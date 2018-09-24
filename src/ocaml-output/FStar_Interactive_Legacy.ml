@@ -149,7 +149,7 @@ let (push_with_kind :
           if restore_cmd_line_options1
           then
             (let uu____272 = FStar_Options.restore_cmd_line_options false  in
-             FStar_All.pipe_right uu____272 (fun a234  -> ()))
+             FStar_All.pipe_right uu____272 (fun a1  -> ()))
           else ();
           res
   
@@ -196,7 +196,7 @@ let (check_frag :
 let (report_fail : unit -> unit) =
   fun uu____458  ->
     (let uu____460 = FStar_Errors.report_all ()  in
-     FStar_All.pipe_right uu____460 (fun a235  -> ()));
+     FStar_All.pipe_right uu____460 (fun a2  -> ()));
     FStar_Errors.clear ()
   
 type input_chunks =
@@ -260,34 +260,26 @@ type interactive_state =
 let (__proj__Mkinteractive_state__item__chunk :
   interactive_state -> FStar_Util.string_builder) =
   fun projectee  ->
-    match projectee with
-    | { chunk = __fname__chunk; stdin = __fname__stdin;
-        buffer = __fname__buffer; log = __fname__log;_} -> __fname__chunk
+    match projectee with | { chunk; stdin; buffer; log = log1;_} -> chunk
   
 let (__proj__Mkinteractive_state__item__stdin :
   interactive_state ->
     FStar_Util.stream_reader FStar_Pervasives_Native.option FStar_ST.ref)
   =
   fun projectee  ->
-    match projectee with
-    | { chunk = __fname__chunk; stdin = __fname__stdin;
-        buffer = __fname__buffer; log = __fname__log;_} -> __fname__stdin
+    match projectee with | { chunk; stdin; buffer; log = log1;_} -> stdin
   
 let (__proj__Mkinteractive_state__item__buffer :
   interactive_state -> input_chunks Prims.list FStar_ST.ref) =
   fun projectee  ->
-    match projectee with
-    | { chunk = __fname__chunk; stdin = __fname__stdin;
-        buffer = __fname__buffer; log = __fname__log;_} -> __fname__buffer
+    match projectee with | { chunk; stdin; buffer; log = log1;_} -> buffer
   
 let (__proj__Mkinteractive_state__item__log :
   interactive_state ->
     FStar_Util.file_handle FStar_Pervasives_Native.option FStar_ST.ref)
   =
   fun projectee  ->
-    match projectee with
-    | { chunk = __fname__chunk; stdin = __fname__stdin;
-        buffer = __fname__buffer; log = __fname__log;_} -> __fname__log
+    match projectee with | { chunk; stdin; buffer; log = log1;_} -> log1
   
 let (the_interactive_state : interactive_state) =
   let uu____1002 = FStar_Util.new_string_builder ()  in
@@ -944,8 +936,8 @@ let rec (go :
                              match (uu____3805, uu____3806) with
                              | ((cd1,ns1,uu____3833),(cd2,ns2,uu____3836)) ->
                                  (match FStar_String.compare cd1 cd2 with
-                                  | _0_16 when _0_16 = (Prims.parse_int "0")
-                                      -> FStar_String.compare ns1 ns2
+                                  | _0_1 when _0_1 = (Prims.parse_int "0") ->
+                                      FStar_String.compare ns1 ns2
                                   | n1 -> n1)) matches
                        in
                     FStar_List.iter

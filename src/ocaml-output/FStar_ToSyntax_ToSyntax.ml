@@ -1436,7 +1436,7 @@ let rec (desugar_data_pat :
         | [] -> ()
         | p1::[] ->
             let uu____3953 = pat_vars p1  in
-            FStar_All.pipe_right uu____3953 (fun a234  -> ())
+            FStar_All.pipe_right uu____3953 (fun a1  -> ())
         | p1::ps ->
             let pvars = pat_vars p1  in
             let aux p2 =
@@ -2390,7 +2390,7 @@ and (desugar_term_maybe_top :
               let uu____7409 =
                 let uu____7410 =
                   let uu____7421 =
-                    FStar_List.map (fun _0_16  -> FStar_Util.Inr _0_16) terms
+                    FStar_List.map (fun _0_1  -> FStar_Util.Inr _0_1) terms
                      in
                   (uu____7421, rhs)  in
                 FStar_Parser_AST.Sum uu____7410  in
@@ -2828,7 +2828,7 @@ and (desugar_term_maybe_top :
               let uu____8679 =
                 let uu____8686 =
                   let uu____8693 =
-                    FStar_All.pipe_left (fun _0_17  -> FStar_Util.Inl _0_17)
+                    FStar_All.pipe_left (fun _0_2  -> FStar_Util.Inl _0_2)
                       (FStar_Parser_AST.mk_binder (FStar_Parser_AST.NoName t)
                          t.FStar_Parser_AST.range FStar_Parser_AST.Type_level
                          FStar_Pervasives_Native.None)

@@ -34,28 +34,22 @@ let (__proj__Mkrecord_or_dc__item__typename :
   record_or_dc -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { typename = __fname__typename; constrname = __fname__constrname;
-        parms = __fname__parms; fields = __fname__fields;
-        is_private_or_abstract = __fname__is_private_or_abstract;
-        is_record = __fname__is_record;_} -> __fname__typename
+    | { typename; constrname; parms; fields; is_private_or_abstract;
+        is_record;_} -> typename
   
 let (__proj__Mkrecord_or_dc__item__constrname :
   record_or_dc -> FStar_Ident.ident) =
   fun projectee  ->
     match projectee with
-    | { typename = __fname__typename; constrname = __fname__constrname;
-        parms = __fname__parms; fields = __fname__fields;
-        is_private_or_abstract = __fname__is_private_or_abstract;
-        is_record = __fname__is_record;_} -> __fname__constrname
+    | { typename; constrname; parms; fields; is_private_or_abstract;
+        is_record;_} -> constrname
   
 let (__proj__Mkrecord_or_dc__item__parms :
   record_or_dc -> FStar_Syntax_Syntax.binders) =
   fun projectee  ->
     match projectee with
-    | { typename = __fname__typename; constrname = __fname__constrname;
-        parms = __fname__parms; fields = __fname__fields;
-        is_private_or_abstract = __fname__is_private_or_abstract;
-        is_record = __fname__is_record;_} -> __fname__parms
+    | { typename; constrname; parms; fields; is_private_or_abstract;
+        is_record;_} -> parms
   
 let (__proj__Mkrecord_or_dc__item__fields :
   record_or_dc ->
@@ -64,27 +58,21 @@ let (__proj__Mkrecord_or_dc__item__fields :
   =
   fun projectee  ->
     match projectee with
-    | { typename = __fname__typename; constrname = __fname__constrname;
-        parms = __fname__parms; fields = __fname__fields;
-        is_private_or_abstract = __fname__is_private_or_abstract;
-        is_record = __fname__is_record;_} -> __fname__fields
+    | { typename; constrname; parms; fields; is_private_or_abstract;
+        is_record;_} -> fields
   
 let (__proj__Mkrecord_or_dc__item__is_private_or_abstract :
   record_or_dc -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { typename = __fname__typename; constrname = __fname__constrname;
-        parms = __fname__parms; fields = __fname__fields;
-        is_private_or_abstract = __fname__is_private_or_abstract;
-        is_record = __fname__is_record;_} -> __fname__is_private_or_abstract
+    | { typename; constrname; parms; fields; is_private_or_abstract;
+        is_record;_} -> is_private_or_abstract
   
 let (__proj__Mkrecord_or_dc__item__is_record : record_or_dc -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { typename = __fname__typename; constrname = __fname__constrname;
-        parms = __fname__parms; fields = __fname__fields;
-        is_private_or_abstract = __fname__is_private_or_abstract;
-        is_record = __fname__is_record;_} -> __fname__is_record
+    | { typename; constrname; parms; fields; is_private_or_abstract;
+        is_record;_} -> is_record
   
 type scope_mod =
   | Local_binding of local_binding 
@@ -185,33 +173,19 @@ let (__proj__Mkenv__item__curmodule :
   env -> FStar_Ident.lident FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__curmodule
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> curmodule
   
 let (__proj__Mkenv__item__curmonad :
   env -> FStar_Ident.ident FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__curmonad
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> curmonad
   
 let (__proj__Mkenv__item__modules :
   env ->
@@ -220,95 +194,53 @@ let (__proj__Mkenv__item__modules :
   =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__modules
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> modules
   
 let (__proj__Mkenv__item__scope_mods : env -> scope_mod Prims.list) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__scope_mods
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> scope_mods
   
 let (__proj__Mkenv__item__exported_ids :
   env -> exported_id_set FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__exported_ids
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> exported_ids
   
 let (__proj__Mkenv__item__trans_exported_ids :
   env -> exported_id_set FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__trans_exported_ids
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> trans_exported_ids
   
 let (__proj__Mkenv__item__includes :
   env -> FStar_Ident.lident Prims.list FStar_ST.ref FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__includes
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> includes
   
 let (__proj__Mkenv__item__sigaccum : env -> FStar_Syntax_Syntax.sigelts) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__sigaccum
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> sigaccum
   
 let (__proj__Mkenv__item__sigmap :
   env ->
@@ -317,78 +249,43 @@ let (__proj__Mkenv__item__sigmap :
   =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__sigmap
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> sigmap
   
 let (__proj__Mkenv__item__iface : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__iface
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> iface
   
 let (__proj__Mkenv__item__admitted_iface : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__admitted_iface
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> admitted_iface
   
 let (__proj__Mkenv__item__expect_typ : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__expect_typ
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> expect_typ
   
 let (__proj__Mkenv__item__docs :
   env -> FStar_Parser_AST.fsdoc FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__docs
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> docs
   
 let (__proj__Mkenv__item__remaining_iface_decls :
   env ->
@@ -397,89 +294,55 @@ let (__proj__Mkenv__item__remaining_iface_decls :
   =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__remaining_iface_decls
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> remaining_iface_decls
   
 let (__proj__Mkenv__item__syntax_only : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__syntax_only
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> syntax_only
   
 let (__proj__Mkenv__item__ds_hooks : env -> dsenv_hooks) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__ds_hooks
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> ds_hooks
   
 let (__proj__Mkenv__item__dep_graph : env -> FStar_Parser_Dep.deps) =
   fun projectee  ->
     match projectee with
-    | { curmodule = __fname__curmodule; curmonad = __fname__curmonad;
-        modules = __fname__modules; scope_mods = __fname__scope_mods;
-        exported_ids = __fname__exported_ids;
-        trans_exported_ids = __fname__trans_exported_ids;
-        includes = __fname__includes; sigaccum = __fname__sigaccum;
-        sigmap = __fname__sigmap; iface = __fname__iface;
-        admitted_iface = __fname__admitted_iface;
-        expect_typ = __fname__expect_typ; docs = __fname__docs;
-        remaining_iface_decls = __fname__remaining_iface_decls;
-        syntax_only = __fname__syntax_only; ds_hooks = __fname__ds_hooks;
-        dep_graph = __fname__dep_graph;_} -> __fname__dep_graph
+    | { curmodule; curmonad; modules; scope_mods; exported_ids;
+        trans_exported_ids; includes; sigaccum; sigmap; iface;
+        admitted_iface; expect_typ; docs; remaining_iface_decls; syntax_only;
+        ds_hooks; dep_graph;_} -> dep_graph
   
 let (__proj__Mkdsenv_hooks__item__ds_push_open_hook :
   dsenv_hooks -> env -> open_module_or_namespace -> unit) =
   fun projectee  ->
     match projectee with
-    | { ds_push_open_hook = __fname__ds_push_open_hook;
-        ds_push_include_hook = __fname__ds_push_include_hook;
-        ds_push_module_abbrev_hook = __fname__ds_push_module_abbrev_hook;_}
-        -> __fname__ds_push_open_hook
+    | { ds_push_open_hook; ds_push_include_hook;
+        ds_push_module_abbrev_hook;_} -> ds_push_open_hook
   
 let (__proj__Mkdsenv_hooks__item__ds_push_include_hook :
   dsenv_hooks -> env -> FStar_Ident.lident -> unit) =
   fun projectee  ->
     match projectee with
-    | { ds_push_open_hook = __fname__ds_push_open_hook;
-        ds_push_include_hook = __fname__ds_push_include_hook;
-        ds_push_module_abbrev_hook = __fname__ds_push_module_abbrev_hook;_}
-        -> __fname__ds_push_include_hook
+    | { ds_push_open_hook; ds_push_include_hook;
+        ds_push_module_abbrev_hook;_} -> ds_push_include_hook
   
 let (__proj__Mkdsenv_hooks__item__ds_push_module_abbrev_hook :
   dsenv_hooks -> env -> FStar_Ident.ident -> FStar_Ident.lident -> unit) =
   fun projectee  ->
     match projectee with
-    | { ds_push_open_hook = __fname__ds_push_open_hook;
-        ds_push_include_hook = __fname__ds_push_include_hook;
-        ds_push_module_abbrev_hook = __fname__ds_push_module_abbrev_hook;_}
-        -> __fname__ds_push_module_abbrev_hook
+    | { ds_push_open_hook; ds_push_include_hook;
+        ds_push_module_abbrev_hook;_} -> ds_push_module_abbrev_hook
   
 type 'a withenv = env -> ('a,env) FStar_Pervasives_Native.tuple2
 let (default_ds_hooks : dsenv_hooks) =
@@ -3486,17 +3349,13 @@ let (__proj__Mkexported_ids__item__exported_id_terms :
   exported_ids -> Prims.string Prims.list) =
   fun projectee  ->
     match projectee with
-    | { exported_id_terms = __fname__exported_id_terms;
-        exported_id_fields = __fname__exported_id_fields;_} ->
-        __fname__exported_id_terms
+    | { exported_id_terms; exported_id_fields;_} -> exported_id_terms
   
 let (__proj__Mkexported_ids__item__exported_id_fields :
   exported_ids -> Prims.string Prims.list) =
   fun projectee  ->
     match projectee with
-    | { exported_id_terms = __fname__exported_id_terms;
-        exported_id_fields = __fname__exported_id_fields;_} ->
-        __fname__exported_id_fields
+    | { exported_id_terms; exported_id_fields;_} -> exported_id_fields
   
 let (as_exported_ids : exported_id_set -> exported_ids) =
   fun e  ->
@@ -3542,18 +3401,15 @@ let (__proj__Mkmodule_inclusion_info__item__mii_exported_ids :
   module_inclusion_info -> exported_ids FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { mii_exported_ids = __fname__mii_exported_ids;
-        mii_trans_exported_ids = __fname__mii_trans_exported_ids;
-        mii_includes = __fname__mii_includes;_} -> __fname__mii_exported_ids
+    | { mii_exported_ids; mii_trans_exported_ids; mii_includes;_} ->
+        mii_exported_ids
   
 let (__proj__Mkmodule_inclusion_info__item__mii_trans_exported_ids :
   module_inclusion_info -> exported_ids FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { mii_exported_ids = __fname__mii_exported_ids;
-        mii_trans_exported_ids = __fname__mii_trans_exported_ids;
-        mii_includes = __fname__mii_includes;_} ->
-        __fname__mii_trans_exported_ids
+    | { mii_exported_ids; mii_trans_exported_ids; mii_includes;_} ->
+        mii_trans_exported_ids
   
 let (__proj__Mkmodule_inclusion_info__item__mii_includes :
   module_inclusion_info ->
@@ -3561,9 +3417,8 @@ let (__proj__Mkmodule_inclusion_info__item__mii_includes :
   =
   fun projectee  ->
     match projectee with
-    | { mii_exported_ids = __fname__mii_exported_ids;
-        mii_trans_exported_ids = __fname__mii_trans_exported_ids;
-        mii_includes = __fname__mii_includes;_} -> __fname__mii_includes
+    | { mii_exported_ids; mii_trans_exported_ids; mii_includes;_} ->
+        mii_includes
   
 let (default_mii : module_inclusion_info) =
   {

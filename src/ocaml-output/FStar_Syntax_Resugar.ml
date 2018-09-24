@@ -765,7 +765,7 @@ let rec (resugar_term' :
                            let uu____2378 =
                              let uu____2389 =
                                FStar_List.map
-                                 (fun _0_16  -> FStar_Util.Inl _0_16) xs3
+                                 (fun _0_1  -> FStar_Util.Inl _0_1) xs3
                                 in
                              (uu____2389, body3)  in
                            FStar_Parser_AST.Sum uu____2378  in
@@ -1599,7 +1599,7 @@ and (resugar_bv_as_pat :
                  let uu____5841 =
                    FStar_Syntax_Subst.compress x.FStar_Syntax_Syntax.sort  in
                  FStar_All.pipe_left
-                   (fun _0_17  -> FStar_Pervasives_Native.Some _0_17)
+                   (fun _0_2  -> FStar_Pervasives_Native.Some _0_2)
                    uu____5841
                   in
                resugar_bv_as_pat' env x aqual body_bv uu____5836)

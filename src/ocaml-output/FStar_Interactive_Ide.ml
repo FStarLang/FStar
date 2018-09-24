@@ -216,16 +216,12 @@ type timed_fname = {
   tf_modtime: FStar_Util.time }
 let (__proj__Mktimed_fname__item__tf_fname : timed_fname -> Prims.string) =
   fun projectee  ->
-    match projectee with
-    | { tf_fname = __fname__tf_fname; tf_modtime = __fname__tf_modtime;_} ->
-        __fname__tf_fname
+    match projectee with | { tf_fname; tf_modtime;_} -> tf_fname
   
 let (__proj__Mktimed_fname__item__tf_modtime :
   timed_fname -> FStar_Util.time) =
   fun projectee  ->
-    match projectee with
-    | { tf_fname = __fname__tf_fname; tf_modtime = __fname__tf_modtime;_} ->
-        __fname__tf_modtime
+    match projectee with | { tf_fname; tf_modtime;_} -> tf_modtime
   
 let (t0 : FStar_Util.time) = FStar_Util.now () 
 let (tf_of_fname : Prims.string -> timed_fname) =
@@ -256,38 +252,32 @@ type push_query =
 let (__proj__Mkpush_query__item__push_kind : push_query -> push_kind) =
   fun projectee  ->
     match projectee with
-    | { push_kind = __fname__push_kind; push_code = __fname__push_code;
-        push_line = __fname__push_line; push_column = __fname__push_column;
-        push_peek_only = __fname__push_peek_only;_} -> __fname__push_kind
+    | { push_kind; push_code; push_line; push_column; push_peek_only;_} ->
+        push_kind
   
 let (__proj__Mkpush_query__item__push_code : push_query -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { push_kind = __fname__push_kind; push_code = __fname__push_code;
-        push_line = __fname__push_line; push_column = __fname__push_column;
-        push_peek_only = __fname__push_peek_only;_} -> __fname__push_code
+    | { push_kind; push_code; push_line; push_column; push_peek_only;_} ->
+        push_code
   
 let (__proj__Mkpush_query__item__push_line : push_query -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { push_kind = __fname__push_kind; push_code = __fname__push_code;
-        push_line = __fname__push_line; push_column = __fname__push_column;
-        push_peek_only = __fname__push_peek_only;_} -> __fname__push_line
+    | { push_kind; push_code; push_line; push_column; push_peek_only;_} ->
+        push_line
   
 let (__proj__Mkpush_query__item__push_column : push_query -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { push_kind = __fname__push_kind; push_code = __fname__push_code;
-        push_line = __fname__push_line; push_column = __fname__push_column;
-        push_peek_only = __fname__push_peek_only;_} -> __fname__push_column
+    | { push_kind; push_code; push_line; push_column; push_peek_only;_} ->
+        push_column
   
 let (__proj__Mkpush_query__item__push_peek_only : push_query -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { push_kind = __fname__push_kind; push_code = __fname__push_code;
-        push_line = __fname__push_line; push_column = __fname__push_column;
-        push_peek_only = __fname__push_peek_only;_} ->
-        __fname__push_peek_only
+    | { push_kind; push_code; push_line; push_column; push_peek_only;_} ->
+        push_peek_only
   
 type optmod_t = FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option
 type repl_task =
@@ -344,32 +334,20 @@ type repl_state =
 let (__proj__Mkrepl_state__item__repl_line : repl_state -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { repl_line = __fname__repl_line; repl_column = __fname__repl_column;
-        repl_fname = __fname__repl_fname;
-        repl_deps_stack = __fname__repl_deps_stack;
-        repl_curmod = __fname__repl_curmod; repl_env = __fname__repl_env;
-        repl_stdin = __fname__repl_stdin; repl_names = __fname__repl_names;_}
-        -> __fname__repl_line
+    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
+        repl_env; repl_stdin; repl_names;_} -> repl_line
   
 let (__proj__Mkrepl_state__item__repl_column : repl_state -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { repl_line = __fname__repl_line; repl_column = __fname__repl_column;
-        repl_fname = __fname__repl_fname;
-        repl_deps_stack = __fname__repl_deps_stack;
-        repl_curmod = __fname__repl_curmod; repl_env = __fname__repl_env;
-        repl_stdin = __fname__repl_stdin; repl_names = __fname__repl_names;_}
-        -> __fname__repl_column
+    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
+        repl_env; repl_stdin; repl_names;_} -> repl_column
   
 let (__proj__Mkrepl_state__item__repl_fname : repl_state -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { repl_line = __fname__repl_line; repl_column = __fname__repl_column;
-        repl_fname = __fname__repl_fname;
-        repl_deps_stack = __fname__repl_deps_stack;
-        repl_curmod = __fname__repl_curmod; repl_env = __fname__repl_env;
-        repl_stdin = __fname__repl_stdin; repl_names = __fname__repl_names;_}
-        -> __fname__repl_fname
+    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
+        repl_env; repl_stdin; repl_names;_} -> repl_fname
   
 let (__proj__Mkrepl_state__item__repl_deps_stack :
   repl_state ->
@@ -378,54 +356,34 @@ let (__proj__Mkrepl_state__item__repl_deps_stack :
   =
   fun projectee  ->
     match projectee with
-    | { repl_line = __fname__repl_line; repl_column = __fname__repl_column;
-        repl_fname = __fname__repl_fname;
-        repl_deps_stack = __fname__repl_deps_stack;
-        repl_curmod = __fname__repl_curmod; repl_env = __fname__repl_env;
-        repl_stdin = __fname__repl_stdin; repl_names = __fname__repl_names;_}
-        -> __fname__repl_deps_stack
+    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
+        repl_env; repl_stdin; repl_names;_} -> repl_deps_stack
   
 let (__proj__Mkrepl_state__item__repl_curmod : repl_state -> optmod_t) =
   fun projectee  ->
     match projectee with
-    | { repl_line = __fname__repl_line; repl_column = __fname__repl_column;
-        repl_fname = __fname__repl_fname;
-        repl_deps_stack = __fname__repl_deps_stack;
-        repl_curmod = __fname__repl_curmod; repl_env = __fname__repl_env;
-        repl_stdin = __fname__repl_stdin; repl_names = __fname__repl_names;_}
-        -> __fname__repl_curmod
+    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
+        repl_env; repl_stdin; repl_names;_} -> repl_curmod
   
 let (__proj__Mkrepl_state__item__repl_env : repl_state -> env_t) =
   fun projectee  ->
     match projectee with
-    | { repl_line = __fname__repl_line; repl_column = __fname__repl_column;
-        repl_fname = __fname__repl_fname;
-        repl_deps_stack = __fname__repl_deps_stack;
-        repl_curmod = __fname__repl_curmod; repl_env = __fname__repl_env;
-        repl_stdin = __fname__repl_stdin; repl_names = __fname__repl_names;_}
-        -> __fname__repl_env
+    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
+        repl_env; repl_stdin; repl_names;_} -> repl_env
   
 let (__proj__Mkrepl_state__item__repl_stdin :
   repl_state -> FStar_Util.stream_reader) =
   fun projectee  ->
     match projectee with
-    | { repl_line = __fname__repl_line; repl_column = __fname__repl_column;
-        repl_fname = __fname__repl_fname;
-        repl_deps_stack = __fname__repl_deps_stack;
-        repl_curmod = __fname__repl_curmod; repl_env = __fname__repl_env;
-        repl_stdin = __fname__repl_stdin; repl_names = __fname__repl_names;_}
-        -> __fname__repl_stdin
+    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
+        repl_env; repl_stdin; repl_names;_} -> repl_stdin
   
 let (__proj__Mkrepl_state__item__repl_names :
   repl_state -> FStar_Interactive_CompletionTable.table) =
   fun projectee  ->
     match projectee with
-    | { repl_line = __fname__repl_line; repl_column = __fname__repl_column;
-        repl_fname = __fname__repl_fname;
-        repl_deps_stack = __fname__repl_deps_stack;
-        repl_curmod = __fname__repl_curmod; repl_env = __fname__repl_env;
-        repl_stdin = __fname__repl_stdin; repl_names = __fname__repl_names;_}
-        -> __fname__repl_names
+    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
+        repl_env; repl_stdin; repl_names;_} -> repl_names
   
 type repl_stack_entry_t =
   (repl_depth_t,(repl_task,repl_state) FStar_Pervasives_Native.tuple2)
@@ -904,7 +862,7 @@ let (run_repl_transaction :
                        let uu____2183 =
                          run_repl_task st1.repl_curmod env1 task  in
                        FStar_All.pipe_left
-                         (fun _0_16  -> FStar_Pervasives_Native.Some _0_16)
+                         (fun _0_1  -> FStar_Pervasives_Native.Some _0_1)
                          uu____2183)
                    in
                 match uu____2169 with
@@ -985,7 +943,7 @@ let (run_repl_ld_transactions :
                progress_callback task;
                (let uu____2415 = FStar_Options.restore_cmd_line_options false
                    in
-                FStar_All.pipe_right uu____2415 (fun a234  -> ()));
+                FStar_All.pipe_right uu____2415 (fun a1  -> ()));
                (let timestamped_task = update_task_timestamps task  in
                 let push_kind =
                   let uu____2418 = FStar_Options.lax ()  in
@@ -1303,15 +1261,9 @@ let (uu___is_ProtocolViolation : query' -> Prims.bool) =
 let (__proj__ProtocolViolation__item___0 : query' -> Prims.string) =
   fun projectee  -> match projectee with | ProtocolViolation _0 -> _0 
 let (__proj__Mkquery__item__qq : query -> query') =
-  fun projectee  ->
-    match projectee with
-    | { qq = __fname__qq; qid = __fname__qid;_} -> __fname__qq
-  
+  fun projectee  -> match projectee with | { qq; qid;_} -> qq 
 let (__proj__Mkquery__item__qid : query -> Prims.string) =
-  fun projectee  ->
-    match projectee with
-    | { qq = __fname__qq; qid = __fname__qid;_} -> __fname__qid
-  
+  fun projectee  -> match projectee with | { qq; qid;_} -> qid 
 let (query_needs_current_module : query' -> Prims.bool) =
   fun uu___449_3160  ->
     match uu___449_3160 with
@@ -1682,41 +1634,32 @@ let (__proj__Mksymbol_lookup_result__item__slr_name :
   symbol_lookup_result -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { slr_name = __fname__slr_name; slr_def_range = __fname__slr_def_range;
-        slr_typ = __fname__slr_typ; slr_doc = __fname__slr_doc;
-        slr_def = __fname__slr_def;_} -> __fname__slr_name
+    | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} -> slr_name
   
 let (__proj__Mksymbol_lookup_result__item__slr_def_range :
   symbol_lookup_result -> FStar_Range.range FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { slr_name = __fname__slr_name; slr_def_range = __fname__slr_def_range;
-        slr_typ = __fname__slr_typ; slr_doc = __fname__slr_doc;
-        slr_def = __fname__slr_def;_} -> __fname__slr_def_range
+    | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} ->
+        slr_def_range
   
 let (__proj__Mksymbol_lookup_result__item__slr_typ :
   symbol_lookup_result -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { slr_name = __fname__slr_name; slr_def_range = __fname__slr_def_range;
-        slr_typ = __fname__slr_typ; slr_doc = __fname__slr_doc;
-        slr_def = __fname__slr_def;_} -> __fname__slr_typ
+    | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} -> slr_typ
   
 let (__proj__Mksymbol_lookup_result__item__slr_doc :
   symbol_lookup_result -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { slr_name = __fname__slr_name; slr_def_range = __fname__slr_def_range;
-        slr_typ = __fname__slr_typ; slr_doc = __fname__slr_doc;
-        slr_def = __fname__slr_def;_} -> __fname__slr_doc
+    | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} -> slr_doc
   
 let (__proj__Mksymbol_lookup_result__item__slr_def :
   symbol_lookup_result -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { slr_name = __fname__slr_name; slr_def_range = __fname__slr_def_range;
-        slr_typ = __fname__slr_typ; slr_doc = __fname__slr_doc;
-        slr_def = __fname__slr_def;_} -> __fname__slr_def
+    | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} -> slr_def
   
 let (alist_of_symbol_lookup_result :
   symbol_lookup_result ->
@@ -1731,20 +1674,18 @@ let (alist_of_symbol_lookup_result :
       let uu____3913 =
         let uu____3920 =
           let uu____3925 =
-            json_of_opt (fun _0_17  -> FStar_Util.JsonStr _0_17) lr.slr_typ
-             in
+            json_of_opt (fun _0_2  -> FStar_Util.JsonStr _0_2) lr.slr_typ  in
           ("type", uu____3925)  in
         let uu____3926 =
           let uu____3933 =
             let uu____3938 =
-              json_of_opt (fun _0_18  -> FStar_Util.JsonStr _0_18) lr.slr_doc
+              json_of_opt (fun _0_3  -> FStar_Util.JsonStr _0_3) lr.slr_doc
                in
             ("documentation", uu____3938)  in
           let uu____3939 =
             let uu____3946 =
               let uu____3951 =
-                json_of_opt (fun _0_19  -> FStar_Util.JsonStr _0_19)
-                  lr.slr_def
+                json_of_opt (fun _0_4  -> FStar_Util.JsonStr _0_4) lr.slr_def
                  in
               ("definition", uu____3951)  in
             [uu____3946]  in
@@ -1758,10 +1699,10 @@ let (alist_of_protocol_info :
   let js_version = FStar_Util.JsonInt interactive_protocol_vernum  in
   let js_features =
     let uu____3984 =
-      FStar_List.map (fun _0_20  -> FStar_Util.JsonStr _0_20)
+      FStar_List.map (fun _0_5  -> FStar_Util.JsonStr _0_5)
         interactive_protocol_features
        in
-    FStar_All.pipe_left (fun _0_21  -> FStar_Util.JsonList _0_21) uu____3984
+    FStar_All.pipe_left (fun _0_6  -> FStar_Util.JsonList _0_6) uu____3984
      in
   [("version", js_version); ("features", js_features)] 
 type fstar_option_permission_level =
@@ -1801,88 +1742,56 @@ type fstar_option =
 let (__proj__Mkfstar_option__item__opt_name : fstar_option -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { opt_name = __fname__opt_name; opt_sig = __fname__opt_sig;
-        opt_value = __fname__opt_value; opt_default = __fname__opt_default;
-        opt_type = __fname__opt_type; opt_snippets = __fname__opt_snippets;
-        opt_documentation = __fname__opt_documentation;
-        opt_permission_level = __fname__opt_permission_level;_} ->
-        __fname__opt_name
+    | { opt_name; opt_sig; opt_value; opt_default; opt_type; opt_snippets;
+        opt_documentation; opt_permission_level;_} -> opt_name
   
 let (__proj__Mkfstar_option__item__opt_sig : fstar_option -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { opt_name = __fname__opt_name; opt_sig = __fname__opt_sig;
-        opt_value = __fname__opt_value; opt_default = __fname__opt_default;
-        opt_type = __fname__opt_type; opt_snippets = __fname__opt_snippets;
-        opt_documentation = __fname__opt_documentation;
-        opt_permission_level = __fname__opt_permission_level;_} ->
-        __fname__opt_sig
+    | { opt_name; opt_sig; opt_value; opt_default; opt_type; opt_snippets;
+        opt_documentation; opt_permission_level;_} -> opt_sig
   
 let (__proj__Mkfstar_option__item__opt_value :
   fstar_option -> FStar_Options.option_val) =
   fun projectee  ->
     match projectee with
-    | { opt_name = __fname__opt_name; opt_sig = __fname__opt_sig;
-        opt_value = __fname__opt_value; opt_default = __fname__opt_default;
-        opt_type = __fname__opt_type; opt_snippets = __fname__opt_snippets;
-        opt_documentation = __fname__opt_documentation;
-        opt_permission_level = __fname__opt_permission_level;_} ->
-        __fname__opt_value
+    | { opt_name; opt_sig; opt_value; opt_default; opt_type; opt_snippets;
+        opt_documentation; opt_permission_level;_} -> opt_value
   
 let (__proj__Mkfstar_option__item__opt_default :
   fstar_option -> FStar_Options.option_val) =
   fun projectee  ->
     match projectee with
-    | { opt_name = __fname__opt_name; opt_sig = __fname__opt_sig;
-        opt_value = __fname__opt_value; opt_default = __fname__opt_default;
-        opt_type = __fname__opt_type; opt_snippets = __fname__opt_snippets;
-        opt_documentation = __fname__opt_documentation;
-        opt_permission_level = __fname__opt_permission_level;_} ->
-        __fname__opt_default
+    | { opt_name; opt_sig; opt_value; opt_default; opt_type; opt_snippets;
+        opt_documentation; opt_permission_level;_} -> opt_default
   
 let (__proj__Mkfstar_option__item__opt_type :
   fstar_option -> FStar_Options.opt_type) =
   fun projectee  ->
     match projectee with
-    | { opt_name = __fname__opt_name; opt_sig = __fname__opt_sig;
-        opt_value = __fname__opt_value; opt_default = __fname__opt_default;
-        opt_type = __fname__opt_type; opt_snippets = __fname__opt_snippets;
-        opt_documentation = __fname__opt_documentation;
-        opt_permission_level = __fname__opt_permission_level;_} ->
-        __fname__opt_type
+    | { opt_name; opt_sig; opt_value; opt_default; opt_type; opt_snippets;
+        opt_documentation; opt_permission_level;_} -> opt_type
   
 let (__proj__Mkfstar_option__item__opt_snippets :
   fstar_option -> Prims.string Prims.list) =
   fun projectee  ->
     match projectee with
-    | { opt_name = __fname__opt_name; opt_sig = __fname__opt_sig;
-        opt_value = __fname__opt_value; opt_default = __fname__opt_default;
-        opt_type = __fname__opt_type; opt_snippets = __fname__opt_snippets;
-        opt_documentation = __fname__opt_documentation;
-        opt_permission_level = __fname__opt_permission_level;_} ->
-        __fname__opt_snippets
+    | { opt_name; opt_sig; opt_value; opt_default; opt_type; opt_snippets;
+        opt_documentation; opt_permission_level;_} -> opt_snippets
   
 let (__proj__Mkfstar_option__item__opt_documentation :
   fstar_option -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { opt_name = __fname__opt_name; opt_sig = __fname__opt_sig;
-        opt_value = __fname__opt_value; opt_default = __fname__opt_default;
-        opt_type = __fname__opt_type; opt_snippets = __fname__opt_snippets;
-        opt_documentation = __fname__opt_documentation;
-        opt_permission_level = __fname__opt_permission_level;_} ->
-        __fname__opt_documentation
+    | { opt_name; opt_sig; opt_value; opt_default; opt_type; opt_snippets;
+        opt_documentation; opt_permission_level;_} -> opt_documentation
   
 let (__proj__Mkfstar_option__item__opt_permission_level :
   fstar_option -> fstar_option_permission_level) =
   fun projectee  ->
     match projectee with
-    | { opt_name = __fname__opt_name; opt_sig = __fname__opt_sig;
-        opt_value = __fname__opt_value; opt_default = __fname__opt_default;
-        opt_type = __fname__opt_type; opt_snippets = __fname__opt_snippets;
-        opt_documentation = __fname__opt_documentation;
-        opt_permission_level = __fname__opt_permission_level;_} ->
-        __fname__opt_permission_level
+    | { opt_name; opt_sig; opt_value; opt_default; opt_type; opt_snippets;
+        opt_documentation; opt_permission_level;_} -> opt_permission_level
   
 let rec (kind_of_fstar_option_type : FStar_Options.opt_type -> Prims.string)
   =
@@ -1965,7 +1874,7 @@ let (alist_of_fstar_option :
           let uu____4382 =
             let uu____4389 =
               let uu____4394 =
-                json_of_opt (fun _0_22  -> FStar_Util.JsonStr _0_22)
+                json_of_opt (fun _0_7  -> FStar_Util.JsonStr _0_7)
                   opt.opt_documentation
                  in
               ("documentation", uu____4394)  in
@@ -2030,7 +1939,7 @@ let (json_of_message : Prims.string -> FStar_Util.json -> FStar_Util.json) =
           let uu____4536 =
             let uu____4541 =
               let uu____4542 = FStar_ST.op_Bang repl_current_qid  in
-              json_of_opt (fun _0_23  -> FStar_Util.JsonStr _0_23) uu____4542
+              json_of_opt (fun _0_8  -> FStar_Util.JsonStr _0_8) uu____4542
                in
             ("query-id", uu____4541)  in
           [uu____4536;
@@ -2054,7 +1963,7 @@ let (json_of_hello : FStar_Util.json) =
   let js_version = FStar_Util.JsonInt interactive_protocol_vernum  in
   let js_features =
     let uu____4620 =
-      FStar_List.map (fun _0_24  -> FStar_Util.JsonStr _0_24)
+      FStar_List.map (fun _0_9  -> FStar_Util.JsonStr _0_9)
         interactive_protocol_features
        in
     FStar_Util.JsonList uu____4620  in
@@ -2175,7 +2084,7 @@ let (json_of_repl_state : repl_state -> FStar_Util.json) =
           let uu____4837 =
             let uu____4840 =
               FStar_List.concatMap filenames st.repl_deps_stack  in
-            FStar_List.map (fun _0_25  -> FStar_Util.JsonStr _0_25)
+            FStar_List.map (fun _0_10  -> FStar_Util.JsonStr _0_10)
               uu____4840
              in
           FStar_Util.JsonList uu____4837  in
@@ -2308,7 +2217,7 @@ let run_segment :
           (fun uu____5182  ->
              let uu____5183 = collect_decls ()  in
              FStar_All.pipe_left
-               (fun _0_26  -> FStar_Pervasives_Native.Some _0_26) uu____5183)
+               (fun _0_11  -> FStar_Pervasives_Native.Some _0_11) uu____5183)
          in
       match uu____5173 with
       | FStar_Pervasives_Native.None  ->
@@ -2330,7 +2239,7 @@ let run_segment :
             FStar_Util.JsonAssoc uu____5237  in
           let js_decls =
             let uu____5259 = FStar_List.map json_of_decl decls  in
-            FStar_All.pipe_left (fun _0_27  -> FStar_Util.JsonList _0_27)
+            FStar_All.pipe_left (fun _0_12  -> FStar_Util.JsonList _0_12)
               uu____5259
              in
           ((QueryOK, (FStar_Util.JsonAssoc [("decls", js_decls)])),
@@ -2413,7 +2322,7 @@ let (load_deps :
            let uu____5501 = deps_and_repl_ld_tasks_of_our_file st.repl_fname
               in
            FStar_All.pipe_left
-             (fun _0_28  -> FStar_Pervasives_Native.Some _0_28) uu____5501)
+             (fun _0_13  -> FStar_Pervasives_Native.Some _0_13) uu____5501)
        in
     match uu____5475 with
     | FStar_Pervasives_Native.None  -> FStar_Util.Inr st
@@ -2698,7 +2607,7 @@ let run_push_with_deps :
        | FStar_Util.Inl (st1,deps) ->
            ((let uu____5936 = FStar_Options.restore_cmd_line_options false
                 in
-             FStar_All.pipe_right uu____5936 (fun a235  -> ()));
+             FStar_All.pipe_right uu____5936 (fun a2  -> ()));
             (let names1 =
                add_module_completions st1.repl_fname deps st1.repl_names  in
              run_push_without_deps
@@ -3066,7 +2975,7 @@ let run_module_autocomplete :
           let mods_and_nss =
             FStar_Interactive_CompletionTable.autocomplete_mod_or_ns
               st.repl_names needle
-              (fun _0_29  -> FStar_Pervasives_Native.Some _0_29)
+              (fun _0_14  -> FStar_Pervasives_Native.Some _0_14)
              in
           let json =
             FStar_List.map
@@ -3185,7 +3094,7 @@ let run_and_rewind :
                      (fun uu____7738  ->
                         let uu____7739 = task st1  in
                         FStar_All.pipe_left
-                          (fun _0_30  -> FStar_Util.Inl _0_30) uu____7739))
+                          (fun _0_15  -> FStar_Util.Inl _0_15) uu____7739))
               ()
           with | FStar_Util.SigInt  -> FStar_Util.Inl sigint_default
           | e -> FStar_Util.Inr e  in
@@ -3369,16 +3278,10 @@ let (__proj__TypeContainsLid__item___0 : search_term' -> FStar_Ident.lid) =
   fun projectee  -> match projectee with | TypeContainsLid _0 -> _0 
 let (__proj__Mksearch_term__item__st_negate : search_term -> Prims.bool) =
   fun projectee  ->
-    match projectee with
-    | { st_negate = __fname__st_negate; st_term = __fname__st_term;_} ->
-        __fname__st_negate
+    match projectee with | { st_negate; st_term;_} -> st_negate
   
 let (__proj__Mksearch_term__item__st_term : search_term -> search_term') =
-  fun projectee  ->
-    match projectee with
-    | { st_negate = __fname__st_negate; st_term = __fname__st_term;_} ->
-        __fname__st_term
-  
+  fun projectee  -> match projectee with | { st_negate; st_term;_} -> st_term 
 let (st_cost : search_term' -> Prims.int) =
   fun uu___455_8321  ->
     match uu___455_8321 with
@@ -3396,18 +3299,14 @@ type search_candidate =
 let (__proj__Mksearch_candidate__item__sc_lid :
   search_candidate -> FStar_Ident.lid) =
   fun projectee  ->
-    match projectee with
-    | { sc_lid = __fname__sc_lid; sc_typ = __fname__sc_typ;
-        sc_fvars = __fname__sc_fvars;_} -> __fname__sc_lid
+    match projectee with | { sc_lid; sc_typ; sc_fvars;_} -> sc_lid
   
 let (__proj__Mksearch_candidate__item__sc_typ :
   search_candidate ->
     FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option FStar_ST.ref)
   =
   fun projectee  ->
-    match projectee with
-    | { sc_lid = __fname__sc_lid; sc_typ = __fname__sc_typ;
-        sc_fvars = __fname__sc_fvars;_} -> __fname__sc_typ
+    match projectee with | { sc_lid; sc_typ; sc_fvars;_} -> sc_typ
   
 let (__proj__Mksearch_candidate__item__sc_fvars :
   search_candidate ->
@@ -3415,9 +3314,7 @@ let (__proj__Mksearch_candidate__item__sc_fvars :
       FStar_ST.ref)
   =
   fun projectee  ->
-    match projectee with
-    | { sc_lid = __fname__sc_lid; sc_typ = __fname__sc_typ;
-        sc_fvars = __fname__sc_fvars;_} -> __fname__sc_fvars
+    match projectee with | { sc_lid; sc_typ; sc_fvars;_} -> sc_fvars
   
 let (sc_of_lid : FStar_Ident.lid -> search_candidate) =
   fun lid  ->

@@ -3,17 +3,9 @@ type ident = {
   idText: Prims.string ;
   idRange: FStar_Range.range }[@@deriving yojson,show]
 let (__proj__Mkident__item__idText : ident -> Prims.string) =
-  fun projectee  ->
-    match projectee with
-    | { idText = __fname__idText; idRange = __fname__idRange;_} ->
-        __fname__idText
-  
+  fun projectee  -> match projectee with | { idText; idRange;_} -> idText 
 let (__proj__Mkident__item__idRange : ident -> FStar_Range.range) =
-  fun projectee  ->
-    match projectee with
-    | { idText = __fname__idText; idRange = __fname__idRange;_} ->
-        __fname__idRange
-  
+  fun projectee  -> match projectee with | { idText; idRange;_} -> idRange 
 type path = Prims.string Prims.list
 type lident =
   {
@@ -22,29 +14,17 @@ type lident =
   nsstr: Prims.string ;
   str: Prims.string }[@@deriving yojson,show]
 let (__proj__Mklident__item__ns : lident -> ident Prims.list) =
-  fun projectee  ->
-    match projectee with
-    | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
-        str = __fname__str;_} -> __fname__ns
-  
+  fun projectee  -> match projectee with | { ns; ident; nsstr; str;_} -> ns 
 let (__proj__Mklident__item__ident : lident -> ident) =
   fun projectee  ->
-    match projectee with
-    | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
-        str = __fname__str;_} -> __fname__ident
+    match projectee with | { ns; ident; nsstr; str;_} -> ident
   
 let (__proj__Mklident__item__nsstr : lident -> Prims.string) =
   fun projectee  ->
-    match projectee with
-    | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
-        str = __fname__str;_} -> __fname__nsstr
+    match projectee with | { ns; ident; nsstr; str;_} -> nsstr
   
 let (__proj__Mklident__item__str : lident -> Prims.string) =
-  fun projectee  ->
-    match projectee with
-    | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
-        str = __fname__str;_} -> __fname__str
-  
+  fun projectee  -> match projectee with | { ns; ident; nsstr; str;_} -> str 
 type lid = lident[@@deriving yojson,show]
 let (mk_ident :
   (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2 -> ident) =

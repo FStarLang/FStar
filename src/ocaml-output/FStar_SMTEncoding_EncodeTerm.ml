@@ -394,9 +394,7 @@ let (__proj__Mkpattern__item__pat_vars :
   =
   fun projectee  ->
     match projectee with
-    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
-        guard = __fname__guard; projections = __fname__projections;_} ->
-        __fname__pat_vars
+    | { pat_vars; pat_term; guard; projections;_} -> pat_vars
   
 let (__proj__Mkpattern__item__pat_term :
   pattern ->
@@ -406,17 +404,13 @@ let (__proj__Mkpattern__item__pat_term :
   =
   fun projectee  ->
     match projectee with
-    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
-        guard = __fname__guard; projections = __fname__projections;_} ->
-        __fname__pat_term
+    | { pat_vars; pat_term; guard; projections;_} -> pat_term
   
 let (__proj__Mkpattern__item__guard :
   pattern -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) =
   fun projectee  ->
     match projectee with
-    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
-        guard = __fname__guard; projections = __fname__projections;_} ->
-        __fname__guard
+    | { pat_vars; pat_term; guard; projections;_} -> guard
   
 let (__proj__Mkpattern__item__projections :
   pattern ->
@@ -426,9 +420,7 @@ let (__proj__Mkpattern__item__projections :
   =
   fun projectee  ->
     match projectee with
-    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
-        guard = __fname__guard; projections = __fname__projections;_} ->
-        __fname__projections
+    | { pat_vars; pat_term; guard; projections;_} -> projections
   
 let (as_function_typ :
   FStar_SMTEncoding_Env.env_t ->
@@ -3169,7 +3161,7 @@ and (encode_function_type_as_formula :
          in
       let lemma_pats p =
         let elts = list_elements1 p  in
-        let smt_pat_or t1 =
+        let smt_pat_or1 t1 =
           let uu____8139 =
             let uu____8156 = FStar_Syntax_Util.unmeta t1  in
             FStar_All.pipe_right uu____8156 FStar_Syntax_Util.head_and_args
@@ -3190,7 +3182,7 @@ and (encode_function_type_as_formula :
            in
         match elts with
         | t1::[] ->
-            let uu____8305 = smt_pat_or t1  in
+            let uu____8305 = smt_pat_or1 t1  in
             (match uu____8305 with
              | FStar_Pervasives_Native.Some e ->
                  let uu____8327 = list_elements1 e  in
