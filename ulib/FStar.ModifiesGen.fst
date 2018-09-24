@@ -139,7 +139,7 @@ let fun_set_equal_elim (#t: Type) (#t' : Type) (f1 f2: (t -> GTot (GSet.set t'))
   (requires (fun_set_equal f1 f2))
   (ensures (f1 == f2))
   [SMTPat (fun_set_equal f1 f2)]
-= assert (f1 `FunctionalExtensionality.gfeq` f2)
+= assert (f1 `FunctionalExtensionality.feq_g` f2); assume (f1 == f2)
 
 let loc_equal (#al: aloc_t) (#c: cls al) (s1 s2: loc c) : GTot Type0 =
   let Loc regions1 region_liveness_tags1 _ _ aux1 = s1 in

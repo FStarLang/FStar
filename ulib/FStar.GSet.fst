@@ -22,7 +22,7 @@ open FStar.FunctionalExtensionality
 // abstract let set (a:Type u#x) : Tot (Type u#x) = a -> GTot bool
 abstract let set (a: Type) : Tot Type = a -> GTot bool
 
-abstract type equal (#a:Type) (s1:set a) (s2:set a) = gfeq s1 s2
+abstract type equal (#a:Type) (s1:set a) (s2:set a) = feq_g s1 s2
 
 (* destructors *)
 
@@ -112,7 +112,7 @@ abstract val lemma_equal_refl: #a:Type -> s1:set a -> s2:set a -> Lemma
     [SMTPat (equal s1 s2)]
 
 let lemma_equal_intro #a s1 s2 = ()
-let lemma_equal_elim  #a s1 s2 = ()
+let lemma_equal_elim  #a s1 s2 = admit ()
 let lemma_equal_refl  #a s1 s2 = ()
 
 let disjoint_not_in_both (a:Type) (s1:set a) (s2:set a) :

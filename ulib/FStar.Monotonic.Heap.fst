@@ -15,7 +15,7 @@ let equal h1 h2 =
   h1.next_addr = h2.next_addr /\
   FStar.FunctionalExtensionality.feq h1.memory h2.memory
 
-let equal_extensional h1 h2 = ()
+let equal_extensional h1 h2 = assume (h1.memory == h2.memory)
 
 let emp = {
   next_addr = 1;

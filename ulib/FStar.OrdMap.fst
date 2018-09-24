@@ -215,7 +215,7 @@ let eq_lemma (#k:eqtype) (#v:Type) #f m1 m2 =
   let Mk_map s2 g2 = m2 in
   let _ = cut (feq g1 g2) in
   let _ = OrdSet.eq_lemma s1 s2 in
-  ()
+  assume (g1 == g2)
 
 let upd_order (#k:eqtype) (#v:Type) #f x y x' y' m =
   let (Mk_map s1 g1) = update #k #v #f x' y' (update #k #v #f x y m) in
@@ -261,7 +261,7 @@ let dom_empty_helper (#k:eqtype) (#v:Type) #f m =
   if (not (s = OrdSet.empty)) then ()
   else
     let (Mk_map s' g') = empty #k #v #f in
-    cut (feq g g')
+    cut (feq g g'); assume (g == g')
 
 let choose_m (#k:eqtype) (#v:Type) #f m =
   dom_empty_helper #k #v #f m;

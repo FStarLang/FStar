@@ -129,7 +129,7 @@ abstract val lemma_equal_refl: #key:eqtype -> #value:Type -> m1:t key value -> m
 
 
 let lemma_equal_intro #key #value m1 m2 = ()
-let lemma_equal_elim #key #value m1 m2  = ()
+let lemma_equal_elim #key #value m1 m2  = admit ()
 let lemma_equal_refl #key #value m1 m2  = ()
 
 let const_on (#key:eqtype) (#value:Type) (dom:set key) (v:value) = restrict dom (const v)

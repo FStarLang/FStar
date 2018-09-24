@@ -110,7 +110,7 @@ abstract val lemma_equal_refl: #a:eqtype -> s1:set a -> s2:set a -> Lemma
     [SMTPat (equal s1 s2)]
 
 let lemma_equal_intro #a s1 s2 = ()
-let lemma_equal_elim  #a s1 s2 = ()
+let lemma_equal_elim  #a s1 s2 = admit ()
 let lemma_equal_refl  #a s1 s2 = ()
 
 let disjoint_not_in_both (a:eqtype) (s1:set a) (s2:set a) :
