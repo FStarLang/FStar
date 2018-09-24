@@ -71,9 +71,9 @@ let is_restricted_g (a:Type) (#b:a -> Type) (f:arrow_g a b) =
 let restricted_g_t (a:Type) (b:a -> Type) =
   f:arrow_g a b{is_restricted_g a f}
 
-val feq_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow a b)
-  : Lemma (feq (on_domain a f) f)
-          [SMTPat (on_domain a f)]
+val feq_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow_g a b)
+  : Lemma (feq_g (on_domain_g a f) f)
+          [SMTPat (on_domain_g a f)]
 
 val extensionality_g (a:Type) (b:a -> Type) (f g:arrow_g a b)
   : Lemma (ensures (feq_g #a #b f g <==> (on_domain_g a f == on_domain_g a g)))
@@ -83,6 +83,6 @@ val idempotence_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow_g a b)
   : Lemma (on_domain_g a (on_domain_g a f) == on_domain_g a f)
           [SMTPat (on_domain_g a (on_domain_g a f))]
 
-let on_dom_g (a:Type) (#b:a -> Type) (f:arrow a b)
+let on_dom_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
   : restricted_g_t a b
   = on_domain_g a f
