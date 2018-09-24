@@ -19,7 +19,7 @@ module FStar.Set
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.FunctionalExtensionality
 
-abstract type set (a:Type u#a{hasEq a}) :Type u#a = a -> Tot bool
+abstract type set (a:Type u#a{hasEq a}) :Type u#a = f:(a -> Tot bool){exists g. on_domain a g == f}
 abstract type equal (#a:eqtype) (s1:set a) (s2:set a) = feq s1 s2
 
 (* destructors *)
@@ -34,16 +34,34 @@ abstract val union      : #a:eqtype -> set a -> set a -> Tot (set a)
 abstract val intersect  : #a:eqtype -> set a -> set a -> Tot (set a)
 abstract val complement : #a:eqtype -> set a -> Tot (set a)
 
-let empty              = fun #a x -> false
-let singleton #a x     = fun y -> y = x
-let union #a s1 s2     = fun x -> s1 x || s2 x
-let intersect #a s1 s2 = fun x -> s1 x && s2 x
-let complement #a s    = fun x -> not (s x)
+let empty #a =
+  let f = on_domain a (fun x -> false) in
+  assert (on_domain a f == on_domain a (fun x -> false));
+  f
 
+let singleton #a x =
+  let f = on_domain a (fun y -> y = x) in
+  assert (on_domain a f == on_domain a (fun y -> y = x));
+  f
+
+let union #a s1 s2 =
+  let f = on_domain a (fun x -> s1 x || s2 x) in
+  assert (on_domain a f == on_domain a (fun x -> s1 x || s2 x));
+  f
+
+let intersect #a s1 s2 =
+  let f = on_domain a (fun x -> s1 x && s2 x) in
+  assert (on_domain a f == on_domain a (fun x -> s1 x && s2 x));
+  f
+
+let complement #a s =
+  let f = on_domain a (fun x -> not (s x)) in
+  assert (on_domain a f == on_domain a (fun x -> not (s x)));
+  f
+  
 (* a property about sets *)
 let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
   equal (intersect s1 s2) empty
-
 
 (* ops *)
 type subset (#a:eqtype) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
@@ -110,7 +128,7 @@ abstract val lemma_equal_refl: #a:eqtype -> s1:set a -> s2:set a -> Lemma
     [SMTPat (equal s1 s2)]
 
 let lemma_equal_intro #a s1 s2 = ()
-let lemma_equal_elim  #a s1 s2 = admit ()
+let lemma_equal_elim  #a s1 s2 = ()
 let lemma_equal_refl  #a s1 s2 = ()
 
 let disjoint_not_in_both (a:eqtype) (s1:set a) (s2:set a) :
