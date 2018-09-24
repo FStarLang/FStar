@@ -7,9 +7,9 @@ F* standard library Map module.
 module FStar.Map
 open FStar.Set
 open FStar.FunctionalExtensionality
-
+module F = FStar.FunctionalExtensionality
 noeq abstract type t (key:eqtype) (value:Type) = {
-  mappings: key -> Tot value;
+  mappings: F.restricted_t key (fun _ -> value);
   domain:   set key
 }
 
@@ -23,16 +23,15 @@ abstract val domain: #key:eqtype -> #value:Type -> t key value -> Tot (set key)
 
 let sel #key #value m k = m.mappings k
 let upd #key #value m k v = {
-  mappings = (fun x -> if x = k then v else m.mappings x);
+  mappings = F.on_dom key (fun x -> if x = k then v else m.mappings x);
   domain =   union m.domain (singleton k)
 }
 let const #key #value v = {
-  mappings = (fun _ -> v);
+  mappings = F.on_dom key (fun _ -> v);
   domain =   complement empty
 }
-
 let concat #key #value m1 m2 = {
-  mappings = (fun x -> if mem x m2.domain then m2.mappings x else m1.mappings x);
+  mappings = F.on_dom key (fun x -> if mem x m2.domain then m2.mappings x else m1.mappings x);
   domain =   union m1.domain m2.domain
 }
 let contains #key #value m k = mem k m.domain
@@ -129,7 +128,7 @@ abstract val lemma_equal_refl: #key:eqtype -> #value:Type -> m1:t key value -> m
 
 
 let lemma_equal_intro #key #value m1 m2 = ()
-let lemma_equal_elim #key #value m1 m2  = admit ()
+let lemma_equal_elim #key #value m1 m2  = ()
 let lemma_equal_refl #key #value m1 m2  = ()
 
 let const_on (#key:eqtype) (#value:Type) (dom:set key) (v:value) = restrict dom (const v)
