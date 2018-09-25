@@ -272,10 +272,7 @@ let extend_gen_0 t g =
   forall_intro (extend_gen_0_aux t g)
 
 let rec extend_gen_typing_conversion (#t:typ) (#g:env) (#e0:exp) (#t0:typ) (h:typing (extend t g) e0 t0)
-  :Tot (typing (extend_gen 0 t g) e0 t0) =
-  let open FStar.Tactics in
-  assert (extend_gen 0 t g == extend t g) by (norm [iota; delta_only [`%extend_gen]]);
-  h
+  :Tot (typing (extend_gen 0 t g) e0 t0) = h
 
 val preservation : #e:exp -> #t:typ -> h:typing empty e t{Some? (step e)} ->
       Tot (typing empty (Some?.v (step e)) t) (decreases e)
