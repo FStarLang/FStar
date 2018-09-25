@@ -14,112 +14,112 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
-module FStar.Set
-(** Computational sets (on eqtypes): membership is a boolean function *)
+module FStar.GSet
+(** Computatiional sets (on Types): membership is a boolean function *)
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-val set (a:eqtype)
-  : Type0
+val set (a: Type u#a) : Type u#a
 
-val equal (#a:eqtype) (s1:set a) (s2:set a)
-  : Type0
+val equal (#a:Type) (s1:set a) (s2:set a) : Type0
 
 (* destructors *)
 
-val mem (#a:eqtype) (x:a) (s:set a)
-  : Tot bool
+val mem : #a:Type -> a -> set a -> GTot bool
 
 (* constructors *)
-val empty (#a:eqtype)
-  : Tot (set a)
-
-val singleton (#a:eqtype) (x:a)
-  : Tot (set a)
-
-val union      : #a:eqtype -> set a -> set a -> Tot (set a)
-val intersect  : #a:eqtype -> set a -> set a -> Tot (set a)
-val complement : #a:eqtype -> set a -> Tot (set a)
+val empty      : #a:Type -> Tot (set a)
+val singleton  : #a:Type -> a -> Tot (set a)
+val union      : #a:Type -> set a -> set a -> Tot (set a)
+val intersect  : #a:Type -> set a -> set a -> Tot (set a)
+val complement : #a:Type -> set a -> Tot (set a)
+val comprehend (#a: Type) (f: (a -> GTot bool)) : set a
+val of_set (#a: eqtype) (f: Set.set a) : set a
 
 (* a property about sets *)
-let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
+let disjoint (#a:Type) (s1: set a) (s2: set a) =
   equal (intersect s1 s2) empty
 
 (* ops *)
-let subset (#a:eqtype) (s1:set a) (s2:set a) =
-  forall x. mem x s1 ==> mem x s2
+type subset (#a:Type) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
 
 (* Properties *)
-val mem_empty: #a:eqtype -> x:a -> Lemma
+val mem_empty: #a:Type -> x:a -> Lemma
    (requires True)
    (ensures (not (mem x empty)))
    [SMTPat (mem x empty)]
 
-val mem_singleton: #a:eqtype -> x:a -> y:a -> Lemma
+val mem_singleton: #a:Type -> x:a -> y:a -> Lemma
    (requires True)
-   (ensures (mem y (singleton x) = (x=y)))
+   (ensures (mem y (singleton x) <==> (x==y)))
    [SMTPat (mem y (singleton x))]
 
-val mem_union: #a:eqtype -> x:a -> s1:set a -> s2:set a -> Lemma
+val mem_union: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma
    (requires True)
    (ensures (mem x (union s1 s2) = (mem x s1 || mem x s2)))
    [SMTPat (mem x (union s1 s2))]
 
-val mem_intersect: #a:eqtype -> x:a -> s1:set a -> s2:set a -> Lemma
+val mem_intersect: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma
    (requires True)
    (ensures (mem x (intersect s1 s2) = (mem x s1 && mem x s2)))
    [SMTPat (mem x (intersect s1 s2))]
 
-val mem_complement: #a:eqtype -> x:a -> s:set a -> Lemma
+val mem_complement: #a:Type -> x:a -> s:set a -> Lemma
    (requires True)
    (ensures (mem x (complement s) = not (mem x s)))
    [SMTPat (mem x (complement s))]
 
-val mem_subset: #a:eqtype -> s1:set a -> s2:set a -> Lemma
+val mem_subset: #a:Type -> s1:set a -> s2:set a -> Lemma
    (requires (forall x. mem x s1 ==> mem x s2))
    (ensures (subset s1 s2))
    [SMTPat (subset s1 s2)]
 
-val subset_mem: #a:eqtype -> s1:set a -> s2:set a -> Lemma
+val subset_mem: #a:Type -> s1:set a -> s2:set a -> Lemma
    (requires (subset s1 s2))
    (ensures (forall x. mem x s1 ==> mem x s2))
    [SMTPat (subset s1 s2)]
 
+val comprehend_mem (#a: Type) (f: (a -> GTot bool)) (x: a) 
+  : Lemma (ensures (mem x (comprehend f) == f x))
+          [SMTPat (mem x (comprehend f))]
+
+val mem_of_set (#a: eqtype) (f: Set.set a) (x: a) 
+  : Lemma (ensures (mem x (of_set f) <==> Set.mem x f))
+          [SMTPat (mem x (of_set f))]
+
 (* extensionality *)
-val lemma_equal_intro: #a:eqtype -> s1:set a -> s2:set a -> Lemma
+
+val lemma_equal_intro: #a:Type -> s1:set a -> s2:set a -> Lemma
     (requires  (forall x. mem x s1 = mem x s2))
     (ensures (equal s1 s2))
     [SMTPat (equal s1 s2)]
 
-val lemma_equal_elim: #a:eqtype -> s1:set a -> s2:set a -> Lemma
+val lemma_equal_elim: #a:Type -> s1:set a -> s2:set a -> Lemma
     (requires (equal s1 s2))
     (ensures  (s1 == s2))
     [SMTPat (equal s1 s2)]
 
-val lemma_equal_refl: #a:eqtype -> s1:set a -> s2:set a -> Lemma
+val lemma_equal_refl: #a:Type -> s1:set a -> s2:set a -> Lemma
     (requires (s1 == s2))
     (ensures  (equal s1 s2))
     [SMTPat (equal s1 s2)]
 
-val disjoint_not_in_both (a:eqtype) (s1:set a) (s2:set a)
-  : Lemma
-      (requires (disjoint s1 s2))
-      (ensures (forall (x:a).{:pattern (mem x s1) \/ (mem x s2)} mem x s1 ==> ~(mem x s2)))
-      [SMTPat (disjoint s1 s2)]
+let disjoint_not_in_both (a:Type) (s1:set a) (s2:set a) :
+  Lemma
+    (requires (disjoint s1 s2))
+    (ensures (forall (x:a).{:pattern (mem x s1) \/ (mem x s2)} mem x s1 ==> ~(mem x s2)))
+  [SMTPat (disjoint s1 s2)]
+= let f (x:a) : Lemma (~(mem x (intersect s1 s2))) = () in
+  FStar.Classical.forall_intro f
 
 (* Converting lists to sets *)
-
-(* WHY IS THIS HERE? It is not strictly part of the interface *)
 #reset-options //restore fuel usage here
-let rec as_set' (#a:eqtype) (l:list a) : set a =
+
+let rec as_set' (#a:Type) (l:list a) : set a = 
   match l with
   | [] -> empty
   | hd::tl -> union (singleton hd) (as_set' tl)
 
-unfold
-let as_set (#a:eqtype) (l:list a) = normalize_term (as_set' l)
-
-let lemma_disjoint_subset (#a:eqtype) (s1:set a) (s2:set a) (s3:set a)
+let lemma_disjoint_subset (#a:Type) (s1:set a) (s2:set a) (s3:set a)
   : Lemma (requires (disjoint s1 s2 /\ subset s3 s1))
           (ensures  (disjoint s3 s2))
   = ()
