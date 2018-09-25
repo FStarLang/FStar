@@ -389,7 +389,10 @@ let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
 
 private
 let __eq_sym #t (a b : t) : Lemma ((a == b) == (b == a)) =
-  FStar.PropositionalExtensionality.axiom ()
+  FStar.PropositionalExtensionality.axiom ();
+  let p1 :prop = (a == b) in
+  let p2 :prop = (b == a) in
+  assert (p1 <==> p2)
 
 (** Like [rewrite], but works with equalities [v == e] and [e == v] *)
 let rewrite' (b:binder) : Tac unit =
