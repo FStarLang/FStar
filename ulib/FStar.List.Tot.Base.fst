@@ -435,6 +435,16 @@ let rec splitAt (#a:Type) (n:nat) (l:list a) : list a * list a =
     | [] -> [], l
     | x :: xs -> let l1, l2 = splitAt (n-1) xs in x :: l1, l2
 
+(** [unsnoc] is an inverse of [snoc] *)
+val unsnoc: #a:Type -> l:list a{length l > 0} -> list a * a
+let unsnoc #a l =
+  let l1, l2 = splitAt (length l - 1) l in
+  let rec aux (l:list a{length l > 0}) :
+    Lemma (length (snd (splitAt (length l - 1) l)) = 1) =
+    if length l = 1 then () else aux (tl l) in
+  aux l;
+  l1, hd l2
+
 (** Sorting (implemented as quicksort) **)
 
 (** [partition] splits a list [l] into two lists, the sum of whose
