@@ -22,6 +22,16 @@ Guidelines for the changelog:
   * Revised typechecking of nested patterns and ascriptions on
     patterns, fixing unsoundnesses (issue #238, for example)
 
+## Syntax
+
+   * We now overload `&` to construct both dependent and non-dependent
+     tuple types. `t1 & t2` is equivalent to `tuple2 t1 t2` whereas
+     `x:t1 & t2` is `dtuple2 t1 (fun x -> t2)`. See
+     examples/micro-benchmarks/TupleSyntax.fst. The main value
+     proposition here is that in contrast to `*`, which clashes with
+     the multiplication on integers, the `&` symbol can be used for
+     tuples while reserving `*` for multiplication.
+
 # Version 0.9.6.0
 
 ## Command line options
