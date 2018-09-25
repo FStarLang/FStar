@@ -65,3 +65,15 @@ let rec splitAt_append (#a:Type) (n:nat) (l:list a) :
     match l with
     | [] -> ()
     | x :: xs -> splitAt_append (n-1) xs
+
+
+let rec splitAt_index_hd (#t:Type) (n:nat) (l:list t) :
+  Lemma
+    (requires (n < length l))
+    (ensures (let l1, l2 = splitAt n l in
+              splitAt_length n l;
+              hd l2 == index l n)) =
+  let x :: xs = l in
+  match n with
+  | 0 -> ()
+  | _ -> splitAt_index_hd (n - 1) (tl l)
