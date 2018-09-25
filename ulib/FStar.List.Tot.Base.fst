@@ -451,7 +451,7 @@ polymorphic comparison using both the [compare] function and the (>)
 infix operator are such that [compare x y] is positive if, and only
 if, x > y. Requires, at type-checking time, [compare] to be a pure
 total function. *)
-val bool_of_compare : #a:Type -> (a -> a -> Tot int) -> F.restricted_t_2 a a bool
+val bool_of_compare : #a:Type -> (a -> a -> Tot int) -> Tot (F.restricted_t_2 a a bool)
 let bool_of_compare #a f = F.on_dom2 (fun x y -> f x y > 0)
 
 (** [compare_of_bool] turns a strict order into a comparison
@@ -461,7 +461,7 @@ polymorphic comparison using both the [compare] function and the (>)
 infix operator are such that [compare x y] is positive if, and only
 if, x > y. Requires, at type-checking time, [rel] to be a pure total
 function.  *)
-val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> F.restricted_t_2 a a int
+val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> Tot (F.restricted_t_2 a a int)
 let compare_of_bool #a rel =
   F.on_dom2 (fun x y ->
              if x `rel` y  then 1
