@@ -141,3 +141,17 @@ let lemma_split3_on_same_leftprefix
   append_length_inv_tail a1 [b1] a2 [b2];
   // assert (a1 == a2 /\ b1 == b2);
   ()
+
+
+let rec lemma_split3_unsnoc (#t:Type) (l:list t) (n:nat{n < length l}) :
+  Lemma
+    (requires (n <> length l - 1))
+    (ensures (
+        let a, b, c = split3 l n in
+        lemma_split3_length l n;
+        let xs, x = unsnoc l in
+        let ys, y = unsnoc c in
+        append a (b :: ys) == xs)) =
+  match n with
+  | 0 -> ()
+  | _ -> lemma_split3_unsnoc (tl l) (n-1)
