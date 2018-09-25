@@ -188,17 +188,17 @@ uregressions: ulib-extra tutorial uexamples interactive-test prettyprinting-test
 uregressions-ulong: uregressions
 
 fstarlib:
-	+$(MAKE) -C ../ulib/ml
-	+$(MAKE) -C ../ulib install-fstar-tactics
+	# +$(MAKE) -C ../ulib/ml
+	# +$(MAKE) -C ../ulib install-fstar-tactics
 	+$(MAKE) -C ../ulib
 
 ulib-extra:
 	+$(MAKE) -C ../ulib extra
 
-tutorial: fstarlib
+tutorial: #fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions
 
-uexamples: fstarlib
+uexamples: #fstarlib
 	+$(MAKE) -C ../examples all
 
 # Interactive mode regressions

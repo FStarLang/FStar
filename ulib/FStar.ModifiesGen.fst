@@ -1258,7 +1258,8 @@ let modifies_loc_addresses_intro_weak
     loc_disjoint l (loc_region_only false r)
   ))
   (ensures (modifies (loc_union (loc_addresses true r s) l) h1 h2))
-= modifies_preserves_mreferences_intro (loc_union (loc_addresses true r s) l) h1 h2 (fun r' a' b' ->
+= admit();
+  modifies_preserves_mreferences_intro (loc_union (loc_addresses true r s) l) h1 h2 (fun r' a' b' ->
     ()
   );
   modifies_preserves_livenesses_intro (loc_union (loc_addresses true r s) l) h1 h2 (fun r' a' b' ->
@@ -1376,6 +1377,7 @@ let loc_unused_in #al c h =
   let f (r: HS.rid) : GTot (GSet.set nat) =
     GSet.comprehend (fun a -> StrongExcludedMiddle.strong_excluded_middle (h `does_not_contain_addr` (r, a)))
   in
+  admit();
   Loc
     (Ghost.hide (Set.complement Set.empty))
     (Ghost.hide Set.empty)
