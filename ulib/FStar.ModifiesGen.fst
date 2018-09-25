@@ -650,6 +650,18 @@ let modifies_preserves_livenesses
       HS.contains h2 p
   ))
 
+let modifies_preserves_livenesses_elim
+  (#al: aloc_t) (#c: cls al)
+  (s: loc c)
+  (h1 h2: HS.mem) 
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (p: HS.mreference t pre)
+: Lemma
+  (requires (modifies_preserves_livenesses s h1 h2 /\ HS.contains h1 p /\ (Set.mem (HS.frameOf p) (regions_of_loc s) ==> ~ (GSet.mem (HS.as_addr p) (Loc?.non_live_addrs s (HS.frameOf p))))))
+  (ensures (HS.contains h2 p))
+= ()
+
 let modifies_preserves_livenesses_intro
   (#al: aloc_t) (#c: cls al)
   (s: loc c)
@@ -993,22 +1005,40 @@ let modifies_loc_includes #al #c s1 h h' s2 =
 
 let modifies_preserves_liveness #al #c s1 s2 h h' #t #pre r = ()
 
-// #set-options "--z3rlimit 32 --max_fuel 1 --max_ifuel 1"
-
 let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
-//  assume (Set.mem (HS.frameOf r) (regions_of_loc s1) ==> (~ (GSet.mem (HS.as_addr r) (Loc?.non_live_addrs (loc_union s1 s2) (HS.frameOf r)))));
-  admit
-  ()
-
-// #reset-options
+  let rg = HS.frameOf r in
+  let ad = HS.as_addr r in
+  let la = loc_of_aloc #_ #c #rg #ad x in
+  if Set.mem rg (regions_of_loc s2)
+  then begin
+    assert (Loc?.non_live_addrs s2 rg `GSet.subset` Loc?.non_live_addrs (address_liveness_insensitive_locs c) rg);
+    assert (Loc?.non_live_addrs s2 rg `GSet.subset` GSet.empty);
+    assert (~ (GSet.mem ad (Loc?.non_live_addrs s2 rg)));
+    if Set.mem rg (regions_of_loc s1)
+    then begin
+      if GSet.mem ad (Loc?.non_live_addrs s1 rg)
+      then begin
+        assert (loc_disjoint_aux s1 la);
+        assert (GSet.subset (Loc?.non_live_addrs s1 rg) (Loc?.live_addrs s1 rg));
+        assert (aloc_domain c (Loc?.regions s1) (Loc?.live_addrs s1) `GSet.subset` (Ghost.reveal (Loc?.aux s1)));
+        assert (GSet.mem (ALoc rg ad None) (Ghost.reveal (Loc?.aux s1)));
+        assert (GSet.mem (ALoc rg ad (Some x)) (Ghost.reveal (Loc?.aux la)));
+        assert (aloc_disjoint (ALoc rg ad None) (ALoc #_ #c rg ad (Some x)));
+        ()
+      end else ()
+    end else ()
+  end else ()
 
 let modifies_preserves_region_liveness #al #c l1 l2 h h' r = ()
 
 let modifies_preserves_region_liveness_reference #al #c l1 l2 h h' #t #pre r = ()
 
-// #set-options "--z3rlimit 32"
-
-let modifies_preserves_region_liveness_aloc #al #c l1 l2 h h' #r #n x = admit ()
+let modifies_preserves_region_liveness_aloc #al #c l1 l2 h h' #r #n x =
+  if Set.mem r (Ghost.reveal (Loc?.region_liveness_tags l1))
+  then begin
+    assert (GSet.subset (GSet.complement GSet.empty) (Loc?.non_live_addrs l1 r));
+    assert (GSet.subset (Loc?.non_live_addrs l1 r) (Loc?.live_addrs l1 r))
+  end else ()
 
 // #reset-options
 
@@ -1367,13 +1397,21 @@ let not_live_region_loc_not_unused_in_disjoint #al c h0 r
   assert (loc_disjoint_addrs l1 l2);
   assert (loc_disjoint_aux l1 l2)
 
-// #set-options "--z3rlimit 16"
+#set-options "--z3rlimit 16"
 
 let modifies_address_liveness_insensitive_unused_in #al c h h' =
   assert (forall r . HS.live_region h r ==> HS.live_region h' r) ;
-  admit ()
+  let ln' = loc_not_unused_in c h' in
+  let ln = loc_not_unused_in c h in
+  assert (forall (r: HS.rid) . Loc?.non_live_addrs ln r `GSet.subset` Loc?.non_live_addrs ln' r);
+  assert (ln' `loc_includes` ln);
+  let lu = loc_unused_in c h in
+  let lu' = loc_unused_in c h' in
+  assert (forall (r: HS.rid) . Loc?.non_live_addrs lu' r `GSet.subset` Loc?.non_live_addrs lu r);
+  assert (forall (r: HS.rid) . Loc?.live_addrs lu' r `GSet.subset` Loc?.live_addrs lu r);
+  assert (lu `loc_includes` lu')
 
-// #reset-options
+#reset-options
 
 let modifies_only_not_unused_in #al #c l h h' =
   assert (modifies_preserves_regions l h h');
