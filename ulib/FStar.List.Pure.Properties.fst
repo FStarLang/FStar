@@ -52,3 +52,16 @@ let rec splitAt_length_total (#a:Type) (l:list a)
   match l with
   | [] -> ()
   | x :: xs -> splitAt_length_total xs
+
+
+let rec splitAt_append (#a:Type) (n:nat) (l:list a) :
+  Lemma
+    (requires n <= length l)
+    (ensures (let l1, l2 = splitAt n l in
+              append l1 l2 == l)) =
+  match n with
+  | 0 -> ()
+  | _ ->
+    match l with
+    | [] -> ()
+    | x :: xs -> splitAt_append (n-1) xs
