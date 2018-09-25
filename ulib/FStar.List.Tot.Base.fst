@@ -445,6 +445,19 @@ let unsnoc #a l =
   aux l;
   l1, hd l2
 
+(** [split3] splits a list into 3 parts. This allows easy access to
+    the part of the list before and after the element, as well as the
+    element itself. *)
+val split3: #a:Type -> l:list a -> i:nat{i < length l} -> list a * a * list a
+let split3 #a l i =
+  let rec aux (l:list a) (i:nat{i < length l}) :
+    Lemma (length (snd (splitAt i l)) > 0) =
+    if i = 0 then () else aux (tl l) (i - 1) in
+  aux l i;
+  let a, as = splitAt i l in
+  let b :: c = as in
+  a, b, c
+
 (** Sorting (implemented as quicksort) **)
 
 (** [partition] splits a list [l] into two lists, the sum of whose
