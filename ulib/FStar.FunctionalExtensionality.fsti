@@ -51,6 +51,26 @@ let on_dom (a:Type) (#b:a -> Type) (f:arrow a b)
   : restricted_t a b
   = on_domain a f
 
+let restricted_t_2 (a:Type) (b:Type) (c:Type) =
+   f:restricted_t a (fun _ ->
+     restricted_t b (fun _ ->
+     c))
+
+let restricted_t_2_idem (#a #b #c:Type) (f: restricted_t_2 a b c)
+  : Lemma (on_domain a f == f)
+  = ()
+
+let on_dom2 (#a #b:Type) (#c:Type) (f:(a -> b -> c)) : restricted_t_2 a b c =
+    on_dom a (fun x ->
+    on_dom b (fun y ->
+    f x y))
+
+let on_dom2_interp (#a #b #c:Type) (f: (a -> b -> c)) (x:a) (y:b)
+    : Lemma (on_dom2 f x y == f x y)
+            [SMTPat (on_dom2 f x y)]
+    = ()
+
+
 (****** GTot version ******)
 
 type arrow_g (a:Type) (b:a -> Type) = x:a -> GTot (b x)
@@ -86,3 +106,22 @@ val idempotence_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow_g a b)
 let on_dom_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
   : restricted_g_t a b
   = on_domain_g a f
+
+let restricted_g_t_2 (a:Type) (b:Type) (c:Type) =
+   f:restricted_g_t a (fun _ ->
+     restricted_g_t b (fun _ ->
+     c))
+
+let restricted_g_t_2_idem (#a #b #c:Type) (f: restricted_g_t_2 a b c)
+  : Lemma (on_domain_g a f == f)
+  = ()
+
+let on_dom_g2 (#a #b:Type) (#c:Type) (f:(a -> b -> GTot c)) : restricted_g_t_2 a b c =
+    on_dom_g a (fun x ->
+    on_dom_g b (fun y ->
+    f x y))
+
+let on_dom_g2_interp (#a #b #c:Type) (f: (a -> b -> GTot c)) (x:a) (y:b)
+    : Lemma (on_dom_g2 f x y == f x y)
+            [SMTPat (on_dom_g2 f x y)]
+    = ()
