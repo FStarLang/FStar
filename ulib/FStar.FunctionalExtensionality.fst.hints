@@ -1,1 +1,71 @@
-[ "d÷\u0015§•\u001a^y,{XH€ôgº", [] ]
+[
+  "\u0011\u001dXÑe‘Œ\rê£^_‹oŸ_",
+  [
+    [
+      "FStar.FunctionalExtensionality.feq_on_domain",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_domain"
+      ],
+      0,
+      "15f2fc2d3742cb74edbbfb815f472150"
+    ],
+    [
+      "FStar.FunctionalExtensionality.idempotence_on_domain",
+      1,
+      0,
+      0,
+      [ "@query", "equation_FStar.FunctionalExtensionality.on_domain" ],
+      0,
+      "01c64b965c77de5f8a262e7d380ff835"
+    ],
+    [
+      "FStar.FunctionalExtensionality.on_dom",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.is_restricted",
+        "equation_FStar.FunctionalExtensionality.on_domain"
+      ],
+      0,
+      "0f9c5227a545a6e4bb9e053ec6dcc477"
+    ],
+    [
+      "FStar.FunctionalExtensionality.feq_on_domain_g",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq_g",
+        "equation_FStar.FunctionalExtensionality.on_domain_g"
+      ],
+      0,
+      "7bea51e0c0b3d5cdc9299af34ec7e335"
+    ],
+    [
+      "FStar.FunctionalExtensionality.idempotence_on_domain_g",
+      1,
+      0,
+      0,
+      [ "@query", "equation_FStar.FunctionalExtensionality.on_domain_g" ],
+      0,
+      "4029c026f5336b2b64334f99337297f5"
+    ],
+    [
+      "FStar.FunctionalExtensionality.on_dom_g",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.is_restricted_g",
+        "equation_FStar.FunctionalExtensionality.on_domain_g"
+      ],
+      0,
+      "4def96967edacb485fcbe21b4e7ba077"
+    ]
+  ]
+]
