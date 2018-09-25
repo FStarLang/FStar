@@ -77,3 +77,34 @@ let rec splitAt_index_hd (#t:Type) (n:nat) (l:list t) :
   match n with
   | 0 -> ()
   | _ -> splitAt_index_hd (n - 1) (tl l)
+
+
+
+(** Properties of split3 *)
+
+
+let rec lemma_split3_append (#t:Type) (l:list t) (n:nat{n < length l}) :
+  Lemma
+    (requires True)
+    (ensures (
+        let a, b, c = split3 l n in
+        l == append a (b :: c))) =
+  splitAt_append n l
+
+
+let rec lemma_split3_index (#t:Type) (l:list t) (n:nat{n < length l}) :
+  Lemma
+    (requires True)
+    (ensures (
+        let a, b, c = split3 l n in
+        b == index l n)) =
+  splitAt_index_hd n l
+
+
+let rec lemma_split3_length (#t:Type) (l:list t) (n:nat{n < length l}) :
+  Lemma
+    (requires True)
+    (ensures (
+        let a, b, c = split3 l n in
+        length a = n /\ length c = length l - n - 1)) =
+  splitAt_length n l
