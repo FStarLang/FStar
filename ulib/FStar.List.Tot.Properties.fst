@@ -258,6 +258,13 @@ val rev_involutive : l:list 'a ->
         (ensures (rev (rev l) == l))
 let rev_involutive l = rev_rev' l; rev_rev' (rev' l); rev'_involutive l
 
+(** Properties about snoc *)
+
+val snoc_length : l:list 'a -> x:'a ->
+  Lemma (requires True)
+        (ensures (length (snoc l x) = length l + 1))
+        [SMTPat (length (snoc l x))]
+let snoc_length l x = append_length l [x]
 
 (** Reverse induction principle **)
 

@@ -123,6 +123,10 @@ let rec append x y = match x with
 (** Defines notation [@] for [append], as in OCaml, F# . *)
 let op_At x y = append x y
 
+(** [snoc l x] adds [x] to the end of the list [l]. *)
+val snoc: list 'a -> 'a -> Tot (list 'a)
+let snoc l x = append l [x]
+
 (** [flatten l], where [l] is a list of lists, returns the list of the
 elements of the lists in [l], preserving their order. Named as in:
 OCaml, Coq. *)
