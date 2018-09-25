@@ -28,14 +28,14 @@ val equal (#a:eqtype) (s1:set a) (s2:set a)
 (* destructors *)
 
 val mem (#a:eqtype) (x:a) (s:set a)
-  : bool
+  : Tot bool
 
 (* constructors *)
 val empty (#a:eqtype)
-  : set a
+  : Tot (set a)
 
 val singleton (#a:eqtype) (x:a)
-  : (set a)
+  : Tot (set a)
 
 val union      : #a:eqtype -> set a -> set a -> Tot (set a)
 val intersect  : #a:eqtype -> set a -> set a -> Tot (set a)

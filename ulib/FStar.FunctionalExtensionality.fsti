@@ -27,7 +27,7 @@ type feq (#a:Type) (#b:a -> Type) (f:arrow a b) (g:arrow a b) =
 
 inline_for_extraction
 val on_domain (a:Type) (#b:a -> Type) (f:arrow a b)
-  : arrow a b
+  : Tot (arrow a b)
 
 let is_restricted (a:Type) (#b:a -> Type) (f:arrow a b) =
     on_domain a f == f
@@ -63,7 +63,7 @@ type feq_g (#a:Type) (#b:a -> Type) (f:arrow_g a b) (g:arrow_g a b) =
 
 inline_for_extraction
 val on_domain_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
-  : arrow_g a b
+  : Tot (arrow_g a b)
 
 let is_restricted_g (a:Type) (#b:a -> Type) (f:arrow_g a b) =
     on_domain_g a f == f
