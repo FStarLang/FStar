@@ -993,24 +993,24 @@ let modifies_loc_includes #al #c s1 h h' s2 =
 
 let modifies_preserves_liveness #al #c s1 s2 h h' #t #pre r = ()
 
-#set-options "--z3rlimit 32 --max_fuel 1 --max_ifuel 1"
+// #set-options "--z3rlimit 32 --max_fuel 1 --max_ifuel 1"
 
 let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
-  assume (Set.mem (HS.frameOf r) (regions_of_loc s1) ==> (~ (GSet.mem (HS.as_addr r) (Loc?.non_live_addrs (loc_union s1 s2) (HS.frameOf r)))));
-//  admit
+//  assume (Set.mem (HS.frameOf r) (regions_of_loc s1) ==> (~ (GSet.mem (HS.as_addr r) (Loc?.non_live_addrs (loc_union s1 s2) (HS.frameOf r)))));
+  admit
   ()
 
-#reset-options
+// #reset-options
 
 let modifies_preserves_region_liveness #al #c l1 l2 h h' r = ()
 
 let modifies_preserves_region_liveness_reference #al #c l1 l2 h h' #t #pre r = ()
 
-#set-options "--z3rlimit 32"
+// #set-options "--z3rlimit 32"
 
-let modifies_preserves_region_liveness_aloc #al #c l1 l2 h h' #r #n x = ()
+let modifies_preserves_region_liveness_aloc #al #c l1 l2 h h' #r #n x = admit ()
 
-#reset-options
+// #reset-options
 
 let modifies_trans'
   (#al: aloc_t) (#c: cls al)
@@ -1063,11 +1063,12 @@ let restrict_to_regions
   (rs: Set.set HS.rid)
 : GTot (loc c)
 = let (Loc regions region_liveness_tags non_live_addrs live_addrs aux) = l in
+  let regions' = (Ghost.hide (Set.intersect (Ghost.reveal regions) rs)) in
   Loc
-    (Ghost.hide (Set.intersect (Ghost.reveal regions) rs))
+    regions'
     (Ghost.hide (Set.intersect (Ghost.reveal region_liveness_tags) rs))
-    (fun r -> non_live_addrs r)
-    (fun r -> live_addrs r)
+    (mk_non_live_addrs (fun (r: addrs_dom regions') -> (non_live_addrs r <: GSet.set nat)))
+    (mk_live_addrs (fun (r: addrs_dom regions') -> (live_addrs r <: GSet.set nat)))
     (Ghost.hide (GSet.intersect (Ghost.reveal aux) (aloc_domain c (Ghost.hide rs) (fun r -> GSet.complement GSet.empty))))
 
 let regions_of_loc_restrict_to_regions
@@ -1211,6 +1212,8 @@ let modifies_loc_regions_intro #al #c rs h1 h2 =
     f r a b
   )
 
+#set-options "--z3rlimit 16"
+
 let modifies_loc_addresses_intro_weak
   (#al: aloc_t) (#c: cls al)
   (r: HS.rid)
@@ -1241,8 +1244,6 @@ let modifies_loc_addresses_intro_weak
   in
   modifies_preserves_alocs_intro (loc_union (loc_addresses true r s) l) h1 h2 () (fun r' a b -> if r = r' then f a b else ()
   )
-
-#set-options "--z3rlimit 16"
 
 let modifies_loc_addresses_intro #al #c r s l h1 h2 =
   loc_includes_loc_regions_restrict_to_regions l (Set.singleton r);
@@ -1337,8 +1338,8 @@ let loc_not_unused_in #al c h =
   Loc
     (Ghost.hide (Set.complement Set.empty))
     (Ghost.hide Set.empty)
-    f
-    (fun x -> f x)
+    (mk_non_live_addrs f)
+    (mk_live_addrs (fun x -> f x))
     (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) f))
 
 let loc_unused_in #al c h =
@@ -1348,8 +1349,8 @@ let loc_unused_in #al c h =
   Loc
     (Ghost.hide (Set.complement Set.empty))
     (Ghost.hide Set.empty)
-    f
-    (fun x -> f x)
+    (mk_non_live_addrs f)
+    (mk_live_addrs (fun x -> f x))
     (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) f))
 
 let loc_addresses_unused_in #al c r a h = ()
@@ -1366,12 +1367,13 @@ let not_live_region_loc_not_unused_in_disjoint #al c h0 r
   assert (loc_disjoint_addrs l1 l2);
   assert (loc_disjoint_aux l1 l2)
 
-#set-options "--z3rlimit 16"
+// #set-options "--z3rlimit 16"
 
 let modifies_address_liveness_insensitive_unused_in #al c h h' =
-  assert (forall r . HS.live_region h r ==> HS.live_region h' r) 
+  assert (forall r . HS.live_region h r ==> HS.live_region h' r) ;
+  admit ()
 
-#reset-options
+// #reset-options
 
 let modifies_only_not_unused_in #al #c l h h' =
   assert (modifies_preserves_regions l h h');
@@ -1384,12 +1386,16 @@ let modifies_only_not_unused_in #al #c l h h' =
     else ()
   )
 
+#set-options "--z3rlimit 16"
+
 let mreference_live_loc_not_unused_in #al c #t #pre h b =
   Classical.move_requires (does_not_contain_addr_addr_unused_in h) (HS.frameOf b, HS.as_addr b);
   assert (~ (h `does_not_contain_addr` (HS.frameOf b, HS.as_addr b)));
   loc_addresses_not_unused_in c (HS.frameOf b) (Set.singleton (HS.as_addr b)) h;
   loc_includes_trans (loc_not_unused_in c h) (loc_freed_mreference b) (loc_mreference b);
   ()
+
+#reset-options
 
 let mreference_unused_in_loc_unused_in #al c #t #pre h b =
   Classical.move_requires (addr_unused_in_does_not_contain_addr h) (HS.frameOf b, HS.as_addr b);
