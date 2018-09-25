@@ -435,20 +435,20 @@ let rec splitAt (#a:Type) (n:nat) (l:list a) : list a * list a =
     | [] -> [], l
     | x :: xs -> let l1, l2 = splitAt (n-1) xs in x :: l1, l2
 
-let rec splitAt_snd_length (#a:Type) (n:nat) (l:list a) :
+let rec lemma_splitAt_snd_length (#a:Type) (n:nat) (l:list a) :
   Lemma
     (requires (n <= length l))
     (ensures (length (snd (splitAt n l)) = length l - n)) =
   match n, l with
   | 0, _ -> ()
   | _, [] -> ()
-  | _, _ :: l' -> splitAt_snd_length (n - 1) l'
+  | _, _ :: l' -> lemma_splitAt_snd_length (n - 1) l'
 
 (** [unsnoc] is an inverse of [snoc] *)
 val unsnoc: #a:Type -> l:list a{length l > 0} -> list a * a
 let unsnoc #a l =
   let l1, l2 = splitAt (length l - 1) l in
-  splitAt_snd_length (length l - 1) l;
+  lemma_splitAt_snd_length (length l - 1) l;
   l1, hd l2
 
 (** [split3] splits a list into 3 parts. This allows easy access to
@@ -457,7 +457,7 @@ let unsnoc #a l =
 val split3: #a:Type -> l:list a -> i:nat{i < length l} -> list a * a * list a
 let split3 #a l i =
   let a, as = splitAt i l in
-  splitAt_snd_length i l;
+  lemma_splitAt_snd_length i l;
   let b :: c = as in
   a, b, c
 

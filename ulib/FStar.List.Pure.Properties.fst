@@ -54,7 +54,7 @@ let rec splitAt_length_total (#a:Type) (l:list a)
   | x :: xs -> splitAt_length_total xs
 
 
-let rec splitAt_append (#a:Type) (n:nat) (l:list a) :
+let rec lemma_splitAt_append (#a:Type) (n:nat) (l:list a) :
   Lemma
     (requires n <= length l)
     (ensures (let l1, l2 = splitAt n l in
@@ -64,10 +64,10 @@ let rec splitAt_append (#a:Type) (n:nat) (l:list a) :
   | _ ->
     match l with
     | [] -> ()
-    | x :: xs -> splitAt_append (n-1) xs
+    | x :: xs -> lemma_splitAt_append (n-1) xs
 
 
-let rec splitAt_index_hd (#t:Type) (n:nat) (l:list t) :
+let rec lemma_splitAt_index_hd (#t:Type) (n:nat) (l:list t) :
   Lemma
     (requires (n < length l))
     (ensures (let l1, l2 = splitAt n l in
@@ -76,7 +76,7 @@ let rec splitAt_index_hd (#t:Type) (n:nat) (l:list t) :
   let x :: xs = l in
   match n with
   | 0 -> ()
-  | _ -> splitAt_index_hd (n - 1) (tl l)
+  | _ -> lemma_splitAt_index_hd (n - 1) (tl l)
 
 
 
@@ -89,7 +89,7 @@ let rec lemma_split3_append (#t:Type) (l:list t) (n:nat{n < length l}) :
     (ensures (
         let a, b, c = split3 l n in
         l == append a (b :: c))) =
-  splitAt_append n l
+  lemma_splitAt_append n l
 
 
 let rec lemma_split3_index (#t:Type) (l:list t) (n:nat{n < length l}) :
@@ -98,7 +98,7 @@ let rec lemma_split3_index (#t:Type) (l:list t) (n:nat{n < length l}) :
     (ensures (
         let a, b, c = split3 l n in
         b == index l n)) =
-  splitAt_index_hd n l
+  lemma_splitAt_index_hd n l
 
 
 let rec lemma_split3_length (#t:Type) (l:list t) (n:nat{n < length l}) :
@@ -129,8 +129,8 @@ let lemma_split3_on_same_leftprefix
   // assert ((a2 @ [b2]) @ c2 == l2);
   let x1, y1 = splitAt (n+1) l1 in
   let x2, y2 = splitAt (n+1) l2 in
-  splitAt_append (n+1) l1;
-  splitAt_append (n+1) l2;
+  lemma_splitAt_append (n+1) l1;
+  lemma_splitAt_append (n+1) l2;
   splitAt_length (n+1) l1;
   splitAt_length (n+1) l2;
   // assert (x1 @ y1 == (a1 @ [b1]) @ c1);
