@@ -414,8 +414,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                     let x = resugar_term' env x in
                     match out with
                     | None -> Some x
-                    | Some tail ->
-                      Some (mk(A.Op(Ident.id_of_text "*", [x; tail]))))
+                    | Some prefix ->
+                      Some (mk(A.Op(Ident.id_of_text "*", [prefix; x]))))
                     None
                     args
           in

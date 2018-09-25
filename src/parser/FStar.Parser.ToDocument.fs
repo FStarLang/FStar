@@ -1584,6 +1584,7 @@ and p_atomicUniverse u = match u.tm with
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e =
+  unfold_tuples := false;
   p_term false false e
 
 let signature_to_document e = p_justSig e

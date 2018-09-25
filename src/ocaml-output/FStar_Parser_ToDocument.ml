@@ -3802,7 +3802,9 @@ and (p_atomicUniverse : FStar_Parser_AST.term -> FStar_Pprint.document) =
         failwith uu____7047
 
 let (term_to_document : FStar_Parser_AST.term -> FStar_Pprint.document) =
-  fun e  -> p_term false false e 
+  fun e  ->
+    FStar_ST.op_Colon_Equals unfold_tuples false; p_term false false e
+  
 let (signature_to_document : FStar_Parser_AST.decl -> FStar_Pprint.document)
   = fun e  -> p_justSig e 
 let (decl_to_document : FStar_Parser_AST.decl -> FStar_Pprint.document) =
@@ -3816,15 +3818,15 @@ let (modul_to_document : FStar_Parser_AST.modul -> FStar_Pprint.document) =
     FStar_ST.op_Colon_Equals should_print_fs_typ_app false;
     (let res =
        match m with
-       | FStar_Parser_AST.Module (uu____7100,decls) ->
-           let uu____7106 =
+       | FStar_Parser_AST.Module (uu____7120,decls) ->
+           let uu____7126 =
              FStar_All.pipe_right decls (FStar_List.map decl_to_document)  in
-           FStar_All.pipe_right uu____7106
+           FStar_All.pipe_right uu____7126
              (FStar_Pprint.separate FStar_Pprint.hardline)
-       | FStar_Parser_AST.Interface (uu____7115,decls,uu____7117) ->
-           let uu____7122 =
+       | FStar_Parser_AST.Interface (uu____7135,decls,uu____7137) ->
+           let uu____7142 =
              FStar_All.pipe_right decls (FStar_List.map decl_to_document)  in
-           FStar_All.pipe_right uu____7122
+           FStar_All.pipe_right uu____7142
              (FStar_Pprint.separate FStar_Pprint.hardline)
         in
      FStar_ST.op_Colon_Equals should_print_fs_typ_app false; res)
@@ -3835,8 +3837,8 @@ let (comments_to_document :
   =
   fun comments  ->
     FStar_Pprint.separate_map FStar_Pprint.hardline
-      (fun uu____7175  ->
-         match uu____7175 with | (comment,range) -> str comment) comments
+      (fun uu____7195  ->
+         match uu____7195 with | (comment,range) -> str comment) comments
   
 let (modul_with_comments_to_document :
   FStar_Parser_AST.modul ->
@@ -3850,39 +3852,39 @@ let (modul_with_comments_to_document :
     fun comments  ->
       let decls =
         match m with
-        | FStar_Parser_AST.Module (uu____7219,decls) -> decls
-        | FStar_Parser_AST.Interface (uu____7225,decls,uu____7227) -> decls
+        | FStar_Parser_AST.Module (uu____7239,decls) -> decls
+        | FStar_Parser_AST.Interface (uu____7245,decls,uu____7247) -> decls
          in
       FStar_ST.op_Colon_Equals should_print_fs_typ_app false;
       (match decls with
        | [] -> (FStar_Pprint.empty, comments)
        | d::ds ->
-           let uu____7272 =
+           let uu____7292 =
              match ds with
              | {
                  FStar_Parser_AST.d = FStar_Parser_AST.Pragma
                    (FStar_Parser_AST.LightOff );
-                 FStar_Parser_AST.drange = uu____7285;
-                 FStar_Parser_AST.doc = uu____7286;
-                 FStar_Parser_AST.quals = uu____7287;
-                 FStar_Parser_AST.attrs = uu____7288;_}::uu____7289 ->
+                 FStar_Parser_AST.drange = uu____7305;
+                 FStar_Parser_AST.doc = uu____7306;
+                 FStar_Parser_AST.quals = uu____7307;
+                 FStar_Parser_AST.attrs = uu____7308;_}::uu____7309 ->
                  let d0 = FStar_List.hd ds  in
-                 let uu____7295 =
-                   let uu____7298 =
-                     let uu____7301 = FStar_List.tl ds  in d :: uu____7301
+                 let uu____7315 =
+                   let uu____7318 =
+                     let uu____7321 = FStar_List.tl ds  in d :: uu____7321
                       in
-                   d0 :: uu____7298  in
-                 (uu____7295, (d0.FStar_Parser_AST.drange))
-             | uu____7306 -> ((d :: ds), (d.FStar_Parser_AST.drange))  in
-           (match uu____7272 with
+                   d0 :: uu____7318  in
+                 (uu____7315, (d0.FStar_Parser_AST.drange))
+             | uu____7326 -> ((d :: ds), (d.FStar_Parser_AST.drange))  in
+           (match uu____7292 with
             | (decls1,first_range) ->
                 let extract_decl_range d1 = d1.FStar_Parser_AST.drange  in
                 (FStar_ST.op_Colon_Equals comment_stack comments;
                  (let initial_comment =
-                    let uu____7366 = FStar_Range.start_of_range first_range
+                    let uu____7386 = FStar_Range.start_of_range first_range
                        in
                     place_comments_until_pos (Prims.parse_int "0")
-                      (Prims.parse_int "1") uu____7366 FStar_Pprint.empty
+                      (Prims.parse_int "1") uu____7386 FStar_Pprint.empty
                      in
                   let doc1 =
                     separate_map_with_comments FStar_Pprint.empty
@@ -3892,7 +3894,7 @@ let (modul_with_comments_to_document :
                   let comments1 = FStar_ST.op_Bang comment_stack  in
                   FStar_ST.op_Colon_Equals comment_stack [];
                   FStar_ST.op_Colon_Equals should_print_fs_typ_app false;
-                  (let uu____7462 =
+                  (let uu____7482 =
                      FStar_Pprint.op_Hat_Hat initial_comment doc1  in
-                   (uu____7462, comments1))))))
+                   (uu____7482, comments1))))))
   

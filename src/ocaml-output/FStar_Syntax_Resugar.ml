@@ -720,13 +720,13 @@ let rec (resugar_term' :
                             (match out with
                              | FStar_Pervasives_Native.None  ->
                                  FStar_Pervasives_Native.Some x1
-                             | FStar_Pervasives_Native.Some tail1 ->
+                             | FStar_Pervasives_Native.Some prefix1 ->
                                  let uu____2262 =
                                    let uu____2263 =
                                      let uu____2264 =
                                        let uu____2271 =
                                          FStar_Ident.id_of_text "*"  in
-                                       (uu____2271, [x1; tail1])  in
+                                       (uu____2271, [prefix1; x1])  in
                                      FStar_Parser_AST.Op uu____2264  in
                                    mk1 uu____2263  in
                                  FStar_Pervasives_Native.Some uu____2262))
