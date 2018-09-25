@@ -108,3 +108,36 @@ let rec lemma_split3_length (#t:Type) (l:list t) (n:nat{n < length l}) :
         let a, b, c = split3 l n in
         length a = n /\ length c = length l - n - 1)) =
   splitAt_length n l
+
+
+let lemma_split3_on_same_leftprefix
+    (#t:Type) (l1 l2:list t) (n:nat{n < length l1 /\ n < length l2}) :
+  Lemma
+    (requires (fst (splitAt (n+1) l1) == fst (splitAt (n+1) l2)))
+    (ensures (let a1, b1, c1 = split3 l1 n in
+              let a2, b2, c2 = split3 l2 n in
+              a1 == a2 /\ b1 == b2)) =
+  let a1, b1, c1 = split3 l1 n in
+  let a2, b2, c2 = split3 l2 n in
+  lemma_split3_append l1 n;
+  lemma_split3_append l2 n;
+  lemma_split3_length l1 n;
+  lemma_split3_length l2 n;
+  append_l_cons b1 c1 a1;
+  append_l_cons b2 c2 a2;
+  // assert ((a1 @ [b1]) @ c1 == l1);
+  // assert ((a2 @ [b2]) @ c2 == l2);
+  let x1, y1 = splitAt (n+1) l1 in
+  let x2, y2 = splitAt (n+1) l2 in
+  splitAt_append (n+1) l1;
+  splitAt_append (n+1) l2;
+  splitAt_length (n+1) l1;
+  splitAt_length (n+1) l2;
+  // assert (x1 @ y1 == (a1 @ [b1]) @ c1);
+  // assert (x2 @ y2 == (a2 @ [b2]) @ c2);
+  append_length_inv_head x1 y1 (append a1 [b1]) c1;
+  append_length_inv_head x2 y2 (append a2 [b2]) c2;
+  // assert (a1 @ [b1] == a2 @ [b2]);
+  append_length_inv_tail a1 [b1] a2 [b2];
+  // assert (a1 == a2 /\ b1 == b2);
+  ()
