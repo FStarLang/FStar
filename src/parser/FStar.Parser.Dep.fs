@@ -645,9 +645,14 @@ let collect_one
         List.iter (fun (_, t) -> collect_term t) idterms
     | Project (t, _) ->
         collect_term t
-    | Product (binders, t)
+    | Product (binders, t) ->
+      collect_binders binders;
+      collect_term t
     | Sum (binders, t) ->
-        collect_binders binders;
+        List.iter (function
+          | Inl b -> collect_binder b
+          | Inr t -> collect_term t)
+          binders;
         collect_term t
     | QForall (binders, ts, t)
     | QExists (binders, ts, t) ->
