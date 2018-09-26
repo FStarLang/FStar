@@ -22,6 +22,26 @@ Guidelines for the changelog:
   * Revised typechecking of nested patterns and ascriptions on
     patterns, fixing unsoundnesses (issue #238, for example)
 
+## Libraries
+
+   * Two core axioms were discovered by Aseem Rastogi to be formulated
+     in an unsound manner.
+
+     FStar.FunctionalExtensionality has been reformulated to prevent
+     equivalence proofs of a function on a given domain to be
+     improperly extended to equivalence on a larger domain. The
+     library was fixed to ensure that domain type used to prove the
+     equivalence was recorded in the axiom. See
+     examples/micro-benchmarks/Test.FunctionalExtensionality.fst for
+     example uses.
+
+     FStar.PropositionalExtensionality was found to be incompatible
+     with the representation of `prop` as the type of all
+     sub-singletons. `prop` has been reformulated as the type of all
+     sub-types of `unit`.
+
+     See issue #1542 for more discussion.
+
 ## Syntax
 
    * We now overload `&` to construct both dependent and non-dependent
