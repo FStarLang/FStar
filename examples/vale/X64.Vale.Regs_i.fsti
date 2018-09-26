@@ -3,7 +3,9 @@ module X64.Vale.Regs_i
 
 open X64.Machine_s
 
-type t = reg -> nat64
+module F = FStar.FunctionalExtensionality
+
+type t = F.restricted_t reg (fun _ -> nat64)
 
 val equal : regs1:t -> regs2:t -> Type0
 
