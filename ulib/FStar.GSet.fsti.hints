@@ -1,0 +1,87 @@
+[
+  "ï\u001a'þEðí†»†àkW¡cã",
+  [
+    [
+      "FStar.GSet.mem_union",
+      1,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "0d0216f38def77ad9a2bb44946fd92cb"
+    ],
+    [
+      "FStar.GSet.mem_intersect",
+      1,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "1baa4cc1f5bd8bb93923c95655c1beee"
+    ],
+    [
+      "FStar.GSet.mem_complement",
+      1,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "11540889c3477558ca313d7127d10d26"
+    ],
+    [
+      "FStar.GSet.lemma_equal_intro",
+      1,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "de3c0d1932f877c95166b931cc7a2bcf"
+    ],
+    [
+      "FStar.GSet.disjoint_not_in_both",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.GSet.disjoint", "lemma_FStar.GSet.lemma_equal_elim",
+        "lemma_FStar.GSet.mem_empty", "lemma_FStar.GSet.mem_intersect",
+        "primitive_Prims.op_AmpAmp", "typing_FStar.GSet.empty",
+        "typing_FStar.GSet.intersect", "typing_FStar.GSet.mem"
+      ],
+      0,
+      "a30ed7c29c8a79c0f0faa076bb26b361"
+    ],
+    [
+      "FStar.GSet.as_set'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "a94d6eec83063eaf9330ed405416f6fd"
+    ],
+    [
+      "FStar.GSet.lemma_disjoint_subset",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.GSet.disjoint", "lemma_FStar.GSet.lemma_equal_elim",
+        "lemma_FStar.GSet.lemma_equal_intro", "lemma_FStar.GSet.mem_empty",
+        "lemma_FStar.GSet.mem_intersect", "lemma_FStar.GSet.subset_mem",
+        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.GSet.empty", "typing_FStar.GSet.intersect",
+        "typing_FStar.GSet.mem"
+      ],
+      0,
+      "348e7b5a7b7ddb0dcb97b81e6c178fd0"
+    ]
+  ]
+]

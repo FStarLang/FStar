@@ -13,7 +13,7 @@
         "primitive_Prims.op_Equality"
       ],
       0,
-      "ad50cd9bc1f5967a1ad57541133fb1c6"
+      "2980c4c967513e579dcac30c1e62b818"
     ],
     [
       "TransparentMap.sel_upd2",
@@ -27,7 +27,7 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "44bca98869360889baa88465d949fec0"
+      "eefd04b86757cd6ec11fe8f9e189b054"
     ],
     [
       "TransparentMap.lemma_equal_intro",
@@ -39,23 +39,7 @@
         "equation_TransparentMap.equal", "equation_TransparentMap.sel"
       ],
       0,
-      "6bff70e98c4e7093df184371b09900c4"
-    ],
-    [
-      "TransparentMap.lemma_equal_elim",
-      1,
-      1,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.FunctionalExtensionality.Extensionality",
-        "equation_FStar.FunctionalExtensionality.efun",
-        "equation_Prims.eqtype", "equation_TransparentMap.equal",
-        "equation_TransparentMap.map",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "9148b19775638c26c062c8b3963fd667"
+      "e37130ea22eaba4a06ae69354c1e8b92"
     ],
     [
       "TransparentMap.lemma_equal_refl",
@@ -64,7 +48,7 @@
       0,
       [ "@query", "lemma_TransparentMap.lemma_equal_intro" ],
       0,
-      "597075a4cf024db24337f1ea981cba0a"
+      "21303d4d857d599e4e74049edcfda06c"
     ]
   ]
 ]

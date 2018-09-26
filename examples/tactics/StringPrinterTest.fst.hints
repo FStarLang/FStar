@@ -17,7 +17,7 @@
         "typing_FStar.Buffer.buffer"
       ],
       0,
-      "5d4430f2ed9762bf4e39daee1ec53ca4"
+      "0b5f84848421e07819f33507c7894653"
     ],
     [
       "StringPrinterTest.print_list_cipher_suite",
@@ -35,43 +35,7 @@
         "typing_FStar.Buffer.buffer"
       ],
       0,
-      "4f7230e1acfa198cc3351d2f1a86f4de"
-    ],
-    [
-      "StringPrinterTest.test3",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Prims.eqtype", "function_token_typing_FStar.UInt8.t",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Buffer.buffer"
-      ],
-      0,
-      "d912ecb933365a1eef08691c2d610334"
-    ],
-    [
-      "StringPrinterTest.print_list_cipher_suite",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Prims.eqtype", "function_token_typing_FStar.UInt8.t",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Buffer.buffer"
-      ],
-      0,
-      "2aa180f4cc07ea00d8103676e28c1e54"
+      "d232757465958b42632c15db31aebc13"
     ]
   ]
 ]
