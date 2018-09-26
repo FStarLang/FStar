@@ -69,6 +69,16 @@ let rec lemma_splitAt_append (#a:Type) (n:nat) (l:list a) :
     | x :: xs -> lemma_splitAt_append (n-1) xs
 
 
+(** If we [splitAt] the point at which two lists have been [append]ed, then we
+    get back the original lists. *)
+let rec lemma_append_splitAt (#t:Type) (l1 l2:list t) :
+  Lemma
+    (ensures (splitAt (length l1) (append l1 l2) == (l1, l2))) =
+  match l1 with
+  | [] -> ()
+  | _ -> lemma_append_splitAt (tl l1) l2
+
+
 (** The [hd] of the second list returned via [splitAt] is the [n]th element of
     the original list *)
 let rec lemma_splitAt_index_hd (#t:Type) (n:nat) (l:list t) :
