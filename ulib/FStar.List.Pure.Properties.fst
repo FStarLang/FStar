@@ -213,3 +213,13 @@ let rec lemma_unsnoc_split3 (#t:Type) (l:list t) (i:nat{i < length l}) :
   lemma_splitAt_shorten_left xs l (length xs) (i+1);
   // assert (fst (splitAt (i+1) xs) == fst (splitAt (i+1) l));
   lemma_split3_on_same_leftprefix l xs i
+
+(** The head of the right side of a [split3] can be [index]ed from original list. *)
+let rec lemma_split3_r_hd (#t:Type) (l:list t) (i:nat{i < length l}) :
+  Lemma
+    (ensures (let a, b, c = split3 l i in
+              lemma_split3_length l i;
+              length c > 0 ==> hd c == index l (i + 1))) =
+  match i with
+  | 0 -> ()
+  | _ -> lemma_split3_r_hd (tl l) (i - 1)
