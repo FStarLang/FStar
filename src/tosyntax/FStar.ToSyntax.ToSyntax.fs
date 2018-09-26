@@ -236,8 +236,17 @@ and free_type_vars env t = match (unparen t).tm with
     let env, f = free_type_vars_b env b in
     f@free_type_vars env t
 
-  | Product(binders, body)
   | Sum(binders, body) ->
+    let env, free = List.fold_left (fun (env, free) bt ->
+      let env, f =
+        match bt with
+        | Inl binder -> free_type_vars_b env binder
+        | Inr t -> env, free_type_vars env body
+      in
+      env, f@free) (env, []) binders in
+    free@free_type_vars env body
+
+  | Product(binders, body) ->
     let env, free = List.fold_left (fun (env, free) binder ->
       let env, f = free_type_vars_b env binder in
       env, f@free) (env, []) binders in
@@ -896,32 +905,43 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       desugar_term_aq env (mk_term(Op(Ident.mk_ident ("~",r), [e])) top.range top.level)
 
     (* if op_Star has not been rebound, then it's reserved for tuples *)
-    | Op(op_star, [_;_]) when
-      Ident.text_of_id op_star = "*" &&
-      (op_as_term env 2 top.range op_star |> Option.isNone) ->
+    | Op(op_star, [lhs;rhs]) when
+      (Ident.text_of_id op_star = "*" &&
+       op_as_term env 2 top.range op_star |> Option.isNone) ->
       (* See the comment in parse.mly to understand why this implicitly relies
        * on the presence of a Paren node in the AST. *)
       let rec flatten t = match t.tm with
         // * is left-associative
-        | Op({idText = "*"}, [t1;t2]) -> flatten t1 @ [ t2 ]
+        | Op({idText = "*"}, [t1;t2]) when
+           op_as_term env 2 top.range op_star |> Option.isNone ->
+          flatten t1 @ [ t2 ]
         | _ -> [t]
       in
-      let targs, aqs = flatten (unparen top) |>
-                            List.map (fun t -> let t', aq = desugar_typ_aq env t in as_arg t', aq) |>
-                            List.unzip in
-      let tup = fail_or env (Env.try_lookup_lid env) (C.mk_tuple_lid (List.length targs) top.range) in
-      mk (Tm_app(tup, targs)), join_aqs aqs
+      let terms = flatten lhs in
+      //make the surface syntax for a non-dependent tuple
+      let t = {top with tm=Sum(List.map Inr terms, rhs)} in
+      desugar_term_maybe_top top_level env t
 
     | Tvar a ->
       setpos <| (fail_or2 (try_lookup_id env) a), noaqs
 
     | Uvar u ->
-        raise_error (Errors.Fatal_UnexpectedUniverseVariable, "Unexpected universe variable " ^ text_of_id u ^ " in non-universe context") top.range
+      raise_error
+          (Errors.Fatal_UnexpectedUniverseVariable,
+           "Unexpected universe variable " ^
+            text_of_id u ^
+            " in non-universe context")
+          top.range
 
     | Op(s, args) ->
-      begin match op_as_term env (List.length args) top.range s with
-        | None -> raise_error (Errors.Fatal_UnepxectedOrUnboundOperator, "Unexpected or unbound operator: " ^ Ident.text_of_id s) top.range
-        | Some op ->
+      begin
+      match op_as_term env (List.length args) top.range s with
+      | None ->
+        raise_error (Errors.Fatal_UnepxectedOrUnboundOperator,
+                     "Unexpected or unbound operator: " ^
+                     Ident.text_of_id s)
+                     top.range
+      | Some op ->
             if List.length args > 0 then
               let args, aqs = args |> List.map (fun t -> let t', s = desugar_term_aq env t in
                                                          (t', None), s) |> List.unzip in
@@ -1021,16 +1041,36 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             raise_error err top.range
         end
 
-    | Sum(binders, t) ->
+    | Sum(binders, t)
+      when BU.for_all (function Inr _ -> true | _ -> false) binders ->
+      //non-dependent tuple
+      let terms =
+         (binders |>
+          List.map (function Inr x -> x | Inl _ -> failwith "Impossible"))
+         @[t]
+      in
+      let targs, aqs =
+        terms |>
+        List.map (fun t -> let t', aq = desugar_typ_aq env t in as_arg t', aq) |>
+        List.unzip
+      in
+      let tup = fail_or env (Env.try_lookup_lid env) (C.mk_tuple_lid (List.length targs) top.range) in
+      mk (Tm_app(tup, targs)), join_aqs aqs
+
+    | Sum(binders, t) -> //dependent tuple
       let env, _, targs = List.fold_left (fun (env, tparams, typs) b ->
-                let xopt, t = desugar_binder env b in
+                let xopt, t =
+                  match b with
+                  | Inl b -> desugar_binder env b
+                  | Inr t -> None, desugar_typ env t
+                in
                 let env, x =
                     match xopt with
                     | None -> env, S.new_bv (Some top.range) tun
                     | Some x -> push_bv env x in
                 (env, tparams@[{x with sort=t}, None], typs@[as_arg <| no_annot_abs tparams t]))
         (env, [], [])
-        (binders@[mk_binder (NoName t) t.range Type_level None]) in
+        (binders@[Inl <| mk_binder (NoName t) t.range Type_level None]) in
       let tup = fail_or env (try_lookup_lid env) (C.mk_dtuple_lid (List.length targs) top.range) in
       mk <| Tm_app(tup, targs), noaqs
 
