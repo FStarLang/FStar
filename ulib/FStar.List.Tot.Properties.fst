@@ -319,6 +319,18 @@ let lemma_unsnoc_snoc #a l =
     if length l = 1 then () else aux (tl l) in
   aux l
 
+(** [unsnoc] followed by [append] can be connected to the same vice-versa. *)
+let rec lemma_unsnoc_append (#a:Type) (l1 l2:list a) :
+  Lemma
+    (requires (length l2 > 0)) // the [length l2 = 0] is trivial
+    (ensures (
+        let as, a = unsnoc (l1 @ l2) in
+        let bs, b = unsnoc l2 in
+        as == l1 @ bs /\ a == b)) =
+  match l1 with
+  | [] -> ()
+  | _ :: l1' -> lemma_unsnoc_append l1' l2
+
 (** Properties about partition **)
 
 (** If [partition f l = (l1, l2)], then for any [x], [x] is in [l] if
