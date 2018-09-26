@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "cfd96e5bb7750e4908ee340061a07a42"
+      "617c00cfab256045e8196d5332da68c3"
     ],
     [
       "Bug056.xxx",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2a844e292c0e216758dc0f33bb8ea11f"
+      "176bc69ed3bd061625c60d353a7861e7"
     ]
   ]
 ]
