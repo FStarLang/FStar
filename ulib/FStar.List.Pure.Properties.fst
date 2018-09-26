@@ -105,6 +105,33 @@ let rec lemma_splitAt_shorten_left
   | _ ->
     lemma_splitAt_shorten_left (tl l1) (tl l2) (i-1) (j-1)
 
+(** Doing an [index] on the left-part of a [splitAt] is same as doing it on
+    the original list *)
+let rec lemma_splitAt_reindex_left (#t:Type) (i:nat) (l:list t) (j:nat) :
+  Lemma
+    (requires i <= length l /\ j < i)
+    (ensures (
+        let left, right = splitAt i l in
+        splitAt_length i l;
+        index left j == index l j)) =
+  match i, j with
+  | 1, _ | _, 0 -> ()
+  | _ -> lemma_splitAt_reindex_left (i - 1) (tl l) (j - 1)
+
+
+(** Doing an [index] on the right-part of a [splitAt] is same as doing it on
+    the original list, but shifted *)
+let rec lemma_splitAt_reindex_right (#t:Type) (i:nat) (l:list t) (j:nat) :
+  Lemma
+    (requires i <= length l /\ j + i < length l)
+    (ensures (
+        let left, right = splitAt i l in
+        splitAt_length i l;
+        index right j == index l (j + i))) =
+  match i with
+  | 0 -> ()
+  | _ -> lemma_splitAt_reindex_right (i - 1) (tl l) j
+
 
 (** Properties of split3 *)
 
