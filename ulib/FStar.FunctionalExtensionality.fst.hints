@@ -11,7 +11,7 @@
         "equation_FStar.FunctionalExtensionality.on_domain"
       ],
       0,
-      "15f2fc2d3742cb74edbbfb815f472150"
+      "180606f4731eea8a21aa4e241abacdb2"
     ],
     [
       "FStar.FunctionalExtensionality.idempotence_on_domain",
@@ -20,7 +20,7 @@
       0,
       [ "@query", "equation_FStar.FunctionalExtensionality.on_domain" ],
       0,
-      "01c64b965c77de5f8a262e7d380ff835"
+      "67acb18cfa8ceb1310b53c7812096b50"
     ],
     [
       "FStar.FunctionalExtensionality.on_dom",
@@ -32,7 +32,32 @@
         "equation_FStar.FunctionalExtensionality.on_domain"
       ],
       0,
-      "0f9c5227a545a6e4bb9e053ec6dcc477"
+      "ec7daa7c11287c3fc18d2c3dd39a0aac"
+    ],
+    [
+      "FStar.FunctionalExtensionality.restricted_t_2_idem",
+      1,
+      0,
+      0,
+      [ "@query", "equation_FStar.FunctionalExtensionality.on_domain" ],
+      0,
+      "d48b88258c08a7c29fc2ee9586eba6c2"
+    ],
+    [
+      "FStar.FunctionalExtensionality.on_dom2_interp",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.on_dom",
+        "equation_FStar.FunctionalExtensionality.on_dom2",
+        "equation_FStar.FunctionalExtensionality.on_domain",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_18c16d0000283bc2d03d20da1368225d",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_3a38181befbe88e1cf5b3bc8c9abd35d",
+        "token_correspondence_FStar.FunctionalExtensionality.on_dom2"
+      ],
+      0,
+      "ff79aaac74392b7c748bb60e0c6bd888"
     ],
     [
       "FStar.FunctionalExtensionality.feq_on_domain_g",
@@ -44,7 +69,7 @@
         "equation_FStar.FunctionalExtensionality.on_domain_g"
       ],
       0,
-      "7bea51e0c0b3d5cdc9299af34ec7e335"
+      "0dccf67e8317820ad9c0e09a0d426934"
     ],
     [
       "FStar.FunctionalExtensionality.idempotence_on_domain_g",
@@ -53,7 +78,7 @@
       0,
       [ "@query", "equation_FStar.FunctionalExtensionality.on_domain_g" ],
       0,
-      "4029c026f5336b2b64334f99337297f5"
+      "e745ff3fd598c863405c7b0ccd7426a4"
     ],
     [
       "FStar.FunctionalExtensionality.on_dom_g",
@@ -65,7 +90,32 @@
         "equation_FStar.FunctionalExtensionality.on_domain_g"
       ],
       0,
-      "4def96967edacb485fcbe21b4e7ba077"
+      "b565f76f290a68894304c4420345e33b"
+    ],
+    [
+      "FStar.FunctionalExtensionality.restricted_g_t_2_idem",
+      1,
+      0,
+      0,
+      [ "@query", "equation_FStar.FunctionalExtensionality.on_domain_g" ],
+      0,
+      "a359ed393407369e77cd950f8ec0c5f1"
+    ],
+    [
+      "FStar.FunctionalExtensionality.on_dom_g2_interp",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.on_dom_g",
+        "equation_FStar.FunctionalExtensionality.on_dom_g2",
+        "equation_FStar.FunctionalExtensionality.on_domain_g",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_18c16d0000283bc2d03d20da1368225d",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_695b05b55ae92c2b02977c8b6df4133d",
+        "token_correspondence_FStar.FunctionalExtensionality.on_dom_g2"
+      ],
+      0,
+      "6c8ee979d9e58888816d7e1e2400075b"
     ]
   ]
 ]
