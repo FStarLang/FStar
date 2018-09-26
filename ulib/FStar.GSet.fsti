@@ -18,6 +18,10 @@ module FStar.GSet
 (** Computatiional sets (on Types): membership is a boolean function *)
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
+(*
+ * AR: mark it must_erase_for_extraction temporarily until CMI comes in
+ *)
+[@must_erase_for_extraction]
 val set (a: Type u#a) : Type u#a
 
 val equal (#a:Type) (s1:set a) (s2:set a) : Type0
