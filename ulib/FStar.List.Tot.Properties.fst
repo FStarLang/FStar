@@ -538,6 +538,15 @@ let rec mem_memP
   | [] -> ()
   | a :: q -> mem_memP x q
 
+(** If an element can be [index]ed, then it is a [memP] of the list. *)
+let rec lemma_index_memP (#t:Type) (l:list t) (i:nat{i < length l}) :
+  Lemma
+    (ensures (index l i `memP` l))
+    [SMTPat (index l i `memP` l)] =
+  match i with
+  | 0 -> ()
+  | _ -> lemma_index_memP (tl l) (i - 1)
+
 (** The empty list has no elements. *)
 val memP_empty : #a: Type -> x:a ->
   Lemma (requires (memP x []))
