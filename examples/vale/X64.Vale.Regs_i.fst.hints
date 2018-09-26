@@ -15,7 +15,30 @@
         "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "32908df6fcd0544a2c5e1124a4861a18"
+      "c2e5378e51415373fbd0bdd1d7e6bc38"
+    ],
+    [
+      "X64.Vale.Regs_i.lemma_equal_elim",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "X64.Machine_s_pretyping_b7c45855ed90996ceceb34aa61de24e7",
+        "X64.Vale.Regs_i_interpretation_Tm_arrow_ee7017858cc0d7eacce54d227f2089c3",
+        "equality_tok_X64.Machine_s.Rax@tok",
+        "equation_FStar.FunctionalExtensionality.is_restricted",
+        "equation_FStar.FunctionalExtensionality.restricted_t",
+        "equation_X64.Machine_s.nat64", "equation_X64.Vale.Regs_i.equal",
+        "equation_X64.Vale.Regs_i.t", "kinding_X64.Machine_s.reg@tok",
+        "lemma_FStar.FunctionalExtensionality.extensionality",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "typing_X64.Vale.Regs_i_Tm_abs_1bf39616a74f1454291cdea0f832200d",
+        "typing_tok_X64.Machine_s.Rax@tok"
+      ],
+      0,
+      "fd4b0f91e1f6ac1c4543627867c63d30"
     ]
   ]
 ]
