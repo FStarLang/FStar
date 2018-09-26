@@ -340,6 +340,37 @@ let rec lemma_unsnoc_is_last (#t:Type) (l:list t) :
   | [_] -> ()
   | _ -> lemma_unsnoc_is_last (tl l)
 
+(** Definition and properties about [split_using] *)
+
+(** [split_using] splits a list at the first instance of finding an
+    element in it. *)
+let rec split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
+  GTot (r:(list t * list t)) =
+  match l with
+  | [_] -> [], l
+  | a :: as ->
+    if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
+      [], l
+    ) else (
+      let l1', l2' = split_using as x in
+      a :: l1', l2'
+    )
+
+let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
+  Lemma
+    (ensures (
+        let l1, l2 = split_using l x in
+        (length l2 > 0) /\
+        ~(x `memP` l1) /\ (hd l2 == x) /\
+        append l1 l2 == l))
+    [SMTPat (split_using l x)] =
+  match l with
+  | [_] -> ()
+  | a :: as ->
+    if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x)
+    then ()
+    else lemma_split_using (tl l) x
+
 (** Properties about partition **)
 
 (** If [partition f l = (l1, l2)], then for any [x], [x] is in [l] if
