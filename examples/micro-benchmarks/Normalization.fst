@@ -56,16 +56,3 @@ let f_1529_1 () =
 let f_1529_2 () =
   let f_local = norm [delta] f_1529 in
   assert (f_local 2 == 5)
-
-(*
- * Cf. #1542, test that normalizer reduces on_domain applications
- *)
-[@"opaque_to_smt"]
-let f_1542 (x:int) :int = x + 1
-
-let test_1542 () =
-  let open FStar.FunctionalExtensionality in
-  assert_norm ((on_dom int f_1542) 1 == 2);
-  assert_norm (on_dom int f_1542 2 == 3);
-  assert_norm (on_domain int f_1542 3 == 4);
-  assert_norm ((on_domain int f_1542) 4 == 5)
