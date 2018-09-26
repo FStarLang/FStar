@@ -444,7 +444,8 @@ let rec lemma_splitAt_snd_length (#a:Type) (n:nat) (l:list a) :
   | _, [] -> ()
   | _, _ :: l' -> lemma_splitAt_snd_length (n - 1) l'
 
-(** [unsnoc] is an inverse of [snoc] *)
+(** [unsnoc] is an inverse of [snoc]. It splits a list into
+    all-elements-except-last and last element. *)
 val unsnoc: #a:Type -> l:list a{length l > 0} -> list a * a
 let unsnoc #a l =
   let l1, l2 = splitAt (length l - 1) l in

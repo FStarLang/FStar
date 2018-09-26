@@ -292,6 +292,23 @@ let rec map_lemma f l =
     | [] -> ()
     | h::t -> map_lemma f t
 
+(** Properties about unsnoc *)
+
+(** [unsnoc] is the inverse of [snoc] *)
+val lemma_unsnoc_snoc: #a:Type -> l:list a{length l > 0} ->
+  Lemma (requires True)
+    (ensures (let l', x = unsnoc l in snoc l' x == l))
+let lemma_unsnoc_snoc #a l =
+  let l', x = unsnoc l in
+  let l1, l2 = l', [x] in
+  lemma_splitAt_snd_length (length l - 1) l;
+  // assert ((l1, l2) == splitAt (length l - 1) l);
+  let rec aux (l:list a{length l > 0}) :
+    Lemma (let l1, l2 = splitAt (length l - 1) l in
+           append l1 l2 == l) =
+    if length l = 1 then () else aux (tl l) in
+  aux l
+
 (** Properties about partition **)
 
 (** If [partition f l = (l1, l2)], then for any [x], [x] is in [l] if
