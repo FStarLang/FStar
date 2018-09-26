@@ -331,6 +331,15 @@ let rec lemma_unsnoc_append (#a:Type) (l1 l2:list a) :
   | [] -> ()
   | _ :: l1' -> lemma_unsnoc_append l1' l2
 
+(** [unsnoc] gives you [last] element, which is [index]ed at [length l - 1] *)
+let rec lemma_unsnoc_is_last (#t:Type) (l:list t) :
+  Lemma
+    (requires (length l > 0))
+    (ensures (snd (unsnoc l) == last l /\ snd (unsnoc l) == index l (length l - 1))) =
+  match l with
+  | [_] -> ()
+  | _ -> lemma_unsnoc_is_last (tl l)
+
 (** Properties about partition **)
 
 (** If [partition f l = (l1, l2)], then for any [x], [x] is in [l] if
