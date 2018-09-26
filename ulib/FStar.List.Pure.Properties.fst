@@ -165,3 +165,25 @@ let rec lemma_split3_unsnoc (#t:Type) (l:list t) (n:nat{n < length l}) :
   match n with
   | 0 -> ()
   | _ -> lemma_split3_unsnoc (tl l) (n-1)
+
+
+let rec lemma_unsnoc_split3 (#t:Type) (l:list t) (i:nat{i < length l}) :
+  Lemma
+    (requires (i <> length l - 1))
+    (ensures (
+        let xs, x = unsnoc l in
+        lemma_unsnoc_snoc l;
+        let a0, b0, c0 = split3 l i in
+        let a1, b1, c1 = split3 xs i in
+        a0 == a1 /\ b0 == b1)) =
+  let xs, x = unsnoc l in
+  lemma_unsnoc_snoc l;
+  let a0, b0, c0 = split3 l i in
+  let a1, b1, c1 = split3 xs i in
+  splitAt_length_total xs;
+  // assert (fst (splitAt (length xs) xs) == xs);
+  // assert (fst (splitAt (length xs) xs) == fst (splitAt (length xs) l));
+  // assert (i+1 <= length xs);
+  lemma_splitAt_shorten_left xs l (length xs) (i+1);
+  // assert (fst (splitAt (i+1) xs) == fst (splitAt (i+1) l));
+  lemma_split3_on_same_leftprefix l xs i
