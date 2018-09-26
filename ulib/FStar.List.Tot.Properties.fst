@@ -308,6 +308,7 @@ let rec map_lemma f l =
 val lemma_unsnoc_snoc: #a:Type -> l:list a{length l > 0} ->
   Lemma (requires True)
     (ensures (let l', x = unsnoc l in snoc l' x == l))
+    [SMTPat (unsnoc l)]
 let lemma_unsnoc_snoc #a l =
   let l', x = unsnoc l in
   let l1, l2 = l', [x] in
@@ -346,7 +347,6 @@ let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
   Lemma
     (requires (length l > 0 /\ i < length l - 1))
     (ensures (
-        lemma_unsnoc_snoc l;
         index (fst (unsnoc l)) i == index l i)) =
   match i with
   | 0 -> ()

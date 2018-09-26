@@ -225,12 +225,10 @@ let rec lemma_unsnoc_split3 (#t:Type) (l:list t) (i:nat{i < length l}) :
     (requires (i <> length l - 1))
     (ensures (
         let xs, x = unsnoc l in
-        lemma_unsnoc_snoc l;
         let a0, b0, c0 = split3 l i in
         let a1, b1, c1 = split3 xs i in
         a0 == a1 /\ b0 == b1)) =
   let xs, x = unsnoc l in
-  lemma_unsnoc_snoc l;
   let a0, b0, c0 = split3 l i in
   let a1, b1, c1 = split3 xs i in
   splitAt_length_total xs;
