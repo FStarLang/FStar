@@ -340,6 +340,18 @@ let rec lemma_unsnoc_is_last (#t:Type) (l:list t) :
   | [_] -> ()
   | _ -> lemma_unsnoc_is_last (tl l)
 
+(** [index]ing on the left part of an [unsnoc]d list is the same as indexing
+    the original list. *)
+let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
+  Lemma
+    (requires (length l > 0 /\ i < length l - 1))
+    (ensures (
+        lemma_unsnoc_snoc l;
+        index (fst (unsnoc l)) i == index l i)) =
+  match i with
+  | 0 -> ()
+  | _ -> lemma_unsnoc_index (tl l) (i - 1)
+
 (** Definition and properties about [split_using] *)
 
 (** [split_using] splits a list at the first instance of finding an
