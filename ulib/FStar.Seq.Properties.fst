@@ -178,7 +178,18 @@ let rec sorted #a f s =
   else let hd = head s in
        f hd (index s 1) && sorted f (tail s)
 
+module F = FStar.FunctionalExtensionality
+
 #set-options "--max_fuel 1 --initial_fuel 1"
+let rec sorted_feq (#a:Type)
+               (f g : (a -> a -> Tot bool))
+               (s:seq a{forall x y. f x y == g x y})
+   : Lemma (ensures (sorted f s <==> sorted g s))
+           (decreases (length s))
+   = if length s <= 1 then ()
+     else sorted_feq f g (tail s)
+
+
 val lemma_append_count: #a:eqtype -> lo:seq a -> hi:seq a -> Lemma
   (requires True)
   (ensures (forall x. count x (append lo hi) = (count x lo + count x hi)))
@@ -1097,6 +1108,7 @@ let rec lemma_seq_of_list_sorted (#a:Type) (f:a -> a -> Tot bool) (l:list a)
     lemma_seq_of_list_induction l;
     if length (seq_of_list l) > 1 then lemma_seq_of_list_sorted f (List.Tot.Base.tl l)
 
+
 let lemma_seq_sortwith_correctness (#a:eqtype) (f:a -> a -> Tot int) (s:seq a)
   :Lemma (requires (total_order a (List.Tot.Base.bool_of_compare f)))
          (ensures  (let s' = sortWith f s in sorted (List.Tot.Base.bool_of_compare f) s' /\ permutation a s s'))
@@ -1114,17 +1126,15 @@ let lemma_seq_sortwith_correctness (#a:eqtype) (f:a -> a -> Tot int) (s:seq a)
     List.Tot.Properties.sortWith_permutation f l;  //List.sortWith is a permutation
     lemma_seq_of_list_permutation l'  //seq_of_list is a permutation
 
-module F = FStar.FunctionalExtensionality
 
 (* sort_lseq:
    A wrapper of Seq.sortWith which proves that the output sequences
    is a sorted permutation of the input sequence with the same length
 *)
 let sort_lseq (#a:eqtype) #n (f:tot_ord a) (s:lseq a n)
-  : s':lseq a n{sorted (F.on_dom2 f) s' /\ permutation a s s'} =
-  let f = F.on_dom2 f in
+  : s':lseq a n{sorted f s' /\ permutation a s s'} =
   lemma_seq_sortwith_correctness (L.compare_of_bool f) s;
   let s' = sortWith (L.compare_of_bool f) s in
   perm_len s s';
-  L.compare_of_bool_of_compare f;
+  sorted_feq f (L.bool_of_compare (L.compare_of_bool f)) s';
   s'
