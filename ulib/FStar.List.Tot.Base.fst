@@ -468,7 +468,7 @@ let compare_of_bool #a rel x y =
     else 0-1
 
 
-let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> bool)
+let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> Tot bool)
   : Lemma (F.on_dom2 (bool_of_compare (compare_of_bool (F.on_dom2 f))) == F.on_dom2 f)
   = let f = F.on_dom2 f in
     assert (forall x. F.feq (F.on_dom a (bool_of_compare (compare_of_bool f) x)) (f x));
