@@ -214,6 +214,16 @@ let append_length_inv_tail
   append_length left2 right2;
   append_length_inv_head left1 right1 left2 right2
 
+(** The [last] element of a list remains the same, even after that list is
+    [append]ed to another list. *)
+let rec lemma_append_last (#a:Type) (l1 l2:list a) :
+  Lemma
+    (requires (length l2 > 0))
+    (ensures (last (l1 @ l2) == last l2)) =
+  match l1 with
+  | [] -> ()
+  | _ :: l1' -> lemma_append_last l1' l2
+
 (** Properties mixing rev and append **)
 
 val rev': list 'a -> Tot (list 'a)
