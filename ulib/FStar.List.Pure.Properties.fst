@@ -54,6 +54,8 @@ let rec splitAt_length_total (#a:Type) (l:list a)
   | x :: xs -> splitAt_length_total xs
 
 
+(** If we [append] the two lists produced using a [splitAt], then we
+    get back the original list *)
 let rec lemma_splitAt_append (#a:Type) (n:nat) (l:list a) :
   Lemma
     (requires n <= length l)
@@ -67,6 +69,8 @@ let rec lemma_splitAt_append (#a:Type) (n:nat) (l:list a) :
     | x :: xs -> lemma_splitAt_append (n-1) xs
 
 
+(** The [hd] of the second list returned via [splitAt] is the [n]th element of
+    the original list *)
 let rec lemma_splitAt_index_hd (#t:Type) (n:nat) (l:list t) :
   Lemma
     (requires (n < length l))
@@ -79,6 +83,8 @@ let rec lemma_splitAt_index_hd (#t:Type) (n:nat) (l:list t) :
   | _ -> lemma_splitAt_index_hd (n - 1) (tl l)
 
 
+(** If two lists have the same left prefix, then shorter left prefixes are
+    also the same. *)
 let rec lemma_splitAt_shorten_left
     (#t:Type) (l1 l2:list t) (i:nat{i <= length l1 /\ i <= length l2}) (j:nat{j <= i}) :
   Lemma
@@ -93,6 +99,8 @@ let rec lemma_splitAt_shorten_left
 (** Properties of split3 *)
 
 
+(** The 3 pieces returned via [split3] can be joined together via an
+    [append] and a [cons] *)
 let rec lemma_split3_append (#t:Type) (l:list t) (n:nat{n < length l}) :
   Lemma
     (requires True)
@@ -102,6 +110,7 @@ let rec lemma_split3_append (#t:Type) (l:list t) (n:nat{n < length l}) :
   lemma_splitAt_append n l
 
 
+(** The middle element returned via [split3] is the [n]th [index]ed element *)
 let rec lemma_split3_index (#t:Type) (l:list t) (n:nat{n < length l}) :
   Lemma
     (requires True)
@@ -111,6 +120,7 @@ let rec lemma_split3_index (#t:Type) (l:list t) (n:nat{n < length l}) :
   lemma_splitAt_index_hd n l
 
 
+(** The lengths of the left and right parts of a [split3] are as expected. *)
 let rec lemma_split3_length (#t:Type) (l:list t) (n:nat{n < length l}) :
   Lemma
     (requires True)
@@ -120,6 +130,8 @@ let rec lemma_split3_length (#t:Type) (l:list t) (n:nat{n < length l}) :
   splitAt_length n l
 
 
+(** If we [split3] on lists with the same left prefix, we get the same
+    element and left prefix. *)
 let lemma_split3_on_same_leftprefix
     (#t:Type) (l1 l2:list t) (n:nat{n < length l1 /\ n < length l2}) :
   Lemma
@@ -153,6 +165,8 @@ let lemma_split3_on_same_leftprefix
   ()
 
 
+(** If we perform an [unsnoc] on a list, then the left part is the same
+    as an [append]+[cons] on the list after [split3]. *)
 let rec lemma_split3_unsnoc (#t:Type) (l:list t) (n:nat{n < length l}) :
   Lemma
     (requires (n <> length l - 1))
@@ -167,6 +181,8 @@ let rec lemma_split3_unsnoc (#t:Type) (l:list t) (n:nat{n < length l}) :
   | _ -> lemma_split3_unsnoc (tl l) (n-1)
 
 
+(** Doing [unsnoc] and [split3] in either order leads to the same left
+    part, and element. *)
 let rec lemma_unsnoc_split3 (#t:Type) (l:list t) (i:nat{i < length l}) :
   Lemma
     (requires (i <> length l - 1))
