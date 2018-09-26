@@ -27,6 +27,10 @@ open FStar.Ghost
  * Clients should not open/know about HyperHeap, they should work only with HyperStack
  *)
 
+(*
+ * AR: mark it must_erase_for_extraction temporarily until CMI comes in
+ *)
+[@must_erase_for_extraction]
 val rid :eqtype
 
 val reveal (r:rid) :GTot (list (int * int))
