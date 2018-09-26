@@ -34,7 +34,7 @@ val predicateExtensionality : a:Type0 -> p1:predicate a -> p2:predicate a ->
 	(* [SMTPat (peq #a p1 p2)] *)
 let predicateExtensionality (a:Type0) p1 p2 =
   propositionalExtensionality ();
-  assert (feq #a #Type0 p1 p2 <==> p1==p2)
+  assert (feq #a #(fun _ -> Type0) p1 p2 <==> p1==p2)
 
 (* Inconsistent in F* -- proof by Kenji Maillard *)
 
