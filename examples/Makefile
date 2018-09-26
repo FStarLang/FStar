@@ -28,11 +28,11 @@ low-mitls-experiments \
 vale \
 seplogic \
 csl \
+hello \
+native_tactics \
+extraction \
 demos \
 indexed_effects
-# hello \
-# native_tactics \
-# extraction \
 
 # low-level \  ... NS: removing from CI for this branch
 
