@@ -44,17 +44,14 @@ module FStar.FunctionalExtensionality
 (* The type of total, dependent functions *)
 unfold
 let arrow (a:Type) (b:a -> Type)
-  : Type
   = x:a -> Tot (b x)
 
 [@(deprecated "use arrow instead")]
 let efun (a:Type) (b:a -> Type)
-  : Type
   = arrow a b
 
 (* feq #a #b f g: pointwise equality of `f` and `g` on domain `a` *)
 let feq (#a:Type) (#b:a -> Type) (f:arrow a b) (g:arrow a b)
-  : prop
   = forall x.{:pattern (f x) \/ (g x)} f x == g x
 
 (* `on_domain a f`:
@@ -105,7 +102,6 @@ val idempotence_on_domain (#a:Type) (#b:a -> Type) (f:arrow a b)
         `exists g. f == on_domain a g`
 *)
 let is_restricted (a:Type) (#b:a -> Type) (f:arrow a b)
-  : prop
   = on_domain a f == f
 
 (* restricted_t a b:
@@ -131,7 +127,6 @@ let (^->) (a:Type) (b:Type)
 (* `on_dom a f`:
      A convenience function to introduce a restricted, dependent function
  *)
-unfold
 let on_dom (a:Type) (#b:a -> Type) (f:arrow a b)
   : restricted_t a b
   = on_domain a f
@@ -166,17 +161,14 @@ val extensionality (a:Type) (b:a -> Type) (f:arrow a b) (g:arrow a b)
 (* The type of ghost, total, dependent functions *)
 unfold
 let arrow_g (a:Type) (b:a -> Type)
-  : Type
   = x:a -> GTot (b x)
 
 [@(deprecated "use arrow_g instead")]
 let efun_g (a:Type) (b:a -> Type)
-  : Type
   = arrow_g a b
 
 (* feq_g #a #b f g: pointwise equality of `f` and `g` on domain `a` *)
 let feq_g (#a:Type) (#b:a -> Type) (f:arrow_g a b) (g:arrow_g a b)
-  : prop
   = forall x.{:pattern (f x) \/ (g x)} f x == g x
 
 val on_domain_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
@@ -195,7 +187,6 @@ val idempotence_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow_g a b)
           [SMTPat (on_domain_g a (on_domain_g a f))]
 
 let is_restricted_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
-  : prop
   = on_domain_g a f == f
 
 let restricted_g_t (a:Type) (b:a -> Type)
