@@ -10,8 +10,8 @@ let (parse_z3_version_lines :
     | x::uu____24 ->
         let trimmed = FStar_Util.trim_string x  in
         let parts = FStar_Util.split trimmed " "  in
-        let rec aux uu___124_40 =
-          match uu___124_40 with
+        let rec aux uu___125_40 =
+          match uu___125_40 with
           | hash::[] ->
               let n1 =
                 Prims.min (FStar_String.strlen _z3hash_expected)
@@ -54,7 +54,7 @@ let (z3hash_warning_message :
   fun uu____76  ->
     let run_proc_result =
       try
-        (fun uu___130_84  ->
+        (fun uu___131_84  ->
            match () with
            | () ->
                let uu____87 =
@@ -63,7 +63,7 @@ let (z3hash_warning_message :
                    FStar_Pervasives_Native.None
                   in
                FStar_Pervasives_Native.Some uu____87) ()
-      with | uu___129_90 -> FStar_Pervasives_Native.None  in
+      with | uu___130_90 -> FStar_Pervasives_Native.None  in
     match run_proc_result with
     | FStar_Pervasives_Native.None  ->
         FStar_Pervasives_Native.Some
@@ -180,8 +180,8 @@ let (uu___is_KILLED : z3status -> Prims.bool) =
   
 type z3statistics = Prims.string FStar_Util.smap
 let (status_tag : z3status -> Prims.string) =
-  fun uu___125_404  ->
-    match uu___125_404 with
+  fun uu___126_404  ->
+    match uu___126_404 with
     | SAT uu____405 -> "sat"
     | UNSAT uu____412 -> "unsat"
     | UNKNOWN uu____413 -> "unknown"
@@ -831,11 +831,11 @@ let (z3_job :
               let start = FStar_Util.now ()  in
               let uu____3691 =
                 try
-                  (fun uu___132_3701  ->
+                  (fun uu___133_3701  ->
                      match () with
                      | () -> doZ3Exe r fresh input label_messages) ()
                 with
-                | uu___131_3708 ->
+                | uu___132_3708 ->
                     Obj.magic
                       (if
                          let uu____3713 = FStar_Options.trace_error ()  in
@@ -847,7 +847,7 @@ let (z3_job :
                                   in
                                uu____3720.refresh  in
                              uu____3715 ());
-                            FStar_Exn.raise uu___131_3708)
+                            FStar_Exn.raise uu___132_3708)
                        else Obj.repr (failwith "unreachable"))
                  in
               match uu____3691 with
@@ -998,8 +998,8 @@ let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun decls  ->
     FStar_All.pipe_right decls
       (FStar_List.iter
-         (fun uu___126_4449  ->
-            match uu___126_4449 with
+         (fun uu___127_4449  ->
+            match uu___127_4449 with
             | FStar_SMTEncoding_Term.Push  -> failwith "Unexpected push/pop"
             | FStar_SMTEncoding_Term.Pop  -> failwith "Unexpected push/pop"
             | uu____4450 -> ()));
@@ -1051,8 +1051,8 @@ let (mk_input :
           let uu____4707 =
             FStar_All.pipe_right theory
               (FStar_Util.prefix_until
-                 (fun uu___127_4735  ->
-                    match uu___127_4735 with
+                 (fun uu___128_4735  ->
+                    match uu___128_4735 with
                     | FStar_SMTEncoding_Term.CheckSat  -> true
                     | uu____4736 -> false))
              in
@@ -1070,22 +1070,22 @@ let (mk_input :
             let ss_lines = pp suffix1  in
             let ps = FStar_String.concat "\n" ps_lines  in
             let ss = FStar_String.concat "\n" ss_lines  in
-            let uncaption uu___128_4820 =
-              match uu___128_4820 with
+            let uncaption uu___129_4820 =
+              match uu___129_4820 with
               | FStar_SMTEncoding_Term.Caption uu____4821 ->
                   FStar_SMTEncoding_Term.Caption ""
               | FStar_SMTEncoding_Term.Assume a ->
                   FStar_SMTEncoding_Term.Assume
-                    (let uu___133_4825 = a  in
+                    (let uu___134_4825 = a  in
                      {
                        FStar_SMTEncoding_Term.assumption_term =
-                         (uu___133_4825.FStar_SMTEncoding_Term.assumption_term);
+                         (uu___134_4825.FStar_SMTEncoding_Term.assumption_term);
                        FStar_SMTEncoding_Term.assumption_caption =
                          FStar_Pervasives_Native.None;
                        FStar_SMTEncoding_Term.assumption_name =
-                         (uu___133_4825.FStar_SMTEncoding_Term.assumption_name);
+                         (uu___134_4825.FStar_SMTEncoding_Term.assumption_name);
                        FStar_SMTEncoding_Term.assumption_fact_ids =
-                         (uu___133_4825.FStar_SMTEncoding_Term.assumption_fact_ids)
+                         (uu___134_4825.FStar_SMTEncoding_Term.assumption_fact_ids)
                      })
               | FStar_SMTEncoding_Term.DeclFun (n1,a,s,uu____4829) ->
                   FStar_SMTEncoding_Term.DeclFun

@@ -12,7 +12,7 @@
         "token_correspondence_Eq.__proj__Mkdeq__item__eq"
       ],
       0,
-      "a20ee0f1737a4dbdf4d7166eb92a7aea"
+      "6e5111e09d0c75fc4920429e95e20a5f"
     ],
     [
       "Eq.eq_instance_of_eqtype",
@@ -21,34 +21,34 @@
       1,
       [ "@query" ],
       0,
-      "82e343527110faad2a336e63be3045ad"
-    ],
-    [
-      "Eq.uu___65",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "f28e8321dd82cbf6598b142aee7839c2"
+      "4512c302042323f1287ce2030a242c2b"
     ],
     [
       "Eq.uu___66",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fb1b52aa91b2fc1b30c0a8b41447914f"
+      "73445df61452c99bf4ce3013bf4dad5d"
     ],
     [
       "Eq.uu___67",
       1,
       2,
       1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "6ecca708f1f851a2ac726cc19069f057"
+    ],
+    [
+      "Eq.uu___68",
+      1,
+      2,
+      1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "a6e172b4bd70aeb6e43c34db9c9f84cb"
+      "801d7b2feab9e2e1bbb8805d3d61d60c"
     ],
     [
       "Eq.eqList",
@@ -76,7 +76,7 @@
         "token_correspondence_Eq.eq", "typing_Eq.eqList"
       ],
       0,
-      "9ef1dc6be4f26bf2569fd4ff9999c9ed"
+      "baafb0ec004f2646d3c3fc63905126d5"
     ],
     [
       "Eq.eq_list",
@@ -92,7 +92,7 @@
         "typing_Eq.eqList"
       ],
       0,
-      "bdaad92a15367818507ca2c6187e0f67"
+      "94a11c8ae430c6e08e4a8385e1c80c78"
     ],
     [
       "Eq.eq_pair",
@@ -109,23 +109,7 @@
         "token_correspondence_Eq.eq"
       ],
       0,
-      "052c40e59ac49f4aef6302db36afbe77"
-    ],
-    [
-      "Eq.uu___68",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.uu___65",
-        "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
-        "primitive_Prims.op_Equality", "proj_equation_Eq.Mkdeq_eq",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Eq.Mkdeq_eq", "token_correspondence_Eq.eq"
-      ],
-      0,
-      "d56b3949b8c64761cc96d8d4cf39a05a"
+      "abcb2d391f72607e87793c5dedbbdf4b"
     ],
     [
       "Eq.uu___69",
@@ -134,15 +118,14 @@
       1,
       [
         "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.uu___65",
+        "equation_Eq.uu___66",
         "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
         "primitive_Prims.op_Equality", "proj_equation_Eq.Mkdeq_eq",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0", "projection_inverse_Eq.Mkdeq_eq",
-        "token_correspondence_Eq.eq"
+        "projection_inverse_Eq.Mkdeq_eq", "token_correspondence_Eq.eq"
       ],
       0,
-      "9b05f3e3f33d3b8eb15eb0695fd10ba2"
+      "7911155ae2a382eeeb91007723d66b58"
     ],
     [
       "Eq.uu___70",
@@ -158,7 +141,7 @@
         "projection_inverse_Eq.Mkdeq_eq", "token_correspondence_Eq.eq"
       ],
       0,
-      "700e9f45a7f328094654412742e0b1bc"
+      "dfc5cd29bef614f65372aad12b765af5"
     ],
     [
       "Eq.uu___71",
@@ -167,14 +150,14 @@
       1,
       [
         "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.uu___66",
+        "equation_Eq.uu___67",
         "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
         "primitive_Prims.op_Equality", "proj_equation_Eq.Mkdeq_eq",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Eq.Mkdeq_eq", "token_correspondence_Eq.eq"
       ],
       0,
-      "229232c63e6480472c2fb4e3deef41b9"
+      "971ae6eeff7b576240ff1c3f5b22b128"
     ],
     [
       "Eq.uu___72",
@@ -182,20 +165,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Eq_interpretation_Tm_arrow_c834b9a0e83b3270eaf744614c578370",
-        "data_typing_intro_Prims.Cons@tok",
-        "data_typing_intro_Prims.Nil@tok", "equation_Eq.eq",
-        "equation_Eq.eq_list", "equation_Eq.uu___65",
-        "function_token_typing_Eq.eqList",
-        "function_token_typing_Eq.uu___65",
-        "function_token_typing_Prims.int", "int_typing",
-        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_Eq.Mkdeq_eq",
-        "refinement_interpretation_Eq_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
-        "token_correspondence_Eq.eq", "token_correspondence_Eq.eqList"
+        "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
+        "equation_Eq.uu___67",
+        "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
+        "primitive_Prims.op_Equality", "proj_equation_Eq.Mkdeq_eq",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Eq.Mkdeq_eq", "token_correspondence_Eq.eq"
       ],
       0,
-      "415e97a6439c95b50392ebd8609b63dd"
+      "3c6ef6dc3f1eebd162ebe2af5937fe2d"
     ],
     [
       "Eq.uu___73",
@@ -207,17 +185,16 @@
         "Eq_interpretation_Tm_arrow_c834b9a0e83b3270eaf744614c578370",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Eq.eq",
-        "equation_Eq.eq_list", "equation_Eq.uu___65",
+        "equation_Eq.eq_list", "equation_Eq.uu___66",
         "function_token_typing_Eq.eqList",
-        "function_token_typing_Eq.uu___65",
+        "function_token_typing_Eq.uu___66",
         "function_token_typing_Prims.int", "int_typing",
-        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Eq.Mkdeq_eq", "projection_inverse_Prims.Cons_hd",
+        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_Eq.Mkdeq_eq",
         "refinement_interpretation_Eq_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
         "token_correspondence_Eq.eq", "token_correspondence_Eq.eqList"
       ],
       0,
-      "7644d31e75f656f5f2267f03c9f0ed74"
+      "a7e714f3abb3e408f24cef65e1096bb7"
     ],
     [
       "Eq.uu___74",
@@ -225,8 +202,30 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query",
+        "Eq_interpretation_Tm_arrow_c834b9a0e83b3270eaf744614c578370",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_Eq.eq",
+        "equation_Eq.eq_list", "equation_Eq.uu___66",
+        "function_token_typing_Eq.eqList",
+        "function_token_typing_Eq.uu___66",
+        "function_token_typing_Prims.int", "int_typing",
+        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Eq.Mkdeq_eq", "projection_inverse_Prims.Cons_hd",
+        "refinement_interpretation_Eq_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
+        "token_correspondence_Eq.eq", "token_correspondence_Eq.eqList"
+      ],
+      0,
+      "9f4f83149be8216e8b6d0717208ca2a9"
+    ],
+    [
+      "Eq.uu___75",
+      1,
+      2,
+      1,
+      [
         "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.eq_pair", "equation_Eq.uu___65", "equation_Eq.uu___67",
+        "equation_Eq.eq_pair", "equation_Eq.uu___66", "equation_Eq.uu___68",
         "interpretation_Eq_Tm_abs_9b218a6fd552c26703ce1117d9e4f07d",
         "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -237,16 +236,16 @@
         "token_correspondence_Eq.eq"
       ],
       0,
-      "5734da9f4e815d1e237183bacdf95711"
+      "0a8cbae3cb435918fd1e1607ccb7df43"
     ],
     [
-      "Eq.uu___75",
+      "Eq.uu___76",
       1,
       2,
       1,
       [
         "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.eq_pair", "equation_Eq.uu___65", "equation_Eq.uu___67",
+        "equation_Eq.eq_pair", "equation_Eq.uu___66", "equation_Eq.uu___68",
         "interpretation_Eq_Tm_abs_9b218a6fd552c26703ce1117d9e4f07d",
         "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -259,27 +258,7 @@
         "token_correspondence_Eq.eq"
       ],
       0,
-      "c9c6bfc6627976a8887d1ea7f1e47d77"
-    ],
-    [
-      "Eq.uu___76",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.eq_pair", "equation_Eq.uu___65", "equation_Eq.uu___67",
-        "interpretation_Eq_Tm_abs_9b218a6fd552c26703ce1117d9e4f07d",
-        "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
-        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0", "projection_inverse_Eq.Mkdeq_eq",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_Eq.eq"
-      ],
-      0,
-      "119499c873c72bff05a59c4bf7e67ffc"
+      "463177a3d3c3a071156607a1a6cb9c6c"
     ],
     [
       "Eq.uu___77",
@@ -288,7 +267,7 @@
       1,
       [
         "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.eq_pair", "equation_Eq.uu___65", "equation_Eq.uu___67",
+        "equation_Eq.eq_pair", "equation_Eq.uu___66", "equation_Eq.uu___68",
         "interpretation_Eq_Tm_abs_9b218a6fd552c26703ce1117d9e4f07d",
         "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -299,7 +278,27 @@
         "token_correspondence_Eq.eq"
       ],
       0,
-      "c036b6dc8d00f0d9f27440403d4776cd"
+      "3a4834058cd7e241f4f6a15f2199a6e6"
+    ],
+    [
+      "Eq.uu___78",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
+        "equation_Eq.eq_pair", "equation_Eq.uu___66", "equation_Eq.uu___68",
+        "interpretation_Eq_Tm_abs_9b218a6fd552c26703ce1117d9e4f07d",
+        "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0", "projection_inverse_Eq.Mkdeq_eq",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "token_correspondence_Eq.eq"
+      ],
+      0,
+      "00badba8e94dae049a26a5ec5861965d"
     ],
     [
       "Eq.__proj__Mkdeq__item__eq_ok",
@@ -312,7 +311,7 @@
         "token_correspondence_Eq.__proj__Mkdeq__item__eq"
       ],
       0,
-      "f30b4a09a53249a6416bc0246aa0af77"
+      "3f240d002fb54f8f338bfc00b810ef90"
     ],
     [
       "Eq.eq_instance_of_eqtype",
@@ -321,34 +320,34 @@
       1,
       [ "@query" ],
       0,
-      "cf3f633c650ae169c2b644bee366a7e5"
-    ],
-    [
-      "Eq.uu___65",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b4682a30a12467e52b006909417ce6f6"
+      "5edaf7b060572387fd93f1b6ddc5a90a"
     ],
     [
       "Eq.uu___66",
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1eb036c918e329f81a021faad1be0160"
+      "e7ddea29cdc9058321f33f87a96f1422"
     ],
     [
       "Eq.uu___67",
       2,
       2,
       1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "5a1b4a3a29d0fa1e2c605c8ce01d633f"
+    ],
+    [
+      "Eq.uu___68",
+      2,
+      2,
+      1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "03949cd9ab437d19505e6ae12a115ed6"
+      "f0730b51de29a7bfe5f9ed16e154f908"
     ],
     [
       "Eq.eqList",
@@ -376,7 +375,7 @@
         "token_correspondence_Eq.eq", "typing_Eq.eqList"
       ],
       0,
-      "75a8d841018ca5dd5f707c755d161540"
+      "2dc2c580172374823b4e6e59fc36af34"
     ],
     [
       "Eq.eq_list",
@@ -392,7 +391,7 @@
         "typing_Eq.eqList"
       ],
       0,
-      "5606119cabf8236dd326562387b0a261"
+      "4b7125472ca41fc95550d3dbdec2af4f"
     ],
     [
       "Eq.eq_pair",
@@ -409,23 +408,7 @@
         "token_correspondence_Eq.eq"
       ],
       0,
-      "d92af3927ab46a3850d646c6f8b65815"
-    ],
-    [
-      "Eq.uu___68",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.uu___65",
-        "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
-        "primitive_Prims.op_Equality", "proj_equation_Eq.Mkdeq_eq",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Eq.Mkdeq_eq", "token_correspondence_Eq.eq"
-      ],
-      0,
-      "cf74b55e323ae20078d1fd48f229d271"
+      "ee09ebe36af0bcf34190fbcdc06c012f"
     ],
     [
       "Eq.uu___69",
@@ -434,15 +417,14 @@
       1,
       [
         "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.uu___65",
+        "equation_Eq.uu___66",
         "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
         "primitive_Prims.op_Equality", "proj_equation_Eq.Mkdeq_eq",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0", "projection_inverse_Eq.Mkdeq_eq",
-        "token_correspondence_Eq.eq"
+        "projection_inverse_Eq.Mkdeq_eq", "token_correspondence_Eq.eq"
       ],
       0,
-      "7d361d4267624f7047be88bdd75cc06d"
+      "0a17aaa25bae1e9e18fe5a0c9ceac878"
     ],
     [
       "Eq.uu___70",
@@ -458,7 +440,7 @@
         "projection_inverse_Eq.Mkdeq_eq", "token_correspondence_Eq.eq"
       ],
       0,
-      "13d696af07353c47fbb78385a423d752"
+      "28b1c15d4bb32729189fe1e1c2e6564a"
     ],
     [
       "Eq.uu___71",
@@ -467,14 +449,14 @@
       1,
       [
         "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.uu___66",
+        "equation_Eq.uu___67",
         "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
         "primitive_Prims.op_Equality", "proj_equation_Eq.Mkdeq_eq",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Eq.Mkdeq_eq", "token_correspondence_Eq.eq"
       ],
       0,
-      "cb0309b25de5e601dc289bdb3bb53e15"
+      "4f40528b341244282092bb9d3a7f2fec"
     ],
     [
       "Eq.uu___72",
@@ -482,20 +464,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Eq_interpretation_Tm_arrow_c834b9a0e83b3270eaf744614c578370",
-        "data_typing_intro_Prims.Cons@tok",
-        "data_typing_intro_Prims.Nil@tok", "equation_Eq.eq",
-        "equation_Eq.eq_list", "equation_Eq.uu___65",
-        "function_token_typing_Eq.eqList",
-        "function_token_typing_Eq.uu___65",
-        "function_token_typing_Prims.int", "int_typing",
-        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_Eq.Mkdeq_eq",
-        "refinement_interpretation_Eq_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
-        "token_correspondence_Eq.eq", "token_correspondence_Eq.eqList"
+        "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
+        "equation_Eq.uu___67",
+        "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
+        "primitive_Prims.op_Equality", "proj_equation_Eq.Mkdeq_eq",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Eq.Mkdeq_eq", "token_correspondence_Eq.eq"
       ],
       0,
-      "ed1e4c00c06fa3c0f2488f9b6ea171e1"
+      "d8b38fea8725174ea6fb219c635382bd"
     ],
     [
       "Eq.uu___73",
@@ -507,17 +484,16 @@
         "Eq_interpretation_Tm_arrow_c834b9a0e83b3270eaf744614c578370",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Eq.eq",
-        "equation_Eq.eq_list", "equation_Eq.uu___65",
+        "equation_Eq.eq_list", "equation_Eq.uu___66",
         "function_token_typing_Eq.eqList",
-        "function_token_typing_Eq.uu___65",
+        "function_token_typing_Eq.uu___66",
         "function_token_typing_Prims.int", "int_typing",
-        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Eq.Mkdeq_eq", "projection_inverse_Prims.Cons_hd",
+        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_Eq.Mkdeq_eq",
         "refinement_interpretation_Eq_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
         "token_correspondence_Eq.eq", "token_correspondence_Eq.eqList"
       ],
       0,
-      "6c3c609a7df4a2893b3b662db6e7ed92"
+      "4509ccaa4992db17be400d389e3251e8"
     ],
     [
       "Eq.uu___74",
@@ -525,8 +501,30 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query",
+        "Eq_interpretation_Tm_arrow_c834b9a0e83b3270eaf744614c578370",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_Eq.eq",
+        "equation_Eq.eq_list", "equation_Eq.uu___66",
+        "function_token_typing_Eq.eqList",
+        "function_token_typing_Eq.uu___66",
+        "function_token_typing_Prims.int", "int_typing",
+        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Eq.Mkdeq_eq", "projection_inverse_Prims.Cons_hd",
+        "refinement_interpretation_Eq_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
+        "token_correspondence_Eq.eq", "token_correspondence_Eq.eqList"
+      ],
+      0,
+      "8051aafc3b280cce00f31b005a23304c"
+    ],
+    [
+      "Eq.uu___75",
+      2,
+      2,
+      1,
+      [
         "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.eq_pair", "equation_Eq.uu___65", "equation_Eq.uu___67",
+        "equation_Eq.eq_pair", "equation_Eq.uu___66", "equation_Eq.uu___68",
         "interpretation_Eq_Tm_abs_9b218a6fd552c26703ce1117d9e4f07d",
         "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -537,16 +535,16 @@
         "token_correspondence_Eq.eq"
       ],
       0,
-      "1b6d491882ea911395b051a4311a42b7"
+      "aaa37225c8bf2f141f51724bc36aee78"
     ],
     [
-      "Eq.uu___75",
+      "Eq.uu___76",
       2,
       2,
       1,
       [
         "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.eq_pair", "equation_Eq.uu___65", "equation_Eq.uu___67",
+        "equation_Eq.eq_pair", "equation_Eq.uu___66", "equation_Eq.uu___68",
         "interpretation_Eq_Tm_abs_9b218a6fd552c26703ce1117d9e4f07d",
         "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -559,27 +557,7 @@
         "token_correspondence_Eq.eq"
       ],
       0,
-      "8e3f9d531b419d72587517a575dce14f"
-    ],
-    [
-      "Eq.uu___76",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.eq_pair", "equation_Eq.uu___65", "equation_Eq.uu___67",
-        "interpretation_Eq_Tm_abs_9b218a6fd552c26703ce1117d9e4f07d",
-        "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
-        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0", "projection_inverse_Eq.Mkdeq_eq",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_Eq.eq"
-      ],
-      0,
-      "8d4b4393de0b6a61a00dc75c9798f9a6"
+      "ad945e621461b415a508042fbb85dbca"
     ],
     [
       "Eq.uu___77",
@@ -588,7 +566,7 @@
       1,
       [
         "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
-        "equation_Eq.eq_pair", "equation_Eq.uu___65", "equation_Eq.uu___67",
+        "equation_Eq.eq_pair", "equation_Eq.uu___66", "equation_Eq.uu___68",
         "interpretation_Eq_Tm_abs_9b218a6fd552c26703ce1117d9e4f07d",
         "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -599,7 +577,27 @@
         "token_correspondence_Eq.eq"
       ],
       0,
-      "eb8bd5b188a2d7d051c65cfbd5b6a9f0"
+      "a3f3e353b351bce4991d691d16b89988"
+    ],
+    [
+      "Eq.uu___78",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Eq.eq", "equation_Eq.eq_instance_of_eqtype",
+        "equation_Eq.eq_pair", "equation_Eq.uu___66", "equation_Eq.uu___68",
+        "interpretation_Eq_Tm_abs_9b218a6fd552c26703ce1117d9e4f07d",
+        "interpretation_Eq_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "proj_equation_Eq.Mkdeq_eq", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0", "projection_inverse_Eq.Mkdeq_eq",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "token_correspondence_Eq.eq"
+      ],
+      0,
+      "408cd180e84c70f44aa5c0fb8e83cb8d"
     ]
   ]
 ]
