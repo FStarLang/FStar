@@ -23,22 +23,16 @@ let loc_includes_union_assoc_l2r s1 s2 s3 s =
   loc_includes_trans (loc_union s1 (loc_union s2 s3)) (loc_union (loc_union s1 s2) s3) s
 
 let loc_includes_union_assoc_focalize_1 l1 l2 x r s =
-  loc_includes_trans (loc_union l1 (loc_union (loc_union l2 x) r))
-    (loc_union (loc_union l1 l2) (loc_union x r))
-    s
+  loc_includes_trans (loc_union l1 (loc_union (loc_union l2 x) r)) (loc_union (loc_union l1 l2) (loc_union x r)) s
 
 let loc_includes_union_assoc_focalize_2 l x r1 r2 s =
-  loc_includes_trans (loc_union l (loc_union (loc_union x r1) r2))
-    (loc_union l (loc_union x (loc_union r1 r2)))
-    s
+  loc_includes_trans (loc_union l (loc_union (loc_union x r1) r2)) (loc_union l (loc_union x (loc_union r1 r2))) s
 
 let loc_includes_region_union_r l s1 s2 =
   loc_includes_trans (loc_union l (loc_regions s1)) (loc_union (loc_regions s1) l) (loc_regions s2)
 
 let loc_includes_region_union_assoc l r s1 s2 =
-  loc_includes_trans (loc_union l (loc_union (loc_regions s1) r))
-    (loc_union (loc_regions s1) (loc_union l r))
-    (loc_regions s2)
+  loc_includes_trans (loc_union l (loc_union (loc_regions s1) r)) (loc_union (loc_regions s1) (loc_union l r)) (loc_regions s2)
 
 let loc_disjoint_none_l s =
   loc_disjoint_none_r s;
@@ -100,7 +94,8 @@ let loc_disjoint_gsub_buffer_r l #t b i len =
 let loc_disjoint_gsub_buffer_l l #t b i len =
   loc_disjoint_includes (loc_buffer b) l (loc_buffer (gsub_buffer b i len)) l
 
-let loc_disjoint_addresses_pointer #t p r n = loc_disjoint_sym (loc_pointer p) (loc_addresses r n)
+let loc_disjoint_addresses_pointer #t p r n =
+  loc_disjoint_sym (loc_pointer p) (loc_addresses r n)
 
 let loc_disjoint_union_r_elim l l1 l2 =
   loc_disjoint_includes l (loc_union l1 l2) l l1;
@@ -112,72 +107,80 @@ let modifies_trans_incl_l s12 h1 h2 s23 h3 = ()
 
 let modifies_trans_incl_r s12 h1 h2 s23 h3 = ()
 
-let modifies_fresh_frame_popped' h0 h1 s h2 h3 = modifies_fresh_frame_popped h0 h1 s h2 h3
+let modifies_fresh_frame_popped' h0 h1 s h2 h3 =
+  modifies_fresh_frame_popped h0 h1 s h2 h3
 
 let buffer_includes_gsub_r_gen #t b0 b i len =
   buffer_includes_gsub_r b i len;
   buffer_includes_trans b0 b (gsub_buffer b i len)
 
 let readable_gpointer_of_buffer_cell_gsub #t h b i len j =
-  assert (gpointer_of_buffer_cell b j ==
-      gpointer_of_buffer_cell (gsub_buffer b i len) (UInt32.sub j i))
+  assert (gpointer_of_buffer_cell b j == gpointer_of_buffer_cell (gsub_buffer b i len) (UInt32.sub j i))
 
 private
-let rec buffer_contents_equal_aux (#a: typ) (b1: buffer a) (b2: buffer a) (len: UInt32.t)
-  : HST.Stack bool
-    (requires
-      (fun h ->
-          hasEq (type_of_typ a) /\ UInt32.v len == UInt32.v (buffer_length b1) /\
-          UInt32.v len == UInt32.v (buffer_length b2) /\ buffer_readable h b1 /\
-          buffer_readable h b2))
-    (ensures
-      (fun h0 z h1 ->
-          h1 == h0 /\ UInt32.v len == UInt32.v (buffer_length b1) /\
-          UInt32.v len == UInt32.v (buffer_length b2) /\
-          (z == true <==> Seq.equal (buffer_as_seq h0 b1) (buffer_as_seq h0 b2))))
-    (decreases (UInt32.v len)) =
-  if len = 0ul
+let rec buffer_contents_equal_aux
+  (#a: typ)
+  (b1 b2: buffer a)
+  (len: UInt32.t)
+: HST.Stack bool
+  (requires (fun h ->
+    hasEq (type_of_typ a) /\
+    UInt32.v len == UInt32.v (buffer_length b1) /\
+    UInt32.v len == UInt32.v (buffer_length b2) /\
+    buffer_readable h b1 /\
+    buffer_readable h b2
+  ))
+  (ensures (fun h0 z h1 ->
+    h1 == h0 /\
+    UInt32.v len == UInt32.v (buffer_length b1) /\
+    UInt32.v len == UInt32.v (buffer_length b2) /\
+    (z == true <==> Seq.equal (buffer_as_seq h0 b1) (buffer_as_seq h0 b2))
+  ))
+  (decreases (UInt32.v len))
+= if len = 0ul
   then true
-  else
+  else begin
     let len' = UInt32.sub len 1ul in
-    let t: eqtype = type_of_typ a in
-    let r1: t = read_buffer b1 len' in
-    let r2: t = read_buffer b2 len' in
+    let t : eqtype = type_of_typ a in
+    let r1 : t = read_buffer b1 len' in
+    let r2 : t = read_buffer b2 len' in
     let b1' = sub_buffer b1 0ul len' in
     let b2' = sub_buffer b2 0ul len' in
     let h = HST.get () in
     assert (Seq.equal (buffer_as_seq h b1) (Seq.snoc (buffer_as_seq h b1') r1));
     assert (Seq.equal (buffer_as_seq h b2) (Seq.snoc (buffer_as_seq h b2') r2));
-    if r1 = r2 then buffer_contents_equal_aux b1' b2' len' else false
+    if r1  = r2
+    then
+      buffer_contents_equal_aux b1' b2' len'
+    else
+      false
+  end
 
 let buffer_contents_equal #a b1 b2 len =
   let b1' = sub_buffer b1 0ul len in
   let b2' = sub_buffer b2 0ul len in
   buffer_contents_equal_aux b1' b2' len
 
-let buffer_readable_intro_empty #t h b = buffer_readable_intro h b
+let buffer_readable_intro_empty #t h b =
+  buffer_readable_intro h b
 
 let loc_disjoint_gsub_buffer_gpointer_of_buffer_cell #a b i len j =
   assert (gpointer_of_buffer_cell b j == gpointer_of_buffer_cell (gsub_buffer b j 1ul) 0ul)
 
-let buffer_readable_gsub_intro #t h b i len = buffer_readable_intro h (gsub_buffer b i len)
+let buffer_readable_gsub_intro #t h b i len =
+  buffer_readable_intro h (gsub_buffer b i len)
 
-let buffer_readable_gsub_elim #t h b i len = buffer_readable_elim h (gsub_buffer b i len)
+let buffer_readable_gsub_elim #t h b i len =
+  buffer_readable_elim h (gsub_buffer b i len)
 
 let buffer_as_seq_gsub_buffer_append #t h b i len1 len2 =
-  Seq.lemma_eq_intro (buffer_as_seq h (gsub_buffer b i (UInt32.add len1 len2)))
-    (Seq.append (buffer_as_seq h (gsub_buffer b i len1))
-        (buffer_as_seq h (gsub_buffer b (UInt32.add i len1) len2)))
+  Seq.lemma_eq_intro (buffer_as_seq h (gsub_buffer b i (UInt32.add len1 len2))) (Seq.append (buffer_as_seq h (gsub_buffer b i len1)) (buffer_as_seq h (gsub_buffer b (UInt32.add i len1) len2)))
 
 let buffer_as_seq_gsub_buffer_snoc #t h b i len =
-  Seq.lemma_eq_intro (buffer_as_seq h (gsub_buffer b i (UInt32.add len 1ul)))
-    (Seq.snoc (buffer_as_seq h (gsub_buffer b i len))
-        (Seq.index (buffer_as_seq h b) (UInt32.v i + UInt32.v len)))
+  Seq.lemma_eq_intro (buffer_as_seq h (gsub_buffer b i (UInt32.add len 1ul))) (Seq.snoc (buffer_as_seq h (gsub_buffer b i len)) (Seq.index (buffer_as_seq h b) (UInt32.v i + UInt32.v len)))
 
 let buffer_as_seq_gsub_buffer_cons #t h b i len =
-  Seq.lemma_eq_intro (buffer_as_seq h (gsub_buffer b i (UInt32.add len 1ul)))
-    (Seq.cons (Seq.index (buffer_as_seq h b) (UInt32.v i))
-        (buffer_as_seq h (gsub_buffer b (UInt32.add i 1ul) len)))
+  Seq.lemma_eq_intro (buffer_as_seq h (gsub_buffer b i (UInt32.add len 1ul))) (Seq.cons (Seq.index (buffer_as_seq h b) (UInt32.v i)) (buffer_as_seq h (gsub_buffer b (UInt32.add i 1ul) len)))
 
 let buffer_snoc #t b i len v =
   let h = HST.get () in
@@ -196,11 +199,10 @@ let buffer_cons #t b i len v =
   buffer_readable_gsub_intro h' b i (UInt32.add len 1ul);
   buffer_as_seq_gsub_buffer_cons h' b i len
 
-let buffer_readable_gsub_merge #t b i len h = buffer_readable_intro h b
+let buffer_readable_gsub_merge #t b i len h =
+  buffer_readable_intro h b
 
 let buffer_readable_modifies_gsub #t b i len h0 h1 l =
   buffer_readable_intro h1 (gsub_buffer b 0ul i);
-  buffer_readable_intro h1
-    (gsub_buffer b (UInt32.add i len) (UInt32.sub (buffer_length b) (UInt32.add i len)));
+  buffer_readable_intro h1 (gsub_buffer b (UInt32.add i len) (UInt32.sub (buffer_length b) (UInt32.add i len)));
   buffer_readable_gsub_merge b i len h1
-

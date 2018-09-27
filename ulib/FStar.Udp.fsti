@@ -3,14 +3,10 @@ open FStar.Bytes
 open FStar.Error
 
 (* Type declarations *)
-new
-val socket: eqtype
-new
-val sock_in_channel: Type0
-new
-val sock_out_channel: Type0
-new
-val udpListener: Type0
+new val socket: eqtype
+new val sock_in_channel: Type0
+new val sock_out_channel: Type0
+new val udpListener: Type0
 
 (* Server side *)
 val listen: string -> nat -> EXT udpListener
