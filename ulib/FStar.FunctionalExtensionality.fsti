@@ -164,6 +164,7 @@ val extensionality (a:Type) (b:a -> Type) (f:arrow a b) (g:arrow a b)
 
 
 (* The type of ghost, total, dependent functions *)
+unfold
 let arrow_g (a:Type) (b:a -> Type)
   : Type
   = x:a -> GTot (b x)
@@ -198,7 +199,6 @@ let is_restricted_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
   = on_domain_g a f == f
 
 let restricted_g_t (a:Type) (b:a -> Type)
-  : Type
   = f:arrow_g a b{is_restricted_g a f}
 
 (* `a ^->> b`:
@@ -208,7 +208,6 @@ let restricted_g_t (a:Type) (b:a -> Type)
  *)
 unfold
 let (^->>) (a:Type) (b:Type)
-  : Type
   = restricted_g_t a (fun _ -> b)
 
 
