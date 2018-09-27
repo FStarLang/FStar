@@ -42,6 +42,7 @@ module FStar.FunctionalExtensionality
  *)
 
 (* The type of total, dependent functions *)
+unfold
 let arrow (a:Type) (b:a -> Type)
   : Type
   = x:a -> Tot (b x)
@@ -114,7 +115,6 @@ let is_restricted (a:Type) (#b:a -> Type) (f:arrow a b)
       and whose (dependent) co-domain is b.
 *)
 let restricted_t (a:Type) (b:a -> Type)
-  : Type
   = f:arrow a b{is_restricted a f}
 
 (* `a ^-> b`:
@@ -125,7 +125,6 @@ let restricted_t (a:Type) (b:a -> Type)
  *)
 unfold
 let (^->) (a:Type) (b:Type)
-  : Type
   = restricted_t a (fun _ -> b)
 
 
@@ -141,7 +140,7 @@ let on_dom (a:Type) (#b:a -> Type) (f:arrow a b)
      A convenience function to introduce a restricted, non-dependent function
  *)
 unfold
-let on (a:Type) (#b:Type) (f:(a -> b))
+let on (a:Type) (#b:Type) (f:(a -> Tot b))
   : (a ^-> b)
   = on_dom a f
 
