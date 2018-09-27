@@ -109,7 +109,6 @@ let mk_class (nm:string) : Tac unit =
     T.iter (fun b ->
                   (* dump ("b = " ^ term_to_string (type_of_binder b)); *)
                   let s = name_of_binder b in
-                  let s = remove "__fname__" s in (* unmangle *)
                   (* dump ("b = " ^ s); *)
                   let ns = cur_module () in
                   let sfv = pack_fv (ns @ [s]) in
@@ -128,7 +127,7 @@ let mk_class (nm:string) : Tac unit =
                   let sfv : fv = sfv in
                   let se = pack_sigelt (Sg_Let false sfv us ty def) in
                   //let se = set_sigelt_attrs [`tcnorm] se in
-                  dump ("trying to return : " ^ term_to_string (quote se));
+                  //dump ("trying to return : " ^ term_to_string (quote se));
                   add_elem (fun () -> exact (quote se));
                   ()
     ) bs;

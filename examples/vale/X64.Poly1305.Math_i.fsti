@@ -7,6 +7,8 @@ open X64.Poly1305.Spec_s // for modp
 open X64.Vale.State_i // for add_wrap
 open Opaque_i
 
+module F = FStar.FunctionalExtensionality
+
 let lowerUpper128 (l:nat64) (u:nat64) : nat128 =
     0x10000000000000000 `op_Multiply` u + l
 
@@ -37,8 +39,12 @@ let memModified (old_mem:mem) (new_mem:mem) (ptr:int) (num_bytes) =
     (forall (a:int) . {:pattern (new_mem `Map.contains` a)} old_mem `Map.contains` a <==> new_mem `Map.contains` a) /\
     (forall (a:int) . {:pattern (new_mem.[a]) \/ Map.sel new_mem a} a < ptr || a >= ptr + num_bytes ==> old_mem.[a] == new_mem.[a])
     
-let heapletTo128 (m:mem) (i:int) (len:nat) : (int->nat128) =
-  fun addr -> if i <= addr && addr < (i + len) && (addr - i) % 16 = 0 then m.[addr] + 0x10000000000000000 * m.[addr + 8] else 42
+let heapletTo128 (m:mem) (i:int) (len:nat) : F.restricted_t int (fun _ -> nat128) =
+  F.on_dom int
+    (fun addr -> if i <= addr && addr < (i + len) && (addr - i) % 16 = 0
+              then (m.[addr] + 0x10000000000000000 * m.[addr + 8] <: nat128) 
+              else (42 <: nat128))
+
 (*
 val heapletTo128_preserved (m:mem) (m':mem) (i:int) (len:nat) : Lemma 
   (requires memModified m m' ptr num_bytes /\

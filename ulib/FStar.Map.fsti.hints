@@ -1,0 +1,23 @@
+[
+  "ú\u0019á8\u001cù\u0010˚G\u0010p„\u0003ÜNk",
+  [
+    [
+      "FStar.Map.lemma_ContainsDom",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "26bf2b9b93f13877aeac39f4d45532fa"
+    ],
+    [
+      "FStar.Map.lemma_equal_intro",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "b0a581a89cc37567604ec5b8c65fce41"
+    ]
+  ]
+]

@@ -17,19 +17,29 @@
 module FStar.FunctionalExtensionality
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-type efun (a:Type) (b:Type) = a -> Tot b
+inline_for_extraction
+let on_domain (a:Type) (#b:a -> Type) (f:arrow a b)
+  : arrow a b
+  = fun (x:a) -> f x
 
-type feq (#a:Type) (#b:Type) (f:efun a b) (g:efun a b) =
-  (forall x.{:pattern (f x) \/ (g x)} f x == g x)
+let feq_on_domain (#a:Type) (#b:a -> Type) (f:arrow a b)
+  = ()
 
-assume Extensionality : forall (a:Type) (b:Type) (f: efun a b) (g: efun a b).
-                        {:pattern feq #a #b f g} feq #a #b f g <==> f==g
+let extensionality a b f g = admit() //the main axiom of this module
 
-(** Ghost functional extensionality **)
-type gfun (a:Type) (b:Type) = a -> GTot b
+let idempotence_on_domain #a #b f = ()
 
-type gfeq (#a:Type) (#b:Type) (f:gfun a b) (g:gfun a b) =
-    (forall x.{:pattern (f x) \/ (g x)} f x == g x)
+(****** GTot version ******)
 
-assume GhostExtensionality : forall (a:Type) (b:Type) (f: gfun a b) (g: gfun a b).
-                        {:pattern gfeq #a #b f g} gfeq #a #b f g <==> f==g
+inline_for_extraction
+let on_domain_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
+  : arrow_g a b
+  = fun (x:a) -> f x
+
+let feq_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow a b)
+  = ()
+
+let extensionality_g (a:Type) (b:a -> Type) (f g:arrow_g a b) = admit () //variant of the main axiom
+
+let idempotence_on_domain_g #a #b f
+  = ()

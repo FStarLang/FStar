@@ -10,8 +10,8 @@ let (parse_z3_version_lines :
     | x::uu____24 ->
         let trimmed = FStar_Util.trim_string x  in
         let parts = FStar_Util.split trimmed " "  in
-        let rec aux uu___122_40 =
-          match uu___122_40 with
+        let rec aux uu___124_40 =
+          match uu___124_40 with
           | hash::[] ->
               let n1 =
                 Prims.min (FStar_String.strlen _z3hash_expected)
@@ -54,7 +54,7 @@ let (z3hash_warning_message :
   fun uu____76  ->
     let run_proc_result =
       try
-        (fun uu___128_84  ->
+        (fun uu___130_84  ->
            match () with
            | () ->
                let uu____87 =
@@ -63,7 +63,7 @@ let (z3hash_warning_message :
                    FStar_Pervasives_Native.None
                   in
                FStar_Pervasives_Native.Some uu____87) ()
-      with | uu___127_90 -> FStar_Pervasives_Native.None  in
+      with | uu___129_90 -> FStar_Pervasives_Native.None  in
     match run_proc_result with
     | FStar_Pervasives_Native.None  ->
         FStar_Pervasives_Native.Some
@@ -180,8 +180,8 @@ let (uu___is_KILLED : z3status -> Prims.bool) =
   
 type z3statistics = Prims.string FStar_Util.smap
 let (status_tag : z3status -> Prims.string) =
-  fun uu___123_404  ->
-    match uu___123_404 with
+  fun uu___125_404  ->
+    match uu___125_404 with
     | SAT uu____405 -> "sat"
     | UNSAT uu____412 -> "unsat"
     | UNKNOWN uu____413 -> "unknown"
@@ -242,22 +242,14 @@ type bgproc =
   refresh: unit -> unit ;
   restart: unit -> unit }
 let (__proj__Mkbgproc__item__ask : bgproc -> Prims.string -> Prims.string) =
-  fun projectee  ->
-    match projectee with
-    | { ask = __fname__ask; refresh = __fname__refresh;
-        restart = __fname__restart;_} -> __fname__ask
-  
+  fun projectee  -> match projectee with | { ask; refresh; restart;_} -> ask 
 let (__proj__Mkbgproc__item__refresh : bgproc -> unit -> unit) =
   fun projectee  ->
-    match projectee with
-    | { ask = __fname__ask; refresh = __fname__refresh;
-        restart = __fname__restart;_} -> __fname__refresh
+    match projectee with | { ask; refresh; restart;_} -> refresh
   
 let (__proj__Mkbgproc__item__restart : bgproc -> unit -> unit) =
   fun projectee  ->
-    match projectee with
-    | { ask = __fname__ask; refresh = __fname__refresh;
-        restart = __fname__restart;_} -> __fname__restart
+    match projectee with | { ask; refresh; restart;_} -> restart
   
 type query_log =
   {
@@ -270,45 +262,35 @@ let (__proj__Mkquery_log__item__get_module_name :
   query_log -> unit -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { get_module_name = __fname__get_module_name;
-        set_module_name = __fname__set_module_name;
-        write_to_log = __fname__write_to_log; close_log = __fname__close_log;
-        log_file_name = __fname__log_file_name;_} -> __fname__get_module_name
+    | { get_module_name; set_module_name; write_to_log; close_log;
+        log_file_name;_} -> get_module_name
   
 let (__proj__Mkquery_log__item__set_module_name :
   query_log -> Prims.string -> unit) =
   fun projectee  ->
     match projectee with
-    | { get_module_name = __fname__get_module_name;
-        set_module_name = __fname__set_module_name;
-        write_to_log = __fname__write_to_log; close_log = __fname__close_log;
-        log_file_name = __fname__log_file_name;_} -> __fname__set_module_name
+    | { get_module_name; set_module_name; write_to_log; close_log;
+        log_file_name;_} -> set_module_name
   
 let (__proj__Mkquery_log__item__write_to_log :
   query_log -> Prims.string -> unit) =
   fun projectee  ->
     match projectee with
-    | { get_module_name = __fname__get_module_name;
-        set_module_name = __fname__set_module_name;
-        write_to_log = __fname__write_to_log; close_log = __fname__close_log;
-        log_file_name = __fname__log_file_name;_} -> __fname__write_to_log
+    | { get_module_name; set_module_name; write_to_log; close_log;
+        log_file_name;_} -> write_to_log
   
 let (__proj__Mkquery_log__item__close_log : query_log -> unit -> unit) =
   fun projectee  ->
     match projectee with
-    | { get_module_name = __fname__get_module_name;
-        set_module_name = __fname__set_module_name;
-        write_to_log = __fname__write_to_log; close_log = __fname__close_log;
-        log_file_name = __fname__log_file_name;_} -> __fname__close_log
+    | { get_module_name; set_module_name; write_to_log; close_log;
+        log_file_name;_} -> close_log
   
 let (__proj__Mkquery_log__item__log_file_name :
   query_log -> unit -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { get_module_name = __fname__get_module_name;
-        set_module_name = __fname__set_module_name;
-        write_to_log = __fname__write_to_log; close_log = __fname__close_log;
-        log_file_name = __fname__log_file_name;_} -> __fname__log_file_name
+    | { get_module_name; set_module_name; write_to_log; close_log;
+        log_file_name;_} -> log_file_name
   
 let (query_logging : query_log) =
   let query_number = FStar_Util.mk_ref (Prims.parse_int "0")  in
@@ -497,51 +479,36 @@ let (__proj__Mksmt_output__item__smt_result :
   smt_output -> smt_output_section) =
   fun projectee  ->
     match projectee with
-    | { smt_result = __fname__smt_result;
-        smt_reason_unknown = __fname__smt_reason_unknown;
-        smt_unsat_core = __fname__smt_unsat_core;
-        smt_statistics = __fname__smt_statistics;
-        smt_labels = __fname__smt_labels;_} -> __fname__smt_result
+    | { smt_result; smt_reason_unknown; smt_unsat_core; smt_statistics;
+        smt_labels;_} -> smt_result
   
 let (__proj__Mksmt_output__item__smt_reason_unknown :
   smt_output -> smt_output_section FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { smt_result = __fname__smt_result;
-        smt_reason_unknown = __fname__smt_reason_unknown;
-        smt_unsat_core = __fname__smt_unsat_core;
-        smt_statistics = __fname__smt_statistics;
-        smt_labels = __fname__smt_labels;_} -> __fname__smt_reason_unknown
+    | { smt_result; smt_reason_unknown; smt_unsat_core; smt_statistics;
+        smt_labels;_} -> smt_reason_unknown
   
 let (__proj__Mksmt_output__item__smt_unsat_core :
   smt_output -> smt_output_section FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { smt_result = __fname__smt_result;
-        smt_reason_unknown = __fname__smt_reason_unknown;
-        smt_unsat_core = __fname__smt_unsat_core;
-        smt_statistics = __fname__smt_statistics;
-        smt_labels = __fname__smt_labels;_} -> __fname__smt_unsat_core
+    | { smt_result; smt_reason_unknown; smt_unsat_core; smt_statistics;
+        smt_labels;_} -> smt_unsat_core
   
 let (__proj__Mksmt_output__item__smt_statistics :
   smt_output -> smt_output_section FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { smt_result = __fname__smt_result;
-        smt_reason_unknown = __fname__smt_reason_unknown;
-        smt_unsat_core = __fname__smt_unsat_core;
-        smt_statistics = __fname__smt_statistics;
-        smt_labels = __fname__smt_labels;_} -> __fname__smt_statistics
+    | { smt_result; smt_reason_unknown; smt_unsat_core; smt_statistics;
+        smt_labels;_} -> smt_statistics
   
 let (__proj__Mksmt_output__item__smt_labels :
   smt_output -> smt_output_section FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { smt_result = __fname__smt_result;
-        smt_reason_unknown = __fname__smt_reason_unknown;
-        smt_unsat_core = __fname__smt_unsat_core;
-        smt_statistics = __fname__smt_statistics;
-        smt_labels = __fname__smt_labels;_} -> __fname__smt_labels
+    | { smt_result; smt_reason_unknown; smt_unsat_core; smt_statistics;
+        smt_labels;_} -> smt_labels
   
 let (smt_output_sections :
   FStar_Range.range -> Prims.string Prims.list -> smt_output) =
@@ -805,20 +772,13 @@ let (z3_options : Prims.string FStar_ST.ref) =
   
 let (set_z3_options : Prims.string -> unit) =
   fun opts  -> FStar_ST.op_Colon_Equals z3_options opts 
-type 'a job = {
+type 'a job_t = {
   job: unit -> 'a ;
   callback: 'a -> unit }
-let __proj__Mkjob__item__job : 'a . 'a job -> unit -> 'a =
-  fun projectee  ->
-    match projectee with
-    | { job = __fname__job; callback = __fname__callback;_} -> __fname__job
-  
-let __proj__Mkjob__item__callback : 'a . 'a job -> 'a -> unit =
-  fun projectee  ->
-    match projectee with
-    | { job = __fname__job; callback = __fname__callback;_} ->
-        __fname__callback
-  
+let __proj__Mkjob_t__item__job : 'a . 'a job_t -> unit -> 'a =
+  fun projectee  -> match projectee with | { job; callback;_} -> job 
+let __proj__Mkjob_t__item__callback : 'a . 'a job_t -> 'a -> unit =
+  fun projectee  -> match projectee with | { job; callback;_} -> callback 
 type z3result =
   {
   z3result_status: z3status ;
@@ -828,42 +788,30 @@ type z3result =
 let (__proj__Mkz3result__item__z3result_status : z3result -> z3status) =
   fun projectee  ->
     match projectee with
-    | { z3result_status = __fname__z3result_status;
-        z3result_time = __fname__z3result_time;
-        z3result_statistics = __fname__z3result_statistics;
-        z3result_query_hash = __fname__z3result_query_hash;_} ->
-        __fname__z3result_status
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash;_} -> z3result_status
   
 let (__proj__Mkz3result__item__z3result_time : z3result -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { z3result_status = __fname__z3result_status;
-        z3result_time = __fname__z3result_time;
-        z3result_statistics = __fname__z3result_statistics;
-        z3result_query_hash = __fname__z3result_query_hash;_} ->
-        __fname__z3result_time
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash;_} -> z3result_time
   
 let (__proj__Mkz3result__item__z3result_statistics :
   z3result -> z3statistics) =
   fun projectee  ->
     match projectee with
-    | { z3result_status = __fname__z3result_status;
-        z3result_time = __fname__z3result_time;
-        z3result_statistics = __fname__z3result_statistics;
-        z3result_query_hash = __fname__z3result_query_hash;_} ->
-        __fname__z3result_statistics
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash;_} -> z3result_statistics
   
 let (__proj__Mkz3result__item__z3result_query_hash :
   z3result -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { z3result_status = __fname__z3result_status;
-        z3result_time = __fname__z3result_time;
-        z3result_statistics = __fname__z3result_statistics;
-        z3result_query_hash = __fname__z3result_query_hash;_} ->
-        __fname__z3result_query_hash
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash;_} -> z3result_query_hash
   
-type z3job = z3result job
+type z3job = z3result job_t
 let (job_queue : z3job Prims.list FStar_ST.ref) = FStar_Util.mk_ref [] 
 let (pending_jobs : Prims.int FStar_ST.ref) =
   FStar_Util.mk_ref (Prims.parse_int "0") 
@@ -883,11 +831,11 @@ let (z3_job :
               let start = FStar_Util.now ()  in
               let uu____3691 =
                 try
-                  (fun uu___130_3701  ->
+                  (fun uu___132_3701  ->
                      match () with
                      | () -> doZ3Exe r fresh input label_messages) ()
                 with
-                | uu___129_3708 ->
+                | uu___131_3708 ->
                     Obj.magic
                       (if
                          let uu____3713 = FStar_Options.trace_error ()  in
@@ -899,7 +847,7 @@ let (z3_job :
                                   in
                                uu____3720.refresh  in
                              uu____3715 ());
-                            FStar_Exn.raise uu___129_3708)
+                            FStar_Exn.raise uu___131_3708)
                        else Obj.repr (failwith "unreachable"))
                  in
               match uu____3691 with
@@ -1050,8 +998,8 @@ let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun decls  ->
     FStar_All.pipe_right decls
       (FStar_List.iter
-         (fun uu___124_4449  ->
-            match uu___124_4449 with
+         (fun uu___126_4449  ->
+            match uu___126_4449 with
             | FStar_SMTEncoding_Term.Push  -> failwith "Unexpected push/pop"
             | FStar_SMTEncoding_Term.Pop  -> failwith "Unexpected push/pop"
             | uu____4450 -> ()));
@@ -1103,8 +1051,8 @@ let (mk_input :
           let uu____4707 =
             FStar_All.pipe_right theory
               (FStar_Util.prefix_until
-                 (fun uu___125_4735  ->
-                    match uu___125_4735 with
+                 (fun uu___127_4735  ->
+                    match uu___127_4735 with
                     | FStar_SMTEncoding_Term.CheckSat  -> true
                     | uu____4736 -> false))
              in
@@ -1122,22 +1070,22 @@ let (mk_input :
             let ss_lines = pp suffix1  in
             let ps = FStar_String.concat "\n" ps_lines  in
             let ss = FStar_String.concat "\n" ss_lines  in
-            let uncaption uu___126_4820 =
-              match uu___126_4820 with
+            let uncaption uu___128_4820 =
+              match uu___128_4820 with
               | FStar_SMTEncoding_Term.Caption uu____4821 ->
                   FStar_SMTEncoding_Term.Caption ""
               | FStar_SMTEncoding_Term.Assume a ->
                   FStar_SMTEncoding_Term.Assume
-                    (let uu___131_4825 = a  in
+                    (let uu___133_4825 = a  in
                      {
                        FStar_SMTEncoding_Term.assumption_term =
-                         (uu___131_4825.FStar_SMTEncoding_Term.assumption_term);
+                         (uu___133_4825.FStar_SMTEncoding_Term.assumption_term);
                        FStar_SMTEncoding_Term.assumption_caption =
                          FStar_Pervasives_Native.None;
                        FStar_SMTEncoding_Term.assumption_name =
-                         (uu___131_4825.FStar_SMTEncoding_Term.assumption_name);
+                         (uu___133_4825.FStar_SMTEncoding_Term.assumption_name);
                        FStar_SMTEncoding_Term.assumption_fact_ids =
-                         (uu___131_4825.FStar_SMTEncoding_Term.assumption_fact_ids)
+                         (uu___133_4825.FStar_SMTEncoding_Term.assumption_fact_ids)
                      })
               | FStar_SMTEncoding_Term.DeclFun (n1,a,s,uu____4829) ->
                   FStar_SMTEncoding_Term.DeclFun

@@ -301,24 +301,21 @@ let (__proj__Mkcomp_typ__item__comp_univs :
   comp_typ -> FStar_Syntax_Syntax.universes) =
   fun projectee  ->
     match projectee with
-    | { comp_univs = __fname__comp_univs; effect_name = __fname__effect_name;
-        result_typ = __fname__result_typ; effect_args = __fname__effect_args;
-        flags = __fname__flags;_} -> __fname__comp_univs
+    | { comp_univs; effect_name; result_typ; effect_args; flags = flags1;_}
+        -> comp_univs
   
 let (__proj__Mkcomp_typ__item__effect_name : comp_typ -> FStar_Ident.lident)
   =
   fun projectee  ->
     match projectee with
-    | { comp_univs = __fname__comp_univs; effect_name = __fname__effect_name;
-        result_typ = __fname__result_typ; effect_args = __fname__effect_args;
-        flags = __fname__flags;_} -> __fname__effect_name
+    | { comp_univs; effect_name; result_typ; effect_args; flags = flags1;_}
+        -> effect_name
   
 let (__proj__Mkcomp_typ__item__result_typ : comp_typ -> t) =
   fun projectee  ->
     match projectee with
-    | { comp_univs = __fname__comp_univs; effect_name = __fname__effect_name;
-        result_typ = __fname__result_typ; effect_args = __fname__effect_args;
-        flags = __fname__flags;_} -> __fname__result_typ
+    | { comp_univs; effect_name; result_typ; effect_args; flags = flags1;_}
+        -> result_typ
   
 let (__proj__Mkcomp_typ__item__effect_args :
   comp_typ ->
@@ -326,16 +323,14 @@ let (__proj__Mkcomp_typ__item__effect_args :
   =
   fun projectee  ->
     match projectee with
-    | { comp_univs = __fname__comp_univs; effect_name = __fname__effect_name;
-        result_typ = __fname__result_typ; effect_args = __fname__effect_args;
-        flags = __fname__flags;_} -> __fname__effect_args
+    | { comp_univs; effect_name; result_typ; effect_args; flags = flags1;_}
+        -> effect_args
   
 let (__proj__Mkcomp_typ__item__flags : comp_typ -> cflags Prims.list) =
   fun projectee  ->
     match projectee with
-    | { comp_univs = __fname__comp_univs; effect_name = __fname__effect_name;
-        result_typ = __fname__result_typ; effect_args = __fname__effect_args;
-        flags = __fname__flags;_} -> __fname__flags
+    | { comp_univs; effect_name; result_typ; effect_args; flags = flags1;_}
+        -> flags1
   
 let (uu___is_TOTAL : cflags -> Prims.bool) =
   fun projectee  ->
@@ -383,27 +378,19 @@ let (__proj__Mkresidual_comp__item__residual_effect :
   residual_comp -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { residual_effect = __fname__residual_effect;
-        residual_typ = __fname__residual_typ;
-        residual_flags = __fname__residual_flags;_} ->
-        __fname__residual_effect
+    | { residual_effect; residual_typ; residual_flags;_} -> residual_effect
   
 let (__proj__Mkresidual_comp__item__residual_typ :
   residual_comp -> t FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { residual_effect = __fname__residual_effect;
-        residual_typ = __fname__residual_typ;
-        residual_flags = __fname__residual_flags;_} -> __fname__residual_typ
+    | { residual_effect; residual_typ; residual_flags;_} -> residual_typ
   
 let (__proj__Mkresidual_comp__item__residual_flags :
   residual_comp -> cflags Prims.list) =
   fun projectee  ->
     match projectee with
-    | { residual_effect = __fname__residual_effect;
-        residual_typ = __fname__residual_typ;
-        residual_flags = __fname__residual_flags;_} ->
-        __fname__residual_flags
+    | { residual_effect; residual_typ; residual_flags;_} -> residual_flags
   
 type arg = (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2
 type args =
@@ -433,14 +420,14 @@ let (mkAccuMatch :
         -> t)
   = fun s  -> fun cases  -> fun bs  -> Accu ((Match (s, cases, bs)), []) 
 let (equal_if : Prims.bool -> FStar_Syntax_Util.eq_result) =
-  fun uu___230_1868  ->
-    if uu___230_1868
+  fun uu___235_1868  ->
+    if uu___235_1868
     then FStar_Syntax_Util.Equal
     else FStar_Syntax_Util.Unknown
   
 let (equal_iff : Prims.bool -> FStar_Syntax_Util.eq_result) =
-  fun uu___231_1874  ->
-    if uu___231_1874
+  fun uu___236_1874  ->
+    if uu___236_1874
     then FStar_Syntax_Util.Equal
     else FStar_Syntax_Util.NotEqual
   
@@ -734,18 +721,10 @@ type nbe_cbs =
   iapp: t -> args -> t ;
   translate: FStar_Syntax_Syntax.term -> t }
 let (__proj__Mknbe_cbs__item__iapp : nbe_cbs -> t -> args -> t) =
-  fun projectee  ->
-    match projectee with
-    | { iapp = __fname__iapp; translate = __fname__translate;_} ->
-        __fname__iapp
-  
+  fun projectee  -> match projectee with | { iapp; translate;_} -> iapp 
 let (__proj__Mknbe_cbs__item__translate :
   nbe_cbs -> FStar_Syntax_Syntax.term -> t) =
-  fun projectee  ->
-    match projectee with
-    | { iapp = __fname__iapp; translate = __fname__translate;_} ->
-        __fname__translate
-  
+  fun projectee  -> match projectee with | { iapp; translate;_} -> translate 
 let (iapp_cb : nbe_cbs -> t -> args -> t) =
   fun cbs  -> fun h  -> fun a  -> cbs.iapp h a 
 let (translate_cb : nbe_cbs -> FStar_Syntax_Syntax.term -> t) =
@@ -757,30 +736,16 @@ type 'a embedding =
   typ: t ;
   emb_typ: FStar_Syntax_Syntax.emb_typ }
 let __proj__Mkembedding__item__em : 'a . 'a embedding -> nbe_cbs -> 'a -> t =
-  fun projectee  ->
-    match projectee with
-    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
-        emb_typ = __fname__emb_typ;_} -> __fname__em
-  
+  fun projectee  -> match projectee with | { em; un; typ; emb_typ;_} -> em 
 let __proj__Mkembedding__item__un :
   'a . 'a embedding -> nbe_cbs -> t -> 'a FStar_Pervasives_Native.option =
-  fun projectee  ->
-    match projectee with
-    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
-        emb_typ = __fname__emb_typ;_} -> __fname__un
-  
+  fun projectee  -> match projectee with | { em; un; typ; emb_typ;_} -> un 
 let __proj__Mkembedding__item__typ : 'a . 'a embedding -> t =
-  fun projectee  ->
-    match projectee with
-    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
-        emb_typ = __fname__emb_typ;_} -> __fname__typ
-  
+  fun projectee  -> match projectee with | { em; un; typ; emb_typ;_} -> typ 
 let __proj__Mkembedding__item__emb_typ :
   'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
   fun projectee  ->
-    match projectee with
-    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
-        emb_typ = __fname__emb_typ;_} -> __fname__emb_typ
+    match projectee with | { em; un; typ; emb_typ;_} -> emb_typ
   
 let embed : 'a . 'a embedding -> nbe_cbs -> 'a -> t =
   fun e  -> fun cb  -> fun x  -> e.em cb x 
@@ -1830,13 +1795,13 @@ let (string_substring' : args -> t FStar_Pervasives_Native.option) =
              let n11 = FStar_BigInt.to_int_fs n1  in
              let n21 = FStar_BigInt.to_int_fs n2  in
              (try
-                (fun uu___233_6994  ->
+                (fun uu___238_6994  ->
                    match () with
                    | () ->
                        let r = FStar_String.substring s1 n11 n21  in
                        let uu____6998 = embed e_string bogus_cbs r  in
                        FStar_Pervasives_Native.Some uu____6998) ()
-              with | uu___232_7000 -> FStar_Pervasives_Native.None)
+              with | uu___237_7000 -> FStar_Pervasives_Native.None)
          | uu____7003 -> FStar_Pervasives_Native.None)
     | uu____7016 -> FStar_Pervasives_Native.None
   

@@ -56,8 +56,3 @@ let f_1529_1 () =
 let f_1529_2 () =
   let f_local = norm [delta] f_1529 in
   assert (f_local 2 == 5)
-
-
-
-
-

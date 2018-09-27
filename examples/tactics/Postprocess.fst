@@ -51,7 +51,7 @@ open FStar.FunctionalExtensionality
 
 
 let apply_feq_lem #a #b ($f $g : a -> b) : Lemma (requires (forall x. f x == g x))
-                                              (ensures (f == g)) =
+                                                (ensures  (on_domain a f == on_domain a g)) =
     assert (feq f g);
     ()
 

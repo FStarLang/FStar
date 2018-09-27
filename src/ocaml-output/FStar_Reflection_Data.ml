@@ -255,21 +255,15 @@ type bv_view =
   bv_sort: typ }
 let (__proj__Mkbv_view__item__bv_ppname : bv_view -> Prims.string) =
   fun projectee  ->
-    match projectee with
-    | { bv_ppname = __fname__bv_ppname; bv_index = __fname__bv_index;
-        bv_sort = __fname__bv_sort;_} -> __fname__bv_ppname
+    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_ppname
   
 let (__proj__Mkbv_view__item__bv_index : bv_view -> FStar_BigInt.t) =
   fun projectee  ->
-    match projectee with
-    | { bv_ppname = __fname__bv_ppname; bv_index = __fname__bv_index;
-        bv_sort = __fname__bv_sort;_} -> __fname__bv_index
+    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_index
   
 let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
   fun projectee  ->
-    match projectee with
-    | { bv_ppname = __fname__bv_ppname; bv_index = __fname__bv_index;
-        bv_sort = __fname__bv_sort;_} -> __fname__bv_sort
+    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_sort
   
 type binder_view =
   (FStar_Syntax_Syntax.bv,aqualv) FStar_Pervasives_Native.tuple2
@@ -370,24 +364,13 @@ type refl_constant =
   fv: FStar_Syntax_Syntax.fv ;
   t: FStar_Syntax_Syntax.term }
 let (__proj__Mkrefl_constant__item__lid : refl_constant -> FStar_Ident.lid) =
-  fun projectee  ->
-    match projectee with
-    | { lid = __fname__lid; fv = __fname__fv; t = __fname__t;_} ->
-        __fname__lid
-  
+  fun projectee  -> match projectee with | { lid; fv; t;_} -> lid 
 let (__proj__Mkrefl_constant__item__fv :
   refl_constant -> FStar_Syntax_Syntax.fv) =
-  fun projectee  ->
-    match projectee with
-    | { lid = __fname__lid; fv = __fname__fv; t = __fname__t;_} ->
-        __fname__fv
-  
+  fun projectee  -> match projectee with | { lid; fv; t;_} -> fv 
 let (__proj__Mkrefl_constant__item__t :
   refl_constant -> FStar_Syntax_Syntax.term) =
-  fun projectee  ->
-    match projectee with
-    | { lid = __fname__lid; fv = __fname__fv; t = __fname__t;_} -> __fname__t
-  
+  fun projectee  -> match projectee with | { lid; fv; t;_} -> t 
 let (refl_constant_lid : refl_constant -> FStar_Ident.lid) =
   fun rc  -> rc.lid 
 let (refl_constant_term : refl_constant -> FStar_Syntax_Syntax.term) =
@@ -470,59 +453,59 @@ let (mk_inspect_pack_pair :
       { lid = pack_lid; fv = pack_fv; t = uu____1342 }  in
     (inspect, pack)
   
-let (uu___84 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
+let (uu___86 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
   = mk_inspect_pack_pair "_ln" 
 let (fstar_refl_inspect_ln : refl_constant) =
-  match uu___84 with
+  match uu___86 with
   | (fstar_refl_inspect_ln,fstar_refl_pack_ln) -> fstar_refl_inspect_ln 
 let (fstar_refl_pack_ln : refl_constant) =
-  match uu___84 with
+  match uu___86 with
   | (fstar_refl_inspect_ln1,fstar_refl_pack_ln) -> fstar_refl_pack_ln 
-let (uu___85 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
+let (uu___87 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
   = mk_inspect_pack_pair "_fv" 
 let (fstar_refl_inspect_fv : refl_constant) =
-  match uu___85 with
+  match uu___87 with
   | (fstar_refl_inspect_fv,fstar_refl_pack_fv) -> fstar_refl_inspect_fv 
 let (fstar_refl_pack_fv : refl_constant) =
-  match uu___85 with
+  match uu___87 with
   | (fstar_refl_inspect_fv1,fstar_refl_pack_fv) -> fstar_refl_pack_fv 
-let (uu___86 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
+let (uu___88 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
   = mk_inspect_pack_pair "_bv" 
 let (fstar_refl_inspect_bv : refl_constant) =
-  match uu___86 with
+  match uu___88 with
   | (fstar_refl_inspect_bv,fstar_refl_pack_bv) -> fstar_refl_inspect_bv 
 let (fstar_refl_pack_bv : refl_constant) =
-  match uu___86 with
+  match uu___88 with
   | (fstar_refl_inspect_bv1,fstar_refl_pack_bv) -> fstar_refl_pack_bv 
-let (uu___87 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
+let (uu___89 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
   = mk_inspect_pack_pair "_binder" 
 let (fstar_refl_inspect_binder : refl_constant) =
-  match uu___87 with
+  match uu___89 with
   | (fstar_refl_inspect_binder,fstar_refl_pack_binder) ->
       fstar_refl_inspect_binder
   
 let (fstar_refl_pack_binder : refl_constant) =
-  match uu___87 with
+  match uu___89 with
   | (fstar_refl_inspect_binder1,fstar_refl_pack_binder) ->
       fstar_refl_pack_binder
   
-let (uu___88 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
+let (uu___90 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
   = mk_inspect_pack_pair "_comp" 
 let (fstar_refl_inspect_comp : refl_constant) =
-  match uu___88 with
+  match uu___90 with
   | (fstar_refl_inspect_comp,fstar_refl_pack_comp) -> fstar_refl_inspect_comp 
 let (fstar_refl_pack_comp : refl_constant) =
-  match uu___88 with
+  match uu___90 with
   | (fstar_refl_inspect_comp1,fstar_refl_pack_comp) -> fstar_refl_pack_comp 
-let (uu___89 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
+let (uu___91 : (refl_constant,refl_constant) FStar_Pervasives_Native.tuple2)
   = mk_inspect_pack_pair "_sigelt" 
 let (fstar_refl_inspect_sigelt : refl_constant) =
-  match uu___89 with
+  match uu___91 with
   | (fstar_refl_inspect_sigelt,fstar_refl_pack_sigelt) ->
       fstar_refl_inspect_sigelt
   
 let (fstar_refl_pack_sigelt : refl_constant) =
-  match uu___89 with
+  match uu___91 with
   | (fstar_refl_inspect_sigelt1,fstar_refl_pack_sigelt) ->
       fstar_refl_pack_sigelt
   

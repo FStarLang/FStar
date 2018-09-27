@@ -68,3 +68,7 @@ let testify_forall_region_contains_pred _ _ = ()
 
 type ex_rid = erid
 type 'a witnessed = 'a FStar_CommonST.witnessed
+type ('a, 'b, 'c, 'd) stable_on = unit
+type ('a, 'b, 'c, 'd) token = unit
+let witness_p _ _ = ()
+let recall_p _ _ = ()

@@ -37,9 +37,9 @@ let r_dassl
 let flip_flip
   (phi: gexp bool)
 : Lemma
-  (flip (flip phi) == phi)
+  (forall h1 h2. (flip (flip phi)) h1 h2 == phi h1 h2)
   [SMTPat (flip (flip phi))]
-= gfeq2 (flip (flip phi)) phi
+= ()
 
 let r_dassr
   (x: var)

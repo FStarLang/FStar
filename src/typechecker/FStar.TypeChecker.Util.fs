@@ -1131,6 +1131,7 @@ let maybe_instantiate (env:Env.env) e t =
          BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
                  (Print.term_to_string e) (Print.term_to_string t) (FStar.Common.string_of_option Print.term_to_string (Env.expected_typ env));
        let number_of_implicits t =
+            let t = N.unfold_whnf env t in
             let formals, _ = U.arrow_formals t in
             let n_implicits =
             match formals |> BU.prefix_until (fun (_, imp) -> Option.isNone imp || U.eq_aqual imp (Some Equality) = U.Equal) with
@@ -1155,7 +1156,8 @@ let maybe_instantiate (env:Env.env) e t =
                 | None -> None
                 | Some i -> Some (i - 1)
         in
-        begin match torig.n with
+        let t = N.unfold_whnf env t in
+        begin match t.n with
             | Tm_arrow(bs, c) ->
               let bs, c = SS.open_comp bs c in
               //instantiate at most inst_n implicit binders, when inst_n = Some n
@@ -1209,7 +1211,7 @@ let maybe_instantiate (env:Env.env) e t =
                   e, t, guard
               end
 
-            | _ -> e, t, Env.trivial_guard
+            | _ -> e, torig, Env.trivial_guard
        end
   end
 
@@ -1770,14 +1772,16 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       | _ -> ()
 
 let must_erase_for_extraction (g:env) (t:typ) =
+    let has_erased_for_extraction_attr (fv:fv) :bool =
+      fv |> lid_of_fv |> Env.lookup_attrs_of_lid g |> (fun l_opt -> is_some l_opt && l_opt |> must |> List.existsb (fun t ->
+            match (SS.compress t).n with
+            | Tm_fvar fv when lid_equals fv.fv_name.v C.must_erase_for_extraction_attr -> true
+            | _ -> false))
+    in
     let rec aux_whnf env t = //t is expected to b in WHNF
         match (SS.compress t).n with
         | Tm_type _ -> true
-        | Tm_fvar fv -> fv_eq_lid fv C.unit_lid ||
-          (fv |> lid_of_fv |> Env.lookup_attrs_of_lid g |> (fun l_opt -> is_some l_opt && l_opt |> must |> List.existsb (fun t ->
-            match (SS.compress t).n with
-            | Tm_fvar fv when lid_equals fv.fv_name.v C.must_erase_for_extraction_attr -> true
-            | _ -> false)))
+        | Tm_fvar fv -> fv_eq_lid fv C.unit_lid || has_erased_for_extraction_attr fv
         | Tm_arrow _ ->
           let bs, c = U.arrow_formals_comp t in
           let env = FStar.TypeChecker.Env.push_binders env bs in
@@ -1790,7 +1794,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
           aux env t
         | Tm_app(head, [_]) ->
           (match (U.un_uinst head).n with
-           | Tm_fvar fv -> fv_eq_lid fv C.erased_lid
+           | Tm_fvar fv -> fv_eq_lid fv C.erased_lid || has_erased_for_extraction_attr fv  //may be we should just call aux on head?                           
            | _ -> false)
         | _ ->
           false

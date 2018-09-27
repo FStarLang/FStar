@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f6c4f231c5ed6a70f26aaa5d55cdaef9"
+      "73e8cb4b0238a98d1560095c6a25e543"
     ],
     [
       "HyE.AE.__proj__Key__item__log",
@@ -25,7 +25,7 @@
         "projection_inverse_HyE.AE.Key_region"
       ],
       0,
-      "80c385b0c61b5503969c4b7f89ca0e94"
+      "9d807d6ae52aa6f94a00c8a3e475463b"
     ],
     [
       "HyE.AE.keygen",
@@ -126,7 +126,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "d7d8450899147d2ca1ae481413431f9f"
+      "cebfc1148bf71d24ad7a29e8be74da3c"
     ],
     [
       "HyE.AE.encrypt",
@@ -204,7 +204,7 @@
         "typing_tok_CoreCrypto.AES_128_GCM@tok"
       ],
       0,
-      "55a0cb2c8fd0b3b55013304f4cdac98f"
+      "3375905889891b937dbfd8d77c10fe35"
     ],
     [
       "HyE.AE.decrypt",
@@ -224,7 +224,7 @@
         "haseqHyE.AE_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "b422b8f844e1f8853719574ad7d940de"
+      "e977cb579f880592fe7736567cff605b"
     ],
     [
       "HyE.AE.decrypt",
@@ -334,7 +334,39 @@
         "typing_HyE.Ideal.int_ctxt", "typing_Platform.Bytes.length"
       ],
       0,
-      "a8a18c21b46e11370d479a3b5c6863d6"
+      "a1847468f1e30c966a556215a136995e"
+    ],
+    [
+      "HyE.AE.aes_key",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_CoreCrypto.AES_128_GCM",
+        "equality_tok_CoreCrypto.AES_128_GCM@tok",
+        "equation_CoreCrypto.aeadKeySize", "equation_HyE.AE.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "877c1cce188d6a9d0c6bd7e614be773f"
+    ],
+    [
+      "HyE.AE.decrypt",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_HyE.Plain.Plain_hasEq",
+        "assumption_Platform.Bytes.HasEq_bytes", "equation_HyE.AE.cipher",
+        "equation_HyE.AE.ivsize", "equation_HyE.AE.msg",
+        "equation_Platform.Bytes.bytes",
+        "function_token_typing_HyE.AE.cipher",
+        "function_token_typing_HyE.Plain.t",
+        "haseqHyE.AE_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
+      ],
+      0,
+      "13d75214ed39c6f5d5f3b555780f4bd9"
     ]
   ]
 ]

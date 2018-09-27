@@ -6,16 +6,12 @@ type vops_t =
 let (__proj__Mkvops_t__item__next_major :
   vops_t -> unit -> FStar_Syntax_Syntax.version) =
   fun projectee  ->
-    match projectee with
-    | { next_major = __fname__next_major; next_minor = __fname__next_minor;_}
-        -> __fname__next_major
+    match projectee with | { next_major; next_minor;_} -> next_major
   
 let (__proj__Mkvops_t__item__next_minor :
   vops_t -> unit -> FStar_Syntax_Syntax.version) =
   fun projectee  ->
-    match projectee with
-    | { next_major = __fname__next_major; next_minor = __fname__next_minor;_}
-        -> __fname__next_minor
+    match projectee with | { next_major; next_minor;_} -> next_minor
   
 let (vops : vops_t) =
   let major = FStar_Util.mk_ref (Prims.parse_int "0")  in
@@ -48,21 +44,15 @@ type uf =
   version: FStar_Syntax_Syntax.version }
 let (__proj__Mkuf__item__term_graph : uf -> tgraph) =
   fun projectee  ->
-    match projectee with
-    | { term_graph = __fname__term_graph; univ_graph = __fname__univ_graph;
-        version = __fname__version;_} -> __fname__term_graph
+    match projectee with | { term_graph; univ_graph; version;_} -> term_graph
   
 let (__proj__Mkuf__item__univ_graph : uf -> ugraph) =
   fun projectee  ->
-    match projectee with
-    | { term_graph = __fname__term_graph; univ_graph = __fname__univ_graph;
-        version = __fname__version;_} -> __fname__univ_graph
+    match projectee with | { term_graph; univ_graph; version;_} -> univ_graph
   
 let (__proj__Mkuf__item__version : uf -> FStar_Syntax_Syntax.version) =
   fun projectee  ->
-    match projectee with
-    | { term_graph = __fname__term_graph; univ_graph = __fname__univ_graph;
-        version = __fname__version;_} -> __fname__version
+    match projectee with | { term_graph; univ_graph; version;_} -> version
   
 let (empty : FStar_Syntax_Syntax.version -> uf) =
   fun v1  ->
@@ -95,11 +85,11 @@ let (new_transaction : unit -> tx) =
   fun uu____470  ->
     let tx = let uu____472 = get ()  in TX uu____472  in
     (let uu____474 =
-       let uu___84_475 = get ()  in
+       let uu___86_475 = get ()  in
        let uu____476 = vops.next_minor ()  in
        {
-         term_graph = (uu___84_475.term_graph);
-         univ_graph = (uu___84_475.univ_graph);
+         term_graph = (uu___86_475.term_graph);
+         univ_graph = (uu___86_475.univ_graph);
          version = uu____476
        }  in
      set uu____474);
@@ -117,11 +107,11 @@ let (get_version : unit -> FStar_Syntax_Syntax.version) =
 let (set_term_graph : tgraph -> unit) =
   fun tg  ->
     let uu____559 =
-      let uu___85_560 = get ()  in
+      let uu___87_560 = get ()  in
       {
         term_graph = tg;
-        univ_graph = (uu___85_560.univ_graph);
-        version = (uu___85_560.version)
+        univ_graph = (uu___87_560.univ_graph);
+        version = (uu___87_560.version)
       }  in
     set uu____559
   
@@ -212,11 +202,11 @@ let (get_univ_graph : unit -> ugraph) =
 let (set_univ_graph : ugraph -> unit) =
   fun ug  ->
     let uu____805 =
-      let uu___86_806 = get ()  in
+      let uu___88_806 = get ()  in
       {
-        term_graph = (uu___86_806.term_graph);
+        term_graph = (uu___88_806.term_graph);
         univ_graph = ug;
-        version = (uu___86_806.version)
+        version = (uu___88_806.version)
       }  in
     set uu____805
   

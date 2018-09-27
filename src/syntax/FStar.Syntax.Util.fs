@@ -799,12 +799,6 @@ let mk_data l args =
       let e = mk_app (fvar l delta_constant (Some Data_ctor)) args in //NS delta: ok
       mk e None e.pos
 
-let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
-let unmangle_field_name x =
-    if U.starts_with x.idText "__fname__"
-    then mk_ident(U.substring_from x.idText 9, x.idRange)
-    else x
-
 (***********************************************************************************************)
 (* Combining an effect name with the name of one of its actions, or a
    data constructor name with the name of one of its formal parameters
@@ -843,12 +837,11 @@ let mk_field_projector_name_from_string constr field =
     field_projector_prefix ^ constr ^ field_projector_sep ^ field
 
 let mk_field_projector_name_from_ident lid (i : ident) =
-    let j = unmangle_field_name i in
-    let jtext = j.idText in
+    let itext = i.idText in
     let newi =
-        if field_projector_contains_constructor jtext
-        then j
-        else mk_ident (mk_field_projector_name_from_string lid.ident.idText jtext, i.idRange)
+        if field_projector_contains_constructor itext
+        then i
+        else mk_ident (mk_field_projector_name_from_string lid.ident.idText itext, i.idRange)
     in
     lid_of_ids (lid.ns @ [newi])
 

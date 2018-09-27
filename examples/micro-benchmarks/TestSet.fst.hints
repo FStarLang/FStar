@@ -15,7 +15,7 @@
         "typing_FStar.TSet.singleton", "typing_FStar.TSet.union"
       ],
       0,
-      "82b783c620c9a7b09ed1770a6d79f388"
+      "5c75fc7d929131eafebe2dc9892298c2"
     ],
     [
       "TestSet.should_succeed",
@@ -32,7 +32,7 @@
         "typing_FStar.TSet.singleton", "typing_FStar.TSet.union"
       ],
       0,
-      "6f24f85282e5e8f0bafed547c86f19be"
+      "6a77ebdc2edd570a5a83938c01d314e0"
     ]
   ]
 ]

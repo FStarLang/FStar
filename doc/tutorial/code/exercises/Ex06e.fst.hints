@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "2f195d592e90253eb34371d21f2480f8"
+      "be3cb609740b83630d83f0dbd030408b"
     ],
     [
       "Ex06e.mem",
@@ -36,7 +36,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "823f31acf50513706aea3d08582e6b32"
+      "86e7b3889d41728669bb7553a4197a3c"
     ],
     [
       "Ex06e.sorted",
@@ -54,7 +54,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "236798206beb319461b17ed47ad1beae"
+      "25439fc95bd2daae41a0932b37c4cbc7"
     ],
     [
       "Ex06e.mem",
@@ -73,7 +73,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "128731a24297c43780d7b6c37c0371eb"
+      "759072dcfdceace6b478406590c30770"
     ]
   ]
 ]

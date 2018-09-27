@@ -1,9 +1,11 @@
 module SepLogic.Heap
 
+module F = FStar.FunctionalExtensionality
+
 private noeq type heap_rec = {
   next_addr : nat;
   hdomain   : addrs;
-  memory    : nat -> Tot (option (a:Type0 & a))
+  memory    : F.restricted_t nat (fun _ -> option (a:Type0 & a))
 }
 
 let heap = h:heap_rec
@@ -20,7 +22,7 @@ private let equal_heaps (h0 h1:heap) =
   
 private noeq type memory_rec = {
   domain   : addrs; 
-  contents : nat -> Tot (option (a:Type0 & a))
+  contents : F.restricted_t nat (fun _ -> option (a:Type0 & a))
 }
 
 let memory = m:(option memory_rec)
@@ -40,7 +42,7 @@ let defined m = Some? m
 
 let emp = 
   let domain = OS.empty in
-  let contents = fun _ -> None in
+  let contents = F.on_dom nat (fun _ -> None) in
   Some ({ domain = domain; contents = contents })
   
 let ref a = nat
@@ -56,10 +58,10 @@ let disjoint_heaps (h0 h1:heap) =
 
 let join h0 h1 =
   let domain = OS.union h0.hdomain h1.hdomain in 
-  let memory = (fun r ->  match (h0.memory r, h1.memory r) with
-                          | (Some v1, None) -> Some v1
-			  | (None, Some v2) -> Some v2
-			  | (None, None)    -> None) in
+  let memory = F.on_dom nat (fun r ->  match (h0.memory r, h1.memory r) with
+                                  | (Some v1, None) -> Some v1
+			          | (None, Some v2) -> Some v2
+			          | (None, None)    -> None) in
   if (h0.next_addr < h1.next_addr)
   then { next_addr = h1.next_addr; hdomain = domain; memory = memory }
   else { next_addr = h0.next_addr; hdomain = domain; memory = memory }
@@ -67,7 +69,7 @@ let join h0 h1 =
 let ( |> ) #a r x = 
   let domain = OS.singleton r in
   let contents : nat -> Tot (option (a:Type0 & a)) = 
-    (fun r' -> if r = r' then Some (| a , x |) else None) in
+    F.on_dom nat (fun r' -> if r = r' then Some (| a , x |) else (None <: (option (a:Type0 & a)))) in
   Some ({ domain = domain; contents = contents })
 
 let ( <*> ) m0 m1 = 
@@ -75,10 +77,10 @@ let ( <*> ) m0 m1 =
   | (Some m0', Some m1') ->
       (if (disjoint_addrs m0'.domain m1'.domain)
        then (let domain = OS.union m0'.domain m1'.domain in
-             let contents = (fun r -> match (m0'.contents r, m1'.contents r) with
-                                     | (Some v1, None) -> Some v1
-                                     | (None, Some v2) -> Some v2
-                                     | (None, None)    -> None) in
+             let contents = F.on_dom nat (fun r -> match (m0'.contents r, m1'.contents r) with
+                                              | (Some v1, None) -> Some v1
+                                              | (None, Some v2) -> Some v2
+                                              | (None, None)    -> None) in
              Some ({ domain = domain; contents = contents }))
        else None)
   | _ -> None
@@ -108,7 +110,7 @@ let sel #a h r =
   x
 
 let upd' (#a:Type0) (h:heap) (r:ref a) (x:a) =
-  { h with memory = (fun r' -> if r = r' then Some (| a, x |) else h.memory r') }
+  { h with memory = F.on_dom nat (fun r' -> if r = r' then Some (| a, x |) else h.memory r') }
 
 let upd #a h r x = upd' h r x
 
@@ -119,14 +121,14 @@ let alloc #a h0 x =
   let r = h0.next_addr in 
   let next_addr = h0.next_addr + 1 in
   let domain = OS.union h0.hdomain (OS.singleton r) in
-  let memory = (fun r' -> if r = r' then Some (| a , x |) else h0.memory r') in
+  let memory = F.on_dom nat (fun r' -> if r = r' then Some (| a , x |) else h0.memory r') in
   let h1 = { next_addr = next_addr; hdomain = domain; memory = memory } in
   (r, h1)
 
 let dealloc #a h0 r =
   let next_addr = h0.next_addr in
   let domain = OS.remove r h0.hdomain in
-  let memory = (fun r' -> if r <> r' then h0.memory r' else None) in
+  let memory = F.on_dom nat (fun r' -> if r <> r' then h0.memory r' else None) in
   { next_addr = next_addr; hdomain = domain; memory = memory }
   
 let addrs_in m = 
@@ -144,14 +146,14 @@ let restrict_memory rs m =
   match m with 
   | Some m' -> 
       let domain = OS.intersect m'.domain rs in 
-      let contents = (fun r -> if OS.mem r domain then m'.contents r else None) in
+      let contents = F.on_dom nat (fun r -> if OS.mem r domain then m'.contents r else None) in
       Some ({ domain = domain; contents = contents })
 
 let complement_memory rs m =  
   match m with 
   | Some m' -> 
       let domain = OS.minus m'.domain rs in
-      let contents = (fun r -> if OS.mem r domain then m'.contents r else None) in
+      let contents = F.on_dom nat (fun r -> if OS.mem r domain then m'.contents r else None) in
       Some ({ domain = domain; contents = contents })
 
 let lemma_disjoint_heaps_comm h0 h1 = ()

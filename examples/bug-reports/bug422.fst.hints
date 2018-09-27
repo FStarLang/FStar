@@ -11,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0b1a6eed3ab711bd4f4cccddbe069ad0"
+      "f2b82cc69c14e6e69e1babba88dd4380"
     ],
     [
       "Bug422.fails",
@@ -26,7 +26,8 @@
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Monotonic.Heap.modifies",
         "equation_FStar.Monotonic.Heap.modifies_t", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Bug422.sixty_four",
+        "equation_Prims.nat", "equation_Prims.pos",
+        "function_token_typing_Bug422.sixty_four",
         "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -47,7 +48,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "50df372b4f21f5602a3384e34ff13df3"
+      "b6c2c4eef91fdd3e39f2f4c0fae646fb"
     ],
     [
       "Bug422.box'",
@@ -59,7 +60,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d4bda875ac6ecec10d1cc9fda204d4bc"
+      "6c6fecf41b41d7e126ae08b459e26e53"
     ],
     [
       "Bug422.__proj__Box'__item__v",
@@ -71,7 +72,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "fc61cf38f98997fa781a2f44443fc7b1"
+      "f0fab80eb7f99d44cfd22db8c888205f"
     ],
     [
       "Bug422.__proj__Box'__item__v",
@@ -83,7 +84,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "fc322566d74c583dcd5f7ea0c07613a1"
+      "dee52090c903220f8796dc51db0abe13"
     ],
     [
       "Bug422.works",
@@ -99,7 +100,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1829c76943942a7b33289fd44a2db406"
+      "a2738f49ada9fbd5d8bde3c0f2075dbb"
     ],
     [
       "Bug422.works",
@@ -134,7 +135,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "a8f4196e83680a5b8d0992a796e7e80c"
+      "fff2c87b53c4c0e5202719565af39f9f"
     ],
     [
       "Bug422.works",
@@ -149,7 +150,8 @@
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Monotonic.Heap.modifies",
         "equation_FStar.Monotonic.Heap.modifies_t", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Bug422.sixty_four",
+        "equation_Prims.nat", "equation_Prims.pos",
+        "function_token_typing_Bug422.sixty_four",
         "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -171,7 +173,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "e37142b152988a52a7df17306785225f"
+      "50b296d00230d16baac6e4d4b72a92bc"
     ]
   ]
 ]

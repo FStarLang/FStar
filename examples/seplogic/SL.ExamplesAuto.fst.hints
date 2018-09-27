@@ -11,7 +11,7 @@
         "lemma_SL.Heap.lemma_sep_comm"
       ],
       0,
-      "1f0a4996a9c808412a5e7d416917dc10"
+      "b0b7133522dea0c51ba85b35bcbf9832"
     ],
     [
       "SL.ExamplesAuto.footprint_of",
@@ -36,7 +36,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "98eb434cd7391ff97deecac3efe27bc4"
+      "11a1a4cb56cce64f07931574bb0a7ac8"
     ],
     [
       "SL.ExamplesAuto.frame_wp_lemma",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "e515ca0d1e64f62aab8559ee858fc767"
+      "90e162543b3d4328574caa05aad781c0"
     ],
     [
       "SL.ExamplesAuto.ite_wp_lemma",
@@ -63,7 +63,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "7577ebbf199438164b21bdb12445276f"
+      "30bdf9eeecf9d025266622b6e5ae6e18"
     ],
     [
       "SL.ExamplesAuto.if_then_else_wp_lemma",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "601a5705fb472fa6b870efde5a305546"
+      "1184eb6d4dd6ce11c3a656ef3a55e071"
     ],
     [
       "SL.ExamplesAuto.close_wp_lemma",
@@ -87,11 +87,11 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
         "equation_Prims.squash", "equation_SL.Effect.st_close_wp",
-        "l_quant_interp__19670",
+        "l_quant_interp__29011",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "c0d3bab61cc47843f37393fa8d68d6bc"
+      "1509137d1c54eed0b4edaa70d3a7fe73"
     ],
     [
       "SL.ExamplesAuto.assume_p_lemma",
@@ -105,7 +105,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "c78c08431440fd345650a05e691ad89d"
+      "9718076e646e236e2b5d86cdcf1c6648"
     ],
     [
       "SL.ExamplesAuto.pointsto_to_string",
@@ -128,7 +128,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "59c2a16fd85f67afb846cf7ed6f93cc0"
+      "a954af6b43d47cf9faef8a2136bfdf35"
     ],
     [
       "SL.ExamplesAuto.sort_sl_correct",
@@ -146,7 +146,7 @@
         "token_correspondence_CanonCommMonoid.sortWith"
       ],
       0,
-      "abcd6fb07ec07dab255d1b42e9de16f3"
+      "7cc8e6ace7061215b7a4a71aa702d07a"
     ],
     [
       "SL.ExamplesAuto.__proj__Frame__item__ta",
@@ -160,7 +160,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_7b96c44bc1723c750211be32c4326057"
       ],
       0,
-      "9fc99375d8b8f09df7a16a585684c300"
+      "d721678f182bdfb3710e1e3b257f0edf"
     ],
     [
       "SL.ExamplesAuto.__proj__Frame__item__twp",
@@ -174,7 +174,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_7b96c44bc1723c750211be32c4326057"
       ],
       0,
-      "26c8a261b921bf10259f11b04d92f775"
+      "6f6d133f031d7578cd95ad0f0217a72f"
     ],
     [
       "SL.ExamplesAuto.__proj__Frame__item__tpost",
@@ -188,7 +188,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_7b96c44bc1723c750211be32c4326057"
       ],
       0,
-      "38c8a1ce2621aa1ccae677305373eedc"
+      "300e3c1ee98883341a4bb497644cec2d"
     ],
     [
       "SL.ExamplesAuto.__proj__Frame__item__tm",
@@ -202,7 +202,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_7b96c44bc1723c750211be32c4326057"
       ],
       0,
-      "c4f88f88b120f6e24ec99188bee2a252"
+      "49cac7401440e9026662f38af946eb85"
     ],
     [
       "SL.ExamplesAuto.__proj__Unknown__item___0",
@@ -216,7 +216,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_3eb8fee3b8fcd7b6207497a8ddf9490a"
       ],
       0,
-      "822c813547948344ffac2e8a0371849e"
+      "3dd8ba5ba9bc9ed4848c6e418df4d54f"
     ],
     [
       "SL.ExamplesAuto.peek_cmd",
@@ -242,7 +242,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "15a1c9d32c1ac4d74751b87bbd47c059"
+      "e3c4349ff4239e8cdd2ab8f84b49f02f"
     ],
     [
       "SL.ExamplesAuto.unfold_first_occurrence",
@@ -254,7 +254,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "8082fbf082d78fbd1684edec4dcb499a"
+      "914b35ffbb7b6ed5dc14080e480dc217"
     ],
     [
       "SL.ExamplesAuto.__tcut",
@@ -267,7 +267,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "b0b9f8d85aa63109b3708f1da7c1fe86"
+      "e16b8cdc755231a51c404ded795762c8"
     ],
     [
       "SL.ExamplesAuto.sl",
@@ -301,7 +301,7 @@
         "typing_SL.ExamplesAuto.__proj__Unknown__item___0"
       ],
       0,
-      "ceadfb7821409a927274c2c40daf08c6"
+      "ef73cdee9f547b60299fd95e504334cc"
     ],
     [
       "SL.ExamplesAuto.__elim_exists_as_forall",
@@ -310,12 +310,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "l_quant_interp__19909",
+        "equation_Prims.squash", "l_quant_interp__29250",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_d16de86ec5446f55c1622708945a0449"
       ],
       0,
-      "f9972daa3b8cc8b49c49a9293bd63c29"
+      "ede992d05f60c3c7c037ed5225d8def3"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -347,7 +347,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "5c33e8b9f62f606570d8ad09b805f75f"
+      "1b2bbff73a4913dee37d1a7df0320d76"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -376,7 +376,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "ff6cd4760749360a15abb1f8fabe00fb"
+      "130916b253181e6d0eb4c50c4e43149c"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -405,7 +405,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "2abcd27a1b1acf84dba3817a14e8004c"
+      "6a004bd415cfc47cd6cba8c726e985b4"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -435,7 +435,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "916281b5d729c4fe8036f4691546bd91"
+      "f0299663e0390962440d576b1c2f2505"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -465,7 +465,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "f90c7c2d57ebef18a0dba8df580d6726"
+      "36dd33ac6de57ba33d056b84c31eb74a"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -497,7 +497,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "8a38fa01edf7a8d80983e4604f8cb9bc"
+      "3ec0bdb0ed1432245dbb9dadc6033b9f"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -530,7 +530,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "3cc2b4fa1c5c0c4a430d13eb1070e3fa"
+      "47f5d500edb3374f90f1ea1e98d4e712"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -550,7 +550,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "41078baa8f57ef6898423a69bb53ed46"
+      "6bdefbfc2cd84cc2cd940e9e6e8e6a19"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -570,7 +570,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "0a232f16df5b1c2cfda084ab3454ec4c"
+      "147de01ac002d8a53e079fe8a1f7a8ff"
     ],
     [
       "SL.ExamplesAuto.rotate",
@@ -602,7 +602,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "6203541a7371426e3c9aa53f45de4528"
+      "cbab8f65e8107bed2212fff8f9cee488"
     ],
     [
       "SL.ExamplesAuto.rotate",
@@ -639,7 +639,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "e85fc0487a69db56c036e30e0700bc8d"
+      "9a4103093ded15e9f4578f506301a535"
     ],
     [
       "SL.ExamplesAuto.rotate",
@@ -674,7 +674,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "2d92f4fd5119c734c1b74461db00cb17"
+      "dee3784592de36b0a9fa501ae6538008"
     ],
     [
       "SL.ExamplesAuto.rotate",
@@ -694,7 +694,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "2a8e1bb4edbcdb8d24fc1cd7163d69d1"
+      "b6ccb73f1960f46d5eb9a2f0b5183703"
     ],
     [
       "SL.ExamplesAuto.rotate",
@@ -714,7 +714,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "2c367d88aee97082fd6912838b9f3ce0"
+      "5ca70fedcb84b3509a03d154457a2a81"
     ],
     [
       "SL.ExamplesAuto.test",
@@ -726,7 +726,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_8bfca1b807f3b95890cf7a960b4ff61e"
       ],
       0,
-      "008ea1dba0f794d6e106715b3a591c8f"
+      "7cc94188c83551594ef503b259986f50"
     ],
     [
       "SL.ExamplesAuto.test",
@@ -740,7 +740,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_8bfca1b807f3b95890cf7a960b4ff61e"
       ],
       0,
-      "090d73d56ef9ddb3c60ef05d6599e135"
+      "caddba992febb2cd3fc39d3eef3d9561"
     ],
     [
       "SL.ExamplesAuto.test",
@@ -754,7 +754,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_8bfca1b807f3b95890cf7a960b4ff61e"
       ],
       0,
-      "15ef563ee9a52d7c428f6ce63dffafc4"
+      "a75b4994873326f1a19c310d13e32786"
     ],
     [
       "SL.ExamplesAuto.write_read",
@@ -781,7 +781,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "7d61ea4eef6b022324c1d4956158e232"
+      "3c0c013f58c7c19863ddf1aeef06e35c"
     ],
     [
       "SL.ExamplesAuto.write_read",
@@ -801,7 +801,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "8b2282f144518a4d1ca194f218f2748f"
+      "ee84e35f4be5620eefad44c79f45af7a"
     ],
     [
       "SL.ExamplesAuto.write_read",
@@ -821,7 +821,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "3119ed5d5d967404df673a1acc6ca441"
+      "33cd4b6700e90b3ef8c22c3f68e699e5"
     ],
     [
       "SL.ExamplesAuto.write_read",
@@ -842,7 +842,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "2c45fbe4a5efcd57761f2c85cbc12316"
+      "5fb40c577b624064a917233bed32d034"
     ],
     [
       "SL.ExamplesAuto.write_read",
@@ -863,7 +863,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "0a996efa3a784f077d6f028c8cf34840"
+      "c56d7ad8a993f033b5cc135f360a26fb"
     ],
     [
       "SL.ExamplesAuto.read_write",
@@ -895,7 +895,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "e8e33f2f7e7539de8f57df498fcfa56c"
+      "0264961c4482f52c44f72f34c9efec0a"
     ],
     [
       "SL.ExamplesAuto.read_write",
@@ -924,7 +924,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "6ab1842ad773fa03ff5c3a4a5a65cfcf"
+      "d3cdbdfb4a97d6543d6d0cbb574080f3"
     ],
     [
       "SL.ExamplesAuto.read_write",
@@ -953,7 +953,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "45ac5310dd059be50013142016304c69"
+      "ce3fa03697b59a9aaecec0fed3530d8b"
     ],
     [
       "SL.ExamplesAuto.read_write",
@@ -973,7 +973,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "0acc486e8cb7324d38f99325ef01e28f"
+      "a3dcd22bbb9dc43ffa598ba608df6a68"
     ],
     [
       "SL.ExamplesAuto.read_write",
@@ -993,7 +993,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "62238369537109163188ed6d5408848d"
+      "45335ec9e5e4774657e95567a89d4d1d"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -1005,7 +1005,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "16d4a66de9845dc6c7430fed29f59561"
+      "0fc50c9dd477987feb90033a7426ed0d"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -1030,7 +1030,7 @@
         "typing_SL.Heap.addrs_in", "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "bdb7e2a99e51e500f32460bf8d924438"
+      "eba7afb357c897bd4f17390d511d0180"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -1043,7 +1043,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_ef1494113268b111e11d71f440b8d0ec"
       ],
       0,
-      "e64bd5adadd20173a15b7dde5effdd64"
+      "670854631e4ca7024780f4e14c098a65"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -1056,7 +1056,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_ef1494113268b111e11d71f440b8d0ec"
       ],
       0,
-      "eb0bbb1e13732334011adefd295891ae"
+      "5e6124e70a9a482634671e90224d1735"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -1081,7 +1081,7 @@
         "typing_SL.Heap.addrs_in", "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "209a57ea3922cbb75f3b087e8ae72556"
+      "0a5c46fd53a517774abb9a8cf969135e"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -1094,7 +1094,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_ef1494113268b111e11d71f440b8d0ec"
       ],
       0,
-      "d07403de8058a0ed87412035b9df4412"
+      "55dde3a18a4d4da0ea6bea566c0a8897"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -1107,7 +1107,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_ef1494113268b111e11d71f440b8d0ec"
       ],
       0,
-      "0dfd93c515aef34cc792b65867e31b09"
+      "1e74af92c9bb5275626248dde1d567fe"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -1119,7 +1119,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "7fcfeb3c34c6ad19915ffc74f49ba131"
+      "8d4325612df9ced3ab3eb287d21316d2"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -1152,7 +1152,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "6dbb4bf43ab8e784329dec06e0b84d57"
+      "83126a79b8a1ed8eb09a8139b160e3eb"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -1168,7 +1168,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "fe6756686ae95e90da69b5148383c518"
+      "a4861e9dd263071345872ec8ad586621"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -1184,7 +1184,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "4ad9f7789189eec9dffdad02b967a088"
+      "e51c329f36cc74f450ec2b46a847f53b"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -1217,7 +1217,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "b4f65488b3f4cf21b0668bf35dec0fc8"
+      "e98f02cc4366be5a7ccc6bb3e669db6d"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -1230,7 +1230,7 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_f584ac7f9e02ea51fdd9f4acf0063cf9"
       ],
       0,
-      "8dc585f2289b31cacde6730ae97675da"
+      "9f5c01434540797a682bb5a5a09b0374"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -1243,7 +1243,223 @@
         "refinement_interpretation_SL.ExamplesAuto_Tm_refine_f584ac7f9e02ea51fdd9f4acf0063cf9"
       ],
       0,
-      "8929fb5cb21e502edbdb08d1e2ace87e"
+      "13702e820954fce8afe2a146aef15b6f"
+    ],
+    [
+      "SL.ExamplesAuto.memory_cm",
+      2,
+      2,
+      1,
+      [
+        "@query", "lemma_SL.Heap.lemma_sep_assoc",
+        "lemma_SL.Heap.lemma_sep_comm"
+      ],
+      0,
+      "96e8c9812169d21dd63fd9873d0e76e0"
+    ],
+    [
+      "SL.ExamplesAuto.footprint_of",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
+        "equation_FStar.Reflection.Types.name", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Reflection.Types.name",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "9639053aee66d4979ba08edd0e144c62"
+    ],
+    [
+      "SL.ExamplesAuto.frame_wp_lemma",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.l_and", "equation_Prims.squash",
+        "equation_SL.Effect.frame_wp", "l_and-interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "9c1729cafe6644ff7531abb9b87038bf"
+    ],
+    [
+      "SL.ExamplesAuto.pointsto_to_string",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "equation_FStar.Reflection.Types.name", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Reflection.Types.name",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "37b43f1a6335f6ec7d75484a6a8755ee"
+    ],
+    [
+      "SL.ExamplesAuto.__proj__Frame__item__ta",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_SL.ExamplesAuto.Frame",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_SL.ExamplesAuto_Tm_refine_7b96c44bc1723c750211be32c4326057"
+      ],
+      0,
+      "87ce6990c3c9ca7001ea3262bf5aab05"
+    ],
+    [
+      "SL.ExamplesAuto.__proj__Frame__item__twp",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_SL.ExamplesAuto.Frame",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_SL.ExamplesAuto_Tm_refine_7b96c44bc1723c750211be32c4326057"
+      ],
+      0,
+      "20b9e058ce4afb3e5a66306e2a56d27a"
+    ],
+    [
+      "SL.ExamplesAuto.__proj__Frame__item__tpost",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_SL.ExamplesAuto.Frame",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_SL.ExamplesAuto_Tm_refine_7b96c44bc1723c750211be32c4326057"
+      ],
+      0,
+      "44bed97e21c37585f2de84cde6897ca3"
+    ],
+    [
+      "SL.ExamplesAuto.__proj__Frame__item__tm",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_SL.ExamplesAuto.Frame",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_SL.ExamplesAuto_Tm_refine_7b96c44bc1723c750211be32c4326057"
+      ],
+      0,
+      "3e3f8a95e18b00610246dbb7e30c5aec"
+    ],
+    [
+      "SL.ExamplesAuto.__proj__Unknown__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_SL.ExamplesAuto.Unknown",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_SL.ExamplesAuto_Tm_refine_3eb8fee3b8fcd7b6207497a8ddf9490a"
+      ],
+      0,
+      "023a1f17870164cce4945761bc3115fa"
+    ],
+    [
+      "SL.ExamplesAuto.peek_cmd",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
+        "equation_FStar.Reflection.Types.name",
+        "equation_FStar.Reflection.Types.typ", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Reflection.Types.name",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "fbd02c36ad7c312c36c36fb8896db363"
+    ],
+    [
+      "SL.ExamplesAuto.unfold_first_occurrence",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "a00b36e4129473f604bf917ba644c8c0"
+    ],
+    [
+      "SL.ExamplesAuto.sl",
+      2,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "SL.ExamplesAuto_pretyping_723aec1e8ea8c2bc5b2c58f41e7919eb",
+        "bool_inversion", "bool_typing",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_SL.ExamplesAuto.Read@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_SL.ExamplesAuto.Assume",
+        "disc_equation_SL.ExamplesAuto.Bind",
+        "disc_equation_SL.ExamplesAuto.Close",
+        "disc_equation_SL.ExamplesAuto.Frame",
+        "disc_equation_SL.ExamplesAuto.FramePost",
+        "disc_equation_SL.ExamplesAuto.IfThenElse",
+        "disc_equation_SL.ExamplesAuto.Ite",
+        "disc_equation_SL.ExamplesAuto.Read",
+        "disc_equation_SL.ExamplesAuto.Unknown",
+        "disc_equation_SL.ExamplesAuto.Write",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_SL.ExamplesAuto.cmd",
+        "function_token_typing_FStar.Reflection.Types.fv",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_SL.ExamplesAuto_Tm_refine_3eb8fee3b8fcd7b6207497a8ddf9490a",
+        "typing_SL.ExamplesAuto.__proj__Unknown__item___0"
+      ],
+      0,
+      "ffb3c78bdd639359cb1c177abb646f2e"
     ]
   ]
 ]

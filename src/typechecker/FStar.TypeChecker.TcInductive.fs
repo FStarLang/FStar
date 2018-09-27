@@ -144,9 +144,24 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                 (Print.binders_to_string "->" arguments)
                 (Print.term_to_string result);
 
-
          let arguments, env', us = tc_tparams env arguments in
          let result, res_lcomp = tc_trivial_guard env' result in
+         let head, args = U.head_and_args result in
+
+         (* Make sure the parameters are respected, cf #1534 *)
+         (* The first few arguments, as many as List.length tps, must exactly match the
+          * bvs in tps, as they have been opened already by the code above. Must be done
+          * after typechecking `result`, to make sure implicits are filled in. *)
+         let p_args = fst (BU.first_N (List.length tps) args) in
+         List.iter2 (fun (bv, _) (t, _) ->
+            match (SS.compress t).n with
+            | Tm_name bv' when S.bv_eq bv bv' -> ()
+            | _ ->
+               raise_error (Errors.Error_BadInductiveParam,
+                    BU.format2 "This parameter is not constant: expected %s, got %s"
+                            (Print.bv_to_string bv) (Print.term_to_string t)) t.pos
+         ) tps p_args;
+
          let ty = unfold_whnf env res_lcomp.res_typ |> U.unrefine in
          begin match (SS.compress ty).n with
                | Tm_type _ -> ()
@@ -154,7 +169,6 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                                                 (Print.term_to_string result)
                                                 (Print.term_to_string ty))) se.sigrng
          end;
-         let head, _ = U.head_and_args result in
          (*
           * AR: if the inductive type is explictly universe annotated,
           *     we need to instantiate universes properly in head (head = tycon<applied to uvars>)
