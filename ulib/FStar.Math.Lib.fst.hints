@@ -160,7 +160,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ae1ac2955d79606947a664a978e5dcae"
+      "b9576625d260c67a7a49174e89ca1f00"
     ],
     [
       "FStar.Math.Lib.powx",
@@ -178,7 +178,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c34ef09003fc0ccbef0982295eb992dc"
+      "8c57f6428d0a6852faa78138215e1df7"
     ],
     [
       "FStar.Math.Lib.abs",
@@ -604,7 +604,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "29c6cbb7e2e40c30af2d4c5e4ceba0ec"
+      "14a669ea3bfb8f39d1b624453a63a92b"
     ],
     [
       "FStar.Math.Lib.powx",
@@ -622,7 +622,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c699f7bf1ea44eb560cef3561ec3f4d8"
+      "e06f97f9d59a2d9945f69fc87162cbf4"
     ],
     [
       "FStar.Math.Lib.abs",
