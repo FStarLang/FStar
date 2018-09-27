@@ -982,27 +982,6 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         let stack = push (App (env, ref, None, Range.dummyRange)) stack in
         Some (cfg, stack)
 
-(*
- * AR: reduce (on_domain _ #_ f) x to f x
- *     NOTE: it would be unsound to reduce on_domain _ #_ f to f, cf. #1542
- *)
-let is_fext_on_domain_application (hd:term) (args:args) :option<term> =
-  let fext_lid (s:string) = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] Range.dummyRange in
-  let on_domain_lids = ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"] |> List.map fext_lid in
-  let is_on_dom fv = on_domain_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) in
-
-  match (SS.compress hd).n with
-  | Tm_app (hd, [_a; _b; f]) ->
-    (match (U.un_uinst hd).n with
-     | Tm_fvar fv when is_on_dom fv ->
-       Some (U.mk_app (fst f) args)
-     | _ -> None)
-  | Tm_uinst ({ n = Tm_fvar fv }, _)
-  | Tm_fvar fv when is_on_dom fv && List.length args >= 4 ->  //first two are type arguments, third is the function, and then the function arguments
-    let args = args |> List.tl |> List.tl in  //remove the first two type arguments
-    Some (U.mk_app (args |> List.hd |> fst) (args |> List.tl))
-  | _ -> None
-
 let is_fext_on_domain (t:term) :option<term> =
   let fext_lid (s:string) = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] Range.dummyRange in
   let on_domain_lids = ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"] |> List.map fext_lid in
@@ -1065,9 +1044,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_quoted _ ->
             rebuild cfg env stack (closure_as_term cfg env t)
           
-          | Tm_app(hd, args) when is_fext_on_domain_application hd args |> is_some ->
-            norm cfg env stack (is_fext_on_domain_application hd args |> must)
-
           | Tm_app(hd, args)
             when should_consider_norm_requests cfg &&
                  is_norm_request hd args = Norm_request_requires_rejig ->
@@ -2156,7 +2132,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
            failwith "DIE!");
   
   let f_opt = is_fext_on_domain t in
-  if f_opt |> is_some && (match stack with | Arg _::_ -> true | _ -> false)
+  if f_opt |> is_some && (match stack with | Arg _::_ -> true | _ -> false)  //AR: it is crucial to check that (on_domain a #b) is actually applied, else it would be unsound to reduce it to f
   then f_opt |> must |> norm cfg env stack
   else
       let t = maybe_simplify cfg env stack t in
