@@ -110,7 +110,7 @@
         "typing_FStar.DM4F.Heap_Tm_abs_c96947700dc5ff33e3983e3780a00a96"
       ],
       0,
-      "34d803c2fc887aeedeab85556275b7ab"
+      "5883ed7fdb7dc0c9eafba24c5e224322"
     ],
     [
       "FStar.DM4F.Heap.upd",
@@ -155,7 +155,7 @@
         "typing_FStar.DM4F.Heap_Tm_abs_c96947700dc5ff33e3983e3780a00a96"
       ],
       0,
-      "34049042085933bdc5d27b958ed32693"
+      "2f00a1a50defaee21b34c360ac607b9d"
     ],
     [
       "FStar.DM4F.Heap.alloc",
@@ -219,7 +219,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "6141a789de5f2aa23908a3670c1ed2ef"
+      "d10a850269e5ffeb8c03610a82619a40"
     ],
     [
       "FStar.DM4F.Heap.contains_a_well_typed_implies_contains",
@@ -468,7 +468,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "0fcc644e6070aebebc1f5bbff841d465"
+      "936fdfc5eff6a42a13af228c77493286"
     ],
     [
       "FStar.DM4F.Heap.sel_upd2",
@@ -534,7 +534,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "afdcc5591ff7a4e5dc6c26d1a21f43cb"
+      "a2e22d920bc59e57058679107964f043"
     ],
     [
       "FStar.DM4F.Heap.upd_sel",
@@ -592,7 +592,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "67c0979286e5dc103cee4caade07ff13"
+      "0ff56a81fde9382d641129f32a8a61fb"
     ],
     [
       "FStar.DM4F.Heap.emp",
@@ -623,7 +623,7 @@
         "typing_FStar.DM4F.Heap_Tm_abs_c96947700dc5ff33e3983e3780a00a96"
       ],
       0,
-      "34df2c2f150fb0d34c4876cf75307fce"
+      "a61a4a80f3116f7890afdd808309e851"
     ],
     [
       "FStar.DM4F.Heap.in_dom_emp",
@@ -655,7 +655,7 @@
         "typing_FStar.DM4F.Heap_Tm_abs_c96947700dc5ff33e3983e3780a00a96"
       ],
       0,
-      "4d8114b2427b22678f393f8a353832e6"
+      "10c699f6757a4121feb6dd035f1a7a57"
     ],
     [
       "FStar.DM4F.Heap.upd_contains",
@@ -731,7 +731,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "2d81572c5cf47cb1fcf7cd0f7aabcdaa"
+      "acbda7825d3012b265c63d567e5d0dcb"
     ],
     [
       "FStar.DM4F.Heap.upd_contains_a_well_typed",
@@ -807,7 +807,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "9f5d111ae599381d1692e17d6b5df91d"
+      "f848d8b10e798f474863d7a43395891f"
     ],
     [
       "FStar.DM4F.Heap.modifies",

@@ -67,7 +67,7 @@
         "typing_Serializer.entry_st_bufs"
       ],
       0,
-      "b8411fbdbbec8777f26ade17ea77007b"
+      "1c097d0f6b52c1a1da5313f9f0776b92"
     ],
     [
       "Serializer.adjacent_entries_disjoint",
@@ -1299,7 +1299,7 @@
         "typing_Serializer.entry_st_bufs"
       ],
       0,
-      "0621fb812aa601e3e4950ee3b819704d"
+      "b0172e745687a9a031d80522a9564844"
     ],
     [
       "Serializer.ser_entry",
