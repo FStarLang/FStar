@@ -33,7 +33,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a62d9be7a099692d232837462f6b3f70"
+      "fae6879e613824ec85e63c183fc65ca2"
     ],
     [
       "FStar.OrdSetProps.union_lemma",
@@ -135,7 +135,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4152bc486d9ab793b61224c97be83690"
+      "af2e1074fdcf9dea6119e520e6f5eb36"
     ],
     [
       "FStar.OrdSetProps.union_lemma",

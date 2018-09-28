@@ -153,7 +153,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "8021dd677f11886a852418f0c3812c05"
+      "58dd4cd62578b691f945666b61df12c7"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_reduce",
@@ -609,7 +609,7 @@
         "typing_tok_X64.Machine_s.Rbx@tok"
       ],
       0,
-      "578064fc4d9ae14bdf845deb9c2f460c"
+      "32dc8a6753e6e6d9001ef962e35c54bf"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_reduce_regs_fast_block",
@@ -734,7 +734,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "e3225fbe4a111d1128d122666188e4c7"
+      "2950470bd2bffb98039731afe88a45e7"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_blocks",
@@ -841,7 +841,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "2344d80f673867f78bdb4708b9dc602b"
+      "4c04bba5d634df40f9ed3afa82c88f97"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -1033,7 +1033,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "ea287ac3134733d9023ac6a40e4cb482"
+      "07032841706b65d3025b5e6dc658e31c"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1056,7 +1056,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "f3595539deed2eddd5bc168fd1335ef7"
+      "4c53e46abd1588be644a9b3bd2336949"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_last_block",
@@ -1257,7 +1257,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "ab6606d20f29a17b6b1018891ff8f243"
+      "99c519e46867983138f8a976bd965878"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_last_block",
@@ -1829,7 +1829,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "aaa90a998f7cd42ba5d8ad3abe4abe6b"
+      "8ee4e41ac2b87f4b76ba155825b2a40b"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_impl",
@@ -2059,7 +2059,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "fefcf2ab81ff105b23d0b98e8049ed2b"
+      "03dc7410a06c8252e4e556c71dcee77b"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305",
