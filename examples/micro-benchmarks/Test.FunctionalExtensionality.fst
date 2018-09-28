@@ -17,7 +17,7 @@ let eta_is_eq #a (#b:a -> Type) (f: (x:a -> b x)) : (f == (fun (x:a) -> f x)) =
      And the interpretation of `a ^-> b` is an arrow whose **maximal
      domain** is a.
 *)
-[@expect_failure]
+[@(expect_failure [19])]
 let sub_fails (f: int ^-> int) : (nat ^-> int) = f
 //this fails because `f`'s maximal domain is `int`,
 //but we are trying to return it at a type that claims
@@ -46,7 +46,7 @@ let on_dom_transitivity_of_equality =
   assert (F.feq (on nat f) h) //`f` is pointwise equal to h on nat, but not provably equal
 
 
-(* Now for a negative test *)
+(* Now for some negative tests *)
 
 assume val f1 : int -> int
 assume val g1 : nat ^-> int
@@ -116,3 +116,34 @@ let on_2 (#a #b:Type) (#c:Type) (f:(a -> b -> Tot c))
 let on_2_interp (#a #b #c:Type) (f: (a -> b -> Tot c)) (x:a) (y:b)
     : Lemma (on_2 f x y == f x y)
     = ()
+
+////////////////////////////////////////////////////////////////////////////////
+//Subtyping the co-domain needs explicit coercion
+////////////////////////////////////////////////////////////////////////////////
+
+// One might expect that `^->` would be covariant in the co-domain of
+// the function, but this doesn't work currently since `on_domain` is abstract
+[@(expect_failure [19])]
+let sub_currently_not (f: int ^-> nat) : (int ^-> int) = f
+
+// We can get this to work using an explicit `on_domain` coercion
+let needs_explicit_coercion (f: int ^-> nat) : (int ^-> int) = on_domain int #(fun _ -> int) f
+
+// In more detail here is a where F* gets stuck in the derivation of `sub_currently_not`
+let sub_currently_not_why (f: int ^-> nat) : (int ^-> int) =
+  assert (eq2 #(int -> nat) (on int #nat f) f);  //f is restricted at type int -> nat
+  assert (eq2 #(int -> nat) (on int #nat (on int #nat f)) (on int #nat f));  //on idempotence at type int -> nat
+  assert (eq2 #(int -> int) (on int #int (on int #int f)) (on int #int f));  //on idempotence at type int -> int
+
+  assume (eq2 #(int -> int) (on int #int f) f);  // <- F* can't currently prove this
+  f
+
+// Potential ways to lift this limitation in the future include:
+// 0. If some day we add variance annotations to type parameters, we
+//    could try to make on_domain co-variant in its (implicit) 2nd argument.
+// 1. We frame the idempotence lemma so as to allow weakening of `b`,
+//    but then we would need to use `has_type` to state it
+// 2. We treat `on_domain` specially in the smt encoding and encode it
+//    as a `Term -> Term -> Term` function, thereby skipping the codomain
+//    argument ... I think F* typechecking would make sure that `on_domain`
+//    application is type correct -- this sounds a bit hacky

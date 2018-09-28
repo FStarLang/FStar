@@ -26,7 +26,7 @@ module FStar.FunctionalExtensionality
  * of its interaction with subtyping. In fact, prior formulations of
  * this axiom were discovered to be unsound by Aseem Rastogi.
 
- * The predicate `feq #a #b f g` asserts that `f, g: a -> b` are
+ * The predicate `feq #a #b f g` asserts that `f, g: x:a -> (b x)` are
  * pointwise equal on the domain `a`.
 
  * However, due to subtyping `f` and `g` may also be defined on some
@@ -35,7 +35,7 @@ module FStar.FunctionalExtensionality
  * to conclude that they are equal everywhere.
 
  * For more context on how functional extensionality works in F*, see
- *   1. examples/micro-benchmarks/Test.FunctionalExtensionality
+ *   1. examples/micro-benchmarks/Test.FunctionalExtensionality.fst
  *   2. ulib/FStar.Map.fst and ulib/FStar.Map.fsti
  *   3. Issue #1542 on github.com/FStarLang/FStar/issues/1542
 
@@ -62,7 +62,7 @@ let feq (#a:Type) (#b:a -> Type) (f:arrow a b) (g:arrow a b)
     1. Intuitively, `on_domain a f` can be seen as a function whose
        maximal domain is `a`.
 
-    2. While, `on_domain a f` is proven to be pointwise equal to `f`,
+    2. While, `on_domain a f` is proven to be *pointwise* equal to `f`,
        crucially it is not provably equal to `f`, since `f` may
        actually have a domain larger than `a`.
 
@@ -107,8 +107,8 @@ let is_restricted (a:Type) (#b:a -> Type) (f:arrow a b)
 (* restricted_t a b:
       Lifts the `is_restricted` predicate into a refinement type
 
-      This is the type of functions whose maximal domain is a
-      and whose (dependent) co-domain is b.
+      This is the type of functions whose maximal domain is `a`
+      and whose (dependent) co-domain is `b`.
 *)
 let restricted_t (a:Type) (b:a -> Type)
   = f:arrow a b{is_restricted a f}
@@ -202,16 +202,16 @@ let (^->>) (a:Type) (b:Type)
   = restricted_g_t a (fun _ -> b)
 
 
-(* `on_dom a f`:
-     A convenience function to introduce a restricted, dependent function
+(* `on_dom_g a f`:
+     A convenience function to introduce a restricted, ghost, dependent function
  *)
 unfold
 let on_dom_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
   : restricted_g_t a b
   = on_domain_g a f
 
-(* `on a f`:
-     A convenience function to introduce a restricted, non-dependent function
+(* `on_g a f`:
+     A convenience function to introduce a restricted, ghost, non-dependent function
  *)
 unfold
 let on_g (a:Type) (#b:Type) (f:(a -> GTot b))
