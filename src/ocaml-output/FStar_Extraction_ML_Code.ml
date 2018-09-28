@@ -342,40 +342,40 @@ let (escape_or :
     FStar_BaseTypes.char -> Prims.string)
   =
   fun fallback  ->
-    fun uu___272_1120  ->
-      if uu___272_1120 = 92
+    fun uu___273_1120  ->
+      if uu___273_1120 = 92
       then "\\\\"
       else
-        if uu___272_1120 = 32
+        if uu___273_1120 = 32
         then " "
         else
-          if uu___272_1120 = 8
+          if uu___273_1120 = 8
           then "\\b"
           else
-            if uu___272_1120 = 9
+            if uu___273_1120 = 9
             then "\\t"
             else
-              if uu___272_1120 = 13
+              if uu___273_1120 = 13
               then "\\r"
               else
-                if uu___272_1120 = 10
+                if uu___273_1120 = 10
                 then "\\n"
                 else
-                  if uu___272_1120 = 39
+                  if uu___273_1120 = 39
                   then "\\'"
                   else
-                    if uu___272_1120 = 34
+                    if uu___273_1120 = 34
                     then "\\\""
                     else
-                      if FStar_Util.is_letter_or_digit uu___272_1120
-                      then FStar_Util.string_of_char uu___272_1120
+                      if FStar_Util.is_letter_or_digit uu___273_1120
+                      then FStar_Util.string_of_char uu___273_1120
                       else
-                        if FStar_Util.is_punctuation uu___272_1120
-                        then FStar_Util.string_of_char uu___272_1120
+                        if FStar_Util.is_punctuation uu___273_1120
+                        then FStar_Util.string_of_char uu___273_1120
                         else
-                          if FStar_Util.is_symbol uu___272_1120
-                          then FStar_Util.string_of_char uu___272_1120
-                          else fallback uu___272_1120
+                          if FStar_Util.is_symbol uu___273_1120
+                          then FStar_Util.string_of_char uu___273_1120
+                          else fallback uu___273_1120
   
 let (string_of_mlconstant :
   FStar_Extraction_ML_Syntax.mlconstant -> Prims.string) =

@@ -1,6 +1,4 @@
 module FStar.PredicateExtensionality
-#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-
 module F = FStar.FunctionalExtensionality
 module P = FStar.PropositionalExtensionality
 

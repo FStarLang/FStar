@@ -2,24 +2,6 @@
   "ÛNu''q\n¶sí=5º`\u0006²",
   [
     [
-      "Plugins.Test.uu___63",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2dee588e4b6901cc801558ace7d43839"
-    ],
-    [
-      "Plugins.Test.uu___63",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5cd58ae0751981d8984dc01f3870bf58"
-    ],
-    [
       "Plugins.Test.uu___64",
       1,
       2,
@@ -30,7 +12,7 @@
         "function_token_typing_Prims.bool", "function_token_typing_Prims.int"
       ],
       0,
-      "6a4aa453514b5f5f79a53014d961d03f"
+      "65cdc044aa9bd54f20990d3a09ab5139"
     ],
     [
       "Plugins.Test.uu___64",
@@ -39,10 +21,32 @@
       1,
       [ "@query" ],
       0,
-      "9f05fa968312bfde66b22e5142c79e07"
+      "b283bab6275649253e6c360ce7fee129"
     ],
     [
       "Plugins.Test.uu___65",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int",
+        "function_token_typing_Prims.bool", "function_token_typing_Prims.int"
+      ],
+      0,
+      "9b1373d245427951a9a7464a52536795"
+    ],
+    [
+      "Plugins.Test.uu___65",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "eafee10e1c1c60cf1cf13134cb78cbe9"
+    ],
+    [
+      "Plugins.Test.uu___66",
       1,
       2,
       1,
@@ -52,10 +56,10 @@
         "function_token_typing_Prims.int"
       ],
       0,
-      "af02b050998141b4d1dc91b576cede24"
+      "617ef547b6cb682833f5121eae22225f"
     ],
     [
-      "Plugins.Test.uu___65",
+      "Plugins.Test.uu___66",
       2,
       2,
       1,

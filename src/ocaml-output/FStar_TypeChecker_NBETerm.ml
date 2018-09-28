@@ -420,14 +420,14 @@ let (mkAccuMatch :
         -> t)
   = fun s  -> fun cases  -> fun bs  -> Accu ((Match (s, cases, bs)), []) 
 let (equal_if : Prims.bool -> FStar_Syntax_Util.eq_result) =
-  fun uu___235_1868  ->
-    if uu___235_1868
+  fun uu___236_1868  ->
+    if uu___236_1868
     then FStar_Syntax_Util.Equal
     else FStar_Syntax_Util.Unknown
   
 let (equal_iff : Prims.bool -> FStar_Syntax_Util.eq_result) =
-  fun uu___236_1874  ->
-    if uu___236_1874
+  fun uu___237_1874  ->
+    if uu___237_1874
     then FStar_Syntax_Util.Equal
     else FStar_Syntax_Util.NotEqual
   
@@ -1795,13 +1795,13 @@ let (string_substring' : args -> t FStar_Pervasives_Native.option) =
              let n11 = FStar_BigInt.to_int_fs n1  in
              let n21 = FStar_BigInt.to_int_fs n2  in
              (try
-                (fun uu___238_6994  ->
+                (fun uu___239_6994  ->
                    match () with
                    | () ->
                        let r = FStar_String.substring s1 n11 n21  in
                        let uu____6998 = embed e_string bogus_cbs r  in
                        FStar_Pervasives_Native.Some uu____6998) ()
-              with | uu___237_7000 -> FStar_Pervasives_Native.None)
+              with | uu___238_7000 -> FStar_Pervasives_Native.None)
          | uu____7003 -> FStar_Pervasives_Native.None)
     | uu____7016 -> FStar_Pervasives_Native.None
   

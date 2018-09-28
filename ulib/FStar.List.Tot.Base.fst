@@ -467,16 +467,9 @@ let compare_of_bool #a rel x y =
     else if x = y then 0
     else 0-1
 
-
 let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> Tot bool)
-  : Lemma (F.on_dom2 (bool_of_compare (compare_of_bool (F.on_dom2 f))) == F.on_dom2 f)
-  = let f = F.on_dom2 f in
-    assert (forall x. F.feq (F.on_dom a (bool_of_compare (compare_of_bool f) x)) (f x));
-    assert (forall x. F.feq (F.on_dom2 (bool_of_compare (compare_of_bool f)) x) (f x));
-    assert (F.feq (F.on_dom2 (bool_of_compare (compare_of_bool f))) f);
-    assert (F.on_dom a (F.on_dom2 (bool_of_compare (compare_of_bool f))) == F.on_dom a f);
-    F.restricted_t_2_idem f;
-    F.restricted_t_2_idem (F.on_dom2 (bool_of_compare (compare_of_bool f)))
+  : Lemma (forall x y. bool_of_compare (compare_of_bool f) x y == f x y)
+  = ()
 
 (** [sortWith compare l] returns the list [l'] containing the elements
 of [l] sorted along the comparison function [compare], in such a way

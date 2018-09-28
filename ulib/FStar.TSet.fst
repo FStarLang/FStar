@@ -42,12 +42,6 @@ abstract val union      : #a:Type -> x:set a -> y:set a -> Tot (set a)
 abstract val intersect  : #a:Type -> x:set a -> y:set a -> Tot (set a)
 abstract val complement : #a:Type -> x:set a -> Tot (set a)
 
-(*
- * AR: 05/12: adding calls to equational lemmas from PropositionalExtensionality
- *            these should go away with proper prop support
- *            also see the comment in PropositionalExtensionality.fst
- *)
-
 let empty #a           = F.on_dom a #(fun _ -> prop) (fun x -> False)
 let singleton #a x     = F.on_dom a #(fun _ -> prop) (fun y -> y == x)
 let union #a s1 s2     = F.on_dom a #(fun _ -> prop) (fun x -> s1 x \/ s2 x)

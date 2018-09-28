@@ -16,7 +16,7 @@
         "typing_Effects.Def_Tm_abs_bb024be3a42bf719d69858a7cf22c46a"
       ],
       0,
-      "cdc028c214af311383ed407e54d36bc6"
+      "46d1e8a55b7f89377613619e5e8f1d05"
     ],
     [
       "Effects.Def.morphism_laws_via_eq",
@@ -33,7 +33,7 @@
         "typing_Effects.Def_Tm_abs_5f3d3f8c665d1ee3f1ea417cc2cac42f"
       ],
       0,
-      "c7fd09d06deeefb764a1bfe971c93b63"
+      "e01ea766f25596cb7b5e651772724719"
     ],
     [
       "Effects.Def.st_laws",
@@ -49,7 +49,6 @@
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "equation_Effects.Def.bind_st", "equation_Effects.Def.eq_st",
         "equation_Effects.Def.return_st", "equation_Effects.Def.st",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -65,7 +64,7 @@
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "token_correspondence_Effects.Def.return_st",
         "typing_Effects.Def.bind_st", "typing_Effects.Def.return_st",
         "typing_Effects.Def_Tm_abs_7bb27e2a349c57996e4d8bc061fb4305",
@@ -74,7 +73,7 @@
         "typing_Effects.Def_Tm_abs_f541716cfedab030d3e5d803d0c6034f"
       ],
       0,
-      "9fc29725c7690370f26c0b16fdaa82c9"
+      "a5af3ce0837056471639c64d2d7b37a8"
     ],
     [
       "Effects.Def.bind_ex",
@@ -88,15 +87,14 @@
         "bool_typing", "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.ex",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "interpretation_Effects.Def_Tm_abs_6f8d22493c0547f494d5ea206bd93952",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "unit_typing"
       ],
       0,
-      "c01d2105773865589bd438e690a42919"
+      "a1c29d3abfa2c0d61c4288d0ee305235"
     ],
     [
       "Effects.Def.handle",
@@ -110,15 +108,14 @@
         "bool_typing", "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.ex",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "interpretation_Effects.Def_Tm_abs_6f8d22493c0547f494d5ea206bd93952",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "unit_typing"
       ],
       0,
-      "2bf9ec81706b537bf45fe5b763dc51f2"
+      "b8d56c1a560bffbc85658ae674deb8af"
     ],
     [
       "Effects.Def.ex_laws",
@@ -137,7 +134,6 @@
         "constructor_distinct_Tm_unit", "equation_Effects.Def.bind_ex",
         "equation_Effects.Def.eq_ex", "equation_Effects.Def.ex",
         "equation_Effects.Def.return_ex",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -153,7 +149,7 @@
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "token_correspondence_Effects.Def.return_ex",
         "typing_Effects.Def.bind_ex", "typing_Effects.Def.return_ex",
         "typing_Effects.Def_Tm_abs_0b4eca7c82914b4147ac281250089650",
@@ -163,7 +159,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "307c1160c8b92060e4b6fd3da73d78c0"
+      "a340a969ea4b400fdcaadf7fb1ea354c"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -177,18 +173,17 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.stexn",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_e0c1bfa79aec4a6c976456f4e6e84f84",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "69895a3c698aefca464cb3beb698e564"
+      "c42658f9f3b1dae7fc63d9502e22d9b1"
     ],
     [
       "Effects.Def.stexn_laws",
@@ -248,16 +243,15 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.exnst",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_ac1efa7727d6196ad4baeae8df6497aa",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b"
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4"
       ],
       0,
-      "de0f4763762597328c521eaad4137718"
+      "2e39aa5e9675354574c3ec87595322a0"
     ],
     [
       "Effects.Def.exnst_laws",
@@ -277,7 +271,6 @@
         "data_elim_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.bind_exnst", "equation_Effects.Def.eq_exnst",
         "equation_Effects.Def.exnst", "equation_Effects.Def.return_exnst",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -296,7 +289,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "token_correspondence_Effects.Def.return_exnst",
         "typing_Effects.Def.bind_exnst", "typing_Effects.Def.return_exnst",
         "typing_Effects.Def_Tm_abs_1a62c3eba1c17891ac568d143a12d966",
@@ -305,7 +298,7 @@
         "typing_Effects.Def_Tm_abs_b25d060f680a12438c5aa09bfaaac178"
       ],
       0,
-      "a765797687ad1e8b2124aaee348dc513"
+      "79c0f26593ecc0793d66acfaada3c727"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -324,7 +317,6 @@
         "equation_Effects.Def.lift_st_stexn",
         "equation_Effects.Def.return_st",
         "equation_Effects.Def.return_stexn", "equation_Effects.Def.stexn",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -345,7 +337,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_st", "typing_Effects.Def.bind_stexn",
         "typing_Effects.Def.lift_st_stexn", "typing_Effects.Def.return_st",
         "typing_Effects.Def.return_stexn",
@@ -359,7 +351,7 @@
         "typing_Effects.Def_Tm_abs_f541716cfedab030d3e5d803d0c6034f"
       ],
       0,
-      "c688ca8b980953ce587b6a9ff879323e"
+      "d7b214afc60018587b0dfac5692e1c51"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -377,7 +369,6 @@
         "equation_Effects.Def.lift_ex_stexn",
         "equation_Effects.Def.return_ex",
         "equation_Effects.Def.return_stexn", "equation_Effects.Def.stexn",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -398,7 +389,7 @@
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_ex", "typing_Effects.Def.bind_stexn",
         "typing_Effects.Def.lift_ex_stexn", "typing_Effects.Def.return_ex",
         "typing_Effects.Def.return_stexn",
@@ -413,7 +404,7 @@
         "unit_typing"
       ],
       0,
-      "56e88f8f46f518d873840d5bd7f56d57"
+      "5a2260da3616e133db2b89e13b26cdaf"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -433,7 +424,6 @@
         "equation_Effects.Def.lift_st_exnst",
         "equation_Effects.Def.return_exnst",
         "equation_Effects.Def.return_st", "equation_Effects.Def.st",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -452,7 +442,7 @@
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_exnst", "typing_Effects.Def.bind_st",
         "typing_Effects.Def.lift_st_exnst",
         "typing_Effects.Def.return_exnst", "typing_Effects.Def.return_st",
@@ -466,7 +456,7 @@
         "typing_Effects.Def_Tm_abs_f541716cfedab030d3e5d803d0c6034f"
       ],
       0,
-      "4d923648e8eb2eabd2dda5eee34a5bcf"
+      "46a20dde9dd00d7c58875024812007a9"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -480,15 +470,14 @@
         "bool_typing", "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.ex",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "interpretation_Effects.Def_Tm_abs_6f8d22493c0547f494d5ea206bd93952",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "unit_typing"
       ],
       0,
-      "3423b2df1bd3f23c625a0533a6eb97fe"
+      "52d86ccfa61522354a2229842601d56c"
     ],
     [
       "Effects.Def.morphism_lift_ex_exnst",
@@ -510,7 +499,6 @@
         "equation_Effects.Def.lift_ex_exnst",
         "equation_Effects.Def.return_ex",
         "equation_Effects.Def.return_exnst",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -535,7 +523,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__b",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_ex", "typing_Effects.Def.bind_exnst",
         "typing_Effects.Def.lift_ex_exnst", "typing_Effects.Def.return_ex",
         "typing_Effects.Def.return_exnst",
@@ -550,7 +538,7 @@
         "unit_typing"
       ],
       0,
-      "64756376775300eca83b1d67a368cb79"
+      "87b291d1fc845a748ffb7ef44aa172f4"
     ],
     [
       "Effects.Def.st_laws",
@@ -566,7 +554,6 @@
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "equation_Effects.Def.bind_st", "equation_Effects.Def.eq_st",
         "equation_Effects.Def.return_st", "equation_Effects.Def.st",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -582,7 +569,7 @@
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "token_correspondence_Effects.Def.return_st",
         "typing_Effects.Def.bind_st", "typing_Effects.Def.return_st",
         "typing_Effects.Def_Tm_abs_7bb27e2a349c57996e4d8bc061fb4305",
@@ -591,7 +578,7 @@
         "typing_Effects.Def_Tm_abs_f541716cfedab030d3e5d803d0c6034f"
       ],
       0,
-      "943d1fac96ad4c6b59d51a2818b703dc"
+      "ed0a0c08021384d0c9afc44d398a7733"
     ],
     [
       "Effects.Def.bind_ex",
@@ -605,15 +592,14 @@
         "bool_typing", "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.ex",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "interpretation_Effects.Def_Tm_abs_6f8d22493c0547f494d5ea206bd93952",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "unit_typing"
       ],
       0,
-      "65cec9426a1c3212beae2e711b72c76b"
+      "a840d07a7200b2bf94d3b0824eac4d2b"
     ],
     [
       "Effects.Def.handle",
@@ -627,15 +613,14 @@
         "bool_typing", "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.ex",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "interpretation_Effects.Def_Tm_abs_6f8d22493c0547f494d5ea206bd93952",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "unit_typing"
       ],
       0,
-      "8dd814c4a09a7806e3c228e185c3fee7"
+      "f916dbfe84e90ff5f29fa90cd19b8318"
     ],
     [
       "Effects.Def.ex_laws",
@@ -654,7 +639,6 @@
         "constructor_distinct_Tm_unit", "equation_Effects.Def.bind_ex",
         "equation_Effects.Def.eq_ex", "equation_Effects.Def.ex",
         "equation_Effects.Def.return_ex",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -670,7 +654,7 @@
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "token_correspondence_Effects.Def.return_ex",
         "typing_Effects.Def.bind_ex", "typing_Effects.Def.return_ex",
         "typing_Effects.Def_Tm_abs_0b4eca7c82914b4147ac281250089650",
@@ -680,7 +664,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "640b30a7846ef9901bf2a939b20a39a7"
+      "dc2847c24b35dec7506fc0429018438b"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -694,18 +678,17 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.stexn",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_e0c1bfa79aec4a6c976456f4e6e84f84",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "30abdfd16a970c042f0c9a51a2d978b8"
+      "cfceaeffcad75ff8f481adf335d4c769"
     ],
     [
       "Effects.Def.stexn_laws",
@@ -765,16 +748,15 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.exnst",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_ac1efa7727d6196ad4baeae8df6497aa",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b"
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4"
       ],
       0,
-      "dafec5a02b1fe084b99470b04bcded5d"
+      "d0e1ece51e3ca5454a20e51da0e9c93a"
     ],
     [
       "Effects.Def.exnst_laws",
@@ -794,7 +776,6 @@
         "data_elim_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.bind_exnst", "equation_Effects.Def.eq_exnst",
         "equation_Effects.Def.exnst", "equation_Effects.Def.return_exnst",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -813,7 +794,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "token_correspondence_Effects.Def.return_exnst",
         "typing_Effects.Def.bind_exnst", "typing_Effects.Def.return_exnst",
         "typing_Effects.Def_Tm_abs_1a62c3eba1c17891ac568d143a12d966",
@@ -822,7 +803,7 @@
         "typing_Effects.Def_Tm_abs_b25d060f680a12438c5aa09bfaaac178"
       ],
       0,
-      "2c62879a9919367f6eed51423cfa9378"
+      "9075d1f553a00bffc48e2f827342a131"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -841,7 +822,6 @@
         "equation_Effects.Def.lift_st_stexn",
         "equation_Effects.Def.return_st",
         "equation_Effects.Def.return_stexn", "equation_Effects.Def.stexn",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -862,7 +842,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_st", "typing_Effects.Def.bind_stexn",
         "typing_Effects.Def.lift_st_stexn", "typing_Effects.Def.return_st",
         "typing_Effects.Def.return_stexn",
@@ -876,7 +856,7 @@
         "typing_Effects.Def_Tm_abs_f541716cfedab030d3e5d803d0c6034f"
       ],
       0,
-      "945bd26afd68875537ab65ed191afefe"
+      "d1afeb7eea6d5fd22cdc1c5c31bb6e7e"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -894,7 +874,6 @@
         "equation_Effects.Def.lift_ex_stexn",
         "equation_Effects.Def.return_ex",
         "equation_Effects.Def.return_stexn", "equation_Effects.Def.stexn",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -915,7 +894,7 @@
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_ex", "typing_Effects.Def.bind_stexn",
         "typing_Effects.Def.lift_ex_stexn", "typing_Effects.Def.return_ex",
         "typing_Effects.Def.return_stexn",
@@ -930,7 +909,7 @@
         "unit_typing"
       ],
       0,
-      "3e4d9a89f8030a8dcab1d175953fa673"
+      "598ad9f683cc462ed83fc18eee736b09"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -950,7 +929,6 @@
         "equation_Effects.Def.lift_st_exnst",
         "equation_Effects.Def.return_exnst",
         "equation_Effects.Def.return_st", "equation_Effects.Def.st",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -969,7 +947,7 @@
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_exnst", "typing_Effects.Def.bind_st",
         "typing_Effects.Def.lift_st_exnst",
         "typing_Effects.Def.return_exnst", "typing_Effects.Def.return_st",
@@ -983,7 +961,7 @@
         "typing_Effects.Def_Tm_abs_f541716cfedab030d3e5d803d0c6034f"
       ],
       0,
-      "26fcd7f16fc51a84636d9d3f5e4d3b9d"
+      "ae1214d2f93a001ec6fe383305cacf3c"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -997,15 +975,14 @@
         "bool_typing", "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.ex",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "interpretation_Effects.Def_Tm_abs_6f8d22493c0547f494d5ea206bd93952",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "unit_typing"
       ],
       0,
-      "c8a039b161bd378271644d0e3c06d5e6"
+      "573ea88cf70653f13778fc014b05b323"
     ],
     [
       "Effects.Def.morphism_lift_ex_exnst",
@@ -1027,7 +1004,6 @@
         "equation_Effects.Def.lift_ex_exnst",
         "equation_Effects.Def.return_ex",
         "equation_Effects.Def.return_exnst",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.on_dom",
@@ -1052,7 +1028,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__b",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_2b7181aa5e69259183420adaa263965b",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_ex", "typing_Effects.Def.bind_exnst",
         "typing_Effects.Def.lift_ex_exnst", "typing_Effects.Def.return_ex",
         "typing_Effects.Def.return_exnst",
@@ -1067,7 +1043,7 @@
         "unit_typing"
       ],
       0,
-      "0ec269615074ac28d9178d472157e473"
+      "868eaab91efb09c4005aee8bb6a09571"
     ]
   ]
 ]

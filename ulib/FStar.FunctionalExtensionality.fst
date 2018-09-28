@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2018 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,27 +19,28 @@ module FStar.FunctionalExtensionality
 
 inline_for_extraction
 let on_domain (a:Type) (#b:a -> Type) (f:arrow a b)
-  : arrow a b
-  = fun (x:a) -> f x
+  = f
 
 let feq_on_domain (#a:Type) (#b:a -> Type) (f:arrow a b)
   = ()
 
-let extensionality a b f g = admit() //the main axiom of this module
+let idempotence_on_domain #a #b f
+  = ()
 
-let idempotence_on_domain #a #b f = ()
+let extensionality a b f g
+  = admit() //the main axiom of this module
+
 
 (****** GTot version ******)
 
-inline_for_extraction
 let on_domain_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
-  : arrow_g a b
-  = fun (x:a) -> f x
+  = f
 
 let feq_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow a b)
   = ()
 
-let extensionality_g (a:Type) (b:a -> Type) (f g:arrow_g a b) = admit () //variant of the main axiom
-
 let idempotence_on_domain_g #a #b f
   = ()
+
+let extensionality_g a b f g
+  = admit () //variant of the main axiom
