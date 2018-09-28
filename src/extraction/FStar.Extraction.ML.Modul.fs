@@ -221,6 +221,7 @@ let iface_of_bindings fvs = {
 let iface_of_tydefs tds = {
     empty_iface with
         iface_tydefs = tds;
+        iface_type_names=List.map (fun td -> td.tydef_fv) tds;
 }
 
 let iface_of_type_names fvs = {

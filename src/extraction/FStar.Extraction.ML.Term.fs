@@ -268,7 +268,7 @@ let is_type env t =
     let b = is_type_aux env t in
     debug env (fun _ ->
         if b
-        then BU.print2 "is_type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t)
+        then BU.print2 "yes, is_type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t)
         else BU.print2 "not a type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
     b
 
@@ -425,15 +425,16 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr  =
     match type_leq_c g (Some e) ty expect with
         | true, Some e' -> e'
         | _ ->
-          debug g (fun () -> BU.print3 "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
-                             (Code.string_of_mlexpr g.currentModule e)
-                             (Code.string_of_mlty g.currentModule ty)
-                             (Code.string_of_mlty g.currentModule expect));
           match ty with
           | MLTY_Erased ->
             //generate a default value suitable for the expected type
             default_value_for_ty g expect
           | _ ->
+            debug g (fun () ->
+                BU.print3 "!!! needed to coerce expression \n %s \n of type \n %s \n to type \n %s  \n"
+                                 (Code.string_of_mlexpr g.currentModule e)
+                                 (Code.string_of_mlty g.currentModule ty)
+                                 (Code.string_of_mlty g.currentModule expect));
             maybe_eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
 
 (********************************************************************************************)
@@ -1091,7 +1092,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                  ml_unit, E_PURE, MLTY_Erased
 
                | Some {exp_b_expr=x; exp_b_tscheme=mltys} ->
-                 //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
+                 let _ = debug g (fun () ->
+                          BU.print3 "looked up %s: got %s at %s \n"
+                              (Print.fv_to_string fv)
+                              (Code.string_of_mlexpr g.currentModule x)
+                              (Code.string_of_mlty g.currentModule (snd mltys))) in
                  begin match mltys with
                     | ([], t) when (t=ml_unit_ty) -> ml_unit, E_PURE, t //optimize (x:unit) to ()
                     | ([], t) -> maybe_eta_data_and_project_record g fv.fv_qual t x, E_PURE, t
@@ -1148,8 +1153,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
                 let mk_head () =
                     let mlargs = List.rev mlargs_f |> List.map fst in
-                    let head = with_ty MLTY_Top <| MLE_App(mlhead, mlargs) in
-                    maybe_coerce top.pos g head MLTY_Top t
+                    with_ty MLTY_Top <| MLE_App(mlhead, mlargs)
                 in
                 debug g (fun () -> BU.print3 "extract_app ml_head=%s type of head = %s, next arg = %s\n"
                                 (Code.string_of_mlexpr g.currentModule (mk_head()))
@@ -1234,7 +1238,14 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
                       let (head_ml, (vars, t), inst_ok), qual =
                         match lookup_term g head with
-                        | Inr exp_b, q -> (exp_b.exp_b_expr, exp_b.exp_b_tscheme, exp_b.exp_b_inst_ok), q
+                        | Inr exp_b, q ->
+                          debug g (fun () ->
+                              BU.print4 "@@@looked up %s: got %s at %s (inst_ok=%s)\n"
+                                  (Print.term_to_string head)
+                                  (Code.string_of_mlexpr g.currentModule exp_b.exp_b_expr)
+                                  (Code.string_of_mlty g.currentModule (snd exp_b.exp_b_tscheme))
+                                  (BU.string_of_bool exp_b.exp_b_inst_ok));
+                          (exp_b.exp_b_expr, exp_b.exp_b_tscheme, exp_b.exp_b_inst_ok), q
                         | _ -> failwith "FIXME Ty" in
 
                       let has_typ_apps = match args with
@@ -1255,6 +1266,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                                let prefixAsMLTypes = List.map (fun (x, _) -> term_as_mlty g x) prefix in
         //                        let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
                                let t = instantiate (vars, t) prefixAsMLTypes in
+                               debug g (fun () ->
+                                  BU.print4 "@@@looked up %s, instantiated with [%s] translated to [%s], got %s\n"
+                                      (Print.term_to_string head)
+                                      (Print.args_to_string prefix)
+                                      (List.map (Code.string_of_mlty g.currentModule) prefixAsMLTypes |> String.concat ", ")
+                                      (Code.string_of_mlty g.currentModule t));
                                // If I understand this code correctly when we reach this branch we are observing an
                                // application of the form:
                                //
@@ -1274,9 +1291,9 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                                // problems in FStar.Extraction.Kremlin when trying match aganist head symbols which
                                // are now wrapped with empty type applications.
                                let mk_tapp e ty_args =
-                                match ty_args with
-                                | [] -> e
-                                | _ -> { e with expr=MLE_TApp(e, ty_args)} in
+                                    match ty_args with
+                                    | [] -> e
+                                    | _ -> { e with expr=MLE_TApp(e, ty_args)} in
                                let head = match head_ml.expr with
                                  | MLE_Name _
                                  | MLE_Var _ -> { mk_tapp head_ml prefixAsMLTypes with mlty=t }
