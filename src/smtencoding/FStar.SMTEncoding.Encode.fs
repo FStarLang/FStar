@@ -1427,6 +1427,7 @@ let encode_sig tcenv se =
    Z3.giveZ3 (caption decls)
 
 let encode_modul tcenv modul =
+    if Options.lax() then () else
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
     if Env.debug tcenv Options.Low
     then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
