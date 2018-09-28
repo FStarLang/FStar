@@ -144,9 +144,24 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                 (Print.binders_to_string "->" arguments)
                 (Print.term_to_string result);
 
-
          let arguments, env', us = tc_tparams env arguments in
          let result, res_lcomp = tc_trivial_guard env' result in
+         let head, args = U.head_and_args result in
+
+         (* Make sure the parameters are respected, cf #1534 *)
+         (* The first few arguments, as many as List.length tps, must exactly match the
+          * bvs in tps, as they have been opened already by the code above. Must be done
+          * after typechecking `result`, to make sure implicits are filled in. *)
+         let p_args = fst (BU.first_N (List.length tps) args) in
+         List.iter2 (fun (bv, _) (t, _) ->
+            match (SS.compress t).n with
+            | Tm_name bv' when S.bv_eq bv bv' -> ()
+            | _ ->
+               raise_error (Errors.Error_BadInductiveParam,
+                    BU.format2 "This parameter is not constant: expected %s, got %s"
+                            (Print.bv_to_string bv) (Print.term_to_string t)) t.pos
+         ) tps p_args;
+
          let ty = unfold_whnf env res_lcomp.res_typ |> U.unrefine in
          begin match (SS.compress ty).n with
                | Tm_type _ -> ()
@@ -154,20 +169,21 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                                                 (Print.term_to_string result)
                                                 (Print.term_to_string ty))) se.sigrng
          end;
-         let head, _ = U.head_and_args result in
          (*
           * AR: if the inductive type is explictly universe annotated,
           *     we need to instantiate universes properly in head (head = tycon<applied to uvars>)
           *     the following code unifies them with the annotated universes
           *)
          let g_uvs = match (SS.compress head).n with
-            | Tm_uinst ( { n = Tm_fvar fv }, tuvs) ->  //AR: in the second phase of 2-phases, this can be a Tm_uninst too
+            | Tm_uinst ( { n = Tm_fvar fv }, tuvs)  when S.fv_eq_lid fv tc_lid ->  //AR: in the second phase of 2-phases, this can be a Tm_uninst too
               if List.length _uvs = List.length tuvs then
                 List.fold_left2 (fun g u1 u2 ->
                   //unify the two
                   Env.conj_guard g (Rel.teq env' (mk (Tm_type u1) None Range.dummyRange) (mk (Tm_type (U_name u2)) None Range.dummyRange))
                 ) Env.trivial_guard tuvs _uvs
-              else failwith "Impossible: tc_datacon: length of annotated universes not same as instantiated ones"
+              else Errors.raise_error (Errors.Fatal_UnexpectedConstructorType,
+                                       "Length of annotated universes does not match inferred universes")
+                                       se.sigrng
             | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> Env.trivial_guard
             | _ -> raise_error (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Expected a constructor of type %s; got %s"
                                         (Print.lid_to_string tc_lid)
@@ -358,22 +374,15 @@ and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes)
   let b, idatas = datacons_of_typ env ilid in
   //if ilid is not an inductive, return false
   if not b then begin
-    match Env.lookup_attrs_of_lid env ilid with
-    | None
-    | Some [] ->
-      debug_log env ("Checking nested positivity, not an inductive, return false");
-      false
-    | Some attrs ->
-      if attrs |> BU.for_some (fun tm ->
-         match (SS.compress tm).n with
-         | Tm_fvar fv ->
-           S.fv_eq_lid fv FStar.Parser.Const.assume_strictly_positive_attr_lid
-         | _ -> false)
-      then (debug_log env (BU.format1 "Checking nested positivity, special case decorated with `assume_strictly_positive` %s; return true"
+    if Env.fv_has_attr 
+              env 
+              (S.lid_as_fv ilid delta_constant None)
+              FStar.Parser.Const.assume_strictly_positive_attr_lid
+    then (debug_log env (BU.format1 "Checking nested positivity, special case decorated with `assume_strictly_positive` %s; return true"
                                     (Ident.string_of_lid ilid));
-            true)
-      else (debug_log env ("Checking nested positivity, not an inductive, return false");
-           false)
+          true)
+    else (debug_log env ("Checking nested positivity, not an inductive, return false");
+          false)
   end
   //if ilid has already been unfolded with same arguments, return true
   else
@@ -515,6 +524,12 @@ let check_positivity (ty:sigelt) (env:env_t) :bool =
   let ty_bs = SS.open_binders ty_bs in
 
   List.for_all (fun d -> ty_positive_in_datacon ty_lid d ty_bs (List.map (fun s -> U_name s) ty_us) unfolded_inductives env) (snd (datacons_of_typ env ty_lid))
+
+(* Special-casing the check for exceptions, the single open inductive type we handle. *)
+let check_exn_positivity (data_ctor_lid:lid) (env:env_t) : bool =
+  //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
+  let unfolded_inductives = BU.mk_ref [] in
+  ty_positive_in_datacon C.exn_lid data_ctor_lid [] []  unfolded_inductives env
 
 let datacon_typ (data:sigelt) :term =
   match data.sigel with
@@ -1062,7 +1077,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let early_prims_inductive =
       lid_equals C.prims_lid  (Env.current_module env) &&
-      (tc.ident.idText = "dtuple2" || List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives)
+      List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives
     in
 
     let discriminator_ses =

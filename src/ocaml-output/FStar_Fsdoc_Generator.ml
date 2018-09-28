@@ -299,11 +299,11 @@ let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lident) =
         let uu____1270 = one_toplevel decls  in
         (match uu____1270 with
          | FStar_Pervasives_Native.Some (top_decl,other_decls) ->
-             let on =
+             let on1 =
                FStar_Options.prepend_output_dir
                  (Prims.strcat name.FStar_Ident.str ".md")
                 in
-             let fd = FStar_Util.open_file_for_writing on  in
+             let fd = FStar_Util.open_file_for_writing on1  in
              let w = FStar_Util.append_to_file fd  in
              let no_summary = "fsdoc: no-summary-found"  in
              let no_comment = "fsdoc: no-comment-found"  in
@@ -347,8 +347,8 @@ let (generate : Prims.string Prims.list -> unit) =
            FStar_Pervasives_Native.fst uu____1358) files
        in
     let mods = FStar_List.map document_module modules  in
-    let on = FStar_Options.prepend_output_dir "index.md"  in
-    let fd = FStar_Util.open_file_for_writing on  in
+    let on1 = FStar_Options.prepend_output_dir "index.md"  in
+    let fd = FStar_Util.open_file_for_writing on1  in
     FStar_List.iter
       (fun m  ->
          let uu____1384 = FStar_Util.format "%s\n" [m.FStar_Ident.str]  in

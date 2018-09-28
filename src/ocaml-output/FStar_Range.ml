@@ -4,15 +4,9 @@ type pos = {
   line: Prims.int ;
   col: Prims.int }[@@deriving yojson,show]
 let (__proj__Mkpos__item__line : pos -> Prims.int) =
-  fun projectee  ->
-    match projectee with
-    | { line = __fname__line; col = __fname__col;_} -> __fname__line
-  
+  fun projectee  -> match projectee with | { line; col;_} -> line 
 let (__proj__Mkpos__item__col : pos -> Prims.int) =
-  fun projectee  ->
-    match projectee with
-    | { line = __fname__line; col = __fname__col;_} -> __fname__col
-  
+  fun projectee  -> match projectee with | { line; col;_} -> col 
 let (max : Prims.int -> Prims.int -> Prims.int) =
   fun i  -> fun j  -> if i < j then j else i 
 let (pos_geq : pos -> pos -> Prims.bool) =
@@ -26,36 +20,26 @@ type rng = {
   end_pos: pos }[@@deriving yojson,show]
 let (__proj__Mkrng__item__file_name : rng -> file_name) =
   fun projectee  ->
-    match projectee with
-    | { file_name = __fname__file_name; start_pos = __fname__start_pos;
-        end_pos = __fname__end_pos;_} -> __fname__file_name
+    match projectee with | { file_name; start_pos; end_pos;_} -> file_name
   
 let (__proj__Mkrng__item__start_pos : rng -> pos) =
   fun projectee  ->
-    match projectee with
-    | { file_name = __fname__file_name; start_pos = __fname__start_pos;
-        end_pos = __fname__end_pos;_} -> __fname__start_pos
+    match projectee with | { file_name; start_pos; end_pos;_} -> start_pos
   
 let (__proj__Mkrng__item__end_pos : rng -> pos) =
   fun projectee  ->
-    match projectee with
-    | { file_name = __fname__file_name; start_pos = __fname__start_pos;
-        end_pos = __fname__end_pos;_} -> __fname__end_pos
+    match projectee with | { file_name; start_pos; end_pos;_} -> end_pos
   
 type range = {
   def_range: rng ;
   use_range: rng }[@@deriving yojson,show]
 let (__proj__Mkrange__item__def_range : range -> rng) =
   fun projectee  ->
-    match projectee with
-    | { def_range = __fname__def_range; use_range = __fname__use_range;_} ->
-        __fname__def_range
+    match projectee with | { def_range; use_range;_} -> def_range
   
 let (__proj__Mkrange__item__use_range : range -> rng) =
   fun projectee  ->
-    match projectee with
-    | { def_range = __fname__def_range; use_range = __fname__use_range;_} ->
-        __fname__use_range
+    match projectee with | { def_range; use_range;_} -> use_range
   
 let (dummy_pos : pos) =
   { line = (Prims.parse_int "0"); col = (Prims.parse_int "0") } 
@@ -71,8 +55,8 @@ let (set_use_range : range -> rng -> range) =
     fun use_rng  ->
       if use_rng <> dummy_rng
       then
-        let uu___76_139 = r2  in
-        { def_range = (uu___76_139.def_range); use_range = use_rng }
+        let uu___80_139 = r2  in
+        { def_range = (uu___80_139.def_range); use_range = use_rng }
       else r2
   
 let (set_def_range : range -> rng -> range) =
@@ -80,8 +64,8 @@ let (set_def_range : range -> rng -> range) =
     fun def_rng  ->
       if def_rng <> dummy_rng
       then
-        let uu___77_151 = r2  in
-        { def_range = def_rng; use_range = (uu___77_151.use_range) }
+        let uu___81_151 = r2  in
+        { def_range = def_rng; use_range = (uu___81_151.use_range) }
       else r2
   
 let (mk_pos : Prims.int -> Prims.int -> pos) =
@@ -142,7 +126,7 @@ let (string_of_file_name : Prims.string -> Prims.string) =
     if uu____242
     then
       try
-        (fun uu___79_245  ->
+        (fun uu___83_245  ->
            match () with
            | () ->
                let uu____246 =
@@ -152,7 +136,7 @@ let (string_of_file_name : Prims.string -> Prims.string) =
                 | FStar_Pervasives_Native.None  -> f
                 | FStar_Pervasives_Native.Some absolute_path -> absolute_path))
           ()
-      with | uu___78_252 -> f
+      with | uu___82_252 -> f
     else f
   
 let (file_of_range : range -> Prims.string) =
@@ -160,16 +144,16 @@ let (file_of_range : range -> Prims.string) =
 let (set_file_of_range : range -> Prims.string -> range) =
   fun r  ->
     fun f  ->
-      let uu___80_270 = r  in
+      let uu___84_270 = r  in
       {
         def_range =
-          (let uu___81_273 = r.def_range  in
+          (let uu___85_273 = r.def_range  in
            {
              file_name = f;
-             start_pos = (uu___81_273.start_pos);
-             end_pos = (uu___81_273.end_pos)
+             start_pos = (uu___85_273.start_pos);
+             end_pos = (uu___85_273.end_pos)
            });
-        use_range = (uu___80_270.use_range)
+        use_range = (uu___84_270.use_range)
       }
   
 let (string_of_rng : rng -> Prims.string) =
@@ -222,8 +206,8 @@ let (range_before_pos : range -> pos -> Prims.bool) =
   
 let (end_of_line : pos -> pos) =
   fun p  ->
-    let uu___82_389 = p  in
-    { line = (uu___82_389.line); col = FStar_Util.max_int }
+    let uu___86_389 = p  in
+    { line = (uu___86_389.line); col = FStar_Util.max_int }
   
 let (extend_to_end_of_line : range -> range) =
   fun r  ->

@@ -719,6 +719,15 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                    (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.mod_big_int x y)))
             ])
         in
+        let mask m =
+          match m with
+          | "UInt8" -> Z.of_hex "ff"
+          | "UInt16" -> Z.of_hex "ffff"
+          | "UInt32" -> Z.of_hex "ffffffff"
+          | "UInt64" -> Z.of_hex "ffffffffffffffff"
+          | "UInt128" -> Z.of_hex "ffffffffffffffffffffffffffffffff"
+          | _ -> failwith (BU.format1 "Impossible: bad string on mask: %s\n" m)
+        in
         let bitwise =
           bounded_unsigned_int_types
           |> List.collect (fun m ->
@@ -755,29 +764,60 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                  0,
                  unary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) -> int_as_bounded r int_to_t (Z.lognot_big_int x)),
+                   (fun r (int_to_t, x) -> int_as_bounded r int_to_t (Z.logand_big_int (Z.lognot_big_int x) (mask m))),
                  NBETerm.unary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) -> NBETerm.int_as_bounded int_to_t (Z.lognot_big_int x));
+                   (fun (int_to_t, x) -> NBETerm.int_as_bounded int_to_t (Z.logand_big_int (Z.lognot_big_int x) (mask m)));
+              PC.p2l ["FStar"; m; "shift_left"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.logand_big_int (Z.shift_left_big_int x y) (mask m))),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.logand_big_int (Z.shift_left_big_int x y) (mask m)));
+              PC.p2l ["FStar"; m; "shift_right"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.shift_right_big_int x y)),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.shift_right_big_int x y));
             ])
         in
        add_sub_mul_v
        @ div_mod_unsigned
+       @ bitwise
     in
     let strong_steps = List.map (as_primitive_step true)  (basic_ops@bounded_arith_ops) in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)
 
 let equality_ops : BU.psmap<primitive_step> =
-    let interp_prop (psc:psc) _norm_cb (args:args) : option<term> =
+    let interp_prop_eq2 (psc:psc) _norm_cb (args:args) : option<term> =
         let r = psc.psc_range in
         match args with
-        | [(_typ, _); (a1, _); (a2, _)]    //eq2
-        | [(_typ, _); _; (a1, _); (a2, _)] ->    //eq3
+        | [(_typ, _); (a1, _); (a2, _)]  ->         //eq2
             (match U.eq_tm a1 a2 with
             | U.Equal -> Some ({U.t_true with pos=r})
             | U.NotEqual -> Some ({U.t_false with pos=r})
             | _ -> None)
+
+        | _ ->
+            failwith "Unexpected number of arguments"
+    in
+    let interp_prop_eq3 (psc:psc) _norm_cb (args:args) : option<term> =
+        let r = psc.psc_range in
+        match args with
+        | [(t1, _); (t2, _); (a1, _); (a2, _)] ->    //eq3       
+            (match U.eq_inj (U.eq_tm t1 t2) (U.eq_tm a1 a2) with
+            | U.Equal -> Some ({U.t_true with pos=r})
+            | U.NotEqual -> Some ({U.t_false with pos=r})
+            | _ -> None)
+
         | _ ->
             failwith "Unexpected number of arguments"
     in
@@ -788,8 +828,8 @@ let equality_ops : BU.psmap<primitive_step> =
          auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
-         interpretation = interp_prop;
-         interpretation_nbe = fun _cb -> NBETerm.interp_prop}
+         interpretation = interp_prop_eq2;
+         interpretation_nbe = fun _cb -> NBETerm.interp_prop_eq2}
     in
     let hetero_propositional_equality =
         {name = PC.eq3_lid;
@@ -798,8 +838,8 @@ let equality_ops : BU.psmap<primitive_step> =
          auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
-         interpretation = interp_prop;
-         interpretation_nbe = fun _cb -> NBETerm.interp_prop}
+         interpretation = interp_prop_eq3;
+         interpretation_nbe = fun _cb -> NBETerm.interp_prop_eq3}
     in
 
     prim_from_list [propositional_equality; hetero_propositional_equality]

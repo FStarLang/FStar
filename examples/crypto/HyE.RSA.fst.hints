@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "140eaea34e4040f800da81ff12bac1f1"
+      "38feeea792dd2d12054562532bacdf98"
     ],
     [
       "HyE.RSA.enc",
@@ -31,7 +31,37 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "cb885ffcb8c48eefb4a6433b3b8f0bb5"
+      "705d9f8af4914756ff4617da682b2658"
+    ],
+    [
+      "HyE.RSA.plain",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_CoreCrypto.AES_128_GCM",
+        "equality_tok_CoreCrypto.AES_128_GCM@tok",
+        "equation_CoreCrypto.aeadKeySize", "equation_HyE.RSA.plainsize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "518d29c542f2e66d6f64783c76a605c6"
+    ],
+    [
+      "HyE.RSA.enc",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_Platform.Bytes.HasEq_bytes", "equation_HyE.RSA.plain",
+        "equation_HyE.RSA.plainsize", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "function_token_typing_HyE.RSA.plain",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+      ],
+      0,
+      "d1fd8ebb0cc85d97bc655a5d5b43f578"
     ]
   ]
 ]

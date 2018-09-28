@@ -46,7 +46,7 @@ FSTAR_HOME=../..
 
 include ../Makefile.include
 
-OTHERFLAGS += --use_extracted_interfaces false
+OTHERFLAGS += --use_extracted_interfaces true
 
 FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst	      
 

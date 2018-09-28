@@ -1,0 +1,16 @@
+Initial experiment with SL tactics:
+
+FStar.SL.Monotonic.Heap, FStar.SL.Heap: heap for sl, derived from FStar.Heap, but adding notions of restrict, join, points_to, etc.
+Lang.fst: a deeply embedded language, with shallow wps, where the wp combinators are defined using small footprints
+SL.Tactics.fst: Tactics for solving the wps
+Examples.fst: Examples of proofs using the tactics (swap, rotate, etc.)
+
+
+Scaling the experiment:
+
+SepLogic.Heap: miniature sl heap, without many unnecesary components (mm, rel, ...)
+Shallow.fst: realization of wp combinators in Lang.fst
+SL.Effect.fst: sl state monad as an F* effect
+
+
+

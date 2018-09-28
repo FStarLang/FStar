@@ -16,6 +16,8 @@ val goal_type    : goal -> typ
 val goal_witness : goal -> term
 val is_guard     : goal -> bool (* A bit of helper info: did this goal come from a VC guard? *)
 
+val get_label    : goal -> string
+val set_label    : string -> goal -> goal
 
 (* Tracing *)
 val incr_depth : proofstate -> proofstate
@@ -32,3 +34,5 @@ type guard_policy =
     | Goal
     | Force
     | Drop // unsound! careful!
+
+exception TacticFailure of string

@@ -62,13 +62,15 @@ years of F* experience, etc.
 [List archives]: https://lists.gforge.inria.fr/pipermail/fstar-club/
 [searchable]: https://mail-archive.com/fstar-club@lists.gforge.inria.fr/
 
-### Public Slack channel on functionalprogramming
+<!-- ### Public Slack channel on functionalprogramming -->
 
-Users can also ask questions on the public `#fstar` Slack channel
-on [`functionalprogramming`](https://functionalprogramming.slack.com/messages/C15JP868Z/). You can get an invite at:
-<https://fpchat-invite.herokuapp.com/>.
-Archives are available at:
-https://functionalprogramming.slackarchive.io/fstar/
+<!-- Users can also ask questions on the public `#fstar` Slack channel -->
+<!-- on [`functionalprogramming`](https://functionalprogramming.slack.com/messages/C15JP868Z/). -->
+<!-- You can get an invite at: <https://fpchat-invite.herokuapp.com/>. -->
+<!-- Slack restricts archiving functionality to paying organizations, -->
+<!-- so we are looking for better alternatives. -->
+<!-- Archives were previously available at: -->
+<!-- https://functionalprogramming.slackarchive.io/fstar/ -->
 
 ### Reporting issues
 

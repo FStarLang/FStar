@@ -23,10 +23,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "80045ac8671c3f4704d23d39be3a2045"
+      "a2fa833daa915eb7cfaca95d74e21013"
     ],
     [
-      "Pruning.uu___68",
+      "Pruning.uu___76",
       1,
       4,
       2,
@@ -41,10 +41,10 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "947f24175cd0dfeb144c93b919f91f1a"
+      "5b42f0192686c275c46bec58cc5d7488"
     ],
     [
-      "Pruning.uu___69",
+      "Pruning.uu___77",
       1,
       4,
       2,
@@ -59,7 +59,52 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "82b8c72ecae3012f54536bffcafa1617"
+      "7d7a3659403174f656b608b52e0b716e"
+    ],
+    [
+      "Pruning.f",
+      2,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "e4086f6fcb435f78b296efaeabe5c1e0"
+    ],
+    [
+      "Pruning.uu___76",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "equation_FStar.List.Tot.Base.rev",
+        "equation_with_fuel_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
+      ],
+      0,
+      "bb4611c73dc192c74784b70acccb072a"
+    ],
+    [
+      "Pruning.uu___77",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "equation_FStar.List.Tot.Base.rev",
+        "equation_with_fuel_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
+      ],
+      0,
+      "a6bd05f999bbe2e7622d6226e2589de1"
     ]
   ]
 ]

@@ -385,3 +385,15 @@ let tcdecltime : unit = ()
  *)
 irreducible
 let assume_strictly_positive : unit = ()
+
+(**
+ * This attribute is to be used as a hint for the unifier.
+ * A function-typed symbol `t` marked with this attribute
+ * will be treated as being injective in all its arguments
+ * by the unifier.
+ * That is, given a problem `t a1..an =?= t b1..bn`
+ * the unifier will solve it by proving `ai =?= bi` for
+ * all `i`, without trying to unfold the definition of `t`.
+ **)
+irreducible
+let unifier_hint_injective : unit = ()

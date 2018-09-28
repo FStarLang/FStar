@@ -46,7 +46,7 @@ module Dep     = FStar.Parser.Dep
 module NBE     = FStar.TypeChecker.NBE
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
-let cache_version_number = 4
+let cache_version_number = 5
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -97,8 +97,9 @@ let init_env deps : TcEnv.env =
           (FStar.Tactics.Interpreter.primitive_steps ()))
   in
   (* Set up some tactics callbacks *)
-  let env = { env with synth_hook = FStar.Tactics.Interpreter.synthesize } in
-  let env = { env with splice = FStar.Tactics.Interpreter.splice} in
+  let env = { env with synth_hook       = FStar.Tactics.Interpreter.synthesize } in
+  let env = { env with splice           = FStar.Tactics.Interpreter.splice} in
+  let env = { env with postprocess      = FStar.Tactics.Interpreter.postprocess} in
   let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
   env.solver.init env;
   env

@@ -57,107 +57,67 @@ type 'a problem =
 let __proj__Mkproblem__item__pid : 'a . 'a problem -> Prims.int =
   fun projectee  ->
     match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard;
-        logical_guard_uvar = __fname__logical_guard_uvar;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__pid
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank;_} -> pid
   
 let __proj__Mkproblem__item__lhs : 'a . 'a problem -> 'a =
   fun projectee  ->
     match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard;
-        logical_guard_uvar = __fname__logical_guard_uvar;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__lhs
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank;_} -> lhs
   
 let __proj__Mkproblem__item__relation : 'a . 'a problem -> rel =
   fun projectee  ->
     match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard;
-        logical_guard_uvar = __fname__logical_guard_uvar;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__relation
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank;_} -> relation
   
 let __proj__Mkproblem__item__rhs : 'a . 'a problem -> 'a =
   fun projectee  ->
     match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard;
-        logical_guard_uvar = __fname__logical_guard_uvar;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__rhs
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank;_} -> rhs
   
 let __proj__Mkproblem__item__element :
   'a . 'a problem -> FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option =
   fun projectee  ->
     match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard;
-        logical_guard_uvar = __fname__logical_guard_uvar;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__element
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank;_} -> element
   
 let __proj__Mkproblem__item__logical_guard :
   'a . 'a problem -> FStar_Syntax_Syntax.term =
   fun projectee  ->
     match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard;
-        logical_guard_uvar = __fname__logical_guard_uvar;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__logical_guard
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank;_} -> logical_guard
   
 let __proj__Mkproblem__item__logical_guard_uvar :
   'a . 'a problem -> FStar_Syntax_Syntax.ctx_uvar =
   fun projectee  ->
     match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard;
-        logical_guard_uvar = __fname__logical_guard_uvar;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__logical_guard_uvar
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank;_} -> logical_guard_uvar
   
 let __proj__Mkproblem__item__reason :
   'a . 'a problem -> Prims.string Prims.list =
   fun projectee  ->
     match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard;
-        logical_guard_uvar = __fname__logical_guard_uvar;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__reason
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank;_} -> reason
   
 let __proj__Mkproblem__item__loc : 'a . 'a problem -> FStar_Range.range =
   fun projectee  ->
     match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard;
-        logical_guard_uvar = __fname__logical_guard_uvar;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__loc
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank;_} -> loc
   
 let __proj__Mkproblem__item__rank :
   'a . 'a problem -> rank_t FStar_Pervasives_Native.option =
   fun projectee  ->
     match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard;
-        logical_guard_uvar = __fname__logical_guard_uvar;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__rank
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank;_} -> rank
   
 type prob =
   | TProb of FStar_Syntax_Syntax.typ problem 
@@ -175,8 +135,8 @@ let (uu___is_CProb : prob -> Prims.bool) =
 let (__proj__CProb__item___0 : prob -> FStar_Syntax_Syntax.comp problem) =
   fun projectee  -> match projectee with | CProb _0 -> _0 
 let (as_tprob : prob -> FStar_Syntax_Syntax.typ problem) =
-  fun uu___211_485  ->
-    match uu___211_485 with
+  fun uu___218_485  ->
+    match uu___218_485 with
     | TProb p -> p
     | uu____491 -> failwith "Expected a TProb"
   
@@ -249,12 +209,12 @@ let rec (decr_delta_depth :
   FStar_Syntax_Syntax.delta_depth ->
     FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option)
   =
-  fun uu___212_660  ->
-    match uu___212_660 with
-    | FStar_Syntax_Syntax.Delta_constant_at_level _0_16 when
-        _0_16 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
-    | FStar_Syntax_Syntax.Delta_equational_at_level _0_17 when
-        _0_17 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
+  fun uu___219_660  ->
+    match uu___219_660 with
+    | FStar_Syntax_Syntax.Delta_constant_at_level _0_1 when
+        _0_1 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
+    | FStar_Syntax_Syntax.Delta_equational_at_level _0_2 when
+        _0_2 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Delta_constant_at_level i ->
         FStar_Pervasives_Native.Some
           (FStar_Syntax_Syntax.Delta_constant_at_level
@@ -277,28 +237,19 @@ let (__proj__Mkidentifier_info__item__identifier :
   =
   fun projectee  ->
     match projectee with
-    | { identifier = __fname__identifier;
-        identifier_ty = __fname__identifier_ty;
-        identifier_range = __fname__identifier_range;_} ->
-        __fname__identifier
+    | { identifier; identifier_ty; identifier_range;_} -> identifier
   
 let (__proj__Mkidentifier_info__item__identifier_ty :
   identifier_info -> FStar_Syntax_Syntax.typ) =
   fun projectee  ->
     match projectee with
-    | { identifier = __fname__identifier;
-        identifier_ty = __fname__identifier_ty;
-        identifier_range = __fname__identifier_range;_} ->
-        __fname__identifier_ty
+    | { identifier; identifier_ty; identifier_range;_} -> identifier_ty
   
 let (__proj__Mkidentifier_info__item__identifier_range :
   identifier_info -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
-    | { identifier = __fname__identifier;
-        identifier_ty = __fname__identifier_ty;
-        identifier_range = __fname__identifier_range;_} ->
-        __fname__identifier_range
+    | { identifier; identifier_ty; identifier_range;_} -> identifier_range
   
 let (insert_col_info :
   Prims.int ->
@@ -329,8 +280,8 @@ let (find_nearest_preceding_col_info :
   =
   fun col  ->
     fun col_infos  ->
-      let rec aux out uu___213_1008 =
-        match uu___213_1008 with
+      let rec aux out uu___220_1008 =
+        match uu___220_1008 with
         | [] -> out
         | (c,i)::rest ->
             if c > col
@@ -352,27 +303,19 @@ let (__proj__Mkid_info_table__item__id_info_enabled :
   id_info_table -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { id_info_enabled = __fname__id_info_enabled;
-        id_info_db = __fname__id_info_db;
-        id_info_buffer = __fname__id_info_buffer;_} ->
-        __fname__id_info_enabled
+    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_enabled
   
 let (__proj__Mkid_info_table__item__id_info_db :
   id_info_table -> row_info_by_file) =
   fun projectee  ->
     match projectee with
-    | { id_info_enabled = __fname__id_info_enabled;
-        id_info_db = __fname__id_info_db;
-        id_info_buffer = __fname__id_info_buffer;_} -> __fname__id_info_db
+    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_db
   
 let (__proj__Mkid_info_table__item__id_info_buffer :
   id_info_table -> identifier_info Prims.list) =
   fun projectee  ->
     match projectee with
-    | { id_info_enabled = __fname__id_info_enabled;
-        id_info_db = __fname__id_info_db;
-        id_info_buffer = __fname__id_info_buffer;_} ->
-        __fname__id_info_buffer
+    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_buffer
   
 let (id_info_table_empty : id_info_table) =
   let uu____1100 = FStar_Util.psmap_empty ()  in
@@ -393,10 +336,10 @@ let (id_info__insert :
           let uu____1153 = FStar_Range.use_range range  in
           FStar_Range.set_def_range range uu____1153  in
         let info1 =
-          let uu___216_1155 = info  in
+          let uu___223_1155 = info  in
           let uu____1156 = ty_map info.identifier_ty  in
           {
-            identifier = (uu___216_1155.identifier);
+            identifier = (uu___223_1155.identifier);
             identifier_ty = uu____1156;
             identifier_range = use_range1
           }  in
@@ -430,10 +373,10 @@ let (id_info_insert :
           let info =
             { identifier = id1; identifier_ty = ty; identifier_range = range
             }  in
-          let uu___217_1318 = table  in
+          let uu___224_1318 = table  in
           {
-            id_info_enabled = (uu___217_1318.id_info_enabled);
-            id_info_db = (uu___217_1318.id_info_db);
+            id_info_enabled = (uu___224_1318.id_info_enabled);
+            id_info_db = (uu___224_1318.id_info_db);
             id_info_buffer = (info :: (table.id_info_buffer))
           }
   
@@ -466,12 +409,12 @@ let (id_info_insert_fv :
 let (id_info_toggle : id_info_table -> Prims.bool -> id_info_table) =
   fun table  ->
     fun enabled  ->
-      let uu___218_1363 = table  in
+      let uu___225_1363 = table  in
       let uu____1364 = enabled && (FStar_Options.ide ())  in
       {
         id_info_enabled = uu____1364;
-        id_info_db = (uu___218_1363.id_info_db);
-        id_info_buffer = (uu___218_1363.id_info_buffer)
+        id_info_db = (uu___225_1363.id_info_db);
+        id_info_buffer = (uu___225_1363.id_info_buffer)
       }
   
 let (id_info_promote :
@@ -480,13 +423,13 @@ let (id_info_promote :
   =
   fun table  ->
     fun ty_map  ->
-      let uu___219_1380 = table  in
+      let uu___226_1380 = table  in
       let uu____1381 =
         FStar_List.fold_left (id_info__insert ty_map) table.id_info_db
           table.id_info_buffer
          in
       {
-        id_info_enabled = (uu___219_1380.id_info_enabled);
+        id_info_enabled = (uu___226_1380.id_info_enabled);
         id_info_db = uu____1381;
         id_info_buffer = []
       }
@@ -532,8 +475,8 @@ let (check_uvar_ctx_invariant :
               let uu____1469 =
                 FStar_All.pipe_right gamma
                   (FStar_List.map
-                     (fun uu___214_1479  ->
-                        match uu___214_1479 with
+                     (fun uu___221_1479  ->
+                        match uu___221_1479 with
                         | FStar_Syntax_Syntax.Binding_var x ->
                             let uu____1481 =
                               FStar_Syntax_Print.bv_to_string x  in
@@ -565,8 +508,8 @@ let (check_uvar_ctx_invariant :
               (let uu____1516 =
                  let uu____1541 =
                    FStar_Util.prefix_until
-                     (fun uu___215_1556  ->
-                        match uu___215_1556 with
+                     (fun uu___222_1556  ->
+                        match uu___222_1556 with
                         | FStar_Syntax_Syntax.Binding_var uu____1557 -> true
                         | uu____1558 -> false) g
                     in

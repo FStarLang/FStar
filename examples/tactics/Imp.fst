@@ -187,9 +187,10 @@ let _ = assert_norm (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 
 let _ = assert (forall x. poly5 x `equiv` poly5' x)
             by (let _ = forall_intros () in
                 compute ();
-                dump "after norm";
+                (* dump "after norm"; *)
                 canon_semiring int_cr;
-                dump "final")
+                (* dump "final"; *)
+                ())
 
 // Takes long.. try again later
 //let _ = assert (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))

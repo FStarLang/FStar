@@ -310,27 +310,15 @@ let (__proj__LblPos__item___0 :
   term' -> (term,Prims.string) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | LblPos _0 -> _0 
 let (__proj__Mkterm__item__tm : term -> term') =
-  fun projectee  ->
-    match projectee with
-    | { tm = __fname__tm; freevars = __fname__freevars; rng = __fname__rng;_}
-        -> __fname__tm
-  
+  fun projectee  -> match projectee with | { tm; freevars; rng;_} -> tm 
 let (__proj__Mkterm__item__freevars :
   term ->
     (Prims.string,sort) FStar_Pervasives_Native.tuple2 Prims.list
       FStar_Syntax_Syntax.memo)
   =
-  fun projectee  ->
-    match projectee with
-    | { tm = __fname__tm; freevars = __fname__freevars; rng = __fname__rng;_}
-        -> __fname__freevars
-  
+  fun projectee  -> match projectee with | { tm; freevars; rng;_} -> freevars 
 let (__proj__Mkterm__item__rng : term -> FStar_Range.range) =
-  fun projectee  ->
-    match projectee with
-    | { tm = __fname__tm; freevars = __fname__freevars; rng = __fname__rng;_}
-        -> __fname__rng
-  
+  fun projectee  -> match projectee with | { tm; freevars; rng;_} -> rng 
 type pat = term
 type fv = (Prims.string,sort) FStar_Pervasives_Native.tuple2
 type fvs = (Prims.string,sort) FStar_Pervasives_Native.tuple2 Prims.list
@@ -373,41 +361,29 @@ type assumption =
 let (__proj__Mkassumption__item__assumption_term : assumption -> term) =
   fun projectee  ->
     match projectee with
-    | { assumption_term = __fname__assumption_term;
-        assumption_caption = __fname__assumption_caption;
-        assumption_name = __fname__assumption_name;
-        assumption_fact_ids = __fname__assumption_fact_ids;_} ->
-        __fname__assumption_term
+    | { assumption_term; assumption_caption; assumption_name;
+        assumption_fact_ids;_} -> assumption_term
   
 let (__proj__Mkassumption__item__assumption_caption : assumption -> caption)
   =
   fun projectee  ->
     match projectee with
-    | { assumption_term = __fname__assumption_term;
-        assumption_caption = __fname__assumption_caption;
-        assumption_name = __fname__assumption_name;
-        assumption_fact_ids = __fname__assumption_fact_ids;_} ->
-        __fname__assumption_caption
+    | { assumption_term; assumption_caption; assumption_name;
+        assumption_fact_ids;_} -> assumption_caption
   
 let (__proj__Mkassumption__item__assumption_name :
   assumption -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { assumption_term = __fname__assumption_term;
-        assumption_caption = __fname__assumption_caption;
-        assumption_name = __fname__assumption_name;
-        assumption_fact_ids = __fname__assumption_fact_ids;_} ->
-        __fname__assumption_name
+    | { assumption_term; assumption_caption; assumption_name;
+        assumption_fact_ids;_} -> assumption_name
   
 let (__proj__Mkassumption__item__assumption_fact_ids :
   assumption -> fact_db_id Prims.list) =
   fun projectee  ->
     match projectee with
-    | { assumption_term = __fname__assumption_term;
-        assumption_caption = __fname__assumption_caption;
-        assumption_name = __fname__assumption_name;
-        assumption_fact_ids = __fname__assumption_fact_ids;_} ->
-        __fname__assumption_fact_ids
+    | { assumption_term; assumption_caption; assumption_name;
+        assumption_fact_ids;_} -> assumption_fact_ids
   
 type decl =
   | DefPrelude 
@@ -530,14 +506,14 @@ let (freevar_eq : term -> term -> Prims.bool) =
       | uu____1498 -> false
   
 let (freevar_sort : term -> sort) =
-  fun uu___116_1507  ->
-    match uu___116_1507 with
+  fun uu___120_1507  ->
+    match uu___120_1507 with
     | { tm = FreeV x; freevars = uu____1509; rng = uu____1510;_} -> fv_sort x
     | uu____1523 -> failwith "impossible"
   
 let (fv_of_term : term -> fv) =
-  fun uu___117_1528  ->
-    match uu___117_1528 with
+  fun uu___121_1528  ->
+    match uu___121_1528 with
     | { tm = FreeV fv; freevars = uu____1530; rng = uu____1531;_} -> fv
     | uu____1544 -> failwith "impossible"
   
@@ -568,12 +544,12 @@ let (free_variables : term -> fvs) =
          fvs)
   
 let (qop_to_string : qop -> Prims.string) =
-  fun uu___118_1763  ->
-    match uu___118_1763 with | Forall  -> "forall" | Exists  -> "exists"
+  fun uu___122_1763  ->
+    match uu___122_1763 with | Forall  -> "forall" | Exists  -> "exists"
   
 let (op_to_string : op -> Prims.string) =
-  fun uu___119_1768  ->
-    match uu___119_1768 with
+  fun uu___123_1768  ->
+    match uu___123_1768 with
     | TrueOp  -> "true"
     | FalseOp  -> "false"
     | Not  -> "not"
@@ -615,8 +591,8 @@ let (op_to_string : op -> Prims.string) =
   
 let (weightToSmt : Prims.int FStar_Pervasives_Native.option -> Prims.string)
   =
-  fun uu___120_1780  ->
-    match uu___120_1780 with
+  fun uu___124_1780  ->
+    match uu___124_1780 with
     | FStar_Pervasives_Native.None  -> ""
     | FStar_Pervasives_Native.Some i ->
         let uu____1784 = FStar_Util.string_of_int i  in
@@ -1896,8 +1872,8 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
   
 let (caption_to_string :
   Prims.string FStar_Pervasives_Native.option -> Prims.string) =
-  fun uu___121_5957  ->
-    match uu___121_5957 with
+  fun uu___125_5957  ->
+    match uu___125_5957 with
     | FStar_Pervasives_Native.None  -> ""
     | FStar_Pervasives_Native.Some c ->
         Prims.strcat ";;;;;;;;;;;;;;;;" (Prims.strcat c "\n")
@@ -1914,8 +1890,8 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
             then
               let uu____5998 =
                 FStar_All.pipe_right (FStar_Util.splitlines c)
-                  (fun uu___122_6002  ->
-                     match uu___122_6002 with | [] -> "" | h::t -> h)
+                  (fun uu___126_6002  ->
+                     match uu___126_6002 with | [] -> "" | h::t -> h)
                  in
               FStar_Util.format1 "\n; %s" uu____5998
             else ""
@@ -1943,8 +1919,8 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
             let fact_ids_to_string ids =
               FStar_All.pipe_right ids
                 (FStar_List.map
-                   (fun uu___123_6099  ->
-                      match uu___123_6099 with
+                   (fun uu___127_6099  ->
+                      match uu___127_6099 with
                       | Name n1 ->
                           let uu____6101 = FStar_Ident.text_of_lid n1  in
                           Prims.strcat "Name " uu____6101
@@ -2293,10 +2269,10 @@ let (mk_Valid : term -> term) =
           let uu____6755 = unboxBitVec sz t2  in (uu____6754, uu____6755)  in
         mkBvUlt uu____6749 t.rng
     | App (Var "Prims.b2t",t1::[]) ->
-        let uu___124_6759 = unboxBool t1  in
+        let uu___128_6759 = unboxBool t1  in
         {
-          tm = (uu___124_6759.tm);
-          freevars = (uu___124_6759.freevars);
+          tm = (uu___128_6759.tm);
+          freevars = (uu___128_6759.freevars);
           rng = (t.rng)
         }
     | uu____6760 -> mkApp ("Valid", [t]) t.rng

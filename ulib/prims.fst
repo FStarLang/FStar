@@ -140,20 +140,10 @@ type has_type : #a:Type -> a -> Type -> Type0
 [@ "tac_opaque"]
 type l_Forall (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a -> GTot (p x))
 
+let subtype_of (p1:Type) (p2:Type) = forall (x:p1). has_type x p2
+
 (* The type of squashed types *)
-type prop = a:Type0{ forall (x:a). x === () }
-
-(* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
-unopteq
-type dtuple2 (a:Type)
-             (b:(a -> GTot Type)) =
-  | Mkdtuple2: _1:a
-            -> _2:b _1
-            -> dtuple2 a b
-
-(* exists (x:a). p x : specialized to Type#0 *)
-[@ "tac_opaque"]
-type l_Exists (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a & p x)
+type prop = a:Type0{ a `subtype_of` unit }
 
 (* range is a type for the internal representations of source ranges
          The functions that follow below allow manipulating ranges
@@ -255,6 +245,18 @@ sub_effect
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
 effect Ghost (a:Type) (pre:Type) (post:pure_post' a pre) =
        GHOST a (fun (p:pure_post a) -> pre /\ (forall (ghost_result:a). post ghost_result ==> p ghost_result))
+
+(* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
+unopteq
+type dtuple2 (a:Type)
+             (b:(a -> GTot Type)) =
+  | Mkdtuple2: _1:a
+            -> _2:b _1
+            -> dtuple2 a b
+
+(* exists (x:a). p x : specialized to Type#0 *)
+[@ "tac_opaque"]
+type l_Exists (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a & p x)
 
 assume new
 type int : Type0

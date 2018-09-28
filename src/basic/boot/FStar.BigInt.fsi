@@ -32,6 +32,9 @@ val logor_big_int: bigint -> bigint -> bigint
 val logxor_big_int: bigint -> bigint -> bigint
 val lognot_big_int: bigint -> bigint
 
+val shift_left_big_int: bigint -> bigint -> bigint
+val shift_right_big_int: bigint -> bigint -> bigint
+
 val sqrt_big_int : (bigint -> bigint)
 
 val string_of_big_int : (bigint -> string)
@@ -42,3 +45,5 @@ val to_int : (bigint -> int)
 
 val of_int_fs: (int -> bigint)
 val to_int_fs: (bigint -> int)
+
+val of_hex: string -> bigint

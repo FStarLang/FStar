@@ -25,12 +25,12 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
             begin match tracepoint ps' with
             | () -> t2 a (decr_depth ps')
             end
-        | Failed msg ps' -> Failed msg ps'
+        | Failed e ps' -> Failed e ps'
 
 (* Actions *)
 let __get () : __tac proofstate = fun s0 -> Success s0 s0
 
-let __fail (a:Type0) (msg:string) : __tac a = fun (ps:proofstate) -> Failed #a msg ps
+let __raise (a:Type0) (e:exn) : __tac a = fun (ps:proofstate) -> Failed #a e ps
 
 let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 
@@ -46,7 +46,7 @@ let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
     wp ps (fun m' -> match m' with
                      | Success a q -> f a q post
-                     | Failed msg q -> post (Failed msg q))
+                     | Failed e q -> post (Failed e q))
 
 unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
     fun ps post -> forall k. (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
@@ -60,7 +60,7 @@ new_effect {
   with repr     = __tac
      ; bind     = __bind
      ; return   = __ret
-     ; __fail   = __fail
+     ; __raise  = __raise
      ; __get    = __get
 }
 
@@ -84,7 +84,7 @@ let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
 sub_effect DIV ~> TAC = lift_div_tac
 
 let get = TAC?.__get
-let fail_act (#a:Type) (msg:string) = TAC?.__fail a msg
+let raise (#a:Type) (e:exn) = TAC?.__raise a e
 
 abstract
 let with_tactic (t : unit -> Tac 'a) (p:Type) : Type = p
@@ -113,3 +113,19 @@ val assume_safe : (#a:Type) -> (unit -> TacF a) -> Tac a
 let assume_safe #a tau = admit (); tau ()
 
 private let tactic a = unit -> Tac a
+
+(* A hook to postprocess a definition, after typechecking, and rewrite it
+ * into a (provably equal) shape chosen by the user. This can be used to implement
+ * custom transformations previous to extraction, such as selective inlining.
+ * When ran added to a definition [let x = E], the [tau] metaprogram
+ * is presented with a goal of the shape [E = ?u] for a fresh uvar [?u].
+ * The metaprogram should then both instantiate [?u] and prove the equivalence
+ * to [E]. *)
+irreducible
+let postprocess_with (tau : unit -> Tac unit) = ()
+
+(* Similar semantics to [postprocess_with], but the metaprogram only runs before
+ * extraction, and hence typechecking and the logical environment should not be
+ * affected at all. *)
+irreducible
+let postprocess_for_extraction_with (tau : unit -> Tac unit) = ()

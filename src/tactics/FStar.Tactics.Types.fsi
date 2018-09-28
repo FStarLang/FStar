@@ -25,6 +25,7 @@ type goal = {
     opts    : FStar.Options.optionstate; // option state for this particular goal
     is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
+    label : string; // A user-defined description
 }
 type guard_policy =
     | Goal
@@ -42,7 +43,7 @@ type proofstate = {
     // way for primitives to take/give goals, and a way
     // to have the SMT goal set. What we should really do
     // is go full-LCF and take them as arguments, returning them
-    // as values. This option stack should be user-level.
+    // as values. This goal stack should be user-level.
     goals        : list<goal>;   //all the goals remaining to be solved
     smt_goals    : list<goal>;   //goals that have been deferred to SMT
 
@@ -72,10 +73,16 @@ val goal_with_type: goal -> term -> goal
 val goal_with_env: goal -> env -> goal
 val is_guard : goal -> bool
 
+val get_label : goal -> string
+val set_label : string -> goal -> goal
+
 val goals_of     : proofstate -> list<goal>
 val smt_goals_of : proofstate -> list<goal>
 
-val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> goal
+val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> goal
 type direction =
     | TopDown
     | BottomUp
+
+exception TacticFailure of string
+exception EExn of term

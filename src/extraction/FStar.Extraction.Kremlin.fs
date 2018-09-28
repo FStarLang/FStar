@@ -122,6 +122,7 @@ and expr =
   | EFun of list<binder> * expr * typ
   | EAbortS of string
   | EBufFree of expr
+  | EBufCreateNoInit of lifetime * expr
 
 
 and op =
@@ -430,13 +431,19 @@ and translate_let env flavor lb: option<decl> =
           | MLTY_Fun (_, eff, t) when i > 0 ->
               find_return_type eff (i - 1) t
           | t ->
-              eff, t
+              i, eff, t
         in
-        let eff, t = find_return_type E_PURE (List.length args) t0 in
+        let name = env.module_name, name in
+        let i, eff, t = find_return_type E_PURE (List.length args) t0 in
+        if i > 0 then begin
+          let msg = "function type annotation has less arrows than the \
+            number of arguments; please mark the return type abbreviation as \
+            inline_for_extraction" in
+          BU.print2_warning "Not extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) msg
+        end;
         let t = translate_type env t in
         let binders = translate_binders env args in
         let env = add_binders env args in
-        let name = env.module_name, name in
         let cc = translate_cc meta in
         let meta = match eff, t with
           | E_GHOST, _
@@ -582,9 +589,13 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmref"
     ->
       TBuf (translate_type env arg)
+  | MLTY_Named ([arg; _; _], p) when
+    Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type env arg)
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "LowStar.Buffer.buffer" ||
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
+    Syntax.string_of_mlpath p = "LowStar.Buffer.buffer" ||
+    Syntax.string_of_mlpath p = "LowStar.ImmutableBuffer.ibuffer" ||
+    Syntax.string_of_mlpath p = "LowStar.UninitializedBuffer.ubuffer" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.reference" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.stackref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ref" ||
@@ -690,7 +701,8 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
-      || string_of_mlpath p = "LowStar.Buffer.index" ->
+      || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
+      || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
@@ -700,19 +712,28 @@ and translate_expr env e: expr =
   (* All the distinguished combinators that correspond to allocation, either on
    * the stack, on the heap (GC'd or manually-managed). *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ e1; e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.create" || string_of_mlpath p = "LowStar.Buffer.alloca") ->
+    when (string_of_mlpath p = "FStar.Buffer.create" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca") ->
       EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
+  
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ elen ])
+    when string_of_mlpath p = "LowStar.UninitializedBuffer.ualloca" ->
+      EBufCreateNoInit (Stack, translate_expr env elen)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
     when (string_of_mlpath p = "FStar.HyperStack.ST.salloc") ->
       EBufCreate (Stack, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.createL" || string_of_mlpath p = "LowStar.Buffer.alloca_of_list") ->
+    when (string_of_mlpath p = "FStar.Buffer.createL" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca_of_list" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca_of_list") ->
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; e2 ])
-    when string_of_mlpath p = "LowStar.Buffer.gcmalloc_of_list" ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _erid; e2 ])
+    when string_of_mlpath p = "LowStar.Monotonic.Buffer.mgcmalloc_of_list" ||
+         string_of_mlpath p = "LowStar.ImmutableBuffer.igcmalloc_of_list" ->
       EBufCreateL (Eternal, List.map (translate_expr env) (list_elements e2))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
@@ -720,37 +741,56 @@ and translate_expr env e: expr =
       EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.rcreate" || string_of_mlpath p = "LowStar.Buffer.gcmalloc") ->
+    when (string_of_mlpath p = "FStar.Buffer.rcreate" || string_of_mlpath p = "LowStar.Monotonic.Buffer.mgcmalloc" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.igcmalloc") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _erid; elen ])
+    when string_of_mlpath p = "LowStar.UninitializedBuffer.ugcmalloc" ->
+      EBufCreateNoInit (Eternal, translate_expr env elen)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
     when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_mm") ->
       EBufCreate (ManuallyManaged, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.rcreate_mm" || string_of_mlpath p = "LowStar.Buffer.malloc") ->
+    when (string_of_mlpath p = "FStar.Buffer.rcreate_mm" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.imalloc") ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _erid; elen ])
+    when string_of_mlpath p = "LowStar.UninitializedBuffer.umalloc" ->
+      EBufCreateNoInit (ManuallyManaged, translate_expr env elen)
 
   (* Only manually-managed references and buffers can be freed. *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.HyperStack.ST.rfree") ->
       EBufFree (translate_expr env e2)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.rfree" || string_of_mlpath p = "LowStar.Buffer.free") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.rfree" || string_of_mlpath p = "LowStar.Monotonic.Buffer.free") ->
       EBufFree (translate_expr env e2)
 
   (* Generic buffer operations. *)
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub" || string_of_mlpath p = "LowStar.Buffer.sub") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
+      EBufSub (translate_expr env e1, translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when string_of_mlpath p = "LowStar.Monotonic.Buffer.msub" ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.join") ->
       (translate_expr env e1)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset" || string_of_mlpath p = "LowStar.Buffer.offset") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
+      EBufSub (translate_expr env e1, translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when string_of_mlpath p = "LowStar.Monotonic.Buffer.moffset" ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
     when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment"
-    || string_of_mlpath p = "LowStar.Buffer.upd'" ->
+    || string_of_mlpath p = "LowStar.Monotonic.Buffer.upd'"
+    || string_of_mlpath p = "LowStar.UninitializedBuffer.uupd" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" ->
@@ -761,7 +801,8 @@ and translate_expr env e: expr =
       EPopFrame
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3; e4; e5 ]) when (
       string_of_mlpath p = "FStar.Buffer.blit" ||
-      string_of_mlpath p = "LowStar.Buffer.blit"
+      string_of_mlpath p = "LowStar.Monotonic.Buffer.blit" ||
+      string_of_mlpath p = "LowStar.UninitializedBuffer.ublit"
     ) ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.fill") ->
@@ -771,6 +812,13 @@ and translate_expr env e: expr =
       // (void*)0 so that it can get rid of ghost calls to HST.get at the
       // beginning of functions, which is needed to enforce the push/pop
       // structure.
+      EUnit
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ebuf; _eseq ])
+    when (string_of_mlpath p = "LowStar.Monotonic.Buffer.witness_p" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.recall_p" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.witness_contents" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.recall_contents") ->
       EUnit
 
   | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->

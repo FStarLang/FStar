@@ -214,8 +214,6 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
-  | Mutable_alloc
-  | Mutable_rval
 and fv_qual =
   | Data_ctor
   | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
@@ -418,9 +416,9 @@ type sigelt' =
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
                        * list<lident>               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon        of lident
+  | Sig_datacon        of lident                    //name of the datacon
                        * univ_names                 //universe variables of the inductive type it belongs to
-                       * typ
+                       * typ                        //the constructor's type as an arrow
                        * lident                     //the inductive type of the value this constructs
                        * int                        //and the number of parameters of the inductive
                        * list<lident>               //mutually defined types
@@ -699,6 +697,7 @@ let t_unit      = tconst PC.unit_lid
 let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid
 let t_string    = tconst PC.string_lid
+let t_exn       = tconst PC.exn_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid

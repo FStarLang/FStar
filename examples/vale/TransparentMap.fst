@@ -1,12 +1,14 @@
 module TransparentMap
 open FStar.FunctionalExtensionality
 
-type map (k:eqtype) (v:Type) = k -> v
+module F = FStar.FunctionalExtensionality
+
+type map (k:eqtype) (v:Type) = F.restricted_t k (fun _ -> v)
 
 let sel (#k:eqtype) (#v:Type) (m:map k v) (key:k) : v = m key
 
 let upd (#k:eqtype) (#v:Type) (m:map k v) (key:k) (value:v) : map k v =
-  fun x -> if x = key then value else sel m x
+  F.on_dom k (fun x -> if x = key then value else sel m x)
 
 let sel_upd1 (#k:eqtype) (#v:Type) (m:map k v) (key:k) (value:v)
   : Lemma
@@ -43,4 +45,3 @@ abstract val lemma_equal_refl: #key:eqtype -> #value:Type -> m1:map key value ->
 let lemma_equal_intro #key #value m1 m2 = ()
 let lemma_equal_elim #key #value m1 m2  = ()
 let lemma_equal_refl #key #value m1 m2  = ()
-

@@ -2,15 +2,6 @@
   "î?Šä\\©*\"ÅÄå¤Ö¡ÞÆ",
   [
     [
-      "TestHeap.DistinctXY",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "134bbc26ab4a726dd9ae006b493d21b4"
-    ],
-    [
       "TestHeap.test0",
       1,
       2,
@@ -22,7 +13,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
       ],
       0,
-      "042b4044f8f0a852e59954a6cbed4a40"
+      "a1204e41db2408dcdbcba78e5afd288a"
     ],
     [
       "TestHeap.test1",
@@ -41,7 +32,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "f4b85af2c2fd1d7cd426d4dfe4529bc5"
+      "178d0c2f4c989b3b8c9672ca7e4a9655"
     ],
     [
       "TestHeap.test3",
@@ -57,7 +48,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "1566a4f9e6e93b616d4d094183ecaccc"
+      "96efa077fc5009cd46ea975b15f78e01"
     ],
     [
       "TestHeap.test7",
@@ -76,7 +67,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "4f41732032ee08dcb190536f85881782"
+      "901ae1b9e721b57751b31e2e49d98e2c"
     ],
     [
       "TestHeap.test8",
@@ -92,16 +83,91 @@
         "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
       ],
       0,
-      "255b1abf5203fffeefcce9dfdbc35f93"
+      "35f631d03c1654994b82b785c1b0e200"
     ],
     [
-      "TestHeap.DistinctXY",
+      "TestHeap.test0",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Heap.ref",
+        "function_token_typing_TestHeap.x", "int_typing",
+        "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
+        "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
+      ],
       0,
-      "fb71b47b1815a88dee3cd17c4a1d477a"
+      "63af9e482155668699c4f239963788a0"
+    ],
+    [
+      "TestHeap.test1",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_TestHeap.DistinctXY", "equation_FStar.Heap.ref",
+        "equation_FStar.Heap.trivial_preorder",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing",
+        "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
+        "lemma_FStar.Monotonic.Heap.lemma_sel_upd2",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
+      ],
+      0,
+      "77fc99cf6460254037ec9bcd0a99bb22"
+    ],
+    [
+      "TestHeap.test3",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Heap.ref",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing",
+        "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
+      ],
+      0,
+      "98355c60929378fc11600533da6bbe2b"
+    ],
+    [
+      "TestHeap.test7",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_TestHeap.DistinctXY",
+        "equation_FStar.Heap.ref", "equation_FStar.Heap.trivial_preorder",
+        "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing",
+        "lemma_FStar.Monotonic.Heap.lemma_upd_contains",
+        "lemma_FStar.Monotonic.Heap.lemma_upd_contains_different_addr",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
+      ],
+      0,
+      "b55a401ed024abc01296206413cf06e3"
+    ],
+    [
+      "TestHeap.test8",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_TestHeap.DistinctXY",
+        "equation_FStar.Heap.ref", "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing",
+        "lemma_FStar.Monotonic.Heap.lemma_upd_contains_different_addr",
+        "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
+      ],
+      0,
+      "865bd280088eedfb844d52c9e6fb67a0"
     ]
   ]
 ]

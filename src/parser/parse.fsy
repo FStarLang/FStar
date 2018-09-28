@@ -85,6 +85,7 @@ let logic_qualifier_deprecation_warning =
 %token INCLUDE
 %token INLINE
 %token INLINE_FOR_EXTRACTION
+%token INSTANCE
 %token <string * bool> INT
 %token <string * bool> INT16
 %token <string * bool> INT32
@@ -107,7 +108,6 @@ let logic_qualifier_deprecation_warning =
 %token MATCH
 %token MINUS
 %token MODULE
-%token MUTABLE
 %token <string> NAME
 %token NEW
 %token NEW_EFFECT
@@ -744,6 +744,45 @@ in
 | list_decoration_ rawDecl
     {let (ds, decl) = ($1, $2) in
       ( mk_decl decl (rhs parseState 2) ds )}
+| list_decoration_ typeclassDecl
+    {let (ds, decl) = ($1, $2) in
+      ( let (decl, extra_attrs) = decl in
+        let d = mk_decl decl (rhs parseState 2) ds in
+        { d with attrs = extra_attrs @ d.attrs }
+      )}
+
+typeclassDecl:
+  CLASS option_FSDOC_ typeDecl
+    {let (_1, x0, y0) = ((), $2, $3) in
+let tcdef =
+  let y = y0 in
+  let x = x0 in
+      ( (x, y) )
+in
+      (
+        (* Only a single type decl allowed, but construct it the same as for multiple ones.
+         * Only difference is the `true` below marking that this a class so desugaring
+         * adds the needed %splice. *)
+        let flip (a,b) = (b,a) in
+        let tcdef = flip tcdef in
+        let d = Tycon (false, true, [tcdef]) in
+
+        (* No attrs yet, but perhaps we want a `class` attribute *)
+        (d, [])
+      )}
+| INSTANCE letqualifier letbinding
+    {let (_1, q, lb) = ((), $2, $3) in
+      (
+        (* Making a single letbinding *)
+        let r = rhs2 parseState 1 3 in
+        let lbs = focusLetBindings [lb] r in (* lbs is a singleton really *)
+        let d = TopLevelLet(q, lbs) in
+
+        (* Slapping a `tcinstance` attribute to it *)
+        let at = mk_term (Var tcinstance_lid) r Type_level in
+
+        (d, [at])
+      )}
 
 rawDecl:
   pragma
@@ -767,9 +806,6 @@ rawDecl:
 | TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
     {let (_1, tcdefs) = ((), $2) in
       ( Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
-| CLASS separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
-    {let (_1, tcdefs) = ((), $2) in
-      ( Tycon (false, true, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
 | EFFECT uident typars EQUALS typ
     {let (_1, uid, tparams, _4, t) = ((), $2, $3, (), $5) in
       ( Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
@@ -1078,9 +1114,6 @@ letqualifier:
   REC
     {let _1 = () in
                 ( Rec )}
-| MUTABLE
-    {let _1 = () in
-                ( Mutable )}
 | 
     {                ( NoLetQualifier )}
 
@@ -1308,7 +1341,15 @@ in
       ( lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) )}
 
 patternOrMultibinder:
-  LBRACK_BAR lident COLON simpleArrow BAR_RBRACK
+  LBRACK_BAR UNDERSCORE COLON simpleArrow BAR_RBRACK
+    {let (_1, _2, _3, t, _5) = ((), (), (), $4, ()) in
+      ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let w = mk_pattern (PatWild (Some (Meta mt)))
+                                 (rhs2 parseState 1 5) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
+      )}
+| LBRACK_BAR lident COLON simpleArrow BAR_RBRACK
     {let (_1, i, _3, t, _5) = ((), $2, (), $4, ()) in
       ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         let w = mk_pattern (PatVar (i, Some (Meta mt)))
@@ -2225,15 +2266,21 @@ tmNoEqWith_appTerm_:
 | tmNoEqWith_appTerm_ AMP tmNoEqWith_appTerm_
     {let (e1, _2, e2) = ($1, (), $3) in
       (
-        let x, t, f = match extract_named_refinement e1 with
-            | Some (x, t, f) -> x, t, f
-            | _ -> raise_error (Fatal_MissingQuantifierBinder, "Missing binder for the first component of a dependent tuple") (rhs parseState 1) in
-        let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
-        let tail = e2 in
-        let dom, res = match tail.tm with
-            | Sum(dom', res) -> dom::dom', res
-            | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
+            let dom =
+               match extract_named_refinement e1 with
+               | Some (x, t, f) ->
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 Inl dom
+               | _ ->
+                 Inr e1
+            in
+            let tail = e2 in
+            let dom, res =
+                match tail.tm with
+                | Sum(dom', res) -> dom::dom', res
+                | _ -> [dom], tail
+            in
+            mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       )}
 | tmNoEqWith_appTerm_ OPINFIX3 tmNoEqWith_appTerm_
     {let (e1, op, e2) = ($1, $2, $3) in
@@ -2264,15 +2311,21 @@ tmNoEqWith_tmRefinement_:
 | tmNoEqWith_tmRefinement_ AMP tmNoEqWith_tmRefinement_
     {let (e1, _2, e2) = ($1, (), $3) in
       (
-        let x, t, f = match extract_named_refinement e1 with
-            | Some (x, t, f) -> x, t, f
-            | _ -> raise_error (Fatal_MissingQuantifierBinder, "Missing binder for the first component of a dependent tuple") (rhs parseState 1) in
-        let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
-        let tail = e2 in
-        let dom, res = match tail.tm with
-            | Sum(dom', res) -> dom::dom', res
-            | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
+            let dom =
+               match extract_named_refinement e1 with
+               | Some (x, t, f) ->
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 Inl dom
+               | _ ->
+                 Inr e1
+            in
+            let tail = e2 in
+            let dom, res =
+                match tail.tm with
+                | Sum(dom', res) -> dom::dom', res
+                | _ -> [dom], tail
+            in
+            mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       )}
 | tmNoEqWith_tmRefinement_ OPINFIX3 tmNoEqWith_tmRefinement_
     {let (e1, op, e2) = ($1, $2, $3) in
@@ -2913,5 +2966,6 @@ in
    ( x :: xs )}
 
 %%
+
 
 

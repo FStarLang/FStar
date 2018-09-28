@@ -15,7 +15,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "397c21022242470f2a75362c46ed54d4"
+      "4a707dfc92b2afee8b62be3887d1ce05"
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND_bind_wp",
@@ -31,7 +31,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "681aa8239ec1b19f05bf08635e7b1fb0"
+      "b343ad6943ea3eb5f34d3fda158761fa"
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__get_elab",
@@ -40,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "e3c05a612b3684e691f9a5c22339c54e"
+      "8978861b484430e341a85bf2bdc82e58"
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__put_elab",
@@ -49,7 +49,7 @@
       1,
       [ "@query" ],
       0,
-      "a819b66bed7eb903df1a7409e2806fa6"
+      "0057ebef19fb724504e1e8eb39cd9cd1"
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__raise_elab",
@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "50a081e9e56cf2417bb6c5fba97f3846"
+      "5694a0bd705cbcd7e1cba8e2a67eac98"
     ],
     [
       "FStar.DM4F.Random.RAND",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "4953f1c1b0f026fd29704d6fa5d83d40"
+      "42714752c3f6ad38b6eecd15188fab2c"
     ],
     [
       "FStar.DM4F.Random.RAND",
@@ -76,7 +76,7 @@
       1,
       [ "@query" ],
       0,
-      "875cb4bd993621ea338c52a64c6e609f"
+      "8b7e8be97bd4042c9a4b9670dfa8b8c1"
     ],
     [
       "FStar.DM4F.Random.RAND",
@@ -85,7 +85,7 @@
       1,
       [ "@query" ],
       0,
-      "1ad5b432648b4cc63ec0c9f1ead953be"
+      "27a993ef760ee834cf57428538fcee03"
     ],
     [
       "FStar.DM4F.Random.sample",
@@ -94,7 +94,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "714c38120d35aa142143e2b55c5e5af1"
+      "330f9dc720402674e5bbd1c2c2f93d47"
     ],
     [
       "FStar.DM4F.Random.sample",
@@ -107,7 +107,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "09466f1178555a6de0f45099cb62b470"
+      "414ff5e58115e55c89b351eb3f11b230"
     ],
     [
       "FStar.DM4F.Random.test_sample_some",
@@ -120,7 +120,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "46863842e9076fcccc65427bf38e4174"
+      "795b58c5154af8a312e86c3c915370a0"
     ],
     [
       "FStar.DM4F.Random.test_sample_some",
@@ -132,7 +132,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ee5d044352b40cf4b9004fc1970d81e9"
+      "c29c78b947229c0689c872fe5e0b4842"
     ],
     [
       "FStar.DM4F.Random.test_sample_none",
@@ -141,7 +141,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "4322e3a7bd25c6dc94f4897ebfe59b77"
+      "4dcbb37b1b05e97c77c01a60758ae5e6"
     ],
     [
       "FStar.DM4F.Random.__proj__Bijection__item__finv",
@@ -158,7 +158,7 @@
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__f"
       ],
       0,
-      "5feabde10b17b87215d21cf45dfc0071"
+      "c5bd4b78b17e1db9d651650a38737e45"
     ],
     [
       "FStar.DM4F.Random.inverse",
@@ -178,7 +178,7 @@
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__finv"
       ],
       0,
-      "1ed3b3f415b260aa7844da4686e938f1"
+      "5aa47016cfea8d54d37548b7f31d9d94"
     ],
     [
       "FStar.DM4F.Random.sum_extensional",
@@ -194,7 +194,7 @@
         "typing_FStar.DM4F.Random.sum"
       ],
       0,
-      "563cd6e2baa5f5369352cff1529a8d7b"
+      "08cd06182a4efc104f95aa02a5906307"
     ],
     [
       "FStar.DM4F.Random.mass",
@@ -206,7 +206,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "49381491f0a509cbd53cc32d6cd6dea9"
+      "da8892587b455e7ece0c0b1ff0627541"
     ],
     [
       "FStar.DM4F.Random.point",
@@ -220,7 +220,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9fd64bbc9070188554c4915e947e4abf"
+      "4a6a15b683811ab956b6e79b1d6fe492"
     ],
     [
       "FStar.DM4F.Random.pr_leq",
@@ -232,7 +232,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "bc587b0b2fe91d827535680e62670900"
+      "82155dc3c4c3433b5e4be0dce788ca5c"
     ],
     [
       "FStar.DM4F.Random.pr_leq",
@@ -256,7 +256,7 @@
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__f"
       ],
       0,
-      "c2ef30d109ae3e312afc806a082d1af1"
+      "791f7659d37a355ddc2574cbb65cbfa8"
     ],
     [
       "FStar.DM4F.Random.pr_eq",
@@ -268,7 +268,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c55b40b5c710fa865076cbc7968decbb"
+      "9207485f8bf6dcabc1de8308a4427f37"
     ],
     [
       "FStar.DM4F.Random.pr_eq",
@@ -295,7 +295,7 @@
         "typing_FStar.DM4F.Random.mass"
       ],
       0,
-      "5899173c274aeb362ee5b075ea3858ed"
+      "4f89fe4444743fadf63cfdaf7f98e3a0"
     ],
     [
       "FStar.DM4F.Random.cond",
@@ -307,7 +307,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "373ed657107b358f770aa55b2c197dfb"
+      "117c33c7d5cf87c0c7237ae9d6f418bf"
     ],
     [
       "FStar.DM4F.Random.cond",
@@ -319,7 +319,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "fc2e6276db683a325b3751d7cbf1e57d"
+      "1ebfb0457875686844f148c82a0d0ad3"
     ],
     [
       "FStar.DM4F.Random.bind",
@@ -335,7 +335,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "970c16c865982054adc460ba5928923d"
+      "757ed13969786459e38aa3d126111267"
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND_bind_wp",
@@ -351,7 +351,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "cc63be25f58f4810a81a59ccd199c8e5"
+      "fa9e40509d889877d407ada87314f085"
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__get_elab",
@@ -360,7 +360,7 @@
       1,
       [ "@query" ],
       0,
-      "5acf2a12db93b6c798f459882197a6ad"
+      "c206d8b85eebbf17fcd1149518cb6216"
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__put_elab",
@@ -369,7 +369,7 @@
       1,
       [ "@query" ],
       0,
-      "2d1eaf5d1fa321c7ffc195d4a53a46a1"
+      "c7ef0ed0d287a862b5d2815520b279c4"
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__raise_elab",
@@ -378,7 +378,7 @@
       1,
       [ "@query" ],
       0,
-      "8f5e4a74304423b1088a18b2758f740c"
+      "d72762472e4b115dce4ee9a2ad4187ad"
     ],
     [
       "FStar.DM4F.Random.RAND",
@@ -387,7 +387,7 @@
       1,
       [ "@query" ],
       0,
-      "1596f8cfc5a8eb81f80f18fff6a7286b"
+      "ca8e090e6428d80c24c4498c41c58a5f"
     ],
     [
       "FStar.DM4F.Random.RAND",
@@ -396,7 +396,7 @@
       1,
       [ "@query" ],
       0,
-      "995e307bacf5d916a23304400c61f381"
+      "b8b015baa9c035b76f41aec68fd9a6e2"
     ],
     [
       "FStar.DM4F.Random.RAND",
@@ -405,7 +405,7 @@
       1,
       [ "@query" ],
       0,
-      "31d9da87fba9482be5985d51193850ae"
+      "0427e1adc660188cb9bd97ec6a9f1ace"
     ],
     [
       "FStar.DM4F.Random.sample",
@@ -418,7 +418,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "d54a3576a719ce53b15ec344590b182c"
+      "1dd612a817e178d4c6f2f56b26721367"
     ],
     [
       "FStar.DM4F.Random.sample",
@@ -427,7 +427,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "80283ce021f47a3a71aa6348d216a7f4"
+      "2495a93cc567c89dbd87d37dd2df1bad"
     ],
     [
       "FStar.DM4F.Random.test_sample_some",
@@ -439,7 +439,37 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9ceef4a9a3fc93b88f7a6a6a334c156c"
+      "7a26c7ae9b24d1f7697903dc458fb5b3"
+    ],
+    [
+      "FStar.DM4F.Random.test_sample_some",
+      4,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "b3b0a2d3812ab379f03241a9832c5959"
+    ],
+    [
+      "FStar.DM4F.Random.test_sample_some",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.Heap.Random.size",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "b9cea34b0a3445a10d6b60545d028d13"
+    ],
+    [
+      "FStar.DM4F.Random.test_sample_none",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "30aace3f922686c2dc29282560102f3c"
     ],
     [
       "FStar.DM4F.Random.__proj__Bijection__item__finv",
@@ -456,7 +486,7 @@
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__f"
       ],
       0,
-      "d717806dbd431d59f8fd7c4b3515adf0"
+      "6c0916f6495d7c008921c0ff1dede007"
     ],
     [
       "FStar.DM4F.Random.inverse",
@@ -476,7 +506,7 @@
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__finv"
       ],
       0,
-      "4e7ea3a74608e3dd76c79fb9d288afb7"
+      "0bb40397e0c01a96145597dd2ed18ca9"
     ],
     [
       "FStar.DM4F.Random.mass",
@@ -488,7 +518,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "af34c7f31d88128784bab97d3e3ada39"
+      "93d4aa779e4cb8e1b0279dae85405c99"
     ],
     [
       "FStar.DM4F.Random.point",
@@ -502,7 +532,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b1a81c5a2dcedf0ff119d5aea592a528"
+      "5733c9a9a4b122e0ff2b33e0f971ba79"
     ],
     [
       "FStar.DM4F.Random.pr_leq",
@@ -514,7 +544,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0767e478d854406f6b60ffa6b8fdd9ed"
+      "7b8930b1bdb05fd6886ea4cbd2617cd3"
     ],
     [
       "FStar.DM4F.Random.pr_eq",
@@ -526,7 +556,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "7222ccc27d721f068cd97c048485d98a"
+      "95e16004dc28dd2fbf7a92d9a8e53835"
     ],
     [
       "FStar.DM4F.Random.cond",
@@ -538,7 +568,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "dd17ddf47ba4200fc31027788acdf197"
+      "5f3af813f60d37234de62694ff0b4844"
     ]
   ]
 ]

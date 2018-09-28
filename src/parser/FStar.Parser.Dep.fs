@@ -92,7 +92,7 @@ let module_name_of_file f =
     | Some longname ->
       longname
     | None ->
-      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "not a valid FStar file: %s\n" f))
+      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "not a valid FStar file: %s" f))
 
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
@@ -262,7 +262,7 @@ let build_inclusion_candidates_list (): list<(string * string)> =
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
   List.concatMap (fun d ->
-    if file_exists d then
+    if is_directory d then
       let files = readdir d in
       List.filter_map (fun f ->
         let f = basename f in
@@ -556,13 +556,17 @@ let collect_one
   and collect_binders binders =
     List.iter collect_binder binders
 
-  and collect_binder = function
+  and collect_binder b =
+    collect_aqual b.aqual;
+    match b with
     | { b = Annotated (_, t) }
     | { b = TAnnotated (_, t) }
-    | { b = NoName t } ->
-        collect_term t
-    | _ ->
-        ()
+    | { b = NoName t } -> collect_term t
+    | _ -> ()
+
+  and collect_aqual = function
+    | Some (Meta t) -> collect_term t
+    | _ -> ()
 
   and collect_term t =
     collect_term' t.tm
@@ -641,9 +645,14 @@ let collect_one
         List.iter (fun (_, t) -> collect_term t) idterms
     | Project (t, _) ->
         collect_term t
-    | Product (binders, t)
+    | Product (binders, t) ->
+      collect_binders binders;
+      collect_term t
     | Sum (binders, t) ->
-        collect_binders binders;
+        List.iter (function
+          | Inl b -> collect_binder b
+          | Inr t -> collect_term t)
+          binders;
         collect_term t
     | QForall (binders, ts, t)
     | QExists (binders, ts, t) ->
@@ -675,16 +684,18 @@ let collect_one
     collect_pattern' p.pat
 
   and collect_pattern' = function
-    | PatWild _
+    | PatVar (_, aqual)
+    | PatTvar (_, aqual)
+    | PatWild aqual ->
+        collect_aqual aqual
+
     | PatOp _
     | PatConst _ ->
         ()
     | PatApp (p, ps) ->
         collect_pattern p;
         collect_patterns ps
-    | PatVar _
-    | PatName _
-    | PatTvar _ ->
+    | PatName _ ->
         ()
     | PatList ps
     | PatOr ps

@@ -913,6 +913,10 @@ let getcwd = Sys.getcwd
 let readdir dir = "." :: ".." :: Array.to_list (Sys.readdir dir)
 
 let file_exists = Sys.file_exists
+(* Sys.is_directory raises Sys_error if the path does not exist *)
+let is_directory f = Sys.file_exists f && Sys.is_directory f
+
+
 let basename = Filename.basename
 let dirname = Filename.dirname
 let print_endline = print_endline

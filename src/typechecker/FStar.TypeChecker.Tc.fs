@@ -979,10 +979,11 @@ let tc_inductive' env ses quals lids =
     let data_ops_ses = List.map (TcInductive.mk_data_operations quals env tcs) datas |> List.flatten in
 
     //strict positivity check
-    (if Options.no_positivity () || (not (Env.should_verify env))  then ()  //skipping positivity check if lax mode
-     else
+    if Options.no_positivity () || (not (Env.should_verify env)) then ()  //skipping positivity check if lax mode
+    else begin
        let env = push_sigelt env sig_bndle in
-       let b = List.iter (fun ty ->
+       (* Check positivity of the inductives within the Sig_bundle *)
+       List.iter (fun ty ->
          let b = TcInductive.check_positivity ty env in
          if not b then
            let lid, r =
@@ -992,8 +993,22 @@ let tc_inductive' env ses quals lids =
            in
            Errors.log_issue r (Errors.Error_InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition"))
          else ()
-       ) tcs in
-       ());
+       ) tcs;
+
+       (* Separately, if any of the data constructors in the Sig_bundle are
+        * exceptions, check their positivity separately. See issue #1535 *)
+       List.iter (fun d ->
+         let data_lid, ty_lid =
+            match d.sigel with
+            | Sig_datacon (data_lid, _, _, ty_lid, _, _) -> data_lid, ty_lid
+            | _ -> failwith "Impossible"
+         in
+         if lid_equals ty_lid PC.exn_lid && not (TcInductive.check_exn_positivity data_lid env) then
+            Errors.log_issue d.sigrng
+                     (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                        ("Exception " ^ data_lid.str ^ " does not satisfy the positivity condition"))
+       ) datas
+    end;
 
     //generate hasEq predicate for this inductive
     //skip logical connectives types in prims, tcs is bound to the inductive type, caller ensures its length is > 0
@@ -1050,13 +1065,9 @@ let list_of_option = function
     | None -> []
     | Some x -> [x]
 
-(* Checks that all of the elements of l1 appear in l2 in the exact
- * same amount. Returns None when everything is OK, and Some (e, n1, n2)
- * when `e` occurs `n1` times in `l1` but `n2` (<> n1) times in `l2`. *)
-let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
-    (* If there are no expected errors, we don't check anything *)
-    match l1 with | [] -> None | _ ->
-
+(* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2) *)
+(* Precondition: lists are sorted *)
+let check_multi_contained (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
     let rec collect (l : list<'a>) : list<('a * int)> =
         match l with
         | [] -> []
@@ -1070,7 +1081,6 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
             end
     in
     let summ l =
-        let l = List.sortWith (fun x y -> x - y) l in
         collect l
     in
     let l1 = summ l1 in
@@ -1128,6 +1138,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       else ses
     in
     let sigbndle, projectors_ses = tc_inductive env ses se.sigquals lids in
+    let sigbndle = { sigbndle with sigattrs = se.sigattrs } in (* keep the attributes *)
     [ sigbndle ], projectors_ses, env0
 
   | Sig_pragma(p) ->  //no need for two-phase here
@@ -1357,9 +1368,11 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let lids' = List.collect U.lids_of_sigelt ses in
     List.iter (fun lid ->
         match List.tryFind (Ident.lid_equals lid) lids' with
-        | Some _ -> ()
-        | None ->
+        (* If env.nosynth is on, nothing will be generated, so don't raise an error
+         * so flycheck does spuriously not mark the line red *)
+        | None when not env.nosynth ->
             raise_error (Errors.Fatal_SplicedUndef, BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" (string_of_lid lid) (String.concat ", " <| List.map string_of_lid lids')) r
+        | _ -> ()
     ) lids;
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
@@ -1480,10 +1493,31 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       else e
     in
 
+    let attrs, post_tau =
+        match U.extract_attr' PC.postprocess_with se.sigattrs with
+        | None -> se.sigattrs, None
+        | Some (ats, [tau, None]) -> ats, Some tau
+        | Some (ats, args) ->
+            Errors.log_issue r (Errors.Warning_UnrecognizedAttribute,
+                                   ("Ill-formed application of `postprocess_with`"));
+            se.sigattrs, None
+    in
+    let se = { se with sigattrs = attrs } in (* to remove the postprocess_with *)
+    let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+        let lbdef = env.postprocess env tau lb.lbtyp lb.lbdef in
+        { lb with lbdef = lbdef }
+    in
     let se, lbs = match tc_maybe_toplevel_term env' e with
       | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
+
+        // Postprocess the letbindings with the tactic, if any
+        let lbs = (fst lbs,
+                    (match post_tau with
+                     | Some tau -> List.map (postprocess_lb tau) (snd lbs)
+                     | None -> (snd lbs)))
+        in
 
         //propagate the MaskedEffect tag to the qualifiers
         let quals = match e.n with
@@ -1533,16 +1567,28 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
         List.iter Errors.print_issue errs;
         BU.print_string ">>]\n"
     end;
-    begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
-    | [], _ ->
+    let sort = List.sortWith (fun x y -> x - y) in
+    let errnos = sort errnos in
+    let actual = sort (List.concatMap (fun i -> list_of_option i.issue_number) errs) in
+    begin match errs with
+    | [] ->
         List.iter Errors.print_issue errs;
-        raise_error (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded") se.sigrng
-    | _, Some (e, n1, n2) ->
-        List.iter Errors.print_issue errs;
-        raise_error (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
-                                                (string_of_int e) (string_of_int n1) (string_of_int n2)) se.sigrng
-    | _, None -> [], [], env
-    end
+        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
+    | _ ->
+        if errnos <> [] && errnos <> actual then
+            let (e, n1, n2) = match check_multi_contained errnos actual with
+                              | Some r -> r
+                              | None -> (-1, -1, -1) // should be impossible
+            in
+            List.iter Errors.print_issue errs;
+            Errors.log_issue se.sigrng (Errors.Error_DidNotFail,
+                    BU.format5 "This top-level definition was expected to raise error codes %s, but it raised %s. Error #%s was raised %s times, instead of %s."
+                                    (FStar.Common.string_of_list string_of_int errnos)
+                                    (FStar.Common.string_of_list string_of_int actual)
+                                    (string_of_int e) (string_of_int n2) (string_of_int n1))
+        else ()
+    end;
+    [], [], env
 
   | None ->
     tc_decl' env se
@@ -1704,7 +1750,7 @@ let tc_decls env ses =
     List.iter (fun se -> env.solver.encode_sig env se) ses';
 
     let exports, hidden =
-      if Options.use_extracted_interfaces () then [], []
+      if Options.use_extracted_interfaces () then List.rev_append ses' exports, []
       else
         let accum_exports_hidden (exports, hidden) se =
           let se_exported, hidden = for_export hidden se in
@@ -1713,7 +1759,11 @@ let tc_decls env ses =
         List.fold_left accum_exports_hidden (exports, hidden) ses'
     in
 
-    let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in
+    // GM: Aug 28 2018, pretty sure this is unneded as the only sigelt that can
+    // be present in ses' is the typechecked se (or none). I'm taking it out
+    // so I can make `postprocess_with` remove itself during typechecking
+    // (otherwise, it would run twice with extracted interfaces)
+    (* let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in *)
 
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
   in
@@ -1723,6 +1773,7 @@ let tc_decls env ses =
     let r, ms_elapsed = BU.record_time (fun () -> process_one_decl acc se) in
     if Env.debug env (Options.Other "TCDeclTime")
      || BU.for_some (U.attr_eq U.tcdecltime_attr) se.sigattrs
+     || Options.timing ()
     then BU.print2 "Checked %s in %s milliseconds\n" (Print.sigelt_to_string_short se) (string_of_int ms_elapsed);
     r
   in
@@ -1862,12 +1913,15 @@ let extract_interface (en:env) (m:modul) :modul =
       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
     in
 
-    Option.isNone c_opt ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
-    (let c = c_opt |> must in
-     //if c is pure or ghost then keep it if the return type is not unit
-     if is_pure_or_ghost_comp c then not (c |> comp_result |> is_unit)
-     //else keep it if the effect is reifiable
-     else Env.is_reifiable_effect en (comp_effect_name c))
+    match c_opt with
+    | None -> true //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
+    | Some c ->
+        // discard lemmas, we don't need their bodies
+        if is_lemma_comp c
+        then false
+        else if is_pure_or_ghost_comp c // keep all pure functions
+        then true
+        else Env.is_reifiable_effect en (comp_effect_name c) //else only keep it if the effect is reifiable
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
@@ -2006,14 +2060,13 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else
-    let modul = if Options.use_extracted_interfaces () then { m with exports = m.declarations } else { m with exports=exports } in
+    let modul = { m with exports = exports } in
     let env = Env.finish_module en modul in
 
     //we can clear the lid to query index table
     env.qtbl_name_and_index |> fst |> BU.smap_clear;
 
-    if not (Options.lax()) && (not (Options.use_extracted_interfaces ()))
-    && (not loading_from_cache)
+    if (not (Options.lax())) && (not loading_from_cache) && (not (Options.use_extracted_interfaces ()))
     then check_exports env modul exports;
 
     //pop BUT ignore the old env

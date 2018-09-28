@@ -822,6 +822,9 @@ let readdir d =
 let file_exists f =
   System.IO.File.Exists f || System.IO.Directory.Exists f
 
+let is_directory f =
+  System.IO.Directory.Exists f (* does not raise exceptions *)
+
 let basename f =
   System.IO.Path.GetFileName f
 

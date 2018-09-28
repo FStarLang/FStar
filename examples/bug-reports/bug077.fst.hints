@@ -13,7 +13,7 @@
         "refinement_interpretation_Bug077_Tm_refine_89761103e61acc2f14aca90db784842d"
       ],
       0,
-      "28c42a7f042da67f6ddbcd5577a1ef92"
+      "be33615ebc816da0ade69cad18db255a"
     ],
     [
       "Bug077.ok4",
@@ -31,7 +31,7 @@
         "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "e3d9582c21ba38b208f0eb531a657e5b"
+      "a9edd287043767b9e8a2853a2df9b1f1"
     ],
     [
       "Bug077.ok5",
@@ -40,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "ab1bfa8d0b4201fc0995f87ed523ec15"
+      "1b1b796fb1762f582b31df23bf0e4086"
     ],
     [
       "Bug077.ok5",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "94bff9215e08b54f6b64ffa091d22c50"
+      "172bcbdf9d259e493b4a7e28dbbdcf3d"
     ],
     [
       "Bug077.bug",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "708ba149e1fdf7940ee36164e2842967"
+      "7cf23b9f4e26f6eaf7a3732097cd3ef1"
     ]
   ]
 ]

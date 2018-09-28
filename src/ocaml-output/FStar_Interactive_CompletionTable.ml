@@ -45,8 +45,8 @@ let rec heap_merge_pairs :
       'Auu____261 heap Prims.list -> 'Auu____261 heap
   =
   fun cmp  ->
-    fun uu___82_283  ->
-      match uu___82_283 with
+    fun uu___86_283  ->
+      match uu___86_283 with
       | [] -> EmptyHeap
       | h::[] -> h
       | h1::h2::hh ->
@@ -58,8 +58,8 @@ let heap_peek :
   'Auu____326 .
     'Auu____326 heap -> 'Auu____326 FStar_Pervasives_Native.option
   =
-  fun uu___83_335  ->
-    match uu___83_335 with
+  fun uu___87_335  ->
+    match uu___87_335 with
     | EmptyHeap  -> FStar_Pervasives_Native.None
     | Heap (v1,uu____339) -> FStar_Pervasives_Native.Some v1
   
@@ -71,8 +71,8 @@ let heap_pop :
           FStar_Pervasives_Native.option
   =
   fun cmp  ->
-    fun uu___84_380  ->
-      match uu___84_380 with
+    fun uu___88_380  ->
+      match uu___88_380 with
       | EmptyHeap  -> FStar_Pervasives_Native.None
       | Heap (v1,hh) ->
           let uu____403 =
@@ -94,8 +94,8 @@ let push_nodup :
   =
   fun key_fn  ->
     fun x  ->
-      fun uu___85_486  ->
-        match uu___85_486 with
+      fun uu___89_486  ->
+        match uu___89_486 with
         | [] -> [x]
         | h::t ->
             let uu____495 =
@@ -115,8 +115,8 @@ let rec add_priorities :
   =
   fun n1  ->
     fun acc  ->
-      fun uu___86_539  ->
-        match uu___86_539 with
+      fun uu___90_539  ->
+        match uu___90_539 with
         | [] -> acc
         | h::t ->
             add_priorities (n1 + (Prims.parse_int "1")) ((n1, h) :: acc) t
@@ -308,33 +308,21 @@ type prefix_match =
 let (__proj__Mkprefix_match__item__prefix :
   prefix_match -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
-    match projectee with
-    | { prefix = __fname__prefix; completion = __fname__completion;_} ->
-        __fname__prefix
+    match projectee with | { prefix = prefix1; completion;_} -> prefix1
   
 let (__proj__Mkprefix_match__item__completion : prefix_match -> Prims.string)
   =
   fun projectee  ->
-    match projectee with
-    | { prefix = __fname__prefix; completion = __fname__completion;_} ->
-        __fname__completion
+    match projectee with | { prefix = prefix1; completion;_} -> completion
   
 type path_elem = {
   imports: Prims.string Prims.list ;
   segment: prefix_match }
 let (__proj__Mkpath_elem__item__imports :
   path_elem -> Prims.string Prims.list) =
-  fun projectee  ->
-    match projectee with
-    | { imports = __fname__imports; segment = __fname__segment;_} ->
-        __fname__imports
-  
+  fun projectee  -> match projectee with | { imports; segment;_} -> imports 
 let (__proj__Mkpath_elem__item__segment : path_elem -> prefix_match) =
-  fun projectee  ->
-    match projectee with
-    | { imports = __fname__imports; segment = __fname__segment;_} ->
-        __fname__segment
-  
+  fun projectee  -> match projectee with | { imports; segment;_} -> segment 
 let (matched_prefix_of_path_elem :
   path_elem -> Prims.string FStar_Pervasives_Native.option) =
   fun elem  -> (elem.segment).prefix 
@@ -416,15 +404,11 @@ type 'a trie = {
   namespaces: 'a trie names }
 let __proj__Mktrie__item__bindings : 'a . 'a trie -> 'a names =
   fun projectee  ->
-    match projectee with
-    | { bindings = __fname__bindings; namespaces = __fname__namespaces;_} ->
-        __fname__bindings
+    match projectee with | { bindings; namespaces;_} -> bindings
   
 let __proj__Mktrie__item__namespaces : 'a . 'a trie -> 'a trie names =
   fun projectee  ->
-    match projectee with
-    | { bindings = __fname__bindings; namespaces = __fname__namespaces;_} ->
-        __fname__namespaces
+    match projectee with | { bindings; namespaces;_} -> namespaces
   
 let trie_empty : 'Auu____2230 . unit -> 'Auu____2230 trie =
   fun uu____2233  -> { bindings = []; namespaces = [] } 
@@ -543,8 +527,8 @@ let trie_mutate_leaf :
              fun uu____2898  ->
                fun uu____2899  ->
                  fun namespaces  ->
-                   let uu___88_2908 = tr1  in
-                   { bindings = (uu___88_2908.bindings); namespaces })
+                   let uu___92_2908 = tr1  in
+                   { bindings = (uu___92_2908.bindings); namespaces })
   
 let trie_insert : 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
   fun tr  ->
@@ -554,11 +538,11 @@ let trie_insert : 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
           trie_mutate_leaf tr ns_query
             (fun tr1  ->
                fun uu____2955  ->
-                 let uu___89_2958 = tr1  in
+                 let uu___93_2958 = tr1  in
                  let uu____2961 = names_insert tr1.bindings id1 v1  in
                  {
                    bindings = uu____2961;
-                   namespaces = (uu___89_2958.namespaces)
+                   namespaces = (uu___93_2958.namespaces)
                  })
   
 let trie_import :
@@ -586,11 +570,11 @@ let trie_include : 'a . 'a trie -> query -> query -> 'a trie =
           (fun tr1  ->
              fun inc  ->
                fun label  ->
-                 let uu___90_3088 = tr1  in
+                 let uu___94_3088 = tr1  in
                  {
                    bindings = ((ImportedNames (label, (inc.bindings))) ::
                      (tr1.bindings));
-                   namespaces = (uu___90_3088.namespaces)
+                   namespaces = (uu___94_3088.namespaces)
                  })
   
 let trie_open_namespace : 'a . 'a trie -> query -> query -> 'a trie =
@@ -601,9 +585,9 @@ let trie_open_namespace : 'a . 'a trie -> query -> query -> 'a trie =
           (fun tr1  ->
              fun inc  ->
                fun label  ->
-                 let uu___91_3138 = tr1  in
+                 let uu___95_3138 = tr1  in
                  {
-                   bindings = (uu___91_3138.bindings);
+                   bindings = (uu___95_3138.bindings);
                    namespaces = ((ImportedNames (label, (inc.namespaces))) ::
                      (tr1.namespaces))
                  })
@@ -639,8 +623,8 @@ let names_revmap :
       let rec aux acc imports name_collections1 =
         FStar_List.fold_left
           (fun acc1  ->
-             fun uu___87_3334  ->
-               match uu___87_3334 with
+             fun uu___91_3334  ->
+               match uu___91_3334 with
                | Names bt ->
                    let uu____3356 =
                      let uu____3363 = fn bt  in (imports, uu____3363)  in
@@ -765,16 +749,10 @@ type ns_info = {
   ns_name: Prims.string ;
   ns_loaded: Prims.bool }
 let (__proj__Mkns_info__item__ns_name : ns_info -> Prims.string) =
-  fun projectee  ->
-    match projectee with
-    | { ns_name = __fname__ns_name; ns_loaded = __fname__ns_loaded;_} ->
-        __fname__ns_name
-  
+  fun projectee  -> match projectee with | { ns_name; ns_loaded;_} -> ns_name 
 let (__proj__Mkns_info__item__ns_loaded : ns_info -> Prims.bool) =
   fun projectee  ->
-    match projectee with
-    | { ns_name = __fname__ns_name; ns_loaded = __fname__ns_loaded;_} ->
-        __fname__ns_loaded
+    match projectee with | { ns_name; ns_loaded;_} -> ns_loaded
   
 type mod_info =
   {
@@ -783,21 +761,15 @@ type mod_info =
   mod_loaded: Prims.bool }
 let (__proj__Mkmod_info__item__mod_name : mod_info -> Prims.string) =
   fun projectee  ->
-    match projectee with
-    | { mod_name = __fname__mod_name; mod_path = __fname__mod_path;
-        mod_loaded = __fname__mod_loaded;_} -> __fname__mod_name
+    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_name
   
 let (__proj__Mkmod_info__item__mod_path : mod_info -> Prims.string) =
   fun projectee  ->
-    match projectee with
-    | { mod_name = __fname__mod_name; mod_path = __fname__mod_path;
-        mod_loaded = __fname__mod_loaded;_} -> __fname__mod_path
+    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_path
   
 let (__proj__Mkmod_info__item__mod_loaded : mod_info -> Prims.bool) =
   fun projectee  ->
-    match projectee with
-    | { mod_name = __fname__mod_name; mod_path = __fname__mod_path;
-        mod_loaded = __fname__mod_loaded;_} -> __fname__mod_loaded
+    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_loaded
   
 let (mod_name : mod_info -> Prims.string) = fun md  -> md.mod_name 
 type mod_symbol =
@@ -836,15 +808,11 @@ type table = {
   tbl_mods: mod_symbol trie }
 let (__proj__Mktable__item__tbl_lids : table -> lid_symbol trie) =
   fun projectee  ->
-    match projectee with
-    | { tbl_lids = __fname__tbl_lids; tbl_mods = __fname__tbl_mods;_} ->
-        __fname__tbl_lids
+    match projectee with | { tbl_lids; tbl_mods;_} -> tbl_lids
   
 let (__proj__Mktable__item__tbl_mods : table -> mod_symbol trie) =
   fun projectee  ->
-    match projectee with
-    | { tbl_lids = __fname__tbl_lids; tbl_mods = __fname__tbl_mods;_} ->
-        __fname__tbl_mods
+    match projectee with | { tbl_lids; tbl_mods;_} -> tbl_mods
   
 let (empty : table) =
   { tbl_lids = (trie_empty ()); tbl_mods = (trie_empty ()) } 
@@ -853,28 +821,28 @@ let (insert : table -> query -> Prims.string -> lid_symbol -> table) =
     fun host_query  ->
       fun id1  ->
         fun c  ->
-          let uu___92_4097 = tbl  in
+          let uu___96_4097 = tbl  in
           let uu____4098 = trie_insert tbl.tbl_lids host_query id1 c  in
-          { tbl_lids = uu____4098; tbl_mods = (uu___92_4097.tbl_mods) }
+          { tbl_lids = uu____4098; tbl_mods = (uu___96_4097.tbl_mods) }
   
 let (register_alias : table -> Prims.string -> query -> query -> table) =
   fun tbl  ->
     fun key  ->
       fun host_query  ->
         fun included_query  ->
-          let uu___93_4121 = tbl  in
+          let uu___97_4121 = tbl  in
           let uu____4122 =
             trie_add_alias tbl.tbl_lids key host_query included_query  in
-          { tbl_lids = uu____4122; tbl_mods = (uu___93_4121.tbl_mods) }
+          { tbl_lids = uu____4122; tbl_mods = (uu___97_4121.tbl_mods) }
   
 let (register_include : table -> query -> query -> table) =
   fun tbl  ->
     fun host_query  ->
       fun included_query  ->
-        let uu___94_4140 = tbl  in
+        let uu___98_4140 = tbl  in
         let uu____4141 = trie_include tbl.tbl_lids host_query included_query
            in
-        { tbl_lids = uu____4141; tbl_mods = (uu___94_4140.tbl_mods) }
+        { tbl_lids = uu____4141; tbl_mods = (uu___98_4140.tbl_mods) }
   
 let (register_open : table -> Prims.bool -> query -> query -> table) =
   fun tbl  ->
@@ -884,10 +852,10 @@ let (register_open : table -> Prims.bool -> query -> query -> table) =
           if is_module
           then register_include tbl host_query included_query
           else
-            (let uu___95_4165 = tbl  in
+            (let uu___99_4165 = tbl  in
              let uu____4166 =
                trie_open_namespace tbl.tbl_lids host_query included_query  in
-             { tbl_lids = uu____4166; tbl_mods = (uu___95_4165.tbl_mods) })
+             { tbl_lids = uu____4166; tbl_mods = (uu___99_4165.tbl_mods) })
   
 let (register_module_path :
   table -> Prims.bool -> Prims.string -> query -> table) =
@@ -926,7 +894,7 @@ let (register_module_path :
             match q with
             | [] -> ins_mod id1 bindings name loaded1
             | uu____4338 -> ins_ns id1 bindings name loaded1  in
-          let uu___96_4344 = tbl  in
+          let uu___100_4344 = tbl  in
           let uu____4345 =
             trie_mutate tbl.tbl_mods mod_query []
               (fun tr  ->
@@ -934,13 +902,13 @@ let (register_module_path :
                    fun q  ->
                      fun revq  ->
                        fun namespaces  ->
-                         let uu___97_4367 = tr  in
+                         let uu___101_4367 = tr  in
                          let uu____4370 = ins id1 q revq tr.bindings loaded
                             in
                          { bindings = uu____4370; namespaces })
               (fun tr  -> fun uu____4381  -> tr)
              in
-          { tbl_lids = (uu___96_4344.tbl_lids); tbl_mods = uu____4345 }
+          { tbl_lids = (uu___100_4344.tbl_lids); tbl_mods = uu____4345 }
   
 let (string_of_path : path -> Prims.string) =
   fun path  ->
@@ -1005,28 +973,22 @@ let (__proj__Mkcompletion_result__item__completion_match_length :
   completion_result -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { completion_match_length = __fname__completion_match_length;
-        completion_candidate = __fname__completion_candidate;
-        completion_annotation = __fname__completion_annotation;_} ->
-        __fname__completion_match_length
+    | { completion_match_length; completion_candidate;
+        completion_annotation;_} -> completion_match_length
   
 let (__proj__Mkcompletion_result__item__completion_candidate :
   completion_result -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { completion_match_length = __fname__completion_match_length;
-        completion_candidate = __fname__completion_candidate;
-        completion_annotation = __fname__completion_annotation;_} ->
-        __fname__completion_candidate
+    | { completion_match_length; completion_candidate;
+        completion_annotation;_} -> completion_candidate
   
 let (__proj__Mkcompletion_result__item__completion_annotation :
   completion_result -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { completion_match_length = __fname__completion_match_length;
-        completion_candidate = __fname__completion_candidate;
-        completion_annotation = __fname__completion_annotation;_} ->
-        __fname__completion_annotation
+    | { completion_match_length; completion_candidate;
+        completion_annotation;_} -> completion_annotation
   
 let (json_of_completion_result : completion_result -> FStar_Util.json) =
   fun result  ->

@@ -20,13 +20,12 @@
 
 module LambdaOmega
 
+#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1"
+
 open FStar.Constructive
 open FStar.Classical
 open FStar.FunctionalExtensionality
 open FStar.StrongExcludedMiddle
-
-#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1"
-
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
    proof follows Chapter 30, but we don't consider polymorphism
@@ -86,21 +85,26 @@ let esub_lam_renaming s = ()
 
 (* Substitution extensional; trivial with the extensionality axiom *)
 val esubst_extensional: s1:esub -> s2:esub{feq s1 s2} -> e:exp ->
-                        Lemma (requires True) (ensures (esubst s1 e = esubst s2 e))
+                        Lemma (requires True) (ensures (esubst s1 e == esubst s2 e))
+			      (decreases e)
                        (*[SMTPat (esubst s1 e);  SMTPat (esubst s2 e)]*)
-let esubst_extensional s1 s2 e = ()
+let rec esubst_extensional s1 s2 e =
+  match e with
+  | EVar _     -> ()
+  | ELam t e1   ->
+    let open FStar.Tactics in
+    assert (esubst s1 (ELam t e1) == ELam t (esubst (esub_lam s1) e1))
+      by norm [delta_only [`%esubst]];
+    assert (esubst s2 (ELam t e1) == ELam t (esubst (esub_lam s2) e1))
+      by norm [delta_only [`%esubst]];
+    esubst_extensional (esub_lam s1) (esub_lam s2) e1
+  | EApp e1 e2 -> esubst_extensional s1 s2 e1; esubst_extensional s1 s2 e2
 
-(* This only works automatically with the patterns in subst_extensional above;
-   it would be a lot cooler if this worked without, since that increases checking time.
-   Even worse, there is no way to prove this without the SMTPat (e.g. manually),
-   or to use the SMTPat only locally, in this definition (`using` needed). *)
 val esub_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
       (ensures (esubst s (ELam t e) = ELam t (esubst (esub_lam s) e)))
-      (* [SMTPat (esubst (ELam t e) s)]
-      (\* -- this increases running time by 10 secs and adds variability *\) *)
-let esub_lam_hoist t e s = admit()
-  // using esubst_extensional
-  //   (fun s1 s2 e -> [SMTPat (esubst s1 e);  SMTPat (esubst s2 e)])
+let esub_lam_hoist t e s =
+  let open FStar.Tactics in
+  assert (esubst s (ELam t e) = ELam t (esubst (esub_lam s) e)) by norm [delta_only [`%esubst]]
 
 val esub_beta : exp -> Tot esub
 let esub_beta e = fun y -> if y = 0 then e
@@ -111,9 +115,9 @@ let esubst_beta e = esubst (esub_beta e)
 
 (* Substitution on types is kind of analogous *)
 (* CH: Now this is more complex: tsub_inc_above, tsubst_beta_gen are
-   still there unfortunately, although they were simplified away for
-   expressions. This seems to be more an artifact of the TAPL proof
-   (via confluence); so we can still hope we can do better for TinyF*.*)
+//    still there unfortunately, although they were simplified away for
+//    expressions. This seems to be more an artifact of the TAPL proof
+//    (via confluence); so we can still hope we can do better for TinyF*.*)
 
 type tsub = var -> Tot typ
 type trenaming (s:tsub) = (forall (x:var). TVar? (s x))
@@ -135,39 +139,46 @@ let is_tvar (t:typ) : int = if TVar? t then 0 else 1
 
 val tsubst : s:tsub -> t:typ -> Pure typ (requires True)
       (ensures (fun t' -> trenaming s /\ TVar? t ==> TVar? t'))
-      (decreases %[is_tvar t; is_trenaming s; t])
+      (decreases %[is_tvar t; is_trenaming s; 1; t])
+val tsub_lam: s:tsub -> x:var -> Tot (t:typ{trenaming s ==> TVar? t})
+              (decreases %[1; is_trenaming s; 0; TVar 0])
 let rec tsubst s t =
   match t with
   | TVar x -> s x
-
-  | TLam k t1 ->
-     let tsub_lam : y:var -> Tot (t:typ{trenaming s ==> TVar? t}) =
-       fun y -> if y=0 then TVar y
-                       else (tsubst tsub_inc (s (y-1))) in
-     TLam k (tsubst tsub_lam t1)
-
+  | TLam k t1 -> TLam k (tsubst (tsub_lam s) t1)
   | TArr t1 t2 -> TArr (tsubst s t1) (tsubst s t2)
   | TApp t1 t2 -> TApp (tsubst s t1) (tsubst s t2)
-
-val tsub_lam: s:tsub -> Tot tsub
-let tsub_lam s y =
+and tsub_lam s y =
   if y = 0 then TVar y
            else tsubst tsub_inc (s (y-1))
 
 (* Type substitution extensional; trivial with the extensionality axiom *)
 val tsubst_extensional: s1:tsub -> s2:tsub{feq s1 s2} -> t:typ ->
                         Lemma (requires True) (ensures (tsubst s1 t = tsubst s2 t))
+			      (decreases t)
 (*                       [SMTPat (tsubst t s1);  SMTPat (tsubst t s2)]*)
-let tsubst_extensional s1 s2 t = ()
+let rec tsubst_extensional s1 s2 t =
+  match t with
+  | TVar _ -> ()
+  | TLam k t1 -> 
+    let open FStar.Tactics in
+    assert (tsubst s1 (TLam k t1) == TLam k (tsubst (tsub_lam s1) t1))
+      by norm [delta_only [`%tsubst]];
+    assert (tsubst s2 (TLam k t1) == TLam k (tsubst (tsub_lam s2) t1))
+      by norm [delta_only [`%tsubst]];
+    tsubst_extensional (tsub_lam s1) (tsub_lam s2) t1
+  | TArr t1 t2 -> tsubst_extensional s1 s2 t1; tsubst_extensional s1 s2 t2
+  | TApp t1 t2 -> tsubst_extensional s1 s2 t1; tsubst_extensional s1 s2 t2
 
-(* Same silly situation as for esub_lam_hoist *)
 val tsub_lam_hoist : k:knd -> t:typ -> s:tsub -> Lemma
       (ensures (tsubst s (TLam k t) = TLam k (tsubst (tsub_lam s) t)))
-let tsub_lam_hoist k t s = admit()
+let tsub_lam_hoist k t s =
+  let open FStar.Tactics in
+  assert (tsubst s (TLam k t) = TLam k (tsubst (tsub_lam s) t)) by norm [delta_only [`%tsubst]]
 
 (* Type substitution composition *)
 (* CH: again, we managed to get rid of this for expressions only
-       (it was never used anyway) *)
+//        (it was never used anyway) *)
 
 val tsub_comp : s1:tsub -> s2:tsub -> Tot tsub
 let tsub_comp s1 s2 x = tsubst s1 (s2 x)
@@ -233,7 +244,7 @@ let rec tsubst_comp s1 s2 t =
 val tsub_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
       (tsub_lam (tsub_comp s1 s2) x = tsub_comp (tsub_lam s1) (tsub_lam s2) x)
 (* CH: TODO: Quite a bit of duplication here, mutual recursion would
-       have been better than nested one. Can we do that? *)
+//        have been better than nested one. Can we do that? *)
 let tsub_lam_comp s1 s2 x =
         match x with
         | 0 -> ()
@@ -257,10 +268,12 @@ let tsub_id x = TVar x
 
 val tsubst_id : t:typ -> Lemma (tsubst tsub_id t = t)
 let rec tsubst_id t =
+  let open FStar.Tactics in
   match t with
   | TVar z -> ()
   | TLam k t1 ->
      tsub_lam_hoist k t1 tsub_id;
+     assert (feq tsub_id (tsub_lam tsub_id)) by norm [delta_only [`%tsub_lam; `%tsub_inc]];
      tsubst_extensional tsub_id (tsub_lam tsub_id) t1;
      tsubst_id t1
   | TArr t1 t2
@@ -347,7 +360,7 @@ let extend_evar g n t =
   MkEnv a_env x_env
 
 (* Kinding, type equivalence, and typing rules;
-   first 3 kinding and typing rules are analogous *)
+//    first 3 kinding and typing rules are analogous *)
 
 noeq type kinding : env -> typ -> knd -> Type =
   | KiVar : #g:env ->
@@ -458,7 +471,7 @@ let rec progress #e #t h =
                | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
     (* | TyEqu h1 _ _ -> progress h1 -- used to work *)
     (* | TyEqu #g #e #t1 #t2 h1 _ _ -> progress #e #t1 h1
-       -- explicit annotation doesn't help with Pure annotation *)
+//        -- explicit annotation doesn't help with Pure annotation *)
        | TyEqu h1 _ _ -> progress h1
 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
@@ -483,8 +496,8 @@ let rec tcontext_invariance #t #g #k h g' =
   | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
   | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
 (* CH: this doesn't directly follow from functional extensionality,
-       because (MkEnv?.x g) and (MkEnv?.x g') are completely unrelated;
-       this is just because we pass this useless argument to kinding. *)
+//        because (MkEnv?.x g) and (MkEnv?.x g') are completely unrelated;
+//        this is just because we pass this useless argument to kinding. *)
 irreducible val kinding_extensional: #g:env -> #t:typ -> #k:knd -> h:(kinding g t k) ->
                 g':env{feq (MkEnv?.a g) (MkEnv?.a g')} ->
                 Tot (kinding g' t k) (decreases h)
@@ -505,10 +518,13 @@ let kinding_weakening_ebnd #g #t #k h x t' =
 val tshift_up_above_lam: n:nat -> k:knd -> t:typ -> Lemma
   (ensures (tshift_up_above n (TLam k t) = TLam k (tshift_up_above (n + 1) t)))
 let tshift_up_above_lam n k t =
+  let open FStar.Tactics in
   assert(tshift_up_above n (TLam k t) = tsubst (tsub_inc_above n) (TLam k t));
   tsub_lam_hoist k t (tsub_inc_above n);
   assert(tshift_up_above n (TLam k t) =
          TLam k (tsubst (tsub_lam (tsub_inc_above n)) t));
+  assert (feq (tsub_lam (tsub_inc_above n)) (tsub_inc_above (n+1)))
+    by norm [delta_only [`%tsub_lam; `%tsub_inc_above]];
   tsubst_extensional (tsub_lam (tsub_inc_above n)) (tsub_inc_above (n+1)) t
 
 (* kinding weakening when a type variable binding is added to env *)
@@ -529,7 +545,7 @@ let rec kinding_weakening_tbnd #g #t #k h x k' =
       KiArr (kinding_weakening_tbnd h1 x k') (kinding_weakening_tbnd h2 x k')
 
 (* kinding strengthening from TAPL (Lemma 30.3.1),
-   just an instance of kinding_extensional; used often *)
+//    just an instance of kinding_extensional; used often *)
 irreducible val kinding_strengthening_ebnd :
       g:env -> x:var -> t_x:typ -> #t:typ -> #k:knd ->
       h:(kinding (extend_evar g x t_x) t k) ->
@@ -645,13 +661,13 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
          then TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam))
          else let hgamma2
              (* : typing g2 (s (y-1)) (Some?.v (lookup_evar g1 (y-1)))
-                -- this annotation doesn't help fix inference problem below *)
+//                 -- this annotation doesn't help fix inference problem below *)
              = hs (y - 1) (kinding_extensional hkindg1 g1) in
               (* XXX before universes this used to work without implicits
-                     filed this as #580 *)
+//                      filed this as #580 *)
               (* substitution esub_inc hgamma2 hs'' *)
               (* Failed to verify implicit argument: Subtyping check failed;
-                 expected type LambdaOmega.var; got type Prims.int [2 times] *)
+//                  expected type LambdaOmega.var; got type Prims.int [2 times] *)
               substitution esub_inc hgamma2 hs''
      in (esub_lam_hoist tlam ebody s;
          TyLam tlam (kinding_extensional hkind g2)
@@ -861,18 +877,18 @@ let rec tred_diamond #s #t #u h1 h2 =
     (* one TrBeta and other TrApp *)
 
     (* CH: the following two cases are not as symmetric as one could expect
-           because the lexicographic termination argument gets in the way *)
+//            because the lexicographic termination argument gets in the way *)
 
     | MkLTup (TrBeta #s1 #s2 #t1' #t2' k h11 h12)
              (TrApp #s1' #s2' #lu1' #u2' h21 h22) ->
      (* CH: a bit of proof context:
-        h1: (TApp (TLam k s1) s2) (tsubst_beta t2' t1')
-        h2: (TApp s1' s2') (TApp lu1' u2')
-        h11: tred s1 t1'
-        h12: tred s2 t2'
-        h21: tred s1' lu1'
-        h22: tred s2' u2'
-        s1' = (TLam k s1); s2' = s2 *)
+//         h1: (TApp (TLam k s1) s2) (tsubst_beta t2' t1')
+//         h2: (TApp s1' s2') (TApp lu1' u2')
+//         h11: tred s1 t1'
+//         h12: tred s2 t2'
+//         h21: tred s1' lu1'
+//         h22: tred s2' u2'
+//         s1' = (TLam k s1); s2' = s2 *)
     (* AR: does not work without this type annotation *)
       let h21:(tred (TLam?.t s1') (TLam?.t lu1')) =
         match h21 with
@@ -880,19 +896,19 @@ let rec tred_diamond #s #t #u h1 h2 =
           | TrRefl _ -> TrRefl (TLam?.t s1') in
       let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
         (* XXX: tred_diamond h11 h21 (#580)
-           This used to work before universes but now fails:
-           Failed to verify implicit argument: Subtyping check failed;
-           expected type
-           (uu___#3285:LambdaOmega.typ{(Prims.b2t (LambdaOmega.TLam? uu___@0))}
-           ); got type LambdaOmega.typ
-        *)
+//            This used to work before universes but now fails:
+//            Failed to verify implicit argument: Subtyping check failed;
+//            expected type
+//            (uu___#3285:LambdaOmega.typ{(Prims.b2t (LambdaOmega.TLam? uu___@0))}
+//            ); got type LambdaOmega.typ
+//         *)
       let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
       let v = tsubst_beta v2 v1 in
       ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta k p1b p2b))
       (* XXX: TrBeta k p1b p2b:
-        Failed to verify implicit argument: Subtyping check failed;
-        expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
-        (LambdaOmega.TLam? uu___@0))}); got type LambdaOmega.typ*)
+//         Failed to verify implicit argument: Subtyping check failed;
+//         expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
+//         (LambdaOmega.TLam? uu___@0))}); got type LambdaOmega.typ*)
 
     | MkLTup (TrApp #s1' #s2' #lu1' #u2' h21 h22)
              (TrBeta #s1 #s2 #t1' #t2' k h11 h12) ->
@@ -911,8 +927,8 @@ let rec tred_diamond #s #t #u h1 h2 =
                     (subst_of_tred_tred 0 p4 h_body2))
       (* XXX (#580): (TrBeta k h_body p3) *)
       (* Failed to verify implicit argument: Subtyping check failed;
-        expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
-        (LambdaOmega.TLam? uu___@0))}); got type LambdaOmega.typ *)
+//         expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
+//         (LambdaOmega.TLam? uu___@0))}); got type LambdaOmega.typ *)
 
 type tred_star: typ -> typ -> Type =
   | TsRefl : t:typ ->
@@ -1074,7 +1090,7 @@ let rec tred_star_tequiv #s #t h = match h with
   | TsStep h1 h2 -> EqTran (tred_tequiv h1) (tred_star_tequiv h2)
 
 (* RTL direction of Lemma 30.3.5 in TAPL. TAPL calls this direction obvious.
-   We don't use this anywhere *)
+//    We don't use this anywhere *)
 irreducible val tss_tequiv : #s:typ -> #t:typ ->
       h:(tred_star_sym s t) -> Tot (tequiv s t) (decreases h)
 let rec tss_tequiv #s #t h =
@@ -1114,35 +1130,35 @@ let rec inversion_elam #g s1 e #s t1 t2 ht heq hnew = match ht with
     let ExIntro u p = tequiv_tred_tred heq in
     let Conj p1 p2 = p in
     (* NS:
-       p1:tred_star (TArr s1 s2) u
-       p2:tred_star (TArr t1 t2) u
-    *)
+//        p1:tred_star (TArr s1 s2) u
+//        p2:tred_star (TArr t1 t2) u
+//     *)
 
     (* AR: implicits required *)
     let ExIntro u1 (ExIntro u2 (Conj psu1 psu2)) = tred_tarr_preserved p1 in
     (* NS:
-       psu1: tred_star (TArr s1 s2) (TArr u1 u2)
-       psu2: tred_star u (TArr u1 u2)
-    *)
+//        psu1: tred_star (TArr s1 s2) (TArr u1 u2)
+//        psu2: tred_star u (TArr u1 u2)
+//     *)
 
     (* AR: implicits required *)
     let ExIntro u1' (ExIntro u2' (Conj ptu1 ptu2)) = tred_tarr_preserved p2 in
     (* NS:
-        ptu1: tred_star (TArr s1 s2) (TArr u1' u2')
-        ptu2: tred_star u (TArr u1' u2')
-    *)
+//         ptu1: tred_star (TArr s1 s2) (TArr u1' u2')
+//         ptu2: tred_star u (TArr u1' u2')
+//     *)
 
     (*
-     * AR: so now we have tequiv s2 t2, and ht1. as TAPL says, we now want to use
-     * TyEqu to derive typing judgment with result type t2 (ht1 has result type s2).
-     * but, TyEqu also requires that g |- t2 :: KTyp, which means we are stuck.
-     * i don't see a way to derive this kinding judgment just given the premises.
-     *
-     * i am fixing it by making sure that all typing judgments result in types
-     * that have kind KTyp. so then, we can derive s2::KTyp, and since tequiv s2 t2,
-     * we will get t2::KTyp. to do so, i had to make a small change to TyVar
-     * requiring that the lookup type has kind KTyp.
-     *)
+//      * AR: so now we have tequiv s2 t2, and ht1. as TAPL says, we now want to use
+//      * TyEqu to derive typing judgment with result type t2 (ht1 has result type s2).
+//      * but, TyEqu also requires that g |- t2 :: KTyp, which means we are stuck.
+//      * i don't see a way to derive this kinding judgment just given the premises.
+//      *
+//      * i am fixing it by making sure that all typing judgments result in types
+//      * that have kind KTyp. so then, we can derive s2::KTyp, and since tequiv s2 t2,
+//      * we will get t2::KTyp. to do so, i had to make a small change to TyVar
+//      * requiring that the lookup type has kind KTyp.
+//      *)
 
     let pst2 = EqTran (tred_star_tequiv psu2) //NS: tequiv (TArr u1 u2) u
                       (EqSymm (tred_star_tequiv ptu2))  //NS: tequiv u (TArr u1' u2')

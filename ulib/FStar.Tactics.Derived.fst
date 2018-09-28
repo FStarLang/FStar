@@ -12,6 +12,8 @@ module L = FStar.List.Tot
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
+let fail (m:string) = raise (TacticFailure m)
+
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =
     match goals () with
@@ -166,16 +168,34 @@ let focus (t : unit -> Tac 'a) : Tac 'a =
         set_goals (goals () @ gs); set_smt_goals (smt_goals () @ sgs);
         x
 
-let rec mapAll (t : unit -> Tac unit) : Tac unit =
+(** Similar to [dump], but only dumping the current goal. *)
+let dump1 (m : string) = focus (fun () -> dump m)
+
+let rec mapAll (t : unit -> Tac 'a) : Tac (list 'a) =
+    match goals () with
+    | [] -> []
+    | _::_ -> let (h, t) = divide 1 t (fun () -> mapAll t) in h::t
+
+let rec iterAll (t : unit -> Tac unit) : Tac unit =
+    (* Could use mapAll, but why even build that list *)
     match goals () with
     | [] -> ()
-    | _::_ -> let _ = divide 1 t (fun () -> mapAll t) in ()
+    | _::_ -> let _ = divide 1 t (fun () -> iterAll t) in ()
+
+let iterAllSMT (t : unit -> Tac unit) : Tac unit =
+    let gs, sgs = goals (), smt_goals () in
+    set_goals sgs;
+    set_smt_goals [];
+    iterAll t;
+    let gs', sgs' = goals (), smt_goals () in
+    set_goals gs;
+    set_smt_goals (gs'@sgs')
 
 (** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
 subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
 with a single goal (they're "focused"). *)
 let rec seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
-    focus (fun () -> f (); mapAll g)
+    focus (fun () -> f (); iterAll g)
 
 let exact_args (qs : list aqualv) (t : term) : Tac unit =
     focus (fun () ->
@@ -224,15 +244,19 @@ let guard (b : bool) : TacH unit (requires (fun _ -> True))
     if not b then
         fail "guard failed"
 
+let try_with (f : unit -> Tac 'a) (h : exn -> Tac 'a) : Tac 'a =
+    match catch f with
+    | Inl e -> h e
+    | Inr x -> x
+
 let trytac (t : unit -> Tac 'a) : Tac (option 'a) =
-    match catch t with
-    | Inl _ -> None
-    | Inr x -> Some x
+    try Some (t ())
+    with
+    | _ -> None
 
 let or_else (#a:Type) (t1 : unit -> Tac a) (t2 : unit -> Tac a) : Tac a =
-    match trytac t1 with
-    | Some x -> x
-    | None -> t2 ()
+    try t1 ()
+    with | _ -> t2 ()
 
 val (<|>) : (unit -> Tac 'a) ->
             (unit -> Tac 'a) ->
@@ -331,6 +355,9 @@ let pose_as (s:string) (t:term) : Tac binder =
     rename_to b s;
     b
 
+let for_each_binder (f : binder -> Tac 'a) : Tac (list 'a) =
+    map f (binders_of_env (cur_env ()))
+
 let rec revert_all (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
@@ -359,6 +386,19 @@ let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
         | _ -> None
         end
     | _ -> None
+
+private
+let __eq_sym #t (a b : t) : Lemma ((a == b) == (b == a)) =
+  FStar.PropositionalExtensionality.apply (a==b) (b==a)
+
+(** Like [rewrite], but works with equalities [v == e] and [e == v] *)
+let rewrite' (b:binder) : Tac unit =
+    ((fun () -> rewrite b)
+     <|> (fun () -> binder_retype b;
+                    apply_lemma (`__eq_sym);
+                    rewrite b)
+     <|> (fun () -> fail "rewrite' failed"))
+    ()
 
 let rec try_rewrite_equality (x:term) (bs:binders) : Tac unit =
     match bs with
@@ -410,6 +450,15 @@ let grewrite' (t1 t2 eq : term) : Tac unit =
     | _ ->
         fail "impossible"
 
+(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
+let l_to_r (lems:list term) : Tac unit =
+    let first_or_trefl () : Tac unit =
+        fold_left (fun k l () ->
+                    (fun () -> apply_lemma l)
+                    `or_else` k)
+                  trefl lems () in
+    pointwise first_or_trefl
+
 let mk_squash (t : term) : term =
     let sq : term = pack_ln (Tv_FVar (pack_fv squash_qn)) in
     mk_e_app sq [t]
@@ -429,8 +478,7 @@ let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
 
 private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
 private let __witness #a x #p _ =
-  let id (a:Type) = a in
-  let x : squash (exists x. id (p x)) = () in //an indirection to tickle the SMT encoding
+  let x : squash (exists x. p x) = () in
   x
 
 let witness (t : term) : Tac unit =
@@ -545,3 +593,20 @@ let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_
  *)
 let specialize (#a:Type) (f:a) (l:list string) :unit -> Tac unit
   = fun () -> solve_then (fun () -> exact (quote f)) (fun () -> norm [delta_only l; iota; zeta])
+
+let tlabel (l:string) =
+    match goals () with
+    | [] -> fail "tlabel: no goals"
+    | h::t ->
+        set_goals (set_label l h :: t)
+
+let tlabel' (l:string) =
+    match goals () with
+    | [] -> fail "tlabel': no goals"
+    | h::t ->
+        let h = set_label (l ^ get_label h) h in
+        set_goals (h :: t)
+
+let focus_all () : Tac unit =
+    set_goals (goals () @ smt_goals ());
+    set_smt_goals []

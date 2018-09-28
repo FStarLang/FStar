@@ -49,6 +49,9 @@ let logor_big_int x y = System.Numerics.BigInteger.op_BitwiseOr (x, y)
 let logxor_big_int x y = System.Numerics.BigInteger.op_ExclusiveOr (x, y)
 let lognot_big_int x = System.Numerics.BigInteger.op_OnesComplement x
 
+let shift_left_big_int x (y: bigint) = System.Numerics.BigInteger.(<<<) (x, int y)
+let shift_right_big_int x (y: bigint) = System.Numerics.BigInteger.(>>>) (x, int y)
+
 let sqrt_big_int = Z.sqrt_big_int
 
 let string_of_big_int = Z.string_of_big_int
@@ -61,3 +64,7 @@ let to_int (x:bigint) = int32 x
 let of_int_fs (x:int) = bigint x
 // returns int32 in F#, bigint in OCaml.
 let to_int_fs (x:bigint) = int32 x
+
+let of_hex (x: string) =
+  // otherwise leading F is interpreted as negative 1
+  System.Numerics.BigInteger.Parse ("0"+x, System.Globalization.NumberStyles.AllowHexSpecifier)

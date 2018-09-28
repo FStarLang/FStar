@@ -71,12 +71,12 @@ let last #a s = index s (length s - 1)
 val cons: #a:Type -> a -> seq a -> Tot (seq a)
 let cons #a x s = append (create 1 x) s
 
-val lemma_cons_inj: #a:Type -> v1:a -> v2:a -> s1:seq a -> s2:seq a 
+val lemma_cons_inj: #a:Type -> v1:a -> v2:a -> s1:seq a -> s2:seq a
   -> Lemma (requires (equal (cons v1 s1) (cons v2 s2)))
           (ensures (v1 == v2 /\ equal s1 s2))
 let lemma_cons_inj #a v1 v2 s1 s2 =
-  let t1 = create 1 v1 in 
-  let t2 = create 1 v2 in 
+  let t1 = create 1 v1 in
+  let t2 = create 1 v2 in
   lemma_append_inj t1 s1 t2 s2;
   assert(index t1 0 == index t2 0)
 
@@ -115,6 +115,17 @@ let rec mem_index (#a:eqtype) (x:a) (s:seq a)
     = if length s = 0 then ()
       else if head s = x then ()
       else mem_index x (tail s)
+
+(* index_mem:
+   A utility function that finds the first index of
+   `x` in `s`, given that we know the `x` is actually contained in `s` *)
+let rec index_mem (#a:eqtype) (x:a) (s:seq a)
+    : Pure nat
+           (requires (mem x s))
+           (ensures (fun i -> i < length s /\ index s i == x))
+           (decreases (length s))
+    = if head s = x then 0
+      else 1 + index_mem x (tail s)
 
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val swap: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{j<length s} -> Tot (seq a)
@@ -167,7 +178,18 @@ let rec sorted #a f s =
   else let hd = head s in
        f hd (index s 1) && sorted f (tail s)
 
+module F = FStar.FunctionalExtensionality
+
 #set-options "--max_fuel 1 --initial_fuel 1"
+let rec sorted_feq (#a:Type)
+               (f g : (a -> a -> Tot bool))
+               (s:seq a{forall x y. f x y == g x y})
+   : Lemma (ensures (sorted f s <==> sorted g s))
+           (decreases (length s))
+   = if length s <= 1 then ()
+     else sorted_feq f g (tail s)
+
+
 val lemma_append_count: #a:eqtype -> lo:seq a -> hi:seq a -> Lemma
   (requires True)
   (ensures (forall x. count x (append lo hi) = (count x lo + count x hi)))
@@ -300,12 +322,47 @@ let lemma_swap_permutes_aux #a s i j x =
 #set-options "--max_fuel 0 --initial_fuel 0"
 type permutation (a:eqtype) (s1:seq a) (s2:seq a) =
        (forall i. count i s1 = count i s2)
-val lemma_swap_permutes: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
-  (permutation a s (swap s i j))
-let lemma_swap_permutes #a s i j = FStar.Classical.forall_intro #a #(fun x -> count x s = count x (swap s i j)) (lemma_swap_permutes_aux s i j)
+let lemma_swap_permutes (#a:eqtype) (s:seq a) (i:nat{i<length s}) (j:nat{i <= j && j<length s})
+  : Lemma (permutation a s (swap s i j))
+  = FStar.Classical.forall_intro
+                    #a
+                    #(fun x -> count x s = count x (swap s i j))
+                    (lemma_swap_permutes_aux s i j)
+
+(* perm_len:
+     A lemma that shows that two sequences that are permutations
+     of each other also have the same length
+*)
+//a proof optimization: Z3 only needs to unfold the recursive definition of `count` once
+#set-options "--initial_fuel 1 --max_fuel 1"
+let rec perm_len (#a:eqtype) (s1 s2: seq a)
+  : Lemma (requires (permutation a s1 s2))
+          (ensures  (length s1 == length s2))
+          (decreases (length s1))
+  = if length s1 = 0 then begin
+       if length s2 = 0 then ()
+       else assert (count (index s2 0) s2 > 0)
+    end
+    else let s1_hd = head s1 in
+         let s1_tl = tail s1 in
+         assert (count s1_hd s1 > 0);
+         assert (count s1_hd s2 > 0);
+         assert (length s2 > 0);
+         let s2_hd = head s2 in
+         let s2_tl = tail s2 in
+         if s1_hd = s2_hd
+         then (assert (permutation a s1_tl s2_tl); perm_len s1_tl s2_tl)
+         else let i = index_mem s1_hd s2 in
+              let s_pfx, s_sfx = split_eq s2 i in
+              assert (equal s_sfx (append (create 1 s1_hd) (tail s_sfx)));
+              let s2' = append s_pfx (tail s_sfx) in
+              lemma_append_count s_pfx s_sfx;
+              lemma_append_count (create 1 s1_hd) (tail s_sfx);
+              lemma_append_count s_pfx (tail s_sfx);
+              assert (permutation a s1_tl s2');
+              perm_len s1_tl s2'
 
 
-#set-options "--max_fuel 1 --initial_fuel 1"
 val cons_perm: #a:eqtype -> tl:seq a -> s:seq a{length s > 0} ->
          Lemma (requires (permutation a tl (tail s)))
                (ensures (permutation a (cons (head s) tl) s))
@@ -369,6 +426,10 @@ let lemma_swap_permutes_slice #a s start i j len =
 (* replaces the [i,j) sub-sequence of s1 with the corresponding sub-sequence of s2 *)
 val splice: #a:Type -> s1:seq a -> i:nat -> s2:seq a{length s1=length s2} -> j:nat{i <= j /\ j <= (length s2)} -> Tot (seq a)
 let splice #a s1 i s2 j = Seq.append (slice s1 0 i) (Seq.append (slice s2 i j) (slice s1 j (length s1)))
+
+(* replace with sub *)
+let replace_subseq (#a:Type0) (s:Seq.seq a) (i:nat) (j:nat{i <= j /\ j <= length s}) (sub:Seq.seq a{length sub == j - i}) :Tot (Seq.seq a)
+  = Seq.append (Seq.slice s 0 i) (Seq.append sub (Seq.slice s j (Seq.length s)))
 
 val splice_refl : #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s}
   -> Lemma
@@ -459,9 +520,9 @@ let snoc #a s x = Seq.append s (Seq.create 1 x)
 
 let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
   : Lemma (requires True)
-	  (ensures (Seq.equal (cons hd (snoc s tl))
-		 	      (snoc (cons hd s) tl)))
-  = ()	  
+          (ensures (Seq.equal (cons hd (snoc s tl))
+                              (snoc (cons hd s) tl)))
+  = ()
 
 val lemma_tail_snoc: #a:Type -> s:Seq.seq a{Seq.length s > 0} -> x:a
                      -> Lemma (ensures (tail (snoc s x) == snoc (tail s) x))
@@ -471,8 +532,8 @@ val lemma_snoc_inj: #a:Type -> s1:seq a -> s2:seq a -> v1:a -> v2:a
   -> Lemma (requires (equal (snoc s1 v1) (snoc s2 v2)))
           (ensures (v1 == v2 /\ equal s1 s2))
 let lemma_snoc_inj #a s1 s2 v1 v2 =
-  let t1 = create 1 v1 in 
-  let t2 = create 1 v2 in 
+  let t1 = create 1 v1 in
+  let t2 = create 1 v2 in
   lemma_append_inj s1 t1 s2 t2;
   assert(head t1  == head t2)
 
@@ -483,7 +544,7 @@ let lemma_mem_snoc #a s x = lemma_append_count s (Seq.create 1 x)
 
 val find_l: #a:Type -> f:(a -> Tot bool) -> l:seq a -> Tot (o:option a{Some? o ==> f (Some?.v o)})
   (decreases (Seq.length l))
-let rec find_l #a f l = 
+let rec find_l #a f l =
   if Seq.length l = 0 then None
   else if f (head l) then Some (head l)
   else find_l f (tail l)
@@ -529,9 +590,9 @@ let rec find_append_none_s2 #a s1 s2 f =
 
 val find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
                -> Lemma (ensures (let res = find_l f (snoc s x) in
-	                         match res with 
-	                         | None -> find_l f s == None /\ not (f x)
-	                         | Some y -> res == find_l f s \/ (f x /\ x==y)))
+                                 match res with
+                                 | None -> find_l f s == None /\ not (f x)
+                                 | Some y -> res == find_l f s \/ (f x /\ x==y)))
                  (decreases (Seq.length s))
 let find_snoc #a s x f =
   if Some? (find_l f s) then find_append_some s (Seq.create 1 x) f
@@ -548,9 +609,9 @@ let un_snoc_snoc (#a:Type) (s:seq a) (x:a) : Lemma (un_snoc (snoc s x) == (s, x)
 
 val find_r: #a:Type -> f:(a -> Tot bool) -> l:seq a -> Tot (o:option a{Some? o ==> f (Some?.v o)})
   (decreases (Seq.length l))
-let rec find_r #a f l = 
+let rec find_r #a f l =
   if Seq.length l = 0 then None
-  else let prefix, last = un_snoc l in 
+  else let prefix, last = un_snoc l in
        if f last then Some last
        else find_r f prefix
 
@@ -561,10 +622,10 @@ val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a
                    -> Pure (option a)
                       (requires (forall (i:nat{ i < Seq.length l /\ i >= ctr}).
                                         not (f (Seq.index l i) )))
-                      (ensures (function 
+                      (ensures (function
                                   | None -> forall (i:nat{i < Seq.length l}).  not (f (Seq.index l i))
                                   | Some x -> f x /\  (exists (i:nat{i < Seq.length l}). {:pattern (found i)}
-							    found i /\
+                                                            found i /\
                                                             x == Seq.index l i)))
 
 let rec seq_find_aux #a f l ctr =
@@ -605,12 +666,12 @@ let for_all
 = None? (seq_find (fun i -> not (f i)) l)
 
 #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 1 --max_fuel 1"
-val seq_mem_k: #a:eqtype -> s:seq a -> n:nat{n < Seq.length s} -> 
+val seq_mem_k: #a:eqtype -> s:seq a -> n:nat{n < Seq.length s} ->
     Lemma (requires True)
-	  (ensures (mem (Seq.index s n) s))
-	  (decreases n)
-	  [SMTPat (mem (Seq.index s n) s)]
-let rec seq_mem_k #a s n = 
+          (ensures (mem (Seq.index s n) s))
+          (decreases n)
+          [SMTPat (mem (Seq.index s n) s)]
+let rec seq_mem_k #a s n =
   if n = 0 then ()
   else let tl = tail s in
        seq_mem_k tl (n - 1)
@@ -678,22 +739,22 @@ let rec lemma_index_is_nth #a s i =
 
 ////////////////////////////////////////////////////////////////////////////////
 //s `contains` x : Type0
-//    An undecidable version of `mem`, 
+//    An undecidable version of `mem`,
 //    for when the sequence payload is not an eqtype
 ////////////////////////////////////////////////////////////////////////////////
-abstract let contains (#a:Type) (s:seq a) (x:a) : Tot Type0 = 
+abstract let contains (#a:Type) (s:seq a) (x:a) : Tot Type0 =
   exists (k:nat). k < Seq.length s /\ Seq.index s k == x
-    
+
 let contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)
   : Lemma (k < Seq.length s /\ Seq.index s k == x
-	    ==>
-	   s `contains` x)
+            ==>
+           s `contains` x)
   = ()
 
 let contains_elim (#a:Type) (s:seq a) (x:a)
   : Lemma (s `contains` x
-	    ==>
-	  (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
+            ==>
+          (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
   = ()
 
 let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.empty x)) = ()
@@ -702,20 +763,20 @@ let lemma_contains_singleton (#a:Type) (x:a) : Lemma (forall (y:a). contains (cr
 
 private let intro_append_contains_from_disjunction (#a:Type) (s1:seq a) (s2:seq a) (x:a)
     : Lemma (requires s1 `contains` x \/ s2 `contains` x)
-   	    (ensures (append s1 s2) `contains` x)
-    = let open FStar.Classical in 
+            (ensures (append s1 s2) `contains` x)
+    = let open FStar.Classical in
       let open FStar.StrongExcludedMiddle in
       let open FStar.Squash in
       if strong_excluded_middle (s1 `contains` x)
       then ()
       else let s = append s1 s2 in
-	   exists_elim (s `contains` x) (get_proof (s2 `contains` x)) (fun k -> 
+           exists_elim (s `contains` x) (get_proof (s2 `contains` x)) (fun k ->
            assert (Seq.index s (Seq.length s1 + k) == x))
 
 let append_contains_equiv (#a:Type) (s1:seq a) (s2:seq a) (x:a)
   : Lemma ((append s1 s2) `contains` x
-	    <==>
-  	   (s1 `contains` x \/ s2 `contains` x))
+            <==>
+           (s1 `contains` x \/ s2 `contains` x))
   = FStar.Classical.move_requires (intro_append_contains_from_disjunction s1 s2) x
 
 val contains_snoc : #a:Type -> s:Seq.seq a -> x:a ->
@@ -732,29 +793,29 @@ let rec lemma_find_l_contains (#a:Type) (f:a -> Tot bool) (l:seq a)
 
 let contains_cons (#a:Type) (hd:a) (tl:Seq.seq a) (x:a)
   : Lemma ((cons hd tl) `contains` x
-	   <==>
-	   (x==hd \/ tl `contains` x))
+           <==>
+           (x==hd \/ tl `contains` x))
   = append_contains_equiv (Seq.create 1 hd) tl x
 
 let append_cons_snoc (#a:Type) (u: Seq.seq a) (x:a) (v:Seq.seq a)
     : Lemma (Seq.equal (Seq.append u (cons x v))
-		       (Seq.append (snoc u x) v))
-    = ()		       
-    
+                       (Seq.append (snoc u x) v))
+    = ()
+
 let append_slices (#a:Type) (s1:Seq.seq a) (s2:Seq.seq a)
    : Lemma ( Seq.equal s1 (Seq.slice (Seq.append s1 s2) 0 (Seq.length s1)) /\
-	     Seq.equal s2 (Seq.slice (Seq.append s1 s2) (Seq.length s1) (Seq.length s1 + Seq.length s2)) /\
-	     (forall (i:nat) (j:nat).
-		i <= j /\ j <= Seq.length s2 ==>
-		Seq.equal (Seq.slice s2 i j) 
-			  (Seq.slice (Seq.append s1 s2) (Seq.length s1 + i) (Seq.length s1 + j))))
-   = ()       
+             Seq.equal s2 (Seq.slice (Seq.append s1 s2) (Seq.length s1) (Seq.length s1 + Seq.length s2)) /\
+             (forall (i:nat) (j:nat).
+                i <= j /\ j <= Seq.length s2 ==>
+                Seq.equal (Seq.slice s2 i j)
+                          (Seq.slice (Seq.append s1 s2) (Seq.length s1 + i) (Seq.length s1 + j))))
+   = ()
 
 
 val find_l_none_no_index (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool)) :
   Lemma (requires (None? (find_l f s)))
         (ensures (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i))))
-	(decreases (Seq.length s))
+        (decreases (Seq.length s))
 #reset-options
 let rec find_l_none_no_index #a s f =
   if Seq.length s = 0
@@ -762,8 +823,8 @@ let rec find_l_none_no_index #a s f =
   else (assert (not (f (head s)));
         assert (None? (find_l f (tail s)));
         find_l_none_no_index (tail s) f;
-	assert (Seq.equal s (cons (head s) (tail s)));
-	find_append_none (create 1 (head s)) (tail s) f)
+        assert (Seq.equal s (cons (head s) (tail s)));
+        find_append_none (create 1 (head s)) (tail s) f)
 
 (** More properties, with new naming conventions *)
 
@@ -801,7 +862,7 @@ let suffix_of_tail
   (requires True)
   (ensures ((tail s) `suffix_of` s))
   [SMTPat ((tail s) `suffix_of` s)]
-= cons_head_tail s    
+= cons_head_tail s
 
 let index_cons_l
   (#a: Type)
@@ -901,15 +962,15 @@ let slice_slice
 let lemma_seq_of_list_induction (#a:Type) (l:list a)
   :Lemma (requires True)
          (ensures (let s = seq_of_list l in
-	           match l with
-	           | []    -> Seq.equal s empty
-		   | hd::tl -> head s == hd /\ tail s == seq_of_list tl))
+                   match l with
+                   | []    -> Seq.equal s empty
+                   | hd::tl -> head s == hd /\ tail s == seq_of_list tl))
   = if List.Tot.length l > 0 then lemma_tl (List.Tot.hd l) (seq_of_list (List.Tot.tl l))
 
 let rec lemma_seq_of_list_index (#a:Type) (l:list a) (i:nat{i < List.Tot.length l})
   :Lemma (requires True)
          (ensures  (index (seq_of_list l) i == List.Tot.index l i))
-	 [SMTPat (index (seq_of_list l) i)]
+         [SMTPat (index (seq_of_list l) i)]
   = match l with
     | []    -> ()
     | hd::tl -> if i = 0 then () else lemma_seq_of_list_index tl (i - 1)
@@ -1047,6 +1108,7 @@ let rec lemma_seq_of_list_sorted (#a:Type) (f:a -> a -> Tot bool) (l:list a)
     lemma_seq_of_list_induction l;
     if length (seq_of_list l) > 1 then lemma_seq_of_list_sorted f (List.Tot.Base.tl l)
 
+
 let lemma_seq_sortwith_correctness (#a:eqtype) (f:a -> a -> Tot int) (s:seq a)
   :Lemma (requires (total_order a (List.Tot.Base.bool_of_compare f)))
          (ensures  (let s' = sortWith f s in sorted (List.Tot.Base.bool_of_compare f) s' /\ permutation a s s'))
@@ -1063,3 +1125,16 @@ let lemma_seq_sortwith_correctness (#a:eqtype) (f:a -> a -> Tot int) (s:seq a)
     lemma_seq_to_list_permutation s;  //seq_to_list is a permutation
     List.Tot.Properties.sortWith_permutation f l;  //List.sortWith is a permutation
     lemma_seq_of_list_permutation l'  //seq_of_list is a permutation
+
+
+(* sort_lseq:
+   A wrapper of Seq.sortWith which proves that the output sequences
+   is a sorted permutation of the input sequence with the same length
+*)
+let sort_lseq (#a:eqtype) #n (f:tot_ord a) (s:lseq a n)
+  : s':lseq a n{sorted f s' /\ permutation a s s'} =
+  lemma_seq_sortwith_correctness (L.compare_of_bool f) s;
+  let s' = sortWith (L.compare_of_bool f) s in
+  perm_len s s';
+  sorted_feq f (L.bool_of_compare (L.compare_of_bool f)) s';
+  s'

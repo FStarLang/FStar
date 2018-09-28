@@ -97,7 +97,7 @@ let sel_upd1 (#b:_) (vb:buffer b) (i:nat{i < length vb}) (x:b) (h:HS.mem{live h 
                          as'' suffix';
     assert (as' == as'')
 
-#set-options "--z3rlimit_factor 2"
+#set-options "--z3rlimit 20"
 let sel_upd2 (#b:_) (vb:buffer b)
              (i:nat{i < length vb})
              (j:nat{j < length vb /\ i<>j})
@@ -147,6 +147,14 @@ let sel_upd (#b:_)
             (h:HS.mem{live h vb}) =
     if i=j then sel_upd1 vb i x h
     else sel_upd2 vb i j x h
+
+let lemma_upd_with_sel #b vb i h =
+  let v = get_view vb in
+  let prefix, as, suffix = split_at_i vb i h in
+  let s0 = B.as_seq h (as_buffer vb) in
+  let s1 = prefix `Seq.append` (View?.put v (View?.get v as) `Seq.append` suffix) in
+  assert (Seq.equal s0 s1);
+  B.lemma_g_upd_with_same_seq (as_buffer vb) h
 
 let upd_modifies #b h vb i x
   = let open FStar.Mul in

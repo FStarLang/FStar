@@ -24,10 +24,12 @@
 ## Online editor ##
 
 The easiest way to try out F\* quickly is directly in your browser by using
-the [online F\* editor] that's part of the [F\* tutorial].
+either [online F\* editor] that's part of the [F\* tutorial]
+or our new [even cooler online editor] (experimental).
 
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [F\* tutorial]: https://www.fstar-lang.org/tutorial/
+[even cooler online editor]: http://fstar.ht.vc/
 
 ## OPAM package ##
 
@@ -97,15 +99,16 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
 
-4. You can verify all the examples, keeping in mind that this might
-   take a long time.
+4. You can verify the F* library and all the examples,
+   keeping in mind that this might take a long time.
 
+        $ make -j6 -C ulib
         $ make -j6 -C examples
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
-   Note: This step currently requires having OCaml installed (as for step 3 above).
+   Note: Some of the examples currently require having OCaml installed (as for step 3 above).
 
-   Note: This step currently requires having [KreMLin](https://github.com/FStarLang/kremlin)
+   Note: Some of the examples currently require having [KreMLin](https://github.com/FStarLang/kremlin)
          installed and the `KREMLIN_HOME` variable pointing to its location.
          
    Note: On Linux if you get a file descriptor exhaustion error that looks
@@ -238,9 +241,9 @@ Read on for the more complete solution involving Visual Studio itself.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono (any version from 4.0.3.0 to 5.10.x),
-            fsharp (version 4.1.x), and
-            msbuild (version 14.1.x-15.6.x)
+  - Install mono (any version from 4.0.3.0 to 5.14.x),
+            fsharp (version 4.1.x, where [on Linux x<=18](https://github.com/FStarLang/FStar/issues/1539)), and
+            msbuild (version 14.1.x-15.8.x)
 
     - On Debian/Ubuntu
 
@@ -249,7 +252,12 @@ Read on for the more complete solution involving Visual Studio itself.
     - On Arch
 
             $ pacman -S mono
-            $ aura -A fsharp msbuild-stable
+            $ aura -A msbuild-stable
+            $ git clone https://github.com/catalin-hritcu/arch-fsharp.git
+            $ cd arch-fsharp
+            $ git checkout fsharp-4.1.18
+            $ makepkg
+            $ pacman -U fsharp-4.1.18-1-any.pkg.tar.xz
 
     - For other Linux distributions check out these links:
       - http://www.mono-project.com/download/#download-lin
@@ -300,7 +308,7 @@ This will install both OCaml and OPAM.
 1. Install OPAM (version 1.2.x).
 
    - Installation instructions are available at various places
-     (e.g., https://github.com/realworldocaml/book/wiki/Installation-Instructions#getting-opam
+     (e.g., https://dev.realworldocaml.org/install.html
      or http://opam.ocaml.org/doc/Install.html).
 
 #### Instructions for all OSes ####
@@ -325,7 +333,7 @@ This will install both OCaml and OPAM.
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process pprint ulex
   ```
   Some of the examples also require the `sqlite3` opam package, which depends
   on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)

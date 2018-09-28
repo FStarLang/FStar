@@ -1,20 +1,11 @@
 [
-  "\u00031≤V·èßï∫\u0017æ\u001f\u0002.¨j",
+  "6åÈ\u001aÇ'êJFœ·ƒb…B®",
   [
     [
-      "PropositionalExtensionalityInconsistent.step",
+      "PropositionalExtensionalityInconsistent.propExt_Type_inconsistent",
       1,
-      0,
-      0,
-      [ "@MaxIFuel_assumption", "@query", "int_inversion", "unit_typing" ],
-      0,
-      "b5936dd4b71a218fed38e91da72b60f3"
-    ],
-    [
-      "PropositionalExtensionalityInconsistent.clearly_wrong'",
+      2,
       1,
-      0,
-      0,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_0da546199211a769a972571cdb3aec67",
@@ -22,6 +13,7 @@
         "assumption_Prims.HasEq_bool", "constructor_distinct_Tm_unit",
         "equality_tok_Prims.T@tok", "equation_Prims.l_True",
         "equation_Prims.logical", "equation_Prims.squash",
+        "equation_PropositionalExtensionalityInconsistent.propExt_Type",
         "fuel_guarded_inversion_Prims.c_True",
         "function_token_typing_Prims.bool",
         "function_token_typing_Prims.l_True", "kinding_Prims.c_True@tok",
@@ -30,98 +22,76 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "53e57a9fe70d56f026711de41169a8d9"
+      "d02990c53cb1d897e7eefa53db1f49a8"
     ],
     [
-      "PropositionalExtensionalityInconsistent.predicateExtensionality",
+      "PropositionalExtensionalityInconsistent.propExt_sub_singleton_inconsistent",
       1,
-      0,
-      0,
+      2,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_0da546199211a769a972571cdb3aec67",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_bool", "constructor_distinct_Tm_unit",
+        "constructor_distinct_Prims.T", "constructor_distinct_Tm_unit",
         "equality_tok_Prims.T@tok", "equation_Prims.l_True",
         "equation_Prims.logical", "equation_Prims.squash",
+        "equation_PropositionalExtensionalityInconsistent.propExt_sub_singleton",
+        "equation_PropositionalExtensionalityInconsistent.sub_singleton",
         "fuel_guarded_inversion_Prims.c_True",
-        "function_token_typing_Prims.bool",
         "function_token_typing_Prims.l_True", "kinding_Prims.c_True@tok",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "true_interp", "typing_Prims.hasEq", "typing_tok_Prims.T@tok",
-        "unit_inversion", "unit_typing"
-      ],
-      0,
-      "adfc3abe239e691d088a2c775517be45"
-    ],
-    [
-      "PropositionalExtensionalityInconsistent.proof",
-      1,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_PropositionalExtensionalityInconsistent.p1",
-        "equation_PropositionalExtensionalityInconsistent.p2",
-        "equation_PropositionalExtensionalityInconsistent.peq",
-        "int_inversion",
-        "token_correspondence_PropositionalExtensionalityInconsistent.p1",
-        "token_correspondence_PropositionalExtensionalityInconsistent.p2",
+        "refinement_interpretation_PropositionalExtensionalityInconsistent_Tm_refine_a5a4b976760c8ff6c395fec345e05f6d",
+        "true_interp", "typing_tok_Prims.T@tok", "unit_inversion",
         "unit_typing"
       ],
       0,
-      "54b86cdce85465821301e20402004852"
+      "f19a69789fa514ec0676d14e4d5cba08"
     ],
     [
-      "PropositionalExtensionalityInconsistent.zarb",
+      "PropositionalExtensionalityInconsistent.predExt_Type_inconsistent",
       1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "3a5b4612250a8f5a3b1e30efaa3bcb29"
-    ],
-    [
-      "PropositionalExtensionalityInconsistent.clearly_wrong",
+      2,
       1,
-      0,
-      0,
       [
-        "@query", "equation_PropositionalExtensionalityInconsistent.p1",
-        "equation_PropositionalExtensionalityInconsistent.p2"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_Prims.c_True",
+        "constructor_distinct_Prims.unit", "equality_tok_Prims.T@tok",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_PropositionalExtensionalityInconsistent.peq",
+        "interpretation_PropositionalExtensionalityInconsistent_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "interpretation_PropositionalExtensionalityInconsistent_Tm_abs_d37bf1607b6d4dda2ebccf3fe69eafd2",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "true_interp", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "ed18ab88241ab195900d8162f0229cf2"
+      "969622ecf4312a314633281045a21f43"
     ],
     [
-      "PropositionalExtensionalityInconsistent.test",
+      "PropositionalExtensionalityInconsistent.predExt_ss_inconsistent",
       1,
-      0,
-      0,
+      2,
+      1,
       [
-        "@query", "constructor_distinct_Prims.int",
-        "constructor_distinct_Prims.unit"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_Prims.c_True",
+        "constructor_distinct_Prims.unit", "equality_tok_Prims.T@tok",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_PropositionalExtensionalityInconsistent.peq_ss",
+        "equation_PropositionalExtensionalityInconsistent.sub_singleton",
+        "fuel_guarded_inversion_Prims.c_True",
+        "interpretation_PropositionalExtensionalityInconsistent_Tm_abs_2405a812367541e40c67ffc99d31bb39",
+        "interpretation_PropositionalExtensionalityInconsistent_Tm_abs_886c983ca0884b59e18b11af014002a9",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "true_interp", "typing_tok_Prims.T@tok", "unit_inversion",
+        "unit_typing"
       ],
       0,
-      "9fea9a25c00ff5fe48df7b769b19c823"
-    ],
-    [
-      "PropositionalExtensionalityInconsistent.unit_contractible",
-      1,
-      0,
-      0,
-      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
-      0,
-      "8a588a9fd614d4ec2ef3c24a2f6dc15e"
-    ],
-    [
-      "PropositionalExtensionalityInconsistent.ahahah",
-      1,
-      0,
-      0,
-      [ "@query", "int_typing", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "e5a04a6735e5df8d06dc0dbf2e938db0"
+      "2a9840cbfe9ed91aea360fd1d7c42b6a"
     ]
   ]
 ]

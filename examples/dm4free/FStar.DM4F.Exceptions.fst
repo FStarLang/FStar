@@ -78,7 +78,8 @@ exception Division_by_zero
 
 val div_intrinsic : i:nat -> j:int -> Exn int
   (requires True)
-  (ensures (function Inr Division_by_zero -> j=0 | Inl z -> j<>0 /\ z = i / j))
+  (ensures (function | Inr Division_by_zero -> j=0 | Inl z -> j<>0 /\ z = i / j
+                     | _ -> True))
 let div_intrinsic i j =
   if j=0 then raise Division_by_zero
   else i / j
