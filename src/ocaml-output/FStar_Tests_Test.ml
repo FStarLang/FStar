@@ -3,7 +3,7 @@ let main : 'Auu____7 'Auu____8 . 'Auu____7 -> 'Auu____8 =
   fun argv  ->
     FStar_Util.print_string "Initializing ...\n";
     (try
-       (fun uu___480_20  ->
+       (fun uu___481_20  ->
           match () with
           | () ->
               (FStar_Main.setup_hooks ();

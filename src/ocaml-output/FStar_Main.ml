@@ -1,5 +1,5 @@
 open Prims
-let (uu___478 : unit) = FStar_Version.dummy () 
+let (uu___479 : unit) = FStar_Version.dummy () 
 let (process_args :
   unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -330,7 +330,7 @@ let (handle_error : Prims.exn -> unit) =
 let main : 'Auu____617 . unit -> 'Auu____617 =
   fun uu____622  ->
     try
-      (fun uu___480_630  ->
+      (fun uu___481_630  ->
          match () with
          | () ->
              (setup_hooks ();
@@ -350,6 +350,6 @@ let main : 'Auu____617 . unit -> 'Auu____617 =
                     cleanup ();
                     FStar_All.exit (Prims.parse_int "0"))))) ()
     with
-    | uu___479_650 ->
-        (handle_error uu___479_650; FStar_All.exit (Prims.parse_int "1"))
+    | uu___480_650 ->
+        (handle_error uu___480_650; FStar_All.exit (Prims.parse_int "1"))
   

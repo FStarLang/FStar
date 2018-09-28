@@ -1,6 +1,5 @@
 FSTAR_HOME=../../..
 include ../../Makefile.include
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
 include .depend
 
 %.fst.checked:
