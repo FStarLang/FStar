@@ -1163,10 +1163,16 @@ let print_full deps : unit =
         in
         let all_checked_fst_files = List.map cache_file all_fst_files_dep in
           if is_implementation f then (
-            Util.print3 "%s: %s \\\n\t%s\n\n"
-                        (output_ml_file f)
-                        (cache_file f)
-                        (String.concat " \\\n\t" all_checked_fst_files);
+            if Options.cmi()
+            then
+                Util.print3 "%s: %s \\\n\t%s\n\n"
+                            (output_ml_file f)
+                            (cache_file f)
+                            (String.concat " \\\n\t" all_checked_fst_files)
+            else
+                Util.print2 "%s: %s \n\n"
+                            (output_ml_file f)
+                            (cache_file f);
             let cmx_files =
                 let extracted_fst_files =
                     all_fst_files_dep |> List.filter (fun df ->
@@ -1184,11 +1190,17 @@ let print_full deps : unit =
           ) else if not(has_implementation file_system_map (lowercase_module_name f))
                  && is_interface f then (
             // .krml files can be produced using just an interface, unlike .ml files
-            Util.print3 "%s: %s \\\n\t%s\n\n"
+            if Options.cmi()
+            then
+                Util.print3 "%s: %s \\\n\t%s\n\n"
+                            (output_ml_file f)
+                            (cache_file f)
+                            (String.concat " \\\n\t" all_checked_fst_files)
+            else
+                Util.print2 "%s: %s \n\n"
                     (output_krml_file f)
                     (cache_file f)
-                    (String.concat " \\\n\t" all_checked_fst_files))
-          );
+          ));
     let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
     let all_ml_files =
         let ml_file_map = BU.smap_create 41 in
