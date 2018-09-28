@@ -421,6 +421,13 @@ let tc_one_file
   if not (Options.cache_off()) then
       match load_module_from_cache env fn with
       | None ->
+        if Option.isSome (Options.codegen())
+        && Options.cmi()
+        then FStar.Errors.raise_err
+                (FStar.Errors.Error_UncheckedFile,
+                 BU.format1 "Cross-module inlining expects all modules to be checked first; %s was not checked"
+                            fn);
+
         let tc_result, env = tc_source_file () in
         if FStar.Errors.get_err_count() = 0
         && (Options.lax()  //we'll write out a .checked.lax file

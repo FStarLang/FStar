@@ -384,11 +384,15 @@ let collect_one
   in
   let working_map = smap_copy original_map in
 
+  let dep_edge module_name =
+      PreferInterface module_name
+  in
+
   let add_dependence_edge original_or_working_map lid =
     let key = lowercase_join_longident lid true in
     match resolve_module_name original_or_working_map key with
     | Some module_name ->
-      add_dep deps (PreferInterface module_name);
+      add_dep deps (dep_edge module_name);
       if has_interface original_or_working_map module_name
       && has_implementation original_or_working_map module_name
       then add_dep mo_roots (UseImplementation module_name);
@@ -495,7 +499,7 @@ let collect_one
         add_dep deps (FriendImplementation (lowercase_join_longident lid true))
     | ModuleAbbrev (ident, lid) ->
         if record_module_alias ident lid
-        then add_dep deps (PreferInterface (lowercase_join_longident lid true))
+        then add_dep deps (dep_edge (lowercase_join_longident lid true))
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | Main t
@@ -575,11 +579,11 @@ let collect_one
     | Const_int (_, Some (signedness, width)) ->
         let u = match signedness with | Unsigned -> "u" | Signed -> "" in
         let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
-        add_dep deps (PreferInterface (Util.format2 "fstar.%sint%s" u w))
+        add_dep deps (dep_edge (Util.format2 "fstar.%sint%s" u w))
     | Const_char _ ->
-        add_dep deps (PreferInterface "fstar.char")
+        add_dep deps (dep_edge "fstar.char")
     | Const_float _ ->
-        add_dep deps (PreferInterface "fstar.float")
+        add_dep deps (dep_edge "fstar.float")
     | _ ->
         ()
 
@@ -905,6 +909,11 @@ let collect (all_cmd_line_files: list<file_name>)
           deps |> List.map (fun d ->
             match d with
             | PreferInterface f
+                when Options.cmi() && Options.codegen() <> None ->
+              if has_implementation file_system_map f
+              then UseImplementation f
+              else PreferInterface f
+            | PreferInterface f
                 when List.contains (FriendImplementation f) friends ->
               FriendImplementation f
             | _ -> d)
@@ -1130,37 +1139,55 @@ let print_full deps : unit =
 
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
+        let all_fst_files_dep =
+            let impl_dep = function
+                | PreferInterface f when Options.cmi() ->
+                  if has_implementation file_system_map f
+                  then UseImplementation f
+                  else PreferInterface f
+                | d -> d
+            in
+            let fst_files =
+                f_deps
+                |> List.map (fun dep ->
+                   file_of_dep_aux false file_system_map all_cmd_line_files (impl_dep dep))
+            in
+            let fst_files_from_iface =
+                match iface_deps with
+                | None -> []
+                | Some iface_deps ->
+                    let id = iface_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files) in
+                    id
+            in
+            BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface)
+        in
+        let all_checked_fst_files = List.map cache_file all_fst_files_dep in
           if is_implementation f then (
-            Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file f);
+            Util.print3 "%s: %s \\\n\t%s\n\n"
+                        (output_ml_file f)
+                        (cache_file f)
+                        (String.concat " \\\n\t" all_checked_fst_files);
             let cmx_files =
-                let fst_files =
-                    f_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files)
-                in
-                let fst_files_from_iface =
-                    match iface_deps with
-                    | None -> []
-                    | Some iface_deps ->
-                      let id = iface_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files) in
-                      id
-                in
-                let fst_files = BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface) in
                 let extracted_fst_files =
-                    fst_files |> List.filter (fun df ->
+                    all_fst_files_dep |> List.filter (fun df ->
                         lowercase_module_name df <> lowercase_module_name f //avoid circular deps on f's own cmx
                         && Options.should_extract (lowercase_module_name df))
                 in
                 extracted_fst_files |> List.map output_cmx_file
             in
-           if Options.should_extract (lowercase_module_name f)
-           then Util.print3 "%s: %s \\\n\t%s\n\n"
+            if Options.should_extract (lowercase_module_name f)
+            then Util.print3 "%s: %s \\\n\t%s\n\n"
                         (output_cmx_file f)
                         (output_ml_file f)
                         (String.concat "\\\n\t" cmx_files);
-           Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file f)
+            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file f)
           ) else if not(has_implementation file_system_map (lowercase_module_name f))
                  && is_interface f then (
             // .krml files can be produced using just an interface, unlike .ml files
-            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file f))
+            Util.print3 "%s: %s \\\n\t%s\n\n"
+                    (output_krml_file f)
+                    (cache_file f)
+                    (String.concat " \\\n\t" all_checked_fst_files))
           );
     let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
     let all_ml_files =
