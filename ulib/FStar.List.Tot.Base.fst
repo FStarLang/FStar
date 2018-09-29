@@ -21,6 +21,8 @@ used in specifications.
 *)
 module FStar.List.Tot.Base
 
+module F = FStar.FunctionalExtensionality
+
 (**
 Base operations
 *)
@@ -449,8 +451,8 @@ polymorphic comparison using both the [compare] function and the (>)
 infix operator are such that [compare x y] is positive if, and only
 if, x > y. Requires, at type-checking time, [compare] to be a pure
 total function. *)
-val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
-let bool_of_compare f x y = f x y > 0
+val bool_of_compare : #a:Type -> (a -> a -> Tot int) -> a -> a -> Tot bool
+let bool_of_compare #a f x y = f x y > 0
 
 (** [compare_of_bool] turns a strict order into a comparison
 function. More precisely, [compare_of_bool rel x y] returns a positive
@@ -461,9 +463,13 @@ if, x > y. Requires, at type-checking time, [rel] to be a pure total
 function.  *)
 val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
-  if x `rel` y  then 1
-  else if x = y then 0
-  else 0-1
+    if x `rel` y  then 1
+    else if x = y then 0
+    else 0-1
+
+let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> Tot bool)
+  : Lemma (forall x y. bool_of_compare (compare_of_bool f) x y == f x y)
+  = ()
 
 (** [sortWith compare l] returns the list [l'] containing the elements
 of [l] sorted along the comparison function [compare], in such a way

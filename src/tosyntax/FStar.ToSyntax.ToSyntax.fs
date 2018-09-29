@@ -236,8 +236,17 @@ and free_type_vars env t = match (unparen t).tm with
     let env, f = free_type_vars_b env b in
     f@free_type_vars env t
 
-  | Product(binders, body)
   | Sum(binders, body) ->
+    let env, free = List.fold_left (fun (env, free) bt ->
+      let env, f =
+        match bt with
+        | Inl binder -> free_type_vars_b env binder
+        | Inr t -> env, free_type_vars env body
+      in
+      env, f@free) (env, []) binders in
+    free@free_type_vars env body
+
+  | Product(binders, body) ->
     let env, free = List.fold_left (fun (env, free) binder ->
       let env, f = free_type_vars_b env binder in
       env, f@free) (env, []) binders in
@@ -896,32 +905,43 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       desugar_term_aq env (mk_term(Op(Ident.mk_ident ("~",r), [e])) top.range top.level)
 
     (* if op_Star has not been rebound, then it's reserved for tuples *)
-    | Op(op_star, [_;_]) when
-      Ident.text_of_id op_star = "*" &&
-      (op_as_term env 2 top.range op_star |> Option.isNone) ->
+    | Op(op_star, [lhs;rhs]) when
+      (Ident.text_of_id op_star = "*" &&
+       op_as_term env 2 top.range op_star |> Option.isNone) ->
       (* See the comment in parse.mly to understand why this implicitly relies
        * on the presence of a Paren node in the AST. *)
       let rec flatten t = match t.tm with
         // * is left-associative
-        | Op({idText = "*"}, [t1;t2]) -> flatten t1 @ [ t2 ]
+        | Op({idText = "*"}, [t1;t2]) when
+           op_as_term env 2 top.range op_star |> Option.isNone ->
+          flatten t1 @ [ t2 ]
         | _ -> [t]
       in
-      let targs, aqs = flatten (unparen top) |>
-                            List.map (fun t -> let t', aq = desugar_typ_aq env t in as_arg t', aq) |>
-                            List.unzip in
-      let tup = fail_or env (Env.try_lookup_lid env) (C.mk_tuple_lid (List.length targs) top.range) in
-      mk (Tm_app(tup, targs)), join_aqs aqs
+      let terms = flatten lhs in
+      //make the surface syntax for a non-dependent tuple
+      let t = {top with tm=Sum(List.map Inr terms, rhs)} in
+      desugar_term_maybe_top top_level env t
 
     | Tvar a ->
       setpos <| (fail_or2 (try_lookup_id env) a), noaqs
 
     | Uvar u ->
-        raise_error (Errors.Fatal_UnexpectedUniverseVariable, "Unexpected universe variable " ^ text_of_id u ^ " in non-universe context") top.range
+      raise_error
+          (Errors.Fatal_UnexpectedUniverseVariable,
+           "Unexpected universe variable " ^
+            text_of_id u ^
+            " in non-universe context")
+          top.range
 
     | Op(s, args) ->
-      begin match op_as_term env (List.length args) top.range s with
-        | None -> raise_error (Errors.Fatal_UnepxectedOrUnboundOperator, "Unexpected or unbound operator: " ^ Ident.text_of_id s) top.range
-        | Some op ->
+      begin
+      match op_as_term env (List.length args) top.range s with
+      | None ->
+        raise_error (Errors.Fatal_UnepxectedOrUnboundOperator,
+                     "Unexpected or unbound operator: " ^
+                     Ident.text_of_id s)
+                     top.range
+      | Some op ->
             if List.length args > 0 then
               let args, aqs = args |> List.map (fun t -> let t', s = desugar_term_aq env t in
                                                          (t', None), s) |> List.unzip in
@@ -1021,16 +1041,36 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             raise_error err top.range
         end
 
-    | Sum(binders, t) ->
+    | Sum(binders, t)
+      when BU.for_all (function Inr _ -> true | _ -> false) binders ->
+      //non-dependent tuple
+      let terms =
+         (binders |>
+          List.map (function Inr x -> x | Inl _ -> failwith "Impossible"))
+         @[t]
+      in
+      let targs, aqs =
+        terms |>
+        List.map (fun t -> let t', aq = desugar_typ_aq env t in as_arg t', aq) |>
+        List.unzip
+      in
+      let tup = fail_or env (Env.try_lookup_lid env) (C.mk_tuple_lid (List.length targs) top.range) in
+      mk (Tm_app(tup, targs)), join_aqs aqs
+
+    | Sum(binders, t) -> //dependent tuple
       let env, _, targs = List.fold_left (fun (env, tparams, typs) b ->
-                let xopt, t = desugar_binder env b in
+                let xopt, t =
+                  match b with
+                  | Inl b -> desugar_binder env b
+                  | Inr t -> None, desugar_typ env t
+                in
                 let env, x =
                     match xopt with
                     | None -> env, S.new_bv (Some top.range) tun
                     | Some x -> push_bv env x in
                 (env, tparams@[{x with sort=t}, None], typs@[as_arg <| no_annot_abs tparams t]))
         (env, [], [])
-        (binders@[mk_binder (NoName t) t.range Type_level None]) in
+        (binders@[Inl <| mk_binder (NoName t) t.range Type_level None]) in
       let tup = fail_or env (try_lookup_lid env) (C.mk_dtuple_lid (List.length targs) top.range) in
       mk <| Tm_app(tup, targs), noaqs
 
@@ -1335,7 +1375,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let r = top.range in
       let handler = mk_function branches r r in
       let body = mk_function [(mk_pattern (PatConst Const_unit) r, None, e)] r r in
-      let a1 = mk_term (App(mk_term (Var C.try_with_lid) r top.level, body, Nothing)) r  top.level in
+      let try_with_lid = Ident.lid_of_path ["try_with"] r in
+      let try_with = AST.mk_term (AST.Var try_with_lid) r AST.Expr in
+      let a1 = mk_term (App(try_with, body, Nothing)) r top.level in
       let a2 = mk_term (App(a1, handler, Nothing)) r top.level in
       desugar_term_aq env a2
 
@@ -1787,6 +1829,17 @@ and trans_aqual env = function
   | Some (AST.Meta t) -> Some (S.Meta (desugar_term env t))
   | None -> None
 
+let binder_ident (b:binder) : option<ident> =
+  match b.b with
+  | TAnnotated (x, _)
+  | Annotated (x, _)
+  | TVariable x
+  | Variable x -> Some x
+  | NoName _ -> None
+
+let binder_idents (bs:list<binder>) : list<ident> =
+  List.collect (fun b -> FStar.Common.list_of_option (binder_ident b)) bs
+
 // FIXME: Would be nice to add auto-generated docs to these
 let mk_data_discriminators quals env datas =
     let quals = quals |> List.filter (function
@@ -1935,13 +1988,20 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
-      (* it is necessary to mangle field names to avoid capture as they are turned into the formal parameters of the data constructor *)
-      let mfields = List.map (fun (x,t,_) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr None) fields in
+      let mfields = List.map (fun (x,t,_) -> mk_binder (Annotated(x,t)) x.idRange Expr None) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type_level) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type_level in
       //let _ = BU.print_string (BU.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in
+
+      let names = id :: binder_idents parms in
+      List.iter (fun (f, _, _) ->
+          if BU.for_some (fun i -> ident_equals f i) names then
+              raise_error (Errors.Error_FieldShadow,
+                              BU.format1 "Field %s shadows the record's name or a parameter of it, please rename it" (string_of_ident f)) f.idRange)
+          fields;
+
       // FIXME: docs of individual fields are dropped
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> unmangle_field_name x)
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> x)
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -2542,7 +2602,13 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   | Tycon(is_effect, typeclass, tcs) ->
     let quals = d.quals in
     let quals = if is_effect then Effect_qual :: quals else quals in
-    let quals = if typeclass then Noeq        :: quals else quals in
+    let quals =
+        if typeclass then
+            match tcs with
+            | [(TyconRecord _, _)] -> Noeq :: quals
+            | _ -> raise_error (Errors.Error_BadClassDecl, "Ill-formed `class` declaration: definition must be a record type") d.drange
+        else quals
+    in
     let tcs = List.map (fun (x,_) -> x) tcs in
     let env, ses = desugar_tycon env d (List.map (trans_qual None) quals) tcs in
 
@@ -2567,7 +2633,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         match get_fname se.sigquals with
         | None -> []
         | Some id ->
-            let id = U.unmangle_field_name id in
             [qualify env id]
     in
     let rec splice_decl meths se =
@@ -2724,30 +2789,14 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     let env = push_doc env lid d.doc in
     env, [se]
 
-  | Exception(id, None) ->
-    let t = fail_or env (try_lookup_lid env) C.exn_lid in
-    let l = qualify env id in
-    let qual = [ExceptionConstructor] in
-    let se = { sigel = Sig_datacon(l, [], t, C.exn_lid, 0, [C.exn_lid]);
-               sigquals = qual;
-               sigrng = d.drange;
-               sigmeta = default_sigmeta  ;
-               sigattrs = [] } in
-    let se' = { sigel = Sig_bundle([se], [l]);
-                sigquals = qual;
-                sigrng = d.drange;
-                sigmeta = default_sigmeta  ;
-                sigattrs = [] } in
-    let env = push_sigelt env se' in
-    let env = push_doc env l d.doc in
-    let data_ops = mk_data_projector_names [] env se in
-    let discs = mk_data_discriminators [] env [l] in
-    let env = List.fold_left push_sigelt env (discs@data_ops) in
-    env, se'::discs@data_ops
-
-  | Exception(id, Some term) ->
-    let t = desugar_term env term in
-    let t = U.arrow ([null_binder t]) (mk_Total <| fail_or env (try_lookup_lid env) C.exn_lid) in
+  | Exception(id, t_opt) ->
+    let t =
+        match t_opt with
+        | None -> fail_or env (try_lookup_lid env) C.exn_lid
+        | Some term ->
+            let t = desugar_term env term in
+            U.arrow ([null_binder t]) (mk_Total <| fail_or env (try_lookup_lid env) C.exn_lid)
+    in
     let l = qualify env id in
     let qual = [ExceptionConstructor] in
     let se = { sigel = Sig_datacon(l, [], t, C.exn_lid, 0, [C.exn_lid]);

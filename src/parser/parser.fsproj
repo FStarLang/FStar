@@ -10,7 +10,6 @@
     <RootNamespace>parser</RootNamespace>
     <AssemblyName>parser</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.3.0</TargetFSharpCoreVersion>
     <Name>parser</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\VS\</SolutionDir>
@@ -113,10 +112,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="FSharp.Core" >
-      <HintPath>..\VS\packages\FSharp.Core.4.2.3/lib/net45/FSharp.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>

@@ -1,7 +1,7 @@
 open Prims
 let (has_cygpath : Prims.bool) =
   try
-    (fun uu___64_3  ->
+    (fun uu___67_3  ->
        match () with
        | () ->
            let t_out =
@@ -9,7 +9,7 @@ let (has_cygpath : Prims.bool) =
                FStar_Pervasives_Native.None
               in
            (FStar_Util.trim_string t_out) = "/usr/bin/cygpath") ()
-  with | uu___63_6 -> false 
+  with | uu___66_6 -> false 
 let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
   let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
   fun s  ->
@@ -94,25 +94,32 @@ let string_of_list :
         Prims.strcat uu____339 "]"  in
       Prims.strcat "[" uu____338
   
+let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
+  =
+  fun o  ->
+    match o with
+    | FStar_Pervasives_Native.None  -> []
+    | FStar_Pervasives_Native.Some x -> [x]
+  
 let string_of_option :
-  'Auu____349 .
-    ('Auu____349 -> Prims.string) ->
-      'Auu____349 FStar_Pervasives_Native.option -> Prims.string
+  'Auu____368 .
+    ('Auu____368 -> Prims.string) ->
+      'Auu____368 FStar_Pervasives_Native.option -> Prims.string
   =
   fun f  ->
-    fun uu___62_364  ->
-      match uu___62_364 with
+    fun uu___65_383  ->
+      match uu___65_383 with
       | FStar_Pervasives_Native.None  -> "None"
       | FStar_Pervasives_Native.Some x ->
-          let uu____370 = f x  in Prims.strcat "Some " uu____370
+          let uu____389 = f x  in Prims.strcat "Some " uu____389
   
 type 'a thunk = (unit -> 'a,'a) FStar_Util.either FStar_ST.ref
 let mk_thunk : 'a . (unit -> 'a) -> 'a thunk =
   fun f  -> FStar_Util.mk_ref (FStar_Util.Inl f) 
 let force_thunk : 'a . 'a thunk -> 'a =
   fun t  ->
-    let uu____505 = FStar_ST.op_Bang t  in
-    match uu____505 with
+    let uu____524 = FStar_ST.op_Bang t  in
+    match uu____524 with
     | FStar_Util.Inr a -> a
     | FStar_Util.Inl f ->
         let a = f ()  in (FStar_ST.op_Colon_Equals t (FStar_Util.Inr a); a)
@@ -123,9 +130,9 @@ let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
       let rec aux i =
         if i < n1
         then
-          let uu____709 = f i  in
-          let uu____710 = aux (i + (Prims.parse_int "1"))  in uu____709 ::
-            uu____710
+          let uu____728 = f i  in
+          let uu____729 = aux (i + (Prims.parse_int "1"))  in uu____728 ::
+            uu____729
         else []  in
       aux (Prims.parse_int "0")
   

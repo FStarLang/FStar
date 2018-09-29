@@ -283,14 +283,14 @@ let attempt probs wl             =
     List.iter (def_check_prob "attempt") probs;
     {wl with attempting=probs@wl.attempting}
 
-let mk_eq2 wl prob t1 t2 : term * worklist =
+let mk_eq2 wl env prob t1 t2 : term * worklist =
     (* NS: Rather than introducing a new variable, it would be much preferable
             to simply compute the type of t1 here.
             Sadly, it seems to be way too expensive to call env.type_of here.
     *)
     let t_type, u = U.type_u () in
-    let binders = Env.all_binders wl.tcenv in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma binders t_type Allow_unresolved in
+    let binders = Env.all_binders env in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type Allow_unresolved in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -1313,7 +1313,7 @@ let guard_of_prob (env:Env.env) (wl:worklist) (problem:tprob) (t1 : term) (t2 : 
             U.mk_forall u_x x (U.mk_has_type t1 (S.bv_to_name x) t2)
     in
     match problem.relation with
-    | EQ     -> mk_eq2 wl (TProb problem) t1 t2
+    | EQ     -> mk_eq2 wl env (TProb problem) t1 t2
     | SUB    -> has_type_guard t1 t2, wl
     | SUBINV -> has_type_guard t2 t1, wl
 
@@ -1979,7 +1979,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         match quasi_pattern env lhs with
         | None ->
            giveup_or_defer env orig wl
-              (BU.format1 "first_order heursitic cannot solve %s; lhs not a quasi-pattern"
+              (BU.format1 "first_order heuristic cannot solve %s; lhs not a quasi-pattern"
                           (prob_to_string env orig))
 
         | Some (bs_lhs, t_res_lhs) ->
@@ -1988,7 +1988,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           else if is_arrow rhs
           then imitate_arrow orig env wl lhs bs_lhs t_res_lhs EQ rhs
           else giveup_or_defer env orig wl
-                               (BU.format1 "first_order heursitic cannot solve %s; \
+                               (BU.format1 "first_order heuristic cannot solve %s; \
                                             rhs not an app or arrow"
                                             (prob_to_string env orig))
     in
@@ -2476,9 +2476,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     def_check_closed_in (p_loc orig) "ref.t2" (List.map fst (p_scope orig)) t2;
     let _ =
         if debug env (Options.Other "Rel")
-        then BU.print3 "Attempting %s (%s vs %s)\n" (string_of_int problem.pid)
+        then BU.print4 "Attempting %s (%s vs %s); rel = (%s)\n" (string_of_int problem.pid)
                             (Print.tag_of_term t1 ^ "::" ^ Print.term_to_string t1)
                             (Print.tag_of_term t2 ^ "::" ^ Print.term_to_string t2)
+                            (rel_to_string problem.relation)
                             in
     let r = Env.get_range env in
     match t1.n, t2.n with
@@ -2557,8 +2558,27 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         in
         let force_eta t =
             if is_abs t then t
-            else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
-                 N.eta_expand_with_type env t (N.unfold_whnf env ty)
+            else begin
+                let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+                (* Find the WHNF ignoring refinements. Otherwise consider
+                 *
+                 * let myty1 = a -> Tot b
+                 * let myty2 = f:myty1{whatever f}
+                 *
+                 * The WHNF of myty2 is not an arrow, and we would fail to eta-expand. *)
+                let ty =
+                    let rec aux ty =
+                        let ty = N.unfold_whnf env ty in
+                        match (SS.compress ty).n with
+                        | Tm_refine _ -> aux (U.unrefine ty)
+                        | _ -> ty
+                    in aux ty
+                in
+                let r = N.eta_expand_with_type env t ty in
+                if Env.debug wl.tcenv <| Options.Other "Rel" then
+                  BU.print3 "force_eta of (%s) at type (%s) = %s\n" (Print.term_to_string t) (Print.term_to_string (N.unfold_whnf env ty)) (Print.term_to_string r);
+                r
+            end
         in
         begin
             match maybe_eta t1, maybe_eta t2 with
@@ -2803,7 +2823,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               else let guard, wl =
                        if equal t1 t2
                        then None, wl
-                       else let g, wl = mk_eq2 wl orig t1 t2 in
+                       else let g, wl = mk_eq2 wl env orig t1 t2 in
                             Some g, wl
                    in
                    solve env (solve_prob orig guard [] wl)
@@ -3345,6 +3365,8 @@ let resolve_implicits' env must_total forcelax g =
                | None ->
                     until_fixpoint (hd::out, changed) tl
                | Some (env, tau) ->
+                    if Env.debug env (Options.Other "Tac") then
+                        BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
                     let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
                     // let the unifier handle setting the variable
                     let extra =
@@ -3353,7 +3375,7 @@ let resolve_implicits' env must_total forcelax g =
                         | Some g -> g.implicits
                     in
                     let hd = { hd with imp_meta = None } in
-                    until_fixpoint (out, changed) (hd :: (extra @ tl))
+                    until_fixpoint (out, true) (hd :: (extra @ tl))
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl

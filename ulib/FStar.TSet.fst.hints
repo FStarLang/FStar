@@ -1,14 +1,17 @@
 [
-  "ƒï5E)ûS±.äl\bÜÁœH",
+  "f\u000e\u0005üŒsZ:«ß)\u0016k«'®",
   [
     [
       "FStar.TSet.empty",
       1,
       0,
       0,
-      [ "@query", "equation_Prims.l_False", "false_interp" ],
+      [
+        "@query", "equation_Prims.l_False", "equation_Prims.subtype_of",
+        "false_interp", "l_quant_interp"
+      ],
       0,
-      "931eb546f008f4b8cccd07691a663565"
+      "490d7493e6a0420282a67bebf180a2c8"
     ],
     [
       "FStar.TSet.singleton",
@@ -19,11 +22,12 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Prims.eq2", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "l_quant_interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "unit_typing"
       ],
       0,
-      "7ceefb4346d11efd8d22f8869197b0fb"
+      "74e7d40fcb47cddb26d937516713b030"
     ],
     [
       "FStar.TSet.union",
@@ -34,11 +38,12 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Prims.l_or", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "l_quant_interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "unit_typing"
       ],
       0,
-      "45cbd4f5debc9d13927e18c95231c788"
+      "95f55acb5774c55843148653e9a2f06b"
     ],
     [
       "FStar.TSet.intersect",
@@ -49,11 +54,12 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Prims.l_and", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "l_quant_interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "unit_typing"
       ],
       0,
-      "9181ab010a500104e2ed7ed2ee31d057"
+      "2fd05b5e645933c371d30969acedd3eb"
     ],
     [
       "FStar.TSet.complement",
@@ -65,11 +71,12 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Prims.l_False", "equation_Prims.l_imp",
         "equation_Prims.l_not", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "l_quant_interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "unit_typing"
       ],
       0,
-      "e30db6ed9a4e7ce2bfa4efe700ddd0d6"
+      "993436e79d33fff23dabc425283d5e60"
     ],
     [
       "FStar.TSet.mem_empty",
@@ -77,13 +84,22 @@
       0,
       0,
       [
-        "@query", "equation_FStar.TSet.empty", "equation_FStar.TSet.mem",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "equation_FStar.FunctionalExtensionality.arrow",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_dom",
+        "equation_FStar.TSet.empty", "equation_FStar.TSet.mem",
         "equation_Prims.l_False", "equation_Prims.prop", "false_interp",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "interpretation_FStar.TSet_Tm_abs_886c983ca0884b59e18b11af014002a9",
-        "unit_typing"
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "typing_FStar.TSet_Tm_abs_886c983ca0884b59e18b11af014002a9"
       ],
       0,
-      "18f6384175fe490bf6619088a6776f84"
+      "e9f5c03c4aae64fe66076150eee111f2"
     ],
     [
       "FStar.TSet.mem_singleton",
@@ -91,12 +107,22 @@
       0,
       0,
       [
-        "@query", "eq2-interp", "equation_FStar.TSet.mem",
-        "equation_FStar.TSet.singleton", "equation_Prims.prop",
-        "interpretation_FStar.TSet_Tm_abs_4a8b5af53f87cdf31b1c6b39359b0bc7"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "eq2-interp", "equation_FStar.FunctionalExtensionality.arrow",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_dom",
+        "equation_FStar.TSet.mem", "equation_FStar.TSet.singleton",
+        "equation_Prims.prop",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "interpretation_FStar.TSet_Tm_abs_4a8b5af53f87cdf31b1c6b39359b0bc7",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "typing_FStar.TSet_Tm_abs_4a8b5af53f87cdf31b1c6b39359b0bc7"
       ],
       0,
-      "b108c549b58963d3a79020a8141930be"
+      "7b23300180b4d0ff8d1637939198c732"
     ],
     [
       "FStar.TSet.mem_union",
@@ -104,13 +130,22 @@
       0,
       0,
       [
-        "@query", "equation_FStar.TSet.mem", "equation_FStar.TSet.union",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "equation_FStar.FunctionalExtensionality.arrow",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_dom",
+        "equation_FStar.TSet.mem", "equation_FStar.TSet.union",
         "equation_Prims.prop",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "interpretation_FStar.TSet_Tm_abs_bf7df9b68193612f2e28c85161cf966c",
-        "unit_typing"
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "typing_FStar.TSet_Tm_abs_bf7df9b68193612f2e28c85161cf966c"
       ],
       0,
-      "918850ce0288dffd0bde44fced4dff42"
+      "df34c1e251ee8b697e54887d2de8a4d3"
     ],
     [
       "FStar.TSet.mem_intersect",
@@ -118,13 +153,22 @@
       0,
       0,
       [
-        "@query", "equation_FStar.TSet.intersect", "equation_FStar.TSet.mem",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "equation_FStar.FunctionalExtensionality.arrow",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_dom",
+        "equation_FStar.TSet.intersect", "equation_FStar.TSet.mem",
         "equation_Prims.prop",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "interpretation_FStar.TSet_Tm_abs_30a1967e70d56a00508c2fb5f0ef6c01",
-        "unit_typing"
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "typing_FStar.TSet_Tm_abs_30a1967e70d56a00508c2fb5f0ef6c01"
       ],
       0,
-      "c660678173a818ecd979250061ef9a77"
+      "7f908d32c8dc40f14e4fab75da6cfd72"
     ],
     [
       "FStar.TSet.mem_complement",
@@ -132,13 +176,22 @@
       0,
       0,
       [
-        "@query", "equation_FStar.TSet.complement",
-        "equation_FStar.TSet.mem", "equation_Prims.prop",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "equation_FStar.FunctionalExtensionality.arrow",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_dom",
+        "equation_FStar.TSet.complement", "equation_FStar.TSet.mem",
+        "equation_Prims.prop",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "interpretation_FStar.TSet_Tm_abs_106e2b8bb3ee461ce99851ab8e9b259c",
-        "unit_typing"
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "typing_FStar.TSet_Tm_abs_106e2b8bb3ee461ce99851ab8e9b259c"
       ],
       0,
-      "adf3251bcd150d0f5c0ad259c79330c8"
+      "645e0f402cde444d8b4f01a2ac9a3496"
     ],
     [
       "FStar.TSet.subset_mem",
@@ -147,7 +200,7 @@
       0,
       [ "@query", "equation_FStar.TSet.subset", "unit_typing" ],
       0,
-      "bb4cd2053d8036d58857cb8c5e4b0dd0"
+      "373850c4f94de5c0b949990f03bdadc1"
     ],
     [
       "FStar.TSet.mem_subset",
@@ -156,7 +209,7 @@
       0,
       [ "@query", "equation_FStar.TSet.subset", "unit_typing" ],
       0,
-      "e406c5efc869e176401827671b90b1b7"
+      "432225d6a52f473c8da6a8c3e044d771"
     ],
     [
       "FStar.TSet.lemma_equal_intro",
@@ -168,7 +221,7 @@
         "unit_typing"
       ],
       0,
-      "b474ff084c83812a2644291f1eb19011"
+      "a8d30dec55bd87c7b73e5bd40a960f55"
     ],
     [
       "FStar.TSet.lemma_equal_elim",
@@ -176,11 +229,15 @@
       0,
       0,
       [
-        "@query", "equation_FStar.PredicateExtensionality.peq",
-        "equation_FStar.TSet.equal"
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.FunctionalExtensionality.is_restricted",
+        "equation_FStar.FunctionalExtensionality.restricted_t",
+        "equation_FStar.PredicateExtensionality.peq",
+        "equation_FStar.TSet.equal", "equation_FStar.TSet.set",
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4"
       ],
       0,
-      "45617961b38e2cc05430ab0c731a60f7"
+      "4cb4f156910cffb881f6a5404ea03c38"
     ],
     [
       "FStar.TSet.lemma_equal_refl",
@@ -189,7 +246,7 @@
       0,
       [ "@query", "equation_FStar.TSet.equal", "unit_typing" ],
       0,
-      "39e9719e2c401c6f3fbd77779c516a96"
+      "8c97cf3bbef2b0dcb49e56c2dd2c4315"
     ],
     [
       "FStar.TSet.tset_of_set",
@@ -197,12 +254,15 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion"
+        "unit_typing"
       ],
       0,
-      "d8166933349a7c37df6197d744d860e8"
+      "e3dc8c606ac6512c0c36d6a1b625f1f8"
     ],
     [
       "FStar.TSet.lemma_mem_tset_of_set_l",
@@ -211,22 +271,31 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
+        "equation_FStar.FunctionalExtensionality.arrow",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_FStar.TSet.mem", "equation_FStar.TSet.tset_of_set",
         "equation_Prims.eqtype", "equation_Prims.prop",
         "equation_Prims.squash",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "interpretation_FStar.TSet_Tm_abs_72d81c36c33d89af8ffb225fe76fa39e",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_FStar.TSet_Tm_refine_a77d79782e60b55519df953e8dedd579",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_FStar.TSet.mem", "typing_FStar.TSet.tset_of_set",
+        "typing_FStar.TSet_Tm_abs_72d81c36c33d89af8ffb225fe76fa39e",
         "unit_typing"
       ],
       0,
-      "6370fe7a59f60fb3537016169aadf991"
+      "f0fc464e66ff9c13e61082bf677b510f"
     ],
     [
       "FStar.TSet.lemma_mem_tset_of_set_r",
@@ -235,16 +304,24 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "bool_inversion", "equation_FStar.FunctionalExtensionality.arrow",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_FStar.TSet.mem", "equation_FStar.TSet.tset_of_set",
-        "equation_Prims.prop", "equation_Prims.squash",
+        "equation_Prims.eqtype", "equation_Prims.prop",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "interpretation_FStar.TSet_Tm_abs_72d81c36c33d89af8ffb225fe76fa39e",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "typing_FStar.Set.mem",
+        "typing_FStar.TSet_Tm_abs_72d81c36c33d89af8ffb225fe76fa39e"
       ],
       0,
-      "1a4f2330091fc93ce3c9b21f9c2ee070"
+      "2f4f8dfcbb2f3b0e801597ff0a3d8d0b"
     ],
     [
       "FStar.TSet.lemma_mem_tset_of_set",
@@ -253,7 +330,7 @@
       0,
       [ "@query" ],
       0,
-      "09cbb909c7af4e4b395d768838bc13ea"
+      "d95c3e285d99260b084546d60cfe06ee"
     ],
     [
       "FStar.TSet.filter",
@@ -264,11 +341,12 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Prims.l_and", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "l_quant_interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "unit_typing"
       ],
       0,
-      "0611862ba3e539ae66aab9d26dff28d6"
+      "0740a518dc1409f8f372130cf52b810e"
     ],
     [
       "FStar.TSet.lemma_mem_filter",
@@ -276,13 +354,22 @@
       0,
       0,
       [
-        "@query", "equation_FStar.TSet.filter", "equation_FStar.TSet.mem",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "equation_FStar.FunctionalExtensionality.arrow",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_dom",
+        "equation_FStar.TSet.filter", "equation_FStar.TSet.mem",
         "equation_Prims.prop",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "interpretation_FStar.TSet_Tm_abs_30a1967e70d56a00508c2fb5f0ef6c01",
-        "l_and-interp"
+        "l_and-interp", "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "typing_FStar.TSet_Tm_abs_30a1967e70d56a00508c2fb5f0ef6c01"
       ],
       0,
-      "869fabe053d0134cd5a5821ca8903566"
+      "ecc34195e8bb383b8a185b95d11ec6bb"
     ],
     [
       "FStar.TSet.exists_y_in_s",
@@ -293,11 +380,12 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Prims.l_Exists", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "l_quant_interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "unit_typing"
       ],
       0,
-      "1fa52e602d781f81fb1ffe9b1223b534"
+      "c0f3f454f2b6bd93ad104adc55fd685f"
     ],
     [
       "FStar.TSet.lemma_mem_map",
@@ -305,13 +393,22 @@
       0,
       0,
       [
-        "@query", "equation_FStar.TSet.exists_y_in_s",
-        "equation_FStar.TSet.map", "equation_FStar.TSet.mem",
-        "l_quant_interp__1189",
-        "token_correspondence_FStar.TSet.exists_y_in_s"
+        "@MaxIFuel_assumption", "@query",
+        "FStar.TSet_interpretation_Tm_arrow_13d3b21cc66bcbfbc7099ee7ae4c5f87",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "equation_FStar.FunctionalExtensionality.arrow",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_dom",
+        "equation_FStar.TSet.exists_y_in_s", "equation_FStar.TSet.map",
+        "equation_FStar.TSet.mem", "equation_Prims.prop",
+        "function_token_typing_FStar.TSet.exists_y_in_s",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "token_correspondence_FStar.TSet.exists_y_in_s",
+        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0"
       ],
       0,
-      "6051c367720df8d9e0d459422d400f5f"
+      "46009d4a2facf4c2fbec9f4c34687530"
     ],
     [
       "FStar.TSet.as_set'",
@@ -325,7 +422,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "096f090eb7d335c2732ee1c75f281137"
+      "b411ae7e29a982c547a20299f1837781"
     ],
     [
       "FStar.TSet.exists_y_in_s",
@@ -336,11 +433,12 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Prims.l_Exists", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "l_quant_interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion", "unit_typing"
+        "unit_typing"
       ],
       0,
-      "475ac5f93ed19d922bc5928bd45cdcfd"
+      "637c56882e74f35e8d198a2028a91daa"
     ],
     [
       "FStar.TSet.as_set'",
@@ -354,7 +452,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "90c104d5f72d027ba4c27f3936a57de2"
+      "68842f57c64f9ac3f5587447429aaa38"
     ]
   ]
 ]

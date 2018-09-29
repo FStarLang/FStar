@@ -45,6 +45,9 @@ queries*.smt2
 transcript
 dump
 
+# ignore .ml files on the root dir
+/*.ml
+
 *.cmi
 *.cmo
 *.cmx

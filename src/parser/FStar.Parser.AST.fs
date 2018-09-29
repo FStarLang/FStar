@@ -66,7 +66,7 @@ type term' =
   | Record    of option<term> * list<(lid * term)>
   | Project   of term * lid
   | Product   of list<binder> * term                 (* function space *)
-  | Sum       of list<binder> * term                 (* dependent tuple *)
+  | Sum       of list<(either<binder,term>)> * term                 (* dependent tuple *)
   | QForall   of list<binder> * list<list<term>> * term
   | QExists   of list<binder> * list<list<term>> * term
   | Refine    of binder * term
@@ -95,12 +95,12 @@ and binder' =
 and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
 
 and pattern' =
-  | PatWild     of option<arg_qualifier>
+  | PatWild     of aqual
   | PatConst    of sconst
   | PatApp      of pattern * list<pattern>
-  | PatVar      of ident * option<arg_qualifier>
+  | PatVar      of ident * aqual
   | PatName     of lid
-  | PatTvar     of ident * option<arg_qualifier>
+  | PatTvar     of ident * aqual
   | PatList     of list<pattern>
   | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
@@ -138,7 +138,7 @@ type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
   | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term * option<fsdoc>)>
-  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * option<fsdoc> * bool)> (* using 'of' notion *)
+  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * option<fsdoc> * bool)> (* bool is whether it's using 'of' notation *)
 
 type qualifier =
   | Private
@@ -588,7 +588,10 @@ let rec term_to_string (x:term) = match x.tm with
   | Product([b], t) when (x.level = Kind) ->
     Util.format2 "%s => %s" (b|> binder_to_string) (t|> term_to_string)
   | Sum(binders, t) ->
-    Util.format2 "%s * %s" (binders |> (List.map binder_to_string) |> String.concat " * " ) (t|> term_to_string)
+    (binders@[Inr t]) |>
+    List.map (function Inl b -> binder_to_string b
+                     | Inr t -> term_to_string t) |>
+    String.concat " & "
   | QForall(bs, pats, t) ->
     Util.format3 "forall %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)

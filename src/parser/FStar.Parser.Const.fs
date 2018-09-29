@@ -362,7 +362,7 @@ let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
-let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "instance"]
+let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 
 let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
 let effect_Tac_lid = fstar_tactics_lid' ["Effect"; "Tac"] // trivial variant

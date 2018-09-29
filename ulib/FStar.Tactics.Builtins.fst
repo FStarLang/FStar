@@ -10,17 +10,6 @@ open FStar.Reflection.Data
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
-(** Simply fail. The specs ensures that it fails *without changing the
-proofstate*, but hides the message. *)
-assume val fail : #a:Type -> m:string -> TacH a (requires (fun _ -> True)) (ensures (fun ps r -> Failed? r /\ Failed?.ps r == ps))
-
-// NOTE: The only reason `fail` is assumed as a primitive is to enable
-// the TacFail debugging flag. We could instead define it like this,
-// with the exact same spec and runtime behaviour (minus the
-// debugging aspect).
-(* val fail : #a:Type -> m:string -> TacH a (requires (fun _ -> True)) (ensures (fun ps r -> Failed? r /\ Failed?.ps r == ps)) *)
-(* let fail = fail_act *)
-
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
 assume val top_env : unit -> Tac env
@@ -61,7 +50,9 @@ assume val unquote : #a:Type -> term -> Tac a
 If [t] succeeds with return value [a], [catch t] returns [Inr a].
 On failure, it returns [Inl msg], where [msg] is the error [t]
 raised. See also [or_else].  *)
-assume val catch : #a:Type -> (unit -> Tac a) -> TacS (either string a)
+assume val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
+
+assume val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
 (** [trivial] will discharge the goal if it's exactly [True] after
 doing normalization and simplification of it. *)

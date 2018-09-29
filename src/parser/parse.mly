@@ -59,7 +59,7 @@ let logic_qualifier_deprecation_warning =
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
-%token FRIEND OPEN REC THEN TRUE TRY TYPE CLASS EFFECT VAL
+%token FRIEND OPEN REC THEN TRUE TRY TYPE CLASS INSTANCE EFFECT VAL
 %token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -151,6 +151,39 @@ decl:
   | ds=list(decoration) decl=rawDecl
       { mk_decl decl (rhs parseState 2) ds }
 
+  | ds=list(decoration) decl=typeclassDecl
+      { let (decl, extra_attrs) = decl in
+        let d = mk_decl decl (rhs parseState 2) ds in
+        { d with attrs = extra_attrs @ d.attrs }
+      }
+
+typeclassDecl:
+  | CLASS tcdef=pair(option(FSDOC), typeDecl)
+      {
+        (* Only a single type decl allowed, but construct it the same as for multiple ones.
+         * Only difference is the `true` below marking that this a class so desugaring
+         * adds the needed %splice. *)
+        let flip (a,b) = (b,a) in
+        let tcdef = flip tcdef in
+        let d = Tycon (false, true, [tcdef]) in
+
+        (* No attrs yet, but perhaps we want a `class` attribute *)
+        (d, [])
+      }
+
+  | INSTANCE q=letqualifier lb=letbinding
+      {
+        (* Making a single letbinding *)
+        let r = rhs2 parseState 1 3 in
+        let lbs = focusLetBindings [lb] r in (* lbs is a singleton really *)
+        let d = TopLevelLet(q, lbs) in
+
+        (* Slapping a `tcinstance` attribute to it *)
+        let at = mk_term (Var tcinstance_lid) r Type_level in
+
+        (d, [at])
+      }
+
 rawDecl:
   | p=pragma
       { Pragma p }
@@ -166,8 +199,6 @@ rawDecl:
       {  TopLevelModule uid }
   | TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
       { Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
-  | CLASS tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
-      { Tycon (false, true, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
   | EFFECT uid=uident tparams=typars EQUALS t=typ
       { Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
@@ -416,6 +447,14 @@ fieldPattern:
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
+  | LBRACK_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACK
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let w = mk_pattern (PatWild (Some (Meta mt)))
+                                 (rhs2 parseState 1 5) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
+      }
+
   | LBRACK_BAR i=lident COLON t=simpleArrow BAR_RBRACK
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         let w = mk_pattern (PatVar (i, Some (Meta mt)))
@@ -423,6 +462,7 @@ patternOrMultibinder:
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
       }
+
   | LBRACK_BAR t=simpleArrow BAR_RBRACK
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
         let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (Meta mt)))
@@ -753,15 +793,21 @@ tmNoEqWith(X):
       { consTerm (rhs parseState 2) e1 e2 }
   | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
       {
-        let x, t, f = match extract_named_refinement e1 with
-            | Some (x, t, f) -> x, t, f
-            | _ -> raise_error (Fatal_MissingQuantifierBinder, "Missing binder for the first component of a dependent tuple") (rhs parseState 1) in
-        let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
-        let tail = e2 in
-        let dom, res = match tail.tm with
-            | Sum(dom', res) -> dom::dom', res
-            | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
+            let dom =
+               match extract_named_refinement e1 with
+               | Some (x, t, f) ->
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 Inl dom
+               | _ ->
+                 Inr e1
+            in
+            let tail = e2 in
+            let dom, res =
+                match tail.tm with
+                | Sum(dom', res) -> dom::dom', res
+                | _ -> [dom], tail
+            in
+            mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       }
   | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}

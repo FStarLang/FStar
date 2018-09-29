@@ -20,12 +20,14 @@ incl \
 struct \
 micro-benchmarks \
 tactics \
+typeclasses \
 miniparse \
 kv_parsing \
 lowparse \
 low-mitls-experiments \
 vale \
 seplogic \
+csl \
 hello \
 native_tactics \
 extraction \

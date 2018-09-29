@@ -125,3 +125,6 @@ let set_label l g = { g with label = l }
 type direction =
     | TopDown
     | BottomUp
+
+exception TacticFailure of string
+exception EExn of term

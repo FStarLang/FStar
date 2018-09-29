@@ -96,6 +96,7 @@ type token =
   | INT32 of (string * bool)
   | INT16 of (string * bool)
   | INT of (string * bool)
+  | INSTANCE
   | INLINE_FOR_EXTRACTION
   | INLINE
   | INCLUDE
@@ -247,6 +248,7 @@ type tokenId =
     | TOKEN_INT32
     | TOKEN_INT16
     | TOKEN_INT
+    | TOKEN_INSTANCE
     | TOKEN_INLINE_FOR_EXTRACTION
     | TOKEN_INLINE
     | TOKEN_INCLUDE
@@ -361,6 +363,7 @@ type nonTerminalId =
     | NONTERM_attribute
     | NONTERM_decoration
     | NONTERM_decl
+    | NONTERM_typeclassDecl
     | NONTERM_rawDecl
     | NONTERM_typeDecl
     | NONTERM_typars

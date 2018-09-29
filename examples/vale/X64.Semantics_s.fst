@@ -3,6 +3,8 @@ module X64.Semantics_s
 open FStar.BaseTypes
 open X64.Machine_s
 
+module F = FStar.FunctionalExtensionality
+
 type uint64 = UInt64.t
 
 let map (key:eqtype) (value:Type) = Map.t key value
@@ -46,7 +48,7 @@ assume val mem_make (#v:Type0) (mappings:int -> v) (domain:Set.set int) : m:(map
 
 noeq type state = {
   ok: bool;
-  regs: reg -> uint64;
+  regs: F.restricted_t reg (fun _ -> uint64);
   flags: uint64;
   mem: mem;
 }
@@ -72,7 +74,7 @@ let eval_operand (o:operand) (s:state) : uint64 =
   | OMem m -> eval_mem (eval_maddr m s) s
 
 let update_reg' (r:reg) (v:uint64) (s:state) : state =
-  { s with regs = fun r' -> if r' = r then v else s.regs r' }
+  { s with regs = F.on_dom reg (fun r' -> if r' = r then v else s.regs r') }
 
 let update_mem (ptr:int) (v:uint64) (s:state) : state = { s with mem = s.mem.[ptr] <- v }
 

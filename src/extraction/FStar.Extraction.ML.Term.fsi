@@ -25,3 +25,4 @@ val is_arity: env -> term -> bool
 val ind_discriminator_body : env:env -> discName:lident -> constrName:lident -> mlmodule1
 val term_as_mlty: env -> term -> mlty
 val term_as_mlexpr: env -> term -> mlexpr * e_tag * mlty
+val extract_lb_iface : env -> letbindings -> env * list<(fv * exp_binding)>

@@ -3,8 +3,8 @@ type norm_cb =
   (FStar_Ident.lid,FStar_Syntax_Syntax.term) FStar_Util.either ->
     FStar_Syntax_Syntax.term
 let (id_norm_cb : norm_cb) =
-  fun uu___209_13  ->
-    match uu___209_13 with
+  fun uu___215_13  ->
+    match uu___215_13 with
     | FStar_Util.Inr x -> x
     | FStar_Util.Inl l ->
         let uu____20 =
@@ -56,38 +56,28 @@ type 'a embedding =
   emb_typ: FStar_Syntax_Syntax.emb_typ }
 let __proj__Mkembedding__item__em : 'a . 'a embedding -> 'a -> embed_t =
   fun projectee  ->
-    match projectee with
-    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
-        print = __fname__print; emb_typ = __fname__emb_typ;_} -> __fname__em
+    match projectee with | { em; un; typ; print = print7; emb_typ;_} -> em
   
 let __proj__Mkembedding__item__un :
   'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
   fun projectee  ->
-    match projectee with
-    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
-        print = __fname__print; emb_typ = __fname__emb_typ;_} -> __fname__un
+    match projectee with | { em; un; typ; print = print7; emb_typ;_} -> un
   
 let __proj__Mkembedding__item__typ :
   'a . 'a embedding -> FStar_Syntax_Syntax.typ =
   fun projectee  ->
-    match projectee with
-    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
-        print = __fname__print; emb_typ = __fname__emb_typ;_} -> __fname__typ
+    match projectee with | { em; un; typ; print = print7; emb_typ;_} -> typ
   
 let __proj__Mkembedding__item__print : 'a . 'a embedding -> 'a printer =
   fun projectee  ->
     match projectee with
-    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
-        print = __fname__print; emb_typ = __fname__emb_typ;_} ->
-        __fname__print
+    | { em; un; typ; print = print7; emb_typ;_} -> print7
   
 let __proj__Mkembedding__item__emb_typ :
   'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
   fun projectee  ->
     match projectee with
-    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
-        print = __fname__print; emb_typ = __fname__emb_typ;_} ->
-        __fname__emb_typ
+    | { em; un; typ; print = print7; emb_typ;_} -> emb_typ
   
 let emb_typ_of : 'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
   fun e  -> e.emb_typ 
@@ -168,13 +158,13 @@ let type_of : 'a . 'a embedding -> FStar_Syntax_Syntax.typ = fun e  -> e.typ
 let set_type : 'a . FStar_Syntax_Syntax.typ -> 'a embedding -> 'a embedding =
   fun ty  ->
     fun e  ->
-      let uu___211_1478 = e  in
+      let uu___217_1478 = e  in
       {
-        em = (uu___211_1478.em);
-        un = (uu___211_1478.un);
+        em = (uu___217_1478.em);
+        un = (uu___217_1478.un);
         typ = ty;
-        print = (uu___211_1478.print);
-        emb_typ = (uu___211_1478.emb_typ)
+        print = (uu___217_1478.print);
+        emb_typ = (uu___217_1478.emb_typ)
       }
   
 let lazy_embed :
@@ -351,11 +341,11 @@ let (e_any : FStar_Syntax_Syntax.term embedding) =
   
 let (e_unit : unit embedding) =
   let em u rng _topt _norm =
-    let uu___212_2197 = FStar_Syntax_Util.exp_unit  in
+    let uu___218_2197 = FStar_Syntax_Util.exp_unit  in
     {
-      FStar_Syntax_Syntax.n = (uu___212_2197.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___218_2197.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___212_2197.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___218_2197.FStar_Syntax_Syntax.vars)
     }  in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unascribe t0  in
@@ -391,11 +381,11 @@ let (e_bool : Prims.bool embedding) =
       if b
       then FStar_Syntax_Util.exp_true_bool
       else FStar_Syntax_Util.exp_false_bool  in
-    let uu___213_2319 = t  in
+    let uu___219_2319 = t  in
     {
-      FStar_Syntax_Syntax.n = (uu___213_2319.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___219_2319.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___213_2319.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___219_2319.FStar_Syntax_Syntax.vars)
     }  in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unmeta_safe t0  in
@@ -428,11 +418,11 @@ let (e_bool : Prims.bool embedding) =
 let (e_char : FStar_Char.char embedding) =
   let em c rng _topt _norm =
     let t = FStar_Syntax_Util.exp_char c  in
-    let uu___214_2440 = t  in
+    let uu___220_2440 = t  in
     {
-      FStar_Syntax_Syntax.n = (uu___214_2440.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___220_2440.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___214_2440.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___220_2440.FStar_Syntax_Syntax.vars)
     }  in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unmeta_safe t0  in
@@ -559,8 +549,8 @@ let e_option :
            in
         (uu____2815, [ea.emb_typ])  in
       FStar_Syntax_Syntax.ET_app uu____2808  in
-    let printer uu___210_2825 =
-      match uu___210_2825 with
+    let printer uu___216_2825 =
+      match uu___216_2825 with
       | FStar_Pervasives_Native.None  -> "None"
       | FStar_Pervasives_Native.Some x ->
           let uu____2829 =
@@ -1493,7 +1483,7 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Util.bind_opt uu____7326
                     (fun ss  ->
                        FStar_All.pipe_left
-                         (fun _0_16  -> FStar_Pervasives_Native.Some _0_16)
+                         (fun _0_1  -> FStar_Pervasives_Native.Some _0_1)
                          (UnfoldOnly ss))
               | (FStar_Syntax_Syntax.Tm_fvar fv,(l,uu____7363)::[]) when
                   FStar_Syntax_Syntax.fv_eq_lid fv
@@ -1507,7 +1497,7 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Util.bind_opt uu____7398
                     (fun ss  ->
                        FStar_All.pipe_left
-                         (fun _0_17  -> FStar_Pervasives_Native.Some _0_17)
+                         (fun _0_2  -> FStar_Pervasives_Native.Some _0_2)
                          (UnfoldFully ss))
               | (FStar_Syntax_Syntax.Tm_fvar fv,(l,uu____7435)::[]) when
                   FStar_Syntax_Syntax.fv_eq_lid fv
@@ -1521,7 +1511,7 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Util.bind_opt uu____7470
                     (fun ss  ->
                        FStar_All.pipe_left
-                         (fun _0_18  -> FStar_Pervasives_Native.Some _0_18)
+                         (fun _0_3  -> FStar_Pervasives_Native.Some _0_3)
                          (UnfoldAttr ss))
               | uu____7505 ->
                   (if w

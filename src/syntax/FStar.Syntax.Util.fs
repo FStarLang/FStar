@@ -516,6 +516,14 @@ let injectives =
      "FStar.UInt32.__uint_to_t";
      "FStar.UInt64.__uint_to_t"]
 
+let eq_inj f g =
+     match f, g with
+     | Equal, Equal -> Equal
+     | NotEqual, _
+     | _, NotEqual -> NotEqual
+     | Unknown, _
+     | _, Unknown -> Unknown
+
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
 let rec eq_tm (t1:term) (t2:term) : eq_result =
     let t1 = canon_app t1 in
@@ -532,14 +540,6 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       match f with
       | Equal -> g()
       | _ -> Unknown
-    in
-    let eq_inj f g =
-      match f, g with
-      | Equal, Equal -> Equal
-      | NotEqual, _
-      | _, NotEqual -> NotEqual
-      | Unknown, _
-      | _, Unknown -> Unknown
     in
     let equal_data f1 (args1:Syntax.args) f2 (args2:Syntax.args) =
         // we got constructors! we know they are injective and disjoint, so we can do some
@@ -799,12 +799,6 @@ let mk_data l args =
       let e = mk_app (fvar l delta_constant (Some Data_ctor)) args in //NS delta: ok
       mk e None e.pos
 
-let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
-let unmangle_field_name x =
-    if U.starts_with x.idText "__fname__"
-    then mk_ident(U.substring_from x.idText 9, x.idRange)
-    else x
-
 (***********************************************************************************************)
 (* Combining an effect name with the name of one of its actions, or a
    data constructor name with the name of one of its formal parameters
@@ -843,12 +837,11 @@ let mk_field_projector_name_from_string constr field =
     field_projector_prefix ^ constr ^ field_projector_sep ^ field
 
 let mk_field_projector_name_from_ident lid (i : ident) =
-    let j = unmangle_field_name i in
-    let jtext = j.idText in
+    let itext = i.idText in
     let newi =
-        if field_projector_contains_constructor jtext
-        then j
-        else mk_ident (mk_field_projector_name_from_string lid.ident.idText jtext, i.idRange)
+        if field_projector_contains_constructor itext
+        then i
+        else mk_ident (mk_field_projector_name_from_string lid.ident.idText itext, i.idRange)
     in
     lid_of_ids (lid.ns @ [newi])
 
@@ -1458,18 +1451,18 @@ let destruct_typ_as_formula f : option<connective> =
         // eq2 can have 2 args or 3
         | Tm_fvar fv, 2
             when fv_eq_lid fv PC.c_eq2_lid ->
-                Some (BaseConn (PC.eq2_lid, args))
+                Some (BaseConn (PC.c_eq2_lid, args))
         | Tm_fvar fv, 3
             when fv_eq_lid fv PC.c_eq2_lid ->
-                Some (BaseConn (PC.eq2_lid, args))
+                Some (BaseConn (PC.c_eq2_lid, args))
 
         // eq3 can have 2 args or 4
         | Tm_fvar fv, 2
             when fv_eq_lid fv PC.c_eq3_lid ->
-                Some (BaseConn (PC.eq3_lid, args))
+                Some (BaseConn (PC.c_eq3_lid, args))
         | Tm_fvar fv, 4
             when fv_eq_lid fv PC.c_eq3_lid ->
-                Some (BaseConn (PC.eq3_lid, args))
+                Some (BaseConn (PC.c_eq3_lid, args))
 
         | Tm_fvar fv, 0
             when fv_eq_lid fv PC.c_true_lid ->

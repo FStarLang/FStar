@@ -411,9 +411,9 @@ type sigelt' =
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
                        * list<lident>               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon        of lident
+  | Sig_datacon        of lident                    //name of the datacon
                        * univ_names                 //universe variables of the inductive type it belongs to
-                       * typ
+                       * typ                        //the constructor's type as an arrow
                        * lident                     //the inductive type of the value this constructs
                        * int                        //and the number of parameters of the inductive
                        * list<lident>               //mutually defined types
@@ -562,6 +562,7 @@ val t_unit          : term
 val t_bool          : term
 val t_int           : term
 val t_string        : term
+val t_exn           : term
 val t_float         : term
 val t_char          : term
 val t_range         : term
