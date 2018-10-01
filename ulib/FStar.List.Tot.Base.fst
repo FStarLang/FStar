@@ -446,7 +446,7 @@ let rec lemma_splitAt_snd_length (#a:Type) (n:nat) (l:list a) :
 
 (** [unsnoc] is an inverse of [snoc]. It splits a list into
     all-elements-except-last and last element. *)
-val unsnoc: #a:Type -> l:list a{length l > 0} -> list a * a
+val unsnoc: #a:Type -> l:list a{length l > 0} -> Tot (list a * a)
 let unsnoc #a l =
   let l1, l2 = splitAt (length l - 1) l in
   lemma_splitAt_snd_length (length l - 1) l;
@@ -455,7 +455,7 @@ let unsnoc #a l =
 (** [split3] splits a list into 3 parts. This allows easy access to
     the part of the list before and after the element, as well as the
     element itself. *)
-val split3: #a:Type -> l:list a -> i:nat{i < length l} -> list a * a * list a
+val split3: #a:Type -> l:list a -> i:nat{i < length l} -> Tot (list a * a * list a)
 let split3 #a l i =
   let a, as = splitAt i l in
   lemma_splitAt_snd_length i l;
