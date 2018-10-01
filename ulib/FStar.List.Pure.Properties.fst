@@ -86,7 +86,7 @@ let rec lemma_splitAt_index_hd (#t:Type) (n:nat) (l:list t) :
     (requires (n < length l))
     (ensures (let l1, l2 = splitAt n l in
               splitAt_length n l;
-              hd l2 == index l n)) =
+              length l2 > 0 /\ hd l2 == index l n)) =
   let x :: xs = l in
   match n with
   | 0 -> ()
@@ -113,7 +113,7 @@ let rec lemma_splitAt_reindex_left (#t:Type) (i:nat) (l:list t) (j:nat) :
     (ensures (
         let left, right = splitAt i l in
         splitAt_length i l;
-        index left j == index l j)) =
+        j < length left /\ index left j == index l j)) =
   match i, j with
   | 1, _ | _, 0 -> ()
   | _ -> lemma_splitAt_reindex_left (i - 1) (tl l) (j - 1)
@@ -127,7 +127,7 @@ let rec lemma_splitAt_reindex_right (#t:Type) (i:nat) (l:list t) (j:nat) :
     (ensures (
         let left, right = splitAt i l in
         splitAt_length i l;
-        index right j == index l (j + i))) =
+        j < length right /\ index right j == index l (j + i))) =
   match i with
   | 0 -> ()
   | _ -> lemma_splitAt_reindex_right (i - 1) (tl l) j
@@ -210,9 +210,10 @@ let rec lemma_split3_unsnoc (#t:Type) (l:list t) (n:nat{n < length l}) :
     (ensures (
         let a, b, c = split3 l n in
         lemma_split3_length l n;
-        let xs, x = unsnoc l in
-        let ys, y = unsnoc c in
-        append a (b :: ys) == xs)) =
+        length c > 0 /\ (
+          let xs, x = unsnoc l in
+          let ys, y = unsnoc c in
+          append a (b :: ys) == xs))) =
   match n with
   | 0 -> ()
   | _ -> lemma_split3_unsnoc (tl l) (n-1)
@@ -244,7 +245,7 @@ let rec lemma_split3_r_hd (#t:Type) (l:list t) (i:nat{i < length l}) :
   Lemma
     (ensures (let a, b, c = split3 l i in
               lemma_split3_length l i;
-              length c > 0 ==> hd c == index l (i + 1))) =
+              length c > 0 ==> i + 1 < length l /\ hd c == index l (i + 1))) =
   match i with
   | 0 -> ()
   | _ -> lemma_split3_r_hd (tl l) (i - 1)
