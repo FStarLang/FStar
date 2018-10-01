@@ -220,7 +220,7 @@ function build_fstar() {
                 if [[ "$OS" == "Windows_NT" ]]; then
                     ## This hack for determining the success of a vale run is needed
                     ## because somehow scons is not returning the error code properly
-                    timeout $timeout ./run_scons.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output
+                    { timeout $timeout ./run_scons.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output ; } || has_error="true"
 
                     ## adds "min-test (Vale)" to the ORANGE_FILE
                     ##      if this string vvvv is present in vale_output
