@@ -4,8 +4,9 @@ include ../Makefile.include
 OTHERFLAGS+=--include ../tactics
 
 all: SepLogic.Heap.uver Shallow.uver SL.Heap.uver SL.Effect.uver	\
-	SL.Shallow.uver Examples.uver SL.Examples.custom		\
-	SL.ExamplesAuto.custom
+	SL.Shallow.uver Examples.uver SL.ExamplesAuto.custom
+
+# Temporarily disabled: SL.Examples.custom
 
 SL.Examples.custom: OTHERFLAGS+=--cache_off
 SL.ExamplesAuto.custom: OTHERFLAGS+=--cache_off
