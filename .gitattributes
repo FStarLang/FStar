@@ -1,7 +1,9 @@
 # Linguist
 *.fst linguist-language=FStar
+*.fst linguist-documentation=false
 *.fsti linguist-language=FStar
-src/ocaml-output/* linguist-vendored
+*.fsti linguist-documentation=false
+src/ocaml-output/FStar_*.ml linguist-vendored
 
 # Line endings
 *.fs* eol=lf
