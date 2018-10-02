@@ -1,6 +1,9 @@
+# Linguist
 *.fst linguist-language=FStar
 *.fsti linguist-language=FStar
+src/ocaml-output/* linguist-vendored
 
+# Line endings
 *.fs* eol=lf
 *.ml* eol=lf
 Makefile eol=lf
@@ -10,7 +13,6 @@ configure eol=lf
 kremlin_ref eol=lf
 .gitignore eol=lf
 .ignore eol=lf
-
 /src/tools/* eol=lf
 /src/tests/interactive/* eol=lf
 
