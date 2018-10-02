@@ -1809,7 +1809,8 @@ let must_erase_for_extraction (g:env) (t:typ) =
                              Env.Iota] env t in
 //        debug g (fun () -> BU.print1 "aux %s\n" (Print.term_to_string t));
         let res = aux_whnf env t in
-        if Env.debug env <| Options.Other "Extraction" then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (Print.term_to_string t);
+        if Env.debug env <| Options.Other "Extraction"
+        then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (Print.term_to_string t);
         res
     in
     aux g t

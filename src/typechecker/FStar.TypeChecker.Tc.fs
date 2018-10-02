@@ -1581,8 +1581,11 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
                               | None -> (-1, -1, -1) // should be impossible
             in
             List.iter Errors.print_issue errs;
-            Errors.log_issue se.sigrng (Errors.Error_DidNotFail,
-                    BU.format5 "This top-level definition was expected to raise error codes %s, but it raised %s. Error #%s was raised %s times, instead of %s."
+            Errors.log_issue
+                     se.sigrng
+                     (Errors.Error_DidNotFail,
+                      BU.format5 "This top-level definition was expected to raise error codes %s, \
+                                  but it raised %s. Error #%s was raised %s times, instead of %s."
                                     (FStar.Common.string_of_list string_of_int errnos)
                                     (FStar.Common.string_of_list string_of_int actual)
                                     (string_of_int e) (string_of_int n2) (string_of_int n1))
@@ -1593,7 +1596,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   | None ->
     tc_decl' env se
 
-let for_export hidden se : list<sigelt> * list<lident> =
+let for_export env hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'abstract'
 
 
@@ -1696,7 +1699,43 @@ let for_export hidden se : list<sigelt> * list<lident> =
            { se with sigel = Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp);
                      sigquals = Assumption::se.sigquals}),
           hidden)
-    else [se], hidden
+    else begin
+        if not (Options.ide()) then
+            (match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
+             | None ->
+               //printfn "No iface_decls for %s" (Print.lid_to_string (Env.current_module env));
+               ()
+
+             | Some iface_decls ->
+               //let docs =
+               //    List.map FStar.Parser.ToDocument.decl_to_document iface_decls
+               //    |> List.map
+               //        (FStar.Pprint.pretty_string (float_of_string "1.0") 100)
+               //    |> String.concat "\n"
+               //in
+               //printfn "Found iface_decls: %s" docs;
+               snd lbs |> List.iter (fun lb ->
+                   let lbname = BU.right lb.lbname in
+                   let has_iface_val =
+                       iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val lbname.fv_name.v.ident)
+                   in
+                   if has_iface_val
+                   && TcUtil.must_erase_for_extraction env lb.lbdef
+                   && not (Env.fv_has_attr env
+                                           lbname
+                                           FStar.Parser.Const.must_erase_for_extraction_attr)
+                   then FStar.Errors.log_issue
+                            (range_of_fv lbname)
+                            (FStar.Errors.Error_MustEraseMissing,
+                             BU.format2
+                                 "Values of type `%s` will be erased during extraction, \
+                                  but its interface hides this fact. Add the `must_erase_for_extraction` \
+                                  attribute to the `val %s` declaration for this symbol in the interface"
+                                  (Print.fv_to_string lbname)
+                                  (Print.fv_to_string lbname)
+                                  )));
+           [se], hidden
+    end
 
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
 (* this was earlier part of tc_decl, but separating it might help if and when we cache type checked modules *)
@@ -1753,7 +1792,7 @@ let tc_decls env ses =
       if Options.use_extracted_interfaces () then List.rev_append ses' exports, []
       else
         let accum_exports_hidden (exports, hidden) se =
-          let se_exported, hidden = for_export hidden se in
+          let se_exported, hidden = for_export env hidden se in
           List.rev_append se_exported exports, hidden
         in
         List.fold_left accum_exports_hidden (exports, hidden) ses'

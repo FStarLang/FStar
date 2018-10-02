@@ -1,5 +1,7 @@
-FSTAR_HOME=../../..
-include ../../Makefile.include
+FSTAR_HOME?=../../..
+ROOTS?=
+EXTRACT?=
+include $(FSTAR_HOME)/examples/Makefile.include
 include .depend
 
 %.fst.checked:
@@ -10,12 +12,11 @@ include .depend
 
 %.ml:
 	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen OCaml --extract_module $(basename $(notdir $(subst .checked,,$<))) --cmi
-	egrep test_function B.ml | egrep -q -v A.id #test that A.id is inlined
 
 .depend:
-	$(FSTAR) --dep full B.fst --extract A --extract B --cmi > .depend
+	$(FSTAR) --dep full $(ROOTS) B.fst $(addprefix --extract ,$(ROOTS)) --cmi > .depend
 
 depend: .depend
 
 clean:
-	rm -f .depend A.ml B.ml *.checked *~
+	rm -f .depend *.ml *.checked *~
