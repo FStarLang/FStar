@@ -25,7 +25,7 @@ function fetch_vale() {
     echo Switching to vale to fstar_ci
     git clean -fdx .
     git reset --hard origin/fstar_ci
-    nuget.exe restore tools/Vale/src/packages.config -PackagesDirectory tools/FsLexYacc
+    nuget restore tools/Vale/src/packages.config -PackagesDirectory tools/FsLexYacc
     cd ..
     export_home VALE "$(pwd)/vale"
 }
