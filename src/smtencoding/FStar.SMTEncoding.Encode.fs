@@ -474,6 +474,10 @@ let declare_top_level_let env x t t_norm =
   match lookup_fvar_binding env x.fv_name.v with
   (* Need to introduce a new name decl *)
   | None ->
+      let t_norm =
+        let bs, c = U.arrow_formals_comp t_norm in
+        if List.length bs = 0 then t_norm else U.arrow bs c
+      in
       let decls, env = encode_free_var false env x t t_norm [] in
       let fvb = lookup_lid env x.fv_name.v in
       fvb, decls, env
