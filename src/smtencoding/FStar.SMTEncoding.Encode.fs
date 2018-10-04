@@ -533,12 +533,11 @@ let encode_top_level_let :
     in
 
     let destruct_bound_function flid t_norm e
-      : (S.binders      //arguments of the lambda abstraction
-      * S.term          //body of the lambda abstraction
-      * S.binders       //arguments of the function type, length of this component is equal to the first
-      * option<S.comp>  //result comp type, if we could actually destruct t_norm into an arrow
-      * S.typ)          //result type, in case the prev. option comp is Some, then this is comp_res_type of that comp
-      * bool            //if set, we should generate a curried application of f
+      : (S.binders    //arguments of the lambda abstraction
+      * S.term        //body of the lambda abstraction
+      * S.binders     //arguments of the function type, length of this component is equal to the first
+      * S.typ)        //result type
+      * bool          //if set, we should generate a curried application of f
     =
       (* The input type [t_norm] might contain reifiable computation type which must be reified at this point *)
       let get_result_type c =
@@ -563,11 +562,11 @@ let encode_top_level_let :
                           let subst = List.map2 (fun (x, _) (b, _) -> NT(x, S.bv_to_name b)) formals bs0 in
                           SS.subst_comp subst c in
                       let body = U.abs rest body lopt in
-                      (bs0, body, bs0, Some c, get_result_type c), false
+                      (bs0, body, bs0, get_result_type c), false
               else if nformals > nbinders (* eta-expand before translating it *)
               then let binders, body = eta_expand binders formals body tres in
-                      (binders, body, formals, Some c, tres), false
-              else (binders, body, formals, Some c, tres), false
+                      (binders, body, formals, tres), false
+              else (binders, body, formals, tres), false
 
             | Tm_refine(x, _) ->
                 fst (aux norm x.sort), true
@@ -592,9 +591,9 @@ let encode_top_level_let :
                 let formals, c = SS.open_comp formals c in
                 let tres = get_result_type c in
                 let binders, body = eta_expand [] formals e tres in
-                (binders, body, formals, Some c, tres), false
+                (binders, body, formals, tres), false
               | Tm_refine (bv, _) -> aux' bv.sort
-              | _ -> ([], e, [], None, t_norm), false
+              | _ -> ([], e, [], t_norm), false
             in
             aux' t_norm
           end
@@ -607,27 +606,18 @@ let encode_top_level_let :
       if bindings |> BU.for_all (fun lb -> U.is_lemma lb.lbtyp || is_tactic lb.lbtyp)
       then encode_top_level_vals env bindings quals
       else
-        (*
-         * AR: this encodes decls for the lets
-         *     at this point, we don't have enough information on what arguments should be curried
-         *     this is better done once we have destruct_bound_function
-         *     for non-rec lets, moving it
-         *     for rec lets, this code will behave as before
-         *)
         let toks, typs, decls, env =
-          if is_rec then
-            bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
-              (* some, but not all are lemmas; impossible *)
-              if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
-              let t_norm = whnf env lb.lbtyp in
-              (* We are declaring the top_level_let with t_norm which might contain *)
-              (* non-reified reifiable computation type. *)
-              (* TODO : clear this mess, the declaration should have a type corresponding to *)
-              (* the encoded term *)
-              let tok, decl, env = declare_top_level_let env (BU.right lb.lbname) lb.lbtyp t_norm in
-              tok::toks, t_norm::typs, decl::decls, env)
-              ([], [], [], env)
-          else [], [], [], env
+          bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
+            (* some, but not all are lemmas; impossible *)
+            if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
+            let t_norm = whnf env lb.lbtyp in
+            (* We are declaring the top_level_let with t_norm which might contain *)
+            (* non-reified reifiable computation type. *)
+            (* TODO : clear this mess, the declaration should have a type corresponding to *)
+            (* the encoded term *)
+            let tok, decl, env = declare_top_level_let env (BU.right lb.lbname) lb.lbtyp t_norm in
+            tok::toks, t_norm::typs, decl::decls, env)
+            ([], [], [], env)
         in
         let toks_fvbs = List.rev toks in
         let decls = List.rev decls |> List.flatten in
@@ -666,14 +656,11 @@ let encode_top_level_let :
 
         let encode_non_rec_lbdef
                 (bindings:list<letbinding>)
+                (typs:list<S.term>)
+                (toks:list<fvar_binding>)
                 (env:env_t) =
-            match bindings with
-            | [{lbunivs=uvs;lbdef=e;lbname=lbn;lbtyp=t_norm}] ->
-                let (binders, body, formals, c_opt, t_body), curry = destruct_bound_function (lbn |> BU.right |> (fun fv -> fv.fv_name.v)) t_norm e in
-
-                //AR: if destruct returned a Some comp, then it could do something with the t_norm
-                //    encode the let decl. accordingly, else use t_norm
-                let fvb, decls, env = declare_top_level_let env (lbn |> BU.right) t_norm (if c_opt |> BU.is_some then (U.arrow formals (c_opt |> BU.must)) else t_norm) in                
+            match bindings, typs, toks with
+            | [{lbunivs=uvs;lbdef=e;lbname=lbn}], [t_norm], [fvb] ->
 
                 (* Open universes *)
                 let flid = fvb.fvar_lid in
@@ -688,6 +675,7 @@ let encode_top_level_let :
                 in
 
                 (* Open binders *)
+                let (binders, body, _, t_body), curry = destruct_bound_function flid t_norm e in
                 if Env.debug env.tcenv <| Options.Other "SMTEncoding"
                 then BU.print2 "Encoding let : binders=[%s], body=%s\n"
                                 (Print.binders_to_string ", " binders)
@@ -763,7 +751,7 @@ let encode_top_level_let :
                         (Print.term_to_string e);
 
             (* Open binders *)
-            let (binders, body, formals, _, tres), curry = destruct_bound_function fvb.fvar_lid t_norm e in
+            let (binders, body, formals, tres), curry = destruct_bound_function fvb.fvar_lid t_norm e in
             if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
             then BU.print4 "Encoding let rec: binders=[%s], body=%s, formals=[%s], tres=%s\n"
                               (Print.binders_to_string ", " binders)
@@ -842,7 +830,7 @@ let encode_top_level_let :
             if not is_rec
             then
               (* Encoding non-recursive definitions *)
-              encode_non_rec_lbdef bindings env
+              encode_non_rec_lbdef bindings typs toks_fvbs env
             else
               encode_rec_lbdefs bindings typs toks_fvbs env
           with Inner_let_rec -> decls, env_decls  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
