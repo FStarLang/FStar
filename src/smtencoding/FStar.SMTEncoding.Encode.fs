@@ -541,14 +541,14 @@ let encode_top_level_let :
           then reify_comp ({env.tcenv with lax = true}) c U_unknown
           else U.comp_result c
       in
-
       let rec aux norm t_norm =
         let binders, body, lopt = U.abs_formals e in
         match binders with
         | _::_ -> begin
-            match (U.unascribe <| SS.compress t_norm).n with
-            | Tm_arrow(formals, c) ->
-              let formals, c = SS.open_comp formals c in
+            let t_norm = U.unascribe <| SS.compress t_norm in
+            match t_norm.n with
+            | Tm_arrow _ ->
+              let formals, c = U.arrow_formals_comp t_norm in
               let nformals = List.length formals in
               let nbinders = List.length binders in
               let tres = get_result_type c in
