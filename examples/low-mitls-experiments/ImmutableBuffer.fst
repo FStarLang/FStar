@@ -55,7 +55,17 @@ let test (l:list int{List.Tot.length l == 10}) :HST.St unit =
   IB.recall_contents b ls;
   let h = HST.get () in
   assert (B.as_seq h b == ls);
-  assert (B.as_seq h sb = Seq.slice ls 0 2)
+  assert (B.as_seq h sb = Seq.slice ls 0 2);
+
+  //test partial API
+  let b1 = IB.igcmalloc_of_list_partial HS.root l in
+  if B.is_null b1 then ()
+  else begin
+    assert (B.length b1 == 10);
+    IB.recall_contents b1 ls;
+    let h = HST.get () in
+    assert (B.as_seq h b1 == ls)
+  end
 
 
 (***** Tests for uninitialized buffers *****)
