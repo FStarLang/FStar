@@ -48,6 +48,7 @@ let rec fix_F #aa #r #p f x a =
   f x (fun y h ->
          axiom1_dep (acc_inv x a) y;
          axiom1 (acc_inv x a y) h;
+	 admit ();
          fix_F f y (acc_inv x a y h))
 
 val fix : #aa:Type -> #r:(aa -> aa -> Type) -> well_founded aa r -> p:(aa -> Type) ->
