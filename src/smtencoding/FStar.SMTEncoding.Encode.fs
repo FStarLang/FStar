@@ -475,7 +475,7 @@ let declare_top_level_let env x t t_norm =
   (* Need to introduce a new name decl *)
   | None ->
       let t_norm =
-        let bs, c = U.arrow_formals_comp t_norm in
+        let bs, c = U.arrow_formals_comp_aux false t_norm in
         if List.length bs = 0 then t_norm else U.arrow bs c
       in
       let decls, env = encode_free_var false env x t t_norm [] in
@@ -552,7 +552,7 @@ let encode_top_level_let :
             let t_norm = U.unascribe <| SS.compress t_norm in
             match t_norm.n with
             | Tm_arrow _ ->
-              let formals, c = U.arrow_formals_comp t_norm in
+              let formals, c = U.arrow_formals_comp_aux false t_norm in
               let nformals = List.length formals in
               let nbinders = List.length binders in
               let tres = get_result_type c in

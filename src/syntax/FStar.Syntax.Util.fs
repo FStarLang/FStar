@@ -921,27 +921,29 @@ let branch b = Subst.close_branch b
  *     flattening arrows of the form t -> Tot (t1 -> C), so that it returns two binders in this example
  *     the function also descends under the refinements (e.g. t -> Tot (f:(t1 -> C){phi}))
  *)
-let rec arrow_formals_comp k =
+let rec arrow_formals_comp_aux (unrefine:bool) k =
     let k = Subst.compress k in
     match k.n with
         | Tm_arrow(bs, c) ->
             let bs, c = Subst.open_comp bs c in
             if is_total_comp c
-            then let bs', k = arrow_formals_comp (comp_result c) in
+            then let bs', k = arrow_formals_comp_aux unrefine (comp_result c) in
                  bs@bs', k
             else bs, c
-        | Tm_refine ({ sort = s }, _) ->
+        | Tm_refine ({ sort = s }, _) when unrefine ->
           (*
            * AR: start descending into s, but if s does not turn out to be an arrow later, we want to return k itself
            *)
           let rec aux (s:term) (k:term) =
             match (Subst.compress s).n with
-            | Tm_arrow _ -> arrow_formals_comp s  //found an arrow, go to the main function
+            | Tm_arrow _ -> arrow_formals_comp_aux unrefine s  //found an arrow, go to the main function
             | Tm_refine ({ sort = s }, _) -> aux s k  //another refinement, descend into it, but with the same def
             | _ -> [], Syntax.mk_Total k  //return def
           in
           aux s k
         | _ -> [], Syntax.mk_Total k
+
+let arrow_formals_comp k = arrow_formals_comp_aux true k
 
 let rec arrow_formals k =
     let bs, c = arrow_formals_comp k in
