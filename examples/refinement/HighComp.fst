@@ -39,9 +39,16 @@ total reifiable reflectable new_effect {
 }
 
 
-(** ** High level WPs (monotonicby construction) **)
+(** ** High level WPs (monotonic by construction) *)
 
 type hwp a = HIGH?.wp a
+
+type hpre = state -> Type0
+type hpost a = state -> a -> state -> Type0
+
+effect High (a:Type) (pre:hpre) (post:hpost a) = HIGH a (fun s0 p -> pre s0 /\ (forall (res:a) (s1:state). post s0 res s1 ==> p (res, s1)))
+
+
 
 let monotonic #a (wp:hwp a) =
   forall p1 p2 s. {:pattern wp s p1; wp s p2}
@@ -53,6 +60,10 @@ type hwp_mon 'a = (wp:hwp 'a{monotonic wp})
 
 // [comp] type with wp
 type comp_wp 'a (wp : hwp_mon 'a) = s0:state -> PURE ('a * state) (wp s0)
+
+let null_wp 'a : hwp_mon 'a  = fun s0 p -> forall res s1. p (res, s1)
+
+effect H (a: Type) = HIGH a (null_wp a)
 
 unfold
 let return_wp (#a:Type) (x : a) : hwp_mon a = HIGH?.return_wp a x
@@ -103,6 +114,19 @@ let rec for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:
   (f lo; for #wp (lo + 1) hi f)
 
 
+
+let get () : H state = (HIGH?.get 0, HIGH?.get 1)
+
+let rec for' (inv : state -> int -> Type0)
+             (f : (i:int) -> High unit (requires (fun h0 -> inv h0 i))
+                                    (ensures (fun h0 _ h1 -> inv h1 (i + 1)))) 
+             (lo : int) (hi : int{lo <= hi}) :
+    High unit (requires (fun h0 -> inv h0 lo))
+              (ensures (fun h0 _ h1 -> inv h1 hi)) (decreases (hi - lo)) = 
+    if lo = hi then ()
+    else 
+      (f lo; for' inv f (lo + 1) hi)
+    
 (** ** Elaborated combinators for high DSL **)
 
 let return_elab (#a:Type) (x : a) : comp_wp a (return_wp x) =
