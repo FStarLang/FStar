@@ -259,12 +259,12 @@ in
 option___anonymous_8_:
   
     {    ( None )}
-| BY thunk_typ_
+| BY thunk2_typ_
     {let (_10, tactic0) = ((), $2) in
 let x =
   let tactic = tactic0 in
   let _1 = _10 in
-                                                                 (tactic)
+                                                                  (tactic)
 in
     ( Some x )}
 
@@ -1648,6 +1648,13 @@ thunk_typ_:
     {let t = $1 in
                 ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
 
+thunk2_typ_:
+  typ
+    {let t = $1 in
+     ( let u = mk_term (Const Const_unit) (rhs parseState 3) Expr in
+       let t = mk_term (Seq (u, t)) (rhs parseState 3) Expr in
+       mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
 ascribeTyp:
   COLON tmArrow_tmNoEq_ option___anonymous_5_
     {let (_1, t, tacopt) = ((), $2, $3) in
@@ -2966,6 +2973,3 @@ in
    ( x :: xs )}
 
 %%
-
-
-
