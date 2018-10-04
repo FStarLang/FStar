@@ -1091,15 +1091,16 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
             | [], [] -> env, [], None, Env.trivial_guard, subst
 
             | (hd, imp)::bs, (hd_expected, imp')::bs_expected ->
-               begin match imp, imp' with
-                    | None, Some (Implicit _)
-                    | None, Some (Meta _)
-                    | Some (Implicit _), None
-                    | Some (Meta _), None ->
-                      raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
+               begin
+                 (* These are the discrepancies in qualifiers that we allow *)
+                 let special q1 q2 = match q1, q2 with
+                 | None, Some Equality -> true
+                 | _ -> false
+                 in
+                 if not (special imp imp') && U.eq_aqual imp imp' <> U.Equal
+                 then raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
                                    BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
                                   (S.range_of_bv hd)
-                    | _ -> ()
                end;
                (* since binders depend on previous ones, we accumulate a substitution *)
                let expected_t = SS.subst subst hd_expected.sort in

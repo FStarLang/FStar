@@ -646,6 +646,7 @@ and eq_aqual a1 a2 =
     | _, None -> NotEqual
     | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
     | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
+    | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
 
 and branch_matches b1 b2 =
