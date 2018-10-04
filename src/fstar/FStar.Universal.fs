@@ -31,6 +31,7 @@ open FStar.Dependencies
 open FStar.Extraction.ML.UEnv
 open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
+open FStar.TypeChecker
 
 
 (* Module abbreviations for the universal type-checker  *)
@@ -49,7 +50,7 @@ module Dep     = FStar.Parser.Dep
 module NBE     = FStar.TypeChecker.NBE
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
-let cache_version_number = 5
+let cache_version_number = 6
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -57,7 +58,6 @@ type uenv = FStar.Extraction.ML.UEnv.uenv
 
 type tc_result = {
   checked_module: Syntax.modul; //persisted
-  checked_module_iface_opt: option<Syntax.modul>; //persisted
   extracted_iface: Extraction.ML.Modul.iface; //persisted
   mii:module_inclusion_info; //persisted
 
@@ -390,7 +390,7 @@ let tc_one_file
       let fmod, env = parse env pre_fn fn in
       let mii = FStar.Syntax.DsEnv.inclusion_info env.env_tcenv.dsenv fmod.name in
       let check_mod () =
-          let ((tcmod, tcmod_iface_opt), env), tc_time =
+          let (tcmod, env), tc_time =
             FStar.Util.record_time (fun () ->
                with_tcenv_of_env env (fun tcenv ->
                  Tc.check_module tcenv fmod (is_some pre_fn)))
@@ -402,7 +402,6 @@ let tc_one_file
           in
           {
             checked_module=tcmod;
-            checked_module_iface_opt=tcmod_iface_opt;
             tc_time=tc_time;
 
             extracted_iface = extracted_iface;
@@ -469,32 +468,7 @@ let tc_one_file
         in
 
         let delta_env env =
-            let tcmod_or_iface =
-                if tcmod.is_interface then tcmod
-                else
-                    let use_interface_from_the_cache =
-                        Options.use_extracted_interfaces ()
-                        && pre_fn = None
-                        && not (Options.expose_interfaces ()
-                                && Options.should_verify tcmod.name.str)
-                    in
-                    if use_interface_from_the_cache
-                    then
-                        if Option.isNone tc_result.checked_module_iface_opt then
-                        begin
-                            FStar.Errors.log_issue (Range.mk_range tcmod.name.str
-                                                                (Range.mk_pos 0 0)
-                                                                (Range.mk_pos 0 0))
-                                                (Errors.Warning_MissingInterfaceOrImplementation,
-                                                    "use_extracted_interfaces option is set \
-                                                    but could not find an interface in the cache for: "
-                                                    ^ tcmod.name.str);
-                            tcmod
-                        end
-                    else Option.get (tc_result.checked_module_iface_opt)
-                    else tcmod
-            in
-            let _, env = with_tcenv_of_env env (delta_tcenv tcmod_or_iface) in
+            let _, env = with_tcenv_of_env env (delta_tcenv tcmod) in
             FStar.Extraction.ML.Modul.extend_with_iface env tc_result.extracted_iface
         in
         tc_result,

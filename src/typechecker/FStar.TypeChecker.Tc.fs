@@ -1720,18 +1720,33 @@ let for_export env hidden se : list<sigelt> * list<lident> =
                        iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val lbname.fv_name.v.ident)
                    in
                    if has_iface_val
-                   && TcUtil.must_erase_for_extraction env lb.lbdef
-                   && not (Env.fv_has_attr env
-                                           lbname
-                                           FStar.Parser.Const.must_erase_for_extraction_attr)
-                   then FStar.Errors.log_issue
+                   then
+                      let must_erase =
+                        TcUtil.must_erase_for_extraction env lb.lbdef in
+                      let has_attr =
+                        Env.fv_has_attr env
+                                        lbname
+                                        FStar.Parser.Const.must_erase_for_extraction_attr in
+                      if must_erase && not has_attr
+                      then
+                          FStar.Errors.log_issue
+                                (range_of_fv lbname)
+                                (FStar.Errors.Error_MustEraseMissing,
+                                 BU.format2
+                                     "Values of type `%s` will be erased during extraction, \
+                                      but its interface hides this fact. Add the `must_erase_for_extraction` \
+                                      attribute to the `val %s` declaration for this symbol in the interface"
+                                      (Print.fv_to_string lbname)
+                                      (Print.fv_to_string lbname)
+                                      )
+                      else if has_attr && not must_erase
+                      then FStar.Errors.log_issue
                             (range_of_fv lbname)
                             (FStar.Errors.Error_MustEraseMissing,
-                             BU.format2
-                                 "Values of type `%s` will be erased during extraction, \
-                                  but its interface hides this fact. Add the `must_erase_for_extraction` \
-                                  attribute to the `val %s` declaration for this symbol in the interface"
-                                  (Print.fv_to_string lbname)
+                             BU.format1
+                                 "Values of type `%s` cannot be erased during extraction, \
+                                  but the `must_erase_for_extraction` attribute claims that it can. \
+                                  Please remove the attribute."
                                   (Print.fv_to_string lbname)
                                   )));
            [se], hidden
@@ -2054,14 +2069,14 @@ let tc_more_partial_modul env modul decls =
   let modul = {modul with declarations=modul.declarations@ses} in
   modul, exports, env
 
-let rec tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * option<modul> * env) =
+let rec tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
   let msg = "Internals for " ^ m.name.str in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, non_private_decls, env = tc_partial_modul env0 m in
   finish_partial_modul false iface_exists env modul non_private_decls
 
-and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
+and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) (exports:list<sigelt>) : (modul * env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   let should_extract_interface =
     (not loading_from_cache)            &&
@@ -2094,9 +2109,8 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     in
 
     //AR: the third flag 'true' is for iface_exists for the current file, since it's an iface already, pass true
-    let modul_iface, must_be_none, env = tc_modul en0 modul_iface true in
-    if Option.isSome must_be_none then failwith "Impossible! finish_partial_module: expected the second component to be None"
-    else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
+    let modul_iface, env = tc_modul en0 modul_iface true in
+    { m with exports = modul_iface.exports }, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else
     let modul = { m with exports = exports } in
@@ -2114,7 +2128,7 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     env.solver.refresh();
     //interactive mode manages it itself
     let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
-    modul, None, env
+    modul, env
 
 let load_checked_module (en:env) (m:modul) :env =
   //This function tries to very carefully mimic the effect of the environment
@@ -2138,7 +2152,7 @@ let load_checked_module (en:env) (m:modul) :env =
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
   //the second true flag is for iface_exists, used to determine whether should extract interface or not
-  let _, _, env = finish_partial_modul true true env m m.exports in
+  let _, env = finish_partial_modul true true env m m.exports in
   env
 
 let check_module env m b =
@@ -2148,7 +2162,7 @@ let check_module env m b =
   then BU.print1 "Module before type checking:\n%s\n" (Print.modul_to_string m);
 
   let env = {env with lax=not (Options.should_verify m.name.str)} in
-  let m, m_iface_opt, env = tc_modul env m b in
+  let m, env = tc_modul env m b in
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
   if Options.dump_module m.name.str
@@ -2169,4 +2183,4 @@ let check_module env m b =
     BU.print1 "%s\n" (Print.modul_to_string normalized_module)
   end;
 
-  (m, m_iface_opt), env
+  m, env
