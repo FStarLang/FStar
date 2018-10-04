@@ -1893,8 +1893,8 @@ let (declare_top_level_let :
           match uu____5587 with
           | FStar_Pervasives_Native.None  ->
               let t_norm1 =
-                let uu____5601 = FStar_Syntax_Util.arrow_formals_comp t_norm
-                   in
+                let uu____5601 =
+                  FStar_Syntax_Util.arrow_formals_comp_aux false t_norm  in
                 match uu____5601 with
                 | (bs,c) ->
                     if (FStar_List.length bs) = (Prims.parse_int "0")
@@ -2206,7 +2206,8 @@ let (encode_top_level_let :
                          (match t_norm2.FStar_Syntax_Syntax.n with
                           | FStar_Syntax_Syntax.Tm_arrow uu____6603 ->
                               let uu____6618 =
-                                FStar_Syntax_Util.arrow_formals_comp t_norm2
+                                FStar_Syntax_Util.arrow_formals_comp_aux
+                                  false t_norm2
                                  in
                               (match uu____6618 with
                                | (formals,c) ->

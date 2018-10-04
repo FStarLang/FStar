@@ -2389,8 +2389,8 @@ and (encode_term :
                                    FStar_Syntax_Util.unrefine uu____6150
                                   in
                                let uu____6151 =
-                                 FStar_Syntax_Util.arrow_formals_comp
-                                   head_type2
+                                 FStar_Syntax_Util.arrow_formals_comp_aux
+                                   false head_type2
                                   in
                                (match uu____6151 with
                                 | (formals,c) ->
