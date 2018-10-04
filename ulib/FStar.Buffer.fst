@@ -141,7 +141,10 @@ let only #t (b:buffer t) : Tot (TSet.set abuffer) = FStar.TSet.singleton (Buff #
 (* let op_Plus_Plus #a s (b:buffer a) : Tot (TSet.set abuffer) = TSet.union s (only b) *)
 (* let op_Plus_Plus_Plus set1 set2 : Tot (TSet.set abuffer) = FStar.TSet.union set1 set2 *)
 
+unfold
 let op_Bang_Bang = TSet.singleton
+
+unfold
 let op_Plus_Plus = TSet.union
 
 (* Maps a set of buffer to the set of their references *)

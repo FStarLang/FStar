@@ -220,6 +220,7 @@ val rev': list 'a -> Tot (list 'a)
 let rec rev' = function
   | [] -> []
   | hd::tl -> (rev' tl)@[hd]
+unfold
 let rev'T = rev'
 
 val rev_acc_rev': l:list 'a -> acc:list 'a ->

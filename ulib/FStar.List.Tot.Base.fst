@@ -219,6 +219,7 @@ let rec memP (#a: Type) (x: a) (l: list a) : Tot Type0 =
 element of [l]. Requires, at type-checking time, the type of elements
 of [l] to have decidable equality. It is equivalent to: [mem x
 l]. TODO: should we rather swap the order of arguments? *)
+unfold
 let contains = mem
 
 (** [existsb f l] returns [true] if, and only if, there exists some
@@ -407,6 +408,7 @@ let rec split l = match l with
 (** [unzip] takes a list of pairs [(x1, y1), ..., (xn, yn)] and
 returns the pair of lists ([x1, ..., xn], [y1, ..., yn]). Named as in:
 Haskell *)
+unfold
 let unzip = split
 
 (** [unzip3] takes a list of triples [(x1, y1, z1), ..., (xn, yn, zn)]
