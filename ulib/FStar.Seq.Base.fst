@@ -246,7 +246,7 @@ abstract let append_empty_r
 
 
 abstract
-val init_index_ (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a))
+val init_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a))
   : Lemma (requires True)
     (ensures (forall (i:nat{i < len}). index (init len contents) i == contents i))
 
@@ -265,16 +265,16 @@ let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i
       else index (init_aux len k contents) i == index (init_aux len (k+1) contents) (i-1))
   end
 
-let init_index_ #a len contents =
+let init_index #a len contents =
   if len = 0 then () else init_index_aux #a len 0 contents
 
 abstract
-let init_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a)) (j: nat)
+let init_index_ (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a)) (j: nat)
   : Lemma (requires j < len)
     (ensures (index (init len contents) j == contents j))
     [SMTPat (index (init len contents) j)]
 =
-  init_index_ len contents
+  init_index len contents
 
 let lemma_equal_instances_implies_equal_types ()
   :Lemma (forall (a:Type) (b:Type) (s1:seq a) (s2:seq b). s1 === s2 ==> a == b)
