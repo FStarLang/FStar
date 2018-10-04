@@ -1094,7 +1094,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                begin
                  (* These are the discrepancies in qualifiers that we allow *)
                  let special q1 q2 = match q1, q2 with
+                 | Some (Meta _), Some (Meta _) -> true (* don't compare the metaprograms *)
                  | None, Some Equality -> true
+                 | Some (Implicit _), Some (Meta _) -> true
                  | _ -> false
                  in
                  if not (special imp imp') && U.eq_aqual imp imp' <> U.Equal
