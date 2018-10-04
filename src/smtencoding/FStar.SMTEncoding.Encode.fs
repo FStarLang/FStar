@@ -475,7 +475,7 @@ let declare_top_level_let env x t t_norm =
   (* Need to introduce a new name decl *)
   | None ->
       let t_norm =
-        let bs, c = U.arrow_formals_comp_aux false t_norm in
+        let bs, c = U.arrow_formals_comp_aux false false t_norm in
         if List.length bs = 0 then t_norm else U.arrow bs c
       in
       let decls, env = encode_free_var false env x t t_norm [] in
@@ -549,10 +549,15 @@ let encode_top_level_let :
         let binders, body, lopt = U.abs_formals e in
         match binders with
         | _::_ -> begin
-            let t_norm = U.unascribe <| SS.compress t_norm in
-            match t_norm.n with
+            let t_norm' = U.unascribe <| SS.compress t_norm in
+            match t_norm'.n with
             | Tm_arrow _ ->
-              let formals, c = U.arrow_formals_comp_aux false t_norm in
+              let formals, c = U.arrow_formals_comp_aux false false t_norm in
+              if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+              then BU.print3 "Destruct_bound_function_lid:\n\tt_norm=%s\n\tformals=%s\n\tc=%s\n"
+                                (Print.term_to_string t_norm)
+                                (Print.binders_to_string ", " formals)
+                                (Print.comp_to_string c);
               let nformals = List.length formals in
               let nbinders = List.length binders in
               let tres = get_result_type c in
@@ -587,8 +592,8 @@ let encode_top_level_let :
         | _ -> begin
             let rec aux' (t_norm:S.term) =
               match (SS.compress t_norm).n with
-              | Tm_arrow(formals, c) ->
-                let formals, c = SS.open_comp formals c in
+              | Tm_arrow _ ->
+                let formals, c = U.arrow_formals_comp_aux false false t_norm in
                 let tres = get_result_type c in
                 let binders, body = eta_expand [] formals e tres in
                 (binders, body, formals, tres), false
@@ -677,9 +682,11 @@ let encode_top_level_let :
                 (* Open binders *)
                 let (binders, body, _, t_body), curry = destruct_bound_function flid t_norm e in
                 if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-                then BU.print2 "Encoding let : binders=[%s], body=%s\n"
+                then BU.print4 "Encoding let (def=%s) : binders=[%s], body=%s @ type t_norm=%s\n"
+                                (Print.tag_of_term (SS.compress e))
                                 (Print.binders_to_string ", " binders)
-                                (Print.term_to_string body);
+                                (Print.term_to_string body)
+                                (Print.term_to_string t_norm);
                 (* Encode binders *)
                 let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
 

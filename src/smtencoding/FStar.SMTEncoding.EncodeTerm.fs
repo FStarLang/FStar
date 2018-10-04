@@ -888,7 +888,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             | None -> encode_partial_app None
             | Some head_type ->
                 let head_type = U.unrefine <| N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv head_type in
-                let formals, c = U.arrow_formals_comp_aux false head_type in
+                let formals, c = U.arrow_formals_comp_aux false false head_type in
                 begin
                 match head.n with
                 | Tm_uinst({n=Tm_fvar fv}, _)
