@@ -199,7 +199,7 @@ let ubuffer_of_buffer' (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel
        b_is_mm = HS.is_mm (Buffer?.content b);
     })
 
-let ubuffer_preserved' 
+let ubuffer_preserved'
   (#r: HS.rid)
   (#a: nat)
   (b: ubuffer r a)
@@ -320,7 +320,7 @@ let ubuffer_includes0 (#r1 #r2:HS.rid) (#a1 #a2:nat) (larger:ubuffer r1 a1) (sma
 val ubuffer_includes (#r: HS.rid) (#a: nat) (larger smaller: ubuffer r a) : GTot Type0
 
 let ubuffer_includes #r #a larger smaller = ubuffer_includes0 larger smaller
-  
+
 val ubuffer_includes_refl (#r: HS.rid) (#a: nat) (b: ubuffer r a) : Lemma
   (b `ubuffer_includes` b)
 
@@ -406,7 +406,7 @@ let modifies_0_preserves_regions (h1 h2: HS.mem) : GTot Type0 =
 let modifies_0_preserves_not_unused_in (h1 h2: HS.mem) : GTot Type0 =
   forall (r: HS.rid) (n: nat) . (
     HS.live_region h1 r /\ HS.live_region h2 r /\
-    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)  
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)
   ) ==> (
     n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)
   )
@@ -930,7 +930,7 @@ let pointer_distinct_sel_disjoint #a #_ #_ #_ #_ b1 b2 h =
   end
   else
     loc_disjoint_buffer b1 b2
-	 
+
 let is_null #_ #_ #_ b = Null? b
 
 let msub #a #rrel #rel sub_rel b i len =

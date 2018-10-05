@@ -74,9 +74,9 @@ val unused_in (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem) :
 ///
 ///   If an object is referred to outside of its lifetime, the
 ///   behavior is undefined.
-/// 
+///
 ///   -- ISO/IEC 9899:2011, Section 6.2.4 paragraph 2
-/// 
+///
 /// By contrast, it is not required for the ghost versions of those
 /// operators.
 
@@ -220,7 +220,7 @@ let get (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (p:mbuffer a rrel rel) (i:nat)
 
 /// Before defining sub-buffer related API, we need to define the notion of "compatibility"
 ///
-/// 
+///
 /// Sub-buffers can be taken at a different preorder than their parent buffers
 /// But we need to ensure that the changes to the sub-buffer are compatible with the preorder
 /// of the parent buffer, and vice versa.
@@ -1413,7 +1413,7 @@ let unused_in_not_unused_in_disjoint_2
 = loc_includes_trans (loc_unused_in h) l1 l1' ;
   loc_includes_trans (loc_not_unused_in h) l2 l2'  ;
   loc_unused_in_not_unused_in_disjoint h ;
-  loc_disjoint_includes (loc_unused_in h) (loc_not_unused_in h) l1' l2' 
+  loc_disjoint_includes (loc_unused_in h) (loc_not_unused_in h) l1' l2'
 
 
 (* Duplicate the modifies clause to cope with cases that must not be used with transitivity *)
@@ -1625,7 +1625,7 @@ val includes_frameOf_as_addr (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel
          (ensures (g_is_null larger == g_is_null smaller /\ frameOf larger == frameOf smaller /\ as_addr larger == as_addr smaller))
          [SMTPat (larger `includes` smaller)]
 
-/// 
+///
 /// Useful shorthands for pointers, or maybe-null pointers
 
 inline_for_extraction
@@ -1736,7 +1736,7 @@ let g_upd (#a:Type0) (#rrel #rel:srel a)
           (h:HS.mem{live h b /\ rel (as_seq h b) (Seq.upd (as_seq h b) i v)})
   : GTot HS.mem
   = g_upd_seq b (Seq.upd (as_seq h b) i v) h
-            
+
 /// ``upd b i v`` writes ``v`` to the memory, at offset ``i`` of
 /// buffer ``b``. KreMLin compiles it as ``b[i] = v``.
 
@@ -1755,7 +1755,7 @@ let upd
   (b:mbuffer a rrel rel)
   (i:U32.t)
   (v:a)
-  : HST.Stack unit (requires (fun h -> live h b /\ U32.v i < length b /\ 
+  : HST.Stack unit (requires (fun h -> live h b /\ U32.v i < length b /\
                                     rel (as_seq h b) (Seq.upd (as_seq h b) (U32.v i) v)))
                    (ensures (fun h _ h' -> (not (g_is_null b)) /\
                                         modifies (loc_buffer b) h h' /\
@@ -1827,7 +1827,7 @@ val freeable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0
 val free (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
   :HST.ST unit (requires (fun h0 -> live h0 b /\ freeable b))
                (ensures  (fun h0 _ h1 -> (not (g_is_null b)) /\
-                                      Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\ 
+                                      Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\
                                       (HS.get_tip h1) == (HS.get_tip h0) /\
                                       modifies (loc_addr_of_buffer b) h0 h1 /\
                                       HS.live_region h1 (frameOf b)))
@@ -1867,7 +1867,7 @@ let freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel
  *
  *   So, if you change any of the pre- or postcondition, you should change the pre and post spec functions
  *   (such as alloc_post_mem_common etc.), rather than the specs directly
- 
+
  *   Perhaps we can rely on F* type inference and not write specs explicitly in those wrappers?
  *   Will try that
  *
@@ -1889,7 +1889,7 @@ let alloc_post_mem_common (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (h0 h1:HS.mem) (s:Seq.seq a)
   = b `unused_in` h0 /\
     live h1 b /\
-    Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\ 
+    Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\
     (HS.get_tip h1) == (HS.get_tip h0) /\
     modifies loc_none h0 h1 /\
     as_seq h1 b == s
