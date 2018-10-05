@@ -1848,6 +1848,8 @@ let freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel
          [SMTPat (freeable b1); SMTPat (disjoint b1 b2)]
   = freeable_disjoint b1 b2
 
+(***** Begin allocation functions *****)
+
 
 /// Allocation. This is the common postcondition of all allocation
 /// operators, which tells that the resulting buffer is fresh, and
@@ -1870,6 +1872,13 @@ let freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel
  *   Will try that
  *
  *   For memory dependent post, alloc_post_mem_common is the one used by everyone
+ *
+ *   For heap allocations, the library also provides partial functions that could return null
+ *     Clients need to explicitly check for non-nullness when using these functions
+ *     Partial function specs use alloc_partial_post_mem_common
+ *
+ *   NOTE: a useful test for the implementation of partial functions is that
+ *         their spec should be valid even when their implementation just returns null
  *)
 
 unfold let lmbuffer (a:Type0) (rrel rel:srel a) (len:nat)
@@ -1885,7 +1894,18 @@ let alloc_post_mem_common (#a:Type0) (#rrel #rel:srel a)
     modifies loc_none h0 h1 /\
     as_seq h1 b == s
 
+(* Return type and post for partial allocation functions *)
+unfold let lmbuffer_or_null (a:Type0) (rrel rel:srel a) (len:nat) (r:HS.rid)
+  = b:mbuffer a rrel rel{(not (g_is_null b)) ==> (length b == len /\ frameOf b == r)}
+
+unfold let alloc_partial_post_mem_common (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (h0 h1:HS.mem) (s:Seq.seq a)
+  = (g_is_null b /\ h0 == h1) \/
+    ((not (g_is_null b)) /\ alloc_post_mem_common b h0 h1 s)
+
+
 unfold let malloc_pre (r:HS.rid) (len:U32.t) = HST.is_eternal_region r /\ U32.v len > 0
+
 
 /// ``gcmalloc r init len`` allocates a memory-managed buffer of some
 /// positive length ``len`` in an eternal region ``r``. Every cell of this
@@ -1900,6 +1920,17 @@ val mgcmalloc (#a:Type0) (#rrel:srel a)
   :HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ recallable b})
           (requires (fun _       -> malloc_pre r len))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
+
+(*
+ * See the Allocation comment above when changing the spec
+ *)
+inline_for_extraction
+let mgcmalloc_partial (#a:Type0) (#rrel:srel a)
+  (r:HS.rid) (init:a) (len:U32.t)
+  :HST.ST (b:lmbuffer_or_null a rrel rrel (U32.v len) r{recallable b})
+          (requires (fun _       -> malloc_pre r len))
+          (ensures  (fun h0 b h1 -> alloc_partial_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
+  = mgcmalloc r init len
 
 
 /// ``malloc r init len`` allocates a hand-managed buffer of some
@@ -1917,6 +1948,18 @@ val mmalloc (#a:Type0) (#rrel:srel a)
   :HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ freeable b})
           (requires (fun _       -> malloc_pre r len))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
+
+(*
+ * See the Allocation comment above when changing the spec
+ *)
+inline_for_extraction
+let mmalloc_partial (#a:Type0) (#rrel:srel a)
+  (r:HS.rid) (init:a) (len:U32.t)
+  :HST.ST (b:lmbuffer_or_null a rrel rrel (U32.v len) r{(not (g_is_null b)) ==> freeable b})
+          (requires (fun _       -> malloc_pre r len))
+          (ensures  (fun h0 b h1 -> alloc_partial_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
+  = mmalloc r init len
+
 
 /// ``alloca init len`` allocates a buffer of some positive length ``len``
 /// in the current stack frame. Every cell of this buffer will have
@@ -1966,6 +2009,20 @@ val mgcmalloc_of_list (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a)
   :HST.ST (b:lmbuffer a rrel rrel (normalize_term (List.Tot.length init)){frameOf b == r /\ recallable b})
           (requires (fun _       -> gcmalloc_of_list_pre r init))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init)))
+
+(*
+ * See the Allocation comment above when changing the spec
+ *)
+inline_for_extraction
+let mgcmalloc_of_list_partial (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a)
+  :HST.ST (b:lmbuffer_or_null a rrel rrel (normalize_term (List.Tot.length init)) r{recallable b})
+          (requires (fun _       -> gcmalloc_of_list_pre r init))
+          (ensures  (fun h0 b h1 -> alloc_partial_post_mem_common b h0 h1 (Seq.seq_of_list init)))
+
+  = mgcmalloc_of_list r init
+
+
+(***** End allocation functions *****)
 
 
 /// Derived operations

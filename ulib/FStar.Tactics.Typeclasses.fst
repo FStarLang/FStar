@@ -48,17 +48,6 @@ unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev
 
 (**** Generating methods from a class ****)
 
-let rec drop (n:nat) l =
-  if n = 0 then l
-  else match l with
-       | [] -> []
-       | x::xs -> drop (n-1) xs
-
-let remove s1 s2 =
-  (* FIXME, should check that s1 is a prefix of s2 *)
-  String.substring s2 (String.strlen s1) (String.strlen s2 - String.strlen s1)
-let _ = assert_norm (remove "a" "abc" == "bc")
-
 (* In TAC, not Tot *)
 let rec mk_abs (bs : list binder) (body : term) : Tac term (decreases bs) =
     match bs with
