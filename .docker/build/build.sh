@@ -25,7 +25,7 @@ function fetch_vale() {
     echo Switching to vale to fstar_ci
     git clean -fdx .
     git reset --hard origin/fstar_ci
-    nuget.exe restore tools/Vale/src/packages.config -PackagesDirectory tools/FsLexYacc
+    nuget restore tools/Vale/src/packages.config -PackagesDirectory tools/FsLexYacc
     cd ..
     export_home VALE "$(pwd)/vale"
 }
@@ -220,11 +220,9 @@ function build_fstar() {
                 if [[ "$OS" == "Windows_NT" ]]; then
                     ## This hack for determining the success of a vale run is needed
                     ## because somehow scons is not returning the error code properly
-                    { timeout $timeout ./run_scons.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output ; } || has_error="true"
+                    { timeout $timeout env VALE_SCONS_EXIT_CODE_OUTPUT_FILE=vale_exit_code ./run_scons.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output ; } || has_error="true"
 
-                    ## adds "min-test (Vale)" to the ORANGE_FILE
-                    ##      if this string vvvv is present in vale_output
-                    ! grep -qi 'scons: building terminated because of errors.' vale_output || has_error="true"
+                    { [[ -f vale_exit_code ]] && [[ $(cat vale_exit_code) -eq 0 ]] ; } || has_error="true"
                 else
                     timeout $timeout scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
                 fi
