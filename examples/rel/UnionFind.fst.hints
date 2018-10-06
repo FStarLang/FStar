@@ -530,7 +530,7 @@
         "typing_UnionFind.Functions.merge_opt", "unit_typing"
       ],
       0,
-      "a19267ceefac0ab91ad44cdcd4700f88"
+      "8cd4249b49ef162f7f8b82cfd1c91b3c"
     ],
     [
       "UnionFind.lemma_merge_height_independence",
