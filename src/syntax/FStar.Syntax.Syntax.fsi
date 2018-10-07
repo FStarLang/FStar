@@ -158,7 +158,7 @@ and comp_typ = {
   effect_name:lident;
   result_typ:typ;
   effect_args:args;
-  flags:list<cflags>
+  flags:list<cflag>
 }
 and comp' =
   | Total  of typ * option<universe>
@@ -172,7 +172,7 @@ and arg = term * aqual                                           (* marks an exp
 and args = list<arg>
 and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
-and cflags =
+and cflag =
   | TOTAL
   | MLEFFECT
   | RETURN
@@ -238,7 +238,7 @@ and free_vars = {
 and residual_comp = {
     residual_effect:lident;                (* first component is the effect name *)
     residual_typ   :option<typ>;           (* second component: result type *)
-    residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
+    residual_flags :list<cflag>            (* third component: contains (an approximation of) the cflags *)
 }
 
 and attribute = term
@@ -280,7 +280,7 @@ and aqual = option<arg_qualifier>
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
-    cflags: list<cflags>;
+    cflags: list<cflag>;
     comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
@@ -355,7 +355,7 @@ type action = {
     action_typ: typ
 }
 type eff_decl = {
-    cattributes :list<cflags>;     // default cflags
+    cattributes :list<cflag>;      // default cflags
     mname       :lident;           //STATE_h
     univs       :univ_names;       //initially empty; but after type-checking and generalization, usually the universe of the result type etc.
     binders     :binders;          //heap:Type
@@ -433,7 +433,7 @@ type sigelt' =
                        * univ_names
                        * binders
                        * comp
-                       * list<cflags>
+                       * list<cflag>
   | Sig_pragma         of pragma
   | Sig_splice         of list<lident> * term
 
@@ -484,7 +484,7 @@ val mk_Comp:        comp_typ -> comp
 val mk_lcomp:
     eff_name: lident ->
     res_typ: typ ->
-    cflags: list<cflags> ->
+    cflags: list<cflag> ->
     comp_thunk: (unit -> comp) -> lcomp
 val lcomp_comp: lcomp -> comp
 val bv_to_tm:       bv -> term

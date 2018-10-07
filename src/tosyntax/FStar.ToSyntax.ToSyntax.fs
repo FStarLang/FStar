@@ -867,7 +867,7 @@ and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
     let tm = setpos tm in
     tm
 
-and desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflags> =
+and desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflag> =
     let desugar_attribute t =
         match (unparen t).tm with
             | Var ({str="cps"}) -> CPS

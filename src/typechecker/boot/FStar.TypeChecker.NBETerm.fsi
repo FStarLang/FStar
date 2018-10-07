@@ -69,16 +69,16 @@ and comp_typ = {
   effect_name:lident;
   result_typ:t;
   effect_args:args;
-  flags:list<cflags>
+  flags:list<cflag>
 }
 
 and residual_comp = {
   residual_effect:lident;
   residual_typ   :option<t>;
-  residual_flags :list<cflags>
+  residual_flags :list<cflag>
 }
 
-and cflags =
+and cflag =
   | TOTAL
   | MLEFFECT
   | RETURN
