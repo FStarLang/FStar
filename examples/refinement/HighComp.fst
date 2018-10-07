@@ -46,9 +46,6 @@ type hwp a = HIGH?.wp a
 type hpre = state -> Type0
 type hpost a = state -> a -> state -> Type0
 
-effect High (a:Type) (pre:hpre) (post:hpost a) = HIGH a (fun s0 p -> pre s0 /\ (forall (res:a) (s1:state). post s0 res s1 ==> p (res, s1)))
-
-
 
 let monotonic #a (wp:hwp a) =
   forall p1 p2 s. {:pattern wp s p1; wp s p2}
@@ -58,12 +55,32 @@ let monotonic #a (wp:hwp a) =
 
 type hwp_mon 'a = (wp:hwp 'a{monotonic wp})
 
+let null_wp 'a : hwp_mon 'a  = fun s0 p -> forall s. p s
+
 // [comp] type with wp
 type comp_wp 'a (wp : hwp_mon 'a) = s0:state -> PURE ('a * state) (wp s0)
 
-let null_wp 'a : hwp_mon 'a  = fun s0 p -> forall res s1. p (res, s1)
+type comp_p 'a (pre : hpre) (post : hpost 'a) = comp_wp 'a (fun s0 p -> pre s0 /\ (forall r s1. post s0 r s1 ==> p (r, s1)))
+
+(** Effect deffinitions *)
 
 effect H (a: Type) = HIGH a (null_wp a)
+
+effect High (a:Type) (pre:hpre) (post:hpost a) = 
+      HIGH a (fun s0 p -> pre s0 /\ (forall (r:a) (s1:state). post s0 r s1 ==> p (r, s1)))
+
+
+effect HighMon (a:Type) (wp:hwp_mon a) = HIGH a wp
+
+effect Hi (a:Type)
+          (pre: state -> Type)
+          (post: state -> a -> state -> Type) =
+        HighMon a (fun s0 k -> pre s0 /\ (forall x s1. post s0 x s1 ==> k (x, s1)))
+
+effect HTot (a:Type) = HighComp.HIGH a (null_wp a)
+
+
+(** WP combinators *)
 
 unfold
 let return_wp (#a:Type) (x : a) : hwp_mon a = HIGH?.return_wp a x
@@ -163,6 +180,22 @@ let rec for_elab_unfold (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= h
                       bind_elab #unit #unit #(wp lo) m f)));
                ()
           
+let rec for_elab' (inv : state -> int -> Type0)
+               (f : (i:int) -> comp_p unit (requires (fun h0 -> inv h0 i))
+                                        (ensures (fun h0 _ h1 -> inv h1 (i + 1)))) 
+               (lo : int) (hi : int{lo <= hi}) :
+      Tot (comp_p unit (requires (fun h0 -> inv h0 lo))
+                       (ensures (fun h0 _ h1 -> inv h1 hi))) (decreases (hi - lo)) = 
+      if lo = hi then (return_elab ())
+      else 
+        begin 
+          bind_elab (f lo) (fun _ -> 
+          assert (lo < hi);
+          assert (hi - (lo + 1) < hi - lo);
+          for_elab' inv f (lo + 1) hi)
+        end
+
+
 
 let hread_elab (i:nat) : comp_wp mint (read_wp i) =
   (fun s -> if i = 0 then (fst s, s) else (snd s, s))
