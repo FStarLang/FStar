@@ -89,14 +89,18 @@ let state_as_lstate_put_put h ls bs1 bs2 =
 (** ** Low computations and their WPs **)
 
 let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp) =
-     ls:lstate ->
-     Stack a
-       (requires (fun h -> well_formed h ls /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
-       (ensures  (fun h r h' ->
-                    well_formed h' ls /\
-                    (let s0 = lstate_as_state h ls in
-                     let (x, s1) = c s0 in
-                     h' == state_as_lstate h ls s1 /\ x == r )))
+  ls:lstate ->
+  Stack a
+     (requires (fun h -> well_formed h ls /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
+     (ensures  (fun h r h' ->
+                  well_formed h' ls /\
+                  (let s0 = lstate_as_state h ls in
+                   let (x, s1) = c s0 in
+                   h' == state_as_lstate h ls s1 /\ x == r )))
+
+let lcomp (a : Type) pre post (c : comp_p a pre post) = 
+  lcomp_wp a 
+    (fun s0 p -> pre s0 /\ (forall r s1. post s0 r s1 ==> p (r, s1))) c
 
 //Rather than get into trouble with applying `c` directly in a context
 //where we have to think about the VC of the continuation,
@@ -157,6 +161,13 @@ let morph (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c =
       let p = g_upd_preserves_live h' b2 b1 s2' in // Shows: live h1 b
       assume (h'' == g_upd b2 0 s2' (g_upd b1 0 s1' h));
       x
+
+
+let as_wp (#a : Type) (pre : hpre) (post : hpost a) : hwp a =
+    (fun s0 p -> pre s0 /\ (forall r s1. post s0 r s1 ==> p (r, s1)))
+
+let morph_p  (#a : Type) (pre : hpre) (post : hpost a) (c : comp_p a pre post) : lcomp a pre post c =
+  morph (as_wp pre post) c
 
 
 (** ** DSL for low computations **)
@@ -306,6 +317,23 @@ let rec lfor (#wp : int -> hwp_mon unit) (#f : (i:int) -> comp_wp unit (wp i)) (
                  bind_elab m cf));
        lbind m c)
 
+
+let rec lfor' (inv : state -> int -> Type0) (fh : (i:int) -> comp_p unit  (fun h0 -> inv h0 i) (fun h0 _ h1 -> inv h1 (i + 1)))
+              (f : (i:int) -> lcomp unit (fun h0 -> inv h0 i)
+                                      (fun h0 _ h1 -> inv h1 (i + 1)) (fh i)) 
+              (lo : int) (hi : int{lo <= hi}) :
+          Tot (lcomp unit (requires (fun h0 -> inv h0 lo))
+                          (ensures (fun h0 _ h1 -> inv h1 hi))
+                          (for_elab' inv fh lo hi)) (decreases (hi - lo)) = 
+          if lo = hi then (lreturn ())
+          else 
+          begin 
+            let k () = lfor' inv fh f (lo + 1) hi in 
+            lbind (f lo) (fun _ -> 
+            k ())
+          end
+
+(** The above should be translated to a C for loop. Propbably we should implement it with a Low* for combinator *)
 
 // Versions of the DSL with reif in spec
 
@@ -484,6 +512,15 @@ let morph_for (wp1 : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (
                       (lfor lo hi (fun i -> morph (wp1 i) (f i)))) in
 
   ()
+
+
+
+let morph_for' (inv : state -> int -> Type0) (f : (i:int) -> comp_p unit  (fun h0 -> inv h0 i) (fun h0 _ h1 -> inv h1 (i + 1)))
+               (lo : int) (hi : int{lo <= hi})
+               (wp : hwp_mon unit) (c : comp_wp unit wp) :
+      Lemma (requires (c === for_elab' inv f lo hi))
+            (ensures (morph wp c === lfor' inv f (fun i -> morph _ (f i)) lo hi)) = admit ()
+
 
 let morph_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
     (wp2 : hwp_mon a) (c2 : comp_wp a wp2)
