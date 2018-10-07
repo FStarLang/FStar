@@ -297,14 +297,14 @@ and comp_typ =
     (term' syntax,arg_qualifier FStar_Pervasives_Native.option)
       FStar_Pervasives_Native.tuple2 Prims.list
     ;
-  flags: cflags Prims.list }
+  flags: cflag Prims.list }
 and comp' =
   | Total of (term' syntax,universe FStar_Pervasives_Native.option)
   FStar_Pervasives_Native.tuple2 
   | GTotal of (term' syntax,universe FStar_Pervasives_Native.option)
   FStar_Pervasives_Native.tuple2 
   | Comp of comp_typ 
-and cflags =
+and cflag =
   | TOTAL 
   | MLEFFECT 
   | RETURN 
@@ -367,7 +367,7 @@ and residual_comp =
   {
   residual_effect: FStar_Ident.lident ;
   residual_typ: term' syntax FStar_Pervasives_Native.option ;
-  residual_flags: cflags Prims.list }
+  residual_flags: cflag Prims.list }
 and lazyinfo =
   {
   blob: FStar_Dyn.dyn ;
@@ -720,7 +720,7 @@ let (__proj__Mkcomp_typ__item__effect_args :
     | { comp_univs; effect_name; result_typ; effect_args; flags;_} ->
         effect_args
   
-let (__proj__Mkcomp_typ__item__flags : comp_typ -> cflags Prims.list) =
+let (__proj__Mkcomp_typ__item__flags : comp_typ -> cflag Prims.list) =
   fun projectee  ->
     match projectee with
     | { comp_univs; effect_name; result_typ; effect_args; flags;_} -> flags
@@ -749,47 +749,47 @@ let (uu___is_Comp : comp' -> Prims.bool) =
   
 let (__proj__Comp__item___0 : comp' -> comp_typ) =
   fun projectee  -> match projectee with | Comp _0 -> _0 
-let (uu___is_TOTAL : cflags -> Prims.bool) =
+let (uu___is_TOTAL : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | TOTAL  -> true | uu____3263 -> false
   
-let (uu___is_MLEFFECT : cflags -> Prims.bool) =
+let (uu___is_MLEFFECT : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | MLEFFECT  -> true | uu____3269 -> false
   
-let (uu___is_RETURN : cflags -> Prims.bool) =
+let (uu___is_RETURN : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | RETURN  -> true | uu____3275 -> false
   
-let (uu___is_PARTIAL_RETURN : cflags -> Prims.bool) =
+let (uu___is_PARTIAL_RETURN : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | PARTIAL_RETURN  -> true | uu____3281 -> false
   
-let (uu___is_SOMETRIVIAL : cflags -> Prims.bool) =
+let (uu___is_SOMETRIVIAL : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | SOMETRIVIAL  -> true | uu____3287 -> false
   
-let (uu___is_TRIVIAL_POSTCONDITION : cflags -> Prims.bool) =
+let (uu___is_TRIVIAL_POSTCONDITION : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | TRIVIAL_POSTCONDITION  -> true
     | uu____3293 -> false
   
-let (uu___is_SHOULD_NOT_INLINE : cflags -> Prims.bool) =
+let (uu___is_SHOULD_NOT_INLINE : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | SHOULD_NOT_INLINE  -> true | uu____3299 -> false
   
-let (uu___is_LEMMA : cflags -> Prims.bool) =
+let (uu___is_LEMMA : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | LEMMA  -> true | uu____3305 -> false
   
-let (uu___is_CPS : cflags -> Prims.bool) =
+let (uu___is_CPS : cflag -> Prims.bool) =
   fun projectee  -> match projectee with | CPS  -> true | uu____3311 -> false 
-let (uu___is_DECREASES : cflags -> Prims.bool) =
+let (uu___is_DECREASES : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | DECREASES _0 -> true | uu____3320 -> false
   
-let (__proj__DECREASES__item___0 : cflags -> term' syntax) =
+let (__proj__DECREASES__item___0 : cflag -> term' syntax) =
   fun projectee  -> match projectee with | DECREASES _0 -> _0 
 let (uu___is_Meta_pattern : metadata -> Prims.bool) =
   fun projectee  ->
@@ -976,7 +976,7 @@ let (__proj__Mkresidual_comp__item__residual_typ :
     | { residual_effect; residual_typ; residual_flags;_} -> residual_typ
   
 let (__proj__Mkresidual_comp__item__residual_flags :
-  residual_comp -> cflags Prims.list) =
+  residual_comp -> cflag Prims.list) =
   fun projectee  ->
     match projectee with
     | { residual_effect; residual_typ; residual_flags;_} -> residual_flags
@@ -1130,7 +1130,7 @@ type lcomp =
   {
   eff_name: FStar_Ident.lident ;
   res_typ: typ ;
-  cflags: cflags Prims.list ;
+  cflags: cflag Prims.list ;
   comp_thunk: (unit -> comp,comp) FStar_Util.either FStar_ST.ref }
 let (__proj__Mklcomp__item__eff_name : lcomp -> FStar_Ident.lident) =
   fun projectee  ->
@@ -1142,7 +1142,7 @@ let (__proj__Mklcomp__item__res_typ : lcomp -> typ) =
     match projectee with
     | { eff_name; res_typ; cflags; comp_thunk;_} -> res_typ
   
-let (__proj__Mklcomp__item__cflags : lcomp -> cflags Prims.list) =
+let (__proj__Mklcomp__item__cflags : lcomp -> cflag Prims.list) =
   fun projectee  ->
     match projectee with
     | { eff_name; res_typ; cflags; comp_thunk;_} -> cflags
@@ -1157,8 +1157,7 @@ let (lazy_chooser :
   (lazy_kind -> lazyinfo -> term) FStar_Pervasives_Native.option FStar_ST.ref)
   = FStar_Util.mk_ref FStar_Pervasives_Native.None 
 let (mk_lcomp :
-  FStar_Ident.lident -> typ -> cflags Prims.list -> (unit -> comp) -> lcomp)
-  =
+  FStar_Ident.lident -> typ -> cflag Prims.list -> (unit -> comp) -> lcomp) =
   fun eff_name  ->
     fun res_typ  ->
       fun cflags  ->
@@ -1412,7 +1411,7 @@ let (__proj__Mkaction__item__action_typ : action -> typ) =
   
 type eff_decl =
   {
-  cattributes: cflags Prims.list ;
+  cattributes: cflag Prims.list ;
   mname: FStar_Ident.lident ;
   univs: univ_names ;
   binders: binders ;
@@ -1432,7 +1431,7 @@ type eff_decl =
   bind_repr: tscheme ;
   actions: action Prims.list ;
   eff_attrs: attribute Prims.list }
-let (__proj__Mkeff_decl__item__cattributes : eff_decl -> cflags Prims.list) =
+let (__proj__Mkeff_decl__item__cattributes : eff_decl -> cflag Prims.list) =
   fun projectee  ->
     match projectee with
     | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
@@ -1630,7 +1629,7 @@ type sigelt' =
   | Sig_new_effect_for_free of eff_decl 
   | Sig_sub_effect of sub_eff 
   | Sig_effect_abbrev of
-  (FStar_Ident.lident,univ_names,binders,comp,cflags Prims.list)
+  (FStar_Ident.lident,univ_names,binders,comp,cflag Prims.list)
   FStar_Pervasives_Native.tuple5 
   | Sig_pragma of pragma 
   | Sig_splice of (FStar_Ident.lident Prims.list,term)
@@ -1727,7 +1726,7 @@ let (uu___is_Sig_effect_abbrev : sigelt' -> Prims.bool) =
   
 let (__proj__Sig_effect_abbrev__item___0 :
   sigelt' ->
-    (FStar_Ident.lident,univ_names,binders,comp,cflags Prims.list)
+    (FStar_Ident.lident,univ_names,binders,comp,cflag Prims.list)
       FStar_Pervasives_Native.tuple5)
   = fun projectee  -> match projectee with | Sig_effect_abbrev _0 -> _0 
 let (uu___is_Sig_pragma : sigelt' -> Prims.bool) =

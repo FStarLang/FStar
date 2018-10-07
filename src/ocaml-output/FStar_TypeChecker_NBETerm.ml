@@ -112,8 +112,8 @@ and comp_typ =
   result_typ: t ;
   effect_args:
     (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2 Prims.list ;
-  flags: cflags Prims.list }
-and cflags =
+  flags: cflag Prims.list }
+and cflag =
   | TOTAL 
   | MLEFFECT 
   | RETURN 
@@ -128,7 +128,7 @@ and residual_comp =
   {
   residual_effect: FStar_Ident.lident ;
   residual_typ: t FStar_Pervasives_Native.option ;
-  residual_flags: cflags Prims.list }
+  residual_flags: cflag Prims.list }
 let (uu___is_Var : atom -> Prims.bool) =
   fun projectee  ->
     match projectee with | Var _0 -> true | uu____493 -> false
@@ -326,53 +326,53 @@ let (__proj__Mkcomp_typ__item__effect_args :
     | { comp_univs; effect_name; result_typ; effect_args; flags = flags1;_}
         -> effect_args
   
-let (__proj__Mkcomp_typ__item__flags : comp_typ -> cflags Prims.list) =
+let (__proj__Mkcomp_typ__item__flags : comp_typ -> cflag Prims.list) =
   fun projectee  ->
     match projectee with
     | { comp_univs; effect_name; result_typ; effect_args; flags = flags1;_}
         -> flags1
   
-let (uu___is_TOTAL : cflags -> Prims.bool) =
+let (uu___is_TOTAL : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | TOTAL  -> true | uu____1584 -> false
   
-let (uu___is_MLEFFECT : cflags -> Prims.bool) =
+let (uu___is_MLEFFECT : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | MLEFFECT  -> true | uu____1590 -> false
   
-let (uu___is_RETURN : cflags -> Prims.bool) =
+let (uu___is_RETURN : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | RETURN  -> true | uu____1596 -> false
   
-let (uu___is_PARTIAL_RETURN : cflags -> Prims.bool) =
+let (uu___is_PARTIAL_RETURN : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | PARTIAL_RETURN  -> true | uu____1602 -> false
   
-let (uu___is_SOMETRIVIAL : cflags -> Prims.bool) =
+let (uu___is_SOMETRIVIAL : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | SOMETRIVIAL  -> true | uu____1608 -> false
   
-let (uu___is_TRIVIAL_POSTCONDITION : cflags -> Prims.bool) =
+let (uu___is_TRIVIAL_POSTCONDITION : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | TRIVIAL_POSTCONDITION  -> true
     | uu____1614 -> false
   
-let (uu___is_SHOULD_NOT_INLINE : cflags -> Prims.bool) =
+let (uu___is_SHOULD_NOT_INLINE : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | SHOULD_NOT_INLINE  -> true | uu____1620 -> false
   
-let (uu___is_LEMMA : cflags -> Prims.bool) =
+let (uu___is_LEMMA : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | LEMMA  -> true | uu____1626 -> false
   
-let (uu___is_CPS : cflags -> Prims.bool) =
+let (uu___is_CPS : cflag -> Prims.bool) =
   fun projectee  -> match projectee with | CPS  -> true | uu____1632 -> false 
-let (uu___is_DECREASES : cflags -> Prims.bool) =
+let (uu___is_DECREASES : cflag -> Prims.bool) =
   fun projectee  ->
     match projectee with | DECREASES _0 -> true | uu____1639 -> false
   
-let (__proj__DECREASES__item___0 : cflags -> t) =
+let (__proj__DECREASES__item___0 : cflag -> t) =
   fun projectee  -> match projectee with | DECREASES _0 -> _0 
 let (__proj__Mkresidual_comp__item__residual_effect :
   residual_comp -> FStar_Ident.lident) =
@@ -387,7 +387,7 @@ let (__proj__Mkresidual_comp__item__residual_typ :
     | { residual_effect; residual_typ; residual_flags;_} -> residual_typ
   
 let (__proj__Mkresidual_comp__item__residual_flags :
-  residual_comp -> cflags Prims.list) =
+  residual_comp -> cflag Prims.list) =
   fun projectee  ->
     match projectee with
     | { residual_effect; residual_typ; residual_flags;_} -> residual_flags

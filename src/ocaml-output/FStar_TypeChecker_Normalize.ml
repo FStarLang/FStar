@@ -1193,8 +1193,8 @@ and (close_comp :
                  FStar_Syntax_Syntax.mk_Comp uu____4784)
 
 and (filter_out_lcomp_cflags :
-  FStar_Syntax_Syntax.cflags Prims.list ->
-    FStar_Syntax_Syntax.cflags Prims.list)
+  FStar_Syntax_Syntax.cflag Prims.list ->
+    FStar_Syntax_Syntax.cflag Prims.list)
   =
   fun flags1  ->
     FStar_All.pipe_right flags1
@@ -8124,8 +8124,8 @@ let rec (elim_delayed_subst_term :
         mk1 uu____25274
 
 and (elim_delayed_subst_cflags :
-  FStar_Syntax_Syntax.cflags Prims.list ->
-    FStar_Syntax_Syntax.cflags Prims.list)
+  FStar_Syntax_Syntax.cflag Prims.list ->
+    FStar_Syntax_Syntax.cflag Prims.list)
   =
   fun flags1  ->
     FStar_List.map

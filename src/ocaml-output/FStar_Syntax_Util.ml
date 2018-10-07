@@ -370,7 +370,7 @@ let (comp_effect_name :
   
 let (comp_flags :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-    FStar_Syntax_Syntax.cflags Prims.list)
+    FStar_Syntax_Syntax.cflag Prims.list)
   =
   fun c  ->
     match c.FStar_Syntax_Syntax.n with
@@ -409,7 +409,7 @@ let (comp_to_comp_typ_nouniv :
   
 let (comp_set_flags :
   FStar_Syntax_Syntax.comp ->
-    FStar_Syntax_Syntax.cflags Prims.list ->
+    FStar_Syntax_Syntax.cflag Prims.list ->
       FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
   =
   fun c  ->
@@ -438,7 +438,7 @@ let (comp_set_flags :
   
 let (lcomp_set_flags :
   FStar_Syntax_Syntax.lcomp ->
-    FStar_Syntax_Syntax.cflags Prims.list -> FStar_Syntax_Syntax.lcomp)
+    FStar_Syntax_Syntax.cflag Prims.list -> FStar_Syntax_Syntax.lcomp)
   =
   fun lc  ->
     fun fs  ->
@@ -2661,7 +2661,7 @@ let (mk_residual_comp :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
       FStar_Pervasives_Native.option ->
-      FStar_Syntax_Syntax.cflags Prims.list ->
+      FStar_Syntax_Syntax.cflag Prims.list ->
         FStar_Syntax_Syntax.residual_comp)
   =
   fun l  ->
@@ -4079,7 +4079,7 @@ and (comp_eq_dbg :
 
 and (eq_flags_dbg :
   Prims.bool ->
-    FStar_Syntax_Syntax.cflags -> FStar_Syntax_Syntax.cflags -> Prims.bool)
+    FStar_Syntax_Syntax.cflag -> FStar_Syntax_Syntax.cflag -> Prims.bool)
   = fun dbg  -> fun f1  -> fun f2  -> true
 
 and (branch_eq_dbg :

@@ -444,7 +444,7 @@ let (mk_comp_l :
     FStar_Syntax_Syntax.universe ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
         FStar_Syntax_Syntax.term ->
-          FStar_Syntax_Syntax.cflags Prims.list -> FStar_Syntax_Syntax.comp)
+          FStar_Syntax_Syntax.cflag Prims.list -> FStar_Syntax_Syntax.comp)
   =
   fun mname  ->
     fun u_result  ->
@@ -469,13 +469,13 @@ let (mk_comp :
     FStar_Syntax_Syntax.universe ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
         FStar_Syntax_Syntax.term ->
-          FStar_Syntax_Syntax.cflags Prims.list -> FStar_Syntax_Syntax.comp)
+          FStar_Syntax_Syntax.cflag Prims.list -> FStar_Syntax_Syntax.comp)
   = fun md  -> mk_comp_l md.FStar_Syntax_Syntax.mname 
 let (lax_mk_tot_or_comp_l :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.universe ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        FStar_Syntax_Syntax.cflags Prims.list -> FStar_Syntax_Syntax.comp)
+        FStar_Syntax_Syntax.cflag Prims.list -> FStar_Syntax_Syntax.comp)
   =
   fun mname  ->
     fun u_result  ->
@@ -801,8 +801,8 @@ let (return_value :
           c
   
 let (weaken_flags :
-  FStar_Syntax_Syntax.cflags Prims.list ->
-    FStar_Syntax_Syntax.cflags Prims.list)
+  FStar_Syntax_Syntax.cflag Prims.list ->
+    FStar_Syntax_Syntax.cflag Prims.list)
   =
   fun flags1  ->
     let uu____1934 =
@@ -898,7 +898,7 @@ let (strengthen_comp :
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
       FStar_Syntax_Syntax.comp ->
         FStar_Syntax_Syntax.formula ->
-          FStar_Syntax_Syntax.cflags Prims.list -> FStar_Syntax_Syntax.comp)
+          FStar_Syntax_Syntax.cflag Prims.list -> FStar_Syntax_Syntax.comp)
   =
   fun env  ->
     fun reason  ->
@@ -1773,7 +1773,7 @@ let (fvar_const :
 let (bind_cases :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
-      (FStar_Syntax_Syntax.typ,FStar_Ident.lident,FStar_Syntax_Syntax.cflags
+      (FStar_Syntax_Syntax.typ,FStar_Ident.lident,FStar_Syntax_Syntax.cflag
                                                     Prims.list,Prims.bool ->
                                                                  FStar_Syntax_Syntax.lcomp)
         FStar_Pervasives_Native.tuple4 Prims.list ->

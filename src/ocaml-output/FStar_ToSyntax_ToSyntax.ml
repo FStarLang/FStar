@@ -2271,7 +2271,7 @@ and (desugar_name :
 
 and (desugar_attributes :
   env_t ->
-    FStar_Parser_AST.term Prims.list -> FStar_Syntax_Syntax.cflags Prims.list)
+    FStar_Parser_AST.term Prims.list -> FStar_Syntax_Syntax.cflag Prims.list)
   =
   fun env  ->
     fun cattributes  ->

@@ -1643,7 +1643,7 @@ and (readback_residual_comp :
 and (translate_flag :
   FStar_TypeChecker_Cfg.cfg ->
     FStar_TypeChecker_NBETerm.t Prims.list ->
-      FStar_Syntax_Syntax.cflags -> FStar_TypeChecker_NBETerm.cflags)
+      FStar_Syntax_Syntax.cflag -> FStar_TypeChecker_NBETerm.cflag)
   =
   fun cfg  ->
     fun bs  ->
@@ -1668,7 +1668,7 @@ and (translate_flag :
 
 and (readback_flag :
   FStar_TypeChecker_Cfg.cfg ->
-    FStar_TypeChecker_NBETerm.cflags -> FStar_Syntax_Syntax.cflags)
+    FStar_TypeChecker_NBETerm.cflag -> FStar_Syntax_Syntax.cflag)
   =
   fun cfg  ->
     fun f  ->

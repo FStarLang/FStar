@@ -433,8 +433,8 @@ let rec (subst' :
 
 and (subst_flags' :
   FStar_Syntax_Syntax.subst_ts ->
-    FStar_Syntax_Syntax.cflags Prims.list ->
-      FStar_Syntax_Syntax.cflags Prims.list)
+    FStar_Syntax_Syntax.cflag Prims.list ->
+      FStar_Syntax_Syntax.cflag Prims.list)
   =
   fun s  ->
     fun flags  ->
