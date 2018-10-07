@@ -25,8 +25,8 @@ let rec fib (n : int) : Tot mint (decreases n) =
 let inv (s : state) (i:int) = i >= 1 /\ (fst s = fib (i - 1) /\ snd s = fib i)
 
 
-let shift i : High unit (fun s0 -> inv s0 i)
-                        (fun s0 () s1 -> inv s1 (i + 1)) = 
+let shift i : Hi unit (fun s0 -> inv s0 i)
+                      (fun s0 () s1 -> inv s1 (i + 1)) = 
   let x0 = get_action 0 in
   let x1 = get_action 1 in
   let _  = put_action 0 x1 in 
@@ -34,7 +34,7 @@ let shift i : High unit (fun s0 -> inv s0 i)
   ()
 
 
-let fib_fast n : High mint (fun s0 -> True) (fun s0 r s1 -> r = fib n) = 
+let fib_fast n : Hi mint (fun s0 -> True) (fun s0 r s1 -> r = fib n) = 
     if (n <= 0) then 0ul
     else 
       begin 
@@ -43,5 +43,12 @@ let fib_fast n : High mint (fun s0 -> True) (fun s0 r s1 -> r = fib n) =
         for' inv shift 1 n;
         get_action 1
       end
+
+
+(* from example1.fst *)
+let morph #a (#wp:hwp_mon a) ($c:HIGH?.repr a wp) : lcomp_wp a wp c = morph #a wp c
+
+let fib_low n = morph (reify (fib_fast n))
+
 
                       
