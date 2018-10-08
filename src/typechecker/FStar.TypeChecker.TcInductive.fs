@@ -1190,6 +1190,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           in
           let quals =
               let iquals = iquals |> List.filter (function
+                  | S.Inline_for_extraction
                   | S.NoExtract
                   | S.Abstract
                   | S.Private -> true
