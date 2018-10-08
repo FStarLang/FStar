@@ -1041,7 +1041,7 @@ let tc_inductive env ses quals lids =
   let env = Env.push env "tc_inductive" in
   let pop () = ignore (Env.pop env "tc_inductive") in  //OK to ignore: caller will reuse original env
   try tc_inductive' env ses quals lids |> (fun r -> pop (); r)
-  with e -> pop (); raise e 
+  with e -> pop (); raise e
 
 //when we process a reset-options pragma, we need to restart z3 etc.
 let z3_reset_options (en:env) :env =
@@ -1290,6 +1290,23 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let tps, env, us = tc_tparams env tps in
     let c, u, g = tc_comp env c in
     Rel.force_trivial_guard env g;
+    let _ =
+        let expected_result_typ =
+            match tps with
+            | (x, _)::_ -> S.bv_to_name x
+            | _ -> raise_error (Errors.Fatal_NotEnoughArgumentsForEffect,
+                                "Effect abbreviations must bind at least the result type")
+                                r
+        in
+        let def_result_typ = FStar.Syntax.Util.comp_result c in
+        if not (Rel.teq_nosmt_force env expected_result_typ def_result_typ)
+        then raise_error (Errors.Fatal_EffectAbbreviationResultTypeMismatch,
+                          BU.format2 "Result type of effect abbreviation `%s` \
+                                      does not match the result type of its definition `%s`"
+                                      (Print.term_to_string expected_result_typ)
+                                      (Print.term_to_string def_result_typ))
+                         r
+    in
     let tps = SS.close_binders tps in
     let c = SS.close_comp tps c in
     let uvs, t = TcUtil.generalize_universes env0 (mk (Tm_arrow(tps, c)) None r) in
@@ -1298,11 +1315,14 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       | _,  Tm_arrow(tps, c) -> tps, c
       | _ -> failwith "Impossible (t is an arrow)" in
     if List.length uvs <> 1
-    then (let _, t = Subst.open_univ_vars uvs t in
-          raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
-                                  (Print.lid_to_string lid)
-                                  (List.length uvs |> BU.string_of_int)
-                                  (Print.term_to_string t))) r);
+    then begin
+        let _, t = Subst.open_univ_vars uvs t in
+        raise_error (Errors.Fatal_TooManyUniverse,
+                     BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
+                                      (Print.lid_to_string lid)
+                                      (List.length uvs |> BU.string_of_int)
+                                      (Print.term_to_string t)) r
+    end;
     let se = { se with sigel = Sig_effect_abbrev(lid, uvs, tps, c, flags) } in
     [se], [], env0
 
