@@ -1210,22 +1210,25 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let mk_letrec_env envbody bs c =
                     let letrecs = guard_letrecs envbody bs c in
                     let envbody = {envbody with letrecs=[]} in
-                    letrecs |> List.fold_left (fun (env, letrec_binders) (l,t,u_names) ->
-//                        let t = N.normalize [Env.EraseUniverses; Env.Beta] env t in
-//                        printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
-                        let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
-                        let env = Env.push_let_binding env l (u_names, t) in
-                        let lb = match l with
-                            | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
-                            | _ -> letrec_binders in
-                        env, lb)
-                      (envbody, [])
+                    let envbody, letrec_binders, g =
+                            letrecs |> List.fold_left (fun (env, letrec_binders, g) (l,t,u_names) ->
+                                //let t = N.normalize [Env.EraseUniverses; Env.Beta] env t in
+                                //printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
+                                let t, _, g' = tc_term (Env.clear_expected_typ env |> fst) t in
+                                let env = Env.push_let_binding env l (u_names, t) in
+                                let lb = match l with
+                                    | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
+                                    | _ -> letrec_binders in
+                                env, lb, Env.conj_guard g g')
+                              (envbody, [], Env.trivial_guard)
+                    in
+                    (envbody, letrec_binders, Env.close_guard envbody bs g)
                 in
 
                 let envbody, bs, g_env, c, body = check_actuals_against_formals env bs bs_expected body in
-                let envbody, letrecs = mk_letrec_env envbody bs c in
+                let envbody, letrecs, g_annots = mk_letrec_env envbody bs c in
                 let envbody = Env.set_expected_typ envbody (U.comp_result c) in
-                Some t, bs, letrecs, Some c, envbody, body, g_env
+                Some t, bs, letrecs, Some c, envbody, body, Env.conj_guard g_env g_annots
 
               | _ -> (* expected type is not a function;
                         try normalizing it first;
