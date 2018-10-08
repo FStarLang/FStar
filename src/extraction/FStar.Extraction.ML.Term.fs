@@ -1352,9 +1352,12 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                               tcenv lb.lbdef
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
-                             then FStar.Util.measure_execution_time
-                                      "Time to normalize top-level let"
-                                      norm_call
+                             || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
+                             then let a = FStar.Util.measure_execution_time
+                                          (BU.format1 "(Time to normalize top-level let %s)" (Print.lbname_to_string lb.lbname))
+                                          norm_call in
+                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+                                  a
                              else norm_call ()
                     in
                     {lb with lbdef=lbdef})

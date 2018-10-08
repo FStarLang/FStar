@@ -326,6 +326,10 @@ let rec inline_closure_env cfg (env:env) stack t =
         let t = mk (Tm_refine(List.hd x |> fst, phi)) t.pos in
         rebuild_closure cfg env stack t
 
+      | Tm_ascribed(t1, _, _)
+        when cfg.steps.unascribe ->
+        inline_closure_env cfg env stack t1
+
       | Tm_ascribed(t1, (annot,tacopt), lopt) ->
         let annot =
             match annot with
@@ -1045,6 +1049,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack (closure_as_term cfg env t)
 
           | Tm_app({n=Tm_fvar fv}, [_])
+          | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, [_])
             when (fv_eq_lid fv PC.assert_lid
                 || fv_eq_lid fv PC.assert_norm_lid)
                 && cfg.steps.for_extraction ->
@@ -2136,7 +2141,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                                (Print.term_to_string t)
                                (bvs |> List.map Print.bv_to_string |> String.concat ", ");
            failwith "DIE!");
-  
+
   let f_opt = is_fext_on_domain t in
   if f_opt |> is_some && (match stack with | Arg _::_ -> true | _ -> false)  //AR: it is crucial to check that (on_domain a #b) is actually applied, else it would be unsound to reduce it to f
   then f_opt |> must |> norm cfg env stack
