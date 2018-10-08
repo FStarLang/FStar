@@ -50,6 +50,7 @@ type step =
   | Unmeta          //remove all non-monadic metas.
   | Unascribe
   | NBE
+  | ForExtraction   //marking an invocation of the normalizer for extraction
 and steps = list<step>
 
 val eq_step : step -> step -> bool

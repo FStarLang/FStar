@@ -48,6 +48,7 @@ type fsteps = {
      in_full_norm_request: bool;
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
+     for_extraction:bool
 }
 
 let steps_to_string f =
@@ -135,6 +136,7 @@ let default_steps : fsteps = {
     in_full_norm_request = false;
     weakly_reduce_scrutinee = true;
     nbe_step = false;
+    for_extraction = false
 }
 
 let fstep_add_one s fs =
@@ -168,6 +170,7 @@ let fstep_add_one s fs =
     | Unmeta ->  { fs with unmeta = true }
     | Unascribe ->  { fs with unascribe = true }
     | NBE -> {fs with nbe_step = true }
+    | ForExtraction -> {fs with for_extraction = true }
 
 let to_fsteps (s : list<step>) : fsteps =
     List.fold_right fstep_add_one s default_steps

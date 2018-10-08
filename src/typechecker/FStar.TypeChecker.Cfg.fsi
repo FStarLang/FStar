@@ -52,6 +52,7 @@ type fsteps = {
      in_full_norm_request: bool;
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
+     for_extraction:bool;
 }
 
 val default_steps : fsteps
