@@ -82,6 +82,8 @@ let (some_lid : FStar_Ident.lident) = psnconst "Some"
 let (none_lid : FStar_Ident.lident) = psnconst "None" 
 let (assume_lid : FStar_Ident.lident) = pconst "_assume" 
 let (assert_lid : FStar_Ident.lident) = pconst "_assert" 
+let (assert_norm_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "Native"; "assert_norm"] 
 let (list_append_lid : FStar_Ident.lident) = p2l ["FStar"; "List"; "append"] 
 let (list_tot_append_lid : FStar_Ident.lident) =
   p2l ["FStar"; "List"; "Tot"; "Base"; "append"] 
