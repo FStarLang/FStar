@@ -718,7 +718,9 @@ let termToSmt
 
 let caption_to_string = function
     | None -> ""
-    | Some c -> ";;;;;;;;;;;;;;;;" ^ c ^ "\n"
+    | Some c ->
+        let c = String.split ['\n'] c |> List.map BU.trim_string |> String.concat " " in
+        ";;;;;;;;;;;;;;;;" ^ c ^ "\n"
 
 let rec declToSmt' print_ranges z3options decl =
   match decl with
