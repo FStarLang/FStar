@@ -28,8 +28,7 @@ type eqtype = a:Type0{hasEq a}
 
 (* bool is a two element type with elements {'true', 'false'}
     we assume it is primitive, for convenient interop with other languages *)
-assume new type bool : Type0
-assume HasEq_bool: hasEq bool
+assume new type bool : eqtype
 
 (* False is the empty inductive type *)
 type c_False =
@@ -40,8 +39,7 @@ type c_True =
 
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
-assume new type unit : Type0
-assume HasEq_unit: hasEq unit
+assume new type unit : eqtype
 
 (* A coercion down to universe 0 *)
 [@ "tac_opaque"]
@@ -155,9 +153,7 @@ assume new
 type range : Type0
 
 assume new
-type string : Type0
-
-assume HasEq_string: hasEq string
+type string : eqtype
 
 (* PURE effect *)
 let pure_pre = Type0
@@ -259,9 +255,7 @@ type dtuple2 (a:Type)
 type l_Exists (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a & p x)
 
 assume new
-type int : Type0
-
-assume HasEq_int: hasEq int
+type int : eqtype
 
 assume
 val range_0 : range
