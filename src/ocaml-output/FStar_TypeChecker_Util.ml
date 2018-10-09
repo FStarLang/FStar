@@ -4287,11 +4287,12 @@ let (check_sigelt_quals :
             FStar_All.pipe_right quals
               (FStar_List.for_all
                  (fun x  ->
-                    (((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
-                           (visibility x))
-                          || (reducibility x))
-                         || (reification x))
-                        || (inferred x))
+                    ((((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) ||
+                            (visibility x))
+                           || (reducibility x))
+                          || (reification x))
+                         || (inferred x))
+                        || (has_eq x))
                        ||
                        (env.FStar_TypeChecker_Env.is_iface &&
                           (x = FStar_Syntax_Syntax.Assumption)))
