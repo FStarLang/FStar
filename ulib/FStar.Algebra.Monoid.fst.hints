@@ -259,14 +259,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_unit",
-        "equation_FStar.Algebra.Monoid.monoid_morphism_unit_lemma",
-        "equation_Prims.squash",
+        "assumption_Prims.HasEq_unit", "equation_Prims.squash",
         "haseqPrims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
       0,
-      "ae64fe38ec850c993946339ebac6d890"
+      "67e04d1d18a7c667c8283670727675fb"
     ],
     [
       "FStar.Algebra.Monoid.intro_monoid_morphism",
@@ -677,14 +675,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_unit",
-        "equation_FStar.Algebra.Monoid.monoid_morphism_unit_lemma",
-        "equation_Prims.squash",
+        "assumption_Prims.HasEq_unit", "equation_Prims.squash",
         "haseqPrims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
       0,
-      "0f3ca2d48cb44d9d1164bc97722fd718"
+      "230089250ecd517e302880e87867485f"
     ],
     [
       "FStar.Algebra.Monoid.intro_monoid_morphism",

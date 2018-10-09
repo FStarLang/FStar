@@ -19,7 +19,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1dd55f1f04f3032ce6fcd59c109d5e36"
+      "bda71d7aa148eb680d5552f6355bee2e"
     ],
     [
       "Loops.sum_up_eq",
@@ -73,7 +73,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "3eca00b7686107ebfd71d6b58e5eb082"
+      "ade650cd786eafb417ea2665f03bf31d"
     ],
     [
       "Loops.sum_up_commute",
@@ -128,7 +128,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "c150be535624b9d1cf753073a10ef70a"
+      "25873484c0037ba076ab1090703f3966"
     ],
     [
       "Loops.sum_dn",
@@ -147,7 +147,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e528ad47dfc79f4b2383a567b8477012"
+      "beea0cfe6ec9c4c6be623a35ebe2c166"
     ],
     [
       "Loops.sum_dn_eq",
@@ -201,7 +201,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "d1d5b8357c73608ee61b7d3552a75cc6"
+      "276906d43470864a795bef627728970c"
     ],
     [
       "Loops.sum_dn_commute",
@@ -256,7 +256,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "f4dc79400661ffacf2aed42dc65dfc18"
+      "5aef9e454f4a350aafff3e9e8ba46411"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -269,7 +269,7 @@
         "refinement_interpretation_Loops_Tm_refine_5d68b4aedab07e9543c96792e76744c9"
       ],
       0,
-      "47292170acfa34582ecc0002702ad15a"
+      "d87c388d4e0bd30fa769f9c0aa7903a9"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -333,7 +333,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "5baa29f9d0f8abe83492a8ec82557c26"
+      "835c4fc300243ffa71ade1f6395cf87c"
     ],
     [
       "Loops.equiv_sum_up_dn",
@@ -372,7 +372,7 @@
         "true_interp", "typing_Loops.sum_dn", "typing_Loops.v", "unit_typing"
       ],
       0,
-      "814cb350772bfc60374a5e6d9d0ebec2"
+      "741d880f91531d7d18745863660afab2"
     ],
     [
       "Loops.sum_up",
@@ -392,7 +392,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ce6df58744b7219272be558a01d8d734"
+      "0f02646bd4681c2e1a7d8808171b7774"
     ],
     [
       "Loops.sum_up_eq",
@@ -404,7 +404,7 @@
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
       0,
-      "e00aca0ae7b8ee641a03bf2b10f9ab26"
+      "4c8d94e552ad166a90e5e7361eac052e"
     ],
     [
       "Loops.sum_up_commute",
@@ -412,14 +412,15 @@
       1,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "int_inversion", "int_typing",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
         "primitive_Prims.op_Addition",
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
       0,
-      "723a35ee3f0e456678b9eda6bbacbfa1"
+      "f78ab6561cbc605faa39ea8cf2301076"
     ],
     [
       "Loops.sum_dn",
@@ -438,7 +439,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "348afaa7b6a8ecf731063736ef88e540"
+      "b2dcfe24fc4ce08671272c4a75436ecf"
     ],
     [
       "Loops.sum_dn_eq",
@@ -450,7 +451,7 @@
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
       0,
-      "c585e08cb9409eb74407494c67acdd4b"
+      "8095d6acb2a0d0c90cabaca0f6db8009"
     ],
     [
       "Loops.sum_dn_commute",
@@ -458,14 +459,15 @@
       1,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "int_inversion", "int_typing",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
         "primitive_Prims.op_Addition",
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
       0,
-      "7046c62af0c295d3339e1160c485d6ac"
+      "1c893169d64f8628b000812268789961"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -478,7 +480,7 @@
         "refinement_interpretation_Loops_Tm_refine_5d68b4aedab07e9543c96792e76744c9"
       ],
       0,
-      "e7e3c1ef0b1ced02a6beeab9b3ed2683"
+      "8a49eca43c3020fbdb966ac7825f711b"
     ],
     [
       "Loops.equiv_sum_up_dn",
@@ -490,7 +492,7 @@
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
       0,
-      "6aab833bb023ef892fb5fce0a52414fc"
+      "588a43408c49281bf94d726e81d305ef"
     ]
   ]
 ]

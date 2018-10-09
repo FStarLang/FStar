@@ -168,7 +168,6 @@
         "equation_FStar.UInt32.n", "equation_Prims.nat",
         "function_token_typing_FStar.UInt32.n",
         "haseqCntFormat_Tm_refine_9adbdccb31bd5d6d35b7a0e150a5d273",
-        "haseqCntProtocol_Tm_refine_eb48192ac9da37a7c3551a1c91338a9c",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
@@ -613,7 +612,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "dc1ebb985f9dce16081b0af6a1959497"
+      "8de0b3993b514ba29963f92d4769be8a"
     ],
     [
       "CntProtocol.main",
@@ -669,7 +668,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "typing_FStar.Set.mem"
       ],
       0,
-      "d6a781ed4a7a1877b5fce84015b40264"
+      "a429d93611cbcd50f347a01265d1add3"
     ],
     [
       "CntProtocol.event",
@@ -687,7 +686,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2dfc80374005420e546e9cb4db28f637"
+      "7d071d907c04c06eff94e039b1dc1bb6"
     ],
     [
       "CntProtocol.client_cnt",
@@ -696,7 +695,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "7a26e5e02915bcd4c9ce2581a3ad6592"
+      "48de9e37caf84fd23c3e3a28875f031d"
     ],
     [
       "CntProtocol.server_cnt",
@@ -705,7 +704,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "45241e31191175a5f0fe5ce7ae301619"
+      "87643becb6e8e43fcc04c1d5d98fa204"
     ],
     [
       "CntProtocol.server_max",
@@ -727,7 +726,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c05676a1f15aaf3a7e1be2e52c509cd3"
+      "c21e84b82171180b56c268712e0023aa"
     ],
     [
       "CntProtocol.max_list",
@@ -741,7 +740,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "080caec217204cc1e9dfc199b299c941"
+      "08644c9362286317858a885c5fbc67ec"
     ],
     [
       "CntProtocol.max_lemma",
@@ -750,7 +749,7 @@
       1,
       [ "@query", "assumption_CntProtocol.event__uu___haseq" ],
       0,
-      "243f7a7a766e93c73d65ad251091c947"
+      "65f0c5a7ffe6cd86b232297057f4c47a"
     ],
     [
       "CntProtocol.invariant",
@@ -767,7 +766,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0479095fc01c417accb73ce836c36657"
+      "ebe94c503e35d3a859358b7feb4946af"
     ],
     [
       "CntProtocol.next_cnt",
@@ -776,7 +775,7 @@
       1,
       [ "@query" ],
       0,
-      "a6bbb0dd09ac7a57269572e38b8966c1"
+      "99be86b548ce17140c646a005e22f78c"
     ],
     [
       "CntProtocol.update_cnt",
@@ -785,7 +784,7 @@
       1,
       [ "@query" ],
       0,
-      "63a427b406fe46ec3968f188d5e9b56f"
+      "deaa7e5ca2edd11dd1172cd22b040011"
     ],
     [
       "CntProtocol.log_and_update",
@@ -813,7 +812,7 @@
         "typing_FStar.Monotonic.Heap.addr_of"
       ],
       0,
-      "8da126744d084dd562a1edb9ea1a8764"
+      "556d19987501b33b0f021be7fd5362e6"
     ],
     [
       "CntProtocol.send",
@@ -828,7 +827,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2998d21b9d076336c1814afb13a2dff1"
+      "8541c28da21689b1006a609da4f71e13"
     ],
     [
       "CntProtocol.recv",
@@ -843,7 +842,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "173b09ff3bbf04b9a866a63785964f85"
+      "1f4af0892a9cc1a8fa3c213e88cb6dfd"
     ],
     [
       "CntProtocol.req",
@@ -852,7 +851,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "5e32d6527b80f5fc4908d5b49a6f3fa7"
+      "d85ecd4a4e72b2a0a472b3809b18e9d0"
     ],
     [
       "CntProtocol.k",
@@ -861,7 +860,7 @@
       1,
       [ "@query" ],
       0,
-      "884a6b2e4f5dff596e4a56c8096dce1b"
+      "95162a5a1858fa4ecb73d7f644a11e12"
     ],
     [
       "CntProtocol.client",
@@ -884,7 +883,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "4c08088fb30169c792e2dcfabf4cfeec"
+      "250055930127eb1550471fa31d1d40b0"
     ],
     [
       "CntProtocol.server",
@@ -910,7 +909,7 @@
         "typing_FStar.Monotonic.Heap.addr_of"
       ],
       0,
-      "e8fee6b3f6f392ea68612b74af3e8587"
+      "ab46ac10a138546817c8a245c59f5f23"
     ],
     [
       "CntProtocol.main",
@@ -966,7 +965,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "typing_FStar.Set.mem"
       ],
       0,
-      "80a009a1f3a7301241726e3e4b674601"
+      "9e068b2992f5919a7364bf04ed995f6f"
     ]
   ]
 ]

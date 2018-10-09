@@ -219,11 +219,21 @@
       0,
       0,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.DM4F.Heap.modifies", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Swap.addr_set",
+        "equation_Swap.footprint2", "equation_Swap.heap_eq",
+        "equation_Swap.heap_equiv_on", "equation_Swap.no_alloc",
+        "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "lemma_FStar.Set.disjoint_not_in_both",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.DM4F.Heap.addr_of"
       ],
       0,
-      "3aa0e681fb60b3dc3b079676220f5fac"
+      "397fd88509b68b66f0b0bab03b8256b5"
     ],
     [
       "Swap.swap_old",

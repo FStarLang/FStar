@@ -100,7 +100,7 @@
         "typing_FStar.Seq.Properties.head", "typing_FStar.Seq.Properties.mem"
       ],
       0,
-      "be681e75a0e7cf6b09482ecdf3bf1e60"
+      "07c3fd9b36a43aeb748fcbf4ca5cb46a"
     ],
     [
       "QuickSort.Array.lemma_slice_cons_pv",

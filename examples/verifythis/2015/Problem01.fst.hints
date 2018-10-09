@@ -74,7 +74,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ba1677ef36bc2a46c4cce8f689decee4"
+      "b730a1d11071dcc3896479ce300361e6"
     ],
     [
       "Problem01.test_prefix",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Problem01_Tm_refine_5ec69b392d18c536c7a2f6f1921608e0"
       ],
       0,
-      "00e5fb380652d4c1185d7c1378fc2c4a"
+      "fa8edc9f77ffc91f01a0942f516d1982"
     ],
     [
       "Problem01.test_prefix",
@@ -123,7 +123,7 @@
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "9f9b7584d322b33eda693f32e2b90db1"
+      "2af9c677957be4e79a2dafc3dd3a3713"
     ],
     [
       "Problem01.test_relaxed_prefix",
@@ -155,7 +155,7 @@
         "typing_Problem01.test_prefix"
       ],
       0,
-      "71514e1830da084d0fabcc9efc3f52aa"
+      "88fe8776fad997ba534af7f5a3f329cb"
     ]
   ]
 ]

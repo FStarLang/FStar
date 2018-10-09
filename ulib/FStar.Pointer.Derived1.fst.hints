@@ -350,13 +350,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Monotonic.HyperHeap.HasEq_rid",
         "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
         "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e0c4af386cb3ff43f167aa184f48a15f"
+      "861a47096dbea1d6e619b911a5c2f9b3"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_addresses_pointer",
@@ -364,15 +363,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
-        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "lemma_FStar.Pointer.Base.loc_disjoint_pointer_addresses"
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b9bea97f07258505989e40d3637c2fa6"
+      "4183be73bc364202030eeffb7915396f"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_addresses_pointer",
@@ -381,7 +376,7 @@
       1,
       [ "@query", "lemma_FStar.Pointer.Base.loc_disjoint_pointer_addresses" ],
       0,
-      "bf61914b5be8dbce03fb0cc9c8dd5d19"
+      "e7664e80d30a92282e70a070e3d1230f"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_union_r_elim",

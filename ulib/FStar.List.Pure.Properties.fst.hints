@@ -39,7 +39,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "bcdd6cc701fbef23886c4fdfd12593af"
+      "bb76ab3599ceb41c1903b56f39889f84"
     ],
     [
       "FStar.List.Pure.Properties.splitAt_assoc",
@@ -79,7 +79,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "33bf0f67387ec1c5dedf53641f4d2181"
+      "f6085b9d3e53ec0902d5b2d851fde0a3"
     ],
     [
       "FStar.List.Pure.Properties.splitAt_length_total",
@@ -109,16 +109,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "8917a78de82e7f841f8fdf8d919b5bf9"
-    ],
-    [
-      "FStar.List.Pure.Properties.splitAt_length",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "bc0d1095eaa775d78739fdef937832fe"
+      "a4fce2455a0ec4d0990b5173ddaf6f59"
     ],
     [
       "FStar.List.Pure.Properties.splitAt_assoc",
@@ -131,7 +122,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8652e7d622f3810430d3dcbec2469450"
+      "e7587a455bcf909e57291f107de33c2c"
     ]
   ]
 ]

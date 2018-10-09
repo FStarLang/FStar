@@ -253,7 +253,7 @@
         "typing_While.interpret_exp", "well-founded-ordering-on-nat"
       ],
       0,
-      "2672d7c7d59b7c5aed742cf0329b3ad7"
+      "144b34824e3c3c0c37d8aee967adebfb"
     ],
     [
       "While.interpret_while",
@@ -277,20 +277,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "25854369301cc18d31424338788649eb"
+      "473a521073a77d256161a6014f4a670a"
     ],
     [
       "While.interpret_exp_st",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "42d99c5a1e2b463797a6d71abbe062d3"
-    ],
-    [
-      "While.interpret_exp_st",
-      2,
       2,
       1,
       [
@@ -302,7 +293,6 @@
         "disc_equation_While.AOp", "disc_equation_While.AVar",
         "equation_FStar.Heap.trivial_preorder", "equation_FStar.ST.mref",
         "equation_FStar.ST.ref", "equation_While.id",
-        "equation_While.interpret_binop",
         "equation_with_fuel_While.interpret_exp.fuel_instrumented",
         "fuel_guarded_inversion_While.exp",
         "function_token_typing_Prims.int",
@@ -316,7 +306,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "e59f899d28ba66f05804738fa5cde1d4"
+      "73739709be6f085a74dc93353532c846"
     ],
     [
       "While.interpret_com_st",
@@ -333,7 +323,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "f39628027d5e1d5496a74282011c5adc"
+      "8952676e5a08cf32dce74577a551eb8e"
     ],
     [
       "While.interpret_binop",
@@ -346,7 +336,7 @@
         "disc_equation_While.Times", "fuel_guarded_inversion_While.binop"
       ],
       0,
-      "c3f2283ce76b627da2850135cea4ccbc"
+      "774b1b804a20ce274fad392de2b4501d"
     ],
     [
       "While.__proj__AInt__item___0",
@@ -359,7 +349,7 @@
         "refinement_interpretation_While_Tm_refine_94ebaa80e9cf95cffc242c7914de3c00"
       ],
       0,
-      "855b24b92f608fd439f5b8e95194d25e"
+      "db5001e1a16935943e7d344869c3f26c"
     ],
     [
       "While.__proj__AVar__item___0",
@@ -372,7 +362,7 @@
         "refinement_interpretation_While_Tm_refine_be67e6dd42460413742cd5885f052b86"
       ],
       0,
-      "41afa135353f57b3fc82a61aab46a00f"
+      "04f79e6aa8d5266e347d72265293f6a2"
     ],
     [
       "While.__proj__AOp__item___0",
@@ -385,7 +375,7 @@
         "refinement_interpretation_While_Tm_refine_a075d9df1f5c243dba503141508929bb"
       ],
       0,
-      "074144098f94c66f9a7231374a274de5"
+      "9701c22eb33a9bae706d29a9d85ae0c0"
     ],
     [
       "While.__proj__AOp__item___1",
@@ -398,7 +388,7 @@
         "refinement_interpretation_While_Tm_refine_a075d9df1f5c243dba503141508929bb"
       ],
       0,
-      "928ec348f345d4646ab022fa5bf0fc42"
+      "21b1a0e030e94aa33045e4c0c98a71cd"
     ],
     [
       "While.__proj__AOp__item___2",
@@ -411,7 +401,7 @@
         "refinement_interpretation_While_Tm_refine_a075d9df1f5c243dba503141508929bb"
       ],
       0,
-      "48599ab588f4082b3238a853b3e4ad13"
+      "339d4bc6562de7a17d1617ff81cbd845"
     ],
     [
       "While.interpret_exp",
@@ -426,7 +416,7 @@
         "fuel_guarded_inversion_While.exp", "subterm_ordering_While.AOp"
       ],
       0,
-      "f6939b4bee829c24c6a6f57e414accdf"
+      "bfd49c30bf25ede1dd0037d5fa427fdf"
     ],
     [
       "While.__proj__Assign__item__var",
@@ -439,7 +429,7 @@
         "refinement_interpretation_While_Tm_refine_b9111ee85b655c8456fbdffc10913247"
       ],
       0,
-      "b15992742913fcc170082a38447a0370"
+      "d7da6fecce698ccccd0f8617500edd71"
     ],
     [
       "While.__proj__Assign__item__term",
@@ -452,7 +442,7 @@
         "refinement_interpretation_While_Tm_refine_b9111ee85b655c8456fbdffc10913247"
       ],
       0,
-      "ddf3f444e7cea3498430f22e6380ca47"
+      "f3e76098d87d54f509dbb228530979d6"
     ],
     [
       "While.__proj__Seq__item__first",
@@ -465,7 +455,7 @@
         "refinement_interpretation_While_Tm_refine_e301b9284cf53dcfdd19d29aff2de799"
       ],
       0,
-      "3cd0522cd2119649e802783936cf49fa"
+      "1bd41f6de44880f08f07726e9a6345c1"
     ],
     [
       "While.__proj__Seq__item__second",
@@ -478,7 +468,7 @@
         "refinement_interpretation_While_Tm_refine_e301b9284cf53dcfdd19d29aff2de799"
       ],
       0,
-      "cc5bdea13c826bb8e5633259588e7428"
+      "7343645305f2c575d414fa65c8c6902d"
     ],
     [
       "While.__proj__If__item__cond",
@@ -491,7 +481,7 @@
         "refinement_interpretation_While_Tm_refine_11047f422339fc49495ea91916ee701e"
       ],
       0,
-      "e68defd3d17d8a3d467c38d532cbf2ae"
+      "f75e4f952af80362f6947b4cc3fa8cb7"
     ],
     [
       "While.__proj__If__item__then_branch",
@@ -504,7 +494,7 @@
         "refinement_interpretation_While_Tm_refine_11047f422339fc49495ea91916ee701e"
       ],
       0,
-      "d9836ba4c88343fe13fbcee13e1939fa"
+      "ca40ea6cdf1efaf59b682979b899662a"
     ],
     [
       "While.__proj__If__item__else_branch",
@@ -517,7 +507,7 @@
         "refinement_interpretation_While_Tm_refine_11047f422339fc49495ea91916ee701e"
       ],
       0,
-      "8fc8522e8907bf89811f8f5cfa975346"
+      "428eb23a7a8069a179f9e7d5c966a71d"
     ],
     [
       "While.__proj__While__item__cond",
@@ -530,7 +520,7 @@
         "refinement_interpretation_While_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
       ],
       0,
-      "747942e57329a19dadd3cb52dc02b825"
+      "402d4760c5b531bf0cfc033960973f47"
     ],
     [
       "While.__proj__While__item__body",
@@ -543,7 +533,7 @@
         "refinement_interpretation_While_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
       ],
       0,
-      "2f92a2b8089b6454007f16f25073490d"
+      "8d73e2a0c7d9c4d451d12e3abd15fa05"
     ],
     [
       "While.__proj__While__item__variant",
@@ -556,7 +546,7 @@
         "refinement_interpretation_While_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
       ],
       0,
-      "408d8a90a0b83ae6375cd9a23c9eff00"
+      "a3d9b708ef73756e146868ccbb1c8443"
     ],
     [
       "While.interpret_while",
@@ -587,7 +577,7 @@
         "typing_While.interpret_exp", "well-founded-ordering-on-nat"
       ],
       0,
-      "c118cdde5d0dc095a467e2d897dce087"
+      "1595684eb99e60b50f633b9b8df50786"
     ],
     [
       "While.interpret_while",
@@ -611,16 +601,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a33852a734ca9120b68ee7ec2bbd3759"
-    ],
-    [
-      "While.interpret_exp_st",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "86e63433522c68c04c696240ea1dbd61"
+      "b585ad11a1eeb20f7b7a2fe5e3e844f9"
     ]
   ]
 ]

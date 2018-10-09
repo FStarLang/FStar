@@ -2,15 +2,6 @@
   "u‰∏„çu€\u001aîeN?…‡%\u0001",
   [
     [
-      "OneTimePad.xor_b",
-      1,
-      0,
-      4,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "878844a5887074949ab4afad187faee2"
-    ],
-    [
       "OneTimePad.xor_properties",
       1,
       0,
@@ -35,7 +26,7 @@
         "typing_OneTimePad.xor_b"
       ],
       0,
-      "949a1dcc2a25682583efe189e6b3b615"
+      "b28b6b0d8df013a2b75665e18e201a10"
     ],
     [
       "OneTimePad._dm4f_RANDOM___proj__RANDOM__item__rand_elab",
@@ -44,7 +35,7 @@
       4,
       [ "@query" ],
       0,
-      "1cd1c6646a656286481c38efe52aaf65"
+      "c734d086e2e854c9ada8391d7f58a074"
     ],
     [
       "OneTimePad.RANDOM",
@@ -53,7 +44,7 @@
       4,
       [ "@query" ],
       0,
-      "4eaf6bd23aa293be8e17a90cc4c07eac"
+      "635c0bc708abf8dc3bdcbc2c2184ec37"
     ],
     [
       "OneTimePad.related_tape",
@@ -66,7 +57,7 @@
         "function_token_typing_Prims.bool"
       ],
       0,
-      "7fc25927502779a84d0f0d94876fc757"
+      "08b78107dae40706c188f16b369c1126"
     ],
     [
       "OneTimePad.xor_at",
@@ -97,7 +88,7 @@
         "token_correspondence_OneTimePad.xor"
       ],
       0,
-      "82165dfe9a4e3fead17dfedb56f913a3"
+      "a4c9b074fb07a1cdc50e5a41e2097f0b"
     ],
     [
       "OneTimePad.one_time_pad_ok",
@@ -141,16 +132,7 @@
         "typing_OneTimePad.xor_b", "unit_typing"
       ],
       0,
-      "62529d1cf260252f76a46ec849540089"
-    ],
-    [
-      "OneTimePad.xor_b",
-      2,
-      0,
-      4,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "1bd5f74116fe271a8d717514fbeb10bc"
+      "3c93bfa865fc25b624f1d31d003fea73"
     ],
     [
       "OneTimePad.xor_properties",
@@ -177,7 +159,7 @@
         "typing_OneTimePad.xor_b"
       ],
       0,
-      "bb48ec0e40638475c6c71d617b95916c"
+      "74667ad1e853da2eff2d400c4550acc4"
     ],
     [
       "OneTimePad._dm4f_RANDOM___proj__RANDOM__item__rand_elab",
@@ -186,7 +168,7 @@
       4,
       [ "@query" ],
       0,
-      "27724f0e175fb3d734fc58f84725abe2"
+      "bebbc491c6c59a1bc9848fec6ebafc03"
     ],
     [
       "OneTimePad.RANDOM",
@@ -195,7 +177,7 @@
       4,
       [ "@query" ],
       0,
-      "dca38eee9448e3e03c1a10f1afb95c9e"
+      "20759c2887bd098778d2d97932518d86"
     ],
     [
       "OneTimePad.related_tape",
@@ -208,7 +190,7 @@
         "function_token_typing_Prims.bool"
       ],
       0,
-      "3c0b26d2a57ec4ee8d69433f380d080c"
+      "6be0877ed8b77a94a77244fc3974ec98"
     ],
     [
       "OneTimePad.xor_at",
@@ -239,7 +221,7 @@
         "token_correspondence_OneTimePad.xor"
       ],
       0,
-      "7ec06900153dc334a1ef34ac46be5f26"
+      "460972925aa0133adadcedd03a43ba70"
     ],
     [
       "OneTimePad.one_time_pad_ok",
@@ -252,7 +234,7 @@
         "function_token_typing_Prims.bool"
       ],
       0,
-      "e2f695dd215e2864700b6adb5c4ef6c5"
+      "922720b5a365232cef834bfd48666943"
     ]
   ]
 ]

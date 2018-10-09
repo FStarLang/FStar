@@ -11,16 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "3583c57d6465e4bdeffe6a4a1fc5c49c"
-    ],
-    [
-      "FStar.String.strcat",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "dece3ea6123d8ca9e9d8b40d7c2c69ed"
+      "f9b11ecac3c3be095f38b8304f9b2fa1"
     ]
   ]
 ]
