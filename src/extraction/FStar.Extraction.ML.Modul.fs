@@ -422,7 +422,9 @@ let extract_reifiable_effect g ed
             let mlp = mlpath_of_lident fv.fv_name.v in
             let ({exp_b_tscheme=tysc}) = UEnv.lookup_fv g fv in
             with_ty MLTY_Top <| MLE_Name mlp, tysc
-        | _ -> failwith "Not an fv"
+        | _ -> failwith (BU.format2 "(%s) Not an fv: %s"
+                                        (Range.string_of_range tm.pos)
+                                        (Print.term_to_string tm))
     in
 
     let extract_action g (a:S.action) =
@@ -521,6 +523,7 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
 
     | Sig_new_effect ed ->
       if Env.is_reifiable_effect g.env_tcenv ed.mname
+      && List.isEmpty ed.binders //we do not extract parameterized effects
       then let env, iface, _ = extract_reifiable_effect g ed in
            env, iface
       else g, empty_iface
