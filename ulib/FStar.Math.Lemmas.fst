@@ -61,22 +61,22 @@ val distributivity_sub_right: a:int -> b:int -> c:int -> Lemma
   ((a * (b - c) = a * b - a * c))
 let distributivity_sub_right a b c = ()
 
-(* Lemma: multiplication is commutative, hence parenthesizing is meaningless *)
+(* Lemma: multiplication is associative, hence parenthesizing is meaningless *)
 val paren_mul_left: a:int -> b:int -> c:int -> Lemma
   (a * b * c = (a * b) * c)
 let paren_mul_left a b c = ()
 
-(* Lemma: multiplication is commutative, hence parenthesizing is meaningless *)
+(* Lemma: multiplication is associative, hence parenthesizing is meaningless *)
 val paren_mul_right: a:int -> b:int -> c:int -> Lemma
   (a * b * c = a * (b * c))
 let paren_mul_right a b c = ()
 
-(* Lemma: addition is commutative, hence parenthesizing is meaningless *)
+(* Lemma: addition is associative, hence parenthesizing is meaningless *)
 val paren_add_left: a:int -> b:int -> c:int -> Lemma
   (a + b + c = (a + b) + c)
 let paren_add_left a b c = ()
 
-(* Lemma: addition is commutative, hence parenthesizing is meaningless *)
+(* Lemma: addition is associative, hence parenthesizing is meaningless *)
 val paren_add_right: a:int -> b:int -> c:int -> Lemma
   (a + b + c = a + (b + c))
 let paren_add_right a b c = ()
