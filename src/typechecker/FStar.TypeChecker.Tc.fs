@@ -1616,6 +1616,56 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   | None ->
     tc_decl' env se
 
+let check_must_erase_attribute env se =
+    match se.sigel with
+    | Sig_let(lbs, l) ->
+        if not (Options.ide())
+        then
+        begin
+          match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
+          | None ->
+            ()
+
+          | Some iface_decls ->
+            snd lbs |> List.iter (fun lb ->
+                let lbname = BU.right lb.lbname in
+                let has_iface_val =
+                    iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val lbname.fv_name.v.ident)
+                in
+                if has_iface_val
+                then
+                    let must_erase =
+                    TcUtil.must_erase_for_extraction env lb.lbdef in
+                    let has_attr =
+                    Env.fv_has_attr env
+                                    lbname
+                                    FStar.Parser.Const.must_erase_for_extraction_attr in
+                    if must_erase && not has_attr
+                    then
+                        FStar.Errors.log_issue
+                            (range_of_fv lbname)
+                            (FStar.Errors.Error_MustEraseMissing,
+                                BU.format2
+                                    "Values of type `%s` will be erased during extraction, \
+                                    but its interface hides this fact. Add the `must_erase_for_extraction` \
+                                    attribute to the `val %s` declaration for this symbol in the interface"
+                                    (Print.fv_to_string lbname)
+                                    (Print.fv_to_string lbname)
+                                    )
+                    else if has_attr && not must_erase
+                    then FStar.Errors.log_issue
+                        (range_of_fv lbname)
+                        (FStar.Errors.Error_MustEraseMissing,
+                            BU.format1
+                                "Values of type `%s` cannot be erased during extraction, \
+                                but the `must_erase_for_extraction` attribute claims that it can. \
+                                Please remove the attribute."
+                                (Print.fv_to_string lbname)
+                                ))
+    end
+
+    | _ -> ()
+
 let for_export env hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'abstract'
 
@@ -1719,58 +1769,7 @@ let for_export env hidden se : list<sigelt> * list<lident> =
            { se with sigel = Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp);
                      sigquals = Assumption::se.sigquals}),
           hidden)
-    else begin
-        if not (Options.ide()) then
-            (match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
-             | None ->
-               //printfn "No iface_decls for %s" (Print.lid_to_string (Env.current_module env));
-               ()
-
-             | Some iface_decls ->
-               //let docs =
-               //    List.map FStar.Parser.ToDocument.decl_to_document iface_decls
-               //    |> List.map
-               //        (FStar.Pprint.pretty_string (float_of_string "1.0") 100)
-               //    |> String.concat "\n"
-               //in
-               //printfn "Found iface_decls: %s" docs;
-               snd lbs |> List.iter (fun lb ->
-                   let lbname = BU.right lb.lbname in
-                   let has_iface_val =
-                       iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val lbname.fv_name.v.ident)
-                   in
-                   if has_iface_val
-                   then
-                      let must_erase =
-                        TcUtil.must_erase_for_extraction env lb.lbdef in
-                      let has_attr =
-                        Env.fv_has_attr env
-                                        lbname
-                                        FStar.Parser.Const.must_erase_for_extraction_attr in
-                      if must_erase && not has_attr
-                      then
-                          FStar.Errors.log_issue
-                                (range_of_fv lbname)
-                                (FStar.Errors.Error_MustEraseMissing,
-                                 BU.format2
-                                     "Values of type `%s` will be erased during extraction, \
-                                      but its interface hides this fact. Add the `must_erase_for_extraction` \
-                                      attribute to the `val %s` declaration for this symbol in the interface"
-                                      (Print.fv_to_string lbname)
-                                      (Print.fv_to_string lbname)
-                                      )
-                      else if has_attr && not must_erase
-                      then FStar.Errors.log_issue
-                            (range_of_fv lbname)
-                            (FStar.Errors.Error_MustEraseMissing,
-                             BU.format1
-                                 "Values of type `%s` cannot be erased during extraction, \
-                                  but the `must_erase_for_extraction` attribute claims that it can. \
-                                  Please remove the attribute."
-                                  (Print.fv_to_string lbname)
-                                  )));
-           [se], hidden
-    end
+    else [se], hidden
 
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
 (* this was earlier part of tc_decl, but separating it might help if and when we cache type checked modules *)
@@ -1824,6 +1823,7 @@ let tc_decls env ses =
     List.iter (fun se -> env.solver.encode_sig env se) ses';
 
     let exports, hidden =
+      check_must_erase_attribute env se;
       if Options.use_extracted_interfaces () then List.rev_append ses' exports, []
       else
         let accum_exports_hidden (exports, hidden) se =
@@ -2139,7 +2139,9 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     //we can clear the lid to query index table
     env.qtbl_name_and_index |> fst |> BU.smap_clear;
 
-    if (not (Options.lax())) && (not loading_from_cache) && (not (Options.use_extracted_interfaces ()))
+    if not (Options.lax())
+    && not loading_from_cache
+    && not (Options.use_extracted_interfaces ())
     then check_exports env modul exports;
 
     //pop BUT ignore the old env
