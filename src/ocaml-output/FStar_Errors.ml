@@ -316,9 +316,9 @@ type raw_error =
   | Error_BadInductiveParam 
   | Error_FieldShadow 
   | Error_UnexpectedDM4FType 
+  | Fatal_EffectAbbreviationResultTypeMismatch 
   | Error_UncheckedFile 
   | Error_MustEraseMissing 
-  | Fatal_EffectAbbreviationResultTypeMismatch 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
@@ -2187,21 +2187,21 @@ let (uu___is_Error_UnexpectedDM4FType : raw_error -> Prims.bool) =
     | Error_UnexpectedDM4FType  -> true
     | uu____3474 -> false
   
-let (uu___is_Error_UncheckedFile : raw_error -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | Error_UncheckedFile  -> true | uu____3485 -> false
-  
-let (uu___is_Error_MustEraseMissing : raw_error -> Prims.bool) =
-  fun projectee  ->
-    match projectee with
-    | Error_MustEraseMissing  -> true
-    | uu____3496 -> false
-  
 let (uu___is_Fatal_EffectAbbreviationResultTypeMismatch :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_EffectAbbreviationResultTypeMismatch  -> true
+    | uu____3485 -> false
+  
+let (uu___is_Error_UncheckedFile : raw_error -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Error_UncheckedFile  -> true | uu____3496 -> false
+  
+let (uu___is_Error_MustEraseMissing : raw_error -> Prims.bool) =
+  fun projectee  ->
+    match projectee with
+    | Error_MustEraseMissing  -> true
     | uu____3507 -> false
   
 type flag =
@@ -2548,9 +2548,9 @@ let (default_flags :
   (Error_BadInductiveParam, CFatal);
   (Error_FieldShadow, CFatal);
   (Error_UnexpectedDM4FType, CFatal);
+  (Fatal_EffectAbbreviationResultTypeMismatch, CFatal);
   (Error_UncheckedFile, CFatal);
-  (Error_MustEraseMissing, CWarning);
-  (Fatal_EffectAbbreviationResultTypeMismatch, CFatal)] 
+  (Error_MustEraseMissing, CWarning)] 
 exception Err of (raw_error,Prims.string) FStar_Pervasives_Native.tuple2 
 let (uu___is_Err : Prims.exn -> Prims.bool) =
   fun projectee  ->
