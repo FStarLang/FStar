@@ -1,6 +1,6 @@
 module LowStar.BufferView
 
-(**
+/**
  * A "view" on a buffer allows treating a
  * `Buffer.buffer a` as a
  * `BufferView.buffer b`
@@ -12,12 +12,12 @@ module LowStar.BufferView
  * from sequences of `a` (sub-sequences of the source buffer)
  * to elements of `b`.
  *
- **)
+ ***/
 open LowStar.Buffer
 module HS=FStar.HyperStack
 module B=LowStar.Buffer
 
-(** Definition of a view **)
+/** Definition of a view ***/
 
 /// `f` and `g` are mutual inverses
 let inverses #a #b

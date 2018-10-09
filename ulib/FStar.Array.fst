@@ -14,11 +14,11 @@
    limitations under the License.
 *)
 
-(**
+/**
 F* standard library mutable arrays module.
 
 @summary Mutable arrays
-*)
+**/
 module FStar.Array
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.All

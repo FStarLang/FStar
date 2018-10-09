@@ -826,7 +826,7 @@ let rec find_l_none_no_index #a s f =
         assert (Seq.equal s (cons (head s) (tail s)));
         find_append_none (create 1 (head s)) (tail s) f)
 
-(** More properties, with new naming conventions *)
+/** More properties, with new naming conventions **/
 
 let suffix_of
   (#a: Type)
@@ -1005,8 +1005,8 @@ let rec mem_seq_of_list
     in
     mem_seq_of_list x q
 
-(** Dealing efficiently with `seq_of_list` by meta-evaluating conjunctions over
-an entire list. *)
+/** Dealing efficiently with `seq_of_list` by meta-evaluating conjunctions over
+an entire list. **/
 #set-options "--max_fuel 1"
 
 let rec explode_and (#a: Type)

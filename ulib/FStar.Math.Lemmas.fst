@@ -190,7 +190,7 @@ let multiply_fractions (a:int) (n:pos) = ()
 val modulo_lemma: a:nat -> b:pos -> Lemma (requires (a < b)) (ensures (a % b = a))
 let modulo_lemma a b = ()
 
-(** Same as `lemma_div_def` in Math.Lib *)
+/** Same as `lemma_div_def` in Math.Lib **/
 val lemma_div_mod: a:int -> p:pos -> Lemma (a = p * (a / p) + a % p)
 let lemma_div_mod a p = ()
 

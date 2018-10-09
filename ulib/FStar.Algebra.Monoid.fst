@@ -9,7 +9,7 @@ module PropExt = FStar.PropositionalExtensionality
  *            also see the comment in PropositionalExtensionality.fst
  *)
 
-(** Definition of a monoid *)
+/** Definition of a monoid **/
 
 let right_unitality_lemma (m:Type) (u:m) (mult:m -> m -> m) =
   forall (x:m). x `mult` u == x
@@ -39,7 +39,7 @@ let intro_monoid (m:Type) (u:m) (mult:m -> m -> m)
   Monoid u mult () () ()
 
 
-(** Some monoid structures *)
+/** Some monoid structures **/
 
 let nat_plus_monoid : monoid nat =
   let add (x y : nat) : nat = x + y in

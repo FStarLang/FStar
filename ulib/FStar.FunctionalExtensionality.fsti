@@ -219,7 +219,7 @@ let on_g (a:Type) (#b:Type) (f:(a -> GTot b))
   = on_dom_g a f
 
 
-(** Main axiom for ghost functions **)
+/** Main axiom for ghost functions ***/
 val extensionality_g (a:Type) (b:a -> Type) (f g:arrow_g a b)
   : Lemma (ensures (feq_g #a #b f g <==> on_domain_g a f == on_domain_g a g))
           [SMTPat (feq_g #a #b f g)]

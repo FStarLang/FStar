@@ -60,7 +60,7 @@ let at_least_is_stable (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grow
   : Lemma (ensures stable_on_t r (at_least n x r))
   = ()
 
-(** extending a stored sequence, witnessing its new entry for convenience. *)
+/** extending a stored sequence, witnessing its new entry for convenience. **/
 let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
   : ST unit
        (requires (fun h -> True))
@@ -273,7 +273,7 @@ let map_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 //Collecting monotone sequences
 ////////////////////////////////////////////////////////////////////////////////
 
-(** yields the concatenation of all sequences returned by f applied to the sequence elements *)
+/** yields the concatenation of all sequences returned by f applied to the sequence elements **/
 val collect: ('a -> Tot (seq 'b)) -> s:seq 'a -> Tot (seq 'b)
     (decreases (Seq.length s))
 let rec collect f s =

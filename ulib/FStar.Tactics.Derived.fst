@@ -14,19 +14,19 @@ let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
 let fail (m:string) = raise (TacticFailure m)
 
-(** Return the current *goal*, not its type. (Ignores SMT goals) *)
+/** Return the current *goal*, not its type. (Ignores SMT goals) **/
 let _cur_goal () : Tac goal =
     match goals () with
     | []   -> fail "no more goals"
     | g::_ -> g
 
-(** [cur_env] returns the current goal's environment *)
+/** [cur_env] returns the current goal's environment **/
 let cur_env () : Tac env = goal_env (_cur_goal ())
 
-(** [cur_goal] returns the current goal's type *)
+/** [cur_goal] returns the current goal's type **/
 let cur_goal () : Tac typ = goal_type (_cur_goal ())
 
-(** [cur_witness] returns the current goal's witness *)
+/** [cur_witness] returns the current goal's witness **/
 let cur_witness () : Tac term = goal_witness (_cur_goal ())
 
 (* [cur_goal_safe] will always return the current goal, without failing.
@@ -37,7 +37,7 @@ let cur_goal_safe () : TacH goal (requires (fun ps -> ~(goals_of ps == [])))
  = match goals_of (get ()) with
    | g :: _ -> g
 
-(** Set the guard policy only locally, without affecting calling code *)
+/** Set the guard policy only locally, without affecting calling code **/
 let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
     let old_pol = get_guard_policy () in
     set_guard_policy pol;
@@ -45,36 +45,36 @@ let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
     set_guard_policy old_pol;
     r
 
-(** Ignore the current goal. If left unproven, this will fail after
-the tactic finishes. *)
+/** Ignore the current goal. If left unproven, this will fail after
+the tactic finishes. **/
 let dismiss () : Tac unit =
     match goals () with
     | [] -> fail "dismiss: no more goals"
     | _::gs -> set_goals gs
 
-(** Flip the order of the first two goals. *)
+/** Flip the order of the first two goals. **/
 let flip () : Tac unit =
     let gs = goals () in
     match goals () with
     | [] | [_]   -> fail "flip: less than two goals"
     | g1::g2::gs -> set_goals (g2::g1::gs)
 
-(** Succeed if there are no more goals left, and fail otherwise. *)
+/** Succeed if there are no more goals left, and fail otherwise. **/
 let qed () : Tac unit =
     match goals () with
     | [] -> ()
     | _ -> fail "qed: not done!"
 
-(** [debug str] is similar to [print str], but will only print the message
+/** [debug str] is similar to [print str], but will only print the message
 if the [--debug] option was given for the current module AND
-[--debug_level Tac] is on. *)
+[--debug_level Tac] is on. **/
 let debug (m:string) : Tac unit =
     if debugging () then print m
 
-(** [smt] will mark the current goal for being solved through the SMT.
+/** [smt] will mark the current goal for being solved through the SMT.
 This does not immediately run the SMT: it just dumps the goal in the
 SMT bin. Note, if you dump a proof-relevant goal there, the engine will
-later raise an error. *)
+later raise an error. **/
 let smt () : Tac unit =
     match goals (), smt_goals () with
     | [], _ -> fail "smt: no active goals"
@@ -86,33 +86,33 @@ let smt () : Tac unit =
 
 let idtac () : Tac unit = ()
 
-(** Push the current goal to the back. *)
+/** Push the current goal to the back. **/
 let later () : Tac unit =
     match goals () with
     | g::gs -> set_goals (gs @ [g])
     | _ -> fail "later: no goals"
 
-(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
+/** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
-always be the case since [w] is usually a uvar. *)
+always be the case since [w] is usually a uvar. **/
 let exact (t : term) : Tac unit =
     with_policy SMT (fun () -> t_exact true false t)
 
-(** [apply f] will attempt to produce a solution to the goal by an application
+/** [apply f] will attempt to produce a solution to the goal by an application
 of [f] to any amount of arguments (which need to be solved as further goals).
 The amount of arguments introduced is the least such that [f a_i] unifies
-with the goal's type. *)
+with the goal's type. **/
 let apply (t : term) : Tac unit =
     t_apply true t
 
-(** [apply_raw f] is like [apply], but will ask for all arguments
+/** [apply_raw f] is like [apply], but will ask for all arguments
 regardless of whether they appear free in further goals. See the
-explanation in [t_apply]. *)
+explanation in [t_apply]. **/
 let apply_raw (t : term) : Tac unit =
     t_apply false t
 
-(** Like [exact], but allows for the term [e] to have a type [t] only
-under some guard [g], adding the guard as a goal. *)
+/** Like [exact], but allows for the term [e] to have a type [t] only
+under some guard [g], adding the guard as a goal. **/
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact true false t)
 
@@ -136,9 +136,9 @@ let unify t1 t2 : Tac bool =
     unify_env e t1 t2
 
 
-(** [divide n t1 t2] will split the current set of goals into the [n]
+/** [divide n t1 t2] will split the current set of goals into the [n]
 first ones, and the rest. It then runs [t1] on the first set, and [t2]
-on the second, returning both results (and concatenating remaining goals). *)
+on the second, returning both results (and concatenating remaining goals). **/
 let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a * 'b) =
     if n < 0 then
       fail "divide: negative n";
@@ -156,8 +156,8 @@ let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a * 'b) =
     set_goals (gsl @ gsr); set_smt_goals (sgs @ sgsl @ sgsr);
     (x, y)
 
-(** [focus t] runs [t ()] on the current active goal, hiding all others
-and restoring them at the end. *)
+/** [focus t] runs [t ()] on the current active goal, hiding all others
+and restoring them at the end. **/
 let focus (t : unit -> Tac 'a) : Tac 'a =
     match goals () with
     | [] -> fail "focus: no goals"
@@ -168,7 +168,7 @@ let focus (t : unit -> Tac 'a) : Tac 'a =
         set_goals (goals () @ gs); set_smt_goals (smt_goals () @ sgs);
         x
 
-(** Similar to [dump], but only dumping the current goal. *)
+/** Similar to [dump], but only dumping the current goal. **/
 let dump1 (m : string) = focus (fun () -> dump m)
 
 let rec mapAll (t : unit -> Tac 'a) : Tac (list 'a) =
@@ -191,9 +191,9 @@ let iterAllSMT (t : unit -> Tac unit) : Tac unit =
     set_goals gs;
     set_smt_goals (gs'@sgs')
 
-(** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
+/** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
 subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
-with a single goal (they're "focused"). *)
+with a single goal (they're "focused"). **/
 let rec seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
     focus (fun () -> f (); iterAll g)
 
@@ -211,10 +211,10 @@ let exact_args (qs : list aqualv) (t : term) : Tac unit =
 let exact_n (n : int) (t : term) : Tac unit =
     exact_args (repeatn n (fun () -> Q_Explicit)) t
 
-(** [ngoals ()] returns the number of goals *)
+/** [ngoals ()] returns the number of goals **/
 let ngoals () : Tac int = List.length (goals ())
 
-(** [ngoals_smt ()] returns the number of SMT goals *)
+/** [ngoals_smt ()] returns the number of SMT goals **/
 let ngoals_smt () : Tac int = List.length (smt_goals ())
 
 let fresh_bv t : Tac bv =
@@ -277,10 +277,10 @@ let repeat1 (#a:Type) (t : unit -> Tac a) : Tac (list a) =
 let repeat' (f : unit -> Tac 'a) : Tac unit =
     let _ = repeat f in ()
 
-(** Join all of the SMT goals into one. This helps when all of them are
+/** Join all of the SMT goals into one. This helps when all of them are
 expected to be similar, and therefore easier to prove at once by the SMT
 solver. TODO: would be nice to try to join them in a more meaningful
-way, as the order can matter. *)
+way, as the order can matter. **/
 let join_all_smt_goals () =
   let gs, sgs = goals (), smt_goals () in
   set_smt_goals [];
@@ -306,7 +306,7 @@ let admit_all () : Tac unit =
     let _ = repeat tadmit in
     ()
 
-(** [is_guard] returns whether the current goal arised from a typechecking guard *)
+/** [is_guard] returns whether the current goal arised from a typechecking guard **/
 let is_guard () : Tac bool =
     Tactics.Types.is_guard (_cur_goal ())
 
@@ -391,7 +391,7 @@ private
 let __eq_sym #t (a b : t) : Lemma ((a == b) == (b == a)) =
   FStar.PropositionalExtensionality.apply (a==b) (b==a)
 
-(** Like [rewrite], but works with equalities [v == e] and [e == v] *)
+/** Like [rewrite], but works with equalities [v == e] and [e == v] **/
 let rewrite' (b:binder) : Tac unit =
     ((fun () -> rewrite b)
      <|> (fun () -> binder_retype b;
@@ -450,7 +450,7 @@ let grewrite' (t1 t2 eq : term) : Tac unit =
     | _ ->
         fail "impossible"
 
-(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
+/** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities **/
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
         fold_left (fun k l () ->

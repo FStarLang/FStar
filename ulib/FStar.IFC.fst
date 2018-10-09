@@ -1,10 +1,10 @@
 module FStar.IFC
 
-(**
+/**
  * FStar.IFC provides a simple, generic abstraction
  * for monadic information-flow control
  * based on a user-defined (semi-)lattice of information flow labels
- **)
+ */
 
 (* Basic definitions for a join semilattice *)
 let associative #a (f: (a -> a -> a)) =

@@ -14,8 +14,8 @@ val loc_union
   (s1 s2: loc)
 : GTot loc
 
-(** The following is useful to make Z3 cut matching loops with
-modifies_trans and modifies_refl *)
+/** The following is useful to make Z3 cut matching loops with
+modifies_trans and modifies_refl **/
 val loc_union_idem
   (s: loc)
 : Lemma
@@ -324,7 +324,7 @@ val loc_disjoint_regions
   [SMTPat (loc_disjoint (loc_regions preserve_liveness1 rs1) (loc_regions preserve_liveness2 rs2))]
 
 
-(** The modifies clause proper *)
+/** The modifies clause proper **/
 
 val modifies
   (s: loc)
@@ -729,7 +729,7 @@ val buffer_live_mreference_unused_in_disjoint
   (ensures (loc_disjoint (loc_buffer b1) (loc_freed_mreference b2)))
   [SMTPat (B.live h b1); SMTPat (HS.unused_in b2 h)]
 
-(** BEGIN TODO: move to FStar.Monotonic.HyperStack *)
+/** BEGIN TODO: move to FStar.Monotonic.HyperStack **/
 
 val does_not_contain_addr
   (h: HS.mem)
@@ -791,7 +791,7 @@ val does_not_contain_addr_elim
   ))
   (ensures (~ (m `HS.contains` r)))
 
-(** END TODO *)
+/** END TODO **/
 
 val modifies_only_live_addresses
   (r: HS.rid)

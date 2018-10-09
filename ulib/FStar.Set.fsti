@@ -16,7 +16,7 @@
 *)
 
 module FStar.Set
-(** Computational sets (on eqtypes): membership is a boolean function *)
+/** Computational sets (on eqtypes): membership is a boolean function **/
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 val set (a:eqtype)

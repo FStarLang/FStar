@@ -1,5 +1,5 @@
 module FStar.Buffer
- 
+
 open FStar.Seq
 open FStar.UInt32
 module Int32 = FStar.Int32
@@ -13,7 +13,7 @@ module HST = FStar.HyperStack.ST
 
 #set-options "--initial_fuel 0 --max_fuel 0"
 
-//17-01-04 usage? move to UInt? 
+//17-01-04 usage? move to UInt?
 let lemma_size (x:int) : Lemma (requires (UInt.size x n))
 				     (ensures (x >= 0))
 				     [SMTPat (UInt.size x n)]
@@ -45,7 +45,7 @@ let max_length #a (b:buffer a) : GTot nat = v b.max_length
 let length #a (b:buffer a) : GTot nat = v b.length
 let idx #a (b:buffer a) : GTot nat = v b.idx
 
-//17-01-04 rename to container or ref? 
+//17-01-04 rename to container or ref?
 let content #a (b:buffer a) :
   GTot (reference (lseq a (max_length b))) = b.content
 
@@ -63,7 +63,7 @@ val recall: #a:Type
   (requires (fun m -> True))
   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
 let recall #a b = recall b.content
- 
+
 (* Ghostly access an element of the array, or the full underlying sequence *)
 let as_seq #a h (b:buffer a) : GTot (s:seq a{Seq.length s == length b}) =
   Seq.slice (sel h b) (idx b) (idx b + length b)
@@ -187,7 +187,7 @@ let disjoint_3 a b b' b'' = disjoint a b /\ disjoint a b' /\ disjoint a b''
 let disjoint_4 a b b' b'' b''' = disjoint a b /\ disjoint a b' /\ disjoint a b'' /\ disjoint a b'''
 let disjoint_5 a b b' b'' b''' b'''' = disjoint a b /\ disjoint a b' /\ disjoint a b'' /\ disjoint a b''' /\ disjoint a b''''
 
-let disjoint_ref_1 (#t:Type) (#u:Type) (a:buffer t) (r:reference u) = 
+let disjoint_ref_1 (#t:Type) (#u:Type) (a:buffer t) (r:reference u) =
   frameOf a =!= HS.frameOf r \/ as_addr a =!= HS.as_addr r
 let disjoint_ref_2 a r r' = disjoint_ref_1 a r /\ disjoint_ref_1 a r'
 let disjoint_ref_3 a r r' r'' = disjoint_ref_1 a r /\ disjoint_ref_2 a r' r''
@@ -585,7 +585,7 @@ let lemma_stack_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3 :
 //    verification as the specialized modifies clauses are abstract from outside the
 //    module *)
 
-(** Commutativity lemmas *)
+/** Commutativity lemmas **/
 let lemma_modifies_2_comm (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 : Lemma
   (requires True)
   (ensures  (modifies_2 b b' h0 h1 <==> modifies_2 b' b h0 h1))
@@ -601,7 +601,7 @@ let lemma_modifies_3_2_comm (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 
 
 #reset-options "--z3rlimit 20"
 
-(** Transitivity lemmas *)
+/** Transitivity lemmas **/
 let lemma_modifies_0_trans h0 h1 h2 : Lemma
   (requires (modifies_0 h0 h1 /\ modifies_0 h1 h2))
   (ensures  (modifies_0 h0 h2))
@@ -789,7 +789,7 @@ let lemma_modifies_0_none_trans h0 h1 h2 : Lemma
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
-(** Concrete getters and setters *)
+/** Concrete getters and setters **/
 val create: #a:Type -> init:a -> len:UInt32.t -> StackInline (buffer a)
   (requires (fun h -> True))
   (ensures (fun (h0:mem) b h1 -> b `unused_in` h0
@@ -815,7 +815,7 @@ unfold let p (#a:Type0) (init:list a) : GTot Type0 =
 unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
   normalize (length buf == len)
 
-(** Concrete getters and setters *)
+/** Concrete getters and setters **/
 val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
   (requires (fun h -> p #a init))
   (ensures (fun (h0:mem) b h1 ->
@@ -873,26 +873,26 @@ private let rcreate_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (mm:bool)
     lemma_upd h0 content s;
     b
 
-(** This function allocates a buffer in an "eternal" region, i.e. a region where memory is
-//  * automatically-managed. One does not need to call rfree on such a buffer. It
-//  * translates to C as a call to malloc and assumes a conservative garbage
-//  * collector is runnning. *)
+/** This function allocates a buffer in an "eternal" region, i.e. a region where memory is
+  automatically-managed. One does not need to call rfree on such a buffer. It
+  translates to C as a call to malloc and assumes a conservative garbage
+  collector is runnning. **/
 val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
   (requires (fun h            -> is_eternal_region r))
   (ensures (fun (h0:mem) b h1 -> rcreate_post_common r init len b h0 h1 /\ ~(is_mm b.content)))
 let rcreate #a r init len = rcreate_common r init len false
 
-(** This predicate tells whether a buffer can be `rfree`d. The only
+/** This predicate tells whether a buffer can be `rfree`d. The only
     way to produce it should be `rcreate_mm`, and the only way to
     consume it should be `rfree.` Rationale: a buffer can be `rfree`d
-    only if it is the result of `rcreate_mm`. Subbuffers should not. *)
+    only if it is the result of `rcreate_mm`. Subbuffers should not. **/
 abstract
 let freeable (#a: Type) (b: buffer a) : GTot Type0 =
   is_mm b.content /\ is_eternal_region (frameOf b) /\ idx b == 0
 
-(** This function allocates a buffer into a manually-managed buffer in a heap
+/** This function allocates a buffer into a manually-managed buffer in a heap
  * region, meaning that the client must call rfree in order to avoid memory
- * leaks. It translates to C as a straight malloc. *)
+ * leaks. It translates to C as a straight malloc. **/
 let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
   :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
                  (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm (content b) /\ freeable b))
@@ -900,7 +900,7 @@ let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
 
 #reset-options
 
-(** This function frees a buffer allocated with `rcreate_mm`. It translates to C as a regular free. *)
+/** This function frees a buffer allocated with `rcreate_mm`. It translates to C as a regular free. **/
 let rfree (#a:Type) (b:buffer a)
   :ST unit (requires (fun h0      -> live h0 b /\ freeable b))
            (ensures  (fun h0 _ h1 -> is_mm (content b) /\ is_eternal_region (frameOf b) /\ h1 == HS.free (content b) h0))
@@ -934,7 +934,7 @@ let to_seq #a b l =
 // ocaml-only, used for conversions to Platform.bytes
 val to_seq_full: #a:Type -> b:buffer a -> ST (seq a)
   (requires (fun h -> live h b))
-  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ 
+  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h1 b /\
 			 r == as_seq #a h1 b ))
 let to_seq_full #a b =
   let s = !b.content in
@@ -949,8 +949,8 @@ let index #a b n =
   let s = !b.content in
   Seq.index s (v b.idx + v n)
 
-(** REMARK: the proof of this lemma relies crucially on the `a == a'` condition
-//     in `disjoint`, and on the pattern in `Seq.slice_upd` *)
+/** REMARK: the proof of this lemma relies crucially on the `a == a'` condition
+   in `disjoint`, and on the pattern in `Seq.slice_upd` **/
 private let lemma_aux_0
   (#a:Type) (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) (h0:mem) (tt:Type) (bb:buffer tt)
   :Lemma (requires (live h0 b /\ live h0 bb /\ disjoint b bb))
@@ -1022,7 +1022,7 @@ let sub_sub
   (len2: UInt32.t {v i2 + v len2 <= v len1})
 : Lemma
   (ensures (sub (sub b i1 len1) i2 len2 == sub b (i1 +^ i2) len2))
-= ()  
+= ()
 
 let sub_zero_length
   (#a: Type)
@@ -1065,7 +1065,7 @@ let lemma_offset_spec (#a:Type) (b:buffer a)
      [SMTPatOr [[SMTPat (as_seq h (offset b i))];
                 [SMTPat (Seq.slice (as_seq h b) (v i) (length b))]]]
   = Seq.lemma_eq_intro (as_seq h (offset b i)) (Seq.slice (as_seq h b) (v i) (length b))
-  
+
 private val eq_lemma1:
     #a:eqtype
   -> b1:buffer a
@@ -1097,7 +1097,7 @@ let eq_lemma2 #a b1 b2 len h =
   cut (forall (j:nat). j < v len ==> get h b1 j == Seq.index s1 j);
   cut (forall (j:nat). j < v len ==> get h b2 j == Seq.index s2 j)
 
-(** Corresponds to memcmp for `eqtype` *)
+/** Corresponds to memcmp for `eqtype` **/
 val eqb: #a:eqtype -> b1:buffer a -> b2:buffer a
   -> len:UInt32.t{v len <= length b1 /\ v len <= length b2}
   -> ST bool
@@ -1113,10 +1113,10 @@ let rec eqb #a b1 b2 len =
     else
       false
 
-(**
-//     Defining operators for buffer accesses as specified at
-//     https://github.com/FStarLang/FStar/wiki/Parsing-and-operator-precedence
-//    *)
+/**
+     Defining operators for buffer accesses as specified at
+     https://github.com/FStarLang/FStar/wiki/Parsing-and-operator-precedence
+**/
 (* JP: if the [val] is not specified, there's an issue with these functions
 //  * taking an extra unification parameter at extraction-time... *)
 val op_Array_Access: #a:Type -> b:buffer a -> n:UInt32.t{v n<length b} -> Stack a
@@ -1140,7 +1140,7 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem)
 
 #reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
 
-(** Corresponds to memcpy *)
+/** Corresponds to memcpy **/
 val blit: #t:Type
   -> a:buffer t
   -> idx_a:UInt32.t{v idx_a <= length a}
@@ -1171,7 +1171,7 @@ let rec blit #t a idx_a b idx_b len =
     Seq.cons_head_tail (Seq.slice (as_seq h1 b) (v idx_b + v len') (length b))
     end
 
-(** Corresponds to memset *)
+/** Corresponds to memset **/
 val fill: #t:Type
   -> b:buffer t
   -> z:t
@@ -1281,7 +1281,7 @@ let modifies_subbuffer_2 (#t:Type) (#t':Type) h0 h1 (sub:buffer t) (a':buffer t'
   (ensures  (modifies_2 a a' h0 h1 /\ modifies_2 a' a h0 h1 /\ live h1 a))
   [SMTPat (modifies_2 sub a' h0 h1); SMTPat (includes a sub)]
   = ()
-    
+
 let modifies_subbuffer_2' (#t:Type) (#t':Type) h0 h1 (sub:buffer t) (a':buffer t') (a:buffer t) : Lemma
   (requires (live h0 a /\ live h0 a' /\ includes a sub /\ modifies_2 a' sub h0 h1 ))
   (ensures  (modifies_2 a a' h0 h1 /\ live h1 a))

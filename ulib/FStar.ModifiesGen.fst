@@ -605,7 +605,7 @@ let loc_disjoint_regions #al #c preserve_liveness1 preserve_liveness2 rs1 rs2 =
   assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_regions #_ #c preserve_liveness1 rs1))) (Ghost.reveal (Loc?.aux (loc_regions #_ #c preserve_liveness2 rs2))))
 
 
-(** Liveness-insensitive memory locations *)
+/** Liveness-insensitive memory locations **/
 
 let address_liveness_insensitive_locs #al c =
   Loc
@@ -635,7 +635,7 @@ let loc_includes_region_liveness_insensitive_locs_loc_addresses #al c preserve_l
 
 let loc_includes_region_liveness_insensitive_locs_loc_of_aloc #al c #r #a x = ()
 
-(** The modifies clause proper *)
+/** The modifies clause proper **/
 
 let modifies_preserves_livenesses
   (#al: aloc_t) (#c: cls al)

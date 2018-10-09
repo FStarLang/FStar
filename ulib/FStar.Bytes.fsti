@@ -41,17 +41,17 @@ unfold let u8 = U8.t
 unfold let u16 = U16.t
 unfold let u32 = U32.t
 
-(** Realized by uint8_t in C and int in OCaml (char does not have necessary operators...) *)
+/** Realized by uint8_t in C and int in OCaml (char does not have necessary operators...) **/
 unfold type byte = u8
 
-(** Realized in C by a pair of a length field and uint8_t* in C
-    Realized in OCaml by a string *)
+/** Realized in C by a pair of a length field and uint8_t* in C
+    Realized in OCaml by a string **/
 val bytes : t:Type0{hasEq t}
 val len : bytes -> u32
 
 unfold let length b = FStar.UInt32.v (len b)
 
-(**  representation for specs that need lemmas not defined here. *)
+/**  representation for specs that need lemmas not defined here. **/
 val reveal:
     bytes
   -> GTot (S.seq byte)
@@ -87,7 +87,7 @@ val empty_unique:
   -> Lemma (length b = 0 ==> b = empty_bytes)
     [SMTPat (len b)]
 
-(** If you statically know the length, it is OK to read at arbitrary indexes *)
+/** If you statically know the length, it is OK to read at arbitrary indexes **/
 val get:
     b:bytes
   -> pos:u32{U32.v pos < length b}
@@ -109,7 +109,7 @@ val extensionality:
   -> Lemma (requires (equal b1 b2))
           (ensures (b1 = b2))
 
-(** creating byte values **)
+/** creating byte values ***/
 val create:
     len:u32
   -> v:byte
@@ -130,7 +130,7 @@ val abyte (b:byte) : lbytes 1
 val twobytes (b:byte*byte) : lbytes 2
     // init 2ul (fun i -> if i = 0ul then fst b else snd b)
 
-(** appending bytes **)
+/** appending bytes ***/
 val append:
     b1:bytes
   -> b2:bytes
@@ -161,11 +161,11 @@ val split:
 
 unfold let split_ b (k:nat{FStar.UInt.size k U32.n /\ k < length b}) = split b (U32.uint_to_t k)
 
-(** Interpret a sequence of bytes as a mathematical integer encoded in big endian **)
+/** Interpret a sequence of bytes as a mathematical integer encoded in big endian ***/
 let fits_in_k_bytes (n:nat) (k:nat) = FStar.UInt.size n (op_Multiply 8 k)
 type uint_k (k:nat) = n:nat{fits_in_k_bytes n k}
 
-(** repr_bytes n: The number of bytes needed to represent a nat **)
+/** repr_bytes n: The number of bytes needed to represent a nat ***/
 val repr_bytes:
     n:nat
   -> k:pos{fits_in_k_bytes n k}
@@ -287,7 +287,7 @@ val hex_of_bytes: bytes -> Tot string
 val print_bytes: bytes -> Tot string
 val bytes_of_string: string -> bytes //abytes
 
-(** A better implementation of BufferBytes, formerly found in miTLS *)
+/** A better implementation of BufferBytes, formerly found in miTLS **/
 
 module B = LowStar.Buffer
 module M = LowStar.Modifies

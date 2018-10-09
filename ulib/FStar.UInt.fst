@@ -603,7 +603,7 @@ val lognot_lemma_1: #n:pos ->
   Lemma (requires True) (ensures (lognot #n (zero n) = ones n))
 let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
 
-(** Used in the next two lemmas *)
+/** Used in the next two lemmas **/
 private val to_vec_mod_pow2: #n:nat -> a:uint_t n -> m:pos -> i:nat{n - m <= i /\ i < n} ->
   Lemma (requires (a % pow2 m == 0))
         (ensures  (index (to_vec a) i == false))
@@ -622,7 +622,7 @@ let rec to_vec_mod_pow2 #n a m i =
     to_vec_mod_pow2 #(n - 1) (a / 2) (m - 1) i
     end
 
-(** Used in the next two lemmas *)
+/** Used in the next two lemmas **/
 private val to_vec_lt_pow2: #n:nat -> a:uint_t n -> m:nat -> i:nat{i < n - m} ->
   Lemma (requires (a < pow2 m))
         (ensures  (index (to_vec a) i == false))
@@ -639,7 +639,7 @@ let rec to_vec_lt_pow2 #n a m i =
       to_vec_lt_pow2 #(n - 1) (a / 2) (m - 1) i
       end
 
-(** Used in the next two lemmas *)
+/** Used in the next two lemmas **/
 #reset-options "--initial_fuel 0 --max_fuel 1 --z3rlimit 40"
 private val index_to_vec_ones: #n:pos -> m:nat{m <= n} -> i:nat{i < n} ->
   Lemma (requires True)

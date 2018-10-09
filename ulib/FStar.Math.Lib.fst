@@ -97,7 +97,7 @@ val op_Plus_Percent : a:int -> p:pos ->
   Tot (res:int{ (a >= 0 ==> res = a % p) /\ (a < 0 ==> res = -((-a) % p)) }) 
 let op_Plus_Percent a p = signed_modulo a p
 
-(** Useful lemmas for future proofs **)
+/** Useful lemmas for future proofs ***/
 
 (* Lemmas of x^n *)
 val powx_lemma1: a:int -> Lemma (powx a 1 = a)

@@ -4,10 +4,10 @@ module P = FStar.Pointer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-(** Code
+/** TaggedUnion
 
   The code of a tagged union with fields `l` is `typ l`
-*)
+*/
 
 val typ (l: P.union_typ) : P.typ
 

@@ -119,8 +119,8 @@ val loc_union
   (s1 s2: loc c)
 : GTot (loc c)
 
-(** The following is useful to make Z3 cut matching loops with
-modifies_trans and modifies_refl *)
+/** The following is useful to make Z3 cut matching loops with
+modifies_trans and modifies_refl **/
 val loc_union_idem
   (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
@@ -447,7 +447,7 @@ val loc_disjoint_regions
   (ensures (loc_disjoint (loc_regions #_ #c preserve_liveness1 rs1) (loc_regions preserve_liveness2 rs2)))
 
 
-(** Liveness-insensitive memory locations *)
+/** Liveness-insensitive memory locations **/
 
 val address_liveness_insensitive_locs (#aloc: aloc_t) (c: cls aloc) : Tot (loc c)
 
@@ -478,7 +478,7 @@ val loc_includes_region_liveness_insensitive_locs_loc_of_aloc
   (region_liveness_insensitive_locs c `loc_includes` loc_of_aloc #_ #c x)
 
 
-(** The modifies clause proper *)
+/** The modifies clause proper **/
 
 val modifies
   (#aloc: aloc_t) (#c: cls aloc)
@@ -884,7 +884,7 @@ val modifies_upd
   (requires (HS.contains h r))
   (ensures (modifies #_ #c (loc_mreference r) h (HS.upd h r v)))
 
-(** BEGIN TODO: move to FStar.Monotonic.HyperStack *)
+/** BEGIN TODO: move to FStar.Monotonic.HyperStack **/
 
 val does_not_contain_addr
   (h: HS.mem)
@@ -952,7 +952,7 @@ val does_not_contain_addr_elim
   ))
   (ensures (~ (m `HS.contains` r)))
 
-(** END TODO *)
+/** END TODO **/
 
 val loc_not_unused_in (#al: aloc_t) (c: cls al) (h: HS.mem) : GTot (loc c)
 
@@ -1039,7 +1039,7 @@ val mreference_unused_in_loc_unused_in
   (ensures (loc_unused_in c h `loc_includes` loc_freed_mreference r /\ loc_unused_in c h `loc_includes` loc_mreference r))
 
 
-(** * Compositionality *)
+/** * Compositionality **/
 
 val aloc_union: (bool -> Tot (aloc_t u#x)) -> Tot (aloc_t u#x)
 

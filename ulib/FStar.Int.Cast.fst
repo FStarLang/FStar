@@ -13,7 +13,7 @@ module I64 = FStar.Int64
 
 let op_At_Percent = FStar.Int.op_At_Percent
 
-(** Uints to Uints **)
+/** Uints to Uints ***/
 assume val uint8_to_uint64: a:U8.t -> Tot (b:U64.t{U64.v b = U8.v a})
 noextract
 assume val uint8_to_uint63: a:U8.t -> Tot (b:U63.t{U63.v b = U8.v a})
@@ -57,7 +57,7 @@ assume val uint64_to_uint32: a:U64.t -> Tot (b:U32.t{U32.v b = U64.v a % pow2 32
 assume val uint64_to_uint16: a:U64.t -> Tot (b:U16.t{U16.v b = U64.v a % pow2 16})
 assume val uint64_to_uint8 : a:U64.t -> Tot (b:U8.t{U8.v b = U64.v a % pow2 8})
 
-(** Ints to Ints **)
+/** Ints to Ints ***/
 assume val int8_to_int64: a:I8.t -> Tot (b:I64.t{I64.v b = I8.v a})
 noextract
 assume val int8_to_int63: a:I8.t -> Tot (b:I63.t{I63.v b = I8.v a})
@@ -101,7 +101,7 @@ assume val int64_to_int32: a:I64.t -> Tot (b:I32.t{I32.v b = (I64.v a @% pow2 32
 assume val int64_to_int16: a:I64.t -> Tot (b:I16.t{I16.v b = (I64.v a @% pow2 16)})
 assume val int64_to_int8 : a:I64.t -> Tot (b:I8.t {I8.v b  = (I64.v a @% pow2 8)})
 
-(** Uints to Ints **)
+/** Uints to Ints ***/
 assume val uint8_to_int64: a:U8.t -> Tot (b:I64.t{I64.v b = U8.v a})
 noextract
 assume val uint8_to_int63: a:U8.t -> Tot (b:I63.t{I63.v b = U8.v a})

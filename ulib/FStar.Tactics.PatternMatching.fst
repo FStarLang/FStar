@@ -112,7 +112,7 @@ let fetch_eq_side () : Tac (term * term) =
 /// (Skip over this part on a quick read — these are just convenience functions)
 
 
-(** Ensure that tactic `t` fails. **)
+/** Ensure that tactic `t` fails. ***/
 let mustfail #a (t: unit -> Tac a) (message: string) : Tac unit =
     match trytac t with
     | Some _ -> fail message
@@ -131,12 +131,12 @@ let and_elim' (h: binder) : Tac unit =
   and_elim (pack (Tv_Var (bv_of_binder h)));
   clear h
 
-(** Use a hypothesis at type a to satisfy a goal at type squash a *)
+/** Use a hypothesis at type a to satisfy a goal at type squash a **/
 let exact_hyp (a: Type0) (h: binder) : Tac unit =
   let hd = quote (FStar.Squash.return_squash #a) in
   exact (mk_app hd [((pack (Tv_Var (bv_of_binder h))), Q_Explicit)])
 
-(** Use a hypothesis h (of type a) to satisfy a goal at type a *)
+/** Use a hypothesis h (of type a) to satisfy a goal at type a **/
 let exact_hyp' (h: binder): Tac unit =
   exact (pack (Tv_Var (bv_of_binder h)))
 
@@ -274,9 +274,9 @@ let string_of_bindings (bindings: bindings) =
     (map (fun (nm, tm) -> (">> " ^ nm ^ ": " ^ term_to_string tm))
                   bindings)
 
-(** Match a pattern against a term.
+/** Match a pattern against a term.
 `cur_bindings` is a list of bindings collected while matching previous parts of
-the pattern.  Returns a result in the exception monad. **)
+the pattern.  Returns a result in the exception monad. ***/
 let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     : Tac (match_res bindings) =
   admit();
@@ -314,16 +314,16 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     // on top of Tac causesq queries to be hard on Z3
     | _ -> fail "?"
 
-(** Match a pattern `pat` against a term.
-Returns a result in the exception monad. **)
+/** Match a pattern `pat` against a term.
+Returns a result in the exception monad. ***/
 let interp_pattern (pat: pattern) : term -> Tac (match_res bindings) =
   fun (tm: term) ->
     rev_bindings <-- interp_pattern_aux pat [] tm;
     return (List.Tot.rev rev_bindings)
 
-(** Match a term `tm` against a pattern `pat`.
+/** Match a term `tm` against a pattern `pat`.
 Raises an exception if the match fails.  This is mostly useful for debugging:
-use ``mgw`` to capture matches. **)
+use ``mgw`` to capture matches. ***/
 let match_term pat (tm : term) : Tac bindings =
     match interp_pattern pat (norm_term [] tm) with
     | Success bb -> bb
@@ -384,7 +384,7 @@ let string_of_matching_solution ms =
   "\n{ vars: " ^ vars ^ "\n" ^
   "  hyps: " ^ hyps ^ " }"
 
-(** Find a varname in an association list; fail if it can't be found. **)
+/** Find a varname in an association list; fail if it can't be found. ***/
 let assoc_varname_fail (#b: Type) (key: varname) (ls: list (varname * b))
     : Tac b =
   match List.Tot.assoc key ls with
@@ -420,10 +420,10 @@ let ms_locate_unit (a: Type) _solution _binder_name : Tac unit =
 /// constructing a trivial matching problem and passing the predicate as the
 /// continuation.
 
-(** Scan ``hypotheses`` for a match for ``pat`` that lets ``body`` succeed.
+/** Scan ``hypotheses`` for a match for ``pat`` that lets ``body`` succeed.
 
 ``name`` is used to refer to the hypothesis matched in the final solution.
-``part_sol`` includes bindings gathered while matching previous solutions. **)
+``part_sol`` includes bindings gathered while matching previous solutions. ***/
 let rec solve_mp_for_single_hyp #a
                                 (name: varname)
                                 (pat: pattern)
@@ -446,8 +446,8 @@ let rec solve_mp_for_single_hyp #a
       (fun () ->
          solve_mp_for_single_hyp name pat hs body part_sol)
 
-(** Scan ``hypotheses`` for matches for ``mp_hyps`` that lets ``body``
-succeed. **)
+/** Scan ``hypotheses`` for matches for ``mp_hyps`` that lets ``body``
+succeed. ***/
 let rec solve_mp_for_hyps #a
                           (mp_hyps: list (varname * pattern))
                           (hypotheses: list hypothesis)
@@ -461,10 +461,10 @@ let rec solve_mp_for_hyps #a
       (solve_mp_for_hyps pats hypotheses body)
       partial_solution
 
-(** Solve a matching problem.
+/** Solve a matching problem.
 
 The solution returned is constructed to ensure that the continuation ``body``
-succeeds: this implements the usual backtracking-match semantics. **)
+succeeds: this implements the usual backtracking-match semantics. ***/
 let solve_mp #a (problem: matching_problem)
                 (hypotheses: binders) (goal: term)
                 (body: matching_solution -> Tac a)
@@ -497,7 +497,7 @@ let solve_mp #a (problem: matching_problem)
 assume val __ : #t:Type -> t
 let any_qn = `%__
 
-(** Compile a term `tm` into a pattern. **)
+/** Compile a term `tm` into a pattern. ***/
 let rec pattern_of_term_ex tm : Tac (match_res pattern) =
   match inspect tm with
   | Tv_Var bv ->
@@ -519,13 +519,13 @@ let rec pattern_of_term_ex tm : Tac (match_res pattern) =
        return (PApp fpat xpat))
   | _ -> raise (UnsupportedTermInPattern tm)
 
-(** β-reduce a term `tm`.
+/** β-reduce a term `tm`.
 This is useful to remove needles function applications introduced by F*, like
-``(fun a b c -> a) 1 2 3``. **)
+``(fun a b c -> a) 1 2 3``. ***/
 let beta_reduce (tm: term) : Tac term =
   norm_term [] tm
 
-(** Compile a term `tm` into a pattern. **)
+/** Compile a term `tm` into a pattern. ***/
 let pattern_of_term tm : Tac pattern =
     match pattern_of_term_ex tm with
     | Success bb -> bb
@@ -595,7 +595,7 @@ let classify_abspat_binder binder : Tac (abspat_binder_kind * term) =
     | Success _ -> fail "classifiy_abspat_binder: impossible (2)"
     | Failure _ -> ABKVar typ, typ
 
-(** Split an abstraction `tm` into a list of binders and a body. **)
+/** Split an abstraction `tm` into a list of binders and a body. ***/
 let rec binders_and_body_of_abs tm : Tac (binders * term) =
   match inspect tm with
   | Tv_Abs binder tm ->
@@ -606,7 +606,7 @@ let rec binders_and_body_of_abs tm : Tac (binders * term) =
 let cleanup_abspat (t: term) : Tac term =
   norm_term [] t
 
-(** Parse a notation into a matching problem and a continuation.
+/** Parse a notation into a matching problem and a continuation.
 
 Pattern-matching notations are of the form ``(fun binders… -> continuation)``,
 where ``binders`` are of one of the forms ``var …``, ``hyp …``, or ``goal …``.
@@ -619,7 +619,7 @@ A reduction phase is run to ensure that the pattern looks reasonable; it is
 needed because F* tends to infer arguments in β-expanded form.
 
 The continuation returned can't directly be applied to a pattern-matching
-solution; see ``interp_abspat_continuation`` below for that. **)
+solution; see ``interp_abspat_continuation`` below for that. ***/
 let matching_problem_of_abs (tm: term)
     : Tac (matching_problem * abspat_continuation) =
 
@@ -671,22 +671,22 @@ let matching_problem_of_abs (tm: term)
 /// ``abspat_continuation``, which is essentially just a list of binders and a
 /// term (the body of the abstraction pattern).
 
-(** Get the (quoted) type expected by a specific kind of abspat binder. **)
+/** Get the (quoted) type expected by a specific kind of abspat binder. ***/
 let arg_type_of_binder_kind binder_kind : Tac term =
   match binder_kind with
   | ABKVar typ -> typ
   | ABKHyp -> `binder
   | ABKGoal -> `unit
 
-(** Retrieve the function used to locate a value for a given abspat binder. **)
+/** Retrieve the function used to locate a value for a given abspat binder. ***/
 let locate_fn_of_binder_kind binder_kind =
   match binder_kind with
   | ABKVar _ -> `ms_locate_var
   | ABKHyp   -> `ms_locate_hyp
   | ABKGoal  -> `ms_locate_unit
 
-(** Construct a term fetching the value of an abspat argument from a quoted
-matching solution ``solution_term``. **)
+/** Construct a term fetching the value of an abspat argument from a quoted
+matching solution ``solution_term``. ***/
 let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
     : Tac term =
   let loc_fn = locate_fn_of_binder_kind argspec.asa_kind in
@@ -695,9 +695,9 @@ let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
                      (solution_term, Q_Explicit); (name_tm, Q_Explicit)] in
   mk_app loc_fn locate_args
 
-(** Specialize a continuation of type ``abspat_continuation``.
+/** Specialize a continuation of type ``abspat_continuation``.
 This constructs a fully applied version of `continuation`, but it requires a
-quoted solution to be passed in. **)
+quoted solution to be passed in. ***/
 let specialize_abspat_continuation' (continuation: abspat_continuation)
                                     (solution_term:term)
     : Tac term =
@@ -706,9 +706,9 @@ let specialize_abspat_continuation' (continuation: abspat_continuation)
   let argspecs, body = continuation in
   mk_app body (map mk_arg argspecs)
 
-(** Specialize a continuation of type ``abspat_continuation``.  This yields a
+/** Specialize a continuation of type ``abspat_continuation``.  This yields a
 quoted function taking a matching solution and running its body with appropriate
-bindings. **)
+bindings. ***/
 let specialize_abspat_continuation (continuation: abspat_continuation)
     : Tac term =
   let solution_binder = fresh_binder (`matching_solution) in
@@ -720,9 +720,9 @@ let specialize_abspat_continuation (continuation: abspat_continuation)
   debug ("… which reduces to " ^ (term_to_string normalized));
   thunked
 
-(** Interpret a continuation of type ``abspat_continuation``.
+/** Interpret a continuation of type ``abspat_continuation``.
 This yields a function taking a matching solution and running the body of the
-continuation with appropriate bindings. **)
+continuation with appropriate bindings. ***/
 let interp_abspat_continuation (a:Type0) (continuation: abspat_continuation)
     : Tac (matching_solution -> Tac a) =
   let applied = specialize_abspat_continuation continuation in
@@ -733,14 +733,14 @@ let interp_abspat_continuation (a:Type0) (continuation: abspat_continuation)
 ///
 /// We now have all we need to use pattern-matching, short of a few convenience functions:
 
-(** Construct a matching problem from an abspat. **)
+/** Construct a matching problem from an abspat. ***/
 let interp_abspat #a (abspat: a)
     : Tac (matching_problem * abspat_continuation) =
   matching_problem_of_abs (quote abspat)
 
-(** Construct an solve a matching problem.
+/** Construct an solve a matching problem.
 This higher-order function isn't very usable on its own — it's mostly a
-convenience function to avoid duplicating the problem-parsing code. **)
+convenience function to avoid duplicating the problem-parsing code. ***/
 let match_abspat #b #a (abspat: a)
                  (k: abspat_continuation -> Tac (matching_solution -> Tac b))
     : Tac b =
@@ -750,11 +750,11 @@ let match_abspat #b #a (abspat: a)
   admit();  //NS: imprecision in the encoding of the impure result function type
   solve_mp #matching_solution problem hypotheses goal (k continuation)
 
-(** Inspect the matching problem produced by parsing an abspat. **)
+/** Inspect the matching problem produced by parsing an abspat. ***/
 let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
   fst (interp_abspat #a abspat)
 
-(** Inspect the matching solution produced by parsing and solving an abspat. **)
+/** Inspect the matching solution produced by parsing and solving an abspat. ***/
 let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
   match_abspat abspat (fun _ -> (fun solution -> solution) <: Tac _)
 
@@ -773,8 +773,8 @@ let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
 /// If you think that sounds like a greedy algorithm, it does.  That's why it's
 /// called ‘gpm’ below: greedy pattern-matching.
 
-(** Solve a greedy pattern-matching problem and run its continuation.
-This if for pattern-matching problems in the ``Tac`` effect. **)
+/** Solve a greedy pattern-matching problem and run its continuation.
+This if for pattern-matching problems in the ``Tac`` effect. ***/
 let gpm #b #a (abspat: a) () : Tac b =
   let continuation, solution = match_abspat abspat tpair in
   interp_abspat_continuation b continuation solution
@@ -783,8 +783,8 @@ let gpm #b #a (abspat: a) () : Tac b =
 /// the implementations!  This one will only find assignments that let the body
 /// run successfuly.
 
-(** Solve a greedy pattern-matching problem and run its continuation.
-This if for pattern-matching problems in the ``Tac`` effect. **)
+/** Solve a greedy pattern-matching problem and run its continuation.
+This if for pattern-matching problems in the ``Tac`` effect. ***/
 let pm #b #a (abspat: a) : Tac b =
   match_abspat abspat (interp_abspat_continuation b)
 

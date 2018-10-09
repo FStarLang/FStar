@@ -1,7 +1,8 @@
-(**
- * Implementation of partial maps with extensional equality
- *)
+/**
+@summary Partial maps with extensional equality
+*/
 module FStar.Map
+
 open FStar.Set
 open FStar.FunctionalExtensionality
 module S = FStar.Set

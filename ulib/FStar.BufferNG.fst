@@ -119,7 +119,7 @@ let lemma_live_disjoint #a #a' h (b:buffer a) (b':buffer a') : Lemma
   [SMTPat (disjoint b b'); SMTPat (live h b)]
 = ()
 
-(** Concrete getters and setters *)
+/** Concrete getters and setters **/
 val create
   (#a:typ)
   (init: P.type_of_typ a)
@@ -427,7 +427,7 @@ val live_slice_middle
 let live_slice_middle #t b i len h =
   P.buffer_readable_gsub_merge b i len h
 
-(** Corresponds to memcpy *)
+/** Corresponds to memcpy **/
 abstract
 val blit: #t:typ
   -> a:buffer t
@@ -458,7 +458,7 @@ let blit #t a idx_a b idx_b len =
     assert (let g = gsub b 0ul idx_b in as_seq h1 g == as_seq h0 g)
   end
 
-(** Corresponds to memset *)
+/** Corresponds to memset **/
 abstract
 val fill: #t:typ
   -> b:buffer t

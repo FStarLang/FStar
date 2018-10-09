@@ -1,13 +1,13 @@
 module FStar.ConstantTime.Integers
 
-(**
+/**
     This module provides a refinement of FStar.IFC providing an
     interface restricted only to constant-time operations on integers.
 
     In contrast, FStar.IFC provides a general monadic information-flow
     control framework, which need not be restricted to constant-time
     operations.
-*)
+*/
 
 open FStar.IFC
 open FStar.Integers

@@ -14,10 +14,9 @@
    limitations under the License.
 *)
 
-(**
-
- @summary FStar.Map provides a polymorphic, partial map from keys to
-   values, where keys support decidable equality.
+/**
+  FStar.Map provides a polymorphic, partial map from keys to values,
+  where keys support decidable equality.
 
  `m:Map.t key value` is a partial map from `key` to `value`
 
@@ -27,8 +26,10 @@
     1. a total map `key -> Tot value`
     2. a set of keys that record the domain of the map
 
-*)
+  @summary Polymorphic, partial maps with decidable key equality
+*/
 module FStar.Map
+
 module S = FStar.Set
 
 (* Map.t key value: The main type provided by this module *)

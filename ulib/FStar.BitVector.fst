@@ -16,22 +16,22 @@ let ones_vec #n = create n true
 
 (* Bitwise operators *)
 val logand_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
-let rec logand_vec #n a b = 
+let rec logand_vec #n a b =
   if n = 1 then create 1 (index a 0 && index b 0)
   else append (create 1 (index a 0 && index b 0)) (logand_vec #(n - 1) (slice a 1 n) (slice b 1 n))
-  
+
 val logxor_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
-let rec logxor_vec #n a b = 
+let rec logxor_vec #n a b =
   if n = 1 then create 1 (index a 0 <> index b 0)
   else append (create 1 (index a 0 <> index b 0)) (logxor_vec #(n - 1) (slice a 1 n) (slice b 1 n))
-  
+
 val logor_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
-let rec logor_vec #n a b = 
+let rec logor_vec #n a b =
   if n = 1 then create 1 (index a 0 || index b 0)
   else append (create 1 (index a 0 || index b 0)) (logor_vec #(n - 1) (slice a 1 n) (slice b 1 n))
-  
+
 val lognot_vec: #n:pos -> a:bv_t n -> Tot (bv_t n)
-let rec lognot_vec #n a = 
+let rec lognot_vec #n a =
   if n = 1 then create 1 (not (index a 0))
   else append (create 1 (not (index a 0))) (lognot_vec #(n - 1) (slice a 1 n))
 
@@ -75,23 +75,23 @@ val lemma_xor_bounded: m:pos -> n:nat -> x:bv_t m -> y:bv_t m ->
         (ensures  (forall (i:nat). (i < m /\ i >= n) ==> (Seq.index (logxor_vec x y) (m-1-i) = false)))
 let lemma_xor_bounded m n x y = ()
 
-(** is_subset_vec is the property that the zero bits of b are also zero in a.
-    I.e. that a is a subset of b. *)
+/** is_subset_vec is the property that the zero bits of b are also zero in a.
+    I.e. that a is a subset of b. **/
 let is_subset_vec (#n:pos) (a:bv_t n) (b:bv_t n) =
   forall (i:nat). i < n ==> index b i = false ==> index a i = false
 
-(** is_superset_vec is the property that the non-zero bits of b are also non-zero in a.
-    I.e. that a is a superset of b. *)
+/** is_superset_vec is the property that the non-zero bits of b are also non-zero in a.
+    I.e. that a is a superset of b. **/
 let is_superset_vec (#n:pos) (a:bv_t n) (b:bv_t n) =
   forall (i:nat). i < n ==> index b i = true ==> index a i = true
 
-(** lemma_slice_subset_vec proves that the subset property is conserved in subslices. *)
+/** lemma_slice_subset_vec proves that the subset property is conserved in subslices. **/
 val lemma_slice_subset_vec: #n:pos -> a:bv_t n -> b:bv_t n -> i:nat -> j:nat{i < j && j <= n} ->
   Lemma (requires is_subset_vec a b)
   (ensures (match n with | 1 -> True | _ -> is_subset_vec #(j-i) (slice a i j) (slice b i j)))
 let lemma_slice_subset_vec #n a b i j = ()
 
-(** lemma_slice_superset_vec proves that the superset property is conserved in subslices. *)
+/** lemma_slice_superset_vec proves that the superset property is conserved in subslices. **/
 val lemma_slice_superset_vec: #n:pos -> a:bv_t n -> b:bv_t n -> i:nat -> j:nat{i < j && j <= n} ->
   Lemma (requires is_superset_vec a b)
   (ensures (match n with | 1 -> True | _ -> is_superset_vec #(j-i) (slice a i j) (slice b i j)))
@@ -104,7 +104,7 @@ let shift_left_vec #n a s =
   if s >= n then zero_vec #n
   else if s = 0 then a
   else append (slice a s n) (zero_vec #s)
-  
+
 val shift_right_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
 let shift_right_vec #n a s =
   if s >= n then zero_vec #n

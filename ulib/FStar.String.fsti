@@ -24,12 +24,12 @@ val string_of_list : list char -> Tot string
 let strlen s = List.length (list_of_string s)
 unfold let length s = strlen s
 
-(**
+/**
  When applied to a literal s of less than n characters, this predicate
  reduces to True before going to the SMT solver.
  Otherwise, the left disjunct reduces partially but the right disjunct
  remains as is, allowing to keep `strlen s <= n` in the context.
-*)
+**/
 unfold let maxlen s n = b2t (normalize_term (strlen s <= n)) \/ strlen s <= n
 
 val make: l:nat -> char -> Tot (s:string {length s = l})

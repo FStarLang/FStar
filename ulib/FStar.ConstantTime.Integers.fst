@@ -1,14 +1,14 @@
 module FStar.ConstantTime.Integers
 
-(** 
-    This module provides a refinement of FStar.IFC providing an
-    interface restricted only to constant-time operations on integers.
-    
-    In contrast, FStar.IFC provides a general monadic information-flow
-    control framework, which need not be restricted to constant-time
-    operations. 
-*)
-    
+/**
+  This module provides a refinement of FStar.IFC providing an
+  interface restricted only to constant-time operations on integers.
+
+  In contrast, FStar.IFC provides a general monadic information-flow
+  control framework, which need not be restricted to constant-time
+  operations.
+*/
+
 open FStar.IFC
 open FStar.Integers
 
@@ -35,7 +35,7 @@ let hide (#sl:sl) (#l:lattice_element sl) (#s:sw) (x:int{within_bounds s x})
 let reveal_hide #sl #l #s x = ()
 let hide_reveal #sl #l #s x = ()
 
-let promote #sl #l0 #s x l1 =  
+let promote #sl #l0 #s x l1 =
     join (return #_ #(secret_int l0 s) l1 x)
 
 //////////////////////////////////////////////////////////////////////////////////////////

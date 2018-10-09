@@ -6,7 +6,7 @@ module HST = FStar.HyperStack.ST
 
 (*** Definitions *)
 
-(** Pointers to data of type t.
+/** Pointers to data of type t.
 
     This defines two main types:
     - `npointer (t: typ)`, a pointer that may be "NULL";
@@ -14,7 +14,7 @@ module HST = FStar.HyperStack.ST
       (defined as a refinement of `npointer`).
 
     `nullptr #t` (of type `npointer t`) represents the "NULL" value.
-*)
+**/
 
 (* GM: Seems the initial fuels are needed, or we get queries with fuel=2 *)
 #set-options "--initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
@@ -108,7 +108,7 @@ noeq type _npointer (to : typ): Type0 =
 let npointer (t: typ): Tot Type0 =
   _npointer t
 
-(** The null pointer *)
+/** The null pointer **/
 
 let nullptr (#t: typ): Tot (npointer t) = NullPtr
 
@@ -123,7 +123,7 @@ let g_is_null_intro
   (g_is_null (nullptr #t) == true)
 = ()
 
-(** Buffers *)
+/** Buffers **/
 
 let not_an_array_cell (#t: typ) (p: pointer t) : GTot bool =
   match Pointer?.p p with
@@ -151,7 +151,7 @@ noeq type _buffer (t: typ) =
   _buffer t
 let buffer (t: typ): Tot Type0 = _buffer t
 
-(** Helper for the interpretation of unions.
+/** Helper for the interpretation of unions.
 
     A C union is interpreted as a dependent pair of a key and a value (which
     depends on the key). The intent is for the key to be ghost, as it will not
@@ -161,7 +161,7 @@ let buffer (t: typ): Tot Type0 = _buffer t
     - `gtdata_get_key` (defined below) is in `GTot`, and
     - `gtdata_get_value` asks for the key `k` to read, and a proof that `k`
       matches the ghost key.
-*)
+**/
 
 let gtdata (* ghostly-tagged data *)
   (key: eqtype)
@@ -249,14 +249,14 @@ let rec type_of_typ'_eq (t: typ) : Lemma (type_of_typ' t == type_of_typ t)
   | TBuffer t' -> type_of_typ'_eq t'
   | _ -> ()
 
-(** Interpretation of unions, as ghostly-tagged data
+/** Interpretation of unions, as ghostly-tagged data
     (see `gtdata` for more information).
-*)
+**/
 let _union_get_key (#l: union_typ) (v: union l) : Tot (struct_field l) = _gtdata_get_key v
 
 let struct_sel (#l: struct_typ) (s: struct l) (f: struct_field l) : Tot (type_of_struct_field l f) =
   DM.sel s f
- 
+
 let struct_upd (#l: struct_typ) (s: struct l) (f: struct_field l) (v: type_of_struct_field l f) : Tot (struct l) =
   DM.upd s f v
 
@@ -271,10 +271,10 @@ let union_get_value #l v fd = gtdata_get_value v fd
 
 let union_create l fd v = gtdata_create fd v
 
-(** For any `t: typ`, `dummy_val t` provides a default value of this type.
+/** For any `t: typ`, `dummy_val t` provides a default value of this type.
 
     This is useful to represent uninitialized data.
-*)
+**/
 let rec dummy_val
   (t: typ)
 : Tot (type_of_typ t)
@@ -307,7 +307,7 @@ let rec dummy_val
   | TNPointer t -> NullPtr #t
   | TBuffer t -> Buffer (BufferRootSingleton (Pointer t HS.dummy_aref PathBase)) 0ul 1ul
 
-(** The interpretation of type codes (`typ`) defined previously (`type_of_typ`)
+/** The interpretation of type codes (`typ`) defined previously (`type_of_typ`)
     maps codes to fully defined FStar types. In other words, a struct is
     interpreted as a dependent map where all fields have a well defined value.
 
@@ -331,7 +331,7 @@ let rec dummy_val
     - Finally, reading from a fully-initialized data is guarded by a `readable`
       predicate, which ensures that the dummy values cannot be accessed, and
       therefore that reading uninitialized data is actually forbidden.
-*)
+**/
 
 let rec otype_of_typ
   (t: typ)
@@ -822,7 +822,7 @@ let not_ovalue_is_readable_none_ovalue
 
 (*** Semantics of pointers *)
 
-(** Pointer paths *)
+/** Pointer paths **/
 
 let step_sel
   (#from: typ)
@@ -1298,7 +1298,7 @@ let path_includes_exists_concat
   (ensures (exists (r: path through to) . q == path_concat p r))
 = path_includes_ind
     (fun #to1_ #to2_ p1_ p2_ -> exists r . p2_ == path_concat p1_ r)
-    (fun #through #to_ p s -> 
+    (fun #through #to_ p s ->
       let r = PathStep through to_ PathBase s in
       assert_norm (PathStep through to_ p s == path_concat p r)
     )
@@ -1909,7 +1909,7 @@ let path_sel_upd_other'
   (ensures (path_sel (path_upd m p1 v) p2 == path_sel m p2))
 = path_sel_upd_other p1 p2
 
-(** Operations on pointers *)
+/** Operations on pointers **/
 
 let equal
   (#t1 #t2: typ)
@@ -2380,10 +2380,10 @@ let live_includes
   p1 p2
 *)
 
-(** The readable permission.
+/** The readable permission.
     We choose to implement it only abstractly, instead of explicitly
     tracking the permission in the heap.
-*)
+**/
 
 let readable
   (#a: typ)
@@ -2522,7 +2522,7 @@ let readable_gufield
   (fd: struct_field l)
 = ()
 
-(** The active field of a union *)
+/** The active field of a union **/
 
 let is_active_union_field
   (#l: union_typ)
@@ -2608,7 +2608,7 @@ let is_active_union_field_includes_readable
 
 (*** Semantics of buffers *)
 
-(** Operations on buffers *)
+/** Operations on buffers **/
 
 let _singleton_buffer_of_pointer
   (#t: typ)
@@ -2618,7 +2618,7 @@ let _singleton_buffer_of_pointer
   match pth with
   | PathStep _ _ pth' (StepCell ln ty i) ->
     (* reconstruct the buffer to the enclosing array *)
-    Buffer (BufferRootArray #ty #ln (Pointer from contents pth')) i 1ul 
+    Buffer (BufferRootArray #ty #ln (Pointer from contents pth')) i 1ul
   | _ ->
     Buffer (BufferRootSingleton p) 0ul 1ul
 
@@ -3278,7 +3278,7 @@ let loc_aux_includes_pointer
   (p: pointer t)
 : GTot Type0
 = match s with
-  | LocPointer p' -> 
+  | LocPointer p' ->
     p' `includes` p
   | LocBuffer b ->
     buffer_includes_pointer b p
@@ -3681,7 +3681,7 @@ let loc_includes_addresses_pointer #t r s p =
   MG.loc_includes_addresses_aloc #_ #cls false r s #(as_addr p) (LocPointer p)
 
 let loc_includes_addresses_buffer #t r s p =
-  MG.loc_includes_addresses_aloc #_ #cls false r s #(buffer_as_addr p) (LocBuffer p)  
+  MG.loc_includes_addresses_aloc #_ #cls false r s #(buffer_as_addr p) (LocBuffer p)
 
 let loc_includes_region_pointer #t s p =
   MG.loc_includes_region_aloc #_ #cls false s #(frameOf p) #(as_addr p) (LocPointer p)
@@ -3838,7 +3838,7 @@ let modifies_loc_includes = MG.modifies_loc_includes
 
 let modifies_trans = MG.modifies_trans
 
-(** Concrete allocators, getters and setters *)
+/** Concrete allocators, getters and setters **/
 
 let screate
   (value:typ)
@@ -3948,7 +3948,7 @@ let reference_of
   (p: pointer value)
 : Pure (HS.reference pointer_ref_contents)
   (requires (live h p))
-  (ensures (fun x -> 
+  (ensures (fun x ->
     live h p /\
     x == HS.reference_of h (Pointer?.contents p) pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) /\
     HS.frameOf x == HS.frameOf (greference_of p) /\
@@ -4100,7 +4100,7 @@ let write_union_field
   let vu : otype_of_typ (TUnion l) = vu in
   owrite p vu
 
-(** Lemmas and patterns *)
+/** Lemmas and patterns **/
 
 let modifies_fresh_frame_popped = MG.modifies_fresh_frame_popped
 
@@ -4117,8 +4117,8 @@ let modifies_loc_addresses_intro r a l h1 h2 =
 
 (* `modifies` and the readable permission *)
 
-(** NOTE: we historically used to have this lemma for arbitrary
-pointer inclusion, but that became wrong for unions. *)
+/** NOTE: we historically used to have this lemma for arbitrary
+pointer inclusion, but that became wrong for unions. **/
 
 let modifies_1_readable_struct #l f p h h' =
   readable_struct h' p
@@ -4127,18 +4127,18 @@ let modifies_1_readable_array #t #len i p h h' =
   readable_array h' p
 
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
-		
-let read_buffer		
-  (#t: typ)		
-  (b: buffer t)		
-  i		
-= read (pointer_of_buffer_cell b i)		
-		
-let write_buffer		
-  (#t: typ)		
-  (b: buffer t)		
-  i v		
-= write (pointer_of_buffer_cell b i) v		
+
+let read_buffer
+  (#t: typ)
+  (b: buffer t)
+  i
+= read (pointer_of_buffer_cell b i)
+
+let write_buffer
+  (#t: typ)
+  (b: buffer t)
+  i v
+= write (pointer_of_buffer_cell b i) v
 
 (* unused_in, cont'd *)
 
@@ -4170,7 +4170,7 @@ let buffer_live_reference_unused_in_disjoint #t1 #t2 h b1 b2 =
 (* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
 
 let root_buffer #t b =
-  let root = Buffer?.broot b in 
+  let root = Buffer?.broot b in
   match root with
   | BufferRootSingleton p -> Buffer root 0ul 1ul
   | BufferRootArray #_ #len _ -> Buffer root 0ul len

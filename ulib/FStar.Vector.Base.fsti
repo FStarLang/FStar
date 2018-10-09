@@ -14,53 +14,52 @@
       limitations under the License.
 *)
 
-(*
+/**
+ A library for vectors, i.e., immutable arrays, whose length is
+ representable by a machine integer, FStar.UInt32.t.
 
-   A library for vectors, i.e., immutable arrays, whose length is
-   representable by a machine integer, FStar.UInt32.t.
+ This is closely related to FStar.Seq, with the following main
+ differences:
 
-   This is closely related to FStar.Seq, with the following main
-   differences:
+ The type `raw a l`: A raw vector
 
-   The type `raw a l`: A raw vector
+   1. Raw vectors receive special treatment during extraction,
+      especially by KreMLin, which extracts a vector to a raw C
+      pointer. When extracing to OCaml, a `raw a l` is a
+      `Batteries.Vect t a`
 
-     1. Raw vectors receive special treatment during extraction,
-        especially by KreMLin, which extracts a vector to a raw C
-        pointer. When extracing to OCaml, a `raw a l` is a
-        `Batteries.Vect t a`
+   2. The length of a vector is representable in a U32.t
 
-     2. The length of a vector is representable in a U32.t
+   3. The interface is designed around a length-indexed type: this
+      enables the compilation to raw pointers, since this ensures
+      that all functions that manipulate vectors always have a U32
+      variable describing that vector's length in scope.
 
-     3. The interface is designed around a length-indexed type: this
-        enables the compilation to raw pointers, since this ensures
-        that all functions that manipulate vectors always have a U32
-        variable describing that vector's length in scope.
+      A length-indexed interface is also suitable for clients for whom
+      proving properties about the length is a primary concern: the
+      signatures in this interface carry intrinsic proofs about length
+      properties, simplifying proof obligations in client code.
 
-        A length-indexed interface is also suitable for clients for whom
-        proving properties about the length is a primary concern: the
-        signatures in this interface carry intrinsic proofs about length
-        properties, simplifying proof obligations in client code.
+   4. Raw vectors lack decidable equality (since that cannot be
+      implemented given the representation choice in KreMLin)
 
-     4. Raw vectors lack decidable equality (since that cannot be
-        implemented given the representation choice in KreMLin)
+ The type `t a`: A dynamically sized vector
 
-   The type `t a`: A dynamically sized vector
+   1. Conceptually, a `t a` is a pair of a `len:U32.t` and a `raw a
+      len`. They are implemented as such by KreMLin. When extracting
+      to OCaml, `t a` is identical to `raw a _`, i.e., it is still
+      extracted to a `Batteries.Vect.t a`
 
-     1. Conceptually, a `t a` is a pair of a `len:U32.t` and a `raw a
-        len`. They are implemented as such by KreMLin. When extracting
-        to OCaml, `t a` is identical to `raw a _`, i.e., it is still
-        extracted to a `Batteries.Vect.t a`
+   2. Unlike raw vectors, `t a` supports decidable equality when it
+      is supported by `a`. This is the main reason `t a` is provided
+      at an abstract type, rather than being exposed as a pair of a
+      U32 and a raw vector, since the latter does not support
+      decidable equality.
 
-     2. Unlike raw vectors, `t a` supports decidable equality when it
-        is supported by `a`. This is the main reason `t a` is provided
-        at an abstract type, rather than being exposed as a pair of a
-        U32 and a raw vector, since the latter does not support
-        decidable equality.
-
-   @summary Immutable vectors whose length is less than  `pow2 32`
-*)
-
+ @summary Immutable vectors of length less than  `pow2 32`
+*/
 module FStar.Vector.Base
+
 module U32 = FStar.UInt32
 module S = FStar.Seq
 
@@ -82,10 +81,10 @@ val raw:
 /// A convenience to use `nat` for the length of vector in specs and proofs
 let raw_length (#a:Type) (#l:len_t) (v:raw a l) : GTot nat = U32.v l
 
-(**
-    Abstractly, a `vec a l` is just a sequence whose length is `U32.v l`.
-    `reveal` and `hide` build an isomorphism establishing this
-**)
+/**
+  Abstractly, a `vec a l` is just a sequence whose length is `U32.v l`.
+  `reveal` and `hide` build an isomorphism establishing this
+*/
 
 val reveal:
     #a:Type

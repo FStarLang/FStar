@@ -1,4 +1,4 @@
-(** A library for monotonic references to partial, dependent maps, with a whole-map invariant *)
+/** A library for monotonic references to partial, dependent maps, with a whole-map invariant **/
 module FStar.Monotonic.Map
 
 open FStar.HyperStack

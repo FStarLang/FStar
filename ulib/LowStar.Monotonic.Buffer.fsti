@@ -1306,7 +1306,7 @@ val does_not_contain_addr_elim
   ))
   (ensures (~ (m `HS.contains` r)))
 
-(** END TODO *)
+/** END TODO **/
 
 /// Addresses that have not been allocated yet can be removed from
 /// modifies clauses.

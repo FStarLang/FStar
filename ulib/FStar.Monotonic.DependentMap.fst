@@ -1,7 +1,7 @@
 module FStar.Monotonic.DependentMap
-(** A library for mutable partial, dependent maps,
+/** A library for mutable partial, dependent maps,
     that grow monotonically,
-    while subject to an invariant on the entire map *)
+    while subject to an invariant on the entire map **/
 open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module DM = FStar.DependentMap

@@ -4,7 +4,7 @@ open FStar.List.Tot.Base
 open FStar.List.Pure.Base
 open FStar.List.Tot.Properties
 
-(** Properties of splitAt *)
+/** Properties of splitAt **/
 
 let rec splitAt_length
   (#a:Type)

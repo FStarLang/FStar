@@ -7,7 +7,7 @@ open FStar.HyperStack.ST // for := , !
 
 (*** Definitions *)
 
-(** Type codes *)
+/** Type codes **/
 
 type base_typ =
 | TUInt
@@ -60,9 +60,9 @@ and struct_typ = {
 }
 and union_typ = struct_typ
 
-(** `struct_field l` is the type of fields of `TStruct l`
+/** `struct_field l` is the type of fields of `TStruct l`
     (i.e. a refinement of `string`).
-*)
+**/
 let struct_field'
   (l: struct_typ')
 : Tot eqtype
@@ -73,14 +73,14 @@ let struct_field
 : Tot eqtype
 = struct_field' l.fields
 
-(** `union_field l` is the type of fields of `TUnion l`
+/** `union_field l` is the type of fields of `TUnion l`
     (i.e. a refinement of `string`).
-*)
+**/
 let union_field = struct_field
 
-(** `typ_of_struct_field l f` is the type of data associated with field `f` in
+/** `typ_of_struct_field l f` is the type of data associated with field `f` in
     `TStruct l` (i.e. a refinement of `typ`).
-*)
+**/
 
 let typ_of_struct_field'
   (l: struct_typ')
@@ -97,9 +97,9 @@ let typ_of_struct_field
 : Tot (t: typ {t << l})
 = typ_of_struct_field' l.fields f
 
-(** `typ_of_union_field l f` is the type of data associated with field `f` in
+/** `typ_of_union_field l f` is the type of data associated with field `f` in
     `TUnion l` (i.e. a refinement of `typ`).
-*)
+**/
 let typ_of_union_field
   (l: union_typ)
   (f: union_field l)
@@ -141,7 +141,7 @@ let rec typ_depth_typ_of_struct_field
     typ_depth_typ_of_struct_field l' f
   end
 
-(** Pointers to data of type t.
+/** Pointers to data of type t.
 
     This defines two main types:
     - `npointer (t: typ)`, a pointer that may be "NULL";
@@ -149,11 +149,11 @@ let rec typ_depth_typ_of_struct_field
       (defined as a refinement of `npointer`).
 
     `nullptr #t` (of type `npointer t`) represents the "NULL" value.
-*)
+**/
 
 val npointer (t: typ) : Tot Type0
 
-(** The null pointer *)
+/** The null pointer **/
 
 val nullptr (#t: typ): Tot (npointer t)
 
@@ -168,17 +168,17 @@ val g_is_null_intro
 // concrete, for subtyping
 let pointer (t: typ) : Tot Type0 = (p: npointer t { g_is_null p == false } )
 
-(** Buffers *)
+/** Buffers **/
 
 val buffer (t: typ): Tot Type0
 
-(** Interpretation of type codes.
+/** Interpretation of type codes.
 
    Defines functions mapping from type codes (`typ`) to their interpretation as
    FStar types. For example, `type_of_typ (TBase TUInt8)` is `FStar.UInt8.t`.
-*)
+**/
 
-(** Interpretation of base types. *)
+/** Interpretation of base types. **/
 let type_of_base_typ
   (t: base_typ)
 : Tot Type0
@@ -197,7 +197,7 @@ let type_of_base_typ
   | TBool -> bool
   | TUnit -> unit
 
-(** Interpretation of arrays of elements of (interpreted) type `t`. *)
+/** Interpretation of arrays of elements of (interpreted) type `t`. **/
 type array (length: array_length_t) (t: Type) = (s: Seq.seq t {Seq.length s == UInt32.v length})
 
 let type_of_struct_field''
@@ -358,7 +358,7 @@ val union_create
 
 (*** Semantics of pointers *)
 
-(** Operations on pointers *)
+/** Operations on pointers **/
 
 val equal
   (#t1 #t2: typ)
@@ -728,10 +728,10 @@ val includes_gcell
   (requires (UInt32.v i < UInt32.v length))
   (ensures (UInt32.v i < UInt32.v length /\ includes p (gcell p i)))
 
-(** The readable permission.
+/** The readable permission.
     We choose to implement it only abstractly, instead of explicitly
     tracking the permission in the heap.
-*)
+**/
 
 val readable
   (#a: typ)
@@ -855,7 +855,7 @@ val readable_gufield
   (ensures (readable h (gufield p fd) <==> (readable h p /\ union_get_key (gread h p) == fd)))
   [SMTPat (readable h (gufield p fd))]
 
-(** The active field of a union *)
+/** The active field of a union **/
 
 val is_active_union_field
   (#l: union_typ)
@@ -936,7 +936,7 @@ let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot Type0 =
 
 (*** Semantics of buffers *)
 
-(** Operations on buffers *)
+/** Operations on buffers **/
 
 val gsingleton_buffer_of_pointer
   (#t: typ)
@@ -1521,8 +1521,8 @@ val loc_union
   (s1 s2: loc)
 : GTot loc
 
-(** The following is useful to make Z3 cut matching loops with
-modifies_trans and modifies_refl *)
+/** The following is useful to make Z3 cut matching loops with
+modifies_trans and modifies_refl **/
 val loc_union_idem
   (s: loc)
 : Lemma
@@ -1934,7 +1934,7 @@ val loc_disjoint_regions
   (ensures (loc_disjoint (loc_regions rs1) (loc_regions rs2)))
   [SMTPat (loc_disjoint (loc_regions rs1) (loc_regions rs2))]
 
-(** The modifies clause proper *)
+/** The modifies clause proper **/
 
 val modifies
   (s: loc)
@@ -2052,7 +2052,7 @@ let modifies_0 (h0 h1: HS.mem) : GTot Type0 =
 let modifies_1 (#t: typ) (p: pointer t) (h0 h1: HS.mem) : GTot Type0 =
   modifies (loc_pointer p) h0 h1
 
-(** Concrete allocators, getters and setters *)
+/** Concrete allocators, getters and setters **/
 
 val screate
   (value:typ)
@@ -2136,9 +2136,9 @@ val write: #a:typ -> b:pointer a -> z:type_of_typ a -> HST.Stack unit
     /\ readable h1 b
     /\ gread h1 b == z ))
 
-(** Given our model, this operation is stateful, however it should be translated
+/** Given our model, this operation is stateful, however it should be translated
     to a no-op by Kremlin, as the tag does not actually exist at runtime.
-*)
+**/
 val write_union_field
   (#l: union_typ)
   (p: pointer (TUnion l))
@@ -2193,8 +2193,8 @@ val modifies_loc_addresses_intro
 
 (* `modifies` and the readable permission *)
 
-(** NOTE: we historically used to have this lemma for arbitrary
-pointer inclusion, but that became wrong for unions. *)
+/** NOTE: we historically used to have this lemma for arbitrary
+pointer inclusion, but that became wrong for unions. **/
 
 val modifies_1_readable_struct
   (#l: struct_typ)

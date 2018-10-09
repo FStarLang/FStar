@@ -1,7 +1,10 @@
 module FStar.Monotonic.DependentMap
-(** A library for mutable partial, dependent maps,
+
+/** A library for mutable partial, dependent maps,
     that grow monotonically,
-    while subject to an invariant on the entire map *)
+    while subject to an invariant on the entire map
+*/
+
 open FStar.HyperStack.ST
 
 module HS  = FStar.HyperStack
@@ -205,7 +208,7 @@ val lookup
           | Some v ->
             contains t x v h1 /\
             witnessed (contains t x v))))
- 
+
 let forall_t (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:HST.erid)
              (t:t r a b inv) (h:HS.mem) (pred: (x:a) -> b x -> Type0)
   = forall (x:a).{:pattern (sel (HS.sel h t) x) \/ (DM.sel (repr (HS.sel h t)) x)}

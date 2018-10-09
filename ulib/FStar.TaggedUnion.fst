@@ -4,7 +4,7 @@ module P = FStar.Pointer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-(** Code of a tagged union *)
+/** Code of a tagged union **/
 
 let typ_l (l: P.union_typ) = {
   P.name = "__tagged__" ^ l.P.name;
