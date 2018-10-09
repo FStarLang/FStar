@@ -853,7 +853,7 @@ let maybe_return_e2_and_bind
 
 let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) delta_constant None
 
-let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflags> * (bool -> lcomp))>) : lcomp =
+let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>) : lcomp =
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
                              C.effect_PURE_lid
                              lcases
@@ -1741,6 +1741,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->
               x=Abstract
+              || x=Inline_for_extraction
               || x=NoExtract
               || inferred x
               || visibility x

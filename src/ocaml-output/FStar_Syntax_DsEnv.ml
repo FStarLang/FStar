@@ -1601,7 +1601,7 @@ let (try_lookup_effect_name :
 let (try_lookup_effect_name_and_attributes :
   env ->
     FStar_Ident.lident ->
-      (FStar_Ident.lident,FStar_Syntax_Syntax.cflags Prims.list)
+      (FStar_Ident.lident,FStar_Syntax_Syntax.cflag Prims.list)
         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
   =
   fun env  ->

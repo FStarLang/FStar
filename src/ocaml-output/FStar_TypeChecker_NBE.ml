@@ -1228,7 +1228,9 @@ and (translate :
                         FStar_TypeChecker_Cfg.weakly_reduce_scrutinee =
                           (uu___265_4708.FStar_TypeChecker_Cfg.weakly_reduce_scrutinee);
                         FStar_TypeChecker_Cfg.nbe_step =
-                          (uu___265_4708.FStar_TypeChecker_Cfg.nbe_step)
+                          (uu___265_4708.FStar_TypeChecker_Cfg.nbe_step);
+                        FStar_TypeChecker_Cfg.for_extraction =
+                          (uu___265_4708.FStar_TypeChecker_Cfg.for_extraction)
                       });
                    FStar_TypeChecker_Cfg.tcenv =
                      (uu___264_4705.FStar_TypeChecker_Cfg.tcenv);
@@ -1643,7 +1645,7 @@ and (readback_residual_comp :
 and (translate_flag :
   FStar_TypeChecker_Cfg.cfg ->
     FStar_TypeChecker_NBETerm.t Prims.list ->
-      FStar_Syntax_Syntax.cflags -> FStar_TypeChecker_NBETerm.cflags)
+      FStar_Syntax_Syntax.cflag -> FStar_TypeChecker_NBETerm.cflag)
   =
   fun cfg  ->
     fun bs  ->
@@ -1668,7 +1670,7 @@ and (translate_flag :
 
 and (readback_flag :
   FStar_TypeChecker_Cfg.cfg ->
-    FStar_TypeChecker_NBETerm.cflags -> FStar_Syntax_Syntax.cflags)
+    FStar_TypeChecker_NBETerm.cflag -> FStar_Syntax_Syntax.cflag)
   =
   fun cfg  ->
     fun f  ->
@@ -2614,7 +2616,9 @@ let (normalize :
                    FStar_TypeChecker_Cfg.weakly_reduce_scrutinee =
                      (uu___275_7835.FStar_TypeChecker_Cfg.weakly_reduce_scrutinee);
                    FStar_TypeChecker_Cfg.nbe_step =
-                     (uu___275_7835.FStar_TypeChecker_Cfg.nbe_step)
+                     (uu___275_7835.FStar_TypeChecker_Cfg.nbe_step);
+                   FStar_TypeChecker_Cfg.for_extraction =
+                     (uu___275_7835.FStar_TypeChecker_Cfg.for_extraction)
                  });
               FStar_TypeChecker_Cfg.tcenv =
                 (uu___274_7832.FStar_TypeChecker_Cfg.tcenv);
@@ -2709,7 +2713,9 @@ let (normalize_for_unit_test :
                  FStar_TypeChecker_Cfg.weakly_reduce_scrutinee =
                    (uu___277_7872.FStar_TypeChecker_Cfg.weakly_reduce_scrutinee);
                  FStar_TypeChecker_Cfg.nbe_step =
-                   (uu___277_7872.FStar_TypeChecker_Cfg.nbe_step)
+                   (uu___277_7872.FStar_TypeChecker_Cfg.nbe_step);
+                 FStar_TypeChecker_Cfg.for_extraction =
+                   (uu___277_7872.FStar_TypeChecker_Cfg.for_extraction)
                });
             FStar_TypeChecker_Cfg.tcenv =
               (uu___276_7869.FStar_TypeChecker_Cfg.tcenv);

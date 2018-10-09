@@ -6934,8 +6934,8 @@ and (tc_eqn :
         ((FStar_Syntax_Syntax.pat,FStar_Syntax_Syntax.term
                                     FStar_Pervasives_Native.option,FStar_Syntax_Syntax.term)
            FStar_Pervasives_Native.tuple3,FStar_Syntax_Syntax.term,FStar_Ident.lident,
-          FStar_Syntax_Syntax.cflags Prims.list,Prims.bool ->
-                                                  FStar_Syntax_Syntax.lcomp,
+          FStar_Syntax_Syntax.cflag Prims.list,Prims.bool ->
+                                                 FStar_Syntax_Syntax.lcomp,
           FStar_TypeChecker_Env.guard_t) FStar_Pervasives_Native.tuple6)
   =
   fun scrutinee  ->

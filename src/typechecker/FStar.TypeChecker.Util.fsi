@@ -59,7 +59,7 @@ val should_return: env -> option<term> -> lcomp -> bool
 val return_value: env -> option<universe> -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
-val bind_cases: env -> typ -> list<(typ * lident * list<cflags> * (bool -> lcomp))> -> lcomp
+val bind_cases: env -> typ -> list<(typ * lident * list<cflag> * (bool -> lcomp))> -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
