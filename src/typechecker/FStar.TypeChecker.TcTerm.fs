@@ -552,29 +552,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env0, _ = Env.clear_expected_typ env in
     let e, c, g = tc_term env0 e in
     let reify_op, _ = U.head_and_args top in
-    let u_c =
-        (* c' is the computation type of the computation type and as such should be Type u *)
-        let _, c', _ = tc_term env0 c.res_typ in  //AR: note that we use env0, which unsets the expected_typ
-        match (SS.compress c'.res_typ).n with
-        | Tm_type u -> u
-        | _ ->
-            (* We constrain this unification variable to be of the shape Type u *)
-            (* for some new unification variable u *)
-            let t, u = U.type_u () in
-            let g_opt = Rel.try_teq true env c'.res_typ t in
-            begin match g_opt with
-            | Some g' -> Rel.force_trivial_guard env g'
-            | None ->
-                failwith (BU.format3
-                  "Unexpected result type of computation. \
-                   The computation type %s of the term %s should have \
-                   type Type n for some level n but has type %s"
-                  (Print.lcomp_to_string c')
-                  (Print.term_to_string c.res_typ)
-                  (Print.term_to_string c'.res_typ))
-            end ;
-            u
-    in
+    let u_c = env.universe_of env c.res_typ in
     let ef = U.comp_effect_name (lcomp_comp c) in
     if not (is_user_reifiable_effect env ef) then
         raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" ef.str)) e.pos;
