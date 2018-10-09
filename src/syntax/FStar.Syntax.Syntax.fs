@@ -189,16 +189,16 @@ and arg = term * aqual                                           (* marks an exp
 and args = list<arg>
 and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
-and cflag =
-  | TOTAL
-  | MLEFFECT
-  | RETURN
-  | PARTIAL_RETURN
-  | SOMETRIVIAL
-  | TRIVIAL_POSTCONDITION
-  | SHOULD_NOT_INLINE
-  | LEMMA
-  | CPS
+and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
+  | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
+  | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
+  | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
+  | RETURN                                                         (* the WP is return_wp of something *)
+  | PARTIAL_RETURN                                                 (* the WP is return_wp of something, possibly strengthened with some precondition *)
+  | SOMETRIVIAL                                                    (* the WP is the null wp *)
+  | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
+  | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
+  | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of term
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)

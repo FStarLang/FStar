@@ -2,40 +2,13 @@
   "çØÂrRJG\bÊêŸª\u0007]ÓW",
   [
     [
-      "Map.OpaqueToSMT.Test.imap",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "92dc1dc8c892f2ffa2cba77f4eae05d8"
-    ],
-    [
-      "Map.OpaqueToSMT.Test.upd",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2d3ccf379b0835732934c725aa24babe"
-    ],
-    [
-      "Map.OpaqueToSMT.Test.sel",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "1d6b4be1f9ac068f87eb4d0e0557ef43"
-    ],
-    [
       "Map.OpaqueToSMT.Test.test1",
       1,
       0,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1d766713a3af548722c7411c6dc28977"
+      "4567bddb3c17e810a9abb0deb4d0d2bb"
     ],
     [
       "Map.OpaqueToSMT.Test.test2",
@@ -44,43 +17,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6a9e3facc1da58a1aa97db59e74f6fbd"
-    ],
-    [
-      "Map.OpaqueToSMT.Test.imap",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "676545e6d62636046cf298fe399ac245"
-    ],
-    [
-      "Map.OpaqueToSMT.Test.upd",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "86afea06f59e37c889677a9da690ff16"
-    ],
-    [
-      "Map.OpaqueToSMT.Test.upd",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "556fe312e9c3350a39e6276d4688d5a1"
-    ],
-    [
-      "Map.OpaqueToSMT.Test.sel",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "7ad73bff249f03e27a9ca92e513fc13f"
+      "9a1a8fe09f802e6691736d3d5a968147"
     ],
     [
       "Map.OpaqueToSMT.Test.test1",
@@ -89,7 +26,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3b4e367df0225ea7054285daf46a95aa"
+      "0cffbdd571d2686db1afdb6252fbf199"
     ],
     [
       "Map.OpaqueToSMT.Test.test2",
@@ -98,7 +35,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "af95eb4beb6037e6aa955140ba69ad86"
+      "d0ea81d4b1e9a75b960c7f0fee04475b"
     ]
   ]
 ]

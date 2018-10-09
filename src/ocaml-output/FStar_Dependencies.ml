@@ -5,8 +5,8 @@ let (find_deps_if_needed :
       FStar_Pervasives_Native.tuple2)
   =
   fun files  ->
-    let uu____16 = FStar_Parser_Dep.collect files  in
-    match uu____16 with
+    let uu____19 = FStar_Parser_Dep.collect files  in
+    match uu____19 with
     | (all_files,deps) ->
         (match all_files with
          | [] ->
@@ -14,5 +14,5 @@ let (find_deps_if_needed :
                 (FStar_Errors.Error_DependencyAnalysisFailed,
                   "Dependency analysis failed; reverting to using only the files provided\n");
               (files, deps))
-         | uu____44 -> ((FStar_List.rev all_files), deps))
+         | uu____56 -> ((FStar_List.rev all_files), deps))
   
