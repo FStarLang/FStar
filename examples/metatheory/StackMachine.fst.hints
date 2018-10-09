@@ -12,7 +12,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8dd075c121691d0ec1f1b94376ffbeed"
+      "027a7f9b0559acb643710bfdaf00021f"
     ],
     [
       "StackMachine.__proj__Const__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_733535f472f5bce64316080d16cf1692"
       ],
       0,
-      "80109262ccebe6441816bb0352dbb3da"
+      "01480a59d7151a70546a1e6329993724"
     ],
     [
       "StackMachine.__proj__Binop__item___0",
@@ -38,7 +38,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
-      "6fd37254bde5c33ca8eb6fdba73210cb"
+      "4fa054a797a9c9679e9e411bfc8ed52d"
     ],
     [
       "StackMachine.__proj__Binop__item___1",
@@ -51,7 +51,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
-      "acc47ba01536f5085e4c1d1a01cbe254"
+      "0c2ad063fec6380b3110e890bc14a81a"
     ],
     [
       "StackMachine.__proj__Binop__item___2",
@@ -64,7 +64,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
-      "06d47737f8f2cbf12885052934b1d23a"
+      "875313fc5acc9af536b99da5a7a4da7f"
     ],
     [
       "StackMachine.add_nat",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "dbea8e9758727acc9be7aabbfe76fa13"
+      "cb7c4bdaa6047b11c446b85a4752d946"
     ],
     [
       "StackMachine.mul_nat",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "cd1837989d114b8747b6c363bd25c45e"
+      "28c25bfa247e4701407770b495606ad3"
     ],
     [
       "StackMachine.eq_nat",
@@ -102,7 +102,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a14e350133dc539b76ed34e09fa0fee8"
+      "5efe5712b03f55a063d53595daabb5bd"
     ],
     [
       "StackMachine.binopDenote",
@@ -115,7 +115,7 @@
         "fuel_guarded_inversion_StackMachine.binop"
       ],
       0,
-      "7149a464198d8e1ff6a3b31bdc55acd9"
+      "bc64295dae8bb65c6aa97d5809f0fd05"
     ],
     [
       "StackMachine.expDenote",
@@ -131,7 +131,7 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
-      "98b93611bace3ba5e5654d5a6c9771be"
+      "68857317f3c68a2d54fec3288f2f8e7a"
     ],
     [
       "StackMachine.instr",
@@ -144,7 +144,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ac30b444c41fa9fa414ca33a3d70ff36"
+      "5dd44eebb82e2b815ad35788b1e43a11"
     ],
     [
       "StackMachine.__proj__IConst__item___0",
@@ -158,7 +158,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_a31651c68d304738b29495c5aeb6aa44"
       ],
       0,
-      "aac8bcb7dde4e8c3e9a2240c32ebd49c"
+      "aea6cceb0ae59713d7f386e0ba702439"
     ],
     [
       "StackMachine.__proj__IBinop__item___0",
@@ -172,7 +172,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_94dbe5757f232f1d6a06d4d6dfaafd34"
       ],
       0,
-      "734f99d8c1738579d79c643caba0cd19"
+      "19e3079e4a79ed1675b2ec31a6b0ab38"
     ],
     [
       "StackMachine.instrDenote",
@@ -186,7 +186,7 @@
         "fuel_guarded_inversion_StackMachine.instr"
       ],
       0,
-      "a0edb0044d54277d1e63e29ef75df96c"
+      "620ed6cffe02b89a921b20b8db6e9a89"
     ],
     [
       "StackMachine.progDenote",
@@ -209,7 +209,7 @@
         "typing_StackMachine.instrDenote"
       ],
       0,
-      "e2452c76c011afb5e0efb7c81695fa40"
+      "1726c43a66ba41fe5a3fb92bc6ddf472"
     ],
     [
       "StackMachine.compile",
@@ -225,7 +225,7 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
-      "bc6f9277e8ab0e33ee7e3de4316e088d"
+      "d6178f49c5ed769e1bdeffc7a766b38a"
     ],
     [
       "StackMachine.app_assoc_reverse",
@@ -250,7 +250,7 @@
         "token_correspondence_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "28f58ccc7e29b33cb28e060077110134"
+      "b4450e18a5611135fd88bcda1b4ee2e3"
     ],
     [
       "StackMachine.compile_correct'",
@@ -327,7 +327,7 @@
         "unit_typing"
       ],
       0,
-      "a678f97e30701c7b8e5fb02e37b0430c"
+      "d7bf4f18b30a5f91b7142e5dbc6da2bb"
     ],
     [
       "StackMachine.app_nil_end",
@@ -344,7 +344,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b5f8e3a4c13c8863e163ae1fe4472217"
+      "760f5d635f064a2202f72f719eff6309"
     ],
     [
       "StackMachine.compile_correct",
@@ -367,7 +367,7 @@
         "projection_inverse_Prims.Nil_a", "typing_StackMachine.compile"
       ],
       0,
-      "af1f1274db0dcfe8a750c5665c60fff7"
+      "b42147cb507b51b13493ed7837ec07af"
     ],
     [
       "StackMachine.tbinop",
@@ -376,7 +376,7 @@
       1,
       [ "@query", "assumption_StackMachine.typ__uu___haseq" ],
       0,
-      "5147a40371fc4e4dfd8b790196241d26"
+      "953adf7ba2630963d4235c6cca36359d"
     ],
     [
       "StackMachine.__proj__TEq__item__t",
@@ -389,7 +389,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_013f03405ee56e2bee5ec40dee6f6602"
       ],
       0,
-      "ebcecc5941c79de18755762164adabd5"
+      "f1791f799492785a1bcb7fab8495316b"
     ],
     [
       "StackMachine.texp",
@@ -404,7 +404,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a2d75d45d99e95f8163cf33fc2de31fd"
+      "0092a61e8833a890bfc26a9261b81ff2"
     ],
     [
       "StackMachine.__proj__TNConst__item___0",
@@ -418,7 +418,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_6dd4891ce41bb7d9b26ab7b05113bdd5"
       ],
       0,
-      "d33a97706ce5c2ac5257b84438f39bf5"
+      "5892b4f970f1b797434092c48489851f"
     ],
     [
       "StackMachine.__proj__TBConst__item___0",
@@ -432,7 +432,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_9da0b8f720646900d62e529141346f6a"
       ],
       0,
-      "ddffb07e3c2ba32acc9c5b81b19358c3"
+      "415806b20aa5017c6f6d76b65e9dd880"
     ],
     [
       "StackMachine.__proj__TBinop__item__t1",
@@ -446,7 +446,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "447e88c7701db8c64e69de0016900ef8"
+      "b0ba54292804229c10503c078baa76c9"
     ],
     [
       "StackMachine.__proj__TBinop__item__t2",
@@ -460,7 +460,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "a3310f79e4afec5deec451f7687879a1"
+      "8e79e6224460a8e2a715932090d535ed"
     ],
     [
       "StackMachine.__proj__TBinop__item__t",
@@ -474,7 +474,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "43af59db570f2414cbd8be07646a70fa"
+      "b2756d2ad6397b563adf7561557c4a85"
     ],
     [
       "StackMachine.__proj__TBinop__item___3",
@@ -494,7 +494,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "fcabd5048661c4522c769b8dee8c97f8"
+      "735e2e03ec8684937a26edf923359dc7"
     ],
     [
       "StackMachine.__proj__TBinop__item___4",
@@ -510,7 +510,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "90564e30798fcccc2d923d26e458dc2f"
+      "28e203ce85aa03b749ba5fcef1ad6b96"
     ],
     [
       "StackMachine.__proj__TBinop__item___5",
@@ -526,7 +526,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "e816c42a5e7cc86914a6ac9ca4b9f4f5"
+      "94508cc2510112d441e187d25898440f"
     ],
     [
       "StackMachine.typeDenote",
@@ -539,7 +539,7 @@
         "fuel_guarded_inversion_StackMachine.typ"
       ],
       0,
-      "213098f86b2883ce830b35d7ab73e1da"
+      "e5e04249833572f9a80977d6850cd05c"
     ],
     [
       "StackMachine.tbinopDenote",
@@ -571,7 +571,7 @@
         "typing_tok_StackMachine.TTimes@tok"
       ],
       0,
-      "5f219d119a3d8d415c51ad08e97a9529"
+      "a14ffb1c397178e8aead65e53b877505"
     ],
     [
       "StackMachine.texpDenote",
@@ -598,7 +598,7 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
-      "8ad907502917d3ff2c7c1c94fbdbcb6f"
+      "7e460db760c79c774628c074d266edff"
     ],
     [
       "StackMachine.tinstr",
@@ -617,7 +617,7 @@
         "kinding_StackMachine.typ@tok"
       ],
       0,
-      "b535fcabc81987810eb87644913d21e8"
+      "a6aeb32a5f42c4ae810441085b3b2ac4"
     ],
     [
       "StackMachine.__proj__TiNConst__item__s",
@@ -631,7 +631,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_a56f6ca6150cb01114a8fab36ff93703"
       ],
       0,
-      "aa260d2741e9b0b62a5b3386143f6955"
+      "958efc6a9285dc9db5990185917fc241"
     ],
     [
       "StackMachine.__proj__TiNConst__item___1",
@@ -645,7 +645,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_a56f6ca6150cb01114a8fab36ff93703"
       ],
       0,
-      "d555ed3f841c8dae93f9f6f3d535d8b7"
+      "d2e54503729d1fd27bd3dbbee2f21b6a"
     ],
     [
       "StackMachine.__proj__TiBConst__item__s",
@@ -659,7 +659,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_55dae19a239461194000bc379645c48e"
       ],
       0,
-      "9d3b799f7ed2f8ea62834eef2584f3d0"
+      "c5a5cc514109ed03b454a5d1d4146785"
     ],
     [
       "StackMachine.__proj__TiBConst__item___1",
@@ -673,7 +673,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_55dae19a239461194000bc379645c48e"
       ],
       0,
-      "a3eb436582f819eb7f2ec9b95f8cb2a1"
+      "0ce1483ff06d215000b761cc7bad5a38"
     ],
     [
       "StackMachine.__proj__TiBinop__item__arg1",
@@ -687,7 +687,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
-      "163fb54386e6458ae628b80cf2b9b6e4"
+      "ed4d18b48bd9ed909a65a08f44bde5e9"
     ],
     [
       "StackMachine.__proj__TiBinop__item__arg2",
@@ -701,7 +701,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
-      "2874303aa09be91e06d3bbaf4f6e5aa0"
+      "11c8ce35fb2d8a7c9a0942e2926af1c2"
     ],
     [
       "StackMachine.__proj__TiBinop__item__res",
@@ -715,7 +715,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
-      "803b2615ba1a3b0ce3685159eb77ad9e"
+      "ac1b421e989052976ec50449de2c8771"
     ],
     [
       "StackMachine.__proj__TiBinop__item__s",
@@ -729,7 +729,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
-      "945703a5a21296db339e00816ba4653e"
+      "07171b44110129c97f847ca88d8cb95f"
     ],
     [
       "StackMachine.__proj__TiBinop__item___4",
@@ -749,7 +749,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
-      "c9d1fd83a1d88f5422d90c9fd3ad72d3"
+      "74d3a35a976af3e4b8ad2d84fd80fcec"
     ],
     [
       "StackMachine.tprog",
@@ -765,7 +765,7 @@
         "equation_StackMachine.tstack", "kinding_StackMachine.typ@tok"
       ],
       0,
-      "c03531fc0abaf4f13216dd5a5fda02bd"
+      "a26b1d59ec89fba82f926a8b29e4b682"
     ],
     [
       "StackMachine.__proj__TNil__item__s",
@@ -778,7 +778,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_f199955d1c0a09a2e1c2187aa1c27dfb"
       ],
       0,
-      "24f428b2a9b2e3cfb80aa5370a46773a"
+      "0f4c4100923b72881fc701cb6f72e235"
     ],
     [
       "StackMachine.__proj__TCons__item__s1",
@@ -791,7 +791,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
-      "d04074b0153b8d588326bdc4a4ae1925"
+      "da58aef4717b86664a5469e2073566f4"
     ],
     [
       "StackMachine.__proj__TCons__item__s2",
@@ -804,7 +804,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
-      "bb209e6710b84208e34f33470adda0f2"
+      "8c808d159b452811bf46bca9b4382bac"
     ],
     [
       "StackMachine.__proj__TCons__item__s3",
@@ -817,7 +817,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
-      "1c4dfc9c49ec76e29678783a04f4f6c9"
+      "315e23cdb29dec5d24460d5ded333758"
     ],
     [
       "StackMachine.__proj__TCons__item___3",
@@ -834,7 +834,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
-      "1b44d69f5cfb5b0558e75f918ce08427"
+      "bc5c494e7793435968195f2229f37236"
     ],
     [
       "StackMachine.__proj__TCons__item___4",
@@ -851,7 +851,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
-      "01f0335bc7d6540022a9d85ac156af32"
+      "199c4a2873013f153af61844546a013a"
     ],
     [
       "StackMachine.vstack",
@@ -868,7 +868,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ecec0cd123c7b9687f9d4cc1c40a8dcb"
+      "ce55c1cf5c23987386f4f6270136e4e6"
     ],
     [
       "StackMachine.tinstrDenote",
@@ -915,7 +915,7 @@
         "typing_StackMachine.vstack", "typing_tok_StackMachine.Nat@tok"
       ],
       0,
-      "85435fc8084f2eacb20919f61ddedb57"
+      "52fad81d71db4a21a6013ca30e99dcff"
     ],
     [
       "StackMachine.tprogDenote",
@@ -932,7 +932,7 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
-      "077e21a71b3e45a6ea43eb3fcb2596bd"
+      "79ef99761a8a04537bf59f13d8218f4a"
     ],
     [
       "StackMachine.tconcat",
@@ -949,7 +949,7 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
-      "5073a7e04f655c143e00e4d3910f1b7f"
+      "49957c090dd381d0f6b450c0a20cac3a"
     ],
     [
       "StackMachine.tcompile",
@@ -970,7 +970,7 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
-      "cb7e828c7b4677cd0dc1bd413d77b177"
+      "b23c2ff399723c39812c5238437f49ae"
     ],
     [
       "StackMachine.tconcat_correct",
@@ -1002,7 +1002,7 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
-      "1363785dc6a8e69e56fe1123d03533f5"
+      "de626f76298dab944b50a75e17ef765f"
     ],
     [
       "StackMachine.tcompile_correct'",
@@ -1092,7 +1092,7 @@
         "typing_StackMachine.vstack"
       ],
       0,
-      "a1aa9fecc98127eed7c00c29ed548f72"
+      "f24b7437bac9620abbaa694077c20825"
     ],
     [
       "StackMachine.exp",
@@ -1105,7 +1105,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5263758543dc0c33234b8e3c7a2ffbf5"
+      "9ebe27eb594682535e66992569b737e4"
     ],
     [
       "StackMachine.__proj__Const__item___0",
@@ -1118,7 +1118,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_733535f472f5bce64316080d16cf1692"
       ],
       0,
-      "3b8cee934dc5efe9833ae0c449c2c122"
+      "1c2335e9513bb07b57a114ed1d244821"
     ],
     [
       "StackMachine.__proj__Binop__item___0",
@@ -1131,7 +1131,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
-      "c47d741031ba9073131cc6e69308b53f"
+      "96725278803e0793c8aa157ee4dceb7b"
     ],
     [
       "StackMachine.__proj__Binop__item___1",
@@ -1144,7 +1144,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
-      "0a77f64ae151550dcc1afb9d7815e913"
+      "1a610bc55de3321f2929a2fe42943c50"
     ],
     [
       "StackMachine.__proj__Binop__item___2",
@@ -1157,7 +1157,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
-      "9847f017aad764cf9d3754ce5c2af49f"
+      "e3494d37964861004ebcc44d054482d5"
     ],
     [
       "StackMachine.add_nat",
@@ -1170,7 +1170,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0abc4efe4a893884177dda8734bbe352"
+      "b916ac76f6ef2b672b6cf8dffcc532d4"
     ],
     [
       "StackMachine.mul_nat",
@@ -1183,7 +1183,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "32656335afd2ce1189f238812070228f"
+      "9e1c4509a3ca46084c748b723a3dc884"
     ],
     [
       "StackMachine.eq_nat",
@@ -1195,7 +1195,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c2922bf70426757890b8a7a5ac743caf"
+      "1c05b4c89a1d9923f2e71c9ee51ab84a"
     ],
     [
       "StackMachine.binopDenote",
@@ -1208,7 +1208,7 @@
         "fuel_guarded_inversion_StackMachine.binop"
       ],
       0,
-      "8fd645ae443b7e475def1ca5c005c418"
+      "77a9b700503e032370595ab14f2d2513"
     ],
     [
       "StackMachine.expDenote",
@@ -1224,7 +1224,7 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
-      "9c36e601a359b064ac8f0bf462679def"
+      "033f9f1f4578aa3539ac64de68d6c6d0"
     ],
     [
       "StackMachine.instr",
@@ -1237,7 +1237,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5b74b4bc4dbb9e3c5042016935a66a2b"
+      "ab5033f1a3a9ab23758fd7d860e59ef0"
     ],
     [
       "StackMachine.__proj__IConst__item___0",
@@ -1251,7 +1251,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_a31651c68d304738b29495c5aeb6aa44"
       ],
       0,
-      "2fbc76d14a6f900643ce1ed2ab5c795f"
+      "2842f3af53ca8025aa2232a5a14b4864"
     ],
     [
       "StackMachine.__proj__IBinop__item___0",
@@ -1265,7 +1265,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_94dbe5757f232f1d6a06d4d6dfaafd34"
       ],
       0,
-      "bad10d4e0534f58edae48eb4e7590e24"
+      "323cb091c8e072c135785d02920b4fd0"
     ],
     [
       "StackMachine.instrDenote",
@@ -1279,7 +1279,7 @@
         "fuel_guarded_inversion_StackMachine.instr"
       ],
       0,
-      "75229df1e5792ba1e56fef46ad5690df"
+      "5702853707294f9a805bbab776749542"
     ],
     [
       "StackMachine.progDenote",
@@ -1302,7 +1302,7 @@
         "typing_StackMachine.instrDenote"
       ],
       0,
-      "77ef6ed531e4b22d751ba80b670eee87"
+      "3e02313c4de7019e90550af26aae178b"
     ],
     [
       "StackMachine.compile",
@@ -1318,7 +1318,7 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
-      "67fbce52b3412b8e8f350e7d694ac119"
+      "9887ccac775d71b1d1eec11efa1add70"
     ],
     [
       "StackMachine.compile_correct'",
@@ -1334,7 +1334,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5d76141a9aa184ef71c440600a0e1ba3"
+      "2d11b20be87b7e7c118a4a3d6510bb13"
     ],
     [
       "StackMachine.compile_correct",
@@ -1350,7 +1350,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a0113b9d916970eb3f9f2953cf6eee67"
+      "b6978616b3a15a7bc6f3f57c723c7bc3"
     ],
     [
       "StackMachine.tbinop",
@@ -1359,7 +1359,7 @@
       1,
       [ "@query", "assumption_StackMachine.typ__uu___haseq" ],
       0,
-      "44178e5debaf5b7178a9a8b87ce185b7"
+      "0cf38b6d0d6b0e6d4001c90d3a0fa949"
     ],
     [
       "StackMachine.__proj__TEq__item__t",
@@ -1372,7 +1372,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_013f03405ee56e2bee5ec40dee6f6602"
       ],
       0,
-      "e87681b774ecab546e8fdd64494b0b6b"
+      "2de189825c0effe21bce46f745f9d2a4"
     ],
     [
       "StackMachine.texp",
@@ -1387,7 +1387,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "83a6846b8b2d4078f8db0412c0712dc5"
+      "30e869a7d0b63a9fc657fd1bf74bd9dc"
     ],
     [
       "StackMachine.__proj__TNConst__item___0",
@@ -1401,7 +1401,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_6dd4891ce41bb7d9b26ab7b05113bdd5"
       ],
       0,
-      "8e126cb1cd75761ca1757eefac587f99"
+      "172988436132ca51adb8514ec4f7a88a"
     ],
     [
       "StackMachine.__proj__TBConst__item___0",
@@ -1415,7 +1415,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_9da0b8f720646900d62e529141346f6a"
       ],
       0,
-      "0d82e15e79967de2de03f88ed006a41b"
+      "625d6d362b6a49bb1bbb67622a0bc2f4"
     ],
     [
       "StackMachine.__proj__TBinop__item__t1",
@@ -1429,7 +1429,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "421c7193482518fa44f13fab630b05e2"
+      "86b07fdc566ee3ad367318ad0e08e3e8"
     ],
     [
       "StackMachine.__proj__TBinop__item__t2",
@@ -1443,7 +1443,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "7861dfc5943a5071b9784145c20ebfcf"
+      "5e4d65d936dbf6be9bbcc479d36558df"
     ],
     [
       "StackMachine.__proj__TBinop__item__t",
@@ -1457,7 +1457,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "0dcde47c45d4ab6be73ada9e0472c81d"
+      "b5684f4b93110b462b8aa1c62d3f3e14"
     ],
     [
       "StackMachine.__proj__TBinop__item___3",
@@ -1477,7 +1477,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "ac12f612b807d180920180967ec37b17"
+      "205679147be6966ba9af9387e515c6f9"
     ],
     [
       "StackMachine.__proj__TBinop__item___4",
@@ -1493,7 +1493,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "9f9c5464bbdbddb399b29aefb74305e2"
+      "0ff09d0705ec4cf52405584f90a5519d"
     ],
     [
       "StackMachine.__proj__TBinop__item___5",
@@ -1509,7 +1509,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
-      "5333a1270dd2932c563b12126c76ecf4"
+      "99d4465b6ef12281048db432857eb05c"
     ],
     [
       "StackMachine.typeDenote",
@@ -1522,7 +1522,7 @@
         "fuel_guarded_inversion_StackMachine.typ"
       ],
       0,
-      "6174c03bb166adb638b5352608026626"
+      "8f94f48ac3a1353150948b5078c76329"
     ],
     [
       "StackMachine.tbinopDenote",
@@ -1555,7 +1555,7 @@
         "typing_tok_StackMachine.TTimes@tok"
       ],
       0,
-      "7076253db601173c9f1ada40110159ec"
+      "747aa81ac3416775c555149337973ca4"
     ],
     [
       "StackMachine.texpDenote",
@@ -1582,7 +1582,7 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
-      "80dd7cb2d091ea92f3f7e7e128cb5963"
+      "753ef91924670ca37f5d9e9375edcc05"
     ],
     [
       "StackMachine.tinstr",
@@ -1601,7 +1601,7 @@
         "kinding_StackMachine.typ@tok"
       ],
       0,
-      "93d5f39c2b8081c83d1351f1b55e1c70"
+      "32dd9a8bbd4a00af9e1a42c67fc6fb0d"
     ],
     [
       "StackMachine.__proj__TiNConst__item__s",
@@ -1615,7 +1615,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_a56f6ca6150cb01114a8fab36ff93703"
       ],
       0,
-      "9582eaca046b0fd8a9a77b1ba997a468"
+      "8e6b52e466f191fa3369a6bd27bc652d"
     ],
     [
       "StackMachine.__proj__TiNConst__item___1",
@@ -1629,7 +1629,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_a56f6ca6150cb01114a8fab36ff93703"
       ],
       0,
-      "51f906528029af70c6774e53c6734660"
+      "508ee8413d92f5a8da8f45fef9277218"
     ],
     [
       "StackMachine.__proj__TiBConst__item__s",
@@ -1643,7 +1643,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_55dae19a239461194000bc379645c48e"
       ],
       0,
-      "b0b67477dbe4f3570e4c9a49ce2837d6"
+      "695b177f76321eb99afcb4578f725aea"
     ],
     [
       "StackMachine.__proj__TiBConst__item___1",
@@ -1657,7 +1657,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_55dae19a239461194000bc379645c48e"
       ],
       0,
-      "c530651af84535bd17383aabe65bc33d"
+      "adfb7de6bcba93c86fab71dc1e18dfef"
     ],
     [
       "StackMachine.__proj__TiBinop__item__arg1",
@@ -1671,7 +1671,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
-      "eeebe9e61254b9e95657ab77751517c3"
+      "05a1fbe47fa39108b41704b6679d31bb"
     ],
     [
       "StackMachine.__proj__TiBinop__item__arg2",
@@ -1685,7 +1685,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
-      "233e3cca2da5afbbb32495efff0f2b7e"
+      "70c0d52430097f926f9507ec6a2f321c"
     ],
     [
       "StackMachine.__proj__TiBinop__item__res",
@@ -1699,7 +1699,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
-      "43454f853fb1c054563f25d72770cc5c"
+      "1c6aa3e3cb7cb6f9c2821f8055478278"
     ],
     [
       "StackMachine.__proj__TiBinop__item__s",
@@ -1713,7 +1713,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
-      "b29490df4c21a1286bc41ff4e9c12029"
+      "892c704375d234bac8ad80e1590c15a4"
     ],
     [
       "StackMachine.__proj__TiBinop__item___4",
@@ -1733,7 +1733,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
-      "74bb0daba318f9f62a3db224f77bc7db"
+      "12d9f8dc189b4dc5656233a7eb26cdd8"
     ],
     [
       "StackMachine.tprog",
@@ -1749,7 +1749,7 @@
         "equation_StackMachine.tstack", "kinding_StackMachine.typ@tok"
       ],
       0,
-      "ca4a6d4400b38dba7f6a20d2a8c19a85"
+      "c42f85ee21102f8f5c15d0c3d6e55f76"
     ],
     [
       "StackMachine.__proj__TNil__item__s",
@@ -1762,7 +1762,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_f199955d1c0a09a2e1c2187aa1c27dfb"
       ],
       0,
-      "e970e3df180763b0d94d6d4986c299f5"
+      "02b00620e33070f994a17542ec38492e"
     ],
     [
       "StackMachine.__proj__TCons__item__s1",
@@ -1775,7 +1775,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
-      "52b2bdf0880b81e89751c89ab692238c"
+      "b2d36e833fef2dac4d4307b8c7330641"
     ],
     [
       "StackMachine.__proj__TCons__item__s2",
@@ -1788,7 +1788,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
-      "bded9c66ec6bfc8005b09c0bd1d0507d"
+      "e02dc67ee4c58f232a86c41200f0bd1a"
     ],
     [
       "StackMachine.__proj__TCons__item__s3",
@@ -1801,7 +1801,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
-      "b060663b2277a1f73a52ead911e541c1"
+      "dcda6faaff0e8ea7732a7d339c1ca0da"
     ],
     [
       "StackMachine.__proj__TCons__item___3",
@@ -1818,7 +1818,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
-      "a3e986848f6abbc6da990cfbd923762a"
+      "d78e302367d98d919df1d5fc7d5dd2cf"
     ],
     [
       "StackMachine.__proj__TCons__item___4",
@@ -1835,7 +1835,7 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
-      "26b4c81efe2f74d68ad5f351bcf2cfb0"
+      "4cd252ea2cedfad3afefa40ab57f3c59"
     ],
     [
       "StackMachine.vstack",
@@ -1852,7 +1852,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8a684455190247a2e17e7a171b4fe21a"
+      "82d79a25f76f9aef8a00da6d7d21b69d"
     ],
     [
       "StackMachine.tinstrDenote",
@@ -1899,7 +1899,7 @@
         "typing_StackMachine.vstack", "typing_tok_StackMachine.Nat@tok"
       ],
       0,
-      "5c7d6ae68b9a29e611c8db036ffc68db"
+      "333876e16bae91ca5a2f9f4d6a245155"
     ],
     [
       "StackMachine.tprogDenote",
@@ -1916,7 +1916,7 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
-      "643bde3675a9d40837dd5473b0c8cb5a"
+      "281f84f2c593213f2f7192aa6cb5679b"
     ],
     [
       "StackMachine.tconcat",
@@ -1933,7 +1933,7 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
-      "8f169483c12fcdfb3591356f6d24f6c9"
+      "937e25075870252b29dd626264e10687"
     ],
     [
       "StackMachine.tcompile",
@@ -1954,7 +1954,7 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
-      "1467d7b21ddae8961354988d3b72e6f5"
+      "3860d9a4ff276f54bb01410763d58ef7"
     ]
   ]
 ]

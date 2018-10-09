@@ -1,5 +1,5 @@
 [
-  "ýÏÂ9\u007fÚh£ŸÕ¶šÇ\t»´",
+  "\fV™\u001fPk^…~[O)Ö½Â\u000e",
   [
     [
       "Normalization.test",
@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "28e07b7c22a751da69c7dad92fcf8abc"
+      "6be7b058761696ebf27c4c078f3722af"
     ],
     [
       "Normalization.id",
@@ -25,7 +25,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "31126b1495ee875d9c32baace81832e8"
+      "1a69d688240e691ae2a39ab7057665ab"
     ],
     [
       "Normalization.test2",
@@ -34,7 +34,7 @@
       0,
       [ "@query" ],
       0,
-      "ed5674e95664c85b2b35cc675afb2039"
+      "dc0e2c25849c7640faa5fa45ddc96fc2"
     ],
     [
       "Normalization.pow2_values",
@@ -43,7 +43,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6e82773acda203acb036d4eaac5db146"
+      "91c22c44f7df6846a4ebf58b17d0399b"
     ],
     [
       "Normalization.test_sort",
@@ -56,7 +56,20 @@
         "function_token_typing_Prims.int"
       ],
       0,
-      "532df5b13ab1bb1ef4d5e78b26cc79e7"
+      "8b62ad93bb8f23bfdfb670f6fc55d24e"
+    ],
+    [
+      "Normalization.test_sort1",
+      1,
+      0,
+      0,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.list__uu___haseq",
+        "function_token_typing_Prims.int"
+      ],
+      0,
+      "ee3112078d3f041b2b72f77ba900bbee"
     ],
     [
       "Normalization.id",
@@ -73,7 +86,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2264d2209146ed0c35d06a996bfb4595"
+      "92ee9c9e659d2d64d8f6bc0b83661812"
     ],
     [
       "Normalization.test_sort",
@@ -86,7 +99,20 @@
         "function_token_typing_Prims.int"
       ],
       0,
-      "f096d4c357c0afeeeefc23afee8b1b22"
+      "001cbbdffc43b69c3f3cfe15561e9668"
+    ],
+    [
+      "Normalization.test_sort1",
+      2,
+      0,
+      0,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.list__uu___haseq",
+        "function_token_typing_Prims.int"
+      ],
+      0,
+      "47a0ed914a37877ec37ab080c114a571"
     ]
   ]
 ]
