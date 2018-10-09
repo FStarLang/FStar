@@ -419,24 +419,55 @@ let maybe_eta_expand expect e =
     else eta_expand expect e
 
 (*
-  A small optimization to push coercions on the result type of functions
-  into the body of a lambda term.
+  A small optimization to push coercions into the structure of a term
 
   Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
 let apply_coercion (g:env) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
     let rec aux (e:mlexpr) ty expect =
+        let coerce_branch (pat, w, b) = pat, w, aux b ty expect in
+        //printfn "apply_coercion: %s : %s ~> %s\n%A : %A ~> %A"
+        //                   (Code.string_of_mlexpr g.currentModule e)
+        //                   (Code.string_of_mlty g.currentModule ty)
+        //                   (Code.string_of_mlty g.currentModule expect)
+        //                   e ty expect;
         match e.expr, ty, expect with
         | MLE_Fun(arg::rest, body), MLTY_Fun(t0, _, t1), MLTY_Fun(s0, _, s1) ->
-          if type_leq g s0 s1
-          then let body =
+          let body =
                  match rest with
                  | [] -> body
                  | _ -> with_ty t1 (MLE_Fun(rest, body))
-               in
-               with_ty expect (MLE_Fun([arg], aux body t1 s1))
-          else with_ty expect (MLE_Coerce(e, ty, expect))
+          in
+          let body = aux body t1 s1 in
+          if type_leq g s0 t0
+          then with_ty expect (MLE_Fun([arg], body))
+          else let lb =
+                    { mllb_meta = [];
+                      mllb_name = fst arg;
+                      mllb_tysc = Some ([], t0);
+                      mllb_add_unit = false;
+                      mllb_def = with_ty t0 (MLE_Coerce(with_ty s0 <| MLE_Var (fst arg), s0, t0));
+                      print_typ=false }
+                in
+                let body = with_ty s1 <| MLE_Let((NonRec, [lb]), body) in
+                with_ty expect <| MLE_Fun([fst arg, s0], body)
+
+        | MLE_Let(lbs, body), _, _ ->
+          with_ty expect <| (MLE_Let(lbs, aux body ty expect))
+
+        | MLE_Match(s, branches), _, _ ->
+          with_ty expect <| MLE_Match(s, List.map coerce_branch branches)
+
+        | MLE_If(s, b1, b2_opt), _, _ ->
+          with_ty expect <| MLE_If(s, aux b1 ty expect, BU.map_opt b2_opt (fun b2 -> aux b2 ty expect))
+
+        | MLE_Seq es, _, _ ->
+          let prefix, last = BU.prefix es in
+          with_ty expect <| MLE_Seq(prefix @ [aux last ty expect])
+
+        | MLE_Try(s, branches), _, _ ->
+          with_ty expect <| MLE_Try(s, List.map coerce_branch branches)
 
         | _ ->
           with_ty expect (MLE_Coerce(e, ty, expect))
