@@ -253,7 +253,7 @@
         "typing_While.interpret_exp", "well-founded-ordering-on-nat"
       ],
       0,
-      "144b34824e3c3c0c37d8aee967adebfb"
+      "903939d13f0448ed1246de3c72d8b2a8"
     ],
     [
       "While.interpret_while",
@@ -277,7 +277,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "473a521073a77d256161a6014f4a670a"
+      "f9e85331c2430566bda72e9c8664d137"
     ],
     [
       "While.interpret_exp_st",
@@ -292,7 +292,8 @@
         "constructor_distinct_While.AVar", "disc_equation_While.AInt",
         "disc_equation_While.AOp", "disc_equation_While.AVar",
         "equation_FStar.Heap.trivial_preorder", "equation_FStar.ST.mref",
-        "equation_FStar.ST.ref", "equation_While.id",
+        "equation_FStar.ST.ref", "equation_Prims.eqtype",
+        "equation_While.id",
         "equation_with_fuel_While.interpret_exp.fuel_instrumented",
         "fuel_guarded_inversion_While.exp",
         "function_token_typing_Prims.int",
@@ -302,11 +303,12 @@
         "projection_inverse_While.AOp__2",
         "projection_inverse_While.AVar__0",
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "73739709be6f085a74dc93353532c846"
+      "2ea92c03d3eb66252039219c582b3697"
     ],
     [
       "While.interpret_com_st",
@@ -577,7 +579,7 @@
         "typing_While.interpret_exp", "well-founded-ordering-on-nat"
       ],
       0,
-      "1595684eb99e60b50f633b9b8df50786"
+      "b381e379645284973d6ba09e971156ca"
     ],
     [
       "While.interpret_while",
@@ -601,7 +603,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b585ad11a1eeb20f7b7a2fe5e3e844f9"
+      "2100615a30038008efdc2c0c3cb16633"
     ]
   ]
 ]

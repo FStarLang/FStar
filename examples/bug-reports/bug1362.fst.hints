@@ -30,7 +30,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "92d826b2b649938ff125c94a85d241fa"
+      "043377a2df04c32dda5692a59a2740e2"
     ],
     [
       "Bug1362.f2",
@@ -70,7 +70,7 @@
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "b77a6d026fbd0e50231bd0e182bac97a"
+      "bf7f3e27b2969b7dc9b3af01b1173238"
     ]
   ]
 ]

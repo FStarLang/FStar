@@ -42,13 +42,15 @@
       2,
       1,
       [
-        "@query", "assumption_Bug126.typ__uu___haseq",
-        "assumption_Prims.HasEq_int", "equation_Bug126.var",
-        "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Bug126.typ__uu___haseq", "equation_Bug126.var",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "292b8417133c0c00c541f03c845f61f5"
+      "4aba6c60570ca502166a636d15e79606"
     ],
     [
       "Bug126.__proj__EVar__item__x",
@@ -128,7 +130,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "671972fb6d441bd1a340c8923924fbf3"
+      "42db8efd41bf74e4585d84fed3e4807c"
     ],
     [
       "Bug126.typing",

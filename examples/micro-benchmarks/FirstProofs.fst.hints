@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8e04278020b2ff6b679af736b2f705b9"
+      "c397d89e1d29059d8c387da80e65d89f"
     ],
     [
       "FirstProofs.factorial_is_positive",
@@ -142,7 +142,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8d3ef561e4ddcf74c75947ffe80f8450"
+      "a3349365ad976e6aa752442024a23bd9"
     ],
     [
       "FirstProofs.fibonacci",

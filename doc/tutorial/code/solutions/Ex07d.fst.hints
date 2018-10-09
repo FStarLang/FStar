@@ -46,7 +46,7 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
-      "dea4c5c90e25afd5c92374d6eec3b6cd"
+      "90f4be81acbd786f515ab10e5fb0d6a9"
     ],
     [
       "Ex07d.__proj__EVar__item___0",
@@ -185,7 +185,7 @@
         "subterm_ordering_Ex07d.EIf"
       ],
       0,
-      "f770fed48084f560e98bba688ebb6d99"
+      "b82bf0b6fe53cc067020f1fa4870c20c"
     ],
     [
       "Ex07d.step",
@@ -317,7 +317,7 @@
         "subterm_ordering_Ex07d.EApp", "subterm_ordering_Ex07d.EIf"
       ],
       0,
-      "923534ee26cfb1a1617f8dd5592dc211"
+      "59a934a75f30ca22ee83599c2dd4bfaf"
     ],
     [
       "Ex07d.free_in_context",
@@ -580,7 +580,7 @@
         "typing_tok_Ex07d.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "f94e4566db440dbb35061d7c9c3518ea"
+      "2339e28712277b238f85a928955333e5"
     ],
     [
       "Ex07d.preservation",
@@ -844,7 +844,7 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
-      "438baa1d43a6b1b8f77fd5a95b835407"
+      "47fedc98374124695df22746b66d2e74"
     ],
     [
       "Ex07d.__proj__EVar__item___0",
@@ -980,7 +980,7 @@
         "subterm_ordering_Ex07d.EApp", "subterm_ordering_Ex07d.EIf"
       ],
       0,
-      "36737f2ba3b7b73a221d90f8b187fb99"
+      "004bf21d6588b69355bed0b1f059bc37"
     ],
     [
       "Ex07d.step",
@@ -1045,7 +1045,7 @@
         "subterm_ordering_Ex07d.EApp", "subterm_ordering_Ex07d.EIf"
       ],
       0,
-      "dd8352f367179135963dfad6c2784ffa"
+      "f0750e9c947b7aca2743b87725ab4a92"
     ],
     [
       "Ex07d.equal",
@@ -1148,7 +1148,7 @@
         "typing_tok_Ex07d.TBool@tok", "unit_typing"
       ],
       0,
-      "4df542a34485c7a6dc892bc77c526bc6"
+      "ae105d6c994cb78bda43034a4335df62"
     ],
     [
       "Ex07d.preservation",

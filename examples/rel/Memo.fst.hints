@@ -351,8 +351,8 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.equals",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Memo.dom", "function_token_typing_Prims.int",
-        "int_inversion",
+        "function_token_typing_Memo.codom",
+        "function_token_typing_Prims.int", "int_inversion",
         "interpretation_Memo_Tm_abs_a7bbdf95972a544052a334ba5794d8a0",
         "kinding_FStar.Pervasives.Native.tuple2@tok", "l_and-interp",
         "lemma_FStar.Pervasives.invertOption",
@@ -367,7 +367,7 @@
         "typing_FStar.List.Tot.Base.assoc", "unit_typing"
       ],
       0,
-      "c5e9a500695bdefa62c0b0e9a7b85c17"
+      "09735b363ba79c6003e9d6f76f352c60"
     ],
     [
       "Memo.memo_extr",
@@ -381,8 +381,9 @@
         "data_elim_Prims.Cons", "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Memo.codom",
         "equation_Memo.dom", "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Memo.dom", "function_token_typing_Prims.int",
-        "int_inversion", "lemma_FStar.Pervasives.invertOption",
+        "function_token_typing_Memo.codom",
+        "function_token_typing_Prims.int", "int_inversion",
+        "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -390,7 +391,7 @@
         "typing_FStar.List.Tot.Base.assoc"
       ],
       0,
-      "d4f86c1881382f693cfc45951b87c74d"
+      "d8b357d7feb6e06316ae1b528c26c42c"
     ],
     [
       "Memo.memo_extr_lemma",
@@ -444,7 +445,7 @@
         "typing_FStar.List.Tot.Base.assoc", "unit_inversion", "unit_typing"
       ],
       0,
-      "bfaefda03f15af59b8d5946df331bc0a"
+      "ebebb29d595a55634eb36576f2160357"
     ],
     [
       "Memo.memo_extr_computes",
@@ -487,8 +488,9 @@
         "data_elim_Prims.Cons", "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Memo.codom",
         "equation_Memo.dom", "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Memo.dom", "function_token_typing_Prims.int",
-        "int_inversion", "lemma_FStar.Pervasives.invertOption",
+        "function_token_typing_Memo.codom",
+        "function_token_typing_Prims.int", "int_inversion",
+        "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -497,7 +499,7 @@
         "typing_FStar.List.Tot.Base.assoc"
       ],
       0,
-      "5c9ae7a12672f9cd80b491d3086442a9"
+      "9cf95c13136b815ee3c61df6657917a9"
     ],
     [
       "Memo.memo_extr_p_lemma",
@@ -553,7 +555,7 @@
         "typing_FStar.List.Tot.Base.assoc", "unit_typing"
       ],
       0,
-      "5988525acb715a02584bd52e0d351f1b"
+      "0165a8d7da598073289e3b69ef09a888"
     ],
     [
       "Memo.memo_extr_p_computes",
@@ -841,7 +843,7 @@
         "typing_Memo_Tm_abs_646741795853dc34eae6a4013bf77e10", "unit_typing"
       ],
       0,
-      "87bd594e0b0231f37890fb4636403aff"
+      "c204cd4a24dbc867392be73e77eb8ade"
     ],
     [
       "Memo.memo_rec",
@@ -875,8 +877,8 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.equals",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Memo.dom", "function_token_typing_Prims.int",
-        "int_inversion",
+        "function_token_typing_Memo.codom",
+        "function_token_typing_Prims.int", "int_inversion",
         "interpretation_Memo_Tm_abs_25273ef49a112889c39b81e7273073d9",
         "kinding_FStar.Pervasives.Native.tuple2@tok", "l_and-interp",
         "lemma_FStar.Pervasives.invertOption",
@@ -892,7 +894,7 @@
         "typing_FStar.List.Tot.Base.assoc", "typing_Memo.fixp", "unit_typing"
       ],
       0,
-      "b2db1fe0ba36bb1e8b4911b727a9e8ae"
+      "0f58c6796cb8807050f4f5ed1e62d371"
     ],
     [
       "Memo.complete_memo_rec_extr",
@@ -1017,7 +1019,7 @@
         "typing_tok_Prims.LexTop@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "5f37644682a75d613a540d6487da9ba9"
+      "1606f1b969030f8353d5bfd33fb14b43"
     ],
     [
       "Memo.complete_memo_rec_extr_computes",
@@ -1142,9 +1144,13 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Memo.codom" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Memo.codom",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
       0,
-      "0e179ed8a4e13febc6b7e6e8c1716cc1"
+      "ef3bf24ef786b9a579c4a546a3229ddd"
     ],
     [
       "Memo.fibonnacci_partial",
@@ -1203,7 +1209,7 @@
         "token_correspondence_Memo.fibonnacci"
       ],
       0,
-      "9bd544d188f8cb31f8b7a0250754e0e3"
+      "e60078f92a874ecf828cb38c734a38d3"
     ],
     [
       "Memo.fibonnacci_partial_induces_fibonnacci",
@@ -1517,8 +1523,8 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.equals",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Memo.dom", "function_token_typing_Prims.int",
-        "int_inversion",
+        "function_token_typing_Memo.codom",
+        "function_token_typing_Prims.int", "int_inversion",
         "interpretation_Memo_Tm_abs_a7bbdf95972a544052a334ba5794d8a0",
         "kinding_FStar.Pervasives.Native.tuple2@tok", "l_and-interp",
         "lemma_FStar.Pervasives.invertOption",
@@ -1533,7 +1539,7 @@
         "typing_FStar.List.Tot.Base.assoc", "unit_typing"
       ],
       0,
-      "916f4fbd3400e0338689cc2b1ff7da02"
+      "f16e7dda536ec0f3ca0aea2592ab1cf8"
     ],
     [
       "Memo.memo_extr",
@@ -1547,8 +1553,9 @@
         "data_elim_Prims.Cons", "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Memo.codom",
         "equation_Memo.dom", "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Memo.dom", "function_token_typing_Prims.int",
-        "int_inversion", "lemma_FStar.Pervasives.invertOption",
+        "function_token_typing_Memo.codom",
+        "function_token_typing_Prims.int", "int_inversion",
+        "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -1556,7 +1563,7 @@
         "typing_FStar.List.Tot.Base.assoc"
       ],
       0,
-      "d577bb389cf30d7da21cd57c480b2e68"
+      "c2299d9bfd0e16207ccab87642e4d11b"
     ],
     [
       "Memo.to_memo_pack",
@@ -1585,8 +1592,9 @@
         "data_elim_Prims.Cons", "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Memo.codom",
         "equation_Memo.dom", "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Memo.dom", "function_token_typing_Prims.int",
-        "int_inversion", "lemma_FStar.Pervasives.invertOption",
+        "function_token_typing_Memo.codom",
+        "function_token_typing_Prims.int", "int_inversion",
+        "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -1595,7 +1603,7 @@
         "typing_FStar.List.Tot.Base.assoc"
       ],
       0,
-      "b00786db968d7e9233b16a80caedef7b"
+      "c1de37993dc6f913d17606c01be092b6"
     ],
     [
       "Memo.memo_extr_p_lemma",
@@ -1804,7 +1812,7 @@
         "typing_Memo_Tm_abs_646741795853dc34eae6a4013bf77e10", "unit_typing"
       ],
       0,
-      "3bc3ef96c2120daf30b87e98849799e8"
+      "6d635f2c61589f3e22d703b98b182493"
     ],
     [
       "Memo.memo_rec",
@@ -1838,8 +1846,8 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.equals",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Memo.dom", "function_token_typing_Prims.int",
-        "int_inversion",
+        "function_token_typing_Memo.codom",
+        "function_token_typing_Prims.int", "int_inversion",
         "interpretation_Memo_Tm_abs_25273ef49a112889c39b81e7273073d9",
         "kinding_FStar.Pervasives.Native.tuple2@tok", "l_and-interp",
         "lemma_FStar.Pervasives.invertOption",
@@ -1855,7 +1863,7 @@
         "typing_FStar.List.Tot.Base.assoc", "typing_Memo.fixp", "unit_typing"
       ],
       0,
-      "2fed369326ae790643a424de60ee7b4b"
+      "34609e57161873d7498a7cefcad97d63"
     ],
     [
       "Memo.complete_memo_rec_extr",

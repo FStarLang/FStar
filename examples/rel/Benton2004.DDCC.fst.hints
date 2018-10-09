@@ -218,7 +218,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "d0a9c36f8cd6b3a99cc58c7adae47c5b"
+      "74934b91964870298343267fca5beff2"
     ],
     [
       "Benton2004.DDCC.holds_st_var",
@@ -408,16 +408,18 @@
         "equation_Benton2004.DDCC.ns_f", "equation_Benton2004.DDCC.st_cons",
         "equation_Benton2004.included", "equation_Benton2004.var",
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "equation_Prims.eqtype",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "function_token_typing_Prims.int",
         "lemma_Benton2004.DDCC.holds_ns_f",
         "lemma_Benton2004.DDCC.holds_st_intersect",
-        "lemma_Benton2004.DDCC.holds_st_var", "typing_Benton2004.DDCC.ns_f",
-        "typing_Benton2004.DDCC.st_var",
+        "lemma_Benton2004.DDCC.holds_st_var",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Benton2004.DDCC.ns_f", "typing_Benton2004.DDCC.st_var",
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "a9d58bf27b09d505195629603cc26a77"
+      "c5e3e362890f790a8ca72a8c9cbaae16"
     ],
     [
       "Benton2004.DDCC.subtype_st_t",
@@ -430,16 +432,18 @@
         "equation_Benton2004.DDCC.ns_t", "equation_Benton2004.DDCC.st_cons",
         "equation_Benton2004.included", "equation_Benton2004.var",
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "equation_Prims.eqtype",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "function_token_typing_Prims.int",
         "lemma_Benton2004.DDCC.holds_ns_t",
         "lemma_Benton2004.DDCC.holds_st_intersect",
-        "lemma_Benton2004.DDCC.holds_st_var", "typing_Benton2004.DDCC.ns_t",
-        "typing_Benton2004.DDCC.st_var",
+        "lemma_Benton2004.DDCC.holds_st_var",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Benton2004.DDCC.ns_t", "typing_Benton2004.DDCC.st_var",
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "f97c96dcde1dc21978490d4fd4e23d40"
+      "37b63d901f74fa44f220eaa6899b9d9d"
     ],
     [
       "Benton2004.DDCC.subtype_st_cons",
@@ -620,7 +624,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "dee53b7f7997f28d6c14ea81cdfba4f2"
+      "164ace8de000e44794615f7cb37c0a3d"
     ],
     [
       "Benton2004.DDCC.d_et1",
@@ -673,7 +677,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "b5b0d549f5ae534d414e6b8890b57b1c"
+      "9ab56b0310c8862fc9949b77d98dd7ab"
     ],
     [
       "Benton2004.DDCC.d_csub",
@@ -840,7 +844,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "3a25b2ad9d3c072473d65b35b03fd5fe"
+      "fa959fc65203808b95d7afb7dc9d3766"
     ],
     [
       "Benton2004.DDCC.d_seq",
@@ -908,7 +912,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "c15cd5bdead5ff6449b97ea6ea85fd22"
+      "70eb88aaae43768f2c74224552708084"
     ],
     [
       "Benton2004.DDCC.d_whl_terminates",
@@ -924,7 +928,6 @@
         "binder_x_0ac08b4f060e29fc808ae11b9241f76d_3",
         "binder_x_7ab1748f97b7be5091389973104c9c7b_5",
         "binder_x_7ab1748f97b7be5091389973104c9c7b_6",
-        "binder_x_a101f9ce6e7b42e1e2592940b5f71f23_1",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_7",
         "equality_tok_Prims.LexTop@tok",
         "equation_Benton2004.DDCC.exec_equiv",
@@ -944,7 +947,8 @@
         "equation_Benton2004.terminates_on", "equation_Benton2004.while",
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd", "equation_Prims.nat",
+        "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
+        "equation_Prims.nat",
         "equation_with_fuel_Benton2004.while_raw.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Benton2004.reify_computation",
@@ -964,14 +968,15 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "refinement_interpretation_Benton2004_Tm_refine_19740681924b8e3f1389bc7c09e2f42c",
         "refinement_interpretation_Benton2004_Tm_refine_72f59247ec9aa4a8317b20902c00c895",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_Benton2004.reify_computation",
         "token_correspondence_Benton2004.reify_exp",
         "token_correspondence_Benton2004.while_raw",
-        "typing_Benton2004.while", "well-founded-ordering-on-nat"
+        "well-founded-ordering-on-nat"
       ],
       0,
-      "373e62c819aed0c61430ee37050ca8f8"
+      "0d84fef1934cf3295c192b906f657ed2"
     ],
     [
       "Benton2004.DDCC.d_whl",
@@ -1030,7 +1035,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4ffd9189d20dcb2a8bafeb472f7829bf"
+      "3788f4572995d49ca95ae7f133fd9c4f"
     ],
     [
       "Benton2004.DDCC.d_su1",
@@ -1221,7 +1226,7 @@
         "unit_typing"
       ],
       0,
-      "5f00af21ae75bcdafc3a07139c3ae9ad"
+      "07f6ba1a816ab0f211d5b89b43f87ff0"
     ],
     [
       "Benton2004.DDCC.d_das",
@@ -1303,7 +1308,7 @@
         "unit_typing"
       ],
       0,
-      "3e0ccb887d0fa764778d2c678283eeaf"
+      "17e57cc769142cfd81d0abf6296ad381"
     ],
     [
       "Benton2004.DDCC.d_bre",
@@ -1402,7 +1407,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "f89db2d17eddfb98045b8a196e73164d"
+      "66c2f2a0abde60c73e88aa77de780dec"
     ],
     [
       "Benton2004.DDCC.d_dwh",
@@ -1464,7 +1469,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "e384e40d573e9d6253dfd02d6b1d01f1"
+      "4ca337581d6ba2cb0990689a1d418c3b"
     ],
     [
       "Benton2004.DDCC.d_div",
@@ -1530,7 +1535,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "284be76144d03e7f0e247c809548ca51"
+      "677fb1b5058c1a3a87ad9940fda3fc31"
     ],
     [
       "Benton2004.DDCC.ns_f",
@@ -1625,7 +1630,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "9d40757fb20e349bec0b74a319ec4d30"
+      "6dcc4e8c0b4cd7a7f4a8c9f5f22b9576"
     ],
     [
       "Benton2004.DDCC.st_intersect",

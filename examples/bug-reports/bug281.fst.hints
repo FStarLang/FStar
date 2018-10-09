@@ -7,11 +7,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2bffda71f9c327b1248050d9d0f8a0f3"
+      "7114118f592834770b1d32025dc082fd"
     ],
     [
       "Bug281.__proj__EVar__item___0",
@@ -112,7 +114,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d880cb8c2af63b7fab08fa4b2ebacf44"
+      "8d3767a557012667283b446fc087dafa"
     ],
     [
       "Bug281.sub_elam",

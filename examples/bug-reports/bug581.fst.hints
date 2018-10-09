@@ -8,11 +8,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.V@tok",
-        "function_token_typing_Prims.int"
+        "data_typing_intro_FStar.Pervasives.V@tok", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "122204167e63609fff21c7beb5bb530a"
+      "ca23a3ccb2309f9f7a953814ad7f1dd6"
     ]
   ]
 ]

@@ -68,12 +68,13 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Seq.Base.seq__uu___haseq",
-        "assumption_Prims.HasEq_int", "function_token_typing_Prims.int",
-        "haseqPositivity_Tm_refine_283520f8d17c81858ae409756b6b8a8d"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Seq.Base.seq__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "020ae7df3bbf0d8c0e1de27d89429d43"
+      "7ed7332d25a3902dea68f3ca774b4f07"
     ],
     [
       "Positivity.essai_868",
@@ -159,12 +160,13 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Seq.Base.seq__uu___haseq",
-        "assumption_Prims.HasEq_int", "function_token_typing_Prims.int",
-        "haseqPositivity_Tm_refine_283520f8d17c81858ae409756b6b8a8d"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Seq.Base.seq__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3387550ab27367baa7f0da4e27acdd00"
+      "a0a93dfb2e178bd8e2e2af0cb4068d96"
     ],
     [
       "Positivity.essai_868",

@@ -87,7 +87,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "1a93790a96af7f41b9d9b40178c491b0"
+      "e9e815452b96d149c1a360557b0e56b4"
     ],
     [
       "FStar.OrdSet.hd_unique",
@@ -1452,7 +1452,7 @@
         "assumption_Prims.HasEq_int", "lemma_FStar.OrdSet.hasEq_ordset"
       ],
       0,
-      "700c0f4ce1aba907bbeffe3b676d6781"
+      "dbf2cb6a3bfc99e290b7e84debc5cefe"
     ],
     [
       "FStar.OrdSet.map_internal",

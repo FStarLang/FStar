@@ -22,13 +22,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "868da93c0bc7dc8548920927d30b8d83"
+      "645e1dc14f074f42bc7147e83e4f3de8"
     ],
     [
       "Vector.__proj__VCons__item__hd",
@@ -129,7 +131,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a059b960cb2972bd26c0655d2b5ba3ba"
+      "1c00908e64c6bd49f5aa9151de6cf101"
     ],
     [
       "Vector.append",
@@ -314,13 +316,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "66fb6a960a7d57bb2e1267dd16ff7f55"
+      "697e479c196017a0545791512efd1bf1"
     ],
     [
       "Vector.__proj__VCons__item__hd",
@@ -408,7 +412,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "682abc2cd35da163ccb30a1de9472c28"
+      "b070a3adfdc661188f6349dbdb50c518"
     ],
     [
       "Vector.append",

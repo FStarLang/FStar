@@ -304,7 +304,7 @@
         "unit_typing"
       ],
       0,
-      "2c41fa64a3f0888e8a4898901f3533e4"
+      "83a5a4a0aca5c10c03fd3ee5bae54c14"
     ],
     [
       "FStar.HyperStack.ST.pop_frame",
@@ -999,7 +999,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "5e765fe8a30393fe534100f5ff5d1283"
+      "dc0dea9b3e83dfd34c705a2d4668a225"
     ],
     [
       "FStar.HyperStack.ST.new_region",
@@ -1118,7 +1118,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "b99083201bf2f57af466d68b596c71b8"
+      "22935d43ed417083ff5089cb686f591f"
     ],
     [
       "FStar.HyperStack.ST.new_colored_region",
@@ -1140,7 +1140,7 @@
         "typing_FStar.Monotonic.HyperStack.is_eternal_color"
       ],
       0,
-      "20c1a7e03ab4e5f20573d194a866ffe2"
+      "14719fa9f4ffd15285e7c3a809eab0a9"
     ],
     [
       "FStar.HyperStack.ST.new_colored_region",
@@ -1259,7 +1259,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "e5f6966ba25d2775923d47916d7904f0"
+      "98b6d11c8bc3e73b58db21ecec14bfd6"
     ],
     [
       "FStar.HyperStack.ST.ralloc_post",
