@@ -432,7 +432,7 @@ let extract_reifiable_effect g ed
             (Print.term_to_string a.action_defn);
         let a_nm, a_lid = action_name ed a in
         let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
-        let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn, a.action_defn.pos) in
+        let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn, [], a.action_defn.pos) in
         let lbs = (false, [lb]) in
         let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) None a.action_defn.pos in
         let a_let, _, ty = Term.term_as_mlexpr g action_lb in
