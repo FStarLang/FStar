@@ -1,1 +1,17 @@
-[ "\u001b\u00144T\u001b.\u0004\u0013hñ²cîZšœ", [] ]
+[
+  "\u001b\u00144T\u001b.\u0004\u0013hñ²cîZšœ",
+  [
+    [
+      "Bug433.num",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.pos",
+        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "1c2ee42550c7ff909e35d5cdace8c724"
+    ]
+  ]
+]

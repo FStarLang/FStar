@@ -125,7 +125,7 @@
         "typing_FStar.ST.ref"
       ],
       0,
-      "ad98930309e54ecb7f5335a7cc04ff5c"
+      "7a81eb7ec8e2e910470a3303ed633adc"
     ],
     [
       "StatefulLens.test2",
@@ -160,7 +160,7 @@
         "typing_FStar.ST.ref"
       ],
       0,
-      "199bdba4407ecb7c5a376169f9a13e8f"
+      "e95c9d75f6ec94d76fb21b8175ccdec6"
     ],
     [
       "StatefulLens.test4",
@@ -195,7 +195,7 @@
         "typing_FStar.ST.ref"
       ],
       0,
-      "a4373c7cb3ce663e6df1eb7bda1e8e0c"
+      "a52c54e0a7078fb3b6997e8a657f292f"
     ],
     [
       "StatefulLens.move_x",
@@ -241,7 +241,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "bbed5bcffa96a146b78994b05a14a81a"
+      "2a2a3e4977a125d7bf19a789721aa37e"
     ],
     [
       "StatefulLens.move_x2",
@@ -282,7 +282,7 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
-      "4afa110e06169a17db6a2bd9e8e90e4b"
+      "086d73a4bb3dc34e80e1a2b52d506ab5"
     ],
     [
       "StatefulLens.compose_stlens",
@@ -305,7 +305,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "867b674cc4eb276344c427bb7c607ffc"
+      "7da86f8706713924ec00a2baaf50b12d"
     ],
     [
       "StatefulLens.as_stlens",
@@ -327,7 +327,7 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
-      "0985e340b79359126ed8e003e5c15872"
+      "abb3b3f56440db0cb2d0f4cec2b7bf10"
     ],
     [
       "StatefulLens.stlens_ref",
@@ -353,7 +353,43 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "4f4af072bf5d967d28498d632e3f6263"
+      "77501cc2c5cbc6ba217241e960c6edb6"
+    ],
+    [
+      "StatefulLens.test1",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "a04689553a5817a7517014774a4c80f6"
+    ],
+    [
+      "StatefulLens.test2",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "b9f99e28af9a64905d8bf192b0ee86e5"
+    ],
+    [
+      "StatefulLens.test4",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "b3632e9d3a4a8e7705648501dd620ece"
     ]
   ]
 ]

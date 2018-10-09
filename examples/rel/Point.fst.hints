@@ -63,7 +63,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3eb7060fbce7d26ca5c4d6828b788615"
+      "737f2d5d71473050530dc8731cbd6740"
     ],
     [
       "Point.get_point",
@@ -94,7 +94,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "a460a4a2ca78b61799d4272386fb690e"
+      "24e020bd580a4750f221cda555a785ab"
     ],
     [
       "Point.move_point",
@@ -125,7 +125,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "d836ce7133e5a8641baa49fe1dcfef83"
+      "bd08e75cdf833af35f836c49b88794f4"
     ],
     [
       "Point.init_point",
@@ -169,7 +169,7 @@
         "typing_Point.__proj__C__item__fp"
       ],
       0,
-      "39a132d487d8ab6a1a8f45d20bc73dce"
+      "e591a6d81d3288d6478db2429018be29"
     ],
     [
       "Point.inv_colored_point",
@@ -193,7 +193,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "7539fd922967ba46b8f1738e6bf50314"
+      "b840131d9be2522bea713bedeebc3aab"
     ],
     [
       "Point.move_colored_point",
@@ -221,7 +221,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "79f581247c7d623f1aa5a17db8a26e32"
+      "bc9239eab6ee90180b2983a721104ae3"
     ],
     [
       "Point.get_colored_point",
@@ -246,7 +246,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6a252981057d73fa25dcb4d7f33eae2d"
+      "ce1f7d076bc5114f3878c73996dff744"
     ],
     [
       "Point.init_colored_point",
@@ -290,7 +290,19 @@
         "typing_Point.__proj__C__item__fp"
       ],
       0,
-      "ea2e2c8243b79a0e7e5850723263c3bb"
+      "49e9d66de23e4a802ad57e6567e37e50"
+    ],
+    [
+      "Point.ref_not_in_fp",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "afab2ed04d841834b0d468c5bc8700ae"
     ],
     [
       "Point.lemma",
@@ -383,7 +395,7 @@
         "typing_Point.__proj__C__item__fp", "unit_typing"
       ],
       0,
-      "4f5df8bffc7a397a4a8b16483a1c97c9"
+      "1a821587f48365da99bff2a3eaa15ce5"
     ],
     [
       "Point.__proj__C__item__p",
@@ -396,7 +408,7 @@
         "token_correspondence_Point.__proj__C__item__inv"
       ],
       0,
-      "0b0317518d026885e7c4fb8a2ebd2301"
+      "4cf1fd7704c4f545519c81050699ab64"
     ],
     [
       "Point.move",
@@ -410,7 +422,7 @@
         "token_correspondence_Point.__proj__C__item__inv"
       ],
       0,
-      "c34c90b0ad95ae5c8c0cbcd7cd99a441"
+      "b0f9a440bb4c30aeeb07383b9e1fde58"
     ],
     [
       "Point.get",
@@ -424,7 +436,7 @@
         "token_correspondence_Point.__proj__C__item__inv"
       ],
       0,
-      "948102310e1106406a5d573c783cc8b4"
+      "9b98e71577115adc60b5e0994bcc6054"
     ],
     [
       "Point.inv_point",
@@ -447,7 +459,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "af7648add5f059a456eb8d0cb262b24e"
+      "e8ef0425d967b494a06ca12e5267f22f"
     ],
     [
       "Point.get_point",
@@ -478,7 +490,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "f8db366e6b4d51f30aad360807bc57ea"
+      "603070fc84551f8bc787308a6c80c496"
     ],
     [
       "Point.move_point",
@@ -509,7 +521,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "ae35cbfb526a13ad5a0d00c5a9cd628a"
+      "a1048cdea2b08d69783471cc1d6ad544"
     ],
     [
       "Point.init_point",
@@ -553,7 +565,7 @@
         "typing_Point.__proj__C__item__fp"
       ],
       0,
-      "4bdf6f96ed043507621804e8f8ce8c49"
+      "da777461cf13cf831a4f55435c894d5e"
     ],
     [
       "Point.inv_colored_point",
@@ -577,7 +589,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "441000cb6b4660a82597728eddf0b04e"
+      "1f5bdb421ef10d71743458ca71c25635"
     ],
     [
       "Point.move_colored_point",
@@ -605,7 +617,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "28d53361202185b804d87e42d4c82887"
+      "49eb35999cac81351e687c83ae431434"
     ],
     [
       "Point.get_colored_point",
@@ -630,7 +642,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "79e76f42232698e305b41782db4fdada"
+      "40112e37fccb78c369db70bd5f6e7b3e"
     ],
     [
       "Point.init_colored_point",
@@ -674,7 +686,19 @@
         "typing_Point.__proj__C__item__fp"
       ],
       0,
-      "8448b9a15c9a0fabf32e3a4c3e84d774"
+      "1cb49ba244ab673b65b5606233f9d5b2"
+    ],
+    [
+      "Point.ref_not_in_fp",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "1e99bab3191c454b467127bbf8de2781"
     ],
     [
       "Point.lemma",
@@ -767,7 +791,7 @@
         "typing_Point.__proj__C__item__fp", "unit_typing"
       ],
       0,
-      "128d802360b9e2e2510a3e8b495caa0e"
+      "4212abf4442956718479377c85b99df3"
     ]
   ]
 ]

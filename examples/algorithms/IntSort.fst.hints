@@ -100,6 +100,18 @@
       "0e51136acbaee0f54c1c9ad9a5453fcc"
     ],
     [
+      "IntSort.permutation",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "a06077b19eafc04ecca1040b22e62d24"
+    ],
+    [
       "IntSort.sorted",
       2,
       2,
@@ -115,7 +127,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "3678d7d086d683140c6e59544c5596b6"
+      "1718582a6854410e7ffe2c4714b1abc1"
     ],
     [
       "IntSort.test_sorted",
@@ -124,7 +136,7 @@
       1,
       [ "@query" ],
       0,
-      "3e6b958a81a5848c06393f6525ac3923"
+      "a6902c64e921f825c8b984aac4970098"
     ],
     [
       "IntSort.test_sorted2",
@@ -139,7 +151,19 @@
         "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "a61369718094c5d66c505a0672c9c1cd"
+      "5392757819fcba10c2636684ba4fa3fe"
+    ],
+    [
+      "IntSort.permutation",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "ed7b2e000865c49f4c54ef31b4b94fe7"
     ]
   ]
 ]

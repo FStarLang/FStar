@@ -2,13 +2,25 @@
   ";kÏÈ™\u0019OsOÙBð\u0000ÀQ°",
   [
     [
+      "GC.to_abs_inj",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_GC.mem_addr",
+        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27"
+      ],
+      0,
+      "ef1e3ce8842c4252562eaa38f3facce7"
+    ],
+    [
       "GC.inv",
       1,
       2,
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "b7fe4181ebbe43c43b7ba3b98d655d9d"
+      "aacb71ce94215e5f0e64d9b9634524ea"
     ],
     [
       "GC.gc_inv",
@@ -17,7 +29,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "ab18fda2c9303b60ad685d82569b9ba4"
+      "43bd480ad4af9f5a4899cd07eb2c250c"
     ],
     [
       "GC.mutator_inv",
@@ -26,7 +38,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "cd075beeb0df8fe35937c11b027da16c"
+      "0be07b320079057433df0020e07a1121"
     ],
     [
       "GC.init_invariant",
@@ -43,7 +55,7 @@
         "typing_GC.mem_hi", "typing_GC.mem_lo"
       ],
       0,
-      "2ae6a73c2e40e4d41560e72fd6425455"
+      "a18c5e278d01fe2d1421a33e23e9165e"
     ],
     [
       "GC.upd_map2",
@@ -57,7 +69,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0bbc50a548f686e252218309041156ae"
+      "4ccb46dbd26f37fc594549cafc2fb930"
     ],
     [
       "GC.initialize",
@@ -99,7 +111,7 @@
         "typing_GC.mem_hi", "typing_GC.mem_lo", "typing_GC.valid"
       ],
       0,
-      "ef919018ead1ae9b9cac26755fca524f"
+      "7f7f3db05079d965716376356491acbf"
     ],
     [
       "GC.read_field",
@@ -116,7 +128,7 @@
         "true_interp"
       ],
       0,
-      "f43ed71db05b2471d7701e7d7aa55222"
+      "1671321c7496ac71b539353fb5aee4ea"
     ],
     [
       "GC.write_field",
@@ -162,7 +174,7 @@
         "typing_GC.abs_node", "typing_GC.mem_lo"
       ],
       0,
-      "594dd152546d8bb17abd4e5de3f50300"
+      "57cf2382b2224654b3bf610208d8e7ed"
     ],
     [
       "GC.mark",
@@ -171,7 +183,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "c29b95813caf2c73d0da6a0f771ad1b3"
+      "2ed93430230bfa844d84cafc863b53d9"
     ],
     [
       "GC.mark",
@@ -226,7 +238,7 @@
         "typing_GC.mem_lo", "typing_tok_GC.F1@tok", "typing_tok_GC.F2@tok"
       ],
       0,
-      "0d0ca2b5d3809d6b7bdcbc475b40a144"
+      "fb6b64fcce6249334165f54203f8ab68"
     ],
     [
       "GC.sweep_aux_inv",
@@ -235,7 +247,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "d98cb58b53c8aa922f6073b286e24f81"
+      "ab233fa05cdf27b218f0eb31a465902a"
     ],
     [
       "GC.test1",
@@ -254,7 +266,7 @@
         "typing_GC.mem_hi"
       ],
       0,
-      "0b1c41a17f1e60bdb1a67a5a021fad28"
+      "a206ac000516d16cef2fd72210f8d5f8"
     ],
     [
       "GC.test2",
@@ -282,7 +294,7 @@
         "typing_GC.mem_lo"
       ],
       0,
-      "2bd3ec54dc0520deb9ab411edf1776f8"
+      "97b778b30cb3db9626f203adc8fdf0d6"
     ],
     [
       "GC.sweep",
@@ -291,7 +303,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "7fd0c327c50cba9c48ec3270f796dc67"
+      "eb3a3d1a6b5b73c0f5f790b8db6be709"
     ],
     [
       "GC.sweep",
@@ -351,7 +363,7 @@
         "typing_GC.valid", "unit_inversion", "unit_typing"
       ],
       0,
-      "114e6fb9d283716c9613e8469fe6d002"
+      "58371578fafd96cbd8b7d9ce2e85cb2d"
     ],
     [
       "GC.gc",
@@ -385,7 +397,7 @@
         "typing_GC.mem_lo"
       ],
       0,
-      "8fa6ae783eb8ac3446b9cd5efd5a7eaf"
+      "e2249d74670000394f11f72437f20c44"
     ],
     [
       "GC.alloc",
@@ -453,7 +465,19 @@
         "typing_GC.valid", "typing_tok_GC.F1@tok", "typing_tok_GC.F2@tok"
       ],
       0,
-      "87dcda4ba8390dace3ae486819821d3e"
+      "9f2618ff8bccecbdb20c7cd1effac724"
+    ],
+    [
+      "GC.to_abs_inj",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_GC.mem_addr",
+        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27"
+      ],
+      0,
+      "ea1fab63052ae3022a4f3ef2b050116c"
     ],
     [
       "GC.inv",
@@ -462,7 +486,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "b5fb13ba3bc752c4dae6aaa121dd5309"
+      "f4a9557de1368378b421c9bd3c67257a"
     ],
     [
       "GC.gc_inv",
@@ -471,7 +495,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "29fc6628e5d2cbf7ba2a4e4b29fa1118"
+      "bbc031ace933cd8527ce8e2a38a697fd"
     ],
     [
       "GC.mutator_inv",
@@ -480,7 +504,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "656886f0d93807ac6013b9ba49a198e6"
+      "099fb80503de1a178e74786039febfd4"
     ],
     [
       "GC.init_invariant",
@@ -497,7 +521,7 @@
         "typing_GC.mem_hi", "typing_GC.mem_lo"
       ],
       0,
-      "44d3a2e0e52a0fd4ff5dac5c79b2b40a"
+      "c5212909184f538cd836f6a6f4831374"
     ],
     [
       "GC.upd_map2",
@@ -511,7 +535,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c54abff3602e2245cdcc878f95a3b843"
+      "d9a33bbc57357044266e9cb79e5dde4c"
     ],
     [
       "GC.mark",
@@ -520,7 +544,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "db88cfb18941c8c866b18fcb6a2d6c12"
+      "ccd136eda84d822f4fdd4ab678782802"
     ],
     [
       "GC.sweep_aux_inv",
@@ -529,7 +553,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "70c5696f1633fe04aa118866267b88ac"
+      "81c2f9950380a05a1611f7d5fe66acf4"
     ],
     [
       "GC.test1",
@@ -548,7 +572,7 @@
         "typing_GC.mem_hi"
       ],
       0,
-      "0b2dd776954356c9feecb9de023609d0"
+      "40cf96741244c15ccf6a7c1980255cb0"
     ],
     [
       "GC.test2",
@@ -571,7 +595,7 @@
         "typing_GC.is_mem_addr", "typing_GC.mem_lo"
       ],
       0,
-      "cd2a68a8b509492773b01553be59f313"
+      "44d9f696f632b7764da96a084cf523f8"
     ],
     [
       "GC.sweep",
@@ -630,7 +654,7 @@
         "typing_GC.valid"
       ],
       0,
-      "d20f3a8c9480896c3b6ad37691b3ff5b"
+      "056095807c2ab5eb6b1a393db254c16f"
     ]
   ]
 ]
