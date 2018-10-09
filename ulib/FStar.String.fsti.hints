@@ -1,1 +1,17 @@
-[ "Scw£…­\u0019Ø¢xg\\`\u0014M±", [] ]
+[
+  "Scw£…­\u0019Ø¢xg\\`\u0014M±",
+  [
+    [
+      "FStar.String.make",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "f9b11ecac3c3be095f38b8304f9b2fa1"
+    ]
+  ]
+]

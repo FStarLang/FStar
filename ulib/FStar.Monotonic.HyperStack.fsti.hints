@@ -478,6 +478,23 @@
       "68af81c146735725d987a8d5f750d55f"
     ],
     [
+      "FStar.Monotonic.HyperStack.lemma_sel_same_addr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
+        "equation_FStar.Monotonic.HyperStack.mem", "equation_Prims.pos",
+        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "typing_FStar.Monotonic.HyperStack.get_rid_ctr"
+      ],
+      0,
+      "4a19884ad3f8f88b6833d62d263020d0"
+    ],
+    [
       "FStar.Monotonic.HyperStack.lemma_upd_same_addr",
       1,
       2,
@@ -487,7 +504,7 @@
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a7d8a309b1130f704cf109478dde8ebc"
+      "8c6673fd24fd538c04e3e04d6bd9dd28"
     ],
     [
       "FStar.Monotonic.HyperStack.modifies_drop_tip",
@@ -503,7 +520,19 @@
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144"
       ],
       0,
-      "d7f141e83e8faf1c695da8f6fe159e6d"
+      "d25709e83db5c5a3b825e97ee961eec2"
+    ],
+    [
+      "FStar.Monotonic.HyperStack.modifies_ref",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "bccb95d66f95c37b5c8c76d07519e056"
     ],
     [
       "FStar.Monotonic.HyperStack.__proj__Ref__item__rel",
@@ -517,7 +546,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "ef9e1209b5186b8bdeac7d5b9f7e36f7"
+      "772eec71b32d0cf0ebc2f2302d379ea2"
     ],
     [
       "FStar.Monotonic.HyperStack.__proj__Ref__item___2",
@@ -531,7 +560,7 @@
         "projection_inverse_FStar.Monotonic.HyperStack.Ref_rel"
       ],
       0,
-      "8d93d433565018d3ed955bea42e271b2"
+      "2665a4c440036102121b5a85ca161e8f"
     ],
     [
       "FStar.Monotonic.HyperStack.regions_of_some_refs",
@@ -546,7 +575,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "932559e9faafc717a2fb93ad25939a18"
+      "84d4a3061ea7bae2150827d788d2675c"
     ],
     [
       "FStar.Monotonic.HyperStack.refs_in_region",
@@ -568,7 +597,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5819f0c3879110466e0e7f017faa5a1c"
+      "4b7f360dabef7d2dad0c3f8575bbd79b"
     ],
     [
       "FStar.Monotonic.HyperStack.modifies_some_refs",
@@ -583,7 +612,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4d609065945f9fce69b7597be6fcf6c5"
+      "418c8db7e84b75b8f509873783ba5730"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_heap_equality_cancel_same_mref_upd",
@@ -619,7 +648,7 @@
         "typing_FStar.Monotonic.HyperStack.live_region"
       ],
       0,
-      "637132b6c99cfd6bf37c2185e18d643e"
+      "4c166a64f53f66c0347383192cd25d9e"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_heap_equality_upd_with_sel",
@@ -635,7 +664,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "b4d5fd9fd5899233bad978aea3fe893d"
+      "77cef6eca4d2c79252b972c43bc4c7db"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_heap_equality_commute_distinct_upds",
@@ -676,7 +705,19 @@
         "typing_FStar.Monotonic.HyperStack.live_region"
       ],
       0,
-      "9ebff1e64cfeb01e712ccd6cc4a477aa"
+      "3e337893e5f4057e5c3b23034675d05f"
+    ],
+    [
+      "FStar.Monotonic.HyperStack.contains_aref_unused_in",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.pos",
+        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "ea1b51293f854f23e251a747c812f477"
     ],
     [
       "FStar.Monotonic.HyperStack.sel_reference_of",
@@ -685,7 +726,7 @@
       1,
       [ "@query" ],
       0,
-      "8b80b2c8fecc621dbe48821b4ae00f6a"
+      "de78ca8513b5355c36f6eb4245e7e8c4"
     ],
     [
       "FStar.Monotonic.HyperStack.upd_reference_of",
@@ -703,7 +744,7 @@
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "1824039338be20e20b2c6faf78d1408b"
+      "785da00ba9aae3072d0b8053bba4cb48"
     ]
   ]
 ]
