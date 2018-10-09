@@ -74,7 +74,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a8fbb7dfccf614aa4816d950e006eb69"
+      "ada65d28f51929191f44d4ad0d156def"
     ],
     [
       "QuickSort.Seq.sort",
@@ -201,7 +201,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "335db88c26137404eae3b48b2364ba70"
+      "15261dd2d8b890290e3a72d4b4f3f26e"
     ],
     [
       "QuickSort.Seq.sort",

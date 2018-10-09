@@ -75,7 +75,7 @@
         "typing_tok_FStar.DM4F.Exceptions.Division_by_zero@tok"
       ],
       0,
-      "f6252449251b6385d13d88884890c59d"
+      "3985ffacc7ede3538d0d17cd69854358"
     ],
     [
       "FStar.DM4F.Exceptions.div_extrinsic",
@@ -227,7 +227,7 @@
         "typing_tok_FStar.DM4F.Exceptions.Division_by_zero@tok"
       ],
       0,
-      "f038a0026332aedbe8a15fbf6c87d607"
+      "4af273379a791ea8708bb9fba21b445a"
     ],
     [
       "FStar.DM4F.Exceptions.div_extrinsic",
