@@ -1095,7 +1095,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 S.Discriminator lid ::
                 (if only_decl then [S.Logic; S.Assumption] else []) @
                 //(if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
-                List.filter (function S.Abstract -> not only_decl | S.NoExtract | S.Private -> true | _ -> false ) iquals
+                List.filter (function S.Abstract -> not only_decl | S.Inline_for_extraction | S.NoExtract | S.Private -> true | _ -> false ) iquals
             in
 
             (* Type of the discriminator *)
