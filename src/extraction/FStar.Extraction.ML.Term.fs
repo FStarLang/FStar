@@ -418,6 +418,31 @@ let maybe_eta_expand expect e =
     then e
     else eta_expand expect e
 
+(*
+  A small optimization to push coercions on the result type of functions
+  into the body of a lambda term.
+
+  Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
+  Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
+*)
+let apply_coercion (g:env) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+    let rec aux (e:mlexpr) ty expect =
+        match e.expr, ty, expect with
+        | MLE_Fun(arg::rest, body), MLTY_Fun(t0, _, t1), MLTY_Fun(s0, _, s1) ->
+          if type_leq g s0 s1
+          then let body =
+                 match rest with
+                 | [] -> body
+                 | _ -> with_ty t1 (MLE_Fun(rest, body))
+               in
+               with_ty expect (MLE_Fun([arg], aux body t1 s1))
+          else with_ty expect (MLE_Coerce(e, ty, expect))
+
+        | _ ->
+          with_ty expect (MLE_Coerce(e, ty, expect))
+    in
+    aux e ty expect
+
 //maybe_coerce g e ty expect:
 //     Inserts an Obj.magic around e if ty </: expect
 let maybe_coerce pos (g:env) e ty (expect:mlty) : mlexpr  =
@@ -441,7 +466,7 @@ let maybe_coerce pos (g:env) e ty (expect:mlty) : mlexpr  =
                             (Code.string_of_mlexpr g.currentModule e)
                             (Code.string_of_mlty g.currentModule ty)
                             (Code.string_of_mlty g.currentModule expect)) in
-               maybe_eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
+               maybe_eta_expand expect (apply_coercion g e ty expect)
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
