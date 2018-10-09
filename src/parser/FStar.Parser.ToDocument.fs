@@ -960,12 +960,12 @@ and p_binders (is_atomic: bool) (bs: list<binder>): document = separate_or_flow 
 (* ****************************************************************************)
 
 and text_of_id_or_underscore lid =
-  if starts_with lid.idText reserved_prefix
+  if starts_with lid.idText reserved_prefix && not (Options.print_real_names ())
   then underscore
   else str (text_of_id lid)
 
 and text_of_lid_or_underscore lid =
-  if starts_with lid.ident.idText reserved_prefix
+  if starts_with lid.ident.idText reserved_prefix && not (Options.print_real_names ())
   then underscore
   else str (text_of_lid lid)
 

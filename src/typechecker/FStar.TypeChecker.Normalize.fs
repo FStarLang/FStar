@@ -1043,7 +1043,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_quoted _ ->
             rebuild cfg env stack (closure_as_term cfg env t)
-          
+
+          | Tm_app({n=Tm_fvar fv}, [_])
+          | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, [_])
+            when (fv_eq_lid fv PC.assert_lid
+                || fv_eq_lid fv PC.assert_norm_lid)
+                && cfg.steps.for_extraction ->
+            norm cfg env stack U.exp_unit
+
           | Tm_app(hd, args)
             when should_consider_norm_requests cfg &&
                  is_norm_request hd args = Norm_request_requires_rejig ->
@@ -2087,6 +2094,41 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
            | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
            | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
            | _ -> tm //its arg is a bool, can't unsquash
+      else if S.fv_eq_lid fv PC.haseq_lid
+      then begin
+        (*
+         * AR: We try to mimic the hasEq related axioms in Prims
+         *       and the axiom related to refinements
+         *     For other types, such as lists, whose hasEq is derived by the typechecker,
+         *       we leave them as is
+         *)
+        let t_has_eq_for_sure (t:S.term) :bool =
+          //Axioms from prims
+          let haseq_lids = [PC.int_lid; PC.bool_lid; PC.unit_lid; PC.string_lid] in
+          match (SS.compress t).n with
+          | Tm_fvar fv when haseq_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) -> true
+          | _ -> false
+        in
+        if List.length args = 1 then
+          let t = args |> List.hd |> fst in
+          if t |> t_has_eq_for_sure then w U.t_true
+          else
+            match (SS.compress t).n with
+            | Tm_refine _ ->
+              let t = U.unrefine t in
+              if t |> t_has_eq_for_sure then w U.t_true
+              else
+                //get the hasEq term itself
+                let haseq_tm =
+                  match (SS.compress tm).n with
+                  | Tm_app (hd, _) -> hd
+                  | _ -> failwith "Impossible! We have already checked that this is a Tm_app"
+                in
+                //and apply it to the unrefined type
+                mk_app (haseq_tm) [t |> as_arg]
+            | _ -> tm
+        else tm
+      end
       else begin
            match U.is_auto_squash tm with
            | Some (U_zero, t)
@@ -2130,7 +2172,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                                (Print.term_to_string t)
                                (bvs |> List.map Print.bv_to_string |> String.concat ", ");
            failwith "DIE!");
-  
+
   let f_opt = is_fext_on_domain t in
   if f_opt |> is_some && (match stack with | Arg _::_ -> true | _ -> false)  //AR: it is crucial to check that (on_domain a #b) is actually applied, else it would be unsound to reduce it to f
   then f_opt |> must |> norm cfg env stack

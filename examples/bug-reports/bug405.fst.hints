@@ -6,31 +6,13 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_unit" ],
-      0,
-      "cfdbd2dc7e63698473117755abbca01f"
-    ],
-    [
-      "Bug405.g",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "unit_inversion", "unit_typing"
       ],
       0,
-      "cbf6fd94b7e917b9b80657d1e13a6be1"
-    ],
-    [
-      "Bug405.v",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_unit" ],
-      0,
-      "3b04f902c5819d8717089a955b1d39bd"
+      "fc1c7d771c8d0ca990eae55a8cabb530"
     ]
   ]
 ]

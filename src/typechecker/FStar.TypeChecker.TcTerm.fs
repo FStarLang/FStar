@@ -552,29 +552,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env0, _ = Env.clear_expected_typ env in
     let e, c, g = tc_term env0 e in
     let reify_op, _ = U.head_and_args top in
-    let u_c =
-        (* c' is the computation type of the computation type and as such should be Type u *)
-        let _, c', _ = tc_term env0 c.res_typ in  //AR: note that we use env0, which unsets the expected_typ
-        match (SS.compress c'.res_typ).n with
-        | Tm_type u -> u
-        | _ ->
-            (* We constrain this unification variable to be of the shape Type u *)
-            (* for some new unification variable u *)
-            let t, u = U.type_u () in
-            let g_opt = Rel.try_teq true env c'.res_typ t in
-            begin match g_opt with
-            | Some g' -> Rel.force_trivial_guard env g'
-            | None ->
-                failwith (BU.format3
-                  "Unexpected result type of computation. \
-                   The computation type %s of the term %s should have \
-                   type Type n for some level n but has type %s"
-                  (Print.lcomp_to_string c')
-                  (Print.term_to_string c.res_typ)
-                  (Print.term_to_string c'.res_typ))
-            end ;
-            u
-    in
+    let u_c = env.universe_of env c.res_typ in
     let ef = U.comp_effect_name (lcomp_comp c) in
     if not (is_user_reifiable_effect env ef) then
         raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" ef.str)) e.pos;
@@ -1091,15 +1069,18 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
             | [], [] -> env, [], None, Env.trivial_guard, subst
 
             | (hd, imp)::bs, (hd_expected, imp')::bs_expected ->
-               begin match imp, imp' with
-                    | None, Some (Implicit _)
-                    | None, Some (Meta _)
-                    | Some (Implicit _), None
-                    | Some (Meta _), None ->
-                      raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
+               begin
+                 (* These are the discrepancies in qualifiers that we allow *)
+                 let special q1 q2 = match q1, q2 with
+                 | Some (Meta _), Some (Meta _) -> true (* don't compare the metaprograms *)
+                 | None, Some Equality -> true
+                 | Some (Implicit _), Some (Meta _) -> true
+                 | _ -> false
+                 in
+                 if not (special imp imp') && U.eq_aqual imp imp' <> U.Equal
+                 then raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
                                    BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
                                   (S.range_of_bv hd)
-                    | _ -> ()
                end;
                (* since binders depend on previous ones, we accumulate a substitution *)
                let expected_t = SS.subst subst hd_expected.sort in
@@ -2021,7 +2002,7 @@ and tc_eqn scrutinee env branch
         : (pat * option<term> * term)                                                             (* checked branch *)
         * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
         * lident                                                                 (* effect label of the lcomp below *)
-        * list<cflags>                                                                      (* flags for each lcomp *)
+        * list<cflag>                                                                       (* flags for each lcomp *)
         * (bool -> lcomp)                    (* computation type of the branch, with or without a "return" equation *)
         * guard_t =                                                                    (* well-formedness condition *)
   let pattern, when_clause, branch_exp = SS.open_branch branch in

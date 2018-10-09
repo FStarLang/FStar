@@ -64,6 +64,7 @@ type step =
   | Unmeta          //remove all non-monadic metas.
   | Unascribe
   | NBE
+  | ForExtraction //marking an invocation of the normalizer for extraction
 and steps = list<step>
 
 let rec eq_step s1 s2 =

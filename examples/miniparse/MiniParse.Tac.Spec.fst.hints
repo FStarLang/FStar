@@ -11,19 +11,7 @@
         "projection_inverse_MiniParse.Tac.Spec.Package_p"
       ],
       0,
-      "e98a433e858aa48326616cf7b3f73b1e"
-    ],
-    [
-      "MiniParse.Tac.Spec.gen_package'",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "0466af66ab4e35e241827e963171b9e8"
+      "12a72f6831c0e86466a1e44a1d139075"
     ],
     [
       "MiniParse.Tac.Spec.__proj__Package__item__s",
@@ -35,19 +23,7 @@
         "projection_inverse_MiniParse.Tac.Spec.Package_p"
       ],
       0,
-      "d81b6ab3a6101b286252afcc9603bccc"
-    ],
-    [
-      "MiniParse.Tac.Spec.gen_package'",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "ce8d1faf5dd2fdf0abdedcf8a95cf55c"
+      "73cc6e2a988a27809e41e3fee3c23574"
     ]
   ]
 ]

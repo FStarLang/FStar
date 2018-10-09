@@ -11,7 +11,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "31dd87de7c38a0e11906e18194fd5d3d"
+      "f6c2ef6623e1b468e8972be3805262c3"
     ],
     [
       "MiniParse.Tac.Base.mk_if_t",
@@ -20,7 +20,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
-      "e0bf598bd9a0341a1d54628735db9fd3"
+      "e32cf29530db1507c8aba1b3fda084a0"
     ],
     [
       "MiniParse.Tac.Base.string_of_name",
@@ -35,31 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0826ef27d304bf74efd80e25cdde24fb"
-    ],
-    [
-      "MiniParse.Tac.Base.to_all_goals",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "1964288599d8473fa5e2fb9324c06489"
-    ],
-    [
-      "MiniParse.Tac.Base.solve_goal",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "66443f2f97853492c7eb6f55396bad7d"
+      "2ee50e90758bde9ed325631a2d792d6a"
     ],
     [
       "MiniParse.Tac.Base.app_head_rev_tail",
@@ -71,7 +47,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "2859cb791aede0789b5f057d5e8627ad"
+      "e70bccfab4bb8d03eac3de84a3e0338e"
     ],
     [
       "MiniParse.Tac.Base.mk_if_t",
@@ -80,7 +56,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
-      "d5246b17f9d4d87d441d5860aef20282"
+      "257627ad5a093b6a36a5d432c4bbc06b"
     ],
     [
       "MiniParse.Tac.Base.string_of_name",
@@ -95,31 +71,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e6ad9bf7defd24a442307a172ba60081"
-    ],
-    [
-      "MiniParse.Tac.Base.to_all_goals",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "bceb31606239f8ffe546cccee1a34432"
-    ],
-    [
-      "MiniParse.Tac.Base.solve_goal",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "1a5525a7a7a2aa3deafddaad151e9bc3"
+      "c868aed290291f1e1f48b4b00cea28bd"
     ]
   ]
 ]

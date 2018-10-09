@@ -6,33 +6,12 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "b5c0b6cb9ee78e77a1a342b706c559aa"
-    ],
-    [
-      "Bug284.foo",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
-        "refinement_interpretation_Bug284_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
-      ],
-      0,
-      "520385f417efde24370fc4ccf07db484"
-    ],
-    [
-      "Bug284.foo",
-      3,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Bug284_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "9b89a9c819869ed39f6e5f4ca7728a6b"
+      "b687f3b5871ec178c317fedc4a34f1cf"
     ]
   ]
 ]

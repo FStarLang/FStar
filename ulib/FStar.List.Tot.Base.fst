@@ -484,9 +484,6 @@ let rec sortWith f = function
      partition_length (bool_of_compare f pivot) tl;
      append (sortWith f lo) (pivot::sortWith f hi)
 
-#set-options "--initial_fuel 4 --initial_ifuel 4"
-private abstract let test_sort :unit = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
-
 (** A l1 is a strict prefix of l2. *)
 
 let rec strict_prefix_of (#a: Type) (l1 l2: list a)

@@ -1355,16 +1355,28 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             then lbs |> List.map (fun lb ->
                     let tcenv = TcEnv.set_current_module g.env_tcenv
                                 (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
-//                    debug g (fun () ->
-//                                BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
-//                                Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
+                    // debug g (fun () ->
+                    //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
+                    //            Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
                         if Options.ml_ish()
                         then lb.lbdef
-                        else N.normalize [Env.AllowUnboundUniverses; Env.EraseUniverses;
-                                             Env.Inlining; Env.Eager_unfolding;
-                                             Env.Exclude Env.Zeta; Env.PureSubtermsWithinComputations; Env.Primops]
-                                tcenv lb.lbdef in
+                        else let norm_call () =
+                                 N.normalize ([Env.AllowUnboundUniverses; Env.EraseUniverses;
+                                               Env.Inlining; Env.Eager_unfolding;
+                                               Env.Exclude Env.Zeta; Env.PureSubtermsWithinComputations;
+                                               Env.Primops; Env.Unascribe; Env.ForExtraction])
+                                              tcenv lb.lbdef
+                             in
+                             if TcEnv.debug tcenv <| Options.Other "Extraction"
+                             || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
+                             then let a = FStar.Util.measure_execution_time
+                                          (BU.format1 "(Time to normalize top-level let %s)" (Print.lbname_to_string lb.lbname))
+                                          norm_call in
+                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+                                  a
+                             else norm_call ()
+                    in
                     {lb with lbdef=lbdef})
             else lbs in
 

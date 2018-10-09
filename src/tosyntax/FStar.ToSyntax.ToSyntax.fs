@@ -867,7 +867,7 @@ and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
     let tm = setpos tm in
     tm
 
-and desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflags> =
+and desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflag> =
     let desugar_attribute t =
         match (unparen t).tm with
             | Var ({str="cps"}) -> CPS
@@ -1078,7 +1078,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let bs, t = uncurry binders t in
       let rec aux env bs = function
         | [] ->
-          let cod = desugar_comp top.range env t in
+          let cod = desugar_comp top.range true env t in
           setpos <| U.arrow (List.rev bs) cod
 
         | hd::tl ->
@@ -1397,7 +1397,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Ascribed(e, t, tac_opt) ->
       let annot, aq0 =
         if is_comp_type env t
-        then let comp = desugar_comp t.range env t in
+        then let comp = desugar_comp t.range true env t in
              (Inr comp, [])
         else let tm, aq = desugar_term_aq env t in
              (Inl tm, aq)
@@ -1503,7 +1503,7 @@ and not_ascribed t =
 and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_e imp (desugar_term env a))
 
-and desugar_comp r env t =
+and desugar_comp r (allow_type_promotion:bool) env t =
     let fail : (Errors.raw_error * string) -> 'a = fun err -> raise_error err r in
     let is_requires (t, _) = match (unparen t).tm with
       | Requires _ -> true
@@ -1657,7 +1657,7 @@ and desugar_comp r env t =
         (* the default effect for Type is always Tot *)
         (Ident.set_lid_range Const.effect_Tot_lid head.range, []), [t, Nothing]
 
-      | _ ->
+      | _ when allow_type_promotion ->
         let default_effect =
           if Options.ml_ish ()
           then Const.effect_ML_lid
@@ -1665,6 +1665,10 @@ and desugar_comp r env t =
                 then FStar.Errors.log_issue head.range (Errors.Warning_UseDefaultEffect, "Using default effect Tot");
                 Const.effect_Tot_lid) in
         (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
+
+      | _ ->
+        raise_error (Errors.Fatal_EffectNotFound,
+                     "Expected an effect constructor") t.range
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0
@@ -2090,7 +2094,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                             desugar_attributes env cattributes
                          | _ -> t, []
                  in
-                 let c = desugar_comp t.range env' t in
+                 let c = desugar_comp t.range false env' t in
                  let typars = Subst.close_binders typars in
                  let c = Subst.close_comp typars c in
                  let quals = quals |> List.filter (function S.Effect -> false | _ -> true) in
