@@ -2,15 +2,6 @@
   "L+YÑ‰\u0017\u001f–OŽ&E²\u001ažš",
   [
     [
-      "Bane.big_phi",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b6cf9b3068a3e9710378562be4e9353c"
-    ],
-    [
       "Bane.repeat_or_fail",
       1,
       2,
@@ -21,12 +12,15 @@
         "bool_typing", "data_elim_FStar.Tactics.Result.Success",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_Prims.unit",
-        "lemma_FStar.Pervasives.invertOption", "unit_typing"
+        "lemma_FStar.Pervasives.invertOption",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "unit_typing"
       ],
       0,
-      "fb59dca36adf47b7ce1ddcc3a7671a4e"
+      "c7d2701fac94e5e3a767bb9b56d997a6"
     ]
   ]
 ]

@@ -763,11 +763,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b5ea145823279dc36112ae086392c5c1"
+      "0309eae511eb0ae8e9f91ed8437df3b0"
     ],
     [
       "FStar.Reflection.Data.exp",
@@ -775,12 +777,14 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.Reflection.Data.var", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Reflection.Data.var", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "function_token_typing_FStar.Reflection.Data.var",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "759be3a6bf6e406e3bfaf6f348fef8e4"
+      "7c787e5bb1f2551d86ef68b29540b95b"
     ],
     [
       "FStar.Reflection.Data.__proj__Var__item___0",
@@ -1648,11 +1652,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1bc2ae802566c6a1f05a591c23cb070c"
+      "9ce3a80a80e1a964dfbd28189af2bda0"
     ],
     [
       "FStar.Reflection.Data.exp",
@@ -1660,12 +1666,14 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.Reflection.Data.var", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Reflection.Data.var", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "function_token_typing_FStar.Reflection.Data.var",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8537c6f7d79ff4b0a7039e4ab14665ef"
+      "98372137bcc6fb09b910c5cc92c26c3d"
     ],
     [
       "FStar.Reflection.Data.__proj__Var__item___0",

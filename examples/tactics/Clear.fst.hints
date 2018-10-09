@@ -7,37 +7,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_int",
-        "data_elim_FStar.Tactics.Result.Success",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "true_interp", "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "function_token_typing_Clear.p",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "684c832777410b77a51e895b1b512c48"
+      "5f8d04368fa130dfea20eff84824a0bc"
     ],
     [
       "Clear.l2",
       2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_int",
-        "data_elim_FStar.Tactics.Result.Success",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "true_interp", "unit_typing"
-      ],
-      0,
-      "8687c07c5adc3e5587a0f32d25490bc9"
-    ],
-    [
-      "Clear.l2",
-      3,
       2,
       1,
       [
@@ -46,53 +25,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "79ae9f32612cd1f5bce41f1e854d5964"
-    ],
-    [
-      "Clear.l2",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_int",
-        "data_elim_FStar.Tactics.Result.Success",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "unit_typing"
-      ],
-      0,
-      "25be68b31d5e67e470114e8df08b7122"
-    ],
-    [
-      "Clear.l2",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_int",
-        "data_elim_FStar.Tactics.Result.Success",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "true_interp", "unit_typing"
-      ],
-      0,
-      "8d330c91a22e9f4200f85438d7b77cd8"
-    ],
-    [
-      "Clear.l2",
-      6,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "function_token_typing_Clear.p",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
-      ],
-      0,
-      "50026820fadbc28d6c16f8739eb5c554"
+      "d2078ca8375cee264d5e81fb360fc2ea"
     ]
   ]
 ]

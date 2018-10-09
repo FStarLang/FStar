@@ -2,15 +2,6 @@
   "6Û>zh ,Q[F\u0011orê\u0014þ",
   [
     [
-      "IfcRecursiveReify.low_equiv",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "0f5befa6fa0de245a576cea1cff93a56"
-    ],
-    [
       "IfcRecursiveReify.p1",
       1,
       2,
@@ -34,7 +25,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "929d8df343ec3c47b52056803b2996b0"
+      "4717817ff77d7158bdb183ab869e4dec"
     ],
     [
       "IfcRecursiveReify.ni_p1",
@@ -91,7 +82,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "1d97b8a1eb3876628357e4442d9a4e41"
+      "f08b86eed137cbf131e4f50797913fcb"
     ],
     [
       "IfcRecursiveReify.p2",
@@ -117,7 +108,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "47a7db765d7f84e55397afdd1cb9af79"
+      "0526df5640124c100a7c55ce265981b7"
     ],
     [
       "IfcRecursiveReify.ni_p2",
@@ -175,7 +166,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "19fd0beb31cd2c18f7c7a7d2cbd01be2"
+      "e8fd5581ed1d793b7991e6a06c63cb76"
     ],
     [
       "IfcRecursiveReify.ni_p3",
@@ -197,16 +188,7 @@
         "unit_typing"
       ],
       0,
-      "6a441ce59a5f777440f03bdfa2e8b6e6"
-    ],
-    [
-      "IfcRecursiveReify.low_equiv",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "d3772e441b7680e0f249ce37965077d7"
+      "11a3011cf18f3ea17b62418b5268a805"
     ],
     [
       "IfcRecursiveReify.p1",
@@ -232,7 +214,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "d3f60af53c758411db655d059c2488e0"
+      "43bd34889f549484a65e34b99943ebf1"
     ],
     [
       "IfcRecursiveReify.p2",
@@ -258,7 +240,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "7f2e776bba10136d2e1d1a9e16d012d7"
+      "99f78a53c704d24416b5cc08f3924605"
     ]
   ]
 ]

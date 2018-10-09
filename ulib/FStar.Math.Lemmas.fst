@@ -61,22 +61,22 @@ val distributivity_sub_right: a:int -> b:int -> c:int -> Lemma
   ((a * (b - c) = a * b - a * c))
 let distributivity_sub_right a b c = ()
 
-(* Lemma: multiplication is commutative, hence parenthesizing is meaningless *)
+(* Lemma: multiplication is associative, hence parenthesizing is meaningless *)
 val paren_mul_left: a:int -> b:int -> c:int -> Lemma
   (a * b * c = (a * b) * c)
 let paren_mul_left a b c = ()
 
-(* Lemma: multiplication is commutative, hence parenthesizing is meaningless *)
+(* Lemma: multiplication is associative, hence parenthesizing is meaningless *)
 val paren_mul_right: a:int -> b:int -> c:int -> Lemma
   (a * b * c = a * (b * c))
 let paren_mul_right a b c = ()
 
-(* Lemma: addition is commutative, hence parenthesizing is meaningless *)
+(* Lemma: addition is associative, hence parenthesizing is meaningless *)
 val paren_add_left: a:int -> b:int -> c:int -> Lemma
   (a + b + c = (a + b) + c)
 let paren_add_left a b c = ()
 
-(* Lemma: addition is commutative, hence parenthesizing is meaningless *)
+(* Lemma: addition is associative, hence parenthesizing is meaningless *)
 val paren_add_right: a:int -> b:int -> c:int -> Lemma
   (a + b + c = a + (b + c))
 let paren_add_right a b c = ()
@@ -344,11 +344,17 @@ let mod_add_both (a:int) (b:int) (x:int) (n:pos) =
   lemma_div_mod b n;
   lemma_div_mod (a + x) n;
   lemma_div_mod (b + x) n;
-  let xx = (b + x) / n - (a + x) / n - b / n + a / n in
-  distributivity_sub_left ((b + x) / n) ((a + x) / n) n;
-  distributivity_sub_left ((b + x) / n - (a + x) / n) (b / n) n;
-  distributivity_add_left ((b + x) / n - (a + x) / n - b / n) (a / n) n;
-  lt_multiple_is_equal ((a + x) % n) ((b + x) % n) xx n
+  assert ((a + x) % n == a + x - n * ((a + x) / n));
+  assert ((b + x) % n == b + x - n * ((b + x) / n));
+  assert ((a + x) % n - (b + x) % n == a - b + n * ((b + x) / n - (a + x) / n));
+  lemma_div_plus (b%n + x) (b/n) n;
+  lemma_div_plus (a%n + x) (a/n) n;
+  swap_mul n (b/n); swap_mul n (a/n); (* ugh *)
+  assert ((a + x) % n - (b + x) % n == a - b + n * (b/n + (b%n + x)/n - a/n - (a%n + x)/n));
+  assert ((a + x) % n - (b + x) % n == a - b + n * (b/n - a/n));
+  distributivity_sub_right n (b/n) (a/n);
+  assert ((a + x) % n - (b + x) % n == 0);
+  ()
 
 private
 val lemma_mod_add_distr (a:int) (b:int) (n:pos) : Lemma ((a + b % n) % n = (a + b) % n)

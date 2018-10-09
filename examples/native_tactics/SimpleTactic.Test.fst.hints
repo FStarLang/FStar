@@ -1,14 +1,1 @@
-[
-  "½£Π\u0001\u001e\u0011o1&&€όθε",
-  [
-    [
-      "SimpleTactic.Test.go",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "ef50b06ee7b3ad5645502fb29603ea3b"
-    ]
-  ]
-]
+[ "½£Π\u0001\u001e\u0011o1&&€όθε", [] ]

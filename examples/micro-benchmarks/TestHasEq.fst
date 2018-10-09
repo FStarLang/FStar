@@ -44,3 +44,12 @@ type t3 (a:Type0) :eqtype =
 
 type t4 (a:Type0) :eqtype =  //this succeeds, since independent of a, t4 hasEq
   | C4 : x:nat -> t4 a
+
+(*
+ * Reducing basic hasEq axioms in the normalizer
+ *)
+#push-options "--no_smt"
+let test_1514 () =
+  assert (hasEq int); assert (hasEq bool); assert (hasEq string); assert (hasEq unit);
+  assert (hasEq (x:int{x > 2}))
+#pop-options
