@@ -12,7 +12,7 @@
         "assumption_Prims.HasEq_int", "unit_typing"
       ],
       0,
-      "fb52b9da7f28b72a4e7c9c929abb03ca"
+      "4ec0e5d4a89a2414508358a3994fbe2d"
     ],
     [
       "FStar.Reader.g",
@@ -30,25 +30,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "c196c4be1aed55780d9b6714600e7a93"
-    ],
-    [
-      "FStar.Reader.f",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "76da6b59bf3fd2484660a918495f382b"
-    ],
-    [
-      "FStar.Reader.g",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "c724abd686c661c7c24fc5e7a600c08d"
+      "c5388fa804a4d0ffe0855e7d0e59b06d"
     ]
   ]
 ]

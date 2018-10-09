@@ -2,18 +2,6 @@
   "\u0019!zSü{\u0015ÙwÆ¡T\u000fSD\n",
   [
     [
-      "Bug1206.bslice",
-      1,
-      1,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "684d35a55d0846f54aad76d1f5231975"
-    ],
-    [
       "Bug1206.ser_id",
       1,
       1,
@@ -26,7 +14,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option"
       ],
       0,
-      "263e3bee09be7a3d41d7ba6d195c245c"
+      "66bef144d93862f4b2ac4693961e8bb3"
     ]
   ]
 ]

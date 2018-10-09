@@ -51,7 +51,7 @@
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented"
       ],
       0,
-      "a29d9fb6e2c5f95b64724b4112704e33"
+      "96aead835d30b75bd6c8abb1110f14f7"
     ],
     [
       "Bug463b.eq1",
@@ -69,20 +69,11 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "4cb6e072da079a18407e067b914a19ad"
+      "6cc7a5b5496e7087648ded29299f127a"
     ],
     [
       "Bug463b.eq2",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "0631ad4fa5f51dd237e09b8557e0e740"
-    ],
-    [
-      "Bug463b.eq2",
-      2,
       2,
       1,
       [
@@ -96,23 +87,11 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "d23b4ad57441806cb9a1cfb06bb456f9"
+      "85df3ab0dad3f7c9b5aedc1ea5fbd3bc"
     ],
     [
       "Bug463b.lemma_move_refinement_length",
       1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "8f158165a98ef584544e9fdd1a3f71b3"
-    ],
-    [
-      "Bug463b.lemma_move_refinement_length",
-      2,
       2,
       1,
       [
@@ -136,7 +115,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "c4987a7cac0445bef447bf8776a243c5"
+      "44e7ba9c719590b59c0fb675bfc2be43"
     ]
   ]
 ]
