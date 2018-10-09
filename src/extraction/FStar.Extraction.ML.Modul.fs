@@ -818,7 +818,6 @@ let extract' (g:env) (m:modul) : env * list<mllib> =
        g, []
   else
       let g, sigs = BU.fold_map extract_sig g m.declarations in
-      debug g (fun () -> BU.print_string (gamma_to_string g));
       let mlm : mlmodule = List.flatten sigs in
       let is_kremlin = Options.codegen () = Some Options.Kremlin in
       if m.name.str <> "Prims"

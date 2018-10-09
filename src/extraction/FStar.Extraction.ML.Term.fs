@@ -423,18 +423,25 @@ let maybe_eta_expand expect e =
 let maybe_coerce pos (g:env) e ty (expect:mlty) : mlexpr  =
     let ty = eraseTypeDeep g ty in
     match type_leq_c g (Some e) ty expect with
-        | true, Some e' -> e'
+    | true, Some e' -> e'
+    | _ ->
+        match ty with
+        | MLTY_Erased ->
+          //generate a default value suitable for the expected type
+          default_value_for_ty g expect
         | _ ->
-          debug g (fun () -> BU.print3 "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
-                             (Code.string_of_mlexpr g.currentModule e)
-                             (Code.string_of_mlty g.currentModule ty)
-                             (Code.string_of_mlty g.currentModule expect));
-          match ty with
-          | MLTY_Erased ->
-            //generate a default value suitable for the expected type
-            default_value_for_ty g expect
-          | _ ->
-            maybe_eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
+          if type_leq g (erase_effect_annotations ty) (erase_effect_annotations expect)
+          then let _ = debug g (fun () ->
+                BU.print2 "\n Effect mismatch on type of %s : %s\n"
+                            (Code.string_of_mlexpr g.currentModule e)
+                            (Code.string_of_mlty g.currentModule ty)) in
+               e //types differ but only on effect labels, which ML/KreMLin don't care about; so no coercion needed
+          else let _ = debug g (fun () ->
+                BU.print3 "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
+                            (Code.string_of_mlexpr g.currentModule e)
+                            (Code.string_of_mlty g.currentModule ty)
+                            (Code.string_of_mlty g.currentModule expect)) in
+               maybe_eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
@@ -1148,8 +1155,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
                 let mk_head () =
                     let mlargs = List.rev mlargs_f |> List.map fst in
-                    let head = with_ty MLTY_Top <| MLE_App(mlhead, mlargs) in
-                    maybe_coerce top.pos g head MLTY_Top t
+                    with_ty t <| MLE_App(mlhead, mlargs)
                 in
                 debug g (fun () -> BU.print3 "extract_app ml_head=%s type of head = %s, next arg = %s\n"
                                 (Code.string_of_mlexpr g.currentModule (mk_head()))
@@ -1162,8 +1168,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         //Note, the evaluation order for impure arguments has already been
                         //enforced in the main type-checker, that already let-binds any
                         //impure arguments
-                        let mlargs = List.rev mlargs_f |> List.map fst in
-                        let app = maybe_eta_data_and_project_record g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
+                        let app = maybe_eta_data_and_project_record g is_data t (mk_head()) in
                         app, f, t
 
                     | (arg, _)::rest, MLTY_Fun (formal_t, f', t)

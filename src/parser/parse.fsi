@@ -407,6 +407,7 @@ type nonTerminalId =
     | NONTERM_thunk_atomicTerm_
     | NONTERM_thunk_tmNoEq_
     | NONTERM_thunk_typ_
+    | NONTERM_thunk2_typ_
     | NONTERM_ascribeTyp
     | NONTERM_ascribeKind
     | NONTERM_kind
