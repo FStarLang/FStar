@@ -1685,7 +1685,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
 
         | Inline_for_extraction ->
           quals |> List.for_all (fun x -> x=q || x=Logic || visibility x || reducibility x
-                                              || reification x || inferred x
+                                              || reification x || inferred x || has_eq x
                                               || (env.is_iface && x=Assumption)
                                               || x=NoExtract)
 
