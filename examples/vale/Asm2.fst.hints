@@ -2,67 +2,22 @@
   "aÐ\\+d¯Ïå^\u001b¶¡÷Q:”",
   [
     [
-      "Asm2.state",
-      1,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "01a398779902127992c105cb151ac380"
-    ],
-    [
-      "Asm2.lemma_load",
-      1,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b741e11646d287895f49c1cfad3d3821"
-    ],
-    [
-      "Asm2.lemma_load",
-      2,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "97a30bfa2a1339d42918f3c7eb885fbc"
-    ],
-    [
-      "Asm2.lemma_store",
-      1,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "9efd95ef1ebc10fc1b951e14b4aa66ee"
-    ],
-    [
-      "Asm2.lemma_store",
-      2,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2b7ea50845ab53703ad0735bbd7a9546"
-    ],
-    [
       "Asm2.lemma_copy",
       1,
       1,
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "bool_inversion",
-        "equation_Asm2.contains", "equation_Asm2.lemma_load",
-        "equation_Asm2.lemma_store", "equation_Asm2.map",
-        "equation_Asm2.op_String_Access",
+        "FStar.Map_interpretation_Tm_arrow_639a4253992331c67e251edc6f8641a3",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
+        "equation_Asm2.contains", "equation_Asm2.lemma_store",
+        "equation_Asm2.map", "equation_Asm2.op_String_Access",
         "equation_Asm2.op_String_Assignment", "equation_Asm2.state",
-        "equation_FStar.Set.eqtype", "function_token_typing_Prims.int",
-        "int_inversion", "int_typing", "lemma_FStar.Map.lemma_InDomUpd1",
-        "lemma_FStar.Map.lemma_SelUpd1", "lemma_FStar.Map.lemma_SelUpd2",
-        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "equation_Prims.eqtype", "function_token_typing_FStar.Map.contains",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "lemma_FStar.Map.lemma_InDomUpd1", "lemma_FStar.Map.lemma_SelUpd1",
+        "lemma_FStar.Map.lemma_SelUpd2", "primitive_Prims.op_BarBar",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Asm2_Tm_refine_0920565650466f13cef7ffac0d3419dd",
         "refinement_interpretation_Asm2_Tm_refine_0fec808428cfbfc343e7c3732cdff2a5",
@@ -76,10 +31,10 @@
         "token_correspondence_Asm2.op_String_Assignment",
         "token_correspondence_FStar.Map.contains",
         "token_correspondence_FStar.Map.sel",
-        "token_correspondence_FStar.Map.upd", "typing_FStar.Map.contains"
+        "token_correspondence_FStar.Map.upd"
       ],
       0,
-      "73115089c8cbb5185e66c17e6e2e78a5"
+      "b8d8ee3d31ac81737459f714afbd9f28"
     ],
     [
       "Asm2.lemma_copy",
@@ -113,122 +68,7 @@
         "token_correspondence_FStar.Map.upd", "typing_FStar.Map.contains"
       ],
       0,
-      "ab0abd9aa2ed4cecec963651a810c1e7"
-    ],
-    [
-      "Asm2.state",
-      2,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "5c22d6c5c1a9ba8e4aae369eff4bce43"
-    ],
-    [
-      "Asm2.lemma_load",
-      3,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2eb2629c46202feab6c2f80eede86a7f"
-    ],
-    [
-      "Asm2.lemma_load",
-      4,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "039eb2d6fe39710ba99cd672b36ea93c"
-    ],
-    [
-      "Asm2.lemma_load",
-      5,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "a8bbe3a9e81c4458e1b963a596052fcf"
-    ],
-    [
-      "Asm2.lemma_store",
-      3,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "5ffdb7e0a42f55afb29d6efc9d287d71"
-    ],
-    [
-      "Asm2.lemma_store",
-      4,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "f9fd1d25c2bfc4d9538f2b267201d15b"
-    ],
-    [
-      "Asm2.lemma_store",
-      5,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "61a5f33f9e88ac35739789e82feda1f9"
-    ],
-    [
-      "Asm2.lemma_copy",
-      3,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "a9bdfde378c1511321b1c6882380ee8c"
-    ],
-    [
-      "Asm2.lemma_copy",
-      4,
-      1,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "bool_inversion",
-        "equation_Asm2.contains", "equation_Asm2.lemma_store",
-        "equation_Asm2.map", "equation_Asm2.op_String_Access",
-        "equation_Asm2.op_String_Assignment", "equation_Asm2.state",
-        "equation_Prims.eqtype", "function_token_typing_Prims.int",
-        "int_inversion", "int_typing", "lemma_FStar.Map.lemma_InDomUpd1",
-        "lemma_FStar.Map.lemma_SelUpd1", "lemma_FStar.Map.lemma_SelUpd2",
-        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Asm2_Tm_refine_0920565650466f13cef7ffac0d3419dd",
-        "refinement_interpretation_Asm2_Tm_refine_0fec808428cfbfc343e7c3732cdff2a5",
-        "refinement_interpretation_Asm2_Tm_refine_1759ee49f5ae14ffe80c289f17086516",
-        "refinement_interpretation_Asm2_Tm_refine_21c697500cab9a3c8549e1f558a659e8",
-        "refinement_interpretation_Asm2_Tm_refine_3c0f54a60bffed4bd7ac64c645a58489",
-        "refinement_interpretation_Asm2_Tm_refine_6faa3aff1a3e9775f0ced40bad639a62",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "token_correspondence_Asm2.contains",
-        "token_correspondence_Asm2.op_String_Access",
-        "token_correspondence_Asm2.op_String_Assignment",
-        "token_correspondence_FStar.Map.contains",
-        "token_correspondence_FStar.Map.sel",
-        "token_correspondence_FStar.Map.upd", "typing_FStar.Map.contains"
-      ],
-      0,
-      "71b0015ef52576be146878268177d41b"
-    ],
-    [
-      "Asm2.lemma_copy",
-      5,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b80bae2c63b85247472b0aaf83629b52"
+      "df2b0a59fecee44744c2cb5d21972904"
     ]
   ]
 ]

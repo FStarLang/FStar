@@ -108,7 +108,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c08b9f30b09c27904cec4142914dcc9c"
+      "8a00b4ad034524959df8d5529eefa3a2"
     ],
     [
       "X64.Vale.Decls.lemma_cmp_ne",
@@ -640,7 +640,7 @@
         "typing_X64.Vale.State_i.eval_maddr", "unit_typing"
       ],
       0,
-      "9c99f70fa1e5c5936c81d47e168a524f"
+      "cc1cb6082b534a9341fafae894a96edf"
     ],
     [
       "X64.Vale.Decls.va_transparent_code_Store64",
@@ -783,7 +783,7 @@
         "typing_X64.Vale.State_i.eval_operand", "unit_typing"
       ],
       0,
-      "c3737bc74a6affa658848aca70b0c8af"
+      "b0387b59819d731657917d4c2ef4e984"
     ],
     [
       "X64.Vale.Decls.va_irreducible_lemma_Add64",
