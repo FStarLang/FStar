@@ -487,7 +487,7 @@ let rec token = lexer
    fail lexbuf (E.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
 
  | "(*" '*'* "*)" -> token lexbuf (* avoid confusion with fsdoc *)
- | "(**" -> fsdoc (1,"",[]) lexbuf
+ | "/**" -> fsdoc (1,"",[]) lexbuf
 
  | "(*" ->
    let inner, buffer, startpos = start_comment lexbuf in
@@ -583,16 +583,15 @@ and comment inner buffer startpos = lexer
    JP: this is a parser encoded within a lexer using regexps. This is
    suboptimal. *)
 and fsdoc (n, doc, kw) = lexer
- | "(*" -> fsdoc (n + 1, doc ^ "(*", kw) lexbuf
- | "*)" newline newline ->
+ | "/*" -> fsdoc (n + 1, doc ^ "/*", kw) lexbuf
+ | "*/" newline newline ->
    mknewline 2 lexbuf;
-   if n > 1 then fsdoc (n-1, doc ^ "*)", kw) lexbuf
+   if n > 1 then fsdoc (n-1, doc ^ "*/", kw) lexbuf
    else FSDOC_STANDALONE(doc, kw)
- | "*)" newline ->
-   L.new_line lexbuf;
-   if n > 1 then fsdoc (n-1, doc ^ "*)", kw) lexbuf
+ | "*/" ->
+   if n > 1 then fsdoc (n-1, doc ^ "*/", kw) lexbuf
    else FSDOC(doc, kw)
- | anywhite* "@" ['a'-'z' 'A'-'Z']+ [':']? anywhite* ->
+ | anywhite* "@" ['a'-'z' 'A'-'Z' '_']+ [':']? anywhite* ->
      fsdoc_kw_arg (n, doc, kw, BatString.strip ~chars:" \r\n\t@:" (L.lexeme lexbuf), "") lexbuf
  | newline -> L.new_line lexbuf; fsdoc (n, doc^"\n", kw) lexbuf
  | _ -> fsdoc(n, doc^(L.lexeme lexbuf), kw) lexbuf
@@ -602,7 +601,4 @@ and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
    L.new_line lexbuf;
    fsdoc (n, doc, (kwn, kwa)::kw) lexbuf
  | _ -> fsdoc_kw_arg (n, doc, kw, kwn, kwa^(L.lexeme lexbuf)) lexbuf
-
-and ignore_endline = lexer
- | ' '* newline -> token lexbuf
 

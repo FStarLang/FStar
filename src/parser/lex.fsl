@@ -322,14 +322,11 @@ rule token args = parse
  | "(|"             { LENS_PAREN_LEFT }
  | "|)"             { LENS_PAREN_RIGHT }
 
- | "(*" '*'* "*)" // Silly to have, but fsdoc breaks bootstrapping otherwise
-    { token args lexbuf }
-
  | "(*"
      { let m = getLexerRange  lexbuf in
        comment(1,m,args) lexbuf }
 
- | "(**"
+ | "/**"
      { fsdoc(1,"",[]) lexbuf}
 
  | '"'
@@ -588,19 +585,19 @@ and comment cargs = parse
        comment(n,m,args) lexbuf }
 
 and fsdoc cargs = parse
- | '(' '*'
+ | '/' '*'
     { let n,doc,kw = cargs in
-      fsdoc (n+1,doc^"(*",kw) lexbuf }
+      fsdoc (n+1,doc^"/*",kw) lexbuf }
 
  // Fsdoc followed by newline is a standalone comment and uses a different
  // token from fsdoc annotations to avoid all grammar ambiguities
- | "*)" newline newline
+ | "*/" newline newline
     { let n,doc,kw = cargs in
 	  mknewline 2 lexbuf;
       if n > 1 then fsdoc (n-1,doc^(ulexeme lexbuf),kw) lexbuf
       else FSDOC_STANDALONE(doc,kw) }
 
- | "*)" newline
+ | "*/"
     { let n,doc,kw = cargs in
 	  mknewline 1 lexbuf;
       if n > 1 then fsdoc (n-1,doc^(ulexeme lexbuf),kw) lexbuf
@@ -628,7 +625,7 @@ and fsdoc cargs = parse
 and fsdoc_kw cargs = parse
  | anywhite*
      {fsdoc_kw cargs lexbuf}
- | ['a'-'z' 'A'-'Z']+
+ | ['a'-'z' 'A'-'Z' '_']+
      { let n,doc,kw = cargs in
 	   fsdoc_kw_arg(n,doc,kw,ulexeme lexbuf,"") lexbuf }
  | _ { fail lexbuf (Errors.Fatal_InvalidFSDocKeyword, "Invalid FSDoc keyword") EOF }
@@ -641,6 +638,3 @@ and fsdoc_kw_arg cargs = parse
  | _ { let n,doc,kw,kwn,kwa = cargs in
        fsdoc_kw_arg(n,doc,kw,kwn,kwa^(ulexeme lexbuf)) lexbuf }
 
-and ignore_endline args = parse
- | ' '* newline
-     { token args lexbuf }
