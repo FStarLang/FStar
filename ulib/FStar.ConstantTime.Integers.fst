@@ -63,3 +63,13 @@ let addition_mod (#sl:sl)
     = a <-- x;
       b <-- y;
       return l (a +% b)
+
+let multiplication_mod (#sl:sl)
+                 (#l:lattice_element sl)
+                 (#sw: _ {Unsigned? sw /\ width_of_sw sw <> W128})
+                 (x : secret_int l sw)
+                 (y : secret_int l sw)
+    : Tot (z:secret_int l sw { m z == m x *% m y } )
+    = a <-- x;
+      b <-- y;
+      return l (a *% b)
