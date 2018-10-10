@@ -1121,7 +1121,11 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) delta_constant None)) None Range.dummyRange
+    mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange)
+                           delta_constant
+                           None))
+       None
+       Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
@@ -1145,6 +1149,7 @@ let t_true  = fvar_const PC.true_lid  //NS delta: wrong? should be Delta_constan
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 let tcdecltime_attr = fvar_const PC.tcdecltime_attr
+let inline_let_attr = fvar_const PC.inline_let_attr
 
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 

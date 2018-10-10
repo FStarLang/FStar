@@ -411,20 +411,27 @@ and translate_let env flavor lb: option<decl> =
   | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t0);
-      mllb_def = { expr = MLE_Fun (args, body) };
+      mllb_def = e;
       mllb_meta = meta
-    }
+    } when BU.for_some (function Syntax.Assumed -> true | _ -> false) meta ->
+      let name = env.module_name, name in
+      if List.length tvars = 0 then
+        Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0))
+      else begin
+        BU.print1_warning "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
+        None
+      end
+
   | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t0);
-      mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) };
+      mllb_def = { expr = MLE_Fun (args, body) };
       mllb_meta = meta
     } ->
       if List.mem Syntax.NoExtract meta then
         None
       else
         // Case 1: a possibly-polymorphic function.
-        let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) meta in
         let env = if flavor = Rec then extend env name else env in
         let env = List.fold_left (fun env name -> extend_t env name) env tvars in
         let rec find_return_type eff i = function
@@ -450,24 +457,16 @@ and translate_let env flavor lb: option<decl> =
           | E_PURE, TUnit -> MustDisappear :: translate_flags meta
           | _ -> translate_flags meta
         in
-        if assumed then
-          if List.length tvars = 0 then
-            Some (DExternal (cc, meta, name, translate_type env t0))
-          else begin
-            BU.print1_warning "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
-            None
-          end
-        else begin
-          try
-            let body = translate_expr env body in
-            Some (DFunction (cc, meta, List.length tvars, t, name, binders, body))
-          with e ->
-            // JP: TODO: figure out what are the remaining things we don't extract
-            let msg = BU.print_exn e in
-            Errors. log_issue Range.dummyRange
-            (Errors.Warning_FunctionNotExtacted, (BU.format2 "Error while extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) msg));
-            let msg = "This function was not extracted:\n" ^ msg in
-            Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
+        begin try
+          let body = translate_expr env body in
+          Some (DFunction (cc, meta, List.length tvars, t, name, binders, body))
+        with e ->
+          // JP: TODO: figure out what are the remaining things we don't extract
+          let msg = BU.print_exn e in
+          Errors. log_issue Range.dummyRange
+          (Errors.Warning_FunctionNotExtacted, (BU.format2 "Error while extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) msg));
+          let msg = "This function was not extracted:\n" ^ msg in
+          Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
 
   | {

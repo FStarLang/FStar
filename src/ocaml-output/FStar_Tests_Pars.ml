@@ -327,12 +327,11 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
         ()
     with
     | uu___425_398 ->
-        Obj.magic
-          (if
-             let uu____399 = FStar_Options.trace_error ()  in
-             Prims.op_Negation uu____399
-           then Obj.repr (FStar_Exn.raise uu___425_398)
-           else Obj.repr (failwith "unreachable"))
+        if
+          let uu____399 = FStar_Options.trace_error ()  in
+          Prims.op_Negation uu____399
+        then Obj.magic (Obj.repr (FStar_Exn.raise uu___425_398))
+        else Obj.magic (Obj.repr (failwith "unreachable"))
   
 let (tc' :
   Prims.string ->
@@ -590,10 +589,9 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                         (Prims.strcat "tc_one_fragment failed: " s))))) ()
      with
      | uu___429_646 ->
-         Obj.magic
-           (if
-              let uu____647 = FStar_Options.trace_error ()  in
-              Prims.op_Negation uu____647
-            then Obj.repr (FStar_Exn.raise uu___429_646)
-            else Obj.repr (failwith "unreachable")))
+         if
+           let uu____647 = FStar_Options.trace_error ()  in
+           Prims.op_Negation uu____647
+         then Obj.magic (Obj.repr (FStar_Exn.raise uu___429_646))
+         else Obj.magic (Obj.repr (failwith "unreachable")))
   

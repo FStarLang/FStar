@@ -559,13 +559,13 @@ let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
 let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
-let mk_lb (x, univs, eff, t, e, pos) = {
+let mk_lb (x, univs, eff, t, e, attrs, pos) = {
     lbname=x;
     lbunivs=univs;
     lbtyp=t;
     lbeff=eff;
     lbdef=e;
-    lbattrs=[];
+    lbattrs=attrs;
     lbpos=pos;
   }
 
