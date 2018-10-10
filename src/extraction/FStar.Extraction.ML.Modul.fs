@@ -314,8 +314,8 @@ let extract_typ_abbrev env quals attrs lb
           SS.open_term bs body
         | _ -> [], def in
     let assumed = BU.for_some (function Assumption -> true | _ -> false) quals in
-    let env, ml_bs = binders_as_mlty_binders env bs in
-    let body = Term.term_as_mlty env body |> Util.eraseTypeDeep (Util.udelta_unfold env) in
+    let env1, ml_bs = binders_as_mlty_binders env bs in
+    let body = Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1) in
     let mangled_projector =
          if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
          then let mname = mangle_projector_lid lid in
@@ -342,9 +342,14 @@ let extract_typ_abbrev env quals attrs lb
 *)
 let extract_bundle_iface env se
     : env_t * iface =
-    let extract_ctor (ml_tyvars:list<mlsymbol>) (env:env_t) (ctor: data_constructor)
+    let extract_ctor (env_iparams:env_t)
+                     (ml_tyvars:list<mlsymbol>)
+                     (env:env_t)
+                     (ctor: data_constructor)
         :  env_t * (fv * exp_binding) =
-        let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
+        let mlt = Util.eraseTypeDeep
+                    (Util.udelta_unfold env_iparams)
+                    (Term.term_as_mlty env_iparams ctor.dtyp) in
         let tys = (ml_tyvars, mlt) in
         let fvv = mkFvvar ctor.dname ctor.dtyp in
         let env, _, b = extend_fv env fvv tys false false in
@@ -353,14 +358,14 @@ let extract_bundle_iface env se
 
     let extract_one_family env ind
         : env_t * list<(fv * exp_binding)> =
-       let env, vars  = binders_as_mlty_binders env ind.iparams in
-       let env, ctors = ind.idatas |> BU.fold_map (extract_ctor vars) env in
+       let env_iparams, vars  = binders_as_mlty_binders env ind.iparams in
+       let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
        env, ctors
     in
 
     match se.sigel, se.sigquals with
     | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
-        let env, ctor = extract_ctor [] env ({dname=l; dtyp=t}) in
+        let env, ctor = extract_ctor env [] env ({dname=l; dtyp=t}) in
         env, iface_of_bindings [ctor]
 
     | Sig_bundle(ses, _), quals ->
