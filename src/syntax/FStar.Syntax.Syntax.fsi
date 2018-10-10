@@ -468,7 +468,7 @@ val withinfo: 'a -> Range.range -> withinfo_t<'a>
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> Tot<mk_t_a<'a>>
 
-val mk_lb :         (lbname * list<univ_name> * lident * typ * term * range) -> letbinding
+val mk_lb :         (lbname * list<univ_name> * lident * typ * term * list<attribute> * range) -> letbinding
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>

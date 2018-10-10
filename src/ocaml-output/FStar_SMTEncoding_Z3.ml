@@ -836,19 +836,19 @@ let (z3_job :
                      | () -> doZ3Exe r fresh input label_messages) ()
                 with
                 | uu___132_4593 ->
-                    Obj.magic
-                      (if
-                         let uu____4598 = FStar_Options.trace_error ()  in
-                         Prims.op_Negation uu____4598
-                       then
-                         Obj.repr
+                    if
+                      let uu____4598 = FStar_Options.trace_error ()  in
+                      Prims.op_Negation uu____4598
+                    then
+                      Obj.magic
+                        (Obj.repr
                            ((let uu____4601 =
                                let uu____4606 = FStar_ST.op_Bang bg_z3_proc
                                   in
                                uu____4606.refresh  in
                              uu____4601 ());
-                            FStar_Exn.raise uu___132_4593)
-                       else Obj.repr (failwith "unreachable"))
+                            FStar_Exn.raise uu___132_4593))
+                    else Obj.magic (Obj.repr (failwith "unreachable"))
                  in
               match uu____4576 with
               | (status,statistics) ->

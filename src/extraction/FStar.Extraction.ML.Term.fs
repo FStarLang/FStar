@@ -418,24 +418,93 @@ let maybe_eta_expand expect e =
     then e
     else eta_expand expect e
 
+(*
+  A small optimization to push coercions into the structure of a term
+
+  Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
+  Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
+*)
+let apply_coercion (g:env) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+    let mk_fun binder body =
+        match body.expr with
+        | MLE_Fun(binders, body) ->
+          MLE_Fun(binder::binders, body)
+        | _ ->
+          MLE_Fun([binder], body)
+    in
+    let rec aux (e:mlexpr) ty expect =
+        let coerce_branch (pat, w, b) = pat, w, aux b ty expect in
+        //printfn "apply_coercion: %s : %s ~> %s\n%A : %A ~> %A"
+        //                   (Code.string_of_mlexpr g.currentModule e)
+        //                   (Code.string_of_mlty g.currentModule ty)
+        //                   (Code.string_of_mlty g.currentModule expect)
+        //                   e ty expect;
+        match e.expr, ty, expect with
+        | MLE_Fun(arg::rest, body), MLTY_Fun(t0, _, t1), MLTY_Fun(s0, _, s1) ->
+          let body =
+                 match rest with
+                 | [] -> body
+                 | _ -> with_ty t1 (MLE_Fun(rest, body))
+          in
+          let body = aux body t1 s1 in
+          if type_leq g s0 t0
+          then with_ty expect (mk_fun arg body)
+          else let lb =
+                    { mllb_meta = [];
+                      mllb_name = fst arg;
+                      mllb_tysc = Some ([], t0);
+                      mllb_add_unit = false;
+                      mllb_def = with_ty t0 (MLE_Coerce(with_ty s0 <| MLE_Var (fst arg), s0, t0));
+                      print_typ=false }
+                in
+                let body = with_ty s1 <| MLE_Let((NonRec, [lb]), body) in
+                with_ty expect (mk_fun (fst arg, s0) body)
+
+        | MLE_Let(lbs, body), _, _ ->
+          with_ty expect <| (MLE_Let(lbs, aux body ty expect))
+
+        | MLE_Match(s, branches), _, _ ->
+          with_ty expect <| MLE_Match(s, List.map coerce_branch branches)
+
+        | MLE_If(s, b1, b2_opt), _, _ ->
+          with_ty expect <| MLE_If(s, aux b1 ty expect, BU.map_opt b2_opt (fun b2 -> aux b2 ty expect))
+
+        | MLE_Seq es, _, _ ->
+          let prefix, last = BU.prefix es in
+          with_ty expect <| MLE_Seq(prefix @ [aux last ty expect])
+
+        | MLE_Try(s, branches), _, _ ->
+          with_ty expect <| MLE_Try(s, List.map coerce_branch branches)
+
+        | _ ->
+          with_ty expect (MLE_Coerce(e, ty, expect))
+    in
+    aux e ty expect
+
 //maybe_coerce g e ty expect:
 //     Inserts an Obj.magic around e if ty </: expect
 let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr  =
     let ty = eraseTypeDeep g ty in
     match type_leq_c g (Some e) ty expect with
-        | true, Some e' -> e'
+    | true, Some e' -> e'
+    | _ ->
+        match ty with
+        | MLTY_Erased ->
+          //generate a default value suitable for the expected type
+          default_value_for_ty g expect
         | _ ->
-          match ty with
-          | MLTY_Erased ->
-            //generate a default value suitable for the expected type
-            default_value_for_ty g expect
-          | _ ->
-            debug g (fun () ->
-                BU.print3 "!!! needed to coerce expression \n %s \n of type \n %s \n to type \n %s  \n"
-                                 (Code.string_of_mlexpr g.currentModule e)
-                                 (Code.string_of_mlty g.currentModule ty)
-                                 (Code.string_of_mlty g.currentModule expect));
-            maybe_eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
+          if type_leq g (erase_effect_annotations ty) (erase_effect_annotations expect)
+          then let _ = debug g (fun () ->
+                BU.print2 "\n Effect mismatch on type of %s : %s\n"
+                            (Code.string_of_mlexpr g.currentModule e)
+                            (Code.string_of_mlty g.currentModule ty)) in
+               e //types differ but only on effect labels, which ML/KreMLin don't care about; so no coercion needed
+          else let _ = debug g (fun () ->
+                BU.print3 "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
+                            (Code.string_of_mlexpr g.currentModule e)
+                            (Code.string_of_mlty g.currentModule ty)
+                            (Code.string_of_mlty g.currentModule expect)) in
+               maybe_eta_expand expect (apply_coercion g e ty expect)
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
@@ -1153,7 +1222,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
                 let mk_head () =
                     let mlargs = List.rev mlargs_f |> List.map fst in
-                    with_ty MLTY_Top <| MLE_App(mlhead, mlargs)
+                    with_ty t <| MLE_App(mlhead, mlargs)
                 in
                 debug g (fun () -> BU.print3 "extract_app ml_head=%s type of head = %s, next arg = %s\n"
                                 (Code.string_of_mlexpr g.currentModule (mk_head()))
@@ -1166,8 +1235,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                         //Note, the evaluation order for impure arguments has already been
                         //enforced in the main type-checker, that already let-binds any
                         //impure arguments
-                        let mlargs = List.rev mlargs_f |> List.map fst in
-                        let app = maybe_eta_data_and_project_record g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
+                        let app = maybe_eta_data_and_project_record g is_data t (mk_head()) in
                         app, f, t
 
                     | (arg, _)::rest, MLTY_Fun (formal_t, f', t)

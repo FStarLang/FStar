@@ -1044,13 +1044,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_quoted _ ->
             rebuild cfg env stack (closure_as_term cfg env t)
 
-          | Tm_app({n=Tm_fvar fv}, [_])
-          | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, [_])
-            when (fv_eq_lid fv PC.assert_lid
-                || fv_eq_lid fv PC.assert_norm_lid)
-                && cfg.steps.for_extraction ->
-            norm cfg env stack U.exp_unit
-
           | Tm_app(hd, args)
             when should_consider_norm_requests cfg &&
                  is_norm_request hd args = Norm_request_requires_rejig ->
