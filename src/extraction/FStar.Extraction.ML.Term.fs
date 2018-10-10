@@ -424,7 +424,7 @@ let maybe_eta_expand expect e =
   Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
-let apply_coercion (g:env) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+let apply_coercion (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
     let mk_fun binder body =
         match body.expr with
         | MLE_Fun(binders, body) ->
