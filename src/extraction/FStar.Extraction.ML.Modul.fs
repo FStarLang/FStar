@@ -554,12 +554,15 @@ let extend_with_iface (g:env_t) (iface:iface) =
 (********************************************************************************************)
 
 let extract_bundle env se =
-    let extract_ctor (ml_tyvars:list<mlsymbol>) (env:env_t) (ctor: data_constructor):
+    let extract_ctor (env_iparams:env_t)
+                     (ml_tyvars:list<mlsymbol>)
+                     (env:env_t)
+                     (ctor: data_constructor):
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
-        let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
+        let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses ] in
-        let names = match (SS.compress (N.normalize steps env.env_tcenv ctor.dtyp)).n with
+        let names = match (SS.compress (N.normalize steps env_iparams.env_tcenv ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
               List.map (fun ({ ppname = ppname }, _) -> ppname.idText) bs
           | _ ->
@@ -572,8 +575,8 @@ let extract_bundle env se =
         (lident_as_mlsymbol ctor.dname, List.zip names (argTypes mlt)) in
 
     let extract_one_family env ind =
-       let env, vars  = binders_as_mlty_binders env ind.iparams in
-       let env, ctors = ind.idatas |> BU.fold_map (extract_ctor vars) env in
+       let env_iparams, vars  = binders_as_mlty_binders env ind.iparams in
+       let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
        let indices, _ = U.arrow_formals ind.ityp in
        let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i)) in
        let tbody =

@@ -393,6 +393,10 @@ let tc_one_file
           let (tcmod, env), tc_time =
             FStar.Util.record_time (fun () ->
                with_tcenv_of_env env (fun tcenv ->
+                 let _ = match tcenv.gamma with
+                         | [] -> ()
+                         | _ -> failwith "Impossible: gamma contains leaked names"
+                 in
                  Tc.check_module tcenv fmod (is_some pre_fn)))
           in
           let extracted_defs, extract_time = with_env env (maybe_extract_mldefs tcmod) in
