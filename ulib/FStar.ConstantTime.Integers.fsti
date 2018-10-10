@@ -38,11 +38,13 @@ let m #sl (#t:lattice_element sl) #s (x:secret_int t s)
   = u (reveal x)
 
 /// `hide` is the inverse of `reveal`, proving that `secret_int` is injective
+/// Any integer within bounds can be promoted to a secret integer;
+/// we don't mean to enforce integrity
 val hide (#sl:sl)
          (#l:lattice_element sl)
          (#s:sw)
          (x:int{within_bounds s x})
-  : GTot (secret_int l s)
+  : Tot (secret_int l s)
 
 val reveal_hide (#sl:sl)
                 (#l:lattice_element sl)
@@ -87,6 +89,13 @@ val addition_mod (#sl:sl)
                  (x : secret_int l sw)
                  (y : secret_int l sw)
     : Tot (z:secret_int l sw { m z == m x +% m y } )
+
+val multiplication_mod (#sl:sl)
+                 (#l:lattice_element sl)
+                 (#sw: _ {Unsigned? sw /\ width_of_sw sw <> W128})
+                 (x : secret_int l sw)
+                 (y : secret_int l sw)
+    : Tot (z:secret_int l sw { m z == m x *% m y } )
 
 /// If we like this style, I will proceed to implement a lifting of
 /// the rest of the constant-time integers over secret integers
@@ -150,7 +159,7 @@ let as_public (#q:qual{Public? q}) (x:t q)
 
 [@mark_for_norm]
 unfold
-let ( + ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
+let ( +. ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
     : Tot (t q)
     = match q with
       | Public s -> as_public x + as_public y
@@ -173,10 +182,10 @@ let lo : lattice_element two_point_lattice = Ghost.hide false
 let hi : lattice_element two_point_lattice = Ghost.hide true
 let test2 (x:t (Secret lo (Unsigned W32))) (y:t (Secret lo (Unsigned W32))) = x +% y
 let test3 (x:t (Secret hi (Unsigned W32))) (y:t (Secret lo (Unsigned W32))) = x +% promote y hi
-let test4 (x:t (Secret lo (Unsigned W32))) (y:t (Secret hi (Unsigned W32)) { ok ( + ) (i x) (i y) }) = promote x hi + y
+let test4 (x:t (Secret lo (Unsigned W32))) (y:t (Secret hi (Unsigned W32)) { ok ( + ) (i x) (i y) }) : t (Secret hi (Unsigned W32)) = promote x hi +. y
 
 let hacl_lattice = Ghost.hide (SemiLattice () (fun _ _ -> ()))
 let hacl_label : lattice_element hacl_lattice = Ghost.hide ()
 let s_uint32 = t (Secret hacl_label (Unsigned W32))
 let test5 (x:s_uint32) (y:s_uint32) = x +% y
-let test6 (x:s_uint32) (y:s_uint32{ok (+) (i x) (i y)}) = x + y
+let test6 (x:s_uint32) (y:s_uint32{ok (+) (i x) (i y)}) = x +. y
