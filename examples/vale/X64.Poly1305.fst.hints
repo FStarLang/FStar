@@ -1819,7 +1819,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "a6ba14a7e1887e11c8c33ef72e090d23"
+      "8322eaf0f761d803baca657142ba90fb"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305",
@@ -2030,7 +2030,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "a0d5ae41712fbbb69174a94c3d8893a2"
+      "350472bc5d80645d645e1599c74250d0"
     ]
   ]
 ]
