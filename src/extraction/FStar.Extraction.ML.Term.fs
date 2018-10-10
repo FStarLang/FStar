@@ -425,6 +425,13 @@ let maybe_eta_expand expect e =
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
 let apply_coercion (g:env) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+    let mk_fun binder body =
+        match body.expr with
+        | MLE_Fun(binders, body) ->
+          MLE_Fun(binder::binders, body)
+        | _ ->
+          MLE_Fun([binder], body)
+    in
     let rec aux (e:mlexpr) ty expect =
         let coerce_branch (pat, w, b) = pat, w, aux b ty expect in
         //printfn "apply_coercion: %s : %s ~> %s\n%A : %A ~> %A"
@@ -441,7 +448,7 @@ let apply_coercion (g:env) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
           in
           let body = aux body t1 s1 in
           if type_leq g s0 t0
-          then with_ty expect (MLE_Fun([arg], body))
+          then with_ty expect (mk_fun arg body)
           else let lb =
                     { mllb_meta = [];
                       mllb_name = fst arg;
@@ -451,7 +458,7 @@ let apply_coercion (g:env) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
                       print_typ=false }
                 in
                 let body = with_ty s1 <| MLE_Let((NonRec, [lb]), body) in
-                with_ty expect <| MLE_Fun([fst arg, s0], body)
+                with_ty expect (mk_fun (fst arg, s0) body)
 
         | MLE_Let(lbs, body), _, _ ->
           with_ty expect <| (MLE_Let(lbs, aux body ty expect))
