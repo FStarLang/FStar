@@ -191,9 +191,9 @@ function build_fstar() {
             export_home FSTAR "$(pwd)"
 
             fetch_vale &
-            fetch_hacl &
+            #fetch_hacl &
             fetch_and_make_kremlin &
-            fetch_mitls &
+            #fetch_mitls &
             {
                 if [ ! -d hacl-star-old ]; then
                     git clone https://github.com/mitls/hacl-star hacl-star-old
@@ -204,7 +204,7 @@ function build_fstar() {
 
             # The commands above were executed in sub-shells and their EXPORTs are not
             # propagated to the current shell. Re-do.
-            export_home HACL "$(pwd)/hacl-star"
+            #export_home HACL "$(pwd)/hacl-star"
             export_home KREMLIN "$(pwd)/kremlin"
 
             # Once F* is built, run its main regression suite, along with more relevant
@@ -234,42 +234,42 @@ function build_fstar() {
                 fi
             } &
 
-            {
-                OTHERFLAGS='--warn_error -276 --use_hint_hashes' timeout $timeout make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
-                    {
-                        echo "Error - Hacl.Impl.SHA2_256.fst-verify (HACL*)"
-                        echo " - Hacl.Impl.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
-                    }
-            } &
+  #          {
+  #              OTHERFLAGS='--warn_error -276 --use_hint_hashes' timeout $timeout make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
+  #                  {
+  #                      echo "Error - Hacl.Impl.SHA2_256.fst-verify (HACL*)"
+  #                      echo " - Hacl.Impl.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
+  #                  }
+  #          } &
 
-            {
-                OTHERFLAGS='--use_hint_hashes' timeout $timeout make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
-                    {
-                        echo "Error - Crypto.AEAD.Encrypt.fst-ver (HACL*)"
-                        echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >>$ORANGE_FILE
-                    }
-            } &
+  #          {
+  #              OTHERFLAGS='--use_hint_hashes' timeout $timeout make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
+  #                  {
+  #                      echo "Error - Crypto.AEAD.Encrypt.fst-ver (HACL*)"
+  #                      echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >>$ORANGE_FILE
+  #                  }
+  #          } &
 
-            # We now run all (hardcoded) tests in mitls-fstar@master
-            {
-                OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
-                    {
-                        echo "Error - StreamAE.fst-ver (mitls)"
-                        echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
-                    }
+  #          # We now run all (hardcoded) tests in mitls-fstar@master
+  #          {
+  #              OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
+  #                  {
+  #                      echo "Error - StreamAE.fst-ver (mitls)"
+  #                      echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
+  #                  }
 
-                OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
-                    {
-                        echo "Error - Pkg.fst-ver (mitls verify)"
-                        echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
-                    }
+  #              OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+  #                  {
+  #                      echo "Error - Pkg.fst-ver (mitls verify)"
+  #                      echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
+  #                  }
 
-                OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout $timeout make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
-                    {
-                        echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
-                        echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
-                    }
-            } &
+  #              OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout $timeout make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+  #                  {
+  #                      echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
+  #                      echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
+  #                  }
+  #          } &
 
             # JP: doesn't work because it leads to uint128 being verified in the wrong Z3
             # context (?) meaning that some proof obligations fail
