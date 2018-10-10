@@ -95,7 +95,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "24be5836cd0492bbba26d617114cda05"
+      "7863347fedc006e6ea750e81314674c4"
     ],
     [
       "Ex06b.partition",
@@ -334,7 +334,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "428b59720b3812fb38f2c63741339916"
+      "1eb2c455ff59f7a5171e71d7eb78c35c"
     ],
     [
       "Ex06b.partition",

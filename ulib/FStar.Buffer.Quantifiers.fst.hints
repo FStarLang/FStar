@@ -418,7 +418,7 @@
         "typing_FStar.Buffer.as_seq"
       ],
       0,
-      "ec00634ab042e57ff865f079f81795c5"
+      "24ef6eeab47974d6bbab288527ffa903"
     ],
     [
       "FStar.Buffer.Quantifiers.eq_lemma",
@@ -441,7 +441,7 @@
         "typing_FStar.Buffer.as_seq"
       ],
       0,
-      "d4fb4009a8fd6b0cd1123c30e8fc63a6"
+      "30e749fad01679ead0e70b464c45b256"
     ],
     [
       "FStar.Buffer.Quantifiers.lemma_sub_quantifiers",
@@ -641,7 +641,7 @@
         "typing_FStar.Buffer.as_seq"
       ],
       0,
-      "7f129994fdddf434301991ea4f8927d7"
+      "f6c3664605253dc70aed3f1ff1f2e68d"
     ]
   ]
 ]

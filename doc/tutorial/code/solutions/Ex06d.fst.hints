@@ -256,7 +256,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4d36a616fbfba818e9d75608da09301f"
+      "e7959ff1be469381ef32b1c7bc34c529"
     ],
     [
       "Ex06d.sort",
@@ -317,7 +317,7 @@
         "typing_FStar.Pervasives.Native.fst", "well-founded-ordering-on-nat"
       ],
       0,
-      "a6ed04fe1d6b61e504910fe2cc471a37"
+      "8952cc284824fcbdf30b6ef48f675bc3"
     ],
     [
       "Ex06d.count",
@@ -461,7 +461,7 @@
         "typing_FStar.Pervasives.Native.fst", "well-founded-ordering-on-nat"
       ],
       0,
-      "e9f6bf6e1857b85e103cd9a44c19000a"
+      "bcad09f891a572bd8e7b8048232b9b32"
     ]
   ]
 ]

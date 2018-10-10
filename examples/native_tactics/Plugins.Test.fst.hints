@@ -12,16 +12,7 @@
         "function_token_typing_Prims.bool", "function_token_typing_Prims.int"
       ],
       0,
-      "3d293559593d61b64464661d285f7f09"
-    ],
-    [
-      "Plugins.Test.uu___64",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3830ee3f3c97416fa82a274069344ca0"
+      "6f83fdfaa8e696cbee9fb54aefbe0c95"
     ],
     [
       "Plugins.Test.uu___65",
@@ -29,12 +20,14 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int",
-        "function_token_typing_Prims.bool", "function_token_typing_Prims.int"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "equation_Prims.eqtype", "function_token_typing_Prims.bool",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "693a97881e12573be6b9bdcb0a96e542"
+      "522510c8200e41d26822f0a3f1b3b5c1"
     ],
     [
       "Plugins.Test.uu___65",
@@ -43,7 +36,7 @@
       1,
       [ "@query" ],
       0,
-      "67e8dfc0420791da91b3316e076832fa"
+      "52f3ba0d38c631b27fe38d24f2b68774"
     ],
     [
       "Plugins.Test.uu___66",
@@ -51,12 +44,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list__uu___haseq",
-        "function_token_typing_Prims.int"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7e1047a4735ab812a9332da6389fb60b"
+      "0c06e4f7648231fbc2d1c03a91bbf9cd"
     ],
     [
       "Plugins.Test.uu___66",
@@ -65,7 +59,7 @@
       1,
       [ "@query" ],
       0,
-      "5a64309ddc313c02836ad6b7423db624"
+      "2501ed9b0f86ea5fe06281e695da64ca"
     ]
   ]
 ]

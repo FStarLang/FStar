@@ -52,7 +52,7 @@
         "typing_X64.Poly1305.Spec_s.op_String_Access"
       ],
       0,
-      "3e18179d03c859c02258815f09b2e650"
+      "53f2284a951757c1a7e0120466d75358"
     ],
     [
       "X64.Poly1305.Math_i.heapletTo128_all_preserved",
@@ -97,7 +97,7 @@
         "typing_X64.Poly1305.Math_i_Tm_abs_210ef45de1e23d0686d9af1484ee5631"
       ],
       0,
-      "5e611caca4899cc18ac171e1f0043894"
+      "ede44e1fabe33e891d238c87c684fbfb"
     ],
     [
       "X64.Poly1305.Math_i.poly1305_heap_blocks'",
@@ -128,7 +128,7 @@
       0,
       [ "@query", "equation_X64.Poly1305.Math_i.poly1305_heap_blocks" ],
       0,
-      "835a75ce156d4337bda8096312ad7b0f"
+      "50bf36d6cb60deb1c4bea5dd7dc00143"
     ],
     [
       "X64.Poly1305.Math_i.lemma_heap_blocks_preserved",

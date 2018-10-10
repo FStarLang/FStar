@@ -412,7 +412,7 @@
         "typing_tok_Benton2004.RHL.Left@tok"
       ],
       0,
-      "5e86c88b1bedc8c2481f6da41d9edabd"
+      "af1cc712c90e2d9977490e652bbd2786"
     ],
     [
       "Benton2004.RHL.holds_exp_to_gexp_right",
@@ -433,7 +433,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "fa516cda88e9c2f104c52c5d1a577b41"
+      "4c98115766df62952470a6a1e4b29685"
     ],
     [
       "Benton2004.RHL.holds_r_if_precond_true",
@@ -468,7 +468,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "407ce2589a79052b7ee64792e444f4dd"
+      "87e9c8480430db9f856c41f7e0583924"
     ],
     [
       "Benton2004.RHL.holds_r_if_precond_false",
@@ -508,7 +508,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "18f7bce338d1967cf19388febb434587"
+      "48e4b7c7f240b1be749ddd1f56f1a36a"
     ],
     [
       "Benton2004.RHL.holds_r_if_precond",
@@ -604,7 +604,7 @@
         "typing_Benton2004.ifthenelse", "typing_Benton2004.reify_computation"
       ],
       0,
-      "657fe613896bb93eb30c1b1a7174adc7"
+      "881aa0f8a6a28b6ee95d3b6b5b656533"
     ],
     [
       "Benton2004.RHL.r_seq",
@@ -792,7 +792,7 @@
         "typing_Benton2004.while", "well-founded-ordering-on-nat"
       ],
       0,
-      "901e2c0a5cb9bee00998a9081555aee3"
+      "28cd9210baba37fe10cc5045d7019f82"
     ],
     [
       "Benton2004.RHL.holds_interp_flip",
@@ -1237,7 +1237,7 @@
         "typing_Benton2004.RHL.gconst"
       ],
       0,
-      "01e5582a49c75d3c451f13c3a3c00d1d"
+      "518045c33898bfc32f33ccc61d4fbc2b"
     ],
     [
       "Benton2004.RHL.r_dassl",

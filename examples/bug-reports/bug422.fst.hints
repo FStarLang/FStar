@@ -16,7 +16,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "002d7bcfda03fef9ed21e557eeabd094"
+      "a37118d2333802c50ecdb02159d7f489"
     ],
     [
       "Bug422.fails",
@@ -52,7 +52,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "010b527f3c7ceb420976f257a9648322"
+      "e77b43099cb7c37aea57686d689fd38f"
     ],
     [
       "Bug422.box'",
@@ -111,7 +111,7 @@
         "typing_FStar.Monotonic.Heap.addr_of"
       ],
       0,
-      "cc5ccee7f7bd55d75648262ad85815e7"
+      "8f5c454d5a1397e2db5a9833c88f9381"
     ],
     [
       "Bug422.works",
@@ -183,7 +183,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "cc4caa7a663b34c97a3c5b2996c2dc58"
+      "bb3ddec5dff2e2f938006b362151b1e8"
     ]
   ]
 ]
