@@ -1017,29 +1017,7 @@ and tc_comp env c : comp                                      (* checked version
           comp_univs=comp_univs;
           result_typ=fst res;
           effect_args=args}) in
-      (*
-       * Universe computation for M t wp:
-       *   if M is pure or ghost, then return universe of t
-       *   else if M is not marked Total, then return u0
-       *        else if M has no additional binders, then return universe of t
-       *        else delegate the computation to repr of M, error out of no repr, error out if no repr
-       *)
-      let u_c =
-        let c_lid = c |> U.comp_effect_name |> Env.norm_eff_name env in
-        if U.is_pure_or_ghost_effect c_lid then u  //if pure or ghost, return the universe of the return type
-        else
-          let is_total = Env.lookup_effect_quals env c_lid |> List.existsb (fun q -> q = S.TotalEffect) in
-          if not is_total then S.U_zero  //if it is a non-total effect then u0
-          else match Env.effect_repr env c u with
-               | None ->
-                 let ed = Env.get_effect_decl env c_lid in
-                 if List.length ed.binders = 0 then u
-                 else
-                   raise_error (Errors.Fatal_EffectCannotBeReified,
-                                (BU.format1 "Effect %s is marked total but does not have a repr" (Print.lid_to_string c_lid)))
-                               c.pos
-               | Some tm -> env.universe_of env tm
-      in
+      let u_c = c |> TcUtil.universe_of_comp env u in
       c, u_c, List.fold_left Env.conj_guard f guards
 
 and tc_universe env u : universe =
@@ -2820,10 +2798,7 @@ let rec universe_of_aux env e =
      let u_res =
         let res = U.comp_result c in
         level_of_type env res (universe_of_aux env res) in
-     let u_c =
-        match Env.effect_repr env c u_res with
-        | None -> u_res
-        | Some trepr -> level_of_type env trepr (universe_of_aux env trepr) in
+     let u_c = c |> TcUtil.universe_of_comp env u_res in
      let u = N.normalize_universe env (S.U_max (u_c::us)) in
      S.mk (Tm_type u) None e.pos
    //See the comment at the top of this function; we just compute the universe of hd's result type

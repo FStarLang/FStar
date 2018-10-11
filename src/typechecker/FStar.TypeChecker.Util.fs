@@ -917,6 +917,31 @@ let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
         else raise_error (Err.computed_computation_type_does_not_match_annotation env e c c') (Env.get_range env)
     | Some g -> e, c', g
 
+let universe_of_comp env u_res c =
+  (*
+   * Universe computation for M t wp:
+   *   if M is pure or ghost, then return universe of t
+   *   else if M is not marked Total, then return u0
+   *        else if M has no additional binders, then return universe of t
+   *        else delegate the computation to repr of M, error out of no repr, error out if no repr
+   *)
+  let c_lid = c |> U.comp_effect_name |> Env.norm_eff_name env in
+  if U.is_pure_or_ghost_effect c_lid then u_res  //if pure or ghost, return the universe of the return type
+  else
+    let is_total = Env.lookup_effect_quals env c_lid |> List.existsb (fun q -> q = S.TotalEffect) in
+    if not is_total then S.U_zero  //if it is a non-total effect then u0
+    else match Env.effect_repr env c u_res with
+         | None ->
+           let ed = Env.get_effect_decl env c_lid in
+           if List.length ed.binders = 0 then u_res
+           else
+             raise_error (Errors.Fatal_EffectCannotBeReified,
+                          (BU.format1 "Effect %s is marked total but does not have a repr" (Print.lid_to_string c_lid)))
+                         c.pos
+         | Some tm -> env.universe_of env tm
+
+  
+
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
     if env.is_pattern then e, lc else
     let is_type t =
