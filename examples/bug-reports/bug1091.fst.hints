@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
       0,
-      "106e0a4f17a643462b0784fbcc991a7a"
+      "db1817575ff2b77fda76148a8e9da3c0"
     ],
     [
       "Bug1091.jun21_2017_logand_fail",
@@ -25,7 +25,7 @@
         "uvar_typing_19"
       ],
       0,
-      "0108877d71522811659fa14a272b147a"
+      "e859e93ed88484c34ccc534df3fe3882"
     ],
     [
       "Bug1091.jun21_2017_logand",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3b200af404e8311422aee2962e2da183"
+      "75315dba5b3ba6fe7b30a4766f2e9563"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -54,7 +54,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "34c9c56b2e1a6b24d8794967c84075fd"
+      "44a867df26c3d4e713328b7d8183bb12"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -66,7 +66,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "db855ab135534072be261e26269ad2aa"
+      "8b36d1413bdcf864d480081af36af259"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b12b66dad97b49d5af61631cfe092cb2"
+      "43087210b8371e9a138a49ec96de5f33"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fe68c3fa6b73382cfae14fece44dbc28"
+      "fa76dc1deacd238e7f5e949d6b2083de"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -112,7 +112,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "99efa407ac7a829c027be58b62bc8408"
+      "f597e87fc51eb87ae63d7c0bc337bbde"
     ]
   ]
 ]
