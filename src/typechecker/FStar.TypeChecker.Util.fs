@@ -923,7 +923,7 @@ let universe_of_comp env u_res c =
    *   if M is pure or ghost, then return universe of t
    *   else if M is not marked Total, then return u0
    *        else if M has no additional binders, then return universe of t
-   *        else delegate the computation to repr of M, error out of no repr, error out if no repr
+   *        else delegate the computation to repr of M, error out of no repr
    *)
   let c_lid = c |> U.comp_effect_name |> Env.norm_eff_name env in
   if U.is_pure_or_ghost_effect c_lid then u_res  //if pure or ghost, return the universe of the return type
