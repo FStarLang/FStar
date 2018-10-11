@@ -460,7 +460,7 @@ let tc_one_file
         let _ =
             if Options.codegen()<>None
             && Options.should_extract tcmod.name.str
-            && not tcmod.is_interface
+            && (not tcmod.is_interface || Options.codegen()=Some Options.Kremlin)
             then with_env env (fun env ->
                      let env = apply_delta_env env delta in
                      let extract_defs tcmod env =
