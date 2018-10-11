@@ -602,7 +602,7 @@ let extract_bundle env se =
 
     match se.sigel, se.sigquals with
     | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
-        let env, ctor = extract_ctor [] env ({dname=l; dtyp=t}) in
+        let env, ctor = extract_ctor env [] env ({dname=l; dtyp=t}) in
         env, [MLM_Exn ctor]
 
     | Sig_bundle(ses, _), quals ->
