@@ -68,6 +68,7 @@ val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
 val close_lcomp: env -> list<bv> -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
 val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
+val universe_of_comp: env -> universe -> comp -> universe
 
 //checking that e:t is convertible to t'
 val check_and_ascribe : env -> term -> typ -> typ -> term * guard_t
