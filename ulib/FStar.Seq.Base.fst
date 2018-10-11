@@ -133,13 +133,11 @@ let rec lemma_index_create #a n v i =
 abstract val lemma_index_upd1: #a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> Lemma
   (requires True)
   (ensures (index (upd s n v) n == v)) (decreases (length s))
-  [SMTPat (index (upd s n v) n)]
 let rec lemma_index_upd1 #a s n v = if n = 0 then () else lemma_index_upd1 #a (tl s) (n - 1) v
 
 abstract val lemma_index_upd2: #a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> i:nat{i<>n /\ i < length s} -> Lemma
   (requires True)
   (ensures (index (upd s n v) i == index s i)) (decreases (length s))
-  [SMTPat (index (upd s n v) i)]
 let rec lemma_index_upd2 #a s n v i = match (MkSeq?.l s) with
   | []     -> ()
   | hd::tl  ->
@@ -147,6 +145,14 @@ let rec lemma_index_upd2 #a s n v i = match (MkSeq?.l s) with
     else
       if n = 0 then ()
       else lemma_index_upd2 #a (MkSeq tl) (n - 1) v (i - 1)
+
+// Previously, the patterns for the two lemmas above were competing, leaving it
+// up to Z3 to choose. Now, we have a single unified pattern for both.
+let lemma_index_upd (#t: Type) (s: seq t) (i: nat) (v: t) (j: nat) : Lemma
+  (requires (i < length s /\ j < length s))
+  (ensures (index (upd s i v) j == (if j = i then v else index s j)))
+  [SMTPat (index (upd s i v) j)]
+= if i = j then lemma_index_upd1 s i v else lemma_index_upd2 s i v j
 
 abstract val lemma_index_app1: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i < length s1} -> Lemma
   (requires True)
