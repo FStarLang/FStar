@@ -51,7 +51,7 @@ let gte (a:uint64) (b:uint64) : bool = a >= b
 let lt (a:uint64) (b:uint64) : bool = a < b
 let lte (a:uint64) (b:uint64) : bool =  a <= b
 
-(* Constant time operator (TODO!) *)
+(* NOT Constant time operators *)
 let eq_mask (a:uint64) (b:uint64) : uint64 = if a = b then Stdint.Uint64.pred Stdint.Uint64.zero
                                              else Stdint.Uint64.zero
 let gte_mask (a:uint64) (b:uint64) : uint64 = if a >= b then Stdint.Uint64.pred Stdint.Uint64.zero
