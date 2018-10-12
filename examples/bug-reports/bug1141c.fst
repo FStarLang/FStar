@@ -29,7 +29,18 @@ let self #a v =
     | Mk f -> f v
 
 val loop : (#a:Type) -> (a -> a) -> a
+
+[@(expect_failure [34])]
 let loop #a f = reify (self (Mk (fun x -> f (self x)))) ()
 
-val falso : squash False
-let falso = loop (fun x -> x)
+(*
+val falso : unit -> squash False
+let falso () = loop (fun x -> x)
+*)
+
+(* Works in Div *)
+val loop_dv : (#a:Type) -> (a -> a) -> Dv a
+let loop_dv #a f = reify (self (Mk (fun x -> f (self x)))) ()
+
+val falso_dv : unit -> Dv (squash False)
+let falso_dv () = loop_dv (fun x -> x)

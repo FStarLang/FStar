@@ -21,4 +21,5 @@ effect ID (a:Type) = IDN a (fun () p -> forall x. p x)
 
 let rec f () : ID False = f ()
 
-let x : False = reify (f ()) ()
+[@(expect_failure [34])]
+let x () : False = reify (f ()) ()
