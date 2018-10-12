@@ -298,7 +298,13 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> 
             | Some (lets, one_val, rest) -> lets, one_val::rest
         in
         let impls = impls@iface_lets in
-        //let env = E.set_iface_decls env l remaining_iface_vals in
+        let env =
+            if Options.interactive()
+            then E.set_iface_decls env l remaining_iface_vals
+            else env //if not interactive, then don't consume iface_decls
+                     //since some batch-mode checks, e.g., must_erase_for_extraction
+                     //depend on having all the iface decls around
+        in
         let a = Module(l, impls) in
         match remaining_iface_vals with
         | _::_ when expect_complete_modul ->
