@@ -542,6 +542,7 @@ let batch_mode_tc filenames dep_graph =
   end;
   let env = FStar.Extraction.ML.UEnv.mkContext (init_env dep_graph) in
   let all_mods, mllibs, env, delta = tc_fold_interleave ([], [], env, None) filenames in
+  emit mllibs;
   let solver_refresh env =
       snd <|
       with_tcenv_of_env env (fun tcenv ->
