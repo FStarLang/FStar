@@ -826,7 +826,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
          U.process_pragma p se.sigrng;
          g, []
 
-let extract' (g:uenv) (m:modul) : uenv * list<mllib> =
+let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
   S.reset_gensym();
   let _ = Options.restore_cmd_line_options true in
   let name = MLS.mlpath_of_lident m.name in
@@ -835,7 +835,7 @@ let extract' (g:uenv) (m:modul) : uenv * list<mllib> =
   if not (Options.should_extract m.name.str)
   then let g, iface = extract_iface g m in
        debug g (fun () -> BU.print_string (iface_to_string iface));
-       g, []
+       g, None
   else
       let g, sigs = BU.fold_map extract_sig g m.declarations in
       let mlm : mlmodule = List.flatten sigs in
@@ -844,12 +844,12 @@ let extract' (g:uenv) (m:modul) : uenv * list<mllib> =
       && (is_kremlin || not m.is_interface)
       then begin
         BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
-        g, [MLLib ([name, Some ([], mlm), (MLLib [])])]
+        g, Some (MLLib ([name, Some ([], mlm), (MLLib [])]))
       end else
-        g, []
+        g, None
 
 let extract (g:uenv) (m:modul) =
-  if Options.interactive() then g, [] else
+  if Options.interactive() then g, None else
   if Options.debug_any ()
   then let msg = BU.format1 "Extracting module %s\n" (Print.lid_to_string m.name) in
        BU.measure_execution_time msg (fun () -> extract' g m)

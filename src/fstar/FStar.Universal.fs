@@ -357,7 +357,7 @@ let emit (mllibs:list<FStar.Extraction.ML.Syntax.mllib>) =
         let outdir = Options.output_dir() in
         List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
     | Some Options.Kremlin ->
-        let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
+        let programs = List.collect Extraction.Kremlin.translate mllibs in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
         begin match programs with
         | [ name, _ ] ->
@@ -373,6 +373,7 @@ let tc_one_file
         (pre_fn:option<string>) //interface file name
         (fn:string) //file name
     : tc_result
+    * option<FStar.Extraction.ML.Syntax.mllib>
     * uenv
     * delta_env =
   Syntax.reset_gensym();
@@ -382,8 +383,7 @@ let tc_one_file
       then None, 0
       else FStar.Util.record_time (fun () ->
             let _, defs = FStar.Extraction.ML.Modul.extract env tcmod in
-            emit defs;
-            Some defs)
+            defs)
   in
   let tc_source_file () =
       let env = apply_delta_env env delta in
@@ -413,6 +413,7 @@ let tc_one_file
 
             mii = mii
           },
+          extracted_defs,
           env
       in
       if (Options.should_verify fmod.name.str //if we're verifying this module
@@ -431,14 +432,14 @@ let tc_one_file
                  BU.format1 "Cross-module inlining expects all modules to be checked first; %s was not checked"
                             fn);
 
-        let tc_result, env = tc_source_file () in
+        let tc_result, mllib, env = tc_source_file () in
         if FStar.Errors.get_err_count() = 0
         && (Options.lax()  //we'll write out a .checked.lax file
             || Options.should_verify tc_result.checked_module.name.str) //we'll write out a .checked file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
         then store_module_to_cache env fn tc_result;
-        tc_result, env, None
+        tc_result, mllib, env, None
 
       | Some tc_result ->
         let tcmod = tc_result.checked_module in
@@ -457,7 +458,7 @@ let tc_one_file
             FStar.TypeChecker.Tc.load_checked_module tcenv tcmod
         in
         (* If we have to extract this module, then do it first *)
-        let _ =
+        let mllib =
             if Options.codegen()<>None
             && Options.should_extract tcmod.name.str
             && (not tcmod.is_interface || Options.codegen()=Some Options.Kremlin)
@@ -468,7 +469,8 @@ let tc_one_file
                          maybe_extract_mldefs tcmod env
                      in
                      let extracted_defs, extraction_time = extract_defs tcmod env in
-                     ())
+                     extracted_defs)
+            else None
         in
 
         let delta_env env =
@@ -476,11 +478,12 @@ let tc_one_file
             FStar.Extraction.ML.Modul.extend_with_iface env tc_result.extracted_iface
         in
         tc_result,
+        mllib,
         env,
         extend_delta_env delta delta_env
 
-  else let tc_result, env = tc_source_file () in
-       tc_result, env, None
+  else let tc_result, mllib, env = tc_source_file () in
+       tc_result, mllib, env, None
 
 let tc_one_file_for_ide
         (env:TcEnv.env_t)
@@ -490,7 +493,7 @@ let tc_one_file_for_ide
     * TcEnv.env_t
     =
     let env = env_of_tcenv env in
-    let tc_result, env, delta = tc_one_file env None pre_fn fn in
+    let tc_result, _, env, delta = tc_one_file env None pre_fn fn in
     tc_result, (apply_delta_env env delta).env_tcenv
 
 (***********************************************************************)
@@ -504,25 +507,27 @@ let needs_interleaving intf impl =
   List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
 
 let tc_one_file_from_remaining (remaining:list<string>) (env:uenv) (delta_env:delta_env) =
-  let remaining, (nmods, env, delta_env) =
+  let remaining, (nmods, mllib, env, delta_env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let m, env, delta_env = tc_one_file env delta_env (Some intf) impl in
-          remaining, ([m], env, delta_env)
+          let m, mllib, env, delta_env = tc_one_file env delta_env (Some intf) impl in
+          remaining, ([m], mllib, env, delta_env)
         | intf_or_impl :: remaining ->
-          let m, env, delta_env = tc_one_file env delta_env None intf_or_impl in
-          remaining, ([m], env, delta_env)
-        | [] -> [], ([], env, delta_env)
+          let m, mllib, env, delta_env = tc_one_file env delta_env None intf_or_impl in
+          remaining, ([m], mllib, env, delta_env)
+        | [] -> [], ([], None, env, delta_env)
   in
-  remaining, nmods, env, delta_env
+  remaining, nmods, mllib, env, delta_env
 
-let rec tc_fold_interleave (acc:list<tc_result> * uenv * delta_env) (remaining:list<string>) =
+let rec tc_fold_interleave (acc:list<tc_result> * list<FStar.Extraction.ML.Syntax.mllib> * uenv * delta_env)
+                           (remaining:list<string>) =
+  let as_list = function None -> [] | Some l -> [l] in
   match remaining with
     | [] -> acc
     | _  ->
-      let mods, env, delta_env = acc in
-      let remaining, nmods, env, delta_env = tc_one_file_from_remaining remaining env delta_env in
-      tc_fold_interleave (mods@nmods, env, delta_env) remaining
+      let mods, mllibs, env, delta_env = acc in
+      let remaining, nmods, mllib, env, delta_env = tc_one_file_from_remaining remaining env delta_env in
+      tc_fold_interleave (mods@nmods, mllibs@as_list mllib, env, delta_env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
@@ -536,7 +541,7 @@ let batch_mode_tc filenames dep_graph =
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
   let env = FStar.Extraction.ML.UEnv.mkContext (init_env dep_graph) in
-  let all_mods, env, delta = tc_fold_interleave ([], env, None) filenames in
+  let all_mods, mllibs, env, delta = tc_fold_interleave ([], [], env, None) filenames in
   let solver_refresh env =
       snd <|
       with_tcenv_of_env env (fun tcenv ->
