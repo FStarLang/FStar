@@ -6207,7 +6207,8 @@ let (encode_modul :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.modul -> unit) =
   fun tcenv  ->
     fun modul  ->
-      let uu____16450 = FStar_Options.lax ()  in
+      let uu____16450 = (FStar_Options.lax ()) && (FStar_Options.ml_ish ())
+         in
       if uu____16450
       then ()
       else
