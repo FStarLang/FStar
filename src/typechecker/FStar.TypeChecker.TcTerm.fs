@@ -563,7 +563,17 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" ef.str)) e.pos;
     let repr = Env.reify_comp env (lcomp_comp c) u_c in
     let e = mk (Tm_app(reify_op, [(e, aqual)])) None top.pos in
-    let c = S.mk_Total repr |> U.lcomp_of_comp in
+    let c =
+        if is_total_effect env ef
+        then S.mk_Total repr |> U.lcomp_of_comp
+        else let ct = { comp_univs = [u_c]
+                      ; effect_name = Const.effect_Dv_lid
+                      ; result_typ = repr
+                      ; effect_args = []
+                      ; flags = []
+                      }
+             in S.mk_Comp ct |> U.lcomp_of_comp
+    in
     let e, c, g' = comp_check_expected_typ env e c in
     e, c, Env.conj_guard g g'
 
