@@ -1445,24 +1445,26 @@ let (batch_mode_tc :
           in
        match uu____3125 with
        | (all_mods,mllibs,env1,delta1) ->
-           let solver_refresh env2 =
-             let uu____3176 =
-               with_tcenv_of_env env2
-                 (fun tcenv  ->
-                    (let uu____3185 =
-                       (FStar_Options.interactive ()) &&
-                         (let uu____3188 = FStar_Errors.get_err_count ()  in
-                          uu____3188 = (Prims.parse_int "0"))
-                        in
-                     if uu____3185
-                     then
-                       (tcenv.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
-                         ()
-                     else
-                       (tcenv.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.finish
-                         ());
-                    ((), tcenv))
-                in
-             FStar_All.pipe_left FStar_Pervasives_Native.snd uu____3176  in
-           (all_mods, env1, (extend_delta_env delta1 solver_refresh)))
+           (emit mllibs;
+            (let solver_refresh env2 =
+               let uu____3177 =
+                 with_tcenv_of_env env2
+                   (fun tcenv  ->
+                      (let uu____3186 =
+                         (FStar_Options.interactive ()) &&
+                           (let uu____3189 = FStar_Errors.get_err_count ()
+                               in
+                            uu____3189 = (Prims.parse_int "0"))
+                          in
+                       if uu____3186
+                       then
+                         (tcenv.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
+                           ()
+                       else
+                         (tcenv.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.finish
+                           ());
+                      ((), tcenv))
+                  in
+               FStar_All.pipe_left FStar_Pervasives_Native.snd uu____3177  in
+             (all_mods, env1, (extend_delta_env delta1 solver_refresh)))))
   
