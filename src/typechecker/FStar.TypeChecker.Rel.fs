@@ -1694,9 +1694,10 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
       let tx = UF.new_transaction () in
       begin
-      match solve_t env eq_prob ({wl' with defer_ok=false; attempting=sub_probs}) with
-      | Success _ ->
+      match solve_t env eq_prob ({wl' with defer_ok=false; wl_implicits = []; attempting=sub_probs}) with
+      | Success (_, imps) ->
          let wl = {wl' with attempting=rest} in
+         let wl = {wl with wl_implicits = wl'.wl_implicits @ imps} in
          let g =  List.fold_left (fun g p -> U.mk_conj g (p_guard p))
                                  eq_prob.logical_guard
                                  sub_probs in
@@ -2061,7 +2062,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
             then solve env (solve_prob orig None [] wl)
             else (* Given a flex-flex instance:
                     (x1..xn ..X  |- ?u : ts  -> tres) [y1  ... ym ]
-                 ~  (x1..xn ..X'| - ?v : ts' -> tres) [y1' ... ym']
+                 ~  (x1..xn ..X' |- ?v : ts' -> tres) [y1' ... ym']
 
                     let ctx_w = x1..xn in
                     let z1..zk = (..X..y1..ym intersect ...X'...y1'..ym') in

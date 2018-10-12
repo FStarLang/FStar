@@ -940,7 +940,7 @@ let universe_of_comp env u_res c =
                          c.pos
          | Some tm -> env.universe_of env tm
 
-  
+
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
     if env.is_pattern then e, lc else
@@ -1820,7 +1820,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
           aux env t
         | Tm_app(head, [_]) ->
           (match (U.un_uinst head).n with
-           | Tm_fvar fv -> fv_eq_lid fv C.erased_lid || has_erased_for_extraction_attr fv  //may be we should just call aux on head?                           
+           | Tm_fvar fv -> fv_eq_lid fv C.erased_lid || has_erased_for_extraction_attr fv  //may be we should just call aux on head?
            | _ -> false)
         | _ ->
           false

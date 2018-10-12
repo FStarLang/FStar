@@ -33,7 +33,7 @@ let poly_list_id (#a:Type) (l:list a) =
   aux l []
 
 [@ plugin]
-let rec eq_int_list (l m :list int) =
+let rec eq_int_list (l m :list int) : Tot bool (decreases l) =
   match l, m with
   | [], [] -> true
   | l::ls, m::ms -> l = m && eq_int_list ls ms
