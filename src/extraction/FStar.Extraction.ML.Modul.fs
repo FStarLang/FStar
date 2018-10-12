@@ -534,14 +534,19 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       else g, empty_iface
 
 let extract_iface (g:env_t) modul =
+    ignore <| Options.restore_cmd_line_options true;
     if Options.interactive() then g, empty_iface else
     let decls = modul.declarations in
     let iface = {empty_iface with iface_module_name=g.currentModule} in
-    List.fold_left (fun (g, iface) se ->
-        let g, iface' = extract_sigelt_iface g se in
-        g, iface_union iface iface')
-        (g, iface)
-        decls
+    let res =
+        List.fold_left (fun (g, iface) se ->
+            let g, iface' = extract_sigelt_iface g se in
+            g, iface_union iface iface')
+            (g, iface)
+            decls
+    in
+    ignore <| Options.restore_cmd_line_options true;
+    res
 
 let extend_with_iface (g:env_t) (iface:iface) =
      { g with
@@ -832,25 +837,27 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with env_tcenv=FStar.TypeChecker.Env.set_current_module g.env_tcenv m.name;
                   currentModule = name} in
-  if not (Options.should_extract m.name.str)
-  then let g, iface = extract_iface g m in
-       debug g (fun () -> BU.print_string (iface_to_string iface));
-       g, None
-  else
-      let g, sigs = BU.fold_map extract_sig g m.declarations in
-      let mlm : mlmodule = List.flatten sigs in
-      let is_kremlin = Options.codegen () = Some Options.Kremlin in
-      if m.name.str <> "Prims"
-      && (is_kremlin || not m.is_interface)
-      then begin
-        BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
-        g, Some (MLLib ([name, Some ([], mlm), (MLLib [])]))
-      end else
-        g, None
+  let g, sigs = BU.fold_map extract_sig g m.declarations in
+  let mlm : mlmodule = List.flatten sigs in
+  let is_kremlin = Options.codegen () = Some Options.Kremlin in
+  if m.name.str <> "Prims"
+  && (is_kremlin || not m.is_interface)
+  then begin
+    BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
+    g, Some (MLLib ([name, Some ([], mlm), (MLLib [])]))
+  end
+  else g, None
 
 let extract (g:uenv) (m:modul) =
+  ignore <| Options.restore_cmd_line_options true;
+  if not (Options.should_extract m.name.str)
+  then failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
   if Options.interactive() then g, None else
-  if Options.debug_any ()
-  then let msg = BU.format1 "Extracting module %s\n" (Print.lid_to_string m.name) in
-       BU.measure_execution_time msg (fun () -> extract' g m)
-  else extract' g m
+  let res =
+      if Options.debug_any ()
+      then let msg = BU.format1 "Extracting module %s\n" (Print.lid_to_string m.name) in
+           BU.measure_execution_time msg (fun () -> extract' g m)
+      else extract' g m
+  in
+  ignore <| Options.restore_cmd_line_options true;
+  res
