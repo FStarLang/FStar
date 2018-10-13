@@ -579,6 +579,22 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query",
+        "Bug173_pretyping_2e6088c3e78554cca9be304cc06504d2",
+        "assumption_Bug173.typ__uu___haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "data_typing_intro_Bug173.TBool@tok", "kinding_Bug173.typ@tok",
+        "refinement_interpretation_Bug173_Tm_refine_e467f02932a0489e503835b1a9d684c9"
+      ],
+      0,
+      "42d6254663b87ad890fd25949a799d30"
+    ],
+    [
+      "Bug173.preservation_exp",
+      3,
+      2,
+      1,
+      [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug173.step_exp.fuel_instrumented",
         "@fuel_correspondence_Bug173.typing_exp.fuel_instrumented",
@@ -647,7 +663,7 @@
         "typing_Bug173.typing_exp", "unit_inversion", "unit_typing"
       ],
       0,
-      "441204158ec4bcdd79fb3a898057ac13"
+      "975a26ff1f0c8f038e7a6581242d2660"
     ],
     [
       "Bug173.preservation",
@@ -659,11 +675,23 @@
         "refinement_interpretation_Bug173_Tm_refine_9fbf17a08e375afe5de65a8b1e04a4f5"
       ],
       0,
-      "90f1929d34802edae3b12dc5d8426a9a"
+      "8207c1fb5e58e30b19b3bb8676d38b27"
     ],
     [
       "Bug173.preservation",
       2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug173.heap",
+        "refinement_interpretation_Bug173_Tm_refine_7749db9d3e588c5eb945993a0b31167c"
+      ],
+      0,
+      "488994c2a33d909fcbaf877c784c592d"
+    ],
+    [
+      "Bug173.preservation",
+      3,
       2,
       1,
       [
@@ -673,7 +701,8 @@
         "@fuel_correspondence_Bug173.typing.fuel_instrumented",
         "@fuel_correspondence_Bug173.typing_exp.fuel_instrumented",
         "@fuel_irrelevance_Bug173.step.fuel_instrumented",
-        "@fuel_irrelevance_Bug173.typing.fuel_instrumented", "@query",
+        "@fuel_irrelevance_Bug173.typing.fuel_instrumented",
+        "@fuel_irrelevance_Bug173.typing_exp.fuel_instrumented", "@query",
         "Bug173_pretyping_2e6088c3e78554cca9be304cc06504d2",
         "Bug173_pretyping_814bbe39f9d21c3fa611e97d9721bf41",
         "Bug173_pretyping_d83e1dc370c53e96a182896c4591ec0d",
@@ -741,14 +770,13 @@
         "token_correspondence_Bug173.step.fuel_instrumented",
         "token_correspondence_Bug173.typing.fuel_instrumented",
         "typing_Bug173.step", "typing_Bug173.step_exp",
-        "typing_Bug173.typing", "typing_Bug173.typing_exp",
-        "typing_Bug173.uu___is_Skip",
+        "typing_Bug173.typing_exp", "typing_Bug173.uu___is_Skip",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
         "typing_FStar.Pervasives.Native.__proj__Some__item__v",
         "typing_tok_Bug173.Skip@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "28576ff78787c09c0d753b65d6ce09fd"
+      "67d75538a3ff12c3e3ff491cb3875112"
     ],
     [
       "Bug173.preservation'",
@@ -760,11 +788,23 @@
         "refinement_interpretation_Bug173_Tm_refine_9fbf17a08e375afe5de65a8b1e04a4f5"
       ],
       0,
-      "f1610937a0e9131c21baacc9daa87817"
+      "7701b8b1b349a7219a2d4783bf3d84b6"
     ],
     [
       "Bug173.preservation'",
       2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug173.heap",
+        "refinement_interpretation_Bug173_Tm_refine_0c22ba87dd7054cd59e2b0a015b7c657"
+      ],
+      0,
+      "4fc5138c99afdafc22a41cf1a2a3b5c6"
+    ],
+    [
+      "Bug173.preservation'",
+      3,
       2,
       1,
       [
@@ -774,7 +814,10 @@
         "@fuel_correspondence_Bug173.typing.fuel_instrumented",
         "@fuel_correspondence_Bug173.typing_exp.fuel_instrumented",
         "@fuel_irrelevance_Bug173.step.fuel_instrumented",
-        "@fuel_irrelevance_Bug173.typing.fuel_instrumented", "@query",
+        "@fuel_irrelevance_Bug173.typing.fuel_instrumented",
+        "@fuel_irrelevance_Bug173.typing_exp.fuel_instrumented", "@query",
+        "Bug173_interpretation_Tm_arrow_2ecf54de983c64c66d48fc62dfe22069",
+        "Bug173_interpretation_Tm_arrow_dd079cebe5483434f3abfcc6f1877be4",
         "Bug173_pretyping_2e6088c3e78554cca9be304cc06504d2",
         "Bug173_pretyping_814bbe39f9d21c3fa611e97d9721bf41",
         "Bug173_pretyping_d83e1dc370c53e96a182896c4591ec0d",
@@ -799,8 +842,10 @@
         "disc_equation_Bug173.While",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equality_tok_Bug173.Skip@tok", "equation_Bug173.heap",
-        "equation_Bug173.id", "equation_Bug173.typed_heap",
+        "equality_tok_Bug173.Skip@tok", "equality_tok_Bug173.TBool@tok",
+        "equality_tok_Bug173.TInt@tok", "equation_Bug173.env",
+        "equation_Bug173.heap", "equation_Bug173.id",
+        "equation_Bug173.typed_heap", "equation_Bug173.typing_val",
         "equation_Bug173.update", "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.nat",
         "equation_with_fuel_Bug173.step.fuel_instrumented",
@@ -809,6 +854,8 @@
         "equation_with_fuel_Bug173.typing_exp.fuel_instrumented",
         "fuel_guarded_inversion_Bug173.exp",
         "fuel_guarded_inversion_Bug173.stmt",
+        "fuel_guarded_inversion_Bug173.typ",
+        "fuel_guarded_inversion_Bug173.value",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "function_token_typing_Bug173.heap",
         "interpretation_Bug173_Tm_abs_8c75b1e31474a3cf9b1682f260bdb511",
@@ -843,14 +890,15 @@
         "token_correspondence_Bug173.step.fuel_instrumented",
         "token_correspondence_Bug173.typing.fuel_instrumented",
         "typing_Bug173.step", "typing_Bug173.step_exp",
-        "typing_Bug173.typing", "typing_Bug173.typing_exp",
+        "typing_Bug173.typing_exp", "typing_Bug173.typing_val",
         "typing_Bug173.uu___is_Skip",
+        "typing_Bug173_Tm_abs_8c75b1e31474a3cf9b1682f260bdb511",
         "typing_FStar.Pervasives.Native.__proj__Some__item__v",
         "typing_FStar.Pervasives.Native.snd", "typing_tok_Bug173.Skip@tok",
         "unit_inversion", "unit_typing"
       ],
       0,
-      "a0a2ce523bfccf9d73b9d17a0daf7a87"
+      "f2751bff3089bff5dd31b56661d1751a"
     ]
   ]
 ]
