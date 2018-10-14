@@ -210,7 +210,7 @@
       0,
       [ "@query" ],
       0,
-      "20f298945aa4368d1c959c860f65bac5"
+      "7ec89be62f5e75486a7ad4181af5c9d8"
     ],
     [
       "QuickSort.Seq.partition",
@@ -234,7 +234,6 @@
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Seq.Properties.mem",
         "equation_FStar.Seq.Properties.permutation",
         "equation_FStar.Seq.Properties.swap",
         "equation_FStar.Seq.Properties.total_order", "equation_Prims.eqtype",
@@ -249,8 +248,7 @@
         "lemma_FStar.Seq.Properties.seq_mem_k",
         "lemma_FStar.Seq.Properties.slice_length",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -275,10 +273,10 @@
         "refinement_interpretation_QuickSort.Seq_Tm_refine_f235f9076d2ca0595092c09fe2359a82",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice", "typing_FStar.Seq.Base.upd",
-        "typing_FStar.Seq.Properties.count", "well-founded-ordering-on-nat"
+        "well-founded-ordering-on-nat"
       ],
       0,
-      "34d5a65d4cb871e7f34446144947f860"
+      "9896aa69570045b22843b4358df95b5d"
     ],
     [
       "QuickSort.Seq.sort",

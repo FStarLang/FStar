@@ -855,7 +855,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f7a6b3312cb96c8d779a91f9674344ab"
+      "8e8559688286ce30ca6466a82c660d53"
     ],
     [
       "FStar.List.Tot.Properties.map_lemma",
@@ -880,7 +880,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c0009dadeabf3553fb54fc8224f38af8"
+      "5d2c058c346f6fd87bc17e172fc0a163"
     ],
     [
       "FStar.List.Tot.Properties.partition_mem",
@@ -1138,7 +1138,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4670a7eb908ca66fa1faaa8e7eb0df8e"
+      "d0f16e55d28708103b77a4a902a523db"
     ],
     [
       "FStar.List.Tot.Properties.sortWith_permutation",
@@ -1190,7 +1190,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "5129117224e55df040714ac125e7bb87"
+      "674d97cb48803b405a66d66cecc29960"
     ],
     [
       "FStar.List.Tot.Properties.sorted",
@@ -2406,7 +2406,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "dbd15967be8105e4a2972bb0516459e0"
+      "126cb206863e3f16e27ef92d008fe141"
     ],
     [
       "FStar.List.Tot.Properties.sortWith_permutation",
@@ -2420,7 +2420,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f4d8b91c5c84bb340cd454e00c9785e9"
+      "da3423dfdf44658bfeb26c022aefbfef"
     ],
     [
       "FStar.List.Tot.Properties.sorted",
