@@ -1173,41 +1173,55 @@ let print_full (deps:deps) : unit =
 
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
-        let all_fst_files_dep =
+        let all_fst_files_dep, widened =
             let impl_dep = function
                 | PreferInterface f when Options.cmi() ->
                   if has_implementation deps.file_system_map f
                   && List.contains f deps.interfaces_with_inlining
-                  then UseImplementation f
-                  else PreferInterface f
-                | d -> d
+                  then UseImplementation f, true
+                  else PreferInterface f, false
+                | d -> d, false
             in
-            let fst_files =
+            let maybe_widen_deps (f_deps:dependences) =
+                List.fold_right
+                  (fun dep (out, widened) ->
+                     let dep, widened' = impl_dep dep in
+                     file_of_dep_aux false deps.file_system_map deps.cmd_line_files dep::out,
+                     widened || widened')
                 f_deps
-                |> List.map (fun dep ->
-                   file_of_dep_aux false deps.file_system_map deps.cmd_line_files (impl_dep dep))
+                ([], false)
             in
-            let fst_files_from_iface =
+            let fst_files, widened = maybe_widen_deps f_deps in
+            let fst_files_from_iface, widened_iface =
                 match iface_deps with
-                | None -> []
-                | Some iface_deps ->
-                    let id = iface_deps |> List.map (file_of_dep_aux false deps.file_system_map deps.cmd_line_files) in
-                    id
+                | None -> [], false
+                | Some iface_deps -> maybe_widen_deps iface_deps
             in
-            BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface)
+            BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface),
+            widened || widened_iface
         in
         let all_checked_fst_files = List.map cache_file all_fst_files_dep in
           if is_implementation f then (
             if Options.cmi()
-            then
+            && widened
+            then begin
                 Util.print3 "%s: %s \\\n\t%s\n\n"
                             (output_ml_file f)
                             (cache_file f)
+                            (String.concat " \\\n\t" all_checked_fst_files);
+                Util.print3 "%s: %s \\\n\t%s\n\n"
+                            (output_krml_file f)
+                            (cache_file f)
                             (String.concat " \\\n\t" all_checked_fst_files)
-            else
+            end
+            else begin
                 Util.print2 "%s: %s \n\n"
                             (output_ml_file f)
                             (cache_file f);
+                Util.print2 "%s: %s\n\n"
+                            (output_krml_file f)
+                            (cache_file f)
+            end;
             let cmx_files =
                 let extracted_fst_files =
                     all_fst_files_dep |> List.filter (fun df ->
@@ -1220,15 +1234,15 @@ let print_full (deps:deps) : unit =
             then Util.print3 "%s: %s \\\n\t%s\n\n"
                         (output_cmx_file f)
                         (output_ml_file f)
-                        (String.concat "\\\n\t" cmx_files);
-            Util.print2 "%s: %s\n\n" (output_krml_file f) (cache_file f)
+                        (String.concat "\\\n\t" cmx_files)
           ) else if not(has_implementation deps.file_system_map (lowercase_module_name f))
                  && is_interface f then (
             // .krml files can be produced using just an interface, unlike .ml files
             if Options.cmi()
+            && widened
             then
                 Util.print3 "%s: %s \\\n\t%s\n\n"
-                            (output_ml_file f)
+                            (output_krml_file f)
                             (cache_file f)
                             (String.concat " \\\n\t" all_checked_fst_files)
             else
