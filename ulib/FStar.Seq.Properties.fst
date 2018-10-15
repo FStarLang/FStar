@@ -1087,7 +1087,7 @@ let elim_of_list (#a: Type) (l: list a):
 #reset-options
 
 (****** sortWith ******)
-let sortWith (#a:eqtype) (f:a -> a -> Tot int) (s:seq a) :seq a
+let sortWith (#a:eqtype) (f:a -> a -> Tot int) (s:seq a) :Tot (seq a)
   = seq_of_list (List.Tot.Base.sortWith f (seq_to_list s))
 
 let rec lemma_seq_to_list_permutation (#a:eqtype) (s:seq a)
