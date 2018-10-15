@@ -162,10 +162,6 @@ let morph (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c =
       assume (h'' == g_upd b2 0 s2' (g_upd b1 0 s1' h));
       x
 
-
-let as_wp (#a : Type) (pre : hpre) (post : hpost a) : hwp a =
-    (fun s0 p -> pre s0 /\ (forall r s1. post s0 r s1 ==> p (r, s1)))
-
 let morph_p  (#a : Type) (pre : hpre) (post : hpost a) (c : comp_p a pre post) : lcomp a pre post c =
   morph (as_wp pre post) c
 
@@ -444,6 +440,10 @@ let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
                       #wp #(cast wp (return_elab x)) (lreturn x) in
   ()
 
+(** Could we somehow work this such equalities? *)
+let morph_return' #a (x : a) :
+ Lemma
+   (morph _ (return_elab x) == lreturn x) = admit ()
 
 let morph_read (wp : hwp_mon mint) (c : comp_wp mint wp) (i : nat{i < 2}) :
   Lemma
@@ -514,14 +514,25 @@ let morph_for (wp1 : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (
   ()
 
 
-
-let morph_for' (inv : state -> int -> Type0) (f : (i:int) -> comp_p unit  (fun h0 -> inv h0 i) (fun h0 _ h1 -> inv h1 (i + 1)))
+let morph_for' (inv : state -> int -> Type0) (f : (i:int) -> comp_p unit (fun h0 -> inv h0 i) (fun h0 _ h1 -> inv h1 (i + 1)))
                (lo : int) (hi : int{lo <= hi})
                (wp : hwp_mon unit) (c : comp_wp unit wp) :
-      Lemma (requires (c === for_elab' inv f lo hi))
-            (ensures (morph wp c === lfor' inv f (fun i -> morph _ (f i)) lo hi)) = admit ()
+  Lemma (requires (c === for_elab' inv f lo hi))
+        (ensures (for_inv' inv f lo hi c;
+                  morph wp c == lfor' inv f (fun i -> morph _ (f i)) lo hi)) = 
+  let p = for_inv' inv f lo hi c in
+  assert (l_eq #unit
+               #wp #(cast wp (for_elab' inv f lo hi)) (morph wp (cast wp (for_elab' inv f lo hi)))
+               #wp #(cast wp (for_elab' inv f lo hi)) (lcast wp (for_elab' inv f lo hi)
+               (lfor' inv f (fun i -> morph _ (f i)) lo hi)));
+  let p' = l_eq_axiom #unit
+                      #wp #(cast wp (for_elab' inv f lo hi)) (morph wp (cast wp (for_elab' inv f lo hi)))
+                      #wp #(cast wp (for_elab' inv f lo hi)) (lcast wp (for_elab' inv f lo hi)
+                      (lfor' inv f (fun i -> morph _ (f i)) lo hi)) in
 
-
+  ()
+    
+  
 let morph_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
     (wp2 : hwp_mon a) (c2 : comp_wp a wp2)
     (wp : hwp_mon a) (c : comp_wp a wp):

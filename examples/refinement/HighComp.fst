@@ -46,6 +46,10 @@ type hwp a = HIGH?.wp a
 type hpre = state -> Type0
 type hpost a = state -> a -> state -> Type0
 
+unfold
+let as_wp (#a : Type) (pre : hpre) (post : hpost a) : hwp a =
+      (fun s0 p -> pre s0 /\ (forall r s1. post s0 r s1 ==> p (r, s1)))
+
 
 let monotonic #a (wp:hwp a) =
   forall p1 p2 s. {:pattern wp s p1; wp s p2}
@@ -60,14 +64,14 @@ let null_wp 'a : hwp_mon 'a  = fun s0 p -> forall s. p s
 // [comp] type with wp
 type comp_wp 'a (wp : hwp_mon 'a) = s0:state -> PURE ('a * state) (wp s0)
 
-type comp_p 'a (pre : hpre) (post : hpost 'a) = comp_wp 'a (fun s0 p -> pre s0 /\ (forall r s1. post s0 r s1 ==> p (r, s1)))
+type comp_p 'a (pre : hpre) (post : hpost 'a) = comp_wp 'a (as_wp pre post)
 
 (** Effect deffinitions *)
 
 effect H (a: Type) = HIGH a (null_wp a)
 
 effect High (a:Type) (pre:hpre) (post:hpost a) = 
-      HIGH a (fun s0 p -> pre s0 /\ (forall (r:a) (s1:state). post s0 r s1 ==> p (r, s1)))
+       HIGH a (as_wp pre post)
 
 
 effect HighMon (a:Type) (wp:hwp_mon a) = HIGH a wp
@@ -75,7 +79,7 @@ effect HighMon (a:Type) (wp:hwp_mon a) = HIGH a wp
 effect Hi (a:Type)
           (pre: state -> Type)
           (post: state -> a -> state -> Type) =
-        HighMon a (fun s0 k -> pre s0 /\ (forall x s1. post s0 x s1 ==> k (x, s1)))
+       HighMon a (as_wp pre post)
 
 effect HTot (a:Type) = HighComp.HIGH a (null_wp a)
 
@@ -189,13 +193,9 @@ let rec for_elab' (inv : state -> int -> Type0)
       if lo = hi then (return_elab ())
       else 
         begin 
-          bind_elab (f lo) (fun _ -> 
-          assert (lo < hi);
-          assert (hi - (lo + 1) < hi - lo);
-          for_elab' inv f (lo + 1) hi)
+          let k () = for_elab' inv f (lo + 1) hi in 
+          bind_elab (f lo) k
         end
-
-
 
 let hread_elab (i:nat) : comp_wp mint (read_wp i) =
   (fun s -> if i = 0 then (fst s, s) else (snd s, s))
@@ -240,6 +240,13 @@ assume val for_inv (#fwp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) 
   Lemma (requires (c === for_elab lo hi f))
         (ensures (subsumes (for_wp fwp lo hi) wp))
 
+assume val for_inv'  (inv : state -> int -> Type0)
+                     (f : (i:int) -> comp_p unit (requires (fun h0 -> inv h0 i))
+                                              (ensures (fun h0 _ h1 -> inv h1 (i + 1)))) 
+       (lo : int) (hi : int{lo <= hi}) (#wp:hwp_mon unit) (c:comp_wp unit wp) :
+  Lemma (requires (c === for_elab' inv f lo hi))
+        (ensures (subsumes (as_wp (fun h0 -> inv h0 lo)
+                                            (fun h0 _ h1 -> inv h1 hi)) wp))
 
 (** ** Explicit casting to stronger WPs **)
 
