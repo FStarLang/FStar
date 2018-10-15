@@ -932,12 +932,9 @@ let universe_of_comp env u_res c =
     if not is_total then S.U_zero  //if it is a non-total effect then u0
     else match Env.effect_repr env c u_res with
          | None ->
-           let ed = Env.get_effect_decl env c_lid in
-           if List.length ed.binders = 0 then u_res
-           else
-             raise_error (Errors.Fatal_EffectCannotBeReified,
-                          (BU.format1 "Effect %s is marked total but does not have a repr" (Print.lid_to_string c_lid)))
-                         c.pos
+           raise_error (Errors.Fatal_EffectCannotBeReified,
+                        (BU.format1 "Effect %s is marked total but does not have a repr" (Print.lid_to_string c_lid)))
+                        c.pos
          | Some tm -> env.universe_of env tm
 
 
