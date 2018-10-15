@@ -938,6 +938,7 @@ let collect (all_cmd_line_files: list<file_name>)
             | PreferInterface f
                 when Options.cmi() && Options.codegen() <> None ->
               if has_implementation file_system_map f
+              && List.contains f (!interfaces_needing_inlining)
               then UseImplementation f
               else PreferInterface f
             | PreferInterface f
