@@ -1129,6 +1129,43 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
     g_upd_seq_as_seq dst s2' h  //for modifies clause
 #pop-options
 
+#push-options "--z3rlimit 32 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+let fill' (#t:Type) (#rrel #rel: srel t)
+  (b: mbuffer t rrel rel)
+  (z:t)
+  (len:U32.t)
+: HST.Stack unit
+  (requires (fun h ->
+    live h b /\
+    U32.v len <= length b /\
+    rel (as_seq h b) (Seq.replace_subseq (as_seq h b) 0 (U32.v len) (Seq.create (U32.v len) z))
+  ))
+  (ensures  (fun h0 _ h1 ->
+    modifies (loc_buffer b) h0 h1 /\
+    live h1 b /\
+    Seq.slice (as_seq h1 b) 0 (U32.v len) `Seq.equal` Seq.create (U32.v len) z /\
+    Seq.slice (as_seq h1 b) (U32.v len) (length b) `Seq.equal` Seq.slice (as_seq h0 b) (U32.v len) (length b)
+  ))
+= let open HST in
+  if len = 0ul then ()
+  else begin
+    let h = get () in
+    let Buffer max_length content idx length () = b in
+    let s_full = !content in
+    let s = Seq.slice s_full (U32.v idx) (U32.v idx + U32.v length) in
+    let s_src = Seq.create (U32.v len) z in
+    let s' = Seq.replace_subseq s 0 (U32.v len) s_src in
+    let s_full' = Seq.replace_subseq s_full (U32.v idx) (U32.v idx + U32.v len) s_src in
+    assert (s_full' `Seq.equal` Seq.replace_subseq s_full (U32.v idx) (U32.v idx + U32.v length) s');
+    content := s_full';
+    let h' = HST.get () in
+    assert (h' == g_upd_seq b s' h);
+    g_upd_seq_as_seq b s' h  //for modifies clause
+  end
+#pop-options
+
+let fill #t #rrel #rel b z len = fill' b z len
+
 module MG = FStar.ModifiesGen
 
 let abuffer' = ubuffer'
