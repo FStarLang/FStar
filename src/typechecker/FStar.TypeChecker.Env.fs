@@ -203,7 +203,6 @@ and implicit = {
     imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
     imp_tm     : term;                    // The term, made up of the ctx_uvar
     imp_range  : Range.range;             // Position where it was introduced
-    imp_meta   : option<(env * term)>;    // An optional metaprogram to try to fill it
 }
 and implicits = list<implicit>
 and tcenv_hooks =
@@ -1634,7 +1633,7 @@ let close_guard env binders g =
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
-let new_implicit_var_aux reason r env k should_check =
+let new_implicit_var_aux reason r env k should_check meta =
     match U.destruct k FStar.Parser.Const.range_of_lid with
      | Some [_; (tm, _)] ->
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) None tm.pos in
@@ -1650,7 +1649,8 @@ let new_implicit_var_aux reason r env k should_check =
           ctx_uvar_typ=k;
           ctx_uvar_reason=reason;
           ctx_uvar_should_check=should_check;
-          ctx_uvar_range=r
+          ctx_uvar_range=r;
+          ctx_uvar_meta=meta;
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
       let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
@@ -1658,7 +1658,7 @@ let new_implicit_var_aux reason r env k should_check =
                 ; imp_tm     = t
                 ; imp_uvar   = ctx_uvar
                 ; imp_range  = r
-                ; imp_meta   = None } in
+                } in
       let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
 

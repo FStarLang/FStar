@@ -32,8 +32,7 @@ open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 open FStar.Syntax
-open FStar.Syntax
-open FStar.Syntax
+open FStar.Dyn
 
 type lcomp_with_binder = option<bv> * lcomp
 
@@ -54,7 +53,7 @@ let report env errs =
 (* Unification variables *)
 (************************************************************************)
 let new_implicit_var reason r env k =
-    new_implicit_var_aux reason r env k Strict
+    new_implicit_var_aux reason r env k Strict None
 
 let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
     if not <| Options.eager_subtyping() then g else
@@ -1200,14 +1199,12 @@ let maybe_instantiate (env:Env.env) e t =
 
                   | _, (x, Some (Meta tau))::rest ->
                       let t = SS.subst subst x.sort in
-                      let v, _, g = new_implicit_var "Instantiation of meta argument" e.pos env t in
+                      let v, _, g = new_implicit_var_aux "Instantiation of meta argument"
+                                                         e.pos env t Strict
+                                                         (Some (mkdyn env, tau)) in
                       if Env.debug env Options.High then
                         BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
                                 (Print.term_to_string v);
-                      let mark_meta_implicits tau g =
-                          { g with implicits =
-                              List.map (fun imp -> { imp with imp_meta = Some (env, tau) }) g.implicits } in
-                      let g = mark_meta_implicits tau g in
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
                       (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
@@ -1381,8 +1378,8 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
 
      let lecs = lec_hd :: lecs in
 
-     let gen_types (uvs:list<ctx_uvar>) =
-         let fail k =
+     let gen_types (uvs:list<ctx_uvar>) : list<(bv * aqual)> =
+         let fail k : unit =
              let lbname, e, c = lec_hd in
                raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                             BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"

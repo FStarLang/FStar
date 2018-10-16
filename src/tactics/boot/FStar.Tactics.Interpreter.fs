@@ -779,7 +779,7 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
 let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (Options.Other "Tac");
-    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped in
+    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped None in
 
     let u = env.universe_of env typ in
     let goal = U.mk_squash u (U.mk_eq2 u typ tm uvtm) in
