@@ -44,28 +44,32 @@ let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
                     compatible_sub_preorder len rel i1 j1 rel1 /\
                     compatible_sub_preorder (j1 - i1) rel1 i2 j2 rel2))
 	 (ensures  (compatible_sub_preorder len rel (i1 + i2) (i1 + j2) rel2))
-  = let aux0 (s1 s2:Seq.seq a) :Lemma ((Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>
-                                       (rel2 (Seq.slice s1 (i1 + i2) (i1 + j2)) (Seq.slice s2 (i1 + i2) (i1 + j2))))
-      = if FStar.StrongExcludedMiddle.strong_excluded_middle (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) then begin
-          assert (rel1 (Seq.slice s1 i1 j1) (Seq.slice s2 i1 j1));
-	  assert (rel2 (Seq.slice (Seq.slice s1 i1 j1) i2 j2) (Seq.slice (Seq.slice s2 i1 j1) i2 j2));
-	  assert (Seq.equal (Seq.slice (Seq.slice s1 i1 j1) i2 j2) (Seq.slice s1 (i1 + i2) (i1 + j2)));
-	  assert (Seq.equal (Seq.slice (Seq.slice s2 i1 j1) i2 j2) (Seq.slice s2 (i1 + i2) (i1 + j2)))
-        end
+  = let t1 (s1 s2:Seq.seq a) = Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2 in
+    let t2 (s1 s2:Seq.seq a) = t1 s1 s2 /\ rel2 (Seq.slice s1 (i1 + i2) (i1 + j2)) (Seq.slice s2 (i1 + i2) (i1 + j2)) in
+  
+    let aux0 (s1 s2:Seq.seq a) :Lemma (t1 s1 s2 ==> t2 s1 s2)
+      = Classical.arrow_to_impl #(t1 s1 s2) #(t2 s1 s2)
+          (fun _ ->
+           assert (rel1 (Seq.slice s1 i1 j1) (Seq.slice s2 i1 j1));
+	   assert (rel2 (Seq.slice (Seq.slice s1 i1 j1) i2 j2) (Seq.slice (Seq.slice s2 i1 j1) i2 j2));
+	   assert (Seq.equal (Seq.slice (Seq.slice s1 i1 j1) i2 j2) (Seq.slice s1 (i1 + i2) (i1 + j2)));
+	   assert (Seq.equal (Seq.slice (Seq.slice s2 i1 j1) i2 j2) (Seq.slice s2 (i1 + i2) (i1 + j2))))
     in
 
-    let aux1 (s s2:Seq.seq a) :Lemma ((Seq.length s == len /\ Seq.length s2 == j2 - i2 /\
-                                       rel2 (Seq.slice s (i1 + i2) (i1 + j2)) s2) ==>
-				      (rel s (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2)))
-      = if FStar.StrongExcludedMiddle.strong_excluded_middle (Seq.length s == len /\ Seq.length s2 == j2 - i2 /\
-                                                              rel2 (Seq.slice s (i1 + i2) (i1 + j2)) s2) then begin
-      	  assert (Seq.equal (Seq.slice s (i1 + i2) (i1 + j2)) (Seq.slice (Seq.slice s i1 j1) i2 j2));
-          assert (rel1 (Seq.slice s i1 j1) (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2));
-	  assert (rel s (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2)));
-	  assert (Seq.equal (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2))
-	                    (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2))
-	end
+
+    let t1 (s s2:Seq.seq a) = Seq.length s == len /\ Seq.length s2 == j2 - i2 /\
+                              rel2 (Seq.slice s (i1 + i2) (i1 + j2)) s2 in
+    let t2 (s s2:Seq.seq a) = t1 s s2 /\ rel s (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2) in
+    let aux1 (s s2:Seq.seq a) :Lemma (t1 s s2 ==> t2 s s2)
+      = Classical.arrow_to_impl #(t1 s s2) #(t2 s s2)
+          (fun _ ->
+      	   assert (Seq.equal (Seq.slice s (i1 + i2) (i1 + j2)) (Seq.slice (Seq.slice s i1 j1) i2 j2));
+           assert (rel1 (Seq.slice s i1 j1) (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2));
+	   assert (rel s (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2)));
+	   assert (Seq.equal (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2))
+	                     (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2)))
     in
+
     Classical.forall_intro_2 aux0; Classical.forall_intro_2 aux1
 
 noeq type mbuffer (a:Type0) (rrel:srel a) (rel:srel a) :Type0 =
@@ -1021,9 +1025,8 @@ private let lemma_stable_on_rel_is_stable_on_rrel (#a:Type0) (#rrel #rel:srel a)
   = let Buffer _ content _ _ () = b in
     let mp = spred_as_mempred b p in
     let aux (h0 h1:HS.mem) :Lemma ((mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content)) ==> mp h1)
-      = if FStar.StrongExcludedMiddle.strong_excluded_middle (mp h0 /\ rrel (HS.sel h0 content)
-                                                                           (HS.sel h1 content)) then
-	  assert (rel (as_seq h0 b) (as_seq h1 b))
+      = Classical.arrow_to_impl #(mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content)) #(mp h1)
+          (fun _ -> assert (rel (as_seq h0 b) (as_seq h1 b)))
     in
     Classical.forall_intro_2 aux
 
@@ -1129,7 +1132,7 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
     g_upd_seq_as_seq dst s2' h  //for modifies clause
 #pop-options
 
-#push-options "--z3rlimit 32 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#push-options "--z3rlimit 32 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1"
 let fill' (#t:Type) (#rrel #rel: srel t)
   (b: mbuffer t rrel rel)
   (z:t)

@@ -300,9 +300,7 @@ let collect_grows (f:'a -> Tot (seq 'b))
           let s2_prefix, s2_last = un_snoc s2 in
           collect_grows_aux f s1 s2_prefix
     in
-    //AR: wanted to use move_requires here, but that gives an error, probably because of decreases clause?
-    if StrongExcludedMiddle.strong_excluded_middle (grows s1 s2) then collect_grows_aux f s1 s2
-    else ()
+    Classical.arrow_to_impl #(grows s1 s2) #(grows (collect f s1) (collect f s2)) (fun _ -> collect_grows_aux f s1 s2)
   
 let collect_prefix (#a:Type) (#b:Type) (#i:rid)
 		   (r:m_rref i (seq a) grows)

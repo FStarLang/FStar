@@ -76,9 +76,9 @@ let lemma_sel_same_addr #_ #_ _ _ _ = ()
 
 let lemma_upd_same_addr #_ #_ h r1 r2 x =
   FStar.Monotonic.Heap.lemma_heap_equality_upd_same_addr (Map.sel h.h (frameOf r1)) (as_ref r1) (as_ref r2) x;
-  if StrongExcludedMiddle.strong_excluded_middle (h `contains` r1) then
-    lemma_sel_same_addr h r1 r2
-  else lemma_sel_same_addr h r2 r1
+  Classical.or_elim #(h `contains` r1) #(~ (h `contains` r1))
+                    #(fun _ -> h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x)
+                    (fun _ -> lemma_sel_same_addr h r1 r2) (fun _ -> lemma_sel_same_addr h r2 r1)
 
 let mreference_distinct_sel_disjoint #_ #_ #_ h r1 r2 =
   Heap.lemma_distinct_addrs_distinct_preorders ();
