@@ -372,16 +372,25 @@ let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
   Lemma
     (ensures (
         let l1, l2 = split_using l x in
-        (length l2 > 0) /\
-        ~(x `memP` l1) /\ (hd l2 == x) /\
-        append l1 l2 == l))
-    [SMTPat (split_using l x)] =
+         length l2 > 0 /\
+        ~(x `memP` l1) /\
+         hd l2 == x /\
+        append l1 l2 == l)) =
   match l with
   | [_] -> ()
   | a :: as ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x)
-    then ()
-    else lemma_split_using (tl l) x
+    let goal =
+      let l1, l2 = split_using l x in
+        length l2 > 0 /\
+        ~(x `memP` l1) /\
+         hd l2 == x /\
+        append l1 l2 == l
+    in
+    FStar.Classical.or_elim
+      #_ #_
+      #(fun () -> goal)
+      (fun (_:squash (a == x)) -> ())
+      (fun (_:squash (x `memP` as)) -> lemma_split_using as x)
 
 (** Definition of [index_of] *)
 
