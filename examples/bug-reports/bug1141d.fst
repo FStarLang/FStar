@@ -23,3 +23,5 @@ let rec f () : ID False = f ()
 
 [@(expect_failure [34])]
 let x () : False = reify (f ()) ()
+
+let y () : Dv False = reify (f ()) ()
