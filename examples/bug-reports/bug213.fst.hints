@@ -2,15 +2,6 @@
   "Aî\u0016‰[²òžs’¿`‰Ð.£",
   [
     [
-      "Bug213.intPair",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2b400a78e963b398d85f4c4c4d9692aa"
-    ],
-    [
       "Bug213.__proj__ExIntro__item___1",
       1,
       2,
@@ -20,7 +11,7 @@
         "projection_inverse_Bug213.ExIntro_x"
       ],
       0,
-      "e316e12588e71c1de79526a45e52d479"
+      "97152c7983c8482f29bd308f411f7b38"
     ],
     [
       "Bug213.__proj__ExIntro'__item__p",
@@ -32,7 +23,7 @@
         "projection_inverse_Bug213.ExIntro__a"
       ],
       0,
-      "34be9dd0f4dc098952600aaab91b63d9"
+      "e2998d121cc94b612ec15ebb75da4d7f"
     ],
     [
       "Bug213.__proj__ExIntro'__item__x",
@@ -44,7 +35,7 @@
         "projection_inverse_Bug213.ExIntro__a"
       ],
       0,
-      "0de8cb154988e11372a80c36cee29463"
+      "11ad7bdb124537a1e37357c65c2cb847"
     ],
     [
       "Bug213.__proj__ExIntro'__item___3",
@@ -59,7 +50,7 @@
         "token_correspondence_Bug213.__proj__ExIntro___item__p"
       ],
       0,
-      "82a5a7ddf0fd37a2090f83f51ef27acc"
+      "2c6e768652295644c80edf32b955a916"
     ]
   ]
 ]

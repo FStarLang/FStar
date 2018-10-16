@@ -167,6 +167,7 @@ let defaults =
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
+      ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -291,6 +292,7 @@ let get_admit_except            ()      = lookup_opt "admit_except"             
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
+let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -582,6 +584,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "cache_off",
         Const (mk_bool true),
         "Do not read or write any .checked files");
+
+      ( noshort,
+        "cmi",
+        Const (mk_bool true),
+        "Inline across module interfaces during extraction (aka. cross-module inlining)");
 
       ( noshort,
         "codegen",
@@ -1352,6 +1359,7 @@ let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
+let cmi                          () = get_cmi                         ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
 let codegen                      () =
     Util.map_opt

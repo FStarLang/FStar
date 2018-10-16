@@ -2,15 +2,6 @@
   "Çc!ë-Ü´\tèVîô≈8«ﬁ",
   [
     [
-      "Clear.tau2",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "c948f101a1f76e0d3d44f80067474164"
-    ],
-    [
       "Clear.l2",
       1,
       2,
@@ -21,7 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "0c0c915b350df977fb71a97330684635"
+      "b77dfc64805f5b05c56859fe6821101f"
     ]
   ]
 ]

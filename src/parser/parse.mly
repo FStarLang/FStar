@@ -543,6 +543,12 @@ tvar:
 
 thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
+thunk2(X):
+  | t=X
+     { let u = mk_term (Const Const_unit) (rhs parseState 3) Expr in
+       let t = mk_term (Seq (u, t)) (rhs parseState 3) Expr in
+       mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+
 ascribeTyp:
   | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }
 
@@ -623,7 +629,7 @@ noSeqTerm:
       { let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
 
-  | ASSERT e=atomicTerm tactic_opt=option(BY tactic=thunk(typ) {tactic})
+  | ASSERT e=atomicTerm tactic_opt=option(BY tactic=thunk2(typ) {tactic})
       {
         match tactic_opt with
         | None ->
@@ -793,15 +799,21 @@ tmNoEqWith(X):
       { consTerm (rhs parseState 2) e1 e2 }
   | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
       {
-        let x, t, f = match extract_named_refinement e1 with
-            | Some (x, t, f) -> x, t, f
-            | _ -> raise_error (Fatal_MissingQuantifierBinder, "Missing binder for the first component of a dependent tuple") (rhs parseState 1) in
-        let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
-        let tail = e2 in
-        let dom, res = match tail.tm with
-            | Sum(dom', res) -> dom::dom', res
-            | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
+            let dom =
+               match extract_named_refinement e1 with
+               | Some (x, t, f) ->
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 Inl dom
+               | _ ->
+                 Inr e1
+            in
+            let tail = e2 in
+            let dom, res =
+                match tail.tm with
+                | Sum(dom', res) -> dom::dom', res
+                | _ -> [dom], tail
+            in
+            mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       }
   | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}

@@ -5,11 +5,13 @@ open FStar.UInt
 module S = X64.Semantics_s
 module M = TransparentMap
 
+module F = FStar.FunctionalExtensionality
+
 #reset-options "--initial_fuel 2 --max_fuel 2"
 
 let state_to_S (s:state) : S.state = {
   S.ok = s.ok;
-  S.regs = (fun r -> S.u (s.regs r));
+  S.regs = F.on_dom reg (fun r -> S.u (s.regs r));
   S.flags = S.u (int_to_nat64 s.flags);
   S.mem =
     (let mappings i = S.u (Map.sel s.mem i) in
@@ -19,7 +21,7 @@ let state_to_S (s:state) : S.state = {
 let state_of_S (s:S.state) : state =
   let { S.ok = ok; S.regs = regs; S.flags = flags; S.mem = mem } = s in {
     ok = ok;
-    regs = (fun r -> UInt64.v (regs r));
+    regs = F.on_dom reg (fun r -> (UInt64.v (regs r) <: nat64));
     flags = UInt64.v flags;
     mem =
       (let mappings i = UInt64.v (Map.sel mem i) in

@@ -585,7 +585,10 @@ let rec append (l1 l2:listptr)
                 ignore (implies_intro ());
 		apply_lemma (`lemma_frame_out_empty_left);
 		split_and_smt ();
-		ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ());
+		ignore (implies_intro ());
+		ignore (forall_intro ());
+		ignore (implies_intro ());
+
 		split_and_smt ();
 		apply_lemma (`lemma_frame_out_empty_left);
 		smt ();
@@ -691,6 +694,7 @@ let rec append (l1 l2:listptr)
 		split_and_smt ();
 		ignore (implies_intro ());
 		apply_lemma (`lemma_rw);
+		//AR: can't prove definedness hereon
 		ignore (repeatn 2 split_and_smt);
 		apply_lemma (`lemma_frame_out_empty_left);
 		split_and_smt ();
@@ -747,7 +751,9 @@ let rec rev_append (l1:listptr) (l2:listptr)
                ignore (implies_intro ());
 	       apply_lemma (`lemma_frame_out_empty_left);
 	       split_and_smt ();
-	       ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ());
+	       ignore (implies_intro ());
+	       ignore (forall_intro ());
+	       ignore (implies_intro ());
 	       split_and_smt ();
 	       apply_lemma (`lemma_frame_out_empty_left);
 	       smt ();

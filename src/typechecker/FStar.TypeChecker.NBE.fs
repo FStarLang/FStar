@@ -673,7 +673,7 @@ and readback_residual_comp cfg (c:residual_comp) : S.residual_comp =
       S.residual_typ = BU.map_opt c.residual_typ (readback cfg);
       S.residual_flags = List.map (readback_flag cfg) c.residual_flags }
 
-and translate_flag cfg bs (f : S.cflags) : cflags =
+and translate_flag cfg bs (f : S.cflag) : cflag =
     match f with
     | S.TOTAL -> TOTAL
     | S.MLEFFECT -> MLEFFECT
@@ -686,7 +686,7 @@ and translate_flag cfg bs (f : S.cflags) : cflags =
     | S.CPS -> CPS
     | S.DECREASES tm -> DECREASES (translate cfg bs tm)
 
-and readback_flag cfg (f : cflags) : S.cflags =
+and readback_flag cfg (f : cflag) : S.cflag =
     match f with
     | TOTAL -> S.TOTAL
     | MLEFFECT -> S.MLEFFECT

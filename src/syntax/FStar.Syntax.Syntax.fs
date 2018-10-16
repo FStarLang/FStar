@@ -175,7 +175,7 @@ and comp_typ = {
   effect_name:lident;
   result_typ:typ;
   effect_args:args;
-  flags:list<cflags>
+  flags:list<cflag>
 }
 and comp' =
   | Total  of typ * option<universe>
@@ -189,16 +189,16 @@ and arg = term * aqual                                           (* marks an exp
 and args = list<arg>
 and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
-and cflags =
-  | TOTAL
-  | MLEFFECT
-  | RETURN
-  | PARTIAL_RETURN
-  | SOMETRIVIAL
-  | TRIVIAL_POSTCONDITION
-  | SHOULD_NOT_INLINE
-  | LEMMA
-  | CPS
+and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
+  | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
+  | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
+  | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
+  | RETURN                                                         (* the WP is return_wp of something *)
+  | PARTIAL_RETURN                                                 (* the WP is return_wp of something, possibly strengthened with some precondition *)
+  | SOMETRIVIAL                                                    (* the WP is the null wp *)
+  | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
+  | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
+  | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of term
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
@@ -255,7 +255,7 @@ and free_vars = {
 and residual_comp = {
     residual_effect:lident;                (* first component is the effect name *)
     residual_typ   :option<typ>;           (* second component: result type *)
-    residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
+    residual_flags :list<cflag>            (* third component: contains (an approximation of) the cflags *)
 }
 
 and attribute = term
@@ -298,7 +298,7 @@ and aqual = option<arg_qualifier>
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
-    cflags: list<cflags>;
+    cflags: list<cflag>;
     comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
@@ -371,7 +371,7 @@ type action = {
     action_typ: typ
 }
 type eff_decl = {
-    cattributes :list<cflags>;
+    cattributes :list<cflag>;
     mname       :lident;
     univs       :univ_names;
     binders     :binders;
@@ -416,9 +416,9 @@ type sigelt' =
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
                        * list<lident>               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon        of lident
+  | Sig_datacon        of lident                    //name of the datacon
                        * univ_names                 //universe variables of the inductive type it belongs to
-                       * typ
+                       * typ                        //the constructor's type as an arrow
                        * lident                     //the inductive type of the value this constructs
                        * int                        //and the number of parameters of the inductive
                        * list<lident>               //mutually defined types
@@ -438,7 +438,7 @@ type sigelt' =
                        * univ_names
                        * binders
                        * comp
-                       * list<cflags>
+                       * list<cflag>
   | Sig_pragma         of pragma
   | Sig_splice         of list<lident> * term
 and sigelt = {
@@ -559,13 +559,13 @@ let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
 let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
-let mk_lb (x, univs, eff, t, e, pos) = {
+let mk_lb (x, univs, eff, t, e, attrs, pos) = {
     lbname=x;
     lbunivs=univs;
     lbtyp=t;
     lbeff=eff;
     lbdef=e;
-    lbattrs=[];
+    lbattrs=attrs;
     lbpos=pos;
   }
 
@@ -697,6 +697,7 @@ let t_unit      = tconst PC.unit_lid
 let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid
 let t_string    = tconst PC.string_lid
+let t_exn       = tconst PC.exn_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid

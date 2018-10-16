@@ -2,24 +2,13 @@
   "(ìÅÇ\u0004s7œø\u000bõ†ÒÚa¸",
   [
     [
-      "IfcDeclassify.state",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
-      ],
-      0,
-      "d595ff79fcbd40669c256c157f0f08d9"
-    ],
-    [
       "IfcDeclassify._dm4f_STATE___proj__STATE__item__get_elab",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "73eb7bd6d83df038ffd1c3eb8d0eb077"
+      "cdfa1138b4dc7f6f0798d626510527f6"
     ],
     [
       "IfcDeclassify._dm4f_STATE___proj__STATE__item__put_elab",
@@ -28,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "ec84c4cf98de5c87fc6c4cee596d070a"
+      "e889fd71aa276c4653b65cca92c3c930"
     ],
     [
       "IfcDeclassify.STATE",
@@ -37,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "a6fba0f800a53613e1e551bb78b7c6a7"
+      "700f59c44adc604695dc32f00bb2e85e"
     ],
     [
       "IfcDeclassify.STATE",
@@ -46,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "e61bc225b44a11ee5ee3a2ced61d6e26"
+      "27d48a886a8bccaa3d44af42415b47d4"
     ],
     [
       "IfcDeclassify.ni_p1",
@@ -73,7 +62,7 @@
         "unit_typing"
       ],
       0,
-      "2a91d5a7546602076e4017427de93ddc"
+      "b0677e1c0a1e9e227f1d53751dc238f1"
     ],
     [
       "IfcDeclassify.ni_p2",
@@ -102,7 +91,7 @@
         "unit_typing"
       ],
       0,
-      "9efa3d34b3f0bfa10b093ecea6efda7e"
+      "571234a89d1899c6859fe64739ac7286"
     ],
     [
       "IfcDeclassify.ni_p4",
@@ -124,18 +113,7 @@
         "projection_inverse_IfcDeclassify.Mkstate_release", "unit_typing"
       ],
       0,
-      "d265b47b21074e5c23b34d4846f1449b"
-    ],
-    [
-      "IfcDeclassify.state",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
-      ],
-      0,
-      "7d25723e2e09decf5403b2b8fc185dfc"
+      "83c692a4473c0aa50669c37ed4cbc64c"
     ],
     [
       "IfcDeclassify._dm4f_STATE___proj__STATE__item__get_elab",
@@ -144,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "e8c31c954e7612d1575d1b2e5456204d"
+      "c4cdf66b02374517113ea88220b4a4f4"
     ],
     [
       "IfcDeclassify._dm4f_STATE___proj__STATE__item__put_elab",
@@ -153,7 +131,7 @@
       1,
       [ "@query" ],
       0,
-      "396055aa8b70653c3f99d3c009ff09da"
+      "9e5931c81fb2ef87216389176e42e5c1"
     ],
     [
       "IfcDeclassify.STATE",
@@ -162,7 +140,7 @@
       1,
       [ "@query" ],
       0,
-      "43879d166456612d71f6480cf55fd0ae"
+      "0cf2be6145b00fafd36006a5bdcdff33"
     ],
     [
       "IfcDeclassify.STATE",
@@ -171,7 +149,7 @@
       1,
       [ "@query" ],
       0,
-      "9e354d34d2ee4347af49b9f1ca126f85"
+      "f719970caaf793cb3974bcedfa31a45a"
     ]
   ]
 ]

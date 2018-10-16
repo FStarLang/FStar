@@ -139,9 +139,9 @@ let r_dassl
 let flip_flip
   (phi: gexp bool)
 : Lemma
-  (flip (flip phi) == phi)
+  (forall h1 h2. (flip (flip phi)) h1 h2 == phi h1 h2)
   [SMTPat (flip (flip phi))]
-= gfeq2 (flip (flip phi)) phi
+= ()
 
 let r_dassr
   (x: var)
@@ -170,7 +170,7 @@ let d_su1'_flip
   ]]
 = d_su1' c c' c'' (flip phi) (flip phi') (flip phi'')
 
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 40"
 let sec43
   (i n x y: var)
   (diffs: squash (List.Tot.noRepeats [i; n; x; y] == true))

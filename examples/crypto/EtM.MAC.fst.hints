@@ -11,7 +11,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "34b901e5c94bf2edc64e226fcd2fbb63"
+      "ec363791ac6987be037b3c35e4f3f30d"
     ],
     [
       "EtM.MAC.tag",
@@ -24,25 +24,16 @@
         "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1d8ea0bf4748af74beb01ad6f4e94743"
+      "3ceaecec6fa253dba2793f818e70d859"
     ],
     [
       "EtM.MAC.sha1",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "c6c4d23eea57cc953eecbeaea5ca369d"
-    ],
-    [
-      "EtM.MAC.sha1",
-      2,
       2,
       1,
       [ "@query", "equation_EtM.MAC.macsize" ],
       0,
-      "13387a6e5c1834f40f755dc09074687c"
+      "19b5e881b99314ad9ebaa90bf4d77580"
     ],
     [
       "EtM.MAC.hmac_sha1",
@@ -54,7 +45,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a1e78881b119db7f9138caa3ecc22dbd"
+      "1eebee5f3bfac18b9700a745eff791f4"
     ],
     [
       "EtM.MAC.__proj__Key__item__log",
@@ -66,7 +57,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "b0155ddec99ff892d24404546f522282"
+      "ae3c7285d939352363c36eb1a0bee10d"
     ],
     [
       "EtM.MAC.keygen",
@@ -158,7 +149,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "25a254428d7e4ec30e70570d291d7aac"
+      "2c52055ab7917ae4936a833af2532235"
     ],
     [
       "EtM.MAC.mac",
@@ -195,7 +186,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "9f523038d0a9aa3d783c604eac4ca852"
+      "1e7becabc689e0525d0f96bdd0aafb06"
     ],
     [
       "EtM.MAC.verify",
@@ -218,7 +209,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "ade1a8aa2ab814cc3b02244861607883"
+      "dbc726ca3f29230c6f9f442229874f70"
     ],
     [
       "EtM.MAC.verify",
@@ -294,7 +285,85 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "f14f1555e39385e74d0040efff6cc049"
+      "f2165e5efb187b857cbe4833b2b5fa89"
+    ],
+    [
+      "EtM.MAC.sha1_key",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_EtM.MAC.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "e338fb8891324f80443b4569b13bdb2a"
+    ],
+    [
+      "EtM.MAC.tag",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_CoreCrypto.SHA1",
+        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize",
+        "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "51d897bf32480da11813fb0ac1a0deda"
+    ],
+    [
+      "EtM.MAC.sha1",
+      2,
+      2,
+      1,
+      [ "@query", "equation_EtM.MAC.macsize" ],
+      0,
+      "8ccd77905c3b6edf54cbe62de95709fc"
+    ],
+    [
+      "EtM.MAC.hmac_sha1",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_EtM.MAC.blocksize", "equation_EtM.MAC.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "0bb20ec278700b38a99a24b5d2e4dd00"
+    ],
+    [
+      "EtM.MAC.__proj__Key__item__log",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_EtM.MAC.Key_region",
+        "projection_inverse_EtM.MAC.Key_region"
+      ],
+      0,
+      "4b2876495365cf7ce845f4d51028f5b3"
+    ],
+    [
+      "EtM.MAC.verify",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.CPA.cipher",
+        "equation_EtM.CPA.ivsize", "equation_EtM.MAC.log_entry",
+        "equation_EtM.MAC.macsize", "equation_EtM.MAC.msg",
+        "equation_EtM.MAC.tag", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "function_token_typing_EtM.CPA.cipher",
+        "function_token_typing_EtM.MAC.tag",
+        "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+      ],
+      0,
+      "dc479fb8230cdcd78bc4575cbf0e0faf"
     ]
   ]
 ]

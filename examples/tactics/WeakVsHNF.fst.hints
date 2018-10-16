@@ -2,15 +2,6 @@
   "›Ï\u000bVLªÌFl@|èÐ’Æ¦",
   [
     [
-      "WeakVsHNF.wint",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "8e432438708f0f13082572acbf13a47f"
-    ],
-    [
       "WeakVsHNF.guard",
       1,
       2,
@@ -19,23 +10,16 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_FStar.Tactics.Result.Success",
+        "equation_Prims.eqtype",
         "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_Prims.string",
         "lemma_FStar.Tactics.Result.result_split",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Tactics.Result.uu___is_Failed",
         "typing_FStar.Tactics.Result.uu___is_Success"
       ],
       0,
-      "ca795f8a0df84f2b7c2ef79c5ed8d5af"
-    ],
-    [
-      "WeakVsHNF.wint",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "21dcd74af99782465dd686a41720ca12"
+      "3cc0781624b2e38fea1d1f5fe5037339"
     ]
   ]
 ]

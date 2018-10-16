@@ -11,7 +11,7 @@
         "projection_inverse_HyE.CCA2.PKey_region"
       ],
       0,
-      "6c1d0bc3c6bde4816a0891b6fed8e296"
+      "867a1a69f95f293e33a62382b7dde8e0"
     ],
     [
       "HyE.CCA2.keygen",
@@ -43,7 +43,7 @@
         "typing_FStar.Monotonic.HyperStack.get_hmap"
       ],
       0,
-      "f31aaef2d6ca2588f868ff1ff3b9007c"
+      "3327ebc36479951e7faa46170b888bc1"
     ],
     [
       "HyE.CCA2.encrypt",
@@ -55,16 +55,29 @@
         "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "assumption_Platform.Bytes.HasEq_bytes", "bool_inversion",
         "data_typing_intro_FStar.Pervasives.V@tok",
-        "equation_HyE.Ideal.conf", "equation_HyE.RSA.cipher",
-        "equation_HyE.RSA.plain", "equation_HyE.RSA.plainsize",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_FStar.Monotonic.HyperHeap.hmap",
+        "equation_FStar.Monotonic.HyperStack.is_tip",
+        "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
+        "equation_FStar.Monotonic.HyperStack.mem", "equation_HyE.Ideal.conf",
+        "equation_HyE.RSA.cipher", "equation_HyE.RSA.plain",
+        "equation_HyE.RSA.plainsize", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_HyE.CCA2.pkey",
+        "function_token_typing_FStar.Monotonic.Heap.heap",
+        "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_HyE.Ideal.ind_cca",
         "function_token_typing_HyE.RSA.cipher",
         "function_token_typing_HyE.RSA.plain",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "lemma_FStar.Map.lemma_ContainsDom",
+        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "refinement_interpretation_HyE.CCA2_Tm_refine_6e5e30b8a35b3df5111e4e25b1b2bf65",
+        "typing_FStar.Map.contains",
+        "typing_FStar.Monotonic.HyperStack.get_hmap",
+        "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "5256f104b25ec455c42e23c06f505ab5"
+      "c2fbcdbcd910492874b2b28b41d85588"
     ],
     [
       "HyE.CCA2.decrypt",
@@ -105,7 +118,7 @@
         "typing_HyE.CCA2.__proj__SKey__item__pk"
       ],
       0,
-      "6e9828ca9c910ac4543ab857a04a19fd"
+      "436b5bbacc94c4c9f888bcb0c928bfde"
     ]
   ]
 ]

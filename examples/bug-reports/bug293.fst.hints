@@ -6,33 +6,12 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b60c3771f85f467592a8d2c7cfaa481c"
-    ],
-    [
-      "Bug293.test",
-      2,
-      2,
-      1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
       ],
       0,
-      "faa6898a0fdcff29c159dde6006e9f8f"
-    ],
-    [
-      "Bug293.test",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
-      ],
-      0,
-      "a83bb2caaf51a17c454a93731fa901a0"
+      "d965d40a57acb8a651d365dd780efc50"
     ]
   ]
 ]

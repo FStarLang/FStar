@@ -67,22 +67,19 @@ let renaming_sub_inc _ = ()
 
 let is_var (e:exp) : int = if EVar? e then 0 else 1
 
+val sub_elam: s:sub -> var -> Tot (e:exp{renaming s ==> EVar? e})
+                                (decreases %[1;is_renaming s; 0; EVar 0])
 val subst : s:sub -> e:exp -> Pure exp (requires True)
      (ensures (fun e' -> (renaming s /\ EVar? e) ==> EVar? e'))
-     (decreases %[is_var e; is_renaming s; e])
+     (decreases %[is_var e; is_renaming s; 1; e])
 let rec subst s e =
   match e with
   | EVar x -> s x
-  | ELam t e1 ->
-     let sub_elam : y:var -> Tot (e:exp{renaming s ==> EVar? e}) =
-       fun y -> if y=0 then EVar y
-                       else subst sub_inc (s (y-1))            (* shift +1 *)
-     in ELam t (subst sub_elam e1)
+  | ELam t e1 -> ELam t (subst (sub_elam s) e1)
   | EApp e1 e2 -> EApp (subst s e1) (subst s e2)
   | EUnit -> EUnit
 
-val sub_elam: s:sub -> Tot sub
-let sub_elam s y = if y=0 then EVar y
+and sub_elam s y = if y=0 then EVar y
                    else subst sub_inc (s (y-1))
 
 val sub_beta : exp -> Tot sub
@@ -163,7 +160,18 @@ val subst_extensional: s1:sub -> s2:sub{feq s1 s2} -> e:exp ->
                        Lemma (requires True)
                              (ensures (subst s1 e = subst s2 e))
                              [SMTPat (subst s1 e); SMTPat (subst s2 e)]
-let subst_extensional s1 s2 e = ()
+let rec subst_extensional s1 s2 e =
+  let open FStar.Tactics in
+  match e with
+  | EVar _ -> ()
+  | ELam t e1 ->
+    assert (subst s1 (ELam t e1) == ELam t (subst (sub_elam s1) e1))
+      by norm [delta_only [`%subst]];
+    assert (subst s2 (ELam t e1) == ELam t (subst (sub_elam s2) e1))
+      by norm [delta_only [`%subst]];
+    subst_extensional (sub_elam s1) (sub_elam s2) e1
+  | EApp e1 e2 -> subst_extensional s1 s2 e1; subst_extensional s1 s2 e2
+  | _ -> ()
 
 (* Typing of substitutions (very easy, actually) *)
 type subst_typing (s:sub) (g1:env) (g2:env) =

@@ -8,7 +8,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ccda4b92ba397b2e888ad9ec20c8cead"
+      "1bf8dca12c1888c2f0e4689788efb2c4"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -20,7 +20,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3d91760c4ac5cddd36e74be4ff277d54"
+      "7987b6b22172c7f26f5592779bcd80a8"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -47,7 +47,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "74b2f562da5bbb6cb68575f27373af67"
+      "f47f83f903f32680a2d80b1001ee1bb3"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -67,27 +67,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "966b5c9056bd86ceca19e91537c44105"
-    ],
-    [
-      "X64.Poly1305.Spec_s.poly1305_hash_blocks",
-      2,
-      1,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_4",
-        "binder_x_835ec214631cfc50b39ee6d7c6e833c3_5",
-        "equality_tok_Prims.LexTop@tok", "int_inversion", "int_typing",
-        "primitive_Prims.op_Equality",
-        "primitive_Prims.op_GreaterThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_4f38045f61bfb1f8c76e6886928538aa",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "cecf560dff879bc8217f352edbbb010e"
+      "f1f41e53bc97336c81589932f9e7be15"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -118,7 +98,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "af0fc09175e9d8aa2aa08b85cb362b83"
+      "da1e491d4219bdf2e5c2322a8273d65d"
     ],
     [
       "X64.Poly1305.Spec_s.uu___53",
@@ -127,7 +107,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "37c9e2a550e4786416c13151d7a048f9"
+      "ac8e11b2401c647488783fe4e69e3bc1"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -139,7 +119,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "8a585d659c3076d439919d625ec1516b"
+      "498dbbf20f71bb8cac10f005f086c0cb"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -166,20 +146,11 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "3f4c4220a24a36d340bef45b2e034d7c"
+      "bf32afe6db42b64cf30147b3311f2557"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
-      3,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "95b2e5009ed21a718dc0fb346d8c033f"
-    ],
-    [
-      "X64.Poly1305.Spec_s.poly1305_hash_blocks",
-      4,
+      2,
       1,
       0,
       [
@@ -195,7 +166,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bc14026caf83da114fd8a909100177ca"
+      "341292f99427f65b65d59ca7f231e185"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -226,7 +197,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "0232a2c6cb2d85cf652e80da5f4588c5"
+      "2c6285720b179f5f103c5b7d9d7e0aed"
     ]
   ]
 ]

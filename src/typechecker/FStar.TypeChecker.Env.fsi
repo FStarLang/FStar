@@ -50,6 +50,7 @@ type step =
   | Unmeta          //remove all non-monadic metas.
   | Unascribe
   | NBE
+  | ForExtraction   //marking an invocation of the normalizer for extraction
 and steps = list<step>
 
 val eq_step : step -> step -> bool
@@ -322,6 +323,9 @@ val is_reifiable_function    : env -> term -> bool
 (* reifying effects marked with the `reifiable` keyword. (For instance, TAC *)
 (* is reifiable but not user-reifiable.) *)
 val is_user_reifiable_effect : env -> lident -> bool
+
+(* Is this effect marked `total`? *)
+val is_total_effect : env -> lident -> bool
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders

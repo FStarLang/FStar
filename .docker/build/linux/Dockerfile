@@ -13,7 +13,6 @@ RUN chown everest ${MYHOME}/.ssh
 RUN chmod 700 ${MYHOME}/.ssh
 COPY --chown=everest id_rsa ${MYHOME}/.ssh/id_rsa
 RUN chmod 600 ${MYHOME}/.ssh/id_rsa
-RUN eval $(ssh-agent)
 
 # Copy FSTAR source code.
 RUN mkdir ${MYHOME}/FStar

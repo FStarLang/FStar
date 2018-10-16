@@ -6,31 +6,13 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "ef9dd5ebfdc788c2b9b19d38d1a4cf30"
-    ],
-    [
-      "Bug124.test",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3865f9a948cdab7fb33553df278572b8"
-    ],
-    [
-      "Bug124.test'",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "8596a54c8184981b45e1c4980f1f172b"
+      "a235a73c0a8b4c33b558f390519bd242"
     ]
   ]
 ]

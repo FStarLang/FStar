@@ -2,10 +2,13 @@ module FStar.Monotonic.Heap
 
 open FStar.Preorder
 open FStar.Classical
+module F = FStar.FunctionalExtensionality
 
 private noeq type heap_rec = {
-  next_addr: (x: nat { x > 0 } );
-  memory   : (x: nat { x > 0 } ) -> Tot (option (a:Type0 & rel:(option (preorder a)) & b:bool & a))  //type, preorder, mm flag, and value
+  next_addr: pos;
+  memory   : F.restricted_t pos (fun (x:pos) 
+             -> option (a:Type0 & rel:(option (preorder a)) & b:bool & a)) 
+                      //type, preorder, mm flag, and value
 }
 
 let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
@@ -19,8 +22,10 @@ let equal_extensional h1 h2 = ()
 
 let emp = {
   next_addr = 1;
-  memory    = (fun (r:nat) -> None)
+  memory    = F.on_dom pos (fun r -> None)
 }
+
+let next_addr h = h.next_addr
 
 private noeq type mref' (a:Type0) (rel:preorder a) :Type0 = {
   addr: (x: nat { x > 0 } );
@@ -33,8 +38,6 @@ let mref a rel = mref' a rel
 let addr_of #a #rel r = r.addr
 
 let is_mm #a #rel r = r.mm
-
-let compare_addrs #a #b #rel1 #rel2 r1 r2 = r1.addr = r2.addr
 
 let contains #a #rel h r =
   let _ = () in
@@ -58,9 +61,9 @@ let sel #a #rel h r =
   else r.init
 
 let upd_tot' (#a: Type0) (#rel: preorder a) (h: heap) (r: mref a rel) (x: a) =
-  { h with memory = (fun r' -> if r.addr = r'
-			    then Some (| a, Some rel, r.mm, x |)
-                            else h.memory r') }
+  { h with memory = F.on_dom pos (fun r' -> if r.addr = r'
+			                 then Some (| a, Some rel, r.mm, x |)
+                                         else h.memory r') }
 
 let upd_tot #a #rel h r x = upd_tot' h r x
 
@@ -71,23 +74,23 @@ let upd #a #rel h r x =
     if r.addr >= h.next_addr
     then
       { next_addr = r.addr + 1;
-        memory    = (fun r' -> if r' = r.addr
-	   		         then Some (| a, Some rel, r.mm, x |)
-                                 else h.memory r') }
+        memory    = F.on_dom pos (fun r' -> if r' = r.addr
+	   		                 then Some (| a, Some rel, r.mm, x |)
+                                         else h.memory r') }
     else
-      { h with memory = (fun r' -> if r' = r.addr
-				then Some (| a, Some rel, r.mm, x |)
-                                else h.memory r') }
+      { h with memory = F.on_dom pos (fun r' -> if r' = r.addr
+				             then Some (| a, Some rel, r.mm, x |)
+                                             else h.memory r') }
 
 let alloc #a rel h x mm =
   let r = { addr = h.next_addr; init = x; mm = mm } in
   r, { next_addr = r.addr + 1;
-       memory    = (fun r' -> if r' = r.addr
-	   		        then Some (| a, Some rel, r.mm, x |)
-                                else h.memory r') }
+       memory    = F.on_dom pos (fun r' -> if r' = r.addr
+	   		                then Some (| a, Some rel, r.mm, x |)
+                                        else h.memory r') }
 
 let free_mm #a #rel h r =
-  { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
+  { h with memory = F.on_dom pos (fun r' -> if r' = r.addr then None else h.memory r') }
 
 (*
  * update of a well-typed mreference
@@ -207,6 +210,12 @@ let lemma_heap_equality_commute_distinct_upds #a #b #rel_a #rel_b h r1 r2 x y =
   let h0 = upd (upd h r1 x) r2 y in
   let h1 = upd (upd h r2 y) r1 x in
   assert (equal h0 h1)
+
+let lemma_next_addr_upd_tot #_ #_ _ _ _ = ()
+let lemma_next_addr_upd #_ #_ _ _ _ = ()
+let lemma_next_addr_alloc #_ _ _ _ _ = ()
+let lemma_next_addr_free_mm #_ #_ _ _ = ()
+let lemma_next_addr_contained_refs_addr #_ #_ _ _ = ()
 
 (*** Untyped views of references *)
 

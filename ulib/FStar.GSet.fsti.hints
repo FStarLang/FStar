@@ -1,0 +1,51 @@
+[
+  "ï\u001a'þEðí†»†àkW¡cã",
+  [
+    [
+      "FStar.GSet.disjoint_not_in_both",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.GSet.disjoint", "lemma_FStar.GSet.lemma_equal_elim",
+        "lemma_FStar.GSet.mem_empty", "lemma_FStar.GSet.mem_intersect",
+        "primitive_Prims.op_AmpAmp", "typing_FStar.GSet.empty",
+        "typing_FStar.GSet.intersect", "typing_FStar.GSet.mem"
+      ],
+      0,
+      "c59df7498e06f6becf2de928646e3d0c"
+    ],
+    [
+      "FStar.GSet.as_set'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "64864c0e0de560acf2b340529ad342a2"
+    ],
+    [
+      "FStar.GSet.lemma_disjoint_subset",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.GSet.disjoint", "lemma_FStar.GSet.lemma_equal_elim",
+        "lemma_FStar.GSet.lemma_equal_intro", "lemma_FStar.GSet.mem_empty",
+        "lemma_FStar.GSet.mem_intersect", "lemma_FStar.GSet.subset_mem",
+        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.GSet.empty", "typing_FStar.GSet.intersect",
+        "typing_FStar.GSet.mem"
+      ],
+      0,
+      "7f7205e0c59ce99a4767c52a9b6b86a7"
+    ]
+  ]
+]

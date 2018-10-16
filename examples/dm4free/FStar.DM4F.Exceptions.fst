@@ -27,7 +27,7 @@ let bind_ex a b f g = fun _ ->
 let raise0 (a:Type) (e:exn) : ex a = fun _ -> Inr e
 
 (* Define the new effect using DM4F *)
-reifiable reflectable new_effect {
+total reifiable reflectable new_effect {
   EXN : (a:Type) -> Effect
   with repr     = ex
      ; bind     = bind_ex
@@ -78,7 +78,8 @@ exception Division_by_zero
 
 val div_intrinsic : i:nat -> j:int -> Exn int
   (requires True)
-  (ensures (function Inr Division_by_zero -> j=0 | Inl z -> j<>0 /\ z = i / j))
+  (ensures (function | Inr Division_by_zero -> j=0 | Inl z -> j<>0 /\ z = i / j
+                     | _ -> True))
 let div_intrinsic i j =
   if j=0 then raise Division_by_zero
   else i / j

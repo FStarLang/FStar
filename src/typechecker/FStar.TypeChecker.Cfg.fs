@@ -48,6 +48,7 @@ type fsteps = {
      in_full_norm_request: bool;
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
+     for_extraction:bool
 }
 
 let steps_to_string f =
@@ -135,6 +136,7 @@ let default_steps : fsteps = {
     in_full_norm_request = false;
     weakly_reduce_scrutinee = true;
     nbe_step = false;
+    for_extraction = false
 }
 
 let fstep_add_one s fs =
@@ -168,6 +170,7 @@ let fstep_add_one s fs =
     | Unmeta ->  { fs with unmeta = true }
     | Unascribe ->  { fs with unascribe = true }
     | NBE -> {fs with nbe_step = true }
+    | ForExtraction -> {fs with for_extraction = true }
 
 let to_fsteps (s : list<step>) : fsteps =
     List.fold_right fstep_add_one s default_steps
@@ -726,6 +729,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
           | "UInt32" -> Z.of_hex "ffffffff"
           | "UInt64" -> Z.of_hex "ffffffffffffffff"
           | "UInt128" -> Z.of_hex "ffffffffffffffffffffffffffffffff"
+          | _ -> failwith (BU.format1 "Impossible: bad string on mask: %s\n" m)
         in
         let bitwise =
           bounded_unsigned_int_types
@@ -796,15 +800,27 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     prim_from_list <| (strong_steps @ weak_steps)
 
 let equality_ops : BU.psmap<primitive_step> =
-    let interp_prop (psc:psc) _norm_cb (args:args) : option<term> =
+    let interp_prop_eq2 (psc:psc) _norm_cb (args:args) : option<term> =
         let r = psc.psc_range in
         match args with
-        | [(_typ, _); (a1, _); (a2, _)]    //eq2
-        | [(_typ, _); _; (a1, _); (a2, _)] ->    //eq3
+        | [(_typ, _); (a1, _); (a2, _)]  ->         //eq2
             (match U.eq_tm a1 a2 with
             | U.Equal -> Some ({U.t_true with pos=r})
             | U.NotEqual -> Some ({U.t_false with pos=r})
             | _ -> None)
+
+        | _ ->
+            failwith "Unexpected number of arguments"
+    in
+    let interp_prop_eq3 (psc:psc) _norm_cb (args:args) : option<term> =
+        let r = psc.psc_range in
+        match args with
+        | [(t1, _); (t2, _); (a1, _); (a2, _)] ->    //eq3       
+            (match U.eq_inj (U.eq_tm t1 t2) (U.eq_tm a1 a2) with
+            | U.Equal -> Some ({U.t_true with pos=r})
+            | U.NotEqual -> Some ({U.t_false with pos=r})
+            | _ -> None)
+
         | _ ->
             failwith "Unexpected number of arguments"
     in
@@ -815,8 +831,8 @@ let equality_ops : BU.psmap<primitive_step> =
          auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
-         interpretation = interp_prop;
-         interpretation_nbe = fun _cb -> NBETerm.interp_prop}
+         interpretation = interp_prop_eq2;
+         interpretation_nbe = fun _cb -> NBETerm.interp_prop_eq2}
     in
     let hetero_propositional_equality =
         {name = PC.eq3_lid;
@@ -825,8 +841,8 @@ let equality_ops : BU.psmap<primitive_step> =
          auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
-         interpretation = interp_prop;
-         interpretation_nbe = fun _cb -> NBETerm.interp_prop}
+         interpretation = interp_prop_eq3;
+         interpretation_nbe = fun _cb -> NBETerm.interp_prop_eq3}
     in
 
     prim_from_list [propositional_equality; hetero_propositional_equality]

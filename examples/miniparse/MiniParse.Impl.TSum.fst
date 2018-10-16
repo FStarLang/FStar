@@ -7,6 +7,7 @@ module M = LowStar.ModifiesPat
 module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
+#set-options "--z3rlimit 10"
 inline_for_extraction
 let parse_tagged_union_impl
   (#tag_t: Type0)

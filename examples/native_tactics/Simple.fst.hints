@@ -1,5 +1,5 @@
 [
-  "πìHö∂’ñ∫∞ãzcz≈gâ",
+  "P\u0002≥&qÃÀj™t¥\u0007)~ç\t",
   [
     [
       "Simple.id",
@@ -16,16 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "64354f5c409c5e7bc565702e89f5328b"
-    ],
-    [
-      "Simple.id",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "caa58d48afc36da0cdbd09d8c7af1501"
+      "e0cbe03687942ff5990c7b0bf66c1c6e"
     ],
     [
       "Simple.poly_id",
@@ -42,16 +33,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a327d431bf57f4176992f97c8d376b6b"
-    ],
-    [
-      "Simple.poly_id",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "e07e81b045e7662d69c61124fed140ad"
+      "0d300e90303332d9b8cf8ed94dc372f5"
     ],
     [
       "Simple.mk_n_list",
@@ -67,16 +49,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a6355250a6536b35b0b12e95d09dfc5f"
-    ],
-    [
-      "Simple.mk_n_list",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4398ea54f206734458235b94cfe118d9"
+      "d92412bdaf2bd536183cf54b390d0365"
     ],
     [
       "Simple.poly_list_id",
@@ -89,7 +62,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f880552fbd097d9259ea3c46052fbd3c"
+      "9b07bd7134b15ba60680089bd39c3bf7"
     ],
     [
       "Simple.eq_int_list",
@@ -104,16 +77,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "849806b41290d7a2b892284c6010187b"
-    ],
-    [
-      "Simple.eq_int_list",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "fe0c181ac90257a97002fba3685f9796"
+      "13f0383fa5e5d39e610c347a3219082b"
     ]
   ]
 ]

@@ -2,35 +2,17 @@
   "“H\u0010\u0000¾$ WG—%e€h:ö",
   [
     [
-      "IfcExampleReify3.low_equiv",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "9859e6fe7216cb69cae64b35a871502c"
-    ],
-    [
       "IfcExampleReify3.is_x",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "666aa07f71b46433b29cbf21e656638a"
+      "ff4df125fc85607809794b207396a6be"
     ],
     [
       "IfcExampleReify3.p1_x",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "5bd20522940c1d92a7509d8af6c0e876"
-    ],
-    [
-      "IfcExampleReify3.p1_x",
-      2,
       2,
       1,
       [
@@ -71,7 +53,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "b866e0d17921ed2a61f46326fe951269"
+      "0a68168abc5ce6f0d646fd60c585b077"
     ],
     [
       "IfcExampleReify3.ni_p1",
@@ -122,16 +104,7 @@
         "unit_typing"
       ],
       0,
-      "383aeede9effd9998674314422f3257f"
-    ],
-    [
-      "IfcExampleReify3.low_equiv",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "d164a6a9043477b387d063669a756248"
+      "f591aebe2b8e1ed4c0e41295b5386b87"
     ],
     [
       "IfcExampleReify3.is_x",
@@ -140,34 +113,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "059c2f17670b0ceb94757a3073972cce"
-    ],
-    [
-      "IfcExampleReify3.is_x",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "301f0e82cd48069b25d774e9ead1deb9"
-    ],
-    [
-      "IfcExampleReify3.p1",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "89847dd5a85782b14cc06884ccf57887"
-    ],
-    [
-      "IfcExampleReify3.p1_x",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "033aac0abe01df2a6822aadac006ad38"
+      "bed81cd2bc5deeb63f9f2841070ea8c2"
     ]
   ]
 ]

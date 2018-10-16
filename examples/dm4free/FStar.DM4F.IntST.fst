@@ -4,7 +4,7 @@ open FStar.DM4F.ST
 
 // A simple variant of state with a single integer as the state
 // Here is where all the DM4F magic happens
-reifiable reflectable new_effect STINT = STATE_h int
+total reifiable reflectable new_effect STINT = STATE_h int
 // Some abbreviations
 let repr = STINT?.repr
 let post = STINT?.post

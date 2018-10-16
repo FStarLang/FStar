@@ -1,5 +1,5 @@
 # Fstar build container
-FROM everest_base_image:1
+FROM everest-base-windows-nt:1
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS

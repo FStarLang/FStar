@@ -164,6 +164,12 @@ val sel_upd (#b:_)
            else sel (upd h vb i x) vb j == sel h vb j)
           [SMTPat (sel (upd h vb i x) vb j)]
 
+val lemma_upd_with_sel (#b:_)
+                       (vb:buffer b)
+                       (i:nat{i < length vb})
+                       (h:HS.mem{live h vb})
+  :Lemma (upd h vb i (sel h vb i) == h)
+
 /// `modifies` on views is just defined in terms of the underlying buffer
 unfold
 let modifies (#b: _)

@@ -64,6 +64,7 @@ type step =
   | Unmeta          //remove all non-monadic metas.
   | Unascribe
   | NBE
+  | ForExtraction //marking an invocation of the normalizer for extraction
 and steps = list<step>
 
 let rec eq_step s1 s2 =
@@ -1264,6 +1265,11 @@ let is_user_reifiable_effect (env:env) (effect_lid:lident) : bool =
     let effect_lid = norm_eff_name env effect_lid in
     let quals = lookup_effect_quals env effect_lid in
     List.contains Reifiable quals
+
+let is_total_effect (env:env) (effect_lid:lident) : bool =
+    let effect_lid = norm_eff_name env effect_lid in
+    let quals = lookup_effect_quals env effect_lid in
+    List.contains TotalEffect quals
 
 let is_reifiable_effect (env:env) (effect_lid:lident) : bool =
     let effect_lid = norm_eff_name env effect_lid in
