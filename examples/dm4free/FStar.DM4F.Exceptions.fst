@@ -27,7 +27,7 @@ let bind_ex a b f g = fun _ ->
 let raise0 (a:Type) (e:exn) : ex a = fun _ -> Inr e
 
 (* Define the new effect using DM4F *)
-reifiable reflectable new_effect {
+total reifiable reflectable new_effect {
   EXN : (a:Type) -> Effect
   with repr     = ex
      ; bind     = bind_ex
