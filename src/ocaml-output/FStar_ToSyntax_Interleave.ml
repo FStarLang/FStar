@@ -400,36 +400,40 @@ let (interleave_module :
                            let impls2 = FStar_List.append impls1 iface_lets
                               in
                            let env1 =
-                             FStar_Syntax_DsEnv.set_iface_decls env l
-                               remaining_iface_vals
-                              in
+                             let uu____1487 = FStar_Options.interactive ()
+                                in
+                             if uu____1487
+                             then
+                               FStar_Syntax_DsEnv.set_iface_decls env l
+                                 remaining_iface_vals
+                             else env  in
                            let a1 = FStar_Parser_AST.Module (l, impls2)  in
                            (match remaining_iface_vals with
-                            | uu____1494::uu____1495 when
+                            | uu____1499::uu____1500 when
                                 expect_complete_modul ->
                                 let err =
-                                  let uu____1500 =
+                                  let uu____1505 =
                                     FStar_List.map
                                       FStar_Parser_AST.decl_to_string
                                       remaining_iface_vals
                                      in
-                                  FStar_All.pipe_right uu____1500
+                                  FStar_All.pipe_right uu____1505
                                     (FStar_String.concat "\n\t")
                                    in
-                                let uu____1510 =
-                                  let uu____1516 =
-                                    let uu____1518 =
+                                let uu____1515 =
+                                  let uu____1521 =
+                                    let uu____1523 =
                                       FStar_Ident.string_of_lid l  in
                                     FStar_Util.format2
                                       "Some interface elements were not implemented by module %s:\n\t%s"
-                                      uu____1518 err
+                                      uu____1523 err
                                      in
                                   (FStar_Errors.Fatal_InterfaceNotImplementedByModule,
-                                    uu____1516)
+                                    uu____1521)
                                    in
-                                let uu____1522 = FStar_Ident.range_of_lid l
+                                let uu____1527 = FStar_Ident.range_of_lid l
                                    in
-                                FStar_Errors.raise_error uu____1510
-                                  uu____1522
-                            | uu____1527 -> (a1, env1)))))
+                                FStar_Errors.raise_error uu____1515
+                                  uu____1527
+                            | uu____1532 -> (a1, env1)))))
   

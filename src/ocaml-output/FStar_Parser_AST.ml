@@ -2172,3 +2172,10 @@ let (modul_to_string : modul -> Prims.string) =
           FStar_All.pipe_right decls (FStar_List.map decl_to_string)  in
         FStar_All.pipe_right uu____8820 (FStar_String.concat "\n")
   
+let (decl_is_val : FStar_Ident.ident -> decl -> Prims.bool) =
+  fun id1  ->
+    fun decl  ->
+      match decl.d with
+      | Val (id',uu____8849) -> FStar_Ident.ident_equals id1 id'
+      | uu____8850 -> false
+  
