@@ -127,7 +127,7 @@ let subst ts args =
     | Some t ->
       t
 
-let udelta_unfold (g:UEnv.env) = function
+let udelta_unfold (g:UEnv.uenv) = function
     | MLTY_Named(args, n) ->
       begin match UEnv.lookup_ty_const g n with
         | Some ts ->

@@ -29,7 +29,7 @@ val mlconst_of_const : p:Range.range -> c:Const.sconst -> mlconstant
 val mlexpr_of_const : p:Range.range -> c:Const.sconst -> mlexpr'
 val mlexpr_of_range : r:Range.range -> mlexpr'
 val subst : mlidents * mlty -> args:list<mlty> -> mlty
-val udelta_unfold : g:UEnv.env -> _arg1:mlty -> option<mlty>
+val udelta_unfold : g:UEnv.uenv -> _arg1:mlty -> option<mlty>
 val eff_leq : f:e_tag -> f':e_tag -> bool
 val eff_to_string : _arg1:e_tag -> string
 val join : r:Range.range -> f:e_tag -> f':e_tag -> e_tag

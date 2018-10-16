@@ -88,8 +88,7 @@ ocaml-output/%.ml:
 	$(FSTAR_C) --dep full                 \
 		   fstar/FStar.Main.fs	      \
 		   boot/FStar.Tests.Test.fst  \
-		   $(EXTRACT)		      \
-		   --codegen OCaml > ._depend
+		   $(EXTRACT)		      > ._depend
 	mv ._depend .depend
 	mkdir -p $(CACHE_DIR)
 

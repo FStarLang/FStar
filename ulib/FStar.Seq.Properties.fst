@@ -765,13 +765,12 @@ private let intro_append_contains_from_disjunction (#a:Type) (s1:seq a) (s2:seq 
     : Lemma (requires s1 `contains` x \/ s2 `contains` x)
             (ensures (append s1 s2) `contains` x)
     = let open FStar.Classical in
-      let open FStar.StrongExcludedMiddle in
       let open FStar.Squash in
-      if strong_excluded_middle (s1 `contains` x)
-      then ()
-      else let s = append s1 s2 in
-           exists_elim (s `contains` x) (get_proof (s2 `contains` x)) (fun k ->
-           assert (Seq.index s (Seq.length s1 + k) == x))
+      or_elim #(s1 `contains` x) #(s2 `contains` x) #(fun _ -> (append s1 s2) `contains` x)
+        (fun _ -> ())
+	(fun _ -> let s = append s1 s2 in
+               exists_elim (s `contains` x) (get_proof (s2 `contains` x)) (fun k ->
+               assert (Seq.index s (Seq.length s1 + k) == x)))
 
 let append_contains_equiv (#a:Type) (s1:seq a) (s2:seq a) (x:a)
   : Lemma ((append s1 s2) `contains` x
@@ -1087,7 +1086,7 @@ let elim_of_list (#a: Type) (l: list a):
 #reset-options
 
 (****** sortWith ******)
-let sortWith (#a:eqtype) (f:a -> a -> Tot int) (s:seq a) :seq a
+let sortWith (#a:eqtype) (f:a -> a -> Tot int) (s:seq a) :Tot (seq a)
   = seq_of_list (List.Tot.Base.sortWith f (seq_to_list s))
 
 let rec lemma_seq_to_list_permutation (#a:eqtype) (s:seq a)

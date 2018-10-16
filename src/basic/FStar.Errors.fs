@@ -324,6 +324,8 @@ type raw_error =
   | Error_FieldShadow
   | Error_UnexpectedDM4FType
   | Fatal_EffectAbbreviationResultTypeMismatch
+  | Error_UncheckedFile
+  | Error_MustEraseMissing
 
 type flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
@@ -656,6 +658,8 @@ let default_flags =
   (Error_FieldShadow                                 , CFatal);
   (Error_UnexpectedDM4FType                          , CFatal);
   (Fatal_EffectAbbreviationResultTypeMismatch        , CFatal);
+  (Error_UncheckedFile                               , CFatal);
+  (Error_MustEraseMissing                            , CWarning);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]

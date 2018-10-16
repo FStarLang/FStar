@@ -259,8 +259,10 @@ let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
         else check_initial_interface l in
     match E.iface_decls env mname with
     | Some _ ->
-      raise_error (Errors.Fatal_InterfaceAlreadyProcessed, (Util.format1 "Interface %s has already been processed"
-                                (Ident.string_of_lid mname))) (Ident.range_of_lid mname)
+      raise_error (Errors.Fatal_InterfaceAlreadyProcessed,
+                   Util.format1 "Interface %s has already been processed"
+                                (Ident.string_of_lid mname))
+                  (Ident.range_of_lid mname)
     | None ->
       (), E.set_iface_decls env mname decls
 
@@ -296,7 +298,13 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> 
             | Some (lets, one_val, rest) -> lets, one_val::rest
         in
         let impls = impls@iface_lets in
-        let env = E.set_iface_decls env l remaining_iface_vals in
+        let env =
+            if Options.interactive()
+            then E.set_iface_decls env l remaining_iface_vals
+            else env //if not interactive, then don't consume iface_decls
+                     //since some batch-mode checks, e.g., must_erase_for_extraction
+                     //depend on having all the iface decls around
+        in
         let a = Module(l, impls) in
         match remaining_iface_vals with
         | _::_ when expect_complete_modul ->

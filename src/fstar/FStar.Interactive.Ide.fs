@@ -268,7 +268,7 @@ let fresh_name_tracking_hooks () =
 let track_name_changes (env: env_t)
     : env_t * (env_t -> env_t * list<name_tracking_event>) =
   let set_hooks dshooks tchooks env =
-    let (), tcenv' = with_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
+    let (), tcenv' = with_dsenv_of_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
     TcEnv.set_tc_hooks tcenv' tchooks in
 
   let old_dshooks, old_tchooks = DsEnv.ds_hooks env.dsenv, TcEnv.tc_hooks env in
@@ -294,9 +294,8 @@ let string_of_repl_task = function
   | Noop -> "Noop {}"
 
 (** Like ``tc_one_file``, but only return the new environment **)
-let tc_one env intf_opt modf =
-  let _, env, delta = tc_one_file env None intf_opt modf in
-  let env = Universal.apply_delta_env env delta in
+let tc_one (env:env_t) intf_opt modf =
+  let _, env = tc_one_file_for_ide env intf_opt modf in
   env
 
 (** Load the file or files described by `task`.

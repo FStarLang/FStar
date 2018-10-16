@@ -116,6 +116,7 @@ CAPPED=$(subst bug,Bug,$*)
 %.verify: %.fst
 	$(FSTAR) $^
 
+bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 
 %.iverify: %.fsti

@@ -56,7 +56,6 @@ open FStar.Seq.Base
 open FStar.Seq.Properties
 open FStar.Set
 open FStar.Squash
-open FStar.SquashEffect
 open FStar.SquashProperties
 open FStar.ST
 open FStar.String
