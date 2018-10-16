@@ -28,7 +28,7 @@ let bind a b f g =
 let raise (a:Type) : exnst a = fun _ -> None
 
 (* Define the new effect using DM4F *)
-reifiable reflectable new_effect {
+total reifiable reflectable new_effect {
   EXNST: a:Type -> Effect with
     repr    = exnst;
     bind    = bind;

@@ -31,7 +31,7 @@ let put (s:int) : stexn unit = fun _ -> (Some (), s)
 let raise (a:Type) : stexn a = fun s -> (None, s)
 
 (* Define the new effect using DM4F *)
-reifiable reflectable new_effect {
+total reifiable reflectable new_effect {
   STEXN: a:Type -> Effect
   with repr    = stexn
      ; return  = return

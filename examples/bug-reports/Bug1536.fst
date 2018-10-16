@@ -31,6 +31,6 @@ exception EE
 
 #set-options "--debug Bug --debug_level SMTQuery --no_smt"
 
-let _ = assert (normalize_term (reify (ret 1) ()) == Inl 1)
+let t1 () = assert (normalize_term (reify (ret 1) ()) == Inl 1)
 
-let _ = assert (normalize_term (reify (raise #int EE) ()) == Inr EE)
+let t2 () = assert (normalize_term (reify (raise #int EE) ()) == Inr EE)

@@ -2048,6 +2048,22 @@ val blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
                                         Seq.slice (as_seq h' dst) (U32.v idx_dst + U32.v len) (length dst) ==
                                         Seq.slice (as_seq h dst) (U32.v idx_dst + U32.v len) (length dst)))
 
+val fill (#t:Type) (#rrel #rel: srel t)
+  (b: mbuffer t rrel rel)
+  (z:t)
+  (len:U32.t)
+: HST.Stack unit
+  (requires (fun h ->
+    live h b /\
+    U32.v len <= length b /\
+    rel (as_seq h b) (Seq.replace_subseq (as_seq h b) 0 (U32.v len) (Seq.create (U32.v len) z))
+  ))
+  (ensures  (fun h0 _ h1 ->
+    modifies (loc_buffer b) h0 h1 /\
+    live h1 b /\
+    Seq.slice (as_seq h1 b) 0 (U32.v len) == Seq.create (U32.v len) z /\
+    Seq.slice (as_seq h1 b) (U32.v len) (length b) == Seq.slice (as_seq h0 b) (U32.v len) (length b)
+  ))
 
 /// Type class instantiation for compositionality with other kinds of memory locations than regions, references or buffers (just in case).
 /// No usage pattern has been found yet.
