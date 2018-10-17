@@ -324,6 +324,9 @@ val is_reifiable_function    : env -> term -> bool
 (* is reifiable but not user-reifiable.) *)
 val is_user_reifiable_effect : env -> lident -> bool
 
+(* Is this effect marked `total`? *)
+val is_total_effect : env -> lident -> bool
+
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders
 
