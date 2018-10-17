@@ -319,6 +319,14 @@ let lemma_unsnoc_snoc #a l =
     if length l = 1 then () else aux (tl l) in
   aux l
 
+(** Doing an [unsnoc] gives us a list that is shorter in length by 1 *)
+val lemma_unsnoc_length: #a:Type -> l:list a{length l > 0} ->
+  Lemma (requires True)
+    (ensures (length (Mktuple2?._1 (unsnoc l)) == length l - 1))
+    [SMTPat (length (Mktuple2?._1 (unsnoc l)))]
+let lemma_unsnoc_length #a l =
+  lemma_snoc_length (unsnoc l)
+
 (** [unsnoc] followed by [append] can be connected to the same vice-versa. *)
 let rec lemma_unsnoc_append (#a:Type) (l1 l2:list a) :
   Lemma
@@ -346,9 +354,7 @@ let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
   Lemma
     (requires (length l > 0 /\ i < length l - 1))
     (ensures (
-        length (fst (unsnoc l)) == length l - 1 /\ // required to index
         index (fst (unsnoc l)) i == index l i)) =
-  lemma_snoc_length (unsnoc l);
   match i with
   | 0 -> ()
   | _ -> lemma_unsnoc_index (tl l) (i - 1)
