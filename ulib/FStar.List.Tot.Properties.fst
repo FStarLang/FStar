@@ -270,10 +270,10 @@ let rev_involutive l = rev_rev' l; rev_rev' (rev' l); rev'_involutive l
 
 (** Properties about snoc *)
 
-val snoc_length : (lx:(list 'a * 'a)) ->
+val lemma_snoc_length : (lx:(list 'a * 'a)) ->
   Lemma (requires True)
         (ensures (length (snoc lx) = length (fst lx) + 1))
-let snoc_length (l, x) = append_length l [x]
+let lemma_snoc_length (l, x) = append_length l [x]
 
 (** Reverse induction principle **)
 
@@ -348,7 +348,7 @@ let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
     (ensures (
         length (fst (unsnoc l)) == length l - 1 /\ // required to index
         index (fst (unsnoc l)) i == index l i)) =
-  snoc_length (unsnoc l);
+  lemma_snoc_length (unsnoc l);
   match i with
   | 0 -> ()
   | _ -> lemma_unsnoc_index (tl l) (i - 1)
