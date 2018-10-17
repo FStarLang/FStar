@@ -319,6 +319,18 @@ let lemma_unsnoc_snoc #a l =
     if length l = 1 then () else aux (tl l) in
   aux l
 
+(** [snoc] is the inverse of [unsnoc] *)
+val lemma_snoc_unsnoc: #a:Type -> lx:(list a * a) ->
+  Lemma (requires True)
+    (ensures (unsnoc (snoc lx) == lx))
+    (decreases (length (fst (lx))))
+    [SMTPat (unsnoc (snoc lx))]
+let rec lemma_snoc_unsnoc #a lx =
+  let l, x = lx in
+  match l with
+  | [] -> ()
+  | _ -> lemma_snoc_unsnoc (tl l, x)
+
 (** Doing an [unsnoc] gives us a list that is shorter in length by 1 *)
 val lemma_unsnoc_length: #a:Type -> l:list a{length l > 0} ->
   Lemma (requires True)
