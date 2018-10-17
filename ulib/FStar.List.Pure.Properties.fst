@@ -60,7 +60,7 @@ let rec lemma_splitAt_append (#a:Type) (n:nat) (l:list a) :
   Lemma
     (requires n <= length l)
     (ensures (let l1, l2 = splitAt n l in
-              append l1 l2 == l)) =
+              append l1 l2 == l /\ length l1 = n)) =
   match n with
   | 0 -> ()
   | _ ->
@@ -77,6 +77,13 @@ let rec lemma_append_splitAt (#t:Type) (l1 l2:list t) :
   match l1 with
   | [] -> ()
   | _ -> lemma_append_splitAt (tl l1) l2
+
+
+(** Fully characterize behavior of [splitAt] in terms of more standard list concepts *)
+let rec lemma_splitAt (#t: Type) (l l1 l2:list t) (n:nat{n <= length l}) :
+  Lemma (splitAt n l == (l1, l2) <==> l == l1 @ l2 /\ length l1 = n) =
+  lemma_splitAt_append n l;
+  lemma_append_splitAt l1 l2
 
 
 (** The [hd] of the second list returned via [splitAt] is the [n]th element of
