@@ -334,8 +334,7 @@ let rec lemma_snoc_unsnoc #a lx =
 (** Doing an [unsnoc] gives us a list that is shorter in length by 1 *)
 val lemma_unsnoc_length: #a:Type -> l:list a{length l > 0} ->
   Lemma (requires True)
-    (ensures (length (Mktuple2?._1 (unsnoc l)) == length l - 1))
-    [SMTPat (length (Mktuple2?._1 (unsnoc l)))]
+    (ensures (length (fst (unsnoc l)) == length l - 1))
 let lemma_unsnoc_length #a l =
   lemma_snoc_length (unsnoc l)
 
@@ -366,6 +365,7 @@ let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
   Lemma
     (requires (length l > 0 /\ i < length l - 1))
     (ensures (
+        i < length (fst (unsnoc l)) /\
         index (fst (unsnoc l)) i == index l i)) =
   match i with
   | 0 -> ()
