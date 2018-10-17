@@ -355,7 +355,9 @@ let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
 (** Definition and properties about [split_using] *)
 
 (** [split_using] splits a list at the first instance of finding an
-    element in it. *)
+    element in it.
+
+    NOTE: Uses [strong_excluded_middle] axiom. *)
 let rec split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
   GTot (r:(list t * list t)) =
   match l with
@@ -394,7 +396,9 @@ let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
 
 (** Definition of [index_of] *)
 
-(** [index_of l x] gives the index of the leftmost [x] in [l] *)
+(** [index_of l x] gives the index of the leftmost [x] in [l].
+
+    NOTE: Uses [strong_excluded_middle] axiom. *)
 let rec index_of (#t:Type) (l:list t) (x:t{x `memP` l}) :
   GTot (i:nat{i < length l /\ index l i == x}) =
   match l with
