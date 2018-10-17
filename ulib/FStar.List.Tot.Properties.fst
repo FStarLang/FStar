@@ -270,11 +270,11 @@ let rev_involutive l = rev_rev' l; rev_rev' (rev' l); rev'_involutive l
 
 (** Properties about snoc *)
 
-val snoc_length : l:list 'a -> x:'a ->
+val snoc_length : (lx:(list 'a * 'a)) ->
   Lemma (requires True)
-        (ensures (length (snoc l x) = length l + 1))
-        [SMTPat (length (snoc l x))]
-let snoc_length l x = append_length l [x]
+        (ensures (length (snoc lx) = length (fst lx) + 1))
+        [SMTPat (length (snoc lx))]
+let snoc_length (l, x) = append_length l [x]
 
 (** Reverse induction principle **)
 
@@ -307,8 +307,8 @@ let rec map_lemma f l =
 (** [unsnoc] is the inverse of [snoc] *)
 val lemma_unsnoc_snoc: #a:Type -> l:list a{length l > 0} ->
   Lemma (requires True)
-    (ensures (let l', x = unsnoc l in snoc l' x == l))
-    [SMTPat (unsnoc l)]
+    (ensures (snoc (unsnoc l) == l))
+    [SMTPat (snoc (unsnoc l))]
 let lemma_unsnoc_snoc #a l =
   let l', x = unsnoc l in
   let l1, l2 = l', [x] in
@@ -347,7 +347,9 @@ let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
   Lemma
     (requires (length l > 0 /\ i < length l - 1))
     (ensures (
+        length (fst (unsnoc l)) == length l - 1 /\ // required to index
         index (fst (unsnoc l)) i == index l i)) =
+  snoc_length (unsnoc l);
   match i with
   | 0 -> ()
   | _ -> lemma_unsnoc_index (tl l) (i - 1)
