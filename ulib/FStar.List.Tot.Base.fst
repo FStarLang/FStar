@@ -123,6 +123,13 @@ let rec append x y = match x with
 (** Defines notation [@] for [append], as in OCaml, F# . *)
 let op_At x y = append x y
 
+(** [snoc (l, x)] adds [x] to the end of the list [l].
+
+    Note: We use an uncurried [snoc (l, x)] instead of the curried
+    [snoc l x]. *)
+val snoc: (list 'a * 'a) -> Tot (list 'a)
+let snoc (l, x) = append l [x]
+
 (** [flatten l], where [l] is a list of lists, returns the list of the
 elements of the lists in [l], preserving their order. Named as in:
 OCaml, Coq. *)
@@ -430,6 +437,33 @@ let rec splitAt (#a:Type) (n:nat) (l:list a) : list a * list a =
     match l with
     | [] -> [], l
     | x :: xs -> let l1, l2 = splitAt (n-1) xs in x :: l1, l2
+
+let rec lemma_splitAt_snd_length (#a:Type) (n:nat) (l:list a) :
+  Lemma
+    (requires (n <= length l))
+    (ensures (length (snd (splitAt n l)) = length l - n)) =
+  match n, l with
+  | 0, _ -> ()
+  | _, [] -> ()
+  | _, _ :: l' -> lemma_splitAt_snd_length (n - 1) l'
+
+(** [unsnoc] is an inverse of [snoc]. It splits a list into
+    all-elements-except-last and last element. *)
+val unsnoc: #a:Type -> l:list a{length l > 0} -> Tot (list a * a)
+let unsnoc #a l =
+  let l1, l2 = splitAt (length l - 1) l in
+  lemma_splitAt_snd_length (length l - 1) l;
+  l1, hd l2
+
+(** [split3] splits a list into 3 parts. This allows easy access to
+    the part of the list before and after the element, as well as the
+    element itself. *)
+val split3: #a:Type -> l:list a -> i:nat{i < length l} -> Tot (list a * a * list a)
+let split3 #a l i =
+  let a, as = splitAt i l in
+  lemma_splitAt_snd_length i l;
+  let b :: c = as in
+  a, b, c
 
 (** Sorting (implemented as quicksort) **)
 
