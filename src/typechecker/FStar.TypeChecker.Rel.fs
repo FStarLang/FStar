@@ -3352,9 +3352,22 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) : option<guard_t> =
   | Some g -> discharge_guard' None env g false
 
 let resolve_implicits' env must_total forcelax g =
-  let unresolved ctx_u =
+  let rec unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
-    | Some _ -> false
+    | Some r ->
+        begin match ctx_u.ctx_uvar_meta with
+        | None -> false
+        (* If we have a meta annotation, we recurse to see if the uvar
+         * is actually solved, instead of being resolved to yet another uvar.
+         * In that case, while we are keeping track of that uvar, we must not
+         * forget the meta annotation in case this second uvar is not solved.
+         * See #1561. *)
+        | Some _ ->
+            begin match (SS.compress r).n with
+            | Tm_uvar (ctx_u', _) -> unresolved ctx_u'
+            | _ -> false
+            end
+        end
     | None -> true
   in
   let rec until_fixpoint (acc: Env.implicits * bool) (implicits:Env.implicits) : Env.implicits =
