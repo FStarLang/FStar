@@ -153,7 +153,9 @@ let (goal_with_type : goal -> FStar_Syntax_Syntax.term -> goal) =
           FStar_Syntax_Syntax.ctx_uvar_should_check =
             (uu___258_142.FStar_Syntax_Syntax.ctx_uvar_should_check);
           FStar_Syntax_Syntax.ctx_uvar_range =
-            (uu___258_142.FStar_Syntax_Syntax.ctx_uvar_range)
+            (uu___258_142.FStar_Syntax_Syntax.ctx_uvar_range);
+          FStar_Syntax_Syntax.ctx_uvar_meta =
+            (uu___258_142.FStar_Syntax_Syntax.ctx_uvar_meta)
         }  in
       let uu___259_143 = g  in
       {
@@ -184,7 +186,9 @@ let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
           FStar_Syntax_Syntax.ctx_uvar_should_check =
             (uu___260_157.FStar_Syntax_Syntax.ctx_uvar_should_check);
           FStar_Syntax_Syntax.ctx_uvar_range =
-            (uu___260_157.FStar_Syntax_Syntax.ctx_uvar_range)
+            (uu___260_157.FStar_Syntax_Syntax.ctx_uvar_range);
+          FStar_Syntax_Syntax.ctx_uvar_meta =
+            (uu___260_157.FStar_Syntax_Syntax.ctx_uvar_meta)
         }  in
       let uu___261_167 = g  in
       {
@@ -238,7 +242,9 @@ let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
           FStar_Syntax_Syntax.ctx_uvar_should_check =
             (uu___262_215.FStar_Syntax_Syntax.ctx_uvar_should_check);
           FStar_Syntax_Syntax.ctx_uvar_range =
-            (uu___262_215.FStar_Syntax_Syntax.ctx_uvar_range)
+            (uu___262_215.FStar_Syntax_Syntax.ctx_uvar_range);
+          FStar_Syntax_Syntax.ctx_uvar_meta =
+            (uu___262_215.FStar_Syntax_Syntax.ctx_uvar_meta)
         }  in
       let uu___263_222 = goal  in
       {
