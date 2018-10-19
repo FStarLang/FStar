@@ -487,8 +487,8 @@ let run_tactic_on_typ
                 s
             | EExn t ->
                 "uncaught exception: " ^ (Print.term_to_string t)
-            | _ ->
-                "uncaught internal exception: " ^ (BU.message_of_exn e)
+            | e ->
+                raise e
         in
         Err.raise_error (Err.Fatal_UserTacticFailure,
                             BU.format1 "user tactic failed: %s" (texn_to_string e))
