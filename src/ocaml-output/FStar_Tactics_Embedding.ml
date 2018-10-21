@@ -409,11 +409,11 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
            in
         uu____1114 FStar_Pervasives_Native.None rng
     | FStar_Tactics_Types.EExn t ->
-        let uu___360_1150 = t  in
+        let uu___359_1150 = t  in
         {
-          FStar_Syntax_Syntax.n = (uu___360_1150.FStar_Syntax_Syntax.n);
+          FStar_Syntax_Syntax.n = (uu___359_1150.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = rng;
-          FStar_Syntax_Syntax.vars = (uu___360_1150.FStar_Syntax_Syntax.vars)
+          FStar_Syntax_Syntax.vars = (uu___359_1150.FStar_Syntax_Syntax.vars)
         }
     | e1 ->
         let s =

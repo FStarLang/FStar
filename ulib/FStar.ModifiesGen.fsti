@@ -8,7 +8,6 @@ module HST = FStar.HyperStack.ST
 (* NOTE: aloc cannot be a member of the class, because of OCaml
    extraction. So it must be a parameter of the class instead. *)
 
-inline_for_extraction
 type aloc_t = HS.rid -> nat -> Tot Type
 
 noeq

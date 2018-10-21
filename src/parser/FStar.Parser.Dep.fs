@@ -765,6 +765,83 @@ let collect_one_cache : ref<(smap<(list<dependence> * list<dependence> * bool)>)
 let set_collect_one_cache (cache: smap<(list<dependence> * list<dependence> * bool)>) : unit =
   collect_one_cache := cache
 
+let dep_graph_copy dep_graph =
+    let (Deps g) = dep_graph in
+    Deps (BU.smap_copy g)
+
+let topological_dependences_of
+        file_system_map
+        dep_graph
+        interfaces_needing_inlining
+        root_files
+        for_extraction
+    : list<file_name>
+    * bool =
+    let rec all_friend_deps_1
+            dep_graph
+            (cycle:list<file_name>)
+            (all_friends, all_files)
+            filename =
+    let direct_deps, color = must (deps_try_find dep_graph filename) in
+    match color with
+    | Gray ->
+        failwith "Impossible: cycle detected after cycle detection has passed"
+    | Black ->
+        (* If the element has been visited already, then the map contains all its
+            * dependencies. Otherwise, the map only contains its direct dependencies. *)
+        all_friends, all_files
+    | White ->
+        (* Unvisited. Compute. *)
+        deps_add_dep dep_graph filename (direct_deps, Gray);
+        let all_friends, all_files =
+            all_friend_deps
+                dep_graph cycle (all_friends, all_files)
+                (dependences_of file_system_map
+                                dep_graph
+                                root_files
+                                filename)
+        in
+        (* Mutate the graph to mark the node as visited *)
+        deps_add_dep dep_graph filename (direct_deps, Black);
+        (* Also build the topological sort (Tarjan's algorithm). *)
+        List.filter (function FriendImplementation _ -> true | _ -> false) direct_deps
+        @all_friends,
+        filename :: all_files
+    and all_friend_deps dep_graph cycle all_friends filenames =
+        List.fold_left
+                (fun all_friends k ->
+                        all_friend_deps_1 dep_graph (k :: cycle) all_friends k)
+                all_friends
+                filenames
+    in
+    let friends, _ =
+        all_friend_deps (dep_graph_copy dep_graph) [] ([], []) root_files
+    in
+    let widened = BU.mk_ref false in
+    let widen_deps friends deps =
+        deps |> List.map (fun d ->
+        match d with
+        | PreferInterface f
+            when Options.cmi() && for_extraction ->
+            if has_implementation file_system_map f
+            && List.contains f interfaces_needing_inlining
+            then (widened := true; UseImplementation f)
+            else PreferInterface f
+        | PreferInterface f
+            when List.contains (FriendImplementation f) friends ->
+            FriendImplementation f
+        | _ -> d)
+    in
+    let _, all_files =
+        let (Deps dg) = dep_graph in
+        let (Deps dg') = deps_empty() in
+        BU.smap_fold dg (fun filename (dependences, color) () ->
+            BU.smap_add dg' filename (widen_deps friends dependences, color)) ();
+        all_friend_deps (Deps dg') [] ([], []) root_files
+    in
+    all_files,
+    !widened
+
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
 let collect (all_cmd_line_files: list<file_name>)
@@ -822,10 +899,6 @@ let collect (all_cmd_line_files: list<file_name>)
   List.iter discover_one all_cmd_line_files;
 
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
-  let dep_graph_copy dep_graph =
-      let (Deps g) = dep_graph in
-      Deps (BU.smap_copy g)
-  in
   let cycle_detected dep_graph cycle filename =
       Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
       print_graph dep_graph;
@@ -891,73 +964,12 @@ let collect (all_cmd_line_files: list<file_name>)
     let m = lowercase_module_name f in
     Options.add_verify_module m);
 
-  let topological_dependences_of all_command_line_files =
-      let rec all_friend_deps_1
-                dep_graph
-                (cycle:list<file_name>)
-                (all_friends, all_files)
-                filename =
-        let direct_deps, color = must (deps_try_find dep_graph filename) in
-        match color with
-        | Gray ->
-            cycle_detected dep_graph cycle filename; all_friends, all_files
-        | Black ->
-            (* If the element has been visited already, then the map contains all its
-             * dependencies. Otherwise, the map only contains its direct dependencies. *)
-            all_friends, all_files
-        | White ->
-            (* Unvisited. Compute. *)
-            deps_add_dep dep_graph filename (direct_deps, Gray);
-            let all_friends, all_files =
-                all_friend_deps
-                    dep_graph cycle (all_friends, all_files)
-                    (dependences_of file_system_map
-                                    dep_graph
-                                    all_command_line_files
-                                    filename)
-            in
-            (* Mutate the graph to mark the node as visited *)
-            deps_add_dep dep_graph filename (direct_deps, Black);
-            (* Also build the topological sort (Tarjan's algorithm). *)
-            List.filter (function FriendImplementation _ -> true | _ -> false) direct_deps
-            @all_friends,
-            filename :: all_files
-      and all_friend_deps dep_graph cycle all_friends filenames =
-          List.fold_left
-                    (fun all_friends k ->
-                         all_friend_deps_1 dep_graph (k :: cycle) all_friends k)
-                   all_friends
-                   filenames
-      in
-      let friends, _ =
-          all_friend_deps (dep_graph_copy dep_graph) [] ([], []) all_command_line_files
-      in
-      let widen_deps friends deps =
-          deps |> List.map (fun d ->
-            match d with
-            | PreferInterface f
-                when Options.cmi() && Options.codegen() <> None ->
-              if has_implementation file_system_map f
-              && List.contains f (!interfaces_needing_inlining)
-              then UseImplementation f
-              else PreferInterface f
-            | PreferInterface f
-                when List.contains (FriendImplementation f) friends ->
-              FriendImplementation f
-            | _ -> d)
-      in
-      let _, all_files =
-          let (Deps dg) = dep_graph in
-          let (Deps dg') = deps_empty() in
-          BU.smap_fold dg (fun filename (dependences, color) () ->
-              BU.smap_add dg' filename (widen_deps friends dependences, color)) ();
-          all_friend_deps (Deps dg') [] ([], []) all_command_line_files
-      in
-      all_files
+  let inlining_ifaces = !interfaces_needing_inlining in
+  let all_files, _ =
+    topological_dependences_of file_system_map dep_graph inlining_ifaces all_cmd_line_files (Options.codegen()<>None)
   in
-  let all_files = topological_dependences_of all_cmd_line_files in
   all_files,
-  mk_deps dep_graph file_system_map all_cmd_line_files all_files (!interfaces_needing_inlining)
+  mk_deps dep_graph file_system_map all_cmd_line_files all_files inlining_ifaces
 
 let deps_of deps (f:file_name)
     : list<file_name> =
@@ -1118,12 +1130,12 @@ let print_full (deps:deps) : unit =
     let cache_file f = norm_path (cache_file_name f) in
     let transitive_krml = smap_create 41 in
     keys |> List.iter
-        (fun f ->
-          let f_deps, _ = deps_try_find deps.dep_graph f |> Option.get in
+        (fun file_name ->
+          let f_deps, _ = deps_try_find deps.dep_graph file_name |> Option.get in
           let iface_deps =
-              if is_interface f
+              if is_interface file_name
               then None
-              else match interface_of deps.file_system_map (lowercase_module_name f) with
+              else match interface_of deps.file_system_map (lowercase_module_name file_name) with
                    | None ->
                      None
                    | Some iface ->
@@ -1134,7 +1146,7 @@ let print_full (deps:deps) : unit =
                          (List.filter (fun iface_dep ->
                              not (BU.for_some (dep_subsumed_by iface_dep) f_deps)))
           in
-          let norm_f = norm_path f in
+          let norm_f = norm_path file_name in
           let files = List.map (file_of_dep_aux true deps.file_system_map deps.cmd_line_files) f_deps in
           let files =
               match iface_deps with
@@ -1152,103 +1164,100 @@ let print_full (deps:deps) : unit =
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
           Util.print3 "%s: %s \\\n\t%s\n\n"
-                      (cache_file f)
+                      (cache_file file_name)
                       norm_f
                       files;
 
           // for building an executable from a given module:
           // foo.exe: dep1.krml dep2.krml etc.
           let already_there =
-            match smap_try_find transitive_krml (norm_path (output_file ".krml" f)) with
+            match smap_try_find transitive_krml (norm_path (output_file ".krml" file_name)) with
             | Some (_, already_there, _) -> already_there
             | None -> []
           in
           smap_add transitive_krml
-            (norm_path (output_file ".krml" f))
-            (norm_path (output_file ".exe" f),
+            (norm_path (output_file ".krml" file_name))
+            (norm_path (output_file ".exe" file_name),
               List.unique (already_there @ List.map
                 (fun x -> norm_path (output_file ".krml" x))
-                (deps_of deps f)),
+                (deps_of deps file_name)),
               false);
 
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
         let all_fst_files_dep, widened =
-            let impl_dep = function
-                | PreferInterface f when Options.cmi() ->
-                  if has_implementation deps.file_system_map f
-                  && List.contains f deps.interfaces_with_inlining
-                  then UseImplementation f, true
-                  else PreferInterface f, false
-                | d -> d, false
-            in
-            let maybe_widen_deps (f_deps:dependences) =
-                List.fold_right
-                  (fun dep (out, widened) ->
-                     let dep, widened' = impl_dep dep in
-                     file_of_dep_aux false deps.file_system_map deps.cmd_line_files dep::out,
-                     widened || widened')
-                f_deps
-                ([], false)
-            in
-            let fst_files, widened = maybe_widen_deps f_deps in
-            let fst_files_from_iface, widened_iface =
-                match iface_deps with
-                | None -> [], false
-                | Some iface_deps -> maybe_widen_deps iface_deps
-            in
-            BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface),
-            widened || widened_iface
+            if Options.cmi()
+            then topological_dependences_of
+                    deps.file_system_map
+                    deps.dep_graph
+                    deps.interfaces_with_inlining
+                    [file_name]
+                    true
+            else
+                let maybe_widen_deps (f_deps:dependences) =
+                    List.map
+                        (fun dep ->
+                         file_of_dep_aux false deps.file_system_map deps.cmd_line_files dep)
+                    f_deps
+                in
+                let fst_files = maybe_widen_deps f_deps in
+                let fst_files_from_iface =
+                    match iface_deps with
+                    | None -> []
+                    | Some iface_deps -> maybe_widen_deps iface_deps
+                in
+                BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface),
+                false
         in
         let all_checked_fst_files = List.map cache_file all_fst_files_dep in
-          if is_implementation f then (
+          if is_implementation file_name then (
             if Options.cmi()
             && widened
             then begin
                 Util.print3 "%s: %s \\\n\t%s\n\n"
-                            (output_ml_file f)
-                            (cache_file f)
+                            (output_ml_file file_name)
+                            (cache_file file_name)
                             (String.concat " \\\n\t" all_checked_fst_files);
                 Util.print3 "%s: %s \\\n\t%s\n\n"
-                            (output_krml_file f)
-                            (cache_file f)
+                            (output_krml_file file_name)
+                            (cache_file file_name)
                             (String.concat " \\\n\t" all_checked_fst_files)
             end
             else begin
                 Util.print2 "%s: %s \n\n"
-                            (output_ml_file f)
-                            (cache_file f);
+                            (output_ml_file file_name)
+                            (cache_file file_name);
                 Util.print2 "%s: %s\n\n"
-                            (output_krml_file f)
-                            (cache_file f)
+                            (output_krml_file file_name)
+                            (cache_file file_name)
             end;
             let cmx_files =
                 let extracted_fst_files =
                     all_fst_files_dep |> List.filter (fun df ->
-                        lowercase_module_name df <> lowercase_module_name f //avoid circular deps on f's own cmx
+                        lowercase_module_name df <> lowercase_module_name file_name //avoid circular deps on f's own cmx
                         && Options.should_extract (lowercase_module_name df))
                 in
                 extracted_fst_files |> List.map output_cmx_file
             in
-            if Options.should_extract (lowercase_module_name f)
+            if Options.should_extract (lowercase_module_name file_name)
             then Util.print3 "%s: %s \\\n\t%s\n\n"
-                        (output_cmx_file f)
-                        (output_ml_file f)
+                        (output_cmx_file file_name)
+                        (output_ml_file file_name)
                         (String.concat "\\\n\t" cmx_files)
-          ) else if not(has_implementation deps.file_system_map (lowercase_module_name f))
-                 && is_interface f then (
+          ) else if not(has_implementation deps.file_system_map (lowercase_module_name file_name))
+                 && is_interface file_name then (
             // .krml files can be produced using just an interface, unlike .ml files
             if Options.cmi()
             && widened
             then
                 Util.print3 "%s: %s \\\n\t%s\n\n"
-                            (output_krml_file f)
-                            (cache_file f)
+                            (output_krml_file file_name)
+                            (cache_file file_name)
                             (String.concat " \\\n\t" all_checked_fst_files)
             else
                 Util.print2 "%s: %s \n\n"
-                    (output_krml_file f)
-                    (cache_file f)
+                    (output_krml_file file_name)
+                    (cache_file file_name)
           ));
     let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
     let all_ml_files =

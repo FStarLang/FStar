@@ -25,7 +25,7 @@ let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
     if FStar.List.Tot.Base.existsb (term_eq g) seen then
       fail "loop";
     let seen = g :: seen in
-    local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail "could not solve constraint"))
+    local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail ("could not solve constraint: " ^ term_to_string g)))
 and local (seen:list term) (fuel:int) () : Tac unit =
     let bs = binders_of_env (cur_env ()) in
     first (fun b -> trywith seen fuel (pack (Tv_Var (bv_of_binder b)))) bs

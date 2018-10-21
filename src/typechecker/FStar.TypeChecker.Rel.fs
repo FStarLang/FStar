@@ -67,7 +67,7 @@ type worklist = {
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * worklist =
+let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let ctx_uvar = {
          ctx_uvar_head=UF.fresh();
          ctx_uvar_gamma=gamma;
@@ -75,7 +75,8 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
          ctx_uvar_typ=k;
          ctx_uvar_reason=reason;
          ctx_uvar_should_check=should_check;
-         ctx_uvar_range=r
+         ctx_uvar_range=r;
+         ctx_uvar_meta=meta;
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
     let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
@@ -83,15 +84,14 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
               ; imp_tm     = t
               ; imp_uvar   = ctx_uvar
               ; imp_range  = r
-              ; imp_meta   = None
               } in
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
     let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
     let env = Env.push_binders env bs in
-    new_uvar u.ctx_uvar_reason wl u.ctx_uvar_range env.gamma
-            (Env.all_binders env) t u.ctx_uvar_should_check
+    new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
+            (Env.all_binders env) t u.ctx_uvar_should_check u.ctx_uvar_meta
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -290,7 +290,7 @@ let mk_eq2 wl env prob t1 t2 : term * worklist =
     *)
     let t_type, u = U.type_u () in
     let binders = Env.all_binders env in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type Allow_unresolved in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type Allow_unresolved None in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -317,6 +317,7 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
                  bs
                  U.ktype0
                  Allow_untyped
+                 None
     in
     let prob =
         //logical guards are always squashed;
@@ -364,6 +365,7 @@ let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
                (Env.all_binders env)
                lg_ty
                Allow_untyped
+               None
   in
   let lg =
     match subject with
@@ -619,6 +621,7 @@ let destruct_flex_t t wl : flex_t * worklist =
                        (new_gamma |> List.collect (function Binding_var x -> [S.mk_binder x] | _ -> []) |> List.rev)
                        (U.arrow dom_binders (S.mk_Total uv.ctx_uvar_typ))
                        uv.ctx_uvar_should_check
+                       uv.ctx_uvar_meta
       in
       let args_sol = List.map (fun (x, i) -> S.bv_to_name x, i) dom_binders in
       let sol = S.mk_Tm_app t_v args_sol None t.pos in
@@ -763,7 +766,7 @@ let gamma_until (g:gamma) (bs:binders) =
 let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
     let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
     let g = gamma_until src.ctx_uvar_gamma pfx in
-    let _, src', wl = new_uvar src.ctx_uvar_reason wl src.ctx_uvar_range g pfx src.ctx_uvar_typ src.ctx_uvar_should_check in
+    let _, src', wl = new_uvar ("restrict:"^src.ctx_uvar_reason) wl src.ctx_uvar_range g pfx src.ctx_uvar_typ src.ctx_uvar_should_check src.ctx_uvar_meta in
     Unionfind.change src.ctx_uvar_head src';
     wl
 
@@ -2086,7 +2089,8 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                           ^"\tlhs="  ^u_lhs.ctx_uvar_reason
                                           ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
-                                         Strict in
+                                         Strict
+                                         None in
                  let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
                  let _ =
                     if Env.debug env <| Options.Other "Rel"
@@ -3348,9 +3352,22 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) : option<guard_t> =
   | Some g -> discharge_guard' None env g false
 
 let resolve_implicits' env must_total forcelax g =
-  let unresolved ctx_u =
+  let rec unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
-    | Some _ -> false
+    | Some r ->
+        begin match ctx_u.ctx_uvar_meta with
+        | None -> false
+        (* If we have a meta annotation, we recurse to see if the uvar
+         * is actually solved, instead of being resolved to yet another uvar.
+         * In that case, while we are keeping track of that uvar, we must not
+         * forget the meta annotation in case this second uvar is not solved.
+         * See #1561. *)
+        | Some _ ->
+            begin match (SS.compress r).n with
+            | Tm_uvar (ctx_u', _) -> unresolved ctx_u'
+            | _ -> false
+            end
+        end
     | None -> true
   in
   let rec until_fixpoint (acc: Env.implicits * bool) (implicits:Env.implicits) : Env.implicits =
@@ -3362,10 +3379,11 @@ let resolve_implicits' env must_total forcelax g =
           if ctx_u.ctx_uvar_should_check = Allow_unresolved
           then until_fixpoint(out, true) tl
           else if unresolved ctx_u
-          then begin match hd.imp_meta with
+          then begin match ctx_u.ctx_uvar_meta with
                | None ->
                     until_fixpoint (hd::out, changed) tl
-               | Some (env, tau) ->
+               | Some (env_dyn, tau) ->
+                    let env : Env.env = FStar.Dyn.undyn env_dyn in
                     if Env.debug env (Options.Other "Tac") then
                         BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
                     let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
@@ -3375,7 +3393,8 @@ let resolve_implicits' env must_total forcelax g =
                         | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
                         | Some g -> g.implicits
                     in
-                    let hd = { hd with imp_meta = None } in
+                    let ctx_u = { ctx_u with ctx_uvar_meta = None } in
+                    let hd = { hd with imp_uvar = ctx_u } in
                     until_fixpoint (out, true) (hd :: (extra @ tl))
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped

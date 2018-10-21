@@ -1186,7 +1186,7 @@ let (abstr : fv Prims.list -> term -> term) =
   fun fvs  ->
     fun t  ->
       let nvars = FStar_List.length fvs  in
-      let index_of fv =
+      let index_of1 fv =
         let uu____4355 = FStar_Util.try_find_index (fv_eq fv) fvs  in
         match uu____4355 with
         | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
@@ -1203,7 +1203,7 @@ let (abstr : fv Prims.list -> term -> term) =
              | Integer uu____4457 -> t1
              | BoundV uu____4459 -> t1
              | FreeV x ->
-                 let uu____4467 = index_of x  in
+                 let uu____4467 = index_of1 x  in
                  (match uu____4467 with
                   | FStar_Pervasives_Native.None  -> t1
                   | FStar_Pervasives_Native.Some i ->

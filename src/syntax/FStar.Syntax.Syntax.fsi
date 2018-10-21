@@ -126,7 +126,8 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_typ:typ;                                            (* t *)
     ctx_uvar_reason:string;
     ctx_uvar_should_check:should_check_uvar;
-    ctx_uvar_range:Range.range
+    ctx_uvar_range:Range.range;
+    ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
 }
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version

@@ -30,6 +30,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.Const
+open FStar.Dyn
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 module S  = FStar.Syntax.Syntax
@@ -1558,12 +1559,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let tau, _, g_tau = tc_tactic env tau in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
-            let varg, _, implicits = TcUtil.new_implicit_var "Instantiating meta argument in application" head.pos env t in //new_uvar env t in
-            // There's only one implicit, but oh well
-            let mark_meta_implicits tau g =
-                { g with implicits =
-                    List.map (fun imp -> { imp with imp_meta = Some (env, tau) }) g.implicits } in
-            let implicits = mark_meta_implicits tau implicits in
+            let varg, _, implicits = new_implicit_var_aux "Instantiating meta argument in application" head.pos env t Strict (Some (mkdyn env, tau)) in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
             let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau] implicits in
