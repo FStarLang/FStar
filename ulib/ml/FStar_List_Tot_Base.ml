@@ -44,6 +44,7 @@ let rec unzip3 = function
      let (xs,ys,zs) = unzip3 xyzs in
      (x::xs,y::ys,z::zs)
 let bool_of_compare f x y = Z.gt (f x y) Z.zero
-let compare_of_bool rel x y = if (rel x y) then Z.one else (if Z.equal x y then Z.zero else (Z.neg Z.one))
+let compare_of_bool =
+  fun rel -> fun x -> fun y -> if (rel x y) then Z.one else (if x = y then Z.zero else (Z.neg Z.one))
 let sortWith f l = BatList.sort (fun x y -> Z.to_int (f x y)) l
 let list_unref l = l

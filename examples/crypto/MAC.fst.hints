@@ -15,7 +15,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "28196e413ba8986b0e9657b0f09ef821"
+      "00080daff1bb07465c6444c5545dabe6"
     ],
     [
       "MAC.__proj__Entry__item__t",
@@ -27,7 +27,7 @@
         "projection_inverse_MAC.Entry_k"
       ],
       0,
-      "eff1a5d94b2af985fb48598ffe22b739"
+      "034923bae01a44118d8399e343742c37"
     ],
     [
       "MAC.verify",
@@ -53,7 +53,7 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "8b1f75f090edfe36debf1e3cc120db92"
+      "8db4c39e5011cb249833411c881c3297"
     ],
     [
       "MAC.keygen",
@@ -64,7 +64,7 @@
         "@query", "equation_SHA1.keysize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "11f052352f4ff418c878f0370f41f307"
+      "33418992b7810fd7c6ad3a9a8b405ab3"
     ],
     [
       "MAC.mac",
@@ -103,7 +103,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_SHA1.hmac_sha1"
       ],
       0,
-      "5a834841c3cc1b7adc23d156dbe8ee88"
+      "4033f4d4903ee2550f9d52353e685bde"
     ],
     [
       "MAC.verify",
@@ -129,7 +129,47 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "60b5901ab5085e711e96e7ad1dff18d2"
+      "d39d5f96d4791816899c22ef91894b26"
+    ],
+    [
+      "MAC.entry",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.tag",
+        "equation_SHA1.text",
+        "haseqMAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+      ],
+      0,
+      "324d0b0ced59aa9928a1b5a0095c5577"
+    ],
+    [
+      "MAC.__proj__Entry__item__t",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_MAC.Entry_k",
+        "projection_inverse_MAC.Entry_k"
+      ],
+      0,
+      "58f6a07def342701680add893ed07e95"
+    ],
+    [
+      "MAC.verify",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "assumption_Prims.HasEq_bool"
+      ],
+      0,
+      "484885f04ac0b98738b35cf60d693903"
     ]
   ]
 ]

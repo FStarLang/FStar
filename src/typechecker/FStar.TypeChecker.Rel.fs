@@ -67,7 +67,7 @@ type worklist = {
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * worklist =
+let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let ctx_uvar = {
          ctx_uvar_head=UF.fresh();
          ctx_uvar_gamma=gamma;
@@ -75,7 +75,8 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
          ctx_uvar_typ=k;
          ctx_uvar_reason=reason;
          ctx_uvar_should_check=should_check;
-         ctx_uvar_range=r
+         ctx_uvar_range=r;
+         ctx_uvar_meta=meta;
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
     let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
@@ -83,15 +84,14 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
               ; imp_tm     = t
               ; imp_uvar   = ctx_uvar
               ; imp_range  = r
-              ; imp_meta   = None
               } in
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
     let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
     let env = Env.push_binders env bs in
-    new_uvar u.ctx_uvar_reason wl u.ctx_uvar_range env.gamma
-            (Env.all_binders env) t u.ctx_uvar_should_check
+    new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
+            (Env.all_binders env) t u.ctx_uvar_should_check u.ctx_uvar_meta
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -283,14 +283,14 @@ let attempt probs wl             =
     List.iter (def_check_prob "attempt") probs;
     {wl with attempting=probs@wl.attempting}
 
-let mk_eq2 wl prob t1 t2 : term * worklist =
+let mk_eq2 wl env prob t1 t2 : term * worklist =
     (* NS: Rather than introducing a new variable, it would be much preferable
             to simply compute the type of t1 here.
             Sadly, it seems to be way too expensive to call env.type_of here.
     *)
     let t_type, u = U.type_u () in
-    let binders = Env.all_binders wl.tcenv in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma binders t_type Allow_unresolved in
+    let binders = Env.all_binders env in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type Allow_unresolved None in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -317,6 +317,7 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
                  bs
                  U.ktype0
                  Allow_untyped
+                 None
     in
     let prob =
         //logical guards are always squashed;
@@ -364,6 +365,7 @@ let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
                (Env.all_binders env)
                lg_ty
                Allow_untyped
+               None
   in
   let lg =
     match subject with
@@ -619,6 +621,7 @@ let destruct_flex_t t wl : flex_t * worklist =
                        (new_gamma |> List.collect (function Binding_var x -> [S.mk_binder x] | _ -> []) |> List.rev)
                        (U.arrow dom_binders (S.mk_Total uv.ctx_uvar_typ))
                        uv.ctx_uvar_should_check
+                       uv.ctx_uvar_meta
       in
       let args_sol = List.map (fun (x, i) -> S.bv_to_name x, i) dom_binders in
       let sol = S.mk_Tm_app t_v args_sol None t.pos in
@@ -763,7 +766,7 @@ let gamma_until (g:gamma) (bs:binders) =
 let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
     let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
     let g = gamma_until src.ctx_uvar_gamma pfx in
-    let _, src', wl = new_uvar src.ctx_uvar_reason wl src.ctx_uvar_range g pfx src.ctx_uvar_typ src.ctx_uvar_should_check in
+    let _, src', wl = new_uvar ("restrict:"^src.ctx_uvar_reason) wl src.ctx_uvar_range g pfx src.ctx_uvar_typ src.ctx_uvar_should_check src.ctx_uvar_meta in
     Unionfind.change src.ctx_uvar_head src';
     wl
 
@@ -1313,7 +1316,7 @@ let guard_of_prob (env:Env.env) (wl:worklist) (problem:tprob) (t1 : term) (t2 : 
             U.mk_forall u_x x (U.mk_has_type t1 (S.bv_to_name x) t2)
     in
     match problem.relation with
-    | EQ     -> mk_eq2 wl (TProb problem) t1 t2
+    | EQ     -> mk_eq2 wl env (TProb problem) t1 t2
     | SUB    -> has_type_guard t1 t2, wl
     | SUBINV -> has_type_guard t2 t1, wl
 
@@ -1694,9 +1697,10 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
       let tx = UF.new_transaction () in
       begin
-      match solve_t env eq_prob ({wl' with defer_ok=false; attempting=sub_probs}) with
-      | Success _ ->
+      match solve_t env eq_prob ({wl' with defer_ok=false; wl_implicits = []; attempting=sub_probs}) with
+      | Success (_, imps) ->
          let wl = {wl' with attempting=rest} in
+         let wl = {wl with wl_implicits = wl'.wl_implicits @ imps} in
          let g =  List.fold_left (fun g p -> U.mk_conj g (p_guard p))
                                  eq_prob.logical_guard
                                  sub_probs in
@@ -1979,7 +1983,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         match quasi_pattern env lhs with
         | None ->
            giveup_or_defer env orig wl
-              (BU.format1 "first_order heursitic cannot solve %s; lhs not a quasi-pattern"
+              (BU.format1 "first_order heuristic cannot solve %s; lhs not a quasi-pattern"
                           (prob_to_string env orig))
 
         | Some (bs_lhs, t_res_lhs) ->
@@ -1988,7 +1992,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           else if is_arrow rhs
           then imitate_arrow orig env wl lhs bs_lhs t_res_lhs EQ rhs
           else giveup_or_defer env orig wl
-                               (BU.format1 "first_order heursitic cannot solve %s; \
+                               (BU.format1 "first_order heuristic cannot solve %s; \
                                             rhs not an app or arrow"
                                             (prob_to_string env orig))
     in
@@ -2061,7 +2065,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
             then solve env (solve_prob orig None [] wl)
             else (* Given a flex-flex instance:
                     (x1..xn ..X  |- ?u : ts  -> tres) [y1  ... ym ]
-                 ~  (x1..xn ..X'| - ?v : ts' -> tres) [y1' ... ym']
+                 ~  (x1..xn ..X' |- ?v : ts' -> tres) [y1' ... ym']
 
                     let ctx_w = x1..xn in
                     let z1..zk = (..X..y1..ym intersect ...X'...y1'..ym') in
@@ -2085,7 +2089,8 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                           ^"\tlhs="  ^u_lhs.ctx_uvar_reason
                                           ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
-                                         Strict in
+                                         Strict
+                                         None in
                  let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
                  let _ =
                     if Env.debug env <| Options.Other "Rel"
@@ -2476,9 +2481,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     def_check_closed_in (p_loc orig) "ref.t2" (List.map fst (p_scope orig)) t2;
     let _ =
         if debug env (Options.Other "Rel")
-        then BU.print3 "Attempting %s (%s vs %s)\n" (string_of_int problem.pid)
+        then BU.print4 "Attempting %s (%s vs %s); rel = (%s)\n" (string_of_int problem.pid)
                             (Print.tag_of_term t1 ^ "::" ^ Print.term_to_string t1)
                             (Print.tag_of_term t2 ^ "::" ^ Print.term_to_string t2)
+                            (rel_to_string problem.relation)
                             in
     let r = Env.get_range env in
     match t1.n, t2.n with
@@ -2557,8 +2563,27 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         in
         let force_eta t =
             if is_abs t then t
-            else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
-                 N.eta_expand_with_type env t (N.unfold_whnf env ty)
+            else begin
+                let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+                (* Find the WHNF ignoring refinements. Otherwise consider
+                 *
+                 * let myty1 = a -> Tot b
+                 * let myty2 = f:myty1{whatever f}
+                 *
+                 * The WHNF of myty2 is not an arrow, and we would fail to eta-expand. *)
+                let ty =
+                    let rec aux ty =
+                        let ty = N.unfold_whnf env ty in
+                        match (SS.compress ty).n with
+                        | Tm_refine _ -> aux (U.unrefine ty)
+                        | _ -> ty
+                    in aux ty
+                in
+                let r = N.eta_expand_with_type env t ty in
+                if Env.debug wl.tcenv <| Options.Other "Rel" then
+                  BU.print3 "force_eta of (%s) at type (%s) = %s\n" (Print.term_to_string t) (Print.term_to_string (N.unfold_whnf env ty)) (Print.term_to_string r);
+                r
+            end
         in
         begin
             match maybe_eta t1, maybe_eta t2 with
@@ -2803,7 +2828,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               else let guard, wl =
                        if equal t1 t2
                        then None, wl
-                       else let g, wl = mk_eq2 wl orig t1 t2 in
+                       else let g, wl = mk_eq2 wl env orig t1 t2 in
                             Some g, wl
                    in
                    solve env (solve_prob orig guard [] wl)
@@ -3327,9 +3352,22 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) : option<guard_t> =
   | Some g -> discharge_guard' None env g false
 
 let resolve_implicits' env must_total forcelax g =
-  let unresolved ctx_u =
+  let rec unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
-    | Some _ -> false
+    | Some r ->
+        begin match ctx_u.ctx_uvar_meta with
+        | None -> false
+        (* If we have a meta annotation, we recurse to see if the uvar
+         * is actually solved, instead of being resolved to yet another uvar.
+         * In that case, while we are keeping track of that uvar, we must not
+         * forget the meta annotation in case this second uvar is not solved.
+         * See #1561. *)
+        | Some _ ->
+            begin match (SS.compress r).n with
+            | Tm_uvar (ctx_u', _) -> unresolved ctx_u'
+            | _ -> false
+            end
+        end
     | None -> true
   in
   let rec until_fixpoint (acc: Env.implicits * bool) (implicits:Env.implicits) : Env.implicits =
@@ -3341,10 +3379,11 @@ let resolve_implicits' env must_total forcelax g =
           if ctx_u.ctx_uvar_should_check = Allow_unresolved
           then until_fixpoint(out, true) tl
           else if unresolved ctx_u
-          then begin match hd.imp_meta with
+          then begin match ctx_u.ctx_uvar_meta with
                | None ->
                     until_fixpoint (hd::out, changed) tl
-               | Some (env, tau) ->
+               | Some (env_dyn, tau) ->
+                    let env : Env.env = FStar.Dyn.undyn env_dyn in
                     if Env.debug env (Options.Other "Tac") then
                         BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
                     let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
@@ -3354,7 +3393,8 @@ let resolve_implicits' env must_total forcelax g =
                         | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
                         | Some g -> g.implicits
                     in
-                    let hd = { hd with imp_meta = None } in
+                    let ctx_u = { ctx_u with ctx_uvar_meta = None } in
+                    let hd = { hd with imp_uvar = ctx_u } in
                     until_fixpoint (out, true) (hd :: (extra @ tl))
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped

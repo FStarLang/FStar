@@ -113,19 +113,20 @@ It will help if you are already familiar with functional programming
 languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
 with [Haskell]---we provide a quick review of some basic concepts if you're
 a little rusty, but if you feel you need more background, there are many useful
-resources freely available on the web, e.g., [TryF#],
-[F# for fun and profit], [Introduction to Caml], or the
-[Real World OCaml] book.
+resources freely available on the web, e.g., [Learn F#],
+[F# for fun and profit], [Introduction to Caml], the
+[Real World OCaml] book, or the [OCaml MOOC].
 
 [OCaml]: https://ocaml.org
 [F#]: http://fsharp.org/
 [Standard ML]: http://sml-family.org/
 [Haskell]: https://www.haskell.org
 
+[Learn F#]: https://fsharp.org/learn.html
 [F# for fun and profit]: http://fsharpforfunandprofit.com/
-[TryF#]: http://www.tryfsharp.org
 [Introduction to Caml]: https://pl.cs.jhu.edu/pl/lectures/caml-intro.html
 [Real World OCaml]: https://realworldocaml.org/
+[OCaml MOOC]: https://www.fun-mooc.fr/courses/course-v1:parisdiderot+56002+session03/about
 
 ~KK
 Without any experience in ML or Ocaml my experience has been that the later

@@ -183,8 +183,6 @@ let write #a #r m x =
   let h0 = ist_get () in
   ist_recall (contains m);    //recalling that the current heap must contain the given reference
   let h1 = upd h0 m x in
-  (* Help z3 figure out nothing else changed *)
-  assert (forall b s (m':mref0 b s{contains m' h0}). ~(addr_of m = addr_of m') ==> s (sel h0 m') (sel h1 m'));
   ist_put h1
 
 

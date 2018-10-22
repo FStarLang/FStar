@@ -523,7 +523,7 @@ and comp_to_string c =
                             (c.comp_univs |> List.map univ_to_string |> String.concat ", ")
                             (term_to_string c.result_typ)
                             (c.effect_args |> List.map arg_to_string |> String.concat ", ")
-                            (c.flags |> List.map cflags_to_string |> String.concat " ")
+                            (cflags_to_string c.flags)
           else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
           && not (Options.print_effect_args())
           then U.format1 "Tot %s" (term_to_string c.result_typ)
@@ -538,7 +538,7 @@ and comp_to_string c =
       let dec = c.flags |> List.collect (function DECREASES e -> [U.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       U.format2 "%s%s" basic dec
 
-and cflags_to_string c =
+and cflag_to_string c =
     match c with
         | TOTAL -> "total"
         | MLEFFECT -> "ml"
@@ -551,6 +551,7 @@ and cflags_to_string c =
         | CPS -> "cps"
         | DECREASES _ -> "" (* TODO : already printed for now *)
 
+and cflags_to_string fs = FStar.Common.string_of_list cflag_to_string fs
 
 (* CH: at this point not even trying to detect if something looks like a formula,
        only locally detecting certain patterns *)

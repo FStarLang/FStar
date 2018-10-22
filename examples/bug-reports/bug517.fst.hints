@@ -2,15 +2,6 @@
   "`°7z Œ≤Ãÿ:çæ÷X\u0007\u0016",
   [
     [
-      "Bug517.new_int",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "1f0607fdc5a7328379f6c238ccaceed1"
-    ],
-    [
       "Bug517.add",
       1,
       2,
@@ -21,7 +12,7 @@
         "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
       ],
       0,
-      "2b9e1cb559abc9aa80d3bbe1fc54edad"
+      "0127f5443437f88740ff8239664ea7c0"
     ],
     [
       "Bug517.add'",
@@ -34,7 +25,7 @@
         "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
       ],
       0,
-      "30bef39906a8ea19cc05a3446f13affc"
+      "63e937125eb372715525e8418e4c08ce"
     ]
   ]
 ]

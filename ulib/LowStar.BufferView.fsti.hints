@@ -1,5 +1,5 @@
 [
-  "y11˚≤góﬁS¡sÜC\u0018mÔ",
+  "oÃç◊∫ü∏ı˙É.¯+^’e",
   [
     [
       "LowStar.BufferView.view",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "4cf66733278605b042dd7e0e5ae43ed2"
+      "e2f1559103ca4c706bc1e862661a7063"
     ],
     [
       "LowStar.BufferView.__proj__View__item__get",
@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "dc0b00e0a71547c5c457b721d614677e"
+      "ba9ddf31f81beae313338cae2c9db718"
     ],
     [
       "LowStar.BufferView.__proj__View__item__get",
@@ -38,7 +38,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "c3a269b9f3e0b44f97d4ca2671a83b6e"
+      "9e7d82bae3456ee7e322d161b483899d"
     ],
     [
       "LowStar.BufferView.__proj__View__item__put",
@@ -47,7 +47,7 @@
       1,
       [ "@query" ],
       0,
-      "d823516863262bb164c8a0be0dc7c69e"
+      "bcc3288c898798cf15f0fcccd36bc2e2"
     ],
     [
       "LowStar.BufferView.__proj__View__item__put",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "c912a6817d3ce49f55fb076535171ce3"
+      "d13ef1c3b55470ce82acd535057cc987"
     ],
     [
       "LowStar.BufferView.mk_buffer_view",
@@ -79,7 +79,7 @@
       1,
       [ "@query" ],
       0,
-      "84c248f1c19797332bfe18169dee0eab"
+      "607d86397d28cb44f9eabd8543221019"
     ],
     [
       "LowStar.BufferView.as_buffer_mk_buffer_view",
@@ -88,7 +88,7 @@
       1,
       [ "@query" ],
       0,
-      "6a2990669be64cc81a3c237dfa7d9baf"
+      "b70bf1a34fde0cecb189580952947131"
     ],
     [
       "LowStar.BufferView.get_view_mk_buffer_view",
@@ -97,7 +97,7 @@
       1,
       [ "@query" ],
       0,
-      "fbd818a4ff230159f43f85678feaaf7a"
+      "33150b3f88cdc531942db29460abbb57"
     ],
     [
       "LowStar.BufferView.length_eq",
@@ -106,7 +106,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "602cc67bbdc76a4864af603b5237e521"
+      "f8fa832ec841b2864a3df2aeffcb0a29"
     ],
     [
       "LowStar.BufferView.sel_upd",
@@ -116,15 +116,29 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int",
         "equation_FStar.Monotonic.HyperStack.mem", "equation_FStar.UInt32.n",
-        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
-        "haseqLowStar.BufferView_Tm_refine_857a3b7dc93e2e890860939e5d477834",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_LowStar.BufferView_Tm_refine_e00ebf011276c18c2a3282d5327992dd",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "c4a8eddebcd316c9224032725485b953"
+    ],
+    [
+      "LowStar.BufferView.lemma_upd_with_sel",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Monotonic.HyperStack.mem",
         "refinement_interpretation_LowStar.BufferView_Tm_refine_e00ebf011276c18c2a3282d5327992dd"
       ],
       0,
-      "a666271a10b1fc362e4e4ed95cff195a"
+      "d95586b37962a444ce5e1efeec06a7c3"
     ],
     [
       "LowStar.BufferView.as_seq_sel",
@@ -138,7 +152,7 @@
         "typing_LowStar.BufferView.as_seq"
       ],
       0,
-      "8993cc7fa07ca01a9f30718f30231ffa"
+      "b7220a4d1e0784b35092aeb06e9714de"
     ],
     [
       "LowStar.BufferView.get_sel",
@@ -195,7 +209,7 @@
         "typing_Prims.__proj__Mkdtuple2__item___1"
       ],
       0,
-      "c7e9e873ad2925d02d60edd7d889a15e"
+      "8906db7c1150e69ed09c3d065f73baa8"
     ],
     [
       "LowStar.BufferView.put_sel",
@@ -249,7 +263,7 @@
         "typing_Prims.__proj__Mkdtuple2__item___1"
       ],
       0,
-      "3c5e37df9a794c40e54e0200d11783cd"
+      "b53e5b28b55875a418bf8bc045be02aa"
     ]
   ]
 ]

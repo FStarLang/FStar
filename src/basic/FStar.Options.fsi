@@ -108,6 +108,7 @@ val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
 val cache_checked_modules       : unit    -> bool
 val cache_off                   : unit    -> bool
+val cmi                         : unit    -> bool
 type codegen_t =
     | OCaml | FSharp | Kremlin | Plugin
 val codegen                     : unit    -> option<codegen_t>

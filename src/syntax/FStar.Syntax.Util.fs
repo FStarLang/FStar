@@ -228,7 +228,7 @@ let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
 let comp_set_flags (c:comp) f =
     {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
 
-let lcomp_set_flags (lc:lcomp) (fs:list<cflags>) =
+let lcomp_set_flags (lc:lcomp) (fs:list<cflag>) =
     let comp_typ_set_flags (c:comp) =
         match c.n with
         | Total _
@@ -516,6 +516,14 @@ let injectives =
      "FStar.UInt32.__uint_to_t";
      "FStar.UInt64.__uint_to_t"]
 
+let eq_inj f g =
+     match f, g with
+     | Equal, Equal -> Equal
+     | NotEqual, _
+     | _, NotEqual -> NotEqual
+     | Unknown, _
+     | _, Unknown -> Unknown
+
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
 let rec eq_tm (t1:term) (t2:term) : eq_result =
     let t1 = canon_app t1 in
@@ -532,14 +540,6 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       match f with
       | Equal -> g()
       | _ -> Unknown
-    in
-    let eq_inj f g =
-      match f, g with
-      | Equal, Equal -> Equal
-      | NotEqual, _
-      | _, NotEqual -> NotEqual
-      | Unknown, _
-      | _, Unknown -> Unknown
     in
     let equal_data f1 (args1:Syntax.args) f2 (args2:Syntax.args) =
         // we got constructors! we know they are injective and disjoint, so we can do some
@@ -646,6 +646,7 @@ and eq_aqual a1 a2 =
     | _, None -> NotEqual
     | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
     | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
+    | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
 
 and branch_matches b1 b2 =
@@ -799,12 +800,6 @@ let mk_data l args =
       let e = mk_app (fvar l delta_constant (Some Data_ctor)) args in //NS delta: ok
       mk e None e.pos
 
-let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
-let unmangle_field_name x =
-    if U.starts_with x.idText "__fname__"
-    then mk_ident(U.substring_from x.idText 9, x.idRange)
-    else x
-
 (***********************************************************************************************)
 (* Combining an effect name with the name of one of its actions, or a
    data constructor name with the name of one of its formal parameters
@@ -843,12 +838,11 @@ let mk_field_projector_name_from_string constr field =
     field_projector_prefix ^ constr ^ field_projector_sep ^ field
 
 let mk_field_projector_name_from_ident lid (i : ident) =
-    let j = unmangle_field_name i in
-    let jtext = j.idText in
+    let itext = i.idText in
     let newi =
-        if field_projector_contains_constructor jtext
-        then j
-        else mk_ident (mk_field_projector_name_from_string lid.ident.idText jtext, i.idRange)
+        if field_projector_contains_constructor itext
+        then i
+        else mk_ident (mk_field_projector_name_from_string lid.ident.idText itext, i.idRange)
     in
     lid_of_ids (lid.ns @ [newi])
 
@@ -1127,7 +1121,11 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) delta_constant None)) None Range.dummyRange
+    mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange)
+                           delta_constant
+                           None))
+       None
+       Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
@@ -1151,6 +1149,7 @@ let t_true  = fvar_const PC.true_lid  //NS delta: wrong? should be Delta_constan
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 let tcdecltime_attr = fvar_const PC.tcdecltime_attr
+let inline_let_attr = fvar_const PC.inline_let_attr
 
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 
@@ -1458,18 +1457,18 @@ let destruct_typ_as_formula f : option<connective> =
         // eq2 can have 2 args or 3
         | Tm_fvar fv, 2
             when fv_eq_lid fv PC.c_eq2_lid ->
-                Some (BaseConn (PC.eq2_lid, args))
+                Some (BaseConn (PC.c_eq2_lid, args))
         | Tm_fvar fv, 3
             when fv_eq_lid fv PC.c_eq2_lid ->
-                Some (BaseConn (PC.eq2_lid, args))
+                Some (BaseConn (PC.c_eq2_lid, args))
 
         // eq3 can have 2 args or 4
         | Tm_fvar fv, 2
             when fv_eq_lid fv PC.c_eq3_lid ->
-                Some (BaseConn (PC.eq3_lid, args))
+                Some (BaseConn (PC.c_eq3_lid, args))
         | Tm_fvar fv, 4
             when fv_eq_lid fv PC.c_eq3_lid ->
-                Some (BaseConn (PC.eq3_lid, args))
+                Some (BaseConn (PC.c_eq3_lid, args))
 
         | Tm_fvar fv, 0
             when fv_eq_lid fv PC.c_true_lid ->
@@ -1806,7 +1805,7 @@ and comp_eq_dbg (dbg : bool) c1 c2 =
     (check "comp result typ"  (term_eq_dbg dbg c1.result_typ c2.result_typ)) &&
     (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
     true //eq_flags c1.flags c2.flags
-and eq_flags_dbg (dbg : bool) (f1 : cflags) (f2 : cflags) = true // TODO? Or just ignore?
+and eq_flags_dbg (dbg : bool) (f1 : cflag) (f2 : cflag) = true // TODO? Or just ignore?
 and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
     (check "branch pat"  (eq_pat p1 p2)) &&
     (check "branch body"  (term_eq_dbg dbg t1 t2))

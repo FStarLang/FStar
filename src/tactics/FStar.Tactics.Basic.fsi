@@ -1,18 +1,16 @@
 #light "off"
 module FStar.Tactics.Basic
 
+open FStar.TypeChecker.Env
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Syntax.Syntax
-open FStar.TypeChecker.Env
 
 open FStar.Reflection.Data
 module Range = FStar.Range
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 module BU = FStar.Util
-
-type goal = FStar.Tactics.Types.goal
 
 type tac<'a>
 
@@ -22,6 +20,8 @@ val ret : 'a -> tac<'a>
 val set : proofstate -> tac<unit>
 val get : tac<proofstate>
 val bind : tac<'a> -> ('a -> tac<'b>) -> tac<'b>
+val traise : exn -> tac<'a>
+val fail : string -> tac<'a>
 
 val set_goals     : list<goal> -> tac<unit>
 val set_smt_goals : list<goal> -> tac<unit>
@@ -48,12 +48,12 @@ val dump_proofstate : proofstate -> string -> unit
 val print_proof_state  : string -> tac<unit>
 val debugging : unit -> tac<bool>
 
-val fail : string -> tac<'a>
 val trivial : unit -> tac<unit>
 val divide : Z.t -> tac<'a> -> tac<'b> -> tac<('a * 'b)>
 val seq : tac<unit> -> tac<unit> -> tac<unit>
 val focus : tac<'a> -> tac<'a>
-val catch : tac<'a> -> tac<BU.either<string,'a>>
+val catch : tac<'a> -> tac<BU.either<exn,'a>>
+val recover : tac<'a> -> tac<BU.either<exn,'a>>
 val intro : unit -> tac<binder>
 val intro_rec : unit -> tac<(binder * binder)>
 val norm : list<EMB.norm_step> -> tac<unit>

@@ -1,0 +1,115 @@
+[
+  "÷‘\u0000≤<pZˆ)0 ﬂ˜ñX∞",
+  [
+    [
+      "Raise.uu___64",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_Raise.Wat@tok",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "equation_FStar.UInt32.n",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "function_token_typing_FStar.UInt32.n",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "7c90566cbf08f74c677021934bcb7f7f"
+    ],
+    [
+      "Raise.uu___64",
+      2,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_Raise.Wat@tok",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "equation_FStar.UInt32.n",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "function_token_typing_FStar.UInt32.n",
+        "projection_inverse_BoxBool_proj_0", "true_interp"
+      ],
+      0,
+      "441238b5b1552d862a510d681528e9ad"
+    ],
+    [
+      "Raise.uu___65",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_Raise.Wat@tok",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "equation_FStar.UInt32.n",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "function_token_typing_FStar.UInt32.n",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "cb7f89459809824ebd7530d444151d8f"
+    ],
+    [
+      "Raise.uu___64",
+      3,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_Raise.Wat@tok",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "equation_FStar.UInt32.n",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "function_token_typing_FStar.UInt32.n",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "aece89fc5e1f898b04f6427b838f80bc"
+    ],
+    [
+      "Raise.uu___64",
+      4,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_Raise.Wat@tok",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "equation_FStar.UInt32.n",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "function_token_typing_FStar.UInt32.n",
+        "projection_inverse_BoxBool_proj_0", "true_interp"
+      ],
+      0,
+      "32a700e226cd504827c3fede1ad03f84"
+    ]
+  ]
+]

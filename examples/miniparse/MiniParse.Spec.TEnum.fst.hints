@@ -20,7 +20,7 @@
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
-        "projection_inverse_FStar.Tactics.Result.Failed_msg",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
         "projection_inverse_FStar.Tactics.Result.Failed_ps",
         "projection_inverse_FStar.Tactics.Result.Success_a",
         "projection_inverse_FStar.Tactics.Result.Success_ps",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f846dd12d58d9b56a69066cd07cb6558"
+      "684a23004251fd5a8afc85d667f165c2"
     ],
     [
       "MiniParse.Spec.TEnum.get_inductive_constructors",
@@ -46,7 +46,7 @@
         "typing_FStar.Reflection.Basic.lookup_typ"
       ],
       0,
-      "9263624e0c1dbcd8f7d95544bf752be1"
+      "ec421dbaa66624c4b40562235f643957"
     ],
     [
       "MiniParse.Spec.TEnum.invert_branches_with_cascade",
@@ -67,7 +67,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "28a2777f06c911f01318b22b27328198"
+      "d70177b2e51cf8ba78bc31492a7ea3d9"
     ],
     [
       "MiniParse.Spec.TEnum.synth_inverse_forall_bounded_u16_intro",
@@ -85,7 +85,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "62a36517adb48f54fe434c413792258e"
+      "6bdf3012bae8690751a658c75b4a490e"
     ],
     [
       "MiniParse.Spec.TEnum.mk_tenum_branches",
@@ -106,7 +106,7 @@
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
-        "projection_inverse_FStar.Tactics.Result.Failed_msg",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
         "projection_inverse_FStar.Tactics.Result.Failed_ps",
         "projection_inverse_FStar.Tactics.Result.Success_a",
         "projection_inverse_FStar.Tactics.Result.Success_ps",
@@ -114,7 +114,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a769080b4dfe82c30e722612ea951a54"
+      "212a35d0bb4bb954272936d407484cef"
     ],
     [
       "MiniParse.Spec.TEnum.get_inductive_constructors",
@@ -132,7 +132,7 @@
         "typing_FStar.Reflection.Basic.lookup_typ"
       ],
       0,
-      "913211333834fd2df8f5d070235f2403"
+      "95ede070e63f04f821289a1903d65da4"
     ],
     [
       "MiniParse.Spec.TEnum.invert_branches_with_cascade",
@@ -153,7 +153,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "796a5ac0b892e734d23d3cadfaf2933f"
+      "bc5ead791f0e01cac4e6b9dbbfffe310"
     ],
     [
       "MiniParse.Spec.TEnum.synth_inverse_forall_bounded_u16_intro",
@@ -171,7 +171,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b3201a3f10e7258a6b5161136600b803"
+      "e49fd36168f005cc976e9747925d4658"
     ]
   ]
 ]

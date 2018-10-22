@@ -7,13 +7,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.nat",
-        "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "31c1e1ad1f7ef0429127fad561c88fa0"
+      "e92ca5b63087c57c0777b7826d250192"
     ],
     [
       "FStar.DM4F.Heap.Random.tape",
@@ -26,18 +26,14 @@
         "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.id",
         "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Prims.pos",
+        "equation_Prims.nat",
         "function_token_typing_FStar.DM4F.Heap.Random.elem",
         "function_token_typing_FStar.DM4F.Heap.Random.id",
-        "function_token_typing_FStar.DM4F.Heap.Random.q",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "haseqFStar.Seq.Properties_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
-        "int_inversion",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "021b8e413c56fb649cd11290229e9be7"
+      "4b9f5e0c4be290aacd02c0cc98f63178"
     ],
     [
       "FStar.DM4F.Heap.Random.incr",
@@ -59,7 +55,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f9dfb72bd31fc2de5f4f27527c61fa49"
+      "f17243fcfab96a8553ebbeda3827355b"
     ],
     [
       "FStar.DM4F.Heap.Random.index",
@@ -74,7 +70,7 @@
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "ce22a6aa15a5bef96b67d320fd6b0a3b"
+      "4d2a81091b807ad8eadda725b8473377"
     ],
     [
       "FStar.DM4F.Heap.Random.upd",
@@ -97,7 +93,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9b5c94e0c9f1bbb77b2ff05f03ea1fc6"
+      "42077c4c735e0444ca05ea05650023f4"
     ],
     [
       "FStar.DM4F.Heap.Random.create",
@@ -116,7 +112,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "844645a29f0439cc4cbcdcdd1faa69dd"
+      "d497b7b62486971c47f8d1e4aaf33158"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_eq_intro",
@@ -140,7 +136,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fd1d3628a0040445009194fd445f3aa8"
+      "143b21454c1fb1df02cfc91ef3f1d701"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_eq_elim",
@@ -158,7 +154,7 @@
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "171e397f6b82bd661badc9ead59326bc"
+      "b12bdbdf5f19632b99a4c9ade23d2d3e"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_upd1",
@@ -180,7 +176,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "51aebfb635b4da791ac567e8a6fbdfc9"
+      "61e88a13610504c04bb94fe1b4c9e928"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_upd2",
@@ -203,7 +199,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ad2e8f88077058717e9cf1979e652459"
+      "0d0c5040822eb9cbdfae566d56a78c1a"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_create",
@@ -217,7 +213,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c1d6b3e4e49c212f1916a3ca97748922"
+      "bfba82ca40d2990772d2827dddd0646a"
     ]
   ]
 ]

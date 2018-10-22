@@ -134,7 +134,7 @@ val try_lookup_lid_with_attributes: env -> lident -> option<(term * list<attribu
 val try_lookup_lid_with_attributes_no_resolve: env -> lident -> option<(term * list<attribute>)>
 val try_lookup_lid_no_resolve: env -> lident -> option<term>
 val try_lookup_effect_name: env -> lident -> option<lident>
-val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflags>)>
+val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflag>)>
 val try_lookup_effect_defn: env -> lident -> option<eff_decl>
 (* [try_lookup_root_effect_name] is the same as
 [try_lookup_effect_name], but also traverses effect abbrevs. TODO:

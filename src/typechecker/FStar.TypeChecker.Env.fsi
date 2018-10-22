@@ -21,6 +21,7 @@ open FStar
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
+
 module BU = FStar.Util
 
 type step =
@@ -50,6 +51,7 @@ type step =
   | Unmeta          //remove all non-monadic metas.
   | Unascribe
   | NBE
+  | ForExtraction   //marking an invocation of the normalizer for extraction
 and steps = list<step>
 
 val eq_step : step -> step -> bool
@@ -172,7 +174,6 @@ and implicit = {
     imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
     imp_tm     : term;                    // The term, made up of the ctx_uvar
     imp_range  : Range.range;             // Position where it was introduced
-    imp_meta   : option<(env * term)>;    // An optional metaprogram to try to fill it
 }
 and implicits = list<implicit>
 and tcenv_hooks =
@@ -323,6 +324,9 @@ val is_reifiable_function    : env -> term -> bool
 (* is reifiable but not user-reifiable.) *)
 val is_user_reifiable_effect : env -> lident -> bool
 
+(* Is this effect marked `total`? *)
+val is_total_effect : env -> lident -> bool
+
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders
 
@@ -364,6 +368,6 @@ val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
-val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> (term * list<(ctx_uvar * Range.range)> * guard_t)
+val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> option<(FStar.Dyn.dyn * term)> -> (term * list<(ctx_uvar * Range.range)> * guard_t)
 
 val print_gamma : gamma -> string

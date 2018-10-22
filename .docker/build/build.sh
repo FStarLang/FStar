@@ -25,7 +25,7 @@ function fetch_vale() {
     echo Switching to vale to fstar_ci
     git clean -fdx .
     git reset --hard origin/fstar_ci
-    nuget.exe restore tools/Vale/src/packages.config -PackagesDirectory tools/FsLexYacc
+    nuget restore tools/Vale/src/packages.config -PackagesDirectory tools/FsLexYacc
     cd ..
     export_home VALE "$(pwd)/vale"
 }
@@ -188,6 +188,8 @@ function build_fstar() {
             echo Warm-up failed
             echo Failure >$result_file
         else
+            export_home FSTAR "$(pwd)"
+
             fetch_vale &
             fetch_hacl &
             fetch_and_make_kremlin &
@@ -204,7 +206,6 @@ function build_fstar() {
             # propagated to the current shell. Re-do.
             export_home HACL "$(pwd)/hacl-star"
             export_home KREMLIN "$(pwd)/kremlin"
-            export_home FSTAR "$(pwd)"
 
             # Once F* is built, run its main regression suite, along with more relevant
             # tests.
@@ -219,11 +220,9 @@ function build_fstar() {
                 if [[ "$OS" == "Windows_NT" ]]; then
                     ## This hack for determining the success of a vale run is needed
                     ## because somehow scons is not returning the error code properly
-                    timeout $timeout ./scons_cygwin.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output
+                    { timeout $timeout env VALE_SCONS_EXIT_CODE_OUTPUT_FILE=vale_exit_code ./run_scons.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output ; } || has_error="true"
 
-                    ## adds "min-test (Vale)" to the ORANGE_FILE
-                    ##      if this string vvvv is present in vale_output
-                    ! grep -qi 'scons: building terminated because of errors.' vale_output || has_error="true"
+                    { [[ -f vale_exit_code ]] && [[ $(cat vale_exit_code) -eq 0 ]] ; } || has_error="true"
                 else
                     timeout $timeout scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
                 fi
@@ -292,7 +291,8 @@ function build_fstar() {
                 { echo " - snapshot-diff (F*)" >>$ORANGE_FILE; }
             fi
 
-            if [[ $localTarget == "uregressions-ulong" ]]; then
+            # We should not generate hints when building on Windows
+            if [[ $localTarget == "uregressions-ulong" && "$OS" != "Windows_NT" ]]; then
                 refresh_fstar_hints
             fi
         fi

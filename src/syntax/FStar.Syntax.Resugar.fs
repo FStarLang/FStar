@@ -408,12 +408,18 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           resugar_as_app e args
 
         | Some ("tuple", _) ->
-          begin match args with
-            | (fst, _)::(snd, _)::rest ->
-              let e = mk(A.Op(Ident.id_of_text "*", [(resugar_term' env fst); (resugar_term' env snd)])) in
-              List.fold_left(fun acc (x,_) -> mk (A.Op(Ident.id_of_text "*", [e; resugar_term' env x]))) e rest
-            | _ -> resugar_as_app e args
-          end
+          let out =
+              List.fold_left
+                (fun out (x, _) ->
+                    let x = resugar_term' env x in
+                    match out with
+                    | None -> Some x
+                    | Some prefix ->
+                      Some (mk(A.Op(Ident.id_of_text "*", [prefix; x]))))
+                    None
+                    args
+          in
+          Option.get out
 
         | Some ("dtuple", _) when List.length args > 0 ->
           (* this is desugared from Sum(binders*term) *)
@@ -428,7 +434,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                 let xs = if (Options.print_implicits()) then xs else filter_imp xs in
                 let xs = xs |> map_opt (fun b -> resugar_binder' env b t.pos) in
                 let body = resugar_term' env body in
-                mk (A.Sum(xs, body))
+                mk (A.Sum(List.map Inl xs, body))
 
             | _ ->
               let args = args |> List.map (fun (e, qual) ->
@@ -693,8 +699,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         // Is it correct to resugar it to Attributes.
         mk (A.Attributes pats)
 
-      | Meta_labeled (l, _, p) ->
-          mk (A.Labeled(resugar_term' env e, l, p))
+      | Meta_labeled _ ->
+          (* Ignore the label, we don't want to print it *)
+          resugar_term' env e
       | Meta_desugared i ->
           resugar_meta_desugared i
       | Meta_named t ->
@@ -977,7 +984,7 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
               (* Todo: resugar univs *)
               begin match (SS.compress term).n with
                 | Tm_arrow(bs, _) ->
-                  let mfields = bs |> List.map (fun (b, qual) -> (U.unmangle_field_name (bv_as_unique_ident b), resugar_term' env b.sort, None)) in
+                  let mfields = bs |> List.map (fun (b, qual) -> (bv_as_unique_ident b, resugar_term' env b.sort, None)) in
                   mfields@fields
                 | _ -> failwith "unexpected"
               end

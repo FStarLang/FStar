@@ -17,10 +17,10 @@ let bounded (b:bound) = n:nat{bounded_by b n}
 
 class enum a = {
     max     : bound;
-    toInt   : a -> bounded (__fname__max);
-    fromInt : bounded (__fname__max) -> a;
-    inv1    : x:a -> Lemma (__fname__fromInt (__fname__toInt x) == x);
-    inv2    : i:(bounded __fname__max) -> Lemma (__fname__toInt (__fname__fromInt i) == i);
+    toInt   : a -> bounded max;
+    fromInt : bounded max -> a;
+    inv1    : x:a -> Lemma (fromInt (toInt x) == x);
+    inv2    : i:(bounded max) -> Lemma (toInt (fromInt i) == i);
 }
 
 instance enum_nat : enum nat =

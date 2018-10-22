@@ -12,7 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "a60203fd863294820d9a77c331e95eaf"
+      "c07cd3dc5371fd9935609a4a3ef59661"
     ],
     [
       "Sequences.test",
@@ -35,7 +35,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "4efd7e389fbd3abd5b443fed93963b9b"
+      "b597f02e607907433885a029b5aef964"
     ],
     [
       "Sequences.test",
@@ -45,14 +45,13 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_elim_Prims.Refl", "eq2-interp",
-        "equation_FStar.Seq.Properties.snoc", "equation_Prims.eq2",
-        "equation_Prims.nat", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.equals", "int_inversion", "int_typing",
+        "equation_FStar.Seq.Properties.snoc", "equation_Prims.nat",
+        "int_inversion", "int_typing",
+        "lemma_FStar.Seq.Base.lemma_create_len",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Base.lemma_index_app1",
         "lemma_FStar.Seq.Base.lemma_index_slice",
+        "lemma_FStar.Seq.Base.lemma_len_append",
         "lemma_FStar.Seq.Base.lemma_len_slice",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
@@ -62,13 +61,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Properties.snoc",
-        "unit_typing"
+        "refinement_interpretation_Sequences_Tm_refine_2f31165bd40d954c464e64a8448716f5",
+        "refinement_interpretation_Sequences_Tm_refine_6aea8ef6600fce1e84d24892f02432e9",
+        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "b207b8fa25e98bc62d39c150a6377cf0"
+      "d32143593f56fc7cd10b926887255759"
     ],
     [
       "Sequences.test",
@@ -91,7 +90,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "30fc6e8f03960d019a58b17c00acda59"
+      "dd6270e285b9ba8c2a5bcd42c4f72545"
     ],
     [
       "Sequences.test",
@@ -101,14 +100,13 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_elim_Prims.Refl", "eq2-interp",
-        "equation_FStar.Seq.Properties.snoc", "equation_Prims.eq2",
-        "equation_Prims.nat", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.equals", "int_inversion", "int_typing",
+        "equation_FStar.Seq.Properties.snoc", "equation_Prims.nat",
+        "int_inversion", "int_typing",
+        "lemma_FStar.Seq.Base.lemma_create_len",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Base.lemma_index_app1",
         "lemma_FStar.Seq.Base.lemma_index_slice",
+        "lemma_FStar.Seq.Base.lemma_len_append",
         "lemma_FStar.Seq.Base.lemma_len_slice",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
@@ -118,13 +116,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Properties.snoc",
-        "unit_typing"
+        "refinement_interpretation_Sequences_Tm_refine_2f31165bd40d954c464e64a8448716f5",
+        "refinement_interpretation_Sequences_Tm_refine_6aea8ef6600fce1e84d24892f02432e9",
+        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "b7f45b90621aef245727d0ae469e7c5f"
+      "59d6280ca6a26baff6f9ee5f53da2ebe"
     ]
   ]
 ]

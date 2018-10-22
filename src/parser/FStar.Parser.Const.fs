@@ -118,6 +118,7 @@ let some_lid        = psnconst  "Some"
 let none_lid        = psnconst  "None"
 let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
+let assert_norm_lid = p2l ["FStar"; "Pervasives"; "Native"; "assert_norm"]
 (* list_append_lid is needed to desugar @ in the compiler *)
 let list_append_lid = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)

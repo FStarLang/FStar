@@ -45,9 +45,9 @@ let gte (a:uint8) (b:uint8) : bool = a >= b
 let lt (a:uint8) (b:uint8) : bool = a < b
 let lte (a:uint8) (b:uint8) : bool =  a <= b
 
-(* Constant time comparison operators, TODO: check and implement efficiently *)
-let gte_mask (a:uint8) (b:uint8) : uint8 = lnot((a-b) asr 62) land 255
-let eq_mask (a:uint8) (b:uint8) : uint8 = gte_mask a b land gte_mask b a
+(* NOT Constant time comparison operators *)
+let gte_mask (a:uint8) (b:uint8) : uint8 = if a >= b then 255 else 0
+let eq_mask (a:uint8) (b:uint8) : uint8 = if a = b then 255 else 0
                                              
 (* Infix notations *)
 let op_Plus_Hat = add

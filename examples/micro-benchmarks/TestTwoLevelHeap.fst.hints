@@ -7,21 +7,8 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0,
-      "fdfa4a768d9449ec6ffd488f51a3b882"
-    ],
-    [
-      "TestTwoLevelHeap.test0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "bool_inversion", "bool_typing", "equation_FStar.Heap.ref",
-        "equation_FStar.Heap.trivial_preorder", "equation_FStar.Set.eqtype",
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "equation_FStar.Heap.ref", "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.TwoLevelHeap.as_ref",
         "equation_FStar.TwoLevelHeap.modifies",
         "equation_FStar.TwoLevelHeap.rid",
@@ -55,19 +42,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "2a6898934d6d9dae49ee64d4982d0f23"
-    ],
-    [
-      "TestTwoLevelHeap.test0",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0,
-      "b7e81d85ac14138f6e58d6bc1e8ecaae"
+      "4393e7aafc387d82e407ea4330fd2848"
     ]
   ]
 ]

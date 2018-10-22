@@ -13,13 +13,13 @@ clean:
 	$(MAKE) -C ulib clean
 	$(MAKE) -C src/ocaml-output clean
 
-# Shortcuts
+# Shortcuts for developers
 
 # Build the F# version
 0:
 	$(MAKE) -C src/
 
-# Build the OCaml snapshot
+# Build the OCaml snapshot. NOTE: This will not build the standard library, and native tactics will not run
 1:
 	$(MAKE) -C src/ocaml-output
 

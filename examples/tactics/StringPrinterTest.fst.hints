@@ -17,7 +17,7 @@
         "typing_FStar.Buffer.buffer"
       ],
       0,
-      "9439378a3749799687fd4d06981af4f2"
+      "c47a320b2342674e07f645b32e96ef1e"
     ],
     [
       "StringPrinterTest.print_list_cipher_suite",
@@ -35,7 +35,7 @@
         "typing_FStar.Buffer.buffer"
       ],
       0,
-      "de740bc93d60c5b7a91dcab1e5bfd1e9"
+      "080117460b2d7ebd9f69f369e20b708c"
     ],
     [
       "StringPrinterTest.test3",
@@ -43,17 +43,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Prims.eqtype", "function_token_typing_FStar.UInt8.t",
+        "function_token_typing_FStar.UInt8.t",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Buffer.buffer"
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Buffer.buffer",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "b020c73787e9d213082012ed20c8ecc9"
+      "0f0376bd758ef2c221f0561684748cc6"
     ],
     [
       "StringPrinterTest.print_list_cipher_suite",
@@ -61,17 +60,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Prims.eqtype", "function_token_typing_FStar.UInt8.t",
+        "function_token_typing_FStar.UInt8.t",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Buffer.buffer"
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Buffer.buffer",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "0a52536d06fc8215c7c19462e8f5d41d"
+      "b5bd8d2e4b1426a543e14b9bc72b188e"
     ]
   ]
 ]

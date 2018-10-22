@@ -2,25 +2,7 @@
   "ÛNu''q\n¶sí=5º`\u0006²",
   [
     [
-      "Plugins.Test.uu___62",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "f59b2dc7271aeb68456f51b11dbfece4"
-    ],
-    [
-      "Plugins.Test.uu___62",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1dbcc6b90a78d7ae3e1e8f8b4da96545"
-    ],
-    [
-      "Plugins.Test.uu___63",
+      "Plugins.Test.uu___64",
       1,
       2,
       1,
@@ -30,38 +12,54 @@
         "function_token_typing_Prims.bool", "function_token_typing_Prims.int"
       ],
       0,
-      "022366e3129ab0d69d12139452385533"
+      "7dcd854a03e7fca4aed982ec475a7d76"
     ],
     [
-      "Plugins.Test.uu___63",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "065ad5698cde60a811eaab32b39a16e0"
-    ],
-    [
-      "Plugins.Test.uu___64",
+      "Plugins.Test.uu___65",
       1,
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list__uu___haseq",
-        "function_token_typing_Prims.int"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "equation_Prims.eqtype", "function_token_typing_Prims.bool",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8ff9febfc62a18fcb6d197a54730facc"
+      "aece5fc786b9d8c0f5cb7c6e60162af4"
     ],
     [
-      "Plugins.Test.uu___64",
+      "Plugins.Test.uu___65",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "03c318e72a0ce25e5f57d7180189efc6"
+      "9f6fe81984f76b0451a715ee15c21deb"
+    ],
+    [
+      "Plugins.Test.uu___66",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "8370ba45e3dce0b71648d94ef41d6224"
+    ],
+    [
+      "Plugins.Test.uu___66",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "89c7ec44397d708f6d3fd4423c2f1b4a"
     ]
   ]
 ]

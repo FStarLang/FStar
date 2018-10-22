@@ -26,112 +26,117 @@ type step =
   | Unmeta 
   | Unascribe 
   | NBE 
+  | ForExtraction 
 let (uu___is_Beta : step -> Prims.bool) =
-  fun projectee  -> match projectee with | Beta  -> true | uu____37 -> false 
+  fun projectee  -> match projectee with | Beta  -> true | uu____40 -> false 
 let (uu___is_Iota : step -> Prims.bool) =
-  fun projectee  -> match projectee with | Iota  -> true | uu____43 -> false 
+  fun projectee  -> match projectee with | Iota  -> true | uu____51 -> false 
 let (uu___is_Zeta : step -> Prims.bool) =
-  fun projectee  -> match projectee with | Zeta  -> true | uu____49 -> false 
+  fun projectee  -> match projectee with | Zeta  -> true | uu____62 -> false 
 let (uu___is_Exclude : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Exclude _0 -> true | uu____56 -> false
+    match projectee with | Exclude _0 -> true | uu____74 -> false
   
 let (__proj__Exclude__item___0 : step -> step) =
   fun projectee  -> match projectee with | Exclude _0 -> _0 
 let (uu___is_Weak : step -> Prims.bool) =
-  fun projectee  -> match projectee with | Weak  -> true | uu____69 -> false 
+  fun projectee  -> match projectee with | Weak  -> true | uu____93 -> false 
 let (uu___is_HNF : step -> Prims.bool) =
-  fun projectee  -> match projectee with | HNF  -> true | uu____75 -> false 
+  fun projectee  -> match projectee with | HNF  -> true | uu____104 -> false 
 let (uu___is_Primops : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Primops  -> true | uu____81 -> false
+    match projectee with | Primops  -> true | uu____115 -> false
   
 let (uu___is_Eager_unfolding : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Eager_unfolding  -> true | uu____87 -> false
+    match projectee with | Eager_unfolding  -> true | uu____126 -> false
   
 let (uu___is_Inlining : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Inlining  -> true | uu____93 -> false
+    match projectee with | Inlining  -> true | uu____137 -> false
   
 let (uu___is_DoNotUnfoldPureLets : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | DoNotUnfoldPureLets  -> true | uu____99 -> false
+    match projectee with | DoNotUnfoldPureLets  -> true | uu____148 -> false
   
 let (uu___is_UnfoldUntil : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldUntil _0 -> true | uu____106 -> false
+    match projectee with | UnfoldUntil _0 -> true | uu____160 -> false
   
 let (__proj__UnfoldUntil__item___0 : step -> FStar_Syntax_Syntax.delta_depth)
   = fun projectee  -> match projectee with | UnfoldUntil _0 -> _0 
 let (uu___is_UnfoldOnly : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldOnly _0 -> true | uu____122 -> false
+    match projectee with | UnfoldOnly _0 -> true | uu____182 -> false
   
 let (__proj__UnfoldOnly__item___0 : step -> FStar_Ident.lid Prims.list) =
   fun projectee  -> match projectee with | UnfoldOnly _0 -> _0 
 let (uu___is_UnfoldFully : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldFully _0 -> true | uu____144 -> false
+    match projectee with | UnfoldFully _0 -> true | uu____210 -> false
   
 let (__proj__UnfoldFully__item___0 : step -> FStar_Ident.lid Prims.list) =
   fun projectee  -> match projectee with | UnfoldFully _0 -> _0 
 let (uu___is_UnfoldAttr : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldAttr _0 -> true | uu____166 -> false
+    match projectee with | UnfoldAttr _0 -> true | uu____238 -> false
   
 let (__proj__UnfoldAttr__item___0 : step -> FStar_Ident.lid Prims.list) =
   fun projectee  -> match projectee with | UnfoldAttr _0 -> _0 
 let (uu___is_UnfoldTac : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldTac  -> true | uu____185 -> false
+    match projectee with | UnfoldTac  -> true | uu____263 -> false
   
 let (uu___is_PureSubtermsWithinComputations : step -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | PureSubtermsWithinComputations  -> true
-    | uu____191 -> false
+    | uu____274 -> false
   
 let (uu___is_Simplify : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Simplify  -> true | uu____197 -> false
+    match projectee with | Simplify  -> true | uu____285 -> false
   
 let (uu___is_EraseUniverses : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EraseUniverses  -> true | uu____203 -> false
+    match projectee with | EraseUniverses  -> true | uu____296 -> false
   
 let (uu___is_AllowUnboundUniverses : step -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | AllowUnboundUniverses  -> true
-    | uu____209 -> false
+    | uu____307 -> false
   
 let (uu___is_Reify : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Reify  -> true | uu____215 -> false
+    match projectee with | Reify  -> true | uu____318 -> false
   
 let (uu___is_CompressUvars : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CompressUvars  -> true | uu____221 -> false
+    match projectee with | CompressUvars  -> true | uu____329 -> false
   
 let (uu___is_NoFullNorm : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | NoFullNorm  -> true | uu____227 -> false
+    match projectee with | NoFullNorm  -> true | uu____340 -> false
   
 let (uu___is_CheckNoUvars : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CheckNoUvars  -> true | uu____233 -> false
+    match projectee with | CheckNoUvars  -> true | uu____351 -> false
   
 let (uu___is_Unmeta : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Unmeta  -> true | uu____239 -> false
+    match projectee with | Unmeta  -> true | uu____362 -> false
   
 let (uu___is_Unascribe : step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Unascribe  -> true | uu____245 -> false
+    match projectee with | Unascribe  -> true | uu____373 -> false
   
 let (uu___is_NBE : step -> Prims.bool) =
-  fun projectee  -> match projectee with | NBE  -> true | uu____251 -> false 
+  fun projectee  -> match projectee with | NBE  -> true | uu____384 -> false 
+let (uu___is_ForExtraction : step -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | ForExtraction  -> true | uu____395 -> false
+  
 type steps = step Prims.list
 let rec (eq_step : step -> step -> Prims.bool) =
   fun s1  ->
@@ -170,7 +175,7 @@ let rec (eq_step : step -> step -> Prims.bool) =
       | (UnfoldAttr lids1,UnfoldAttr lids2) ->
           ((FStar_List.length lids1) = (FStar_List.length lids2)) &&
             (FStar_List.forall2 FStar_Ident.lid_equals lids1 lids2)
-      | uu____286 -> false
+      | uu____455 -> false
   
 type sig_binding =
   (FStar_Ident.lident Prims.list,FStar_Syntax_Syntax.sigelt)
@@ -182,19 +187,19 @@ type delta_level =
   | Unfold of FStar_Syntax_Syntax.delta_depth 
 let (uu___is_NoDelta : delta_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | NoDelta  -> true | uu____307 -> false
+    match projectee with | NoDelta  -> true | uu____481 -> false
   
 let (uu___is_InliningDelta : delta_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | InliningDelta  -> true | uu____313 -> false
+    match projectee with | InliningDelta  -> true | uu____492 -> false
   
 let (uu___is_Eager_unfolding_only : delta_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Eager_unfolding_only  -> true | uu____319 -> false
+    match projectee with | Eager_unfolding_only  -> true | uu____503 -> false
   
 let (uu___is_Unfold : delta_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Unfold _0 -> true | uu____326 -> false
+    match projectee with | Unfold _0 -> true | uu____515 -> false
   
 let (__proj__Unfold__item___0 :
   delta_level -> FStar_Syntax_Syntax.delta_depth) =
@@ -220,9 +225,7 @@ let (__proj__Mkmlift__item__mlift_wp :
         FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
   =
   fun projectee  ->
-    match projectee with
-    | { mlift_wp = __fname__mlift_wp; mlift_term = __fname__mlift_term;_} ->
-        __fname__mlift_wp
+    match projectee with | { mlift_wp; mlift_term;_} -> mlift_wp
   
 let (__proj__Mkmlift__item__mlift_term :
   mlift ->
@@ -233,9 +236,7 @@ let (__proj__Mkmlift__item__mlift_term :
       FStar_Pervasives_Native.option)
   =
   fun projectee  ->
-    match projectee with
-    | { mlift_wp = __fname__mlift_wp; mlift_term = __fname__mlift_term;_} ->
-        __fname__mlift_term
+    match projectee with | { mlift_wp; mlift_term;_} -> mlift_term
   
 type edge =
   {
@@ -244,21 +245,15 @@ type edge =
   mlift: mlift }
 let (__proj__Mkedge__item__msource : edge -> FStar_Ident.lident) =
   fun projectee  ->
-    match projectee with
-    | { msource = __fname__msource; mtarget = __fname__mtarget;
-        mlift = __fname__mlift;_} -> __fname__msource
+    match projectee with | { msource; mtarget; mlift;_} -> msource
   
 let (__proj__Mkedge__item__mtarget : edge -> FStar_Ident.lident) =
   fun projectee  ->
-    match projectee with
-    | { msource = __fname__msource; mtarget = __fname__mtarget;
-        mlift = __fname__mlift;_} -> __fname__mtarget
+    match projectee with | { msource; mtarget; mlift;_} -> mtarget
   
 let (__proj__Mkedge__item__mlift : edge -> mlift) =
   fun projectee  ->
-    match projectee with
-    | { msource = __fname__msource; mtarget = __fname__mtarget;
-        mlift = __fname__mlift;_} -> __fname__mlift
+    match projectee with | { msource; mtarget; mlift;_} -> mlift
   
 type effects =
   {
@@ -276,27 +271,15 @@ let (__proj__Mkeffects__item__decls :
     (FStar_Syntax_Syntax.eff_decl,FStar_Syntax_Syntax.qualifier Prims.list)
       FStar_Pervasives_Native.tuple2 Prims.list)
   =
-  fun projectee  ->
-    match projectee with
-    | { decls = __fname__decls; order = __fname__order;
-        joins = __fname__joins;_} -> __fname__decls
-  
+  fun projectee  -> match projectee with | { decls; order; joins;_} -> decls 
 let (__proj__Mkeffects__item__order : effects -> edge Prims.list) =
-  fun projectee  ->
-    match projectee with
-    | { decls = __fname__decls; order = __fname__order;
-        joins = __fname__joins;_} -> __fname__order
-  
+  fun projectee  -> match projectee with | { decls; order; joins;_} -> order 
 let (__proj__Mkeffects__item__joins :
   effects ->
     (FStar_Ident.lident,FStar_Ident.lident,FStar_Ident.lident,mlift,mlift)
       FStar_Pervasives_Native.tuple5 Prims.list)
   =
-  fun projectee  ->
-    match projectee with
-    | { decls = __fname__decls; order = __fname__order;
-        joins = __fname__joins;_} -> __fname__joins
-  
+  fun projectee  -> match projectee with | { decls; order; joins;_} -> joins 
 type name_prefix = Prims.string Prims.list
 type proof_namespace =
   (name_prefix,Prims.bool) FStar_Pervasives_Native.tuple2 Prims.list
@@ -432,11 +415,7 @@ and implicit =
   imp_reason: Prims.string ;
   imp_uvar: FStar_Syntax_Syntax.ctx_uvar ;
   imp_tm: FStar_Syntax_Syntax.term ;
-  imp_range: FStar_Range.range ;
-  imp_meta:
-    (env,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple2
-      FStar_Pervasives_Native.option
-    }
+  imp_range: FStar_Range.range }
 and tcenv_hooks =
   {
   tc_push_in_gamma_hook:
@@ -446,441 +425,189 @@ and tcenv_hooks =
 let (__proj__Mkenv__item__solver : env -> solver_t) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__solver
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> solver
   
 let (__proj__Mkenv__item__range : env -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__range
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> range
   
 let (__proj__Mkenv__item__curmodule : env -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__curmodule
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> curmodule
   
 let (__proj__Mkenv__item__gamma :
   env -> FStar_Syntax_Syntax.binding Prims.list) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__gamma
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> gamma
   
 let (__proj__Mkenv__item__gamma_sig : env -> sig_binding Prims.list) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__gamma_sig
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> gamma_sig
   
 let (__proj__Mkenv__item__gamma_cache : env -> cached_elt FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__gamma_cache
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> gamma_cache
   
 let (__proj__Mkenv__item__modules :
   env -> FStar_Syntax_Syntax.modul Prims.list) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__modules
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> modules
   
 let (__proj__Mkenv__item__expected_typ :
   env -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__expected_typ
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> expected_typ
   
 let (__proj__Mkenv__item__sigtab :
   env -> FStar_Syntax_Syntax.sigelt FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__sigtab
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> sigtab
   
 let (__proj__Mkenv__item__attrtab :
   env -> FStar_Syntax_Syntax.sigelt Prims.list FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__attrtab
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> attrtab
   
 let (__proj__Mkenv__item__is_pattern : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__is_pattern
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> is_pattern
   
 let (__proj__Mkenv__item__instantiate_imp : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__instantiate_imp
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> instantiate_imp
   
 let (__proj__Mkenv__item__effects : env -> effects) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__effects
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> effects
   
 let (__proj__Mkenv__item__generalize : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__generalize
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> generalize
   
 let (__proj__Mkenv__item__letrecs :
   env ->
@@ -889,374 +616,158 @@ let (__proj__Mkenv__item__letrecs :
   =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__letrecs
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> letrecs
   
 let (__proj__Mkenv__item__top_level : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__top_level
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> top_level
   
 let (__proj__Mkenv__item__check_uvars : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__check_uvars
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> check_uvars
   
 let (__proj__Mkenv__item__use_eq : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__use_eq
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> use_eq
   
 let (__proj__Mkenv__item__is_iface : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__is_iface
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> is_iface
   
 let (__proj__Mkenv__item__admit : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__admit
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> admit1
   
 let (__proj__Mkenv__item__lax : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__lax
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> lax1
   
 let (__proj__Mkenv__item__lax_universes : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__lax_universes
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> lax_universes
   
 let (__proj__Mkenv__item__phase1 : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__phase1
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> phase1
   
 let (__proj__Mkenv__item__failhard : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__failhard
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> failhard
   
 let (__proj__Mkenv__item__nosynth : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__nosynth
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> nosynth
   
 let (__proj__Mkenv__item__uvar_subtyping : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__uvar_subtyping
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> uvar_subtyping
   
 let (__proj__Mkenv__item__tc_term :
   env ->
@@ -1267,33 +778,15 @@ let (__proj__Mkenv__item__tc_term :
   =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__tc_term
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> tc_term
   
 let (__proj__Mkenv__item__type_of :
   env ->
@@ -1304,65 +797,29 @@ let (__proj__Mkenv__item__type_of :
   =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__type_of
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> type_of
   
 let (__proj__Mkenv__item__universe_of :
   env -> env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__universe_of
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> universe_of
   
 let (__proj__Mkenv__item__check_type_of :
   env ->
@@ -1371,64 +828,28 @@ let (__proj__Mkenv__item__check_type_of :
   =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__check_type_of
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> check_type_of
   
 let (__proj__Mkenv__item__use_bv_sorts : env -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__use_bv_sorts
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> use_bv_sorts
   
 let (__proj__Mkenv__item__qtbl_name_and_index :
   env ->
@@ -1439,128 +860,56 @@ let (__proj__Mkenv__item__qtbl_name_and_index :
   =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__qtbl_name_and_index
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> qtbl_name_and_index
   
 let (__proj__Mkenv__item__normalized_eff_names :
   env -> FStar_Ident.lident FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__normalized_eff_names
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> normalized_eff_names
   
 let (__proj__Mkenv__item__fv_delta_depths :
   env -> FStar_Syntax_Syntax.delta_depth FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__fv_delta_depths
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> fv_delta_depths
   
 let (__proj__Mkenv__item__proof_ns : env -> proof_namespace) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__proof_ns
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> proof_ns
   
 let (__proj__Mkenv__item__synth_hook :
   env ->
@@ -1570,33 +919,15 @@ let (__proj__Mkenv__item__synth_hook :
   =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__synth_hook
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> synth_hook
   
 let (__proj__Mkenv__item__splice :
   env ->
@@ -1604,33 +935,15 @@ let (__proj__Mkenv__item__splice :
   =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__splice
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> splice1
   
 let (__proj__Mkenv__item__postprocess :
   env ->
@@ -1641,159 +954,69 @@ let (__proj__Mkenv__item__postprocess :
   =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__postprocess
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> postprocess
   
 let (__proj__Mkenv__item__is_native_tactic :
   env -> FStar_Ident.lid -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__is_native_tactic
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> is_native_tactic
   
 let (__proj__Mkenv__item__identifier_info :
   env -> FStar_TypeChecker_Common.id_info_table FStar_ST.ref) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__identifier_info
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> identifier_info
   
 let (__proj__Mkenv__item__tc_hooks : env -> tcenv_hooks) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__tc_hooks
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> tc_hooks
   
 let (__proj__Mkenv__item__dsenv : env -> FStar_Syntax_DsEnv.env) =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__dsenv
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> dsenv
   
 let (__proj__Mkenv__item__nbe :
   env ->
@@ -1802,63 +1025,36 @@ let (__proj__Mkenv__item__nbe :
   =
   fun projectee  ->
     match projectee with
-    | { solver = __fname__solver; range = __fname__range;
-        curmodule = __fname__curmodule; gamma = __fname__gamma;
-        gamma_sig = __fname__gamma_sig; gamma_cache = __fname__gamma_cache;
-        modules = __fname__modules; expected_typ = __fname__expected_typ;
-        sigtab = __fname__sigtab; attrtab = __fname__attrtab;
-        is_pattern = __fname__is_pattern;
-        instantiate_imp = __fname__instantiate_imp;
-        effects = __fname__effects; generalize = __fname__generalize;
-        letrecs = __fname__letrecs; top_level = __fname__top_level;
-        check_uvars = __fname__check_uvars; use_eq = __fname__use_eq;
-        is_iface = __fname__is_iface; admit = __fname__admit;
-        lax = __fname__lax; lax_universes = __fname__lax_universes;
-        phase1 = __fname__phase1; failhard = __fname__failhard;
-        nosynth = __fname__nosynth; uvar_subtyping = __fname__uvar_subtyping;
-        tc_term = __fname__tc_term; type_of = __fname__type_of;
-        universe_of = __fname__universe_of;
-        check_type_of = __fname__check_type_of;
-        use_bv_sorts = __fname__use_bv_sorts;
-        qtbl_name_and_index = __fname__qtbl_name_and_index;
-        normalized_eff_names = __fname__normalized_eff_names;
-        fv_delta_depths = __fname__fv_delta_depths;
-        proof_ns = __fname__proof_ns; synth_hook = __fname__synth_hook;
-        splice = __fname__splice; postprocess = __fname__postprocess;
-        is_native_tactic = __fname__is_native_tactic;
-        identifier_info = __fname__identifier_info;
-        tc_hooks = __fname__tc_hooks; dsenv = __fname__dsenv;
-        nbe = __fname__nbe;_} -> __fname__nbe
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; is_pattern; instantiate_imp; effects;
+        generalize; letrecs; top_level; check_uvars; use_eq; is_iface;
+        admit = admit1; lax = lax1; lax_universes; phase1; failhard; 
+        nosynth; uvar_subtyping; tc_term; type_of; universe_of;
+        check_type_of; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        splice = splice1; postprocess; is_native_tactic; identifier_info;
+        tc_hooks; dsenv; nbe = nbe1;_} -> nbe1
   
 let (__proj__Mksolver_t__item__init : solver_t -> env -> unit) =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__init
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> init1
   
 let (__proj__Mksolver_t__item__push : solver_t -> Prims.string -> unit) =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__push
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> push1
   
 let (__proj__Mksolver_t__item__pop : solver_t -> Prims.string -> unit) =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__pop
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> pop1
   
 let (__proj__Mksolver_t__item__snapshot :
   solver_t ->
@@ -1868,12 +1064,9 @@ let (__proj__Mksolver_t__item__snapshot :
   =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__snapshot
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> snapshot1
   
 let (__proj__Mksolver_t__item__rollback :
   solver_t ->
@@ -1883,34 +1076,25 @@ let (__proj__Mksolver_t__item__rollback :
   =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__rollback
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> rollback1
   
 let (__proj__Mksolver_t__item__encode_modul :
   solver_t -> env -> FStar_Syntax_Syntax.modul -> unit) =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__encode_modul
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> encode_modul
   
 let (__proj__Mksolver_t__item__encode_sig :
   solver_t -> env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__encode_sig
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> encode_sig
   
 let (__proj__Mksolver_t__item__preprocess :
   solver_t ->
@@ -1921,12 +1105,9 @@ let (__proj__Mksolver_t__item__preprocess :
   =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__preprocess
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> preprocess
   
 let (__proj__Mksolver_t__item__solve :
   solver_t ->
@@ -1935,48 +1116,35 @@ let (__proj__Mksolver_t__item__solve :
   =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__solve
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> solve
   
 let (__proj__Mksolver_t__item__finish : solver_t -> unit -> unit) =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__finish
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> finish1
   
 let (__proj__Mksolver_t__item__refresh : solver_t -> unit -> unit) =
   fun projectee  ->
     match projectee with
-    | { init = __fname__init; push = __fname__push; pop = __fname__pop;
-        snapshot = __fname__snapshot; rollback = __fname__rollback;
-        encode_modul = __fname__encode_modul;
-        encode_sig = __fname__encode_sig; preprocess = __fname__preprocess;
-        solve = __fname__solve; finish = __fname__finish;
-        refresh = __fname__refresh;_} -> __fname__refresh
+    | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
+        rollback = rollback1; encode_modul; encode_sig; preprocess; solve;
+        finish = finish1; refresh;_} -> refresh
   
 let (__proj__Mkguard_t__item__guard_f :
   guard_t -> FStar_TypeChecker_Common.guard_formula) =
   fun projectee  ->
     match projectee with
-    | { guard_f = __fname__guard_f; deferred = __fname__deferred;
-        univ_ineqs = __fname__univ_ineqs; implicits = __fname__implicits;_}
-        -> __fname__guard_f
+    | { guard_f; deferred; univ_ineqs; implicits;_} -> guard_f
   
 let (__proj__Mkguard_t__item__deferred :
   guard_t -> FStar_TypeChecker_Common.deferred) =
   fun projectee  ->
     match projectee with
-    | { guard_f = __fname__guard_f; deferred = __fname__deferred;
-        univ_ineqs = __fname__univ_ineqs; implicits = __fname__implicits;_}
-        -> __fname__deferred
+    | { guard_f; deferred; univ_ineqs; implicits;_} -> deferred
   
 let (__proj__Mkguard_t__item__univ_ineqs :
   guard_t ->
@@ -1986,57 +1154,34 @@ let (__proj__Mkguard_t__item__univ_ineqs :
   =
   fun projectee  ->
     match projectee with
-    | { guard_f = __fname__guard_f; deferred = __fname__deferred;
-        univ_ineqs = __fname__univ_ineqs; implicits = __fname__implicits;_}
-        -> __fname__univ_ineqs
+    | { guard_f; deferred; univ_ineqs; implicits;_} -> univ_ineqs
   
 let (__proj__Mkguard_t__item__implicits : guard_t -> implicit Prims.list) =
   fun projectee  ->
     match projectee with
-    | { guard_f = __fname__guard_f; deferred = __fname__deferred;
-        univ_ineqs = __fname__univ_ineqs; implicits = __fname__implicits;_}
-        -> __fname__implicits
+    | { guard_f; deferred; univ_ineqs; implicits;_} -> implicits
   
 let (__proj__Mkimplicit__item__imp_reason : implicit -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { imp_reason = __fname__imp_reason; imp_uvar = __fname__imp_uvar;
-        imp_tm = __fname__imp_tm; imp_range = __fname__imp_range;
-        imp_meta = __fname__imp_meta;_} -> __fname__imp_reason
+    | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_reason
   
 let (__proj__Mkimplicit__item__imp_uvar :
   implicit -> FStar_Syntax_Syntax.ctx_uvar) =
   fun projectee  ->
     match projectee with
-    | { imp_reason = __fname__imp_reason; imp_uvar = __fname__imp_uvar;
-        imp_tm = __fname__imp_tm; imp_range = __fname__imp_range;
-        imp_meta = __fname__imp_meta;_} -> __fname__imp_uvar
+    | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_uvar
   
 let (__proj__Mkimplicit__item__imp_tm : implicit -> FStar_Syntax_Syntax.term)
   =
   fun projectee  ->
     match projectee with
-    | { imp_reason = __fname__imp_reason; imp_uvar = __fname__imp_uvar;
-        imp_tm = __fname__imp_tm; imp_range = __fname__imp_range;
-        imp_meta = __fname__imp_meta;_} -> __fname__imp_tm
+    | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_tm
   
 let (__proj__Mkimplicit__item__imp_range : implicit -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
-    | { imp_reason = __fname__imp_reason; imp_uvar = __fname__imp_uvar;
-        imp_tm = __fname__imp_tm; imp_range = __fname__imp_range;
-        imp_meta = __fname__imp_meta;_} -> __fname__imp_range
-  
-let (__proj__Mkimplicit__item__imp_meta :
-  implicit ->
-    (env,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple2
-      FStar_Pervasives_Native.option)
-  =
-  fun projectee  ->
-    match projectee with
-    | { imp_reason = __fname__imp_reason; imp_uvar = __fname__imp_uvar;
-        imp_tm = __fname__imp_tm; imp_range = __fname__imp_range;
-        imp_meta = __fname__imp_meta;_} -> __fname__imp_meta
+    | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_range
   
 let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
   tcenv_hooks ->
@@ -2045,8 +1190,7 @@ let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
   =
   fun projectee  ->
     match projectee with
-    | { tc_push_in_gamma_hook = __fname__tc_push_in_gamma_hook;_} ->
-        __fname__tc_push_in_gamma_hook
+    | { tc_push_in_gamma_hook;_} -> tc_push_in_gamma_hook
   
 type solver_depth_t =
   (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
@@ -2066,187 +1210,187 @@ let (rename_gamma :
     fun gamma  ->
       FStar_All.pipe_right gamma
         (FStar_List.map
-           (fun uu___226_10749  ->
-              match uu___226_10749 with
+           (fun uu___231_11986  ->
+              match uu___231_11986 with
               | FStar_Syntax_Syntax.Binding_var x ->
                   let y =
-                    let uu____10752 = FStar_Syntax_Syntax.bv_to_name x  in
-                    FStar_Syntax_Subst.subst subst1 uu____10752  in
-                  let uu____10753 =
-                    let uu____10754 = FStar_Syntax_Subst.compress y  in
-                    uu____10754.FStar_Syntax_Syntax.n  in
-                  (match uu____10753 with
+                    let uu____11989 = FStar_Syntax_Syntax.bv_to_name x  in
+                    FStar_Syntax_Subst.subst subst1 uu____11989  in
+                  let uu____11990 =
+                    let uu____11991 = FStar_Syntax_Subst.compress y  in
+                    uu____11991.FStar_Syntax_Syntax.n  in
+                  (match uu____11990 with
                    | FStar_Syntax_Syntax.Tm_name y1 ->
-                       let uu____10758 =
-                         let uu___240_10759 = y1  in
-                         let uu____10760 =
+                       let uu____11995 =
+                         let uu___245_11996 = y1  in
+                         let uu____11997 =
                            FStar_Syntax_Subst.subst subst1
                              x.FStar_Syntax_Syntax.sort
                             in
                          {
                            FStar_Syntax_Syntax.ppname =
-                             (uu___240_10759.FStar_Syntax_Syntax.ppname);
+                             (uu___245_11996.FStar_Syntax_Syntax.ppname);
                            FStar_Syntax_Syntax.index =
-                             (uu___240_10759.FStar_Syntax_Syntax.index);
-                           FStar_Syntax_Syntax.sort = uu____10760
+                             (uu___245_11996.FStar_Syntax_Syntax.index);
+                           FStar_Syntax_Syntax.sort = uu____11997
                          }  in
-                       FStar_Syntax_Syntax.Binding_var uu____10758
-                   | uu____10763 -> failwith "Not a renaming")
+                       FStar_Syntax_Syntax.Binding_var uu____11995
+                   | uu____12000 -> failwith "Not a renaming")
               | b -> b))
   
 let (rename_env : FStar_Syntax_Syntax.subst_t -> env -> env) =
   fun subst1  ->
     fun env  ->
-      let uu___241_10775 = env  in
-      let uu____10776 = rename_gamma subst1 env.gamma  in
+      let uu___246_12014 = env  in
+      let uu____12015 = rename_gamma subst1 env.gamma  in
       {
-        solver = (uu___241_10775.solver);
-        range = (uu___241_10775.range);
-        curmodule = (uu___241_10775.curmodule);
-        gamma = uu____10776;
-        gamma_sig = (uu___241_10775.gamma_sig);
-        gamma_cache = (uu___241_10775.gamma_cache);
-        modules = (uu___241_10775.modules);
-        expected_typ = (uu___241_10775.expected_typ);
-        sigtab = (uu___241_10775.sigtab);
-        attrtab = (uu___241_10775.attrtab);
-        is_pattern = (uu___241_10775.is_pattern);
-        instantiate_imp = (uu___241_10775.instantiate_imp);
-        effects = (uu___241_10775.effects);
-        generalize = (uu___241_10775.generalize);
-        letrecs = (uu___241_10775.letrecs);
-        top_level = (uu___241_10775.top_level);
-        check_uvars = (uu___241_10775.check_uvars);
-        use_eq = (uu___241_10775.use_eq);
-        is_iface = (uu___241_10775.is_iface);
-        admit = (uu___241_10775.admit);
-        lax = (uu___241_10775.lax);
-        lax_universes = (uu___241_10775.lax_universes);
-        phase1 = (uu___241_10775.phase1);
-        failhard = (uu___241_10775.failhard);
-        nosynth = (uu___241_10775.nosynth);
-        uvar_subtyping = (uu___241_10775.uvar_subtyping);
-        tc_term = (uu___241_10775.tc_term);
-        type_of = (uu___241_10775.type_of);
-        universe_of = (uu___241_10775.universe_of);
-        check_type_of = (uu___241_10775.check_type_of);
-        use_bv_sorts = (uu___241_10775.use_bv_sorts);
-        qtbl_name_and_index = (uu___241_10775.qtbl_name_and_index);
-        normalized_eff_names = (uu___241_10775.normalized_eff_names);
-        fv_delta_depths = (uu___241_10775.fv_delta_depths);
-        proof_ns = (uu___241_10775.proof_ns);
-        synth_hook = (uu___241_10775.synth_hook);
-        splice = (uu___241_10775.splice);
-        postprocess = (uu___241_10775.postprocess);
-        is_native_tactic = (uu___241_10775.is_native_tactic);
-        identifier_info = (uu___241_10775.identifier_info);
-        tc_hooks = (uu___241_10775.tc_hooks);
-        dsenv = (uu___241_10775.dsenv);
-        nbe = (uu___241_10775.nbe)
+        solver = (uu___246_12014.solver);
+        range = (uu___246_12014.range);
+        curmodule = (uu___246_12014.curmodule);
+        gamma = uu____12015;
+        gamma_sig = (uu___246_12014.gamma_sig);
+        gamma_cache = (uu___246_12014.gamma_cache);
+        modules = (uu___246_12014.modules);
+        expected_typ = (uu___246_12014.expected_typ);
+        sigtab = (uu___246_12014.sigtab);
+        attrtab = (uu___246_12014.attrtab);
+        is_pattern = (uu___246_12014.is_pattern);
+        instantiate_imp = (uu___246_12014.instantiate_imp);
+        effects = (uu___246_12014.effects);
+        generalize = (uu___246_12014.generalize);
+        letrecs = (uu___246_12014.letrecs);
+        top_level = (uu___246_12014.top_level);
+        check_uvars = (uu___246_12014.check_uvars);
+        use_eq = (uu___246_12014.use_eq);
+        is_iface = (uu___246_12014.is_iface);
+        admit = (uu___246_12014.admit);
+        lax = (uu___246_12014.lax);
+        lax_universes = (uu___246_12014.lax_universes);
+        phase1 = (uu___246_12014.phase1);
+        failhard = (uu___246_12014.failhard);
+        nosynth = (uu___246_12014.nosynth);
+        uvar_subtyping = (uu___246_12014.uvar_subtyping);
+        tc_term = (uu___246_12014.tc_term);
+        type_of = (uu___246_12014.type_of);
+        universe_of = (uu___246_12014.universe_of);
+        check_type_of = (uu___246_12014.check_type_of);
+        use_bv_sorts = (uu___246_12014.use_bv_sorts);
+        qtbl_name_and_index = (uu___246_12014.qtbl_name_and_index);
+        normalized_eff_names = (uu___246_12014.normalized_eff_names);
+        fv_delta_depths = (uu___246_12014.fv_delta_depths);
+        proof_ns = (uu___246_12014.proof_ns);
+        synth_hook = (uu___246_12014.synth_hook);
+        splice = (uu___246_12014.splice);
+        postprocess = (uu___246_12014.postprocess);
+        is_native_tactic = (uu___246_12014.is_native_tactic);
+        identifier_info = (uu___246_12014.identifier_info);
+        tc_hooks = (uu___246_12014.tc_hooks);
+        dsenv = (uu___246_12014.dsenv);
+        nbe = (uu___246_12014.nbe)
       }
   
 let (default_tc_hooks : tcenv_hooks) =
-  { tc_push_in_gamma_hook = (fun uu____10783  -> fun uu____10784  -> ()) } 
+  { tc_push_in_gamma_hook = (fun uu____12023  -> fun uu____12024  -> ()) } 
 let (tc_hooks : env -> tcenv_hooks) = fun env  -> env.tc_hooks 
 let (set_tc_hooks : env -> tcenv_hooks -> env) =
   fun env  ->
     fun hooks  ->
-      let uu___242_10804 = env  in
+      let uu___247_12046 = env  in
       {
-        solver = (uu___242_10804.solver);
-        range = (uu___242_10804.range);
-        curmodule = (uu___242_10804.curmodule);
-        gamma = (uu___242_10804.gamma);
-        gamma_sig = (uu___242_10804.gamma_sig);
-        gamma_cache = (uu___242_10804.gamma_cache);
-        modules = (uu___242_10804.modules);
-        expected_typ = (uu___242_10804.expected_typ);
-        sigtab = (uu___242_10804.sigtab);
-        attrtab = (uu___242_10804.attrtab);
-        is_pattern = (uu___242_10804.is_pattern);
-        instantiate_imp = (uu___242_10804.instantiate_imp);
-        effects = (uu___242_10804.effects);
-        generalize = (uu___242_10804.generalize);
-        letrecs = (uu___242_10804.letrecs);
-        top_level = (uu___242_10804.top_level);
-        check_uvars = (uu___242_10804.check_uvars);
-        use_eq = (uu___242_10804.use_eq);
-        is_iface = (uu___242_10804.is_iface);
-        admit = (uu___242_10804.admit);
-        lax = (uu___242_10804.lax);
-        lax_universes = (uu___242_10804.lax_universes);
-        phase1 = (uu___242_10804.phase1);
-        failhard = (uu___242_10804.failhard);
-        nosynth = (uu___242_10804.nosynth);
-        uvar_subtyping = (uu___242_10804.uvar_subtyping);
-        tc_term = (uu___242_10804.tc_term);
-        type_of = (uu___242_10804.type_of);
-        universe_of = (uu___242_10804.universe_of);
-        check_type_of = (uu___242_10804.check_type_of);
-        use_bv_sorts = (uu___242_10804.use_bv_sorts);
-        qtbl_name_and_index = (uu___242_10804.qtbl_name_and_index);
-        normalized_eff_names = (uu___242_10804.normalized_eff_names);
-        fv_delta_depths = (uu___242_10804.fv_delta_depths);
-        proof_ns = (uu___242_10804.proof_ns);
-        synth_hook = (uu___242_10804.synth_hook);
-        splice = (uu___242_10804.splice);
-        postprocess = (uu___242_10804.postprocess);
-        is_native_tactic = (uu___242_10804.is_native_tactic);
-        identifier_info = (uu___242_10804.identifier_info);
+        solver = (uu___247_12046.solver);
+        range = (uu___247_12046.range);
+        curmodule = (uu___247_12046.curmodule);
+        gamma = (uu___247_12046.gamma);
+        gamma_sig = (uu___247_12046.gamma_sig);
+        gamma_cache = (uu___247_12046.gamma_cache);
+        modules = (uu___247_12046.modules);
+        expected_typ = (uu___247_12046.expected_typ);
+        sigtab = (uu___247_12046.sigtab);
+        attrtab = (uu___247_12046.attrtab);
+        is_pattern = (uu___247_12046.is_pattern);
+        instantiate_imp = (uu___247_12046.instantiate_imp);
+        effects = (uu___247_12046.effects);
+        generalize = (uu___247_12046.generalize);
+        letrecs = (uu___247_12046.letrecs);
+        top_level = (uu___247_12046.top_level);
+        check_uvars = (uu___247_12046.check_uvars);
+        use_eq = (uu___247_12046.use_eq);
+        is_iface = (uu___247_12046.is_iface);
+        admit = (uu___247_12046.admit);
+        lax = (uu___247_12046.lax);
+        lax_universes = (uu___247_12046.lax_universes);
+        phase1 = (uu___247_12046.phase1);
+        failhard = (uu___247_12046.failhard);
+        nosynth = (uu___247_12046.nosynth);
+        uvar_subtyping = (uu___247_12046.uvar_subtyping);
+        tc_term = (uu___247_12046.tc_term);
+        type_of = (uu___247_12046.type_of);
+        universe_of = (uu___247_12046.universe_of);
+        check_type_of = (uu___247_12046.check_type_of);
+        use_bv_sorts = (uu___247_12046.use_bv_sorts);
+        qtbl_name_and_index = (uu___247_12046.qtbl_name_and_index);
+        normalized_eff_names = (uu___247_12046.normalized_eff_names);
+        fv_delta_depths = (uu___247_12046.fv_delta_depths);
+        proof_ns = (uu___247_12046.proof_ns);
+        synth_hook = (uu___247_12046.synth_hook);
+        splice = (uu___247_12046.splice);
+        postprocess = (uu___247_12046.postprocess);
+        is_native_tactic = (uu___247_12046.is_native_tactic);
+        identifier_info = (uu___247_12046.identifier_info);
         tc_hooks = hooks;
-        dsenv = (uu___242_10804.dsenv);
-        nbe = (uu___242_10804.nbe)
+        dsenv = (uu___247_12046.dsenv);
+        nbe = (uu___247_12046.nbe)
       }
   
 let (set_dep_graph : env -> FStar_Parser_Dep.deps -> env) =
   fun e  ->
     fun g  ->
-      let uu___243_10815 = e  in
-      let uu____10816 = FStar_Syntax_DsEnv.set_dep_graph e.dsenv g  in
+      let uu___248_12058 = e  in
+      let uu____12059 = FStar_Syntax_DsEnv.set_dep_graph e.dsenv g  in
       {
-        solver = (uu___243_10815.solver);
-        range = (uu___243_10815.range);
-        curmodule = (uu___243_10815.curmodule);
-        gamma = (uu___243_10815.gamma);
-        gamma_sig = (uu___243_10815.gamma_sig);
-        gamma_cache = (uu___243_10815.gamma_cache);
-        modules = (uu___243_10815.modules);
-        expected_typ = (uu___243_10815.expected_typ);
-        sigtab = (uu___243_10815.sigtab);
-        attrtab = (uu___243_10815.attrtab);
-        is_pattern = (uu___243_10815.is_pattern);
-        instantiate_imp = (uu___243_10815.instantiate_imp);
-        effects = (uu___243_10815.effects);
-        generalize = (uu___243_10815.generalize);
-        letrecs = (uu___243_10815.letrecs);
-        top_level = (uu___243_10815.top_level);
-        check_uvars = (uu___243_10815.check_uvars);
-        use_eq = (uu___243_10815.use_eq);
-        is_iface = (uu___243_10815.is_iface);
-        admit = (uu___243_10815.admit);
-        lax = (uu___243_10815.lax);
-        lax_universes = (uu___243_10815.lax_universes);
-        phase1 = (uu___243_10815.phase1);
-        failhard = (uu___243_10815.failhard);
-        nosynth = (uu___243_10815.nosynth);
-        uvar_subtyping = (uu___243_10815.uvar_subtyping);
-        tc_term = (uu___243_10815.tc_term);
-        type_of = (uu___243_10815.type_of);
-        universe_of = (uu___243_10815.universe_of);
-        check_type_of = (uu___243_10815.check_type_of);
-        use_bv_sorts = (uu___243_10815.use_bv_sorts);
-        qtbl_name_and_index = (uu___243_10815.qtbl_name_and_index);
-        normalized_eff_names = (uu___243_10815.normalized_eff_names);
-        fv_delta_depths = (uu___243_10815.fv_delta_depths);
-        proof_ns = (uu___243_10815.proof_ns);
-        synth_hook = (uu___243_10815.synth_hook);
-        splice = (uu___243_10815.splice);
-        postprocess = (uu___243_10815.postprocess);
-        is_native_tactic = (uu___243_10815.is_native_tactic);
-        identifier_info = (uu___243_10815.identifier_info);
-        tc_hooks = (uu___243_10815.tc_hooks);
-        dsenv = uu____10816;
-        nbe = (uu___243_10815.nbe)
+        solver = (uu___248_12058.solver);
+        range = (uu___248_12058.range);
+        curmodule = (uu___248_12058.curmodule);
+        gamma = (uu___248_12058.gamma);
+        gamma_sig = (uu___248_12058.gamma_sig);
+        gamma_cache = (uu___248_12058.gamma_cache);
+        modules = (uu___248_12058.modules);
+        expected_typ = (uu___248_12058.expected_typ);
+        sigtab = (uu___248_12058.sigtab);
+        attrtab = (uu___248_12058.attrtab);
+        is_pattern = (uu___248_12058.is_pattern);
+        instantiate_imp = (uu___248_12058.instantiate_imp);
+        effects = (uu___248_12058.effects);
+        generalize = (uu___248_12058.generalize);
+        letrecs = (uu___248_12058.letrecs);
+        top_level = (uu___248_12058.top_level);
+        check_uvars = (uu___248_12058.check_uvars);
+        use_eq = (uu___248_12058.use_eq);
+        is_iface = (uu___248_12058.is_iface);
+        admit = (uu___248_12058.admit);
+        lax = (uu___248_12058.lax);
+        lax_universes = (uu___248_12058.lax_universes);
+        phase1 = (uu___248_12058.phase1);
+        failhard = (uu___248_12058.failhard);
+        nosynth = (uu___248_12058.nosynth);
+        uvar_subtyping = (uu___248_12058.uvar_subtyping);
+        tc_term = (uu___248_12058.tc_term);
+        type_of = (uu___248_12058.type_of);
+        universe_of = (uu___248_12058.universe_of);
+        check_type_of = (uu___248_12058.check_type_of);
+        use_bv_sorts = (uu___248_12058.use_bv_sorts);
+        qtbl_name_and_index = (uu___248_12058.qtbl_name_and_index);
+        normalized_eff_names = (uu___248_12058.normalized_eff_names);
+        fv_delta_depths = (uu___248_12058.fv_delta_depths);
+        proof_ns = (uu___248_12058.proof_ns);
+        synth_hook = (uu___248_12058.synth_hook);
+        splice = (uu___248_12058.splice);
+        postprocess = (uu___248_12058.postprocess);
+        is_native_tactic = (uu___248_12058.is_native_tactic);
+        identifier_info = (uu___248_12058.identifier_info);
+        tc_hooks = (uu___248_12058.tc_hooks);
+        dsenv = uu____12059;
+        nbe = (uu___248_12058.nbe)
       }
   
 let (dep_graph : env -> FStar_Parser_Dep.deps) =
@@ -2263,21 +1407,21 @@ let (visible_at : delta_level -> FStar_Syntax_Syntax.qualifier -> Prims.bool)
   fun d  ->
     fun q  ->
       match (d, q) with
-      | (NoDelta ,uu____10839) -> true
+      | (NoDelta ,uu____12088) -> true
       | (Eager_unfolding_only
          ,FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen ) -> true
       | (Unfold
-         uu____10840,FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen )
+         uu____12091,FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen )
           -> true
-      | (Unfold uu____10841,FStar_Syntax_Syntax.Visible_default ) -> true
+      | (Unfold uu____12093,FStar_Syntax_Syntax.Visible_default ) -> true
       | (InliningDelta ,FStar_Syntax_Syntax.Inline_for_extraction ) -> true
-      | uu____10842 -> false
+      | uu____12096 -> false
   
 let (default_table_size : Prims.int) = (Prims.parse_int "200") 
-let new_sigtab : 'Auu____10851 . unit -> 'Auu____10851 FStar_Util.smap =
-  fun uu____10858  -> FStar_Util.smap_create default_table_size 
-let new_gamma_cache : 'Auu____10863 . unit -> 'Auu____10863 FStar_Util.smap =
-  fun uu____10870  -> FStar_Util.smap_create (Prims.parse_int "100") 
+let new_sigtab : 'Auu____12110 . unit -> 'Auu____12110 FStar_Util.smap =
+  fun uu____12117  -> FStar_Util.smap_create default_table_size 
+let new_gamma_cache : 'Auu____12123 . unit -> 'Auu____12123 FStar_Util.smap =
+  fun uu____12130  -> FStar_Util.smap_create (Prims.parse_int "100") 
 let (initial_env :
   FStar_Parser_Dep.deps ->
     (env ->
@@ -2310,34 +1454,34 @@ let (initial_env :
             fun solver  ->
               fun module_lid  ->
                 fun nbe1  ->
-                  let uu____11004 = new_gamma_cache ()  in
-                  let uu____11007 = new_sigtab ()  in
-                  let uu____11010 = new_sigtab ()  in
-                  let uu____11017 =
-                    let uu____11030 =
+                  let uu____12268 = new_gamma_cache ()  in
+                  let uu____12271 = new_sigtab ()  in
+                  let uu____12274 = new_sigtab ()  in
+                  let uu____12281 =
+                    let uu____12296 =
                       FStar_Util.smap_create (Prims.parse_int "10")  in
-                    (uu____11030, FStar_Pervasives_Native.None)  in
-                  let uu____11045 =
+                    (uu____12296, FStar_Pervasives_Native.None)  in
+                  let uu____12317 =
                     FStar_Util.smap_create (Prims.parse_int "20")  in
-                  let uu____11048 =
+                  let uu____12321 =
                     FStar_Util.smap_create (Prims.parse_int "50")  in
-                  let uu____11051 = FStar_Options.using_facts_from ()  in
-                  let uu____11052 =
+                  let uu____12325 = FStar_Options.using_facts_from ()  in
+                  let uu____12326 =
                     FStar_Util.mk_ref
                       FStar_TypeChecker_Common.id_info_table_empty
                      in
-                  let uu____11055 = FStar_Syntax_DsEnv.empty_env deps  in
+                  let uu____12329 = FStar_Syntax_DsEnv.empty_env deps  in
                   {
                     solver;
                     range = FStar_Range.dummyRange;
                     curmodule = module_lid;
                     gamma = [];
                     gamma_sig = [];
-                    gamma_cache = uu____11004;
+                    gamma_cache = uu____12268;
                     modules = [];
                     expected_typ = FStar_Pervasives_Native.None;
-                    sigtab = uu____11007;
-                    attrtab = uu____11010;
+                    sigtab = uu____12271;
+                    attrtab = uu____12274;
                     is_pattern = false;
                     instantiate_imp = true;
                     effects = { decls = []; order = []; joins = [] };
@@ -2359,10 +1503,10 @@ let (initial_env :
                     universe_of;
                     check_type_of;
                     use_bv_sorts = false;
-                    qtbl_name_and_index = uu____11017;
-                    normalized_eff_names = uu____11045;
-                    fv_delta_depths = uu____11048;
-                    proof_ns = uu____11051;
+                    qtbl_name_and_index = uu____12281;
+                    normalized_eff_names = uu____12317;
+                    fv_delta_depths = uu____12321;
+                    proof_ns = uu____12325;
                     synth_hook =
                       (fun e  ->
                          fun g  ->
@@ -2374,10 +1518,10 @@ let (initial_env :
                          fun tau  ->
                            fun typ  ->
                              fun tm  -> failwith "no postprocessor available");
-                    is_native_tactic = (fun uu____11099  -> false);
-                    identifier_info = uu____11052;
+                    is_native_tactic = (fun uu____12391  -> false);
+                    identifier_info = uu____12326;
                     tc_hooks = default_tc_hooks;
-                    dsenv = uu____11055;
+                    dsenv = uu____12329;
                     nbe = nbe1
                   }
   
@@ -2393,30 +1537,30 @@ let (query_indices :
     Prims.list FStar_ST.ref)
   = FStar_Util.mk_ref [[]] 
 let (push_query_indices : unit -> unit) =
-  fun uu____11199  ->
-    let uu____11200 = FStar_ST.op_Bang query_indices  in
-    match uu____11200 with
+  fun uu____12503  ->
+    let uu____12504 = FStar_ST.op_Bang query_indices  in
+    match uu____12504 with
     | [] -> failwith "Empty query indices!"
-    | uu____11250 ->
-        let uu____11259 =
-          let uu____11268 =
-            let uu____11275 = FStar_ST.op_Bang query_indices  in
-            FStar_List.hd uu____11275  in
-          let uu____11325 = FStar_ST.op_Bang query_indices  in uu____11268 ::
-            uu____11325
+    | uu____12559 ->
+        let uu____12569 =
+          let uu____12579 =
+            let uu____12587 = FStar_ST.op_Bang query_indices  in
+            FStar_List.hd uu____12587  in
+          let uu____12641 = FStar_ST.op_Bang query_indices  in uu____12579 ::
+            uu____12641
            in
-        FStar_ST.op_Colon_Equals query_indices uu____11259
+        FStar_ST.op_Colon_Equals query_indices uu____12569
   
 let (pop_query_indices : unit -> unit) =
-  fun uu____11414  ->
-    let uu____11415 = FStar_ST.op_Bang query_indices  in
-    match uu____11415 with
+  fun uu____12737  ->
+    let uu____12738 = FStar_ST.op_Bang query_indices  in
+    match uu____12738 with
     | [] -> failwith "Empty query indices!"
     | hd1::tl1 -> FStar_ST.op_Colon_Equals query_indices tl1
   
 let (snapshot_query_indices :
   unit -> (Prims.int,unit) FStar_Pervasives_Native.tuple2) =
-  fun uu____11530  ->
+  fun uu____12865  ->
     FStar_Common.snapshot push_query_indices query_indices ()
   
 let (rollback_query_indices :
@@ -2424,102 +1568,102 @@ let (rollback_query_indices :
   fun depth  -> FStar_Common.rollback pop_query_indices query_indices depth 
 let (add_query_index :
   (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 -> unit) =
-  fun uu____11560  ->
-    match uu____11560 with
+  fun uu____12902  ->
+    match uu____12902 with
     | (l,n1) ->
-        let uu____11567 = FStar_ST.op_Bang query_indices  in
-        (match uu____11567 with
+        let uu____12912 = FStar_ST.op_Bang query_indices  in
+        (match uu____12912 with
          | hd1::tl1 ->
              FStar_ST.op_Colon_Equals query_indices (((l, n1) :: hd1) :: tl1)
-         | uu____11678 -> failwith "Empty query indices")
+         | uu____13034 -> failwith "Empty query indices")
   
 let (peek_query_indices :
   unit ->
     (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 Prims.list)
   =
-  fun uu____11697  ->
-    let uu____11698 = FStar_ST.op_Bang query_indices  in
-    FStar_List.hd uu____11698
+  fun uu____13057  ->
+    let uu____13058 = FStar_ST.op_Bang query_indices  in
+    FStar_List.hd uu____13058
   
 let (stack : env Prims.list FStar_ST.ref) = FStar_Util.mk_ref [] 
 let (push_stack : env -> env) =
   fun env  ->
-    (let uu____11771 =
-       let uu____11774 = FStar_ST.op_Bang stack  in env :: uu____11774  in
-     FStar_ST.op_Colon_Equals stack uu____11771);
-    (let uu___244_11823 = env  in
-     let uu____11824 = FStar_Util.smap_copy (gamma_cache env)  in
-     let uu____11827 = FStar_Util.smap_copy (sigtab env)  in
-     let uu____11830 = FStar_Util.smap_copy (attrtab env)  in
-     let uu____11837 =
-       let uu____11850 =
-         let uu____11853 =
+    (let uu____13137 =
+       let uu____13140 = FStar_ST.op_Bang stack  in env :: uu____13140  in
+     FStar_ST.op_Colon_Equals stack uu____13137);
+    (let uu___249_13189 = env  in
+     let uu____13190 = FStar_Util.smap_copy (gamma_cache env)  in
+     let uu____13193 = FStar_Util.smap_copy (sigtab env)  in
+     let uu____13196 = FStar_Util.smap_copy (attrtab env)  in
+     let uu____13203 =
+       let uu____13218 =
+         let uu____13222 =
            FStar_All.pipe_right env.qtbl_name_and_index
              FStar_Pervasives_Native.fst
             in
-         FStar_Util.smap_copy uu____11853  in
-       let uu____11878 =
+         FStar_Util.smap_copy uu____13222  in
+       let uu____13254 =
          FStar_All.pipe_right env.qtbl_name_and_index
            FStar_Pervasives_Native.snd
           in
-       (uu____11850, uu____11878)  in
-     let uu____11919 = FStar_Util.smap_copy env.normalized_eff_names  in
-     let uu____11922 = FStar_Util.smap_copy env.fv_delta_depths  in
-     let uu____11925 =
-       let uu____11928 = FStar_ST.op_Bang env.identifier_info  in
-       FStar_Util.mk_ref uu____11928  in
+       (uu____13218, uu____13254)  in
+     let uu____13303 = FStar_Util.smap_copy env.normalized_eff_names  in
+     let uu____13306 = FStar_Util.smap_copy env.fv_delta_depths  in
+     let uu____13309 =
+       let uu____13312 = FStar_ST.op_Bang env.identifier_info  in
+       FStar_Util.mk_ref uu____13312  in
      {
-       solver = (uu___244_11823.solver);
-       range = (uu___244_11823.range);
-       curmodule = (uu___244_11823.curmodule);
-       gamma = (uu___244_11823.gamma);
-       gamma_sig = (uu___244_11823.gamma_sig);
-       gamma_cache = uu____11824;
-       modules = (uu___244_11823.modules);
-       expected_typ = (uu___244_11823.expected_typ);
-       sigtab = uu____11827;
-       attrtab = uu____11830;
-       is_pattern = (uu___244_11823.is_pattern);
-       instantiate_imp = (uu___244_11823.instantiate_imp);
-       effects = (uu___244_11823.effects);
-       generalize = (uu___244_11823.generalize);
-       letrecs = (uu___244_11823.letrecs);
-       top_level = (uu___244_11823.top_level);
-       check_uvars = (uu___244_11823.check_uvars);
-       use_eq = (uu___244_11823.use_eq);
-       is_iface = (uu___244_11823.is_iface);
-       admit = (uu___244_11823.admit);
-       lax = (uu___244_11823.lax);
-       lax_universes = (uu___244_11823.lax_universes);
-       phase1 = (uu___244_11823.phase1);
-       failhard = (uu___244_11823.failhard);
-       nosynth = (uu___244_11823.nosynth);
-       uvar_subtyping = (uu___244_11823.uvar_subtyping);
-       tc_term = (uu___244_11823.tc_term);
-       type_of = (uu___244_11823.type_of);
-       universe_of = (uu___244_11823.universe_of);
-       check_type_of = (uu___244_11823.check_type_of);
-       use_bv_sorts = (uu___244_11823.use_bv_sorts);
-       qtbl_name_and_index = uu____11837;
-       normalized_eff_names = uu____11919;
-       fv_delta_depths = uu____11922;
-       proof_ns = (uu___244_11823.proof_ns);
-       synth_hook = (uu___244_11823.synth_hook);
-       splice = (uu___244_11823.splice);
-       postprocess = (uu___244_11823.postprocess);
-       is_native_tactic = (uu___244_11823.is_native_tactic);
-       identifier_info = uu____11925;
-       tc_hooks = (uu___244_11823.tc_hooks);
-       dsenv = (uu___244_11823.dsenv);
-       nbe = (uu___244_11823.nbe)
+       solver = (uu___249_13189.solver);
+       range = (uu___249_13189.range);
+       curmodule = (uu___249_13189.curmodule);
+       gamma = (uu___249_13189.gamma);
+       gamma_sig = (uu___249_13189.gamma_sig);
+       gamma_cache = uu____13190;
+       modules = (uu___249_13189.modules);
+       expected_typ = (uu___249_13189.expected_typ);
+       sigtab = uu____13193;
+       attrtab = uu____13196;
+       is_pattern = (uu___249_13189.is_pattern);
+       instantiate_imp = (uu___249_13189.instantiate_imp);
+       effects = (uu___249_13189.effects);
+       generalize = (uu___249_13189.generalize);
+       letrecs = (uu___249_13189.letrecs);
+       top_level = (uu___249_13189.top_level);
+       check_uvars = (uu___249_13189.check_uvars);
+       use_eq = (uu___249_13189.use_eq);
+       is_iface = (uu___249_13189.is_iface);
+       admit = (uu___249_13189.admit);
+       lax = (uu___249_13189.lax);
+       lax_universes = (uu___249_13189.lax_universes);
+       phase1 = (uu___249_13189.phase1);
+       failhard = (uu___249_13189.failhard);
+       nosynth = (uu___249_13189.nosynth);
+       uvar_subtyping = (uu___249_13189.uvar_subtyping);
+       tc_term = (uu___249_13189.tc_term);
+       type_of = (uu___249_13189.type_of);
+       universe_of = (uu___249_13189.universe_of);
+       check_type_of = (uu___249_13189.check_type_of);
+       use_bv_sorts = (uu___249_13189.use_bv_sorts);
+       qtbl_name_and_index = uu____13203;
+       normalized_eff_names = uu____13303;
+       fv_delta_depths = uu____13306;
+       proof_ns = (uu___249_13189.proof_ns);
+       synth_hook = (uu___249_13189.synth_hook);
+       splice = (uu___249_13189.splice);
+       postprocess = (uu___249_13189.postprocess);
+       is_native_tactic = (uu___249_13189.is_native_tactic);
+       identifier_info = uu____13309;
+       tc_hooks = (uu___249_13189.tc_hooks);
+       dsenv = (uu___249_13189.dsenv);
+       nbe = (uu___249_13189.nbe)
      })
   
 let (pop_stack : unit -> env) =
-  fun uu____11974  ->
-    let uu____11975 = FStar_ST.op_Bang stack  in
-    match uu____11975 with
+  fun uu____13359  ->
+    let uu____13360 = FStar_ST.op_Bang stack  in
+    match uu____13360 with
     | env::tl1 -> (FStar_ST.op_Colon_Equals stack tl1; env)
-    | uu____12029 -> failwith "Impossible: Too many pops"
+    | uu____13414 -> failwith "Impossible: Too many pops"
   
 let (snapshot_stack : env -> (Prims.int,env) FStar_Pervasives_Native.tuple2)
   = fun env  -> FStar_Common.snapshot push_stack stack env 
@@ -2534,78 +1678,78 @@ let (snapshot :
   fun env  ->
     fun msg  ->
       FStar_Util.atomically
-        (fun uu____12101  ->
-           let uu____12102 = snapshot_stack env  in
-           match uu____12102 with
+        (fun uu____13504  ->
+           let uu____13505 = snapshot_stack env  in
+           match uu____13505 with
            | (stack_depth,env1) ->
-               let uu____12127 = snapshot_query_indices ()  in
-               (match uu____12127 with
+               let uu____13539 = snapshot_query_indices ()  in
+               (match uu____13539 with
                 | (query_indices_depth,()) ->
-                    let uu____12151 = (env1.solver).snapshot msg  in
-                    (match uu____12151 with
+                    let uu____13572 = (env1.solver).snapshot msg  in
+                    (match uu____13572 with
                      | (solver_depth,()) ->
-                         let uu____12193 =
+                         let uu____13629 =
                            FStar_Syntax_DsEnv.snapshot env1.dsenv  in
-                         (match uu____12193 with
+                         (match uu____13629 with
                           | (dsenv_depth,dsenv1) ->
                               ((stack_depth, query_indices_depth,
                                  solver_depth, dsenv_depth),
-                                (let uu___245_12239 = env1  in
+                                (let uu___250_13696 = env1  in
                                  {
-                                   solver = (uu___245_12239.solver);
-                                   range = (uu___245_12239.range);
-                                   curmodule = (uu___245_12239.curmodule);
-                                   gamma = (uu___245_12239.gamma);
-                                   gamma_sig = (uu___245_12239.gamma_sig);
-                                   gamma_cache = (uu___245_12239.gamma_cache);
-                                   modules = (uu___245_12239.modules);
+                                   solver = (uu___250_13696.solver);
+                                   range = (uu___250_13696.range);
+                                   curmodule = (uu___250_13696.curmodule);
+                                   gamma = (uu___250_13696.gamma);
+                                   gamma_sig = (uu___250_13696.gamma_sig);
+                                   gamma_cache = (uu___250_13696.gamma_cache);
+                                   modules = (uu___250_13696.modules);
                                    expected_typ =
-                                     (uu___245_12239.expected_typ);
-                                   sigtab = (uu___245_12239.sigtab);
-                                   attrtab = (uu___245_12239.attrtab);
-                                   is_pattern = (uu___245_12239.is_pattern);
+                                     (uu___250_13696.expected_typ);
+                                   sigtab = (uu___250_13696.sigtab);
+                                   attrtab = (uu___250_13696.attrtab);
+                                   is_pattern = (uu___250_13696.is_pattern);
                                    instantiate_imp =
-                                     (uu___245_12239.instantiate_imp);
-                                   effects = (uu___245_12239.effects);
-                                   generalize = (uu___245_12239.generalize);
-                                   letrecs = (uu___245_12239.letrecs);
-                                   top_level = (uu___245_12239.top_level);
-                                   check_uvars = (uu___245_12239.check_uvars);
-                                   use_eq = (uu___245_12239.use_eq);
-                                   is_iface = (uu___245_12239.is_iface);
-                                   admit = (uu___245_12239.admit);
-                                   lax = (uu___245_12239.lax);
+                                     (uu___250_13696.instantiate_imp);
+                                   effects = (uu___250_13696.effects);
+                                   generalize = (uu___250_13696.generalize);
+                                   letrecs = (uu___250_13696.letrecs);
+                                   top_level = (uu___250_13696.top_level);
+                                   check_uvars = (uu___250_13696.check_uvars);
+                                   use_eq = (uu___250_13696.use_eq);
+                                   is_iface = (uu___250_13696.is_iface);
+                                   admit = (uu___250_13696.admit);
+                                   lax = (uu___250_13696.lax);
                                    lax_universes =
-                                     (uu___245_12239.lax_universes);
-                                   phase1 = (uu___245_12239.phase1);
-                                   failhard = (uu___245_12239.failhard);
-                                   nosynth = (uu___245_12239.nosynth);
+                                     (uu___250_13696.lax_universes);
+                                   phase1 = (uu___250_13696.phase1);
+                                   failhard = (uu___250_13696.failhard);
+                                   nosynth = (uu___250_13696.nosynth);
                                    uvar_subtyping =
-                                     (uu___245_12239.uvar_subtyping);
-                                   tc_term = (uu___245_12239.tc_term);
-                                   type_of = (uu___245_12239.type_of);
-                                   universe_of = (uu___245_12239.universe_of);
+                                     (uu___250_13696.uvar_subtyping);
+                                   tc_term = (uu___250_13696.tc_term);
+                                   type_of = (uu___250_13696.type_of);
+                                   universe_of = (uu___250_13696.universe_of);
                                    check_type_of =
-                                     (uu___245_12239.check_type_of);
+                                     (uu___250_13696.check_type_of);
                                    use_bv_sorts =
-                                     (uu___245_12239.use_bv_sorts);
+                                     (uu___250_13696.use_bv_sorts);
                                    qtbl_name_and_index =
-                                     (uu___245_12239.qtbl_name_and_index);
+                                     (uu___250_13696.qtbl_name_and_index);
                                    normalized_eff_names =
-                                     (uu___245_12239.normalized_eff_names);
+                                     (uu___250_13696.normalized_eff_names);
                                    fv_delta_depths =
-                                     (uu___245_12239.fv_delta_depths);
-                                   proof_ns = (uu___245_12239.proof_ns);
-                                   synth_hook = (uu___245_12239.synth_hook);
-                                   splice = (uu___245_12239.splice);
-                                   postprocess = (uu___245_12239.postprocess);
+                                     (uu___250_13696.fv_delta_depths);
+                                   proof_ns = (uu___250_13696.proof_ns);
+                                   synth_hook = (uu___250_13696.synth_hook);
+                                   splice = (uu___250_13696.splice);
+                                   postprocess = (uu___250_13696.postprocess);
                                    is_native_tactic =
-                                     (uu___245_12239.is_native_tactic);
+                                     (uu___250_13696.is_native_tactic);
                                    identifier_info =
-                                     (uu___245_12239.identifier_info);
-                                   tc_hooks = (uu___245_12239.tc_hooks);
+                                     (uu___250_13696.identifier_info);
+                                   tc_hooks = (uu___250_13696.tc_hooks);
                                    dsenv = dsenv1;
-                                   nbe = (uu___245_12239.nbe)
+                                   nbe = (uu___250_13696.nbe)
                                  }))))))
   
 let (rollback :
@@ -2616,8 +1760,8 @@ let (rollback :
     fun msg  ->
       fun depth  ->
         FStar_Util.atomically
-          (fun uu____12270  ->
-             let uu____12271 =
+          (fun uu____13730  ->
+             let uu____13731 =
                match depth with
                | FStar_Pervasives_Native.Some (s1,s2,s3,s4) ->
                    ((FStar_Pervasives_Native.Some s1),
@@ -2630,7 +1774,7 @@ let (rollback :
                      FStar_Pervasives_Native.None,
                      FStar_Pervasives_Native.None)
                 in
-             match uu____12271 with
+             match uu____13731 with
              | (stack_depth,query_indices_depth,solver_depth,dsenv_depth) ->
                  (solver.rollback msg solver_depth;
                   (match () with
@@ -2641,19 +1785,19 @@ let (rollback :
                              let tcenv = rollback_stack stack_depth  in
                              let dsenv1 =
                                FStar_Syntax_DsEnv.rollback dsenv_depth  in
-                             ((let uu____12397 =
+                             ((let uu____13911 =
                                  FStar_Util.physical_equality tcenv.dsenv
                                    dsenv1
                                   in
-                               FStar_Common.runtime_assert uu____12397
+                               FStar_Common.runtime_assert uu____13911
                                  "Inconsistent stack state");
                               tcenv))))))
   
 let (push : env -> Prims.string -> env) =
   fun env  ->
     fun msg  ->
-      let uu____12408 = snapshot env msg  in
-      FStar_Pervasives_Native.snd uu____12408
+      let uu____13927 = snapshot env msg  in
+      FStar_Pervasives_Native.snd uu____13927
   
 let (pop : env -> Prims.string -> env) =
   fun env  ->
@@ -2663,117 +1807,117 @@ let (incr_query_index : env -> env) =
   fun env  ->
     let qix = peek_query_indices ()  in
     match env.qtbl_name_and_index with
-    | (uu____12435,FStar_Pervasives_Native.None ) -> env
+    | (uu____13959,FStar_Pervasives_Native.None ) -> env
     | (tbl,FStar_Pervasives_Native.Some (l,n1)) ->
-        let uu____12467 =
+        let uu____14001 =
           FStar_All.pipe_right qix
             (FStar_List.tryFind
-               (fun uu____12493  ->
-                  match uu____12493 with
-                  | (m,uu____12499) -> FStar_Ident.lid_equals l m))
+               (fun uu____14031  ->
+                  match uu____14031 with
+                  | (m,uu____14039) -> FStar_Ident.lid_equals l m))
            in
-        (match uu____12467 with
+        (match uu____14001 with
          | FStar_Pervasives_Native.None  ->
              let next = n1 + (Prims.parse_int "1")  in
              (add_query_index (l, next);
               FStar_Util.smap_add tbl l.FStar_Ident.str next;
-              (let uu___246_12507 = env  in
+              (let uu___251_14054 = env  in
                {
-                 solver = (uu___246_12507.solver);
-                 range = (uu___246_12507.range);
-                 curmodule = (uu___246_12507.curmodule);
-                 gamma = (uu___246_12507.gamma);
-                 gamma_sig = (uu___246_12507.gamma_sig);
-                 gamma_cache = (uu___246_12507.gamma_cache);
-                 modules = (uu___246_12507.modules);
-                 expected_typ = (uu___246_12507.expected_typ);
-                 sigtab = (uu___246_12507.sigtab);
-                 attrtab = (uu___246_12507.attrtab);
-                 is_pattern = (uu___246_12507.is_pattern);
-                 instantiate_imp = (uu___246_12507.instantiate_imp);
-                 effects = (uu___246_12507.effects);
-                 generalize = (uu___246_12507.generalize);
-                 letrecs = (uu___246_12507.letrecs);
-                 top_level = (uu___246_12507.top_level);
-                 check_uvars = (uu___246_12507.check_uvars);
-                 use_eq = (uu___246_12507.use_eq);
-                 is_iface = (uu___246_12507.is_iface);
-                 admit = (uu___246_12507.admit);
-                 lax = (uu___246_12507.lax);
-                 lax_universes = (uu___246_12507.lax_universes);
-                 phase1 = (uu___246_12507.phase1);
-                 failhard = (uu___246_12507.failhard);
-                 nosynth = (uu___246_12507.nosynth);
-                 uvar_subtyping = (uu___246_12507.uvar_subtyping);
-                 tc_term = (uu___246_12507.tc_term);
-                 type_of = (uu___246_12507.type_of);
-                 universe_of = (uu___246_12507.universe_of);
-                 check_type_of = (uu___246_12507.check_type_of);
-                 use_bv_sorts = (uu___246_12507.use_bv_sorts);
+                 solver = (uu___251_14054.solver);
+                 range = (uu___251_14054.range);
+                 curmodule = (uu___251_14054.curmodule);
+                 gamma = (uu___251_14054.gamma);
+                 gamma_sig = (uu___251_14054.gamma_sig);
+                 gamma_cache = (uu___251_14054.gamma_cache);
+                 modules = (uu___251_14054.modules);
+                 expected_typ = (uu___251_14054.expected_typ);
+                 sigtab = (uu___251_14054.sigtab);
+                 attrtab = (uu___251_14054.attrtab);
+                 is_pattern = (uu___251_14054.is_pattern);
+                 instantiate_imp = (uu___251_14054.instantiate_imp);
+                 effects = (uu___251_14054.effects);
+                 generalize = (uu___251_14054.generalize);
+                 letrecs = (uu___251_14054.letrecs);
+                 top_level = (uu___251_14054.top_level);
+                 check_uvars = (uu___251_14054.check_uvars);
+                 use_eq = (uu___251_14054.use_eq);
+                 is_iface = (uu___251_14054.is_iface);
+                 admit = (uu___251_14054.admit);
+                 lax = (uu___251_14054.lax);
+                 lax_universes = (uu___251_14054.lax_universes);
+                 phase1 = (uu___251_14054.phase1);
+                 failhard = (uu___251_14054.failhard);
+                 nosynth = (uu___251_14054.nosynth);
+                 uvar_subtyping = (uu___251_14054.uvar_subtyping);
+                 tc_term = (uu___251_14054.tc_term);
+                 type_of = (uu___251_14054.type_of);
+                 universe_of = (uu___251_14054.universe_of);
+                 check_type_of = (uu___251_14054.check_type_of);
+                 use_bv_sorts = (uu___251_14054.use_bv_sorts);
                  qtbl_name_and_index =
                    (tbl, (FStar_Pervasives_Native.Some (l, next)));
-                 normalized_eff_names = (uu___246_12507.normalized_eff_names);
-                 fv_delta_depths = (uu___246_12507.fv_delta_depths);
-                 proof_ns = (uu___246_12507.proof_ns);
-                 synth_hook = (uu___246_12507.synth_hook);
-                 splice = (uu___246_12507.splice);
-                 postprocess = (uu___246_12507.postprocess);
-                 is_native_tactic = (uu___246_12507.is_native_tactic);
-                 identifier_info = (uu___246_12507.identifier_info);
-                 tc_hooks = (uu___246_12507.tc_hooks);
-                 dsenv = (uu___246_12507.dsenv);
-                 nbe = (uu___246_12507.nbe)
+                 normalized_eff_names = (uu___251_14054.normalized_eff_names);
+                 fv_delta_depths = (uu___251_14054.fv_delta_depths);
+                 proof_ns = (uu___251_14054.proof_ns);
+                 synth_hook = (uu___251_14054.synth_hook);
+                 splice = (uu___251_14054.splice);
+                 postprocess = (uu___251_14054.postprocess);
+                 is_native_tactic = (uu___251_14054.is_native_tactic);
+                 identifier_info = (uu___251_14054.identifier_info);
+                 tc_hooks = (uu___251_14054.tc_hooks);
+                 dsenv = (uu___251_14054.dsenv);
+                 nbe = (uu___251_14054.nbe)
                }))
-         | FStar_Pervasives_Native.Some (uu____12520,m) ->
+         | FStar_Pervasives_Native.Some (uu____14071,m) ->
              let next = m + (Prims.parse_int "1")  in
              (add_query_index (l, next);
               FStar_Util.smap_add tbl l.FStar_Ident.str next;
-              (let uu___247_12529 = env  in
+              (let uu___252_14087 = env  in
                {
-                 solver = (uu___247_12529.solver);
-                 range = (uu___247_12529.range);
-                 curmodule = (uu___247_12529.curmodule);
-                 gamma = (uu___247_12529.gamma);
-                 gamma_sig = (uu___247_12529.gamma_sig);
-                 gamma_cache = (uu___247_12529.gamma_cache);
-                 modules = (uu___247_12529.modules);
-                 expected_typ = (uu___247_12529.expected_typ);
-                 sigtab = (uu___247_12529.sigtab);
-                 attrtab = (uu___247_12529.attrtab);
-                 is_pattern = (uu___247_12529.is_pattern);
-                 instantiate_imp = (uu___247_12529.instantiate_imp);
-                 effects = (uu___247_12529.effects);
-                 generalize = (uu___247_12529.generalize);
-                 letrecs = (uu___247_12529.letrecs);
-                 top_level = (uu___247_12529.top_level);
-                 check_uvars = (uu___247_12529.check_uvars);
-                 use_eq = (uu___247_12529.use_eq);
-                 is_iface = (uu___247_12529.is_iface);
-                 admit = (uu___247_12529.admit);
-                 lax = (uu___247_12529.lax);
-                 lax_universes = (uu___247_12529.lax_universes);
-                 phase1 = (uu___247_12529.phase1);
-                 failhard = (uu___247_12529.failhard);
-                 nosynth = (uu___247_12529.nosynth);
-                 uvar_subtyping = (uu___247_12529.uvar_subtyping);
-                 tc_term = (uu___247_12529.tc_term);
-                 type_of = (uu___247_12529.type_of);
-                 universe_of = (uu___247_12529.universe_of);
-                 check_type_of = (uu___247_12529.check_type_of);
-                 use_bv_sorts = (uu___247_12529.use_bv_sorts);
+                 solver = (uu___252_14087.solver);
+                 range = (uu___252_14087.range);
+                 curmodule = (uu___252_14087.curmodule);
+                 gamma = (uu___252_14087.gamma);
+                 gamma_sig = (uu___252_14087.gamma_sig);
+                 gamma_cache = (uu___252_14087.gamma_cache);
+                 modules = (uu___252_14087.modules);
+                 expected_typ = (uu___252_14087.expected_typ);
+                 sigtab = (uu___252_14087.sigtab);
+                 attrtab = (uu___252_14087.attrtab);
+                 is_pattern = (uu___252_14087.is_pattern);
+                 instantiate_imp = (uu___252_14087.instantiate_imp);
+                 effects = (uu___252_14087.effects);
+                 generalize = (uu___252_14087.generalize);
+                 letrecs = (uu___252_14087.letrecs);
+                 top_level = (uu___252_14087.top_level);
+                 check_uvars = (uu___252_14087.check_uvars);
+                 use_eq = (uu___252_14087.use_eq);
+                 is_iface = (uu___252_14087.is_iface);
+                 admit = (uu___252_14087.admit);
+                 lax = (uu___252_14087.lax);
+                 lax_universes = (uu___252_14087.lax_universes);
+                 phase1 = (uu___252_14087.phase1);
+                 failhard = (uu___252_14087.failhard);
+                 nosynth = (uu___252_14087.nosynth);
+                 uvar_subtyping = (uu___252_14087.uvar_subtyping);
+                 tc_term = (uu___252_14087.tc_term);
+                 type_of = (uu___252_14087.type_of);
+                 universe_of = (uu___252_14087.universe_of);
+                 check_type_of = (uu___252_14087.check_type_of);
+                 use_bv_sorts = (uu___252_14087.use_bv_sorts);
                  qtbl_name_and_index =
                    (tbl, (FStar_Pervasives_Native.Some (l, next)));
-                 normalized_eff_names = (uu___247_12529.normalized_eff_names);
-                 fv_delta_depths = (uu___247_12529.fv_delta_depths);
-                 proof_ns = (uu___247_12529.proof_ns);
-                 synth_hook = (uu___247_12529.synth_hook);
-                 splice = (uu___247_12529.splice);
-                 postprocess = (uu___247_12529.postprocess);
-                 is_native_tactic = (uu___247_12529.is_native_tactic);
-                 identifier_info = (uu___247_12529.identifier_info);
-                 tc_hooks = (uu___247_12529.tc_hooks);
-                 dsenv = (uu___247_12529.dsenv);
-                 nbe = (uu___247_12529.nbe)
+                 normalized_eff_names = (uu___252_14087.normalized_eff_names);
+                 fv_delta_depths = (uu___252_14087.fv_delta_depths);
+                 proof_ns = (uu___252_14087.proof_ns);
+                 synth_hook = (uu___252_14087.synth_hook);
+                 splice = (uu___252_14087.splice);
+                 postprocess = (uu___252_14087.postprocess);
+                 is_native_tactic = (uu___252_14087.is_native_tactic);
+                 identifier_info = (uu___252_14087.identifier_info);
+                 tc_hooks = (uu___252_14087.tc_hooks);
+                 dsenv = (uu___252_14087.dsenv);
+                 nbe = (uu___252_14087.nbe)
                })))
   
 let (debug : env -> FStar_Options.debug_level_t -> Prims.bool) =
@@ -2786,90 +1930,90 @@ let (set_range : env -> FStar_Range.range -> env) =
       if r = FStar_Range.dummyRange
       then e
       else
-        (let uu___248_12563 = e  in
+        (let uu___253_14130 = e  in
          {
-           solver = (uu___248_12563.solver);
+           solver = (uu___253_14130.solver);
            range = r;
-           curmodule = (uu___248_12563.curmodule);
-           gamma = (uu___248_12563.gamma);
-           gamma_sig = (uu___248_12563.gamma_sig);
-           gamma_cache = (uu___248_12563.gamma_cache);
-           modules = (uu___248_12563.modules);
-           expected_typ = (uu___248_12563.expected_typ);
-           sigtab = (uu___248_12563.sigtab);
-           attrtab = (uu___248_12563.attrtab);
-           is_pattern = (uu___248_12563.is_pattern);
-           instantiate_imp = (uu___248_12563.instantiate_imp);
-           effects = (uu___248_12563.effects);
-           generalize = (uu___248_12563.generalize);
-           letrecs = (uu___248_12563.letrecs);
-           top_level = (uu___248_12563.top_level);
-           check_uvars = (uu___248_12563.check_uvars);
-           use_eq = (uu___248_12563.use_eq);
-           is_iface = (uu___248_12563.is_iface);
-           admit = (uu___248_12563.admit);
-           lax = (uu___248_12563.lax);
-           lax_universes = (uu___248_12563.lax_universes);
-           phase1 = (uu___248_12563.phase1);
-           failhard = (uu___248_12563.failhard);
-           nosynth = (uu___248_12563.nosynth);
-           uvar_subtyping = (uu___248_12563.uvar_subtyping);
-           tc_term = (uu___248_12563.tc_term);
-           type_of = (uu___248_12563.type_of);
-           universe_of = (uu___248_12563.universe_of);
-           check_type_of = (uu___248_12563.check_type_of);
-           use_bv_sorts = (uu___248_12563.use_bv_sorts);
-           qtbl_name_and_index = (uu___248_12563.qtbl_name_and_index);
-           normalized_eff_names = (uu___248_12563.normalized_eff_names);
-           fv_delta_depths = (uu___248_12563.fv_delta_depths);
-           proof_ns = (uu___248_12563.proof_ns);
-           synth_hook = (uu___248_12563.synth_hook);
-           splice = (uu___248_12563.splice);
-           postprocess = (uu___248_12563.postprocess);
-           is_native_tactic = (uu___248_12563.is_native_tactic);
-           identifier_info = (uu___248_12563.identifier_info);
-           tc_hooks = (uu___248_12563.tc_hooks);
-           dsenv = (uu___248_12563.dsenv);
-           nbe = (uu___248_12563.nbe)
+           curmodule = (uu___253_14130.curmodule);
+           gamma = (uu___253_14130.gamma);
+           gamma_sig = (uu___253_14130.gamma_sig);
+           gamma_cache = (uu___253_14130.gamma_cache);
+           modules = (uu___253_14130.modules);
+           expected_typ = (uu___253_14130.expected_typ);
+           sigtab = (uu___253_14130.sigtab);
+           attrtab = (uu___253_14130.attrtab);
+           is_pattern = (uu___253_14130.is_pattern);
+           instantiate_imp = (uu___253_14130.instantiate_imp);
+           effects = (uu___253_14130.effects);
+           generalize = (uu___253_14130.generalize);
+           letrecs = (uu___253_14130.letrecs);
+           top_level = (uu___253_14130.top_level);
+           check_uvars = (uu___253_14130.check_uvars);
+           use_eq = (uu___253_14130.use_eq);
+           is_iface = (uu___253_14130.is_iface);
+           admit = (uu___253_14130.admit);
+           lax = (uu___253_14130.lax);
+           lax_universes = (uu___253_14130.lax_universes);
+           phase1 = (uu___253_14130.phase1);
+           failhard = (uu___253_14130.failhard);
+           nosynth = (uu___253_14130.nosynth);
+           uvar_subtyping = (uu___253_14130.uvar_subtyping);
+           tc_term = (uu___253_14130.tc_term);
+           type_of = (uu___253_14130.type_of);
+           universe_of = (uu___253_14130.universe_of);
+           check_type_of = (uu___253_14130.check_type_of);
+           use_bv_sorts = (uu___253_14130.use_bv_sorts);
+           qtbl_name_and_index = (uu___253_14130.qtbl_name_and_index);
+           normalized_eff_names = (uu___253_14130.normalized_eff_names);
+           fv_delta_depths = (uu___253_14130.fv_delta_depths);
+           proof_ns = (uu___253_14130.proof_ns);
+           synth_hook = (uu___253_14130.synth_hook);
+           splice = (uu___253_14130.splice);
+           postprocess = (uu___253_14130.postprocess);
+           is_native_tactic = (uu___253_14130.is_native_tactic);
+           identifier_info = (uu___253_14130.identifier_info);
+           tc_hooks = (uu___253_14130.tc_hooks);
+           dsenv = (uu___253_14130.dsenv);
+           nbe = (uu___253_14130.nbe)
          })
   
 let (get_range : env -> FStar_Range.range) = fun e  -> e.range 
 let (toggle_id_info : env -> Prims.bool -> unit) =
   fun env  ->
     fun enabled  ->
-      let uu____12579 =
-        let uu____12580 = FStar_ST.op_Bang env.identifier_info  in
-        FStar_TypeChecker_Common.id_info_toggle uu____12580 enabled  in
-      FStar_ST.op_Colon_Equals env.identifier_info uu____12579
+      let uu____14150 =
+        let uu____14151 = FStar_ST.op_Bang env.identifier_info  in
+        FStar_TypeChecker_Common.id_info_toggle uu____14151 enabled  in
+      FStar_ST.op_Colon_Equals env.identifier_info uu____14150
   
 let (insert_bv_info :
   env -> FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> unit) =
   fun env  ->
     fun bv  ->
       fun ty  ->
-        let uu____12634 =
-          let uu____12635 = FStar_ST.op_Bang env.identifier_info  in
-          FStar_TypeChecker_Common.id_info_insert_bv uu____12635 bv ty  in
-        FStar_ST.op_Colon_Equals env.identifier_info uu____12634
+        let uu____14206 =
+          let uu____14207 = FStar_ST.op_Bang env.identifier_info  in
+          FStar_TypeChecker_Common.id_info_insert_bv uu____14207 bv ty  in
+        FStar_ST.op_Colon_Equals env.identifier_info uu____14206
   
 let (insert_fv_info :
   env -> FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.typ -> unit) =
   fun env  ->
     fun fv  ->
       fun ty  ->
-        let uu____12689 =
-          let uu____12690 = FStar_ST.op_Bang env.identifier_info  in
-          FStar_TypeChecker_Common.id_info_insert_fv uu____12690 fv ty  in
-        FStar_ST.op_Colon_Equals env.identifier_info uu____12689
+        let uu____14262 =
+          let uu____14263 = FStar_ST.op_Bang env.identifier_info  in
+          FStar_TypeChecker_Common.id_info_insert_fv uu____14263 fv ty  in
+        FStar_ST.op_Colon_Equals env.identifier_info uu____14262
   
 let (promote_id_info :
   env -> (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> unit) =
   fun env  ->
     fun ty_map  ->
-      let uu____12744 =
-        let uu____12745 = FStar_ST.op_Bang env.identifier_info  in
-        FStar_TypeChecker_Common.id_info_promote uu____12745 ty_map  in
-      FStar_ST.op_Colon_Equals env.identifier_info uu____12744
+      let uu____14318 =
+        let uu____14319 = FStar_ST.op_Bang env.identifier_info  in
+        FStar_TypeChecker_Common.id_info_promote uu____14319 ty_map  in
+      FStar_ST.op_Colon_Equals env.identifier_info uu____14318
   
 let (modules : env -> FStar_Syntax_Syntax.modul Prims.list) =
   fun env  -> env.modules 
@@ -2877,51 +2021,51 @@ let (current_module : env -> FStar_Ident.lident) = fun env  -> env.curmodule
 let (set_current_module : env -> FStar_Ident.lident -> env) =
   fun env  ->
     fun lid  ->
-      let uu___249_12806 = env  in
+      let uu___254_14383 = env  in
       {
-        solver = (uu___249_12806.solver);
-        range = (uu___249_12806.range);
+        solver = (uu___254_14383.solver);
+        range = (uu___254_14383.range);
         curmodule = lid;
-        gamma = (uu___249_12806.gamma);
-        gamma_sig = (uu___249_12806.gamma_sig);
-        gamma_cache = (uu___249_12806.gamma_cache);
-        modules = (uu___249_12806.modules);
-        expected_typ = (uu___249_12806.expected_typ);
-        sigtab = (uu___249_12806.sigtab);
-        attrtab = (uu___249_12806.attrtab);
-        is_pattern = (uu___249_12806.is_pattern);
-        instantiate_imp = (uu___249_12806.instantiate_imp);
-        effects = (uu___249_12806.effects);
-        generalize = (uu___249_12806.generalize);
-        letrecs = (uu___249_12806.letrecs);
-        top_level = (uu___249_12806.top_level);
-        check_uvars = (uu___249_12806.check_uvars);
-        use_eq = (uu___249_12806.use_eq);
-        is_iface = (uu___249_12806.is_iface);
-        admit = (uu___249_12806.admit);
-        lax = (uu___249_12806.lax);
-        lax_universes = (uu___249_12806.lax_universes);
-        phase1 = (uu___249_12806.phase1);
-        failhard = (uu___249_12806.failhard);
-        nosynth = (uu___249_12806.nosynth);
-        uvar_subtyping = (uu___249_12806.uvar_subtyping);
-        tc_term = (uu___249_12806.tc_term);
-        type_of = (uu___249_12806.type_of);
-        universe_of = (uu___249_12806.universe_of);
-        check_type_of = (uu___249_12806.check_type_of);
-        use_bv_sorts = (uu___249_12806.use_bv_sorts);
-        qtbl_name_and_index = (uu___249_12806.qtbl_name_and_index);
-        normalized_eff_names = (uu___249_12806.normalized_eff_names);
-        fv_delta_depths = (uu___249_12806.fv_delta_depths);
-        proof_ns = (uu___249_12806.proof_ns);
-        synth_hook = (uu___249_12806.synth_hook);
-        splice = (uu___249_12806.splice);
-        postprocess = (uu___249_12806.postprocess);
-        is_native_tactic = (uu___249_12806.is_native_tactic);
-        identifier_info = (uu___249_12806.identifier_info);
-        tc_hooks = (uu___249_12806.tc_hooks);
-        dsenv = (uu___249_12806.dsenv);
-        nbe = (uu___249_12806.nbe)
+        gamma = (uu___254_14383.gamma);
+        gamma_sig = (uu___254_14383.gamma_sig);
+        gamma_cache = (uu___254_14383.gamma_cache);
+        modules = (uu___254_14383.modules);
+        expected_typ = (uu___254_14383.expected_typ);
+        sigtab = (uu___254_14383.sigtab);
+        attrtab = (uu___254_14383.attrtab);
+        is_pattern = (uu___254_14383.is_pattern);
+        instantiate_imp = (uu___254_14383.instantiate_imp);
+        effects = (uu___254_14383.effects);
+        generalize = (uu___254_14383.generalize);
+        letrecs = (uu___254_14383.letrecs);
+        top_level = (uu___254_14383.top_level);
+        check_uvars = (uu___254_14383.check_uvars);
+        use_eq = (uu___254_14383.use_eq);
+        is_iface = (uu___254_14383.is_iface);
+        admit = (uu___254_14383.admit);
+        lax = (uu___254_14383.lax);
+        lax_universes = (uu___254_14383.lax_universes);
+        phase1 = (uu___254_14383.phase1);
+        failhard = (uu___254_14383.failhard);
+        nosynth = (uu___254_14383.nosynth);
+        uvar_subtyping = (uu___254_14383.uvar_subtyping);
+        tc_term = (uu___254_14383.tc_term);
+        type_of = (uu___254_14383.type_of);
+        universe_of = (uu___254_14383.universe_of);
+        check_type_of = (uu___254_14383.check_type_of);
+        use_bv_sorts = (uu___254_14383.use_bv_sorts);
+        qtbl_name_and_index = (uu___254_14383.qtbl_name_and_index);
+        normalized_eff_names = (uu___254_14383.normalized_eff_names);
+        fv_delta_depths = (uu___254_14383.fv_delta_depths);
+        proof_ns = (uu___254_14383.proof_ns);
+        synth_hook = (uu___254_14383.synth_hook);
+        splice = (uu___254_14383.splice);
+        postprocess = (uu___254_14383.postprocess);
+        is_native_tactic = (uu___254_14383.is_native_tactic);
+        identifier_info = (uu___254_14383.identifier_info);
+        tc_hooks = (uu___254_14383.tc_hooks);
+        dsenv = (uu___254_14383.dsenv);
+        nbe = (uu___254_14383.nbe)
       }
   
 let (has_interface : env -> FStar_Ident.lident -> Prims.bool) =
@@ -2940,32 +2084,32 @@ let (find_in_sigtab :
   =
   fun env  ->
     fun lid  ->
-      let uu____12833 = FStar_Ident.text_of_lid lid  in
-      FStar_Util.smap_try_find (sigtab env) uu____12833
+      let uu____14414 = FStar_Ident.text_of_lid lid  in
+      FStar_Util.smap_try_find (sigtab env) uu____14414
   
 let (name_not_found :
   FStar_Ident.lid ->
     (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun l  ->
-    let uu____12843 =
+    let uu____14427 =
       FStar_Util.format1 "Name \"%s\" not found" l.FStar_Ident.str  in
-    (FStar_Errors.Fatal_NameNotFound, uu____12843)
+    (FStar_Errors.Fatal_NameNotFound, uu____14427)
   
 let (variable_not_found :
   FStar_Syntax_Syntax.bv ->
     (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
   =
   fun v1  ->
-    let uu____12853 =
-      let uu____12854 = FStar_Syntax_Print.bv_to_string v1  in
-      FStar_Util.format1 "Variable \"%s\" not found" uu____12854  in
-    (FStar_Errors.Fatal_VariableNotFound, uu____12853)
+    let uu____14442 =
+      let uu____14444 = FStar_Syntax_Print.bv_to_string v1  in
+      FStar_Util.format1 "Variable \"%s\" not found" uu____14444  in
+    (FStar_Errors.Fatal_VariableNotFound, uu____14442)
   
 let (new_u_univ : unit -> FStar_Syntax_Syntax.universe) =
-  fun uu____12859  ->
-    let uu____12860 = FStar_Syntax_Unionfind.univ_fresh ()  in
-    FStar_Syntax_Syntax.U_unif uu____12860
+  fun uu____14453  ->
+    let uu____14454 = FStar_Syntax_Unionfind.univ_fresh ()  in
+    FStar_Syntax_Syntax.U_unif uu____14454
   
 let (mk_univ_subst :
   FStar_Syntax_Syntax.univ_name Prims.list ->
@@ -2988,23 +2132,23 @@ let (inst_tscheme_with :
     fun us  ->
       match (ts, us) with
       | (([],t),[]) -> ([], t)
-      | ((formals,t),uu____12954) ->
+      | ((formals,t),uu____14554) ->
           let vs = mk_univ_subst formals us  in
-          let uu____12978 = FStar_Syntax_Subst.subst vs t  in
-          (us, uu____12978)
+          let uu____14578 = FStar_Syntax_Subst.subst vs t  in
+          (us, uu____14578)
   
 let (inst_tscheme :
   FStar_Syntax_Syntax.tscheme ->
     (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
       FStar_Pervasives_Native.tuple2)
   =
-  fun uu___227_12994  ->
-    match uu___227_12994 with
+  fun uu___232_14595  ->
+    match uu___232_14595 with
     | ([],t) -> ([], t)
     | (us,t) ->
         let us' =
           FStar_All.pipe_right us
-            (FStar_List.map (fun uu____13020  -> new_u_univ ()))
+            (FStar_List.map (fun uu____14621  -> new_u_univ ()))
            in
         inst_tscheme_with (us, t) us'
   
@@ -3016,11 +2160,11 @@ let (inst_tscheme_with_range :
   =
   fun r  ->
     fun t  ->
-      let uu____13039 = inst_tscheme t  in
-      match uu____13039 with
+      let uu____14641 = inst_tscheme t  in
+      match uu____14641 with
       | (us,t1) ->
-          let uu____13050 = FStar_Syntax_Subst.set_use_range r t1  in
-          (us, uu____13050)
+          let uu____14652 = FStar_Syntax_Subst.set_use_range r t1  in
+          (us, uu____14652)
   
 let (inst_effect_fun_with :
   FStar_Syntax_Syntax.universes ->
@@ -3031,8 +2175,8 @@ let (inst_effect_fun_with :
   fun insts  ->
     fun env  ->
       fun ed  ->
-        fun uu____13070  ->
-          match uu____13070 with
+        fun uu____14673  ->
+          match uu____14673 with
           | (us,t) ->
               (match ed.FStar_Syntax_Syntax.binders with
                | [] ->
@@ -3041,44 +2185,44 @@ let (inst_effect_fun_with :
                    (if
                       (FStar_List.length insts) <> (FStar_List.length univs1)
                     then
-                      (let uu____13091 =
-                         let uu____13092 =
+                      (let uu____14695 =
+                         let uu____14697 =
                            FStar_All.pipe_left FStar_Util.string_of_int
                              (FStar_List.length univs1)
                             in
-                         let uu____13093 =
+                         let uu____14701 =
                            FStar_All.pipe_left FStar_Util.string_of_int
                              (FStar_List.length insts)
                             in
-                         let uu____13094 =
+                         let uu____14705 =
                            FStar_Syntax_Print.lid_to_string
                              ed.FStar_Syntax_Syntax.mname
                             in
-                         let uu____13095 =
+                         let uu____14707 =
                            FStar_Syntax_Print.term_to_string t  in
                          FStar_Util.format4
                            "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
-                           uu____13092 uu____13093 uu____13094 uu____13095
+                           uu____14697 uu____14701 uu____14705 uu____14707
                           in
-                       failwith uu____13091)
+                       failwith uu____14695)
                     else ();
-                    (let uu____13097 =
+                    (let uu____14712 =
                        inst_tscheme_with
                          ((FStar_List.append ed.FStar_Syntax_Syntax.univs us),
                            t) insts
                         in
-                     FStar_Pervasives_Native.snd uu____13097))
-               | uu____13106 ->
-                   let uu____13107 =
-                     let uu____13108 =
+                     FStar_Pervasives_Native.snd uu____14712))
+               | uu____14721 ->
+                   let uu____14722 =
+                     let uu____14724 =
                        FStar_Syntax_Print.lid_to_string
                          ed.FStar_Syntax_Syntax.mname
                         in
                      FStar_Util.format1
                        "Unexpected use of an uninstantiated effect: %s\n"
-                       uu____13108
+                       uu____14724
                       in
-                   failwith uu____13107)
+                   failwith uu____14722)
   
 type tri =
   | Yes 
@@ -3086,13 +2230,13 @@ type tri =
   | Maybe 
 let (uu___is_Yes : tri -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Yes  -> true | uu____13114 -> false
+    match projectee with | Yes  -> true | uu____14736 -> false
   
 let (uu___is_No : tri -> Prims.bool) =
-  fun projectee  -> match projectee with | No  -> true | uu____13120 -> false 
+  fun projectee  -> match projectee with | No  -> true | uu____14747 -> false 
 let (uu___is_Maybe : tri -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Maybe  -> true | uu____13126 -> false
+    match projectee with | Maybe  -> true | uu____14758 -> false
   
 let (in_cur_mod : env -> FStar_Ident.lident -> tri) =
   fun env  ->
@@ -3109,12 +2253,12 @@ let (in_cur_mod : env -> FStar_Ident.lident -> tri) =
              FStar_List.append cur.FStar_Ident.ns [cur.FStar_Ident.ident]  in
            let rec aux c l1 =
              match (c, l1) with
-             | ([],uu____13168) -> Maybe
-             | (uu____13175,[]) -> No
+             | ([],uu____14806) -> Maybe
+             | (uu____14813,[]) -> No
              | (hd1::tl1,hd'::tl') when
                  hd1.FStar_Ident.idText = hd'.FStar_Ident.idText ->
                  aux tl1 tl'
-             | uu____13194 -> No  in
+             | uu____14833 -> No  in
            aux cur1 lns)
         else No
   
@@ -3135,56 +2279,56 @@ let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
       let found =
         if cur_mod <> No
         then
-          let uu____13285 =
+          let uu____14927 =
             FStar_Util.smap_try_find (gamma_cache env) lid.FStar_Ident.str
              in
-          match uu____13285 with
+          match uu____14927 with
           | FStar_Pervasives_Native.None  ->
-              let uu____13308 =
+              let uu____14950 =
                 FStar_Util.find_map env.gamma
-                  (fun uu___228_13352  ->
-                     match uu___228_13352 with
+                  (fun uu___233_14994  ->
+                     match uu___233_14994 with
                      | FStar_Syntax_Syntax.Binding_lid (l,t) ->
-                         let uu____13391 = FStar_Ident.lid_equals lid l  in
-                         if uu____13391
+                         let uu____15033 = FStar_Ident.lid_equals lid l  in
+                         if uu____15033
                          then
-                           let uu____13412 =
-                             let uu____13431 =
-                               let uu____13446 = inst_tscheme t  in
-                               FStar_Util.Inl uu____13446  in
-                             let uu____13461 = FStar_Ident.range_of_lid l  in
-                             (uu____13431, uu____13461)  in
-                           FStar_Pervasives_Native.Some uu____13412
+                           let uu____15056 =
+                             let uu____15075 =
+                               let uu____15090 = inst_tscheme t  in
+                               FStar_Util.Inl uu____15090  in
+                             let uu____15105 = FStar_Ident.range_of_lid l  in
+                             (uu____15075, uu____15105)  in
+                           FStar_Pervasives_Native.Some uu____15056
                          else FStar_Pervasives_Native.None
-                     | uu____13513 -> FStar_Pervasives_Native.None)
+                     | uu____15158 -> FStar_Pervasives_Native.None)
                  in
-              FStar_Util.catch_opt uu____13308
-                (fun uu____13551  ->
+              FStar_Util.catch_opt uu____14950
+                (fun uu____15196  ->
                    FStar_Util.find_map env.gamma_sig
-                     (fun uu___229_13560  ->
-                        match uu___229_13560 with
-                        | (uu____13563,{
+                     (fun uu___234_15205  ->
+                        match uu___234_15205 with
+                        | (uu____15208,{
                                          FStar_Syntax_Syntax.sigel =
                                            FStar_Syntax_Syntax.Sig_bundle
-                                           (ses,uu____13565);
+                                           (ses,uu____15210);
                                          FStar_Syntax_Syntax.sigrng =
-                                           uu____13566;
+                                           uu____15211;
                                          FStar_Syntax_Syntax.sigquals =
-                                           uu____13567;
+                                           uu____15212;
                                          FStar_Syntax_Syntax.sigmeta =
-                                           uu____13568;
+                                           uu____15213;
                                          FStar_Syntax_Syntax.sigattrs =
-                                           uu____13569;_})
+                                           uu____15214;_})
                             ->
                             FStar_Util.find_map ses
                               (fun se  ->
-                                 let uu____13589 =
+                                 let uu____15234 =
                                    FStar_All.pipe_right
                                      (FStar_Syntax_Util.lids_of_sigelt se)
                                      (FStar_Util.for_some
                                         (FStar_Ident.lid_equals lid))
                                     in
-                                 if uu____13589
+                                 if uu____15234
                                  then
                                    cache
                                      ((FStar_Util.Inr
@@ -3195,32 +2339,32 @@ let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
                             let maybe_cache t =
                               match s.FStar_Syntax_Syntax.sigel with
                               | FStar_Syntax_Syntax.Sig_declare_typ
-                                  uu____13637 ->
+                                  uu____15286 ->
                                   FStar_Pervasives_Native.Some t
-                              | uu____13644 -> cache t  in
-                            let uu____13645 =
+                              | uu____15293 -> cache t  in
+                            let uu____15294 =
                               FStar_List.tryFind (FStar_Ident.lid_equals lid)
                                 lids
                                in
-                            (match uu____13645 with
+                            (match uu____15294 with
                              | FStar_Pervasives_Native.None  ->
                                  FStar_Pervasives_Native.None
                              | FStar_Pervasives_Native.Some l ->
-                                 let uu____13651 =
-                                   let uu____13652 =
+                                 let uu____15300 =
+                                   let uu____15301 =
                                      FStar_Ident.range_of_lid l  in
                                    ((FStar_Util.Inr
                                        (s, FStar_Pervasives_Native.None)),
-                                     uu____13652)
+                                     uu____15301)
                                     in
-                                 maybe_cache uu____13651)))
+                                 maybe_cache uu____15300)))
           | se -> se
         else FStar_Pervasives_Native.None  in
       if FStar_Util.is_some found
       then found
       else
-        (let uu____13720 = find_in_sigtab env lid  in
-         match uu____13720 with
+        (let uu____15372 = find_in_sigtab env lid  in
+         match uu____15372 with
          | FStar_Pervasives_Native.Some se ->
              FStar_Pervasives_Native.Some
                ((FStar_Util.Inr (se, FStar_Pervasives_Native.None)),
@@ -3234,10 +2378,10 @@ let (lookup_sigelt :
   =
   fun env  ->
     fun lid  ->
-      let uu____13800 = lookup_qname env lid  in
-      match uu____13800 with
+      let uu____15453 = lookup_qname env lid  in
+      match uu____15453 with
       | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some (FStar_Util.Inl uu____13821,rng) ->
+      | FStar_Pervasives_Native.Some (FStar_Util.Inl uu____15474,rng) ->
           FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some (FStar_Util.Inr (se,us),rng) ->
           FStar_Pervasives_Native.Some se
@@ -3246,8 +2390,8 @@ let (lookup_attr :
   env -> Prims.string -> FStar_Syntax_Syntax.sigelt Prims.list) =
   fun env  ->
     fun attr  ->
-      let uu____13932 = FStar_Util.smap_try_find (attrtab env) attr  in
-      match uu____13932 with
+      let uu____15588 = FStar_Util.smap_try_find (attrtab env) attr  in
+      match uu____15588 with
       | FStar_Pervasives_Native.Some ses -> ses
       | FStar_Pervasives_Native.None  -> []
   
@@ -3255,29 +2399,29 @@ let (add_se_to_attrtab : env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun env  ->
     fun se  ->
       let add_one1 env1 se1 attr =
-        let uu____13974 =
-          let uu____13977 = lookup_attr env1 attr  in se1 :: uu____13977  in
-        FStar_Util.smap_add (attrtab env1) attr uu____13974  in
+        let uu____15633 =
+          let uu____15636 = lookup_attr env1 attr  in se1 :: uu____15636  in
+        FStar_Util.smap_add (attrtab env1) attr uu____15633  in
       FStar_List.iter
         (fun attr  ->
-           let uu____13987 =
-             let uu____13988 = FStar_Syntax_Subst.compress attr  in
-             uu____13988.FStar_Syntax_Syntax.n  in
-           match uu____13987 with
+           let uu____15646 =
+             let uu____15647 = FStar_Syntax_Subst.compress attr  in
+             uu____15647.FStar_Syntax_Syntax.n  in
+           match uu____15646 with
            | FStar_Syntax_Syntax.Tm_fvar fv ->
-               let uu____13992 =
-                 let uu____13993 = FStar_Syntax_Syntax.lid_of_fv fv  in
-                 uu____13993.FStar_Ident.str  in
-               add_one1 env se uu____13992
-           | uu____13994 -> ()) se.FStar_Syntax_Syntax.sigattrs
+               let uu____15651 =
+                 let uu____15653 = FStar_Syntax_Syntax.lid_of_fv fv  in
+                 uu____15653.FStar_Ident.str  in
+               add_one1 env se uu____15651
+           | uu____15654 -> ()) se.FStar_Syntax_Syntax.sigattrs
   
 let rec (add_sigelt : env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun env  ->
     fun se  ->
       match se.FStar_Syntax_Syntax.sigel with
-      | FStar_Syntax_Syntax.Sig_bundle (ses,uu____14016) ->
+      | FStar_Syntax_Syntax.Sig_bundle (ses,uu____15677) ->
           add_sigelts env ses
-      | uu____14025 ->
+      | uu____15686 ->
           let lids = FStar_Syntax_Util.lids_of_sigelt se  in
           (FStar_List.iter
              (fun l  -> FStar_Util.smap_add (sigtab env) l.FStar_Ident.str se)
@@ -3296,7 +2440,7 @@ let rec (add_sigelt : env -> FStar_Syntax_Syntax.sigelt -> unit) =
                         FStar_Util.smap_add (sigtab env)
                           (a.FStar_Syntax_Syntax.action_name).FStar_Ident.str
                           se_let))
-            | uu____14040 -> ()))
+            | uu____15701 -> ()))
 
 and (add_sigelts : env -> FStar_Syntax_Syntax.sigelt Prims.list -> unit) =
   fun env  ->
@@ -3311,14 +2455,14 @@ let (try_lookup_bv :
   fun env  ->
     fun bv  ->
       FStar_Util.find_map env.gamma
-        (fun uu___230_14071  ->
-           match uu___230_14071 with
+        (fun uu___235_15733  ->
+           match uu___235_15733 with
            | FStar_Syntax_Syntax.Binding_var id1 when
                FStar_Syntax_Syntax.bv_eq id1 bv ->
                FStar_Pervasives_Native.Some
                  ((id1.FStar_Syntax_Syntax.sort),
                    ((id1.FStar_Syntax_Syntax.ppname).FStar_Ident.idRange))
-           | uu____14089 -> FStar_Pervasives_Native.None)
+           | uu____15751 -> FStar_Pervasives_Native.None)
   
 let (lookup_type_of_let :
   FStar_Syntax_Syntax.universes FStar_Pervasives_Native.option ->
@@ -3336,41 +2480,41 @@ let (lookup_type_of_let :
           | FStar_Pervasives_Native.None  -> inst_tscheme ts
           | FStar_Pervasives_Native.Some us -> inst_tscheme_with ts us  in
         match se.FStar_Syntax_Syntax.sigel with
-        | FStar_Syntax_Syntax.Sig_let ((uu____14150,lb::[]),uu____14152) ->
-            let uu____14159 =
-              let uu____14168 =
+        | FStar_Syntax_Syntax.Sig_let ((uu____15813,lb::[]),uu____15815) ->
+            let uu____15824 =
+              let uu____15833 =
                 inst_tscheme1
                   ((lb.FStar_Syntax_Syntax.lbunivs),
                     (lb.FStar_Syntax_Syntax.lbtyp))
                  in
-              let uu____14177 =
+              let uu____15842 =
                 FStar_Syntax_Syntax.range_of_lbname
                   lb.FStar_Syntax_Syntax.lbname
                  in
-              (uu____14168, uu____14177)  in
-            FStar_Pervasives_Native.Some uu____14159
-        | FStar_Syntax_Syntax.Sig_let ((uu____14190,lbs),uu____14192) ->
+              (uu____15833, uu____15842)  in
+            FStar_Pervasives_Native.Some uu____15824
+        | FStar_Syntax_Syntax.Sig_let ((uu____15855,lbs),uu____15857) ->
             FStar_Util.find_map lbs
               (fun lb  ->
                  match lb.FStar_Syntax_Syntax.lbname with
-                 | FStar_Util.Inl uu____14222 -> failwith "impossible"
+                 | FStar_Util.Inl uu____15889 -> failwith "impossible"
                  | FStar_Util.Inr fv ->
-                     let uu____14234 = FStar_Syntax_Syntax.fv_eq_lid fv lid
+                     let uu____15902 = FStar_Syntax_Syntax.fv_eq_lid fv lid
                         in
-                     if uu____14234
+                     if uu____15902
                      then
-                       let uu____14245 =
-                         let uu____14254 =
+                       let uu____15915 =
+                         let uu____15924 =
                            inst_tscheme1
                              ((lb.FStar_Syntax_Syntax.lbunivs),
                                (lb.FStar_Syntax_Syntax.lbtyp))
                             in
-                         let uu____14263 = FStar_Syntax_Syntax.range_of_fv fv
+                         let uu____15933 = FStar_Syntax_Syntax.range_of_fv fv
                             in
-                         (uu____14254, uu____14263)  in
-                       FStar_Pervasives_Native.Some uu____14245
+                         (uu____15924, uu____15933)  in
+                       FStar_Pervasives_Native.Some uu____15915
                      else FStar_Pervasives_Native.None)
-        | uu____14285 -> FStar_Pervasives_Native.None
+        | uu____15956 -> FStar_Pervasives_Native.None
   
 let (effect_signature :
   FStar_Syntax_Syntax.universes FStar_Pervasives_Native.option ->
@@ -3387,35 +2531,35 @@ let (effect_signature :
         | FStar_Pervasives_Native.Some us -> inst_tscheme_with ts us  in
       match se.FStar_Syntax_Syntax.sigel with
       | FStar_Syntax_Syntax.Sig_new_effect ne ->
-          let uu____14344 =
-            let uu____14353 =
-              let uu____14358 =
-                let uu____14359 =
-                  let uu____14362 =
+          let uu____16016 =
+            let uu____16025 =
+              let uu____16030 =
+                let uu____16031 =
+                  let uu____16034 =
                     FStar_Syntax_Syntax.mk_Total
                       ne.FStar_Syntax_Syntax.signature
                      in
                   FStar_Syntax_Util.arrow ne.FStar_Syntax_Syntax.binders
-                    uu____14362
+                    uu____16034
                    in
-                ((ne.FStar_Syntax_Syntax.univs), uu____14359)  in
-              inst_tscheme1 uu____14358  in
-            (uu____14353, (se.FStar_Syntax_Syntax.sigrng))  in
-          FStar_Pervasives_Native.Some uu____14344
+                ((ne.FStar_Syntax_Syntax.univs), uu____16031)  in
+              inst_tscheme1 uu____16030  in
+            (uu____16025, (se.FStar_Syntax_Syntax.sigrng))  in
+          FStar_Pervasives_Native.Some uu____16016
       | FStar_Syntax_Syntax.Sig_effect_abbrev
-          (lid,us,binders,uu____14384,uu____14385) ->
-          let uu____14390 =
-            let uu____14399 =
-              let uu____14404 =
-                let uu____14405 =
-                  let uu____14408 =
+          (lid,us,binders,uu____16056,uu____16057) ->
+          let uu____16062 =
+            let uu____16071 =
+              let uu____16076 =
+                let uu____16077 =
+                  let uu____16080 =
                     FStar_Syntax_Syntax.mk_Total FStar_Syntax_Syntax.teff  in
-                  FStar_Syntax_Util.arrow binders uu____14408  in
-                (us, uu____14405)  in
-              inst_tscheme1 uu____14404  in
-            (uu____14399, (se.FStar_Syntax_Syntax.sigrng))  in
-          FStar_Pervasives_Native.Some uu____14390
-      | uu____14427 -> FStar_Pervasives_Native.None
+                  FStar_Syntax_Util.arrow binders uu____16080  in
+                (us, uu____16077)  in
+              inst_tscheme1 uu____16076  in
+            (uu____16071, (se.FStar_Syntax_Syntax.sigrng))  in
+          FStar_Pervasives_Native.Some uu____16062
+      | uu____16099 -> FStar_Pervasives_Native.None
   
 let (try_lookup_lid_aux :
   FStar_Syntax_Syntax.universes FStar_Pervasives_Native.option ->
@@ -3433,8 +2577,8 @@ let (try_lookup_lid_aux :
           match us_opt with
           | FStar_Pervasives_Native.None  -> inst_tscheme ts
           | FStar_Pervasives_Native.Some us -> inst_tscheme_with ts us  in
-        let mapper uu____14515 =
-          match uu____14515 with
+        let mapper uu____16188 =
+          match uu____16188 with
           | (lr,rng) ->
               (match lr with
                | FStar_Util.Inl t -> FStar_Pervasives_Native.Some (t, rng)
@@ -3442,161 +2586,161 @@ let (try_lookup_lid_aux :
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_datacon
-                        (uu____14611,uvs,t,uu____14614,uu____14615,uu____14616);
-                      FStar_Syntax_Syntax.sigrng = uu____14617;
-                      FStar_Syntax_Syntax.sigquals = uu____14618;
-                      FStar_Syntax_Syntax.sigmeta = uu____14619;
-                      FStar_Syntax_Syntax.sigattrs = uu____14620;_},FStar_Pervasives_Native.None
+                        (uu____16284,uvs,t,uu____16287,uu____16288,uu____16289);
+                      FStar_Syntax_Syntax.sigrng = uu____16290;
+                      FStar_Syntax_Syntax.sigquals = uu____16291;
+                      FStar_Syntax_Syntax.sigmeta = uu____16292;
+                      FStar_Syntax_Syntax.sigattrs = uu____16293;_},FStar_Pervasives_Native.None
                     )
                    ->
-                   let uu____14641 =
-                     let uu____14650 = inst_tscheme1 (uvs, t)  in
-                     (uu____14650, rng)  in
-                   FStar_Pervasives_Native.Some uu____14641
+                   let uu____16316 =
+                     let uu____16325 = inst_tscheme1 (uvs, t)  in
+                     (uu____16325, rng)  in
+                   FStar_Pervasives_Native.Some uu____16316
                | FStar_Util.Inr
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_declare_typ (l,uvs,t);
-                      FStar_Syntax_Syntax.sigrng = uu____14674;
+                      FStar_Syntax_Syntax.sigrng = uu____16349;
                       FStar_Syntax_Syntax.sigquals = qs;
-                      FStar_Syntax_Syntax.sigmeta = uu____14676;
-                      FStar_Syntax_Syntax.sigattrs = uu____14677;_},FStar_Pervasives_Native.None
+                      FStar_Syntax_Syntax.sigmeta = uu____16351;
+                      FStar_Syntax_Syntax.sigattrs = uu____16352;_},FStar_Pervasives_Native.None
                     )
                    ->
-                   let uu____14694 =
-                     let uu____14695 = in_cur_mod env l  in uu____14695 = Yes
+                   let uu____16369 =
+                     let uu____16371 = in_cur_mod env l  in uu____16371 = Yes
                       in
-                   if uu____14694
+                   if uu____16369
                    then
-                     let uu____14706 =
+                     let uu____16383 =
                        (FStar_All.pipe_right qs
                           (FStar_List.contains FStar_Syntax_Syntax.Assumption))
                          || env.is_iface
                         in
-                     (if uu____14706
+                     (if uu____16383
                       then
-                        let uu____14719 =
-                          let uu____14728 = inst_tscheme1 (uvs, t)  in
-                          (uu____14728, rng)  in
-                        FStar_Pervasives_Native.Some uu____14719
+                        let uu____16399 =
+                          let uu____16408 = inst_tscheme1 (uvs, t)  in
+                          (uu____16408, rng)  in
+                        FStar_Pervasives_Native.Some uu____16399
                       else FStar_Pervasives_Native.None)
                    else
-                     (let uu____14759 =
-                        let uu____14768 = inst_tscheme1 (uvs, t)  in
-                        (uu____14768, rng)  in
-                      FStar_Pervasives_Native.Some uu____14759)
+                     (let uu____16441 =
+                        let uu____16450 = inst_tscheme1 (uvs, t)  in
+                        (uu____16450, rng)  in
+                      FStar_Pervasives_Native.Some uu____16441)
                | FStar_Util.Inr
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_inductive_typ
-                        (lid1,uvs,tps,k,uu____14793,uu____14794);
-                      FStar_Syntax_Syntax.sigrng = uu____14795;
-                      FStar_Syntax_Syntax.sigquals = uu____14796;
-                      FStar_Syntax_Syntax.sigmeta = uu____14797;
-                      FStar_Syntax_Syntax.sigattrs = uu____14798;_},FStar_Pervasives_Native.None
+                        (lid1,uvs,tps,k,uu____16475,uu____16476);
+                      FStar_Syntax_Syntax.sigrng = uu____16477;
+                      FStar_Syntax_Syntax.sigquals = uu____16478;
+                      FStar_Syntax_Syntax.sigmeta = uu____16479;
+                      FStar_Syntax_Syntax.sigattrs = uu____16480;_},FStar_Pervasives_Native.None
                     )
                    ->
                    (match tps with
                     | [] ->
-                        let uu____14839 =
-                          let uu____14848 = inst_tscheme1 (uvs, k)  in
-                          (uu____14848, rng)  in
-                        FStar_Pervasives_Native.Some uu____14839
-                    | uu____14869 ->
-                        let uu____14870 =
-                          let uu____14879 =
-                            let uu____14884 =
-                              let uu____14885 =
-                                let uu____14888 =
+                        let uu____16521 =
+                          let uu____16530 = inst_tscheme1 (uvs, k)  in
+                          (uu____16530, rng)  in
+                        FStar_Pervasives_Native.Some uu____16521
+                    | uu____16551 ->
+                        let uu____16552 =
+                          let uu____16561 =
+                            let uu____16566 =
+                              let uu____16567 =
+                                let uu____16570 =
                                   FStar_Syntax_Syntax.mk_Total k  in
-                                FStar_Syntax_Util.flat_arrow tps uu____14888
+                                FStar_Syntax_Util.flat_arrow tps uu____16570
                                  in
-                              (uvs, uu____14885)  in
-                            inst_tscheme1 uu____14884  in
-                          (uu____14879, rng)  in
-                        FStar_Pervasives_Native.Some uu____14870)
+                              (uvs, uu____16567)  in
+                            inst_tscheme1 uu____16566  in
+                          (uu____16561, rng)  in
+                        FStar_Pervasives_Native.Some uu____16552)
                | FStar_Util.Inr
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_inductive_typ
-                        (lid1,uvs,tps,k,uu____14911,uu____14912);
-                      FStar_Syntax_Syntax.sigrng = uu____14913;
-                      FStar_Syntax_Syntax.sigquals = uu____14914;
-                      FStar_Syntax_Syntax.sigmeta = uu____14915;
-                      FStar_Syntax_Syntax.sigattrs = uu____14916;_},FStar_Pervasives_Native.Some
+                        (lid1,uvs,tps,k,uu____16593,uu____16594);
+                      FStar_Syntax_Syntax.sigrng = uu____16595;
+                      FStar_Syntax_Syntax.sigquals = uu____16596;
+                      FStar_Syntax_Syntax.sigmeta = uu____16597;
+                      FStar_Syntax_Syntax.sigattrs = uu____16598;_},FStar_Pervasives_Native.Some
                     us)
                    ->
                    (match tps with
                     | [] ->
-                        let uu____14958 =
-                          let uu____14967 = inst_tscheme_with (uvs, k) us  in
-                          (uu____14967, rng)  in
-                        FStar_Pervasives_Native.Some uu____14958
-                    | uu____14988 ->
-                        let uu____14989 =
-                          let uu____14998 =
-                            let uu____15003 =
-                              let uu____15004 =
-                                let uu____15007 =
+                        let uu____16640 =
+                          let uu____16649 = inst_tscheme_with (uvs, k) us  in
+                          (uu____16649, rng)  in
+                        FStar_Pervasives_Native.Some uu____16640
+                    | uu____16670 ->
+                        let uu____16671 =
+                          let uu____16680 =
+                            let uu____16685 =
+                              let uu____16686 =
+                                let uu____16689 =
                                   FStar_Syntax_Syntax.mk_Total k  in
-                                FStar_Syntax_Util.flat_arrow tps uu____15007
+                                FStar_Syntax_Util.flat_arrow tps uu____16689
                                  in
-                              (uvs, uu____15004)  in
-                            inst_tscheme_with uu____15003 us  in
-                          (uu____14998, rng)  in
-                        FStar_Pervasives_Native.Some uu____14989)
+                              (uvs, uu____16686)  in
+                            inst_tscheme_with uu____16685 us  in
+                          (uu____16680, rng)  in
+                        FStar_Pervasives_Native.Some uu____16671)
                | FStar_Util.Inr se ->
-                   let uu____15043 =
+                   let uu____16725 =
                      match se with
                      | ({
                           FStar_Syntax_Syntax.sigel =
-                            FStar_Syntax_Syntax.Sig_let uu____15064;
-                          FStar_Syntax_Syntax.sigrng = uu____15065;
-                          FStar_Syntax_Syntax.sigquals = uu____15066;
-                          FStar_Syntax_Syntax.sigmeta = uu____15067;
-                          FStar_Syntax_Syntax.sigattrs = uu____15068;_},FStar_Pervasives_Native.None
+                            FStar_Syntax_Syntax.Sig_let uu____16746;
+                          FStar_Syntax_Syntax.sigrng = uu____16747;
+                          FStar_Syntax_Syntax.sigquals = uu____16748;
+                          FStar_Syntax_Syntax.sigmeta = uu____16749;
+                          FStar_Syntax_Syntax.sigattrs = uu____16750;_},FStar_Pervasives_Native.None
                         ) ->
                          lookup_type_of_let us_opt
                            (FStar_Pervasives_Native.fst se) lid
-                     | uu____15083 ->
+                     | uu____16765 ->
                          effect_signature us_opt
                            (FStar_Pervasives_Native.fst se)
                       in
-                   FStar_All.pipe_right uu____15043
+                   FStar_All.pipe_right uu____16725
                      (FStar_Util.map_option
-                        (fun uu____15131  ->
-                           match uu____15131 with
+                        (fun uu____16813  ->
+                           match uu____16813 with
                            | (us_t,rng1) -> (us_t, rng1))))
            in
-        let uu____15162 =
-          let uu____15173 = lookup_qname env lid  in
-          FStar_Util.bind_opt uu____15173 mapper  in
-        match uu____15162 with
+        let uu____16844 =
+          let uu____16855 = lookup_qname env lid  in
+          FStar_Util.bind_opt uu____16855 mapper  in
+        match uu____16844 with
         | FStar_Pervasives_Native.Some ((us,t),r) ->
-            let uu____15247 =
-              let uu____15258 =
-                let uu____15265 =
-                  let uu___250_15268 = t  in
-                  let uu____15269 = FStar_Ident.range_of_lid lid  in
+            let uu____16929 =
+              let uu____16940 =
+                let uu____16947 =
+                  let uu___255_16950 = t  in
+                  let uu____16951 = FStar_Ident.range_of_lid lid  in
                   {
                     FStar_Syntax_Syntax.n =
-                      (uu___250_15268.FStar_Syntax_Syntax.n);
-                    FStar_Syntax_Syntax.pos = uu____15269;
+                      (uu___255_16950.FStar_Syntax_Syntax.n);
+                    FStar_Syntax_Syntax.pos = uu____16951;
                     FStar_Syntax_Syntax.vars =
-                      (uu___250_15268.FStar_Syntax_Syntax.vars)
+                      (uu___255_16950.FStar_Syntax_Syntax.vars)
                   }  in
-                (us, uu____15265)  in
-              (uu____15258, r)  in
-            FStar_Pervasives_Native.Some uu____15247
+                (us, uu____16947)  in
+              (uu____16940, r)  in
+            FStar_Pervasives_Native.Some uu____16929
         | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
   
 let (lid_exists : env -> FStar_Ident.lident -> Prims.bool) =
   fun env  ->
     fun l  ->
-      let uu____15316 = lookup_qname env l  in
-      match uu____15316 with
+      let uu____17000 = lookup_qname env l  in
+      match uu____17000 with
       | FStar_Pervasives_Native.None  -> false
-      | FStar_Pervasives_Native.Some uu____15335 -> true
+      | FStar_Pervasives_Native.Some uu____17021 -> true
   
 let (lookup_bv :
   env ->
@@ -3607,17 +2751,17 @@ let (lookup_bv :
   fun env  ->
     fun bv  ->
       let bvr = FStar_Syntax_Syntax.range_of_bv bv  in
-      let uu____15387 = try_lookup_bv env bv  in
-      match uu____15387 with
+      let uu____17075 = try_lookup_bv env bv  in
+      match uu____17075 with
       | FStar_Pervasives_Native.None  ->
-          let uu____15402 = variable_not_found bv  in
-          FStar_Errors.raise_error uu____15402 bvr
+          let uu____17090 = variable_not_found bv  in
+          FStar_Errors.raise_error uu____17090 bvr
       | FStar_Pervasives_Native.Some (t,r) ->
-          let uu____15417 = FStar_Syntax_Subst.set_use_range bvr t  in
-          let uu____15418 =
-            let uu____15419 = FStar_Range.use_range bvr  in
-            FStar_Range.set_use_range r uu____15419  in
-          (uu____15417, uu____15418)
+          let uu____17106 = FStar_Syntax_Subst.set_use_range bvr t  in
+          let uu____17107 =
+            let uu____17108 = FStar_Range.use_range bvr  in
+            FStar_Range.set_use_range r uu____17108  in
+          (uu____17106, uu____17107)
   
 let (try_lookup_lid :
   env ->
@@ -3628,22 +2772,22 @@ let (try_lookup_lid :
   =
   fun env  ->
     fun l  ->
-      let uu____15440 = try_lookup_lid_aux FStar_Pervasives_Native.None env l
+      let uu____17130 = try_lookup_lid_aux FStar_Pervasives_Native.None env l
          in
-      match uu____15440 with
+      match uu____17130 with
       | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some ((us,t),r) ->
           let use_range1 = FStar_Ident.range_of_lid l  in
           let r1 =
-            let uu____15506 = FStar_Range.use_range use_range1  in
-            FStar_Range.set_use_range r uu____15506  in
-          let uu____15507 =
-            let uu____15516 =
-              let uu____15521 = FStar_Syntax_Subst.set_use_range use_range1 t
+            let uu____17196 = FStar_Range.use_range use_range1  in
+            FStar_Range.set_use_range r uu____17196  in
+          let uu____17197 =
+            let uu____17206 =
+              let uu____17211 = FStar_Syntax_Subst.set_use_range use_range1 t
                  in
-              (us, uu____15521)  in
-            (uu____15516, r1)  in
-          FStar_Pervasives_Native.Some uu____15507
+              (us, uu____17211)  in
+            (uu____17206, r1)  in
+          FStar_Pervasives_Native.Some uu____17197
   
 let (try_lookup_and_inst_lid :
   env ->
@@ -3655,20 +2799,20 @@ let (try_lookup_and_inst_lid :
   fun env  ->
     fun us  ->
       fun l  ->
-        let uu____15555 =
+        let uu____17246 =
           try_lookup_lid_aux (FStar_Pervasives_Native.Some us) env l  in
-        match uu____15555 with
+        match uu____17246 with
         | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some ((uu____15588,t),r) ->
+        | FStar_Pervasives_Native.Some ((uu____17279,t),r) ->
             let use_range1 = FStar_Ident.range_of_lid l  in
             let r1 =
-              let uu____15613 = FStar_Range.use_range use_range1  in
-              FStar_Range.set_use_range r uu____15613  in
-            let uu____15614 =
-              let uu____15619 = FStar_Syntax_Subst.set_use_range use_range1 t
+              let uu____17304 = FStar_Range.use_range use_range1  in
+              FStar_Range.set_use_range r uu____17304  in
+            let uu____17305 =
+              let uu____17310 = FStar_Syntax_Subst.set_use_range use_range1 t
                  in
-              (uu____15619, r1)  in
-            FStar_Pervasives_Native.Some uu____15614
+              (uu____17310, r1)  in
+            FStar_Pervasives_Native.Some uu____17305
   
 let (lookup_lid :
   env ->
@@ -3679,12 +2823,12 @@ let (lookup_lid :
   =
   fun env  ->
     fun l  ->
-      let uu____15642 = try_lookup_lid env l  in
-      match uu____15642 with
+      let uu____17334 = try_lookup_lid env l  in
+      match uu____17334 with
       | FStar_Pervasives_Native.None  ->
-          let uu____15669 = name_not_found l  in
-          let uu____15674 = FStar_Ident.range_of_lid l  in
-          FStar_Errors.raise_error uu____15669 uu____15674
+          let uu____17361 = name_not_found l  in
+          let uu____17367 = FStar_Ident.range_of_lid l  in
+          FStar_Errors.raise_error uu____17361 uu____17367
       | FStar_Pervasives_Native.Some v1 -> v1
   
 let (lookup_univ : env -> FStar_Syntax_Syntax.univ_name -> Prims.bool) =
@@ -3692,11 +2836,11 @@ let (lookup_univ : env -> FStar_Syntax_Syntax.univ_name -> Prims.bool) =
     fun x  ->
       FStar_All.pipe_right
         (FStar_List.find
-           (fun uu___231_15714  ->
-              match uu___231_15714 with
+           (fun uu___236_17410  ->
+              match uu___236_17410 with
               | FStar_Syntax_Syntax.Binding_univ y ->
                   x.FStar_Ident.idText = y.FStar_Ident.idText
-              | uu____15716 -> false) env.gamma) FStar_Option.isSome
+              | uu____17414 -> false) env.gamma) FStar_Option.isSome
   
 let (try_lookup_val_decl :
   env ->
@@ -3706,28 +2850,28 @@ let (try_lookup_val_decl :
   =
   fun env  ->
     fun lid  ->
-      let uu____15735 = lookup_qname env lid  in
-      match uu____15735 with
+      let uu____17435 = lookup_qname env lid  in
+      match uu____17435 with
       | FStar_Pervasives_Native.Some
           (FStar_Util.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
-                (uu____15744,uvs,t);
-              FStar_Syntax_Syntax.sigrng = uu____15747;
+                (uu____17444,uvs,t);
+              FStar_Syntax_Syntax.sigrng = uu____17447;
               FStar_Syntax_Syntax.sigquals = q;
-              FStar_Syntax_Syntax.sigmeta = uu____15749;
-              FStar_Syntax_Syntax.sigattrs = uu____15750;_},FStar_Pervasives_Native.None
-            ),uu____15751)
+              FStar_Syntax_Syntax.sigmeta = uu____17449;
+              FStar_Syntax_Syntax.sigattrs = uu____17450;_},FStar_Pervasives_Native.None
+            ),uu____17451)
           ->
-          let uu____15800 =
-            let uu____15807 =
-              let uu____15808 =
-                let uu____15811 = FStar_Ident.range_of_lid lid  in
-                FStar_Syntax_Subst.set_use_range uu____15811 t  in
-              (uvs, uu____15808)  in
-            (uu____15807, q)  in
-          FStar_Pervasives_Native.Some uu____15800
-      | uu____15824 -> FStar_Pervasives_Native.None
+          let uu____17500 =
+            let uu____17507 =
+              let uu____17508 =
+                let uu____17511 = FStar_Ident.range_of_lid lid  in
+                FStar_Syntax_Subst.set_use_range uu____17511 t  in
+              (uvs, uu____17508)  in
+            (uu____17507, q)  in
+          FStar_Pervasives_Native.Some uu____17500
+      | uu____17524 -> FStar_Pervasives_Native.None
   
 let (lookup_val_decl :
   env ->
@@ -3737,25 +2881,25 @@ let (lookup_val_decl :
   =
   fun env  ->
     fun lid  ->
-      let uu____15845 = lookup_qname env lid  in
-      match uu____15845 with
+      let uu____17546 = lookup_qname env lid  in
+      match uu____17546 with
       | FStar_Pervasives_Native.Some
           (FStar_Util.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
-                (uu____15850,uvs,t);
-              FStar_Syntax_Syntax.sigrng = uu____15853;
-              FStar_Syntax_Syntax.sigquals = uu____15854;
-              FStar_Syntax_Syntax.sigmeta = uu____15855;
-              FStar_Syntax_Syntax.sigattrs = uu____15856;_},FStar_Pervasives_Native.None
-            ),uu____15857)
+                (uu____17551,uvs,t);
+              FStar_Syntax_Syntax.sigrng = uu____17554;
+              FStar_Syntax_Syntax.sigquals = uu____17555;
+              FStar_Syntax_Syntax.sigmeta = uu____17556;
+              FStar_Syntax_Syntax.sigattrs = uu____17557;_},FStar_Pervasives_Native.None
+            ),uu____17558)
           ->
-          let uu____15906 = FStar_Ident.range_of_lid lid  in
-          inst_tscheme_with_range uu____15906 (uvs, t)
-      | uu____15911 ->
-          let uu____15912 = name_not_found lid  in
-          let uu____15917 = FStar_Ident.range_of_lid lid  in
-          FStar_Errors.raise_error uu____15912 uu____15917
+          let uu____17607 = FStar_Ident.range_of_lid lid  in
+          inst_tscheme_with_range uu____17607 (uvs, t)
+      | uu____17612 ->
+          let uu____17613 = name_not_found lid  in
+          let uu____17619 = FStar_Ident.range_of_lid lid  in
+          FStar_Errors.raise_error uu____17613 uu____17619
   
 let (lookup_datacon :
   env ->
@@ -3765,25 +2909,25 @@ let (lookup_datacon :
   =
   fun env  ->
     fun lid  ->
-      let uu____15936 = lookup_qname env lid  in
-      match uu____15936 with
+      let uu____17639 = lookup_qname env lid  in
+      match uu____17639 with
       | FStar_Pervasives_Native.Some
           (FStar_Util.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-                (uu____15941,uvs,t,uu____15944,uu____15945,uu____15946);
-              FStar_Syntax_Syntax.sigrng = uu____15947;
-              FStar_Syntax_Syntax.sigquals = uu____15948;
-              FStar_Syntax_Syntax.sigmeta = uu____15949;
-              FStar_Syntax_Syntax.sigattrs = uu____15950;_},FStar_Pervasives_Native.None
-            ),uu____15951)
+                (uu____17644,uvs,t,uu____17647,uu____17648,uu____17649);
+              FStar_Syntax_Syntax.sigrng = uu____17650;
+              FStar_Syntax_Syntax.sigquals = uu____17651;
+              FStar_Syntax_Syntax.sigmeta = uu____17652;
+              FStar_Syntax_Syntax.sigattrs = uu____17653;_},FStar_Pervasives_Native.None
+            ),uu____17654)
           ->
-          let uu____16004 = FStar_Ident.range_of_lid lid  in
-          inst_tscheme_with_range uu____16004 (uvs, t)
-      | uu____16009 ->
-          let uu____16010 = name_not_found lid  in
-          let uu____16015 = FStar_Ident.range_of_lid lid  in
-          FStar_Errors.raise_error uu____16010 uu____16015
+          let uu____17709 = FStar_Ident.range_of_lid lid  in
+          inst_tscheme_with_range uu____17709 (uvs, t)
+      | uu____17714 ->
+          let uu____17715 = name_not_found lid  in
+          let uu____17721 = FStar_Ident.range_of_lid lid  in
+          FStar_Errors.raise_error uu____17715 uu____17721
   
 let (datacons_of_typ :
   env ->
@@ -3793,41 +2937,41 @@ let (datacons_of_typ :
   =
   fun env  ->
     fun lid  ->
-      let uu____16036 = lookup_qname env lid  in
-      match uu____16036 with
+      let uu____17744 = lookup_qname env lid  in
+      match uu____17744 with
       | FStar_Pervasives_Native.Some
           (FStar_Util.Inr
            ({
               FStar_Syntax_Syntax.sigel =
                 FStar_Syntax_Syntax.Sig_inductive_typ
-                (uu____16043,uu____16044,uu____16045,uu____16046,uu____16047,dcs);
-              FStar_Syntax_Syntax.sigrng = uu____16049;
-              FStar_Syntax_Syntax.sigquals = uu____16050;
-              FStar_Syntax_Syntax.sigmeta = uu____16051;
-              FStar_Syntax_Syntax.sigattrs = uu____16052;_},uu____16053),uu____16054)
+                (uu____17752,uu____17753,uu____17754,uu____17755,uu____17756,dcs);
+              FStar_Syntax_Syntax.sigrng = uu____17758;
+              FStar_Syntax_Syntax.sigquals = uu____17759;
+              FStar_Syntax_Syntax.sigmeta = uu____17760;
+              FStar_Syntax_Syntax.sigattrs = uu____17761;_},uu____17762),uu____17763)
           -> (true, dcs)
-      | uu____16115 -> (false, [])
+      | uu____17826 -> (false, [])
   
 let (typ_of_datacon : env -> FStar_Ident.lident -> FStar_Ident.lident) =
   fun env  ->
     fun lid  ->
-      let uu____16128 = lookup_qname env lid  in
-      match uu____16128 with
+      let uu____17842 = lookup_qname env lid  in
+      match uu____17842 with
       | FStar_Pervasives_Native.Some
           (FStar_Util.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-                (uu____16129,uu____16130,uu____16131,l,uu____16133,uu____16134);
-              FStar_Syntax_Syntax.sigrng = uu____16135;
-              FStar_Syntax_Syntax.sigquals = uu____16136;
-              FStar_Syntax_Syntax.sigmeta = uu____16137;
-              FStar_Syntax_Syntax.sigattrs = uu____16138;_},uu____16139),uu____16140)
+                (uu____17843,uu____17844,uu____17845,l,uu____17847,uu____17848);
+              FStar_Syntax_Syntax.sigrng = uu____17849;
+              FStar_Syntax_Syntax.sigquals = uu____17850;
+              FStar_Syntax_Syntax.sigmeta = uu____17851;
+              FStar_Syntax_Syntax.sigattrs = uu____17852;_},uu____17853),uu____17854)
           -> l
-      | uu____16195 ->
-          let uu____16196 =
-            let uu____16197 = FStar_Syntax_Print.lid_to_string lid  in
-            FStar_Util.format1 "Not a datacon: %s" uu____16197  in
-          failwith uu____16196
+      | uu____17911 ->
+          let uu____17912 =
+            let uu____17914 = FStar_Syntax_Print.lid_to_string lid  in
+            FStar_Util.format1 "Not a datacon: %s" uu____17914  in
+          failwith uu____17912
   
 let (lookup_definition_qninfo_aux :
   Prims.bool ->
@@ -3851,10 +2995,10 @@ let (lookup_definition_qninfo_aux :
              in
           match qninfo with
           | FStar_Pervasives_Native.Some
-              (FStar_Util.Inr (se,FStar_Pervasives_Native.None ),uu____16259)
+              (FStar_Util.Inr (se,FStar_Pervasives_Native.None ),uu____17984)
               ->
               (match se.FStar_Syntax_Syntax.sigel with
-               | FStar_Syntax_Syntax.Sig_let ((is_rec,lbs),uu____16316) when
+               | FStar_Syntax_Syntax.Sig_let ((is_rec,lbs),uu____18041) when
                    (visible se.FStar_Syntax_Syntax.sigquals) &&
                      ((Prims.op_Negation is_rec) || rec_ok)
                    ->
@@ -3862,16 +3006,16 @@ let (lookup_definition_qninfo_aux :
                      (fun lb  ->
                         let fv =
                           FStar_Util.right lb.FStar_Syntax_Syntax.lbname  in
-                        let uu____16338 =
+                        let uu____18065 =
                           FStar_Syntax_Syntax.fv_eq_lid fv lid  in
-                        if uu____16338
+                        if uu____18065
                         then
                           FStar_Pervasives_Native.Some
                             ((lb.FStar_Syntax_Syntax.lbunivs),
                               (lb.FStar_Syntax_Syntax.lbdef))
                         else FStar_Pervasives_Native.None)
-               | uu____16370 -> FStar_Pervasives_Native.None)
-          | uu____16379 -> FStar_Pervasives_Native.None
+               | uu____18100 -> FStar_Pervasives_Native.None)
+          | uu____18109 -> FStar_Pervasives_Native.None
   
 let (lookup_definition_qninfo :
   delta_level Prims.list ->
@@ -3895,9 +3039,9 @@ let (lookup_definition :
   fun delta_levels  ->
     fun env  ->
       fun lid  ->
-        let uu____16438 = lookup_qname env lid  in
+        let uu____18171 = lookup_qname env lid  in
         FStar_All.pipe_left (lookup_definition_qninfo delta_levels lid)
-          uu____16438
+          uu____18171
   
 let (lookup_nonrec_definition :
   delta_level Prims.list ->
@@ -3909,9 +3053,9 @@ let (lookup_nonrec_definition :
   fun delta_levels  ->
     fun env  ->
       fun lid  ->
-        let uu____16470 = lookup_qname env lid  in
+        let uu____18204 = lookup_qname env lid  in
         FStar_All.pipe_left
-          (lookup_definition_qninfo_aux false delta_levels lid) uu____16470
+          (lookup_definition_qninfo_aux false delta_levels lid) uu____18204
   
 let (delta_depth_of_qninfo :
   FStar_Syntax_Syntax.fv ->
@@ -3929,61 +3073,61 @@ let (delta_depth_of_qninfo :
                (FStar_Syntax_Syntax.Delta_constant_at_level
                   (Prims.parse_int "0"))
          | FStar_Pervasives_Native.Some
-             (FStar_Util.Inl uu____16515,uu____16516) ->
+             (FStar_Util.Inl uu____18256,uu____18257) ->
              FStar_Pervasives_Native.Some
                (FStar_Syntax_Syntax.Delta_constant_at_level
                   (Prims.parse_int "0"))
          | FStar_Pervasives_Native.Some
-             (FStar_Util.Inr (se,uu____16564),uu____16565) ->
+             (FStar_Util.Inr (se,uu____18306),uu____18307) ->
              (match se.FStar_Syntax_Syntax.sigel with
-              | FStar_Syntax_Syntax.Sig_inductive_typ uu____16614 ->
+              | FStar_Syntax_Syntax.Sig_inductive_typ uu____18356 ->
                   FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Delta_constant_at_level
                        (Prims.parse_int "0"))
-              | FStar_Syntax_Syntax.Sig_bundle uu____16631 ->
+              | FStar_Syntax_Syntax.Sig_bundle uu____18374 ->
                   FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Delta_constant_at_level
                        (Prims.parse_int "0"))
-              | FStar_Syntax_Syntax.Sig_datacon uu____16640 ->
+              | FStar_Syntax_Syntax.Sig_datacon uu____18384 ->
                   FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Delta_constant_at_level
                        (Prims.parse_int "0"))
-              | FStar_Syntax_Syntax.Sig_declare_typ uu____16655 ->
-                  let uu____16662 =
+              | FStar_Syntax_Syntax.Sig_declare_typ uu____18401 ->
+                  let uu____18408 =
                     FStar_Syntax_DsEnv.delta_depth_of_declaration lid
                       se.FStar_Syntax_Syntax.sigquals
                      in
-                  FStar_Pervasives_Native.Some uu____16662
-              | FStar_Syntax_Syntax.Sig_let ((uu____16663,lbs),uu____16665)
+                  FStar_Pervasives_Native.Some uu____18408
+              | FStar_Syntax_Syntax.Sig_let ((uu____18409,lbs),uu____18411)
                   ->
                   FStar_Util.find_map lbs
                     (fun lb  ->
                        let fv1 =
                          FStar_Util.right lb.FStar_Syntax_Syntax.lbname  in
-                       let uu____16679 =
+                       let uu____18427 =
                          FStar_Syntax_Syntax.fv_eq_lid fv1 lid  in
-                       if uu____16679
+                       if uu____18427
                        then
                          FStar_Pervasives_Native.Some
                            (fv1.FStar_Syntax_Syntax.fv_delta)
                        else FStar_Pervasives_Native.None)
-              | FStar_Syntax_Syntax.Sig_splice uu____16683 ->
+              | FStar_Syntax_Syntax.Sig_splice uu____18434 ->
                   FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Delta_constant_at_level
                        (Prims.parse_int "1"))
-              | FStar_Syntax_Syntax.Sig_main uu____16690 ->
+              | FStar_Syntax_Syntax.Sig_main uu____18442 ->
                   FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_assume uu____16691 ->
+              | FStar_Syntax_Syntax.Sig_assume uu____18443 ->
                   FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_new_effect uu____16698 ->
+              | FStar_Syntax_Syntax.Sig_new_effect uu____18450 ->
                   FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_new_effect_for_free uu____16699 ->
+              | FStar_Syntax_Syntax.Sig_new_effect_for_free uu____18451 ->
                   FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_sub_effect uu____16700 ->
+              | FStar_Syntax_Syntax.Sig_sub_effect uu____18452 ->
                   FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_effect_abbrev uu____16701 ->
+              | FStar_Syntax_Syntax.Sig_effect_abbrev uu____18453 ->
                   FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_pragma uu____16714 ->
+              | FStar_Syntax_Syntax.Sig_pragma uu____18466 ->
                   FStar_Pervasives_Native.None))
   
 let (delta_depth_of_fv :
@@ -3994,50 +3138,50 @@ let (delta_depth_of_fv :
       if lid.FStar_Ident.nsstr = "Prims"
       then fv.FStar_Syntax_Syntax.fv_delta
       else
-        (let uu____16727 =
+        (let uu____18484 =
            FStar_All.pipe_right lid.FStar_Ident.str
              (FStar_Util.smap_try_find env.fv_delta_depths)
             in
-         FStar_All.pipe_right uu____16727
+         FStar_All.pipe_right uu____18484
            (fun d_opt  ->
-              let uu____16739 = FStar_All.pipe_right d_opt FStar_Util.is_some
+              let uu____18497 = FStar_All.pipe_right d_opt FStar_Util.is_some
                  in
-              if uu____16739
+              if uu____18497
               then FStar_All.pipe_right d_opt FStar_Util.must
               else
-                (let uu____16745 =
-                   let uu____16748 =
+                (let uu____18507 =
+                   let uu____18510 =
                      lookup_qname env
                        (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                       in
-                   delta_depth_of_qninfo fv uu____16748  in
-                 match uu____16745 with
+                   delta_depth_of_qninfo fv uu____18510  in
+                 match uu____18507 with
                  | FStar_Pervasives_Native.None  ->
-                     let uu____16749 =
-                       let uu____16750 = FStar_Syntax_Print.fv_to_string fv
+                     let uu____18511 =
+                       let uu____18513 = FStar_Syntax_Print.fv_to_string fv
                           in
                        FStar_Util.format1 "Delta depth not found for %s"
-                         uu____16750
+                         uu____18513
                         in
-                     failwith uu____16749
+                     failwith uu____18511
                  | FStar_Pervasives_Native.Some d ->
-                     ((let uu____16753 =
+                     ((let uu____18518 =
                          (d <> fv.FStar_Syntax_Syntax.fv_delta) &&
                            (FStar_Options.debug_any ())
                           in
-                       if uu____16753
+                       if uu____18518
                        then
-                         let uu____16754 = FStar_Syntax_Print.fv_to_string fv
+                         let uu____18521 = FStar_Syntax_Print.fv_to_string fv
                             in
-                         let uu____16755 =
+                         let uu____18523 =
                            FStar_Syntax_Print.delta_depth_to_string
                              fv.FStar_Syntax_Syntax.fv_delta
                             in
-                         let uu____16756 =
+                         let uu____18525 =
                            FStar_Syntax_Print.delta_depth_to_string d  in
                          FStar_Util.print3
                            "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
-                           uu____16754 uu____16755 uu____16756
+                           uu____18521 uu____18523 uu____18525
                        else ());
                       FStar_Util.smap_add env.fv_delta_depths
                         lid.FStar_Ident.str d;
@@ -4050,9 +3194,9 @@ let (quals_of_qninfo :
   fun qninfo  ->
     match qninfo with
     | FStar_Pervasives_Native.Some
-        (FStar_Util.Inr (se,uu____16777),uu____16778) ->
+        (FStar_Util.Inr (se,uu____18550),uu____18551) ->
         FStar_Pervasives_Native.Some (se.FStar_Syntax_Syntax.sigquals)
-    | uu____16827 -> FStar_Pervasives_Native.None
+    | uu____18600 -> FStar_Pervasives_Native.None
   
 let (attrs_of_qninfo :
   qninfo ->
@@ -4061,9 +3205,9 @@ let (attrs_of_qninfo :
   fun qninfo  ->
     match qninfo with
     | FStar_Pervasives_Native.Some
-        (FStar_Util.Inr (se,uu____16848),uu____16849) ->
+        (FStar_Util.Inr (se,uu____18622),uu____18623) ->
         FStar_Pervasives_Native.Some (se.FStar_Syntax_Syntax.sigattrs)
-    | uu____16898 -> FStar_Pervasives_Native.None
+    | uu____18672 -> FStar_Pervasives_Native.None
   
 let (lookup_attrs_of_lid :
   env ->
@@ -4072,32 +3216,32 @@ let (lookup_attrs_of_lid :
   =
   fun env  ->
     fun lid  ->
-      let uu____16919 = lookup_qname env lid  in
-      FStar_All.pipe_left attrs_of_qninfo uu____16919
+      let uu____18694 = lookup_qname env lid  in
+      FStar_All.pipe_left attrs_of_qninfo uu____18694
   
 let (fv_has_attr :
   env -> FStar_Syntax_Syntax.fv -> FStar_Ident.lid -> Prims.bool) =
   fun env  ->
     fun fv  ->
       fun attr_lid  ->
-        let uu____16939 =
+        let uu____18717 =
           lookup_attrs_of_lid env
             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
            in
-        match uu____16939 with
+        match uu____18717 with
         | FStar_Pervasives_Native.None  -> false
         | FStar_Pervasives_Native.Some [] -> false
         | FStar_Pervasives_Native.Some attrs ->
             FStar_All.pipe_right attrs
               (FStar_Util.for_some
                  (fun tm  ->
-                    let uu____16959 =
-                      let uu____16960 = FStar_Syntax_Util.un_uinst tm  in
-                      uu____16960.FStar_Syntax_Syntax.n  in
-                    match uu____16959 with
+                    let uu____18741 =
+                      let uu____18742 = FStar_Syntax_Util.un_uinst tm  in
+                      uu____18742.FStar_Syntax_Syntax.n  in
+                    match uu____18741 with
                     | FStar_Syntax_Syntax.Tm_fvar fv1 ->
                         FStar_Syntax_Syntax.fv_eq_lid fv1 attr_lid
-                    | uu____16964 -> false))
+                    | uu____18747 -> false))
   
 let (try_lookup_effect_lid :
   env ->
@@ -4106,31 +3250,31 @@ let (try_lookup_effect_lid :
   =
   fun env  ->
     fun ftv  ->
-      let uu____16979 = lookup_qname env ftv  in
-      match uu____16979 with
+      let uu____18764 = lookup_qname env ftv  in
+      match uu____18764 with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr (se,FStar_Pervasives_Native.None ),uu____16983) ->
-          let uu____17028 = effect_signature FStar_Pervasives_Native.None se
+          (FStar_Util.Inr (se,FStar_Pervasives_Native.None ),uu____18768) ->
+          let uu____18813 = effect_signature FStar_Pervasives_Native.None se
              in
-          (match uu____17028 with
+          (match uu____18813 with
            | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
-           | FStar_Pervasives_Native.Some ((uu____17049,t),r) ->
-               let uu____17064 =
-                 let uu____17065 = FStar_Ident.range_of_lid ftv  in
-                 FStar_Syntax_Subst.set_use_range uu____17065 t  in
-               FStar_Pervasives_Native.Some uu____17064)
-      | uu____17066 -> FStar_Pervasives_Native.None
+           | FStar_Pervasives_Native.Some ((uu____18834,t),r) ->
+               let uu____18849 =
+                 let uu____18850 = FStar_Ident.range_of_lid ftv  in
+                 FStar_Syntax_Subst.set_use_range uu____18850 t  in
+               FStar_Pervasives_Native.Some uu____18849)
+      | uu____18851 -> FStar_Pervasives_Native.None
   
 let (lookup_effect_lid :
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun env  ->
     fun ftv  ->
-      let uu____17077 = try_lookup_effect_lid env ftv  in
-      match uu____17077 with
+      let uu____18863 = try_lookup_effect_lid env ftv  in
+      match uu____18863 with
       | FStar_Pervasives_Native.None  ->
-          let uu____17080 = name_not_found ftv  in
-          let uu____17085 = FStar_Ident.range_of_lid ftv  in
-          FStar_Errors.raise_error uu____17080 uu____17085
+          let uu____18866 = name_not_found ftv  in
+          let uu____18872 = FStar_Ident.range_of_lid ftv  in
+          FStar_Errors.raise_error uu____18866 uu____18872
       | FStar_Pervasives_Native.Some k -> k
   
 let (lookup_effect_abbrev :
@@ -4143,37 +3287,37 @@ let (lookup_effect_abbrev :
   fun env  ->
     fun univ_insts  ->
       fun lid0  ->
-        let uu____17108 = lookup_qname env lid0  in
-        match uu____17108 with
+        let uu____18896 = lookup_qname env lid0  in
+        match uu____18896 with
         | FStar_Pervasives_Native.Some
             (FStar_Util.Inr
              ({
                 FStar_Syntax_Syntax.sigel =
                   FStar_Syntax_Syntax.Sig_effect_abbrev
-                  (lid,univs1,binders,c,uu____17119);
-                FStar_Syntax_Syntax.sigrng = uu____17120;
+                  (lid,univs1,binders,c,uu____18907);
+                FStar_Syntax_Syntax.sigrng = uu____18908;
                 FStar_Syntax_Syntax.sigquals = quals;
-                FStar_Syntax_Syntax.sigmeta = uu____17122;
-                FStar_Syntax_Syntax.sigattrs = uu____17123;_},FStar_Pervasives_Native.None
-              ),uu____17124)
+                FStar_Syntax_Syntax.sigmeta = uu____18910;
+                FStar_Syntax_Syntax.sigattrs = uu____18911;_},FStar_Pervasives_Native.None
+              ),uu____18912)
             ->
             let lid1 =
-              let uu____17178 =
-                let uu____17179 = FStar_Ident.range_of_lid lid  in
-                let uu____17180 =
-                  let uu____17181 = FStar_Ident.range_of_lid lid0  in
-                  FStar_Range.use_range uu____17181  in
-                FStar_Range.set_use_range uu____17179 uu____17180  in
-              FStar_Ident.set_lid_range lid uu____17178  in
-            let uu____17182 =
+              let uu____18966 =
+                let uu____18967 = FStar_Ident.range_of_lid lid  in
+                let uu____18968 =
+                  let uu____18969 = FStar_Ident.range_of_lid lid0  in
+                  FStar_Range.use_range uu____18969  in
+                FStar_Range.set_use_range uu____18967 uu____18968  in
+              FStar_Ident.set_lid_range lid uu____18966  in
+            let uu____18970 =
               FStar_All.pipe_right quals
                 (FStar_Util.for_some
-                   (fun uu___232_17186  ->
-                      match uu___232_17186 with
+                   (fun uu___237_18976  ->
+                      match uu___237_18976 with
                       | FStar_Syntax_Syntax.Irreducible  -> true
-                      | uu____17187 -> false))
+                      | uu____18979 -> false))
                in
-            if uu____17182
+            if uu____18970
             then FStar_Pervasives_Native.None
             else
               (let insts =
@@ -4182,213 +3326,213 @@ let (lookup_effect_abbrev :
                      (FStar_List.length univs1)
                  then univ_insts
                  else
-                   (let uu____17201 =
-                      let uu____17202 =
-                        let uu____17203 = get_range env  in
-                        FStar_Range.string_of_range uu____17203  in
-                      let uu____17204 = FStar_Syntax_Print.lid_to_string lid1
+                   (let uu____18998 =
+                      let uu____19000 =
+                        let uu____19002 = get_range env  in
+                        FStar_Range.string_of_range uu____19002  in
+                      let uu____19003 = FStar_Syntax_Print.lid_to_string lid1
                          in
-                      let uu____17205 =
+                      let uu____19005 =
                         FStar_All.pipe_right (FStar_List.length univ_insts)
                           FStar_Util.string_of_int
                          in
                       FStar_Util.format3
                         "(%s) Unexpected instantiation of effect %s with %s universes"
-                        uu____17202 uu____17204 uu____17205
+                        uu____19000 uu____19003 uu____19005
                        in
-                    failwith uu____17201)
+                    failwith uu____18998)
                   in
                match (binders, univs1) with
-               | ([],uu____17222) ->
+               | ([],uu____19026) ->
                    failwith
                      "Unexpected effect abbreviation with no arguments"
-               | (uu____17247,uu____17248::uu____17249::uu____17250) ->
-                   let uu____17271 =
-                     let uu____17272 = FStar_Syntax_Print.lid_to_string lid1
+               | (uu____19052,uu____19053::uu____19054::uu____19055) ->
+                   let uu____19076 =
+                     let uu____19078 = FStar_Syntax_Print.lid_to_string lid1
                         in
-                     let uu____17273 =
+                     let uu____19080 =
                        FStar_All.pipe_left FStar_Util.string_of_int
                          (FStar_List.length univs1)
                         in
                      FStar_Util.format2
                        "Unexpected effect abbreviation %s; polymorphic in %s universes"
-                       uu____17272 uu____17273
+                       uu____19078 uu____19080
                       in
-                   failwith uu____17271
-               | uu____17280 ->
-                   let uu____17295 =
-                     let uu____17300 =
-                       let uu____17301 = FStar_Syntax_Util.arrow binders c
+                   failwith uu____19076
+               | uu____19091 ->
+                   let uu____19106 =
+                     let uu____19111 =
+                       let uu____19112 = FStar_Syntax_Util.arrow binders c
                           in
-                       (univs1, uu____17301)  in
-                     inst_tscheme_with uu____17300 insts  in
-                   (match uu____17295 with
-                    | (uu____17314,t) ->
+                       (univs1, uu____19112)  in
+                     inst_tscheme_with uu____19111 insts  in
+                   (match uu____19106 with
+                    | (uu____19125,t) ->
                         let t1 =
-                          let uu____17317 = FStar_Ident.range_of_lid lid1  in
-                          FStar_Syntax_Subst.set_use_range uu____17317 t  in
-                        let uu____17318 =
-                          let uu____17319 = FStar_Syntax_Subst.compress t1
+                          let uu____19128 = FStar_Ident.range_of_lid lid1  in
+                          FStar_Syntax_Subst.set_use_range uu____19128 t  in
+                        let uu____19129 =
+                          let uu____19130 = FStar_Syntax_Subst.compress t1
                              in
-                          uu____17319.FStar_Syntax_Syntax.n  in
-                        (match uu____17318 with
+                          uu____19130.FStar_Syntax_Syntax.n  in
+                        (match uu____19129 with
                          | FStar_Syntax_Syntax.Tm_arrow (binders1,c1) ->
                              FStar_Pervasives_Native.Some (binders1, c1)
-                         | uu____17354 -> failwith "Impossible")))
-        | uu____17361 -> FStar_Pervasives_Native.None
+                         | uu____19165 -> failwith "Impossible")))
+        | uu____19173 -> FStar_Pervasives_Native.None
   
 let (norm_eff_name : env -> FStar_Ident.lident -> FStar_Ident.lident) =
   fun env  ->
     fun l  ->
       let rec find1 l1 =
-        let uu____17384 =
+        let uu____19197 =
           lookup_effect_abbrev env [FStar_Syntax_Syntax.U_unknown] l1  in
-        match uu____17384 with
+        match uu____19197 with
         | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some (uu____17397,c) ->
+        | FStar_Pervasives_Native.Some (uu____19210,c) ->
             let l2 = FStar_Syntax_Util.comp_effect_name c  in
-            let uu____17404 = find1 l2  in
-            (match uu____17404 with
+            let uu____19217 = find1 l2  in
+            (match uu____19217 with
              | FStar_Pervasives_Native.None  ->
                  FStar_Pervasives_Native.Some l2
              | FStar_Pervasives_Native.Some l' ->
                  FStar_Pervasives_Native.Some l')
          in
       let res =
-        let uu____17411 =
+        let uu____19224 =
           FStar_Util.smap_try_find env.normalized_eff_names l.FStar_Ident.str
            in
-        match uu____17411 with
+        match uu____19224 with
         | FStar_Pervasives_Native.Some l1 -> l1
         | FStar_Pervasives_Native.None  ->
-            let uu____17415 = find1 l  in
-            (match uu____17415 with
+            let uu____19228 = find1 l  in
+            (match uu____19228 with
              | FStar_Pervasives_Native.None  -> l
              | FStar_Pervasives_Native.Some m ->
                  (FStar_Util.smap_add env.normalized_eff_names
                     l.FStar_Ident.str m;
                   m))
          in
-      let uu____17420 = FStar_Ident.range_of_lid l  in
-      FStar_Ident.set_lid_range res uu____17420
+      let uu____19233 = FStar_Ident.range_of_lid l  in
+      FStar_Ident.set_lid_range res uu____19233
   
 let (lookup_effect_quals :
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.qualifier Prims.list) =
   fun env  ->
     fun l  ->
       let l1 = norm_eff_name env l  in
-      let uu____17434 = lookup_qname env l1  in
-      match uu____17434 with
+      let uu____19248 = lookup_qname env l1  in
+      match uu____19248 with
       | FStar_Pervasives_Native.Some
           (FStar_Util.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_new_effect
-                uu____17437;
-              FStar_Syntax_Syntax.sigrng = uu____17438;
+                uu____19251;
+              FStar_Syntax_Syntax.sigrng = uu____19252;
               FStar_Syntax_Syntax.sigquals = q;
-              FStar_Syntax_Syntax.sigmeta = uu____17440;
-              FStar_Syntax_Syntax.sigattrs = uu____17441;_},uu____17442),uu____17443)
+              FStar_Syntax_Syntax.sigmeta = uu____19254;
+              FStar_Syntax_Syntax.sigattrs = uu____19255;_},uu____19256),uu____19257)
           -> q
-      | uu____17494 -> []
+      | uu____19308 -> []
   
 let (lookup_projector :
   env -> FStar_Ident.lident -> Prims.int -> FStar_Ident.lident) =
   fun env  ->
     fun lid  ->
       fun i  ->
-        let fail1 uu____17515 =
-          let uu____17516 =
-            let uu____17517 = FStar_Util.string_of_int i  in
-            let uu____17518 = FStar_Syntax_Print.lid_to_string lid  in
+        let fail1 uu____19332 =
+          let uu____19333 =
+            let uu____19335 = FStar_Util.string_of_int i  in
+            let uu____19337 = FStar_Syntax_Print.lid_to_string lid  in
             FStar_Util.format2
               "Impossible: projecting field #%s from constructor %s is undefined"
-              uu____17517 uu____17518
+              uu____19335 uu____19337
              in
-          failwith uu____17516  in
-        let uu____17519 = lookup_datacon env lid  in
-        match uu____17519 with
-        | (uu____17524,t) ->
-            let uu____17526 =
-              let uu____17527 = FStar_Syntax_Subst.compress t  in
-              uu____17527.FStar_Syntax_Syntax.n  in
-            (match uu____17526 with
-             | FStar_Syntax_Syntax.Tm_arrow (binders,uu____17531) ->
+          failwith uu____19333  in
+        let uu____19340 = lookup_datacon env lid  in
+        match uu____19340 with
+        | (uu____19345,t) ->
+            let uu____19347 =
+              let uu____19348 = FStar_Syntax_Subst.compress t  in
+              uu____19348.FStar_Syntax_Syntax.n  in
+            (match uu____19347 with
+             | FStar_Syntax_Syntax.Tm_arrow (binders,uu____19352) ->
                  if
                    (i < (Prims.parse_int "0")) ||
                      (i >= (FStar_List.length binders))
                  then fail1 ()
                  else
                    (let b = FStar_List.nth binders i  in
-                    let uu____17572 =
+                    let uu____19396 =
                       FStar_Syntax_Util.mk_field_projector_name lid
                         (FStar_Pervasives_Native.fst b) i
                        in
-                    FStar_All.pipe_right uu____17572
+                    FStar_All.pipe_right uu____19396
                       FStar_Pervasives_Native.fst)
-             | uu____17583 -> fail1 ())
+             | uu____19407 -> fail1 ())
   
 let (is_projector : env -> FStar_Ident.lident -> Prims.bool) =
   fun env  ->
     fun l  ->
-      let uu____17594 = lookup_qname env l  in
-      match uu____17594 with
+      let uu____19421 = lookup_qname env l  in
+      match uu____19421 with
       | FStar_Pervasives_Native.Some
           (FStar_Util.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
-                (uu____17595,uu____17596,uu____17597);
-              FStar_Syntax_Syntax.sigrng = uu____17598;
+                (uu____19423,uu____19424,uu____19425);
+              FStar_Syntax_Syntax.sigrng = uu____19426;
               FStar_Syntax_Syntax.sigquals = quals;
-              FStar_Syntax_Syntax.sigmeta = uu____17600;
-              FStar_Syntax_Syntax.sigattrs = uu____17601;_},uu____17602),uu____17603)
+              FStar_Syntax_Syntax.sigmeta = uu____19428;
+              FStar_Syntax_Syntax.sigattrs = uu____19429;_},uu____19430),uu____19431)
           ->
           FStar_Util.for_some
-            (fun uu___233_17656  ->
-               match uu___233_17656 with
-               | FStar_Syntax_Syntax.Projector uu____17657 -> true
-               | uu____17662 -> false) quals
-      | uu____17663 -> false
+            (fun uu___238_19484  ->
+               match uu___238_19484 with
+               | FStar_Syntax_Syntax.Projector uu____19486 -> true
+               | uu____19492 -> false) quals
+      | uu____19494 -> false
   
 let (is_datacon : env -> FStar_Ident.lident -> Prims.bool) =
   fun env  ->
     fun lid  ->
-      let uu____17674 = lookup_qname env lid  in
-      match uu____17674 with
+      let uu____19508 = lookup_qname env lid  in
+      match uu____19508 with
       | FStar_Pervasives_Native.Some
           (FStar_Util.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-                (uu____17675,uu____17676,uu____17677,uu____17678,uu____17679,uu____17680);
-              FStar_Syntax_Syntax.sigrng = uu____17681;
-              FStar_Syntax_Syntax.sigquals = uu____17682;
-              FStar_Syntax_Syntax.sigmeta = uu____17683;
-              FStar_Syntax_Syntax.sigattrs = uu____17684;_},uu____17685),uu____17686)
+                (uu____19510,uu____19511,uu____19512,uu____19513,uu____19514,uu____19515);
+              FStar_Syntax_Syntax.sigrng = uu____19516;
+              FStar_Syntax_Syntax.sigquals = uu____19517;
+              FStar_Syntax_Syntax.sigmeta = uu____19518;
+              FStar_Syntax_Syntax.sigattrs = uu____19519;_},uu____19520),uu____19521)
           -> true
-      | uu____17741 -> false
+      | uu____19579 -> false
   
 let (is_record : env -> FStar_Ident.lident -> Prims.bool) =
   fun env  ->
     fun lid  ->
-      let uu____17752 = lookup_qname env lid  in
-      match uu____17752 with
+      let uu____19593 = lookup_qname env lid  in
+      match uu____19593 with
       | FStar_Pervasives_Native.Some
           (FStar_Util.Inr
            ({
               FStar_Syntax_Syntax.sigel =
                 FStar_Syntax_Syntax.Sig_inductive_typ
-                (uu____17753,uu____17754,uu____17755,uu____17756,uu____17757,uu____17758);
-              FStar_Syntax_Syntax.sigrng = uu____17759;
+                (uu____19595,uu____19596,uu____19597,uu____19598,uu____19599,uu____19600);
+              FStar_Syntax_Syntax.sigrng = uu____19601;
               FStar_Syntax_Syntax.sigquals = quals;
-              FStar_Syntax_Syntax.sigmeta = uu____17761;
-              FStar_Syntax_Syntax.sigattrs = uu____17762;_},uu____17763),uu____17764)
+              FStar_Syntax_Syntax.sigmeta = uu____19603;
+              FStar_Syntax_Syntax.sigattrs = uu____19604;_},uu____19605),uu____19606)
           ->
           FStar_Util.for_some
-            (fun uu___234_17825  ->
-               match uu___234_17825 with
-               | FStar_Syntax_Syntax.RecordType uu____17826 -> true
-               | FStar_Syntax_Syntax.RecordConstructor uu____17835 -> true
-               | uu____17844 -> false) quals
-      | uu____17845 -> false
+            (fun uu___239_19667  ->
+               match uu___239_19667 with
+               | FStar_Syntax_Syntax.RecordType uu____19669 -> true
+               | FStar_Syntax_Syntax.RecordConstructor uu____19679 -> true
+               | uu____19689 -> false) quals
+      | uu____19691 -> false
   
 let (qninfo_is_action : qninfo -> Prims.bool) =
   fun qninfo  ->
@@ -4397,24 +3541,24 @@ let (qninfo_is_action : qninfo -> Prims.bool) =
         (FStar_Util.Inr
          ({
             FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_let
-              (uu____17851,uu____17852);
-            FStar_Syntax_Syntax.sigrng = uu____17853;
+              (uu____19701,uu____19702);
+            FStar_Syntax_Syntax.sigrng = uu____19703;
             FStar_Syntax_Syntax.sigquals = quals;
-            FStar_Syntax_Syntax.sigmeta = uu____17855;
-            FStar_Syntax_Syntax.sigattrs = uu____17856;_},uu____17857),uu____17858)
+            FStar_Syntax_Syntax.sigmeta = uu____19705;
+            FStar_Syntax_Syntax.sigattrs = uu____19706;_},uu____19707),uu____19708)
         ->
         FStar_Util.for_some
-          (fun uu___235_17915  ->
-             match uu___235_17915 with
-             | FStar_Syntax_Syntax.Action uu____17916 -> true
-             | uu____17917 -> false) quals
-    | uu____17918 -> false
+          (fun uu___240_19765  ->
+             match uu___240_19765 with
+             | FStar_Syntax_Syntax.Action uu____19767 -> true
+             | uu____19769 -> false) quals
+    | uu____19771 -> false
   
 let (is_action : env -> FStar_Ident.lident -> Prims.bool) =
   fun env  ->
     fun lid  ->
-      let uu____17929 = lookup_qname env lid  in
-      FStar_All.pipe_left qninfo_is_action uu____17929
+      let uu____19785 = lookup_qname env lid  in
+      FStar_All.pipe_left qninfo_is_action uu____19785
   
 let (is_interpreted : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   let interpreted_symbols =
@@ -4435,51 +3579,51 @@ let (is_interpreted : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
     FStar_Parser_Const.op_Negation]  in
   fun env  ->
     fun head1  ->
-      let uu____17943 =
-        let uu____17944 = FStar_Syntax_Util.un_uinst head1  in
-        uu____17944.FStar_Syntax_Syntax.n  in
-      match uu____17943 with
+      let uu____19802 =
+        let uu____19803 = FStar_Syntax_Util.un_uinst head1  in
+        uu____19803.FStar_Syntax_Syntax.n  in
+      match uu____19802 with
       | FStar_Syntax_Syntax.Tm_fvar fv ->
           (match fv.FStar_Syntax_Syntax.fv_delta with
-           | FStar_Syntax_Syntax.Delta_equational_at_level uu____17948 ->
+           | FStar_Syntax_Syntax.Delta_equational_at_level uu____19809 ->
                true
-           | uu____17949 -> false)
-      | uu____17950 -> false
+           | uu____19812 -> false)
+      | uu____19814 -> false
   
 let (is_irreducible : env -> FStar_Ident.lident -> Prims.bool) =
   fun env  ->
     fun l  ->
-      let uu____17961 = lookup_qname env l  in
-      match uu____17961 with
+      let uu____19828 = lookup_qname env l  in
+      match uu____19828 with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr (se,uu____17963),uu____17964) ->
+          (FStar_Util.Inr (se,uu____19831),uu____19832) ->
           FStar_Util.for_some
-            (fun uu___236_18012  ->
-               match uu___236_18012 with
+            (fun uu___241_19880  ->
+               match uu___241_19880 with
                | FStar_Syntax_Syntax.Irreducible  -> true
-               | uu____18013 -> false) se.FStar_Syntax_Syntax.sigquals
-      | uu____18014 -> false
+               | uu____19883 -> false) se.FStar_Syntax_Syntax.sigquals
+      | uu____19885 -> false
   
 let (is_type_constructor : env -> FStar_Ident.lident -> Prims.bool) =
   fun env  ->
     fun lid  ->
       let mapper x =
         match FStar_Pervasives_Native.fst x with
-        | FStar_Util.Inl uu____18085 -> FStar_Pervasives_Native.Some false
-        | FStar_Util.Inr (se,uu____18101) ->
+        | FStar_Util.Inl uu____19961 -> FStar_Pervasives_Native.Some false
+        | FStar_Util.Inr (se,uu____19979) ->
             (match se.FStar_Syntax_Syntax.sigel with
-             | FStar_Syntax_Syntax.Sig_declare_typ uu____18118 ->
+             | FStar_Syntax_Syntax.Sig_declare_typ uu____19997 ->
                  FStar_Pervasives_Native.Some
                    (FStar_List.contains FStar_Syntax_Syntax.New
                       se.FStar_Syntax_Syntax.sigquals)
-             | FStar_Syntax_Syntax.Sig_inductive_typ uu____18125 ->
+             | FStar_Syntax_Syntax.Sig_inductive_typ uu____20005 ->
                  FStar_Pervasives_Native.Some true
-             | uu____18142 -> FStar_Pervasives_Native.Some false)
+             | uu____20024 -> FStar_Pervasives_Native.Some false)
          in
-      let uu____18143 =
-        let uu____18146 = lookup_qname env lid  in
-        FStar_Util.bind_opt uu____18146 mapper  in
-      match uu____18143 with
+      let uu____20027 =
+        let uu____20031 = lookup_qname env lid  in
+        FStar_Util.bind_opt uu____20031 mapper  in
+      match uu____20027 with
       | FStar_Pervasives_Native.Some b -> b
       | FStar_Pervasives_Native.None  -> false
   
@@ -4487,20 +3631,20 @@ let (num_inductive_ty_params :
   env -> FStar_Ident.lident -> Prims.int FStar_Pervasives_Native.option) =
   fun env  ->
     fun lid  ->
-      let uu____18198 = lookup_qname env lid  in
-      match uu____18198 with
+      let uu____20091 = lookup_qname env lid  in
+      match uu____20091 with
       | FStar_Pervasives_Native.Some
           (FStar_Util.Inr
            ({
               FStar_Syntax_Syntax.sigel =
                 FStar_Syntax_Syntax.Sig_inductive_typ
-                (uu____18201,uu____18202,tps,uu____18204,uu____18205,uu____18206);
-              FStar_Syntax_Syntax.sigrng = uu____18207;
-              FStar_Syntax_Syntax.sigquals = uu____18208;
-              FStar_Syntax_Syntax.sigmeta = uu____18209;
-              FStar_Syntax_Syntax.sigattrs = uu____18210;_},uu____18211),uu____18212)
+                (uu____20095,uu____20096,tps,uu____20098,uu____20099,uu____20100);
+              FStar_Syntax_Syntax.sigrng = uu____20101;
+              FStar_Syntax_Syntax.sigquals = uu____20102;
+              FStar_Syntax_Syntax.sigmeta = uu____20103;
+              FStar_Syntax_Syntax.sigattrs = uu____20104;_},uu____20105),uu____20106)
           -> FStar_Pervasives_Native.Some (FStar_List.length tps)
-      | uu____18277 -> FStar_Pervasives_Native.None
+      | uu____20172 -> FStar_Pervasives_Native.None
   
 let (effect_decl_opt :
   env ->
@@ -4512,29 +3656,29 @@ let (effect_decl_opt :
     fun l  ->
       FStar_All.pipe_right (env.effects).decls
         (FStar_Util.find_opt
-           (fun uu____18321  ->
-              match uu____18321 with
-              | (d,uu____18329) ->
+           (fun uu____20218  ->
+              match uu____20218 with
+              | (d,uu____20227) ->
                   FStar_Ident.lid_equals d.FStar_Syntax_Syntax.mname l))
   
 let (get_effect_decl :
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.eff_decl) =
   fun env  ->
     fun l  ->
-      let uu____18344 = effect_decl_opt env l  in
-      match uu____18344 with
+      let uu____20243 = effect_decl_opt env l  in
+      match uu____20243 with
       | FStar_Pervasives_Native.None  ->
-          let uu____18359 = name_not_found l  in
-          let uu____18364 = FStar_Ident.range_of_lid l  in
-          FStar_Errors.raise_error uu____18359 uu____18364
+          let uu____20258 = name_not_found l  in
+          let uu____20264 = FStar_Ident.range_of_lid l  in
+          FStar_Errors.raise_error uu____20258 uu____20264
       | FStar_Pervasives_Native.Some md -> FStar_Pervasives_Native.fst md
   
 let (identity_mlift : mlift) =
   {
-    mlift_wp = (fun uu____18386  -> fun t  -> fun wp  -> wp);
+    mlift_wp = (fun uu____20287  -> fun t  -> fun wp  -> wp);
     mlift_term =
       (FStar_Pervasives_Native.Some
-         (fun uu____18405  ->
+         (fun uu____20306  ->
             fun t  -> fun wp  -> fun e  -> FStar_Util.return_all e))
   } 
 let (join :
@@ -4546,11 +3690,11 @@ let (join :
   fun env  ->
     fun l1  ->
       fun l2  ->
-        let uu____18436 = FStar_Ident.lid_equals l1 l2  in
-        if uu____18436
+        let uu____20338 = FStar_Ident.lid_equals l1 l2  in
+        if uu____20338
         then (l1, identity_mlift, identity_mlift)
         else
-          (let uu____18444 =
+          (let uu____20349 =
              ((FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GTot_lid)
                 &&
                 (FStar_Ident.lid_equals l2 FStar_Parser_Const.effect_Tot_lid))
@@ -4560,37 +3704,37 @@ let (join :
                   (FStar_Ident.lid_equals l1
                      FStar_Parser_Const.effect_Tot_lid))
               in
-           if uu____18444
+           if uu____20349
            then
              (FStar_Parser_Const.effect_GTot_lid, identity_mlift,
                identity_mlift)
            else
-             (let uu____18452 =
+             (let uu____20360 =
                 FStar_All.pipe_right (env.effects).joins
                   (FStar_Util.find_opt
-                     (fun uu____18505  ->
-                        match uu____18505 with
-                        | (m1,m2,uu____18518,uu____18519,uu____18520) ->
+                     (fun uu____20413  ->
+                        match uu____20413 with
+                        | (m1,m2,uu____20427,uu____20428,uu____20429) ->
                             (FStar_Ident.lid_equals l1 m1) &&
                               (FStar_Ident.lid_equals l2 m2)))
                  in
-              match uu____18452 with
+              match uu____20360 with
               | FStar_Pervasives_Native.None  ->
-                  let uu____18537 =
-                    let uu____18542 =
-                      let uu____18543 = FStar_Syntax_Print.lid_to_string l1
+                  let uu____20446 =
+                    let uu____20452 =
+                      let uu____20454 = FStar_Syntax_Print.lid_to_string l1
                          in
-                      let uu____18544 = FStar_Syntax_Print.lid_to_string l2
+                      let uu____20456 = FStar_Syntax_Print.lid_to_string l2
                          in
                       FStar_Util.format2
-                        "Effects %s and %s cannot be composed" uu____18543
-                        uu____18544
+                        "Effects %s and %s cannot be composed" uu____20454
+                        uu____20456
                        in
-                    (FStar_Errors.Fatal_EffectsCannotBeComposed, uu____18542)
+                    (FStar_Errors.Fatal_EffectsCannotBeComposed, uu____20452)
                      in
-                  FStar_Errors.raise_error uu____18537 env.range
+                  FStar_Errors.raise_error uu____20446 env.range
               | FStar_Pervasives_Native.Some
-                  (uu____18551,uu____18552,m3,j1,j2) -> (m3, j1, j2)))
+                  (uu____20466,uu____20467,m3,j1,j2) -> (m3, j1, j2)))
   
 let (monad_leq :
   env ->
@@ -4600,12 +3744,12 @@ let (monad_leq :
   fun env  ->
     fun l1  ->
       fun l2  ->
-        let uu____18585 =
+        let uu____20501 =
           (FStar_Ident.lid_equals l1 l2) ||
             ((FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_Tot_lid) &&
                (FStar_Ident.lid_equals l2 FStar_Parser_Const.effect_GTot_lid))
            in
-        if uu____18585
+        if uu____20501
         then
           FStar_Pervasives_Native.Some
             { msource = l1; mtarget = l2; mlift = identity_mlift }
@@ -4617,8 +3761,8 @@ let (monad_leq :
                     (FStar_Ident.lid_equals l2 e.mtarget)))
   
 let wp_sig_aux :
-  'Auu____18601 .
-    (FStar_Syntax_Syntax.eff_decl,'Auu____18601)
+  'Auu____20521 .
+    (FStar_Syntax_Syntax.eff_decl,'Auu____20521)
       FStar_Pervasives_Native.tuple2 Prims.list ->
       FStar_Ident.lident ->
         (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
@@ -4627,40 +3771,40 @@ let wp_sig_aux :
   =
   fun decls  ->
     fun m  ->
-      let uu____18630 =
+      let uu____20550 =
         FStar_All.pipe_right decls
           (FStar_Util.find_opt
-             (fun uu____18656  ->
-                match uu____18656 with
-                | (d,uu____18662) ->
+             (fun uu____20576  ->
+                match uu____20576 with
+                | (d,uu____20583) ->
                     FStar_Ident.lid_equals d.FStar_Syntax_Syntax.mname m))
          in
-      match uu____18630 with
+      match uu____20550 with
       | FStar_Pervasives_Native.None  ->
-          let uu____18673 =
+          let uu____20594 =
             FStar_Util.format1
               "Impossible: declaration for monad %s not found"
               m.FStar_Ident.str
              in
-          failwith uu____18673
+          failwith uu____20594
       | FStar_Pervasives_Native.Some (md,_q) ->
-          let uu____18686 =
+          let uu____20609 =
             inst_tscheme
               ((md.FStar_Syntax_Syntax.univs),
                 (md.FStar_Syntax_Syntax.signature))
              in
-          (match uu____18686 with
-           | (uu____18701,s) ->
+          (match uu____20609 with
+           | (uu____20624,s) ->
                let s1 = FStar_Syntax_Subst.compress s  in
                (match ((md.FStar_Syntax_Syntax.binders),
                         (s1.FStar_Syntax_Syntax.n))
                 with
                 | ([],FStar_Syntax_Syntax.Tm_arrow
-                   ((a,uu____18719)::(wp,uu____18721)::[],c)) when
+                   ((a,uu____20642)::(wp,uu____20644)::[],c)) when
                     FStar_Syntax_Syntax.is_teff
                       (FStar_Syntax_Util.comp_result c)
                     -> (a, (wp.FStar_Syntax_Syntax.sort))
-                | uu____18777 -> failwith "Impossible"))
+                | uu____20700 -> failwith "Impossible"))
   
 let (wp_signature :
   env ->
@@ -4678,19 +3822,19 @@ let (null_wp_for_eff :
     fun eff_name  ->
       fun res_u  ->
         fun res_t  ->
-          let uu____18832 =
+          let uu____20758 =
             FStar_Ident.lid_equals eff_name FStar_Parser_Const.effect_Tot_lid
              in
-          if uu____18832
+          if uu____20758
           then
             FStar_Syntax_Syntax.mk_Total' res_t
               (FStar_Pervasives_Native.Some res_u)
           else
-            (let uu____18834 =
+            (let uu____20763 =
                FStar_Ident.lid_equals eff_name
                  FStar_Parser_Const.effect_GTot_lid
                 in
-             if uu____18834
+             if uu____20763
              then
                FStar_Syntax_Syntax.mk_GTotal' res_t
                  (FStar_Pervasives_Native.Some res_u)
@@ -4702,31 +3846,31 @@ let (null_wp_for_eff :
                     ed.FStar_Syntax_Syntax.null_wp
                    in
                 let null_wp_res =
-                  let uu____18842 = get_range env  in
-                  let uu____18843 =
-                    let uu____18850 =
-                      let uu____18851 =
-                        let uu____18868 =
-                          let uu____18879 = FStar_Syntax_Syntax.as_arg res_t
+                  let uu____20774 = get_range env  in
+                  let uu____20775 =
+                    let uu____20782 =
+                      let uu____20783 =
+                        let uu____20800 =
+                          let uu____20811 = FStar_Syntax_Syntax.as_arg res_t
                              in
-                          [uu____18879]  in
-                        (null_wp, uu____18868)  in
-                      FStar_Syntax_Syntax.Tm_app uu____18851  in
-                    FStar_Syntax_Syntax.mk uu____18850  in
-                  uu____18843 FStar_Pervasives_Native.None uu____18842  in
-                let uu____18919 =
-                  let uu____18920 =
-                    let uu____18931 = FStar_Syntax_Syntax.as_arg null_wp_res
+                          [uu____20811]  in
+                        (null_wp, uu____20800)  in
+                      FStar_Syntax_Syntax.Tm_app uu____20783  in
+                    FStar_Syntax_Syntax.mk uu____20782  in
+                  uu____20775 FStar_Pervasives_Native.None uu____20774  in
+                let uu____20851 =
+                  let uu____20852 =
+                    let uu____20863 = FStar_Syntax_Syntax.as_arg null_wp_res
                        in
-                    [uu____18931]  in
+                    [uu____20863]  in
                   {
                     FStar_Syntax_Syntax.comp_univs = [res_u];
                     FStar_Syntax_Syntax.effect_name = eff_name1;
                     FStar_Syntax_Syntax.result_typ = res_t;
-                    FStar_Syntax_Syntax.effect_args = uu____18920;
+                    FStar_Syntax_Syntax.effect_args = uu____20852;
                     FStar_Syntax_Syntax.flags = []
                   }  in
-                FStar_Syntax_Syntax.mk_Comp uu____18919))
+                FStar_Syntax_Syntax.mk_Comp uu____20851))
   
 let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
   fun env  ->
@@ -4734,65 +3878,65 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
       match se.FStar_Syntax_Syntax.sigel with
       | FStar_Syntax_Syntax.Sig_new_effect ne ->
           let effects =
-            let uu___251_18968 = env.effects  in
+            let uu___256_20901 = env.effects  in
             {
               decls = ((ne, (se.FStar_Syntax_Syntax.sigquals)) ::
                 ((env.effects).decls));
-              order = (uu___251_18968.order);
-              joins = (uu___251_18968.joins)
+              order = (uu___256_20901.order);
+              joins = (uu___256_20901.joins)
             }  in
-          let uu___252_18977 = env  in
+          let uu___257_20910 = env  in
           {
-            solver = (uu___252_18977.solver);
-            range = (uu___252_18977.range);
-            curmodule = (uu___252_18977.curmodule);
-            gamma = (uu___252_18977.gamma);
-            gamma_sig = (uu___252_18977.gamma_sig);
-            gamma_cache = (uu___252_18977.gamma_cache);
-            modules = (uu___252_18977.modules);
-            expected_typ = (uu___252_18977.expected_typ);
-            sigtab = (uu___252_18977.sigtab);
-            attrtab = (uu___252_18977.attrtab);
-            is_pattern = (uu___252_18977.is_pattern);
-            instantiate_imp = (uu___252_18977.instantiate_imp);
+            solver = (uu___257_20910.solver);
+            range = (uu___257_20910.range);
+            curmodule = (uu___257_20910.curmodule);
+            gamma = (uu___257_20910.gamma);
+            gamma_sig = (uu___257_20910.gamma_sig);
+            gamma_cache = (uu___257_20910.gamma_cache);
+            modules = (uu___257_20910.modules);
+            expected_typ = (uu___257_20910.expected_typ);
+            sigtab = (uu___257_20910.sigtab);
+            attrtab = (uu___257_20910.attrtab);
+            is_pattern = (uu___257_20910.is_pattern);
+            instantiate_imp = (uu___257_20910.instantiate_imp);
             effects;
-            generalize = (uu___252_18977.generalize);
-            letrecs = (uu___252_18977.letrecs);
-            top_level = (uu___252_18977.top_level);
-            check_uvars = (uu___252_18977.check_uvars);
-            use_eq = (uu___252_18977.use_eq);
-            is_iface = (uu___252_18977.is_iface);
-            admit = (uu___252_18977.admit);
-            lax = (uu___252_18977.lax);
-            lax_universes = (uu___252_18977.lax_universes);
-            phase1 = (uu___252_18977.phase1);
-            failhard = (uu___252_18977.failhard);
-            nosynth = (uu___252_18977.nosynth);
-            uvar_subtyping = (uu___252_18977.uvar_subtyping);
-            tc_term = (uu___252_18977.tc_term);
-            type_of = (uu___252_18977.type_of);
-            universe_of = (uu___252_18977.universe_of);
-            check_type_of = (uu___252_18977.check_type_of);
-            use_bv_sorts = (uu___252_18977.use_bv_sorts);
-            qtbl_name_and_index = (uu___252_18977.qtbl_name_and_index);
-            normalized_eff_names = (uu___252_18977.normalized_eff_names);
-            fv_delta_depths = (uu___252_18977.fv_delta_depths);
-            proof_ns = (uu___252_18977.proof_ns);
-            synth_hook = (uu___252_18977.synth_hook);
-            splice = (uu___252_18977.splice);
-            postprocess = (uu___252_18977.postprocess);
-            is_native_tactic = (uu___252_18977.is_native_tactic);
-            identifier_info = (uu___252_18977.identifier_info);
-            tc_hooks = (uu___252_18977.tc_hooks);
-            dsenv = (uu___252_18977.dsenv);
-            nbe = (uu___252_18977.nbe)
+            generalize = (uu___257_20910.generalize);
+            letrecs = (uu___257_20910.letrecs);
+            top_level = (uu___257_20910.top_level);
+            check_uvars = (uu___257_20910.check_uvars);
+            use_eq = (uu___257_20910.use_eq);
+            is_iface = (uu___257_20910.is_iface);
+            admit = (uu___257_20910.admit);
+            lax = (uu___257_20910.lax);
+            lax_universes = (uu___257_20910.lax_universes);
+            phase1 = (uu___257_20910.phase1);
+            failhard = (uu___257_20910.failhard);
+            nosynth = (uu___257_20910.nosynth);
+            uvar_subtyping = (uu___257_20910.uvar_subtyping);
+            tc_term = (uu___257_20910.tc_term);
+            type_of = (uu___257_20910.type_of);
+            universe_of = (uu___257_20910.universe_of);
+            check_type_of = (uu___257_20910.check_type_of);
+            use_bv_sorts = (uu___257_20910.use_bv_sorts);
+            qtbl_name_and_index = (uu___257_20910.qtbl_name_and_index);
+            normalized_eff_names = (uu___257_20910.normalized_eff_names);
+            fv_delta_depths = (uu___257_20910.fv_delta_depths);
+            proof_ns = (uu___257_20910.proof_ns);
+            synth_hook = (uu___257_20910.synth_hook);
+            splice = (uu___257_20910.splice);
+            postprocess = (uu___257_20910.postprocess);
+            is_native_tactic = (uu___257_20910.is_native_tactic);
+            identifier_info = (uu___257_20910.identifier_info);
+            tc_hooks = (uu___257_20910.tc_hooks);
+            dsenv = (uu___257_20910.dsenv);
+            nbe = (uu___257_20910.nbe)
           }
       | FStar_Syntax_Syntax.Sig_sub_effect sub1 ->
           let compose_edges e1 e2 =
             let composed_lift =
               let mlift_wp u r wp1 =
-                let uu____19007 = (e1.mlift).mlift_wp u r wp1  in
-                (e2.mlift).mlift_wp u r uu____19007  in
+                let uu____20940 = (e1.mlift).mlift_wp u r wp1  in
+                (e2.mlift).mlift_wp u r uu____20940  in
               let mlift_term =
                 match (((e1.mlift).mlift_term), ((e2.mlift).mlift_term)) with
                 | (FStar_Pervasives_Native.Some
@@ -4802,11 +3946,11 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
                           fun t  ->
                             fun wp  ->
                               fun e  ->
-                                let uu____19165 = (e1.mlift).mlift_wp u t wp
+                                let uu____21098 = (e1.mlift).mlift_wp u t wp
                                    in
-                                let uu____19166 = l1 u t wp e  in
-                                l2 u t uu____19165 uu____19166))
-                | uu____19167 -> FStar_Pervasives_Native.None  in
+                                let uu____21099 = l1 u t wp e  in
+                                l2 u t uu____21098 uu____21099))
+                | uu____21100 -> FStar_Pervasives_Native.None  in
               { mlift_wp; mlift_term }  in
             {
               msource = (e1.msource);
@@ -4814,23 +3958,23 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
               mlift = composed_lift
             }  in
           let mk_mlift_wp lift_t u r wp1 =
-            let uu____19239 = inst_tscheme_with lift_t [u]  in
-            match uu____19239 with
-            | (uu____19246,lift_t1) ->
-                let uu____19248 =
-                  let uu____19255 =
-                    let uu____19256 =
-                      let uu____19273 =
-                        let uu____19284 = FStar_Syntax_Syntax.as_arg r  in
-                        let uu____19293 =
-                          let uu____19304 = FStar_Syntax_Syntax.as_arg wp1
+            let uu____21172 = inst_tscheme_with lift_t [u]  in
+            match uu____21172 with
+            | (uu____21179,lift_t1) ->
+                let uu____21181 =
+                  let uu____21188 =
+                    let uu____21189 =
+                      let uu____21206 =
+                        let uu____21217 = FStar_Syntax_Syntax.as_arg r  in
+                        let uu____21226 =
+                          let uu____21237 = FStar_Syntax_Syntax.as_arg wp1
                              in
-                          [uu____19304]  in
-                        uu____19284 :: uu____19293  in
-                      (lift_t1, uu____19273)  in
-                    FStar_Syntax_Syntax.Tm_app uu____19256  in
-                  FStar_Syntax_Syntax.mk uu____19255  in
-                uu____19248 FStar_Pervasives_Native.None
+                          [uu____21237]  in
+                        uu____21217 :: uu____21226  in
+                      (lift_t1, uu____21206)  in
+                    FStar_Syntax_Syntax.Tm_app uu____21189  in
+                  FStar_Syntax_Syntax.mk uu____21188  in
+                uu____21181 FStar_Pervasives_Native.None
                   wp1.FStar_Syntax_Syntax.pos
              in
           let sub_mlift_wp =
@@ -4841,27 +3985,27 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
                 failwith "sub effect should've been elaborated at this stage"
              in
           let mk_mlift_term lift_t u r wp1 e =
-            let uu____19416 = inst_tscheme_with lift_t [u]  in
-            match uu____19416 with
-            | (uu____19423,lift_t1) ->
-                let uu____19425 =
-                  let uu____19432 =
-                    let uu____19433 =
-                      let uu____19450 =
-                        let uu____19461 = FStar_Syntax_Syntax.as_arg r  in
-                        let uu____19470 =
-                          let uu____19481 = FStar_Syntax_Syntax.as_arg wp1
+            let uu____21350 = inst_tscheme_with lift_t [u]  in
+            match uu____21350 with
+            | (uu____21357,lift_t1) ->
+                let uu____21359 =
+                  let uu____21366 =
+                    let uu____21367 =
+                      let uu____21384 =
+                        let uu____21395 = FStar_Syntax_Syntax.as_arg r  in
+                        let uu____21404 =
+                          let uu____21415 = FStar_Syntax_Syntax.as_arg wp1
                              in
-                          let uu____19490 =
-                            let uu____19501 = FStar_Syntax_Syntax.as_arg e
+                          let uu____21424 =
+                            let uu____21435 = FStar_Syntax_Syntax.as_arg e
                                in
-                            [uu____19501]  in
-                          uu____19481 :: uu____19490  in
-                        uu____19461 :: uu____19470  in
-                      (lift_t1, uu____19450)  in
-                    FStar_Syntax_Syntax.Tm_app uu____19433  in
-                  FStar_Syntax_Syntax.mk uu____19432  in
-                uu____19425 FStar_Pervasives_Native.None
+                            [uu____21435]  in
+                          uu____21415 :: uu____21424  in
+                        uu____21395 :: uu____21404  in
+                      (lift_t1, uu____21384)  in
+                    FStar_Syntax_Syntax.Tm_app uu____21367  in
+                  FStar_Syntax_Syntax.mk uu____21366  in
+                uu____21359 FStar_Pervasives_Native.None
                   e.FStar_Syntax_Syntax.pos
              in
           let sub_mlift_term =
@@ -4882,49 +4026,49 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
             }  in
           let print_mlift l =
             let bogus_term s =
-              let uu____19603 =
-                let uu____19604 =
+              let uu____21540 =
+                let uu____21541 =
                   FStar_Ident.lid_of_path [s] FStar_Range.dummyRange  in
-                FStar_Syntax_Syntax.lid_as_fv uu____19604
+                FStar_Syntax_Syntax.lid_as_fv uu____21541
                   FStar_Syntax_Syntax.delta_constant
                   FStar_Pervasives_Native.None
                  in
-              FStar_Syntax_Syntax.fv_to_tm uu____19603  in
+              FStar_Syntax_Syntax.fv_to_tm uu____21540  in
             let arg = bogus_term "ARG"  in
             let wp = bogus_term "WP"  in
             let e = bogus_term "COMP"  in
-            let uu____19608 =
-              let uu____19609 = l.mlift_wp FStar_Syntax_Syntax.U_zero arg wp
+            let uu____21550 =
+              let uu____21552 = l.mlift_wp FStar_Syntax_Syntax.U_zero arg wp
                  in
-              FStar_Syntax_Print.term_to_string uu____19609  in
-            let uu____19610 =
-              let uu____19611 =
+              FStar_Syntax_Print.term_to_string uu____21552  in
+            let uu____21553 =
+              let uu____21555 =
                 FStar_Util.map_opt l.mlift_term
                   (fun l1  ->
-                     let uu____19637 = l1 FStar_Syntax_Syntax.U_zero arg wp e
+                     let uu____21583 = l1 FStar_Syntax_Syntax.U_zero arg wp e
                         in
-                     FStar_Syntax_Print.term_to_string uu____19637)
+                     FStar_Syntax_Print.term_to_string uu____21583)
                  in
-              FStar_Util.dflt "none" uu____19611  in
-            FStar_Util.format2 "{ wp : %s ; term : %s }" uu____19608
-              uu____19610
+              FStar_Util.dflt "none" uu____21555  in
+            FStar_Util.format2 "{ wp : %s ; term : %s }" uu____21550
+              uu____21553
              in
           let order = edge :: ((env.effects).order)  in
           let ms =
             FStar_All.pipe_right (env.effects).decls
               (FStar_List.map
-                 (fun uu____19663  ->
-                    match uu____19663 with
-                    | (e,uu____19671) -> e.FStar_Syntax_Syntax.mname))
+                 (fun uu____21612  ->
+                    match uu____21612 with
+                    | (e,uu____21620) -> e.FStar_Syntax_Syntax.mname))
              in
-          let find_edge order1 uu____19694 =
-            match uu____19694 with
+          let find_edge order1 uu____21643 =
+            match uu____21643 with
             | (i,j) ->
-                let uu____19705 = FStar_Ident.lid_equals i j  in
-                if uu____19705
+                let uu____21654 = FStar_Ident.lid_equals i j  in
+                if uu____21654
                 then
                   FStar_All.pipe_right (id_edge i)
-                    (fun _0_16  -> FStar_Pervasives_Native.Some _0_16)
+                    (fun _0_1  -> FStar_Pervasives_Native.Some _0_1)
                 else
                   FStar_All.pipe_right order1
                     (FStar_Util.find_opt
@@ -4934,38 +4078,38 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
              in
           let order1 =
             let fold_fun order1 k =
-              let uu____19737 =
+              let uu____21689 =
                 FStar_All.pipe_right ms
                   (FStar_List.collect
                      (fun i  ->
-                        let uu____19747 = FStar_Ident.lid_equals i k  in
-                        if uu____19747
+                        let uu____21699 = FStar_Ident.lid_equals i k  in
+                        if uu____21699
                         then []
                         else
                           FStar_All.pipe_right ms
                             (FStar_List.collect
                                (fun j  ->
-                                  let uu____19758 =
+                                  let uu____21713 =
                                     FStar_Ident.lid_equals j k  in
-                                  if uu____19758
+                                  if uu____21713
                                   then []
                                   else
-                                    (let uu____19762 =
-                                       let uu____19771 =
+                                    (let uu____21720 =
+                                       let uu____21729 =
                                          find_edge order1 (i, k)  in
-                                       let uu____19774 =
+                                       let uu____21732 =
                                          find_edge order1 (k, j)  in
-                                       (uu____19771, uu____19774)  in
-                                     match uu____19762 with
+                                       (uu____21729, uu____21732)  in
+                                     match uu____21720 with
                                      | (FStar_Pervasives_Native.Some
                                         e1,FStar_Pervasives_Native.Some e2)
                                          ->
-                                         let uu____19789 =
+                                         let uu____21747 =
                                            compose_edges e1 e2  in
-                                         [uu____19789]
-                                     | uu____19790 -> [])))))
+                                         [uu____21747]
+                                     | uu____21748 -> [])))))
                  in
-              FStar_List.append order1 uu____19737  in
+              FStar_List.append order1 uu____21689  in
             FStar_All.pipe_right ms (FStar_List.fold_left fold_fun order)  in
           let order2 =
             FStar_Util.remove_dups
@@ -4977,29 +4121,29 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
           (FStar_All.pipe_right order2
              (FStar_List.iter
                 (fun edge1  ->
-                   let uu____19820 =
+                   let uu____21778 =
                      (FStar_Ident.lid_equals edge1.msource
                         FStar_Parser_Const.effect_DIV_lid)
                        &&
-                       (let uu____19822 =
+                       (let uu____21781 =
                           lookup_effect_quals env edge1.mtarget  in
-                        FStar_All.pipe_right uu____19822
+                        FStar_All.pipe_right uu____21781
                           (FStar_List.contains
                              FStar_Syntax_Syntax.TotalEffect))
                       in
-                   if uu____19820
+                   if uu____21778
                    then
-                     let uu____19827 =
-                       let uu____19832 =
+                     let uu____21788 =
+                       let uu____21794 =
                          FStar_Util.format1
                            "Divergent computations cannot be included in an effect %s marked 'total'"
                            (edge1.mtarget).FStar_Ident.str
                           in
                        (FStar_Errors.Fatal_DivergentComputationCannotBeIncludedInTotal,
-                         uu____19832)
+                         uu____21794)
                         in
-                     let uu____19833 = get_range env  in
-                     FStar_Errors.raise_error uu____19827 uu____19833
+                     let uu____21798 = get_range env  in
+                     FStar_Errors.raise_error uu____21788 uu____21798
                    else ()));
            (let joins =
               FStar_All.pipe_right ms
@@ -5009,9 +4153,9 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
                         (FStar_List.collect
                            (fun j  ->
                               let join_opt =
-                                let uu____19910 = FStar_Ident.lid_equals i j
+                                let uu____21876 = FStar_Ident.lid_equals i j
                                    in
-                                if uu____19910
+                                if uu____21876
                                 then
                                   FStar_Pervasives_Native.Some
                                     (i, (id_edge i), (id_edge i))
@@ -5020,13 +4164,13 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
                                     (FStar_List.fold_left
                                        (fun bopt  ->
                                           fun k  ->
-                                            let uu____19959 =
-                                              let uu____19968 =
+                                            let uu____21928 =
+                                              let uu____21937 =
                                                 find_edge order2 (i, k)  in
-                                              let uu____19971 =
+                                              let uu____21940 =
                                                 find_edge order2 (j, k)  in
-                                              (uu____19968, uu____19971)  in
-                                            match uu____19959 with
+                                              (uu____21937, uu____21940)  in
+                                            match uu____21928 with
                                             | (FStar_Pervasives_Native.Some
                                                ik,FStar_Pervasives_Native.Some
                                                jk) ->
@@ -5036,35 +4180,35 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
                                                      FStar_Pervasives_Native.Some
                                                        (k, ik, jk)
                                                  | FStar_Pervasives_Native.Some
-                                                     (ub,uu____20013,uu____20014)
+                                                     (ub,uu____21982,uu____21983)
                                                      ->
-                                                     let uu____20021 =
-                                                       let uu____20026 =
-                                                         let uu____20027 =
+                                                     let uu____21990 =
+                                                       let uu____21997 =
+                                                         let uu____21999 =
                                                            find_edge order2
                                                              (k, ub)
                                                             in
                                                          FStar_Util.is_some
-                                                           uu____20027
+                                                           uu____21999
                                                           in
-                                                       let uu____20030 =
-                                                         let uu____20031 =
+                                                       let uu____22002 =
+                                                         let uu____22004 =
                                                            find_edge order2
                                                              (ub, k)
                                                             in
                                                          FStar_Util.is_some
-                                                           uu____20031
+                                                           uu____22004
                                                           in
-                                                       (uu____20026,
-                                                         uu____20030)
+                                                       (uu____21997,
+                                                         uu____22002)
                                                         in
-                                                     (match uu____20021 with
+                                                     (match uu____21990 with
                                                       | (true ,true ) ->
-                                                          let uu____20042 =
+                                                          let uu____22021 =
                                                             FStar_Ident.lid_equals
                                                               k ub
                                                              in
-                                                          if uu____20042
+                                                          if uu____22021
                                                           then
                                                             (FStar_Errors.log_issue
                                                                FStar_Range.dummyRange
@@ -5081,7 +4225,7 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
                                                             (k, ik, jk)
                                                       | (false ,true ) ->
                                                           bopt))
-                                            | uu____20067 -> bopt)
+                                            | uu____22064 -> bopt)
                                        FStar_Pervasives_Native.None)
                                  in
                               match join_opt with
@@ -5090,55 +4234,55 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
                                   [(i, j, k, (e1.mlift), (e2.mlift))]))))
                in
             let effects =
-              let uu___253_20140 = env.effects  in
-              { decls = (uu___253_20140.decls); order = order2; joins }  in
-            let uu___254_20141 = env  in
+              let uu___258_22137 = env.effects  in
+              { decls = (uu___258_22137.decls); order = order2; joins }  in
+            let uu___259_22138 = env  in
             {
-              solver = (uu___254_20141.solver);
-              range = (uu___254_20141.range);
-              curmodule = (uu___254_20141.curmodule);
-              gamma = (uu___254_20141.gamma);
-              gamma_sig = (uu___254_20141.gamma_sig);
-              gamma_cache = (uu___254_20141.gamma_cache);
-              modules = (uu___254_20141.modules);
-              expected_typ = (uu___254_20141.expected_typ);
-              sigtab = (uu___254_20141.sigtab);
-              attrtab = (uu___254_20141.attrtab);
-              is_pattern = (uu___254_20141.is_pattern);
-              instantiate_imp = (uu___254_20141.instantiate_imp);
+              solver = (uu___259_22138.solver);
+              range = (uu___259_22138.range);
+              curmodule = (uu___259_22138.curmodule);
+              gamma = (uu___259_22138.gamma);
+              gamma_sig = (uu___259_22138.gamma_sig);
+              gamma_cache = (uu___259_22138.gamma_cache);
+              modules = (uu___259_22138.modules);
+              expected_typ = (uu___259_22138.expected_typ);
+              sigtab = (uu___259_22138.sigtab);
+              attrtab = (uu___259_22138.attrtab);
+              is_pattern = (uu___259_22138.is_pattern);
+              instantiate_imp = (uu___259_22138.instantiate_imp);
               effects;
-              generalize = (uu___254_20141.generalize);
-              letrecs = (uu___254_20141.letrecs);
-              top_level = (uu___254_20141.top_level);
-              check_uvars = (uu___254_20141.check_uvars);
-              use_eq = (uu___254_20141.use_eq);
-              is_iface = (uu___254_20141.is_iface);
-              admit = (uu___254_20141.admit);
-              lax = (uu___254_20141.lax);
-              lax_universes = (uu___254_20141.lax_universes);
-              phase1 = (uu___254_20141.phase1);
-              failhard = (uu___254_20141.failhard);
-              nosynth = (uu___254_20141.nosynth);
-              uvar_subtyping = (uu___254_20141.uvar_subtyping);
-              tc_term = (uu___254_20141.tc_term);
-              type_of = (uu___254_20141.type_of);
-              universe_of = (uu___254_20141.universe_of);
-              check_type_of = (uu___254_20141.check_type_of);
-              use_bv_sorts = (uu___254_20141.use_bv_sorts);
-              qtbl_name_and_index = (uu___254_20141.qtbl_name_and_index);
-              normalized_eff_names = (uu___254_20141.normalized_eff_names);
-              fv_delta_depths = (uu___254_20141.fv_delta_depths);
-              proof_ns = (uu___254_20141.proof_ns);
-              synth_hook = (uu___254_20141.synth_hook);
-              splice = (uu___254_20141.splice);
-              postprocess = (uu___254_20141.postprocess);
-              is_native_tactic = (uu___254_20141.is_native_tactic);
-              identifier_info = (uu___254_20141.identifier_info);
-              tc_hooks = (uu___254_20141.tc_hooks);
-              dsenv = (uu___254_20141.dsenv);
-              nbe = (uu___254_20141.nbe)
+              generalize = (uu___259_22138.generalize);
+              letrecs = (uu___259_22138.letrecs);
+              top_level = (uu___259_22138.top_level);
+              check_uvars = (uu___259_22138.check_uvars);
+              use_eq = (uu___259_22138.use_eq);
+              is_iface = (uu___259_22138.is_iface);
+              admit = (uu___259_22138.admit);
+              lax = (uu___259_22138.lax);
+              lax_universes = (uu___259_22138.lax_universes);
+              phase1 = (uu___259_22138.phase1);
+              failhard = (uu___259_22138.failhard);
+              nosynth = (uu___259_22138.nosynth);
+              uvar_subtyping = (uu___259_22138.uvar_subtyping);
+              tc_term = (uu___259_22138.tc_term);
+              type_of = (uu___259_22138.type_of);
+              universe_of = (uu___259_22138.universe_of);
+              check_type_of = (uu___259_22138.check_type_of);
+              use_bv_sorts = (uu___259_22138.use_bv_sorts);
+              qtbl_name_and_index = (uu___259_22138.qtbl_name_and_index);
+              normalized_eff_names = (uu___259_22138.normalized_eff_names);
+              fv_delta_depths = (uu___259_22138.fv_delta_depths);
+              proof_ns = (uu___259_22138.proof_ns);
+              synth_hook = (uu___259_22138.synth_hook);
+              splice = (uu___259_22138.splice);
+              postprocess = (uu___259_22138.postprocess);
+              is_native_tactic = (uu___259_22138.is_native_tactic);
+              identifier_info = (uu___259_22138.identifier_info);
+              tc_hooks = (uu___259_22138.tc_hooks);
+              dsenv = (uu___259_22138.dsenv);
+              nbe = (uu___259_22138.nbe)
             }))
-      | uu____20142 -> env
+      | uu____22139 -> env
   
 let (comp_to_comp_typ :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
@@ -5152,7 +4296,7 @@ let (comp_to_comp_typ :
         | FStar_Syntax_Syntax.GTotal (t,FStar_Pervasives_Native.None ) ->
             let u = env.universe_of env t  in
             FStar_Syntax_Syntax.mk_GTotal' t (FStar_Pervasives_Native.Some u)
-        | uu____20170 -> c  in
+        | uu____22168 -> c  in
       FStar_Syntax_Util.comp_to_comp_typ c1
   
 let rec (unfold_effect_abbrev :
@@ -5160,85 +4304,85 @@ let rec (unfold_effect_abbrev :
   fun env  ->
     fun comp  ->
       let c = comp_to_comp_typ env comp  in
-      let uu____20182 =
+      let uu____22181 =
         lookup_effect_abbrev env c.FStar_Syntax_Syntax.comp_univs
           c.FStar_Syntax_Syntax.effect_name
          in
-      match uu____20182 with
+      match uu____22181 with
       | FStar_Pervasives_Native.None  -> c
       | FStar_Pervasives_Native.Some (binders,cdef) ->
-          let uu____20199 = FStar_Syntax_Subst.open_comp binders cdef  in
-          (match uu____20199 with
+          let uu____22198 = FStar_Syntax_Subst.open_comp binders cdef  in
+          (match uu____22198 with
            | (binders1,cdef1) ->
                (if
                   (FStar_List.length binders1) <>
                     ((FStar_List.length c.FStar_Syntax_Syntax.effect_args) +
                        (Prims.parse_int "1"))
                 then
-                  (let uu____20221 =
-                     let uu____20226 =
-                       let uu____20227 =
+                  (let uu____22223 =
+                     let uu____22229 =
+                       let uu____22231 =
                          FStar_Util.string_of_int
                            (FStar_List.length binders1)
                           in
-                       let uu____20234 =
+                       let uu____22239 =
                          FStar_Util.string_of_int
                            ((FStar_List.length
                                c.FStar_Syntax_Syntax.effect_args)
                               + (Prims.parse_int "1"))
                           in
-                       let uu____20243 =
-                         let uu____20244 = FStar_Syntax_Syntax.mk_Comp c  in
-                         FStar_Syntax_Print.comp_to_string uu____20244  in
+                       let uu____22250 =
+                         let uu____22252 = FStar_Syntax_Syntax.mk_Comp c  in
+                         FStar_Syntax_Print.comp_to_string uu____22252  in
                        FStar_Util.format3
                          "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
-                         uu____20227 uu____20234 uu____20243
+                         uu____22231 uu____22239 uu____22250
                         in
                      (FStar_Errors.Fatal_ConstructorArgLengthMismatch,
-                       uu____20226)
+                       uu____22229)
                       in
-                   FStar_Errors.raise_error uu____20221
+                   FStar_Errors.raise_error uu____22223
                      comp.FStar_Syntax_Syntax.pos)
                 else ();
                 (let inst1 =
-                   let uu____20249 =
-                     let uu____20260 =
+                   let uu____22260 =
+                     let uu____22271 =
                        FStar_Syntax_Syntax.as_arg
                          c.FStar_Syntax_Syntax.result_typ
                         in
-                     uu____20260 :: (c.FStar_Syntax_Syntax.effect_args)  in
+                     uu____22271 :: (c.FStar_Syntax_Syntax.effect_args)  in
                    FStar_List.map2
-                     (fun uu____20297  ->
-                        fun uu____20298  ->
-                          match (uu____20297, uu____20298) with
-                          | ((x,uu____20328),(t,uu____20330)) ->
+                     (fun uu____22308  ->
+                        fun uu____22309  ->
+                          match (uu____22308, uu____22309) with
+                          | ((x,uu____22339),(t,uu____22341)) ->
                               FStar_Syntax_Syntax.NT (x, t)) binders1
-                     uu____20249
+                     uu____22260
                     in
                  let c1 = FStar_Syntax_Subst.subst_comp inst1 cdef1  in
                  let c2 =
-                   let uu____20361 =
-                     let uu___255_20362 = comp_to_comp_typ env c1  in
+                   let uu____22372 =
+                     let uu___260_22373 = comp_to_comp_typ env c1  in
                      {
                        FStar_Syntax_Syntax.comp_univs =
-                         (uu___255_20362.FStar_Syntax_Syntax.comp_univs);
+                         (uu___260_22373.FStar_Syntax_Syntax.comp_univs);
                        FStar_Syntax_Syntax.effect_name =
-                         (uu___255_20362.FStar_Syntax_Syntax.effect_name);
+                         (uu___260_22373.FStar_Syntax_Syntax.effect_name);
                        FStar_Syntax_Syntax.result_typ =
-                         (uu___255_20362.FStar_Syntax_Syntax.result_typ);
+                         (uu___260_22373.FStar_Syntax_Syntax.result_typ);
                        FStar_Syntax_Syntax.effect_args =
-                         (uu___255_20362.FStar_Syntax_Syntax.effect_args);
+                         (uu___260_22373.FStar_Syntax_Syntax.effect_args);
                        FStar_Syntax_Syntax.flags =
                          (c.FStar_Syntax_Syntax.flags)
                      }  in
-                   FStar_All.pipe_right uu____20361
+                   FStar_All.pipe_right uu____22372
                      FStar_Syntax_Syntax.mk_Comp
                     in
                  unfold_effect_abbrev env c2)))
   
 let effect_repr_aux :
-  'Auu____20373 .
-    'Auu____20373 ->
+  'Auu____22385 .
+    'Auu____22385 ->
       env ->
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.universe ->
@@ -5251,54 +4395,54 @@ let effect_repr_aux :
         fun u_c  ->
           let effect_name =
             norm_eff_name env (FStar_Syntax_Util.comp_effect_name c)  in
-          let uu____20403 = effect_decl_opt env effect_name  in
-          match uu____20403 with
+          let uu____22415 = effect_decl_opt env effect_name  in
+          match uu____22415 with
           | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
           | FStar_Pervasives_Native.Some (ed,qualifiers) ->
               (match (ed.FStar_Syntax_Syntax.repr).FStar_Syntax_Syntax.n with
                | FStar_Syntax_Syntax.Tm_unknown  ->
                    FStar_Pervasives_Native.None
-               | uu____20442 ->
+               | uu____22454 ->
                    let c1 = unfold_effect_abbrev env c  in
                    let res_typ = c1.FStar_Syntax_Syntax.result_typ  in
                    let wp =
                      match c1.FStar_Syntax_Syntax.effect_args with
-                     | hd1::uu____20465 -> hd1
+                     | hd1::uu____22477 -> hd1
                      | [] ->
                          let name = FStar_Ident.string_of_lid effect_name  in
                          let message =
-                           let uu____20502 =
+                           let uu____22516 =
                              FStar_Util.format1
                                "Not enough arguments for effect %s. " name
                               in
-                           Prims.strcat uu____20502
+                           Prims.strcat uu____22516
                              (Prims.strcat
                                 "This usually happens when you use a partially applied DM4F effect, "
                                 "like [TAC int] instead of [Tac int].")
                             in
-                         let uu____20503 = get_range env  in
+                         let uu____22521 = get_range env  in
                          FStar_Errors.raise_error
                            (FStar_Errors.Fatal_NotEnoughArgumentsForEffect,
-                             message) uu____20503
+                             message) uu____22521
                       in
                    let repr =
                      inst_effect_fun_with [u_c] env ed
                        ([], (ed.FStar_Syntax_Syntax.repr))
                       in
-                   let uu____20517 =
-                     let uu____20520 = get_range env  in
-                     let uu____20521 =
-                       let uu____20528 =
-                         let uu____20529 =
-                           let uu____20546 =
-                             let uu____20557 =
+                   let uu____22536 =
+                     let uu____22539 = get_range env  in
+                     let uu____22540 =
+                       let uu____22547 =
+                         let uu____22548 =
+                           let uu____22565 =
+                             let uu____22576 =
                                FStar_Syntax_Syntax.as_arg res_typ  in
-                             [uu____20557; wp]  in
-                           (repr, uu____20546)  in
-                         FStar_Syntax_Syntax.Tm_app uu____20529  in
-                       FStar_Syntax_Syntax.mk uu____20528  in
-                     uu____20521 FStar_Pervasives_Native.None uu____20520  in
-                   FStar_Pervasives_Native.Some uu____20517)
+                             [uu____22576; wp]  in
+                           (repr, uu____22565)  in
+                         FStar_Syntax_Syntax.Tm_app uu____22548  in
+                       FStar_Syntax_Syntax.mk uu____22547  in
+                     uu____22540 FStar_Pervasives_Native.None uu____22539  in
+                   FStar_Pervasives_Native.Some uu____22536)
   
 let (effect_repr :
   env ->
@@ -5312,6 +4456,13 @@ let (is_user_reifiable_effect : env -> FStar_Ident.lident -> Prims.bool) =
       let effect_lid1 = norm_eff_name env effect_lid  in
       let quals = lookup_effect_quals env effect_lid1  in
       FStar_List.contains FStar_Syntax_Syntax.Reifiable quals
+  
+let (is_total_effect : env -> FStar_Ident.lident -> Prims.bool) =
+  fun env  ->
+    fun effect_lid  ->
+      let effect_lid1 = norm_eff_name env effect_lid  in
+      let quals = lookup_effect_quals env effect_lid1  in
+      FStar_List.contains FStar_Syntax_Syntax.TotalEffect quals
   
 let (is_reifiable_effect : env -> FStar_Ident.lident -> Prims.bool) =
   fun env  ->
@@ -5331,18 +4482,18 @@ let (is_reifiable_comp : env -> FStar_Syntax_Syntax.comp -> Prims.bool) =
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Comp ct ->
           is_reifiable_effect env ct.FStar_Syntax_Syntax.effect_name
-      | uu____20672 -> false
+      | uu____22723 -> false
   
 let (is_reifiable_function : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun env  ->
     fun t  ->
-      let uu____20683 =
-        let uu____20684 = FStar_Syntax_Subst.compress t  in
-        uu____20684.FStar_Syntax_Syntax.n  in
-      match uu____20683 with
-      | FStar_Syntax_Syntax.Tm_arrow (uu____20687,c) ->
+      let uu____22738 =
+        let uu____22739 = FStar_Syntax_Subst.compress t  in
+        uu____22739.FStar_Syntax_Syntax.n  in
+      match uu____22738 with
+      | FStar_Syntax_Syntax.Tm_arrow (uu____22743,c) ->
           is_reifiable_comp env c
-      | uu____20709 -> false
+      | uu____22765 -> false
   
 let (reify_comp :
   env ->
@@ -5353,22 +4504,22 @@ let (reify_comp :
     fun c  ->
       fun u_c  ->
         let l = FStar_Syntax_Util.comp_effect_name c  in
-        (let uu____20727 =
-           let uu____20728 = is_reifiable_effect env l  in
-           Prims.op_Negation uu____20728  in
-         if uu____20727
+        (let uu____22785 =
+           let uu____22787 = is_reifiable_effect env l  in
+           Prims.op_Negation uu____22787  in
+         if uu____22785
          then
-           let uu____20729 =
-             let uu____20734 =
-               let uu____20735 = FStar_Ident.string_of_lid l  in
-               FStar_Util.format1 "Effect %s cannot be reified" uu____20735
+           let uu____22790 =
+             let uu____22796 =
+               let uu____22798 = FStar_Ident.string_of_lid l  in
+               FStar_Util.format1 "Effect %s cannot be reified" uu____22798
                 in
-             (FStar_Errors.Fatal_EffectCannotBeReified, uu____20734)  in
-           let uu____20736 = get_range env  in
-           FStar_Errors.raise_error uu____20729 uu____20736
+             (FStar_Errors.Fatal_EffectCannotBeReified, uu____22796)  in
+           let uu____22802 = get_range env  in
+           FStar_Errors.raise_error uu____22790 uu____22802
          else ());
-        (let uu____20738 = effect_repr_aux true env c u_c  in
-         match uu____20738 with
+        (let uu____22805 = effect_repr_aux true env c u_c  in
+         match uu____22805 with
          | FStar_Pervasives_Native.None  ->
              failwith "internal error: reifiable effect has no repr?"
          | FStar_Pervasives_Native.Some tm -> tm)
@@ -5378,51 +4529,51 @@ let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
     fun s  ->
       let sb = ((FStar_Syntax_Util.lids_of_sigelt s), s)  in
       let env1 =
-        let uu___256_20770 = env  in
+        let uu___261_22841 = env  in
         {
-          solver = (uu___256_20770.solver);
-          range = (uu___256_20770.range);
-          curmodule = (uu___256_20770.curmodule);
-          gamma = (uu___256_20770.gamma);
+          solver = (uu___261_22841.solver);
+          range = (uu___261_22841.range);
+          curmodule = (uu___261_22841.curmodule);
+          gamma = (uu___261_22841.gamma);
           gamma_sig = (sb :: (env.gamma_sig));
-          gamma_cache = (uu___256_20770.gamma_cache);
-          modules = (uu___256_20770.modules);
-          expected_typ = (uu___256_20770.expected_typ);
-          sigtab = (uu___256_20770.sigtab);
-          attrtab = (uu___256_20770.attrtab);
-          is_pattern = (uu___256_20770.is_pattern);
-          instantiate_imp = (uu___256_20770.instantiate_imp);
-          effects = (uu___256_20770.effects);
-          generalize = (uu___256_20770.generalize);
-          letrecs = (uu___256_20770.letrecs);
-          top_level = (uu___256_20770.top_level);
-          check_uvars = (uu___256_20770.check_uvars);
-          use_eq = (uu___256_20770.use_eq);
-          is_iface = (uu___256_20770.is_iface);
-          admit = (uu___256_20770.admit);
-          lax = (uu___256_20770.lax);
-          lax_universes = (uu___256_20770.lax_universes);
-          phase1 = (uu___256_20770.phase1);
-          failhard = (uu___256_20770.failhard);
-          nosynth = (uu___256_20770.nosynth);
-          uvar_subtyping = (uu___256_20770.uvar_subtyping);
-          tc_term = (uu___256_20770.tc_term);
-          type_of = (uu___256_20770.type_of);
-          universe_of = (uu___256_20770.universe_of);
-          check_type_of = (uu___256_20770.check_type_of);
-          use_bv_sorts = (uu___256_20770.use_bv_sorts);
-          qtbl_name_and_index = (uu___256_20770.qtbl_name_and_index);
-          normalized_eff_names = (uu___256_20770.normalized_eff_names);
-          fv_delta_depths = (uu___256_20770.fv_delta_depths);
-          proof_ns = (uu___256_20770.proof_ns);
-          synth_hook = (uu___256_20770.synth_hook);
-          splice = (uu___256_20770.splice);
-          postprocess = (uu___256_20770.postprocess);
-          is_native_tactic = (uu___256_20770.is_native_tactic);
-          identifier_info = (uu___256_20770.identifier_info);
-          tc_hooks = (uu___256_20770.tc_hooks);
-          dsenv = (uu___256_20770.dsenv);
-          nbe = (uu___256_20770.nbe)
+          gamma_cache = (uu___261_22841.gamma_cache);
+          modules = (uu___261_22841.modules);
+          expected_typ = (uu___261_22841.expected_typ);
+          sigtab = (uu___261_22841.sigtab);
+          attrtab = (uu___261_22841.attrtab);
+          is_pattern = (uu___261_22841.is_pattern);
+          instantiate_imp = (uu___261_22841.instantiate_imp);
+          effects = (uu___261_22841.effects);
+          generalize = (uu___261_22841.generalize);
+          letrecs = (uu___261_22841.letrecs);
+          top_level = (uu___261_22841.top_level);
+          check_uvars = (uu___261_22841.check_uvars);
+          use_eq = (uu___261_22841.use_eq);
+          is_iface = (uu___261_22841.is_iface);
+          admit = (uu___261_22841.admit);
+          lax = (uu___261_22841.lax);
+          lax_universes = (uu___261_22841.lax_universes);
+          phase1 = (uu___261_22841.phase1);
+          failhard = (uu___261_22841.failhard);
+          nosynth = (uu___261_22841.nosynth);
+          uvar_subtyping = (uu___261_22841.uvar_subtyping);
+          tc_term = (uu___261_22841.tc_term);
+          type_of = (uu___261_22841.type_of);
+          universe_of = (uu___261_22841.universe_of);
+          check_type_of = (uu___261_22841.check_type_of);
+          use_bv_sorts = (uu___261_22841.use_bv_sorts);
+          qtbl_name_and_index = (uu___261_22841.qtbl_name_and_index);
+          normalized_eff_names = (uu___261_22841.normalized_eff_names);
+          fv_delta_depths = (uu___261_22841.fv_delta_depths);
+          proof_ns = (uu___261_22841.proof_ns);
+          synth_hook = (uu___261_22841.synth_hook);
+          splice = (uu___261_22841.splice);
+          postprocess = (uu___261_22841.postprocess);
+          is_native_tactic = (uu___261_22841.is_native_tactic);
+          identifier_info = (uu___261_22841.identifier_info);
+          tc_hooks = (uu___261_22841.tc_hooks);
+          dsenv = (uu___261_22841.dsenv);
+          nbe = (uu___261_22841.nbe)
         }  in
       add_sigelt env1 s;
       (env1.tc_hooks).tc_push_in_gamma_hook env1 (FStar_Util.Inr sb);
@@ -5431,51 +4582,51 @@ let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
 let (push_local_binding : env -> FStar_Syntax_Syntax.binding -> env) =
   fun env  ->
     fun b  ->
-      let uu___257_20783 = env  in
+      let uu___262_22855 = env  in
       {
-        solver = (uu___257_20783.solver);
-        range = (uu___257_20783.range);
-        curmodule = (uu___257_20783.curmodule);
+        solver = (uu___262_22855.solver);
+        range = (uu___262_22855.range);
+        curmodule = (uu___262_22855.curmodule);
         gamma = (b :: (env.gamma));
-        gamma_sig = (uu___257_20783.gamma_sig);
-        gamma_cache = (uu___257_20783.gamma_cache);
-        modules = (uu___257_20783.modules);
-        expected_typ = (uu___257_20783.expected_typ);
-        sigtab = (uu___257_20783.sigtab);
-        attrtab = (uu___257_20783.attrtab);
-        is_pattern = (uu___257_20783.is_pattern);
-        instantiate_imp = (uu___257_20783.instantiate_imp);
-        effects = (uu___257_20783.effects);
-        generalize = (uu___257_20783.generalize);
-        letrecs = (uu___257_20783.letrecs);
-        top_level = (uu___257_20783.top_level);
-        check_uvars = (uu___257_20783.check_uvars);
-        use_eq = (uu___257_20783.use_eq);
-        is_iface = (uu___257_20783.is_iface);
-        admit = (uu___257_20783.admit);
-        lax = (uu___257_20783.lax);
-        lax_universes = (uu___257_20783.lax_universes);
-        phase1 = (uu___257_20783.phase1);
-        failhard = (uu___257_20783.failhard);
-        nosynth = (uu___257_20783.nosynth);
-        uvar_subtyping = (uu___257_20783.uvar_subtyping);
-        tc_term = (uu___257_20783.tc_term);
-        type_of = (uu___257_20783.type_of);
-        universe_of = (uu___257_20783.universe_of);
-        check_type_of = (uu___257_20783.check_type_of);
-        use_bv_sorts = (uu___257_20783.use_bv_sorts);
-        qtbl_name_and_index = (uu___257_20783.qtbl_name_and_index);
-        normalized_eff_names = (uu___257_20783.normalized_eff_names);
-        fv_delta_depths = (uu___257_20783.fv_delta_depths);
-        proof_ns = (uu___257_20783.proof_ns);
-        synth_hook = (uu___257_20783.synth_hook);
-        splice = (uu___257_20783.splice);
-        postprocess = (uu___257_20783.postprocess);
-        is_native_tactic = (uu___257_20783.is_native_tactic);
-        identifier_info = (uu___257_20783.identifier_info);
-        tc_hooks = (uu___257_20783.tc_hooks);
-        dsenv = (uu___257_20783.dsenv);
-        nbe = (uu___257_20783.nbe)
+        gamma_sig = (uu___262_22855.gamma_sig);
+        gamma_cache = (uu___262_22855.gamma_cache);
+        modules = (uu___262_22855.modules);
+        expected_typ = (uu___262_22855.expected_typ);
+        sigtab = (uu___262_22855.sigtab);
+        attrtab = (uu___262_22855.attrtab);
+        is_pattern = (uu___262_22855.is_pattern);
+        instantiate_imp = (uu___262_22855.instantiate_imp);
+        effects = (uu___262_22855.effects);
+        generalize = (uu___262_22855.generalize);
+        letrecs = (uu___262_22855.letrecs);
+        top_level = (uu___262_22855.top_level);
+        check_uvars = (uu___262_22855.check_uvars);
+        use_eq = (uu___262_22855.use_eq);
+        is_iface = (uu___262_22855.is_iface);
+        admit = (uu___262_22855.admit);
+        lax = (uu___262_22855.lax);
+        lax_universes = (uu___262_22855.lax_universes);
+        phase1 = (uu___262_22855.phase1);
+        failhard = (uu___262_22855.failhard);
+        nosynth = (uu___262_22855.nosynth);
+        uvar_subtyping = (uu___262_22855.uvar_subtyping);
+        tc_term = (uu___262_22855.tc_term);
+        type_of = (uu___262_22855.type_of);
+        universe_of = (uu___262_22855.universe_of);
+        check_type_of = (uu___262_22855.check_type_of);
+        use_bv_sorts = (uu___262_22855.use_bv_sorts);
+        qtbl_name_and_index = (uu___262_22855.qtbl_name_and_index);
+        normalized_eff_names = (uu___262_22855.normalized_eff_names);
+        fv_delta_depths = (uu___262_22855.fv_delta_depths);
+        proof_ns = (uu___262_22855.proof_ns);
+        synth_hook = (uu___262_22855.synth_hook);
+        splice = (uu___262_22855.splice);
+        postprocess = (uu___262_22855.postprocess);
+        is_native_tactic = (uu___262_22855.is_native_tactic);
+        identifier_info = (uu___262_22855.identifier_info);
+        tc_hooks = (uu___262_22855.tc_hooks);
+        dsenv = (uu___262_22855.dsenv);
+        nbe = (uu___262_22855.nbe)
       }
   
 let (push_bv : env -> FStar_Syntax_Syntax.bv -> env) =
@@ -5497,61 +4648,61 @@ let (pop_bv :
     | (FStar_Syntax_Syntax.Binding_var x)::rest ->
         FStar_Pervasives_Native.Some
           (x,
-            (let uu___258_20838 = env  in
+            (let uu___263_22913 = env  in
              {
-               solver = (uu___258_20838.solver);
-               range = (uu___258_20838.range);
-               curmodule = (uu___258_20838.curmodule);
+               solver = (uu___263_22913.solver);
+               range = (uu___263_22913.range);
+               curmodule = (uu___263_22913.curmodule);
                gamma = rest;
-               gamma_sig = (uu___258_20838.gamma_sig);
-               gamma_cache = (uu___258_20838.gamma_cache);
-               modules = (uu___258_20838.modules);
-               expected_typ = (uu___258_20838.expected_typ);
-               sigtab = (uu___258_20838.sigtab);
-               attrtab = (uu___258_20838.attrtab);
-               is_pattern = (uu___258_20838.is_pattern);
-               instantiate_imp = (uu___258_20838.instantiate_imp);
-               effects = (uu___258_20838.effects);
-               generalize = (uu___258_20838.generalize);
-               letrecs = (uu___258_20838.letrecs);
-               top_level = (uu___258_20838.top_level);
-               check_uvars = (uu___258_20838.check_uvars);
-               use_eq = (uu___258_20838.use_eq);
-               is_iface = (uu___258_20838.is_iface);
-               admit = (uu___258_20838.admit);
-               lax = (uu___258_20838.lax);
-               lax_universes = (uu___258_20838.lax_universes);
-               phase1 = (uu___258_20838.phase1);
-               failhard = (uu___258_20838.failhard);
-               nosynth = (uu___258_20838.nosynth);
-               uvar_subtyping = (uu___258_20838.uvar_subtyping);
-               tc_term = (uu___258_20838.tc_term);
-               type_of = (uu___258_20838.type_of);
-               universe_of = (uu___258_20838.universe_of);
-               check_type_of = (uu___258_20838.check_type_of);
-               use_bv_sorts = (uu___258_20838.use_bv_sorts);
-               qtbl_name_and_index = (uu___258_20838.qtbl_name_and_index);
-               normalized_eff_names = (uu___258_20838.normalized_eff_names);
-               fv_delta_depths = (uu___258_20838.fv_delta_depths);
-               proof_ns = (uu___258_20838.proof_ns);
-               synth_hook = (uu___258_20838.synth_hook);
-               splice = (uu___258_20838.splice);
-               postprocess = (uu___258_20838.postprocess);
-               is_native_tactic = (uu___258_20838.is_native_tactic);
-               identifier_info = (uu___258_20838.identifier_info);
-               tc_hooks = (uu___258_20838.tc_hooks);
-               dsenv = (uu___258_20838.dsenv);
-               nbe = (uu___258_20838.nbe)
+               gamma_sig = (uu___263_22913.gamma_sig);
+               gamma_cache = (uu___263_22913.gamma_cache);
+               modules = (uu___263_22913.modules);
+               expected_typ = (uu___263_22913.expected_typ);
+               sigtab = (uu___263_22913.sigtab);
+               attrtab = (uu___263_22913.attrtab);
+               is_pattern = (uu___263_22913.is_pattern);
+               instantiate_imp = (uu___263_22913.instantiate_imp);
+               effects = (uu___263_22913.effects);
+               generalize = (uu___263_22913.generalize);
+               letrecs = (uu___263_22913.letrecs);
+               top_level = (uu___263_22913.top_level);
+               check_uvars = (uu___263_22913.check_uvars);
+               use_eq = (uu___263_22913.use_eq);
+               is_iface = (uu___263_22913.is_iface);
+               admit = (uu___263_22913.admit);
+               lax = (uu___263_22913.lax);
+               lax_universes = (uu___263_22913.lax_universes);
+               phase1 = (uu___263_22913.phase1);
+               failhard = (uu___263_22913.failhard);
+               nosynth = (uu___263_22913.nosynth);
+               uvar_subtyping = (uu___263_22913.uvar_subtyping);
+               tc_term = (uu___263_22913.tc_term);
+               type_of = (uu___263_22913.type_of);
+               universe_of = (uu___263_22913.universe_of);
+               check_type_of = (uu___263_22913.check_type_of);
+               use_bv_sorts = (uu___263_22913.use_bv_sorts);
+               qtbl_name_and_index = (uu___263_22913.qtbl_name_and_index);
+               normalized_eff_names = (uu___263_22913.normalized_eff_names);
+               fv_delta_depths = (uu___263_22913.fv_delta_depths);
+               proof_ns = (uu___263_22913.proof_ns);
+               synth_hook = (uu___263_22913.synth_hook);
+               splice = (uu___263_22913.splice);
+               postprocess = (uu___263_22913.postprocess);
+               is_native_tactic = (uu___263_22913.is_native_tactic);
+               identifier_info = (uu___263_22913.identifier_info);
+               tc_hooks = (uu___263_22913.tc_hooks);
+               dsenv = (uu___263_22913.dsenv);
+               nbe = (uu___263_22913.nbe)
              }))
-    | uu____20839 -> FStar_Pervasives_Native.None
+    | uu____22914 -> FStar_Pervasives_Native.None
   
 let (push_binders : env -> FStar_Syntax_Syntax.binders -> env) =
   fun env  ->
     fun bs  ->
       FStar_List.fold_left
         (fun env1  ->
-           fun uu____20867  ->
-             match uu____20867 with | (x,uu____20875) -> push_bv env1 x) env
+           fun uu____22943  ->
+             match uu____22943 with | (x,uu____22951) -> push_bv env1 x) env
         bs
   
 let (binding_of_lb :
@@ -5565,12 +4716,12 @@ let (binding_of_lb :
       match x with
       | FStar_Util.Inl x1 ->
           let x2 =
-            let uu___259_20909 = x1  in
+            let uu___264_22986 = x1  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___259_20909.FStar_Syntax_Syntax.ppname);
+                (uu___264_22986.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___259_20909.FStar_Syntax_Syntax.index);
+                (uu___264_22986.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = (FStar_Pervasives_Native.snd t)
             }  in
           FStar_Syntax_Syntax.Binding_var x2
@@ -5587,51 +4738,51 @@ let (push_module : env -> FStar_Syntax_Syntax.modul -> env) =
   fun env  ->
     fun m  ->
       add_sigelts env m.FStar_Syntax_Syntax.exports;
-      (let uu___260_20949 = env  in
+      (let uu___265_23028 = env  in
        {
-         solver = (uu___260_20949.solver);
-         range = (uu___260_20949.range);
-         curmodule = (uu___260_20949.curmodule);
+         solver = (uu___265_23028.solver);
+         range = (uu___265_23028.range);
+         curmodule = (uu___265_23028.curmodule);
          gamma = [];
          gamma_sig = [];
-         gamma_cache = (uu___260_20949.gamma_cache);
+         gamma_cache = (uu___265_23028.gamma_cache);
          modules = (m :: (env.modules));
          expected_typ = FStar_Pervasives_Native.None;
-         sigtab = (uu___260_20949.sigtab);
-         attrtab = (uu___260_20949.attrtab);
-         is_pattern = (uu___260_20949.is_pattern);
-         instantiate_imp = (uu___260_20949.instantiate_imp);
-         effects = (uu___260_20949.effects);
-         generalize = (uu___260_20949.generalize);
-         letrecs = (uu___260_20949.letrecs);
-         top_level = (uu___260_20949.top_level);
-         check_uvars = (uu___260_20949.check_uvars);
-         use_eq = (uu___260_20949.use_eq);
-         is_iface = (uu___260_20949.is_iface);
-         admit = (uu___260_20949.admit);
-         lax = (uu___260_20949.lax);
-         lax_universes = (uu___260_20949.lax_universes);
-         phase1 = (uu___260_20949.phase1);
-         failhard = (uu___260_20949.failhard);
-         nosynth = (uu___260_20949.nosynth);
-         uvar_subtyping = (uu___260_20949.uvar_subtyping);
-         tc_term = (uu___260_20949.tc_term);
-         type_of = (uu___260_20949.type_of);
-         universe_of = (uu___260_20949.universe_of);
-         check_type_of = (uu___260_20949.check_type_of);
-         use_bv_sorts = (uu___260_20949.use_bv_sorts);
-         qtbl_name_and_index = (uu___260_20949.qtbl_name_and_index);
-         normalized_eff_names = (uu___260_20949.normalized_eff_names);
-         fv_delta_depths = (uu___260_20949.fv_delta_depths);
-         proof_ns = (uu___260_20949.proof_ns);
-         synth_hook = (uu___260_20949.synth_hook);
-         splice = (uu___260_20949.splice);
-         postprocess = (uu___260_20949.postprocess);
-         is_native_tactic = (uu___260_20949.is_native_tactic);
-         identifier_info = (uu___260_20949.identifier_info);
-         tc_hooks = (uu___260_20949.tc_hooks);
-         dsenv = (uu___260_20949.dsenv);
-         nbe = (uu___260_20949.nbe)
+         sigtab = (uu___265_23028.sigtab);
+         attrtab = (uu___265_23028.attrtab);
+         is_pattern = (uu___265_23028.is_pattern);
+         instantiate_imp = (uu___265_23028.instantiate_imp);
+         effects = (uu___265_23028.effects);
+         generalize = (uu___265_23028.generalize);
+         letrecs = (uu___265_23028.letrecs);
+         top_level = (uu___265_23028.top_level);
+         check_uvars = (uu___265_23028.check_uvars);
+         use_eq = (uu___265_23028.use_eq);
+         is_iface = (uu___265_23028.is_iface);
+         admit = (uu___265_23028.admit);
+         lax = (uu___265_23028.lax);
+         lax_universes = (uu___265_23028.lax_universes);
+         phase1 = (uu___265_23028.phase1);
+         failhard = (uu___265_23028.failhard);
+         nosynth = (uu___265_23028.nosynth);
+         uvar_subtyping = (uu___265_23028.uvar_subtyping);
+         tc_term = (uu___265_23028.tc_term);
+         type_of = (uu___265_23028.type_of);
+         universe_of = (uu___265_23028.universe_of);
+         check_type_of = (uu___265_23028.check_type_of);
+         use_bv_sorts = (uu___265_23028.use_bv_sorts);
+         qtbl_name_and_index = (uu___265_23028.qtbl_name_and_index);
+         normalized_eff_names = (uu___265_23028.normalized_eff_names);
+         fv_delta_depths = (uu___265_23028.fv_delta_depths);
+         proof_ns = (uu___265_23028.proof_ns);
+         synth_hook = (uu___265_23028.synth_hook);
+         splice = (uu___265_23028.splice);
+         postprocess = (uu___265_23028.postprocess);
+         is_native_tactic = (uu___265_23028.is_native_tactic);
+         identifier_info = (uu___265_23028.identifier_info);
+         tc_hooks = (uu___265_23028.tc_hooks);
+         dsenv = (uu___265_23028.dsenv);
+         nbe = (uu___265_23028.nbe)
        })
   
 let (push_univ_vars : env -> FStar_Syntax_Syntax.univ_names -> env) =
@@ -5654,62 +4805,62 @@ let (open_universes_in :
   fun env  ->
     fun uvs  ->
       fun terms  ->
-        let uu____20991 = FStar_Syntax_Subst.univ_var_opening uvs  in
-        match uu____20991 with
+        let uu____23072 = FStar_Syntax_Subst.univ_var_opening uvs  in
+        match uu____23072 with
         | (univ_subst,univ_vars) ->
             let env' = push_univ_vars env univ_vars  in
-            let uu____21019 =
+            let uu____23100 =
               FStar_List.map (FStar_Syntax_Subst.subst univ_subst) terms  in
-            (env', univ_vars, uu____21019)
+            (env', univ_vars, uu____23100)
   
 let (set_expected_typ : env -> FStar_Syntax_Syntax.typ -> env) =
   fun env  ->
     fun t  ->
-      let uu___261_21034 = env  in
+      let uu___266_23116 = env  in
       {
-        solver = (uu___261_21034.solver);
-        range = (uu___261_21034.range);
-        curmodule = (uu___261_21034.curmodule);
-        gamma = (uu___261_21034.gamma);
-        gamma_sig = (uu___261_21034.gamma_sig);
-        gamma_cache = (uu___261_21034.gamma_cache);
-        modules = (uu___261_21034.modules);
+        solver = (uu___266_23116.solver);
+        range = (uu___266_23116.range);
+        curmodule = (uu___266_23116.curmodule);
+        gamma = (uu___266_23116.gamma);
+        gamma_sig = (uu___266_23116.gamma_sig);
+        gamma_cache = (uu___266_23116.gamma_cache);
+        modules = (uu___266_23116.modules);
         expected_typ = (FStar_Pervasives_Native.Some t);
-        sigtab = (uu___261_21034.sigtab);
-        attrtab = (uu___261_21034.attrtab);
-        is_pattern = (uu___261_21034.is_pattern);
-        instantiate_imp = (uu___261_21034.instantiate_imp);
-        effects = (uu___261_21034.effects);
-        generalize = (uu___261_21034.generalize);
-        letrecs = (uu___261_21034.letrecs);
-        top_level = (uu___261_21034.top_level);
-        check_uvars = (uu___261_21034.check_uvars);
+        sigtab = (uu___266_23116.sigtab);
+        attrtab = (uu___266_23116.attrtab);
+        is_pattern = (uu___266_23116.is_pattern);
+        instantiate_imp = (uu___266_23116.instantiate_imp);
+        effects = (uu___266_23116.effects);
+        generalize = (uu___266_23116.generalize);
+        letrecs = (uu___266_23116.letrecs);
+        top_level = (uu___266_23116.top_level);
+        check_uvars = (uu___266_23116.check_uvars);
         use_eq = false;
-        is_iface = (uu___261_21034.is_iface);
-        admit = (uu___261_21034.admit);
-        lax = (uu___261_21034.lax);
-        lax_universes = (uu___261_21034.lax_universes);
-        phase1 = (uu___261_21034.phase1);
-        failhard = (uu___261_21034.failhard);
-        nosynth = (uu___261_21034.nosynth);
-        uvar_subtyping = (uu___261_21034.uvar_subtyping);
-        tc_term = (uu___261_21034.tc_term);
-        type_of = (uu___261_21034.type_of);
-        universe_of = (uu___261_21034.universe_of);
-        check_type_of = (uu___261_21034.check_type_of);
-        use_bv_sorts = (uu___261_21034.use_bv_sorts);
-        qtbl_name_and_index = (uu___261_21034.qtbl_name_and_index);
-        normalized_eff_names = (uu___261_21034.normalized_eff_names);
-        fv_delta_depths = (uu___261_21034.fv_delta_depths);
-        proof_ns = (uu___261_21034.proof_ns);
-        synth_hook = (uu___261_21034.synth_hook);
-        splice = (uu___261_21034.splice);
-        postprocess = (uu___261_21034.postprocess);
-        is_native_tactic = (uu___261_21034.is_native_tactic);
-        identifier_info = (uu___261_21034.identifier_info);
-        tc_hooks = (uu___261_21034.tc_hooks);
-        dsenv = (uu___261_21034.dsenv);
-        nbe = (uu___261_21034.nbe)
+        is_iface = (uu___266_23116.is_iface);
+        admit = (uu___266_23116.admit);
+        lax = (uu___266_23116.lax);
+        lax_universes = (uu___266_23116.lax_universes);
+        phase1 = (uu___266_23116.phase1);
+        failhard = (uu___266_23116.failhard);
+        nosynth = (uu___266_23116.nosynth);
+        uvar_subtyping = (uu___266_23116.uvar_subtyping);
+        tc_term = (uu___266_23116.tc_term);
+        type_of = (uu___266_23116.type_of);
+        universe_of = (uu___266_23116.universe_of);
+        check_type_of = (uu___266_23116.check_type_of);
+        use_bv_sorts = (uu___266_23116.use_bv_sorts);
+        qtbl_name_and_index = (uu___266_23116.qtbl_name_and_index);
+        normalized_eff_names = (uu___266_23116.normalized_eff_names);
+        fv_delta_depths = (uu___266_23116.fv_delta_depths);
+        proof_ns = (uu___266_23116.proof_ns);
+        synth_hook = (uu___266_23116.synth_hook);
+        splice = (uu___266_23116.splice);
+        postprocess = (uu___266_23116.postprocess);
+        is_native_tactic = (uu___266_23116.is_native_tactic);
+        identifier_info = (uu___266_23116.identifier_info);
+        tc_hooks = (uu___266_23116.tc_hooks);
+        dsenv = (uu___266_23116.dsenv);
+        nbe = (uu___266_23116.nbe)
       }
   
 let (expected_typ :
@@ -5725,120 +4876,120 @@ let (clear_expected_typ :
       FStar_Pervasives_Native.tuple2)
   =
   fun env_  ->
-    let uu____21062 = expected_typ env_  in
-    ((let uu___262_21068 = env_  in
+    let uu____23147 = expected_typ env_  in
+    ((let uu___267_23153 = env_  in
       {
-        solver = (uu___262_21068.solver);
-        range = (uu___262_21068.range);
-        curmodule = (uu___262_21068.curmodule);
-        gamma = (uu___262_21068.gamma);
-        gamma_sig = (uu___262_21068.gamma_sig);
-        gamma_cache = (uu___262_21068.gamma_cache);
-        modules = (uu___262_21068.modules);
+        solver = (uu___267_23153.solver);
+        range = (uu___267_23153.range);
+        curmodule = (uu___267_23153.curmodule);
+        gamma = (uu___267_23153.gamma);
+        gamma_sig = (uu___267_23153.gamma_sig);
+        gamma_cache = (uu___267_23153.gamma_cache);
+        modules = (uu___267_23153.modules);
         expected_typ = FStar_Pervasives_Native.None;
-        sigtab = (uu___262_21068.sigtab);
-        attrtab = (uu___262_21068.attrtab);
-        is_pattern = (uu___262_21068.is_pattern);
-        instantiate_imp = (uu___262_21068.instantiate_imp);
-        effects = (uu___262_21068.effects);
-        generalize = (uu___262_21068.generalize);
-        letrecs = (uu___262_21068.letrecs);
-        top_level = (uu___262_21068.top_level);
-        check_uvars = (uu___262_21068.check_uvars);
+        sigtab = (uu___267_23153.sigtab);
+        attrtab = (uu___267_23153.attrtab);
+        is_pattern = (uu___267_23153.is_pattern);
+        instantiate_imp = (uu___267_23153.instantiate_imp);
+        effects = (uu___267_23153.effects);
+        generalize = (uu___267_23153.generalize);
+        letrecs = (uu___267_23153.letrecs);
+        top_level = (uu___267_23153.top_level);
+        check_uvars = (uu___267_23153.check_uvars);
         use_eq = false;
-        is_iface = (uu___262_21068.is_iface);
-        admit = (uu___262_21068.admit);
-        lax = (uu___262_21068.lax);
-        lax_universes = (uu___262_21068.lax_universes);
-        phase1 = (uu___262_21068.phase1);
-        failhard = (uu___262_21068.failhard);
-        nosynth = (uu___262_21068.nosynth);
-        uvar_subtyping = (uu___262_21068.uvar_subtyping);
-        tc_term = (uu___262_21068.tc_term);
-        type_of = (uu___262_21068.type_of);
-        universe_of = (uu___262_21068.universe_of);
-        check_type_of = (uu___262_21068.check_type_of);
-        use_bv_sorts = (uu___262_21068.use_bv_sorts);
-        qtbl_name_and_index = (uu___262_21068.qtbl_name_and_index);
-        normalized_eff_names = (uu___262_21068.normalized_eff_names);
-        fv_delta_depths = (uu___262_21068.fv_delta_depths);
-        proof_ns = (uu___262_21068.proof_ns);
-        synth_hook = (uu___262_21068.synth_hook);
-        splice = (uu___262_21068.splice);
-        postprocess = (uu___262_21068.postprocess);
-        is_native_tactic = (uu___262_21068.is_native_tactic);
-        identifier_info = (uu___262_21068.identifier_info);
-        tc_hooks = (uu___262_21068.tc_hooks);
-        dsenv = (uu___262_21068.dsenv);
-        nbe = (uu___262_21068.nbe)
-      }), uu____21062)
+        is_iface = (uu___267_23153.is_iface);
+        admit = (uu___267_23153.admit);
+        lax = (uu___267_23153.lax);
+        lax_universes = (uu___267_23153.lax_universes);
+        phase1 = (uu___267_23153.phase1);
+        failhard = (uu___267_23153.failhard);
+        nosynth = (uu___267_23153.nosynth);
+        uvar_subtyping = (uu___267_23153.uvar_subtyping);
+        tc_term = (uu___267_23153.tc_term);
+        type_of = (uu___267_23153.type_of);
+        universe_of = (uu___267_23153.universe_of);
+        check_type_of = (uu___267_23153.check_type_of);
+        use_bv_sorts = (uu___267_23153.use_bv_sorts);
+        qtbl_name_and_index = (uu___267_23153.qtbl_name_and_index);
+        normalized_eff_names = (uu___267_23153.normalized_eff_names);
+        fv_delta_depths = (uu___267_23153.fv_delta_depths);
+        proof_ns = (uu___267_23153.proof_ns);
+        synth_hook = (uu___267_23153.synth_hook);
+        splice = (uu___267_23153.splice);
+        postprocess = (uu___267_23153.postprocess);
+        is_native_tactic = (uu___267_23153.is_native_tactic);
+        identifier_info = (uu___267_23153.identifier_info);
+        tc_hooks = (uu___267_23153.tc_hooks);
+        dsenv = (uu___267_23153.dsenv);
+        nbe = (uu___267_23153.nbe)
+      }), uu____23147)
   
 let (finish_module : env -> FStar_Syntax_Syntax.modul -> env) =
   let empty_lid =
-    let uu____21078 =
-      let uu____21081 = FStar_Ident.id_of_text ""  in [uu____21081]  in
-    FStar_Ident.lid_of_ids uu____21078  in
+    let uu____23165 =
+      let uu____23168 = FStar_Ident.id_of_text ""  in [uu____23168]  in
+    FStar_Ident.lid_of_ids uu____23165  in
   fun env  ->
     fun m  ->
       let sigs =
-        let uu____21087 =
+        let uu____23175 =
           FStar_Ident.lid_equals m.FStar_Syntax_Syntax.name
             FStar_Parser_Const.prims_lid
            in
-        if uu____21087
+        if uu____23175
         then
-          let uu____21090 =
+          let uu____23180 =
             FStar_All.pipe_right env.gamma_sig
               (FStar_List.map FStar_Pervasives_Native.snd)
              in
-          FStar_All.pipe_right uu____21090 FStar_List.rev
+          FStar_All.pipe_right uu____23180 FStar_List.rev
         else m.FStar_Syntax_Syntax.exports  in
       add_sigelts env sigs;
-      (let uu___263_21117 = env  in
+      (let uu___268_23208 = env  in
        {
-         solver = (uu___263_21117.solver);
-         range = (uu___263_21117.range);
+         solver = (uu___268_23208.solver);
+         range = (uu___268_23208.range);
          curmodule = empty_lid;
          gamma = [];
          gamma_sig = [];
-         gamma_cache = (uu___263_21117.gamma_cache);
+         gamma_cache = (uu___268_23208.gamma_cache);
          modules = (m :: (env.modules));
-         expected_typ = (uu___263_21117.expected_typ);
-         sigtab = (uu___263_21117.sigtab);
-         attrtab = (uu___263_21117.attrtab);
-         is_pattern = (uu___263_21117.is_pattern);
-         instantiate_imp = (uu___263_21117.instantiate_imp);
-         effects = (uu___263_21117.effects);
-         generalize = (uu___263_21117.generalize);
-         letrecs = (uu___263_21117.letrecs);
-         top_level = (uu___263_21117.top_level);
-         check_uvars = (uu___263_21117.check_uvars);
-         use_eq = (uu___263_21117.use_eq);
-         is_iface = (uu___263_21117.is_iface);
-         admit = (uu___263_21117.admit);
-         lax = (uu___263_21117.lax);
-         lax_universes = (uu___263_21117.lax_universes);
-         phase1 = (uu___263_21117.phase1);
-         failhard = (uu___263_21117.failhard);
-         nosynth = (uu___263_21117.nosynth);
-         uvar_subtyping = (uu___263_21117.uvar_subtyping);
-         tc_term = (uu___263_21117.tc_term);
-         type_of = (uu___263_21117.type_of);
-         universe_of = (uu___263_21117.universe_of);
-         check_type_of = (uu___263_21117.check_type_of);
-         use_bv_sorts = (uu___263_21117.use_bv_sorts);
-         qtbl_name_and_index = (uu___263_21117.qtbl_name_and_index);
-         normalized_eff_names = (uu___263_21117.normalized_eff_names);
-         fv_delta_depths = (uu___263_21117.fv_delta_depths);
-         proof_ns = (uu___263_21117.proof_ns);
-         synth_hook = (uu___263_21117.synth_hook);
-         splice = (uu___263_21117.splice);
-         postprocess = (uu___263_21117.postprocess);
-         is_native_tactic = (uu___263_21117.is_native_tactic);
-         identifier_info = (uu___263_21117.identifier_info);
-         tc_hooks = (uu___263_21117.tc_hooks);
-         dsenv = (uu___263_21117.dsenv);
-         nbe = (uu___263_21117.nbe)
+         expected_typ = (uu___268_23208.expected_typ);
+         sigtab = (uu___268_23208.sigtab);
+         attrtab = (uu___268_23208.attrtab);
+         is_pattern = (uu___268_23208.is_pattern);
+         instantiate_imp = (uu___268_23208.instantiate_imp);
+         effects = (uu___268_23208.effects);
+         generalize = (uu___268_23208.generalize);
+         letrecs = (uu___268_23208.letrecs);
+         top_level = (uu___268_23208.top_level);
+         check_uvars = (uu___268_23208.check_uvars);
+         use_eq = (uu___268_23208.use_eq);
+         is_iface = (uu___268_23208.is_iface);
+         admit = (uu___268_23208.admit);
+         lax = (uu___268_23208.lax);
+         lax_universes = (uu___268_23208.lax_universes);
+         phase1 = (uu___268_23208.phase1);
+         failhard = (uu___268_23208.failhard);
+         nosynth = (uu___268_23208.nosynth);
+         uvar_subtyping = (uu___268_23208.uvar_subtyping);
+         tc_term = (uu___268_23208.tc_term);
+         type_of = (uu___268_23208.type_of);
+         universe_of = (uu___268_23208.universe_of);
+         check_type_of = (uu___268_23208.check_type_of);
+         use_bv_sorts = (uu___268_23208.use_bv_sorts);
+         qtbl_name_and_index = (uu___268_23208.qtbl_name_and_index);
+         normalized_eff_names = (uu___268_23208.normalized_eff_names);
+         fv_delta_depths = (uu___268_23208.fv_delta_depths);
+         proof_ns = (uu___268_23208.proof_ns);
+         synth_hook = (uu___268_23208.synth_hook);
+         splice = (uu___268_23208.splice);
+         postprocess = (uu___268_23208.postprocess);
+         is_native_tactic = (uu___268_23208.is_native_tactic);
+         identifier_info = (uu___268_23208.identifier_info);
+         tc_hooks = (uu___268_23208.tc_hooks);
+         dsenv = (uu___268_23208.dsenv);
+         nbe = (uu___268_23208.nbe)
        })
   
 let (uvars_in_env : env -> FStar_Syntax_Syntax.uvars) =
@@ -5848,22 +4999,22 @@ let (uvars_in_env : env -> FStar_Syntax_Syntax.uvars) =
     let rec aux out g =
       match g with
       | [] -> out
-      | (FStar_Syntax_Syntax.Binding_univ uu____21168)::tl1 -> aux out tl1
-      | (FStar_Syntax_Syntax.Binding_lid (uu____21172,(uu____21173,t)))::tl1
+      | (FStar_Syntax_Syntax.Binding_univ uu____23260)::tl1 -> aux out tl1
+      | (FStar_Syntax_Syntax.Binding_lid (uu____23264,(uu____23265,t)))::tl1
           ->
-          let uu____21194 =
-            let uu____21197 = FStar_Syntax_Free.uvars t  in
-            ext out uu____21197  in
-          aux uu____21194 tl1
+          let uu____23286 =
+            let uu____23289 = FStar_Syntax_Free.uvars t  in
+            ext out uu____23289  in
+          aux uu____23286 tl1
       | (FStar_Syntax_Syntax.Binding_var
-          { FStar_Syntax_Syntax.ppname = uu____21200;
-            FStar_Syntax_Syntax.index = uu____21201;
+          { FStar_Syntax_Syntax.ppname = uu____23292;
+            FStar_Syntax_Syntax.index = uu____23293;
             FStar_Syntax_Syntax.sort = t;_})::tl1
           ->
-          let uu____21208 =
-            let uu____21211 = FStar_Syntax_Free.uvars t  in
-            ext out uu____21211  in
-          aux uu____21208 tl1
+          let uu____23301 =
+            let uu____23304 = FStar_Syntax_Free.uvars t  in
+            ext out uu____23304  in
+          aux uu____23301 tl1
        in
     aux no_uvs env.gamma
   
@@ -5874,22 +5025,22 @@ let (univ_vars : env -> FStar_Syntax_Syntax.universe_uvar FStar_Util.set) =
     let rec aux out g =
       match g with
       | [] -> out
-      | (FStar_Syntax_Syntax.Binding_univ uu____21268)::tl1 -> aux out tl1
-      | (FStar_Syntax_Syntax.Binding_lid (uu____21272,(uu____21273,t)))::tl1
+      | (FStar_Syntax_Syntax.Binding_univ uu____23362)::tl1 -> aux out tl1
+      | (FStar_Syntax_Syntax.Binding_lid (uu____23366,(uu____23367,t)))::tl1
           ->
-          let uu____21294 =
-            let uu____21297 = FStar_Syntax_Free.univs t  in
-            ext out uu____21297  in
-          aux uu____21294 tl1
+          let uu____23388 =
+            let uu____23391 = FStar_Syntax_Free.univs t  in
+            ext out uu____23391  in
+          aux uu____23388 tl1
       | (FStar_Syntax_Syntax.Binding_var
-          { FStar_Syntax_Syntax.ppname = uu____21300;
-            FStar_Syntax_Syntax.index = uu____21301;
+          { FStar_Syntax_Syntax.ppname = uu____23394;
+            FStar_Syntax_Syntax.index = uu____23395;
             FStar_Syntax_Syntax.sort = t;_})::tl1
           ->
-          let uu____21308 =
-            let uu____21311 = FStar_Syntax_Free.univs t  in
-            ext out uu____21311  in
-          aux uu____21308 tl1
+          let uu____23403 =
+            let uu____23406 = FStar_Syntax_Free.univs t  in
+            ext out uu____23406  in
+          aux uu____23403 tl1
        in
     aux no_univs env.gamma
   
@@ -5901,23 +5052,23 @@ let (univnames : env -> FStar_Syntax_Syntax.univ_name FStar_Util.set) =
       match g with
       | [] -> out
       | (FStar_Syntax_Syntax.Binding_univ uname)::tl1 ->
-          let uu____21372 = FStar_Util.set_add uname out  in
-          aux uu____21372 tl1
-      | (FStar_Syntax_Syntax.Binding_lid (uu____21375,(uu____21376,t)))::tl1
+          let uu____23468 = FStar_Util.set_add uname out  in
+          aux uu____23468 tl1
+      | (FStar_Syntax_Syntax.Binding_lid (uu____23471,(uu____23472,t)))::tl1
           ->
-          let uu____21397 =
-            let uu____21400 = FStar_Syntax_Free.univnames t  in
-            ext out uu____21400  in
-          aux uu____21397 tl1
+          let uu____23493 =
+            let uu____23496 = FStar_Syntax_Free.univnames t  in
+            ext out uu____23496  in
+          aux uu____23493 tl1
       | (FStar_Syntax_Syntax.Binding_var
-          { FStar_Syntax_Syntax.ppname = uu____21403;
-            FStar_Syntax_Syntax.index = uu____21404;
+          { FStar_Syntax_Syntax.ppname = uu____23499;
+            FStar_Syntax_Syntax.index = uu____23500;
             FStar_Syntax_Syntax.sort = t;_})::tl1
           ->
-          let uu____21411 =
-            let uu____21414 = FStar_Syntax_Free.univnames t  in
-            ext out uu____21414  in
-          aux uu____21411 tl1
+          let uu____23508 =
+            let uu____23511 = FStar_Syntax_Free.univnames t  in
+            ext out uu____23511  in
+          aux uu____23508 tl1
        in
     aux no_univ_names env.gamma
   
@@ -5927,21 +5078,21 @@ let (bound_vars_of_bindings :
   fun bs  ->
     FStar_All.pipe_right bs
       (FStar_List.collect
-         (fun uu___237_21434  ->
-            match uu___237_21434 with
+         (fun uu___242_23532  ->
+            match uu___242_23532 with
             | FStar_Syntax_Syntax.Binding_var x -> [x]
-            | FStar_Syntax_Syntax.Binding_lid uu____21438 -> []
-            | FStar_Syntax_Syntax.Binding_univ uu____21451 -> []))
+            | FStar_Syntax_Syntax.Binding_lid uu____23536 -> []
+            | FStar_Syntax_Syntax.Binding_univ uu____23549 -> []))
   
 let (binders_of_bindings :
   FStar_Syntax_Syntax.binding Prims.list -> FStar_Syntax_Syntax.binders) =
   fun bs  ->
-    let uu____21461 =
-      let uu____21470 = bound_vars_of_bindings bs  in
-      FStar_All.pipe_right uu____21470
+    let uu____23560 =
+      let uu____23569 = bound_vars_of_bindings bs  in
+      FStar_All.pipe_right uu____23569
         (FStar_List.map FStar_Syntax_Syntax.mk_binder)
        in
-    FStar_All.pipe_right uu____21461 FStar_List.rev
+    FStar_All.pipe_right uu____23560 FStar_List.rev
   
 let (bound_vars : env -> FStar_Syntax_Syntax.bv Prims.list) =
   fun env  -> bound_vars_of_bindings env.gamma 
@@ -5949,38 +5100,38 @@ let (all_binders : env -> FStar_Syntax_Syntax.binders) =
   fun env  -> binders_of_bindings env.gamma 
 let (print_gamma : FStar_Syntax_Syntax.gamma -> Prims.string) =
   fun gamma  ->
-    let uu____21514 =
+    let uu____23617 =
       FStar_All.pipe_right gamma
         (FStar_List.map
-           (fun uu___238_21524  ->
-              match uu___238_21524 with
+           (fun uu___243_23630  ->
+              match uu___243_23630 with
               | FStar_Syntax_Syntax.Binding_var x ->
-                  let uu____21526 = FStar_Syntax_Print.bv_to_string x  in
-                  Prims.strcat "Binding_var " uu____21526
+                  let uu____23633 = FStar_Syntax_Print.bv_to_string x  in
+                  Prims.strcat "Binding_var " uu____23633
               | FStar_Syntax_Syntax.Binding_univ u ->
                   Prims.strcat "Binding_univ " u.FStar_Ident.idText
-              | FStar_Syntax_Syntax.Binding_lid (l,uu____21529) ->
-                  let uu____21546 = FStar_Ident.string_of_lid l  in
-                  Prims.strcat "Binding_lid " uu____21546))
+              | FStar_Syntax_Syntax.Binding_lid (l,uu____23639) ->
+                  let uu____23656 = FStar_Ident.string_of_lid l  in
+                  Prims.strcat "Binding_lid " uu____23656))
        in
-    FStar_All.pipe_right uu____21514 (FStar_String.concat "::\n")
+    FStar_All.pipe_right uu____23617 (FStar_String.concat "::\n")
   
 let (string_of_delta_level : delta_level -> Prims.string) =
-  fun uu___239_21553  ->
-    match uu___239_21553 with
+  fun uu___244_23670  ->
+    match uu___244_23670 with
     | NoDelta  -> "NoDelta"
     | InliningDelta  -> "Inlining"
     | Eager_unfolding_only  -> "Eager_unfolding_only"
     | Unfold d ->
-        let uu____21555 = FStar_Syntax_Print.delta_depth_to_string d  in
-        Prims.strcat "Unfold " uu____21555
+        let uu____23676 = FStar_Syntax_Print.delta_depth_to_string d  in
+        Prims.strcat "Unfold " uu____23676
   
 let (lidents : env -> FStar_Ident.lident Prims.list) =
   fun env  ->
     let keys = FStar_List.collect FStar_Pervasives_Native.fst env.gamma_sig
        in
     FStar_Util.smap_fold (sigtab env)
-      (fun uu____21575  ->
+      (fun uu____23699  ->
          fun v1  ->
            fun keys1  ->
              FStar_List.append (FStar_Syntax_Util.lids_of_sigelt v1) keys1)
@@ -5991,74 +5142,74 @@ let (should_enc_path : env -> Prims.string Prims.list -> Prims.bool) =
     fun path  ->
       let rec list_prefix xs ys =
         match (xs, ys) with
-        | ([],uu____21617) -> true
+        | ([],uu____23754) -> true
         | (x::xs1,y::ys1) -> (x = y) && (list_prefix xs1 ys1)
-        | (uu____21636,uu____21637) -> false  in
-      let uu____21646 =
+        | (uu____23787,uu____23788) -> false  in
+      let uu____23802 =
         FStar_List.tryFind
-          (fun uu____21664  ->
-             match uu____21664 with | (p,uu____21672) -> list_prefix p path)
+          (fun uu____23824  ->
+             match uu____23824 with | (p,uu____23835) -> list_prefix p path)
           env.proof_ns
          in
-      match uu____21646 with
+      match uu____23802 with
       | FStar_Pervasives_Native.None  -> false
-      | FStar_Pervasives_Native.Some (uu____21683,b) -> b
+      | FStar_Pervasives_Native.Some (uu____23854,b) -> b
   
 let (should_enc_lid : env -> FStar_Ident.lident -> Prims.bool) =
   fun env  ->
     fun lid  ->
-      let uu____21705 = FStar_Ident.path_of_lid lid  in
-      should_enc_path env uu____21705
+      let uu____23884 = FStar_Ident.path_of_lid lid  in
+      should_enc_path env uu____23884
   
 let (cons_proof_ns : Prims.bool -> env -> name_prefix -> env) =
   fun b  ->
     fun e  ->
       fun path  ->
-        let uu___264_21723 = e  in
+        let uu___269_23906 = e  in
         {
-          solver = (uu___264_21723.solver);
-          range = (uu___264_21723.range);
-          curmodule = (uu___264_21723.curmodule);
-          gamma = (uu___264_21723.gamma);
-          gamma_sig = (uu___264_21723.gamma_sig);
-          gamma_cache = (uu___264_21723.gamma_cache);
-          modules = (uu___264_21723.modules);
-          expected_typ = (uu___264_21723.expected_typ);
-          sigtab = (uu___264_21723.sigtab);
-          attrtab = (uu___264_21723.attrtab);
-          is_pattern = (uu___264_21723.is_pattern);
-          instantiate_imp = (uu___264_21723.instantiate_imp);
-          effects = (uu___264_21723.effects);
-          generalize = (uu___264_21723.generalize);
-          letrecs = (uu___264_21723.letrecs);
-          top_level = (uu___264_21723.top_level);
-          check_uvars = (uu___264_21723.check_uvars);
-          use_eq = (uu___264_21723.use_eq);
-          is_iface = (uu___264_21723.is_iface);
-          admit = (uu___264_21723.admit);
-          lax = (uu___264_21723.lax);
-          lax_universes = (uu___264_21723.lax_universes);
-          phase1 = (uu___264_21723.phase1);
-          failhard = (uu___264_21723.failhard);
-          nosynth = (uu___264_21723.nosynth);
-          uvar_subtyping = (uu___264_21723.uvar_subtyping);
-          tc_term = (uu___264_21723.tc_term);
-          type_of = (uu___264_21723.type_of);
-          universe_of = (uu___264_21723.universe_of);
-          check_type_of = (uu___264_21723.check_type_of);
-          use_bv_sorts = (uu___264_21723.use_bv_sorts);
-          qtbl_name_and_index = (uu___264_21723.qtbl_name_and_index);
-          normalized_eff_names = (uu___264_21723.normalized_eff_names);
-          fv_delta_depths = (uu___264_21723.fv_delta_depths);
+          solver = (uu___269_23906.solver);
+          range = (uu___269_23906.range);
+          curmodule = (uu___269_23906.curmodule);
+          gamma = (uu___269_23906.gamma);
+          gamma_sig = (uu___269_23906.gamma_sig);
+          gamma_cache = (uu___269_23906.gamma_cache);
+          modules = (uu___269_23906.modules);
+          expected_typ = (uu___269_23906.expected_typ);
+          sigtab = (uu___269_23906.sigtab);
+          attrtab = (uu___269_23906.attrtab);
+          is_pattern = (uu___269_23906.is_pattern);
+          instantiate_imp = (uu___269_23906.instantiate_imp);
+          effects = (uu___269_23906.effects);
+          generalize = (uu___269_23906.generalize);
+          letrecs = (uu___269_23906.letrecs);
+          top_level = (uu___269_23906.top_level);
+          check_uvars = (uu___269_23906.check_uvars);
+          use_eq = (uu___269_23906.use_eq);
+          is_iface = (uu___269_23906.is_iface);
+          admit = (uu___269_23906.admit);
+          lax = (uu___269_23906.lax);
+          lax_universes = (uu___269_23906.lax_universes);
+          phase1 = (uu___269_23906.phase1);
+          failhard = (uu___269_23906.failhard);
+          nosynth = (uu___269_23906.nosynth);
+          uvar_subtyping = (uu___269_23906.uvar_subtyping);
+          tc_term = (uu___269_23906.tc_term);
+          type_of = (uu___269_23906.type_of);
+          universe_of = (uu___269_23906.universe_of);
+          check_type_of = (uu___269_23906.check_type_of);
+          use_bv_sorts = (uu___269_23906.use_bv_sorts);
+          qtbl_name_and_index = (uu___269_23906.qtbl_name_and_index);
+          normalized_eff_names = (uu___269_23906.normalized_eff_names);
+          fv_delta_depths = (uu___269_23906.fv_delta_depths);
           proof_ns = ((path, b) :: (e.proof_ns));
-          synth_hook = (uu___264_21723.synth_hook);
-          splice = (uu___264_21723.splice);
-          postprocess = (uu___264_21723.postprocess);
-          is_native_tactic = (uu___264_21723.is_native_tactic);
-          identifier_info = (uu___264_21723.identifier_info);
-          tc_hooks = (uu___264_21723.tc_hooks);
-          dsenv = (uu___264_21723.dsenv);
-          nbe = (uu___264_21723.nbe)
+          synth_hook = (uu___269_23906.synth_hook);
+          splice = (uu___269_23906.splice);
+          postprocess = (uu___269_23906.postprocess);
+          is_native_tactic = (uu___269_23906.is_native_tactic);
+          identifier_info = (uu___269_23906.identifier_info);
+          tc_hooks = (uu___269_23906.tc_hooks);
+          dsenv = (uu___269_23906.dsenv);
+          nbe = (uu___269_23906.nbe)
         }
   
 let (add_proof_ns : env -> name_prefix -> env) =
@@ -6069,88 +5220,88 @@ let (get_proof_ns : env -> proof_namespace) = fun e  -> e.proof_ns
 let (set_proof_ns : proof_namespace -> env -> env) =
   fun ns  ->
     fun e  ->
-      let uu___265_21763 = e  in
+      let uu___270_23954 = e  in
       {
-        solver = (uu___265_21763.solver);
-        range = (uu___265_21763.range);
-        curmodule = (uu___265_21763.curmodule);
-        gamma = (uu___265_21763.gamma);
-        gamma_sig = (uu___265_21763.gamma_sig);
-        gamma_cache = (uu___265_21763.gamma_cache);
-        modules = (uu___265_21763.modules);
-        expected_typ = (uu___265_21763.expected_typ);
-        sigtab = (uu___265_21763.sigtab);
-        attrtab = (uu___265_21763.attrtab);
-        is_pattern = (uu___265_21763.is_pattern);
-        instantiate_imp = (uu___265_21763.instantiate_imp);
-        effects = (uu___265_21763.effects);
-        generalize = (uu___265_21763.generalize);
-        letrecs = (uu___265_21763.letrecs);
-        top_level = (uu___265_21763.top_level);
-        check_uvars = (uu___265_21763.check_uvars);
-        use_eq = (uu___265_21763.use_eq);
-        is_iface = (uu___265_21763.is_iface);
-        admit = (uu___265_21763.admit);
-        lax = (uu___265_21763.lax);
-        lax_universes = (uu___265_21763.lax_universes);
-        phase1 = (uu___265_21763.phase1);
-        failhard = (uu___265_21763.failhard);
-        nosynth = (uu___265_21763.nosynth);
-        uvar_subtyping = (uu___265_21763.uvar_subtyping);
-        tc_term = (uu___265_21763.tc_term);
-        type_of = (uu___265_21763.type_of);
-        universe_of = (uu___265_21763.universe_of);
-        check_type_of = (uu___265_21763.check_type_of);
-        use_bv_sorts = (uu___265_21763.use_bv_sorts);
-        qtbl_name_and_index = (uu___265_21763.qtbl_name_and_index);
-        normalized_eff_names = (uu___265_21763.normalized_eff_names);
-        fv_delta_depths = (uu___265_21763.fv_delta_depths);
+        solver = (uu___270_23954.solver);
+        range = (uu___270_23954.range);
+        curmodule = (uu___270_23954.curmodule);
+        gamma = (uu___270_23954.gamma);
+        gamma_sig = (uu___270_23954.gamma_sig);
+        gamma_cache = (uu___270_23954.gamma_cache);
+        modules = (uu___270_23954.modules);
+        expected_typ = (uu___270_23954.expected_typ);
+        sigtab = (uu___270_23954.sigtab);
+        attrtab = (uu___270_23954.attrtab);
+        is_pattern = (uu___270_23954.is_pattern);
+        instantiate_imp = (uu___270_23954.instantiate_imp);
+        effects = (uu___270_23954.effects);
+        generalize = (uu___270_23954.generalize);
+        letrecs = (uu___270_23954.letrecs);
+        top_level = (uu___270_23954.top_level);
+        check_uvars = (uu___270_23954.check_uvars);
+        use_eq = (uu___270_23954.use_eq);
+        is_iface = (uu___270_23954.is_iface);
+        admit = (uu___270_23954.admit);
+        lax = (uu___270_23954.lax);
+        lax_universes = (uu___270_23954.lax_universes);
+        phase1 = (uu___270_23954.phase1);
+        failhard = (uu___270_23954.failhard);
+        nosynth = (uu___270_23954.nosynth);
+        uvar_subtyping = (uu___270_23954.uvar_subtyping);
+        tc_term = (uu___270_23954.tc_term);
+        type_of = (uu___270_23954.type_of);
+        universe_of = (uu___270_23954.universe_of);
+        check_type_of = (uu___270_23954.check_type_of);
+        use_bv_sorts = (uu___270_23954.use_bv_sorts);
+        qtbl_name_and_index = (uu___270_23954.qtbl_name_and_index);
+        normalized_eff_names = (uu___270_23954.normalized_eff_names);
+        fv_delta_depths = (uu___270_23954.fv_delta_depths);
         proof_ns = ns;
-        synth_hook = (uu___265_21763.synth_hook);
-        splice = (uu___265_21763.splice);
-        postprocess = (uu___265_21763.postprocess);
-        is_native_tactic = (uu___265_21763.is_native_tactic);
-        identifier_info = (uu___265_21763.identifier_info);
-        tc_hooks = (uu___265_21763.tc_hooks);
-        dsenv = (uu___265_21763.dsenv);
-        nbe = (uu___265_21763.nbe)
+        synth_hook = (uu___270_23954.synth_hook);
+        splice = (uu___270_23954.splice);
+        postprocess = (uu___270_23954.postprocess);
+        is_native_tactic = (uu___270_23954.is_native_tactic);
+        identifier_info = (uu___270_23954.identifier_info);
+        tc_hooks = (uu___270_23954.tc_hooks);
+        dsenv = (uu___270_23954.dsenv);
+        nbe = (uu___270_23954.nbe)
       }
   
 let (unbound_vars :
   env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Util.set) =
   fun e  ->
     fun t  ->
-      let uu____21778 = FStar_Syntax_Free.names t  in
-      let uu____21781 = bound_vars e  in
+      let uu____23970 = FStar_Syntax_Free.names t  in
+      let uu____23973 = bound_vars e  in
       FStar_List.fold_left (fun s  -> fun bv  -> FStar_Util.set_remove bv s)
-        uu____21778 uu____21781
+        uu____23970 uu____23973
   
 let (closed : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun e  ->
     fun t  ->
-      let uu____21802 = unbound_vars e t  in
-      FStar_Util.set_is_empty uu____21802
+      let uu____23996 = unbound_vars e t  in
+      FStar_Util.set_is_empty uu____23996
   
 let (closed' : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t  ->
-    let uu____21810 = FStar_Syntax_Free.names t  in
-    FStar_Util.set_is_empty uu____21810
+    let uu____24006 = FStar_Syntax_Free.names t  in
+    FStar_Util.set_is_empty uu____24006
   
 let (string_of_proof_ns : env -> Prims.string) =
   fun env  ->
-    let aux uu____21827 =
-      match uu____21827 with
+    let aux uu____24027 =
+      match uu____24027 with
       | (p,b) ->
           if (p = []) && b
           then "*"
           else
-            (let uu____21837 = FStar_Ident.text_of_path p  in
-             Prims.strcat (if b then "+" else "-") uu____21837)
+            (let uu____24047 = FStar_Ident.text_of_path p  in
+             Prims.strcat (if b then "+" else "-") uu____24047)
        in
-    let uu____21839 =
-      let uu____21842 = FStar_List.map aux env.proof_ns  in
-      FStar_All.pipe_right uu____21842 FStar_List.rev  in
-    FStar_All.pipe_right uu____21839 (FStar_String.concat " ")
+    let uu____24055 =
+      let uu____24059 = FStar_List.map aux env.proof_ns  in
+      FStar_All.pipe_right uu____24059 FStar_List.rev  in
+    FStar_All.pipe_right uu____24055 (FStar_String.concat " ")
   
 let (guard_of_guard_formula :
   FStar_TypeChecker_Common.guard_formula -> guard_t) =
@@ -6170,21 +5321,21 @@ let (is_trivial : guard_t -> Prims.bool) =
                 ((imp.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_should_check =
                    FStar_Syntax_Syntax.Allow_unresolved)
                   ||
-                  (let uu____21895 =
+                  (let uu____24129 =
                      FStar_Syntax_Unionfind.find
                        (imp.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
                       in
-                   match uu____21895 with
-                   | FStar_Pervasives_Native.Some uu____21898 -> true
+                   match uu____24129 with
+                   | FStar_Pervasives_Native.Some uu____24133 -> true
                    | FStar_Pervasives_Native.None  -> false)))
-    | uu____21899 -> false
+    | uu____24136 -> false
   
 let (is_trivial_guard_formula : guard_t -> Prims.bool) =
   fun g  ->
     match g with
-    | { guard_f = FStar_TypeChecker_Common.Trivial ; deferred = uu____21905;
-        univ_ineqs = uu____21906; implicits = uu____21907;_} -> true
-    | uu____21918 -> false
+    | { guard_f = FStar_TypeChecker_Common.Trivial ; deferred = uu____24146;
+        univ_ineqs = uu____24147; implicits = uu____24148;_} -> true
+    | uu____24160 -> false
   
 let (trivial_guard : guard_t) =
   {
@@ -6205,12 +5356,12 @@ let (abstract_guard_n :
               (FStar_Pervasives_Native.Some
                  (FStar_Syntax_Util.residual_tot FStar_Syntax_Util.ktype0))
              in
-          let uu___266_21945 = g  in
+          let uu___271_24191 = g  in
           {
             guard_f = (FStar_TypeChecker_Common.NonTrivial f');
-            deferred = (uu___266_21945.deferred);
-            univ_ineqs = (uu___266_21945.univ_ineqs);
-            implicits = (uu___266_21945.implicits)
+            deferred = (uu___271_24191.deferred);
+            univ_ineqs = (uu___271_24191.univ_ineqs);
+            implicits = (uu___271_24191.implicits)
           }
   
 let (abstract_guard : FStar_Syntax_Syntax.binder -> guard_t -> guard_t) =
@@ -6225,31 +5376,31 @@ let (def_check_vars_in_set :
     fun msg  ->
       fun vset  ->
         fun t  ->
-          let uu____21980 = FStar_Options.defensive ()  in
-          if uu____21980
+          let uu____24230 = FStar_Options.defensive ()  in
+          if uu____24230
           then
             let s = FStar_Syntax_Free.names t  in
-            let uu____21984 =
-              let uu____21985 =
-                let uu____21986 = FStar_Util.set_difference s vset  in
-                FStar_All.pipe_left FStar_Util.set_is_empty uu____21986  in
-              Prims.op_Negation uu____21985  in
-            (if uu____21984
+            let uu____24236 =
+              let uu____24238 =
+                let uu____24240 = FStar_Util.set_difference s vset  in
+                FStar_All.pipe_left FStar_Util.set_is_empty uu____24240  in
+              Prims.op_Negation uu____24238  in
+            (if uu____24236
              then
-               let uu____21991 =
-                 let uu____21996 =
-                   let uu____21997 = FStar_Syntax_Print.term_to_string t  in
-                   let uu____21998 =
-                     let uu____21999 = FStar_Util.set_elements s  in
-                     FStar_All.pipe_right uu____21999
+               let uu____24247 =
+                 let uu____24253 =
+                   let uu____24255 = FStar_Syntax_Print.term_to_string t  in
+                   let uu____24257 =
+                     let uu____24259 = FStar_Util.set_elements s  in
+                     FStar_All.pipe_right uu____24259
                        (FStar_Syntax_Print.bvs_to_string ",\n\t")
                       in
                    FStar_Util.format3
                      "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
-                     msg uu____21997 uu____21998
+                     msg uu____24255 uu____24257
                     in
-                 (FStar_Errors.Warning_Defensive, uu____21996)  in
-               FStar_Errors.log_issue rng uu____21991
+                 (FStar_Errors.Warning_Defensive, uu____24253)  in
+               FStar_Errors.log_issue rng uu____24247
              else ())
           else ()
   
@@ -6262,15 +5413,15 @@ let (def_check_closed_in :
     fun msg  ->
       fun l  ->
         fun t  ->
-          let uu____22030 =
-            let uu____22031 = FStar_Options.defensive ()  in
-            Prims.op_Negation uu____22031  in
-          if uu____22030
+          let uu____24299 =
+            let uu____24301 = FStar_Options.defensive ()  in
+            Prims.op_Negation uu____24301  in
+          if uu____24299
           then ()
           else
-            (let uu____22033 =
+            (let uu____24306 =
                FStar_Util.as_set l FStar_Syntax_Syntax.order_bv  in
-             def_check_vars_in_set rng msg uu____22033 t)
+             def_check_vars_in_set rng msg uu____24306 t)
   
 let (def_check_closed_in_env :
   FStar_Range.range ->
@@ -6280,14 +5431,14 @@ let (def_check_closed_in_env :
     fun msg  ->
       fun e  ->
         fun t  ->
-          let uu____22056 =
-            let uu____22057 = FStar_Options.defensive ()  in
-            Prims.op_Negation uu____22057  in
-          if uu____22056
+          let uu____24332 =
+            let uu____24334 = FStar_Options.defensive ()  in
+            Prims.op_Negation uu____24334  in
+          if uu____24332
           then ()
           else
-            (let uu____22059 = bound_vars e  in
-             def_check_closed_in rng msg uu____22059 t)
+            (let uu____24339 = bound_vars e  in
+             def_check_closed_in rng msg uu____24339 t)
   
 let (def_check_guard_wf :
   FStar_Range.range -> Prims.string -> env -> guard_t -> unit) =
@@ -6306,30 +5457,30 @@ let (apply_guard : guard_t -> FStar_Syntax_Syntax.term -> guard_t) =
       match g.guard_f with
       | FStar_TypeChecker_Common.Trivial  -> g
       | FStar_TypeChecker_Common.NonTrivial f ->
-          let uu___267_22094 = g  in
-          let uu____22095 =
-            let uu____22096 =
-              let uu____22097 =
-                let uu____22104 =
-                  let uu____22105 =
-                    let uu____22122 =
-                      let uu____22133 = FStar_Syntax_Syntax.as_arg e  in
-                      [uu____22133]  in
-                    (f, uu____22122)  in
-                  FStar_Syntax_Syntax.Tm_app uu____22105  in
-                FStar_Syntax_Syntax.mk uu____22104  in
-              uu____22097 FStar_Pervasives_Native.None
+          let uu___272_24378 = g  in
+          let uu____24379 =
+            let uu____24380 =
+              let uu____24381 =
+                let uu____24388 =
+                  let uu____24389 =
+                    let uu____24406 =
+                      let uu____24417 = FStar_Syntax_Syntax.as_arg e  in
+                      [uu____24417]  in
+                    (f, uu____24406)  in
+                  FStar_Syntax_Syntax.Tm_app uu____24389  in
+                FStar_Syntax_Syntax.mk uu____24388  in
+              uu____24381 FStar_Pervasives_Native.None
                 f.FStar_Syntax_Syntax.pos
                in
             FStar_All.pipe_left
-              (fun _0_17  -> FStar_TypeChecker_Common.NonTrivial _0_17)
-              uu____22096
+              (fun _0_2  -> FStar_TypeChecker_Common.NonTrivial _0_2)
+              uu____24380
              in
           {
-            guard_f = uu____22095;
-            deferred = (uu___267_22094.deferred);
-            univ_ineqs = (uu___267_22094.univ_ineqs);
-            implicits = (uu___267_22094.implicits)
+            guard_f = uu____24379;
+            deferred = (uu___272_24378.deferred);
+            univ_ineqs = (uu___272_24378.univ_ineqs);
+            implicits = (uu___272_24378.implicits)
           }
   
 let (map_guard :
@@ -6341,15 +5492,15 @@ let (map_guard :
       match g.guard_f with
       | FStar_TypeChecker_Common.Trivial  -> g
       | FStar_TypeChecker_Common.NonTrivial f ->
-          let uu___268_22189 = g  in
-          let uu____22190 =
-            let uu____22191 = map1 f  in
-            FStar_TypeChecker_Common.NonTrivial uu____22191  in
+          let uu___273_24474 = g  in
+          let uu____24475 =
+            let uu____24476 = map1 f  in
+            FStar_TypeChecker_Common.NonTrivial uu____24476  in
           {
-            guard_f = uu____22190;
-            deferred = (uu___268_22189.deferred);
-            univ_ineqs = (uu___268_22189.univ_ineqs);
-            implicits = (uu___268_22189.implicits)
+            guard_f = uu____24475;
+            deferred = (uu___273_24474.deferred);
+            univ_ineqs = (uu___273_24474.univ_ineqs);
+            implicits = (uu___273_24474.implicits)
           }
   
 let (always_map_guard :
@@ -6360,33 +5511,33 @@ let (always_map_guard :
     fun map1  ->
       match g.guard_f with
       | FStar_TypeChecker_Common.Trivial  ->
-          let uu___269_22207 = g  in
-          let uu____22208 =
-            let uu____22209 = map1 FStar_Syntax_Util.t_true  in
-            FStar_TypeChecker_Common.NonTrivial uu____22209  in
+          let uu___274_24493 = g  in
+          let uu____24494 =
+            let uu____24495 = map1 FStar_Syntax_Util.t_true  in
+            FStar_TypeChecker_Common.NonTrivial uu____24495  in
           {
-            guard_f = uu____22208;
-            deferred = (uu___269_22207.deferred);
-            univ_ineqs = (uu___269_22207.univ_ineqs);
-            implicits = (uu___269_22207.implicits)
+            guard_f = uu____24494;
+            deferred = (uu___274_24493.deferred);
+            univ_ineqs = (uu___274_24493.univ_ineqs);
+            implicits = (uu___274_24493.implicits)
           }
       | FStar_TypeChecker_Common.NonTrivial f ->
-          let uu___270_22211 = g  in
-          let uu____22212 =
-            let uu____22213 = map1 f  in
-            FStar_TypeChecker_Common.NonTrivial uu____22213  in
+          let uu___275_24497 = g  in
+          let uu____24498 =
+            let uu____24499 = map1 f  in
+            FStar_TypeChecker_Common.NonTrivial uu____24499  in
           {
-            guard_f = uu____22212;
-            deferred = (uu___270_22211.deferred);
-            univ_ineqs = (uu___270_22211.univ_ineqs);
-            implicits = (uu___270_22211.implicits)
+            guard_f = uu____24498;
+            deferred = (uu___275_24497.deferred);
+            univ_ineqs = (uu___275_24497.univ_ineqs);
+            implicits = (uu___275_24497.implicits)
           }
   
 let (trivial : FStar_TypeChecker_Common.guard_formula -> unit) =
   fun t  ->
     match t with
     | FStar_TypeChecker_Common.Trivial  -> ()
-    | FStar_TypeChecker_Common.NonTrivial uu____22219 ->
+    | FStar_TypeChecker_Common.NonTrivial uu____24506 ->
         failwith "impossible"
   
 let (conj_guard_f :
@@ -6401,20 +5552,20 @@ let (conj_guard_f :
       | (g,FStar_TypeChecker_Common.Trivial ) -> g
       | (FStar_TypeChecker_Common.NonTrivial
          f1,FStar_TypeChecker_Common.NonTrivial f2) ->
-          let uu____22234 = FStar_Syntax_Util.mk_conj f1 f2  in
-          FStar_TypeChecker_Common.NonTrivial uu____22234
+          let uu____24523 = FStar_Syntax_Util.mk_conj f1 f2  in
+          FStar_TypeChecker_Common.NonTrivial uu____24523
   
 let (check_trivial :
   FStar_Syntax_Syntax.term -> FStar_TypeChecker_Common.guard_formula) =
   fun t  ->
-    let uu____22240 =
-      let uu____22241 = FStar_Syntax_Util.unmeta t  in
-      uu____22241.FStar_Syntax_Syntax.n  in
-    match uu____22240 with
+    let uu____24530 =
+      let uu____24531 = FStar_Syntax_Util.unmeta t  in
+      uu____24531.FStar_Syntax_Syntax.n  in
+    match uu____24530 with
     | FStar_Syntax_Syntax.Tm_fvar tc when
         FStar_Syntax_Syntax.fv_eq_lid tc FStar_Parser_Const.true_lid ->
         FStar_TypeChecker_Common.Trivial
-    | uu____22245 -> FStar_TypeChecker_Common.NonTrivial t
+    | uu____24535 -> FStar_TypeChecker_Common.NonTrivial t
   
 let (imp_guard_f :
   FStar_TypeChecker_Common.guard_formula ->
@@ -6440,9 +5591,9 @@ let (binop_guard :
   fun f  ->
     fun g1  ->
       fun g2  ->
-        let uu____22286 = f g1.guard_f g2.guard_f  in
+        let uu____24578 = f g1.guard_f g2.guard_f  in
         {
-          guard_f = uu____22286;
+          guard_f = uu____24578;
           deferred = (FStar_List.append g1.deferred g2.deferred);
           univ_ineqs =
             ((FStar_List.append (FStar_Pervasives_Native.fst g1.univ_ineqs)
@@ -6473,20 +5624,20 @@ let (close_guard_univs :
                 (fun u  ->
                    fun b  ->
                      fun f1  ->
-                       let uu____22376 = FStar_Syntax_Syntax.is_null_binder b
+                       let uu____24673 = FStar_Syntax_Syntax.is_null_binder b
                           in
-                       if uu____22376
+                       if uu____24673
                        then f1
                        else
                          FStar_Syntax_Util.mk_forall u
                            (FStar_Pervasives_Native.fst b) f1) us bs f
                in
-            let uu___271_22380 = g  in
+            let uu___276_24680 = g  in
             {
               guard_f = (FStar_TypeChecker_Common.NonTrivial f1);
-              deferred = (uu___271_22380.deferred);
-              univ_ineqs = (uu___271_22380.univ_ineqs);
-              implicits = (uu___271_22380.implicits)
+              deferred = (uu___276_24680.deferred);
+              univ_ineqs = (uu___276_24680.univ_ineqs);
+              implicits = (uu___276_24680.implicits)
             }
   
 let (close_forall :
@@ -6500,8 +5651,8 @@ let (close_forall :
         FStar_List.fold_right
           (fun b  ->
              fun f1  ->
-               let uu____22413 = FStar_Syntax_Syntax.is_null_binder b  in
-               if uu____22413
+               let uu____24714 = FStar_Syntax_Syntax.is_null_binder b  in
+               if uu____24714
                then f1
                else
                  (let u =
@@ -6519,15 +5670,15 @@ let (close_guard : env -> FStar_Syntax_Syntax.binders -> guard_t -> guard_t)
         match g.guard_f with
         | FStar_TypeChecker_Common.Trivial  -> g
         | FStar_TypeChecker_Common.NonTrivial f ->
-            let uu___272_22436 = g  in
-            let uu____22437 =
-              let uu____22438 = close_forall env binders f  in
-              FStar_TypeChecker_Common.NonTrivial uu____22438  in
+            let uu___277_24741 = g  in
+            let uu____24742 =
+              let uu____24743 = close_forall env binders f  in
+              FStar_TypeChecker_Common.NonTrivial uu____24743  in
             {
-              guard_f = uu____22437;
-              deferred = (uu___272_22436.deferred);
-              univ_ineqs = (uu___272_22436.univ_ineqs);
-              implicits = (uu___272_22436.implicits)
+              guard_f = uu____24742;
+              deferred = (uu___277_24741.deferred);
+              univ_ineqs = (uu___277_24741.univ_ineqs);
+              implicits = (uu___277_24741.implicits)
             }
   
 let (new_implicit_var_aux :
@@ -6536,89 +5687,96 @@ let (new_implicit_var_aux :
       env ->
         FStar_Syntax_Syntax.typ ->
           FStar_Syntax_Syntax.should_check_uvar ->
-            (FStar_Syntax_Syntax.term,(FStar_Syntax_Syntax.ctx_uvar,FStar_Range.range)
-                                        FStar_Pervasives_Native.tuple2
-                                        Prims.list,guard_t)
-              FStar_Pervasives_Native.tuple3)
+            (FStar_Dyn.dyn,FStar_Syntax_Syntax.term)
+              FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
+              ->
+              (FStar_Syntax_Syntax.term,(FStar_Syntax_Syntax.ctx_uvar,
+                                          FStar_Range.range)
+                                          FStar_Pervasives_Native.tuple2
+                                          Prims.list,guard_t)
+                FStar_Pervasives_Native.tuple3)
   =
   fun reason  ->
     fun r  ->
       fun env  ->
         fun k  ->
           fun should_check  ->
-            let uu____22476 =
-              FStar_Syntax_Util.destruct k FStar_Parser_Const.range_of_lid
-               in
-            match uu____22476 with
-            | FStar_Pervasives_Native.Some
-                (uu____22501::(tm,uu____22503)::[]) ->
-                let t =
-                  FStar_Syntax_Syntax.mk
-                    (FStar_Syntax_Syntax.Tm_constant
-                       (FStar_Const.Const_range (tm.FStar_Syntax_Syntax.pos)))
-                    FStar_Pervasives_Native.None tm.FStar_Syntax_Syntax.pos
-                   in
-                (t, [], trivial_guard)
-            | uu____22567 ->
-                let binders = all_binders env  in
-                let gamma = env.gamma  in
-                let ctx_uvar =
-                  let uu____22585 = FStar_Syntax_Unionfind.fresh ()  in
-                  {
-                    FStar_Syntax_Syntax.ctx_uvar_head = uu____22585;
-                    FStar_Syntax_Syntax.ctx_uvar_gamma = gamma;
-                    FStar_Syntax_Syntax.ctx_uvar_binders = binders;
-                    FStar_Syntax_Syntax.ctx_uvar_typ = k;
-                    FStar_Syntax_Syntax.ctx_uvar_reason = reason;
-                    FStar_Syntax_Syntax.ctx_uvar_should_check = should_check;
-                    FStar_Syntax_Syntax.ctx_uvar_range = r
-                  }  in
-                (FStar_TypeChecker_Common.check_uvar_ctx_invariant reason r
-                   true gamma binders;
-                 (let t =
+            fun meta  ->
+              let uu____24801 =
+                FStar_Syntax_Util.destruct k FStar_Parser_Const.range_of_lid
+                 in
+              match uu____24801 with
+              | FStar_Pervasives_Native.Some
+                  (uu____24826::(tm,uu____24828)::[]) ->
+                  let t =
                     FStar_Syntax_Syntax.mk
-                      (FStar_Syntax_Syntax.Tm_uvar
-                         (ctx_uvar, ([], FStar_Syntax_Syntax.NoUseRange)))
-                      FStar_Pervasives_Native.None r
+                      (FStar_Syntax_Syntax.Tm_constant
+                         (FStar_Const.Const_range
+                            (tm.FStar_Syntax_Syntax.pos)))
+                      FStar_Pervasives_Native.None tm.FStar_Syntax_Syntax.pos
                      in
-                  let imp =
+                  (t, [], trivial_guard)
+              | uu____24892 ->
+                  let binders = all_binders env  in
+                  let gamma = env.gamma  in
+                  let ctx_uvar =
+                    let uu____24910 = FStar_Syntax_Unionfind.fresh ()  in
                     {
-                      imp_reason = reason;
-                      imp_uvar = ctx_uvar;
-                      imp_tm = t;
-                      imp_range = r;
-                      imp_meta = FStar_Pervasives_Native.None
+                      FStar_Syntax_Syntax.ctx_uvar_head = uu____24910;
+                      FStar_Syntax_Syntax.ctx_uvar_gamma = gamma;
+                      FStar_Syntax_Syntax.ctx_uvar_binders = binders;
+                      FStar_Syntax_Syntax.ctx_uvar_typ = k;
+                      FStar_Syntax_Syntax.ctx_uvar_reason = reason;
+                      FStar_Syntax_Syntax.ctx_uvar_should_check =
+                        should_check;
+                      FStar_Syntax_Syntax.ctx_uvar_range = r;
+                      FStar_Syntax_Syntax.ctx_uvar_meta = meta
                     }  in
-                  let g =
-                    let uu___273_22620 = trivial_guard  in
-                    {
-                      guard_f = (uu___273_22620.guard_f);
-                      deferred = (uu___273_22620.deferred);
-                      univ_ineqs = (uu___273_22620.univ_ineqs);
-                      implicits = [imp]
-                    }  in
-                  (t, [(ctx_uvar, r)], g)))
+                  (FStar_TypeChecker_Common.check_uvar_ctx_invariant reason r
+                     true gamma binders;
+                   (let t =
+                      FStar_Syntax_Syntax.mk
+                        (FStar_Syntax_Syntax.Tm_uvar
+                           (ctx_uvar, ([], FStar_Syntax_Syntax.NoUseRange)))
+                        FStar_Pervasives_Native.None r
+                       in
+                    let imp =
+                      {
+                        imp_reason = reason;
+                        imp_uvar = ctx_uvar;
+                        imp_tm = t;
+                        imp_range = r
+                      }  in
+                    let g =
+                      let uu___278_24942 = trivial_guard  in
+                      {
+                        guard_f = (uu___278_24942.guard_f);
+                        deferred = (uu___278_24942.deferred);
+                        univ_ineqs = (uu___278_24942.univ_ineqs);
+                        implicits = [imp]
+                      }  in
+                    (t, [(ctx_uvar, r)], g)))
   
 let (dummy_solver : solver_t) =
   {
-    init = (fun uu____22637  -> ());
-    push = (fun uu____22639  -> ());
-    pop = (fun uu____22641  -> ());
+    init = (fun uu____24960  -> ());
+    push = (fun uu____24962  -> ());
+    pop = (fun uu____24965  -> ());
     snapshot =
-      (fun uu____22643  ->
+      (fun uu____24968  ->
          (((Prims.parse_int "0"), (Prims.parse_int "0"),
             (Prims.parse_int "0")), ()));
-    rollback = (fun uu____22652  -> fun uu____22653  -> ());
-    encode_modul = (fun uu____22664  -> fun uu____22665  -> ());
-    encode_sig = (fun uu____22668  -> fun uu____22669  -> ());
+    rollback = (fun uu____24987  -> fun uu____24988  -> ());
+    encode_modul = (fun uu____25003  -> fun uu____25004  -> ());
+    encode_sig = (fun uu____25007  -> fun uu____25008  -> ());
     preprocess =
       (fun e  ->
          fun g  ->
-           let uu____22675 =
-             let uu____22682 = FStar_Options.peek ()  in (e, g, uu____22682)
+           let uu____25014 =
+             let uu____25021 = FStar_Options.peek ()  in (e, g, uu____25021)
               in
-           [uu____22675]);
-    solve = (fun uu____22698  -> fun uu____22699  -> fun uu____22700  -> ());
-    finish = (fun uu____22706  -> ());
-    refresh = (fun uu____22708  -> ())
+           [uu____25014]);
+    solve = (fun uu____25037  -> fun uu____25038  -> fun uu____25039  -> ());
+    finish = (fun uu____25046  -> ());
+    refresh = (fun uu____25048  -> ())
   } 

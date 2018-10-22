@@ -1046,6 +1046,7 @@ let n_minus_mod_exact (n:nat) (k:pos) :
 let sub_mod_gt_0 (n:nat) (k:pos) :
   Lemma (0 <= n - n % k) = ()
 
+#set-options "--z3rlimit 20"
 val sum_rounded_mod_exact : n:nat -> m:nat -> k:pos ->
   Lemma (((n - n%k) + (m - m%k)) / k * k == (n - n%k) + (m - m%k))
 let sum_rounded_mod_exact n m k =
@@ -1056,7 +1057,6 @@ let sum_rounded_mod_exact n m k =
   mod_add (n - n%k) (m - m%k) k;
   Math.div_exact_r ((n - n%k) + (m - m % k)) k
 
-#set-options "--z3rlimit 20"
 val div_sum_combine : n:nat -> m:nat -> k:pos ->
   Lemma (n / k + m / k == (n + (m - n % k) - m % k) / k)
 let div_sum_combine n m k =

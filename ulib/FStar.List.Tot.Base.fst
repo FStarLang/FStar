@@ -21,6 +21,8 @@ used in specifications.
 *)
 module FStar.List.Tot.Base
 
+module F = FStar.FunctionalExtensionality
+
 (**
 Base operations
 *)
@@ -120,6 +122,13 @@ let rec append x y = match x with
 
 (** Defines notation [@] for [append], as in OCaml, F# . *)
 let op_At x y = append x y
+
+(** [snoc (l, x)] adds [x] to the end of the list [l].
+
+    Note: We use an uncurried [snoc (l, x)] instead of the curried
+    [snoc l x]. *)
+val snoc: (list 'a * 'a) -> Tot (list 'a)
+let snoc (l, x) = append l [x]
 
 (** [flatten l], where [l] is a list of lists, returns the list of the
 elements of the lists in [l], preserving their order. Named as in:
@@ -429,6 +438,33 @@ let rec splitAt (#a:Type) (n:nat) (l:list a) : list a * list a =
     | [] -> [], l
     | x :: xs -> let l1, l2 = splitAt (n-1) xs in x :: l1, l2
 
+let rec lemma_splitAt_snd_length (#a:Type) (n:nat) (l:list a) :
+  Lemma
+    (requires (n <= length l))
+    (ensures (length (snd (splitAt n l)) = length l - n)) =
+  match n, l with
+  | 0, _ -> ()
+  | _, [] -> ()
+  | _, _ :: l' -> lemma_splitAt_snd_length (n - 1) l'
+
+(** [unsnoc] is an inverse of [snoc]. It splits a list into
+    all-elements-except-last and last element. *)
+val unsnoc: #a:Type -> l:list a{length l > 0} -> Tot (list a * a)
+let unsnoc #a l =
+  let l1, l2 = splitAt (length l - 1) l in
+  lemma_splitAt_snd_length (length l - 1) l;
+  l1, hd l2
+
+(** [split3] splits a list into 3 parts. This allows easy access to
+    the part of the list before and after the element, as well as the
+    element itself. *)
+val split3: #a:Type -> l:list a -> i:nat{i < length l} -> Tot (list a * a * list a)
+let split3 #a l i =
+  let a, as = splitAt i l in
+  lemma_splitAt_snd_length i l;
+  let b :: c = as in
+  a, b, c
+
 (** Sorting (implemented as quicksort) **)
 
 (** [partition] splits a list [l] into two lists, the sum of whose
@@ -449,8 +485,8 @@ polymorphic comparison using both the [compare] function and the (>)
 infix operator are such that [compare x y] is positive if, and only
 if, x > y. Requires, at type-checking time, [compare] to be a pure
 total function. *)
-val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
-let bool_of_compare f x y = f x y > 0
+val bool_of_compare : #a:Type -> (a -> a -> Tot int) -> a -> a -> Tot bool
+let bool_of_compare #a f x y = f x y > 0
 
 (** [compare_of_bool] turns a strict order into a comparison
 function. More precisely, [compare_of_bool rel x y] returns a positive
@@ -461,9 +497,13 @@ if, x > y. Requires, at type-checking time, [rel] to be a pure total
 function.  *)
 val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
-  if x `rel` y  then 1
-  else if x = y then 0
-  else 0-1
+    if x `rel` y  then 1
+    else if x = y then 0
+    else 0-1
+
+let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> Tot bool)
+  : Lemma (forall x y. bool_of_compare (compare_of_bool f) x y == f x y)
+  = ()
 
 (** [sortWith compare l] returns the list [l'] containing the elements
 of [l] sorted along the comparison function [compare], in such a way
@@ -477,9 +517,6 @@ let rec sortWith f = function
      let hi, lo  = partition (bool_of_compare f pivot) tl in
      partition_length (bool_of_compare f pivot) tl;
      append (sortWith f lo) (pivot::sortWith f hi)
-
-#set-options "--initial_fuel 4 --initial_ifuel 4"
-private abstract let test_sort :unit = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
 
 (** A l1 is a strict prefix of l2. *)
 
