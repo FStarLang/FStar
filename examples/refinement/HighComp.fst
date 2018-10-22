@@ -252,7 +252,8 @@ assume val for_inv'  (inv : state -> int -> Type0)
 
 let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 = c 
 
-let cast_eq #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : Lemma (c === cast wp2 c) = ()
+//GM: Oct 22, 2018: This lemma now fails to verify due to the fix for #1533. However, it doesn't seem to be needed.
+(* let cast_eq #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : Lemma (c === cast wp2 c) = () *)
 
 
 (** ** Equality on high computations **)
