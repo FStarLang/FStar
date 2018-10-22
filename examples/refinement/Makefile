@@ -1,3 +1,4 @@
+FSTAR_HOME=../..
 include ../Makefile.include
 ROOTS=HighComp.fst LowComp.fst sum_and_swap.fst
 
