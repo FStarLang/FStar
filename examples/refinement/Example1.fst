@@ -3,6 +3,9 @@ open FStar.Integers
 module H = HighComp
 module L = LowComp
 
+// GM, Oct 23 2018: These two seem to be already defined, and just like
+// this, in HighComp.fst. But removing them causes an assertion failure.
+// Is that the only reason they are redefined?
 effect HighMon (a:Type) (wp:H.hwp_mon a) = H.HIGH a wp
 
 effect Hi (a:Type)
