@@ -1706,7 +1706,7 @@ val index (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (i:U32.t)
 
 val g_upd_seq (#a:Type0) (#rrel #rel:srel a)
               (b:mbuffer a rrel rel) (s:Seq.lseq a (length b))
-	      (h:HS.mem{live h b /\ rel (as_seq h b) s})  (* TODO: we should not need this rel precondition *)
+	      (h:HS.mem{live h b})
   :GTot HS.mem
 
 val lemma_g_upd_with_same_seq (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem)
@@ -1718,7 +1718,7 @@ val lemma_g_upd_with_same_seq (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel r
 val g_upd_seq_as_seq (#a:Type0) (#rrel #rel:srel a)
                      (b:mbuffer a rrel rel)
                      (s:Seq.lseq a (length b))
-                     (h:HS.mem{live h b /\ rel (as_seq h b) s}) (* TODO: we should not need this rel precondition *)
+                     (h:HS.mem{live h b})
   : Lemma (let h' = g_upd_seq b s h in
            (Seq.length s > 0 ==> not (g_is_null b)) /\
            modifies (loc_buffer b) h h' /\
@@ -1733,7 +1733,7 @@ let g_upd (#a:Type0) (#rrel #rel:srel a)
           (b:mbuffer a rrel rel)
           (i:nat{i < length b})
           (v:a)
-          (h:HS.mem{live h b /\ rel (as_seq h b) (Seq.upd (as_seq h b) i v)})
+          (h:HS.mem{live h b})
   : GTot HS.mem
   = g_upd_seq b (Seq.upd (as_seq h b) i v) h
 
