@@ -1,4 +1,4 @@
-module LowStar.Monotonic.BufferView
+module LowStar.BufferView
 
 (**
  * A "view" on a buffer allows treating a
@@ -140,29 +140,6 @@ val view_indexing (#b: _) (vb:buffer b) (i:nat{i < length vb})
            let n = View?.n (get_view vb) in
            n <= length vb * n - i * n)
 
-let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
-    : GTot (frags:
-               (let src_t = Mkdtuple4?._1 vb in
-	        Seq.seq src_t *
-                Seq.lseq src_t (View?.n (get_view vb)) *
-                Seq.seq src_t){
-               let prefix, as, suffix = frags in
-               B.as_seq h (as_buffer vb) ==
-               (prefix `Seq.append` (as `Seq.append` suffix))
-            })
-    = let open FStar.Mul in
-      let s0 = B.as_seq h (as_buffer vb) in
-      let v = get_view vb in
-      let n = View?.n v in
-      let start = i * n in
-      view_indexing vb i;
-      length_eq vb;
-      let prefix, suffix = Seq.split s0 start in
-      Seq.lemma_split s0 start;
-      let as, tail = Seq.split suffix n in
-      Seq.lemma_split suffix n;
-      prefix, as, tail
-
 /// `sel h vb i` : selects element at index `i` from the buffer `vb` in heap `h`
 val sel (#b: _)
         (h:HS.mem)
@@ -170,19 +147,12 @@ val sel (#b: _)
         (i:nat{i < length vb})
    : GTot b
 
-unfold let rel (#b:_) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb}) (x:b)
-  = let v = get_view vb in
-    let prefix, _, suffix = split_at_i vb i h in
-    let s1 = prefix `Seq.append` (View?.put v x `Seq.append` suffix) in
-    let rel = Mkdtuple4?._3 vb in
-    rel (B.as_seq h (as_buffer vb)) s1
-
 /// `upd h vb i x`: stores `x` at index `i` in the buffer `vb` in heap `h`
 val upd (#b: _)
         (h:HS.mem)
         (vb:buffer b{live h vb})
         (i:nat{i < length vb})
-        (x:b{rel h vb i x})
+        (x:b)
   : GTot HS.mem
 
 /// `sel_upd`: A classic select/update lemma for reasoning about maps
@@ -191,7 +161,7 @@ val sel_upd (#b:_)
             (i:nat{i < length vb})
             (j:nat{j < length vb})
             (x:b)
-            (h:HS.mem{live h vb /\ rel h vb i x})
+            (h:HS.mem{live h vb})
   : Lemma (if i = j
            then sel (upd h vb i x) vb j == x
            else sel (upd h vb i x) vb j == sel h vb j)
@@ -201,7 +171,7 @@ val lemma_upd_with_sel (#b:_)
                        (vb:buffer b)
                        (i:nat{i < length vb})
                        (h:HS.mem{live h vb})
-  :Lemma (rel h vb i (sel h vb i) /\ upd h vb i (sel h vb i) == h)
+  :Lemma (upd h vb i (sel h vb i) == h)
 
 /// `modifies` on views is just defined in terms of the underlying buffer
 unfold
@@ -215,7 +185,7 @@ val upd_modifies (#b: _)
                  (h:HS.mem)
                  (vb:buffer b{live h vb})
                  (i:nat{i < length vb})
-                 (x:b{rel h vb i x})
+                 (x:b)
     : Lemma (ensures (modifies vb h (upd h vb i x) /\
                       live (upd h vb i x) vb))
             [SMTPat (upd h vb i x)]

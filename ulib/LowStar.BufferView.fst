@@ -1,4 +1,4 @@
-module LowStar.Monotonic.BufferView
+module LowStar.BufferView
 
 noeq
 type buffer_view (a:Type0) (rrel rel:B.srel a) (b:Type u#b) : Type0 =
@@ -26,6 +26,29 @@ let view_indexing #b vb i
     length_eq vb;
     FStar.Math.Lemmas.distributivity_add_left (length vb) (-i) n
 
+let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
+    : GTot (frags:
+               (let src_t = Mkdtuple4?._1 vb in
+	        Seq.seq src_t *
+                Seq.lseq src_t (View?.n (get_view vb)) *
+                Seq.seq src_t){
+               let prefix, as, suffix = frags in
+               B.as_seq h (as_buffer vb) ==
+               (prefix `Seq.append` (as `Seq.append` suffix))
+            })
+    = let open FStar.Mul in
+      let s0 = B.as_seq h (as_buffer vb) in
+      let v = get_view vb in
+      let n = View?.n v in
+      let start = i * n in
+      view_indexing vb i;
+      length_eq vb;
+      let prefix, suffix = Seq.split s0 start in
+      Seq.lemma_split s0 start;
+      let as, tail = Seq.split suffix n in
+      Seq.lemma_split suffix n;
+      prefix, as, tail
+
 let sel (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb})
    : GTot b
    = let v = get_view vb in
@@ -40,7 +63,7 @@ let upd #b h vb i x
     let s1 = prefix `Seq.append` (View?.put v x `Seq.append` suffix) in
     B.g_upd_seq (as_buffer vb) s1 h
 
-let sel_upd1 (#b:_) (vb:buffer b) (i:nat{i < length vb}) (x:b) (h:HS.mem{live h vb /\ rel h vb i x})
+let sel_upd1 (#b:_) (vb:buffer b) (i:nat{i < length vb}) (x:b) (h:HS.mem{live h vb})
    : Lemma (sel (upd h vb i x) vb i == x)
    =
     let v = get_view vb in
@@ -70,7 +93,7 @@ let sel_upd2 (#b:_) (vb:buffer b)
              (i:nat{i < length vb})
              (j:nat{j < length vb /\ i<>j})
              (x:b)
-             (h:HS.mem{live h vb /\ rel h vb i x})
+             (h:HS.mem{live h vb})
   : Lemma (sel (upd h vb i x) vb j == sel h vb j)
   = let open FStar.Mul in
     let v = get_view vb in
