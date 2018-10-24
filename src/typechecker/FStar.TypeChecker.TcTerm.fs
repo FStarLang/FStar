@@ -33,6 +33,7 @@ open FStar.Const
 open FStar.Dyn
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
+
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
@@ -538,7 +539,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_app({n=Tm_constant Const_range_of}, [(e, None)]) ->
     let e, c, g = tc_term (fst <| Env.clear_expected_typ env) e in
     let head, _ = U.head_and_args top in
-    mk (Tm_app (head, [(e, None)])) None top.pos, (Util.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g
+    mk (Tm_app (head, [(e, None)])) None top.pos, (U.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g
 
   | Tm_app({n=Tm_constant Const_set_range_of}, (t, None)::(r, None)::[]) ->
     let head, _ = U.head_and_args top in
@@ -2133,7 +2134,7 @@ and tc_eqn scrutinee env branch
       if not (Env.should_verify env)
       then U.t_true
       else (* 6 (a) *)
-          let rec build_branch_guard scrutinee_tm pat_exp : list<typ> =
+          let rec build_branch_guard scrutinee_tm (pattern:pat) pat_exp : list<typ> =
             let discriminate scrutinee_tm f =
                 let is_induc, datacons = Env.datacons_of_typ env (Env.typ_of_datacon env f.v) in
                 (* Why the `not is_induc`? We may be checking an exception pattern. See issue #1535. *)
@@ -2161,38 +2162,68 @@ and tc_eqn scrutinee env branch
                 | _ -> fail () in
 
             let pat_exp = SS.compress pat_exp |> U.unmeta in
-            match pat_exp.n with
-                | Tm_uvar _
-                | Tm_app({n=Tm_uvar _}, _)
-                | Tm_name _
-                | Tm_constant Const_unit -> []
-                | Tm_constant c -> [U.mk_eq2 U_zero (tc_constant env pat_exp.pos c) scrutinee_tm pat_exp]
-                | Tm_uinst _
-                | Tm_fvar _ ->
-                  let f = head_constructor pat_exp in
-                  if not (Env.is_datacon env f.v)
-                  then [] //A non-pattern sub-term, typically a type constructor unified via a dot-pattern
-                  else discriminate scrutinee_tm (head_constructor pat_exp)
-                | Tm_app(head, args) ->
-                    let f = head_constructor head in
-                    if not (Env.is_datacon env f.v) //A non-pattern sub-term of pat_exp
-                    then []
-                    else let sub_term_guards = args |> List.mapi (fun i (ei, _) ->
-                            let projector = Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
+            match pattern.v, pat_exp.n with
+            //| Pat_dot_term _, Tm_uvar _
+            //| Pat_dot_term _, Tm_app({n=Tm_uvar _}, _) ->
+            //  []
+
+            | _, Tm_name _ ->
+              [] //no guard for variables; they always match
+
+            | _, Tm_constant Const_unit ->
+              [] //no guard for the unit pattern; it's a singleton
+
+            | Pat_constant _c, Tm_constant c ->
+              [U.mk_eq2 U_zero (tc_constant env pat_exp.pos c) scrutinee_tm pat_exp]
+
+            | Pat_constant (FStar.Const.Const_int(_, Some _)), _ ->
+              //machine integer pattern, cf. #1572
+              let _, t, _ = env.type_of env pat_exp in
+              [U.mk_eq2 U_zero t scrutinee_tm pat_exp]
+
+            | Pat_cons (_, []), Tm_uinst _
+            | Pat_cons (_, []), Tm_fvar _ ->
+                //nullary pattern
+                let f = head_constructor pat_exp in
+                if not (Env.is_datacon env f.v)
+                then failwith "Impossible: nullary patterns must be data constructors"
+                else discriminate scrutinee_tm (head_constructor pat_exp)
+
+            | Pat_cons (_, pat_args), Tm_app(head, args) ->
+                //application pattern
+                let f = head_constructor head in
+                if not (Env.is_datacon env f.v)
+                || List.length pat_args <> List.length args
+                then failwith "Impossible: application patterns must be fully-applied data constructors"
+                else let sub_term_guards =
+                        List.zip pat_args args |>
+                        List.mapi (fun i ((pi, _), (ei, _)) ->
+                            let projector = Env.lookup_projector env f.v i in
+                            //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
                             match Env.try_lookup_lid env projector with
-                             | None -> []
-                             | _ ->
-                                let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) (Delta_equational_at_level 1) None) [as_arg scrutinee_tm] None f.p in
-                                build_branch_guard sub_term ei) |> List.flatten in
-                         discriminate scrutinee_tm f @ sub_term_guards
-                | _ -> [] //a non-pattern sub-term: must be from a dot pattern
+                            | None ->
+                              failwith (BU.format1 "Impossible: projector %s not found" (Print.lid_to_string projector))
+                            | _ ->
+                              let proj = S.fvar (Ident.set_lid_range projector f.p) (Delta_equational_at_level 1) None in
+                              let sub_term = mk_Tm_app proj [as_arg scrutinee_tm] None f.p in
+                              build_branch_guard sub_term pi ei) |>
+                        List.flatten
+                     in
+                     discriminate scrutinee_tm f @ sub_term_guards
+
+            | Pat_dot_term _, _ -> []
+              //a non-pattern sub-term computed via unification; no guard needeed since it is from a dot pattern
+
+            | _ -> failwith (BU.format2 "Internal error: unexpected elaborated pattern: %s and pattern expression %s"
+                                        (Print.pat_to_string pattern)
+                                        (Print.term_to_string pat_exp))
           in
 
           (* 6 (b) *)
-          let build_and_check_branch_guard scrutinee_tm pat =
+          let build_and_check_branch_guard scrutinee_tm pattern pat =
              if not (Env.should_verify env)
              then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
-             else let t = U.mk_conj_l <| build_branch_guard scrutinee_tm pat in
+             else let t = U.mk_conj_l <| build_branch_guard scrutinee_tm pattern pat in
                   let k, _ = U.type_u() in
                   let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in
                   //NS: discarding the guard here means that the VC is not fully type-checked
@@ -2200,7 +2231,7 @@ and tc_eqn scrutinee env branch
                   t in
 
           (* 6 (c) *)
-         let branch_guard = build_and_check_branch_guard scrutinee_tm norm_pat_exp in
+         let branch_guard = build_and_check_branch_guard scrutinee_tm pattern norm_pat_exp in
 
           (* 6 (d) *)
          let branch_guard =
