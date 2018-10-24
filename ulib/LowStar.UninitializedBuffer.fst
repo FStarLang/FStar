@@ -20,7 +20,7 @@ private let initialization_preorder (a:Type0) :srel (option a) =
             (forall (i:nat).{:pattern (Seq.index s2 i)} i < Seq.length s1 ==> Some? (Seq.index s1 i) ==> Some? (Seq.index s2 i))
 
 type ubuffer (a:Type0) =
-  b:mbuffer (option a) (initialization_preorder a) (initialization_preorder a)
+  mbuffer (option a) (initialization_preorder a) (initialization_preorder a)
 
 unfold let unull (#a:Type0) :ubuffer a = mnull #(option a) #(initialization_preorder a) #(initialization_preorder a)
 
@@ -72,6 +72,9 @@ let uupd (#a:Type0) (b:ubuffer a) (i:U32.t) (v:a)
 
 unfold let lubuffer (a:Type0) (len:nat) = b:ubuffer a{length b == len}
 
+unfold let lubuffer_or_null (a:Type0) (len:nat) (r:HS.rid) =
+  b:ubuffer a{(not (g_is_null b)) ==> (length b == len /\ frameOf b == r)}
+
 (*
  * No initializer
  *)
@@ -81,10 +84,24 @@ let ugcmalloc (#a:Type0) (r:HS.rid) (len:U32.t)
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) None)))
   = mgcmalloc r None len
 
+inline_for_extraction
+let ugcmalloc_partial (#a:Type0) (r:HS.rid) (len:U32.t)
+  :HST.ST (b:lubuffer_or_null a (U32.v len) r{recallable b})
+          (requires (fun h0      -> malloc_pre r len))
+          (ensures  (fun h0 b h1 -> alloc_partial_post_mem_common b h0 h1 (Seq.create (U32.v len) None)))
+  = mgcmalloc r None len
+
 let umalloc (#a:Type0) (r:HS.rid) (len:U32.t)
   :HST.ST (b:lubuffer a (U32.v len){frameOf b == r /\ freeable b})
           (requires (fun _       -> malloc_pre r len))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) None)))
+  = mmalloc r None len
+
+inline_for_extraction
+let umalloc_partial (#a:Type0) (r:HS.rid) (len:U32.t)
+  :HST.ST (b:lubuffer_or_null a (U32.v len) r{(not (g_is_null b)) ==> freeable b})
+          (requires (fun _       -> malloc_pre r len))
+          (ensures  (fun h0 b h1 -> alloc_partial_post_mem_common b h0 h1 (Seq.create (U32.v len) None)))
   = mmalloc r None len
 
 let ualloca (#a:Type0) (len:U32.t)

@@ -108,6 +108,7 @@ val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
 val cache_checked_modules       : unit    -> bool
 val cache_off                   : unit    -> bool
+val cmi                         : unit    -> bool
 type codegen_t =
     | OCaml | FSharp | Kremlin | Plugin
 val codegen                     : unit    -> option<codegen_t>
@@ -222,6 +223,7 @@ val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
 val warn_error                  : unit    -> string
 val use_extracted_interfaces    : unit    -> bool
+val use_nbe                     : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

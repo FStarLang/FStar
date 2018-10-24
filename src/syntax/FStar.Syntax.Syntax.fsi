@@ -126,7 +126,8 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_typ:typ;                                            (* t *)
     ctx_uvar_reason:string;
     ctx_uvar_should_check:should_check_uvar;
-    ctx_uvar_range:Range.range
+    ctx_uvar_range:Range.range;
+    ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
 }
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version
@@ -158,7 +159,7 @@ and comp_typ = {
   effect_name:lident;
   result_typ:typ;
   effect_args:args;
-  flags:list<cflags>
+  flags:list<cflag>
 }
 and comp' =
   | Total  of typ * option<universe>
@@ -172,16 +173,16 @@ and arg = term * aqual                                           (* marks an exp
 and args = list<arg>
 and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
-and cflags =
-  | TOTAL
-  | MLEFFECT
-  | RETURN
-  | PARTIAL_RETURN
-  | SOMETRIVIAL
-  | TRIVIAL_POSTCONDITION
-  | SHOULD_NOT_INLINE
-  | LEMMA
-  | CPS
+and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
+  | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
+  | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
+  | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
+  | RETURN                                                         (* the WP is return_wp of something *)
+  | PARTIAL_RETURN                                                 (* the WP is return_wp of something, possibly strengthened with some precondition *)
+  | SOMETRIVIAL                                                    (* the WP is the null wp *)
+  | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
+  | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
+  | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of term
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
@@ -238,7 +239,7 @@ and free_vars = {
 and residual_comp = {
     residual_effect:lident;                (* first component is the effect name *)
     residual_typ   :option<typ>;           (* second component: result type *)
-    residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
+    residual_flags :list<cflag>            (* third component: contains (an approximation of) the cflags *)
 }
 
 and attribute = term
@@ -280,7 +281,7 @@ and aqual = option<arg_qualifier>
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
-    cflags: list<cflags>;
+    cflags: list<cflag>;
     comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
@@ -355,7 +356,7 @@ type action = {
     action_typ: typ
 }
 type eff_decl = {
-    cattributes :list<cflags>;     // default cflags
+    cattributes :list<cflag>;      // default cflags
     mname       :lident;           //STATE_h
     univs       :univ_names;       //initially empty; but after type-checking and generalization, usually the universe of the result type etc.
     binders     :binders;          //heap:Type
@@ -433,7 +434,7 @@ type sigelt' =
                        * univ_names
                        * binders
                        * comp
-                       * list<cflags>
+                       * list<cflag>
   | Sig_pragma         of pragma
   | Sig_splice         of list<lident> * term
 
@@ -468,7 +469,7 @@ val withinfo: 'a -> Range.range -> withinfo_t<'a>
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> Tot<mk_t_a<'a>>
 
-val mk_lb :         (lbname * list<univ_name> * lident * typ * term * range) -> letbinding
+val mk_lb :         (lbname * list<univ_name> * lident * typ * term * list<attribute> * range) -> letbinding
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>
@@ -484,7 +485,7 @@ val mk_Comp:        comp_typ -> comp
 val mk_lcomp:
     eff_name: lident ->
     res_typ: typ ->
-    cflags: list<cflags> ->
+    cflags: list<cflag> ->
     comp_thunk: (unit -> comp) -> lcomp
 val lcomp_comp: lcomp -> comp
 val bv_to_tm:       bv -> term

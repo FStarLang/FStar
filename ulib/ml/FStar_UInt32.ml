@@ -44,6 +44,7 @@ let gte (a:uint32) (b:uint32) : bool = a >= b
 let lt (a:uint32) (b:uint32) : bool = a < b
 let lte (a:uint32) (b:uint32) : bool =  a <= b
 
+(* NOT Constant time comparison operators *)
 let eq_mask (a:uint32) (b:uint32) : uint32 =
   if a = b then -1 else 0
 let gte_mask (a:uint32) (b:uint32) : uint32 =

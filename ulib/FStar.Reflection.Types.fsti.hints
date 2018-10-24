@@ -7,12 +7,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list__uu___haseq",
-        "function_token_typing_Prims.string"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.string",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "cc0047b8a0f1fab1bad4b230940a9556"
+      "7605572a253392d384f88c55f81637bc"
     ]
   ]
 ]

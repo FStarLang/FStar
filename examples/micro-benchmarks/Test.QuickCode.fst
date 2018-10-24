@@ -68,7 +68,7 @@ unfold let normal_steps : list string =
   ]
 
 unfold let normal (x:Type0) : Type0 =
-  norm [iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps; nbe] x
+  norm [iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps] x
 
 
 [@ "opaque_to_smt" qattr]

@@ -2,15 +2,6 @@
   "‰Ã…‰0·ÙÕæ“˘óKÚ\u0012ö",
   [
     [
-      "Benton2004.RHL.Examples2.phi",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "04b70f0bdca794380ab0e2f26e0d2835"
-    ],
-    [
       "Benton2004.RHL.Examples2.proof",
       1,
       4,
@@ -114,16 +105,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "f36fa461231a115653095f8063143da8"
-    ],
-    [
-      "Benton2004.RHL.Examples2.phi",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "eb4a5c7c73aee28734da66023951f949"
+      "40b6f32722b9b34a5ad45e8f3068d079"
     ]
   ]
 ]

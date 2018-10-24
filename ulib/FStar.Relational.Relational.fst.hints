@@ -24,22 +24,13 @@
       "7a20a1c67c3e76260865fae4bb7cd8a6"
     ],
     [
-      "FStar.Relational.Relational.eq_rel",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "db270bd7214317a8090e76e063b896a8"
-    ],
-    [
       "FStar.Relational.Relational.rel",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "fd88c352d62b51c60931bef4842da983"
+      "8c4ccead830c21a3f649e00363af20da"
     ],
     [
       "FStar.Relational.Relational.tl_rel",
@@ -52,16 +43,7 @@
         "refinement_interpretation_FStar.Relational.Relational_Tm_refine_12775a49c16ac0863ce1a5e5a1a8be3f"
       ],
       0,
-      "5e01aff8349f23fd9ab944fa1f120020"
-    ],
-    [
-      "FStar.Relational.Relational.eq_rel",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "5a4cb1beae1f5e8863eb764cfd612c2c"
+      "606bb9a92131816c2b2ec2c0b2956b2e"
     ]
   ]
 ]

@@ -59,7 +59,7 @@ val should_return: env -> option<term> -> lcomp -> bool
 val return_value: env -> option<universe> -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
-val bind_cases: env -> typ -> list<(typ * lident * list<cflags> * (bool -> lcomp))> -> lcomp
+val bind_cases: env -> typ -> list<(typ * lident * list<cflag> * (bool -> lcomp))> -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
@@ -68,6 +68,7 @@ val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
 val close_lcomp: env -> list<bv> -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
 val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
+val universe_of_comp: env -> universe -> comp -> universe
 
 //checking that e:t is convertible to t'
 val check_and_ascribe : env -> term -> typ -> typ -> term * guard_t

@@ -228,7 +228,7 @@ let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
 let comp_set_flags (c:comp) f =
     {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
 
-let lcomp_set_flags (lc:lcomp) (fs:list<cflags>) =
+let lcomp_set_flags (lc:lcomp) (fs:list<cflag>) =
     let comp_typ_set_flags (c:comp) =
         match c.n with
         | Total _
@@ -646,6 +646,7 @@ and eq_aqual a1 a2 =
     | _, None -> NotEqual
     | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
     | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
+    | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
 
 and branch_matches b1 b2 =
@@ -1120,7 +1121,11 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) delta_constant None)) None Range.dummyRange
+    mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange)
+                           delta_constant
+                           None))
+       None
+       Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
@@ -1144,6 +1149,7 @@ let t_true  = fvar_const PC.true_lid  //NS delta: wrong? should be Delta_constan
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 let tcdecltime_attr = fvar_const PC.tcdecltime_attr
+let inline_let_attr = fvar_const PC.inline_let_attr
 
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 
@@ -1799,7 +1805,7 @@ and comp_eq_dbg (dbg : bool) c1 c2 =
     (check "comp result typ"  (term_eq_dbg dbg c1.result_typ c2.result_typ)) &&
     (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
     true //eq_flags c1.flags c2.flags
-and eq_flags_dbg (dbg : bool) (f1 : cflags) (f2 : cflags) = true // TODO? Or just ignore?
+and eq_flags_dbg (dbg : bool) (f1 : cflag) (f2 : cflag) = true // TODO? Or just ignore?
 and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
     (check "branch pat"  (eq_pat p1 p2)) &&
     (check "branch body"  (term_eq_dbg dbg t1 t2))

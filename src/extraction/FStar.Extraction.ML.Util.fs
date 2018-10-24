@@ -127,7 +127,7 @@ let subst ts args =
     | Some t ->
       t
 
-let udelta_unfold (g:UEnv.env) = function
+let udelta_unfold (g:UEnv.uenv) = function
     | MLTY_Named(args, n) ->
       begin match UEnv.lookup_ty_const g n with
         | Some ts ->
@@ -259,6 +259,12 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : 
     | _ -> false, None
 
 and type_leq g t1 t2 : bool = type_leq_c g None t1 t2 |> fst
+
+let rec erase_effect_annotations (t:mlty) =
+    match t with
+    | MLTY_Fun(t1, f, t2) ->
+      MLTY_Fun(erase_effect_annotations t1, E_PURE, erase_effect_annotations t2)
+    | _ -> t
 
 let is_type_abstraction = function
     | (Inl _, _)::_ -> true

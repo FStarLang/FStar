@@ -685,3 +685,9 @@ let modul_to_string (m:modul) = match m with
     | Module (_, decls)
     | Interface (_, decls, _) ->
       decls |> List.map decl_to_string |> String.concat "\n"
+
+let decl_is_val id decl =
+    match decl.d with
+    | Val (id', _) ->
+      Ident.ident_equals id id'
+    | _ -> false

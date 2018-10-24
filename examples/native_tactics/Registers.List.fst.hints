@@ -12,7 +12,7 @@
         "binder_x_fe28d8bcde588226b4e538b35321de05_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.LexTop@tok",
-        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.fst", "equation_Prims.eqtype",
         "equation_Registers.List.regmap",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.list",
@@ -21,20 +21,12 @@
         "kinding_Prims.list@tok",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_Prims.Cons",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "f2fa2f9449fdfd94ab8f505277b6e182"
-    ],
-    [
-      "Registers.List.sel",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "8857ba34494d25829541425462a4c180"
+      "e62e1475721f6effa3f3e113acb99d76"
     ],
     [
       "Registers.List.const_map_n",
@@ -50,16 +42,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "943b63aa5e9fcb8b0bde51536e6813e8"
-    ],
-    [
-      "Registers.List.const_map_n",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "1a5fbb4dc043796d90c7a79be76957b0"
+      "fced5d560201fbea7b48d62518ca8e7a"
     ],
     [
       "Registers.List.identity_map",
@@ -75,16 +58,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8ec1b97801bee996a2215ba4b4012402"
-    ],
-    [
-      "Registers.List.identity_map",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "0b5c395414c6f9b193ca33e2b8a71f67"
+      "39d46c6ef3eb61aa02a81d8b27ef4243"
     ],
     [
       "Registers.List.eta_map",
@@ -99,16 +73,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d71cb0dbe87ec50398d4f13b86fda279"
-    ],
-    [
-      "Registers.List.eta_map",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "36a2eadb711b5fff7f73c50a4b6e0408"
+      "1c46d90c4a634c40534682059d2e45e4"
     ]
   ]
 ]

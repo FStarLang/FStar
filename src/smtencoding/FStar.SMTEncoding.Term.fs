@@ -718,7 +718,9 @@ let termToSmt
 
 let caption_to_string = function
     | None -> ""
-    | Some c -> ";;;;;;;;;;;;;;;;" ^ c ^ "\n"
+    | Some c ->
+        let c = String.split ['\n'] c |> List.map BU.trim_string |> String.concat " " in
+        ";;;;;;;;;;;;;;;;" ^ c ^ "\n"
 
 let rec declToSmt' print_ranges z3options decl =
   match decl with
@@ -726,7 +728,7 @@ let rec declToSmt' print_ranges z3options decl =
     mkPrelude z3options
   | Caption c ->
     if Options.log_queries ()
-    then format1 "\n; %s" (BU.splitlines c |> (function [] -> "" | h::t -> h))
+    then "\n" ^ (BU.splitlines c |> List.map (fun s -> "; " ^ s ^ "\n") |> String.concat "")
     else ""
   | DeclFun(f,argsorts,retsort,c) ->
     let l = List.map strSort argsorts in

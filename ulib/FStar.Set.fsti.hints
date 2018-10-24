@@ -2,51 +2,6 @@
   "*‘d…'åè\\ë∑yœÆ55}",
   [
     [
-      "FStar.Set.mem_singleton",
-      1,
-      0,
-      0,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "001bafec22c6f626a4edd436a04f4e44"
-    ],
-    [
-      "FStar.Set.mem_union",
-      1,
-      0,
-      0,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "127ab26bff86126ca0a0f8d38e9bf029"
-    ],
-    [
-      "FStar.Set.mem_intersect",
-      1,
-      0,
-      0,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "e6cede005bd9511df78f62d3a158f044"
-    ],
-    [
-      "FStar.Set.mem_complement",
-      1,
-      0,
-      0,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "e8f37ce0feb07d0718398ce8e4d86d16"
-    ],
-    [
-      "FStar.Set.lemma_equal_intro",
-      1,
-      0,
-      0,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "7bf08386e2f0d4f3fac17481262f122e"
-    ],
-    [
       "FStar.Set.as_set'",
       1,
       2,
@@ -59,7 +14,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "95f042f186a0d304530499409db1b9e5"
+      "acb02ea5f7eea9cb7132856bd5c8dd2a"
     ],
     [
       "FStar.Set.lemma_disjoint_subset",
@@ -76,7 +31,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "b5fc6377273a31226cfe52f767d9ef21"
+      "604baa9d89bbdeb9f485387ee501edde"
     ]
   ]
 ]

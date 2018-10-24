@@ -30,7 +30,10 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   bug1319a.fst bug1319b.fst bug1319c.fst bug1319d.fst bug1319e.fst bug1319f.fst bug807a.fst bug807b.fst bug807c.fst bug807d.fst bug807e.fst \
   Bug1502.fst \
   Bug1488.fst bug607.fst bug466.fst bug400.fst bug1470.fst bug1481.fst Bug1506.fst bug606.fst bug543.fst bug1521.fst \
-  Bug1533.fst bug1535a.fst bug1535b.fst Bug1536.fst bug1370a.fst bug1534.fst
+  Bug1533.fst bug1535a.fst bug1535b.fst Bug1536.fst bug1370a.fst bug1370b.fst bug1534.fst bug575.fst \
+  bug1443a.fst bug1443b.fst bug1443c.fst bug1443d.fst bug1443e.fst bug1523.fst bug1141a.fst bug1141b.fst bug1141c.fst bug1141d.fst \
+  bug1561a.fst bug1561b.fst bug1065a.fst bug1065b.fst bug1065c.fst bug1568.fst
+
 SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
 
@@ -40,7 +43,7 @@ SHOULD_VERIFY_BROKEN=bug092.fst bug170b.fst bug192.fst bug210.fst bug210b.fst bu
   bug818.fst bug818b.fst
 SHOULD_VERIFY_OPEN=bug045.fst bug057.fst bug064.fst bug065.fst bug071.fst bug121.fst bug131.fst bug171.fst\
   bug171b.fst bug171c.fst bug258.fst bug259.fst bug282.fst bug291.fst bug419.fst bug442.fst\
-  bug442b.fst bug484.fst bug542.fst bug543.fst bug554.fst bug575.fst bug604.fst bug606.fst\
+  bug442b.fst bug484.fst bug542.fst bug543.fst bug554.fst bug604.fst bug606.fst\
   bug626.fst bug682.fst bug715.fst bug739.fst bug815.fst bug815b.fst bug851.fst bug933.fst bug933b.fst\
   bug1038.fst bug1055b.fst bug1091.fst bug1390.fst bug807d.fst bug1486.fst bug1392.fst
 
@@ -114,6 +117,7 @@ CAPPED=$(subst bug,Bug,$*)
 %.verify: %.fst
 	$(FSTAR) $^
 
+bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 
 %.iverify: %.fsti

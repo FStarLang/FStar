@@ -25,7 +25,7 @@ let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
     if FStar.List.Tot.Base.existsb (term_eq g) seen then
       fail "loop";
     let seen = g :: seen in
-    local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail "could not solve constraint"))
+    local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail ("could not solve constraint: " ^ term_to_string g)))
 and local (seen:list term) (fuel:int) () : Tac unit =
     let bs = binders_of_env (cur_env ()) in
     first (fun b -> trywith seen fuel (pack (Tv_Var (bv_of_binder b)))) bs
@@ -47,17 +47,6 @@ let tcresolve () : Tac unit =
 unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev
 
 (**** Generating methods from a class ****)
-
-let rec drop (n:nat) l =
-  if n = 0 then l
-  else match l with
-       | [] -> []
-       | x::xs -> drop (n-1) xs
-
-let remove s1 s2 =
-  (* FIXME, should check that s1 is a prefix of s2 *)
-  String.substring s2 (String.strlen s1) (String.strlen s2 - String.strlen s1)
-let _ = assert_norm (remove "a" "abc" == "bc")
 
 (* In TAC, not Tot *)
 let rec mk_abs (bs : list binder) (body : term) : Tac term (decreases bs) =

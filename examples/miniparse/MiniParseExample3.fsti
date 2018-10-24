@@ -4,7 +4,7 @@ open MiniParse.Impl.Base
 
 module U8 = FStar.UInt8
 
-type color = | Red | Blue | Green | Yellow
+type color = U8.t // | Red | Blue | Green | Yellow
 type palette = nlist 18 (color * U8.t)
 
 noextract

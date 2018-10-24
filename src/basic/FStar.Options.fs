@@ -167,6 +167,7 @@ let defaults =
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
+      ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -261,7 +262,8 @@ let defaults =
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , String "");
-      ("use_extracted_interfaces"     , Bool false)]
+      ("use_extracted_interfaces"     , Bool false);
+      ("use_nbe"                      , Bool false)]
 
 let init () =
    let o = peek () in
@@ -290,6 +292,7 @@ let get_admit_except            ()      = lookup_opt "admit_except"             
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
+let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -381,6 +384,7 @@ let get_no_positivity           ()      = lookup_opt "__no_positivity"          
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
+let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -580,6 +584,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "cache_off",
         Const (mk_bool true),
         "Do not read or write any .checked files");
+
+      ( noshort,
+        "cmi",
+        Const (mk_bool true),
+        "Inline across module interfaces during extraction (aka. cross-module inlining)");
 
       ( noshort,
         "codegen",
@@ -1077,6 +1086,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          "Extract interfaces from the dependencies and use them for verification (default 'false')");
 
         ( noshort,
+         "use_nbe",
+          BoolStr,
+         "Use normalization by evaluation as the default normalization srategy (default 'false')");
+
+
+        ( noshort,
           "__debug_embedding",
            WithSideEffect ((fun _ -> debug_embedding := true),
                            (Const (mk_bool true))),
@@ -1344,6 +1359,7 @@ let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
+let cmi                          () = get_cmi                         ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
 let codegen                      () =
     Util.map_opt
@@ -1455,6 +1471,7 @@ let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
+let use_nbe                      () = get_use_nbe                     ()
 
 let with_saved_options f =
   // take some care to not mess up the stack on errors

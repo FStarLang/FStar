@@ -173,7 +173,7 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
         None
   in pickBranch_aux scrut branches branches
 
-(* Tests is the application is full and if none of the recursive arguments is symbolic *)
+(* Succeds if the application is full and if none of the recursive arguments is symbolic *)
 let test_args ts ar_list : (bool * args * args) = (* can unfold x full arg list x residual args *)
   let rec aux ts ar_list acc res =
     match ts, ar_list with
@@ -193,7 +193,7 @@ let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
     | _ -> None in
   BU.bind_opt (Env.lookup_qname env lid) mapper
 
-let is_univ (tm : t)=
+let is_univ (tm : t) =
   match tm with
   | Univ _ -> true
   | _ -> false
@@ -673,7 +673,7 @@ and readback_residual_comp cfg (c:residual_comp) : S.residual_comp =
       S.residual_typ = BU.map_opt c.residual_typ (readback cfg);
       S.residual_flags = List.map (readback_flag cfg) c.residual_flags }
 
-and translate_flag cfg bs (f : S.cflags) : cflags =
+and translate_flag cfg bs (f : S.cflag) : cflag =
     match f with
     | S.TOTAL -> TOTAL
     | S.MLEFFECT -> MLEFFECT
@@ -686,7 +686,7 @@ and translate_flag cfg bs (f : S.cflags) : cflags =
     | S.CPS -> CPS
     | S.DECREASES tm -> DECREASES (translate cfg bs tm)
 
-and readback_flag cfg (f : cflags) : S.cflags =
+and readback_flag cfg (f : cflag) : S.cflag =
     match f with
     | TOTAL -> S.TOTAL
     | MLEFFECT -> S.MLEFFECT

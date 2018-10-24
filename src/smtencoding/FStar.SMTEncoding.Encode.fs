@@ -1427,6 +1427,7 @@ let encode_sig tcenv se =
    Z3.giveZ3 (caption decls)
 
 let encode_modul tcenv modul =
+    if Options.lax() && Options.ml_ish() then () else
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
     if Env.debug tcenv Options.Low
     then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
@@ -1481,10 +1482,16 @@ let encode_query use_env_msg tcenv q
     let phi, qdecls = encode_formula q env in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
+    let caption =
+        if Options.log_queries ()
+        then [Caption ("Encoding query formula: " ^ (Print.term_to_string q))]
+        else []
+    in
     let query_prelude =
         env_decls
         @label_prefix
-        @qdecls in
+        @qdecls
+        @caption in
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     query_prelude, labels, qry, suffix

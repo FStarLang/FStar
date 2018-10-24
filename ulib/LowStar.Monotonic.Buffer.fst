@@ -44,28 +44,32 @@ let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
                     compatible_sub_preorder len rel i1 j1 rel1 /\
                     compatible_sub_preorder (j1 - i1) rel1 i2 j2 rel2))
 	 (ensures  (compatible_sub_preorder len rel (i1 + i2) (i1 + j2) rel2))
-  = let aux0 (s1 s2:Seq.seq a) :Lemma ((Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>
-                                       (rel2 (Seq.slice s1 (i1 + i2) (i1 + j2)) (Seq.slice s2 (i1 + i2) (i1 + j2))))
-      = if FStar.StrongExcludedMiddle.strong_excluded_middle (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) then begin
-          assert (rel1 (Seq.slice s1 i1 j1) (Seq.slice s2 i1 j1));
-	  assert (rel2 (Seq.slice (Seq.slice s1 i1 j1) i2 j2) (Seq.slice (Seq.slice s2 i1 j1) i2 j2));
-	  assert (Seq.equal (Seq.slice (Seq.slice s1 i1 j1) i2 j2) (Seq.slice s1 (i1 + i2) (i1 + j2)));
-	  assert (Seq.equal (Seq.slice (Seq.slice s2 i1 j1) i2 j2) (Seq.slice s2 (i1 + i2) (i1 + j2)))
-        end
+  = let t1 (s1 s2:Seq.seq a) = Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2 in
+    let t2 (s1 s2:Seq.seq a) = t1 s1 s2 /\ rel2 (Seq.slice s1 (i1 + i2) (i1 + j2)) (Seq.slice s2 (i1 + i2) (i1 + j2)) in
+
+    let aux0 (s1 s2:Seq.seq a) :Lemma (t1 s1 s2 ==> t2 s1 s2)
+      = Classical.arrow_to_impl #(t1 s1 s2) #(t2 s1 s2)
+          (fun _ ->
+           assert (rel1 (Seq.slice s1 i1 j1) (Seq.slice s2 i1 j1));
+	   assert (rel2 (Seq.slice (Seq.slice s1 i1 j1) i2 j2) (Seq.slice (Seq.slice s2 i1 j1) i2 j2));
+	   assert (Seq.equal (Seq.slice (Seq.slice s1 i1 j1) i2 j2) (Seq.slice s1 (i1 + i2) (i1 + j2)));
+	   assert (Seq.equal (Seq.slice (Seq.slice s2 i1 j1) i2 j2) (Seq.slice s2 (i1 + i2) (i1 + j2))))
     in
 
-    let aux1 (s s2:Seq.seq a) :Lemma ((Seq.length s == len /\ Seq.length s2 == j2 - i2 /\
-                                       rel2 (Seq.slice s (i1 + i2) (i1 + j2)) s2) ==>
-				      (rel s (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2)))
-      = if FStar.StrongExcludedMiddle.strong_excluded_middle (Seq.length s == len /\ Seq.length s2 == j2 - i2 /\
-                                                              rel2 (Seq.slice s (i1 + i2) (i1 + j2)) s2) then begin
-      	  assert (Seq.equal (Seq.slice s (i1 + i2) (i1 + j2)) (Seq.slice (Seq.slice s i1 j1) i2 j2));
-          assert (rel1 (Seq.slice s i1 j1) (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2));
-	  assert (rel s (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2)));
-	  assert (Seq.equal (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2))
-	                    (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2))
-	end
+
+    let t1 (s s2:Seq.seq a) = Seq.length s == len /\ Seq.length s2 == j2 - i2 /\
+                              rel2 (Seq.slice s (i1 + i2) (i1 + j2)) s2 in
+    let t2 (s s2:Seq.seq a) = t1 s s2 /\ rel s (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2) in
+    let aux1 (s s2:Seq.seq a) :Lemma (t1 s s2 ==> t2 s s2)
+      = Classical.arrow_to_impl #(t1 s s2) #(t2 s s2)
+          (fun _ ->
+           assert (Seq.equal (Seq.slice s (i1 + i2) (i1 + j2)) (Seq.slice (Seq.slice s i1 j1) i2 j2));
+           assert (rel1 (Seq.slice s i1 j1) (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2));
+	   assert (rel s (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2)));
+	   assert (Seq.equal (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2))
+	                     (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2)))
     in
+
     Classical.forall_intro_2 aux0; Classical.forall_intro_2 aux1
 
 noeq type mbuffer (a:Type0) (rrel:srel a) (rel:srel a) :Type0 =
@@ -199,7 +203,7 @@ let ubuffer_of_buffer' (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel
        b_is_mm = HS.is_mm (Buffer?.content b);
     })
 
-let ubuffer_preserved' 
+let ubuffer_preserved'
   (#r: HS.rid)
   (#a: nat)
   (b: ubuffer r a)
@@ -320,7 +324,7 @@ let ubuffer_includes0 (#r1 #r2:HS.rid) (#a1 #a2:nat) (larger:ubuffer r1 a1) (sma
 val ubuffer_includes (#r: HS.rid) (#a: nat) (larger smaller: ubuffer r a) : GTot Type0
 
 let ubuffer_includes #r #a larger smaller = ubuffer_includes0 larger smaller
-  
+
 val ubuffer_includes_refl (#r: HS.rid) (#a: nat) (b: ubuffer r a) : Lemma
   (b `ubuffer_includes` b)
 
@@ -406,7 +410,7 @@ let modifies_0_preserves_regions (h1 h2: HS.mem) : GTot Type0 =
 let modifies_0_preserves_not_unused_in (h1 h2: HS.mem) : GTot Type0 =
   forall (r: HS.rid) (n: nat) . (
     HS.live_region h1 r /\ HS.live_region h2 r /\
-    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)  
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)
   ) ==> (
     n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)
   )
@@ -930,7 +934,7 @@ let pointer_distinct_sel_disjoint #a #_ #_ #_ #_ b1 b2 h =
   end
   else
     loc_disjoint_buffer b1 b2
-	 
+
 let is_null #_ #_ #_ b = Null? b
 
 let msub #a #rrel #rel sub_rel b i len =
@@ -1021,9 +1025,8 @@ private let lemma_stable_on_rel_is_stable_on_rrel (#a:Type0) (#rrel #rel:srel a)
   = let Buffer _ content _ _ () = b in
     let mp = spred_as_mempred b p in
     let aux (h0 h1:HS.mem) :Lemma ((mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content)) ==> mp h1)
-      = if FStar.StrongExcludedMiddle.strong_excluded_middle (mp h0 /\ rrel (HS.sel h0 content)
-                                                                           (HS.sel h1 content)) then
-	  assert (rel (as_seq h0 b) (as_seq h1 b))
+      = Classical.arrow_to_impl #(mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content)) #(mp h1)
+          (fun _ -> assert (rel (as_seq h0 b) (as_seq h1 b)))
     in
     Classical.forall_intro_2 aux
 
@@ -1128,6 +1131,43 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
     content2 := s_full2';
     g_upd_seq_as_seq dst s2' h  //for modifies clause
 #pop-options
+
+#push-options "--z3rlimit 32 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1"
+let fill' (#t:Type) (#rrel #rel: srel t)
+  (b: mbuffer t rrel rel)
+  (z:t)
+  (len:U32.t)
+: HST.Stack unit
+  (requires (fun h ->
+    live h b /\
+    U32.v len <= length b /\
+    rel (as_seq h b) (Seq.replace_subseq (as_seq h b) 0 (U32.v len) (Seq.create (U32.v len) z))
+  ))
+  (ensures  (fun h0 _ h1 ->
+    modifies (loc_buffer b) h0 h1 /\
+    live h1 b /\
+    Seq.slice (as_seq h1 b) 0 (U32.v len) `Seq.equal` Seq.create (U32.v len) z /\
+    Seq.slice (as_seq h1 b) (U32.v len) (length b) `Seq.equal` Seq.slice (as_seq h0 b) (U32.v len) (length b)
+  ))
+= let open HST in
+  if len = 0ul then ()
+  else begin
+    let h = get () in
+    let Buffer max_length content idx length () = b in
+    let s_full = !content in
+    let s = Seq.slice s_full (U32.v idx) (U32.v idx + U32.v length) in
+    let s_src = Seq.create (U32.v len) z in
+    let s' = Seq.replace_subseq s 0 (U32.v len) s_src in
+    let s_full' = Seq.replace_subseq s_full (U32.v idx) (U32.v idx + U32.v len) s_src in
+    assert (s_full' `Seq.equal` Seq.replace_subseq s_full (U32.v idx) (U32.v idx + U32.v length) s');
+    content := s_full';
+    let h' = HST.get () in
+    assert (h' == g_upd_seq b s' h);
+    g_upd_seq_as_seq b s' h  //for modifies clause
+  end
+#pop-options
+
+let fill #t #rrel #rel b z len = fill' b z len
 
 module MG = FStar.ModifiesGen
 

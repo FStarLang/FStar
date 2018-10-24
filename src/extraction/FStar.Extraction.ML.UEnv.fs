@@ -62,9 +62,9 @@ type tydef = {
     tydef_def:mltyscheme
 }
 
-type env = {
-    tcenv: TypeChecker.Env.env;
-    gamma:list<binding>;
+type uenv = {
+    env_tcenv: TypeChecker.Env.env;
+    env_bindings:list<binding>;
     tydefs:list<tydef>;
     type_names:list<fv>;
     currentModule: mlpath // needed to properly translate the definitions in the current file
@@ -132,7 +132,7 @@ let tyscheme_of_td (_, _, _, vars, _, body_opt) : option<mltyscheme> =
     | _ -> None
 
 //TODO: this two-level search is pretty inefficient: we should optimize it
-let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyscheme> =
+let lookup_ty_const (env:uenv) ((module_name, ty_name):mlpath) : option<mltyscheme> =
     BU.find_map env.tydefs  (fun tydef ->
         if module_name = tydef.tydef_mlmodule_name
         && ty_name = tydef.tydef_name
@@ -141,7 +141,7 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
 
 let module_name_of_fv fv = fv.fv_name.v.ns |> List.map (fun (i:ident) -> i.idText)
 
-let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
+let maybe_mangle_type_projector (env:uenv) (fv:fv) : option<mlpath> =
     let mname = module_name_of_fv fv in
     let ty_name = fv.fv_name.v.ident.idText in
     BU.find_map env.tydefs  (fun tydef ->
@@ -152,10 +152,10 @@ let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
              | Some mangled -> Some (mname, mangled)
         else None)
 
-let lookup_tyvar (g:env) (bt:bv) : mlty = lookup_ty_local g.gamma bt
+let lookup_tyvar (g:uenv) (bt:bv) : mlty = lookup_ty_local g.env_bindings bt
 
-let lookup_fv_by_lid (g:env) (lid:lident) : ty_or_exp_b =
-    let x = BU.find_map g.gamma (function
+let lookup_fv_by_lid (g:uenv) (lid:lident) : ty_or_exp_b =
+    let x = BU.find_map g.env_bindings (function
         | Fv (fv', x) when fv_eq_lid fv' lid -> Some x
         | _ -> None) in
     match x with
@@ -163,18 +163,18 @@ let lookup_fv_by_lid (g:env) (lid:lident) : ty_or_exp_b =
         | Some y -> Inr y
 
 (*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
-let try_lookup_fv (g:env) (fv:fv) : option<exp_binding> =
-    BU.find_map g.gamma (function
+let try_lookup_fv (g:uenv) (fv:fv) : option<exp_binding> =
+    BU.find_map g.env_bindings (function
         | Fv (fv', t) when fv_eq fv fv' -> Some t
         | _ -> None)
 
-let lookup_fv (g:env) (fv:fv) : exp_binding =
+let lookup_fv (g:uenv) (fv:fv) : exp_binding =
     match try_lookup_fv g fv with
     | None -> failwith (BU.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
     | Some y -> y
 
-let lookup_bv (g:env) (bv:bv) : ty_or_exp_b =
-    let x = BU.find_map g.gamma (function
+let lookup_bv (g:uenv) (bv:bv) : ty_or_exp_b =
+    let x = BU.find_map g.env_bindings (function
         | Bv (bv', r) when bv_eq bv bv' -> Some (r)
         | _ -> None) in
     match x with
@@ -182,7 +182,7 @@ let lookup_bv (g:env) (bv:bv) : ty_or_exp_b =
         | Some y -> y
 
 
-let lookup  (g:env) (x:either<bv,fv>) : ty_or_exp_b * option<fv_qual> =
+let lookup  (g:uenv) (x:either<bv,fv>) : ty_or_exp_b * option<fv_qual> =
     match x with
     | Inl x -> lookup_bv g x, None
     | Inr x -> Inr (lookup_fv g x), x.fv_qual
@@ -201,14 +201,14 @@ let extend_hidden_ty (g:env) (a:btvar) (mapped_to:mlty) : env =
     {g with tcenv=tcenv}
 *)
 
-let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
+let extend_ty (g:uenv) (a:bv) (mapped_to:option<mlty>) : uenv =
     let ml_a =  bv_as_ml_tyvar a in
     let mapped_to = match mapped_to with
         | None -> MLTY_Var ml_a
         | Some t -> t in
-    let gamma = Bv(a, Inl ({ty_b_name=ml_a; ty_b_ty=mapped_to}))::g.gamma in
-    let tcenv = TypeChecker.Env.push_bv g.tcenv a in // push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
-    {g with gamma=gamma; tcenv=tcenv}
+    let gamma = Bv(a, Inl ({ty_b_name=ml_a; ty_b_ty=mapped_to}))::g.env_bindings in
+    let tcenv = TypeChecker.Env.push_bv g.env_tcenv a in // push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
+    {g with env_bindings=gamma; env_tcenv=tcenv}
 
 let sanitize (s:string) : string =
   let cs = FStar.String.list_of_string s in
@@ -239,15 +239,15 @@ let find_uniq gamma mlident =
   let mlident = sanitize mlident in
   find_uniq mlident 0
 
-let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
               (mk_unit:bool (*some pattern terms become unit while extracting*))
-    : env
+    : uenv
     * mlident
     * exp_binding =
     let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
-    let mlident = find_uniq g.gamma (bv_as_mlident x) in
+    let mlident = find_uniq g.env_bindings (bv_as_mlident x) in
     let mlx = MLE_Var mlident in
     let mlx = if mk_unit
               then ml_unit
@@ -256,9 +256,9 @@ let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
               else with_ty ml_ty mlx in
     let t_x = if add_unit then pop_unit t_x else t_x in
     let exp_binding = {exp_b_name=mlident; exp_b_expr=mlx; exp_b_tscheme=t_x; exp_b_inst_ok=is_rec} in
-    let gamma = Bv(x, Inr exp_binding)::g.gamma in
-    let tcenv = TypeChecker.Env.push_binders g.tcenv (binders_of_list [x]) in
-    {g with gamma=gamma; tcenv=tcenv}, mlident, exp_binding
+    let gamma = Bv(x, Inr exp_binding)::g.env_bindings in
+    let tcenv = TypeChecker.Env.push_binders g.env_tcenv (binders_of_list [x]) in
+    {g with env_bindings=gamma; env_tcenv=tcenv}, mlident, exp_binding
 
 let rec mltyFvars (t: mlty) : list<mlident>  =
     match t with
@@ -277,8 +277,8 @@ let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
 let tySchemeIsClosed (tys : mltyscheme) : bool =
     subsetMlidents  (mltyFvars (snd tys)) (fst tys)
 
-let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
-    : env
+let extend_fv' (g:uenv) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+    : uenv
     * mlident
     * exp_binding =
     if tySchemeIsClosed t_x
@@ -296,12 +296,12 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let t_x = if add_unit then pop_unit t_x else t_x in
         let exp_binding = {exp_b_name=mlsymbol; exp_b_expr=mly; exp_b_tscheme=t_x; exp_b_inst_ok=is_rec} in
-        let gamma = Fv(x, exp_binding)::g.gamma in
-        {g with gamma=gamma}, mlsymbol, exp_binding
+        let gamma = Fv(x, exp_binding)::g.env_bindings in
+        {g with env_bindings=gamma}, mlsymbol, exp_binding
     else failwith "freevars found"
 
-let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
-    : env
+let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+    : uenv
     * mlident
     * exp_binding =
     let mlp = mlpath_of_lident x.fv_name.v in
@@ -311,8 +311,8 @@ let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     //let _ = printfn "(* old name  \n %A \n new name \n %A \n name in dependent module \n %A \n *) \n"  (Backends.ML.Syntax.mlpath_of_lident x.v) mlp (mlpath_of_lident ([],"SomeDepMod") x.v) in
     extend_fv' g x mlp t_x add_unit is_rec
 
-let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
-    : env
+let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+    : uenv
     * mlident
     * exp_binding =
     match l with
@@ -323,7 +323,7 @@ let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_re
         let p, y = mlpath_of_lident f.fv_name.v in
         extend_fv' g f (p, y) t_x add_unit is_rec
 
-let extend_tydef (g:env) (fv:fv) (td:one_mltydecl) : env * tydef =
+let extend_tydef (g:uenv) (fv:fv) (td:one_mltydecl) : uenv * tydef =
     let m = module_name_of_fv fv in
     let _assumed, name, mangled, vars, metadata, body_opt = td in
     let tydef = {
@@ -336,7 +336,7 @@ let extend_tydef (g:env) (fv:fv) (td:one_mltydecl) : env * tydef =
     {g with tydefs=tydef::g.tydefs; type_names=fv::g.type_names},
     tydef
 
-let extend_type_name (g:env) (fv:fv) : env =
+let extend_type_name (g:uenv) (fv:fv) : uenv =
     {g with type_names=fv::g.type_names}
 
 let is_type_name g fv = g.type_names |> BU.for_some (fv_eq fv)
@@ -347,8 +347,8 @@ let is_fv_type g fv =
 
 let emptyMlPath : mlpath = ([],"")
 
-let mkContext (e:TypeChecker.Env.env) : env =
-   let env = { tcenv = e; gamma =[] ; tydefs =[]; type_names=[]; currentModule = emptyMlPath} in
+let mkContext (e:TypeChecker.Env.env) : uenv =
+   let env = { env_tcenv = e; env_bindings =[] ; tydefs =[]; type_names=[]; currentModule = emptyMlPath} in
    let a = "'a" in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
    let g, _, _ =

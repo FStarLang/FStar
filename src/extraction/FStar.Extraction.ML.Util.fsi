@@ -29,7 +29,7 @@ val mlconst_of_const : p:Range.range -> c:Const.sconst -> mlconstant
 val mlexpr_of_const : p:Range.range -> c:Const.sconst -> mlexpr'
 val mlexpr_of_range : r:Range.range -> mlexpr'
 val subst : mlidents * mlty -> args:list<mlty> -> mlty
-val udelta_unfold : g:UEnv.env -> _arg1:mlty -> option<mlty>
+val udelta_unfold : g:UEnv.uenv -> _arg1:mlty -> option<mlty>
 val eff_leq : f:e_tag -> f':e_tag -> bool
 val eff_to_string : _arg1:e_tag -> string
 val join : r:Range.range -> f:e_tag -> f':e_tag -> e_tag
@@ -38,6 +38,7 @@ val mk_ty_fun : (Prims.list<(mlident * mlty)> -> mlty -> mlty)
 type unfold_t = mlty -> option<mlty>
 val type_leq_c : unfold_ty:unfold_t -> e:option<mlexpr> -> t:mlty -> t':mlty -> bool * option<mlexpr>
 val type_leq : g:unfold_t -> t1:mlty -> t2:mlty -> bool
+val erase_effect_annotations: mlty -> mlty
 val is_type_abstraction : list<(BU.either<'a,'b> * 'c)> -> bool
 val is_xtuple : list<string> * string -> option<int>
 val is_xtuple_ty : list<string> * string -> option<int>

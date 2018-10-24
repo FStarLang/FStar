@@ -1,5 +1,5 @@
 [
-  "™ª,…‹9}œ‘ýztVç\u0010\u0012",
+  "\u000f‰‡ß·8JK”ÖÙ\u000fzn$3",
   [
     [
       "Prims.Ghost",
@@ -97,15 +97,6 @@
       "ceb135dbd377675343822b2c3209a320"
     ],
     [
-      "Prims.nonzero",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "1e53ecbaa7cd289e40b6a6e0a14375cd"
-    ],
-    [
       "Prims.pow2",
       1,
       2,
@@ -121,7 +112,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "101596fcba5d351d3e43faa919496b48"
+      "21df9767558506f5ecb3aa738a802b27"
     ],
     [
       "Prims.Ghost",
@@ -130,7 +121,7 @@
       1,
       [ "@query" ],
       0,
-      "b0729b3f746e032172e8017f2998646f"
+      "04ed0e459cf3f7962eb6b1c172ad62fc"
     ],
     [
       "Prims.__proj__Mkdtuple2__item___2",
@@ -142,7 +133,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "15dadc79cf8ac42f2147c75a3cb9365b"
+      "18fe316d79757fb1b21d6a649a16817a"
     ],
     [
       "Prims.list",
@@ -151,7 +142,7 @@
       1,
       [ "@query" ],
       0,
-      "9d359184c6175a84edbd65799f247f7b"
+      "d19401ba74849259d8237b0a852f4e3c"
     ],
     [
       "Prims.__proj__Cons__item__hd",
@@ -164,7 +155,7 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "a315035b752c562afc84dd0ef7258f66"
+      "a6e67b0ae79c7aae5d6c51fe0a721aaa"
     ],
     [
       "Prims.__proj__Cons__item__tl",
@@ -177,7 +168,7 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "592cdfd643df1d315a15dbf33a16a4b7"
+      "848b629edc590b39aec2521d0665576e"
     ],
     [
       "Prims.Lemma",
@@ -189,7 +180,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "b8fee6b75285b1fa055f33c1a92545f2"
+      "087a9f0ed4a71513a238cd27b6283b09"
     ],
     [
       "Prims._assert",
@@ -198,7 +189,7 @@
       1,
       [ "@query" ],
       0,
-      "ddb8c2a43d24b38143ac3d102ff7d500"
+      "b3d0c5d5e2dc517e46d55a353e651ff0"
     ],
     [
       "Prims.assert_spinoff",
@@ -207,7 +198,7 @@
       1,
       [ "@query" ],
       0,
-      "18344dfc26830980c9e244c161a24d5e"
+      "d7c0107173e89a5af0249baa2daaebdb"
     ],
     [
       "Prims.cut",
@@ -216,16 +207,7 @@
       1,
       [ "@query" ],
       0,
-      "04514627317e99730b2786b3bebc921d"
-    ],
-    [
-      "Prims.nonzero",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "74ba695d70d0154bbaee53b32fef84d1"
+      "03a2858bc399601fde9d04ba73f41986"
     ],
     [
       "Prims.pow2",
@@ -243,7 +225,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c01ad94450a00dcf32511314a5739f8c"
+      "a6c4439d8f8aae4d37ff0f58cef59627"
     ]
   ]
 ]

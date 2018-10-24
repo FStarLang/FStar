@@ -41,6 +41,7 @@ let compare x y =
   else if y < x then 0-1
   else 0
 let test_sort = assert_norm (FStar.List.Tot.sortWith compare [10; 9; 8; 7; 6; 5; 4; 3; 2; 1] = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10])
+let test_sort1 = assert_norm (FStar.List.Tot.sortWith (FStar.List.Tot.compare_of_bool (<)) [10; 9; 8; 7; 6; 5; 4; 3; 2; 1] = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10])
 
 
 (*

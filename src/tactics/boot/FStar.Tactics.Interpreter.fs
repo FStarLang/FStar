@@ -487,8 +487,8 @@ let run_tactic_on_typ
                 s
             | EExn t ->
                 "uncaught exception: " ^ (Print.term_to_string t)
-            | _ ->
-                "uncaught internal exception: " ^ (BU.message_of_exn e)
+            | e ->
+                raise e
         in
         Err.raise_error (Err.Fatal_UserTacticFailure,
                             BU.format1 "user tactic failed: %s" (texn_to_string e))
@@ -604,7 +604,7 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
 
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
                // ==> is specialized to U_zero
-               let x = S.new_bv None (U.mk_squash U_zero p) in
+               let x = S.new_bv None p in
                let r1 = traverse f (flip pol)  e                p in
                let r2 = traverse f       pol  (Env.push_bv e x) q in
                comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
@@ -616,8 +616,8 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         (* But if neither side ran tactics, we just keep p <==> q *)
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.iff_lid ->
                // <==> is specialized to U_zero
-               let xp = S.new_bv None (U.mk_squash U_zero p) in
-               let xq = S.new_bv None (U.mk_squash U_zero q) in
+               let xp = S.new_bv None p in
+               let xq = S.new_bv None q in
                let r1 = traverse f Both (Env.push_bv e xq) p in
                let r2 = traverse f Both (Env.push_bv e xp) q in
                // Should be flipping the tres, I think
@@ -779,7 +779,7 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
 let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (Options.Other "Tac");
-    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped in
+    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped None in
 
     let u = env.universe_of env typ in
     let goal = U.mk_squash u (U.mk_eq2 u typ tm uvtm) in

@@ -145,6 +145,8 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                 (Print.term_to_string result);
 
          let arguments, env', us = tc_tparams env arguments in
+         let type_u_tc = S.mk (Tm_type u_tc) None result.pos in
+         let env' = Env.set_expected_typ env' type_u_tc in
          let result, res_lcomp = tc_trivial_guard env' result in
          let head, args = U.head_and_args result in
 
@@ -1095,7 +1097,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 S.Discriminator lid ::
                 (if only_decl then [S.Logic; S.Assumption] else []) @
                 //(if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
-                List.filter (function S.Abstract -> not only_decl | S.NoExtract | S.Private -> true | _ -> false ) iquals
+                List.filter (function S.Abstract -> not only_decl | S.Inline_for_extraction | S.NoExtract | S.Private -> true | _ -> false ) iquals
             in
 
             (* Type of the discriminator *)
@@ -1190,6 +1192,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           in
           let quals =
               let iquals = iquals |> List.filter (function
+                  | S.Inline_for_extraction
                   | S.NoExtract
                   | S.Abstract
                   | S.Private -> true

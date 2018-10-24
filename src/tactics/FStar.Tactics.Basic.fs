@@ -445,7 +445,7 @@ let replace_cur (g:goal) : tac<unit> =
 
 let new_uvar (reason:string) (env:env) (typ:typ) : tac<(term * ctx_uvar)> =
     //typ.pos should really never be a FStar.Range.range ... can it?
-    let u, ctx_uvar, g_u = Env.new_implicit_var_aux reason typ.pos env typ Allow_untyped in
+    let u, ctx_uvar, g_u = Env.new_implicit_var_aux reason typ.pos env typ Allow_untyped None in
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))
 
