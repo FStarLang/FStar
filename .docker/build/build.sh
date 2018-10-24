@@ -225,7 +225,7 @@ function build_fstar() {
             fetch_hacl &
             fetch_and_make_kremlin &
             fetch_mitls &
-            fetch_quackyducky &
+            fetch_and_make_qd &
             {
                 if [ ! -d hacl-star-old ]; then
                     git clone https://github.com/mitls/hacl-star hacl-star-old
