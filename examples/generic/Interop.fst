@@ -1,11 +1,20 @@
 module Interop
+(* 
+   This example sketches a style for internalizing interoperability
+   between a deeply embedded assembly language working with registers (i.e., Vale)
+   and Low*, where functions and curried and have explicitly named arguments.
+
+   We effectively model a calling convention in which arguments are received in 
+   specific registers.
+*)
+
 open FStar.FunctionalExtensionality
 open FStar.Integers
 open FStar.HyperStack.ST
-module L = LowStar.Buffer
 module M = FStar.Map
+module HS = FStar.HyperStack
 
-(* Some fixed register type *)
+(* Some fixed set of registers *)
 type reg =
   | R1
   | R2
@@ -61,8 +70,6 @@ let rec elim_m (#n:arity) #r (m:arity{m <= n}) (f:n_arrow n r)
       | 0 -> f
       | _ ->
         elim_m #(n - 1) #r m (elim_1 f (Map.sel regs (as_reg (1 + max_arity - n)))) regs
-
-module HS = FStar.HyperStack
 
 (* Vale preconditions are are n-ary functions returning heap predicates *)
 let vale_pre (n:arity) = n_arrow n (HS.mem -> prop)
