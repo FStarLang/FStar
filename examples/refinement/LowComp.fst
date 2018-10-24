@@ -140,6 +140,17 @@ let l_eq #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
          (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) =
   lwp_eq (as_lwp c1) (as_lwp c2)
 
+
+let l_eq_refl #a (#wp:hwp_mon a) (#c:comp_wp a wp) (lc: lcomp_wp a wp c) : Lemma (l_eq lc lc) = () 
+  
+let l_eq_symm #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
+                 (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) (_ : squash (l_eq lc1 lc2)) : Lemma (l_eq lc2 lc1) = () 
+
+let l_eq_trans #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1:lcomp_wp a wp1 c1)
+                  (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2:lcomp_wp a wp2 c2)
+                  (#wp3:hwp_mon a) (#c3:comp_wp a wp2) (lc3:lcomp_wp a wp2 c2) 
+                  (_ : squash (l_eq lc1 lc2)) (_ : squash (l_eq lc2 lc3)) : Lemma (l_eq lc1 lc3) = () 
+
 assume val l_eq_axiom : (#a:Type) -> (#wp1:hwp_mon a) -> (#c1:comp_wp a wp1) -> (lc1: lcomp_wp a wp1 c1) ->
                         (#wp2:hwp_mon a) -> (#c2:comp_wp a wp2) -> (lc2 : lcomp_wp a wp2 c2) ->
                         Lemma (requires (l_eq lc1 lc2)) (ensures (lc1 === lc2))
