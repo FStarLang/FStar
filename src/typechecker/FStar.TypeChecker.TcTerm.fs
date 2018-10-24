@@ -2134,7 +2134,7 @@ and tc_eqn scrutinee env branch
       if not (Env.should_verify env)
       then U.t_true
       else (* 6 (a) *)
-          let rec build_branch_guard scrutinee_tm (pattern:pat) pat_exp : list<typ> =
+          let rec build_branch_guard (scrutinee_tm:option<term>) (pattern:pat) pat_exp : list<typ> =
             let discriminate scrutinee_tm f =
                 let is_induc, datacons = Env.datacons_of_typ env (Env.typ_of_datacon env f.v) in
                 (* Why the `not is_induc`? We may be checking an exception pattern. See issue #1535. *)
@@ -2161,12 +2161,15 @@ and tc_eqn scrutinee env branch
                 | Tm_uinst(t, _) -> head_constructor t
                 | _ -> fail () in
 
+            let force_scrutinee () =
+                match scrutinee_tm with
+                | None -> failwith (BU.format2 "Impossible (%s): scrutinee of match is not defined %s"
+                                                (Range.string_of_range pattern.p)
+                                                (Print.pat_to_string pattern))
+                | Some t -> t
+            in
             let pat_exp = SS.compress pat_exp |> U.unmeta in
             match pattern.v, pat_exp.n with
-            //| Pat_dot_term _, Tm_uvar _
-            //| Pat_dot_term _, Tm_app({n=Tm_uvar _}, _) ->
-            //  []
-
             | _, Tm_name _ ->
               [] //no guard for variables; they always match
 
@@ -2174,12 +2177,13 @@ and tc_eqn scrutinee env branch
               [] //no guard for the unit pattern; it's a singleton
 
             | Pat_constant _c, Tm_constant c ->
-              [U.mk_eq2 U_zero (tc_constant env pat_exp.pos c) scrutinee_tm pat_exp]
+
+              [U.mk_eq2 U_zero (tc_constant env pat_exp.pos c) (force_scrutinee()) pat_exp]
 
             | Pat_constant (FStar.Const.Const_int(_, Some _)), _ ->
               //machine integer pattern, cf. #1572
               let _, t, _ = env.type_of env pat_exp in
-              [U.mk_eq2 U_zero t scrutinee_tm pat_exp]
+              [U.mk_eq2 U_zero t (force_scrutinee()) pat_exp]
 
             | Pat_cons (_, []), Tm_uinst _
             | Pat_cons (_, []), Tm_fvar _ ->
@@ -2187,7 +2191,7 @@ and tc_eqn scrutinee env branch
                 let f = head_constructor pat_exp in
                 if not (Env.is_datacon env f.v)
                 then failwith "Impossible: nullary patterns must be data constructors"
-                else discriminate scrutinee_tm (head_constructor pat_exp)
+                else discriminate (force_scrutinee ()) (head_constructor pat_exp)
 
             | Pat_cons (_, pat_args), Tm_app(head, args) ->
                 //application pattern
@@ -2200,16 +2204,18 @@ and tc_eqn scrutinee env branch
                         List.mapi (fun i ((pi, _), (ei, _)) ->
                             let projector = Env.lookup_projector env f.v i in
                             //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
-                            match Env.try_lookup_lid env projector with
-                            | None ->
-                              failwith (BU.format1 "Impossible: projector %s not found" (Print.lid_to_string projector))
-                            | _ ->
-                              let proj = S.fvar (Ident.set_lid_range projector f.p) (Delta_equational_at_level 1) None in
-                              let sub_term = mk_Tm_app proj [as_arg scrutinee_tm] None f.p in
-                              build_branch_guard sub_term pi ei) |>
+                            let scrutinee_tm =
+                                match Env.try_lookup_lid env projector with
+                                | None ->
+                                  None //no projector, e.g., because we are actually typechecking the projector itself
+                                | _ ->
+                                  let proj = S.fvar (Ident.set_lid_range projector f.p) (Delta_equational_at_level 1) None in
+                                  Some (mk_Tm_app proj [as_arg (force_scrutinee())] None f.p)
+                            in
+                            build_branch_guard scrutinee_tm pi ei) |>
                         List.flatten
                      in
-                     discriminate scrutinee_tm f @ sub_term_guards
+                     discriminate (force_scrutinee()) f @ sub_term_guards
 
             | Pat_dot_term _, _ -> []
               //a non-pattern sub-term computed via unification; no guard needeed since it is from a dot pattern
@@ -2231,7 +2237,7 @@ and tc_eqn scrutinee env branch
                   t in
 
           (* 6 (c) *)
-         let branch_guard = build_and_check_branch_guard scrutinee_tm pattern norm_pat_exp in
+         let branch_guard = build_and_check_branch_guard (Some scrutinee_tm) pattern norm_pat_exp in
 
           (* 6 (d) *)
          let branch_guard =
