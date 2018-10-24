@@ -238,6 +238,7 @@ function build_fstar() {
             # propagated to the current shell. Re-do.
             export_home HACL "$(pwd)/hacl-star"
             export_home KREMLIN "$(pwd)/kremlin"
+            export_home QD "$(pwd)/qd"
 
             # Once F* is built, run its main regression suite, along with more relevant
             # tests.
