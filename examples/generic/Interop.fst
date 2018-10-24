@@ -94,7 +94,7 @@ let vale_sig
     (pre:vale_pre n)
     (post:vale_post n)
     = s0:state
-    -> Pure state
+    -> Ghost state
         (requires (as_vale_pre pre s0))
         (ensures (fun s1 -> as_vale_post post s0 s1))
 
@@ -109,13 +109,11 @@ let rec as_lowstar_sig (n:arity{n > 0}) (pre:vale_pre n) (post:vale_post n) : Ty
                             (ensures (fun h0 _ h1 -> elim #1 post x h0 h1))
   | _ -> x:uint_64 -> as_lowstar_sig (n - 1) (elim_1 pre x) (elim_1 post x)
 
-(* Two primitives to update the state monolithically *)
+(* A primitives to update the state monolithically with the result of a ghost function *)
 assume val gput: f:(unit -> GTot HS.mem) -> ST unit (requires (fun _ -> True)) (ensures (fun _ _ h1 -> h1 == f()))
-assume val put: h:HS.mem -> ST unit (requires (fun _ -> True)) (ensures (fun _ _ h1 -> h1 == h))
 
 //Avoid some inductive proofs by just letting Z3 unfold the recursive functions above
 #reset-options "--z3rlimit_factor 2 --max_fuel 5 --initial_fuel 5 --max_ifuel 1 --initial_ifuel 1"
-
 (* wrap v: Turns `v`, a Vale function, into an equivalent a Low* function *) 
 let rec wrap
         (#n:arity{n > 0})
@@ -124,7 +122,6 @@ let rec wrap
         (v:vale_sig n pre post)
   : as_lowstar_sig n pre post
   =
- 
   let rec aux (m:arity{0 < m /\ m <= n}) //number of arguments still to be received
               (regs:registers)         //arguments already received in registers
     : Tot (as_lowstar_sig m (elim_m m pre regs) (elim_m m post regs))
@@ -147,9 +144,8 @@ let rec wrap
                 memory = h0;
               } in
               //Apply the vale function
-              let state1 = v state in
-              //Replace the Low* state
-              put (v state).memory
+              //and replace the Low* state
+              gput (fun () -> (v state).memory)
        in
        (f <: as_lowstar_sig 1 pre post)
 
