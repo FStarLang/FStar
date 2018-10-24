@@ -444,6 +444,10 @@ type decl_meta =
      is_fsdoc: bool} //is a standalone fsdoc
 let dummy_meta = {r = dummyRange; has_qs = false; has_attrs = false; has_fsdoc = false; is_fsdoc = false}
 
+type annotation_style =
+  | Binders of int * int // val f (x1:t1) ... (xn:tn) : C
+  | Arrows of int * int //  val f : x1:t1 -> ... -> xn:tn -> C
+
 // TODO: rewrite in terms of with_comment_sep
 let with_comment printer tm tmrange origin =
   let rec comments_before_pos acc print_pos lookahead_pos =
@@ -695,7 +699,8 @@ and p_rawDecl d = match d.d with
           has_attrs = false;
           is_fsdoc = false })
   | Val(lid, t) ->
-    str "val" ^^ space ^^ p_lident lid ^^ group (colon ^^ space ^^ (p_typ false false t))
+    // str "val" ^^ space ^^ p_lident lid ^^ group (colon ^^ space ^^ alt_p_typ false false t) //(p_typ false false t))
+    group (str "val" ^^ space ^^ p_lident lid ^^ space ^^ (alt_p_typ false false t))
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
@@ -812,8 +817,8 @@ and p_letlhs kw (pat, _) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
   let pat, ascr_doc =
     match pat.pat with
-    | PatAscribed (pat, (t, None)) -> pat, group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
-    | PatAscribed (pat, (t, Some tac)) -> pat, group (colon ^^ space ^^ p_tmArrow p_tmNoEq t) ^^ group (str "by" ^^ space ^^ p_atomicTerm tac)
+    | PatAscribed (pat, (t, None)) -> pat, group (colon ^^ space ^^ p_tmArrow (Arrows (2, 2)) p_tmNoEq t)
+    | PatAscribed (pat, (t, Some tac)) -> pat, group (colon ^^ space ^^ p_tmArrow (Arrows (2, 2)) p_tmNoEq t) ^^ group (str "by" ^^ space ^^ p_atomicTerm tac)
     | _ -> pat, empty
   in
   match pat.pat with
@@ -1289,6 +1294,10 @@ and p_typ' ps pb e = match e.tm with
             (p_trigger trigger))) term_doc)
   | _ -> p_simpleTerm ps pb e
 
+and alt_p_typ ps pb e = with_comment (alt_p_typ' ps pb) e e.range "!41"
+
+and alt_p_typ' ps pb e = p_tmArrow (Binders (4, 0)) p_tmFormula e
+
 and p_quantifier e = match e.tm with
     | QForall _ -> str "forall"
     | QExists _ -> str "exists"
@@ -1370,23 +1379,29 @@ and p_tmIff e = match e.tm with
     | _ -> p_tmImplies e
 
 and p_tmImplies e = match e.tm with
-    | Op({idText = "==>"}, [e1;e2]) -> infix0 (str "==>") (p_tmArrow p_tmFormula e1) (p_tmImplies e2)
-    | _ -> p_tmArrow p_tmFormula e
+    | Op({idText = "==>"}, [e1;e2]) -> infix0 (str "==>") (p_tmArrow (Arrows (2, 2)) p_tmFormula e1) (p_tmImplies e2)
+    | _ -> p_tmArrow (Arrows (2, 2)) p_tmFormula e
 
 (* This function is somewhat convoluted because it is used in a few different contexts and it's trying to properly  *)
 (* indent for each of them. For signatures, it is trying to print the whole arrow on one line. If this fails, it    *)
 (* tries to print everything except the last term on the same line and push the last term on a new line. If this    *)
 (* fails, it prints every term on a separate line. This seems consistent with the current style used in most cases. *)
 (* A trailing space may sometimes be introduced, which we should trim.                                              *)
-and p_tmArrow p_Tm e =
+and p_tmArrow style p_Tm e =
   let terms = p_tmArrow' p_Tm e in
   let terms', last = List.splitAt (List.length terms - 1) terms in
-  let last_op = if List.length terms > 1 then space ^^ rarrow else empty in
+  let n, last_n, terms', sep, last_op =
+    match style with
+    | Arrows (n, ln)-> n, ln, terms', space ^^ rarrow ^^ break1, rarrow ^^ space
+    | Binders (n, ln) -> n, ln, List.map soft_parens_with_nesting terms', break1, colon ^^ space
+  in
+  let last_op = if List.length terms > 1 then last_op else empty in
+  let single_line_arg_indent = repeat n space in
   match List.length terms with
   | 1 -> List.hd terms
-  | _ -> group (ifflat (separate (space ^^ rarrow ^^ break1) terms)
-             (prefix2 (group ((ifflat ((separate (space ^^ rarrow ^^ break1) terms') ^^ last_op)
-                  (jump2 ((separate (space ^^ rarrow ^^ break1) terms') ^^ last_op))))) (List.hd last)))
+  | _ -> group (ifflat ((separate sep terms') ^^ space ^^ last_op ^^ List.hd last)
+             (prefix n 1 (group ((ifflat (separate sep terms')
+                  (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms'))))))) (align (hang last_n (last_op ^^ List.hd last)))))
 
 and p_tmArrow' p_Tm e = match e.tm with
   | Product(bs, tgt) -> (List.map (fun b -> p_binder false b) bs) @ (p_tmArrow' p_Tm tgt)
