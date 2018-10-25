@@ -368,7 +368,7 @@ let should_not_inline_lc (lc:lcomp) =
  * (d) It's not a let rec, as determined by the absence of the SHOULD_NOT_INLINE flag---see issue #1362. Would be better to just encode inner let recs to the SMT solver properly
  *)
 let should_return env eopt lc =
-    let lc_is_unit = U.arrow_formals_comp lc.res_typ |> snd |> U.comp_result |> U.is_unit in
+    let lc_is_unit = U.arrow_formals_comp lc.res_typ |> snd |> (fun c -> not (Env.is_reifiable_comp env c) && (U.comp_result c |> U.is_unit)) in
     match eopt with
     | None -> false //no term to return
     | Some e ->
