@@ -25,10 +25,6 @@ noeq type regional a =
     // It does not have to satisfy the invariant `r_inv` described below.
     dummy: a ->
 
-    // A representation type of `a` and a corresponding conversion function
-    repr: Type0 ->
-    r_repr: (HS.mem -> a -> GTot repr) ->
-
     // An invariant we want to maintain for each operation.
     // For example, it may include `live` and `freeable` properties
     // for related objects.
@@ -38,8 +34,12 @@ noeq type regional a =
       Lemma (requires (r_inv h v))
 	    (ensures (MHS.live_region h (region_of v)))) ->
 
-    // A core separation lemma, saying that the invariant and represenation
-    // are preserved when an orthogonal state transition happens.
+    // A representation type of `a` and a corresponding conversion function
+    repr: Type0 ->
+    r_repr: (h:HS.mem -> v:a{r_inv h v} -> GTot repr) ->
+
+    // A core separation lemma, saying that the invariant and represenation are
+    // preserved when an orthogonal state transition happens.
     r_sep:
       (v:a -> p:loc -> h:HS.mem -> h':HS.mem ->
       Lemma (requires (r_inv h v /\
@@ -47,24 +47,24 @@ noeq type regional a =
 		      modifies p h h'))
 	    (ensures (r_inv h' v /\ r_repr h v == r_repr h' v))) ->
 
-    /// Initialization (allocation)
-    // A representation value for the initial value of type `a`
+    /// Allocation
+    // The representation for the initial value of type `a`
     irepr: Ghost.erased repr ->
 
     // A property that should hold for all initial values of type `a`.
-    r_init_p: (a -> GTot Type0) ->
+    r_alloc_p: (a -> GTot Type0) ->
 
-    // An initialization operation. We might have a multiple ways of
-    // initializing a given target type `a`; then multiple typeclass instances
-    // should be defined, and each of them can be used properly.
-    r_init: (r:erid ->
+    // An allocation operation. We might have several ways of initializing a
+    // given target type `a`; then multiple typeclass instances should be
+    // defined, and each of them can be used properly.
+    r_alloc: (r:erid ->
       HST.ST a
 	(requires (fun h0 -> True))
 	(ensures (fun h0 v h1 ->
 	  Set.subset (Map.domain (HS.get_hmap h0))
 	  	     (Map.domain (HS.get_hmap h1)) /\
 	  modifies loc_none h0 h1 /\ 
-	  r_init_p v /\ r_inv h1 v /\ region_of v == r /\
+	  r_alloc_p v /\ r_inv h1 v /\ region_of v == r /\
 	  r_repr h1 v == Ghost.reveal irepr))) ->
 
     // Destruction: note that it allows to `modify` all the regions, including

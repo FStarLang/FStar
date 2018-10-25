@@ -14,31 +14,13 @@ module S = FStar.Seq
 type uint32_t = UInt32.t
 
 val max_uint32: uint32_t
-let max_uint32 = UInt32.uint_to_t (UInt.max_int UInt32.n)
+let max_uint32 = 4294967295ul // UInt32.uint_to_t (UInt.max_int UInt32.n)
 
 module U32 = FStar.UInt32
 
-/// Some helpers for `LowStar.Buffer`
-
-val get_as_seq_index:
-  #a:Type -> h:HS.mem -> buf:B.buffer a -> i:uint32_t{i < B.len buf} ->
-  Lemma (B.get h buf (U32.v i) == S.index (B.as_seq h (B.gsub buf i 1ul)) 0)
-let get_as_seq_index #a h buf i = ()
-
-val get_preserved_buffer:
-  #a:Type -> buf:B.buffer a ->
-  i:uint32_t -> len:uint32_t{U32.v i + U32.v len <= B.length buf} ->
-  k:uint32_t{(k < i || i + len <= k) && k < B.len buf} ->
-  h0:HS.mem -> h1:HS.mem ->
-  Lemma (requires (B.live h0 buf /\
-		  modifies (B.loc_buffer (B.gsub buf i len)) h0 h1))
-	(ensures (B.get h0 buf (U32.v k) == B.get h1 buf (U32.v k)))
-let get_preserved_buffer #a buf i len k h0 h1 =
-  get_as_seq_index h0 buf k; get_as_seq_index h1 buf k
-
 /// Abstract vector type
 
-noeq type vector_str a =
+inline_for_extraction noeq type vector_str a =
 | Vec: sz:uint32_t ->
        cap:uint32_t{cap >= sz} ->
        vs:B.buffer a{B.len vs = cap} -> 
@@ -57,45 +39,142 @@ let as_seq h #a vec =
 
 /// Capacity
 
-unfold val size_of: #a:Type -> vec:vector a -> Tot uint32_t
-unfold let size_of #a vec = 
+inline_for_extraction val size_of: #a:Type -> vec:vector a -> Tot uint32_t
+inline_for_extraction let size_of #a vec = 
   Vec?.sz vec
 
-unfold val capacity_of: #a:Type -> vec:vector a -> Tot uint32_t
-unfold let capacity_of #a vec =
+inline_for_extraction val capacity_of: #a:Type -> vec:vector a -> Tot uint32_t
+inline_for_extraction let capacity_of #a vec =
   Vec?.cap vec
 
-unfold val is_empty: #a:Type -> vec:vector a -> Tot bool
-unfold let is_empty #a vec =
+val is_empty: #a:Type -> vec:vector a -> Tot bool
+let is_empty #a vec =
   size_of vec = 0ul
 
-unfold val is_full: #a:Type -> vstr:vector_str a -> GTot bool
-unfold let is_full #a vstr =
+val is_full: #a:Type -> vstr:vector_str a -> GTot bool
+let is_full #a vstr =
   Vec?.sz vstr >= max_uint32
 
 /// Memory-related
 
-unfold val live: #a:Type -> HS.mem -> vector a -> GTot Type0
-unfold let live #a h vec =
+val live: #a:Type -> HS.mem -> vector a -> GTot Type0
+let live #a h vec =
   B.live h (Vec?.vs vec)
 
-unfold val freeable: #a:Type -> vector a -> GTot Type0
-unfold let freeable #a vec =
+val freeable: #a:Type -> vector a -> GTot Type0
+let freeable #a vec =
   B.freeable (Vec?.vs vec)
 
-unfold val loc_vector_within: 
-  #a:Type -> vec:vector a -> 
-  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} -> GTot loc
-unfold let loc_vector_within #a vec i j =
-  B.loc_buffer (B.gsub (Vec?.vs vec) i (j - i))
-
-unfold val loc_vector: #a:Type -> vector a -> GTot loc
-unfold let loc_vector #a vec =
+val loc_vector: #a:Type -> vector a -> GTot loc
+let loc_vector #a vec =
   B.loc_buffer (Vec?.vs vec)
 
-unfold val loc_addr_of_vector: #a:Type -> vector a -> GTot loc
-unfold let loc_addr_of_vector #a vec =
+val loc_addr_of_vector: #a:Type -> vector a -> GTot loc
+let loc_addr_of_vector #a vec =
   B.loc_addr_of_buffer (Vec?.vs vec)
+
+val loc_vector_within:
+  #a:Type -> vec:vector a -> 
+  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} -> 
+  GTot loc (decreases (U32.v (j - i)))
+let rec loc_vector_within #a vec i j =
+  if i = j then loc_none
+  else loc_union (B.loc_buffer (B.gsub (Vec?.vs vec) i 1ul))
+		 (loc_vector_within vec (i + 1ul) j)
+
+val loc_vector_within_includes_:
+  #a:Type -> vec:vector a -> 
+  i:uint32_t -> 
+  j1:uint32_t{i <= j1 && j1 <= size_of vec} -> 
+  j2:uint32_t{i <= j2 && j2 <= j1} ->
+  Lemma (requires True)
+	(ensures (loc_includes (loc_vector_within vec i j1)
+			       (loc_vector_within vec i j2)))
+	(decreases (U32.v (j1 - i)))
+let rec loc_vector_within_includes_ #a vec i j1 j2 =
+  if i = j1 then ()
+  else if i = j2 then ()
+  else begin
+    loc_vector_within_includes_ vec (i + 1ul) j1 j2;
+    loc_includes_union_l (B.loc_buffer (B.gsub (Vec?.vs vec) i 1ul))
+    			 (loc_vector_within vec (i + 1ul) j1)
+    			 (loc_vector_within vec (i + 1ul) j2);
+    loc_includes_union_r (loc_vector_within vec i j1)
+			 (B.loc_buffer (B.gsub (Vec?.vs vec) i 1ul))
+			 (loc_vector_within vec (i + 1ul) j2)
+  end
+
+val loc_vector_within_includes:
+  #a:Type -> vec:vector a -> 
+  i1:uint32_t -> j1:uint32_t{i1 <= j1 && j1 <= size_of vec} -> 
+  i2:uint32_t{i1 <= i2} -> j2:uint32_t{i2 <= j2 && j2 <= j1} ->
+  Lemma (requires True)
+	(ensures (loc_includes (loc_vector_within vec i1 j1)
+			       (loc_vector_within vec i2 j2)))
+	(decreases (U32.v (j1 - i1)))
+let rec loc_vector_within_includes #a vec i1 j1 i2 j2 =
+  if i1 = j1 then ()
+  else if i1 = i2 then loc_vector_within_includes_ vec i1 j1 j2
+  else begin
+    loc_vector_within_includes vec (i1 + 1ul) j1 i2 j2;
+    loc_includes_union_l (B.loc_buffer (B.gsub (Vec?.vs vec) i1 1ul))
+			 (loc_vector_within vec (i1 + 1ul) j1)
+			 (loc_vector_within vec i2 j2)
+  end
+
+val loc_vector_within_included:
+  #a:Type -> vec:vector a -> 
+  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
+  Lemma (requires True)
+	(ensures (loc_includes (loc_vector vec)
+			       (loc_vector_within vec i j)))
+	(decreases (U32.v (j - i)))
+let rec loc_vector_within_included #a vec i j =
+  if i = j then ()
+  else loc_vector_within_included vec (i + 1ul) j
+
+val loc_vector_within_disjoint_:
+  #a:Type -> vec:vector a -> 
+  i1:uint32_t -> 
+  i2:uint32_t{i1 < i2} ->
+  j2:uint32_t{i2 <= j2 && j2 <= size_of vec} ->
+  Lemma (requires True)
+	(ensures (loc_disjoint (B.loc_buffer (B.gsub (Vec?.vs vec) i1 1ul))
+			       (loc_vector_within vec i2 j2)))
+	(decreases (U32.v (j2 - i2)))
+let rec loc_vector_within_disjoint_ #a vec i1 i2 j2 =
+  if i2 = j2 then ()
+  else loc_vector_within_disjoint_ vec i1 (i2 + 1ul) j2
+
+val loc_vector_within_disjoint:
+  #a:Type -> vec:vector a -> 
+  i1:uint32_t -> j1:uint32_t{i1 <= j1 && j1 <= size_of vec} -> 
+  i2:uint32_t{j1 <= i2} -> j2:uint32_t{i2 <= j2 && j2 <= size_of vec} ->
+  Lemma (requires True)
+	(ensures (loc_disjoint (loc_vector_within vec i1 j1)
+			       (loc_vector_within vec i2 j2)))
+	(decreases (U32.v (j1 - i1)))
+let rec loc_vector_within_disjoint #a vec i1 j1 i2 j2 =
+  if i1 = j1 then ()
+  else (loc_vector_within_disjoint_ vec i1 i2 j2;
+       loc_vector_within_disjoint vec (i1 + 1ul) j1 i2 j2)
+
+val loc_vector_within_union_rev:
+  #a:Type -> vec:vector a -> 
+  i:uint32_t -> j:uint32_t{i < j && j <= size_of vec} ->
+  Lemma (requires True)
+	(ensures (loc_vector_within vec i j ==
+		 loc_union (loc_vector_within vec i (j - 1ul))
+			   (loc_vector_within vec (j - 1ul) j)))
+	(decreases (U32.v (j - i)))
+let rec loc_vector_within_union_rev #a vec i j =
+  if i = j - 1ul then ()
+  else begin
+    loc_vector_within_union_rev vec (i + 1ul) j;
+    loc_union_assoc (B.loc_buffer (B.gsub (Vec?.vs vec) i 1ul))
+		    (loc_vector_within vec (i + 1ul) (j - 1ul))
+		    (loc_vector_within vec (j - 1ul) j)
+  end
 
 unfold val frameOf: #a:Type -> vector a -> Tot HH.rid
 unfold let frameOf #a vec =
@@ -112,7 +191,8 @@ val modifies_as_seq:
   Lemma (requires (live h0 vec /\ 
 		  loc_disjoint (loc_vector vec) dloc /\
 		  modifies dloc h0 h1))
-	(ensures (as_seq h0 vec == as_seq h1 vec))
+	(ensures (live h1 vec /\
+		 as_seq h0 vec == as_seq h1 vec))
 	[SMTPat (live h0 vec); 
 	SMTPat (loc_disjoint (loc_vector vec) dloc);
 	SMTPat (modifies dloc h0 h1)]
@@ -128,26 +208,37 @@ val modifies_as_seq_within:
 		  modifies dloc h0 h1))
 	(ensures (S.slice (as_seq h0 vec) (U32.v i) (U32.v j) == 
 		 S.slice (as_seq h1 vec) (U32.v i) (U32.v j)))
+	(decreases (U32.v (j - i)))
 	[SMTPat (live h0 vec); 
 	SMTPat (loc_disjoint (loc_vector_within vec i j) dloc);
 	SMTPat (modifies dloc h0 h1)]
-let modifies_as_seq_within #a vec i j dloc h0 h1 =
-  B.modifies_buffer_elim (B.gsub (Vec?.vs vec) i (j - i)) dloc h0 h1
+let rec modifies_as_seq_within #a vec i j dloc h0 h1 =
+  if i = j then ()
+  else begin
+    B.modifies_buffer_elim (B.gsub (Vec?.vs vec) i 1ul) dloc h0 h1;
+    modifies_as_seq_within vec (i + 1ul) j dloc h0 h1;
+    assert (S.equal (S.slice (as_seq h0 vec) (U32.v i) (U32.v j))
+		    (S.append (S.slice (as_seq h0 vec) (U32.v i) (U32.v i + 1))
+			      (S.slice (as_seq h0 vec) (U32.v i + 1) (U32.v j))));
+    assert (S.equal (S.slice (as_seq h1 vec) (U32.v i) (U32.v j))
+		    (S.append (S.slice (as_seq h1 vec) (U32.v i) (U32.v i + 1))
+			      (S.slice (as_seq h1 vec) (U32.v i + 1) (U32.v j))))
+  end
 
 /// Construction
 
-val create_empty: 
+inline_for_extraction val alloc_empty: 
   a:Type -> Tot (vec:vector a{size_of vec = 0ul})
-let create_empty a =
+inline_for_extraction let alloc_empty a =
   Vec 0ul 0ul B.null
 
-val create_empty_as_seq_empty:
+val alloc_empty_as_seq_empty:
   a:Type -> h:HS.mem ->
-  Lemma (S.equal (as_seq h (create_empty a)) S.empty)
-	[SMTPat (as_seq h (create_empty a))]
-let create_empty_as_seq_empty a h = ()
+  Lemma (S.equal (as_seq h (alloc_empty a)) S.empty)
+	[SMTPat (as_seq h (alloc_empty a))]
+let alloc_empty_as_seq_empty a h = ()
 
-val create_rid:
+val alloc_rid:
   #a:Type -> len:uint32_t{len > 0ul} -> v:a ->
   rid:HH.rid{HST.is_eternal_region rid} ->
   HST.ST (vector a)
@@ -160,10 +251,12 @@ val create_rid:
                      (Map.domain (MHS.get_hmap h1)) /\
 	   size_of vec = len /\
 	   S.equal (as_seq h1 vec) (S.create (U32.v len) v)))
-let create_rid #a len v rid =
+let alloc_rid #a len v rid =
   Vec len len (B.malloc rid v len)
 
-val create: 
+// Allocate a vector with the length `len`, filled with the initial value `v`.
+// Note that the vector is allocated in the root region.
+val alloc: 
   #a:Type -> len:uint32_t{len > 0ul} -> v:a -> 
   HST.ST (vector a)
 	 (requires (fun h0 -> true))
@@ -175,10 +268,12 @@ val create:
                      (Map.domain (MHS.get_hmap h1)) /\
 	   size_of vec = len /\
 	   S.equal (as_seq h1 vec) (S.create (U32.v len) v)))
-let create #a len v =
-  create_rid len v HH.root
+let alloc #a len v =
+  alloc_rid len v HH.root
 
-val create_reserve:
+// Allocate a vector with the _capacity_ `len`; we still need to provide an
+// initial value `ia` in order to allocate space.
+val alloc_reserve:
   #a:Type -> len:uint32_t{len > 0ul} -> ia:a ->
   rid:HH.rid{HST.is_eternal_region rid} ->
   HST.ST (vector a)
@@ -190,10 +285,13 @@ val create_reserve:
                      (Map.domain (MHS.get_hmap h1)) /\
 	   size_of vec = 0ul /\
 	   S.equal (as_seq h1 vec) S.empty))
-let create_reserve #a len ia rid =
+let alloc_reserve #a len ia rid =
   Vec 0ul len (B.malloc rid ia len)
 
-val create_by_buffer:
+// Allocate a vector with a given buffer with the length `len`.
+// Note that it does not copy the buffer content; instead it directly uses the
+// buffer pointer.
+val alloc_by_buffer:
   #a:Type -> len:uint32_t{len > 0ul} ->
   buf:B.buffer a{B.len buf = len} ->
   HST.ST (vector a)
@@ -203,7 +301,7 @@ val create_by_buffer:
 	   live h1 vec /\ h0 == h1 /\
 	   size_of vec = len /\
 	   S.equal (as_seq h1 vec) (B.as_seq h0 buf)))
-let create_by_buffer #a len buf =
+let alloc_by_buffer #a len buf =
   Vec len len buf
 
 /// Destruction
@@ -289,8 +387,10 @@ let assign #a vec i v =
   //       but the `modifies` postcondition is coarse-grained.
   B.upd (B.sub (Vec?.vs vec) i 1ul) 0ul v;
   let hh1 = HST.get () in
+  loc_vector_within_disjoint vec 0ul i i (i + 1ul);
   modifies_as_seq_within 
     vec 0ul i (loc_vector_within #a vec i (i + 1ul)) hh0 hh1;
+  loc_vector_within_disjoint vec i (i + 1ul) (i + 1ul) (size_of vec);
   modifies_as_seq_within 
     vec (i + 1ul) (size_of vec) (loc_vector_within #a vec i (i + 1ul)) hh0 hh1;
   slice_append (as_seq hh1 vec) 0 (U32.v i) (U32.v i + 1);
@@ -337,6 +437,9 @@ let insert #a vec v =
     (B.upd vs sz v;
     Vec (sz + 1ul) cap vs)
 
+// Flush elements in the vector until the index `i`.
+// It also frees the original allocation and reallocates a smaller space for
+// remaining elements.
 val flush:
   #a:Type -> vec:vector a -> ia:a ->
   i:uint32_t{i <= size_of vec} ->
@@ -454,25 +557,12 @@ val forall2_all:
 let forall2_all #a h vec p =
   forall2 h vec 0ul (size_of vec) p
 
-(*! Facts *)
+/// Facts
 
-val forall_seq_ok:
-  #a:Type -> seq:S.seq a -> 
-  i:nat -> j:nat{i <= j && j <= S.length seq} ->
-  k:nat{i <= k && k < j} ->
-  p:(a -> GTot Type0) ->
-  Lemma (requires (forall_seq seq i j p))
-	(ensures (p (S.index seq k)))
-let forall_seq_ok #a seq i j k p = ()
-
-val forall2_seq_ok:
-  #a:Type -> seq:S.seq a -> 
-  i:nat -> j:nat{i <= j && j <= S.length seq} ->
-  k:nat{i <= k && k < j} -> l:nat{i <= l && l < j && k <> l} ->
-  p:(a -> a -> GTot Type0) ->
-  Lemma (requires (forall2_seq seq i j p))
-	(ensures (p (S.index seq k) (S.index seq l)))
-let forall2_seq_ok #a seq i j k l p = ()
+val get_as_seq_index:
+  #a:Type -> h:HS.mem -> buf:B.buffer a -> i:uint32_t{i < B.len buf} ->
+  Lemma (B.get h buf (U32.v i) == S.index (B.as_seq h (B.gsub buf i 1ul)) 0)
+let get_as_seq_index #a h buf i = ()
 
 val get_preserved:
   #a:Type -> vec:vector a ->
@@ -497,8 +587,33 @@ private val get_preserved_within:
 	[SMTPat (live h0 vec);
 	SMTPat (modifies (loc_vector_within vec i j) h0 h1);
 	SMTPat (get h0 vec k)]
-let get_preserved_within #a vec i j k h0 h1 =
-  get_preserved_buffer (Vec?.vs vec) i (j - i) k h0 h1
+let rec get_preserved_within #a vec i j k h0 h1 =
+  if k < i then begin
+    loc_vector_within_disjoint vec k (k + 1ul) i j;
+    get_preserved vec k (loc_vector_within vec i j) h0 h1
+  end
+  else begin
+    loc_vector_within_disjoint vec i j k (k + 1ul);
+    get_preserved vec k (loc_vector_within vec i j) h0 h1
+  end    
+
+val forall_seq_ok:
+  #a:Type -> seq:S.seq a -> 
+  i:nat -> j:nat{i <= j && j <= S.length seq} ->
+  k:nat{i <= k && k < j} ->
+  p:(a -> GTot Type0) ->
+  Lemma (requires (forall_seq seq i j p))
+	(ensures (p (S.index seq k)))
+let forall_seq_ok #a seq i j k p = ()
+
+val forall2_seq_ok:
+  #a:Type -> seq:S.seq a -> 
+  i:nat -> j:nat{i <= j && j <= S.length seq} ->
+  k:nat{i <= k && k < j} -> l:nat{i <= l && l < j && k <> l} ->
+  p:(a -> a -> GTot Type0) ->
+  Lemma (requires (forall2_seq seq i j p))
+	(ensures (p (S.index seq k) (S.index seq l)))
+let forall2_seq_ok #a seq i j k l p = ()
 
 val forall_as_seq:
   #a:Type -> s0:S.seq a -> s1:S.seq a{S.length s0 = S.length s1} ->
