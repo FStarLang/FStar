@@ -2182,7 +2182,10 @@ and tc_eqn scrutinee env branch
 
             | Pat_constant (FStar.Const.Const_int(_, Some _)), _ ->
               //machine integer pattern, cf. #1572
-              let _, t, _ = env.type_of env pat_exp in
+              let _, t, _ =
+                let env, _ = Env.clear_expected_typ env in
+                env.type_of env pat_exp
+              in
               [U.mk_eq2 U_zero t (force_scrutinee()) pat_exp]
 
             | Pat_cons (_, []), Tm_uinst _
