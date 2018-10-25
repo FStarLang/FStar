@@ -935,7 +935,7 @@
         "unit_typing"
       ],
       0,
-      "bdf4f1970497ec99115d85e53e83e4a8"
+      "d2ae31869f5bbe901d94348d8f396bbd"
     ],
     [
       "FStar.Monotonic.HyperStack.mreference_distinct_sel_disjoint",
@@ -1741,7 +1741,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "2e7752418082a7e0797e95a7084d26b1"
+      "75d4316ada881af485005987f91e508e"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_upd_1",
