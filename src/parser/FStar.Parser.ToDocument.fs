@@ -43,7 +43,6 @@ module BU = FStar.Util
 (* - Printing the comments [comment_stack] *)
 
 
-
 let min x y = if x > y then y else x
 let max x y = if x > y then x else y
 
@@ -699,8 +698,12 @@ and p_rawDecl d = match d.d with
           has_attrs = false;
           is_fsdoc = false })
   | Val(lid, t) ->
+    if all_binders_annot t then
+      group (str "val" ^^ space ^^ p_lident lid ^^ space ^^ (alt_p_typ (Binders (4,0)) false false t))
+    else
+      group (str "val" ^^ space ^^ p_lident lid ^^ group (colon ^^ space ^^ alt_p_typ (Arrows (2,2)) false false t))
     // str "val" ^^ space ^^ p_lident lid ^^ group (colon ^^ space ^^ alt_p_typ false false t) //(p_typ false false t))
-    group (str "val" ^^ space ^^ p_lident lid ^^ space ^^ (alt_p_typ false false t))
+
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
@@ -1006,6 +1009,10 @@ and is_meta_qualifier aq =
   | Some (Meta _) -> true
   | _ -> false
 
+and is_binder_annot b = match b.b with
+  | Annotated _ -> true
+  | _ -> false
+
 (* is_atomic is true if the binder must be parsed atomically *)
 and p_binder is_atomic b = match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
@@ -1294,9 +1301,9 @@ and p_typ' ps pb e = match e.tm with
             (p_trigger trigger))) term_doc)
   | _ -> p_simpleTerm ps pb e
 
-and alt_p_typ ps pb e = with_comment (alt_p_typ' ps pb) e e.range "!41"
+and alt_p_typ style ps pb e = with_comment (alt_p_typ' style ps pb) e e.range "!41"
 
-and alt_p_typ' ps pb e = p_tmArrow (Binders (4, 0)) p_tmFormula e
+and alt_p_typ' style ps pb e = p_tmArrow style p_tmFormula e
 
 and p_quantifier e = match e.tm with
     | QForall _ -> str "forall"
@@ -1402,6 +1409,15 @@ and p_tmArrow style p_Tm e =
   | _ -> group (ifflat ((separate sep terms') ^^ space ^^ last_op ^^ List.hd last)
              (prefix n 1 (group ((ifflat (separate sep terms')
                   (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms'))))))) (align (hang last_n (last_op ^^ List.hd last)))))
+
+and all_binders_annot e =
+  let rec all_binders e l =
+    match e.tm with
+    | Product(bs, tgt) -> if List.for_all is_binder_annot bs then all_binders tgt (l+ List.length bs) else (false, 0)
+    | _ -> (true, l+1)
+  in
+  let b, l = all_binders e 0 in
+  if b && l > 1 then true else false
 
 and p_tmArrow' p_Tm e = match e.tm with
   | Product(bs, tgt) -> (List.map (fun b -> p_binder false b) bs) @ (p_tmArrow' p_Tm tgt)
