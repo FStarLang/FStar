@@ -363,12 +363,14 @@ let should_not_inline_lc (lc:lcomp) =
 (* should_return env (Some e) lc:
  * We will "return" e, adding an equality to the VC, if all of the following conditions hold
  * (a) e is a pure or ghost term
- * (b) Its return type, lc.result_typ, is not a sub-singleton (unit, squash, etc)
+ * (b) Its return type, lc.res_typ, is not a sub-singleton (unit, squash, etc), if lc.res_typ is an arrow, then we check the comp type of the arrow
+ *     An exception is made for reifiable effects -- they are useful even if they return unit
  * (c) Its head symbol is not marked irreducible (in this case inlining is not going to help, it is equivalent to having a bound variable)
  * (d) It's not a let rec, as determined by the absence of the SHOULD_NOT_INLINE flag---see issue #1362. Would be better to just encode inner let recs to the SMT solver properly
  *)
 let should_return env eopt lc =
-    let lc_is_unit = U.arrow_formals_comp lc.res_typ |> snd |> (fun c -> not (Env.is_reifiable_comp env c) && (U.comp_result c |> U.is_unit)) in
+    //if lc.res_typ is not an arrow, arrow_formals_comp returns Tot lc.res_typ
+    let lc_is_unit = lc.res_typ |> U.arrow_formals_comp |> snd |> (fun c -> not (Env.is_reifiable_comp env c) && (U.comp_result c |> U.is_unit)) in
     match eopt with
     | None -> false //no term to return
     | Some e ->
