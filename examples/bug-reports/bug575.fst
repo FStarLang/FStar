@@ -6,7 +6,6 @@ type relation = int -> Type0
 noeq type multi0 (r:int -> Type0) : int -> Type =
 | Multi_step0 : x:int -> r x -> multi0 r x
 
-// Needs the --__temp_no_proj
 noeq type multi (r:relation) : int -> Type0 =
 | Multi_step : x:int -> r x -> multi r x
 
