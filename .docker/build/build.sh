@@ -79,6 +79,37 @@ function fetch_and_make_kremlin() {
     export PATH="$(pwd)/kremlin:$PATH"
 }
 
+# By default, QuackyDucky master works against F* stable. Can also be overridden.
+function fetch_qd() {
+    if [ ! -d qd ]; then
+        git clone https://github.com/project-everest/quackyducky qd
+    fi
+
+    cd qd
+    git fetch origin
+    local ref=$(if [ -f ../.qd_version ]; then cat ../.qd_version | tr -d '\r\n'; else echo origin/master; fi)
+    echo Switching to QuackyDucky $ref
+    git reset --hard $ref
+    cd ..
+    export_home QD "$(pwd)/qd"
+}
+
+function fetch_and_make_qd() {
+    fetch_qd
+
+    # Default build target is minimal, unless specified otherwise
+    local localTarget
+    if [[ $1 == "" ]]; then
+        localTarget="quackyducky"
+    else
+        localTarget="$1"
+    fi
+
+    make -C qd -j $threads $localTarget ||
+        (cd qd && git clean -fdx && make -j $threads $localTarget)
+}
+
+
 # By default, mitls-fstar master works against F* stable. Can also be overridden.
 function fetch_mitls() {
     if [ ! -d mitls-fstar ]; then
@@ -194,6 +225,7 @@ function build_fstar() {
             fetch_hacl &
             fetch_and_make_kremlin &
             fetch_mitls &
+            fetch_and_make_qd &
             {
                 if [ ! -d hacl-star-old ]; then
                     git clone https://github.com/mitls/hacl-star hacl-star-old
@@ -206,6 +238,7 @@ function build_fstar() {
             # propagated to the current shell. Re-do.
             export_home HACL "$(pwd)/hacl-star"
             export_home KREMLIN "$(pwd)/kremlin"
+            export_home QD "$(pwd)/qd"
 
             # Once F* is built, run its main regression suite, along with more relevant
             # tests.
@@ -252,6 +285,13 @@ function build_fstar() {
 
             # We now run all (hardcoded) tests in mitls-fstar@master
             {
+                # First regenerate dependencies and parsers (maybe not
+                # really needed for now, since any test of this set
+                # already does this; but it will become necessary if
+                # we later decide to perform these tests in parallel,
+                # to avoid races.)
+                make -C mitls-fstar/src/tls refresh-depend
+
                 OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
                     {
                         echo "Error - StreamAE.fst-ver (mitls)"

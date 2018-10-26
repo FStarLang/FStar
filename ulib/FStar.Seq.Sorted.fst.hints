@@ -83,7 +83,7 @@
         "unit_typing"
       ],
       0,
-      "e66780d03d5337b8b9307b779637c85d"
+      "1256b76ec91af482714b81113e689b26"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_cons_lemma",
@@ -132,7 +132,7 @@
         "typing_FStar.Seq.Base.slice", "unit_inversion", "unit_typing"
       ],
       0,
-      "756e6a3691c13a2a4e85ed66ca39038d"
+      "bc1e52a9f67ec89b4790729d2af9e75a"
     ],
     [
       "FStar.Seq.Sorted.sorted_sorted_pred_lemma",
@@ -319,7 +319,7 @@
         "typing_FStar.Seq.Properties.last"
       ],
       0,
-      "1b66001934ae045a50b89c55d8e81333"
+      "34db72fcdcc3a247a51465b2680797d2"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_cons_lemma",
