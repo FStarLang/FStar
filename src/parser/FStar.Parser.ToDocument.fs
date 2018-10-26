@@ -400,6 +400,42 @@ let handleable_op op args =
   | 3 -> List.mem (Ident.text_of_id op) [".()<-" ; ".[]<-"]
   | _ -> false
 
+
+// Style choice for type signatures. Depending on available space, they
+// can be printed in one of three ways:
+//   (1) all on the same line
+//   (2) all on the same line, except the computation type, which is
+//   pushed on a new line
+//   (3) keyword and identifier on one line, then every binder and the
+//   computation type on separate lines; binders can also be spread over
+//   multiple lines
+// In case (2), the first parameter controls indentation for the
+// computation type. In case (3), first parameter is indentation for each
+// of the binders, second parameter is indendation for the computation
+// type.
+type annotation_style =
+  | Binders of int * int // val f (x1:t1) ... (xn:tn) : C
+  | Arrows of int * int //  val f : x1:t1 -> ... -> xn:tn -> C
+
+// decide whether a type signature can be printed in the format
+//   val f (x1:t1) ... (xn:tn) : C
+// it can't if either not all args are annotated binders or if it has no
+// arguments, in which case it will be printed using the colon + arrows style
+let all_binders_annot e =
+  let is_binder_annot b =
+    match b.b with
+    | Annotated _ -> true
+    | _ -> false
+  in
+  let rec all_binders e l =
+    match e.tm with
+    | Product(bs, tgt) -> if List.for_all is_binder_annot bs then all_binders tgt (l+ List.length bs) else (false, 0)
+    | _ -> (true, l+1)
+  in
+  let b, l = all_binders e 0 in
+  if b && l > 1 then true else false
+
+
 (* ****************************************************************************)
 (*                                                                            *)
 (*                   Taking care of comments                                  *)
@@ -442,10 +478,6 @@ type decl_meta =
      has_fsdoc: bool;
      is_fsdoc: bool} //is a standalone fsdoc
 let dummy_meta = {r = dummyRange; has_qs = false; has_attrs = false; has_fsdoc = false; is_fsdoc = false}
-
-type annotation_style =
-  | Binders of int * int // val f (x1:t1) ... (xn:tn) : C
-  | Arrows of int * int //  val f : x1:t1 -> ... -> xn:tn -> C
 
 // TODO: rewrite in terms of with_comment_sep
 let with_comment printer tm tmrange origin =
@@ -698,12 +730,11 @@ and p_rawDecl d = match d.d with
           has_attrs = false;
           is_fsdoc = false })
   | Val(lid, t) ->
-    if all_binders_annot t then
-      group (str "val" ^^ space ^^ p_lident lid ^^ space ^^ (alt_p_typ (Binders (4,0)) false false t))
-    else
-      group (str "val" ^^ space ^^ p_lident lid ^^ group (colon ^^ space ^^ alt_p_typ (Arrows (2,2)) false false t))
-    // str "val" ^^ space ^^ p_lident lid ^^ group (colon ^^ space ^^ alt_p_typ false false t) //(p_typ false false t))
-
+    group <| str "val" ^^ space ^^ p_lident lid ^^
+      (if all_binders_annot t then
+         space ^^ (p_typ_top (Binders (4,0)) false false t)
+       else
+         group (colon ^^ space ^^ p_typ_top (Arrows (2,2)) false false t))
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
@@ -1009,10 +1040,6 @@ and is_meta_qualifier aq =
   | Some (Meta _) -> true
   | _ -> false
 
-and is_binder_annot b = match b.b with
-  | Annotated _ -> true
-  | _ -> false
-
 (* is_atomic is true if the binder must be parsed atomically *)
 and p_binder is_atomic b = match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
@@ -1301,9 +1328,9 @@ and p_typ' ps pb e = match e.tm with
             (p_trigger trigger))) term_doc)
   | _ -> p_simpleTerm ps pb e
 
-and alt_p_typ style ps pb e = with_comment (alt_p_typ' style ps pb) e e.range "!41"
+and p_typ_top style ps pb e = with_comment (p_typ_top' style ps pb) e e.range "!41"
 
-and alt_p_typ' style ps pb e = p_tmArrow style p_tmFormula e
+and p_typ_top' style ps pb e = p_tmArrow style p_tmFormula e
 
 and p_quantifier e = match e.tm with
     | QForall _ -> str "forall"
@@ -1389,11 +1416,16 @@ and p_tmImplies e = match e.tm with
     | Op({idText = "==>"}, [e1;e2]) -> infix0 (str "==>") (p_tmArrow (Arrows (2, 2)) p_tmFormula e1) (p_tmImplies e2)
     | _ -> p_tmArrow (Arrows (2, 2)) p_tmFormula e
 
-(* This function is somewhat convoluted because it is used in a few different contexts and it's trying to properly  *)
-(* indent for each of them. For signatures, it is trying to print the whole arrow on one line. If this fails, it    *)
-(* tries to print everything except the last term on the same line and push the last term on a new line. If this    *)
-(* fails, it prints every term on a separate line. This seems consistent with the current style used in most cases. *)
-(* A trailing space may sometimes be introduced, which we should trim.                                              *)
+// This function is somewhat convoluted because it is used in a few
+// different contexts and it is trying to properly indent for each of
+// them. For signatures, it is trying to print the whole arrow on one
+// line. If this fails, it tries to print everything except the
+// computation type on the same line and push the computation type on a
+// new line. If this fails, it prints every term on a separate line. A
+// trailing space may sometimes be introduced, which we should trim.
+// It also needs to make adjustments depending on which style a signature
+// is to be printed in. For more details see the `annotation_style` type
+// definition.
 and p_tmArrow style p_Tm e =
   let terms = p_tmArrow' p_Tm e in
   let terms', last = List.splitAt (List.length terms - 1) terms in
@@ -1407,17 +1439,9 @@ and p_tmArrow style p_Tm e =
   match List.length terms with
   | 1 -> List.hd terms
   | _ -> group (ifflat ((separate sep terms') ^^ space ^^ last_op ^^ List.hd last)
-             (prefix n 1 (group ((ifflat (separate sep terms')
-                  (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms'))))))) (align (hang last_n (last_op ^^ List.hd last)))))
-
-and all_binders_annot e =
-  let rec all_binders e l =
-    match e.tm with
-    | Product(bs, tgt) -> if List.for_all is_binder_annot bs then all_binders tgt (l+ List.length bs) else (false, 0)
-    | _ -> (true, l+1)
-  in
-  let b, l = all_binders e 0 in
-  if b && l > 1 then true else false
+           (prefix n 1 (group ((ifflat (separate sep terms')
+             (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms')))))))
+               (align (hang last_n (last_op ^^ List.hd last)))))
 
 and p_tmArrow' p_Tm e = match e.tm with
   | Product(bs, tgt) -> (List.map (fun b -> p_binder false b) bs) @ (p_tmArrow' p_Tm tgt)
