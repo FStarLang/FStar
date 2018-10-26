@@ -46,6 +46,14 @@ module BU = FStar.Util
 let min x y = if x > y then y else x
 let max x y = if x > y then x else y
 
+// VD: copied over from NBE, should both probably go in FStar.List
+let map_rev (f : 'a -> 'b) (l : list<'a>) : list<'b> =
+  let rec aux (l:list<'a>) (acc:list<'b>) =
+    match l with
+    | [] -> acc
+    | x :: xs -> aux xs (f x :: acc)
+  in  aux l []
+
 
 (* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
 (* reset at the end of each module. If you are using individual print function you *)
@@ -435,6 +443,7 @@ let all_binders_annot e =
   let b, l = all_binders e 0 in
   if b && l > 1 then true else false
 
+type catf = document -> document -> document
 let cat_with_colon x y = x ^^ colon ^/^ y
 
 
@@ -1042,8 +1051,14 @@ and is_meta_qualifier aq =
   | Some (Meta _) -> true
   | _ -> false
 
+and p_binder is_atomic b =
+  let b', t', catf = p_binder' is_atomic b in
+  match t' with
+  | Some typ -> catf b' typ
+  | None -> b'
+
 (* is_atomic is true if the binder must be parsed atomically *)
-and p_binder' (is_atomic: bool) (b: binder): document * option<document> * (document -> document -> document) =
+and p_binder' (is_atomic: bool) (b: binder): document * option<document> * catf =
   match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid, None, cat_with_colon
   | TVariable lid -> p_lident lid, None, cat_with_colon
@@ -1079,11 +1094,9 @@ and p_binder' (is_atomic: bool) (b: binder): document * option<document> * (docu
         else p_appTerm t, None, cat_with_colon (* This choice seems valid (used in p_tmNoEq') *)
     end
 
-and p_binder is_atomic b =
-  let b', t', catf = p_binder' is_atomic b in
-  match t' with
-  | Some typ -> catf b' typ
-  | None -> b'
+and p_refinement aqual_opt binder t phi =
+  let b, typ = p_refinement' aqual_opt binder t phi in
+  cat_with_colon b typ
 
 and p_refinement' aqual_opt binder t phi =
   let is_t_atomic =
@@ -1103,10 +1116,6 @@ and p_refinement' aqual_opt binder t phi =
     (p_appTerm t ^^
       (jump 2 jump_break (group ((ifflat
         (soft_braces_with_nesting_tight phi) (soft_braces_with_nesting phi))))))
-
-and p_refinement aqual_opt binder t phi =
-  let b, typ = p_refinement' aqual_opt binder t phi in
-  cat_with_colon b typ
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
 (* Note: also skipping multiBinder here. *)
@@ -1443,7 +1452,11 @@ and p_tmImplies e = match e.tm with
 // is to be printed in. For more details see the `annotation_style` type
 // definition.
 and p_tmArrow style p_Tm e =
-  let terms = p_tmArrow' p_Tm e in
+  let terms =
+    match style with
+    | Arrows _ -> p_tmArrow' p_Tm e
+    | Binders _ -> collapse_binders p_Tm e
+  in
   let terms', last = List.splitAt (List.length terms - 1) terms in
   let n, last_n, terms', sep, last_op =
     match style with
@@ -1459,9 +1472,56 @@ and p_tmArrow style p_Tm e =
              (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms')))))))
                (align (hang last_n (last_op ^^ List.hd last)))))
 
-and p_tmArrow' p_Tm e = match e.tm with
+and p_tmArrow' p_Tm e =
+  match e.tm with
   | Product(bs, tgt) -> (List.map (fun b -> p_binder false b) bs) @ (p_tmArrow' p_Tm tgt)
   | _ -> [p_Tm e]
+
+// When printing in `Binders` style, collapse binders which have the same
+// type, so instead of printing
+//    val f (a: t) (b: t) (c: t) : Tot nat
+// print
+//    val f (a b c: t) : Tot nat
+// For this, we use the generalised version of p_binder, which returns
+// the binder, its type (as an optional) and a function which
+// concatenates them.
+and collapse_binders (p_Tm: term -> document) (e: term): list<document> =
+  let rec accumulate_binders p_Tm e: list<(document * option<document> * catf)> =
+    match e.tm with
+    | Product(bs, tgt) -> (List.map (fun b -> p_binder' false b) bs) @ (accumulate_binders p_Tm tgt)
+    | _ -> [(p_Tm e, None, cat_with_colon)]
+  in
+  let fold_fun (bs: list<(list<document> * option<document> * catf)>) (x: document * option<document> * catf) =
+    let b1, t1, f1 = x in
+    match bs with
+    | [] -> [([b1], t1, f1)]
+    | hd::tl ->
+      let b2s, t2, _ = hd in
+      match (t1, t2) with
+      | (Some typ1, Some typ2) ->
+        if typ1 = typ2 then
+          (b2s @ [b1], t1, f1) :: tl
+        else
+          ([b1], t1, f1) :: hd :: tl
+      | _ -> ([b1], t1, f1) :: bs
+  in
+  let p_collapsed_binder (cb: list<document> * option<document> * catf): document =
+    let bs, t, f = cb in
+    match t with
+    | None -> begin
+      match bs with
+      | [b] -> b
+      | _ -> failwith "Impossible" // can't have dangling type or collapse unannotated binders
+    end
+    | Some typ -> begin
+      match bs with
+      | [] -> failwith "Impossible" // can't have dangling type
+      | [b] -> f b typ
+      | hd::tl -> f (List.fold_left (fun x y -> x ^^ space ^^ y) hd tl) typ
+    end
+  in
+  let binders = List.fold_left fold_fun [] (accumulate_binders p_Tm e) in
+  map_rev p_collapsed_binder binders
 
 and p_tmFormula e =
     let conj = space ^^ (str "/\\") ^^ break1 in
