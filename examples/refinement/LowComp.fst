@@ -7,6 +7,7 @@ open LowStar.Buffer
 open LowStar.BufferOps
 open LowStar.Modifies
 open Mem_eq
+open Relations 
 
 module H = FStar.Monotonic.Heap
 module B = LowStar.Buffer
@@ -150,6 +151,20 @@ let l_eq_trans #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1:lcomp_wp a wp1 c1)
                   (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2:lcomp_wp a wp2 c2)
                   (#wp3:hwp_mon a) (#c3:comp_wp a wp2) (lc3:lcomp_wp a wp2 c2) 
                   (_ : squash (l_eq lc1 lc2)) (_ : squash (l_eq lc2 lc3)) : Lemma (l_eq lc1 lc3) = () 
+
+let uncurry3 #a #b #c (r : #a -> #b -> c -> #a -> #b -> c -> Type) : relation (a * b * c) = 
+  fun (x, y, z) (x', y', z') -> r x y z x' y' z'
+
+let l_eq' #a : relation (wp:hwp_mon a & c:comp_wp a wp & lcomp_wp a wp c) =
+  fun (|x, y, z|) (|x', y', z'|) -> l_eq #a #x #y z #x' #y' z'
+
+(* TODO : generic curry - uncurry operators for dependent pairs *)
+
+instance l_eq_equiv #a : equiv (l_eq' #a) = { refl'  = (fun x -> ());
+                                              symm'  = (fun x y p -> ());
+                                              trans' = (fun x y z p1 p2 -> ()); } 
+
+
 
 assume val l_eq_axiom : (#a:Type) -> (#wp1:hwp_mon a) -> (#c1:comp_wp a wp1) -> (lc1: lcomp_wp a wp1 c1) ->
                         (#wp2:hwp_mon a) -> (#c2:comp_wp a wp2) -> (lc2 : lcomp_wp a wp2 c2) ->
