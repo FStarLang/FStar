@@ -435,6 +435,8 @@ let all_binders_annot e =
   let b, l = all_binders e 0 in
   if b && l > 1 then true else false
 
+let cat_with_colon x y = x ^^ colon ^/^ y
+
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1041,38 +1043,49 @@ and is_meta_qualifier aq =
   | _ -> false
 
 (* is_atomic is true if the binder must be parsed atomically *)
-and p_binder is_atomic b = match b.b with
-  | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
-  | TVariable lid -> p_lident lid
+and p_binder' (is_atomic: bool) (b: binder): document * option<document> * (document -> document -> document) =
+  match b.b with
+  | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid, None, cat_with_colon
+  | TVariable lid -> p_lident lid, None, cat_with_colon
   | Annotated (lid, t) ->
-      let doc = match t.tm with
+      let b', t' =
+        match t.tm with
         | Refine ({b = Annotated (lid', t)}, phi) when lid.idText = lid'.idText ->
-          p_refinement b.aqual (p_lident lid) t phi
+          p_refinement' b.aqual (p_lident lid) t phi
         | _ ->
           let t' = if is_typ_tuple t then
             soft_parens_with_nesting (p_tmFormula t)
           else
             p_tmFormula t
           in
-          optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^/^ t'
-      in
-      if is_atomic || (is_meta_qualifier b.aqual)
-      then group (lparen ^^ doc ^^ rparen)
-      else group doc
+          optional p_aqual b.aqual ^^ p_lident lid, t'
+        in
+        let catf =
+          if is_atomic || (is_meta_qualifier b.aqual) then
+            (fun x y -> group (lparen ^^ (cat_with_colon x y) ^^ rparen))
+          else
+            (fun x y -> group (cat_with_colon x y))
+        in
+        b', Some t', catf
   | TAnnotated _ -> failwith "Is this still used ?"
   | NoName t ->
     begin match t.tm with
       | Refine ({b = NoName t}, phi) ->
-        if is_atomic
-        then group (lparen ^^ p_refinement b.aqual underscore t phi ^^ rparen)
-        else group (p_refinement b.aqual underscore t phi)
+        let b', t' = p_refinement' b.aqual underscore t phi in
+        b', Some t', cat_with_colon
       | _ ->
         if is_atomic
-        then p_atomicTerm t (* t is a type but it might need some parenthesis *)
-        else p_appTerm t (* This choice seems valid (used in p_tmNoEq') *)
+        then p_atomicTerm t, None, cat_with_colon (* t is a type but it might need some parenthesis *)
+        else p_appTerm t, None, cat_with_colon (* This choice seems valid (used in p_tmNoEq') *)
     end
 
-and p_refinement aqual_opt binder t phi =
+and p_binder is_atomic b =
+  let b', t', catf = p_binder' is_atomic b in
+  match t' with
+  | Some typ -> catf b' typ
+  | None -> b'
+
+and p_refinement' aqual_opt binder t phi =
   let is_t_atomic =
     match t.tm with
     | Construct _
@@ -1086,11 +1099,14 @@ and p_refinement aqual_opt binder t phi =
    * If t can be displayed on a single line, tightly surround it with braces,
    * otherwise pad with a space. *)
   let jump_break = if is_t_atomic then 0 else 1 in
-  (optional p_aqual aqual_opt ^^ binder ^^ colon) ^/^
+  (optional p_aqual aqual_opt ^^ binder),
     (p_appTerm t ^^
       (jump 2 jump_break (group ((ifflat
         (soft_braces_with_nesting_tight phi) (soft_braces_with_nesting phi))))))
 
+and p_refinement aqual_opt binder t phi =
+  let b, typ = p_refinement' aqual_opt binder t phi in
+  cat_with_colon b typ
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
 (* Note: also skipping multiBinder here. *)
