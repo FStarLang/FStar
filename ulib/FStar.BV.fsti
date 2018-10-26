@@ -29,6 +29,10 @@ val int2bv: #n:pos -> num:uint_t n -> Tot (bv_t n)
 
 val bv2int: #n:pos -> vec:bv_t n -> Tot (uint_t n)
 
+val list2bv: #n:pos -> l:list bool{List.length l = n} -> Tot (bv_t n)
+
+val bv2list: #n:pos -> bv_t n -> Tot (l:list bool{List.length l = n})
+
 unfold
 let bv_zero #n = int2bv #n 0
 
@@ -39,6 +43,14 @@ val int2bv_lemma_1: #n:pos -> a:uint_t n -> b:uint_t n ->
 
 val int2bv_lemma_2: #n:pos -> a:uint_t n -> b:uint_t n ->
   Lemma (requires (int2bv a = int2bv b)) (ensures a = b)
+
+val list2bv_bij: #n:pos -> a:list bool{List.length a = n} ->
+  Lemma (requires (True))
+        (ensures (bv2list (list2bv #n a) = a))
+
+val bv2list_bij: #n:pos -> a:bv_t n ->
+  Lemma (requires (True))
+        (ensures (list2bv (bv2list #n a) = a))
 
 val bvadd :#n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 val bvsub :#n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
