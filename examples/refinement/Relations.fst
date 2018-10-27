@@ -3,7 +3,7 @@ module Relations
 open FStar.Tactics.Typeclasses
 
 
-type relation a = a -> Type
+type relation a = a -> a -> Type
 
 type reflexive #a (r : relation a) = forall x. r x x  
 
