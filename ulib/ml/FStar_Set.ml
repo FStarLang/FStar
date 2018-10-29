@@ -5,3 +5,6 @@ let union = BatSet.union
 let intersect = BatSet.intersect
 let complement x = BatSet.empty
 let mem = BatSet.mem
+
+(* F* should not extract below: *)
+type ('A, 'B, 'C) equal = unit
