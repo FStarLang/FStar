@@ -189,7 +189,7 @@ let go : 'Auu____393 . 'Auu____393 -> unit =
                             (FStar_List.length filenames)
                            in
                         Prims.strcat
-                          "Only one command line file is allowed if --use_extracted_interfaces is set, found %s"
+                          "Only one command line file is allowed if --use_extracted_interfaces is set, found "
                           uu____468
                          in
                       (FStar_Errors.Error_TooManyFiles, uu____466)  in
