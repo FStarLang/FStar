@@ -172,8 +172,9 @@ let two_point_lattice = Ghost.hide (SemiLattice true ( || ))
 let lo : lattice_element two_point_lattice = Ghost.hide false
 let hi : lattice_element two_point_lattice = Ghost.hide true
 let test2 (x:t (Secret lo (Unsigned W32))) (y:t (Secret lo (Unsigned W32))) = x +% y
-let test3 (x:t (Secret hi (Unsigned W32))) (y:t (Secret lo (Unsigned W32))) = x +% promote y hi
-let test4 (x:t (Secret lo (Unsigned W32))) (y:t (Secret hi (Unsigned W32)) { ok ( + ) (i x) (i y) }) = promote x hi + y
+let test3 (x:t (Secret hi (Unsigned W32))) (y:t (Secret lo (Unsigned W32))) = x +% promote #_ #lo y hi
+let test4 (x:t (Secret lo (Unsigned W32))) (y:t (Secret hi (Unsigned W32)) { ok ( + ) (i x) (i y) }) = 
+  promote #_ #lo x hi + y
 
 let hacl_lattice = Ghost.hide (SemiLattice () (fun _ _ -> ()))
 let hacl_label : lattice_element hacl_lattice = Ghost.hide ()
