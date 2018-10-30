@@ -25,6 +25,7 @@ unfold let gsub (#a:Type0) = mgsub #a #(trivial_preorder a) #(trivial_preorder a
 
 unfold let gsub_inj (#a:Type0) = mgsub_inj #a #(trivial_preorder a) #(trivial_preorder a) (trivial_preorder a) (trivial_preorder a)
 
+[@unifier_hint_injective]
 inline_for_extraction
 type pointer (a:Type0) = b:buffer a{length b == 1}
 
