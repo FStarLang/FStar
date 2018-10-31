@@ -793,7 +793,7 @@ let topological_dependences_of
         all_friends, all_files
     | White ->
         if Options.debug_any()
-        then BU.print2 "Visiting %s: direct deps are %s"
+        then BU.print2 "Visiting %s: direct deps are %s\n"
                 filename
                 (String.concat ", " (List.map dep_to_string direct_deps));
         (* Unvisited. Compute. *)
@@ -809,7 +809,7 @@ let topological_dependences_of
         (* Mutate the graph to mark the node as visited *)
         deps_add_dep dep_graph filename (direct_deps, Black);
         if Options.debug_any()
-        then BU.print1 "Adding %s" filename;
+        then BU.print1 "Adding %s\n" filename;
         (* Also build the topological sort (Tarjan's algorithm). *)
         List.collect
           (function | FriendImplementation m -> [m]
@@ -843,12 +843,12 @@ let topological_dependences_of
            order
     *)
     if Options.debug_any()
-    then BU.print1 "==============Phase1==================";
+    then BU.print_string "==============Phase1==================\n";
     let friends, all_files_0 =
         all_friend_deps (dep_graph_copy dep_graph) [] ([], []) root_files
     in
     if Options.debug_any()
-    then BU.print1 "Phase1 complete: all_files = %s" (String.concat ", " all_files_0);
+    then BU.print1 "Phase1 complete: all_files = %s\n" (String.concat ", " all_files_0);
     let widened = BU.mk_ref false in
     let widen_deps friends deps =
         deps |> List.map (fun d ->
@@ -864,11 +864,11 @@ let topological_dependences_of
         BU.smap_fold dg (fun filename (dependences, color) () ->
             BU.smap_add dg' filename (widen_deps friends dependences, color)) ();
         if Options.debug_any()
-        then BU.print_string "==============Phase2==================";
+        then BU.print_string "==============Phase2==================\n";
         all_friend_deps (Deps dg') [] ([], []) root_files
     in
     if Options.debug_any()
-    then BU.print1 "Phase2 complete: all_files = %s" (String.concat ", " all_files);
+    then BU.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
     all_files,
     !widened
 
