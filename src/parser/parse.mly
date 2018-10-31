@@ -818,7 +818,7 @@ tmNoEqWith(X):
   | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmNoEqWith(X) BACKTICK id=qlident BACKTICK e2=tmNoEqWith(X)
-      { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
+      { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Infix; e2, Nothing ] (rhs2 parseState 1 5) }
   | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | LBRACE e=recordExp RBRACE { e }

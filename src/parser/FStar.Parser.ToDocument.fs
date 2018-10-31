@@ -1644,16 +1644,21 @@ and p_simpleDef ps (lid, e) =
 and p_appTerm e = match e.tm with
   | App _ when is_general_application e ->
       let head, args = head_and_args e in
-      let head_doc, args =
-        if !should_print_fs_typ_app
-        then
-          let fs_typ_args, args = BU.take (fun (_,aq) -> aq = FsTypApp) args in
-          p_indexingTerm head ^^
-          soft_surround_map_or_flow 2 0 empty langle (comma ^^ break1) rangle p_fsTypArg fs_typ_args,
-          args
-        else p_indexingTerm head, args
-      in
-      group (soft_surround_map_or_flow 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
+      (match args with
+      | [e1; e2] when snd e1 = Infix ->
+        p_argTerm e1 ^/^ group (str "`" ^^ (p_indexingTerm head) ^^ str "`") ^/^ p_argTerm e2
+      | _ ->
+        let head_doc, args =
+          if !should_print_fs_typ_app
+          then
+            let fs_typ_args, args = BU.take (fun (_,aq) -> aq = FsTypApp) args in
+            p_indexingTerm head ^^
+            soft_surround_map_or_flow 2 0 empty langle (comma ^^ break1) rangle p_fsTypArg fs_typ_args,
+            args
+          else p_indexingTerm head, args
+        in
+        group (soft_surround_map_or_flow 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
+      )
 
   (* dependent tuples are handled below *)
   | Construct (lid, args) when is_general_construction e && not (is_dtuple_constructor lid) ->
@@ -1676,7 +1681,9 @@ and p_argTerm arg_imp = match arg_imp with
       surround 2 1 langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
   | (e, HashBrace t) -> str "#[" ^^ p_indexingTerm t ^^ str "]" ^^ p_indexingTerm e
+  | (e, Infix)
   | (e, Nothing) -> p_indexingTerm e
+
 
 and p_fsTypArg (e, _) = p_indexingTerm e
 
@@ -1825,7 +1832,7 @@ and p_constant = function
   | Const_bool b -> doc_of_bool b
   | Const_float x -> str (Util.string_of_float x)
   | Const_char x -> doc_of_char x
-  | Const_string(s, _) -> dquotes (str s)
+  | Const_string(s, _) -> dquotes (str s) //(str (FStar.String.escaped s))
   | Const_bytearray(bytes,_) -> dquotes (str (Util.string_of_bytes bytes)) ^^ str "B"
   | Const_int (repr, sign_width_opt) ->
       let signedness = function
