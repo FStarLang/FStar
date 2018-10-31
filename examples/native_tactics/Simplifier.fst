@@ -23,7 +23,7 @@ let test1 (r: ref int) =
    r := 1;
    r := 2;
    r := 3)
-  <: St unit by (fun () -> simplify_c ())
+  <: St unit by simplify_c ()
 
 let test2 (r: ref int) =
   (r := 0;
@@ -37,7 +37,7 @@ let test2 (r: ref int) =
    r := 8;
    r := 9;
    r := 10)
-  <: St unit by (fun () -> simplify_c ())
+  <: St unit by simplify_c ()
 
 // let _ = assert_by_tactic (True /\ True)
 //                          test_simplify

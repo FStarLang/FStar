@@ -51,6 +51,7 @@ val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
 val resolve_implicits         : env -> guard_t -> guard_t
 val resolve_implicits_tac     : env -> guard_t -> guard_t
+val base_and_refinement_maybe_delta : bool -> env -> term -> term * option<(bv * term)>
 val base_and_refinement       : env -> term -> term * option<(bv * term)>
 
 val unrefine   : env -> typ -> typ
@@ -68,6 +69,3 @@ val universe_inequality : universe -> universe -> guard_t
 
 val subtype_fail: env -> term -> typ -> typ -> unit
 val print_pending_implicits: guard_t -> string
-
-// Debugging
-//val def_check_guard_wf : Range.range -> string -> env -> guard_t -> unit

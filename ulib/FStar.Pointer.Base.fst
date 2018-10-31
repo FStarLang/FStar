@@ -141,7 +141,7 @@ noeq type buffer_root (t: typ) =
 
 let buffer_root_length (#t: typ) (b: buffer_root t): Tot UInt32.t = match b with
 | BufferRootSingleton _ -> 1ul
-| BufferRootArray #t #len _ -> len
+| BufferRootArray #_ #len _ -> len
 
 noeq type _buffer (t: typ) =
 | Buffer:
@@ -164,7 +164,7 @@ let buffer (t: typ): Tot Type0 = _buffer t
 *)
 
 let gtdata (* ghostly-tagged data *)
-  (key: eqtype u#0)
+  (key: eqtype)
   (value: (key -> Tot Type0))
 : Tot Type0
 = ( k: key & value k )
@@ -2675,7 +2675,7 @@ let buffer_live
 = let () = () in ( // necessary to somehow remove the `logic` qualifier
     match b.broot with
     | BufferRootSingleton p -> live h p
-    | BufferRootArray #mlen p -> live h p
+    | BufferRootArray p -> live h p
   )
 
 let buffer_live_gsingleton_buffer_of_pointer
@@ -2701,7 +2701,7 @@ let buffer_live_gbuffer_of_array_pointer
 let buffer_unused_in #t b h =
   match b.broot with
   | BufferRootSingleton p -> unused_in p h
-  | BufferRootArray #mlen p -> unused_in p h
+  | BufferRootArray p -> unused_in p h
 
 let buffer_live_not_unused_in #t b h = ()
 
@@ -2715,7 +2715,7 @@ let frameOf_buffer
 : GTot HS.rid
 = match b.broot with
   | BufferRootSingleton p -> frameOf p
-  | BufferRootArray #mlen p -> frameOf p
+  | BufferRootArray p -> frameOf p
 
 let frameOf_buffer_gsingleton_buffer_of_pointer
   (#t: typ)
@@ -2733,7 +2733,7 @@ let live_region_frameOf_buffer #value h p = ()
 let buffer_as_addr #t b =
   match b.broot with
   | BufferRootSingleton p -> as_addr p
-  | BufferRootArray #mlen p -> as_addr p
+  | BufferRootArray p -> as_addr p
 
 let buffer_as_addr_gsingleton_buffer_of_pointer #t p = ()
 

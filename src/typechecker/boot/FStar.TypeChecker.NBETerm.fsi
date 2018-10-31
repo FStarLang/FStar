@@ -29,16 +29,21 @@ type constant =
   | Char of FStar.Char.char
   | Range of Range.range
 
-//IN F*: type atom : Type0 =
-type atom = //JUST FSHARP
+type atom
+//IN F*: : Type0
+  =
   | Var of var
   | Match of t *
              (t -> t) *
              ((t -> term) -> list<branch>)
-  | Rec of letbinding * list<letbinding> * list<t>
-//IN F*: and t : Type0 =
-and t = //JUST FSHARP
-  | Lam of (list<t> -> t) * list<(unit -> arg)> * int
+
+and t
+//IN F*: : Type0
+  =
+  | Lam of (list<t> -> t)         //these expect their arguments in binder order (optimized for convenience beta reduction)
+        * list<(list<t> -> arg)>  //these expect their arguments in reverse binder order (since this avoids reverses during readback)
+        * int                     // arity
+        * option<(unit -> residual_comp)> // thunked residual comp
   | Accu of atom * args
   | Construct of fv * list<universe> * args
   | FV of fv * list<universe> * args
@@ -46,8 +51,45 @@ and t = //JUST FSHARP
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of (list<t> -> t) * list<(unit -> arg)>
-  | Refinement of (t -> t) * (unit -> arg) 
+  | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
+  | Refinement of (t -> t) * (unit -> arg)
+  | Reflect of t
+  | Quote of S.term * S.quoteinfo
+  | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * FStar.Common.thunk<t>
+  | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
+  (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
+
+and comp =
+  | Tot of t * option<universe>
+  | GTot of t * option<universe>
+  | Comp of comp_typ
+
+and comp_typ = {
+  comp_univs:universes;
+  effect_name:lident;
+  result_typ:t;
+  effect_args:args;
+  flags:list<cflag>
+}
+
+and residual_comp = {
+  residual_effect:lident;
+  residual_typ   :option<t>;
+  residual_flags :list<cflag>
+}
+
+and cflag =
+  | TOTAL
+  | MLEFFECT
+  | RETURN
+  | PARTIAL_RETURN
+  | SOMETRIVIAL
+  | TRIVIAL_POSTCONDITION
+  | SHOULD_NOT_INLINE
+  | LEMMA
+  | CPS
+  | DECREASES of t
+
 
 and arg = t * aqual
 and args = list<(arg)>
@@ -80,26 +122,81 @@ val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
 val mkAccuMatch : t -> (t -> t) -> ((t -> term) -> list<branch>) -> t
-val mkAccuRec : letbinding -> list<letbinding> -> list<t> -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg
 
-type embedding<'a> = {
-  em  : 'a -> t;
-  un  : t -> option<'a>;
-  typ : t;
+type nbe_cbs = {
+   iapp : t -> args -> t;
+   translate : term -> t;
 }
 
-val embed : embedding<'a> -> 'a -> t
-val unembed : embedding<'a> -> t -> option<'a> 
+val iapp_cb      : nbe_cbs -> t -> args -> t
+val translate_cb : nbe_cbs -> term -> t
+
+type embedding<'a> = {
+  em  : nbe_cbs -> 'a -> t;
+  un  : nbe_cbs -> t -> option<'a>;
+  typ : t;
+  emb_typ : emb_typ
+}
+
+val mk_emb : (nbe_cbs -> 'a -> t) ->
+             (nbe_cbs -> t -> option<'a>) ->
+             t ->
+             emb_typ ->
+             embedding<'a>
+
+val embed   : embedding<'a> -> nbe_cbs -> 'a -> t
+val unembed : embedding<'a> -> nbe_cbs -> t -> option<'a>
 val type_of : embedding<'a> -> t
 
-val e_bool : embedding<bool>
+val e_bool   : embedding<bool>
 val e_string : embedding<string>
-val e_char : embedding<char>
-val e_int : embedding<Z.t>
-val e_range : embedding<Range.range>
+val e_char   : embedding<char>
+val e_int    : embedding<Z.t>
+val e_unit   : embedding<unit>
+val e_any    : embedding<t>
+val mk_any_emb : t -> embedding<t>
+val e_range  : embedding<Range.range>
+val e_norm_step : embedding<Syntax.Embeddings.norm_step>
+val e_list   : embedding<'a> -> embedding<list<'a>>
+val e_option : embedding<'a> -> embedding<option<'a>>
+val e_tuple2 : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
+val e_either : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a ,'b>>
+val e_string_list : embedding<list<string>>
+val e_arrow : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>
+
+(* Arity specific raw_embeddings of arrows; used to generate top-level
+   registrations of compiled functions in FStar.Extraction.ML.Util *)
+val arrow_as_prim_step_1:  embedding<'a>
+                        -> embedding<'b>
+                        -> ('a -> 'b)
+                        -> n_tvars:int
+                        -> repr_f:Ident.lid
+                        -> nbe_cbs
+                        -> (args -> option<t>)
+
+val arrow_as_prim_step_2:  embedding<'a>
+                        -> embedding<'b>
+                        -> embedding<'c>
+                        -> ('a -> 'b -> 'c)
+                        -> n_tvars:int
+                        -> repr_f:Ident.lid
+                        -> nbe_cbs
+                        -> (args -> option<t>)
+
+val arrow_as_prim_step_3:  embedding<'a>
+                        -> embedding<'b>
+                        -> embedding<'c>
+                        -> embedding<'d>
+                        -> ('a -> 'b -> 'c -> 'd)
+                        -> n_tvars:int
+                        -> repr_f:Ident.lid
+                        -> nbe_cbs
+                        -> (args -> option<t>)
+
+
 
 // Interface for NBE interpretations
 
@@ -131,7 +228,8 @@ val string_split' : args -> option<t>
 val list_of_string' : (string -> t)
 
 val decidable_eq : bool -> args -> option<t>
-val interp_prop : args -> option<t>
+val interp_prop_eq2 : args -> option<t>
+val interp_prop_eq3 : args -> option<t>
 
 val mixed_binary_op : (arg -> option<'a>) -> (arg -> option<'b>) -> ('c -> t) ->
                       ('a -> 'b -> 'c) -> args -> option<t>
@@ -140,3 +238,5 @@ val binary_op : (arg -> option<'a>) -> ('a -> 'a -> t) -> (args -> option<t>)
 
 val dummy_interp : Ident.lid -> args -> option<t>
 val prims_to_fstar_range_step : args -> option<t>
+
+val mk_range : args -> option<t>

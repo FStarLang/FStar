@@ -35,7 +35,7 @@ let is_val x d = match d.d with
     | _ -> false
 
 let is_type x d = match d.d with
-    | Tycon(_, tys) ->
+    | Tycon(_, _, tys) ->
         tys |> Util.for_some (fun (t,_) -> id_of_tycon t = x.idText)
     | _ -> false
 
@@ -44,7 +44,7 @@ let definition_lids d =
     match d.d with
     | TopLevelLet(_, defs) ->
         lids_of_let defs
-    | Tycon(_, tys) ->
+    | Tycon(_, _, tys) ->
         tys |> List.collect (function
                 | TyconAbbrev (id, _, _, _), _
                 | TyconRecord (id, _, _, _), _
@@ -143,7 +143,7 @@ let rec prefix_with_iface_decls
    | [] -> [], [qualify_kremlin_private impl]
    | iface_hd::iface_tl -> begin
      match iface_hd.d with
-     | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
+     | Tycon(_, _, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
         raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") impl.drange
 
      | Val(x, t) ->
@@ -191,7 +191,7 @@ let check_initial_interface (iface:list<decl>) =
         | [] -> ()
         | hd::tl -> begin
             match hd.d with
-            | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
+            | Tycon(_, _, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
               raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") hd.drange
 
             | Val(x, t) ->  //we have a 'val x' in the interface
@@ -259,8 +259,10 @@ let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
         else check_initial_interface l in
     match E.iface_decls env mname with
     | Some _ ->
-      raise_error (Errors.Fatal_InterfaceAlreadyProcessed, (Util.format1 "Interface %s has already been processed"
-                                (Ident.string_of_lid mname))) (Ident.range_of_lid mname)
+      raise_error (Errors.Fatal_InterfaceAlreadyProcessed,
+                   Util.format1 "Interface %s has already been processed"
+                                (Ident.string_of_lid mname))
+                  (Ident.range_of_lid mname)
     | None ->
       (), E.set_iface_decls env mname decls
 
@@ -296,7 +298,13 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> 
             | Some (lets, one_val, rest) -> lets, one_val::rest
         in
         let impls = impls@iface_lets in
-        let env = E.set_iface_decls env l remaining_iface_vals in
+        let env =
+            if Options.interactive()
+            then E.set_iface_decls env l remaining_iface_vals
+            else env //if not interactive, then don't consume iface_decls
+                     //since some batch-mode checks, e.g., must_erase_for_extraction
+                     //depend on having all the iface decls around
+        in
         let a = Module(l, impls) in
         match remaining_iface_vals with
         | _::_ when expect_complete_modul ->

@@ -18,16 +18,17 @@ val equal_extensional (h1:heap) (h2:heap)
 
 val emp :heap
 
+val next_addr: heap -> GTot pos
+
 [@ assume_strictly_positive]
 val mref (a:Type0) (rel:preorder a) :Type0
 
-val addr_of: #a:Type0 -> #rel:preorder a -> mref a rel -> GTot (n: nat { n > 0 } )
+val addr_of: #a:Type0 -> #rel:preorder a -> mref a rel -> GTot pos
 
 val is_mm: #a:Type0 -> #rel:preorder a -> mref a rel -> GTot bool
 
-val compare_addrs:
-  #a:Type0 -> #b:Type0 -> #rel1:preorder a -> #rel2:preorder b ->
-  r1:mref a rel1 -> r2:mref b rel2 -> Tot (b:bool{b = (addr_of r1 = addr_of r2)})
+let compare_addrs (#a #b:Type0) (#rel1:preorder a) (#rel2:preorder b) (r1:mref a rel1) (r2:mref b rel2)
+  :GTot bool = addr_of r1 = addr_of r2
 
 val contains: #a:Type0 -> #rel:preorder a -> heap -> mref a rel -> Type0
 
@@ -121,7 +122,7 @@ val lemma_distinct_addrs_unused
 val lemma_alloc (#a:Type0) (rel:preorder a) (h0:heap) (x:a) (mm:bool)
   :Lemma (requires True)
          (ensures  (let r, h1 = alloc rel h0 x mm in
-                    fresh r h0 h1 /\ h1 == upd h0 r x /\ is_mm r = mm))
+                    fresh r h0 h1 /\ h1 == upd h0 r x /\ is_mm r = mm /\ addr_of r == next_addr h0))
 	 [SMTPat (alloc rel h0 x mm)]
 
 val lemma_free_mm_sel
@@ -267,6 +268,26 @@ val lemma_heap_equality_commute_distinct_upds
   (x:a) (y:b)
   :Lemma (requires (addr_of r1 =!= addr_of r2))
          (ensures  (upd (upd h r1 x) r2 y == upd (upd h r2 y) r1 x))
+
+val lemma_next_addr_upd_tot
+  (#a:Type0) (#rel:preorder a) (h0:heap) (r:mref a rel{h0 `contains` r}) (x:a)
+  :Lemma (let h1 = upd_tot h0 r x in next_addr h1 == next_addr h0)
+
+val lemma_next_addr_upd
+  (#a:Type0) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a)
+  :Lemma (let h1 = upd h0 r x in next_addr h1 >= next_addr h0)
+
+val lemma_next_addr_alloc
+  (#a:Type0) (rel:preorder a) (h0:heap) (x:a) (mm:bool)
+  :Lemma (let _, h1 = alloc rel h0 x mm in next_addr h1 > next_addr h0)
+
+val lemma_next_addr_free_mm
+  (#a:Type0) (#rel:preorder a) (h0:heap) (r:mref a rel{h0 `contains` r /\ is_mm r})
+  :Lemma (let h1 = free_mm h0 r in next_addr h1 == next_addr h0)
+
+val lemma_next_addr_contained_refs_addr
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
+  :Lemma (h `contains` r ==> addr_of r < next_addr h)
 
 (*** Untyped views of monotonic references *)
 

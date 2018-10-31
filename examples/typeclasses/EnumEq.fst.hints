@@ -1,0 +1,25 @@
+[
+  "\u001d‡w\u001dG\u0006p×¹ã\u0013\u0000Ã\u0018ü«",
+  [
+    [
+      "EnumEq.enum_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Enum.bounded",
+        "equation_Enum.toInt", "equation_FStar.Reflection.Data.var",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "fuel_guarded_inversion_Enum.enum",
+        "function_token_typing_FStar.Reflection.Data.var",
+        "haseqEnum_Tm_refine_fe0c31abb81157bfda9367dd860602f6",
+        "proj_equation_Enum.Mkenum_max",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_Enum.__proj__Mkenum__item__toInt",
+        "token_correspondence_Enum.toInt"
+      ],
+      0,
+      "61bf4f527bbd3dfe4f911641d7ce1810"
+    ]
+  ]
+]

@@ -25,7 +25,7 @@ let app_head_tail (t: T.term) :
 
 inline_for_extraction
 let ctest (v: bool) (test: bool) : Tot Type =
-  (x: unit { test == v } )
+  (x: squash (test == v))
 
 inline_for_extraction
 let mk_if_t (#t: Type) (test: bool) (x1: (ctest true test -> Tot t)) (x2: (ctest false test -> Tot t)) : Tot t =
@@ -61,7 +61,7 @@ let unfold_fv (t: T.fv) : T.Tac T.term =
     begin match T.inspect_sigelt s with
     | T.Sg_Let false _ _ _ def ->
       let nm = string_of_name n in
-      T.print ("Unfolded definition: " ^ nm);
+      T.debug ("Unfolded definition: " ^ nm);
       def
     | _ ->
       let nm = string_of_name n in
@@ -75,9 +75,9 @@ let unfold_term (t: T.term) : T.Tac T.term =
   | _ -> tfail "Not a global variable"
 
 let tsuccess (s: string) : T.Tac unit =
-  T.print ("Checking success for: " ^ s);
+  T.debug ("Checking success for: " ^ s);
   T.qed ();
-  T.print ("Success: " ^ s)
+  T.debug ("Success: " ^ s)
 
 let rec to_all_goals (t: unit -> T.Tac unit) : T.Tac unit =
   if T.ngoals () = 0
@@ -85,22 +85,6 @@ let rec to_all_goals (t: unit -> T.Tac unit) : T.Tac unit =
   else
     let _ = T.divide 1 t (fun () -> to_all_goals t) in
     ()
-
-let admit_others = to_all_goals
-
-(*
-let admit_others (t: unit -> T.Tac unit) : T.Tac unit =
-  if T.ngoals () = 0
-  then ()
-  else if T.ngoals () = 1
-  then t ()
-  else
-    tfail "There should be only one goal here"
-(*    
-    let _ = T.divide 1 t (fun () -> to_all_goals tadmit) in
-    ()
-*)    
-*)
 
 let rec imm_solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
   T.first (List.Tot.append l [
@@ -144,18 +128,15 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
         tfail "More than one goal here"
       else ()
     end;
-  match T.trytac (fun () -> imm_solve_goal l) with
-  | Some _ -> ()
-  | _ ->
   begin match T.trytac tforall_intro with
   | Some _ ->
-    T.print ("Applied: forall_intro");
-    admit_others (fun () -> solve_goal l)
+    T.debug ("Applied: forall_intro");
+    to_all_goals (fun () -> solve_goal l)
   | _ ->
     begin match T.trytac timplies_intro with
     | Some _ ->
-      T.print ("Applied: implies_intro");
-      admit_others (fun () -> solve_goal l)
+      T.debug ("Applied: implies_intro");
+      to_all_goals (fun () -> solve_goal l)
     | _ ->
       begin match T.trytac tsplit with
       | Some _ ->
@@ -170,9 +151,14 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
         else
           to_all_goals (fun () -> solve_goal l)
       | _ ->
-        T.dump "MUST USE SMT FOR THIS ONE";
-        T.smt ();
-        tsuccess "smt"
+        begin match T.trytac (fun () -> imm_solve_goal l) with
+        | Some _ -> ()
+        | _ ->
+          if T.debugging () then
+            T.dump "MUST USE SMT FOR THIS ONE";
+          T.smt ();
+          tsuccess "smt"
+        end
       end
     end
   end
@@ -181,9 +167,16 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
 let rec tconclude_with (l: list (unit -> T.Tac unit)) : T.Tac unit =
   if T.ngoals () > 0
   then begin
-    T.dump "Some goals left";
+    if T.debugging () then
+      T.dump "Some goals left";
     let _ = T.divide 1 (fun () -> solve_goal l) (fun () -> tconclude_with l) in
     ()
-  end else T.print "No goals left"
+  end else T.debug "No goals left"
 
 let tconclude () : T.Tac unit = tconclude_with []
+
+let according_to (pol: T.guard_policy) (t: (unit -> T.Tac unit)) : T.Tac unit =
+  match pol with
+  | T.SMT -> to_all_goals T.smt
+  | T.Drop -> to_all_goals T.tadmit
+  | _ -> T.with_policy pol t

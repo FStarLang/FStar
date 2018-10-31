@@ -3,13 +3,15 @@ module FStar.DM4F.Heap
 open FStar.Classical
 open FStar.Set
 
+module F = FStar.FunctionalExtensionality
+
 (* Heap is a tuple of a source of freshness (the no. of the next
    reference to be allocated) and a mapping of allocated raw
    references (represented as natural numbers) to types and values. *)
 
 abstract noeq type heap_rec = {
   next_addr: nat;
-  memory   : nat -> Tot (option (a:Type0 & a))
+  memory   : F.restricted_t nat (fun _ -> option (a:Type0 & a))
 }
 
 abstract type heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
@@ -52,9 +54,9 @@ let sel #a h r =
 abstract val upd_tot : #a:Type -> h0:heap -> r:ref a{h0 `contains_a_well_typed` r} -> x:a
                        -> Tot heap
 let upd_tot #a h0 r x =
-  { h0 with memory = (fun r' -> if r.addr = r'
-			     then Some (| a, x |)
-                             else h0.memory r') }
+  { h0 with memory = F.on_dom nat (fun r' -> if r.addr = r'
+			                then Some (| a, x |)
+                                        else h0.memory r') }
 
 abstract val upd: #a:Type -> h0:heap -> r:ref a -> x:a
                   -> GTot heap
@@ -65,13 +67,13 @@ let upd #a h0 r x =
     if r.addr >= h0.next_addr
     then (* alloc at r.addr *)
       { next_addr = r.addr + 1;
-        memory    = (fun (r':nat) -> if r' = r.addr
-			        then Some (| a, x |)
-                                else h0.memory r') }
+        memory    = F.on_dom nat (fun (r':nat) -> if r' = r.addr
+			                    then Some (| a, x |)
+                                            else h0.memory r') }
     else (* type modifying update at r.addr *)
-      { h0 with memory = (fun r' -> if r' = r.addr
-				 then Some (| a, x |)
-                                 else h0.memory r') }
+      { h0 with memory = F.on_dom nat (fun r' -> if r' = r.addr
+				             then Some (| a, x |)
+                                             else h0.memory r') }
 
 (* Generating a fresh reference for the given heap. *)
 
@@ -79,9 +81,9 @@ abstract val alloc: #a:Type -> h0:heap -> x:a -> Tot (t:(ref a * heap){snd t == 
 let alloc #a h0 x =
   let r = { addr = h0.next_addr; init = x } in
   let h1 = { next_addr = r.addr + 1;
-             memory    = (fun (r':nat) -> if r' = r.addr
-			        then Some (| a, x |)
-                                else h0.memory r') }
+             memory    = F.on_dom nat (fun (r':nat) -> if r' = r.addr
+			                         then Some (| a, x |)
+                                                 else h0.memory r') }
   in
   assert (let h2 = upd h0 r x in
           FStar.FunctionalExtensionality.feq h1.memory h2.memory);
@@ -145,7 +147,7 @@ let equal_dom (h1:heap) (h2:heap) :Tot Type0 =
 abstract val emp : heap
 let emp = {
   next_addr = 0;
-  memory    = (fun (r:nat) -> None)
+  memory    = F.on_dom nat (fun (r:nat) -> None)
 }
 
 val in_dom_emp: #a:Type -> k:ref a

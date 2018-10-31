@@ -46,7 +46,7 @@ let parse_mod mod_name dsenv =
 let add_mods mod_names dsenv env =
   List.fold_left (fun (dsenv,env) mod_name ->
       let dsenv, string_mod = parse_mod mod_name dsenv in
-      let _mod, _, env = Tc.check_module env string_mod false in
+      let _mod, env = Tc.check_module env string_mod false in
       (dsenv, env)
   ) (dsenv,env) mod_names
 
@@ -59,12 +59,12 @@ let init_once () : unit =
                 TcTerm.universe_of
                 TcTerm.check_type_of_well_typed_term
                 solver
-                Const.prims_lid 
-                NBE.normalize' in
+                Const.prims_lid
+                NBE.normalize_for_unit_test in
   env.solver.init env;
-  let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
+  let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env FStar.Parser.Dep.empty_deps) in
   let env = {env with dsenv=dsenv} in
-  let _prims_mod, _, env = Tc.check_module env prims_mod false in
+  let _prims_mod, env = Tc.check_module env prims_mod false in
   // needed to run tests with chars
   // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Mul.fst"; "FStar.Squash.fsti";
   //                            "FStar.Classical.fst"; "FStar.List.Tot.Base.fst"; "FStar.List.Tot.Properties.fst"; "FStar.List.Tot.fst";
@@ -120,6 +120,13 @@ let tc s =
 
 let tc_nbe s =
     let tm, g, tcenv = tc' s in
+    Rel.force_trivial_guard tcenv g;
+    tm
+
+let tc_nbe_term tm =
+    let tcenv = init() in
+    let tcenv = {tcenv with top_level=false} in
+    let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
     Rel.force_trivial_guard tcenv g;
     tm
 

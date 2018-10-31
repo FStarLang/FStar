@@ -44,6 +44,10 @@ let gte (a:uint16) (b:uint16) : bool = a >= b
 let lt (a:uint16) (b:uint16) : bool = a < b
 let lte (a:uint16) (b:uint16) : bool =  a <= b
 
+(* NOT Constant time comparison operators *)
+let gte_mask (a:uint16) (b:uint16) : uint16 = if a >= b then 0xFFFF else 0
+let eq_mask (a:uint16) (b:uint16) : uint16 = if a = b then 0xFFFF else 0
+
 (* Infix notations *)
 let op_Plus_Hat = add
 let op_Plus_Question_Hat = add_underspec

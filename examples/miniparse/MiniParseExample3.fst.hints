@@ -1,0 +1,30 @@
+[
+  "\u0014ùŸ9³•£å„x\u00193)E]ø",
+  [
+    [
+      "MiniParseExample3.s",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_MiniParse.Tac.Spec.mk_package",
+        "equation_MiniParse.Tac.Spec.package_parser",
+        "equation_MiniParseExample3.palette",
+        "equation_MiniParseExample3.ps",
+        "proj_equation_MiniParse.Tac.Spec.Package_p",
+        "projection_inverse_MiniParse.Tac.Spec.Package_p"
+      ],
+      0,
+      "0c9101a57c20dc0bd3dafd8e05746126"
+    ],
+    [
+      "MiniParseExample3.s",
+      2,
+      2,
+      1,
+      [ "@query", "equation_MiniParseExample3.ps" ],
+      0,
+      "409a27b997c18d271ad8e1825fddfe14"
+    ]
+  ]
+]

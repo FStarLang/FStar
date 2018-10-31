@@ -27,6 +27,9 @@ open FStar.BaseTypes
 
 module FC = FStar.Common
 
+let debug_embedding = mk_ref false
+let eager_embedding = mk_ref false
+
 type debug_level_t =
   | Low
   | Medium
@@ -89,27 +92,67 @@ let as_comma_string_list = function
 
 type optionstate = Util.smap<option_val>
 
-let fstar_options : ref<list<optionstate> > = Util.mk_ref []
-let peek () = List.hd !fstar_options
+
+(* The option state is a stack of stacks. Why? First, we need to
+ * support #push-options and #pop-options, which provide the user with
+ * a stack-like option control, useful for rlimits and whatnot. Second,
+ * there's the interactive mode, which allows to traverse a file and
+ * backtrack over it, and must update this state accordingly. So for
+ * instance consider the following code:
+ *
+ *   1. #push-options "A"
+ *   2. let f = ...
+ *   3. #pop-options
+ *
+ * Running in batch mode starts with a singleton stack, then pushes,
+ * then pops. In the interactive mode, say we go over line 1. Then
+ * our current state is a stack with two elements (original state and
+ * state+"A"), but we need the previous state too to backtrack if we run
+ * C-c C-p or whatever. We can also go over line 3, and still we need
+ * to keep track of everything to backtrack. After processing the lines
+ * one-by-one in the interactive mode, the stacks are: (top at the head)
+ *
+ *      (orig)
+ *      (orig + A) (orig)
+ *      (orig)
+ *
+ * No stack should ever be empty! Any of these failwiths should never be
+ * triggered externally. IOW, the API should protect this invariant.
+ *)
+let fstar_options : ref<list<list<optionstate>>> = Util.mk_ref []
+
+let peek () = List.hd (List.hd !fstar_options)
 let pop  () = // already signal-atomic
     match !fstar_options with
     | []
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
 let push () = // already signal-atomic
-    fstar_options := Util.smap_copy (peek()) :: !fstar_options
+    fstar_options := List.map Util.smap_copy (List.hd !fstar_options) :: !fstar_options
+
+let internal_pop () =
+    let curstack = List.hd !fstar_options in
+    match curstack with
+    | [] -> failwith "impossible: empty current option stack"
+    | [_] -> false
+    | _::tl -> (fstar_options := tl :: List.tl !fstar_options; true)
+
+let internal_push () =
+    let curstack = List.hd !fstar_options in
+    let stack' = Util.smap_copy (List.hd curstack) :: curstack in
+    fstar_options := stack' :: List.tl !fstar_options
+
 let set o =
     match !fstar_options with
     | [] -> failwith "set on empty option stack"
-    | _::os -> fstar_options := (o::os)
+    | []::_ -> failwith "set on empty current option stack"
+    | (_::tl)::os -> fstar_options := ((o::tl)::os)
+
 let snapshot () = Common.snapshot push fstar_options ()
 let rollback depth = Common.rollback pop fstar_options depth
 
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
-
-let with_saved_options f =
-  push (); let retv = f () in pop (); retv
 
 let light_off_files : ref<list<string>> = Util.mk_ref []
 let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
@@ -124,6 +167,7 @@ let defaults =
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
+      ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -165,6 +209,7 @@ let defaults =
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
       ("no_smt"                       , Bool false);
+      ("no_plugins"                   , Bool false);
       ("no_tactics"                   , Bool false);
       ("normalize_pure_terms_for_extraction"
                                       , Bool false);
@@ -187,9 +232,12 @@ let defaults =
       ("smtencoding.elim_box"         , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
+      ("tactics_failhard"             , Bool false);
+      ("tactics_info"                 , Bool false);
       ("tactic_raw_binders"           , Bool false);
       ("tactic_trace"                 , Bool false);
       ("tactic_trace_d"               , Int 0);
+
       ("tcnorm"                       , Bool true);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
@@ -214,7 +262,8 @@ let defaults =
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , String "");
-      ("use_extracted_interfaces"     , Bool false)]
+      ("use_extracted_interfaces"     , Bool false);
+      ("use_nbe"                      , Bool false)]
 
 let init () =
    let o = peek () in
@@ -223,7 +272,7 @@ let init () =
 
 let clear () =
    let o = Util.smap_create 50 in
-   fstar_options := [o];                                 //clear and reset the options stack
+   fstar_options := [[o]];                               //clear and reset the options stack
    light_off_files := [];
    init()
 
@@ -243,6 +292,7 @@ let get_admit_except            ()      = lookup_opt "admit_except"             
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
+let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -280,6 +330,7 @@ let get_n_cores                 ()      = lookup_opt "n_cores"                  
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
+let get_no_plugins              ()      = lookup_opt "no_plugins"               as_bool
 let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
 let get_normalize_pure_terms_for_extraction
                                 ()      = lookup_opt "normalize_pure_terms_for_extraction" as_bool
@@ -302,6 +353,8 @@ let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
+let get_tactics_failhard        ()      = lookup_opt "tactics_failhard"         as_bool
+let get_tactics_info            ()      = lookup_opt "tactics_info"             as_bool
 let get_tactic_trace            ()      = lookup_opt "tactic_trace"             as_bool
 let get_tactic_trace_d          ()      = lookup_opt "tactic_trace_d"           as_int
 let get_tactics_nbe             ()      = lookup_opt "__tactics_nbe"            as_bool
@@ -331,6 +384,7 @@ let get_no_positivity           ()      = lookup_opt "__no_positivity"          
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
+let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -532,6 +586,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Do not read or write any .checked files");
 
       ( noshort,
+        "cmi",
+        Const (mk_bool true),
+        "Inline across module interfaces during extraction (aka. cross-module inlining)");
+
+      ( noshort,
         "codegen",
         EnumStr ["OCaml"; "FSharp"; "Kremlin"; "Plugin"],
         "Generate code for further compilation to executable code, or build a compiler plugin");
@@ -562,7 +621,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "dep",
-        EnumStr ["make"; "graph"; "full"],
+        EnumStr ["make"; "graph"; "full"; "raw"],
         "Output the transitive closure of the full dependency graph in three formats:\n\t \
          'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t \
          'full': a format suitable for 'make', including dependences for producing .ml and .krml files\n\t \
@@ -841,6 +900,16 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Do not use the lexical scope of tactics to improve binder names");
 
        ( noshort,
+        "tactics_failhard",
+        Const (mk_bool true),
+        "Do not recover from metaprogramming errors, and abort if one occurs");
+
+       ( noshort,
+        "tactics_info",
+        Const (mk_bool true),
+        "Print some rough information on tactics, such as the time they take to run");
+
+       ( noshort,
         "tactic_trace",
         Const (mk_bool true),
         "Print a depth-indexed trace of tactic execution (Warning: very verbose)");
@@ -905,6 +974,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          "use_native_tactics",
          PathStr "path",
         "Use compiled tactics from <path>");
+
+       ( noshort,
+        "no_plugins",
+        Const (mk_bool true),
+        "Do not run plugins natively and interpret them as usual instead");
 
        ( noshort,
         "no_tactics",
@@ -1011,6 +1085,24 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
           BoolStr,
          "Extract interfaces from the dependencies and use them for verification (default 'false')");
 
+        ( noshort,
+         "use_nbe",
+          BoolStr,
+         "Use normalization by evaluation as the default normalization srategy (default 'false')");
+
+
+        ( noshort,
+          "__debug_embedding",
+           WithSideEffect ((fun _ -> debug_embedding := true),
+                           (Const (mk_bool true))),
+          "Debug messages for embeddings/unembeddings of natively compiled terms");
+
+       ( noshort,
+        "eager_embedding",
+         WithSideEffect ((fun _ -> eager_embedding := true),
+                          (Const (mk_bool true))),
+        "Eagerly embed and unembed terms to primitive operations and plugins: not recommended except for benchmarking");
+
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
                                 (Const (mk_bool true))),
@@ -1065,9 +1157,12 @@ let settable = function
     | "trace_error"
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
+    | "no_plugins"
     | "no_tactics"
     | "normalize_pure_terms_for_extraction"
     | "tactic_raw_binders"
+    | "tactics_failhard"
+    | "tactics_info"
     | "tactic_trace"
     | "tactic_trace_d"
     | "tcnorm"
@@ -1264,6 +1359,7 @@ let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
+let cmi                          () = get_cmi                         ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
 let codegen                      () =
     Util.map_opt
@@ -1315,6 +1411,7 @@ let no_extract                   s  = let s = String.lowercase s in
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
 let no_location_info             () = get_no_location_info            ()
+let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
 let output_dir                   () = get_odir                        ()
 let ugly                         () = get_ugly                        ()
@@ -1336,6 +1433,8 @@ let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwra
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
+let tactics_failhard             () = get_tactics_failhard            ()
+let tactics_info                 () = get_tactics_info                ()
 let tactic_trace                 () = get_tactic_trace                ()
 let tactic_trace_d               () = get_tactic_trace_d              ()
 let tactics_nbe                  () = get_tactics_nbe                 ()
@@ -1372,6 +1471,25 @@ let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
+let use_nbe                      () = get_use_nbe                     ()
+
+let with_saved_options f =
+  // take some care to not mess up the stack on errors
+  // (unless we're trying to track down an error)
+  // TODO: This assumes `f` does not mess with the stack!
+  if not (trace_error ()) then begin
+      push ();
+      let r = try Inr (f ()) with | ex -> Inl ex in
+      pop ();
+      match r with
+      | Inr v  -> v
+      | Inl ex -> raise ex
+  end else begin
+      push ();
+      let retv = f () in
+      pop ();
+      retv
+  end
 
 let should_extract m =
     let m = String.lowercase m in

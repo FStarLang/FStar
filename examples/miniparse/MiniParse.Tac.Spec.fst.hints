@@ -1,5 +1,5 @@
 [
-  "f\u000e¥≈å”aWè\u007f\u0002\u0010[S\u001eŸ",
+  "¥\u007fıl\"*Èj”Î%.ÑD*'",
   [
     [
       "MiniParse.Tac.Spec.__proj__Package__item__s",
@@ -11,19 +11,7 @@
         "projection_inverse_MiniParse.Tac.Spec.Package_p"
       ],
       0,
-      "6c21f9d5648933a63d50c31d185b7306"
-    ],
-    [
-      "MiniParse.Tac.Spec.gen_package'",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "98f1c7718cd2811c9ecafef7900b815d"
+      "867caf222e092a0d3fff908a84874c6a"
     ],
     [
       "MiniParse.Tac.Spec.__proj__Package__item__s",
@@ -35,19 +23,7 @@
         "projection_inverse_MiniParse.Tac.Spec.Package_p"
       ],
       0,
-      "0f06219351e5e461df53ad074da92ad3"
-    ],
-    [
-      "MiniParse.Tac.Spec.gen_package'",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "e56be724682ae201f6a7a744e2d5a3c6"
+      "2031b733fd954ea4e1f8401057588c5b"
     ]
   ]
 ]

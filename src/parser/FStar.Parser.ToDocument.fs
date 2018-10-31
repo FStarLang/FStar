@@ -52,6 +52,11 @@ module BU = FStar.Util
 (* should wrap them in [with_fs_typ_app] *)
 let should_print_fs_typ_app = BU.mk_ref false
 
+let all_explicit (args:list<(term*imp)>) : bool =
+    BU.for_all (function
+                | (_, Nothing) -> true
+                | _ -> false) args
+
 (* Tuples which come from a resugared AST, via term_to_document are already flattened *)
 (* This reference is set to false in term_to_document and checked in p_tmNoEqWith'    *)
 let unfold_tuples = BU.mk_ref true
@@ -584,17 +589,20 @@ and p_rawDecl d = match d.d with
     group (str "open" ^/^ p_quident uid)
   | Include uid ->
     group (str "include" ^/^ p_quident uid)
+  | Friend uid ->
+    group (str "friend" ^/^ p_quident uid)
   | ModuleAbbrev (uid1, uid2) ->
     (str "module" ^^ space ^^ p_uident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
   | TopLevelModule uid ->
     group(str "module" ^^ space ^^ p_quident uid)
-  | Tycon(true, [TyconAbbrev(uid, tpars, None, t), None]) ->
+  | Tycon(true, _, [TyconAbbrev(uid, tpars, None, t), None]) ->
     let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
     surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ false false t
-  | Tycon(false, tcdefs) ->
+  | Tycon(false, tc, tcdefs) ->
     (* TODO : needs some range information to be able to use this *)
     (* separate_map_with_comments (str "type" ^^ space) (str "and" ^^ space) p_fsdocTypeDeclPairs tcdefs *)
-    (p_fsdocTypeDeclPairs (str "type") (List.hd tcdefs)) ^^
+    let s = if tc then str "class" else str "type" in
+    (p_fsdocTypeDeclPairs s (List.hd tcdefs)) ^^
       (concat_map (fun x -> break1 ^^ p_fsdocTypeDeclPairs (str "and") x) <| List.tl tcdefs)
   | TopLevelLet(q, lbs) ->
     let let_doc = str "let" ^^ p_letqualifier q in
@@ -622,7 +630,7 @@ and p_rawDecl d = match d.d with
     p_fsdoc doc ^^ hardline (* needed so that the comment is treated as standalone *)
   | Main _ ->
     failwith "*Main declaration* : Is that really still in use ??"
-  | Tycon(true, _) ->
+  | Tycon(true, _, _) ->
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
   | Splice (ids, t) ->
     str "%splice" ^^ p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
@@ -747,7 +755,7 @@ and p_effectDefinition uid bs t eff_decls =
     (str "with") ^^ hardline ^^ space ^^ space ^^ (separate_map_last (hardline ^^ semi ^^ space) p_effectDecl eff_decls))
 
 and p_effectDecl ps d = match d.d with
-  | Tycon(false, [TyconAbbrev(lid, [], None, e), None]) ->
+  | Tycon(false, _, [TyconAbbrev(lid, [], None, e), None]) ->
       prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
   | _ ->
       failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
@@ -804,7 +812,6 @@ and p_qualifiers qs =
 
 and p_letqualifier = function
   | Rec -> space ^^ str "rec"
-  | Mutable -> space ^^ str "mutable"
   | NoLetQualifier -> empty
 
 and p_aqual = function
@@ -850,8 +857,8 @@ and p_atomicPattern p = match p.pat with
        * aware that there are multiple callers to p_refinement and that
        * p_appTerm is probably the lower bound of all expected levels. *)
       soft_parens_with_nesting (p_refinement aqual (p_ident lid) t phi)
-    | PatWild, Refine({b = NoName t}, phi) ->
-      soft_parens_with_nesting (p_refinement None underscore t phi)
+    | PatWild aqual, Refine({b = NoName t}, phi) ->
+      soft_parens_with_nesting (p_refinement aqual underscore t phi)
     | _ ->
         (* TODO implement p_simpleArrow *)
         soft_parens_with_nesting (p_tuplePattern pat ^^ colon ^/^ p_tmEqNoRefinement t)
@@ -868,8 +875,8 @@ and p_atomicPattern p = match p.pat with
     p_tvar tv
   | PatOp op ->
     lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
-  | PatWild ->
-    underscore
+  | PatWild aqual ->
+    optional p_aqual aqual ^^ underscore
   | PatConst c ->
     p_constant c
   | PatVar (lid, aqual) ->
@@ -953,12 +960,12 @@ and p_binders (is_atomic: bool) (bs: list<binder>): document = separate_or_flow 
 (* ****************************************************************************)
 
 and text_of_id_or_underscore lid =
-  if starts_with lid.idText reserved_prefix
+  if starts_with lid.idText reserved_prefix && not (Options.print_real_names ())
   then underscore
   else str (text_of_id lid)
 
 and text_of_lid_or_underscore lid =
-  if starts_with lid.ident.idText reserved_prefix
+  if starts_with lid.ident.idText reserved_prefix && not (Options.print_real_names ())
   then underscore
   else str (text_of_lid lid)
 
@@ -1251,7 +1258,7 @@ and p_tmConjunction e = match e.tm with
 and p_tmTuple e = with_comment p_tmTuple' e e.range
 
 and p_tmTuple' e = match e.tm with
-  | Construct (lid, args) when is_tuple_constructor lid ->
+  | Construct (lid, args) when is_tuple_constructor lid && all_explicit args ->
       separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args
   | _ -> p_tmEq e
 
@@ -1292,7 +1299,11 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
   | Sum(binders, res) ->
       let op = "&" in
       let left, mine, right = levels op in
-      let p_dsumfst b = p_binder false b ^^ space ^^ str op ^^ break1 in
+      let p_dsumfst bt =
+        match bt with
+        | Inl b -> p_binder false b ^^ space ^^ str op ^^ break1
+        | Inr t -> p_tmNoEqWith' false p_X left t ^^ space ^^ str op ^^ break1
+      in
       paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' false p_X right res)
   | Op({idText = "*"}, [e1; e2]) when !unfold_tuples ->
       let op = "*" in
@@ -1428,7 +1439,18 @@ and p_atomicTermNotQUident e = match e.tm with
   | Op(op, []) ->
     lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
   | Construct (lid, args) when is_dtuple_constructor lid ->
-    surround 2 1 (lparen ^^ bar) (separate_map (comma ^^ break1) p_tmEq (List.map fst args)) (bar ^^ rparen)
+    if all_explicit args
+    then surround 2 1 (lparen ^^ bar) (separate_map (comma ^^ break1) p_tmEq (List.map fst args)) (bar ^^ rparen)
+    else
+    begin match args with
+      | [] -> p_quident lid
+      | [arg] -> group (p_quident lid ^/^ p_argTerm arg)
+      | hd::tl ->
+          group (
+              group (prefix2 (p_quident lid) (p_argTerm hd)) ^^
+                    jump2 (separate_map break1 p_argTerm tl))
+    end
+
   | Project (e, lid) ->
     group (prefix 2 0 (p_atomicTermNotQUident e)  (dot ^^ p_qlident lid))
   | _ ->

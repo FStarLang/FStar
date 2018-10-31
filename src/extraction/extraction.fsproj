@@ -10,7 +10,6 @@
     <RootNamespace>extraction</RootNamespace>
     <AssemblyName>extraction</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.3.0</TargetFSharpCoreVersion>
     <Name>extraction</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -53,6 +52,7 @@
   <ItemGroup>
     <Compile Include="FStar.Extraction.ML.Syntax.fs" />
     <Compile Include="FStar.Extraction.ML.UEnv.fs" />
+    <Compile Include="FStar.Extraction.ML.Util.fsi" />
     <Compile Include="FStar.Extraction.ML.Util.fs" />
     <Compile Include="FStar.Extraction.ML.Code.fsi" />
     <Compile Include="FStar.Extraction.ML.Code.fs" />
@@ -86,10 +86,6 @@
     </ProjectReference>
     <Reference Include="FSharp.Compatibility.OCaml">
       <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.Core">
-      <HintPath>..\VS\packages\FSharp.Core.4.2.3/lib/net45/FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">

@@ -326,3 +326,11 @@ let test_logical_operators_on_witnessed (p q:mem_predicate)
     assert ((witnessed p \/ witnessed q) ==> witnessed (fun s -> p s \/ q s));
     lemma_witnessed_nested p;
     assert (witnessed (fun _ -> witnessed p) <==> witnessed p)
+
+open FStar.Monotonic.Seq
+
+private let test_alloc (#a:Type0) (p:Seq.seq a -> Type) (r:rid) (init:Seq.seq a{p init})
+               : ST unit (requires (fun _ -> witnessed (region_contains_pred r))) (ensures (fun _ _ _ -> True)) =
+  let is = alloc_mref_iseq p r init in
+  let h = get () in
+  assert (i_sel h is == init)

@@ -16,7 +16,7 @@ type state = {secret:int;
               public:int;
               release:bool}
 
-reifiable reflectable new_effect STATE = STATE_h state
+total reifiable reflectable new_effect STATE = STATE_h state
 
 effect ST (a:Type) (pre: STATE?.pre) (post: (state -> a -> state -> GTot Type0)) =
   STATE a (fun n0 p -> pre n0 /\

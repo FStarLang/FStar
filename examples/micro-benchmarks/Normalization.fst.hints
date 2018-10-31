@@ -1,5 +1,5 @@
 [
-  "\u0001¥ºfùÍÓ\u001fX\u001c1\u0015ÏÏ@\u007f",
+  "\fVô\u001fPk^Ö~[O)÷Ω¬\u000e",
   [
     [
       "Normalization.test",
@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "32b1d77cd771e424399864b47c386c02"
+      "412644ff22fecefd66fed31ca580da20"
     ],
     [
       "Normalization.id",
@@ -25,7 +25,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5b6c7d915b1e380edc56bde880787dd2"
+      "01d982d0d7d9390084e26d8c7c772d26"
     ],
     [
       "Normalization.test2",
@@ -34,7 +34,7 @@
       0,
       [ "@query" ],
       0,
-      "b771ca11629562b12de489082b0540b5"
+      "221eb63623781d2cca2dca91572bfca7"
     ],
     [
       "Normalization.pow2_values",
@@ -43,16 +43,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "03ff5730d47001a3d2a62cf4b7af136c"
-    ],
-    [
-      "Normalization.pow2_values",
-      2,
-      0,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "7d37260cd3bdb959aefc9839891bf27b"
+      "b8d638e89cfda3a8968ad0ea12d496a2"
     ],
     [
       "Normalization.test_sort",
@@ -60,12 +51,27 @@
       0,
       0,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list__uu___haseq",
-        "function_token_typing_Prims.int"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8a7a93e8744ce661d3f0b5de14b800ea"
+      "6d0cc9c74e7444f663a669c27d9bd50d"
+    ],
+    [
+      "Normalization.test_sort1",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "5f77dfe732e143e71aa48c932c600870"
     ],
     [
       "Normalization.id",
@@ -82,16 +88,35 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "aea3f04432c6400b8b92cad4e27848d5"
+      "b377e6c7388baa51e04f2909589a6c6a"
     ],
     [
-      "Normalization.pow2_values",
-      3,
+      "Normalization.test_sort",
+      2,
       0,
       0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
       0,
-      "eedb65053faa63ee12e140d715313c79"
+      "61f68922ff53657636a0f797f71b39e6"
+    ],
+    [
+      "Normalization.test_sort1",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "d1de8f8d95adb442af6c3fa631ff03bb"
     ]
   ]
 ]

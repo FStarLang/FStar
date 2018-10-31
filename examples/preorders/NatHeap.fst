@@ -8,7 +8,9 @@ open FStar.Preorder
 
 (* NB: (a:Type0 & a) instead of dtuple2 is better notation *)
 
-abstract type heap = h:(nat * (nat -> Tot (option (dtuple2 Type0 (fun a -> a)))))
+module F = FStar.FunctionalExtensionality
+
+abstract type heap = h:(nat * (F.restricted_t nat (fun _ -> (option (dtuple2 Type0 (fun a -> a))))))
 		       {(forall (n:nat) . n < fst h ==> (exists v . snd h n == Some v)) /\ 
 			(forall (n:nat) . n >= fst h ==> snd h n == None)}
 
@@ -65,8 +67,8 @@ abstract val alloc_ref : h0:heap ->
 			  (forall b (r:ref b{contains h0 r}) . {:pattern sel #b h0 r}
 			     sel #b h0 r == sel #b (snd rh1) r)})
 let alloc_ref h0 a x = 
-  (fst h0 , (fst h0 + 1 , (fun r -> if r = fst h0 then Some (| a , x |)
-					          else snd h0 r)))
+  (fst h0 , (fst h0 + 1 , F.on_dom nat (fun r -> if r = fst h0 then Some (| a , x |)
+					     else snd h0 r)))
 
 
 (* Update. *)
@@ -85,15 +87,14 @@ abstract val upd : #a:Type ->
 		          ~(r === r') ==>
 			  sel h0 r' == sel h1 r')})
 let upd #a h0 r x = 
-  (fst h0 , (fun r' -> if r = r' then Some (| a , x |)
-                                 else snd h0 r'))
+  (fst h0 , F.on_dom nat (fun r' -> if r = r' then Some (| a , x |)
+                                else snd h0 r'))
 
 
 (* Empty. *)
 
 abstract val emp : heap
-let emp = 
-  Mktuple2 #nat #(nat -> Tot (option (dtuple2 Type0 (fun a -> a)))) 0 (fun (r:nat) -> None)
+let emp = Mktuple2 0 (F.on_dom nat (fun (r:nat) -> None))
 
 
 (*
@@ -123,12 +124,12 @@ let max n m =
 
 abstract val concat : h0:heap -> h1:heap{consistent h0 h1} -> Tot heap
 let concat h0 h1 = 
-  (max (fst h0) (fst h1) , (fun r -> match snd h0 r with
-                                     | None -> snd h1 r
-  				     | Some v -> 
-  				         (match snd h1 r with
-  					  | None -> Some v
-  					  | Some v' -> Some v')))
+  (max (fst h0) (fst h1) , F.on_dom nat (fun r -> match snd h0 r with
+                                             | None -> snd h1 r
+  				             | Some v -> 
+  				               (match snd h1 r with
+  					        | None -> Some v
+  					        | Some v' -> Some v')))
 
 
 (* Lemmas about the consistency of heaps. *)

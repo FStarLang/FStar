@@ -16,6 +16,7 @@ type vconst =
     | C_True
     | C_False
     | C_String of string
+    | C_Range of Range.range
 
 type pattern =
     | Pat_Constant of vconst
@@ -80,6 +81,7 @@ type exp =
 
 type refl_constant = {
     lid : FStar.Ident.lid;
+    fv : fv;
     t : term;
 }
 
@@ -94,17 +96,25 @@ let fstar_refl_data_lid   s = fstar_refl_lid ["Data";   s]
 
 let fstar_refl_data_const s =
     let lid = fstar_refl_data_lid s in
-    { lid = lid ; t = tdataconstr lid }
+    { lid = lid
+    ; fv  = lid_as_fv lid delta_constant (Some Data_ctor)
+    ; t   = tdataconstr lid
+    }
 
-let mk_refl_types_lid_as_term  (s:string) = tconst (fstar_refl_types_lid s)
-let mk_refl_syntax_lid_as_term (s:string) = tconst (fstar_refl_syntax_lid s)
-let mk_refl_data_lid_as_term   (s:string) = tconst (fstar_refl_data_lid s)
+let mk_refl_types_lid_as_term  (s:string) = tconst  (fstar_refl_types_lid s)
+let mk_refl_types_lid_as_fv    (s:string) = fvconst (fstar_refl_types_lid s)
+let mk_refl_syntax_lid_as_term (s:string) = tconst  (fstar_refl_syntax_lid s)
+let mk_refl_syntax_lid_as_fv   (s:string) = fvconst (fstar_refl_syntax_lid s)
+let mk_refl_data_lid_as_term   (s:string) = tconst  (fstar_refl_data_lid s)
+let mk_refl_data_lid_as_fv     (s:string) = fvconst (fstar_refl_data_lid s)
 
 let mk_inspect_pack_pair s =
     let inspect_lid = fstar_refl_basic_lid ("inspect" ^ s) in
     let pack_lid    = fstar_refl_basic_lid ("pack" ^ s) in
-    let inspect     = { lid = inspect_lid ; t = fvar inspect_lid (Delta_constant_at_level 1) None } in
-    let pack        = { lid = pack_lid    ; t = fvar pack_lid (Delta_constant_at_level 1) None } in
+    let inspect_fv  = lid_as_fv inspect_lid (Delta_constant_at_level 1) None in
+    let pack_fv     = lid_as_fv pack_lid    (Delta_constant_at_level 1) None in
+    let inspect     = { lid = inspect_lid ; fv = inspect_fv ; t = fv_to_tm inspect_fv } in
+    let pack        = { lid = pack_lid    ; fv = pack_fv    ; t = fv_to_tm pack_fv } in
     (inspect, pack)
 
 let fstar_refl_inspect_ln     , fstar_refl_pack_ln     = mk_inspect_pack_pair "_ln"
@@ -116,25 +126,43 @@ let fstar_refl_inspect_sigelt , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_
 
 (* assumed types *)
 let fstar_refl_env              = mk_refl_types_lid_as_term "env"
+let fstar_refl_env_fv           = mk_refl_types_lid_as_fv   "env"
 let fstar_refl_bv               = mk_refl_types_lid_as_term "bv"
+let fstar_refl_bv_fv            = mk_refl_types_lid_as_fv   "bv"
 let fstar_refl_fv               = mk_refl_types_lid_as_term "fv"
+let fstar_refl_fv_fv            = mk_refl_types_lid_as_fv   "fv"
 let fstar_refl_comp             = mk_refl_types_lid_as_term "comp"
+let fstar_refl_comp_fv          = mk_refl_types_lid_as_fv   "comp"
 let fstar_refl_binder           = mk_refl_types_lid_as_term "binder"
+let fstar_refl_binder_fv        = mk_refl_types_lid_as_fv   "binder"
 let fstar_refl_sigelt           = mk_refl_types_lid_as_term "sigelt"
+let fstar_refl_sigelt_fv        = mk_refl_types_lid_as_fv   "sigelt"
 let fstar_refl_term             = mk_refl_types_lid_as_term "term"
+let fstar_refl_term_fv          = mk_refl_types_lid_as_fv   "term"
 let fstar_refl_ident            = mk_refl_types_lid_as_term "ident"
+let fstar_refl_ident_fv         = mk_refl_types_lid_as_fv   "ident"
 let fstar_refl_univ_name        = mk_refl_types_lid_as_term "univ_name"
+let fstar_refl_univ_name_fv     = mk_refl_types_lid_as_fv   "univ_name"
 
 (* auxiliary types *)
 let fstar_refl_aqualv           = mk_refl_data_lid_as_term "aqualv"
+let fstar_refl_aqualv_fv        = mk_refl_data_lid_as_fv "aqualv"
 let fstar_refl_comp_view        = mk_refl_data_lid_as_term "comp_view"
+let fstar_refl_comp_view_fv     = mk_refl_data_lid_as_fv "comp_view"
 let fstar_refl_term_view        = mk_refl_data_lid_as_term "term_view"
+let fstar_refl_term_view_fv     = mk_refl_data_lid_as_fv "term_view"
 let fstar_refl_pattern          = mk_refl_data_lid_as_term "pattern"
+let fstar_refl_pattern_fv       = mk_refl_data_lid_as_fv "pattern"
 let fstar_refl_branch           = mk_refl_data_lid_as_term "branch"
+let fstar_refl_branch_fv        = mk_refl_data_lid_as_fv "branch"
 let fstar_refl_bv_view          = mk_refl_data_lid_as_term "bv_view"
+let fstar_refl_bv_view_fv       = mk_refl_data_lid_as_fv "bv_view"
 let fstar_refl_vconst           = mk_refl_data_lid_as_term "vconst"
+let fstar_refl_vconst_fv        = mk_refl_data_lid_as_fv "vconst"
 let fstar_refl_sigelt_view      = mk_refl_data_lid_as_term "sigelt_view"
+let fstar_refl_sigelt_view_fv   = mk_refl_data_lid_as_fv "sigelt_view"
 let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
+let fstar_refl_exp_fv           = mk_refl_data_lid_as_fv "exp"
 
 (* bv_view, this is a record constructor *)
 
@@ -144,7 +172,11 @@ let ref_Mk_bv =
                                 Ident.mk_ident ("bv_ppname", Range.dummyRange);
                                 Ident.mk_ident ("bv_index" , Range.dummyRange);
                                 Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
-    { lid = lid ; t = fvar lid delta_constant (Some attr) }
+    let fv = lid_as_fv lid delta_constant (Some attr) in
+    { lid = lid
+    ; fv  = fv
+    ; t   = fv_to_tm fv
+    }
 
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
@@ -157,6 +189,7 @@ let ref_C_True   = fstar_refl_data_const "C_True"
 let ref_C_False  = fstar_refl_data_const "C_False"
 let ref_C_Int    = fstar_refl_data_const "C_Int"
 let ref_C_String = fstar_refl_data_const "C_String"
+let ref_C_Range  = fstar_refl_data_const "C_Range"
 
 (* pattern *)
 let ref_Pat_Constant = fstar_refl_data_const "Pat_Constant"
@@ -206,3 +239,6 @@ let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange
 let ord_Lt = tdataconstr ord_Lt_lid
 let ord_Eq = tdataconstr ord_Eq_lid
 let ord_Gt = tdataconstr ord_Gt_lid
+let ord_Lt_fv = lid_as_fv ord_Lt_lid delta_constant (Some Data_ctor)
+let ord_Eq_fv = lid_as_fv ord_Eq_lid delta_constant (Some Data_ctor)
+let ord_Gt_fv = lid_as_fv ord_Gt_lid delta_constant (Some Data_ctor)

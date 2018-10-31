@@ -147,6 +147,7 @@ let keywords =
     ALWAYS, "assume"     ,ASSUME;
     ALWAYS, "begin"      ,BEGIN;
     ALWAYS, "by"         ,BY;
+    ALWAYS, "class"      ,CLASS;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
     ALWAYS, "else"       ,ELSE;
@@ -155,6 +156,7 @@ let keywords =
     ALWAYS, "exception"  ,EXCEPTION;
     ALWAYS, "exists"     ,EXISTS;
     ALWAYS, "false"      ,FALSE;
+    ALWAYS, "friend"     ,FRIEND;
     ALWAYS, "forall"     ,FORALL;
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
@@ -163,12 +165,12 @@ let keywords =
     ALWAYS, "include"    ,INCLUDE;
     ALWAYS, "inline"     ,INLINE;
     ALWAYS, "inline_for_extraction"     ,INLINE_FOR_EXTRACTION;
+    ALWAYS, "instance"   ,INSTANCE;
     ALWAYS, "irreducible",IRREDUCIBLE;
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;
     ALWAYS, "match"      ,MATCH;
     ALWAYS, "module"     ,MODULE;
-    ALWAYS, "mutable"    ,MUTABLE;
     ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
     ALWAYS, "noextract",  NOEXTRACT;

@@ -1,14 +1,98 @@
 [
-  "ÝÍ£²\u000e\u0012ét¾V®–`S©Œ",
+  "\u0015=üg£«8@¯Ìç†fïkB",
   [
     [
+      "UnifyRefs.nat32_to_nat64'0",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "2ae258a3c831a1358870850fef96ed8a"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'1",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "9c1186d3bba0c7f89e30f21f8524a3d8"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'2",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "49861ca43720dd46689e67c8adf8d1e9"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'3",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "6df7053e8acfd3556c11b757ff03479f"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_UnifyRefs.nat64",
+        "refinement_interpretation_UnifyRefs_Tm_refine_6e4b4a2387d7c1a73684f335e617968d"
+      ],
+      0,
+      "d74a50e24047742dfa39eda1ad0d99bc"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_UnifyRefs.nat64",
+        "refinement_interpretation_UnifyRefs_Tm_refine_6e4b4a2387d7c1a73684f335e617968d"
+      ],
+      0,
+      "a0b0f558116da13a042bde21854c3ce7"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UnifyRefs_Tm_refine_0958fc86fbbb72ab4560bf1ef55e2fe9"
+      ],
+      0,
+      "77ff4268487e468779f2da21a4e4a2cb"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UnifyRefs_Tm_refine_0958fc86fbbb72ab4560bf1ef55e2fe9"
+      ],
+      0,
+      "85fbf3b0e237ab3f9bb0967a54b73d18"
+    ],
+    [
       "UnifyRefs.nat32_to_nat64'4",
       1,
       2,
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "0a281715f8daf249b272df1e71c284b0"
+      "54eb0ad3bf21e26e1a11214b13c887eb"
     ],
     [
       "UnifyRefs.nat32_to_nat64'5",
@@ -17,7 +101,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "789e068f5c7abe8fbff2e40eae210aaf"
+      "4b8582fc9591d5f13f0ffa8140fce1aa"
     ],
     [
       "UnifyRefs.nat64_to_nat32'4",
@@ -26,7 +110,7 @@
       1,
       [ "@query" ],
       0,
-      "149686603b5449e3bc089d90b82d708a"
+      "7bc6f95b0d02c608c7f6eaf070697685"
     ],
     [
       "UnifyRefs.nat64_to_nat32'5",
@@ -35,7 +119,91 @@
       1,
       [ "@query" ],
       0,
-      "d859128a9428869bb8b431cad0784771"
+      "368d9a037a3b8d34ff500d6bfc349c5c"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'0",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "3870db919fba0939f1df9eb8dccc3720"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'1",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "6a3e53bd4b5e39b3cfa447c5aee63d4e"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'2",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "e7676456f3e46837ac7fd31a0213e467"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'3",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "5e8ed830339f1d46322639830fa32a63"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_UnifyRefs.nat64",
+        "refinement_interpretation_UnifyRefs_Tm_refine_6e4b4a2387d7c1a73684f335e617968d"
+      ],
+      0,
+      "7f7e9be995470f3f7f01e3e3ec6db977"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_UnifyRefs.nat64",
+        "refinement_interpretation_UnifyRefs_Tm_refine_6e4b4a2387d7c1a73684f335e617968d"
+      ],
+      0,
+      "b53512d004feccd783d5c4909d7653d2"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UnifyRefs_Tm_refine_0958fc86fbbb72ab4560bf1ef55e2fe9"
+      ],
+      0,
+      "66388edcff26fee86927db50f3fa1415"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'3",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UnifyRefs_Tm_refine_0958fc86fbbb72ab4560bf1ef55e2fe9"
+      ],
+      0,
+      "781c9dc2cf9f2d7d5ef1bb25bd09c2b0"
     ],
     [
       "UnifyRefs.nat32_to_nat64'4",
@@ -44,7 +212,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "574f48e57e15b4f6b8d263f178da845f"
+      "88b2f20b6aa102dcf6f1b4db75d812f4"
     ],
     [
       "UnifyRefs.nat32_to_nat64'5",
@@ -53,7 +221,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "6e644daaf45c757cc6f8d3f2b39e52cf"
+      "ab28618a909235da70875cf7cc055a95"
     ],
     [
       "UnifyRefs.nat64_to_nat32'4",
@@ -62,7 +230,7 @@
       1,
       [ "@query" ],
       0,
-      "d08b225878a6b3a5ed2cdc0670010897"
+      "a96334b0286cbd2bd8a6b617887a75a3"
     ],
     [
       "UnifyRefs.nat64_to_nat32'5",
@@ -71,7 +239,7 @@
       1,
       [ "@query" ],
       0,
-      "66e46a51c8f2ef3175f46990b2cc8c5f"
+      "d7cb31776dad25f19199cecc63e622ae"
     ]
   ]
 ]

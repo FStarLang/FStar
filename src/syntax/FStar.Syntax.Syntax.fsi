@@ -51,6 +51,14 @@ type pragma =
 
 type memo<'a> = ref<option<'a>>
 
+(* Simple types used in native compilation
+ * to record the types of lazily embedded terms
+ *)
+type emb_typ =
+  | ET_abstract
+  | ET_fun  of emb_typ * emb_typ
+  | ET_app  of string * list<emb_typ>
+
 //versioning for unification variables
 type version = {
     major:int;
@@ -83,22 +91,6 @@ type delta_depth =
   | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
   | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
-
-///[@ PpxDerivingYoJson PpxDerivingShow ]
-// Different kinds of lazy terms. These are used to decide the unfolding
-// function, instead of keeping the closure inside the lazy node, since
-// that means we cannot have equality on terms (not serious) nor call
-// output_value on them (serious).
-type lazy_kind =
-  | BadLazy
-  | Lazy_bv
-  | Lazy_binder
-  | Lazy_fvar
-  | Lazy_comp
-  | Lazy_env
-  | Lazy_proofstate
-  | Lazy_sigelt
-  | Lazy_uvar
 
 type should_check_uvar =
   | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
@@ -134,7 +126,8 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_typ:typ;                                            (* t *)
     ctx_uvar_reason:string;
     ctx_uvar_should_check:should_check_uvar;
-    ctx_uvar_range:Range.range
+    ctx_uvar_range:Range.range;
+    ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
 }
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version
@@ -166,7 +159,7 @@ and comp_typ = {
   effect_name:lident;
   result_typ:typ;
   effect_args:args;
-  flags:list<cflags>
+  flags:list<cflag>
 }
 and comp' =
   | Total  of typ * option<universe>
@@ -180,16 +173,16 @@ and arg = term * aqual                                           (* marks an exp
 and args = list<arg>
 and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
-and cflags =
-  | TOTAL
-  | MLEFFECT
-  | RETURN
-  | PARTIAL_RETURN
-  | SOMETRIVIAL
-  | TRIVIAL_POSTCONDITION
-  | SHOULD_NOT_INLINE
-  | LEMMA
-  | CPS
+and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
+  | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
+  | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
+  | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
+  | RETURN                                                         (* the WP is return_wp of something *)
+  | PARTIAL_RETURN                                                 (* the WP is return_wp of something, possibly strengthened with some precondition *)
+  | SOMETRIVIAL                                                    (* the WP is the null wp *)
+  | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
+  | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
+  | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of term
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
@@ -205,8 +198,6 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
-  | Mutable_alloc
-  | Mutable_rval
 and fv_qual =
   | Data_ctor
   | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
@@ -248,7 +239,7 @@ and free_vars = {
 and residual_comp = {
     residual_effect:lident;                (* first component is the effect name *)
     residual_typ   :option<typ>;           (* second component: result type *)
-    residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
+    residual_flags :list<cflag>            (* third component: contains (an approximation of) the cflags *)
 }
 
 and attribute = term
@@ -256,9 +247,25 @@ and attribute = term
 and lazyinfo = {
     blob  : dyn;
     lkind : lazy_kind;
-    typ   : typ;
+    ltyp  : typ;
     rng   : Range.range;
 }
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+and lazy_kind =
+  | BadLazy
+  | Lazy_bv
+  | Lazy_binder
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_env
+  | Lazy_proofstate
+  | Lazy_goal
+  | Lazy_sigelt
+  | Lazy_uvar
+  | Lazy_embedding of emb_typ * FStar.Common.thunk<term>
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme
@@ -274,7 +281,7 @@ and aqual = option<arg_qualifier>
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
-    cflags: list<cflags>;
+    cflags: list<cflag>;
     comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
@@ -287,6 +294,7 @@ type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
+val new_id_set: unit -> set<ident>
 val new_fv_set: unit -> set<lident>
 val new_universe_names_set: unit -> set<univ_name>
 
@@ -348,7 +356,7 @@ type action = {
     action_typ: typ
 }
 type eff_decl = {
-    cattributes :list<cflags>;     // default cflags
+    cattributes :list<cflag>;      // default cflags
     mname       :lident;           //STATE_h
     univs       :univ_names;       //initially empty; but after type-checking and generalization, usually the universe of the result type etc.
     binders     :binders;          //heap:Type
@@ -404,9 +412,9 @@ type sigelt' =
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
                        * list<lident>               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon        of lident
+  | Sig_datacon        of lident                    //name of the datacon
                        * univ_names                 //universe variables of the inductive type it belongs to
-                       * typ
+                       * typ                        //the constructor's type as an arrow
                        * lident                     //the inductive type of the value this constructs
                        * int                        //and the number of parameters of the inductive
                        * list<lident>               //mutually defined types
@@ -426,7 +434,7 @@ type sigelt' =
                        * univ_names
                        * binders
                        * comp
-                       * list<cflags>
+                       * list<cflag>
   | Sig_pragma         of pragma
   | Sig_splice         of list<lident> * term
 
@@ -461,7 +469,7 @@ val withinfo: 'a -> Range.range -> withinfo_t<'a>
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> Tot<mk_t_a<'a>>
 
-val mk_lb :         (lbname * list<univ_name> * lident * typ * term * range) -> letbinding
+val mk_lb :         (lbname * list<univ_name> * lident * typ * term * list<attribute> * range) -> letbinding
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>
@@ -477,7 +485,7 @@ val mk_Comp:        comp_typ -> comp
 val mk_lcomp:
     eff_name: lident ->
     res_typ: typ ->
-    cflags: list<cflags> ->
+    cflags: list<cflag> ->
     comp_thunk: (unit -> comp) -> lcomp
 val lcomp_comp: lcomp -> comp
 val bv_to_tm:       bv -> term
@@ -547,6 +555,7 @@ val eq_pat : pat -> pat -> bool
 module C = FStar.Parser.Const
 val delta_constant  : delta_depth
 val delta_equational: delta_depth
+val fvconst         : lident -> fv
 val tconst          : lident -> term
 val tabbrev         : lident -> term
 val tdataconstr     : lident -> term
@@ -554,6 +563,7 @@ val t_unit          : term
 val t_bool          : term
 val t_int           : term
 val t_string        : term
+val t_exn           : term
 val t_float         : term
 val t_char          : term
 val t_range         : term
@@ -564,7 +574,6 @@ val t_decls         : term
 val t_binder        : term
 val t_bv            : term
 val t_tactic_unit   : term
-val t_tac_unit      : term
 val t_list_of       : term -> term
 val t_option_of     : term -> term
 val t_tuple2_of     : term -> term -> term

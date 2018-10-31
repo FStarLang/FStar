@@ -14,7 +14,7 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn
 	Reflection.Types Reflection.Basic Reflection.Data \
 	Tactics.Result Tactics.Types Bytes Util \
 	Pervasives Order Range \
-        Vector.Base Vector.Properties Vector
+        Vector.Base Vector.Properties Vector TSet
 	# prims is realized by default hence not included in this list
 
 NOEXTRACT_MODULES=$(addprefix FStar., $(FSTAR_REALIZED_MODULES)) prims FStar.Printf

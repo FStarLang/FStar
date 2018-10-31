@@ -4,11 +4,11 @@ open FStar.OrdSet
  
 val fold: #a:eqtype -> #b:Type -> #f:cmp a -> (a -> b -> Tot b) -> s:ordset a f -> b
           -> Tot b (decreases (size s))
-let rec fold (#a:eqtype) (#b:Type) #f g s a =
-  if s = empty then a
+let rec fold (#a:eqtype) (#b:Type) #f g s x =
+  if s = empty then x
   else
     let Some e = choose s in
-    let a_rest = fold g (remove e s) a in
+    let a_rest = fold g (remove e s) x in
     g e a_rest
 
 (**********)

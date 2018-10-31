@@ -1,0 +1,32 @@
+[
+  "√¬“®á√9–m∂\u001f‰U\u001fVZ",
+  [
+    [
+      "HoleBy.uu___64",
+      1,
+      2,
+      1,
+      [ "@query", "equation_HoleBy.x" ],
+      0,
+      "a79a05bb8108b547aecbbad7531ce4cc"
+    ],
+    [
+      "HoleBy.lem2",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "a0f54a4b7b902b2fd50c7c12531dee4a"
+    ],
+    [
+      "HoleBy.uu___64",
+      2,
+      2,
+      1,
+      [ "@query", "equation_HoleBy.x" ],
+      0,
+      "efcc8e27bbe022420736a61e734d870d"
+    ]
+  ]
+]

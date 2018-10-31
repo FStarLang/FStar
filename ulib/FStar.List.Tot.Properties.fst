@@ -214,6 +214,16 @@ let append_length_inv_tail
   append_length left2 right2;
   append_length_inv_head left1 right1 left2 right2
 
+(** The [last] element of a list remains the same, even after that list is
+    [append]ed to another list. *)
+let rec lemma_append_last (#a:Type) (l1 l2:list a) :
+  Lemma
+    (requires (length l2 > 0))
+    (ensures (last (l1 @ l2) == last l2)) =
+  match l1 with
+  | [] -> ()
+  | _ :: l1' -> lemma_append_last l1' l2
+
 (** Properties mixing rev and append **)
 
 val rev': list 'a -> Tot (list 'a)
@@ -258,6 +268,12 @@ val rev_involutive : l:list 'a ->
         (ensures (rev (rev l) == l))
 let rev_involutive l = rev_rev' l; rev_rev' (rev' l); rev'_involutive l
 
+(** Properties about snoc *)
+
+val lemma_snoc_length : (lx:(list 'a * 'a)) ->
+  Lemma (requires True)
+        (ensures (length (snoc lx) = length (fst lx) + 1))
+let lemma_snoc_length (l, x) = append_length l [x]
 
 (** Reverse induction principle **)
 
@@ -284,6 +300,134 @@ let rec map_lemma f l =
     match l with
     | [] -> ()
     | h::t -> map_lemma f t
+
+(** Properties about unsnoc *)
+
+(** [unsnoc] is the inverse of [snoc] *)
+val lemma_unsnoc_snoc: #a:Type -> l:list a{length l > 0} ->
+  Lemma (requires True)
+    (ensures (snoc (unsnoc l) == l))
+    [SMTPat (snoc (unsnoc l))]
+let lemma_unsnoc_snoc #a l =
+  let l', x = unsnoc l in
+  let l1, l2 = l', [x] in
+  lemma_splitAt_snd_length (length l - 1) l;
+  // assert ((l1, l2) == splitAt (length l - 1) l);
+  let rec aux (l:list a{length l > 0}) :
+    Lemma (let l1, l2 = splitAt (length l - 1) l in
+           append l1 l2 == l) =
+    if length l = 1 then () else aux (tl l) in
+  aux l
+
+(** [snoc] is the inverse of [unsnoc] *)
+val lemma_snoc_unsnoc: #a:Type -> lx:(list a * a) ->
+  Lemma (requires True)
+    (ensures (unsnoc (snoc lx) == lx))
+    (decreases (length (fst (lx))))
+    [SMTPat (unsnoc (snoc lx))]
+let rec lemma_snoc_unsnoc #a lx =
+  let l, x = lx in
+  match l with
+  | [] -> ()
+  | _ -> lemma_snoc_unsnoc (tl l, x)
+
+(** Doing an [unsnoc] gives us a list that is shorter in length by 1 *)
+val lemma_unsnoc_length: #a:Type -> l:list a{length l > 0} ->
+  Lemma (requires True)
+    (ensures (length (fst (unsnoc l)) == length l - 1))
+let lemma_unsnoc_length #a l =
+  lemma_snoc_length (unsnoc l)
+
+(** [unsnoc] followed by [append] can be connected to the same vice-versa. *)
+let rec lemma_unsnoc_append (#a:Type) (l1 l2:list a) :
+  Lemma
+    (requires (length l2 > 0)) // the [length l2 = 0] is trivial
+    (ensures (
+        let as, a = unsnoc (l1 @ l2) in
+        let bs, b = unsnoc l2 in
+        as == l1 @ bs /\ a == b)) =
+  match l1 with
+  | [] -> ()
+  | _ :: l1' -> lemma_unsnoc_append l1' l2
+
+(** [unsnoc] gives you [last] element, which is [index]ed at [length l - 1] *)
+let rec lemma_unsnoc_is_last (#t:Type) (l:list t) :
+  Lemma
+    (requires (length l > 0))
+    (ensures (snd (unsnoc l) == last l /\ snd (unsnoc l) == index l (length l - 1))) =
+  match l with
+  | [_] -> ()
+  | _ -> lemma_unsnoc_is_last (tl l)
+
+(** [index]ing on the left part of an [unsnoc]d list is the same as indexing
+    the original list. *)
+let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
+  Lemma
+    (requires (length l > 0 /\ i < length l - 1))
+    (ensures (
+        i < length (fst (unsnoc l)) /\
+        index (fst (unsnoc l)) i == index l i)) =
+  match i with
+  | 0 -> ()
+  | _ -> lemma_unsnoc_index (tl l) (i - 1)
+
+(** Definition and properties about [split_using] *)
+
+(** [split_using] splits a list at the first instance of finding an
+    element in it.
+
+    NOTE: Uses [strong_excluded_middle] axiom. *)
+let rec split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
+  GTot (r:(list t * list t)) =
+  match l with
+  | [_] -> [], l
+  | a :: as ->
+    if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
+      [], l
+    ) else (
+      let l1', l2' = split_using as x in
+      a :: l1', l2'
+    )
+
+let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
+  Lemma
+    (ensures (
+        let l1, l2 = split_using l x in
+         length l2 > 0 /\
+        ~(x `memP` l1) /\
+         hd l2 == x /\
+        append l1 l2 == l)) =
+  match l with
+  | [_] -> ()
+  | a :: as ->
+    let goal =
+      let l1, l2 = split_using l x in
+        length l2 > 0 /\
+        ~(x `memP` l1) /\
+         hd l2 == x /\
+        append l1 l2 == l
+    in
+    FStar.Classical.or_elim
+      #_ #_
+      #(fun () -> goal)
+      (fun (_:squash (a == x)) -> ())
+      (fun (_:squash (x `memP` as)) -> lemma_split_using as x)
+
+(** Definition of [index_of] *)
+
+(** [index_of l x] gives the index of the leftmost [x] in [l].
+
+    NOTE: Uses [strong_excluded_middle] axiom. *)
+let rec index_of (#t:Type) (l:list t) (x:t{x `memP` l}) :
+  GTot (i:nat{i < length l /\ index l i == x}) =
+  match l with
+  | [_] -> 0
+  | a :: as ->
+    if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
+      0
+    ) else (
+      1 + index_of as x
+    )
 
 (** Properties about partition **)
 
@@ -425,6 +569,15 @@ let rec mem_memP
 = match l with
   | [] -> ()
   | a :: q -> mem_memP x q
+
+(** If an element can be [index]ed, then it is a [memP] of the list. *)
+let rec lemma_index_memP (#t:Type) (l:list t) (i:nat{i < length l}) :
+  Lemma
+    (ensures (index l i `memP` l))
+    [SMTPat (index l i `memP` l)] =
+  match i with
+  | 0 -> ()
+  | _ -> lemma_index_memP (tl l) (i - 1)
 
 (** The empty list has no elements. *)
 val memP_empty : #a: Type -> x:a ->

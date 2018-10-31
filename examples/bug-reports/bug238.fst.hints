@@ -1,14 +1,20 @@
 [
-  "öç\u0014˝¸€ıBksWpËTÊ¨",
+  "\\Ï:Eî–L\nŸ}·ƒ\u0002*|·",
   [
     [
       "Bug238.box",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.l_False", "equation_Prims.squash",
+        "function_token_typing_Prims.unit",
+        "haseqPrims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
       0,
-      "37c026c3bacbd3d46c2ee101b3ae17b0"
+      "2bd41f331d52176f30fc58d1aafe2e05"
     ]
   ]
 ]

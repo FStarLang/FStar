@@ -24,7 +24,7 @@ private let rw_and_try (proof : unit -> Tac unit) () : Tac unit =
 #reset-options "--no_tactics"
 (** Combinator used to discharge equalities with tactics*)
 let ( &|| ) #a (#req : Type0) (#ens : (_:a{req}) -> GTot Type0) ($f:(unit -> Pure a req ens))
-      (proof: (unit -> Tac unit){by_tactic (rw_and_try proof) (squash req)})
+      (proof: (unit -> Tac unit){with_tactic (rw_and_try proof) (squash req)})
         : Tot (x:a{req /\ ens x}) =
             // GM: need to explicitly bring this (squash req) into the
             // logical environment. Unsure why the SMT pattern doesn't

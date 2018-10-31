@@ -314,13 +314,13 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             * list<term>                    (* guards *)
                             * env_t                         (* extended context *)
                             * decls_t                       (* top-level decls to be emitted *)
-                            * list<bv>)                     (* unmangled names *) =
+                            * list<bv>)                     (* names *) =
 
-    if Env.debug env.tcenv Options.Low then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
+    if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
 
     let vars, guards, env, decls, names = bs |> List.fold_left (fun (vars, guards, env, decls, names) b ->
         let v, g, env, decls', n =
-            let x = unmangle (fst b) in
+            let x = fst b in
             let xxsym, xx, env' = gen_term_var env x in
             let guard_x_t, decls' = encode_term_pred fuel_opt (norm env x.sort) env xx in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
             (xxsym, Term_sort),
@@ -561,7 +561,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         // They should be equivalent to a fully spelled out view.
         //
         // Actual encoding: `q ~> pack qv where qv is the view of q
-        let tv = EMB.embed RE.e_term_view t.pos (R.inspect_ln qt) in
+        let tv = EMB.embed RE.e_term_view (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
         if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
             BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t0)
                                                     (Print.term_to_string tv);
@@ -957,12 +957,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               fallback ()
 
             | Some rc ->
-              if is_impure rc && not (is_reifiable env.tcenv rc)
+              if is_impure rc && not (is_reifiable_rc env.tcenv rc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
                 let cache_size = BU.smap_size env.cache in  //record the cache size before starting the encoding
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                let body = if is_reifiable env.tcenv rc
+                let body = if is_reifiable_rc env.tcenv rc
                            then TcUtil.reify_body env.tcenv body
                            else body
                 in
@@ -1073,7 +1073,7 @@ and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t
     mkLet' ([(scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
 and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
-    if Env.debug env.tcenv Options.Low then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
+    if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
     let vars, pat_term = FStar.TypeChecker.Util.decorated_pattern_as_term pat in
 
     let env, vars = vars |> List.fold_left (fun (env, vars) v ->
@@ -1102,7 +1102,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             mk_and_l (is_f::sub_term_guards)
     in
 
-        let rec mk_projections pat (scrutinee:term) =
+    let rec mk_projections pat (scrutinee:term) =
         match pat.v with
         | Pat_dot_term (x, _)
         | Pat_var x
@@ -1115,7 +1115,8 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
                 mk_projections arg (mkApp(proj, [scrutinee]))) //arity ok, primitive projector (#1383)
-            |> List.flatten in
+            |> List.flatten
+    in
 
     let pat_term () = encode_term pat_term env in
 
@@ -1250,17 +1251,36 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             [] l in
         ({f phis with rng=r}, decls) in
 
-    // This gets called for eq2, eq3, equals and h_equals. They have types:
+    // This gets called for
     // eq2 : #a:Type -> a -> a -> Type
-    // eq3 : #a:Type -> #b:Type -> a -> b -> Type
-    // equals : #a:Type -> a -> a -> Type
-    // h_equals : #a:Type -> a -> #b:Type -> b -> Type
-    // So, to properly cover all cases, extract the two non-implicit arguments and state their equality
+    // equals: #a:Type -> a -> a -> Type
     let eq_op r args : (term * decls_t) =
         let rf = List.filter (fun (a,q) -> match q with | Some (Implicit _) -> false | _ -> true) args in
         if List.length rf <> 2
         then failwith (BU.format1 "eq_op: got %s non-implicit arguments instead of 2?" (string_of_int (List.length rf)))
         else enc (bin_op mkEq) r rf
+    in
+
+    // eq3 : #a:Type -> #b:Type -> a -> b -> Type
+    let eq3_op r args : (term * decls_t) =
+        let n = List.length args in
+        if n=4
+        then enc (fun terms ->
+                   match terms with
+                   | [t0; t1; v0; v1] -> mkAnd (mkEq(t0, t1), mkEq(v0, v1))
+                   | _ -> failwith "Impossible") r args
+        else failwith (BU.format1 "eq3_op: got %s non-implicit arguments instead of 4?" (string_of_int n))
+    in
+
+    // h_equals : #a:Type -> a -> #b:Type -> b -> Type
+    let h_equals_op r args : (term * decls_t) =
+        let n = List.length args in
+        if n=4
+        then enc (fun terms ->
+                   match terms with
+                   | [t0; v0; t1; v1] -> mkAnd (mkEq(t0, t1), mkEq(v0, v1))
+                   | _ -> failwith "Impossible") r args
+        else failwith (BU.format1 "eq3_op: got %s non-implicit arguments instead of 4?" (string_of_int n))
     in
 
     let mk_imp r : Tot<(args -> (term * decls_t))> = function
@@ -1279,6 +1299,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           let (g, decls1) = encode_formula guard env in
           let (t, decls2) = encode_formula _then env in
           let (e, decls3) = encode_formula _else env in
+
           let res = Term.mkITE(g, t, e) r in
           res, decls1@decls2@decls3
         | _ -> failwith "impossible" in
@@ -1293,7 +1314,9 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         (Const.ite_lid,   mk_ite);
         (Const.not_lid,   enc_prop_c (un_op mkNot));
         (Const.eq2_lid,   eq_op);
-        (Const.eq3_lid,   eq_op);
+        (Const.c_eq2_lid, eq_op);
+        (Const.eq3_lid,   eq3_op);
+        (Const.c_eq3_lid, h_equals_op);
         (Const.true_lid,  const_op Term.mkTrue);
         (Const.false_lid, const_op Term.mkFalse);
     ] in

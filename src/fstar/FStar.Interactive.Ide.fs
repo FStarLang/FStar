@@ -268,7 +268,7 @@ let fresh_name_tracking_hooks () =
 let track_name_changes (env: env_t)
     : env_t * (env_t -> env_t * list<name_tracking_event>) =
   let set_hooks dshooks tchooks env =
-    let (), tcenv' = with_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
+    let (), tcenv' = with_dsenv_of_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
     TcEnv.set_tc_hooks tcenv' tchooks in
 
   let old_dshooks, old_tchooks = DsEnv.ds_hooks env.dsenv, TcEnv.tc_hooks env in
@@ -294,9 +294,8 @@ let string_of_repl_task = function
   | Noop -> "Noop {}"
 
 (** Like ``tc_one_file``, but only return the new environment **)
-let tc_one env intf_opt modf =
-  let _, env, delta = tc_one_file env None intf_opt modf in
-  let env = Universal.apply_delta_env env delta in
+let tc_one (env:env_t) intf_opt modf =
+  let _, env = tc_one_file_for_ide env intf_opt modf in
   env
 
 (** Load the file or files described by `task`.
@@ -343,7 +342,6 @@ let deps_and_repl_ld_tasks_of_our_file filename
     (get_mod_name f = our_mod_name) in
 
   let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [filename] in
-
   let same_name, real_deps =
     List.partition has_our_mod_name deps in
 
@@ -431,9 +429,13 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
   let rec revert_many st = function
     | [] -> st
     | (_id, (task, _st')) :: entries ->
+      //NS: this assertion has been failing for a while in debug mode; not sure why
       assert (task = fst (snd (List.hd !repl_stack)));
       debug "Reverting" task;
-      revert_many (pop_repl "run_repl_ls_transactions" st) entries in
+      let st' = pop_repl "run_repl_ls_transactions" st in
+      let dep_graph = FStar.TypeChecker.Env.dep_graph st.repl_env in
+      let st' = {st' with repl_env=FStar.TypeChecker.Env.set_dep_graph st'.repl_env dep_graph} in
+      revert_many st' entries in
 
   let rec aux (st: repl_state)
               (tasks: list<repl_task>)
@@ -1270,6 +1272,7 @@ let run_compute st term rules =
                FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant])
     @ [FStar.TypeChecker.Env.Inlining;
        FStar.TypeChecker.Env.Eager_unfolding;
+       FStar.TypeChecker.Env.UnfoldTac;
        FStar.TypeChecker.Env.Primops] in
 
   let normalize_term tcenv rules t =

@@ -1,14 +1,1 @@
-[
-  "èŽ³ü”,a‚Xª\u0019m1‰„×",
-  [
-    [
-      "Bug128.subst",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "3d06fd1f44655252db6a5ca4c3f0cd35"
-    ]
-  ]
-]
+[ "èŽ³ü”,a‚Xª\u0019m1‰„×", [] ]

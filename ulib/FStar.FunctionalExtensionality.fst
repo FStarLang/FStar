@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2018 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,19 +17,30 @@
 module FStar.FunctionalExtensionality
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-type efun (a:Type) (b:Type) = a -> Tot b
+inline_for_extraction
+let on_domain (a:Type) (#b:a -> Type) (f:arrow a b)
+  = f
 
-type feq (#a:Type) (#b:Type) (f:efun a b) (g:efun a b) =
-  (forall x.{:pattern (f x) \/ (g x)} f x == g x)
+let feq_on_domain (#a:Type) (#b:a -> Type) (f:arrow a b)
+  = ()
 
-assume Extensionality : forall (a:Type) (b:Type) (f: efun a b) (g: efun a b).
-                        {:pattern feq #a #b f g} feq #a #b f g <==> f==g
+let idempotence_on_domain #a #b f
+  = ()
 
-(** Ghost functional extensionality **)
-type gfun (a:Type) (b:Type) = a -> GTot b
+let extensionality a b f g
+  = admit() //the main axiom of this module
 
-type gfeq (#a:Type) (#b:Type) (f:gfun a b) (g:gfun a b) =
-    (forall x.{:pattern (f x) \/ (g x)} f x == g x)
 
-assume GhostExtensionality : forall (a:Type) (b:Type) (f: gfun a b) (g: gfun a b).
-                        {:pattern gfeq #a #b f g} gfeq #a #b f g <==> f==g
+(****** GTot version ******)
+
+let on_domain_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
+  = f
+
+let feq_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow a b)
+  = ()
+
+let idempotence_on_domain_g #a #b f
+  = ()
+
+let extensionality_g a b f g
+  = admit () //variant of the main axiom

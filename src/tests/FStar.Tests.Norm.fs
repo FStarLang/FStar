@@ -43,7 +43,7 @@ let mk_let x e e' : term =
     mk (Tm_let((false, [{lbname=BU.Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid; lbattrs=[];lbpos=dummyRange}]), e'))
                            None dummyRange
 
-let lid x = lid_of_path ["Norm"; x] dummyRange
+let lid x = lid_of_path ["Test"; x] dummyRange
 let znat_l = S.lid_as_fv (lid "Z") delta_constant (Some Data_ctor)
 let snat_l = S.lid_as_fv (lid "S") delta_constant (Some Data_ctor)
 let tm_fv fv = mk (Tm_fvar fv) None dummyRange
@@ -102,6 +102,7 @@ let tests =
                                      let f = function \
                                        | A x y \
                                        | B y x -> y - x" in
+  let _ = Pars.pars_and_tc_fragment "type snat = | Z | S : snat -> snat" in
   let _ = Pars.pars_and_tc_fragment "type tb = | T | F" in
   let _ = Pars.pars_and_tc_fragment "type rb = | A1 | A2 | A3" in
   let _ = Pars.pars_and_tc_fragment "type hb = | H : tb -> hb" in
@@ -164,23 +165,23 @@ let tests =
 
   // ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
   ; (15, (let_ x (app succ [one])
-            (let_ y (app mul [nm x; nm x])
-               (let_ h (app mul [nm y; nm y])
-                       (minus (nm h) (nm h))))), z)
+                        (let_ y (app mul [nm x; nm x])
+                        (let_ h (app mul [nm y; nm y])
+                          (minus (nm h) (nm h))))), z)
   ; (16, (mk_let x (app succ [one])
-            (mk_let y (app mul [nm x; nm x])
-                    (mk_let h (app mul [nm y; nm y])
-                            (minus (nm h) (nm h))))), z)
+                       (mk_let y (app mul [nm x; nm x])
+                       (mk_let h (app mul [nm y; nm y])
+                       (minus (nm h) (nm h))))), z)
   ; (17, (let_ x (app succ [one])
-            (let_ y (app mul [nm x; nm x])
-               (let_ h (app mul [nm y; nm y])
+                       (let_ y (app mul [nm x; nm x])
+                       (let_ h (app mul [nm y; nm y])
                        (minus (nm h) (nm h))))), z)
   ; (18, (pred_nat (snat (snat znat))), (snat znat))
-  ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
-  ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
-  ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
-  // ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
-  // ; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
+  ; (19, tc_nbe_term (minus_nat (snat (snat znat)) (snat znat)), (snat znat)) // requires local recdef 
+  ; (20, tc_nbe_term (minus_nat (encode_nat 10) (encode_nat 10)), znat)
+  ; (21, tc_nbe_term (minus_nat (encode_nat 100) (encode_nat 100)), znat)
+  // ; (22, tc_nbe_term (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
+  // ; (23, tc_nbe_term (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
   ; (24, (tc_nbe "recons [0;1]"), (tc_nbe "[0;1]"))
   ; (241, (tc_nbe "recons [false;true;false]"), (tc_nbe "[false;true;false]"))
   ; (25, (tc_nbe "copy [0;1]"), (tc_nbe "[0;1]"))
@@ -226,8 +227,8 @@ let tests =
   ; (404, (tc_nbe "\"abc\" ^ \"def\""), (tc_nbe "\"abcdef\"")) 
 
   // Test for refinements 
-  //; (501, (tc_nbe "fun (x1:int{x1>(3+1)}) -> x1 + (1 + 0)"), (tc_nbe "fun (x1:int{x1>4}) -> x1 + 1")) // ZP : Fails because the two functions are not syntactically equal
-  //; (502, (tc_nbe "x1:int{x1>(3+1)}"), (tc_nbe "x1:int{x1>4}"))
+  // ; (501, (tc_nbe "fun (x1:int{x1>(3+1)}) -> x1 + (1 + 0)"), (tc_nbe "fun (x1:int{x1>4}) -> x1 + 1")) // ZP : Fails because the two functions are not syntactically equal
+  // ; (502, (tc_nbe "x1:int{x1>(3+1)}"), (tc_nbe "x1:int{x1>4}"))
   ]
 
 
@@ -244,7 +245,7 @@ let run_either i r expected normalizer =
     always i (term_eq (U.unascribe x) expected)
 
 let run_interpreter i r expected = run_either i r expected (N.normalize [Env.Beta; Env.UnfoldUntil delta_constant; Env.Primops])
-let run_nbe i r expected = run_either i r expected (FStar.TypeChecker.NBE.test_normalize [FStar.TypeChecker.NBE.UnfoldUntil delta_constant])
+let run_nbe i r expected = run_either i r expected (FStar.TypeChecker.NBE.normalize_for_unit_test [FStar.TypeChecker.Env.UnfoldUntil delta_constant])
 let run_interpreter_with_time i r expected =
   let interp () = run_interpreter i r expected in
   (i, snd (FStar.Util.return_execution_time interp))

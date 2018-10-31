@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1f7da11e2d920c2f4f8643804b1537fa"
+      "9b802c1f0f850892b07bb2e9ed1a71fb"
     ],
     [
       "ReifyLong.bidule",
@@ -18,13 +18,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_equality",
-        "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_token_correspondence",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_Prims.HasEq_unit",
         "equation_FStar.DM4F.IntStoreFixed.write",
         "equation_FStar.Pervasives.Native.fst", "equation_ReifyLong.p1",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_7eec5bd5292b39f63c270c670e278b1a",
+        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_66262f99c7536942ce4dbb9789eda0ec",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_d118813f5b63d6276a92d2454f10fa10",
         "interpretation_ReifyLong_Tm_abs_6e9afa0c594f10d8fda5cf8af28d1383",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -32,7 +31,7 @@
         "unit_typing"
       ],
       0,
-      "4691269df5722b3108c8d62f43d42afd"
+      "ec3b32ea420af7902fda69b41ce18f7f"
     ],
     [
       "ReifyLong.is_x",
@@ -41,36 +40,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6f4e758f2ff98e864a4ea131ff932c77"
-    ],
-    [
-      "ReifyLong.is_x",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "acaa6a5ad18824e4d1a4a74654aeafbf"
-    ],
-    [
-      "ReifyLong.p1",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b3e88b711b9246734abc5589dabead2c"
-    ],
-    [
-      "ReifyLong.bidule",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "assumption_Prims.HasEq_unit"
-      ],
-      0,
-      "b56306a09731464934084232ad980cd1"
+      "eb07da6fdbac1ee55a4dea5340abf044"
     ]
   ]
 ]

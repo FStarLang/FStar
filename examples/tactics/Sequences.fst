@@ -93,13 +93,13 @@ let test (#a:Type0) (s:seq a) (x:a) (from:nat) (to:nat{from<=to /\ to<=length s}
 (* ////////////////// *)
 (* 1. We generate this WP for test: *)
 
-(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (by_tactic idtac (slice s from to == slice l from to) /\ *)
-(*                                                   (by_tactic idtac (slice s from to == slice l from to) ==> (p /\ p ==> ...))) *)
+(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (with_tactic idtac (slice s from to == slice l from to) /\ *)
+(*                                                   (with_tactic idtac (slice s from to == slice l from to) ==> (p /\ p ==> ...))) *)
 
 (* 2. Then we process this WP *)
 
 (*  a. remove marker in negative position *)
-(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (by_tactic idtac (slice s from to == slice l from to) /\ *)
+(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (with_tactic idtac (slice s from to == slice l from to) /\ *)
 (*                                                   (slice s from to == slice l from to ==> (p /\ p ==> ...)) *)
 (*  b. in positive position *)
 

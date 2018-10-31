@@ -36,32 +36,27 @@ let gsubst (#t: Type0) (ge: gexp t) (x: var) (side: pos) (ge': gexp int) : gexp 
   in
   g
 
-let gfeq2 (#a: Type) (#b: Type) (#c: Type) (f1 f2: (a -> b -> GTot c)) : Lemma
-  (requires (forall x y . f1 x y == f2 x y))
-  (ensures (f1 == f2))
-= assert (forall x . FunctionalExtensionality.gfeq (f1 x) (f2 x));
-  assert (FunctionalExtensionality.feq f1 f2)
-
 let gsubst_gconst (#t: Type0) (n: t) (x: var) (side: pos) (ge' : gexp int): Lemma
-  (gsubst (gconst n) x side ge' == gconst n)
+  (forall h1 h2. (gsubst (gconst n) x side ge') h1 h2 == (gconst n) h1 h2)
   [SMTPat (gsubst (gconst n) x side ge')]
-= gfeq2 (gsubst (gconst n) x side ge') (gconst n)
+= ()
 
 let gsubst_gvar_same (x: var) (side: pos) (ge': gexp int) : Lemma
-  (gsubst (gvar x side) x side ge' == ge')
+  (forall h1 h2. (gsubst (gvar x side) x side ge') h1 h2 == ge' h1 h2)
   [SMTPat (gsubst (gvar x side) x side ge')]
-= gfeq2 (gsubst (gvar x side) x side ge') ge'
+= ()
 
 let gsubst_gvar_other (x x': var) (side side': pos) (ge': gexp int) : Lemma
   (requires (x <> x' \/ side <> side'))
-  (ensures (gsubst (gvar x side) x' side' ge' == gvar x side))
+  (ensures  (forall h1 h2. (gsubst (gvar x side) x' side' ge') h1 h2 == (gvar x side) h1 h2))
   [SMTPat (gsubst (gvar x side) x' side' ge')]
-= gfeq2 (gsubst (gvar x side) x' side' ge') (gvar x side)
+=  ()
 
 let gsubst_gop (#from #to: Type0) (op: (from -> from -> GTot to)) (ge1 ge2: gexp from) (x: var) (side: pos) (ge': gexp int) : Lemma
-  (gsubst (gop op ge1 ge2) x side ge' == gop op (gsubst ge1 x side ge') (gsubst ge2 x side ge'))
+  (forall h1 h2. (gsubst (gop op ge1 ge2) x side ge') h1 h2 ==
+            (gop op (gsubst ge1 x side ge') (gsubst ge2 x side ge')) h1 h2)
   [SMTPat (gsubst (gop op ge1 ge2) x side ge')]
-= gfeq2 (gsubst (gop op ge1 ge2) x side ge') (gop op (gsubst ge1 x side ge') (gsubst ge2 x side ge'))
+= ()
 
 (* 4.1.3 Inference rules *)
 
@@ -114,17 +109,17 @@ let exp_to_gexp_const
   (c: t)
   (side: pos)
 : Lemma
-  (exp_to_gexp (const c) side == gconst c)
+  (forall h1 h2. (exp_to_gexp (const c) side) h1 h2 == (gconst c) h1 h2)
   [SMTPat (exp_to_gexp (const c) side)]
-= gfeq2 (exp_to_gexp (const c) side) (gconst c)
+= ()
 
 let exp_to_gexp_evar
   (x: var)
   (side: pos)
 : Lemma
-  (exp_to_gexp (evar x) side == gvar x side)
+  (forall h1 h2. (exp_to_gexp (evar x) side) h1 h2 == (gvar x side) h1 h2)
   [SMTPat (exp_to_gexp (evar x) side)]
-= gfeq2 (exp_to_gexp (evar x) side) (gvar x side)
+= ()
 
 let exp_to_gexp_eop
   (#from #to: Type0)
@@ -132,9 +127,9 @@ let exp_to_gexp_eop
   (e1 e2: exp from)
   (side: pos)
 : Lemma
-  (exp_to_gexp (eop op e1 e2) side == gop op (exp_to_gexp e1 side) (exp_to_gexp e2 side))
+  (forall h1 h2. (exp_to_gexp (eop op e1 e2) side) h1 h2 == (gop op (exp_to_gexp e1 side) (exp_to_gexp e2 side)) h1 h2)
   [SMTPat (exp_to_gexp (eop op e1 e2) side)]
-= gfeq2 (exp_to_gexp (eop op e1 e2) side) (gop op (exp_to_gexp e1 side) (exp_to_gexp e2 side))
+= ()
 
 #set-options "--z3rlimit 2048 --max_fuel 8 --max_ifuel 8"
 
@@ -147,7 +142,7 @@ let holds_gand (b1 b2 : gexp bool) : Lemma
 = ()
 
 let gsubst_gand (b1 b2: gexp bool) x side e : Lemma
-  (gsubst (gand b1 b2) x side e == gand (gsubst b1 x side e) (gsubst b2 x side e))
+  (forall h1 h2. (gsubst (gand b1 b2) x side e) h1 h2 == (gand (gsubst b1 x side e) (gsubst b2 x side e)) h1 h2)
   [SMTPat (gsubst (gand b1 b2) x side e)]
 = ()
 
@@ -160,7 +155,7 @@ let holds_gor (b1 b2 : gexp bool) : Lemma
 = ()
 
 let gsubst_gor (b1 b2: gexp bool) x side e : Lemma
-  (gsubst (gor b1 b2) x side e == gor (gsubst b1 x side e) (gsubst b2 x side e))
+  (forall h1 h2. (gsubst (gor b1 b2) x side e) h1 h2 == (gor (gsubst b1 x side e) (gsubst b2 x side e)) h1 h2)
   [SMTPat (gsubst (gor b1 b2) x side e)]
 = ()
 
@@ -181,7 +176,7 @@ let holds_geq (#t: eqtype) (e1 e2 : gexp t) : Lemma
 = ()
 
 let gsubst_geq (#t: eqtype) (b1 b2: gexp t) x side e : Lemma
-  (gsubst (geq b1 b2) x side e == geq (gsubst b1 x side e) (gsubst b2 x side e))
+  (forall h1 h2. (gsubst (geq b1 b2) x side e) h1 h2 == (geq (gsubst b1 x side e) (gsubst b2 x side e)) h1 h2)
   [SMTPat (gsubst (geq b1 b2) x side e)]
 = ()
 

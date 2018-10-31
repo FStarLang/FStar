@@ -74,6 +74,30 @@ let runtime_assert b msg =
 let string_of_list (f : 'a -> string) (l : list<'a>) : string =
   "[" ^ String.concat ", " (List.map f l) ^ "]"
 
+let list_of_option (o:option<'a>) : list<'a> =
+    match o with
+    | None -> []
+    | Some x -> [x]
+
 let string_of_option f = function
   | None -> "None"
   | Some x -> "Some " ^ f x
+
+open FStar.Util
+type thunk<'a> = ref<(Util.either<(unit -> 'a), 'a>)>
+let mk_thunk (f:unit -> 'a) : thunk<'a> = Util.mk_ref (Util.Inl f)
+let force_thunk (t:thunk<'a>) =
+    match !t with
+    | Inr a -> a
+    | Inl f ->
+      let a = f () in
+      t := Inr a;
+      a
+
+(* Was List.init, but F* doesn't have this in ulib *)
+let tabulate (n:int) (f : int -> 'a) : list<'a> =
+  let rec aux i =
+    if i < n
+    then f i :: aux (i + 1)
+    else []
+  in aux 0

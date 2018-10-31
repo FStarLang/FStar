@@ -32,7 +32,7 @@ module BU = FStar.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
-type local_binding = (ident * bv * bool)                  (* local name binding for name resolution, paired with an env-generated unique name and a boolean that is true when the variable has been introduced with let-mutable *)
+type local_binding = (ident * bv)                         (* local name binding for name resolution, paired with an env-generated unique name *)
 type rec_binding   = (ident * lid * delta_depth)          (* name bound by recursive type and top-level let-bindings definitions only *)
 type module_abbrev = (ident * lident)                     (* module X = A.B.C *)
 
@@ -101,12 +101,14 @@ type dsenv_hooks =
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
 type foundname =
-  | Term_name of typ * bool * list<attribute> // bool indicates if mutable
+  | Term_name of typ * list<attribute>
   | Eff_name  of sigelt * lident
 
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
+val dep_graph: env -> FStar.Parser.Dep.deps
+val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
 val ds_hooks : env -> dsenv_hooks
 val set_ds_hooks: env -> dsenv_hooks -> env
 val syntax_only: env -> bool
@@ -118,21 +120,21 @@ val set_admitted_iface: env -> bool -> env
 val admitted_iface: env -> bool
 val expect_typ: env -> bool
 val set_expect_typ: env -> bool -> env
-val empty_env: unit -> env
+val empty_env: FStar.Parser.Dep.deps -> env
 val current_module: env -> lident
 val set_current_module: env -> lident -> env
 val open_modules_and_namespaces: env -> list<lident>
 val iface_decls : env -> lident -> option<(list<Parser.AST.decl>)>
 val set_iface_decls: env -> lident -> list<Parser.AST.decl> -> env
-val try_lookup_id: env -> ident -> option<(term*bool)>
+val try_lookup_id: env -> ident -> option<term>
 val shorten_module_path: env -> list<ident> -> bool -> (list<ident> * list<ident>)
 val shorten_lid: env -> lid -> lid
-val try_lookup_lid: env -> lident -> option<(term*bool)>
-val try_lookup_lid_with_attributes: env -> lident -> option<(term*bool*list<attribute>)>
-val try_lookup_lid_with_attributes_no_resolve: env -> lident -> option<(term * bool * list<attribute>)>
-val try_lookup_lid_no_resolve: env -> lident -> option<(term*bool)>
+val try_lookup_lid: env -> lident -> option<term>
+val try_lookup_lid_with_attributes: env -> lident -> option<(term * list<attribute>)>
+val try_lookup_lid_with_attributes_no_resolve: env -> lident -> option<(term * list<attribute>)>
+val try_lookup_lid_no_resolve: env -> lident -> option<term>
 val try_lookup_effect_name: env -> lident -> option<lident>
-val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflags>)>
+val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflag>)>
 val try_lookup_effect_defn: env -> lident -> option<eff_decl>
 (* [try_lookup_root_effect_name] is the same as
 [try_lookup_effect_name], but also traverses effect abbrevs. TODO:
@@ -152,9 +154,9 @@ val resolve_module_name: env:env -> lid:lident -> honor_ns:bool -> option<lident
 val fail_if_qualified_by_curmodule: env -> lident -> unit
 val resolve_to_fully_qualified_name : env:env -> l:lident -> option<lident>
 val fv_qual_of_se : sigelt -> option<fv_qual>
+val delta_depth_of_declaration: lident -> list<qualifier> -> delta_depth
 
 val push_bv: env -> ident -> env * bv
-val push_bv_mutable: env -> ident -> env * bv
 val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
@@ -180,7 +182,7 @@ val default_mii : module_inclusion_info
 val inclusion_info: env -> lident -> module_inclusion_info
 val prepare_module_or_interface: bool -> bool -> env -> lident -> module_inclusion_info -> env * bool //pop the context when done desugaring
 
-(* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool*list<attribute>)>
+(* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term * list<attribute>)>
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
 (* private *) val check_admits: env -> modul -> modul
 (* private *) val finish:  env -> modul -> env

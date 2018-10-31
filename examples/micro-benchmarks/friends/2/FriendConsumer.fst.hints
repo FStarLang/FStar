@@ -1,0 +1,17 @@
+[
+  ">–ñ„/\u0003µäc\nnfçgì5",
+  [
+    [
+      "FriendConsumer.test",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FriendProvider.x", "equation_Other.y",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "b480fcc3ffd376f4479a727375c638a1"
+    ]
+  ]
+]

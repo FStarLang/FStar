@@ -11,7 +11,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b9187401a4ac69c97cb343318f4fd366"
+      "33b6ab9fa57f5308201e249a99708d05"
     ],
     [
       "EtM.MAC.tag",
@@ -24,25 +24,16 @@
         "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d76933f104d7951d717a09c4986aa015"
+      "ea5de30491ff53ecb6266ff52ee3bcf7"
     ],
     [
       "EtM.MAC.sha1",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b394e9138326fd5d76ca75d555f9e688"
-    ],
-    [
-      "EtM.MAC.sha1",
-      2,
       2,
       1,
       [ "@query", "equation_EtM.MAC.macsize" ],
       0,
-      "2b6ddbadbc2cf8f3e54a36f4149b3ca2"
+      "af2fea481a09ca474876b637af58cf86"
     ],
     [
       "EtM.MAC.hmac_sha1",
@@ -54,7 +45,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ce5004299e5daec86a381bc8fc080867"
+      "0d390c66d1fbd262703c424b51b45e1f"
     ],
     [
       "EtM.MAC.__proj__Key__item__log",
@@ -66,7 +57,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "ec2daa0a33da99fe8afc5efa9b264783"
+      "30bb19005df8592878c752b8fbccbe10"
     ],
     [
       "EtM.MAC.keygen",
@@ -158,7 +149,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "3dfe615abfab62a1836a9abc07392717"
+      "974cf794c8282fd1ba0d372f12692f04"
     ],
     [
       "EtM.MAC.mac",
@@ -195,7 +186,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "72ece6351062eeceb7cc922901a6aa8d"
+      "424718dbf5728a2feca3a3e2d4c05491"
     ],
     [
       "EtM.MAC.verify",
@@ -218,7 +209,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "2ad52913fd8ee05cfe60d70301fb09ef"
+      "875111438939d8d509455b7ce8461bc3"
     ],
     [
       "EtM.MAC.verify",
@@ -294,7 +285,85 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "56daa7a5793390406d1fa455178e8a63"
+      "913e504f1f1742ae996ff339beec4586"
+    ],
+    [
+      "EtM.MAC.sha1_key",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_EtM.MAC.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "b3280e6e58d48aac522d54f5af269eb3"
+    ],
+    [
+      "EtM.MAC.tag",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_CoreCrypto.SHA1",
+        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize",
+        "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "6537260ecef18fb476b48f0cdd835fde"
+    ],
+    [
+      "EtM.MAC.sha1",
+      2,
+      2,
+      1,
+      [ "@query", "equation_EtM.MAC.macsize" ],
+      0,
+      "689411fa40116a483d3535d6912731eb"
+    ],
+    [
+      "EtM.MAC.hmac_sha1",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_EtM.MAC.blocksize", "equation_EtM.MAC.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "7b18a1922a8e5f9ca67b0ec1295b44c1"
+    ],
+    [
+      "EtM.MAC.__proj__Key__item__log",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_EtM.MAC.Key_region",
+        "projection_inverse_EtM.MAC.Key_region"
+      ],
+      0,
+      "a164b7ed4b8a31b2bc9df5022baa0af2"
+    ],
+    [
+      "EtM.MAC.verify",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.CPA.cipher",
+        "equation_EtM.CPA.ivsize", "equation_EtM.MAC.log_entry",
+        "equation_EtM.MAC.macsize", "equation_EtM.MAC.msg",
+        "equation_EtM.MAC.tag", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "function_token_typing_EtM.CPA.cipher",
+        "function_token_typing_EtM.MAC.tag",
+        "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+      ],
+      0,
+      "dd2683ef46589c0781f1e65b80eefba1"
     ]
   ]
 ]

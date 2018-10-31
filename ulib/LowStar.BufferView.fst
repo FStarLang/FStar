@@ -1,53 +1,37 @@
 module LowStar.BufferView
 
 noeq
-type buffer_view (a:Type0) (b:Type u#b) : Type0 =
-  | BufferView: buf:buffer a
-              -> v:view a b{length buf % View?.n v == 0}
-              -> buffer_view a b
+type buffer_view (a:Type0) (rrel rel:B.srel a) (b:Type u#b) : Type0 =
+  | BufferView: buf:B.mbuffer a rrel rel
+              -> v:view a b{B.length buf % View?.n v == 0}
+              -> buffer_view a rrel rel b
 
-let mk_buffer_view #src #dest b v  = (| src, BufferView b v |)
+let mk_buffer_view #src #rrel #rel #dest b v  = (| src, rrel, rel, BufferView b v |)
 
-let as_buffer (#b : Type) (v:buffer b) =
-    BufferView?.buf (dsnd v)
+let as_buffer #b v = BufferView?.buf (Mkdtuple4?._4 v)
 
-let as_buffer_mk_buffer_view (#src #dest:Type)
-                             (b:B.buffer src)
-                             (v:view src dest{
-                               length b % View?.n v == 0
-                              }) = ()
+let as_buffer_mk_buffer_view #_ #_ #_ #_ _ _ = ()
 
-let get_view  (#b : Type) (v:buffer b) =
-    BufferView?.v (dsnd v)
+let get_view #b v = BufferView?.v (Mkdtuple4?._4 v)
 
-let get_view_mk_buffer_view (#src #dest:Type)
-                            (b:B.buffer src)
-                            (v:view src dest{
-                               length b % View?.n v == 0
-                             }) = ()
+let get_view_mk_buffer_view #_ #_ #_ #_ _ _ = ()
 
-let length (#b: _) (vb:buffer b)
-  : GTot nat
-  = B.length (as_buffer vb) / View?.n (get_view vb)
+let length #b vb = B.length (as_buffer vb) / View?.n (get_view vb)
 
-let length_eq (#b: _) (vb:buffer b) = ()
+let length_eq #_ _ = ()
 
 #reset-options "--max_fuel 0 --max_ifuel 1"
-let view_indexing (#b: _) (vb:buffer b) (i:nat{i < length vb})
+let view_indexing #b vb i
   = let n = View?.n (get_view vb) in
+    length_eq vb;
     FStar.Math.Lemmas.distributivity_add_left (length vb) (-i) n
-
-let lt_leq_mul (min:nat) (max:nat{min < max}) (n:nat)
-   : Lemma (FStar.Mul.(min * n + n <= max * n))
-   = let open FStar.Mul in
-     assert ((min * n) + n = (min + 1) * n);
-     assert ((min * n) + n <= max * n)
 
 let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
     : GTot (frags:
-               (Seq.seq (dfst vb) *
-                Seq.lseq (dfst vb) (View?.n (get_view vb)) *
-                Seq.seq (dfst vb)){
+               (let src_t = Mkdtuple4?._1 vb in
+	        Seq.seq src_t *
+                Seq.lseq src_t (View?.n (get_view vb)) *
+                Seq.seq src_t){
                let prefix, as, suffix = frags in
                B.as_seq h (as_buffer vb) ==
                (prefix `Seq.append` (as `Seq.append` suffix))
@@ -58,6 +42,7 @@ let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
       let n = View?.n v in
       let start = i * n in
       view_indexing vb i;
+      length_eq vb;
       let prefix, suffix = Seq.split s0 start in
       Seq.lemma_split s0 start;
       let as, tail = Seq.split suffix n in
@@ -70,7 +55,7 @@ let sel (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb})
      let _, as, _ = split_at_i vb i h in
      View?.get v as
 
-let upd (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (i:nat{i < length vb}) (x:b)
+let upd #b h vb i x
   : GTot HS.mem
   = let open FStar.Mul in
     let v = get_view vb in
@@ -97,7 +82,13 @@ let sel_upd1 (#b:_) (vb:buffer b) (i:nat{i < length vb}) (x:b) (h:HS.mem{live h 
                          as'' suffix';
     assert (as' == as'')
 
-#set-options "--z3rlimit_factor 2"
+let lt_leq_mul (min:nat) (max:nat{min < max}) (n:nat)
+   : Lemma (FStar.Mul.(min * n + n <= max * n))
+   = let open FStar.Mul in
+     assert ((min * n) + n = (min + 1) * n);
+     assert ((min * n) + n <= max * n)
+
+#set-options "--z3rlimit 20"
 let sel_upd2 (#b:_) (vb:buffer b)
              (i:nat{i < length vb})
              (j:nat{j < length vb /\ i<>j})
@@ -139,14 +130,17 @@ let sel_upd2 (#b:_) (vb:buffer b)
       assert (Seq.equal s_j s_j')
     end
 
-let sel_upd (#b:_)
-            (vb:buffer b)
-            (i:nat{i < length vb})
-            (j:nat{j < length vb})
-            (x:b)
-            (h:HS.mem{live h vb}) =
+let sel_upd #b vb i j x h =
     if i=j then sel_upd1 vb i x h
     else sel_upd2 vb i j x h
+
+let lemma_upd_with_sel #b vb i h =
+  let v = get_view vb in
+  let prefix, as, suffix = split_at_i vb i h in
+  let s0 = B.as_seq h (as_buffer vb) in
+  let s1 = prefix `Seq.append` (View?.put v (View?.get v as) `Seq.append` suffix) in
+  assert (Seq.equal s0 s1);
+  B.lemma_g_upd_with_same_seq (as_buffer vb) h
 
 let upd_modifies #b h vb i x
   = let open FStar.Mul in

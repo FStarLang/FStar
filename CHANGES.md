@@ -11,6 +11,47 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+# Version 0.9.7.0
+
+## Module system
+
+  * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
+
+## Core typechecker
+
+  * Revised typechecking of nested patterns and ascriptions on
+    patterns, fixing unsoundnesses (issue #238, for example)
+
+## Libraries
+
+   * Two core axioms were discovered by Aseem Rastogi to be formulated
+     in an unsound manner.
+
+     FStar.FunctionalExtensionality has been reformulated to prevent
+     equivalence proofs of a function on a given domain to be
+     improperly extended to equivalence on a larger domain. The
+     library was fixed to ensure that domain type used to prove the
+     equivalence was recorded in the axiom. See
+     examples/micro-benchmarks/Test.FunctionalExtensionality.fst for
+     example uses.
+
+     FStar.PropositionalExtensionality was found to be incompatible
+     with the representation of `prop` as the type of all
+     sub-singletons. `prop` has been reformulated as the type of all
+     sub-types of `unit`.
+
+     See issue #1542 for more discussion.
+
+## Syntax
+
+   * We now overload `&` to construct both dependent and non-dependent
+     tuple types. `t1 & t2` is equivalent to `tuple2 t1 t2` whereas
+     `x:t1 & t2` is `dtuple2 t1 (fun x -> t2)`. See
+     examples/micro-benchmarks/TupleSyntax.fst. The main value
+     proposition here is that in contrast to `*`, which clashes with
+     the multiplication on integers, the `&` symbol can be used for
+     tuples while reserving `*` for multiplication.
+
 # Version 0.9.6.0
 
 ## Command line options

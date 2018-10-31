@@ -4,11 +4,12 @@ open FStar.Reflection.Types
 
 noeq
 type vconst =
-  | C_Unit : vconst
-  | C_Int : int -> vconst // Not exposing the full details of our integer repr.
-  | C_True : vconst
-  | C_False : vconst
+  | C_Unit   : vconst
+  | C_Int    : int -> vconst // Not exposing the full details of our integer repr.
+  | C_True   : vconst
+  | C_False  : vconst
   | C_String : string -> vconst
+  | C_Range  : range -> vconst
   (* TODO: complete *)
 
 // This is shadowing `pattern` from Prims (for smt_pats)
@@ -67,8 +68,7 @@ type sigelt_view =
   | Sg_Let :
       (r:bool) ->
       (fv:fv) ->
-      // TODO: range * string should be univ_name, but that's failing due to a bad delta-depth
-      (us:list (range * string)) ->
+      (us:list univ_name) ->
       (typ:typ) ->
       (def:term) ->
       sigelt_view
@@ -79,8 +79,7 @@ type sigelt_view =
   // (no mutually defined types for now)
   | Sg_Inductive :
       (nm:name) ->              // name of the inductive type being defined
-      // TODO: range * string should be univ_name, but that's failing due to a bad delta-depth
-      (univs:list (range * string)) -> // universe variables
+      (univs:list univ_name) -> // universe variables
       (params:binders) ->       // parameters
       (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
       (cts:list name) ->        // constructor names

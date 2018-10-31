@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a18c50c31d21f8fd06e278e2642ba3f5"
+      "27a44578fa4f78fc9907f670d17361f9"
     ],
     [
       "EtM.CPA.aes_key",
@@ -25,7 +25,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "222467375097936c8bfa13cc6b2309bf"
+      "43cda8830126864ff967fb4a8a57c619"
     ],
     [
       "EtM.CPA.log_entry",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "160046d8d0cd9cf87ff324e5553968ee"
+      "8090512b028eaed31fc46cedfeb718f5"
     ],
     [
       "EtM.CPA.iv_of_entry",
@@ -62,7 +62,7 @@
         "refinement_interpretation_Platform.Bytes_Tm_refine_df45e13378b64cfc3cd23f54e8657bfc"
       ],
       0,
-      "6e5b7e8b344bf6cb9bea002cc521b6ec"
+      "8e6cdf869c30ba556ff3f773dc8f3baf"
     ],
     [
       "EtM.CPA.raw_cipher",
@@ -80,7 +80,7 @@
         "refinement_interpretation_EtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "5c03eed869f036e6918883c2a432b951"
+      "db385a226b2d3413e5a58a6290f9dfcf"
     ],
     [
       "EtM.CPA.split_entry",
@@ -130,7 +130,7 @@
         "typing_Platform.Bytes.op_At_Bar", "typing_Platform.Bytes.split"
       ],
       0,
-      "af6b360e8d77ae366395f4ef6998753b"
+      "224ea821bb930bf6e23739847e8e7236"
     ],
     [
       "EtM.CPA.iv_of_entry_inj",
@@ -140,18 +140,16 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_int",
-        "equality_tok_CoreCrypto.AES_128_CBC@tok",
-        "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
+        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.CPA.cipher",
         "equation_EtM.CPA.iv", "equation_EtM.CPA.iv_of_entry",
         "equation_EtM.CPA.ivsize", "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Seq.Properties.split", "equation_FStar.UInt32.n",
-        "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.lbytes", "equation_Platform.Bytes.length",
-        "equation_Platform.Bytes.split", "equation_Prims.nat",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_Platform.Bytes.length", "equation_Platform.Bytes.split",
+        "equation_Prims.eqtype", "equation_Prims.nat",
         "fuel_guarded_inversion_EtM.CPA.log_entry",
         "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.int",
         "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -159,10 +157,11 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_EtM.CPA.iv_of_entry"
       ],
       0,
-      "fc5a80d0e393384af9819e2ecfa94604"
+      "ec4cc5c81244028495159b05eb56ece6"
     ],
     [
       "EtM.CPA.__proj__Key__item__log",
@@ -174,7 +173,7 @@
         "projection_inverse_EtM.CPA.Key_region"
       ],
       0,
-      "97dc17ef7a420f2fbb3570871ae13636"
+      "d01c54bab7f8d31f23e9ae1120f8efb2"
     ],
     [
       "EtM.CPA.iv_not_in",
@@ -191,7 +190,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "d635e09a8ff2877023918a4b350cfd52"
+      "acc643a64ed773e21337b375924bccb9"
     ],
     [
       "EtM.CPA.pairwise_distinct_ivs",
@@ -225,7 +224,7 @@
         "typing_FStar.Seq.Base.seq", "well-founded-ordering-on-nat"
       ],
       0,
-      "00c01c7c6dca88d8c54505260d15d52d"
+      "cc558ee815e14ce1e6c43faa214c59a8"
     ],
     [
       "EtM.CPA.pairwise_snoc",
@@ -252,7 +251,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "c9dd975c957bb2eabce1a47b1621103a"
+      "819867956d235b533035092f9a21c222"
     ],
     [
       "EtM.CPA.invert_pairwise",
@@ -276,7 +275,7 @@
         "refinement_interpretation_EtM.CPA_Tm_refine_b80d66df2e638bd4e8ce22b10f41ad1a"
       ],
       0,
-      "9454b1c8470bd5282c4d01459b33f881"
+      "097adef73d51130f8e552a7236b3d7fd"
     ],
     [
       "EtM.CPA.entry_functional_correctness",
@@ -289,7 +288,7 @@
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "bd78dc3b84a58b07dccd69f0b9901bcd"
+      "9b650b6c9dd6fbb4ad3f4b4120ccdad8"
     ],
     [
       "EtM.CPA.cipher_functional_correctness",
@@ -298,7 +297,7 @@
       1,
       [ "@query", "assumption_EtM.CPA.log_entry__uu___haseq" ],
       0,
-      "282af2a2e43cd4cde040b5676a1044f9"
+      "a27cd62fb3651084b880de7dded7abde"
     ],
     [
       "EtM.CPA.keygen",
@@ -401,7 +400,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "0545ab1b4f721c926d9316bcc000118f"
+      "3b0b24e2755e6c9f2fbdd3a8f7074165"
     ],
     [
       "EtM.CPA.encrypt",
@@ -456,7 +455,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "54bc717429861c69d4413fb7664e21cb"
+      "b2b6f74fed9afd8144dbf4e6a57ae727"
     ],
     [
       "EtM.CPA.find_entry",
@@ -491,7 +490,7 @@
         "typing_FStar.Seq.Base.index"
       ],
       0,
-      "161c2410d7394f8fd3693b762d156b83"
+      "74aefb77b527645414ec2bed13968080"
     ],
     [
       "EtM.CPA.decrypt",
@@ -502,8 +501,7 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.Seq.Base_pretyping_7efa52b424e80c83ad68a652aa3561e4",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_EtM.CPA.log_entry__uu___haseq",
-        "assumption_Prims.HasEq_int", "bool_inversion",
+        "assumption_EtM.CPA.log_entry__uu___haseq", "bool_inversion",
         "constructor_distinct_CoreCrypto.AES_128_CBC", "eq2-interp",
         "equality_tok_CoreCrypto.AES_128_CBC@tok",
         "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
@@ -532,14 +530,14 @@
         "equation_FStar.Monotonic.Seq.log_t",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Seq.Properties.mem", "equation_FStar.Set.eqtype",
-        "equation_FStar.Set.subset", "equation_FStar.UInt32.n",
+        "equation_FStar.Seq.Properties.mem", "equation_FStar.UInt32.n",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.length",
         "equation_Prims.eqtype", "equation_Prims.nat",
         "function_token_typing_EtM.Ideal.ind_cpa",
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "kinding_EtM.CPA.log_entry@tok",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
@@ -551,10 +549,10 @@
         "lemma_FStar.Map.lemma_SelRestrict",
         "lemma_FStar.Map.lemma_equal_intro",
         "lemma_FStar.Set.mem_complement", "lemma_FStar.Set.mem_empty",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Negation",
-        "proj_equation_EtM.CPA.Entry_c", "proj_equation_EtM.CPA.Entry_plain",
-        "proj_equation_EtM.CPA.Key_log",
+        "lemma_FStar.Set.mem_subset", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_Negation", "proj_equation_EtM.CPA.Entry_c",
+        "proj_equation_EtM.CPA.Entry_plain", "proj_equation_EtM.CPA.Key_log",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
@@ -575,9 +573,10 @@
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_ecfe710eaddaa768c46a7d024350dcbc",
         "refinement_interpretation_Platform.Bytes_Tm_refine_df45e13378b64cfc3cd23f54e8657bfc",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_EtM.CPA.log", "typing_EtM.Ideal.uf_cma",
         "typing_FStar.Map.concat", "typing_FStar.Map.contains",
-        "typing_FStar.Map.restrict",
+        "typing_FStar.Map.domain", "typing_FStar.Map.restrict",
         "typing_FStar.Monotonic.HyperHeap.color",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.is_eternal_color",
@@ -586,7 +585,276 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "22f09149e3a63155dcc188204806429c"
+      "5155e7347ddc644564a91964d6831680"
+    ],
+    [
+      "EtM.CPA.iv",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_CoreCrypto.AES_128_CBC",
+        "equality_tok_CoreCrypto.AES_128_CBC@tok",
+        "equation_CoreCrypto.blockSize", "equation_EtM.CPA.ivsize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "d5161ec4bc80ebd9ae4662dfb3f5ace2"
+    ],
+    [
+      "EtM.CPA.aes_key",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_EtM.CPA.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "900cb9118b4af4b4168aaa4841de64c1"
+    ],
+    [
+      "EtM.CPA.log_entry",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Platform.Bytes.HasEq_bytes",
+        "equality_tok_CoreCrypto.AES_128_CBC@tok",
+        "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
+        "equation_EtM.CPA.ivsize", "equation_Platform.Bytes.bytes",
+        "equation_Prims.eqtype", "function_token_typing_EtM.Plain.plain",
+        "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "7422426bf9bf83677675dfce30001c82"
+    ],
+    [
+      "EtM.CPA.iv_of_entry",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_CoreCrypto.AES_128_CBC",
+        "equality_tok_CoreCrypto.AES_128_CBC@tok",
+        "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
+        "equation_EtM.CPA.ivsize", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.length", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_EtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
+        "refinement_interpretation_Platform.Bytes_Tm_refine_df45e13378b64cfc3cd23f54e8657bfc"
+      ],
+      0,
+      "22bd09c1b6466d3fe476a90832945228"
+    ],
+    [
+      "EtM.CPA.raw_cipher",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_CoreCrypto.AES_128_CBC",
+        "equality_tok_CoreCrypto.AES_128_CBC@tok",
+        "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
+        "equation_EtM.CPA.ivsize", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.length", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_EtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
+      ],
+      0,
+      "f435c385f16f67876812de9175fde9d8"
+    ],
+    [
+      "EtM.CPA.split_entry",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_EtM.CPA.iv", "equation_EtM.CPA.ivsize",
+        "equation_FStar.UInt32.n", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes", "equation_Platform.Bytes.length",
+        "equation_Platform.Bytes.op_At_Bar", "equation_Prims.nat",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_FStar.UInt8.t",
+        "lemma_FStar.Seq.Base.lemma_len_append",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "66a6679acc5d857f0ff6ea829fb1cf2b"
+    ],
+    [
+      "EtM.CPA.iv_of_entry_inj",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_EtM.CPA.cipher", "equation_EtM.CPA.iv",
+        "equation_EtM.CPA.ivsize", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+      ],
+      0,
+      "636ead23c280d7a0b3dbfa5822a006e7"
+    ],
+    [
+      "EtM.CPA.__proj__Key__item__log",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_EtM.CPA.Key_region",
+        "projection_inverse_EtM.CPA.Key_region"
+      ],
+      0,
+      "a7db272cb10af26a7c8c9bb1ffacb960"
+    ],
+    [
+      "EtM.CPA.iv_not_in",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_EtM.CPA.log_entry__uu___haseq",
+        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.CPA.iv",
+        "equation_EtM.CPA.ivsize", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+      ],
+      0,
+      "03b62e99a05918d644627265d8f242e4"
+    ],
+    [
+      "EtM.CPA.pairwise_distinct_ivs",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Seq.Base_pretyping_7efa52b424e80c83ad68a652aa3561e4",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_84c1bfaaf908475ecb507651910953b1_0",
+        "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd",
+        "equation_FStar.Seq.Properties.snoc", "equation_FStar.UInt32.n",
+        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
+        "int_inversion", "int_typing", "kinding_EtM.CPA.log_entry@tok",
+        "lemma_FStar.Seq.Base.lemma_create_len",
+        "lemma_FStar.Seq.Base.lemma_len_append",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_EtM.CPA_Tm_refine_ff1392a594136d4683fd441430f357a3",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
+        "typing_FStar.Pervasives.Native.fst", "typing_FStar.Seq.Base.create",
+        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.seq",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "8c599f9a15cdd8c83a3604f968a342ac"
+    ],
+    [
+      "EtM.CPA.invert_pairwise",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_EtM.CPA.log_entry__uu___haseq",
+        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.CPA.cipher",
+        "equation_EtM.CPA.ivsize", "equation_Platform.Bytes.bytes",
+        "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
+      ],
+      0,
+      "666dc6c5d368a50aa5344226babfa7ed"
+    ],
+    [
+      "EtM.CPA.entry_functional_correctness",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_EtM.Ideal.conf", "primitive_Prims.op_AmpAmp",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "d17c16f7622c31b39f9ceb8d670673e7"
+    ],
+    [
+      "EtM.CPA.cipher_functional_correctness",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_EtM.CPA.log_entry__uu___haseq" ],
+      0,
+      "4ac3ee51c28cabc47844915477f0e2db"
+    ],
+    [
+      "EtM.CPA.find_entry",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "EtM.CPA_interpretation_Tm_arrow_d834278d6f14de82ba3dfd7cc9c0e913",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_EtM.CPA.log_entry__uu___haseq",
+        "assumption_Platform.Bytes.HasEq_bytes", "bool_inversion",
+        "bool_typing", "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_EtM.CPA.cipher", "equation_EtM.CPA.ivsize",
+        "equation_FStar.Seq.Properties.mem", "equation_Platform.Bytes.bytes",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "function_token_typing_EtM.Ideal.ind_cpa",
+        "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
+        "kinding_EtM.CPA.log_entry@tok",
+        "lemma_FStar.Seq.Properties.seq_mem_k",
+        "primitive_Prims.op_GreaterThan", "proj_equation_EtM.CPA.Entry_c",
+        "proj_equation_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_EtM.CPA.Entry_c",
+        "refinement_interpretation_EtM.CPA_Tm_refine_64359d260db2dcd373fb09ca31e7605d",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_846db27a9d72443c3ad3d0b0bd9f60bb",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_EtM.CPA_Tm_abs_d6499db0f00f44abebda980bb5319ceb",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
+        "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Properties.seq_find"
+      ],
+      0,
+      "820a3cc3df8b1470c8b807b8f6ec310a"
+    ],
+    [
+      "EtM.CPA.find_entry",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_EtM.CPA.log_entry__uu___haseq" ],
+      0,
+      "eae790500bcb9f1daa86e8ffae4ec1f0"
+    ],
+    [
+      "EtM.CPA.decrypt",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_EtM.CPA.log_entry__uu___haseq" ],
+      0,
+      "998105eb7b88929c9726daeda2cbadcf"
     ]
   ]
 ]

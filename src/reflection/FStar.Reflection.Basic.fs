@@ -104,11 +104,13 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_bool true  -> C_True
     | FStar.Const.Const_bool false -> C_False
     | FStar.Const.Const_string (s, _) -> C_String s
+    | FStar.Const.Const_range r -> C_Range r
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 let rec inspect_ln (t:term) : term_view =
     let t = U.unascribe t in
     let t = U.un_uinst t in
+    let t = U.unlazy_emb t in
     match t.n with
     | Tm_meta (t, _) ->
         inspect_ln t
@@ -226,7 +228,15 @@ let inspect_comp (c : comp) : comp_view =
 let pack_comp (cv : comp_view) : comp =
     match cv with
     | C_Total (t, _) -> mk_Total t
-    | _ -> failwith "sorry, can embed comp_views other than C_Total for now"
+    | C_Lemma (pre, post) ->
+        let ct = { comp_univs  = []
+                 ; effect_name = PC.effect_Lemma_lid
+                 ; result_typ  = S.t_unit
+                 ; effect_args = [S.as_arg pre; S.as_arg post]
+                 ; flags       = [] } in
+        S.mk_Comp ct
+
+    | _ -> failwith "cannot pack a C_Unknown"
 
 let pack_const (c:vconst) : sconst =
     match c with
@@ -235,6 +245,7 @@ let pack_const (c:vconst) : sconst =
     | C_True    -> C.Const_bool true
     | C_False   -> C.Const_bool false
     | C_String s -> C.Const_string (s, Range.dummyRange)
+    | C_Range  r -> C.Const_range r
 
 // TODO: pass in range?
 let pack_ln (tv:term_view) : term =

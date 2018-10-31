@@ -1,0 +1,32 @@
+[
+  "›\u0018,)hâ3\u000b\u0004Òj1Nï–Z",
+  [
+    [
+      "Bug807e.__proj__MkMonad__item__ret",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug807e.MkMonad_car",
+        "projection_inverse_Bug807e.MkMonad_car",
+        "token_correspondence_Bug807e.__proj__MkMonad__item__car"
+      ],
+      0,
+      "03e24990a0c5ddcba509c6ba3a778ad3"
+    ],
+    [
+      "Bug807e.__proj__MkMonad__item__bnd",
+      1,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_Bug807e.__proj__MkMonad__item__car",
+        "proj_equation_Bug807e.MkMonad_car",
+        "projection_inverse_Bug807e.MkMonad_car",
+        "token_correspondence_Bug807e.__proj__MkMonad__item__car"
+      ],
+      0,
+      "aa55aa487088bc2376399b5338202070"
+    ]
+  ]
+]

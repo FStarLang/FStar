@@ -317,6 +317,15 @@ type raw_error =
   | Warning_logicqualifier
   | Fatal_CyclicDependence
   | Error_InductiveAnnotNotAType
+  | Fatal_FriendInterface
+  | Error_CannotRedefineConst
+  | Error_BadClassDecl
+  | Error_BadInductiveParam
+  | Error_FieldShadow
+  | Error_UnexpectedDM4FType
+  | Fatal_EffectAbbreviationResultTypeMismatch
+  | Error_UncheckedFile
+  | Error_MustEraseMissing
 
 type flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
@@ -642,12 +651,21 @@ let default_flags =
   (Warning_logicqualifier                            , CWarning);
   (Fatal_CyclicDependence                            , CFatal);
   (Error_InductiveAnnotNotAType                      , CError);
+  (Fatal_FriendInterface                             , CFatal);
+  (Error_CannotRedefineConst                         , CError);
+  (Error_BadClassDecl                                , CError);
+  (Error_BadInductiveParam                           , CFatal);
+  (Error_FieldShadow                                 , CFatal);
+  (Error_UnexpectedDM4FType                          , CFatal);
+  (Fatal_EffectAbbreviationResultTypeMismatch        , CFatal);
+  (Error_UncheckedFile                               , CFatal);
+  (Error_MustEraseMissing                            , CWarning);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]
 
-exception Err of raw_error* string
-exception Error of raw_error * string * Range.range
+exception Err     of raw_error * string
+exception Error   of raw_error * string * Range.range
 exception Warning of raw_error * string * Range.range
 exception Stop
 

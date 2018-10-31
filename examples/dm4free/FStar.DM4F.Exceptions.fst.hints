@@ -1,5 +1,5 @@
 [
-  "\u00191rÕrº67Ž%iÛ\u001bç0%",
+  "ÿ?\u000f\u001a>4ˆÀ–€\u0006(^™•j",
   [
     [
       "FStar.DM4F.Exceptions.bind_ex",
@@ -15,7 +15,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either", "unit_typing"
       ],
       0,
-      "9b1d9ca84b403c3732a78a754d9ef5ff"
+      "08b58fd1251e023d60ee17e76a0db8fd"
     ],
     [
       "FStar.DM4F.Exceptions._dm4f_EXN_bind_wp",
@@ -29,7 +29,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either"
       ],
       0,
-      "d02e85f4fbed60c2397ce7131de01e30"
+      "525ba3edf5739be4debfa51eff9fc9b9"
     ],
     [
       "FStar.DM4F.Exceptions._dm4f_EXN___proj__EXN__item__raise_elab",
@@ -38,7 +38,7 @@
       1,
       [ "@query" ],
       0,
-      "9c23483255791e09fb5aa29a37da725b"
+      "c1d726e8fd60b41eba3ba14b2e4da3ae"
     ],
     [
       "FStar.DM4F.Exceptions.EXN",
@@ -47,7 +47,7 @@
       1,
       [ "@query" ],
       0,
-      "ff3aff023c5359294c8e09c7a38049e2"
+      "9e7fd740c5424c33ce27c192146114a2"
     ],
     [
       "FStar.DM4F.Exceptions.div_intrinsic",
@@ -58,42 +58,24 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr",
-        "equality_tok_FStar.DM4F.Exceptions.Division_by_zero@tok",
-        "fuel_guarded_inversion_FStar.Pervasives.either",
-        "typing_tok_FStar.DM4F.Exceptions.Division_by_zero@tok"
-      ],
-      0,
-      "fb0d30d3aff93e2a8ab50a03b2355423"
-    ],
-    [
-      "FStar.DM4F.Exceptions.div_intrinsic",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
-        "assumption_Prims.HasEq_int",
         "constructor_distinct_FStar.DM4F.Exceptions.Division_by_zero",
         "constructor_distinct_FStar.Pervasives.Inl",
         "constructor_distinct_FStar.Pervasives.Inr",
         "data_typing_intro_FStar.Pervasives.Inl@tok",
         "data_typing_intro_FStar.Pervasives.Inr@tok",
         "equality_tok_FStar.DM4F.Exceptions.Division_by_zero@tok",
-        "function_token_typing_Prims.exn", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Inl__a",
-        "projection_inverse_FStar.Pervasives.Inl__b",
+        "equation_Prims.eqtype", "function_token_typing_Prims.exn",
+        "function_token_typing_Prims.int", "int_inversion",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Inl_v",
         "projection_inverse_FStar.Pervasives.Inr__a",
         "projection_inverse_FStar.Pervasives.Inr__b",
         "projection_inverse_FStar.Pervasives.Inr_v",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_tok_FStar.DM4F.Exceptions.Division_by_zero@tok"
       ],
       0,
-      "2035db2dfeaabeac6491f6a7c8b0eeaa"
+      "3985ffacc7ede3538d0d17cd69854358"
     ],
     [
       "FStar.DM4F.Exceptions.div_extrinsic",
@@ -104,7 +86,7 @@
         "@query", "assumption_Prims.HasEq_int", "primitive_Prims.op_Equality"
       ],
       0,
-      "30f1ca1a54b35f956c96693acef25529"
+      "42dd0a966338e6f7a684f84d4804aa11"
     ],
     [
       "FStar.DM4F.Exceptions.lemma_div_extrinsic",
@@ -122,6 +104,7 @@
         "constructor_distinct_FStar.DM4F.Exceptions.Division_by_zero",
         "constructor_distinct_FStar.Pervasives.Inl",
         "constructor_distinct_FStar.Pervasives.Inr",
+        "disc_equation_FStar.DM4F.Exceptions.Division_by_zero",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "equality_tok_FStar.DM4F.Exceptions.Division_by_zero@tok",
@@ -132,6 +115,7 @@
         "interpretation_FStar.DM4F.Exceptions_Tm_abs_da8a31190f0e378c55e6469f077583f4",
         "interpretation_FStar.DM4F.Exceptions_Tm_abs_eb7ea241225c2b3537304493be657dc5",
         "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
+        "proj_equation_FStar.Pervasives.Inr_v",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Inl__a",
         "projection_inverse_FStar.Pervasives.Inl__b",
@@ -145,7 +129,7 @@
         "unit_typing"
       ],
       0,
-      "d51acb3c29f1cd956ab3618b9ef7ecb6"
+      "24306a5fd9a1567430d174115a155f9c"
     ],
     [
       "FStar.DM4F.Exceptions.raise_",
@@ -154,7 +138,7 @@
       1,
       [ "@query" ],
       0,
-      "b13e64bbc483a5022e6cd73308287578"
+      "94563741b50fd22e2ba346ab97f147d3"
     ],
     [
       "FStar.DM4F.Exceptions.raise__",
@@ -167,7 +151,7 @@
         "function_token_typing_Prims.exn"
       ],
       0,
-      "18b9c2d00bf52ce9ead0302a5fbd4656"
+      "952aeef1ddb10473c2fb65f6956929e8"
     ],
     [
       "FStar.DM4F.Exceptions.bind_ex",
@@ -183,7 +167,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either", "unit_typing"
       ],
       0,
-      "3f3b169eeabfcf322f62c3bc7072d188"
+      "57918fbb3e00a66fce6eb856ef7acb78"
     ],
     [
       "FStar.DM4F.Exceptions._dm4f_EXN_bind_wp",
@@ -197,7 +181,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either"
       ],
       0,
-      "b6ca3e6c93d524bde3fc4093aa0cd3f5"
+      "24864743d16e6ca7012ac9fa2dca35b8"
     ],
     [
       "FStar.DM4F.Exceptions._dm4f_EXN___proj__EXN__item__raise_elab",
@@ -206,7 +190,7 @@
       1,
       [ "@query" ],
       0,
-      "f15738e10d6917b0cc86a18410beba60"
+      "541b117901d783844f2c3a30e14167e0"
     ],
     [
       "FStar.DM4F.Exceptions.EXN",
@@ -215,53 +199,35 @@
       1,
       [ "@query" ],
       0,
-      "066f946b153c71f21442832f9de471ad"
+      "157853c94dbe3bcd6a8d4d346127faa8"
     ],
     [
       "FStar.DM4F.Exceptions.div_intrinsic",
-      3,
       2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
-        "assumption_Prims.HasEq_int",
-        "constructor_distinct_FStar.DM4F.Exceptions.Division_by_zero",
-        "constructor_distinct_FStar.Pervasives.Inl",
-        "constructor_distinct_FStar.Pervasives.Inr",
-        "data_typing_intro_FStar.Pervasives.Inl@tok",
-        "data_typing_intro_FStar.Pervasives.Inr@tok",
-        "equality_tok_FStar.DM4F.Exceptions.Division_by_zero@tok",
-        "function_token_typing_Prims.exn", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Inl__a",
-        "projection_inverse_FStar.Pervasives.Inl__b",
-        "projection_inverse_FStar.Pervasives.Inl_v",
-        "projection_inverse_FStar.Pervasives.Inr__a",
-        "projection_inverse_FStar.Pervasives.Inr__b",
-        "projection_inverse_FStar.Pervasives.Inr_v",
-        "typing_tok_FStar.DM4F.Exceptions.Division_by_zero@tok"
-      ],
-      0,
-      "5dbc211bc5b9e3eb24acfb0e276f08e6"
-    ],
-    [
-      "FStar.DM4F.Exceptions.div_intrinsic",
-      4,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr",
+        "constructor_distinct_FStar.DM4F.Exceptions.Division_by_zero",
+        "constructor_distinct_FStar.Pervasives.Inl",
+        "constructor_distinct_FStar.Pervasives.Inr",
+        "data_typing_intro_FStar.Pervasives.Inl@tok",
+        "data_typing_intro_FStar.Pervasives.Inr@tok",
         "equality_tok_FStar.DM4F.Exceptions.Division_by_zero@tok",
-        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "equation_Prims.eqtype", "function_token_typing_Prims.exn",
+        "function_token_typing_Prims.int", "int_inversion",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Inl_v",
+        "projection_inverse_FStar.Pervasives.Inr__a",
+        "projection_inverse_FStar.Pervasives.Inr__b",
+        "projection_inverse_FStar.Pervasives.Inr_v",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_tok_FStar.DM4F.Exceptions.Division_by_zero@tok"
       ],
       0,
-      "8f1ae97be16bd969c60a1e64e5d3289e"
+      "4af273379a791ea8708bb9fba21b445a"
     ],
     [
       "FStar.DM4F.Exceptions.div_extrinsic",
@@ -272,7 +238,7 @@
         "@query", "assumption_Prims.HasEq_int", "primitive_Prims.op_Equality"
       ],
       0,
-      "83068172c34b928664d4aa989a93492a"
+      "d7e2271e521034c46cc632548195d697"
     ],
     [
       "FStar.DM4F.Exceptions.lemma_div_extrinsic",
@@ -287,8 +253,10 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_Prims.HasEq_int",
+        "constructor_distinct_FStar.DM4F.Exceptions.Division_by_zero",
         "constructor_distinct_FStar.Pervasives.Inl",
         "constructor_distinct_FStar.Pervasives.Inr",
+        "disc_equation_FStar.DM4F.Exceptions.Division_by_zero",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "equality_tok_FStar.DM4F.Exceptions.Division_by_zero@tok",
@@ -298,6 +266,7 @@
         "interpretation_FStar.DM4F.Exceptions_Tm_abs_d48cea62489b5aadf4a5328920d0bb3d",
         "interpretation_FStar.DM4F.Exceptions_Tm_abs_da8a31190f0e378c55e6469f077583f4",
         "interpretation_FStar.DM4F.Exceptions_Tm_abs_eb7ea241225c2b3537304493be657dc5",
+        "proj_equation_FStar.Pervasives.Inr_v",
         "projection_inverse_FStar.Pervasives.Inl__a",
         "projection_inverse_FStar.Pervasives.Inl__b",
         "projection_inverse_FStar.Pervasives.Inl_v",
@@ -310,7 +279,7 @@
         "unit_typing"
       ],
       0,
-      "e0c77692a2e4ed4b6e22881b4612ce78"
+      "61756c0e9bae38bf736da0fd92143c91"
     ],
     [
       "FStar.DM4F.Exceptions.raise_",
@@ -319,7 +288,7 @@
       1,
       [ "@query" ],
       0,
-      "2eb644f03a215942e8c547b9cc8a33a9"
+      "8dd5a8298656098dbefa50dcece6d643"
     ],
     [
       "FStar.DM4F.Exceptions.raise__",
@@ -332,7 +301,7 @@
         "function_token_typing_Prims.exn"
       ],
       0,
-      "1ef5f0c7c707302764eab2cc14720377"
+      "0103f819fa1989c01236346019d3d4b9"
     ]
   ]
 ]

@@ -6,9 +6,12 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
       0,
-      "adc9179da32b8a693b89612e2b68d15a"
+      "020f96c82e44654f93426cec2b7d23ac"
     ],
     [
       "Setopts.mult_ass",
@@ -20,7 +23,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3ba13ae3875cde0f0a59f6e62af20358"
+      "24b0f3238439b43177fb3425311c205c"
     ]
   ]
 ]

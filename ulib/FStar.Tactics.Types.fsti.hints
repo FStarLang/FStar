@@ -1,1 +1,19 @@
-[ "°I£¤ûÞ8ÙÎ\u0013wºË»#q", [] ]
+[
+  "&) \tr\u0015[njøñMH5qž",
+  [
+    [
+      "FStar.Tactics.Types.__proj__TacticFailure__item__uu___",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Types.TacticFailure",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Tactics.Types_Tm_refine_f49633c0c264cfe426b78eef812b39f3"
+      ],
+      0,
+      "92cf9e096153b5ba71b58f50801786ab"
+    ]
+  ]
+]

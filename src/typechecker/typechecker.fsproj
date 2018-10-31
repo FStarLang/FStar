@@ -10,7 +10,6 @@
     <RootNamespace>typechecker</RootNamespace>
     <AssemblyName>typechecker</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.3.0</TargetFSharpCoreVersion>
     <Name>typechecker</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -64,6 +63,7 @@
     <Compile Include="FStar.TypeChecker.PatternUtils.fs" />
     <Compile Include="FStar.TypeChecker.Normalize.fsi" />
     <Compile Include="FStar.TypeChecker.Normalize.fs" />
+    <Compile Include="FStar.TypeChecker.NBE.fsi" />
     <Compile Include="FStar.TypeChecker.NBE.fs" />
     <Compile Include="FStar.TypeChecker.Err.fs" />
     <Compile Include="FStar.TypeChecker.Rel.fsi" />
@@ -99,10 +99,6 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core">
-      <HintPath>..\VS\packages\FSharp.Core.4.2.3/lib/net45/FSharp.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />

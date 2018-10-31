@@ -1,5 +1,5 @@
 [
-  "¿\";R\u001bŽ_Â£í/'e“u\r",
+  "Mü‘ž‡2ÐI\u001fS÷Õ Å¼Ù",
   [
     [
       "FStar.Math.Lemmas.euclidean_div_axiom",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "87ff8f51429e130a6948519e3a3009f2"
+      "6b6e1be612443f37213afda7ec5a1f2d"
     ],
     [
       "FStar.Math.Lemmas.euclidean_div_axiom",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "292d24c2fb231d89ad0ff86d47ff825e"
+      "313edbe1151fd37dfec308197f054420"
     ],
     [
       "FStar.Math.Lemmas.lemma_eucl_div_bound",
@@ -39,7 +39,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "dd014c3500e5d3c6de16c84e2425fe24"
+      "fd63f18f0fa843ad727d9e5f199a78a5"
     ],
     [
       "FStar.Math.Lemmas.lemma_mult_le_left",
@@ -52,7 +52,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "f439fc12f7213264dfa135088a58bdc6"
+      "6c80e3681ce3955b200e565e5e66d706"
     ],
     [
       "FStar.Math.Lemmas.lemma_mult_le_right",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d2979803a9cffc10aca0eea437d01a8c"
+      "935535318314b1004afef02141c57d7d"
     ],
     [
       "FStar.Math.Lemmas.lemma_mult_lt_left",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "920df276a167d69971e125103a996a1c"
+      "fcbaa69e8cfa67ae99a68c818cbca0e0"
     ],
     [
       "FStar.Math.Lemmas.lemma_mult_lt_right",
@@ -91,7 +91,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8189316b3238e050bdcf5251190ad6d2"
+      "5a3e39cf1b1144bbb10d1b735990ca80"
     ],
     [
       "FStar.Math.Lemmas.lemma_mult_lt_sqr",
@@ -107,20 +107,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ae9a63d5002238f74e65757b59785436"
+      "df43e717b3308c833478b62b29e26040"
     ],
     [
       "FStar.Math.Lemmas.distributivity_add_left",
       1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "8f84f9a80e00b0f6a16ba05f167ad1ee"
-    ],
-    [
-      "FStar.Math.Lemmas.distributivity_add_left",
-      2,
       0,
       1,
       [
@@ -128,93 +119,49 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b8ce6bf6b337fa3f3d643b77cadcf4e3"
+      "f04c6756bf9d549fd26c8a8071606b2e"
     ],
     [
       "FStar.Math.Lemmas.distributivity_add_right",
       1,
       0,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
       0,
-      "96f95bef54015528ae6a007431426d5a"
+      "f3bd391e4d35bae0cc69b45804ce3ec3"
     ],
     [
-      "FStar.Math.Lemmas.distributivity_add_right",
-      2,
+      "FStar.Math.Lemmas.distributivity_sub_left",
+      1,
       0,
       1,
       [
         "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "bccc08c1a8d2f18eef962027f253a36e"
-    ],
-    [
-      "FStar.Math.Lemmas.distributivity_sub_left",
-      1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "c0603eeb35f862cc89212f94e52410ef"
-    ],
-    [
-      "FStar.Math.Lemmas.distributivity_sub_left",
-      2,
-      0,
-      1,
-      [
-        "@query", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "b094cf9a1a091d2cf207a92c80694741"
+      "701c9a8907f81c0edb9615975623e34f"
     ],
     [
       "FStar.Math.Lemmas.distributivity_sub_right",
       1,
       0,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4aba84c97d432079d37d27dfb500f0e5"
-    ],
-    [
-      "FStar.Math.Lemmas.distributivity_sub_right",
-      2,
-      0,
-      1,
       [
-        "@query", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f373a051b156d4b32e57f9c0d3a6e8a1"
-    ],
-    [
-      "FStar.Math.Lemmas.paren_mul_left",
-      1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2a9ccde7722b2116cc4a8ad648942801"
+      "625c3217984f408ab030e00230b76c8b"
     ],
     [
       "FStar.Math.Lemmas.paren_mul_right",
       1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "39d8534560a6a662984a09879d6ff73c"
-    ],
-    [
-      "FStar.Math.Lemmas.paren_mul_right",
-      2,
       0,
       1,
       [
@@ -222,29 +169,11 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b2b1c694c1ec33d739cc77f487d1755d"
-    ],
-    [
-      "FStar.Math.Lemmas.paren_add_left",
-      1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "6f8cc70c78a2bfdf03bf910054a6dac1"
+      "f5911e1df31bedbe5b256d0f8067d532"
     ],
     [
       "FStar.Math.Lemmas.paren_add_right",
       1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "c384eb506161d6ca16085602c12c9b51"
-    ],
-    [
-      "FStar.Math.Lemmas.paren_add_right",
-      2,
       0,
       1,
       [
@@ -252,20 +181,11 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "37f2a9abba0be84cd0eaf76d4d48b94a"
+      "79f9d402075c7cdb379eaf14db5c38ca"
     ],
     [
       "FStar.Math.Lemmas.addition_is_associative",
       1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2f37e010eea71f7b42624bc60f4d9c31"
-    ],
-    [
-      "FStar.Math.Lemmas.addition_is_associative",
-      2,
       0,
       1,
       [
@@ -273,20 +193,11 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ca4a876fab6c4c45ac112a719f4c3733"
+      "96e2cc68488c1888ad92726f300b713c"
     ],
     [
       "FStar.Math.Lemmas.subtraction_is_distributive",
       1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "39345d46a485931d643446e74cf15e37"
-    ],
-    [
-      "FStar.Math.Lemmas.subtraction_is_distributive",
-      2,
       0,
       1,
       [
@@ -295,20 +206,11 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "4b796348447c733a1a8e022bb54a6919"
+      "698eba8a796b2bb160aa73794c4da992"
     ],
     [
       "FStar.Math.Lemmas.swap_add_plus_minus",
       1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "eb1cf6a4f87a46150796f8565fd4c5ba"
-    ],
-    [
-      "FStar.Math.Lemmas.swap_add_plus_minus",
-      2,
       0,
       1,
       [
@@ -317,67 +219,42 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "fcefd37c4eaaebc3474c6c9faca5f56a"
+      "b5369b8e58afb5f4af59a523f323459e"
     ],
     [
       "FStar.Math.Lemmas.swap_mul",
       1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2afa3eff9b407f17c26b4dbcdc9c31ad"
-    ],
-    [
-      "FStar.Math.Lemmas.swap_mul",
-      2,
       0,
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "6404fdd25c8cea0def052e4f3628ae07"
+      "c9c218131097d558f5168342f6f66aed"
     ],
     [
       "FStar.Math.Lemmas.neg_mul_left",
       1,
       0,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "af0c1c130ebd660028c464597e21b117"
-    ],
-    [
-      "FStar.Math.Lemmas.neg_mul_left",
-      2,
-      0,
-      1,
       [
-        "@query", "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3cc2087cfafe661bed3e1af8020ee11b"
+      "2c184c09fdaf144bb38ae5fbc21a595e"
     ],
     [
       "FStar.Math.Lemmas.neg_mul_right",
       1,
       0,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "0d629de96857bd684520b803105e1838"
-    ],
-    [
-      "FStar.Math.Lemmas.neg_mul_right",
-      2,
-      0,
-      1,
       [
-        "@query", "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "414336b60a6891b805cd8d1f89c9ec26"
+      "fc3b62642279ba6ac0947c94d9b8f352"
     ],
     [
       "FStar.Math.Lemmas.swap_neg_mul",
@@ -386,25 +263,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b871ff6d8fed971e0386240d9104f54f"
-    ],
-    [
-      "FStar.Math.Lemmas.swap_neg_mul",
-      2,
-      0,
-      1,
-      [ "@query" ],
-      0,
-      "3e98ba0d02e0a7ebd034769c2864e866"
-    ],
-    [
-      "FStar.Math.Lemmas.mul_binds_tighter",
-      1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "30419084fe9e0f999487db96506a05c2"
+      "c3e304b18386ae44912d94311fa03948"
     ],
     [
       "FStar.Math.Lemmas.mul_ineq1",
@@ -418,7 +277,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "52e740a635caedab0cd9d0cac0af5fca"
+      "80dbdf36f0f07c16caa22fa090dd48e8"
     ],
     [
       "FStar.Math.Lemmas.nat_times_nat_is_nat",
@@ -431,7 +290,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "dbfa54c40b312069402c95ccdb4c7744"
+      "b211093dc7e750d1d3b6384d033088ed"
     ],
     [
       "FStar.Math.Lemmas.pos_times_pos_is_pos",
@@ -444,7 +303,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "269b8fce8ecd20d49d2210c1dc957e41"
+      "334b3b5619c44d6b10f014448b3e0563"
     ],
     [
       "FStar.Math.Lemmas.nat_over_pos_is_nat",
@@ -453,7 +312,7 @@
       1,
       [ "@query" ],
       0,
-      "0e788fd4b7e20496d30c3be62b6040c1"
+      "edb7e8b714086788576a8be360627786"
     ],
     [
       "FStar.Math.Lemmas.nat_over_pos_is_nat",
@@ -468,7 +327,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "cdb12e32c3202598f79cba6647ccbe66"
+      "126a797a9a16cc46aec11747e1088f95"
     ],
     [
       "FStar.Math.Lemmas.pow2_double_sum",
@@ -482,7 +341,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7ba8ba93df61c38f47ea29e30c46eef6"
+      "df8e0c6c96751bb4415a94048987d89c"
     ],
     [
       "FStar.Math.Lemmas.pow2_double_sum",
@@ -504,7 +363,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "ee04659ece132c6befa2f39bfd104343"
+      "17e281c926825fa28ea957ee99e03454"
     ],
     [
       "FStar.Math.Lemmas.pow2_double_mult",
@@ -518,7 +377,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fa4333663422270a5ee8e061629478c5"
+      "1ff9d5e158cad8f95d41470a77e76300"
     ],
     [
       "FStar.Math.Lemmas.pow2_double_mult",
@@ -536,7 +395,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b1c710935e2c397397c1cfa0f123436f"
+      "2c0106c9f4c9bbf5fd50b0dca198f91d"
     ],
     [
       "FStar.Math.Lemmas.pow2_lt_compat",
@@ -560,7 +419,7 @@
         "typing_Prims.pow2", "well-founded-ordering-on-nat"
       ],
       0,
-      "d41a68ddc7826534fa159fec6e89aa68"
+      "1fc93a981df19b7a3cd93f4c6ff4dc05"
     ],
     [
       "FStar.Math.Lemmas.pow2_le_compat",
@@ -579,7 +438,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "69dc6ae9e0273964593b0f438c91397b"
+      "7c6228521b7dd70bb89db01b4e287d88"
     ],
     [
       "FStar.Math.Lemmas.pow2_plus",
@@ -593,11 +452,25 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c9dae418d37c5c37680693977f3f87d8"
+      "8d7132933be0c0f3445c0985b8c787fd"
     ],
     [
       "FStar.Math.Lemmas.pow2_plus",
       2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.Math.Lemmas_Tm_refine_5812baed3c42170c9520a1b2548ac6f7",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "77a2e6ceb4239a606e410e1a3374b486"
+    ],
+    [
+      "FStar.Math.Lemmas.pow2_plus",
+      3,
       1,
       1,
       [
@@ -619,7 +492,7 @@
         "typing_Prims.pow2", "well-founded-ordering-on-nat"
       ],
       0,
-      "cdecb2c97112bb6ca6c3deb056e52b48"
+      "24b092ff8465f590f3e4b53d6dec69fa"
     ],
     [
       "FStar.Math.Lemmas.pow2_minus",
@@ -634,7 +507,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a16b2eb697d0b4026232ec3ca7fa333b"
+      "3a2379c3e166093a4afc54d68bd67408"
     ],
     [
       "FStar.Math.Lemmas.pow2_minus",
@@ -646,9 +519,9 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "equation_Prims.pos",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented",
+        "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
@@ -656,13 +529,14 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Math.Lemmas_Tm_refine_1a57f612ec3fc73d4d26a02bff2b55e7",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "token_correspondence_Prims.pow2.fuel_instrumented",
         "typing_Prims.pow2"
       ],
       0,
-      "81e553507666b54804b5e52d5b98af2e"
+      "599e7e633e219a84dcd3c6bcb35baa4c"
     ],
     [
       "FStar.Math.Lemmas.multiply_fractions",
@@ -671,7 +545,7 @@
       1,
       [ "@query" ],
       0,
-      "caa1339b277a185b15b1c4a96e8443da"
+      "fd039cacc6a8e1a979d3e8ec247eaf82"
     ],
     [
       "FStar.Math.Lemmas.multiply_fractions",
@@ -679,11 +553,13 @@
       0,
       1,
       [
-        "@query", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "2fee5309d16892248f8c2f41447c55c1"
+      "ddd0bfc5de07b7268b65b27d5290f072"
     ],
     [
       "FStar.Math.Lemmas.modulo_lemma",
@@ -692,7 +568,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b9c14f404d7e694f46d4d24b76bba383"
+      "f537819eab15a21036154d7204579d7d"
     ],
     [
       "FStar.Math.Lemmas.modulo_lemma",
@@ -707,7 +583,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "3aae426f286bd461b6985713d84152da"
+      "5b3bc790a38a57101863018cc6a1b794"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_mod",
@@ -716,7 +592,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "89231716dab0d679be09810d118d675c"
+      "7d39a5c0a904937d224e5eb97efb235e"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_mod",
@@ -731,7 +607,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ac1a5a9cb62adaf42f4efdc33b7ac599"
+      "d1bceee8c41767bd0148af36af1abe0d"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_lt",
@@ -743,7 +619,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "abc0f424c5851676d0959cb999936972"
+      "5616ca484623cf7535070f71142ffccc"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_lt",
@@ -757,10 +633,10 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "d515a7c7923c16677dbfb32ce1b64d6b"
+      "1d09bf6879abef4de3a0ab4bc15a7e24"
     ],
     [
-      "FStar.Math.Lemmas.lemma_div_lt",
+      "FStar.Math.Lemmas.lemma_div_lt_nat",
       1,
       0,
       1,
@@ -772,7 +648,46 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a63a47918fe657198b782d03ac6b692e"
+      "4c54d7edf32b71769f83a4b78bb8dafe"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_div_lt_nat",
+      2,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.Math.Lemmas_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_Prims.pow2"
+      ],
+      0,
+      "58629f9a2ef4c6b0f8b75df3d0cdf04f"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_div_lt",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.l_and",
+        "equation_Prims.nat", "equation_Prims.squash", "int_inversion",
+        "l_and-interp", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "ede9972d52c05d1ec4315c1c3d7fd46b"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_lt",
@@ -782,36 +697,97 @@
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "equation_Prims.pos", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Division",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Math.Lemmas_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
+        "int_typing", "primitive_Prims.op_Division",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "typing_Prims.pow2"
       ],
       0,
-      "2d98831d3b9f8ca78877dff62b8bd6ea"
+      "09bc7c411f4e3312951d88f6f18669b4"
     ],
     [
-      "FStar.Math.Lemmas.lemma_eq_trans_2",
+      "FStar.Math.Lemmas.bounded_multiple_is_zero",
       1,
       0,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
       0,
-      "de92cd6c5e7a61104ebcd6025a2e8bff"
+      "a14b7f8359f27fac21f3da291de40513"
     ],
     [
-      "FStar.Math.Lemmas.lemma_eq_trans_2",
+      "FStar.Math.Lemmas.small_div",
+      1,
+      0,
+      1,
+      [ "@query" ],
+      0,
+      "7d022e5fb218a86631f67d16f35d6e51"
+    ],
+    [
+      "FStar.Math.Lemmas.small_div",
       2,
       0,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Division",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
       0,
-      "bffa732eb8e8f436969369cf871338ab"
+      "341ab4b9860ed101f354bcd50c339deb"
+    ],
+    [
+      "FStar.Math.Lemmas.small_mod",
+      1,
+      0,
+      1,
+      [ "@query" ],
+      0,
+      "2d4cef5f696b72af7f75d2dd5b9b8857"
+    ],
+    [
+      "FStar.Math.Lemmas.small_mod",
+      2,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Modulus",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "d681e41c0eeff9f2a612905149e250f5"
+    ],
+    [
+      "FStar.Math.Lemmas.lt_multiple_is_equal",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "8e43374644aa90506cf9f1815b914ca7"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_0",
@@ -819,16 +795,15 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Division",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "c10019046ef9f18a375b637aca4be27d"
+      "cf332dab58a40a9ffd982e493b02479e"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_1",
@@ -845,7 +820,16 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "930a9c0d219d349d4543c82496d9b36e"
+      "2d995e7b454cb461a3db331b303735d9"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_eq_trans_2",
+      1,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "6a65ee166bbeae3aec0e651b790199f9"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus",
@@ -854,7 +838,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2d9847b1407c545d6643c67fd3acff0e"
+      "2c15ab75c3ce933808af9da15ac431d0"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus",
@@ -868,7 +852,235 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c43629702940c19b1804bc268d7f367a"
+      "5c1d9f07f35d84a68ed2b91e1562b61b"
+    ],
+    [
+      "FStar.Math.Lemmas.add_div_mod_1",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "a3a7a70c1ec0f315c78defa9aa3b2cf2"
+    ],
+    [
+      "FStar.Math.Lemmas.sub_div_mod_1",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "e143388b300f37ffea6ed2d8dc3bc7d1"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_div_mod_plus",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
+        "binder_x_cda60864cf6228d7a4fba58b6264c802_2",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.pos",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "1641724854c02bbcbb6d425b3c4a9c55"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_div_mod_plus",
+      2,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
+        "binder_x_cda60864cf6228d7a4fba58b6264c802_2",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.pos",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "6e79896f2abdfbabf9e5c1a0a8b45192"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_div_plus",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "85c9f8e6ab6b5cf143ebf1e898ecac0e"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_div_plus",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "eaacfce817cc9a4ea3b59b9e2a390548"
+    ],
+    [
+      "FStar.Math.Lemmas.cancel_mul_div",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cab6a9bd88537d629436b2c9313bf8ea"
+    ],
+    [
+      "FStar.Math.Lemmas.cancel_mul_div",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "937958dc46a21be1caf3216817a39f9d"
+    ],
+    [
+      "FStar.Math.Lemmas.cancel_mul_mod",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e4511f2744ea1218f274d2931f9dbc3d"
+    ],
+    [
+      "FStar.Math.Lemmas.cancel_mul_mod",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "219d293a4225e049db0ac39c0a3453b6"
+    ],
+    [
+      "FStar.Math.Lemmas.mod_add_both",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "cf2ee86a1a62f246d7cc8ed7014635ea"
+    ],
+    [
+      "FStar.Math.Lemmas.mod_add_both",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "36237499ec01508dd9055c12892b9392"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_mod_add_distr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "26e73e81956e99b1b40ac4b4012d1581"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_mod_add_distr",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "c994c55299d99f5f8c09339d1ab2fc03"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_mod_sub_distr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "6426fc17fa6e18f8e1643eb91aa78e12"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_mod_sub_distr",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "0b22f937501f06a9487e621cc080ad83"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_sub_0",
@@ -877,7 +1089,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "68a908f0bbb933a95510080a67ac5477"
+      "474f7b6f6179c2f9ba21598a54732aac"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_sub_0",
@@ -891,7 +1103,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "b72f1f6cb03f2851b4588e6fffd59b39"
+      "c666945984988e824e629b914e4f5b20"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_sub_1",
@@ -900,7 +1112,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "311fd5c6b28c7b9a18fdfe82062f0de5"
+      "0f47a14e7ed36122413139eca37f4e04"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_sub_1",
@@ -917,24 +1129,23 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "e65b2ecf81b13cb10a4ed064c8376a39"
+      "b4dd4510949ce95bd80e1b3bb4f9ad4f"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mul_distr_l_0",
       1,
       0,
-      0,
+      2,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Division",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "fb4b014991e3af142fcb0967c8036dc5"
+      "8af40031115e43023e3246d0e8932ceb"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mul_distr_l",
@@ -943,7 +1154,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d86e1b798d201f0d3d5e19066e76c3ce"
+      "c286f6eb7dc37a9517e24d3dcb36d779"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mul_distr_l",
@@ -951,15 +1162,49 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "equation_Prims.pos", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
+        "binder_x_cda60864cf6228d7a4fba58b6264c802_2",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.pos",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_GreaterThanOrEqual", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "88437454e1e3dd2c3864b1d48d15481b"
+      "a328ac51042574eeeb7fb70e252d3aed"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_mod_mul_distr_l",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
+        "binder_x_cda60864cf6228d7a4fba58b6264c802_2",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.pos",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_GreaterThanOrEqual", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "d4d2d51d032a1fa75c1f75b045418ff1"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mul_distr_r",
@@ -972,20 +1217,21 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "c6d27fe686295d55f06a16ff63ec8f3d"
+      "a51ca4168a88020084affe73dccfd996"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mul_distr_r",
       2,
       2,
-      1,
+      2,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ae411a96130d234e51adfa2c474891da"
+      "13bc3d7c56b7a9b5c5ab529d285d4e84"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_injective",
@@ -995,14 +1241,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "equation_Prims.pos",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "efa0b2bc75c3d6d706e5c879783c065e"
+      "90fa7a1161227973bbc2fb668a348474"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_injective",
@@ -1016,20 +1263,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "63728c041464bb2019b2276f74d4f30c"
+      "29e84b1a04ed82e17d98f050292ed9d6"
     ],
     [
       "FStar.Math.Lemmas.lemma_mul_sub_distr",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b0529fcd7395e3fd6bbb950c6bf39a1a"
-    ],
-    [
-      "FStar.Math.Lemmas.lemma_mul_sub_distr",
-      2,
       2,
       1,
       [
@@ -1037,7 +1275,7 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1b8fff31eb4e24da569f900b4eb53fc2"
+      "97dc4a332d4cc88d23e8fd0b845ce385"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_exact",
@@ -1046,7 +1284,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1ce62ae31988b33b6b2ad2cf329d213f"
+      "fc7d33472dd3a00cdc94951c44042941"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_exact",
@@ -1062,7 +1300,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "797777254e66077a549d01ca59a2554e"
+      "e1ef20d6244ec180daa922118748a16a"
     ],
     [
       "FStar.Math.Lemmas.div_exact_r",
@@ -1071,7 +1309,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "cee58b77ba76e66ce7a21bcf405819f7"
+      "c220d7d89067af5351272466b24c0fc8"
     ],
     [
       "FStar.Math.Lemmas.div_exact_r",
@@ -1087,7 +1325,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "93546b136c167437fc4815ed8b9e0057"
+      "7f9cfe75b50578e5aeaddab17b35e8d4"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_spec",
@@ -1096,7 +1334,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "339cf765639ce73bf9296ec129ae1d05"
+      "ce46936b7549f2c71508669e479564af"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_spec",
@@ -1105,15 +1343,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Division",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "36dbfad477cbadc94017e7d7c7d266a5"
+      "862d4b2ea2c9d66f37677652116a1066"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_spec2",
@@ -1129,7 +1366,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "2e49854074f3e71ae78ac8ae73e25839"
+      "53638cfe26cce43b4536db699ab7ae1d"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_spec2",
@@ -1145,7 +1382,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "14947758e16adf9fa8ead835580931fa"
+      "8fccf63c56afac0c8d60107e46572839"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_distr_l",
@@ -1154,7 +1391,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d2db9dd0ba9b40aa45de4d3729595dba"
+      "14a87682195d55303a60657232875d48"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_distr_l",
@@ -1170,7 +1407,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "de324e6f92eb83b55edb0cb38ecbf7c4"
+      "51ea58a0b6edffd663bb37ba5136859f"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_distr_r",
@@ -1183,7 +1420,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "9fe1c0e44f1237d3c05a27ab945c0e89"
+      "d7739733c91c7c077d66d8f337ba684d"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_distr_r",
@@ -1195,7 +1432,7 @@
         "primitive_Prims.op_Modulus", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "75dc2e48b3a9136c0ba2ad6f4c62a518"
+      "c120e964335366db89a7693859656a2c"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_mul_distr",
@@ -1204,23 +1441,23 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fecb496856901e82aa96b603c7a89e43"
+      "395942ed65ee0354ed0426e71891faef"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_mul_distr",
       2,
       2,
-      2,
+      1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "772b5b845fb5d551a93436a80ece9220"
+      "eef0042a3d31ecd107ea62ddd6ea2dd6"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mod",
@@ -1229,7 +1466,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "02b82e4f860ed7ad465d6904d9c4658c"
+      "e14759693ecd7c21a31620f1b96b1f0e"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mod",
@@ -1238,7 +1475,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b228778358cb3b047b7803ca9812a400"
+      "16240ff35c0d4537a848109e6777ed78"
     ],
     [
       "FStar.Math.Lemmas.euclidean_division_definition",
@@ -1247,7 +1484,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "21851819f584bead507e194b9af44eb9"
+      "38a7a2d3caf7d4059ba9a095d6de89b4"
     ],
     [
       "FStar.Math.Lemmas.euclidean_division_definition",
@@ -1263,7 +1500,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1e181a57e00e2b5dc4283c5003b56978"
+      "021f7939ee076cb17ceb1d342625ae98"
     ],
     [
       "FStar.Math.Lemmas.modulo_range_lemma",
@@ -1275,7 +1512,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1bb15aec80b74464dcc40b7498c1661d"
+      "d923fb6c594e48012c379833eb6556ab"
     ],
     [
       "FStar.Math.Lemmas.modulo_range_lemma",
@@ -1291,7 +1528,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "df5d79d3b865b0160e285ad2ec4e21e8"
+      "07825ff971a16d0f055084acf280d0b1"
     ],
     [
       "FStar.Math.Lemmas.small_modulo_lemma_1",
@@ -1300,7 +1537,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0d8f686e3343da539a83c7441bf34adb"
+      "eff7b2f9eb5cea4dafdfacfb458c46e0"
     ],
     [
       "FStar.Math.Lemmas.small_modulo_lemma_1",
@@ -1315,7 +1552,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "d157afe0c302b2316617fc6d6fbde8c6"
+      "6fb07d8c24326a3c85313ffdb5ffaab0"
     ],
     [
       "FStar.Math.Lemmas.small_modulo_lemma_2",
@@ -1324,7 +1561,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ed214c95877d128d3b215243a1536ff5"
+      "184a74102ed8286757883cac0159a2f9"
     ],
     [
       "FStar.Math.Lemmas.small_modulo_lemma_2",
@@ -1337,7 +1574,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "d8575bd5ab7e1933f3e4f582bdb1c1d7"
+      "b0a471c5d37d8672274085e4635b31f6"
     ],
     [
       "FStar.Math.Lemmas.small_division_lemma_1",
@@ -1346,7 +1583,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fc6e02dd62f0b3113cfc985308df78ba"
+      "f4b9bcf3224968b8852e3b34a8d614f9"
     ],
     [
       "FStar.Math.Lemmas.small_division_lemma_1",
@@ -1361,7 +1598,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1722b5125b8e392f865fa8f6ad635bae"
+      "8328131582e3ce56711b066eedaacacd"
     ],
     [
       "FStar.Math.Lemmas.small_division_lemma_2",
@@ -1370,7 +1607,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9ab3c9f2b35cece0fe785cde22570f7b"
+      "bf886e9c64817e7ab53189056787ca62"
     ],
     [
       "FStar.Math.Lemmas.small_division_lemma_2",
@@ -1383,7 +1620,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "077be90820f719ff3bce800d7fab98a3"
+      "f841423f0cf6eb51d21a351dfa835487"
     ],
     [
       "FStar.Math.Lemmas.multiplication_order_lemma",
@@ -1398,7 +1635,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "8a7a4b2b7d063d66582f27fe007cec03"
+      "e434e87015ee88f75151f71cd211c33c"
     ],
     [
       "FStar.Math.Lemmas.division_propriety",
@@ -1410,7 +1647,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "a4fd222926cbcc422522b80ca0ba0771"
+      "4a0f13597fb253b9893f12dc7cb95fb4"
     ],
     [
       "FStar.Math.Lemmas.division_propriety",
@@ -1428,7 +1665,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "bae2a07b127812c65eed4538c4985f06"
+      "64dc231bb80e03aca5023674779107ae"
     ],
     [
       "FStar.Math.Lemmas.division_definition_lemma_1",
@@ -1437,7 +1674,7 @@
       1,
       [ "@query" ],
       0,
-      "411801785adf5914418ad411999d8df9"
+      "eb0dceb8b5a2964f059152e1bbfc54ad"
     ],
     [
       "FStar.Math.Lemmas.division_definition_lemma_1",
@@ -1456,7 +1693,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "3cbd77c31f0b787f33a06623c3e666db"
+      "863f08553fc5a0d0e4b1875391506d67"
     ],
     [
       "FStar.Math.Lemmas.division_definition_lemma_2",
@@ -1465,7 +1702,7 @@
       1,
       [ "@query" ],
       0,
-      "c0e618b0f5c07c7d0c5d075d6ab0feb0"
+      "b7223c30d38b990224d310f127ed37e2"
     ],
     [
       "FStar.Math.Lemmas.division_definition_lemma_2",
@@ -1484,7 +1721,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "5aa487c328fc386e8b3b130675f716e1"
+      "259101e9f059c14dd24df163b98704dc"
     ],
     [
       "FStar.Math.Lemmas.division_definition",
@@ -1493,7 +1730,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "41dd7a2d95858ec1187ff28c50349e82"
+      "3df4a2fb8d4a549b6cb14fcfa546c646"
     ],
     [
       "FStar.Math.Lemmas.division_definition",
@@ -1513,7 +1750,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "aca1bb5c665d4f848462045c5b1ed164"
+      "b3d41ce5d0d1285c7ac155465d5efc64"
     ],
     [
       "FStar.Math.Lemmas.multiple_division_lemma",
@@ -1522,7 +1759,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "38138197cb49ab8f764a1793eeb13a0c"
+      "024337b1c8a9d65bbf6437970177a7e0"
     ],
     [
       "FStar.Math.Lemmas.multiple_division_lemma",
@@ -1540,7 +1777,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "f6474e8c03d731bce4724fd912ff879b"
+      "e41293f51d4656c51757c7bbdac0efe5"
     ],
     [
       "FStar.Math.Lemmas.multiple_modulo_lemma",
@@ -1549,7 +1786,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f2f06ac06b679c07986a4e5a17560aca"
+      "6af2b7faa4de0dec69dc2c8e9c49a647"
     ],
     [
       "FStar.Math.Lemmas.multiple_modulo_lemma",
@@ -1563,7 +1800,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "2c7ebed862fc537115bc1c19ecd06ba9"
+      "737eeda27967afb226d425d086ab3186"
     ],
     [
       "FStar.Math.Lemmas.division_addition_lemma",
@@ -1572,7 +1809,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fbec6f3a9f119461030d71c83ba42702"
+      "a4205b74736ffc262f5b0e4316573b61"
     ],
     [
       "FStar.Math.Lemmas.division_addition_lemma",
@@ -1591,7 +1828,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "b7502f8999399c0ecbd9b73aee48d176"
+      "60224c24d4df2a8d549be2fe4e36fac2"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_le_",
@@ -1608,7 +1845,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ed69be8c78dd9f62fdbc6b1f5b58f0a9"
+      "8ed176c2a701cd8777927b97ad294b4f"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_le",
@@ -1620,7 +1857,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "81848b9a655e37aa8145fd15f45a4d94"
+      "1c3bb369d65549acd4a88a20b05caebb"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_le",
@@ -1634,7 +1871,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "5c1ef04c8499819f7272861814d17703"
+      "00836f8d5fa91c35ca8d4dd0561c3de6"
     ],
     [
       "FStar.Math.Lemmas.division_sub_lemma",
@@ -1643,7 +1880,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "df2819ebdefe587017722471e692d2ee"
+      "698f37a9c10bd2366e59bb06b9829b9d"
     ],
     [
       "FStar.Math.Lemmas.division_sub_lemma",
@@ -1661,7 +1898,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "8a6310c3405e9e1e5171648d6d73c9df"
+      "12b107199244127280f718ed3e1a05f3"
     ],
     [
       "FStar.Math.Lemmas.modulo_distributivity",
@@ -1670,7 +1907,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9f9df9d68444d3015e6e5946cf962c6d"
+      "1df772d6c7222b898ca14b0dc09b0960"
     ],
     [
       "FStar.Math.Lemmas.modulo_distributivity",
@@ -1682,7 +1919,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "266ce86174d2f42d0132edeb6f423f0e"
+      "ef63a01cb823a2048d294eef63fdccc5"
     ],
     [
       "FStar.Math.Lemmas.modulo_addition_lemma",
@@ -1691,21 +1928,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5c2c14c5a588e5e0f77ef1636f3809d2"
-    ],
-    [
-      "FStar.Math.Lemmas.modulo_addition_lemma",
-      2,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "equation_Prims.pos", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "5f7b83323f1d1e0897f35798ace3a251"
+      "1efc1092f54d8a1378076479cb08582f"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_sub",
@@ -1714,7 +1937,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4f180032b90a67b9b197368a18963c16"
+      "29073d7c40d9e8c755583d9cfd800763"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_sub",
@@ -1726,7 +1949,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ba2d472d4bf3614acd597036a2a41eb3"
+      "52fc3ce8e93200a1b59f482f608fb488"
     ],
     [
       "FStar.Math.Lemmas.mod_mult_exact",
@@ -1739,7 +1962,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "5ac498d440abb0d745f6d1b4ac35d003"
+      "9d3f8385710ba8f033bd2e02013aae0f"
     ],
     [
       "FStar.Math.Lemmas.mod_mult_exact",
@@ -1754,7 +1977,34 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "c7a4afe6f7f5ceedbec88bbe4279266e"
+      "d7e62ef7980638d2acb08fca29fac27c"
+    ],
+    [
+      "FStar.Math.Lemmas.mod_mul_div_exact",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.pos",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "9d8568b96d8132c9323365c7deecacc8"
+    ],
+    [
+      "FStar.Math.Lemmas.mod_mul_div_exact",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "a20ed73dde0bb08dc2b4bc80a795fb6e"
     ],
     [
       "FStar.Math.Lemmas.mod_pow2_div2",
@@ -1776,7 +2026,7 @@
         "unit_typing"
       ],
       0,
-      "bd9ed935179989bdc09556c417f00f0f"
+      "a84e4bcd55d9e00442555ad269387830"
     ],
     [
       "FStar.Math.Lemmas.mod_pow2_div2",
@@ -1797,7 +2047,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "56d14879a675d92c36a53f7183b3e600"
+      "ead7defc7e4b2bdbf610b3f805e3518f"
     ],
     [
       "FStar.Math.Lemmas.division_multiplication_lemma",
@@ -1811,7 +2061,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "af4e6046e42f52d1a08a3b35a8e32100"
+      "8332f7fbe55c98a7b6138f379a4e8184"
     ],
     [
       "FStar.Math.Lemmas.division_multiplication_lemma",
@@ -1820,16 +2070,15 @@
       0,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "equation_Prims.pos", "int_inversion", "int_typing",
-        "primitive_Prims.op_Division", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxBool_proj_0",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Division",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "bce44e88a50ece2f25676f1cbe7e5ce0"
+      "27a068fc40081569dc729f9f2d28663c"
     ],
     [
       "FStar.Math.Lemmas.lemma_mul_pos_pos_is_pos",
@@ -1842,7 +2091,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "a847463faaa2efa674542d1e8c224e62"
+      "73a8fac39c92b8022e75f6dd12cd1579"
     ],
     [
       "FStar.Math.Lemmas.lemma_mul_nat_pos_is_nat",
@@ -1857,7 +2106,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "40506e65c4a1d62635757ac678d05ea9"
+      "9f1bc7fd5f9e1dbe54133cfac456855a"
     ],
     [
       "FStar.Math.Lemmas.modulo_division_lemma_0",
@@ -1873,7 +2122,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "3eb14aa51f5b9447918e6e7f2b596ebe"
+      "f2009953ea8f8850685d2878c76ab897"
     ],
     [
       "FStar.Math.Lemmas.modulo_division_lemma",
@@ -1887,7 +2136,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "b1e911a76037b5c1fee40a303ee13ca0"
+      "f8a2ecf65d15172924379af18f23287b"
     ],
     [
       "FStar.Math.Lemmas.modulo_division_lemma",
@@ -1904,7 +2153,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "54e885c8eebcad016875a6718645ef27"
+      "43e47af7c9125b23379cd14e81c92c76"
     ],
     [
       "FStar.Math.Lemmas.modulo_modulo_lemma",
@@ -1918,7 +2167,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "94810a27545a66105cc204f3133c0bc1"
+      "6c8dd1ace01586bfab00f94d1b89dbac"
     ],
     [
       "FStar.Math.Lemmas.modulo_modulo_lemma",
@@ -1934,7 +2183,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "b773b4f5ca99ff9410514538638e8b37"
+      "b7f599a3a844b12ccac18b2697a58d85"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_division_lemma_1",
@@ -1947,7 +2196,7 @@
         "refinement_interpretation_FStar.Math.Lemmas_Tm_refine_47109dd5837e560f72664f314778a899"
       ],
       0,
-      "7f523a1b20180628dd28c54dc6c7c5e5"
+      "d882c9847f6c56605279e4a37e29f058"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_division_lemma_1",
@@ -1963,7 +2212,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "dfbde33720ef2b4cb5da43ee4ead4f50"
+      "e1154f1f12b458e3b43be0abb1f36e5b"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_division_lemma_2",
@@ -1978,7 +2227,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "e6be0e0c16439c6a56d797408c7df65b"
+      "2d580e3c2e60c29a43369699bc6f02e1"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_division_lemma_2",
@@ -1997,7 +2246,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "5b82a8709fd63bd0bc396c11e68bd0f8"
+      "d864179815a0647a33c19eca3644a9d7"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_modulo_lemma_1",
@@ -2006,7 +2255,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a50ca21ffdfc42821d966ebe7125deef"
+      "e356642f570dd560552555cbd94f6fc1"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_modulo_lemma_1",
@@ -2022,7 +2271,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "0f23737a380a7d859d2e83b99bb91f0d"
+      "8b5e13666eaa9e04bba1ef1964d29463"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_modulo_lemma_2",
@@ -2037,7 +2286,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "041b852e550fc725df655b4990c82f58"
+      "38d6af1c297088d6f0e077dc5607f28a"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_modulo_lemma_2",
@@ -2058,7 +2307,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "86142a485191bb566c0a04e884bef54e"
+      "d9b1f7c2b5629ef0243219097fb4107d"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_division_lemma_1",
@@ -2074,7 +2323,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "d91d62cd87a3eb40be59563842ce7664"
+      "4166245c706bfd24f3c4f1ee694c0a96"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_division_lemma_1",
@@ -2088,7 +2337,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a4a1852fa77c592acaaffe357a2dfb8d"
+      "58ca9541e20fba8259afc280635a3ca9"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_division_lemma_2",
@@ -2097,7 +2346,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4565d1fdb0766db7b1e3872f1f241549"
+      "25c87658557ec0c21d59a82456d0854d"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_division_lemma_2",
@@ -2116,7 +2365,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "e9a9474187ee20ccb06a4cb612d48e34"
+      "3cfdc740bc22c84255c730ecbdd37e8a"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_modulo_lemma_1",
@@ -2125,7 +2374,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "01281de75872b28cc633a3f69c31fb1c"
+      "a92a2cac90a1960a324aedfdae647bce"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_modulo_lemma_1",
@@ -2139,7 +2388,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "37bd9cbf0b63fd516c612a8fb01a7d9b"
+      "050795ec2fbf00ef5781c4b423c53f06"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_modulo_lemma_2",
@@ -2148,7 +2397,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7de7fc537c3286974202c47cea99cba2"
+      "1f4ad08349bb78d9396d4ee66ae7438e"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_modulo_lemma_2",
@@ -2167,7 +2416,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "6bfa1c09cc34b94de29f38a5ae40b437"
+      "a583f8e9c37dbd3e7915ebc73e79cec0"
     ],
     [
       "FStar.Math.Lemmas.modulo_add",
@@ -2176,7 +2425,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "89bc03bbad584b38fe9103455b624c23"
+      "c9b01a82b17e1156b9f9bf4386675b1d"
     ],
     [
       "FStar.Math.Lemmas.modulo_add",
@@ -2185,7 +2434,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "19d830743facd10c95107757b9f56afb"
+      "345324cec521bd174aad05543a3d455e"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_twice",
@@ -2197,7 +2446,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "cd0f61a2fd3224336d1b8bde2d88e6b3"
+      "01a553afe7b31317a96ee3a61345c7a5"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_twice",
@@ -2209,7 +2458,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "b11e8c311d6ffe3b4a8681467d5b8882"
+      "aa21b2e5f08ce4baf4207593b0892864"
     ],
     [
       "FStar.Math.Lemmas.modulo_sub",
@@ -2218,7 +2467,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "efe6b04be6b83b4b11d3c222bf87f20d"
+      "203593302a5962038ff9b36c0e87fa73"
     ],
     [
       "FStar.Math.Lemmas.modulo_sub",
@@ -2234,7 +2483,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "3e9616c5e5953dcae27c9414c71633de"
+      "f1a46f091e1f93dc56c60889fd29d9e9"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_injective",
@@ -2244,14 +2493,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "equation_Prims.pos",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1aeeb34ba9b4e2a0b6fd9eb80320daaf"
+      "d1d804705d03d055d0acc7506f656471"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_injective",
@@ -2259,11 +2508,11 @@
       0,
       0,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@query", "primitive_Prims.op_Modulus",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "5202af4dd3b65f5bf2a13eaa36d5e30a"
+      "8ff8488d019e9e8aa29ce42ee6c3be54"
     ],
     [
       "FStar.Math.Lemmas.euclidean_div_axiom",
@@ -2275,151 +2524,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "8594d5bbe984a2654704cc298edaf5d7"
-    ],
-    [
-      "FStar.Math.Lemmas.distributivity_add_left",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b1236dd8b4274c70f8dd5f65f7b7b21e"
-    ],
-    [
-      "FStar.Math.Lemmas.distributivity_add_right",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b010ef02bd53c7b997ab2e1f607518e1"
-    ],
-    [
-      "FStar.Math.Lemmas.distributivity_sub_left",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "fa0d89993ab8790367e1bac238a70816"
-    ],
-    [
-      "FStar.Math.Lemmas.distributivity_sub_right",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4db073a2c13dc78d123e783fdaa8b6ca"
-    ],
-    [
-      "FStar.Math.Lemmas.paren_mul_left",
-      2,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "241452178e96876926f1ea61f0dea43a"
-    ],
-    [
-      "FStar.Math.Lemmas.paren_mul_right",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "ed590498e503a77a0ced5d61b9c93242"
-    ],
-    [
-      "FStar.Math.Lemmas.paren_add_left",
-      2,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "5c93d733f23ff45cbe3d548ab611e32c"
-    ],
-    [
-      "FStar.Math.Lemmas.paren_add_right",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "64cef9b53fc2c8a4c10480de39f0a208"
-    ],
-    [
-      "FStar.Math.Lemmas.addition_is_associative",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "480ff32507d1eacb8436f4161894e64e"
-    ],
-    [
-      "FStar.Math.Lemmas.subtraction_is_distributive",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "678b5fdfc22998dbdcd83f21220c4158"
-    ],
-    [
-      "FStar.Math.Lemmas.swap_add_plus_minus",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "f2937a2d2bd2e73160a862f9b0787a1c"
-    ],
-    [
-      "FStar.Math.Lemmas.swap_mul",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "8c402635aaa5179a5c4ec2bde7299983"
-    ],
-    [
-      "FStar.Math.Lemmas.neg_mul_left",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "661c0ee93dc28755c8c6dba6eab744b6"
-    ],
-    [
-      "FStar.Math.Lemmas.neg_mul_right",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "9c003aa8a5124a017aad88fab1fb046f"
-    ],
-    [
-      "FStar.Math.Lemmas.swap_neg_mul",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "a228914a8efacab593668e7a2dc79685"
-    ],
-    [
-      "FStar.Math.Lemmas.mul_binds_tighter",
-      2,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "fcbd250351c1494a3b67e03a8b4e27ea"
+      "3089a4976382d4d82b16155305dcd973"
     ],
     [
       "FStar.Math.Lemmas.nat_over_pos_is_nat",
@@ -2428,7 +2533,7 @@
       1,
       [ "@query" ],
       0,
-      "429ac71b7af9d5f1cccdea4b7e03bcc9"
+      "9d89b068aa7dfdf459926ab644d1c2e4"
     ],
     [
       "FStar.Math.Lemmas.pow2_double_sum",
@@ -2442,7 +2547,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "963836e12f7e32f7d692e13a2370dbbf"
+      "e6205c40584227361050a5c4b7d20bfd"
     ],
     [
       "FStar.Math.Lemmas.pow2_double_mult",
@@ -2456,21 +2561,20 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c6df362b8b003b2b7a9a97a4e74b1a5b"
+      "da9d3140e305d07312fdbf83d389fbd2"
     ],
     [
       "FStar.Math.Lemmas.pow2_plus",
-      3,
+      4,
       1,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a30135cb4972603c3d0200a9634e18c9"
+      "e9ca4ff5bf0bbfab2ec1fcf5133e855d"
     ],
     [
       "FStar.Math.Lemmas.pow2_minus",
@@ -2485,7 +2589,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f44d1a5beab911d49de904c73ac0d4dc"
+      "a86249e5b53206c1c0557c5e2ff6b634"
     ],
     [
       "FStar.Math.Lemmas.multiply_fractions",
@@ -2494,7 +2598,7 @@
       1,
       [ "@query" ],
       0,
-      "9a51874bab9ef2b0b675ec4fe264ecc2"
+      "13a8b3afa0f992891f7a3c9d8e9534c7"
     ],
     [
       "FStar.Math.Lemmas.modulo_lemma",
@@ -2503,7 +2607,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "80bdeeaf0dd38587c25100f40dbbbc07"
+      "f6f27d9df75616de33e0fd96d1300e26"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_mod",
@@ -2516,7 +2620,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "dd765b69accf3964cffc53004fbe7167"
+      "750364cfcdbc6702a47323a5eb8111e1"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_lt",
@@ -2528,10 +2632,10 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "5d43ff0639a67d5ac2f9f64602e14a39"
+      "15ceee63a6107f34a17a120203abf4ab"
     ],
     [
-      "FStar.Math.Lemmas.lemma_div_lt",
+      "FStar.Math.Lemmas.lemma_div_lt_nat",
       3,
       0,
       1,
@@ -2543,16 +2647,43 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e0c9c0fd91ed3cc6411730bf3c9eff4b"
+      "30b280019715ff123d54c376b1fbb3b0"
     ],
     [
-      "FStar.Math.Lemmas.lemma_eq_trans_2",
+      "FStar.Math.Lemmas.lemma_div_lt",
       3,
       0,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.l_and",
+        "equation_Prims.nat", "equation_Prims.squash", "int_inversion",
+        "l_and-interp", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
       0,
-      "e681cdbb3e1a83db8df91d19bc512a90"
+      "08589d0fcc0cd6406f573b238b8ce7e9"
+    ],
+    [
+      "FStar.Math.Lemmas.small_div",
+      3,
+      0,
+      1,
+      [ "@query" ],
+      0,
+      "17a2a3dea33411990ce75ed4cdac0305"
+    ],
+    [
+      "FStar.Math.Lemmas.small_mod",
+      3,
+      0,
+      1,
+      [ "@query" ],
+      0,
+      "369b0eaa1e58a756a939521d89275e7c"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_0",
@@ -2565,7 +2696,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "b52d51ff9965f99ad99746ec0a75866a"
+      "c9acf3559bd6b6ce26968fc61d00989a"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_1",
@@ -2578,7 +2709,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "efd73eafb267602d0f127e99685bbab0"
+      "76ed285f7b594f2e2d26278864f0319b"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus",
@@ -2591,7 +2722,109 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "7542b35a3619e569465ff449479b78ef"
+      "cf29e30b943b602a43b2e746fd4b63f1"
+    ],
+    [
+      "FStar.Math.Lemmas.add_div_mod_1",
+      2,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "9cc74a8adde8d0acae3c468c158a6e3b"
+    ],
+    [
+      "FStar.Math.Lemmas.sub_div_mod_1",
+      2,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "1283a1555e3e3b750e1f4c8d16a263c6"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_div_mod_plus",
+      3,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "bd588758d0a49a968b2c3c8941598584"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_div_plus",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "416515c6363ee7fa06a46a5a3cdffaf6"
+    ],
+    [
+      "FStar.Math.Lemmas.cancel_mul_div",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2dafaa67b73cca476ac560fafc422144"
+    ],
+    [
+      "FStar.Math.Lemmas.cancel_mul_mod",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "160fdb36069eaf0b61c7d59aef2270da"
+    ],
+    [
+      "FStar.Math.Lemmas.mod_add_both",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "92654ad7313f8071bd93f6d4cb233413"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_mod_add_distr",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "9ae5fdf500c8cde4d143cba18fcf7426"
+    ],
+    [
+      "FStar.Math.Lemmas.lemma_mod_sub_distr",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "7102b4b6ee773f3d836ad2648e90390c"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_sub_0",
@@ -2600,7 +2833,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "10e0637a019be5047fa42fc0bb273581"
+      "08cb9eccbd4c3de1073504bbf7dcd85a"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_sub_1",
@@ -2614,7 +2847,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "3bc1d964ef800e0ee920bd2c9326b9a8"
+      "93b0cb9f65f34e5ebaaa19bbc179e44d"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mul_distr_l_0",
@@ -2627,20 +2860,19 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "13680a7352ecd383a99a9199fcd301ae"
+      "920921161b01008cd5cf0ae411867120"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mul_distr_l",
-      3,
+      4,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.pos",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "36b78bafddb16934bdc0c756b1d78256"
+      "8223be43aacd7ec44e2d96ad7f55c2d2"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mul_distr_r",
@@ -2653,7 +2885,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "24cd2ebe2095cfddb65bacf2f770391f"
+      "8d540af7ca4e42876733bc672301b854"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_injective",
@@ -2663,23 +2895,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "equation_Prims.pos",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ed3ae8980f5512d7778e6e4cd430e6b7"
-    ],
-    [
-      "FStar.Math.Lemmas.lemma_mul_sub_distr",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "30bc793d1c0fedb036d81f0c923a1e01"
+      "79c47a2aa79a6ba07d4615ca886e0d9e"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_exact",
@@ -2692,7 +2916,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "fbe3d279f10b8d6ab0be8a1424400f46"
+      "16d84d48037e5f6c6652871186ca6580"
     ],
     [
       "FStar.Math.Lemmas.div_exact_r",
@@ -2705,7 +2929,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "3c527681b46d96c9d4a8cd618f65e9f2"
+      "a60a49e252d730baf107cd8967dabd3d"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_spec",
@@ -2718,7 +2942,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "5eb391496334f6d9c3f81be32dc856d1"
+      "12efaf1d604f336a0fc63cfbe86c026d"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_spec2",
@@ -2727,14 +2951,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
-        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "equation_Prims.pos",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "815781305d1c87af642e4774db3ed103"
+      "df599d84d8ec117ee1b5b1b828db3467"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_distr_l",
@@ -2747,7 +2968,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "6b1c95a9b78277712d3e7a9d84be2caa"
+      "6a4538e9c7acb92e3a3098ecad022c01"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_distr_r",
@@ -2760,7 +2981,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "fd2cf0a70b85b8451e40306f30a357ae"
+      "0063cbc1acf5540349b396bb9aa953e0"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_mul_distr",
@@ -2773,7 +2994,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "c7b87586752ed5f4b51653ff48ba7e59"
+      "30ac4b2cd3e10bcbac0f1204723f7be8"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_mod",
@@ -2786,7 +3007,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "33964352df5c1b871593a3eb1ef57c1f"
+      "786e17ad856c89aedd307c22ae6cd926"
     ],
     [
       "FStar.Math.Lemmas.euclidean_division_definition",
@@ -2799,7 +3020,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "dc038170f2f977be227eb69a272fc1cf"
+      "c1d51f5fd7c98c683ef78bb1dec68df8"
     ],
     [
       "FStar.Math.Lemmas.modulo_range_lemma",
@@ -2811,7 +3032,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "599c11c41875cf0a446f14095de6ecfe"
+      "c6993879ac3114c17a4f80611388213d"
     ],
     [
       "FStar.Math.Lemmas.small_modulo_lemma_1",
@@ -2820,7 +3041,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2e550367f91ddc25727accc2784279c5"
+      "bff3e500f0b4c3172acce71ae8d30122"
     ],
     [
       "FStar.Math.Lemmas.small_modulo_lemma_2",
@@ -2833,7 +3054,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "065f825c6f88a4a3211a1866ed3cafa0"
+      "013adbc79dcfa387c06dbb3e8fea15ae"
     ],
     [
       "FStar.Math.Lemmas.small_division_lemma_1",
@@ -2842,7 +3063,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9016656986d47b3c86bb0af68297c2e2"
+      "e633cd486846bcb00d982498e7a1ae84"
     ],
     [
       "FStar.Math.Lemmas.small_division_lemma_2",
@@ -2855,7 +3076,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "5ca50575469598af008813c1c31bd555"
+      "da771de3e35503bda547e40364443a38"
     ],
     [
       "FStar.Math.Lemmas.division_propriety",
@@ -2867,7 +3088,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "9e4902e30ae4d6ab892420495adbf11f"
+      "fcad0de6f1b41f72b6d80870bc07b385"
     ],
     [
       "FStar.Math.Lemmas.division_definition_lemma_1",
@@ -2876,7 +3097,7 @@
       0,
       [ "@query" ],
       0,
-      "9ad4b464f040194867a701636465f324"
+      "9680b8a10cff40ed11b32986ac0ab3a0"
     ],
     [
       "FStar.Math.Lemmas.division_definition_lemma_2",
@@ -2885,7 +3106,7 @@
       0,
       [ "@query" ],
       0,
-      "89da295b1469933ca13bc8a2c04e938d"
+      "b80d9b3ffc6f64246cd466af8cff6d4e"
     ],
     [
       "FStar.Math.Lemmas.division_definition",
@@ -2894,7 +3115,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "083ba2889451316a8eb2764c5a4c3397"
+      "7d2c2b45074d5f6fec54c613e0f73fa5"
     ],
     [
       "FStar.Math.Lemmas.multiple_division_lemma",
@@ -2903,7 +3124,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8e55bc1051e2272c358667b231050e1f"
+      "954e5a39808b3b5f9a806e943821dbe7"
     ],
     [
       "FStar.Math.Lemmas.multiple_modulo_lemma",
@@ -2912,7 +3133,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e8bc9def4459d9497bb32b48788c1b5e"
+      "5b9633d5799ddff28bb84256251ec17e"
     ],
     [
       "FStar.Math.Lemmas.division_addition_lemma",
@@ -2925,7 +3146,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1acbe8f63c33b208b538cb178d084402"
+      "d5a2d06481a020af5adabc79f7b73588"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_le_",
@@ -2937,7 +3158,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "6a86503f132b34b102936ac863ad6d54"
+      "cf5021d1289bf3ddb7491e152eb4b4c3"
     ],
     [
       "FStar.Math.Lemmas.lemma_div_le",
@@ -2949,7 +3170,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ef88c3efb88015c908879b9b1f21576a"
+      "e7830149f86aa05fe57cdf51ae4f0444"
     ],
     [
       "FStar.Math.Lemmas.division_sub_lemma",
@@ -2962,7 +3183,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1aec37112d4f1600a0d4f155ee032a46"
+      "787a3a96c2a6d2d36c28e09f2943cc7c"
     ],
     [
       "FStar.Math.Lemmas.modulo_distributivity",
@@ -2975,20 +3196,21 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "14a319af7fdf62793b6f2ac6911e577e"
+      "d0659d2b6952f6981d121efd5e5eb1f9"
     ],
     [
       "FStar.Math.Lemmas.modulo_addition_lemma",
-      3,
+      2,
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.pos",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.pos", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "bc04c2b42db14c98b1366819dff9eafe"
+      "bd1b02dd7f48f6c415fa0541cea37cf4"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_sub",
@@ -3001,7 +3223,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "6b40ca4068717a5e0ba115a8c09e967e"
+      "9c46a657c9edc0b22c4023cc8273d843"
     ],
     [
       "FStar.Math.Lemmas.mod_mult_exact",
@@ -3014,7 +3236,21 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1f0ed91b8ec6782994f07debec058e7f"
+      "12f6a138a1a940b4cfb63c8a998ec00e"
+    ],
+    [
+      "FStar.Math.Lemmas.mod_mul_div_exact",
+      3,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.pos",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "04c2b0f638a039d0838f9a0e846c7e03"
     ],
     [
       "FStar.Math.Lemmas.mod_pow2_div2",
@@ -3034,7 +3270,7 @@
         "unit_typing"
       ],
       0,
-      "0d21795b2c9d14e67911578f8094804b"
+      "73f03f3e018c4412178acfab0360d2d2"
     ],
     [
       "FStar.Math.Lemmas.division_multiplication_lemma",
@@ -3048,7 +3284,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "11720ae4fc2ce90eb78701bd78f0ed53"
+      "2d4fb5207d80c6261a6be6017468a48e"
     ],
     [
       "FStar.Math.Lemmas.modulo_division_lemma_0",
@@ -3062,7 +3298,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "54ee157216f3dec1ab53b606e4cd0c8e"
+      "0e03023e848cdbc0f378e605e8d91e96"
     ],
     [
       "FStar.Math.Lemmas.modulo_division_lemma",
@@ -3076,7 +3312,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "8e3255539e81efd8c76c6eb72819c1e3"
+      "1990c47fddfbac686fe2226382abdefd"
     ],
     [
       "FStar.Math.Lemmas.modulo_modulo_lemma",
@@ -3090,7 +3326,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "cc1f25ad3b4d05514a75dff9f6653652"
+      "c5826ef603a7de0fb0a63e88dda5ca05"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_division_lemma_1",
@@ -3103,7 +3339,7 @@
         "refinement_interpretation_FStar.Math.Lemmas_Tm_refine_47109dd5837e560f72664f314778a899"
       ],
       0,
-      "b48f8252aac86c8e591c23f8e91e7fa4"
+      "d8a4c91b4d3b6360fb9437eecce866a4"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_division_lemma_2",
@@ -3118,7 +3354,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "c18c92352126b3bf16beebf7ae2d8773"
+      "fdb4c022dd5a06c2aa5e3e4d1da1397c"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_modulo_lemma_1",
@@ -3132,7 +3368,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "bab616417680bac5768b0ad023a37982"
+      "04ece93899034c89d00691f18544e4e9"
     ],
     [
       "FStar.Math.Lemmas.pow2_multiplication_modulo_lemma_2",
@@ -3147,7 +3383,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "0e293278a355c89513fb5be0a0ca53c2"
+      "149d531289b66c6ddb9ffc10a59c6bb2"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_division_lemma_1",
@@ -3163,7 +3399,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "7ec9d3baab14e6c5a2a32f5bf6e49e1a"
+      "18a03f4ffc175d7e41c7d0ac54082159"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_division_lemma_2",
@@ -3175,7 +3411,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9d619b471f8586dbedad0ef963c688ec"
+      "fd167a6a2f3bf1a36ebfc93e2564ca2a"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_modulo_lemma_1",
@@ -3188,7 +3424,7 @@
         "refinement_interpretation_Prims_Tm_refine_7075614a0e8c0bdbec6de0d0ef7f1280"
       ],
       0,
-      "9fbdd451d99c5c8bd570fa8df7036581"
+      "090c46809d32d1b8cfc84f556a7db25f"
     ],
     [
       "FStar.Math.Lemmas.pow2_modulo_modulo_lemma_2",
@@ -3201,7 +3437,7 @@
         "refinement_interpretation_Prims_Tm_refine_7075614a0e8c0bdbec6de0d0ef7f1280"
       ],
       0,
-      "157f28ec6013ae9638e25a1852c09421"
+      "7cee327c7b4f2b6670ae7c94cf9faabb"
     ],
     [
       "FStar.Math.Lemmas.modulo_add",
@@ -3214,7 +3450,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "59295af60d5339919fa41ad5de4fd8c2"
+      "9d831539d8161c0a8187715707141522"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_twice",
@@ -3226,7 +3462,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "b37302618c7e303a472e72ba84f69878"
+      "01e7c1f08ce5808473f4b77cde25fddf"
     ],
     [
       "FStar.Math.Lemmas.modulo_sub",
@@ -3239,7 +3475,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "2bc6c07e3ca07274632db7f87b73ad95"
+      "b4e0c37b1ba7c333467cfabb3a73a5b9"
     ],
     [
       "FStar.Math.Lemmas.lemma_mod_plus_injective",
@@ -3249,14 +3485,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "equation_Prims.pos",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "f119034f805096c12322cef3f87adc2f"
+      "7ef35f3a838ea3c1c2a20a19f1ed6769"
     ]
   ]
 ]

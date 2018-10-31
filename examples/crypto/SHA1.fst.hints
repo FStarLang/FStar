@@ -10,7 +10,7 @@
         "@query", "equation_SHA1.keysize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "55bd41ad6d65cd9b583dedad4bb57ff6"
+      "f9078e2bda0dbd62aa0f05f883555ed1"
     ],
     [
       "SHA1.sample",
@@ -19,20 +19,11 @@
       1,
       [ "@query" ],
       0,
-      "2bb684735b5bc1e2d9329001c27829c6"
+      "25e6bbc4bfe9457a7738bc2f1eb4f034"
     ],
     [
       "SHA1.sha1",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "98557e910ef1e4d17b66ee5970f396d6"
-    ],
-    [
-      "SHA1.sha1",
-      2,
       2,
       1,
       [
@@ -40,7 +31,7 @@
         "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize"
       ],
       0,
-      "335a1c9d74fc4b3e948da313693a26c6"
+      "52fe1d6a0e3a3bcde785fe12cf36929c"
     ],
     [
       "SHA1.hmac_sha1",
@@ -52,7 +43,42 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "fcc34b220afb2dae4ec155dd19c5657e"
+      "ded054c2d2ea91e7bb31c590c0814177"
+    ],
+    [
+      "SHA1.key",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_SHA1.keysize", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "25c205d4f23e87a35beb5699a9837b2f"
+    ],
+    [
+      "SHA1.sha1",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_CoreCrypto.SHA1",
+        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize"
+      ],
+      0,
+      "fdd6de87e318cc0bc80e55d57087fe38"
+    ],
+    [
+      "SHA1.hmac_sha1",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_SHA1.blocksize", "equation_SHA1.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "cc98a5187cf71a7877d716f8f306bdc6"
     ]
   ]
 ]

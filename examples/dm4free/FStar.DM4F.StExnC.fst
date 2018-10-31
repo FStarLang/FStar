@@ -35,7 +35,7 @@ let raise (a:Type) : stexnc a = fun s0 -> (None, (s0, 1))
  * Define the new effect using DM4F. We don't mark it as reflectable
  * so we know the invariant of exception-counting is enforced
  *)
-reifiable new_effect {
+total reifiable new_effect {
   STEXNC: a:Type -> Effect
   with repr    = stexnc
      ; return  = return
