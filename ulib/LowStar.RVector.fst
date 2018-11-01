@@ -10,7 +10,6 @@ open LowStar.Vector
 module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-module MHS = FStar.Monotonic.HyperStack
 module S = FStar.Seq
 module B = LowStar.Buffer
 module V = LowStar.Vector
@@ -120,7 +119,7 @@ val rs_elems_inv_live_region:
   i:nat -> j:nat{i <= j && j <= S.length rs} ->
   Lemma (requires (rs_elems_inv rg h rs i j))
 	(ensures (V.forall_seq rs i j
-		   (fun r -> MHS.live_region h (Rgl?.region_of rg r))))
+		   (fun r -> HS.live_region h (Rgl?.region_of rg r))))
 let rec rs_elems_inv_live_region #a rg h rs i j =
   if i = j then ()
   else (Rgl?.r_inv_reg rg h (S.index rs (j - 1));
@@ -132,7 +131,7 @@ val rv_elems_inv_live_region:
   i:uint32_t -> j:uint32_t{i <= j && j <= V.size_of rv} ->
   Lemma (requires (rv_elems_inv h rv i j))
 	(ensures (V.forall_ h rv i j
-		   (fun r -> MHS.live_region h (Rgl?.region_of rg r))))
+		   (fun r -> HS.live_region h (Rgl?.region_of rg r))))
 let rv_elems_inv_live_region #a #rg h rv i j =
   rs_elems_inv_live_region rg h (V.as_seq h rv) (U32.v i) (U32.v j)
 
@@ -674,10 +673,10 @@ val alloc_:
       	      (S.create (U32.v cidx) (Ghost.reveal (Rgl?.irepr rg))) /\
       // the loop invariant for this function
       V.forall_ h1 rv 0ul cidx
-	(fun r -> MHS.fresh_region (Rgl?.region_of rg r) h0 h1 /\
+	(fun r -> HS.fresh_region (Rgl?.region_of rg r) h0 h1 /\
 		  Rgl?.r_alloc_p rg r) /\
-      Set.subset (Map.domain (MHS.get_hmap h0))
-		 (Map.domain (MHS.get_hmap h1))))
+      Set.subset (Map.domain (HS.get_hmap h0))
+		 (Map.domain (HS.get_hmap h1))))
     (decreases (U32.v cidx))
 #reset-options "--z3rlimit 20"
 let rec alloc_ #a #rg rv cidx =
@@ -749,7 +748,7 @@ val alloc:
     (ensures (fun h0 rv h1 ->
       modifies (V.loc_vector rv) h0 h1 /\
       rv_inv h1 rv /\
-      MHS.fresh_region (V.frameOf rv) h0 h1 /\
+      HS.fresh_region (V.frameOf rv) h0 h1 /\
       V.size_of rv = len /\
       V.forall_all h1 rv (fun r -> Rgl?.r_alloc_p rg r) /\
       S.equal (as_seq h1 rv)

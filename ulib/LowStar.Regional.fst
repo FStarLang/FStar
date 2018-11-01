@@ -8,7 +8,6 @@ open LowStar.Modifies
 module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-module MHS = FStar.Monotonic.HyperStack
 
 /// Regionality
 
@@ -32,7 +31,7 @@ noeq type regional a =
     r_inv_reg:
       (h:HS.mem -> v:a ->
       Lemma (requires (r_inv h v))
-	    (ensures (MHS.live_region h (region_of v)))) ->
+	    (ensures (HS.live_region h (region_of v)))) ->
 
     // A representation type of `a` and a corresponding conversion function
     repr: Type0 ->

@@ -7,7 +7,6 @@ open LowStar.Modifies
 module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-module MHS = FStar.Monotonic.HyperStack
 module B = LowStar.Buffer
 module S = FStar.Seq
 
@@ -182,8 +181,8 @@ unfold let frameOf #a vec =
 
 unfold val hmap_dom_eq: h0:HS.mem -> h1:HS.mem -> GTot Type0
 unfold let hmap_dom_eq h0 h1 =
-  Set.equal (Map.domain (MHS.get_hmap h0))
-	    (Map.domain (MHS.get_hmap h1))
+  Set.equal (Map.domain (HS.get_hmap h0))
+	    (Map.domain (HS.get_hmap h1))
 
 val modifies_as_seq:
   #a:Type -> vec:vector a -> dloc:loc ->
@@ -247,8 +246,8 @@ val alloc_rid:
 	   frameOf vec = rid /\ 
 	   live h1 vec /\ freeable vec /\
 	   modifies loc_none h0 h1 /\
-	   Set.equal (Map.domain (MHS.get_hmap h0))
-                     (Map.domain (MHS.get_hmap h1)) /\
+	   Set.equal (Map.domain (HS.get_hmap h0))
+                     (Map.domain (HS.get_hmap h1)) /\
 	   size_of vec = len /\
 	   S.equal (as_seq h1 vec) (S.create (U32.v len) v)))
 let alloc_rid #a len v rid =
@@ -264,8 +263,8 @@ val alloc:
 	   frameOf vec = HH.root /\
 	   live h1 vec /\ freeable vec /\
 	   modifies loc_none h0 h1 /\
-	   Set.equal (Map.domain (MHS.get_hmap h0))
-                     (Map.domain (MHS.get_hmap h1)) /\
+	   Set.equal (Map.domain (HS.get_hmap h0))
+                     (Map.domain (HS.get_hmap h1)) /\
 	   size_of vec = len /\
 	   S.equal (as_seq h1 vec) (S.create (U32.v len) v)))
 let alloc #a len v =
@@ -281,8 +280,8 @@ val alloc_reserve:
 	 (ensures (fun h0 vec h1 -> 
 	   frameOf vec = rid /\ live h1 vec /\ freeable vec /\
 	   modifies loc_none h0 h1 /\
-	   Set.equal (Map.domain (MHS.get_hmap h0))
-                     (Map.domain (MHS.get_hmap h1)) /\
+	   Set.equal (Map.domain (HS.get_hmap h0))
+                     (Map.domain (HS.get_hmap h1)) /\
 	   size_of vec = 0ul /\
 	   S.equal (as_seq h1 vec) S.empty))
 let alloc_reserve #a len ia rid =

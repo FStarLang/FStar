@@ -9,7 +9,6 @@ open LowStar.RVector
 module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-module MHS = FStar.Monotonic.HyperStack
 module S = FStar.Seq
 module B = LowStar.Buffer
 module V = LowStar.Vector
@@ -36,7 +35,7 @@ val buffer_r_inv_reg:
   #a:Type -> len:UInt32.t{len > 0ul} ->
   h:HS.mem -> v:B.buffer a ->
   Lemma (requires (buffer_r_inv len h v))
-	(ensures (MHS.live_region h (buffer_region_of v)))
+	(ensures (HS.live_region h (buffer_region_of v)))
 let buffer_r_inv_reg #a len h v = ()
 
 val buffer_repr: a:Type0 -> len:nat{len > 0} -> Type0
@@ -79,8 +78,8 @@ val buffer_r_alloc:
   HST.ST (b:B.buffer a)
     (requires (fun h0 -> true))
     (ensures (fun h0 v h1 -> 
-      Set.subset (Map.domain (MHS.get_hmap h0))
-                 (Map.domain (MHS.get_hmap h1)) /\
+      Set.subset (Map.domain (HS.get_hmap h0))
+                 (Map.domain (HS.get_hmap h1)) /\
       modifies loc_none h0 h1 /\
       buffer_r_alloc_p v /\
       buffer_r_inv len h1 v /\
@@ -154,7 +153,7 @@ val vector_r_inv_reg:
   #a:Type -> #rg:regional a -> 
   h:HS.mem -> v:rvector rg ->
   Lemma (requires (vector_r_inv h v))
-	(ensures (MHS.live_region h (vector_region_of v)))
+	(ensures (HS.live_region h (vector_region_of v)))
 let vector_r_inv_reg #a #rg h v = ()    
 
 val vector_repr: #a:Type0 -> rg:regional a -> Tot Type0
@@ -195,8 +194,8 @@ val vector_r_alloc:
   HST.ST (v:rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 v h1 -> 
-      Set.subset (Map.domain (MHS.get_hmap h0))
-                 (Map.domain (MHS.get_hmap h1)) /\
+      Set.subset (Map.domain (HS.get_hmap h0))
+                 (Map.domain (HS.get_hmap h1)) /\
       modifies loc_none h0 h1 /\
       vector_r_alloc_p v /\
       vector_r_inv h1 v /\
