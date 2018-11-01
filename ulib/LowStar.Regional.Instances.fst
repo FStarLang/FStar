@@ -203,9 +203,7 @@ val vector_r_alloc:
       vector_r_repr h1 v == Ghost.reveal (vector_irepr rg)))
 let vector_r_alloc #a #rg r =
   let nrid = HST.new_region r in
-  let r_alloc = Rgl?.r_alloc rg in
-  let ia = r_alloc nrid in
-  V.alloc_reserve 1ul ia r
+  V.alloc_reserve 1ul (Rgl?.dummy rg) r
 
 val vector_r_free:
   #a:Type -> #rg:regional a -> v:rvector rg ->
