@@ -225,7 +225,6 @@ let file_of_dep_aux
           //then d is only present if either an interface or an implementation exist
           //the previous case already established that the interface doesn't exist
           //     since if the implementation was on the command line, it must exist because of option validation
-          assert false; //unreachable
           raise_err (Errors.Fatal_MissingImplementation, BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
         | Some f -> maybe_add_suffix f
 
@@ -855,6 +854,7 @@ let topological_dependences_of
         match d with
         | PreferInterface m
             when List.contains m friends ->
+          widened := true;
           FriendImplementation m
         | _ -> d)
     in
