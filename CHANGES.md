@@ -54,10 +54,10 @@ Guidelines for the changelog:
 
 ## Extraction
 
-   * Cross-module inlining: Declarations in an interface marked with
-     the `inline_for_extraction` qualifier have their definitions
-     inlined in client code. Currently guarded by the --cmi flag, this
-     will soon be the default behavior.
+   * Cross-module inlining: Declarations in interfaces marked with the
+     `inline_for_extraction` qualifier have their definitions inlined
+     in client code. Currently guarded by the --cmi flag, this will
+     soon be the default behavior.
 
 # Version 0.9.6.0
 
