@@ -38,11 +38,13 @@ let m #sl (#t:lattice_element sl) #s (x:secret_int t s)
   = u (reveal x)
 
 /// `hide` is the inverse of `reveal`, proving that `secret_int` is injective
+/// Any integer within bounds can be promoted to a secret integer;
+/// we don't mean to enforce integrity
 val hide (#sl:sl)
          (#l:lattice_element sl)
          (#s:sw)
          (x:int{within_bounds s x})
-  : GTot (secret_int l s)
+  : Tot (secret_int l s)
 
 val reveal_hide (#sl:sl)
                 (#l:lattice_element sl)
@@ -87,6 +89,13 @@ val addition_mod (#sl:sl)
                  (x : secret_int l sw)
                  (y : secret_int l sw)
     : Tot (z:secret_int l sw { m z == m x +% m y } )
+
+val multiplication_mod (#sl:sl)
+                 (#l:lattice_element sl)
+                 (#sw: _ {Unsigned? sw /\ width_of_sw sw <> W128})
+                 (x : secret_int l sw)
+                 (y : secret_int l sw)
+    : Tot (z:secret_int l sw { m z == m x *% m y } )
 
 /// If we like this style, I will proceed to implement a lifting of
 /// the rest of the constant-time integers over secret integers
@@ -150,7 +159,7 @@ let as_public (#q:qual{Public? q}) (x:t q)
 
 [@mark_for_norm]
 unfold
-let ( + ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
+let ( +! ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
     : Tot (t q)
     = match q with
       | Public s -> as_public x + as_public y
@@ -158,13 +167,23 @@ let ( + ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
 
 [@mark_for_norm]
 unfold
-let ( +% ) (#q:qual{norm (Unsigned? (q2s q) /\ width_of_sw (q2s q) <> W128)})
+let ( +% ) (#q:qual{norm (Unsigned? (q2s q) /\ (Secret? q ==> width_of_sw (q2s q) <> W128))})
            (x:t q)
            (y:t q)
     : Tot (t q)
     = match q with
       | Public s -> as_public x +% as_public y
       | Secret l s -> as_secret x `addition_mod` as_secret y
+
+[@mark_for_norm]
+unfold
+let ( *% ) (#q:qual{norm (Unsigned? (q2s q) /\ width_of_sw (q2s q) <> W128)})
+           (x:t q)
+           (y:t q)
+    : Tot (t q)
+    = match q with
+      | Public s -> as_public x *% as_public y
+      | Secret l s -> as_secret x `multiplication_mod` as_secret y
 
 let test (x:int) (y:int) = x + y
 
@@ -180,4 +199,4 @@ let hacl_lattice = Ghost.hide (SemiLattice () (fun _ _ -> ()))
 let hacl_label : lattice_element hacl_lattice = Ghost.hide ()
 let s_uint32 = t (Secret hacl_label (Unsigned W32))
 let test5 (x:s_uint32) (y:s_uint32) = x +% y
-let test6 (x:s_uint32) (y:s_uint32{ok (+) (i x) (i y)}) = x + y
+let test6 (x:s_uint32) (y:s_uint32{ok (+) (i x) (i y)}) = x +! y

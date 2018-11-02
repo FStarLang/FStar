@@ -29,7 +29,7 @@ let reveal (#sl:sl)
 
 /// `hide` is the inverse of `reveal`, proving that `secret_int` is injective
 let hide (#sl:sl) (#l:lattice_element sl) (#s:sw) (x:int{within_bounds s x})
-  : GTot (secret_int l s)
+  : Tot (secret_int l s)
   = return l (u x)
 
 let reveal_hide #sl #l #s x = ()
@@ -63,3 +63,13 @@ let addition_mod (#sl:sl)
     = a <-- x;
       b <-- y;
       return l (a +% b)
+
+let multiplication_mod (#sl:sl)
+                 (#l:lattice_element sl)
+                 (#sw: _ {Unsigned? sw /\ width_of_sw sw <> W128})
+                 (x : secret_int l sw)
+                 (y : secret_int l sw)
+    : Tot (z:secret_int l sw { m z == m x *% m y } )
+    = a <-- x;
+      b <-- y;
+      return l (a *% b)
