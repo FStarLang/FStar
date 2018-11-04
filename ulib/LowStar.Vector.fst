@@ -1,6 +1,5 @@
 module LowStar.Vector
 
-open FStar.All
 open FStar.Integers
 open LowStar.Modifies
 

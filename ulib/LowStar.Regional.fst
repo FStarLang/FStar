@@ -1,8 +1,5 @@
 module LowStar.Regional
 
-open FStar.All
-open FStar.Integers
-open FStar.Classical
 open LowStar.Modifies
 
 module HH = FStar.Monotonic.HyperHeap
@@ -10,8 +7,6 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
 /// Regionality
-
-type erid = rid:HH.rid{HST.is_eternal_region rid}
 
 // Motivation: we want to ensure that all stateful operations for a value of
 // type `a` are within the `region_of` the value.
@@ -56,7 +51,7 @@ noeq type regional a =
     // An allocation operation. We might have several ways of initializing a
     // given target type `a`; then multiple typeclass instances should be
     // defined, and each of them can be used properly.
-    r_alloc: (r:erid ->
+    r_alloc: (r:HST.erid ->
       HST.ST a
 	(requires (fun h0 -> True))
 	(ensures (fun h0 v h1 ->

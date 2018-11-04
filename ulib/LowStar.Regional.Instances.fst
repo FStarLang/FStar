@@ -1,6 +1,5 @@
 module LowStar.Regional.Instances
 
-open FStar.All
 open FStar.Integers
 open LowStar.Buffer
 open LowStar.Regional
@@ -74,7 +73,7 @@ let buffer_r_alloc_p #a v =
   True
 
 val buffer_r_alloc:
-  #a:Type -> ia:a -> len:UInt32.t{len > 0ul} -> r:erid ->
+  #a:Type -> ia:a -> len:UInt32.t{len > 0ul} -> r:HST.erid ->
   HST.ST (b:B.buffer a)
     (requires (fun h0 -> true))
     (ensures (fun h0 v h1 -> 
@@ -190,7 +189,7 @@ let vector_r_alloc_p #a #rg v =
   V.size_of v = 0ul
 
 val vector_r_alloc: 
-  #a:Type -> #rg:regional a -> r:erid ->
+  #a:Type -> #rg:regional a -> r:HST.erid ->
   HST.ST (v:rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 v h1 -> 

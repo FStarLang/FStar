@@ -1,8 +1,7 @@
 module LowStar.RVector
 
-open FStar.All
-open FStar.Integers
 open FStar.Classical
+open FStar.Integers
 open LowStar.Modifies
 open LowStar.Regional
 open LowStar.Vector
@@ -709,7 +708,7 @@ let rec alloc_ #a #rg rv cidx =
 
 val alloc_rid:
   #a:Type0 -> rg:regional a ->
-  len:uint32_t{len > 0ul} -> rid:erid ->
+  len:uint32_t{len > 0ul} -> rid:HST.erid ->
   HST.ST (rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 rv h1 ->
@@ -728,7 +727,7 @@ let alloc_rid #a rg len rid =
 
 val alloc_reserve:
   #a:Type0 -> rg:regional a ->
-  len:uint32_t{len > 0ul} -> rid:erid ->
+  len:uint32_t{len > 0ul} -> rid:HST.erid ->
   HST.ST (rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 rv h1 ->
