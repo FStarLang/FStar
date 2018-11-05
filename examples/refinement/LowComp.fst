@@ -96,16 +96,16 @@ let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp) =
                   well_formed h' ls /\
                   (let s0 = lstate_as_state h ls in
                    let (x, s1) = c s0 in
-                   h' == state_as_lstate h ls s1 /\ x == r )))
+                   h' == state_as_lstate h ls s1 /\ x == r)))
 
-let lcomp (a : Type) pre post (c : comp_p a pre post) = 
-  lcomp_wp a 
+let lcomp (a : Type) pre post (c : comp_p a pre post) =
+  lcomp_wp a
     (fun s0 p -> pre s0 /\ (forall r s1. post s0 r s1 ==> p (r, s1))) c
 
 //Rather than get into trouble with applying `c` directly in a context
 //where we have to think about the VC of the continuation,
 //let's factor this into a `run`, which makes things a lot more predictable
-let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * state) = c s0
+let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : Tot (a * state) = c s0
 
 type lwp a = lstate -> (mem -> (a * mem -> Type) -> Type)
 
@@ -140,9 +140,22 @@ let l_eq #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
          (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) =
   lwp_eq (as_lwp c1) (as_lwp c2)
 
+// GM, Oct 23 2018: This looks very shady to me now. `l_eq` completely ignores `lc1` and `lc2`.
 assume val l_eq_axiom : (#a:Type) -> (#wp1:hwp_mon a) -> (#c1:comp_wp a wp1) -> (lc1: lcomp_wp a wp1 c1) ->
                         (#wp2:hwp_mon a) -> (#c2:comp_wp a wp2) -> (lc2 : lcomp_wp a wp2 c2) ->
                         Lemma (requires (l_eq lc1 lc2)) (ensures (lc1 === lc2))
+
+// Guido
+   let gh1 : comp_wp int (fun _ _ -> False) = return_elab 1
+   let gh2 : comp_wp int (fun _ _ -> False) = return_elab 2
+
+   let gl1 : lcomp_wp int (fun _ _ -> False) gh1 = fun ls -> 1
+   let gl2 : lcomp_wp int (fun _ _ -> False) gh2 = fun ls -> 2
+
+   // GM, Oct 23 2018: Is this OK? I don't think so, but also not sure it implies a contradiction.
+   let test () : Lemma (gl1 == gl2) =
+     l_eq_axiom #int #(fun _ _ -> False) #gh1 gl1 #(fun _ _ -> False) #gh2 gl2
+// /Guido
 
 // Lifting of high programs to low programs
 let morph (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c =
@@ -316,16 +329,16 @@ let rec lfor (#wp : int -> hwp_mon unit) (#f : (i:int) -> comp_wp unit (wp i)) (
 
 let rec lfor' (inv : state -> int -> Type0) (fh : (i:int) -> comp_p unit  (fun h0 -> inv h0 i) (fun h0 _ h1 -> inv h1 (i + 1)))
               (f : (i:int) -> lcomp unit (fun h0 -> inv h0 i)
-                                      (fun h0 _ h1 -> inv h1 (i + 1)) (fh i)) 
+                                      (fun h0 _ h1 -> inv h1 (i + 1)) (fh i))
               (lo : int) (hi : int{lo <= hi}) :
           Tot (lcomp unit (requires (fun h0 -> inv h0 lo))
                           (ensures (fun h0 _ h1 -> inv h1 hi))
-                          (for_elab' inv fh lo hi)) (decreases (hi - lo)) = 
+                          (for_elab' inv fh lo hi)) (decreases (hi - lo)) =
           if lo = hi then (lreturn ())
-          else 
-          begin 
-            let k () = lfor' inv fh f (lo + 1) hi in 
-            lbind (f lo) (fun _ -> 
+          else
+          begin
+            let k () = lfor' inv fh f (lo + 1) hi in
+            lbind (f lo) (fun _ ->
             k ())
           end
 
@@ -460,7 +473,6 @@ let morph_read (wp : hwp_mon mint) (c : comp_wp mint wp) (i : nat{i < 2}) :
                       #wp #(cast wp (hread_elab i)) (lread' i) in
   ()
 
-
 let morph_write (wp : hwp_mon unit) (c : comp_wp unit wp) (i : nat{i < 2}) (v : mint) :
   Lemma
     (requires (c === hwrite_elab i v))
@@ -519,7 +531,7 @@ let morph_for' (inv : state -> int -> Type0) (f : (i:int) -> comp_p unit (fun h0
                (wp : hwp_mon unit) (c : comp_wp unit wp) :
   Lemma (requires (c === for_elab' inv f lo hi))
         (ensures (for_inv' inv f lo hi c;
-                  morph wp c == lfor' inv f (fun i -> morph _ (f i)) lo hi)) = 
+                  morph wp c == lfor' inv f (fun i -> morph _ (f i)) lo hi)) =
   let p = for_inv' inv f lo hi c in
   assert (l_eq #unit
                #wp #(cast wp (for_elab' inv f lo hi)) (morph wp (cast wp (for_elab' inv f lo hi)))
@@ -531,8 +543,8 @@ let morph_for' (inv : state -> int -> Type0) (f : (i:int) -> comp_p unit (fun h0
                       (lfor' inv f (fun i -> morph _ (f i)) lo hi)) in
 
   ()
-    
-  
+
+
 let morph_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
     (wp2 : hwp_mon a) (c2 : comp_wp a wp2)
     (wp : hwp_mon a) (c : comp_wp a wp):

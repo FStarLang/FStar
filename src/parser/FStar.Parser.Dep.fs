@@ -113,7 +113,7 @@ let dep_to_string = function
     | UseInterface f -> "UseInterface " ^ f
     | PreferInterface f -> "PreferInterface " ^ f
     | UseImplementation f -> "UseImplementation " ^ f
-    | FriendImplementation f -> "UseImplementation " ^ f
+    | FriendImplementation f -> "FriendImplementation " ^ f
 type dependences = list<dependence>
 let empty_dependences = []
 type dependence_graph = //maps file names to the modules it depends on
@@ -123,10 +123,11 @@ type deps = {
     file_system_map:files_for_module_name;   //an abstraction of the file system
     cmd_line_files:list<file_name>;          //all command-line files
     all_files:list<file_name>;               //all files
-    interfaces_with_inlining:list<file_name> //interfaces that use `inline_for_extraction` require inlining
+    interfaces_with_inlining:list<module_name> //interfaces that use `inline_for_extraction` require inlining
 }
 let deps_try_find (Deps m) k = BU.smap_try_find m k
-let deps_add_dep (Deps m) k v = BU.smap_add m k v
+let deps_add_dep (Deps m) k v =
+  BU.smap_add m k v
 let deps_keys (Deps m) = BU.smap_keys m
 let deps_empty () = Deps (BU.smap_create 41)
 let mk_deps dg fs c a i = {
@@ -224,7 +225,6 @@ let file_of_dep_aux
           //then d is only present if either an interface or an implementation exist
           //the previous case already established that the interface doesn't exist
           //     since if the implementation was on the command line, it must exist because of option validation
-          assert false; //unreachable
           raise_err (Errors.Fatal_MissingImplementation, BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
         | Some f -> maybe_add_suffix f
 
@@ -252,7 +252,7 @@ let print_graph (graph:dependence_graph) =
           let r s = replace_char s '.' '_' in
           let print dep =
             Util.format2 "  \"%s\" -> \"%s\""
-                (r k)
+                (r (lowercase_module_name k))
                 (r (module_name_of_dep dep))
           in
           List.map print deps)
@@ -791,6 +791,10 @@ let topological_dependences_of
             * dependencies. Otherwise, the map only contains its direct dependencies. *)
         all_friends, all_files
     | White ->
+        if Options.debug_any()
+        then BU.print2 "Visiting %s: direct deps are %s\n"
+                filename
+                (String.concat ", " (List.map dep_to_string direct_deps));
         (* Unvisited. Compute. *)
         deps_add_dep dep_graph filename (direct_deps, Gray);
         let all_friends, all_files =
@@ -803,8 +807,18 @@ let topological_dependences_of
         in
         (* Mutate the graph to mark the node as visited *)
         deps_add_dep dep_graph filename (direct_deps, Black);
+        if Options.debug_any()
+        then BU.print1 "Adding %s\n" filename;
         (* Also build the topological sort (Tarjan's algorithm). *)
-        List.filter (function FriendImplementation _ -> true | _ -> false) direct_deps
+        List.collect
+          (function | FriendImplementation m -> [m]
+                    | d ->
+                      if for_extraction &&
+                         Options.cmi() &&
+                         List.contains (module_name_of_dep d) interfaces_needing_inlining
+                      then [module_name_of_dep d]
+                      else [])
+          direct_deps
         @all_friends,
         filename :: all_files
     and all_friend_deps dep_graph cycle all_friends filenames =
@@ -814,22 +828,34 @@ let topological_dependences_of
                 all_friends
                 filenames
     in
-    let friends, _ =
+    (* We compute the file list in two phases:
+
+        1. The first traversal encounters all friend and
+           inline_for_extraction modules in the entire dependence
+           graph. Call this the `friends` module list below.
+
+        2. Then, we alter the dependences to turn every occurrence of
+           a interface dependence of a friend/inline module into an
+           implementation dependence.
+
+        3. A second traversal now collects all the files in dependence
+           order
+    *)
+    if Options.debug_any()
+    then BU.print_string "==============Phase1==================\n";
+    let friends, all_files_0 =
         all_friend_deps (dep_graph_copy dep_graph) [] ([], []) root_files
     in
+    if Options.debug_any()
+    then BU.print1 "Phase1 complete: all_files = %s\n" (String.concat ", " all_files_0);
     let widened = BU.mk_ref false in
     let widen_deps friends deps =
         deps |> List.map (fun d ->
         match d with
-        | PreferInterface f
-            when Options.cmi() && for_extraction ->
-            if has_implementation file_system_map f
-            && List.contains f interfaces_needing_inlining
-            then (widened := true; UseImplementation f)
-            else PreferInterface f
-        | PreferInterface f
-            when List.contains (FriendImplementation f) friends ->
-            FriendImplementation f
+        | PreferInterface m
+            when List.contains m friends ->
+          widened := true;
+          FriendImplementation m
         | _ -> d)
     in
     let _, all_files =
@@ -837,8 +863,12 @@ let topological_dependences_of
         let (Deps dg') = deps_empty() in
         BU.smap_fold dg (fun filename (dependences, color) () ->
             BU.smap_add dg' filename (widen_deps friends dependences, color)) ();
+        if Options.debug_any()
+        then BU.print_string "==============Phase2==================\n";
         all_friend_deps (Deps dg') [] ([], []) root_files
     in
+    if Options.debug_any()
+    then BU.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
     all_files,
     !widened
 
@@ -1314,8 +1344,6 @@ let print deps =
   | Some "full" ->
       print_full deps
   | Some "graph" ->
-      (* JP: this was broken by the change of the main map to contain filenames
-       * instead of module names. *)
       print_graph deps.dep_graph
   | Some "raw" ->
       print_raw deps

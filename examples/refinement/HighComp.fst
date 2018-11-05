@@ -62,6 +62,8 @@ type hwp_mon 'a = (wp:hwp 'a{monotonic wp})
 let null_wp 'a : hwp_mon 'a  = fun s0 p -> forall s. p s
 
 // [comp] type with wp
+// GM, Oct 23 2018: I think this is just HIGH?.repr 'a wp. If I do that,
+// things seem to work until I get a mysterious failure in LowComp.
 type comp_wp 'a (wp : hwp_mon 'a) = s0:state -> PURE ('a * state) (wp s0)
 
 type comp_p 'a (pre : hpre) (post : hpost 'a) = comp_wp 'a (as_wp pre post)
@@ -70,7 +72,7 @@ type comp_p 'a (pre : hpre) (post : hpost 'a) = comp_wp 'a (as_wp pre post)
 
 effect H (a: Type) = HIGH a (null_wp a)
 
-effect High (a:Type) (pre:hpre) (post:hpost a) = 
+effect High (a:Type) (pre:hpre) (post:hpost a) =
        HIGH a (as_wp pre post)
 
 
@@ -81,6 +83,8 @@ effect Hi (a:Type)
           (post: state -> a -> state -> Type) =
        HighMon a (as_wp pre post)
 
+// GM: Is this qualifying by the current module? How the hell is that succeeding, given #451?
+// GM: Also what's the difference with `H`?
 effect HTot (a:Type) = HighComp.HIGH a (null_wp a)
 
 
@@ -89,11 +93,9 @@ effect HTot (a:Type) = HighComp.HIGH a (null_wp a)
 unfold
 let return_wp (#a:Type) (x : a) : hwp_mon a = HIGH?.return_wp a x
 
-assume val range0: range
-
 unfold
 let bind_wp #a #b (wp1:hwp_mon a) (fwp2 : (a -> hwp_mon b)) : (wp:hwp_mon b) =
-  HIGH?.bind_wp range0 a b wp1 fwp2
+  HIGH?.bind_wp range_0 a b wp1 fwp2
 
 unfold
 let read_wp (i:nat) : hwp_mon mint =
@@ -108,22 +110,26 @@ let ite_wp #a (b : bool) (wp1 : hwp_mon a) (wp2 : hwp_mon a) : hwp_mon a =
   HIGH?.wp_if_then_else a b wp1 wp2
 
 val for_wp : (int -> hwp_mon unit) -> (lo : int) -> (hi : int{hi >= lo}) -> Tot (hwp_mon unit) (decreases (hi - lo))
-let rec for_wp (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : Tot (hwp_mon unit) (decreases (hi - lo)) = 
+let rec for_wp (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : Tot (hwp_mon unit) (decreases (hi - lo)) =
   if lo = hi then (return_wp ())
   else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))
-  
+
 // Unfolding lemma for the rec def
-let for_wp_unfold (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : 
+// GM: Oct 23 2018, this goes through by compute () alone
+let for_wp_unfold (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) :
     Lemma (requires (lo < hi))
-          (ensures (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi))) =
-  assert (~ (lo = hi)); 
+          (ensures (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi)))
+       by (compute ()) = ()
+
+(*
+  assert (~ (lo = hi));
   assert ((if lo = hi then (return_wp ())
-           else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))) == 
-           bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi)); 
-           assert_norm (for_wp wp lo hi == 
+           else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))) ==
+           bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
+           assert_norm (for_wp wp lo hi ==
                         (if lo = hi then (return_wp ())
                          else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))))
-
+*)
 
 
 
@@ -131,69 +137,68 @@ let for_wp_unfold (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) :
 let rec for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> HIGH unit (wp i)) :
     HIGH unit (for_wp wp lo hi) (decreases (hi - lo)) =
   if lo = hi then ()
-  else 
+  else
   (f lo; for #wp (lo + 1) hi f)
-
 
 
 let get () : H state = (HIGH?.get 0, HIGH?.get 1)
 
 let rec for' (inv : state -> int -> Type0)
              (f : (i:int) -> High unit (requires (fun h0 -> inv h0 i))
-                                    (ensures (fun h0 _ h1 -> inv h1 (i + 1)))) 
+                                    (ensures (fun h0 _ h1 -> inv h1 (i + 1))))
              (lo : int) (hi : int{lo <= hi}) :
     High unit (requires (fun h0 -> inv h0 lo))
-              (ensures (fun h0 _ h1 -> inv h1 hi)) (decreases (hi - lo)) = 
+              (ensures (fun h0 _ h1 -> inv h1 hi)) (decreases (hi - lo)) =
     if lo = hi then ()
-    else 
+    else
       (f lo; for' inv f (lo + 1) hi)
-    
+
 (** ** Elaborated combinators for high DSL **)
 
 let return_elab (#a:Type) (x : a) : comp_wp a (return_wp x) =
   HIGH?.return_elab a x
 
-let bind_elab #a #b #f_w ($f:comp_wp a f_w) #g_w ($g:(x:a) -> comp_wp b (g_w x)) : 
+let bind_elab #a #b #f_w ($f:comp_wp a f_w) #g_w ($g:(x:a) -> comp_wp b (g_w x)) :
     Tot (comp_wp b (bind_wp f_w g_w)) = HIGH?.bind_elab a b f_w f g_w g
 
 
 
-let rec for_elab (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) : 
+let rec for_elab (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) :
     Tot (comp_wp unit (for_wp wp lo hi)) (decreases (hi - lo)) =
   if lo = hi then (return_elab ())
-  else (let (m : comp_wp unit (wp lo)) = f lo in 
+  else (let (m : comp_wp unit (wp lo)) = f lo in
         let f (u:unit) : comp_wp (unit) (for_wp wp (lo+1) hi) = for_elab #wp (lo + 1) hi f in
-        let p = for_wp_unfold wp lo hi in 
+        let p = for_wp_unfold wp lo hi in
         assert (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
         let b = bind_elab m f in b)
 
 // Unfolding lemma for the rec def
-let rec for_elab_unfold (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) : 
+let rec for_elab_unfold (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) :
     Lemma (requires (lo < hi))
-          (ensures (for_elab #wp lo hi f == 
-                    (let (m : comp_wp unit (wp lo)) = f lo in 
+          (ensures (for_elab #wp lo hi f ==
+                    (let (m : comp_wp unit (wp lo)) = f lo in
                      let cf (u:unit) : comp_wp (unit) (for_wp wp (lo+1) hi) = for_elab #wp (lo + 1) hi f in
-                     let p = for_wp_unfold wp lo hi in                    
+                     let p = for_wp_unfold wp lo hi in
                      bind_elab m cf))) =
   assert_norm (for_elab #wp lo hi f ==
                (if lo = hi then (return_elab ())
-                else (let (m : comp_wp unit (wp lo)) = f lo in 
+                else (let (m : comp_wp unit (wp lo)) = f lo in
                       let f (u:unit) : comp_wp (unit) (for_wp wp (lo+1) hi) = for_elab #wp (lo + 1) hi f in
-                      let p = for_wp_unfold wp lo hi in 
+                      let p = for_wp_unfold wp lo hi in
                       assert (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
                       bind_elab #unit #unit #(wp lo) m f)));
                ()
-          
+
 let rec for_elab' (inv : state -> int -> Type0)
                (f : (i:int) -> comp_p unit (requires (fun h0 -> inv h0 i))
-                                        (ensures (fun h0 _ h1 -> inv h1 (i + 1)))) 
+                                        (ensures (fun h0 _ h1 -> inv h1 (i + 1))))
                (lo : int) (hi : int{lo <= hi}) :
       Tot (comp_p unit (requires (fun h0 -> inv h0 lo))
-                       (ensures (fun h0 _ h1 -> inv h1 hi))) (decreases (hi - lo)) = 
+                       (ensures (fun h0 _ h1 -> inv h1 hi))) (decreases (hi - lo)) =
       if lo = hi then (return_elab ())
-      else 
-        begin 
-          let k () = for_elab' inv f (lo + 1) hi in 
+      else
+        begin
+          let k () = for_elab' inv f (lo + 1) hi in
           bind_elab (f lo) k
         end
 
@@ -216,21 +221,26 @@ let ite_elab (#a:Type) (b : bool) (#wp1 : hwp_mon a) (c1:comp_wp a wp1)
 
 let subsumes #a (wp1 : hwp a) (wp2 : hwp a) = forall s0 post. wp2 s0 post ==> wp1 s0 post
 
-assume val return_inv (#a:Type) (#wp : hwp_mon a) (c : comp_wp a wp) (x:a): 
+// GM, 22 Oct 2018: These axioms look a bit useless now, since they
+// require that (comp_wp a wp) and (comp_wp a (return_wp x)) match (due
+// to the fix to ===, cf. #1533). So the WPs would have to match. And
+// it's not like we could make the WPs "irrelevant", they matter a lot.
+
+assume val return_inv (#a:Type) (#wp : hwp_mon a) (c : comp_wp a wp) (x:a):
   Lemma (requires (c === return_elab x)) (ensures (subsumes (return_wp x) wp))
 
-assume val write_inv (#wp : hwp_mon unit) (c : comp_wp unit wp) (i:nat) (v:mint) : 
+assume val write_inv (#wp : hwp_mon unit) (c : comp_wp unit wp) (i:nat) (v:mint) :
   Lemma (requires (c === hwrite_elab i v)) (ensures (subsumes (write_wp i v) wp))
 
-assume val read_inv (#wp : hwp_mon mint) (c : comp_wp mint wp) (i:nat) : 
+assume val read_inv (#wp : hwp_mon mint) (c : comp_wp mint wp) (i:nat) :
   Lemma (requires (c === hread_elab i)) (ensures (subsumes (read_wp i) wp))
 
-assume val bind_inv (#a:Type) (#b:Type) (#f_w : hwp_mon a) (f:comp_wp a f_w) 
+assume val bind_inv (#a:Type) (#b:Type) (#f_w : hwp_mon a) (f:comp_wp a f_w)
                     (#g_w: a -> hwp_mon b) (g:(x:a) -> comp_wp b (g_w x)) (#wp : hwp_mon b) (c:comp_wp b wp) :
   Lemma (requires (c === bind_elab f g))
         (ensures (subsumes (bind_wp f_w g_w) wp))
 
-assume val ite_inv (#a:Type) (b:bool) (#f_w:hwp_mon a) (f:comp_wp a f_w) 
+assume val ite_inv (#a:Type) (b:bool) (#f_w:hwp_mon a) (f:comp_wp a f_w)
        (#g_w:hwp_mon a) (g:comp_wp a g_w) (#wp:hwp_mon a) (c:comp_wp a wp) :
   Lemma (requires (c === ite_elab b f g))
         (ensures (subsumes (ite_wp b f_w g_w) wp))
@@ -242,7 +252,7 @@ assume val for_inv (#fwp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) 
 
 assume val for_inv'  (inv : state -> int -> Type0)
                      (f : (i:int) -> comp_p unit (requires (fun h0 -> inv h0 i))
-                                              (ensures (fun h0 _ h1 -> inv h1 (i + 1)))) 
+                                              (ensures (fun h0 _ h1 -> inv h1 (i + 1))))
        (lo : int) (hi : int{lo <= hi}) (#wp:hwp_mon unit) (c:comp_wp unit wp) :
   Lemma (requires (c === for_elab' inv f lo hi))
         (ensures (subsumes (as_wp (fun h0 -> inv h0 lo)
@@ -250,9 +260,9 @@ assume val for_inv'  (inv : state -> int -> Type0)
 
 (** ** Explicit casting to stronger WPs **)
 
-let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 = c 
+let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 = c
 
-//GM: Oct 22, 2018: This lemma now fails to verify due to the fix for #1533. However, it doesn't seem to be needed.
+//GM: Oct 22, 2018: This lemma now fails to verify due to the fix for #1533. However, it doesn't seem to be used.
 (* let cast_eq #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : Lemma (c === cast wp2 c) = () *)
 
 
@@ -319,7 +329,7 @@ let bind_commutes_lemma
           (#wp1 : _) (c1:h_thunk a wp1)
           (#wp2 : _) (c2: (x:a -> h_thunk b (wp2 x))) (s0:_)
     : Lemma
-         (requires (HIGH?.bind_wp range0 _ _ wp1 wp2 s0 (fun _ -> True)))
+         (requires (HIGH?.bind_wp range_0 _ _ wp1 wp2 s0 (fun _ -> True)))
          (ensures (reify_bind_commutes c1 c2 s0))
     = assert (reify_bind_commutes c1 c2 s0)
           by (dump "start";

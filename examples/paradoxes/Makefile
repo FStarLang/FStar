@@ -15,5 +15,4 @@ ioWpInconsistent:
 	$(FSTAR) IOWPInconsistent.fst
 
 %.fst-in:
-	@echo $(OPTIONS) \
-	--__temp_no_proj InjectiveTypeFormers
+	@echo $(OPTIONS)
