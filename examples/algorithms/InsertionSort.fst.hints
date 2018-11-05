@@ -75,7 +75,7 @@
         "subterm_ordering_Prims.Cons", "typing_IntSort.sorted"
       ],
       0,
-      "862d4691dac282f793166935e5620503"
+      "26c85cc7e3e2acfa97f68b538f312722"
     ],
     [
       "InsertionSort.sort",
@@ -186,7 +186,7 @@
         "subterm_ordering_Prims.Cons", "typing_IntSort.sorted"
       ],
       0,
-      "796e3b7d979fd6d2e93e79e03266ed52"
+      "4a17c7691c4343ce2ecc8de4d9bdc432"
     ],
     [
       "InsertionSort.sort",
