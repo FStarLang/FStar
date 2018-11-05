@@ -357,6 +357,12 @@ let close_lcomp env bvs (lc:lcomp) =
     S.mk_lcomp lc.eff_name lc.res_typ lc.cflags
                (fun () -> close_comp env bvs (lcomp_comp lc))
 
+let close_comp_if_refinement_t (env:env) (t:term) (x:bv) (c:comp) :comp =
+  let t = N.normalize_refinement N.whnf_steps env t in
+  match t.n with
+  | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_comp env [x] c
+  | _ -> c
+
 let should_not_inline_lc (lc:lcomp) =
     lc.cflags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
 
@@ -585,19 +591,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             then Inl (c2, "both ml")
             else Inr "c1 not trivial, and both are not ML"
           in
-          let subst_c2 e1opt reason =
-            match e1opt, b with
-            | Some e, Some x ->
-                Inl (SS.subst_comp [NT(x,e)] c2, reason)
-            | _ -> aux()
-          in
           let try_simplify () =
-            let maybe_close t x c =
-              let t = N.normalize_refinement N.whnf_steps env t in
-              match t.n with
-              | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_comp env [x] c
-              | _ -> c
-            in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
             then if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
@@ -606,24 +600,24 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                                    "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
                                    (Env.get_range env)
             else if U.is_total_comp c1
-                 && U.is_total_comp c2
-            then subst_c2 e1opt "both total"
+            then (*
+                  * Helper routine to close the compuation c with c1's return type
+                  * When c1's return type is of the form _:t{phi}, is is useful to know
+                  *   that t{phi} is inhabited, even if c1 is inlined etc.
+                  *)
+                 let close (x:bv) (reason:string) (c:comp) =
+                   let x = { x with sort = U.comp_result c1 } in
+                   Inl (close_comp_if_refinement_t env x.sort x c, reason)
+                 in
+                 match e1opt, b with
+                 | Some e, Some x ->
+                   c2 |> SS.subst_comp [NT (x, e)] |> close x "c1 Tot"
+                 | _, Some x -> c2 |> close x "c1 Tot only close"
+                 | _, _ -> aux ()
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
-            then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
-            else match e1opt, b with
-                   | Some e, Some x ->
-                     if U.is_total_comp c1
-                     && not (Syntax.is_null_bv x)
-                     then let c2 = SS.subst_comp [NT(x,e)] c2 in
-                          let x = {x with sort = U.comp_result c1} in
-                          Inl (maybe_close x.sort x c2, "c1 Tot")
-                          //forall (_:t). c2[e/x]
-                          //It's important to have that (forall (_:t)) since
-                          //if x does not appear free in e,
-                          //then it may still be important to know that t is inhabited
-                     else aux ()
-                   | _ -> aux ()
+            then Inl (S.mk_GTotal (U.comp_result c2), "both GTot")
+            else aux ()
           in
           match try_simplify () with
           | Inl (c, reason) ->
@@ -995,24 +989,38 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
           let strengthen_trivial () =
             let c = lcomp_comp lc in
             let res_t = Util.comp_result c in
-            (*
-             * AR: if the computation is pure/ghost then return already should take care of it (also enabling it for pure/ghost bloats the wp a lot)
-             *)
-            if c |> Util.comp_effect_name |> norm_eff_name env |> Util.is_pure_or_ghost_effect ||  //if pure or ghost
-               Util.eq_tm t res_t = Util.Equal then begin  //or res_t = t
-               if Env.debug env <| Options.Extreme
-               then BU.print3 "weaken_result_type::strengthen_trivial: Not inserting the return since either the comp c:%s is pure/ghost or res_t:%s is same as t:%s\n"
-                              (Print.lid_to_string (Util.comp_effect_name c)) (Print.term_to_string res_t) (Print.term_to_string t);
-               Util.set_result_typ c t  //set the result type in c
+
+            let set_result_typ (c:comp) :comp = Util.set_result_typ c t in
+
+            if Util.eq_tm t res_t = Util.Equal then begin  //if the two types res_t and t are same, then just set the result type
+              if Env.debug env <| Options.Extreme
+              then BU.print2 "weaken_result_type::strengthen_trivial: res_t:%s is same as t:%s\n"
+                             (Print.term_to_string res_t) (Print.term_to_string t);
+              set_result_typ c
             end
             else
-              let x = S.new_bv (Some res_t.pos) res_t in
-              let cret = return_value env (comp_univ_opt c) res_t (S.bv_to_name x) in
-              let lc = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, Util.lcomp_of_comp cret) in
-              if Env.debug env <| Options.Extreme
-              then BU.print4 "weaken_result_type::strengthen_trivial: Inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
-                             (Print.term_to_string e) (Print.comp_to_string c) (Print.term_to_string t) (Print.lcomp_to_string lc);
-              Util.set_result_typ (lcomp_comp lc) t
+              let is_res_t_refinement =
+                let res_t = N.normalize_refinement N.whnf_steps env res_t in
+                match res_t.n with
+                | Tm_refine _ -> true
+                | _ -> false
+              in
+              //if t is a refinement, insert a return to capture the return type res_t
+              //we are not inlining e, rather just adding (fun (x:res_t) -> p x) at the end
+              if is_res_t_refinement then
+                let x = S.new_bv (Some res_t.pos) res_t in
+                let cret = return_value env (comp_univ_opt c) res_t (S.bv_to_name x) in
+                let lc = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, Util.lcomp_of_comp cret) in
+                if Env.debug env <| Options.Extreme
+                then BU.print4 "weaken_result_type::strengthen_trivial: inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
+                               (Print.term_to_string e) (Print.comp_to_string c) (Print.term_to_string t) (Print.lcomp_to_string lc);
+                set_result_typ (lcomp_comp lc)
+              else begin
+                if Env.debug env <| Options.Extreme
+                then BU.print2 "weaken_result_type::strengthen_trivial: res_t:%s is not a refinement, leaving c:%s as is\n"
+                               (Print.term_to_string res_t) (Print.comp_to_string c);
+                set_result_typ c
+              end
           in
           let lc = S.mk_lcomp lc.eff_name t lc.cflags strengthen_trivial in
           e, lc, g
