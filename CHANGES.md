@@ -52,6 +52,13 @@ Guidelines for the changelog:
      the multiplication on integers, the `&` symbol can be used for
      tuples while reserving `*` for multiplication.
 
+## Extraction
+
+   * Cross-module inlining: Declarations in interfaces marked with the
+     `inline_for_extraction` qualifier have their definitions inlined
+     in client code. Currently guarded by the --cmi flag, this will
+     soon be the default behavior.
+
 # Version 0.9.6.0
 
 ## Command line options

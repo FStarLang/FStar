@@ -2,6 +2,7 @@ module FStar.BV
 
 module U = FStar.UInt
 module B = FStar.BitVector
+module S = FStar.Seq
 
 let bv_t (n : nat) = B.bv_t n
 
@@ -19,10 +20,17 @@ let bvshr = B.shift_right_vec
 
 let int2bv = U.to_vec
 let bv2int = U.from_vec
+
+let list2bv #n l = S.seq_of_list l
+let bv2list #n s = S.seq_to_list s
+
 let bvult #n a b = (bv2int #n a) < (bv2int #n b)
 
 let int2bv_lemma_1 = U.to_vec_lemma_1
 let int2bv_lemma_2 = U.to_vec_lemma_2
+
+let list2bv_bij #n a = S.lemma_list_seq_bij a
+let bv2list_bij #n a = S.lemma_seq_list_bij a
 
 let bvadd #n a b =
     int2bv #n (U.add_mod (bv2int #n a) (bv2int #n b))

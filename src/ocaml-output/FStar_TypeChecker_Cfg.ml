@@ -3063,6 +3063,43 @@ let (retrieve_plugins : unit -> primitive_step Prims.list) =
     let uu____13376 = FStar_Options.no_plugins ()  in
     if uu____13376 then [] else FStar_Pervasives_Native.snd plugins ()
   
+let (add_nbe : fsteps -> fsteps) =
+  fun s  ->
+    let uu____13397 = FStar_Options.use_nbe ()  in
+    if uu____13397
+    then
+      let uu___270_13400 = s  in
+      {
+        beta = (uu___270_13400.beta);
+        iota = (uu___270_13400.iota);
+        zeta = (uu___270_13400.zeta);
+        weak = (uu___270_13400.weak);
+        hnf = (uu___270_13400.hnf);
+        primops = (uu___270_13400.primops);
+        do_not_unfold_pure_lets = (uu___270_13400.do_not_unfold_pure_lets);
+        unfold_until = (uu___270_13400.unfold_until);
+        unfold_only = (uu___270_13400.unfold_only);
+        unfold_fully = (uu___270_13400.unfold_fully);
+        unfold_attr = (uu___270_13400.unfold_attr);
+        unfold_tac = (uu___270_13400.unfold_tac);
+        pure_subterms_within_computations =
+          (uu___270_13400.pure_subterms_within_computations);
+        simplify = (uu___270_13400.simplify);
+        erase_universes = (uu___270_13400.erase_universes);
+        allow_unbound_universes = (uu___270_13400.allow_unbound_universes);
+        reify_ = (uu___270_13400.reify_);
+        compress_uvars = (uu___270_13400.compress_uvars);
+        no_full_norm = (uu___270_13400.no_full_norm);
+        check_no_uvars = (uu___270_13400.check_no_uvars);
+        unmeta = (uu___270_13400.unmeta);
+        unascribe = (uu___270_13400.unascribe);
+        in_full_norm_request = (uu___270_13400.in_full_norm_request);
+        weakly_reduce_scrutinee = (uu___270_13400.weakly_reduce_scrutinee);
+        nbe_step = true;
+        for_extraction = (uu___270_13400.for_extraction)
+      }
+    else s
+  
 let (config' :
   primitive_step Prims.list ->
     FStar_TypeChecker_Env.step Prims.list -> FStar_TypeChecker_Env.env -> cfg)
@@ -3073,79 +3110,81 @@ let (config' :
         let d =
           FStar_All.pipe_right s
             (FStar_List.collect
-               (fun uu___236_13424  ->
-                  match uu___236_13424 with
+               (fun uu___236_13437  ->
+                  match uu___236_13437 with
                   | FStar_TypeChecker_Env.UnfoldUntil k ->
                       [FStar_TypeChecker_Env.Unfold k]
                   | FStar_TypeChecker_Env.Eager_unfolding  ->
                       [FStar_TypeChecker_Env.Eager_unfolding_only]
                   | FStar_TypeChecker_Env.Inlining  ->
                       [FStar_TypeChecker_Env.InliningDelta]
-                  | uu____13428 -> []))
+                  | uu____13441 -> []))
            in
         let d1 =
           match d with
           | [] -> [FStar_TypeChecker_Env.NoDelta]
-          | uu____13434 -> d  in
-        let uu____13437 = to_fsteps s  in
-        let uu____13438 =
-          let uu____13439 =
+          | uu____13447 -> d  in
+        let uu____13450 =
+          let uu____13451 = to_fsteps s  in
+          FStar_All.pipe_right uu____13451 add_nbe  in
+        let uu____13452 =
+          let uu____13453 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "Norm")  in
-          let uu____13442 =
+          let uu____13456 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormTop")  in
-          let uu____13445 =
+          let uu____13459 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormCfg")  in
-          let uu____13448 =
+          let uu____13462 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "Primops")  in
-          let uu____13451 =
+          let uu____13465 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "Unfolding")
              in
-          let uu____13454 =
+          let uu____13468 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "380")  in
-          let uu____13457 =
+          let uu____13471 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "WPE")  in
-          let uu____13460 =
+          let uu____13474 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormDelayed")
              in
-          let uu____13463 =
+          let uu____13477 =
             FStar_TypeChecker_Env.debug e
               (FStar_Options.Other "print_normalized_terms")
              in
           {
-            gen = uu____13439;
-            top = uu____13442;
-            cfg = uu____13445;
-            primop = uu____13448;
-            unfolding = uu____13451;
-            b380 = uu____13454;
-            wpe = uu____13457;
-            norm_delayed = uu____13460;
-            print_normalized = uu____13463
+            gen = uu____13453;
+            top = uu____13456;
+            cfg = uu____13459;
+            primop = uu____13462;
+            unfolding = uu____13465;
+            b380 = uu____13468;
+            wpe = uu____13471;
+            norm_delayed = uu____13474;
+            print_normalized = uu____13477
           }  in
-        let uu____13466 =
-          let uu____13469 =
-            let uu____13472 = retrieve_plugins ()  in
-            FStar_List.append uu____13472 psteps  in
-          add_steps built_in_primitive_steps uu____13469  in
-        let uu____13475 =
+        let uu____13480 =
+          let uu____13483 =
+            let uu____13486 = retrieve_plugins ()  in
+            FStar_List.append uu____13486 psteps  in
+          add_steps built_in_primitive_steps uu____13483  in
+        let uu____13489 =
           (FStar_Options.normalize_pure_terms_for_extraction ()) ||
-            (let uu____13478 =
+            (let uu____13492 =
                FStar_All.pipe_right s
                  (FStar_Util.for_some
                     (FStar_TypeChecker_Env.eq_step
                        FStar_TypeChecker_Env.PureSubtermsWithinComputations))
                 in
-             Prims.op_Negation uu____13478)
+             Prims.op_Negation uu____13492)
            in
         {
-          steps = uu____13437;
+          steps = uu____13450;
           tcenv = e;
-          debug = uu____13438;
+          debug = uu____13452;
           delta_level = d1;
-          primitive_steps = uu____13466;
+          primitive_steps = uu____13480;
           strong = false;
           memoize_lazy = true;
-          normalize_pure_lets = uu____13475;
+          normalize_pure_lets = uu____13489;
           reifying = false
         }
   

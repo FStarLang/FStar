@@ -173,7 +173,7 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
         None
   in pickBranch_aux scrut branches branches
 
-(* Tests is the application is full and if none of the recursive arguments is symbolic *)
+(* Succeds if the application is full and if none of the recursive arguments is symbolic *)
 let test_args ts ar_list : (bool * args * args) = (* can unfold x full arg list x residual args *)
   let rec aux ts ar_list acc res =
     match ts, ar_list with
@@ -193,7 +193,7 @@ let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
     | _ -> None in
   BU.bind_opt (Env.lookup_qname env lid) mapper
 
-let is_univ (tm : t)=
+let is_univ (tm : t) =
   match tm with
   | Univ _ -> true
   | _ -> false

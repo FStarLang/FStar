@@ -726,6 +726,7 @@ let get_norm_request cfg (full_norm:term -> term) args =
     let inherited_steps =
         (if cfg.steps.erase_universes then [EraseUniverses] else [])
       @ (if cfg.steps.allow_unbound_universes then [AllowUnboundUniverses] else [])
+      @ (if cfg.steps.nbe_step then [NBE] else []) // ZOE : NBE can be set as the default mode
     in
     match args with
     | [_; (tm, _)]

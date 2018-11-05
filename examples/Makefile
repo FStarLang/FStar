@@ -32,6 +32,7 @@ hello \
 native_tactics \
 extraction \
 demos \
+refinement \
 indexed_effects
 
 # low-level \  ... NS: removing from CI for this branch

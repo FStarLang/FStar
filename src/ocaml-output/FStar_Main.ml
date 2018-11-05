@@ -1,5 +1,5 @@
 open Prims
-let (uu___478 : unit) = FStar_Version.dummy () 
+let (uu___477 : unit) = FStar_Version.dummy () 
 let (process_args :
   unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -189,7 +189,7 @@ let go : 'Auu____393 . 'Auu____393 -> unit =
                             (FStar_List.length filenames)
                            in
                         Prims.strcat
-                          "Only one command line file is allowed if --use_extracted_interfaces is set, found %s"
+                          "Only one command line file is allowed if --use_extracted_interfaces is set, found "
                           uu____468
                          in
                       (FStar_Errors.Error_TooManyFiles, uu____466)  in
@@ -330,7 +330,7 @@ let (handle_error : Prims.exn -> unit) =
 let main : 'Auu____850 . unit -> 'Auu____850 =
   fun uu____855  ->
     try
-      (fun uu___480_863  ->
+      (fun uu___479_863  ->
          match () with
          | () ->
              (setup_hooks ();
@@ -350,6 +350,6 @@ let main : 'Auu____850 . unit -> 'Auu____850 =
                     cleanup ();
                     FStar_All.exit (Prims.parse_int "0"))))) ()
     with
-    | uu___479_895 ->
-        (handle_error uu___479_895; FStar_All.exit (Prims.parse_int "1"))
+    | uu___478_895 ->
+        (handle_error uu___478_895; FStar_All.exit (Prims.parse_int "1"))
   

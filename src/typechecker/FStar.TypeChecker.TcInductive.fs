@@ -145,6 +145,8 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                 (Print.term_to_string result);
 
          let arguments, env', us = tc_tparams env arguments in
+         let type_u_tc = S.mk (Tm_type u_tc) None result.pos in
+         let env' = Env.set_expected_typ env' type_u_tc in
          let result, res_lcomp = tc_trivial_guard env' result in
          let head, args = U.head_and_args result in
 
