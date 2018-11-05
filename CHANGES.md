@@ -230,7 +230,7 @@ Date:   Mon Apr 30 16:57:21 2018 -0700
   3. The head symbol of `e1` is not marked `irreducible` and it is not an `assume val`
   4. `e1` is not a `let rec`
 
-  This is breaking change. Consider the following example (adapted
+  This is a breaking change. Consider the following example (adapted
   from `ulib/FStar.Algebra.Monoid.fst`):
 
   ```
