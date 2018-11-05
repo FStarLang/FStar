@@ -4377,7 +4377,8 @@ and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
     | FStar_Const.Const_float x -> str (FStar_Util.string_of_float x)
     | FStar_Const.Const_char x -> FStar_Pprint.doc_of_char x
     | FStar_Const.Const_string (s,uu____10377) ->
-        let uu____10380 = str s  in FStar_Pprint.dquotes uu____10380
+        let uu____10380 = str (FStar_String.escaped s)  in
+        FStar_Pprint.dquotes uu____10380
     | FStar_Const.Const_bytearray (bytes,uu____10382) ->
         let uu____10387 =
           let uu____10388 = str (FStar_Util.string_of_bytes bytes)  in
