@@ -1350,7 +1350,9 @@ let (topological_dependences_of :
                           (fun d  ->
                              match d with
                              | PreferInterface m when
-                                 FStar_List.contains m friends1 ->
+                                 (FStar_List.contains m friends1) &&
+                                   (has_implementation file_system_map m)
+                                 ->
                                  (FStar_ST.op_Colon_Equals widened true;
                                   FriendImplementation m)
                              | uu____5573 -> d))
