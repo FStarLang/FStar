@@ -225,7 +225,8 @@ let file_of_dep_aux
           //then d is only present if either an interface or an implementation exist
           //the previous case already established that the interface doesn't exist
           //     since if the implementation was on the command line, it must exist because of option validation
-          raise_err (Errors.Fatal_MissingImplementation, BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
+          raise_err (Errors.Fatal_MissingImplementation,
+                     BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
         | Some f -> maybe_add_suffix f
 
 let file_of_dep = file_of_dep_aux false
@@ -812,12 +813,7 @@ let topological_dependences_of
         (* Also build the topological sort (Tarjan's algorithm). *)
         List.collect
           (function | FriendImplementation m -> [m]
-                    | d ->
-                      if for_extraction &&
-                         Options.cmi() &&
-                         List.contains (module_name_of_dep d) interfaces_needing_inlining
-                      then [module_name_of_dep d]
-                      else [])
+                    | d -> [])
           direct_deps
         @all_friends,
         filename :: all_files
@@ -843,17 +839,27 @@ let topological_dependences_of
     *)
     if Options.debug_any()
     then BU.print_string "==============Phase1==================\n";
+    let root_friends =
+        if Options.cmi()
+        && for_extraction
+        then interfaces_needing_inlining
+        else []
+    in
     let friends, all_files_0 =
-        all_friend_deps (dep_graph_copy dep_graph) [] ([], []) root_files
+        all_friend_deps (dep_graph_copy dep_graph) [] (root_friends, []) root_files
     in
     if Options.debug_any()
-    then BU.print1 "Phase1 complete: all_files = %s\n" (String.concat ", " all_files_0);
+    then BU.print3 "Phase1 complete:\n\tall_files = %s\n\tall_friends=%s\n\tinterfaces_with_inlining=%s\n"
+                   (String.concat ", " all_files_0)
+                   (String.concat ", " (remove_dups (fun x y -> x=y) friends))
+                   (String.concat ", " (interfaces_needing_inlining));
     let widened = BU.mk_ref false in
     let widen_deps friends deps =
         deps |> List.map (fun d ->
         match d with
         | PreferInterface m
-            when List.contains m friends ->
+            when (List.contains m friends &&
+                  has_implementation file_system_map m) ->
           widened := true;
           FriendImplementation m
         | _ -> d)
@@ -998,6 +1004,8 @@ let collect (all_cmd_line_files: list<file_name>)
   let all_files, _ =
     topological_dependences_of file_system_map dep_graph inlining_ifaces all_cmd_line_files (Options.codegen()<>None)
   in
+  if Options.debug_any()
+  then BU.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
   all_files,
   mk_deps dep_graph file_system_map all_cmd_line_files all_files inlining_ifaces
 
