@@ -57,6 +57,24 @@ let state_as_lstate_put_get h ls bs =
   assert (get h2 b2 0 == s2);
   ()
 
+val state_as_lstate_get_put : h:HS.mem -> ls:lstate{well_formed h ls} ->
+    Lemma (state_as_lstate h ls (lstate_as_state h ls) == h)
+let state_as_lstate_get_put h ls = 
+    let (b1, b2) = ls in
+    let s1 = B.get h b1 0 in 
+    let s2 = B.get h b2 0 in 
+    
+    let h1 = g_upd b1 0 s1 h in
+    let l1 = g_upd_preserves_live h b1 b2 s1 in
+    let h2 = g_upd b2 0 s2 h1 in
+    let l2 = g_upd_preserves_live h1 b2 b1 s2 in
+
+    let p1 = get_upd_eq h b1 0 s1 in
+    assert (h1 == h);
+    let p2 = get_upd_eq h b2 0 s2 in 
+    assert (h2 == h);
+    ()
+    
 
 val state_as_lstate_put_put : h:HS.mem -> ls:lstate{well_formed h ls} -> bs1:state -> bs2:state ->
     Lemma (state_as_lstate h ls bs2 == state_as_lstate (state_as_lstate h ls bs1) ls bs2)
