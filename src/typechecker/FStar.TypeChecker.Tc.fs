@@ -1105,6 +1105,24 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) : option<(int * int 
     in
     aux l1 l2
 
+
+(* A function marked as StackInline must have inline_for_extraction, for
+ * soundness; and it must have noextract, to ensure the C compiler doesn't "see"
+ * a definition that returns the address of a stack variable. *)
+let check_stackinline_attributes env se =
+  match se.sigel with
+  | Sig_let ((_, lbs), _) ->
+      let quals = U.quals_of_sigelt se in
+      let r = U.range_of_sigelt se in
+      if List.existsb (fun lb -> TcUtil.is_stackinline env lb.lbtyp) lbs &&
+        not (List.contains Inline_for_extraction quals && List.contains NoExtract quals)
+      then
+        log_issue r (Errors.Warning_StackInline,
+          "StackInline functions must be marked inline_for_extraction, for \
+          soundness, and noextract, for the C compiler to be happy")
+  | _ ->
+      ()
+
 (*
  *  Given `val t : Type` in an interface
  *  and   `let t = e`    in the corresponding implementation
@@ -1621,6 +1639,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
           else "") |> String.concat "\n");
 
     check_must_erase_attribute env0 se;
+    check_stackinline_attributes env0 se;
 
     [se], [], env0
 

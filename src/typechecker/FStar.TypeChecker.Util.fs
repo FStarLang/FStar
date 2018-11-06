@@ -1666,6 +1666,13 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
   mk (Tm_fvar fv) None Range.dummyRange
 
+let is_stackinline env t =
+  let t = N.normalize [ Env.AllowUnboundUniverses; Env.EraseUniverses; Env.UnfoldUntil S.delta_constant; Env.Inlining; Env.Eager_unfolding ] env t in
+  match U.arrow_formals_comp t with
+  | _, { n = Comp { effect_name = e } } when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
+      true
+  | _ ->
+      false
 
 /////////////////////////////////////////////////////////////////////////////
 //Checks that the qualifiers on this sigelt are legal for it
@@ -1755,7 +1762,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       if not (quals |> List.for_all (quals_combo_ok quals))
       then err "ill-formed combination";
       match se.sigel with
-      | Sig_let((is_rec, _), _) -> //let rec
+      | Sig_let((is_rec, lbs), _) -> //let rec
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
         then err "recursive definitions cannot be marked inline";
         if quals |> BU.for_some (fun x -> assumption x || has_eq x)

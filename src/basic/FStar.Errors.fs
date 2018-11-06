@@ -326,6 +326,7 @@ type raw_error =
   | Fatal_EffectAbbreviationResultTypeMismatch
   | Error_UncheckedFile
   | Error_MustEraseMissing
+  | Warning_StackInline
 
 type flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
@@ -660,6 +661,7 @@ let default_flags =
   (Fatal_EffectAbbreviationResultTypeMismatch        , CFatal);
   (Error_UncheckedFile                               , CFatal);
   (Error_MustEraseMissing                            , CWarning);
+  (Warning_StackInline                               , CWarning);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]

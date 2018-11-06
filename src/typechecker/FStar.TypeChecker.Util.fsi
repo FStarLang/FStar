@@ -76,6 +76,7 @@ val check_top_level: env -> guard_t -> lcomp -> bool*comp
 val maybe_coerce_bool_to_type: env -> term -> lcomp -> typ -> term * lcomp
 
 //misc.
+val is_stackinline: env -> typ -> bool
 val label: string -> Range.range -> typ -> typ
 val label_guard: Range.range -> string -> guard_t -> guard_t
 val short_circuit: term -> args -> guard_formula
