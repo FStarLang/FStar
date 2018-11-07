@@ -232,7 +232,7 @@
         "token_correspondence_ProgramEquivalence.inv_0"
       ],
       0,
-      "eae4537f7734c5286ae83a7d7b4f4ced"
+      "5ba3802222a719462ca22f43bbc064fb"
     ],
     [
       "ProgramEquivalence.counter_1",
@@ -245,7 +245,7 @@
         "token_correspondence_ProgramEquivalence.inv_1"
       ],
       0,
-      "92f40b6d34b5e91bb5580bf83a0d4881"
+      "c9cf06eb59bfbbefc9ffebb3f58ee672"
     ],
     [
       "ProgramEquivalence.init_counter_1",
@@ -785,7 +785,7 @@
         "token_correspondence_ProgramEquivalence.inv_0"
       ],
       0,
-      "df479e31a37220ad1d2f4f5ac7eb1596"
+      "3386c58a85049b41b62c2d12fc0879b0"
     ],
     [
       "ProgramEquivalence.counter_1",
@@ -798,7 +798,7 @@
         "token_correspondence_ProgramEquivalence.inv_1"
       ],
       0,
-      "2f966c9e321871a75411f5a501c9f714"
+      "1f80d7428be4fdec0d3087fb154d1be1"
     ],
     [
       "ProgramEquivalence.init_counter_1",

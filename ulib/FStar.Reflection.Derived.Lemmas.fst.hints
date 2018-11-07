@@ -19,7 +19,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6d7edc9a60d05799f5add5d9e2dd70df"
+      "78490b08df5bc35e69ee9bcb6e8b63ca"
     ],
     [
       "FStar.Reflection.Derived.Lemmas.list_ref",
@@ -39,7 +39,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "12b9152f33f09cd249d53909080d8b6a"
+      "94a36c4de131426365c87ead7f1fa1d6"
     ]
   ]
 ]

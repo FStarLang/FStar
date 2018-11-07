@@ -1,1 +1,141 @@
-[ "±aE\u001d¬ñ[ú\u0014¨T\u0006œzNæ", [] ]
+[
+  "h\u0018â\u0004ø¼Å'Ø\u0004®-» 0£",
+  [
+    [
+      "MetaCoq.__proj__Goal__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.Goal",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_MetaCoq_Tm_refine_d546a4ece9ccffe78d7c00983bdb4280"
+      ],
+      0,
+      "06d7549a9ec16b69d80452e25ce5b414"
+    ],
+    [
+      "MetaCoq.__proj__Goal__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.Goal",
+        "proj_equation_MetaCoq.Goal_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_MetaCoq.Goal_a",
+        "refinement_interpretation_MetaCoq_Tm_refine_d546a4ece9ccffe78d7c00983bdb4280"
+      ],
+      0,
+      "0787ddfff6270a846a8e1217d43a8220"
+    ],
+    [
+      "MetaCoq.__proj__AHyp__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.AHyp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_MetaCoq_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
+      ],
+      0,
+      "793a96cc480c0b1335f24d671deb1d97"
+    ],
+    [
+      "MetaCoq.__proj__AHyp__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.AHyp",
+        "proj_equation_MetaCoq.AHyp_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_MetaCoq.AHyp_a",
+        "refinement_interpretation_MetaCoq_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
+      ],
+      0,
+      "614499bb8b67a95e083a4e354f824616"
+    ],
+    [
+      "MetaCoq.__proj__AHyp__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.AHyp",
+        "proj_equation_MetaCoq.AHyp_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_MetaCoq.AHyp_a",
+        "refinement_interpretation_MetaCoq_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
+      ],
+      0,
+      "a813142999717022b1fa546ace11ec20"
+    ],
+    [
+      "MetaCoq.__proj__Goal__item__a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.Goal",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_MetaCoq_Tm_refine_d546a4ece9ccffe78d7c00983bdb4280"
+      ],
+      0,
+      "8428a28fc6b859bf21f7403c7b625bee"
+    ],
+    [
+      "MetaCoq.__proj__Goal__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.Goal",
+        "proj_equation_MetaCoq.Goal_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_MetaCoq.Goal_a",
+        "refinement_interpretation_MetaCoq_Tm_refine_d546a4ece9ccffe78d7c00983bdb4280"
+      ],
+      0,
+      "e851d3f058e60a73bb3187bdb41a701f"
+    ],
+    [
+      "MetaCoq.__proj__AHyp__item__a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.AHyp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_MetaCoq_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
+      ],
+      0,
+      "b591b4034784e09238844b12e787fa32"
+    ],
+    [
+      "MetaCoq.__proj__AHyp__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.AHyp",
+        "proj_equation_MetaCoq.AHyp_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_MetaCoq.AHyp_a",
+        "refinement_interpretation_MetaCoq_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
+      ],
+      0,
+      "7198ab8940aa295c81e5bbe567827030"
+    ],
+    [
+      "MetaCoq.__proj__AHyp__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.AHyp",
+        "proj_equation_MetaCoq.AHyp_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_MetaCoq.AHyp_a",
+        "refinement_interpretation_MetaCoq_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
+      ],
+      0,
+      "605d86f0741fd22fb96c7fa68f40ef3c"
+    ]
+  ]
+]
