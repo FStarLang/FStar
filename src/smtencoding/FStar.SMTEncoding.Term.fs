@@ -140,6 +140,7 @@ type decl =
   | DefineFun  of string * list<sort> * sort * term * caption
   | Assume     of assumption
   | Caption    of string
+  | Module     of string * list<decl>
   | Eval       of term
   | Echo       of string
   | RetainAssumptions of list<string>
@@ -717,17 +718,31 @@ let termToSmt
       aux 0 0 [] t
 
 let caption_to_string = function
-    | None -> ""
-    | Some c ->
+    | Some c
+       when Options.log_queries() &&
+            Options.keep_query_captions() ->
         let c = String.split ['\n'] c |> List.map BU.trim_string |> String.concat " " in
         ";;;;;;;;;;;;;;;;" ^ c ^ "\n"
+    | _ -> ""
+
 
 let rec declToSmt' print_ranges z3options decl =
   match decl with
   | DefPrelude ->
     mkPrelude z3options
+  | Module (s, decls) ->
+    let res = List.map (declToSmt' print_ranges z3options) decls |> String.concat "\n" in
+    if Options.log_queries ()
+    then BU.format5 "\n;;; Start module %s\n%s\n;;; End module %s (%s decls; total size %s)"
+                    s
+                    res
+                    s
+                    (BU.string_of_int (List.length decls))
+                    (BU.string_of_int (String.length res))
+    else res
   | Caption c ->
     if Options.log_queries ()
+    && Options.keep_query_captions()
     then "\n" ^ (BU.splitlines c |> List.map (fun s -> "; " ^ s ^ "\n") |> String.concat "")
     else ""
   | DeclFun(f,argsorts,retsort,c) ->
@@ -746,6 +761,7 @@ let rec declToSmt' print_ranges z3options decl =
     in
     let fids =
         if Options.log_queries()
+        && Options.keep_query_captions()
         then BU.format1 ";;; Fact-ids: %s\n" (String.concat "; " (fact_ids_to_string a.assumption_fact_ids))
         else "" in
     let n = a.assumption_name in
@@ -768,8 +784,9 @@ let rec declToSmt' print_ranges z3options decl =
   | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
 
-and declToSmt         z3options decl = declToSmt' true  z3options decl
+and declToSmt         z3options decl = declToSmt' (true && Options.log_queries() && Options.keep_query_captions())  z3options decl
 and declToSmt_no_caps z3options decl = declToSmt' false z3options decl
+and declsToSmt        z3options decls = List.map (declToSmt z3options) decls |> String.concat "\n"
 
 and mkPrelude z3options =
   let basic = z3options ^
