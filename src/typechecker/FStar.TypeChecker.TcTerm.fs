@@ -1490,6 +1490,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                       BU.print_string "... not lifting\n";
                    None, (e, q)
                end else begin
+                   //this argument is effectful, warn if the function would be erased
+                   //special casing for ignore, may be use an attribute instead?
                    let warn_effectful_args  =
                      (TcUtil.must_erase_for_extraction env chead.res_typ) &&
                      (not (match (U.un_uinst head).n with
