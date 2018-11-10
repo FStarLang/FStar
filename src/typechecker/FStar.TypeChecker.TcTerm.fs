@@ -1480,10 +1480,6 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
        else
           (* 2. For each monadic argument (including the head of the application) we introduce *)
           (*    a fresh variable and lift the actual argument to comp.       *)
-          let allow_effectful_args  =
-            Options.ml_ish () ||
-            not (TcUtil.must_erase_for_extraction env chead.res_typ)
-          in
           let lifted_args, head, args =
             let map_fun ((e, q), _ , c) =
                if Env.debug env Options.Extreme then
@@ -1494,7 +1490,16 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                       BU.print_string "... not lifting\n";
                    None, (e, q)
                end else begin
-                   if not allow_effectful_args then raise_error (Err.expected_ghost_expression e (c |> lcomp_comp)) e.pos;
+                   let warn_effectful_args  =
+                     (TcUtil.must_erase_for_extraction env chead.res_typ) &&
+                     (not (match (U.un_uinst head).n with
+                           | Tm_fvar fv -> S.fv_eq_lid fv (Parser.Const.psconst "ignore")
+                           | _ -> true))
+                   in
+                   if warn_effectful_args then
+                     Errors.log_issue e.pos (Errors.Warning_EffectfulArgumentToErasedFunction,
+                                             (format3 "Effectful argument %s (%s) to erased function %s, consider let binding it"
+                                                      (Print.term_to_string e) c.eff_name.str (Print.term_to_string head)));
                    if Env.debug env Options.Extreme then
                        BU.print_string "... lifting!\n";
                    let x = S.new_bv None c.res_typ in
