@@ -1,0 +1,33 @@
+[
+  "$d~/MpÉo\\ü\u0019±jBmµ",
+  [
+    [
+      "Bug1571.t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Reflection.Data.var", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "function_token_typing_FStar.Reflection.Data.var",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "14f00fdf71b538d8fc2010024fef7822"
+    ],
+    [
+      "Bug1571.__proj__V__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1571.V",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug1571_Tm_refine_4efce2107be5fc6d34ea56c6f3b06057"
+      ],
+      0,
+      "9b04d3822c0bbdaab91cbc506c2d9288"
+    ]
+  ]
+]
