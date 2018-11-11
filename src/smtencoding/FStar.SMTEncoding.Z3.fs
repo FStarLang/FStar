@@ -555,8 +555,7 @@ let mk_input theory =
 
             (* Ignore captions AND ranges when hashing, otherwise we depend on file names *)
             let hs =
-              if Options.log_queries()
-              && Options.keep_query_captions ()
+              if Options.keep_query_captions ()
               then prefix
                    |> List.map (declToSmt_no_caps options)
                    |> String.concat "\n"
