@@ -1067,10 +1067,7 @@ let (mk_input :
             let ps = FStar_String.concat "\n" ps_lines  in
             let ss = FStar_String.concat "\n" ss_lines  in
             let hs =
-              let uu____5794 =
-                (FStar_Options.log_queries ()) &&
-                  (FStar_Options.keep_query_captions ())
-                 in
+              let uu____5794 = FStar_Options.keep_query_captions ()  in
               if uu____5794
               then
                 let uu____5798 =
