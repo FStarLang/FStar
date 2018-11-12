@@ -55,8 +55,8 @@ type files_for_module_name = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
+(* In public interface *)
 type open_kind = | Open_module | Open_namespace
-
 
 let check_and_strip_suffix (f: string): option<string> =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in
@@ -74,10 +74,11 @@ let check_and_strip_suffix (f: string): option<string> =
   | _ ->
       None
 
-
+(* In public interface *)
 let is_interface (f: string): bool =
   String.get f (String.length f - 1) = 'i'
 
+(* In public interface *)
 let is_implementation f =
   not (is_interface f)
 
@@ -87,6 +88,7 @@ let list_of_option = function Some x -> [x] | None -> []
 let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
 
+(* In public interface *)
 let module_name_of_file f =
     match check_and_strip_suffix (basename f) with
     | Some longname ->
@@ -94,6 +96,7 @@ let module_name_of_file f =
     | None ->
       raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "not a valid FStar file: %s" f))
 
+(* In public interface *)
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
 let namespace_of_module f =
@@ -137,6 +140,7 @@ let mk_deps dg fs c a i = {
     all_files=a;
     interfaces_with_inlining=i
 }
+(* In public interface *)
 let empty_deps = mk_deps (deps_empty ()) (BU.smap_create 0) [] [] []
 let module_name_of_dep = function
     | UseInterface m
@@ -171,6 +175,7 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
+(* In public interface *)
 let cache_file_name fn =
   FStar.Options.prepend_cache_dir
     (if Options.lax()
@@ -263,6 +268,7 @@ let print_graph (graph:dependence_graph) =
 
 (** Enumerate all F* files in include directories.
     Return a list of pairs of long names and full paths. *)
+(* In public interface *)
 let build_inclusion_candidates_list (): list<(string * string)> =
   let include_directories = Options.include_path () in
   let include_directories = List.map normalize_file_path include_directories in
@@ -356,10 +362,13 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 
 exception Exit
 
+(* In public interface *)
 let hard_coded_dependencies full_filename =
   let filename : string = basename full_filename in
   let corelibs =
-    [Options.prims_basename () ; Options.pervasives_basename () ; Options.pervasives_native_basename ()]
+    [Options.prims_basename () ;
+     Options.pervasives_basename () ;
+     Options.pervasives_native_basename ()]
   in
   (* The core libraries do not have any implicit dependencies *)
   if List.mem filename corelibs then []
@@ -824,54 +833,117 @@ let topological_dependences_of
                 all_friends
                 filenames
     in
-    (* We compute the file list in two phases:
 
-        1. The first traversal encounters all friend and
-           inline_for_extraction modules in the entire dependence
-           graph. Call this the `friends` module list below.
+    (* An important requirement is that in addition to files being
+       emitted in topological order, we require implementation files
+       to immmediately follow their interface files (if any) in the
+       final order.
 
-        2. Then, we alter the dependences to turn every occurrence of
-           a interface dependence of a friend/inline module into an
-           implementation dependence.
+       This is because the interleaving semantics of
+       interfaces+implementation relies on these files being adjacent
+       in the dependence order.
 
-        3. A second traversal now collects all the files in dependence
-           order
+       This is enforced in several steps.
+
+       First, every implementation file contains its interface file as
+       its *LAST* dependence. In a simple scenario, when scanning an
+       the dependences of an implementation file, we will encounter
+       its interface last, and so we would complete the dependence
+       scan of all the dependences of the implementation;then the
+       dependences of the interface file; then emit the interface file
+       in the topological sort (above); followed immediately by the
+       implementation.
+
+       More complex situations arise due to friend modules where some
+       modules in the dependence graph may rely only on the module's
+       interface, whereas others may rely on its implementation.
+
+       Further complications arise from cross-module inlining, where,
+       the extraction of one module may depend on the implementation
+       details of another module.
+
+       To handle this, we compute the file list in several phases:
+
+        1. If --cmi and codegen is true, then we need to inline across
+           interface boundaries for modules M that are in the
+           interfaces_needing_inlining list. So, we transform the
+           dependence graph updating every interface dependence on
+           such a module M into a friend dependence on that module's
+           implementation.
+
+        2. Then, we traverse the graph in topological order
+           encountering all friend modules reachable from the
+           specified roots.
+
+        3. Then, we alter the dependences to turn every occurrence of
+           a interface dependence of a friend module into an
+           implementation dependence. Note, this does not change the
+           set of files reachable from the given roots.
+
+        4. A second traversal now collects all the files in dependence
+           order, ensuring that implementation and interface files are
+           adjacent in the dependence order, since the interface is
+           always the last dependence of an implementation.
+
+       This ensures that for a given set of roots, every module that
+       needs to be friended or inlined is marked as a friend for
+       *every* module in the dependence graph, avoiding "double
+       vision" problems of some modules seeing the interface only
+       whereas others requiring both interface+implementation.
+
+       So, when traversing the graph, we always encounter friend
+       module implementaions first, then their interfaces, emitting
+       them adjacent to the each other in the final order.
     *)
+
     if Options.debug_any()
     then BU.print_string "==============Phase1==================\n";
-    let root_friends =
-        if Options.cmi()
-        && for_extraction
-        then interfaces_needing_inlining
-        else []
+    let widened = BU.mk_ref false in
+    let widen_deps friends deps =
+        let (Deps dg) = deps in
+        let (Deps dg') = deps_empty() in
+        let widen_one deps =
+          deps |> List.map (fun d ->
+            match d with
+            | PreferInterface m
+                when (List.contains m friends &&
+                     has_implementation file_system_map m) ->
+              widened := true;
+              FriendImplementation m
+            | _ -> d)
+        in
+        BU.smap_fold
+           dg
+           (fun filename (dependences, color) () ->
+              BU.smap_add
+                dg'
+                filename
+                (widen_one dependences, White))
+           ();
+        Deps dg'
+    in
+    let dep_graph =
+      if Options.cmi()
+      && for_extraction
+      then widen_deps interfaces_needing_inlining dep_graph
+      else dep_graph
     in
     let friends, all_files_0 =
-        all_friend_deps (dep_graph_copy dep_graph) [] (root_friends, []) root_files
+        all_friend_deps dep_graph [] ([], []) root_files
     in
     if Options.debug_any()
-    then BU.print3 "Phase1 complete:\n\tall_files = %s\n\tall_friends=%s\n\tinterfaces_with_inlining=%s\n"
+    then BU.print3 "Phase1 complete:\n\t\
+                       all_files = %s\n\t\
+                       all_friends=%s\n\t\
+                       interfaces_with_inlining=%s\n"
                    (String.concat ", " all_files_0)
                    (String.concat ", " (remove_dups (fun x y -> x=y) friends))
                    (String.concat ", " (interfaces_needing_inlining));
-    let widened = BU.mk_ref false in
-    let widen_deps friends deps =
-        deps |> List.map (fun d ->
-        match d with
-        | PreferInterface m
-            when (List.contains m friends &&
-                  has_implementation file_system_map m) ->
-          widened := true;
-          FriendImplementation m
-        | _ -> d)
-    in
+    let dep_graph = widen_deps friends dep_graph in
     let _, all_files =
-        let (Deps dg) = dep_graph in
-        let (Deps dg') = deps_empty() in
-        BU.smap_fold dg (fun filename (dependences, color) () ->
-            BU.smap_add dg' filename (widen_deps friends dependences, color)) ();
         if Options.debug_any()
         then BU.print_string "==============Phase2==================\n";
-        all_friend_deps (Deps dg') [] ([], []) root_files
+        all_friend_deps dep_graph [] ([], []) root_files
     in
     if Options.debug_any()
     then BU.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
@@ -880,6 +952,7 @@ let topological_dependences_of
 
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
+(* In public interface *)
 let collect (all_cmd_line_files: list<file_name>)
     : list<file_name>
     * deps //topologically sorted transitive dependences of all_cmd_line_files
@@ -1002,17 +1075,24 @@ let collect (all_cmd_line_files: list<file_name>)
 
   let inlining_ifaces = !interfaces_needing_inlining in
   let all_files, _ =
-    topological_dependences_of file_system_map dep_graph inlining_ifaces all_cmd_line_files (Options.codegen()<>None)
+    topological_dependences_of
+      file_system_map
+      dep_graph
+      inlining_ifaces
+      all_cmd_line_files
+      (Options.codegen()<>None)
   in
   if Options.debug_any()
   then BU.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
   all_files,
   mk_deps dep_graph file_system_map all_cmd_line_files all_files inlining_ifaces
 
+(* In public interface *)
 let deps_of deps (f:file_name)
     : list<file_name> =
     dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
 
+(* In public interface *)
 let hash_dependences deps fn =
     let file_system_map = deps.file_system_map in
     let all_cmd_line_files = deps.cmd_line_files in
@@ -1067,6 +1147,7 @@ let hash_dependences deps fn =
     in
     hash_deps [] binary_deps
 
+(* In public interface *)
 let print_digest (dig:list<(string * string)>) : string =
     dig
     |> List.map (fun (m, d) -> BU.format2 "%s:%s" m (BU.base64_encode d))
@@ -1091,6 +1172,7 @@ let print_make deps : unit =
           //   a.fst: b.fst c.fsti a.fsti
           Util.print2 "%s: %s\n\n" f (String.concat " " files))
 
+(* In public interface *)
 let print_raw (deps:deps) =
     let (Deps deps) = deps.dep_graph in
       smap_fold deps (fun k (dep, _) out ->
@@ -1345,6 +1427,7 @@ let print_full (deps:deps) : unit =
     Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"   (all_ml_files   |> List.map norm_path |> String.concat " \\\n\t");
     Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"   (all_krml_files |> List.map norm_path |> String.concat " \\\n\t")
 
+(* In public interface *)
 let print deps =
   match Options.dep() with
   | Some "make" ->
@@ -1368,9 +1451,11 @@ let print_fsmap fsmap =
                 k (BU.dflt "_" v0) (BU.dflt "_" v1))
         ""
 
+(* In public interface *)
 let module_has_interface deps module_name =
     has_interface deps.file_system_map (String.lowercase (Ident.string_of_lid module_name))
 
+(* In public interface *)
 let deps_has_implementation deps module_name =
     let m = String.lowercase (Ident.string_of_lid module_name) in
     deps.all_files |> BU.for_some (fun f ->
