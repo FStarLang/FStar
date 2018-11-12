@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-EXTENSIONS="*.fst *.fsti *.fs *.fsi"
+EXTENSIONS="*.fst *.fsti"
 add_copyright() {
     echo "Adding copyright to $1"
     cat copyright.txt > tmp
