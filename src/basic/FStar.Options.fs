@@ -164,6 +164,7 @@ let defaults =
       ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
+      ("already_cached"               , Unset);
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
@@ -290,6 +291,7 @@ let lookup_opt s c =
 let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
+let get_already_cached          ()      = lookup_opt "already_cached"           (as_option (as_list as_string))
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
@@ -571,6 +573,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "admit_except",
         SimpleStr "[symbol|(symbol, id)]",
         "Admit all queries, except those with label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
+
+       ( noshort,
+         "already_cached",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+        "\n\t\tExpects all modules whose names or namespaces match the provided options \n\t\t\t\
+         to already have valid .checked files in the include path");
 
       ( noshort,
         "cache_checked_modules",
@@ -1256,8 +1264,13 @@ let should_print_message m =
     else false
 
 let include_path () =
+  let cache_dir =
+    match get_cache_dir() with
+    | None -> []
+    | Some c -> [c]
+  in
   if get_no_default_includes() then
-    get_include()
+    cache_dir @ get_include()
   else
     let lib_paths =
         match FStar.Util.expand_environment_variable "FSTAR_LIB" with
@@ -1267,7 +1280,7 @@ let include_path () =
           defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists
         | Some s -> [s]
     in
-    lib_paths @ get_include() @ [ "." ]
+    cache_dir @ lib_paths @ get_include() @ [ "." ]
 
 let find_file =
   let file_map = FStar.Util.smap_create 100 in
@@ -1500,27 +1513,39 @@ let with_saved_options f =
       retv
   end
 
+let module_matches_namespace_filter m filter =
+    let m = String.lowercase m in
+    let setting = parse_settings filter in
+    let m_components = path_of_text m in
+    let rec matches_path m_components path =
+        match m_components, path with
+        | _, [] -> true
+        | m::ms, p::ps -> m=String.lowercase p && matches_path ms ps
+        | _ -> false
+    in
+    match setting
+          |> Util.try_find
+              (fun (path, _) -> matches_path m_components path)
+    with
+    | None -> false
+    | Some (_, flag) -> flag
+
+
 let should_extract m =
     let m = String.lowercase m in
     match get_extract() with
     | Some extract_setting -> //new option, using --extract '* -FStar' etc.
-      let _ = match get_no_extract(), get_extract_namespace(), get_extract_module () with
-              | [], [], [] -> ()
-              | _ -> failwith "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module"
+      let _ =
+        match get_no_extract(),
+              get_extract_namespace(),
+              get_extract_module ()
+        with
+        | [], [], [] -> ()
+        | _ -> failwith "Incompatible options: \
+                        --extract cannot be used with \
+                        --no_extract, --extract_namespace or --extract_module"
       in
-      let setting = parse_settings extract_setting in
-      let m_components = path_of_text m in
-      let rec matches_path m_components path =
-          match m_components, path with
-          | _, [] -> true
-          | m::ms, p::ps -> m=String.lowercase p && matches_path ms ps
-          | _ -> false
-      in
-      begin
-      match setting |> Util.try_find (fun (path, _) -> matches_path m_components path) with
-      | None -> false
-      | Some (_, flag) -> flag
-      end
+      module_matches_namespace_filter m extract_setting
     | None -> //old
         let should_extract_namespace m =
             match get_extract_namespace () with
@@ -1536,3 +1561,9 @@ let should_extract m =
         (match get_extract_namespace (), get_extract_module() with
         | [], [] -> true //neither is set
         | _ -> should_extract_namespace m || should_extract_module m)
+
+let should_be_already_cached m =
+  match get_already_cached() with
+  | None -> false
+  | Some already_cached_setting ->
+    module_matches_namespace_filter m already_cached_setting

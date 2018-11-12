@@ -282,22 +282,18 @@ let load_module_from_cache
         match !some_cache_invalid with
         | Some _ -> None
         | _ ->
-          if BU.file_exists cache_file then
-            match load env.env_tcenv fn cache_file with
-            | Inl msg -> fail msg true cache_file
-            | Inr res -> Some res
-          else
-            match FStar.Options.find_file (FStar.Util.basename cache_file) with
-            | None -> fail "Absent" false cache_file //do not warn if the file was not found
-            | Some alt_cache_file ->
-              match load env.env_tcenv fn alt_cache_file with
-              | Inl msg -> fail msg true alt_cache_file
-              | Inr res ->
-                //found a valid .checked file somewhere else in the include path
-                //copy it to the destination, if we are supposed to be verifying this file
-                if Options.should_verify_file fn
-                then FStar.Util.copy_file alt_cache_file cache_file;
-                Some res
+          match FStar.Options.find_file (FStar.Util.basename cache_file) with
+          | None -> fail "Absent" false cache_file //do not warn if the file was not found
+          | Some alt_cache_file ->
+            match load env.env_tcenv fn alt_cache_file with
+            | Inl msg -> fail msg true alt_cache_file
+            | Inr res ->
+              //if we found a valid .checked file somewhere in the include path
+              //copy it to the destination, if we are supposed to be verifying this file
+              if Options.should_verify_file fn
+              && BU.normalize_file_path alt_cache_file <> BU.normalize_file_path cache_file
+              then FStar.Util.copy_file alt_cache_file cache_file;
+              Some res
 
 
 let store_module_to_cache (env:uenv) fn (tc_result:tc_result) =
@@ -425,12 +421,18 @@ let tc_one_file
   if not (Options.cache_off()) then
       match load_module_from_cache env fn with
       | None ->
-        if Option.isSome (Options.codegen())
-        && Options.cmi()
+        if Options.should_be_already_cached (FStar.Parser.Dep.module_name_of_file fn)
+        then FStar.Errors.raise_err
+                (FStar.Errors.Error_UncheckedFile,
+                 BU.format1 "Expected %s to already be checked" fn);
+
+        if (Option.isSome (Options.codegen())
+        && Options.cmi())
         then FStar.Errors.raise_err
                 (FStar.Errors.Error_UncheckedFile,
                  BU.format1 "Cross-module inlining expects all modules to be checked first; %s was not checked"
                             fn);
+
 
         let tc_result, mllib, env = tc_source_file () in
         if FStar.Errors.get_err_count() = 0
