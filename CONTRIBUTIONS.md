@@ -18,8 +18,8 @@ See https://github.com/FStarLang/FStar/wiki/Style-guide
 # Reviewers of pull requests
 
 Aside from the committers on the files that are being changed, various
-components of the repository have have primary maintainers who are
-expected to review pull requests.
+components of the repository have primary maintainers who are
+expected to review pull requests:
 
 ## Lexing
 
