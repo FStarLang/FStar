@@ -873,11 +873,12 @@ let topological_dependences_of
 
         2. Then, we traverse the graph in topological order
            encountering all friend modules reachable from the
-           specified roots. Call this the `friends` module list below.
+           specified roots.
 
         3. Then, we alter the dependences to turn every occurrence of
            a interface dependence of a friend module into an
-           implementation dependence.
+           implementation dependence. Note, this does not change the
+           set of files reachable from the given roots.
 
         4. A second traversal now collects all the files in dependence
            order, ensuring that implementation and interface files are
