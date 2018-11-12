@@ -3,7 +3,7 @@
 Contributors to F\* are required to sign the contributor's license
 agreement provided by https://cla.opensource.microsoft.com/
 
-Contributions are received under the Apache 2.0 license.
+The code of F* is released under the Apache 2.0 license.
 
 # Pull requests
 
