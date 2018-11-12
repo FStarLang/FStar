@@ -91,7 +91,89 @@ let morph lstate hstate (#p: state_lens lstate hstate)
            (a:Type) (wp : hwp_mon hstate a) (c : high hstate a wp) : low lstate hstate #p a wp c =
   fun ls ->
     let hs = to_high' #_ #_ #p ls in 
-    let h = ST.get () in
-    assert (to_high #_ #_ #p h ls == hs);
     let (x, hs') = run_high c hs in
     to_low' #_ #_ #p ls hs'; x
+
+
+(* High WPS *)
+unfold
+let return_wp #state (#a:Type) (x : a) : hwp_mon state a = fun s0 p -> p (x, s0)
+
+unfold
+let bind_wp #state #a #b (wp1:hwp_mon state a) (fwp2 : (a -> hwp_mon state b)) : (wp:hwp_mon state b) =
+    fun s0 p -> wp1 s0 (fun (x, s1) -> fwp2 x s1 p)
+
+(* High combinators *)
+let return_elab #state (#a:Type) (x : a) : high state a (return_wp x) = fun s0 -> (x, s0)
+
+let bind_elab #state #a #b #f_w (f:high state a f_w) #g_w ($g:(x:a) -> high state b (g_w x)) 
+    : high state b (bind_wp f_w g_w) = fun s0 -> let (r1, s1) = run_high f s0 in run_high (g r1) s1
+                                     
+(* Low combinators *)
+
+let lreturn #lstate #state (#p: state_lens lstate state) (a:Type) (x : a)
+: low lstate state #p a (return_wp x) (return_elab x) = 
+  fun ls -> 
+     let h0 = ST.get () in
+     let p = high_low #_ #_ #p h0 ls in (* 1st lens law *)
+     assert (h0 == to_low h0 ls (to_high h0 ls));
+     x
+
+let lbind #lstate #state (#p: state_lens lstate state) #a #b
+    (#wp1:hwp_mon state a) (#fwp2:(a -> hwp_mon state b))
+    (#c1:high state a wp1) (#c2:(x:a -> high state b (fwp2 x)))
+    (m:low lstate state #p a wp1 c1) (f:(x:a) -> low lstate state #p b (fwp2 x) (c2 x)) :
+    low lstate state #p b (bind_wp wp1 fwp2) (bind_elab c1 c2) =
+  fun ls -> 
+    (* almost verbatim from specialized [lbind] *)
+    (* ********************************************* *)
+
+    let h0 = ST.get () in // initial heap
+
+    (* ********************************************* *)
+
+    let x_a = m ls in 
+
+    (* ********************************************* *)
+
+    let h1 = ST.get () in // intermediate heap
+
+    let hc : Ghost.erased _ =
+      //In this block, we run the high computation
+      //in ghost code and remember its intermediate states and result
+      let s0 = to_high #_ #_ #p h0 ls in
+      let x, s1 = run_high c1 s0 in
+      assert (x == x_a);
+      assert (h1 == to_low #_ #_ #p h0 ls s1);
+      low_high h0 ls s1; //Get-Put: 1st lens law
+      assert (to_high  #_ #_ #p h1 ls == s1); //this assertion is key to running `f x_a ls` below
+      let y, s2 = run_high (c2 x) s1 in
+      assert (s2 == snd (run_high #state #b #(bind_wp wp1 fwp2) (bind_elab c1 c2) s0));
+      Ghost.hide (s0, (x, s1), (y, s2))
+    in
+  
+    (* ********************************************* *)
+    
+    let y_b = f x_a ls in
+    
+    (* ********************************************* *)
+    
+    let h2 = ST.get () in // final heap
+    let _ : unit =
+      //In this block, we unpack the memoized result from earlier
+      //and relate those values to the result and final heap
+      let s0, (x, s1), (y, s2) = Ghost.reveal hc in
+      assert (x == x_a);
+      assert (y == y_b);
+      assert (h2 == to_low #_ #_ #p h1 ls s2);
+      assert (h1 == to_low #_ #_ #p h0 ls s1);
+      let _ = low_low #_ #_ #p h0 ls s1 s2 in
+      assert (to_low #_ #_ #p h0 ls s2 == to_low #_ #_ #p (to_low #_ #_ #p h0 ls s1) ls s2);
+      assert (to_low #_ #_ #p h0 ls s2 == to_low #_ #_ #p h1 ls s2)
+    in
+  
+    (* ********************************************* *)
+    y_b
+  
+
+ 
