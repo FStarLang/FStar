@@ -81,6 +81,11 @@ Guidelines for the changelog:
    https://github.com/FStarLang/FStar/wiki/Revised-checking-of-a-module's-interface
    for more information.
 
+   `--keep_query_captions true|false` (default `true`) when set to `true`,
+   and when `--log_queries` is enabled, causes .smt2 files to be logged with
+   comments; otherwise comments are not printed. Note, the comments
+   can be quite verbose.
+
 ## Type inference
 
    We had a significant overhaul of the type inference algorithm and
