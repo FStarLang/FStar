@@ -1906,7 +1906,7 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
                 FStar_List.map (declToSmt' print_captions z3options) decls
                  in
               FStar_All.pipe_right uu____7661 (FStar_String.concat "\n")  in
-            let uu____7671 = FStar_Options.log_queries ()  in
+            let uu____7671 = FStar_Options.keep_query_captions ()  in
             if uu____7671
             then
               let uu____7675 =
@@ -2001,10 +2001,7 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
 and (declToSmt : Prims.string -> decl -> Prims.string) =
   fun z3options  ->
     fun decl  ->
-      let uu____7897 =
-        (FStar_Options.log_queries ()) &&
-          (FStar_Options.keep_query_captions ())
-         in
+      let uu____7897 = FStar_Options.keep_query_captions ()  in
       declToSmt' uu____7897 z3options decl
 
 and (declToSmt_no_caps : Prims.string -> decl -> Prims.string) =

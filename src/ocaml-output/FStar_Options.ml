@@ -3018,14 +3018,14 @@ let (initial_ifuel : unit -> Prims.int) =
   
 let (interactive : unit -> Prims.bool) =
   fun uu____10709  -> (get_in ()) || (get_ide ()) 
-let (keep_query_captions : unit -> Prims.bool) =
-  fun uu____10716  -> get_keep_query_captions () 
-let (lax : unit -> Prims.bool) = fun uu____10723  -> get_lax () 
+let (lax : unit -> Prims.bool) = fun uu____10716  -> get_lax () 
 let (load : unit -> Prims.string Prims.list) =
-  fun uu____10732  -> get_load () 
-let (legacy_interactive : unit -> Prims.bool) = fun uu____10739  -> get_in () 
+  fun uu____10725  -> get_load () 
+let (legacy_interactive : unit -> Prims.bool) = fun uu____10732  -> get_in () 
 let (log_queries : unit -> Prims.bool) =
-  fun uu____10746  -> get_log_queries () 
+  fun uu____10739  -> get_log_queries () 
+let (keep_query_captions : unit -> Prims.bool) =
+  fun uu____10746  -> (log_queries ()) && (get_keep_query_captions ()) 
 let (log_types : unit -> Prims.bool) = fun uu____10753  -> get_log_types () 
 let (max_fuel : unit -> Prims.int) = fun uu____10760  -> get_max_fuel () 
 let (max_ifuel : unit -> Prims.int) = fun uu____10767  -> get_max_ifuel () 
