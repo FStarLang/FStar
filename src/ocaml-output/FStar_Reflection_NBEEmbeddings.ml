@@ -2,8 +2,7 @@ open Prims
 let (mkFV :
   FStar_Syntax_Syntax.fv ->
     FStar_Syntax_Syntax.universe Prims.list ->
-      (FStar_TypeChecker_NBETerm.t,FStar_Syntax_Syntax.aqual)
-        FStar_Pervasives_Native.tuple2 Prims.list ->
+      (FStar_TypeChecker_NBETerm.t * FStar_Syntax_Syntax.aqual) Prims.list ->
         FStar_TypeChecker_NBETerm.t)
   =
   fun fv  ->
@@ -15,8 +14,7 @@ let (mkFV :
 let (mkConstruct :
   FStar_Syntax_Syntax.fv ->
     FStar_Syntax_Syntax.universe Prims.list ->
-      (FStar_TypeChecker_NBETerm.t,FStar_Syntax_Syntax.aqual)
-        FStar_Pervasives_Native.tuple2 Prims.list ->
+      (FStar_TypeChecker_NBETerm.t * FStar_Syntax_Syntax.aqual) Prims.list ->
         FStar_TypeChecker_NBETerm.t)
   =
   fun fv  ->
@@ -155,9 +153,8 @@ let rec mapM_opt :
                  (fun xs1  -> FStar_Pervasives_Native.Some (x1 :: xs1)))
   
 let (e_term_aq :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
-                            FStar_Syntax_Syntax.syntax)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
+    FStar_Syntax_Syntax.syntax) Prims.list ->
     FStar_Syntax_Syntax.term FStar_TypeChecker_NBETerm.embedding)
   =
   fun aq  ->
@@ -587,22 +584,20 @@ let (e_branch :
 let (e_argv : FStar_Reflection_Data.argv FStar_TypeChecker_NBETerm.embedding)
   = FStar_TypeChecker_NBETerm.e_tuple2 e_term e_aqualv 
 let (e_branch_aq :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
-                            FStar_Syntax_Syntax.syntax)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
-    (FStar_Reflection_Data.pattern,FStar_Syntax_Syntax.term)
-      FStar_Pervasives_Native.tuple2 FStar_TypeChecker_NBETerm.embedding)
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
+    FStar_Syntax_Syntax.syntax) Prims.list ->
+    (FStar_Reflection_Data.pattern * FStar_Syntax_Syntax.term)
+      FStar_TypeChecker_NBETerm.embedding)
   =
   fun aq  ->
     let uu____1511 = e_term_aq aq  in
     FStar_TypeChecker_NBETerm.e_tuple2 e_pattern uu____1511
   
 let (e_argv_aq :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
-                            FStar_Syntax_Syntax.syntax)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
-    (FStar_Syntax_Syntax.term,FStar_Reflection_Data.aqualv)
-      FStar_Pervasives_Native.tuple2 FStar_TypeChecker_NBETerm.embedding)
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
+    FStar_Syntax_Syntax.syntax) Prims.list ->
+    (FStar_Syntax_Syntax.term * FStar_Reflection_Data.aqualv)
+      FStar_TypeChecker_NBETerm.embedding)
   =
   fun aq  ->
     let uu____1542 = e_term_aq aq  in
@@ -625,9 +620,8 @@ let rec unlazy_as_t :
       | uu____1586 -> failwith "Not a Lazy of the expected kind (NBE)"
   
 let (e_term_view_aq :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
-                            FStar_Syntax_Syntax.syntax)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
+    FStar_Syntax_Syntax.syntax) Prims.list ->
     FStar_Reflection_Data.term_view FStar_TypeChecker_NBETerm.embedding)
   =
   fun aq  ->

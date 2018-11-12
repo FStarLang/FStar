@@ -20,9 +20,8 @@ let (type_leq_c :
     FStar_Extraction_ML_Syntax.mlexpr FStar_Pervasives_Native.option ->
       FStar_Extraction_ML_Syntax.mlty ->
         FStar_Extraction_ML_Syntax.mlty ->
-          (Prims.bool,FStar_Extraction_ML_Syntax.mlexpr
-                        FStar_Pervasives_Native.option)
-            FStar_Pervasives_Native.tuple2)
+          (Prims.bool * FStar_Extraction_ML_Syntax.mlexpr
+            FStar_Pervasives_Native.option))
   =
   fun g  ->
     fun t1  ->
@@ -42,8 +41,7 @@ let (eraseTypeDeep :
 let record_fields :
   'Auu____78 .
     FStar_Ident.ident Prims.list ->
-      'Auu____78 Prims.list ->
-        (Prims.string,'Auu____78) FStar_Pervasives_Native.tuple2 Prims.list
+      'Auu____78 Prims.list -> (Prims.string * 'Auu____78) Prims.list
   =
   fun fs  ->
     fun vs  ->
@@ -52,15 +50,13 @@ let record_fields :
 let fail :
   'Auu____121 .
     FStar_Range.range ->
-      (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2 ->
-        'Auu____121
+      (FStar_Errors.raw_error * Prims.string) -> 'Auu____121
   = fun r  -> fun err  -> FStar_Errors.raise_error err r 
 let err_uninst :
   'Auu____153 .
     FStar_Extraction_ML_UEnv.uenv ->
       FStar_Syntax_Syntax.term ->
-        (Prims.string Prims.list,FStar_Extraction_ML_Syntax.mlty)
-          FStar_Pervasives_Native.tuple2 ->
+        (Prims.string Prims.list * FStar_Extraction_ML_Syntax.mlty) ->
           FStar_Syntax_Syntax.term -> 'Auu____153
   =
   fun env  ->
@@ -91,8 +87,7 @@ let err_ill_typed_application :
     FStar_Extraction_ML_UEnv.uenv ->
       FStar_Syntax_Syntax.term ->
         FStar_Extraction_ML_Syntax.mlexpr ->
-          (FStar_Syntax_Syntax.term,'Auu____234)
-            FStar_Pervasives_Native.tuple2 Prims.list ->
+          (FStar_Syntax_Syntax.term * 'Auu____234) Prims.list ->
             FStar_Extraction_ML_Syntax.mlty -> 'Auu____235
   =
   fun env  ->
@@ -411,8 +406,7 @@ let (is_type :
 let is_type_binder :
   'Auu____1433 .
     FStar_Extraction_ML_UEnv.uenv ->
-      (FStar_Syntax_Syntax.bv,'Auu____1433) FStar_Pervasives_Native.tuple2 ->
-        Prims.bool
+      (FStar_Syntax_Syntax.bv * 'Auu____1433) -> Prims.bool
   =
   fun env  ->
     fun x  ->
@@ -514,12 +508,10 @@ let (unit_binder : FStar_Syntax_Syntax.binder) =
      in
   FStar_All.pipe_left FStar_Syntax_Syntax.mk_binder uu____1912 
 let (check_pats_for_ite :
-  (FStar_Syntax_Syntax.pat,FStar_Syntax_Syntax.term
-                             FStar_Pervasives_Native.option,FStar_Syntax_Syntax.term)
-    FStar_Pervasives_Native.tuple3 Prims.list ->
-    (Prims.bool,FStar_Syntax_Syntax.term FStar_Pervasives_Native.option,
-      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple3)
+  (FStar_Syntax_Syntax.pat * FStar_Syntax_Syntax.term
+    FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term) Prims.list ->
+    (Prims.bool * FStar_Syntax_Syntax.term FStar_Pervasives_Native.option *
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option))
   =
   fun l  ->
     let def =
@@ -1165,9 +1157,8 @@ let rec (translate_term_to_mlty :
 and (binders_as_ml_binders :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.binders ->
-      ((FStar_Extraction_ML_Syntax.mlident,FStar_Extraction_ML_Syntax.mlty)
-         FStar_Pervasives_Native.tuple2 Prims.list,FStar_Extraction_ML_UEnv.uenv)
-        FStar_Pervasives_Native.tuple2)
+      ((FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty)
+        Prims.list * FStar_Extraction_ML_UEnv.uenv))
   =
   fun g  ->
     fun bs  ->
@@ -1310,16 +1301,14 @@ let rec (extract_one_pat :
         FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option ->
           (FStar_Extraction_ML_UEnv.uenv ->
              FStar_Syntax_Syntax.term ->
-               (FStar_Extraction_ML_Syntax.mlexpr,FStar_Extraction_ML_Syntax.e_tag,
-                 FStar_Extraction_ML_Syntax.mlty)
-                 FStar_Pervasives_Native.tuple3)
+               (FStar_Extraction_ML_Syntax.mlexpr *
+                 FStar_Extraction_ML_Syntax.e_tag *
+                 FStar_Extraction_ML_Syntax.mlty))
             ->
-            (FStar_Extraction_ML_UEnv.uenv,(FStar_Extraction_ML_Syntax.mlpattern,
-                                             FStar_Extraction_ML_Syntax.mlexpr
-                                               Prims.list)
-                                             FStar_Pervasives_Native.tuple2
-                                             FStar_Pervasives_Native.option,
-              Prims.bool) FStar_Pervasives_Native.tuple3)
+            (FStar_Extraction_ML_UEnv.uenv *
+              (FStar_Extraction_ML_Syntax.mlpattern *
+              FStar_Extraction_ML_Syntax.mlexpr Prims.list)
+              FStar_Pervasives_Native.option * Prims.bool))
   =
   fun imp  ->
     fun g  ->
@@ -1625,16 +1614,14 @@ let (extract_pat :
       FStar_Extraction_ML_Syntax.mlty ->
         (FStar_Extraction_ML_UEnv.uenv ->
            FStar_Syntax_Syntax.term ->
-             (FStar_Extraction_ML_Syntax.mlexpr,FStar_Extraction_ML_Syntax.e_tag,
-               FStar_Extraction_ML_Syntax.mlty)
-               FStar_Pervasives_Native.tuple3)
+             (FStar_Extraction_ML_Syntax.mlexpr *
+               FStar_Extraction_ML_Syntax.e_tag *
+               FStar_Extraction_ML_Syntax.mlty))
           ->
-          (FStar_Extraction_ML_UEnv.uenv,(FStar_Extraction_ML_Syntax.mlpattern,
-                                           FStar_Extraction_ML_Syntax.mlexpr
-                                             FStar_Pervasives_Native.option)
-                                           FStar_Pervasives_Native.tuple2
-                                           Prims.list,Prims.bool)
-            FStar_Pervasives_Native.tuple3)
+          (FStar_Extraction_ML_UEnv.uenv *
+            (FStar_Extraction_ML_Syntax.mlpattern *
+            FStar_Extraction_ML_Syntax.mlexpr FStar_Pervasives_Native.option)
+            Prims.list * Prims.bool))
   =
   fun g  ->
     fun p  ->
@@ -1946,8 +1933,8 @@ let (maybe_promote_effect :
   FStar_Extraction_ML_Syntax.mlexpr ->
     FStar_Extraction_ML_Syntax.e_tag ->
       FStar_Extraction_ML_Syntax.mlty ->
-        (FStar_Extraction_ML_Syntax.mlexpr,FStar_Extraction_ML_Syntax.e_tag)
-          FStar_Pervasives_Native.tuple2)
+        (FStar_Extraction_ML_Syntax.mlexpr *
+          FStar_Extraction_ML_Syntax.e_tag))
   =
   fun ml_e  ->
     fun tag  ->
@@ -1966,13 +1953,10 @@ let (maybe_promote_effect :
 let (extract_lb_sig :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.letbindings ->
-      (FStar_Syntax_Syntax.lbname,FStar_Extraction_ML_Syntax.e_tag,(FStar_Syntax_Syntax.typ,
-                                                                    (FStar_Syntax_Syntax.binders,
-                                                                    FStar_Extraction_ML_Syntax.mltyscheme)
-                                                                    FStar_Pervasives_Native.tuple2)
-                                                                    FStar_Pervasives_Native.tuple2,
-        Prims.bool,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple5
-        Prims.list)
+      (FStar_Syntax_Syntax.lbname * FStar_Extraction_ML_Syntax.e_tag *
+        (FStar_Syntax_Syntax.typ * (FStar_Syntax_Syntax.binders *
+        FStar_Extraction_ML_Syntax.mltyscheme)) * Prims.bool *
+        FStar_Syntax_Syntax.term) Prims.list)
   =
   fun g  ->
     fun lbs  ->
@@ -2285,10 +2269,8 @@ let (extract_lb_sig :
 let (extract_lb_iface :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.letbindings ->
-      (FStar_Extraction_ML_UEnv.uenv,(FStar_Syntax_Syntax.fv,FStar_Extraction_ML_UEnv.exp_binding)
-                                       FStar_Pervasives_Native.tuple2
-                                       Prims.list)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Extraction_ML_UEnv.uenv * (FStar_Syntax_Syntax.fv *
+        FStar_Extraction_ML_UEnv.exp_binding) Prims.list))
   =
   fun g  ->
     fun lbs  ->
@@ -2319,8 +2301,8 @@ let rec (check_term_as_mlexpr :
     FStar_Syntax_Syntax.term ->
       FStar_Extraction_ML_Syntax.e_tag ->
         FStar_Extraction_ML_Syntax.mlty ->
-          (FStar_Extraction_ML_Syntax.mlexpr,FStar_Extraction_ML_Syntax.mlty)
-            FStar_Pervasives_Native.tuple2)
+          (FStar_Extraction_ML_Syntax.mlexpr *
+            FStar_Extraction_ML_Syntax.mlty))
   =
   fun g  ->
     fun e  ->
@@ -2380,8 +2362,8 @@ let rec (check_term_as_mlexpr :
 and (term_as_mlexpr :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Extraction_ML_Syntax.mlexpr,FStar_Extraction_ML_Syntax.e_tag,
-        FStar_Extraction_ML_Syntax.mlty) FStar_Pervasives_Native.tuple3)
+      (FStar_Extraction_ML_Syntax.mlexpr * FStar_Extraction_ML_Syntax.e_tag *
+        FStar_Extraction_ML_Syntax.mlty))
   =
   fun g  ->
     fun e  ->
@@ -2394,8 +2376,8 @@ and (term_as_mlexpr :
 and (term_as_mlexpr' :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Extraction_ML_Syntax.mlexpr,FStar_Extraction_ML_Syntax.e_tag,
-        FStar_Extraction_ML_Syntax.mlty) FStar_Pervasives_Native.tuple3)
+      (FStar_Extraction_ML_Syntax.mlexpr * FStar_Extraction_ML_Syntax.e_tag *
+        FStar_Extraction_ML_Syntax.mlty))
   =
   fun g  ->
     fun top  ->

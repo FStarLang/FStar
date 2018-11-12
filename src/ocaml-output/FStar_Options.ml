@@ -225,7 +225,7 @@ let (set : optionstate -> unit) =
     | (uu____1189::tl1)::os ->
         FStar_ST.op_Colon_Equals fstar_options ((o :: tl1) :: os)
   
-let (snapshot : unit -> (Prims.int,unit) FStar_Pervasives_Native.tuple2) =
+let (snapshot : unit -> (Prims.int * unit)) =
   fun uu____1239  -> FStar_Common.snapshot push fstar_options () 
 let (rollback : Prims.int FStar_Pervasives_Native.option -> unit) =
   fun depth  -> FStar_Common.rollback pop fstar_options depth 
@@ -234,8 +234,7 @@ let (set_option : Prims.string -> option_val -> unit) =
     fun v1  ->
       let uu____1269 = peek ()  in FStar_Util.smap_add uu____1269 k v1
   
-let (set_option' :
-  (Prims.string,option_val) FStar_Pervasives_Native.tuple2 -> unit) =
+let (set_option' : (Prims.string * option_val) -> unit) =
   fun uu____1282  -> match uu____1282 with | (k,v1) -> set_option k v1 
 let (light_off_files : Prims.string Prims.list FStar_ST.ref) =
   FStar_Util.mk_ref [] 
@@ -247,8 +246,7 @@ let (add_light_off_file : Prims.string -> unit) =
        in
     FStar_ST.op_Colon_Equals light_off_files uu____1321
   
-let (defaults :
-  (Prims.string,option_val) FStar_Pervasives_Native.tuple2 Prims.list) =
+let (defaults : (Prims.string * option_val) Prims.list) =
   [("__temp_no_proj", (List []));
   ("__temp_fast_implicits", (Bool false));
   ("abort_on", (Int (Prims.parse_int "0")));
@@ -639,8 +637,8 @@ let (display_version : unit -> unit) =
   
 let display_usage_aux :
   'Auu____3691 'Auu____3692 .
-    ('Auu____3691,Prims.string,'Auu____3692 FStar_Getopt.opt_variant,
-      Prims.string) FStar_Pervasives_Native.tuple4 Prims.list -> unit
+    ('Auu____3691 * Prims.string * 'Auu____3692 FStar_Getopt.opt_variant *
+      Prims.string) Prims.list -> unit
   =
   fun specs  ->
     FStar_Util.print_string "fstar.exe [options] file[s]\n";
@@ -680,8 +678,8 @@ let display_usage_aux :
                      FStar_Util.print_string uu____3815))) specs
   
 let (mk_spec :
-  (FStar_BaseTypes.char,Prims.string,option_val FStar_Getopt.opt_variant,
-    Prims.string) FStar_Pervasives_Native.tuple4 -> FStar_Getopt.opt)
+  (FStar_BaseTypes.char * Prims.string * option_val FStar_Getopt.opt_variant
+    * Prims.string) -> FStar_Getopt.opt)
   =
   fun o  ->
     let uu____3854 = o  in
@@ -743,13 +741,11 @@ type opt_type =
   | PathStr of Prims.string 
   | SimpleStr of Prims.string 
   | EnumStr of Prims.string Prims.list 
-  | OpenEnumStr of (Prims.string Prims.list,Prims.string)
-  FStar_Pervasives_Native.tuple2 
-  | PostProcessed of (option_val -> option_val,opt_type)
-  FStar_Pervasives_Native.tuple2 
+  | OpenEnumStr of (Prims.string Prims.list * Prims.string) 
+  | PostProcessed of ((option_val -> option_val) * opt_type) 
   | Accumulated of opt_type 
   | ReverseAccumulated of opt_type 
-  | WithSideEffect of (unit -> unit,opt_type) FStar_Pervasives_Native.tuple2 
+  | WithSideEffect of ((unit -> unit) * opt_type) 
 let (uu___is_Const : opt_type -> Prims.bool) =
   fun projectee  ->
     match projectee with | Const _0 -> true | uu____4137 -> false
@@ -789,17 +785,15 @@ let (uu___is_OpenEnumStr : opt_type -> Prims.bool) =
     match projectee with | OpenEnumStr _0 -> true | uu____4280 -> false
   
 let (__proj__OpenEnumStr__item___0 :
-  opt_type ->
-    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | OpenEnumStr _0 -> _0 
+  opt_type -> (Prims.string Prims.list * Prims.string)) =
+  fun projectee  -> match projectee with | OpenEnumStr _0 -> _0 
 let (uu___is_PostProcessed : opt_type -> Prims.bool) =
   fun projectee  ->
     match projectee with | PostProcessed _0 -> true | uu____4331 -> false
   
 let (__proj__PostProcessed__item___0 :
-  opt_type ->
-    (option_val -> option_val,opt_type) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | PostProcessed _0 -> _0 
+  opt_type -> ((option_val -> option_val) * opt_type)) =
+  fun projectee  -> match projectee with | PostProcessed _0 -> _0 
 let (uu___is_Accumulated : opt_type -> Prims.bool) =
   fun projectee  ->
     match projectee with | Accumulated _0 -> true | uu____4372 -> false
@@ -819,7 +813,7 @@ let (uu___is_WithSideEffect : opt_type -> Prims.bool) =
     match projectee with | WithSideEffect _0 -> true | uu____4419 -> false
   
 let (__proj__WithSideEffect__item___0 :
-  opt_type -> (unit -> unit,opt_type) FStar_Pervasives_Native.tuple2) =
+  opt_type -> ((unit -> unit) * opt_type)) =
   fun projectee  -> match projectee with | WithSideEffect _0 -> _0 
 exception InvalidArgument of Prims.string 
 let (uu___is_InvalidArgument : Prims.exn -> Prims.bool) =
@@ -930,8 +924,8 @@ let (abort_counter : Prims.int FStar_ST.ref) =
   FStar_Util.mk_ref (Prims.parse_int "0") 
 let rec (specs_with_types :
   unit ->
-    (FStar_BaseTypes.char,Prims.string,opt_type,Prims.string)
-      FStar_Pervasives_Native.tuple4 Prims.list)
+    (FStar_BaseTypes.char * Prims.string * opt_type * Prims.string)
+      Prims.list)
   =
   fun uu____4783  ->
     let uu____4797 =
@@ -2592,12 +2586,11 @@ let (resettable : Prims.string -> Prims.bool) =
   
 let (all_specs : FStar_Getopt.opt Prims.list) = specs () 
 let (all_specs_with_types :
-  (FStar_BaseTypes.char,Prims.string,opt_type,Prims.string)
-    FStar_Pervasives_Native.tuple4 Prims.list)
+  (FStar_BaseTypes.char * Prims.string * opt_type * Prims.string) Prims.list)
   = specs_with_types () 
 let (settable_specs :
-  (FStar_BaseTypes.char,Prims.string,unit FStar_Getopt.opt_variant,Prims.string)
-    FStar_Pervasives_Native.tuple4 Prims.list)
+  (FStar_BaseTypes.char * Prims.string * unit FStar_Getopt.opt_variant *
+    Prims.string) Prims.list)
   =
   FStar_All.pipe_right all_specs
     (FStar_List.filter
@@ -2606,8 +2599,8 @@ let (settable_specs :
           | (uu____9276,x,uu____9278,uu____9279) -> settable x))
   
 let (resettable_specs :
-  (FStar_BaseTypes.char,Prims.string,unit FStar_Getopt.opt_variant,Prims.string)
-    FStar_Pervasives_Native.tuple4 Prims.list)
+  (FStar_BaseTypes.char * Prims.string * unit FStar_Getopt.opt_variant *
+    Prims.string) Prims.list)
   =
   FStar_All.pipe_right all_specs
     (FStar_List.filter
@@ -2658,10 +2651,7 @@ let (set_options : options -> Prims.string -> FStar_Getopt.parse_cmdline_res)
 let (file_list_ : Prims.string Prims.list FStar_ST.ref) =
   FStar_Util.mk_ref [] 
 let (parse_cmd_line :
-  unit ->
-    (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
-      FStar_Pervasives_Native.tuple2)
-  =
+  unit -> (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list)) =
   fun uu____9509  ->
     let res =
       FStar_Getopt.parse_cmdline all_specs
@@ -2869,8 +2859,7 @@ let (path_of_text : Prims.string -> Prims.string Prims.list) =
   fun text  -> FStar_String.split [46] text 
 let (parse_settings :
   Prims.string Prims.list ->
-    (Prims.string Prims.list,Prims.bool) FStar_Pervasives_Native.tuple2
-      Prims.list)
+    (Prims.string Prims.list * Prims.bool) Prims.list)
   =
   fun ns  ->
     let parse_one_setting s =
@@ -3129,10 +3118,7 @@ let (use_native_tactics :
 let (use_tactics : unit -> Prims.bool) =
   fun uu____11119  -> get_use_tactics () 
 let (using_facts_from :
-  unit ->
-    (Prims.string Prims.list,Prims.bool) FStar_Pervasives_Native.tuple2
-      Prims.list)
-  =
+  unit -> (Prims.string Prims.list * Prims.bool) Prims.list) =
   fun uu____11135  ->
     let uu____11136 = get_using_facts_from ()  in
     match uu____11136 with

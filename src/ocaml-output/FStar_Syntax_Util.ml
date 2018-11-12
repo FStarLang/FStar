@@ -45,8 +45,8 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
   
 let arg_of_non_null_binder :
   'Auu____133 .
-    (FStar_Syntax_Syntax.bv,'Auu____133) FStar_Pervasives_Native.tuple2 ->
-      (FStar_Syntax_Syntax.term,'Auu____133) FStar_Pervasives_Native.tuple2
+    (FStar_Syntax_Syntax.bv * 'Auu____133) ->
+      (FStar_Syntax_Syntax.term * 'Auu____133)
   =
   fun uu____146  ->
     match uu____146 with
@@ -55,9 +55,8 @@ let arg_of_non_null_binder :
   
 let (args_of_non_null_binders :
   FStar_Syntax_Syntax.binders ->
-    (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.arg_qualifier
-                                FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list)
+    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list)
   =
   fun binders  ->
     FStar_All.pipe_right binders
@@ -70,8 +69,7 @@ let (args_of_non_null_binders :
   
 let (args_of_binders :
   FStar_Syntax_Syntax.binders ->
-    (FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.args)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.args))
   =
   fun binders  ->
     let uu____259 =
@@ -94,12 +92,10 @@ let (args_of_binders :
     FStar_All.pipe_right uu____259 FStar_List.unzip
   
 let (name_binders :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                            FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
-    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                              FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list)
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+    FStar_Pervasives_Native.option) Prims.list ->
+    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list)
   =
   fun binders  ->
     FStar_All.pipe_right binders
@@ -144,8 +140,8 @@ let (name_function_binders :
     | uu____652 -> t
   
 let (null_binders_of_tks :
-  (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.aqual)
-    FStar_Pervasives_Native.tuple2 Prims.list -> FStar_Syntax_Syntax.binders)
+  (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.aqual) Prims.list ->
+    FStar_Syntax_Syntax.binders)
   =
   fun tks  ->
     FStar_All.pipe_right tks
@@ -160,8 +156,8 @@ let (null_binders_of_tks :
                 (uu____700, imp)))
   
 let (binders_of_tks :
-  (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.aqual)
-    FStar_Pervasives_Native.tuple2 Prims.list -> FStar_Syntax_Syntax.binders)
+  (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.aqual) Prims.list ->
+    FStar_Syntax_Syntax.binders)
   =
   fun tks  ->
     FStar_All.pipe_right tks
@@ -247,8 +243,7 @@ let rec (unmeta_safe : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
     | uu____1119 -> e1
   
 let rec (univ_kernel :
-  FStar_Syntax_Syntax.universe ->
-    (FStar_Syntax_Syntax.universe,Prims.int) FStar_Pervasives_Native.tuple2)
+  FStar_Syntax_Syntax.universe -> (FStar_Syntax_Syntax.universe * Prims.int))
   =
   fun u  ->
     match u with
@@ -678,13 +673,10 @@ let rec (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   
 let (head_and_args :
   FStar_Syntax_Syntax.term ->
-    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,(FStar_Syntax_Syntax.term'
-                                                             FStar_Syntax_Syntax.syntax,
-                                                            FStar_Syntax_Syntax.arg_qualifier
-                                                              FStar_Pervasives_Native.option)
-                                                            FStar_Pervasives_Native.tuple2
-                                                            Prims.list)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+      FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+      Prims.list))
   =
   fun t  ->
     let t1 = FStar_Syntax_Subst.compress t  in
@@ -694,11 +686,9 @@ let (head_and_args :
   
 let rec (head_and_args' :
   FStar_Syntax_Syntax.term ->
-    (FStar_Syntax_Syntax.term,(FStar_Syntax_Syntax.term'
-                                 FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                              FStar_Pervasives_Native.option)
-                                FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list))
   =
   fun t  ->
     let t1 = FStar_Syntax_Subst.compress t  in
@@ -872,9 +862,8 @@ let rec (ascribe :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.comp'
                                                              FStar_Syntax_Syntax.syntax)
-       FStar_Util.either,FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
-                           FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 ->
+      FStar_Util.either * FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option) ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun t  ->
@@ -1220,12 +1209,10 @@ and (eq_quoteinfo :
           q2.FStar_Syntax_Syntax.antiquotes
 
 and (eq_antiquotes :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
-                            FStar_Syntax_Syntax.syntax)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
-    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
-                              FStar_Syntax_Syntax.syntax)
-      FStar_Pervasives_Native.tuple2 Prims.list -> eq_result)
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
+    FStar_Syntax_Syntax.syntax) Prims.list ->
+    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax) Prims.list -> eq_result)
   =
   fun a1  ->
     fun a2  ->
@@ -1271,16 +1258,14 @@ and (eq_aqual :
       | uu____4644 -> NotEqual
 
 and (branch_matches :
-  (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t,FStar_Syntax_Syntax.term'
-                                                             FStar_Syntax_Syntax.syntax
-                                                             FStar_Pervasives_Native.option,
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-    FStar_Pervasives_Native.tuple3 ->
-    (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t,FStar_Syntax_Syntax.term'
-                                                               FStar_Syntax_Syntax.syntax
-                                                               FStar_Pervasives_Native.option,
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-      FStar_Pervasives_Native.tuple3 -> eq_result)
+  (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t *
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+    FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term'
+    FStar_Syntax_Syntax.syntax) ->
+    (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t *
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+      FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax) -> eq_result)
   =
   fun b1  ->
     fun b2  ->
@@ -1432,10 +1417,9 @@ let rec (pre_typ : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
 let (destruct :
   FStar_Syntax_Syntax.term ->
     FStar_Ident.lident ->
-      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                              FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2 Prims.list
-        FStar_Pervasives_Native.option)
+      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+        FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+        Prims.list FStar_Pervasives_Native.option)
   =
   fun typ  ->
     fun lid  ->
@@ -1508,16 +1492,15 @@ let (range_of_lbname :
   
 let range_of_arg :
   'Auu____5733 'Auu____5734 .
-    ('Auu____5733 FStar_Syntax_Syntax.syntax,'Auu____5734)
-      FStar_Pervasives_Native.tuple2 -> FStar_Range.range
+    ('Auu____5733 FStar_Syntax_Syntax.syntax * 'Auu____5734) ->
+      FStar_Range.range
   =
   fun uu____5745  ->
     match uu____5745 with | (hd1,uu____5753) -> hd1.FStar_Syntax_Syntax.pos
   
 let range_of_args :
   'Auu____5767 'Auu____5768 .
-    ('Auu____5767 FStar_Syntax_Syntax.syntax,'Auu____5768)
-      FStar_Pervasives_Native.tuple2 Prims.list ->
+    ('Auu____5767 FStar_Syntax_Syntax.syntax * 'Auu____5768) Prims.list ->
       FStar_Range.range -> FStar_Range.range
   =
   fun args  ->
@@ -1529,10 +1512,9 @@ let range_of_args :
   
 let (mk_app :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                            FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+      FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+      Prims.list -> FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun f  ->
     fun args  ->
@@ -1545,9 +1527,8 @@ let (mk_app :
   
 let (mk_app_binders :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                              FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list ->
+    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun f  ->
@@ -1564,9 +1545,9 @@ let (mk_app_binders :
   
 let (mk_data :
   FStar_Ident.lident ->
-    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                            FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list ->
+    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+      FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+      Prims.list ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
         FStar_Syntax_Syntax.syntax)
   =
@@ -1622,9 +1603,7 @@ let (mk_field_projector_name_from_ident :
 let (mk_field_projector_name :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.bv ->
-      Prims.int ->
-        (FStar_Ident.lident,FStar_Syntax_Syntax.bv)
-          FStar_Pervasives_Native.tuple2)
+      Prims.int -> (FStar_Ident.lident * FStar_Syntax_Syntax.bv))
   =
   fun lid  ->
     fun x  ->
@@ -1787,9 +1766,8 @@ let (abs :
                    t.FStar_Syntax_Syntax.pos)
   
 let (arrow :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                            FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+    FStar_Pervasives_Native.option) Prims.list ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
@@ -1809,9 +1787,8 @@ let (arrow :
           uu____6562 FStar_Pervasives_Native.None c.FStar_Syntax_Syntax.pos
   
 let (flat_arrow :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                            FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+    FStar_Pervasives_Native.option) Prims.list ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
@@ -1865,10 +1842,8 @@ let (branch : FStar_Syntax_Syntax.branch -> FStar_Syntax_Syntax.branch) =
   fun b  -> FStar_Syntax_Subst.close_branch b 
 let rec (arrow_formals_comp :
   FStar_Syntax_Syntax.term ->
-    ((FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                               FStar_Pervasives_Native.option)
-       FStar_Pervasives_Native.tuple2 Prims.list,FStar_Syntax_Syntax.comp)
-      FStar_Pervasives_Native.tuple2)
+    ((FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list * FStar_Syntax_Syntax.comp))
   =
   fun k  ->
     let k1 = FStar_Syntax_Subst.compress k  in
@@ -1910,11 +1885,9 @@ let rec (arrow_formals_comp :
   
 let rec (arrow_formals :
   FStar_Syntax_Syntax.term ->
-    ((FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                               FStar_Pervasives_Native.option)
-       FStar_Pervasives_Native.tuple2 Prims.list,FStar_Syntax_Syntax.term'
-                                                   FStar_Syntax_Syntax.syntax)
-      FStar_Pervasives_Native.tuple2)
+    ((FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list * FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax))
   =
   fun k  ->
     let uu____7083 = arrow_formals_comp k  in
@@ -1922,8 +1895,7 @@ let rec (arrow_formals :
   
 let (let_rec_arity :
   FStar_Syntax_Syntax.letbinding ->
-    (Prims.int,Prims.bool Prims.list FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2)
+    (Prims.int * Prims.bool Prims.list FStar_Pervasives_Native.option))
   =
   fun lb  ->
     let rec arrow_until_decreases k =
@@ -1983,9 +1955,8 @@ let (let_rec_arity :
   
 let (abs_formals :
   FStar_Syntax_Syntax.term ->
-    (FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.residual_comp
-                                                            FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple3)
+    (FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.term *
+      FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option))
   =
   fun t  ->
     let subst_lcomp_opt s l =
@@ -2098,15 +2069,12 @@ let (close_univs_and_mk_letbinding :
   
 let (open_univ_vars_binders_and_comp :
   FStar_Syntax_Syntax.univ_names ->
-    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                              FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list ->
+    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list ->
       FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-        (FStar_Syntax_Syntax.univ_names,(FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                                                                  FStar_Pervasives_Native.option)
-                                          FStar_Pervasives_Native.tuple2
-                                          Prims.list,FStar_Syntax_Syntax.comp)
-          FStar_Pervasives_Native.tuple3)
+        (FStar_Syntax_Syntax.univ_names * (FStar_Syntax_Syntax.bv *
+          FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+          Prims.list * FStar_Syntax_Syntax.comp))
   =
   fun uvs  ->
     fun binders  ->
@@ -2239,10 +2207,7 @@ let (ktype0 : FStar_Syntax_Syntax.term) =
     FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (type_u :
-  unit ->
-    (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.universe)
-      FStar_Pervasives_Native.tuple2)
-  =
+  unit -> (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.universe)) =
   fun uu____8545  ->
     let u =
       let uu____8551 = FStar_Syntax_Unionfind.univ_fresh ()  in
@@ -2782,9 +2747,8 @@ let (mk_forall :
         mk_forall_aux tforall1 x body
   
 let (close_forall_no_univs :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                            FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+    FStar_Pervasives_Native.option) Prims.list ->
     FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
   =
   fun bs  ->
@@ -2919,9 +2883,8 @@ let (un_squash :
   
 let (is_squash :
   FStar_Syntax_Syntax.term ->
-    (FStar_Syntax_Syntax.universe,FStar_Syntax_Syntax.term'
-                                    FStar_Syntax_Syntax.syntax)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax) FStar_Pervasives_Native.option)
   =
   fun t  ->
     let uu____10855 = head_and_args t  in
@@ -2944,9 +2907,8 @@ let (is_squash :
   
 let (is_auto_squash :
   FStar_Syntax_Syntax.term ->
-    (FStar_Syntax_Syntax.universe,FStar_Syntax_Syntax.term'
-                                    FStar_Syntax_Syntax.syntax)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax) FStar_Pervasives_Native.option)
   =
   fun t  ->
     let uu____11030 = head_and_args t  in
@@ -3036,8 +2998,8 @@ let (is_sub_singleton : FStar_Syntax_Syntax.term -> Prims.bool) =
   
 let (arrow_one :
   FStar_Syntax_Syntax.typ ->
-    (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.comp)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.binder * FStar_Syntax_Syntax.comp)
+      FStar_Pervasives_Native.option)
   =
   fun t  ->
     let uu____11269 =
@@ -3082,20 +3044,16 @@ let (is_free_in :
   
 type qpats = FStar_Syntax_Syntax.args Prims.list
 type connective =
-  | QAll of (FStar_Syntax_Syntax.binders,qpats,FStar_Syntax_Syntax.typ)
-  FStar_Pervasives_Native.tuple3 
-  | QEx of (FStar_Syntax_Syntax.binders,qpats,FStar_Syntax_Syntax.typ)
-  FStar_Pervasives_Native.tuple3 
-  | BaseConn of (FStar_Ident.lident,FStar_Syntax_Syntax.args)
-  FStar_Pervasives_Native.tuple2 
+  | QAll of (FStar_Syntax_Syntax.binders * qpats * FStar_Syntax_Syntax.typ) 
+  | QEx of (FStar_Syntax_Syntax.binders * qpats * FStar_Syntax_Syntax.typ) 
+  | BaseConn of (FStar_Ident.lident * FStar_Syntax_Syntax.args) 
 let (uu___is_QAll : connective -> Prims.bool) =
   fun projectee  ->
     match projectee with | QAll _0 -> true | uu____11669 -> false
   
 let (__proj__QAll__item___0 :
   connective ->
-    (FStar_Syntax_Syntax.binders,qpats,FStar_Syntax_Syntax.typ)
-      FStar_Pervasives_Native.tuple3)
+    (FStar_Syntax_Syntax.binders * qpats * FStar_Syntax_Syntax.typ))
   = fun projectee  -> match projectee with | QAll _0 -> _0 
 let (uu___is_QEx : connective -> Prims.bool) =
   fun projectee  ->
@@ -3103,18 +3061,15 @@ let (uu___is_QEx : connective -> Prims.bool) =
   
 let (__proj__QEx__item___0 :
   connective ->
-    (FStar_Syntax_Syntax.binders,qpats,FStar_Syntax_Syntax.typ)
-      FStar_Pervasives_Native.tuple3)
+    (FStar_Syntax_Syntax.binders * qpats * FStar_Syntax_Syntax.typ))
   = fun projectee  -> match projectee with | QEx _0 -> _0 
 let (uu___is_BaseConn : connective -> Prims.bool) =
   fun projectee  ->
     match projectee with | BaseConn _0 -> true | uu____11755 -> false
   
 let (__proj__BaseConn__item___0 :
-  connective ->
-    (FStar_Ident.lident,FStar_Syntax_Syntax.args)
-      FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | BaseConn _0 -> _0 
+  connective -> (FStar_Ident.lident * FStar_Syntax_Syntax.args)) =
+  fun projectee  -> match projectee with | BaseConn _0 -> _0 
 let (destruct_typ_as_formula :
   FStar_Syntax_Syntax.term -> connective FStar_Pervasives_Native.option) =
   fun f  ->
@@ -3800,9 +3755,7 @@ let eqsum :
 let eqprod :
   'a 'b .
     ('a -> 'a -> Prims.bool) ->
-      ('b -> 'b -> Prims.bool) ->
-        ('a,'b) FStar_Pervasives_Native.tuple2 ->
-          ('a,'b) FStar_Pervasives_Native.tuple2 -> Prims.bool
+      ('b -> 'b -> Prims.bool) -> ('a * 'b) -> ('a * 'b) -> Prims.bool
   =
   fun e1  ->
     fun e2  ->
@@ -4029,12 +3982,11 @@ let rec (term_eq_dbg :
 
 and (arg_eq_dbg :
   Prims.bool ->
-    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                            FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 ->
-      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                              FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2 -> Prims.bool)
+    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+      FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option) ->
+      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+        FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option) ->
+        Prims.bool)
   =
   fun dbg  ->
     fun a1  ->
@@ -4052,12 +4004,10 @@ and (arg_eq_dbg :
 
 and (binder_eq_dbg :
   Prims.bool ->
-    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                              FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 ->
-      (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                                FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2 -> Prims.bool)
+    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) ->
+      (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+        FStar_Pervasives_Native.option) -> Prims.bool)
   =
   fun dbg  ->
     fun b1  ->
@@ -4114,16 +4064,14 @@ and (eq_flags_dbg :
 
 and (branch_eq_dbg :
   Prims.bool ->
-    (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t,FStar_Syntax_Syntax.term'
-                                                               FStar_Syntax_Syntax.syntax
-                                                               FStar_Pervasives_Native.option,
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-      FStar_Pervasives_Native.tuple3 ->
-      (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t,FStar_Syntax_Syntax.term'
-                                                                 FStar_Syntax_Syntax.syntax
-                                                                 FStar_Pervasives_Native.option,
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-        FStar_Pervasives_Native.tuple3 -> Prims.bool)
+    (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t *
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+      FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax) ->
+      (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t *
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+        FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term'
+        FStar_Syntax_Syntax.syntax) -> Prims.bool)
   =
   fun dbg  ->
     fun uu____16654  ->
@@ -4463,8 +4411,8 @@ and (unbound_variables_comp :
 let (extract_attr' :
   FStar_Ident.lid ->
     FStar_Syntax_Syntax.term Prims.list ->
-      (FStar_Syntax_Syntax.term Prims.list,FStar_Syntax_Syntax.args)
-        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+      (FStar_Syntax_Syntax.term Prims.list * FStar_Syntax_Syntax.args)
+        FStar_Pervasives_Native.option)
   =
   fun attr_lid  ->
     fun attrs  ->
@@ -4490,8 +4438,8 @@ let (extract_attr' :
 let (extract_attr :
   FStar_Ident.lid ->
     FStar_Syntax_Syntax.sigelt ->
-      (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.args)
-        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+      (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.args)
+        FStar_Pervasives_Native.option)
   =
   fun attr_lid  ->
     fun se  ->

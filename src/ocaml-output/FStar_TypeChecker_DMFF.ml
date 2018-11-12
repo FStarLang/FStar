@@ -28,8 +28,7 @@ let (gen_wps_for_free :
       FStar_Syntax_Syntax.bv ->
         FStar_Syntax_Syntax.term ->
           FStar_Syntax_Syntax.eff_decl ->
-            (FStar_Syntax_Syntax.sigelts,FStar_Syntax_Syntax.eff_decl)
-              FStar_Pervasives_Native.tuple2)
+            (FStar_Syntax_Syntax.sigelts * FStar_Syntax_Syntax.eff_decl))
   =
   fun env  ->
     fun binders  ->
@@ -2160,9 +2159,7 @@ let (is_unknown : FStar_Syntax_Syntax.term' -> Prims.bool) =
 let rec (check :
   env ->
     FStar_Syntax_Syntax.term ->
-      nm ->
-        (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-          FStar_Pervasives_Native.tuple3)
+      nm -> (nm * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term))
   =
   fun env  ->
     fun e  ->
@@ -2305,8 +2302,7 @@ let rec (check :
 and (infer :
   env ->
     FStar_Syntax_Syntax.term ->
-      (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-        FStar_Pervasives_Native.tuple3)
+      (nm * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term))
   =
   fun env  ->
     fun e  ->
@@ -2999,18 +2995,14 @@ and (infer :
 and (mk_match :
   env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t,FStar_Syntax_Syntax.term'
-                                                                 FStar_Syntax_Syntax.syntax
-                                                                 FStar_Pervasives_Native.option,
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-        FStar_Pervasives_Native.tuple3 Prims.list ->
+      (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t *
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+        FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term'
+        FStar_Syntax_Syntax.syntax) Prims.list ->
         (env ->
            FStar_Syntax_Syntax.term ->
-             (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-               FStar_Pervasives_Native.tuple3)
-          ->
-          (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-            FStar_Pervasives_Native.tuple3)
+             (nm * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term))
+          -> (nm * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term))
   =
   fun env  ->
     fun e0  ->
@@ -3223,16 +3215,13 @@ and (mk_let :
       FStar_Syntax_Syntax.term ->
         (env_ ->
            FStar_Syntax_Syntax.term ->
-             (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-               FStar_Pervasives_Native.tuple3)
+             (nm * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term))
           ->
           (env_ ->
              FStar_Syntax_Syntax.term ->
-               (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-                 FStar_Pervasives_Native.tuple3)
-            ->
-            (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-              FStar_Pervasives_Native.tuple3)
+               (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
+                 FStar_Syntax_Syntax.term))
+            -> (nm * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term))
   =
   fun env  ->
     fun binding  ->
@@ -3493,8 +3482,8 @@ and (mk_let :
 and (check_n :
   env_ ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.term *
+        FStar_Syntax_Syntax.term))
   =
   fun env  ->
     fun e  ->
@@ -3512,8 +3501,8 @@ and (check_n :
 and (check_m :
   env_ ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.term *
+        FStar_Syntax_Syntax.term))
   =
   fun env  ->
     fun e  ->
@@ -3775,8 +3764,8 @@ let (star_type : env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) =
 let (star_expr :
   env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.term *
+        FStar_Syntax_Syntax.term))
   =
   fun env  ->
     fun t  -> let uu____13404 = n env.tcenv t  in check_n env uu____13404

@@ -116,10 +116,7 @@ let (set_term_graph : tgraph -> unit) =
     set uu____604
   
 let chk_v :
-  'Auu____611 .
-    ('Auu____611,FStar_Syntax_Syntax.version) FStar_Pervasives_Native.tuple2
-      -> 'Auu____611
-  =
+  'Auu____611 . ('Auu____611 * FStar_Syntax_Syntax.version) -> 'Auu____611 =
   fun uu____620  ->
     match uu____620 with
     | (u,v1) ->

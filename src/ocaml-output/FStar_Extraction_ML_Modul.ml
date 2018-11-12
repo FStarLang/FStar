@@ -94,10 +94,7 @@ let (lident_as_mlsymbol :
       (id1.FStar_Ident.ident).FStar_Ident.idText
   
 let as_pair :
-  'Auu____290 .
-    'Auu____290 Prims.list ->
-      ('Auu____290,'Auu____290) FStar_Pervasives_Native.tuple2
-  =
+  'Auu____290 . 'Auu____290 Prims.list -> ('Auu____290 * 'Auu____290) =
   fun uu___401_301  ->
     match uu___401_301 with
     | a::b::[] -> (a, b)
@@ -217,10 +214,8 @@ let (extract_metadata :
 let binders_as_mlty_binders :
   'Auu____470 .
     FStar_Extraction_ML_UEnv.uenv ->
-      (FStar_Syntax_Syntax.bv,'Auu____470) FStar_Pervasives_Native.tuple2
-        Prims.list ->
-        (FStar_Extraction_ML_UEnv.uenv,Prims.string Prims.list)
-          FStar_Pervasives_Native.tuple2
+      (FStar_Syntax_Syntax.bv * 'Auu____470) Prims.list ->
+        (FStar_Extraction_ML_UEnv.uenv * Prims.string Prims.list)
   =
   fun env  ->
     fun bs  ->
@@ -328,8 +323,7 @@ let (bundle_as_inductive_families :
     FStar_Syntax_Syntax.sigelt Prims.list ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
         FStar_Syntax_Syntax.attribute Prims.list ->
-          (FStar_Extraction_ML_UEnv.uenv,inductive_family Prims.list)
-            FStar_Pervasives_Native.tuple2)
+          (FStar_Extraction_ML_UEnv.uenv * inductive_family Prims.list))
   =
   fun env  ->
     fun ses  ->
@@ -444,8 +438,8 @@ type iface =
   {
   iface_module_name: FStar_Extraction_ML_Syntax.mlpath ;
   iface_bindings:
-    (FStar_Syntax_Syntax.fv,FStar_Extraction_ML_UEnv.exp_binding)
-      FStar_Pervasives_Native.tuple2 Prims.list
+    (FStar_Syntax_Syntax.fv * FStar_Extraction_ML_UEnv.exp_binding)
+      Prims.list
     ;
   iface_tydefs: FStar_Extraction_ML_UEnv.tydef Prims.list ;
   iface_type_names: FStar_Syntax_Syntax.fv Prims.list }
@@ -458,8 +452,8 @@ let (__proj__Mkiface__item__iface_module_name :
   
 let (__proj__Mkiface__item__iface_bindings :
   iface ->
-    (FStar_Syntax_Syntax.fv,FStar_Extraction_ML_UEnv.exp_binding)
-      FStar_Pervasives_Native.tuple2 Prims.list)
+    (FStar_Syntax_Syntax.fv * FStar_Extraction_ML_UEnv.exp_binding)
+      Prims.list)
   =
   fun projectee  ->
     match projectee with
@@ -488,8 +482,8 @@ let (empty_iface : iface) =
     iface_type_names = []
   } 
 let (iface_of_bindings :
-  (FStar_Syntax_Syntax.fv,FStar_Extraction_ML_UEnv.exp_binding)
-    FStar_Pervasives_Native.tuple2 Prims.list -> iface)
+  (FStar_Syntax_Syntax.fv * FStar_Extraction_ML_UEnv.exp_binding) Prims.list
+    -> iface)
   =
   fun fvs  ->
     let uu___412_1302 = empty_iface  in
@@ -550,8 +544,7 @@ let (mlpath_to_string : FStar_Extraction_ML_Syntax.mlpath -> Prims.string) =
 let tscheme_to_string :
   'Auu____1386 .
     FStar_Extraction_ML_Syntax.mlpath ->
-      ('Auu____1386,FStar_Extraction_ML_Syntax.mlty)
-        FStar_Pervasives_Native.tuple2 -> Prims.string
+      ('Auu____1386 * FStar_Extraction_ML_Syntax.mlty) -> Prims.string
   =
   fun cm  ->
     fun ts  ->
@@ -580,8 +573,8 @@ let (print_exp_binding :
   
 let (print_binding :
   FStar_Extraction_ML_Syntax.mlpath ->
-    (FStar_Syntax_Syntax.fv,FStar_Extraction_ML_UEnv.exp_binding)
-      FStar_Pervasives_Native.tuple2 -> Prims.string)
+    (FStar_Syntax_Syntax.fv * FStar_Extraction_ML_UEnv.exp_binding) ->
+      Prims.string)
   =
   fun cm  ->
     fun uu____1440  ->
@@ -646,8 +639,7 @@ let (extract_typ_abbrev :
     FStar_Syntax_Syntax.qualifier Prims.list ->
       FStar_Syntax_Syntax.term Prims.list ->
         FStar_Syntax_Syntax.letbinding ->
-          (env_t,iface,FStar_Extraction_ML_Syntax.mlmodule1 Prims.list)
-            FStar_Pervasives_Native.tuple3)
+          (env_t * iface * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list))
   =
   fun env  ->
     fun quals  ->
@@ -787,8 +779,7 @@ let (extract_typ_abbrev :
   
 let (extract_bundle_iface :
   FStar_Extraction_ML_UEnv.uenv ->
-    FStar_Syntax_Syntax.sigelt ->
-      (env_t,iface) FStar_Pervasives_Native.tuple2)
+    FStar_Syntax_Syntax.sigelt -> (env_t * iface))
   =
   fun env  ->
     fun se  ->
@@ -859,8 +850,8 @@ let (extract_type_declaration :
         FStar_Syntax_Syntax.term Prims.list ->
           FStar_Syntax_Syntax.univ_name Prims.list ->
             FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-              (env_t,iface,FStar_Extraction_ML_Syntax.mlmodule1 Prims.list)
-                FStar_Pervasives_Native.tuple3)
+              (env_t * iface * FStar_Extraction_ML_Syntax.mlmodule1
+                Prims.list))
   =
   fun g  ->
     fun lid  ->
@@ -910,9 +901,8 @@ let (extract_type_declaration :
 let (extract_reifiable_effect :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.eff_decl ->
-      (FStar_Extraction_ML_UEnv.uenv,iface,FStar_Extraction_ML_Syntax.mlmodule1
-                                             Prims.list)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Extraction_ML_UEnv.uenv * iface *
+        FStar_Extraction_ML_Syntax.mlmodule1 Prims.list))
   =
   fun g  ->
     fun ed  ->
@@ -1144,8 +1134,7 @@ let (extract_reifiable_effect :
   
 let (extract_sigelt_iface :
   FStar_Extraction_ML_UEnv.uenv ->
-    FStar_Syntax_Syntax.sigelt ->
-      (FStar_Extraction_ML_UEnv.uenv,iface) FStar_Pervasives_Native.tuple2)
+    FStar_Syntax_Syntax.sigelt -> (FStar_Extraction_ML_UEnv.uenv * iface))
   =
   fun g  ->
     fun se  ->
@@ -1224,8 +1213,7 @@ let (extract_sigelt_iface :
   
 let (extract_iface :
   FStar_Extraction_ML_UEnv.uenv ->
-    FStar_Syntax_Syntax.modul ->
-      (FStar_Extraction_ML_UEnv.uenv,iface) FStar_Pervasives_Native.tuple2)
+    FStar_Syntax_Syntax.modul -> (FStar_Extraction_ML_UEnv.uenv * iface))
   =
   fun g  ->
     fun modul  ->
@@ -1288,8 +1276,7 @@ let (extend_with_iface :
 let (extract_bundle :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.sigelt ->
-      (env_t,FStar_Extraction_ML_Syntax.mlmodule1 Prims.list)
-        FStar_Pervasives_Native.tuple2)
+      (env_t * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list))
   =
   fun env  ->
     fun se  ->
@@ -1569,8 +1556,7 @@ let (maybe_register_plugin :
 let rec (extract_sig :
   env_t ->
     FStar_Syntax_Syntax.sigelt ->
-      (env_t,FStar_Extraction_ML_Syntax.mlmodule1 Prims.list)
-        FStar_Pervasives_Native.tuple2)
+      (env_t * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list))
   =
   fun g  ->
     fun se  ->
@@ -2010,9 +1996,8 @@ let rec (extract_sig :
 let (extract' :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.modul ->
-      (FStar_Extraction_ML_UEnv.uenv,FStar_Extraction_ML_Syntax.mllib
-                                       FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Extraction_ML_UEnv.uenv * FStar_Extraction_ML_Syntax.mllib
+        FStar_Pervasives_Native.option))
   =
   fun g  ->
     fun m  ->
@@ -2069,9 +2054,8 @@ let (extract' :
 let (extract :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.modul ->
-      (FStar_Extraction_ML_UEnv.uenv,FStar_Extraction_ML_Syntax.mllib
-                                       FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Extraction_ML_UEnv.uenv * FStar_Extraction_ML_Syntax.mllib
+        FStar_Pervasives_Native.option))
   =
   fun g  ->
     fun m  ->

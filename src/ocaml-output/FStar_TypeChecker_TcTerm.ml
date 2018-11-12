@@ -233,8 +233,7 @@ let (check_no_escape :
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.bv Prims.list ->
         FStar_Syntax_Syntax.term ->
-          (FStar_Syntax_Syntax.term,FStar_TypeChecker_Env.guard_t)
-            FStar_Pervasives_Native.tuple2)
+          (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.guard_t))
   =
   fun head_opt  ->
     fun env  ->
@@ -315,8 +314,7 @@ let (check_no_escape :
 let push_binding :
   'Auu____349 .
     FStar_TypeChecker_Env.env ->
-      (FStar_Syntax_Syntax.bv,'Auu____349) FStar_Pervasives_Native.tuple2 ->
-        FStar_TypeChecker_Env.env
+      (FStar_Syntax_Syntax.bv * 'Auu____349) -> FStar_TypeChecker_Env.env
   =
   fun env  ->
     fun b  ->
@@ -324,9 +322,8 @@ let push_binding :
   
 let (maybe_extend_subst :
   FStar_Syntax_Syntax.subst_elt Prims.list ->
-    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                              FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 ->
+    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
         FStar_Syntax_Syntax.subst_t)
   =
@@ -362,8 +359,8 @@ let (value_check_expected_typ :
       (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.lcomp) FStar_Util.either
         ->
         FStar_TypeChecker_Env.guard_t ->
-          (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-            FStar_Pervasives_Native.tuple3)
+          (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+            FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -468,8 +465,8 @@ let (comp_check_expected_typ :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.lcomp ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-          FStar_Pervasives_Native.tuple3)
+        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+          FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -488,10 +485,9 @@ let (comp_check_expected_typ :
 let (check_expected_effect :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp FStar_Pervasives_Native.option ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.comp)
-        FStar_Pervasives_Native.tuple2 ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.comp,FStar_TypeChecker_Env.guard_t)
-          FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp) ->
+        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
+          FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun copt  ->
@@ -632,10 +628,8 @@ let (check_expected_effect :
 let no_logical_guard :
   'Auu____898 'Auu____899 .
     FStar_TypeChecker_Env.env ->
-      ('Auu____898,'Auu____899,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3 ->
-        ('Auu____898,'Auu____899,FStar_TypeChecker_Env.guard_t)
-          FStar_Pervasives_Native.tuple3
+      ('Auu____898 * 'Auu____899 * FStar_TypeChecker_Env.guard_t) ->
+        ('Auu____898 * 'Auu____899 * FStar_TypeChecker_Env.guard_t)
   =
   fun env  ->
     fun uu____921  ->
@@ -724,8 +718,7 @@ let check_pat_fvs :
     FStar_Range.range ->
       FStar_TypeChecker_Env.env ->
         FStar_Syntax_Syntax.term ->
-          (FStar_Syntax_Syntax.bv,'Auu____1303)
-            FStar_Pervasives_Native.tuple2 Prims.list -> unit
+          (FStar_Syntax_Syntax.bv * 'Auu____1303) Prims.list -> unit
   =
   fun rng  ->
     fun env  ->
@@ -765,8 +758,7 @@ let check_smt_pat :
   'Auu____1417 .
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        (FStar_Syntax_Syntax.bv,'Auu____1417) FStar_Pervasives_Native.tuple2
-          Prims.list ->
+        (FStar_Syntax_Syntax.bv * 'Auu____1417) Prims.list ->
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> unit
   =
   fun env  ->
@@ -792,8 +784,8 @@ let (guard_letrecs :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
       FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-        (FStar_Syntax_Syntax.lbname,FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.univ_names)
-          FStar_Pervasives_Native.tuple3 Prims.list)
+        (FStar_Syntax_Syntax.lbname * FStar_Syntax_Syntax.typ *
+          FStar_Syntax_Syntax.univ_names) Prims.list)
   =
   fun env  ->
     fun actuals  ->
@@ -1084,8 +1076,8 @@ let (wrap_guard_with_tactic_opt :
 let rec (tc_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -1235,8 +1227,8 @@ let rec (tc_term :
 and (tc_maybe_toplevel_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -2807,12 +2799,12 @@ and (tc_maybe_toplevel_term :
 and (tc_synth :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_TypeChecker_Env.env ->
-      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                              FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2 Prims.list ->
+      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+        FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+        Prims.list ->
         FStar_Range.range ->
-          (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-            FStar_Pervasives_Native.tuple3)
+          (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+            FStar_TypeChecker_Env.guard_t))
   =
   fun head1  ->
     fun env  ->
@@ -2900,8 +2892,8 @@ and (tc_synth :
 and (tc_tactic :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun tau  ->
@@ -3000,8 +2992,8 @@ and (tc_tactic_opt :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
       FStar_Pervasives_Native.option ->
-      (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun topt  ->
@@ -3017,8 +3009,8 @@ and (tc_tactic_opt :
 and (tc_value :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -3541,8 +3533,8 @@ and (tc_constant :
 and (tc_comp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
-      (FStar_Syntax_Syntax.comp,FStar_Syntax_Syntax.universe,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.comp * FStar_Syntax_Syntax.universe *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun c  ->
@@ -3734,8 +3726,8 @@ and (tc_abs :
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.binders ->
         FStar_Syntax_Syntax.term ->
-          (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-            FStar_Pervasives_Native.tuple3)
+          (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+            FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun top  ->
@@ -4642,12 +4634,12 @@ and (check_application_args :
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.lcomp ->
         FStar_TypeChecker_Env.guard_t ->
-          (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                                  FStar_Pervasives_Native.option)
-            FStar_Pervasives_Native.tuple2 Prims.list ->
+          (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+            FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+            Prims.list ->
             FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
-              (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-                FStar_Pervasives_Native.tuple3)
+              (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+                FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun head1  ->
@@ -5982,12 +5974,12 @@ and (check_short_circuit_args :
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.lcomp ->
         FStar_TypeChecker_Env.guard_t ->
-          (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                                  FStar_Pervasives_Native.option)
-            FStar_Pervasives_Native.tuple2 Prims.list ->
+          (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+            FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+            Prims.list ->
             FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
-              (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-                FStar_Pervasives_Native.tuple3)
+              (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+                FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun head1  ->
@@ -6100,9 +6092,9 @@ and (tc_pat :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.pat ->
-        (FStar_Syntax_Syntax.pat,FStar_Syntax_Syntax.bv Prims.list,FStar_TypeChecker_Env.env,
-          FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term,FStar_TypeChecker_Env.guard_t)
-          FStar_Pervasives_Native.tuple6)
+        (FStar_Syntax_Syntax.pat * FStar_Syntax_Syntax.bv Prims.list *
+          FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.term *
+          FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun pat_t  ->
@@ -6947,17 +6939,16 @@ and (tc_pat :
 and (tc_eqn :
   FStar_Syntax_Syntax.bv ->
     FStar_TypeChecker_Env.env ->
-      (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t,FStar_Syntax_Syntax.term'
-                                                                 FStar_Syntax_Syntax.syntax
-                                                                 FStar_Pervasives_Native.option,
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-        FStar_Pervasives_Native.tuple3 ->
-        ((FStar_Syntax_Syntax.pat,FStar_Syntax_Syntax.term
-                                    FStar_Pervasives_Native.option,FStar_Syntax_Syntax.term)
-           FStar_Pervasives_Native.tuple3,FStar_Syntax_Syntax.term,FStar_Ident.lident,
-          FStar_Syntax_Syntax.cflag Prims.list,Prims.bool ->
-                                                 FStar_Syntax_Syntax.lcomp,
-          FStar_TypeChecker_Env.guard_t) FStar_Pervasives_Native.tuple6)
+      (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t *
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+        FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term'
+        FStar_Syntax_Syntax.syntax) ->
+        ((FStar_Syntax_Syntax.pat * FStar_Syntax_Syntax.term
+          FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term) *
+          FStar_Syntax_Syntax.term * FStar_Ident.lident *
+          FStar_Syntax_Syntax.cflag Prims.list *
+          (Prims.bool -> FStar_Syntax_Syntax.lcomp) *
+          FStar_TypeChecker_Env.guard_t))
   =
   fun scrutinee  ->
     fun env  ->
@@ -7728,8 +7719,8 @@ and (tc_eqn :
 and (check_top_level_let :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -7922,8 +7913,8 @@ and (check_top_level_let :
 and (check_inner_let :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -8241,8 +8232,8 @@ and (check_inner_let :
 and (check_top_level_let_rec :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun top  ->
@@ -8380,8 +8371,8 @@ and (check_top_level_let_rec :
 and (check_inner_let_rec :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun top  ->
@@ -8579,8 +8570,8 @@ and (build_let_rec_env :
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.letbinding Prims.list ->
-        (FStar_Syntax_Syntax.letbinding Prims.list,FStar_TypeChecker_Env.env_t,
-          FStar_TypeChecker_Env.guard_t) FStar_Pervasives_Native.tuple3)
+        (FStar_Syntax_Syntax.letbinding Prims.list *
+          FStar_TypeChecker_Env.env_t * FStar_TypeChecker_Env.guard_t))
   =
   fun top_level  ->
     fun env  ->
@@ -8953,8 +8944,8 @@ and (build_let_rec_env :
 and (check_let_recs :
   FStar_TypeChecker_Env.env_t ->
     FStar_Syntax_Syntax.letbinding Prims.list ->
-      (FStar_Syntax_Syntax.letbinding Prims.list,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Syntax_Syntax.letbinding Prims.list *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun lbs  ->
@@ -9044,9 +9035,9 @@ and (check_let_bound_def :
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.letbinding ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.lcomp,
-          FStar_TypeChecker_Env.guard_t,Prims.bool)
-          FStar_Pervasives_Native.tuple5)
+        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.univ_names *
+          FStar_Syntax_Syntax.lcomp * FStar_TypeChecker_Env.guard_t *
+          Prims.bool))
   =
   fun top_level  ->
     fun env  ->
@@ -9202,10 +9193,10 @@ and (check_lbtyp :
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.letbinding ->
-        (FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option,FStar_TypeChecker_Env.guard_t,
-          FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.subst_elt
-                                           Prims.list,FStar_TypeChecker_Env.env)
-          FStar_Pervasives_Native.tuple5)
+        (FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option *
+          FStar_TypeChecker_Env.guard_t * FStar_Syntax_Syntax.univ_names *
+          FStar_Syntax_Syntax.subst_elt Prims.list *
+          FStar_TypeChecker_Env.env))
   =
   fun top_level  ->
     fun env  ->
@@ -9280,13 +9271,11 @@ and (check_lbtyp :
 
 and (tc_binder :
   FStar_TypeChecker_Env.env ->
-    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                              FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 ->
-      ((FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                                 FStar_Pervasives_Native.option)
-         FStar_Pervasives_Native.tuple2,FStar_TypeChecker_Env.env,FStar_TypeChecker_Env.guard_t,
-        FStar_Syntax_Syntax.universe) FStar_Pervasives_Native.tuple4)
+    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) ->
+      ((FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+        FStar_Pervasives_Native.option) * FStar_TypeChecker_Env.env *
+        FStar_TypeChecker_Env.guard_t * FStar_Syntax_Syntax.universe))
   =
   fun env  ->
     fun uu____23538  ->
@@ -9360,8 +9349,8 @@ and (tc_binder :
 and (tc_binders :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
-      (FStar_Syntax_Syntax.binders,FStar_TypeChecker_Env.env,FStar_TypeChecker_Env.guard_t,
-        FStar_Syntax_Syntax.universes) FStar_Pervasives_Native.tuple4)
+      (FStar_Syntax_Syntax.binders * FStar_TypeChecker_Env.env *
+        FStar_TypeChecker_Env.guard_t * FStar_Syntax_Syntax.universes))
   =
   fun env  ->
     fun bs  ->
@@ -9394,13 +9383,12 @@ and (tc_binders :
 
 and (tc_smt_pats :
   FStar_TypeChecker_Env.env ->
-    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                            FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list Prims.list ->
-      ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                               FStar_Pervasives_Native.option)
-         FStar_Pervasives_Native.tuple2 Prims.list Prims.list,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple2)
+    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+      FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+      Prims.list Prims.list ->
+      ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+        FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+        Prims.list Prims.list * FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun pats  ->
@@ -9434,8 +9422,8 @@ and (tc_smt_pats :
 and (tc_tot_or_gtot_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -9501,8 +9489,8 @@ and (tc_check_tot_or_gtot_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.typ ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
-          FStar_Pervasives_Native.tuple3)
+        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp *
+          FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -9513,8 +9501,7 @@ and (tc_check_tot_or_gtot_term :
 and (tc_trivial_guard :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp))
   =
   fun env  ->
     fun t  ->
@@ -9526,8 +9513,8 @@ and (tc_trivial_guard :
 let (type_of_tot_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.typ,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ *
+        FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun e  ->
@@ -10128,8 +10115,8 @@ let (universe_of :
 let (tc_tparams :
   FStar_TypeChecker_Env.env_t ->
     FStar_Syntax_Syntax.binders ->
-      (FStar_Syntax_Syntax.binders,FStar_TypeChecker_Env.env,FStar_Syntax_Syntax.universes)
-        FStar_Pervasives_Native.tuple3)
+      (FStar_Syntax_Syntax.binders * FStar_TypeChecker_Env.env *
+        FStar_Syntax_Syntax.universes))
   =
   fun env  ->
     fun tps  ->

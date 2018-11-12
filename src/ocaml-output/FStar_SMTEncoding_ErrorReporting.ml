@@ -13,11 +13,9 @@ let (__proj__Not_a_wp_implication__item__uu___ : Prims.exn -> Prims.string) =
 type label = FStar_SMTEncoding_Term.error_label
 type labels = FStar_SMTEncoding_Term.error_labels
 let (sort_labels :
-  (FStar_SMTEncoding_Term.error_label,Prims.bool)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
-    ((FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
-       FStar_Pervasives_Native.tuple3,Prims.bool)
-      FStar_Pervasives_Native.tuple2 Prims.list)
+  (FStar_SMTEncoding_Term.error_label * Prims.bool) Prims.list ->
+    ((FStar_SMTEncoding_Term.fv * Prims.string * FStar_Range.range) *
+      Prims.bool) Prims.list)
   =
   fun l  ->
     FStar_List.sortWith
@@ -29,8 +27,7 @@ let (sort_labels :
   
 let (remove_dups :
   labels ->
-    (FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
-      FStar_Pervasives_Native.tuple3 Prims.list)
+    (FStar_SMTEncoding_Term.fv * Prims.string * FStar_Range.range) Prims.list)
   =
   fun l  ->
     FStar_Util.remove_dups
@@ -40,15 +37,14 @@ let (remove_dups :
            | ((uu____251,m1,r1),(uu____254,m2,r2)) -> (r1 = r2) && (m1 = m2))
       l
   
-type msg = (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
+type msg = (Prims.string * FStar_Range.range)
 type ranges =
-  (Prims.string FStar_Pervasives_Native.option,FStar_Range.range)
-    FStar_Pervasives_Native.tuple2 Prims.list
+  (Prims.string FStar_Pervasives_Native.option * FStar_Range.range)
+    Prims.list
 let (fresh_label :
   Prims.string ->
     FStar_Range.range ->
-      FStar_SMTEncoding_Term.term ->
-        (label,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2)
+      FStar_SMTEncoding_Term.term -> (label * FStar_SMTEncoding_Term.term))
   =
   let ctr = FStar_Util.mk_ref (Prims.parse_int "0")  in
   fun message  ->
@@ -70,8 +66,7 @@ let (fresh_label :
 let (label_goals :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_Range.range ->
-      FStar_SMTEncoding_Term.term ->
-        (labels,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2)
+      FStar_SMTEncoding_Term.term -> (labels * FStar_SMTEncoding_Term.term))
   =
   fun use_env_msg  ->
     fun r  ->

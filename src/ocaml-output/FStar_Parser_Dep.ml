@@ -16,9 +16,8 @@ let (uu___is_VerifyFigureItOut : verify_mode -> Prims.bool) =
     match projectee with | VerifyFigureItOut  -> true | uu____31 -> false
   
 type files_for_module_name =
-  (Prims.string FStar_Pervasives_Native.option,Prims.string
-                                                 FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 FStar_Util.smap
+  (Prims.string FStar_Pervasives_Native.option * Prims.string
+    FStar_Pervasives_Native.option) FStar_Util.smap
 type color =
   | White 
   | Gray 
@@ -87,9 +86,8 @@ let list_of_option :
   
 let list_of_pair :
   'Auu____279 .
-    ('Auu____279 FStar_Pervasives_Native.option,'Auu____279
-                                                  FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 -> 'Auu____279 Prims.list
+    ('Auu____279 FStar_Pervasives_Native.option * 'Auu____279
+      FStar_Pervasives_Native.option) -> 'Auu____279 Prims.list
   =
   fun uu____294  ->
     match uu____294 with
@@ -172,13 +170,11 @@ type dependences = dependence Prims.list
 let empty_dependences : 'Auu____524 . unit -> 'Auu____524 Prims.list =
   fun uu____527  -> [] 
 type dependence_graph =
-  | Deps of (dependences,color) FStar_Pervasives_Native.tuple2
-  FStar_Util.smap 
+  | Deps of (dependences * color) FStar_Util.smap 
 let (uu___is_Deps : dependence_graph -> Prims.bool) = fun projectee  -> true 
 let (__proj__Deps__item___0 :
-  dependence_graph ->
-    (dependences,color) FStar_Pervasives_Native.tuple2 FStar_Util.smap)
-  = fun projectee  -> match projectee with | Deps _0 -> _0 
+  dependence_graph -> (dependences * color) FStar_Util.smap) =
+  fun projectee  -> match projectee with | Deps _0 -> _0 
 type deps =
   {
   dep_graph: dependence_graph ;
@@ -219,18 +215,13 @@ let (__proj__Mkdeps__item__interfaces_with_inlining :
   
 let (deps_try_find :
   dependence_graph ->
-    Prims.string ->
-      (dependences,color) FStar_Pervasives_Native.tuple2
-        FStar_Pervasives_Native.option)
+    Prims.string -> (dependences * color) FStar_Pervasives_Native.option)
   =
   fun uu____740  ->
     fun k  -> match uu____740 with | Deps m -> FStar_Util.smap_try_find m k
   
 let (deps_add_dep :
-  dependence_graph ->
-    Prims.string ->
-      (dependences,color) FStar_Pervasives_Native.tuple2 -> unit)
-  =
+  dependence_graph -> Prims.string -> (dependences * color) -> unit) =
   fun uu____778  ->
     fun k  ->
       fun v1  -> match uu____778 with | Deps m -> FStar_Util.smap_add m k v1
@@ -511,9 +502,7 @@ let (print_graph : dependence_graph -> unit) =
      FStar_Util.write_file "dep.graph" uu____1552)
   
 let (build_inclusion_candidates_list :
-  unit ->
-    (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list)
-  =
+  unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu____1637  ->
     let include_directories = FStar_Options.include_path ()  in
     let include_directories1 =
@@ -674,9 +663,7 @@ let (uu___is_Exit : Prims.exn -> Prims.bool) =
     match projectee with | Exit  -> true | uu____2314 -> false
   
 let (hard_coded_dependencies :
-  Prims.string ->
-    (FStar_Ident.lident,open_kind) FStar_Pervasives_Native.tuple2 Prims.list)
-  =
+  Prims.string -> (FStar_Ident.lident * open_kind) Prims.list) =
   fun full_filename  ->
     let filename = FStar_Util.basename full_filename  in
     let corelibs =
@@ -713,8 +700,7 @@ let (dep_subsumed_by : dependence -> dependence -> Prims.bool) =
 let (collect_one :
   files_for_module_name ->
     Prims.string ->
-      (dependence Prims.list,dependence Prims.list,Prims.bool)
-        FStar_Pervasives_Native.tuple3)
+      (dependence Prims.list * dependence Prims.list * Prims.bool))
   =
   fun original_map  ->
     fun filename  ->
@@ -1220,14 +1206,14 @@ let (collect_one :
              (uu____4723, uu____4771, uu____4819))))
   
 let (collect_one_cache :
-  (dependence Prims.list,dependence Prims.list,Prims.bool)
-    FStar_Pervasives_Native.tuple3 FStar_Util.smap FStar_ST.ref)
+  (dependence Prims.list * dependence Prims.list * Prims.bool)
+    FStar_Util.smap FStar_ST.ref)
   =
   let uu____4896 = FStar_Util.smap_create (Prims.parse_int "0")  in
   FStar_Util.mk_ref uu____4896 
 let (set_collect_one_cache :
-  (dependence Prims.list,dependence Prims.list,Prims.bool)
-    FStar_Pervasives_Native.tuple3 FStar_Util.smap -> unit)
+  (dependence Prims.list * dependence Prims.list * Prims.bool)
+    FStar_Util.smap -> unit)
   = fun cache  -> FStar_ST.op_Colon_Equals collect_one_cache cache 
 let (dep_graph_copy : dependence_graph -> dependence_graph) =
   fun dep_graph  ->
@@ -1240,8 +1226,7 @@ let (topological_dependences_of :
     dependence_graph ->
       Prims.string Prims.list ->
         file_name Prims.list ->
-          Prims.bool ->
-            (file_name Prims.list,Prims.bool) FStar_Pervasives_Native.tuple2)
+          Prims.bool -> (file_name Prims.list * Prims.bool))
   =
   fun file_system_map  ->
     fun dep_graph  ->
@@ -1401,10 +1386,7 @@ let (topological_dependences_of :
                         (let uu____5715 = FStar_ST.op_Bang widened  in
                          (all_files, uu____5715))))))
   
-let (collect :
-  Prims.string Prims.list ->
-    (Prims.string Prims.list,deps) FStar_Pervasives_Native.tuple2)
-  =
+let (collect : Prims.string Prims.list -> (Prims.string Prims.list * deps)) =
   fun all_cmd_line_files  ->
     let all_cmd_line_files1 =
       FStar_All.pipe_right all_cmd_line_files
@@ -1572,8 +1554,7 @@ let (deps_of : deps -> Prims.string -> Prims.string Prims.list) =
 let (hash_dependences :
   deps ->
     Prims.string ->
-      (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list
-        FStar_Pervasives_Native.option)
+      (Prims.string * Prims.string) Prims.list FStar_Pervasives_Native.option)
   =
   fun deps  ->
     fun fn  ->
@@ -1675,9 +1656,7 @@ let (hash_dependences :
          in
       hash_deps [] binary_deps1
   
-let (print_digest :
-  (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list ->
-    Prims.string)
+let (print_digest : (Prims.string * Prims.string) Prims.list -> Prims.string)
   =
   fun dig  ->
     let uu____6838 =
@@ -2160,9 +2139,8 @@ let (print : deps -> unit) =
     | FStar_Pervasives_Native.None  -> ()
   
 let (print_fsmap :
-  (Prims.string FStar_Pervasives_Native.option,Prims.string
-                                                 FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 FStar_Util.smap -> Prims.string)
+  (Prims.string FStar_Pervasives_Native.option * Prims.string
+    FStar_Pervasives_Native.option) FStar_Util.smap -> Prims.string)
   =
   fun fsmap  ->
     FStar_Util.smap_fold fsmap

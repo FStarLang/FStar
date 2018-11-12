@@ -4,8 +4,8 @@ type z3_replay_result =
     FStar_Util.either
 let z3_result_as_replay_result :
   'Auu____13 'Auu____14 'Auu____15 .
-    ('Auu____13,('Auu____14,'Auu____15) FStar_Pervasives_Native.tuple2)
-      FStar_Util.either -> ('Auu____13,'Auu____14) FStar_Util.either
+    ('Auu____13,('Auu____14 * 'Auu____15)) FStar_Util.either ->
+      ('Auu____13,'Auu____14) FStar_Util.either
   =
   fun uu___372_32  ->
     match uu___372_32 with
@@ -156,8 +156,7 @@ let (filter_assertions :
   FStar_TypeChecker_Env.env ->
     FStar_SMTEncoding_Z3.unsat_core ->
       FStar_SMTEncoding_Term.decls_t ->
-        (FStar_SMTEncoding_Term.decl Prims.list,Prims.bool)
-          FStar_Pervasives_Native.tuple2)
+        (FStar_SMTEncoding_Term.decl Prims.list * Prims.bool))
   =
   fun e  ->
     fun core  ->
@@ -215,8 +214,7 @@ let (filter_assertions :
 let (filter_facts_without_core :
   FStar_TypeChecker_Env.env ->
     FStar_SMTEncoding_Term.decls_t ->
-      (FStar_SMTEncoding_Term.decl Prims.list,Prims.bool)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_SMTEncoding_Term.decl Prims.list * Prims.bool))
   =
   fun e  ->
     fun x  ->
@@ -229,9 +227,7 @@ type errors =
   error_ifuel: Prims.int ;
   error_hint: Prims.string Prims.list FStar_Pervasives_Native.option ;
   error_messages:
-    (FStar_Errors.raw_error,Prims.string,FStar_Range.range)
-      FStar_Pervasives_Native.tuple3 Prims.list
-    }
+    (FStar_Errors.raw_error * Prims.string * FStar_Range.range) Prims.list }
 let (__proj__Mkerrors__item__error_reason : errors -> Prims.string) =
   fun projectee  ->
     match projectee with
@@ -259,8 +255,7 @@ let (__proj__Mkerrors__item__error_hint :
   
 let (__proj__Mkerrors__item__error_messages :
   errors ->
-    (FStar_Errors.raw_error,Prims.string,FStar_Range.range)
-      FStar_Pervasives_Native.tuple3 Prims.list)
+    (FStar_Errors.raw_error * Prims.string * FStar_Range.range) Prims.list)
   =
   fun projectee  ->
     match projectee with

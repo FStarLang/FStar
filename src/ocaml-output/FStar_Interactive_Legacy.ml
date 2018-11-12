@@ -2,10 +2,8 @@ open Prims
 let (tc_one_file :
   Prims.string Prims.list ->
     FStar_TypeChecker_Env.env ->
-      ((Prims.string FStar_Pervasives_Native.option,Prims.string)
-         FStar_Pervasives_Native.tuple2,FStar_TypeChecker_Env.env_t,Prims.string
-                                                                    Prims.list)
-        FStar_Pervasives_Native.tuple3)
+      ((Prims.string FStar_Pervasives_Native.option * Prims.string) *
+        FStar_TypeChecker_Env.env_t * Prims.string Prims.list))
   =
   fun remaining  ->
     fun env  ->
@@ -36,7 +34,7 @@ let (tc_one_file :
   
 type env_t = FStar_TypeChecker_Env.env
 type modul_t = FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option
-type stack_t = (env_t,modul_t) FStar_Pervasives_Native.tuple2 Prims.list
+type stack_t = (env_t * modul_t) Prims.list
 let (pop : FStar_TypeChecker_Env.env -> Prims.string -> unit) =
   fun env  ->
     fun msg  ->
@@ -153,8 +151,8 @@ let (check_frag :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
       FStar_Parser_ParseIt.input_frag ->
-        (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option,FStar_TypeChecker_Env.env_t,
-          Prims.int) FStar_Pervasives_Native.tuple3
+        (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option *
+          FStar_TypeChecker_Env.env_t * Prims.int)
           FStar_Pervasives_Native.option)
   =
   fun env  ->
@@ -196,25 +194,19 @@ let (report_fail : unit -> unit) =
     FStar_Errors.clear ()
   
 type input_chunks =
-  | Push of (Prims.bool,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3 
+  | Push of (Prims.bool * Prims.int * Prims.int) 
   | Pop of Prims.string 
-  | Code of
-  (Prims.string,(Prims.string,Prims.string) FStar_Pervasives_Native.tuple2)
-  FStar_Pervasives_Native.tuple2 
-  | Info of
-  (Prims.string,Prims.bool,(Prims.string,Prims.int,Prims.int)
-                             FStar_Pervasives_Native.tuple3
-                             FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.tuple3 
+  | Code of (Prims.string * (Prims.string * Prims.string)) 
+  | Info of (Prims.string * Prims.bool * (Prims.string * Prims.int *
+  Prims.int) FStar_Pervasives_Native.option) 
   | Completions of Prims.string 
 let (uu___is_Push : input_chunks -> Prims.bool) =
   fun projectee  ->
     match projectee with | Push _0 -> true | uu____608 -> false
   
 let (__proj__Push__item___0 :
-  input_chunks ->
-    (Prims.bool,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3)
-  = fun projectee  -> match projectee with | Push _0 -> _0 
+  input_chunks -> (Prims.bool * Prims.int * Prims.int)) =
+  fun projectee  -> match projectee with | Push _0 -> _0 
 let (uu___is_Pop : input_chunks -> Prims.bool) =
   fun projectee  ->
     match projectee with | Pop _0 -> true | uu____656 -> false
@@ -226,20 +218,16 @@ let (uu___is_Code : input_chunks -> Prims.bool) =
     match projectee with | Code _0 -> true | uu____690 -> false
   
 let (__proj__Code__item___0 :
-  input_chunks ->
-    (Prims.string,(Prims.string,Prims.string) FStar_Pervasives_Native.tuple2)
-      FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | Code _0 -> _0 
+  input_chunks -> (Prims.string * (Prims.string * Prims.string))) =
+  fun projectee  -> match projectee with | Code _0 -> _0 
 let (uu___is_Info : input_chunks -> Prims.bool) =
   fun projectee  ->
     match projectee with | Info _0 -> true | uu____762 -> false
   
 let (__proj__Info__item___0 :
   input_chunks ->
-    (Prims.string,Prims.bool,(Prims.string,Prims.int,Prims.int)
-                               FStar_Pervasives_Native.tuple3
-                               FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple3)
+    (Prims.string * Prims.bool * (Prims.string * Prims.int * Prims.int)
+      FStar_Pervasives_Native.option))
   = fun projectee  -> match projectee with | Info _0 -> _0 
 let (uu___is_Completions : input_chunks -> Prims.bool) =
   fun projectee  ->
@@ -428,8 +416,8 @@ let (fill_buffer : unit -> unit) =
   
 let (deps_of_our_file :
   Prims.string ->
-    (Prims.string Prims.list,Prims.string FStar_Pervasives_Native.option,
-      FStar_Parser_Dep.deps) FStar_Pervasives_Native.tuple3)
+    (Prims.string Prims.list * Prims.string FStar_Pervasives_Native.option *
+      FStar_Parser_Dep.deps))
   =
   fun filename  ->
     let uu____1835 = FStar_Dependencies.find_deps_if_needed [filename]  in
@@ -485,17 +473,16 @@ let (deps_of_our_file :
              (deps1, maybe_intf, dep_graph1))
   
 type m_timestamps =
-  (Prims.string FStar_Pervasives_Native.option,Prims.string,FStar_Util.time
-                                                              FStar_Pervasives_Native.option,
-    FStar_Util.time) FStar_Pervasives_Native.tuple4 Prims.list
+  (Prims.string FStar_Pervasives_Native.option * Prims.string *
+    FStar_Util.time FStar_Pervasives_Native.option * FStar_Util.time)
+    Prims.list
 let rec (tc_deps :
   modul_t ->
     stack_t ->
       FStar_TypeChecker_Env.env ->
         Prims.string Prims.list ->
           m_timestamps ->
-            (stack_t,FStar_TypeChecker_Env.env,m_timestamps)
-              FStar_Pervasives_Native.tuple3)
+            (stack_t * FStar_TypeChecker_Env.env * m_timestamps))
   =
   fun m  ->
     fun stack  ->
@@ -537,10 +524,7 @@ let rec (tc_deps :
 let (update_deps :
   Prims.string ->
     modul_t ->
-      stack_t ->
-        env_t ->
-          m_timestamps ->
-            (stack_t,env_t,m_timestamps) FStar_Pervasives_Native.tuple3)
+      stack_t -> env_t -> m_timestamps -> (stack_t * env_t * m_timestamps))
   =
   fun filename  ->
     fun m  ->
@@ -655,7 +639,7 @@ let (format_info :
               uu____2995 uu____2997
   
 let rec (go :
-  (Prims.int,Prims.int) FStar_Pervasives_Native.tuple2 ->
+  (Prims.int * Prims.int) ->
     Prims.string -> stack_t -> modul_t -> env_t -> m_timestamps -> unit)
   =
   fun line_col  ->

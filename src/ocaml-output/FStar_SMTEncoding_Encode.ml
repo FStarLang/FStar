@@ -4,18 +4,16 @@ type prims_t =
   mk:
     FStar_Ident.lident ->
       Prims.string ->
-        (FStar_SMTEncoding_Term.term,Prims.int,FStar_SMTEncoding_Term.decl
-                                                 Prims.list)
-          FStar_Pervasives_Native.tuple3
+        (FStar_SMTEncoding_Term.term * Prims.int *
+          FStar_SMTEncoding_Term.decl Prims.list)
     ;
   is: FStar_Ident.lident -> Prims.bool }
 let (__proj__Mkprims_t__item__mk :
   prims_t ->
     FStar_Ident.lident ->
       Prims.string ->
-        (FStar_SMTEncoding_Term.term,Prims.int,FStar_SMTEncoding_Term.decl
-                                                 Prims.list)
-          FStar_Pervasives_Native.tuple3)
+        (FStar_SMTEncoding_Term.term * Prims.int *
+          FStar_SMTEncoding_Term.decl Prims.list))
   = fun projectee  -> match projectee with | { mk = mk1; is;_} -> mk1 
 let (__proj__Mkprims_t__item__is :
   prims_t -> FStar_Ident.lident -> Prims.bool) =
@@ -473,8 +471,7 @@ let (pretype_axiom :
   FStar_Range.range ->
     FStar_SMTEncoding_Env.env_t ->
       FStar_SMTEncoding_Term.term ->
-        (Prims.string,FStar_SMTEncoding_Term.sort)
-          FStar_Pervasives_Native.tuple2 Prims.list ->
+        (Prims.string * FStar_SMTEncoding_Term.sort) Prims.list ->
           FStar_SMTEncoding_Term.decl)
   =
   fun rng  ->
@@ -1150,8 +1147,8 @@ let (encode_free_var :
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
             FStar_Syntax_Syntax.qualifier Prims.list ->
-              (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-                FStar_Pervasives_Native.tuple2)
+              (FStar_SMTEncoding_Term.decl Prims.list *
+                FStar_SMTEncoding_Env.env_t))
   =
   fun uninterpreted  ->
     fun env  ->
@@ -1879,9 +1876,8 @@ let (declare_top_level_let :
     FStar_Syntax_Syntax.fv ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-          (FStar_SMTEncoding_Env.fvar_binding,FStar_SMTEncoding_Term.decl
-                                                Prims.list,FStar_SMTEncoding_Env.env_t)
-            FStar_Pervasives_Native.tuple3)
+          (FStar_SMTEncoding_Env.fvar_binding * FStar_SMTEncoding_Term.decl
+            Prims.list * FStar_SMTEncoding_Env.env_t))
   =
   fun env  ->
     fun x  ->
@@ -1909,8 +1905,8 @@ let (encode_top_level_val :
       FStar_Syntax_Syntax.fv ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.qualifier Prims.list ->
-            (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-              FStar_Pervasives_Native.tuple2)
+            (FStar_SMTEncoding_Term.decl Prims.list *
+              FStar_SMTEncoding_Env.env_t))
   =
   fun uninterpreted  ->
     fun env  ->
@@ -1935,8 +1931,8 @@ let (encode_top_level_vals :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.letbinding Prims.list ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
-        (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-          FStar_Pervasives_Native.tuple2)
+        (FStar_SMTEncoding_Term.decl Prims.list *
+          FStar_SMTEncoding_Env.env_t))
   =
   fun env  ->
     fun bindings  ->
@@ -2014,11 +2010,10 @@ let (copy_env : FStar_SMTEncoding_Env.env_t -> FStar_SMTEncoding_Env.env_t) =
   
 let (encode_top_level_let :
   FStar_SMTEncoding_Env.env_t ->
-    (Prims.bool,FStar_Syntax_Syntax.letbinding Prims.list)
-      FStar_Pervasives_Native.tuple2 ->
+    (Prims.bool * FStar_Syntax_Syntax.letbinding Prims.list) ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
-        (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-          FStar_Pervasives_Native.tuple2)
+        (FStar_SMTEncoding_Term.decl Prims.list *
+          FStar_SMTEncoding_Env.env_t))
   =
   fun env  ->
     fun uu____6773  ->
@@ -3451,8 +3446,7 @@ let (encode_top_level_let :
 let rec (encode_sigelt :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.sigelt ->
-      (FStar_SMTEncoding_Term.decls_t,FStar_SMTEncoding_Env.env_t)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_SMTEncoding_Term.decls_t * FStar_SMTEncoding_Env.env_t))
   =
   fun env  ->
     fun se  ->
@@ -3491,8 +3485,7 @@ let rec (encode_sigelt :
 and (encode_sigelt' :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.sigelt ->
-      (FStar_SMTEncoding_Term.decls_t,FStar_SMTEncoding_Env.env_t)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_SMTEncoding_Term.decls_t * FStar_SMTEncoding_Env.env_t))
   =
   fun env  ->
     fun se  ->
@@ -5778,8 +5771,7 @@ and (encode_sigelt' :
 and (encode_sigelts :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.sigelt Prims.list ->
-      (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_SMTEncoding_Term.decl Prims.list * FStar_SMTEncoding_Env.env_t))
   =
   fun env  ->
     fun ses  ->
@@ -5797,8 +5789,7 @@ and (encode_sigelts :
 let (encode_env_bindings :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.binding Prims.list ->
-      (FStar_SMTEncoding_Term.decls_t,FStar_SMTEncoding_Env.env_t)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_SMTEncoding_Term.decls_t * FStar_SMTEncoding_Env.env_t))
   =
   fun env  ->
     fun bindings  ->
@@ -5917,12 +5908,10 @@ let (encode_env_bindings :
   
 let encode_labels :
   'Auu____15481 'Auu____15482 .
-    ((Prims.string,FStar_SMTEncoding_Term.sort)
-       FStar_Pervasives_Native.tuple2,'Auu____15481,'Auu____15482)
-      FStar_Pervasives_Native.tuple3 Prims.list ->
-      (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Term.decl
-                                                Prims.list)
-        FStar_Pervasives_Native.tuple2
+    ((Prims.string * FStar_SMTEncoding_Term.sort) * 'Auu____15481 *
+      'Auu____15482) Prims.list ->
+      (FStar_SMTEncoding_Term.decl Prims.list * FStar_SMTEncoding_Term.decl
+        Prims.list)
   =
   fun labs  ->
     let prefix1 =
@@ -6042,8 +6031,8 @@ let (pop_env : unit -> unit) =
     | [] -> failwith "Popping an empty stack"
     | uu____15941::tl1 -> FStar_ST.op_Colon_Equals last_env tl1
   
-let (snapshot_env : unit -> (Prims.int,unit) FStar_Pervasives_Native.tuple2)
-  = fun uu____15978  -> FStar_Common.snapshot push_env last_env () 
+let (snapshot_env : unit -> (Prims.int * unit)) =
+  fun uu____15978  -> FStar_Common.snapshot push_env last_env () 
 let (rollback_env : Prims.int FStar_Pervasives_Native.option -> unit) =
   fun depth  -> FStar_Common.rollback pop_env last_env depth 
 let (init : FStar_TypeChecker_Env.env -> unit) =
@@ -6053,10 +6042,7 @@ let (init : FStar_TypeChecker_Env.env -> unit) =
     FStar_SMTEncoding_Z3.giveZ3 [FStar_SMTEncoding_Term.DefPrelude]
   
 let (snapshot :
-  Prims.string ->
-    (FStar_TypeChecker_Env.solver_depth_t,unit)
-      FStar_Pervasives_Native.tuple2)
-  =
+  Prims.string -> (FStar_TypeChecker_Env.solver_depth_t * unit)) =
   fun msg  ->
     FStar_Util.atomically
       (fun uu____16031  ->
@@ -6147,8 +6133,7 @@ let (fact_dbs_for_lid :
 let (encode_top_level_facts :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.sigelt ->
-      (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_Env.env_t)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_SMTEncoding_Term.decl Prims.list * FStar_SMTEncoding_Env.env_t))
   =
   fun env  ->
     fun se  ->
@@ -6324,10 +6309,10 @@ let (encode_query :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term ->
-        (FStar_SMTEncoding_Term.decl Prims.list,FStar_SMTEncoding_ErrorReporting.label
-                                                  Prims.list,FStar_SMTEncoding_Term.decl,
-          FStar_SMTEncoding_Term.decl Prims.list)
-          FStar_Pervasives_Native.tuple4)
+        (FStar_SMTEncoding_Term.decl Prims.list *
+          FStar_SMTEncoding_ErrorReporting.label Prims.list *
+          FStar_SMTEncoding_Term.decl * FStar_SMTEncoding_Term.decl
+          Prims.list))
   =
   fun use_env_msg  ->
     fun tcenv  ->

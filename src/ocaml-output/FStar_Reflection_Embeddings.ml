@@ -654,8 +654,8 @@ let (e_argv : FStar_Reflection_Data.argv FStar_Syntax_Embeddings.embedding) =
   FStar_Syntax_Embeddings.e_tuple2 e_term e_aqualv 
 let (e_branch_aq :
   FStar_Syntax_Syntax.antiquotations ->
-    (FStar_Reflection_Data.pattern,FStar_Syntax_Syntax.term)
-      FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.embedding)
+    (FStar_Reflection_Data.pattern * FStar_Syntax_Syntax.term)
+      FStar_Syntax_Embeddings.embedding)
   =
   fun aq  ->
     let uu____2042 = e_term_aq aq  in
@@ -663,8 +663,8 @@ let (e_branch_aq :
   
 let (e_argv_aq :
   FStar_Syntax_Syntax.antiquotations ->
-    (FStar_Syntax_Syntax.term,FStar_Reflection_Data.aqualv)
-      FStar_Pervasives_Native.tuple2 FStar_Syntax_Embeddings.embedding)
+    (FStar_Syntax_Syntax.term * FStar_Reflection_Data.aqualv)
+      FStar_Syntax_Embeddings.embedding)
   =
   fun aq  ->
     let uu____2057 = e_term_aq aq  in

@@ -18,8 +18,7 @@ let (test_mod_ref :
 let (parse_mod :
   Prims.string ->
     FStar_Syntax_DsEnv.env ->
-      (FStar_Syntax_DsEnv.env,FStar_Syntax_Syntax.modul)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Syntax_DsEnv.env * FStar_Syntax_Syntax.modul))
   =
   fun mod_name1  ->
     fun dsenv1  ->
@@ -57,8 +56,7 @@ let (add_mods :
   Prims.string Prims.list ->
     FStar_Syntax_DsEnv.env ->
       FStar_TypeChecker_Env.env ->
-        (FStar_Syntax_DsEnv.env,FStar_TypeChecker_Env.env)
-          FStar_Pervasives_Native.tuple2)
+        (FStar_Syntax_DsEnv.env * FStar_TypeChecker_Env.env))
   =
   fun mod_names  ->
     fun dsenv1  ->
@@ -334,8 +332,8 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
   
 let (tc' :
   Prims.string ->
-    (FStar_Syntax_Syntax.term,FStar_TypeChecker_Env.guard_t,FStar_TypeChecker_Env.env)
-      FStar_Pervasives_Native.tuple3)
+    (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.guard_t *
+      FStar_TypeChecker_Env.env))
   =
   fun s  ->
     let tm = pars s  in

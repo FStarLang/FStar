@@ -1,9 +1,7 @@
 open Prims
 let (cache_version_number : Prims.int) = (Prims.parse_int "6") 
 let (module_or_interface_name :
-  FStar_Syntax_Syntax.modul ->
-    (Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2)
-  =
+  FStar_Syntax_Syntax.modul -> (Prims.bool * FStar_Ident.lident)) =
   fun m  ->
     ((m.FStar_Syntax_Syntax.is_interface), (m.FStar_Syntax_Syntax.name))
   
@@ -51,8 +49,7 @@ let (__proj__Mktc_result__item__extraction_time : tc_result -> Prims.int) =
 let with_dsenv_of_tcenv :
   'a .
     FStar_TypeChecker_Env.env ->
-      'a FStar_Syntax_DsEnv.withenv ->
-        ('a,FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple2
+      'a FStar_Syntax_DsEnv.withenv -> ('a * FStar_TypeChecker_Env.env)
   =
   fun tcenv  ->
     fun f  ->
@@ -152,9 +149,8 @@ let with_dsenv_of_tcenv :
 let with_tcenv_of_env :
   'a .
     uenv ->
-      (FStar_TypeChecker_Env.env ->
-         ('a,FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple2)
-        -> ('a,uenv) FStar_Pervasives_Native.tuple2
+      (FStar_TypeChecker_Env.env -> ('a * FStar_TypeChecker_Env.env)) ->
+        ('a * uenv)
   =
   fun e  ->
     fun f  ->
@@ -176,11 +172,7 @@ let with_tcenv_of_env :
              }))
   
 let with_dsenv_of_env :
-  'a .
-    uenv ->
-      'a FStar_Syntax_DsEnv.withenv ->
-        ('a,uenv) FStar_Pervasives_Native.tuple2
-  =
+  'a . uenv -> 'a FStar_Syntax_DsEnv.withenv -> ('a * uenv) =
   fun e  ->
     fun f  ->
       let uu____238 =
@@ -237,8 +229,7 @@ let (env_of_tcenv :
 let (parse :
   uenv ->
     Prims.string FStar_Pervasives_Native.option ->
-      Prims.string ->
-        (FStar_Syntax_Syntax.modul,uenv) FStar_Pervasives_Native.tuple2)
+      Prims.string -> (FStar_Syntax_Syntax.modul * uenv))
   =
   fun env  ->
     fun pre_fn  ->
@@ -682,8 +673,8 @@ let (tc_one_fragment :
   FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env_t ->
       FStar_Parser_ParseIt.input_frag ->
-        (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option,FStar_TypeChecker_Env.env_t)
-          FStar_Pervasives_Native.tuple2)
+        (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option *
+          FStar_TypeChecker_Env.env_t))
   =
   fun curmod  ->
     fun env  ->
@@ -1107,9 +1098,8 @@ let (tc_one_file :
     delta_env ->
       Prims.string FStar_Pervasives_Native.option ->
         Prims.string ->
-          (tc_result,FStar_Extraction_ML_Syntax.mllib
-                       FStar_Pervasives_Native.option,uenv,delta_env)
-            FStar_Pervasives_Native.tuple4)
+          (tc_result * FStar_Extraction_ML_Syntax.mllib
+            FStar_Pervasives_Native.option * uenv * delta_env))
   =
   fun env  ->
     fun delta1  ->
@@ -1319,9 +1309,7 @@ let (tc_one_file :
 let (tc_one_file_for_ide :
   FStar_TypeChecker_Env.env_t ->
     Prims.string FStar_Pervasives_Native.option ->
-      Prims.string ->
-        (tc_result,FStar_TypeChecker_Env.env_t)
-          FStar_Pervasives_Native.tuple2)
+      Prims.string -> (tc_result * FStar_TypeChecker_Env.env_t))
   =
   fun env  ->
     fun pre_fn  ->
@@ -1352,9 +1340,9 @@ let (tc_one_file_from_remaining :
   Prims.string Prims.list ->
     uenv ->
       delta_env ->
-        (Prims.string Prims.list,tc_result Prims.list,FStar_Extraction_ML_Syntax.mllib
-                                                        FStar_Pervasives_Native.option,
-          uenv,delta_env) FStar_Pervasives_Native.tuple5)
+        (Prims.string Prims.list * tc_result Prims.list *
+          FStar_Extraction_ML_Syntax.mllib FStar_Pervasives_Native.option *
+          uenv * delta_env))
   =
   fun remaining  ->
     fun env  ->
@@ -1384,11 +1372,11 @@ let (tc_one_file_from_remaining :
             (remaining1, nmods, mllib, env1, delta_env1)
   
 let rec (tc_fold_interleave :
-  (tc_result Prims.list,FStar_Extraction_ML_Syntax.mllib Prims.list,uenv,
-    delta_env) FStar_Pervasives_Native.tuple4 ->
+  (tc_result Prims.list * FStar_Extraction_ML_Syntax.mllib Prims.list * uenv
+    * delta_env) ->
     Prims.string Prims.list ->
-      (tc_result Prims.list,FStar_Extraction_ML_Syntax.mllib Prims.list,
-        uenv,delta_env) FStar_Pervasives_Native.tuple4)
+      (tc_result Prims.list * FStar_Extraction_ML_Syntax.mllib Prims.list *
+        uenv * delta_env))
   =
   fun acc  ->
     fun remaining  ->
@@ -1414,9 +1402,8 @@ let rec (tc_fold_interleave :
 let (batch_mode_tc :
   Prims.string Prims.list ->
     FStar_Parser_Dep.deps ->
-      (tc_result Prims.list,uenv,(uenv -> uenv)
-                                   FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple3)
+      (tc_result Prims.list * uenv * (uenv -> uenv)
+        FStar_Pervasives_Native.option))
   =
   fun filenames  ->
     fun dep_graph1  ->

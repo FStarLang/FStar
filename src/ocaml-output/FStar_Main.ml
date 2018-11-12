@@ -1,14 +1,12 @@
 open Prims
 let (uu___476 : unit) = FStar_Version.dummy () 
 let (process_args :
-  unit ->
-    (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
-      FStar_Pervasives_Native.tuple2)
-  = fun uu____13  -> FStar_Options.parse_cmd_line () 
+  unit -> (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list)) =
+  fun uu____13  -> FStar_Options.parse_cmd_line () 
 let (cleanup : unit -> unit) = fun uu____26  -> FStar_Util.kill_all () 
 let (finished_message :
-  ((Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2,Prims.int)
-    FStar_Pervasives_Native.tuple2 Prims.list -> Prims.int -> unit)
+  ((Prims.bool * FStar_Ident.lident) * Prims.int) Prims.list ->
+    Prims.int -> unit)
   =
   fun fmods  ->
     fun errs  ->
@@ -70,9 +68,7 @@ let (finished_message :
       else ()
   
 let (report_errors :
-  ((Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2,Prims.int)
-    FStar_Pervasives_Native.tuple2 Prims.list -> unit)
-  =
+  ((Prims.bool * FStar_Ident.lident) * Prims.int) Prims.list -> unit) =
   fun fmods  ->
     (let uu____215 = FStar_Errors.report_all ()  in
      FStar_All.pipe_right uu____215 (fun a1  -> ()));

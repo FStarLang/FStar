@@ -686,11 +686,7 @@ let e_option :
       FStar_Syntax_Syntax.t_option_of uu____3697  in
     mk_emb_full em un uu____3696 printer emb_t_option_a
   
-let e_tuple2 :
-  'a 'b .
-    'a embedding ->
-      'b embedding -> ('a,'b) FStar_Pervasives_Native.tuple2 embedding
-  =
+let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
   fun ea  ->
     fun eb  ->
       let t_pair_a_b =

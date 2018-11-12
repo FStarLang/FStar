@@ -12,13 +12,11 @@ let cases :
         | FStar_Pervasives_Native.None  -> d
   
 type closure =
-  | Clos of
-  ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
-     FStar_Pervasives_Native.tuple2 Prims.list,FStar_Syntax_Syntax.term,
-  ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
-     FStar_Pervasives_Native.tuple2 Prims.list,FStar_Syntax_Syntax.term)
-    FStar_Pervasives_Native.tuple2 FStar_Syntax_Syntax.memo,Prims.bool)
-  FStar_Pervasives_Native.tuple4 
+  | Clos of ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option *
+  closure) Prims.list * FStar_Syntax_Syntax.term *
+  ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
+  Prims.list * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo *
+  Prims.bool) 
   | Univ of FStar_Syntax_Syntax.universe 
   | Dummy 
 let (uu___is_Clos : closure -> Prims.bool) =
@@ -27,12 +25,10 @@ let (uu___is_Clos : closure -> Prims.bool) =
   
 let (__proj__Clos__item___0 :
   closure ->
-    ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
-       FStar_Pervasives_Native.tuple2 Prims.list,FStar_Syntax_Syntax.term,
-      ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
-         FStar_Pervasives_Native.tuple2 Prims.list,FStar_Syntax_Syntax.term)
-        FStar_Pervasives_Native.tuple2 FStar_Syntax_Syntax.memo,Prims.bool)
-      FStar_Pervasives_Native.tuple4)
+    ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
+      Prims.list * FStar_Syntax_Syntax.term * ((FStar_Syntax_Syntax.binder
+      FStar_Pervasives_Native.option * closure) Prims.list *
+      FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo * Prims.bool))
   = fun projectee  -> match projectee with | Clos _0 -> _0 
 let (uu___is_Univ : closure -> Prims.bool) =
   fun projectee  ->
@@ -45,75 +41,59 @@ let (uu___is_Dummy : closure -> Prims.bool) =
     match projectee with | Dummy  -> true | uu____262 -> false
   
 type env =
-  (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
-    FStar_Pervasives_Native.tuple2 Prims.list
+  (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
+    Prims.list
 let (dummy :
-  (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
-    FStar_Pervasives_Native.tuple2)
-  = (FStar_Pervasives_Native.None, Dummy) 
+  (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)) =
+  (FStar_Pervasives_Native.None, Dummy) 
 type branches =
-  (FStar_Syntax_Syntax.pat,FStar_Syntax_Syntax.term
-                             FStar_Pervasives_Native.option,FStar_Syntax_Syntax.term)
-    FStar_Pervasives_Native.tuple3 Prims.list
+  (FStar_Syntax_Syntax.pat * FStar_Syntax_Syntax.term
+    FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term) Prims.list
 type stack_elt =
-  | Arg of (closure,FStar_Syntax_Syntax.aqual,FStar_Range.range)
-  FStar_Pervasives_Native.tuple3 
-  | UnivArgs of (FStar_Syntax_Syntax.universe Prims.list,FStar_Range.range)
-  FStar_Pervasives_Native.tuple2 
-  | MemoLazy of (env,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple2
-  FStar_Syntax_Syntax.memo 
-  | Match of (env,branches,FStar_TypeChecker_Cfg.cfg,FStar_Range.range)
-  FStar_Pervasives_Native.tuple4 
-  | Abs of
-  (env,FStar_Syntax_Syntax.binders,env,FStar_Syntax_Syntax.residual_comp
-                                         FStar_Pervasives_Native.option,
-  FStar_Range.range) FStar_Pervasives_Native.tuple5 
-  | App of
-  (env,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.aqual,FStar_Range.range)
-  FStar_Pervasives_Native.tuple4 
-  | Meta of (env,FStar_Syntax_Syntax.metadata,FStar_Range.range)
-  FStar_Pervasives_Native.tuple3 
-  | Let of
-  (env,FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.letbinding,FStar_Range.range)
-  FStar_Pervasives_Native.tuple4 
+  | Arg of (closure * FStar_Syntax_Syntax.aqual * FStar_Range.range) 
+  | UnivArgs of (FStar_Syntax_Syntax.universe Prims.list * FStar_Range.range)
+  
+  | MemoLazy of (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo 
+  | Match of (env * branches * FStar_TypeChecker_Cfg.cfg * FStar_Range.range)
+  
+  | Abs of (env * FStar_Syntax_Syntax.binders * env *
+  FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option *
+  FStar_Range.range) 
+  | App of (env * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
+  FStar_Range.range) 
+  | Meta of (env * FStar_Syntax_Syntax.metadata * FStar_Range.range) 
+  | Let of (env * FStar_Syntax_Syntax.binders *
+  FStar_Syntax_Syntax.letbinding * FStar_Range.range) 
   | Cfg of FStar_TypeChecker_Cfg.cfg 
-  | Debug of (FStar_Syntax_Syntax.term,FStar_Util.time)
-  FStar_Pervasives_Native.tuple2 
+  | Debug of (FStar_Syntax_Syntax.term * FStar_Util.time) 
 let (uu___is_Arg : stack_elt -> Prims.bool) =
   fun projectee  ->
     match projectee with | Arg _0 -> true | uu____442 -> false
   
 let (__proj__Arg__item___0 :
-  stack_elt ->
-    (closure,FStar_Syntax_Syntax.aqual,FStar_Range.range)
-      FStar_Pervasives_Native.tuple3)
-  = fun projectee  -> match projectee with | Arg _0 -> _0 
+  stack_elt -> (closure * FStar_Syntax_Syntax.aqual * FStar_Range.range)) =
+  fun projectee  -> match projectee with | Arg _0 -> _0 
 let (uu___is_UnivArgs : stack_elt -> Prims.bool) =
   fun projectee  ->
     match projectee with | UnivArgs _0 -> true | uu____486 -> false
   
 let (__proj__UnivArgs__item___0 :
-  stack_elt ->
-    (FStar_Syntax_Syntax.universe Prims.list,FStar_Range.range)
-      FStar_Pervasives_Native.tuple2)
+  stack_elt -> (FStar_Syntax_Syntax.universe Prims.list * FStar_Range.range))
   = fun projectee  -> match projectee with | UnivArgs _0 -> _0 
 let (uu___is_MemoLazy : stack_elt -> Prims.bool) =
   fun projectee  ->
     match projectee with | MemoLazy _0 -> true | uu____530 -> false
   
 let (__proj__MemoLazy__item___0 :
-  stack_elt ->
-    (env,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple2
-      FStar_Syntax_Syntax.memo)
-  = fun projectee  -> match projectee with | MemoLazy _0 -> _0 
+  stack_elt -> (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo) =
+  fun projectee  -> match projectee with | MemoLazy _0 -> _0 
 let (uu___is_Match : stack_elt -> Prims.bool) =
   fun projectee  ->
     match projectee with | Match _0 -> true | uu____609 -> false
   
 let (__proj__Match__item___0 :
   stack_elt ->
-    (env,branches,FStar_TypeChecker_Cfg.cfg,FStar_Range.range)
-      FStar_Pervasives_Native.tuple4)
+    (env * branches * FStar_TypeChecker_Cfg.cfg * FStar_Range.range))
   = fun projectee  -> match projectee with | Match _0 -> _0 
 let (uu___is_Abs : stack_elt -> Prims.bool) =
   fun projectee  ->
@@ -121,9 +101,9 @@ let (uu___is_Abs : stack_elt -> Prims.bool) =
   
 let (__proj__Abs__item___0 :
   stack_elt ->
-    (env,FStar_Syntax_Syntax.binders,env,FStar_Syntax_Syntax.residual_comp
-                                           FStar_Pervasives_Native.option,
-      FStar_Range.range) FStar_Pervasives_Native.tuple5)
+    (env * FStar_Syntax_Syntax.binders * env *
+      FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option *
+      FStar_Range.range))
   = fun projectee  -> match projectee with | Abs _0 -> _0 
 let (uu___is_App : stack_elt -> Prims.bool) =
   fun projectee  ->
@@ -131,26 +111,24 @@ let (uu___is_App : stack_elt -> Prims.bool) =
   
 let (__proj__App__item___0 :
   stack_elt ->
-    (env,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.aqual,FStar_Range.range)
-      FStar_Pervasives_Native.tuple4)
+    (env * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
+      FStar_Range.range))
   = fun projectee  -> match projectee with | App _0 -> _0 
 let (uu___is_Meta : stack_elt -> Prims.bool) =
   fun projectee  ->
     match projectee with | Meta _0 -> true | uu____779 -> false
   
 let (__proj__Meta__item___0 :
-  stack_elt ->
-    (env,FStar_Syntax_Syntax.metadata,FStar_Range.range)
-      FStar_Pervasives_Native.tuple3)
-  = fun projectee  -> match projectee with | Meta _0 -> _0 
+  stack_elt -> (env * FStar_Syntax_Syntax.metadata * FStar_Range.range)) =
+  fun projectee  -> match projectee with | Meta _0 -> _0 
 let (uu___is_Let : stack_elt -> Prims.bool) =
   fun projectee  ->
     match projectee with | Let _0 -> true | uu____825 -> false
   
 let (__proj__Let__item___0 :
   stack_elt ->
-    (env,FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.letbinding,FStar_Range.range)
-      FStar_Pervasives_Native.tuple4)
+    (env * FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.letbinding *
+      FStar_Range.range))
   = fun projectee  -> match projectee with | Let _0 -> _0 
 let (uu___is_Cfg : stack_elt -> Prims.bool) =
   fun projectee  ->
@@ -163,9 +141,8 @@ let (uu___is_Debug : stack_elt -> Prims.bool) =
     match projectee with | Debug _0 -> true | uu____893 -> false
   
 let (__proj__Debug__item___0 :
-  stack_elt ->
-    (FStar_Syntax_Syntax.term,FStar_Util.time) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | Debug _0 -> _0 
+  stack_elt -> (FStar_Syntax_Syntax.term * FStar_Util.time)) =
+  fun projectee  -> match projectee with | Debug _0 -> _0 
 type stack = stack_elt Prims.list
 let (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t  ->
@@ -195,8 +172,8 @@ let set_memo :
         else ()
   
 let rec (env_to_string :
-  (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
-    FStar_Pervasives_Native.tuple2 Prims.list -> Prims.string)
+  (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
+    Prims.list -> Prims.string)
   =
   fun env  ->
     let uu____1157 =
@@ -262,9 +239,8 @@ let is_empty : 'Auu____1382 . 'Auu____1382 Prims.list -> Prims.bool =
     match uu___260_1390 with | [] -> true | uu____1394 -> false
   
 let (lookup_bvar :
-  (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
-    FStar_Syntax_Syntax.bv -> closure)
+  (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
+    Prims.list -> FStar_Syntax_Syntax.bv -> closure)
   =
   fun env  ->
     fun x  ->
@@ -1087,13 +1063,10 @@ and (close_imp :
 and (close_binders :
   FStar_TypeChecker_Cfg.cfg ->
     env ->
-      (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                                FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2 Prims.list ->
-        ((FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                                   FStar_Pervasives_Native.option)
-           FStar_Pervasives_Native.tuple2 Prims.list,env)
-          FStar_Pervasives_Native.tuple2)
+      (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+        FStar_Pervasives_Native.option) Prims.list ->
+        ((FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+          FStar_Pervasives_Native.option) Prims.list * env))
   =
   fun cfg  ->
     fun env  ->
@@ -1265,10 +1238,8 @@ let (unembed_binder :
 let mk_psc_subst :
   'Auu____5250 .
     FStar_TypeChecker_Cfg.cfg ->
-      ((FStar_Syntax_Syntax.bv,'Auu____5250) FStar_Pervasives_Native.tuple2
-         FStar_Pervasives_Native.option,closure)
-        FStar_Pervasives_Native.tuple2 Prims.list ->
-        FStar_Syntax_Syntax.subst_elt Prims.list
+      ((FStar_Syntax_Syntax.bv * 'Auu____5250) FStar_Pervasives_Native.option
+        * closure) Prims.list -> FStar_Syntax_Syntax.subst_elt Prims.list
   =
   fun cfg  ->
     fun env  ->
@@ -1352,9 +1323,8 @@ let reduce_primops :
   'Auu____5509 .
     FStar_Syntax_Embeddings.norm_cb ->
       FStar_TypeChecker_Cfg.cfg ->
-        ((FStar_Syntax_Syntax.bv,'Auu____5509) FStar_Pervasives_Native.tuple2
-           FStar_Pervasives_Native.option,closure)
-          FStar_Pervasives_Native.tuple2 Prims.list ->
+        ((FStar_Syntax_Syntax.bv * 'Auu____5509)
+          FStar_Pervasives_Native.option * closure) Prims.list ->
           FStar_Syntax_Syntax.term ->
             FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   =
@@ -1520,9 +1490,8 @@ let reduce_equality :
   'Auu____5923 .
     FStar_Syntax_Embeddings.norm_cb ->
       FStar_TypeChecker_Cfg.cfg ->
-        ((FStar_Syntax_Syntax.bv,'Auu____5923) FStar_Pervasives_Native.tuple2
-           FStar_Pervasives_Native.option,closure)
-          FStar_Pervasives_Native.tuple2 Prims.list ->
+        ((FStar_Syntax_Syntax.bv * 'Auu____5923)
+          FStar_Pervasives_Native.option * closure) Prims.list ->
           FStar_Syntax_Syntax.term ->
             FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   =
@@ -1766,10 +1735,9 @@ let get_norm_request :
   'Auu____6437 .
     FStar_TypeChecker_Cfg.cfg ->
       (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
-        (FStar_Syntax_Syntax.term,'Auu____6437)
-          FStar_Pervasives_Native.tuple2 Prims.list ->
-          (FStar_TypeChecker_Env.step Prims.list,FStar_Syntax_Syntax.term)
-            FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
+        (FStar_Syntax_Syntax.term * 'Auu____6437) Prims.list ->
+          (FStar_TypeChecker_Env.step Prims.list * FStar_Syntax_Syntax.term)
+            FStar_Pervasives_Native.option
   =
   fun cfg  ->
     fun full_norm  ->
@@ -1898,8 +1866,7 @@ let firstn :
   'Auu____6811 .
     Prims.int ->
       'Auu____6811 Prims.list ->
-        ('Auu____6811 Prims.list,'Auu____6811 Prims.list)
-          FStar_Pervasives_Native.tuple2
+        ('Auu____6811 Prims.list * 'Auu____6811 Prims.list)
   =
   fun k  ->
     fun l  ->
@@ -2362,8 +2329,7 @@ let decide_unfolding :
           'Auu____9137 ->
             FStar_Syntax_Syntax.fv ->
               FStar_TypeChecker_Env.qninfo ->
-                (FStar_TypeChecker_Cfg.cfg,stack_elt Prims.list)
-                  FStar_Pervasives_Native.tuple2
+                (FStar_TypeChecker_Cfg.cfg * stack_elt Prims.list)
                   FStar_Pervasives_Native.option
   =
   fun cfg  ->
@@ -4520,9 +4486,8 @@ and (reduce_impure_comp :
     env ->
       stack ->
         FStar_Syntax_Syntax.term ->
-          (FStar_Syntax_Syntax.monad_name,(FStar_Syntax_Syntax.monad_name,
-                                            FStar_Syntax_Syntax.monad_name)
-                                            FStar_Pervasives_Native.tuple2)
+          (FStar_Syntax_Syntax.monad_name,(FStar_Syntax_Syntax.monad_name *
+                                            FStar_Syntax_Syntax.monad_name))
             FStar_Util.either ->
             FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term)
   =
@@ -5231,12 +5196,12 @@ and (reify_lift :
 and (norm_pattern_args :
   FStar_TypeChecker_Cfg.cfg ->
     env ->
-      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                              FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2 Prims.list Prims.list ->
-        (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                                FStar_Pervasives_Native.option)
-          FStar_Pervasives_Native.tuple2 Prims.list Prims.list)
+      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+        FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+        Prims.list Prims.list ->
+        (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+          FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+          Prims.list Prims.list)
   =
   fun cfg  ->
     fun env  ->
@@ -8443,12 +8408,12 @@ and (elim_delayed_subst_meta :
     | m -> m
 
 and (elim_delayed_subst_args :
-  (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                          FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
-    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                            FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list)
+  (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+    FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+    Prims.list ->
+    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+      FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+      Prims.list)
   =
   fun args  ->
     FStar_List.map
@@ -8459,12 +8424,10 @@ and (elim_delayed_subst_args :
       args
 
 and (elim_delayed_subst_binders :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                            FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
-    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                              FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list)
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+    FStar_Pervasives_Native.option) Prims.list ->
+    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list)
   =
   fun bs  ->
     FStar_List.map
@@ -8490,15 +8453,12 @@ let (elim_uvars_aux_tc :
       FStar_Syntax_Syntax.binders ->
         (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.comp) FStar_Util.either
           ->
-          (FStar_Syntax_Syntax.univ_names,(FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                                                                    FStar_Pervasives_Native.option)
-                                            FStar_Pervasives_Native.tuple2
-                                            Prims.list,(FStar_Syntax_Syntax.term'
-                                                          FStar_Syntax_Syntax.syntax,
-                                                         FStar_Syntax_Syntax.comp'
-                                                           FStar_Syntax_Syntax.syntax)
-                                                         FStar_Util.either)
-            FStar_Pervasives_Native.tuple3)
+          (FStar_Syntax_Syntax.univ_names * (FStar_Syntax_Syntax.bv *
+            FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+            Prims.list *
+            (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.comp'
+                                                                    FStar_Syntax_Syntax.syntax)
+            FStar_Util.either))
   =
   fun env  ->
     fun univ_names  ->
@@ -8560,12 +8520,10 @@ let (elim_uvars_aux_t :
     FStar_Syntax_Syntax.univ_names ->
       FStar_Syntax_Syntax.binders ->
         FStar_Syntax_Syntax.typ ->
-          (FStar_Syntax_Syntax.univ_names,(FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                                                                    FStar_Pervasives_Native.option)
-                                            FStar_Pervasives_Native.tuple2
-                                            Prims.list,FStar_Syntax_Syntax.term'
-                                                         FStar_Syntax_Syntax.syntax)
-            FStar_Pervasives_Native.tuple3)
+          (FStar_Syntax_Syntax.univ_names * (FStar_Syntax_Syntax.bv *
+            FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+            Prims.list * FStar_Syntax_Syntax.term'
+            FStar_Syntax_Syntax.syntax))
   =
   fun env  ->
     fun univ_names  ->
@@ -8583,12 +8541,10 @@ let (elim_uvars_aux_c :
     FStar_Syntax_Syntax.univ_names ->
       FStar_Syntax_Syntax.binders ->
         FStar_Syntax_Syntax.comp ->
-          (FStar_Syntax_Syntax.univ_names,(FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                                                                    FStar_Pervasives_Native.option)
-                                            FStar_Pervasives_Native.tuple2
-                                            Prims.list,FStar_Syntax_Syntax.comp'
-                                                         FStar_Syntax_Syntax.syntax)
-            FStar_Pervasives_Native.tuple3)
+          (FStar_Syntax_Syntax.univ_names * (FStar_Syntax_Syntax.bv *
+            FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+            Prims.list * FStar_Syntax_Syntax.comp'
+            FStar_Syntax_Syntax.syntax))
   =
   fun env  ->
     fun univ_names  ->

@@ -48,8 +48,7 @@ let (parse_z3_version_lines :
   
 let (z3hash_warning_message :
   unit ->
-    (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
-      FStar_Pervasives_Native.option)
+    (FStar_Errors.raw_error * Prims.string) FStar_Pervasives_Native.option)
   =
   fun uu____130  ->
     let run_proc_result =
@@ -125,18 +124,12 @@ type label = Prims.string
 type unsat_core = Prims.string Prims.list FStar_Pervasives_Native.option
 type z3status =
   | UNSAT of unsat_core 
-  | SAT of
-  (FStar_SMTEncoding_Term.error_labels,Prims.string
-                                         FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.tuple2 
-  | UNKNOWN of
-  (FStar_SMTEncoding_Term.error_labels,Prims.string
-                                         FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.tuple2 
-  | TIMEOUT of
-  (FStar_SMTEncoding_Term.error_labels,Prims.string
-                                         FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.tuple2 
+  | SAT of (FStar_SMTEncoding_Term.error_labels * Prims.string
+  FStar_Pervasives_Native.option) 
+  | UNKNOWN of (FStar_SMTEncoding_Term.error_labels * Prims.string
+  FStar_Pervasives_Native.option) 
+  | TIMEOUT of (FStar_SMTEncoding_Term.error_labels * Prims.string
+  FStar_Pervasives_Native.option) 
   | KILLED 
 let (uu___is_UNSAT : z3status -> Prims.bool) =
   fun projectee  ->
@@ -150,9 +143,8 @@ let (uu___is_SAT : z3status -> Prims.bool) =
   
 let (__proj__SAT__item___0 :
   z3status ->
-    (FStar_SMTEncoding_Term.error_labels,Prims.string
-                                           FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_SMTEncoding_Term.error_labels * Prims.string
+      FStar_Pervasives_Native.option))
   = fun projectee  -> match projectee with | SAT _0 -> _0 
 let (uu___is_UNKNOWN : z3status -> Prims.bool) =
   fun projectee  ->
@@ -160,9 +152,8 @@ let (uu___is_UNKNOWN : z3status -> Prims.bool) =
   
 let (__proj__UNKNOWN__item___0 :
   z3status ->
-    (FStar_SMTEncoding_Term.error_labels,Prims.string
-                                           FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_SMTEncoding_Term.error_labels * Prims.string
+      FStar_Pervasives_Native.option))
   = fun projectee  -> match projectee with | UNKNOWN _0 -> _0 
 let (uu___is_TIMEOUT : z3status -> Prims.bool) =
   fun projectee  ->
@@ -170,9 +161,8 @@ let (uu___is_TIMEOUT : z3status -> Prims.bool) =
   
 let (__proj__TIMEOUT__item___0 :
   z3status ->
-    (FStar_SMTEncoding_Term.error_labels,Prims.string
-                                           FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_SMTEncoding_Term.error_labels * Prims.string
+      FStar_Pervasives_Native.option))
   = fun projectee  -> match projectee with | TIMEOUT _0 -> _0 
 let (uu___is_KILLED : z3status -> Prims.bool) =
   fun projectee  ->
@@ -189,10 +179,7 @@ let (status_tag : z3status -> Prims.string) =
     | KILLED  -> "killed"
   
 let (status_string_and_errors :
-  z3status ->
-    (Prims.string,FStar_SMTEncoding_Term.error_labels)
-      FStar_Pervasives_Native.tuple2)
-  =
+  z3status -> (Prims.string * FStar_SMTEncoding_Term.error_labels)) =
   fun s  ->
     match s with
     | KILLED  -> ((status_tag s), [])
@@ -596,8 +583,7 @@ let (doZ3Exe :
   FStar_Range.range ->
     Prims.bool ->
       Prims.string ->
-        FStar_SMTEncoding_Term.error_labels ->
-          (z3status,z3statistics) FStar_Pervasives_Native.tuple2)
+        FStar_SMTEncoding_Term.error_labels -> (z3status * z3statistics))
   =
   fun r  ->
     fun fresh  ->
@@ -985,8 +971,7 @@ let (pop : Prims.string -> unit) =
              in
           FStar_ST.op_Colon_Equals bg_scope uu____5296))
   
-let (snapshot :
-  Prims.string -> (Prims.int,unit) FStar_Pervasives_Native.tuple2) =
+let (snapshot : Prims.string -> (Prims.int * unit)) =
   fun msg  -> FStar_Common.snapshot push fresh_scope msg 
 let (rollback :
   Prims.string -> Prims.int FStar_Pervasives_Native.option -> unit) =
@@ -1035,8 +1020,7 @@ let (refresh : unit -> unit) =
   
 let (mk_input :
   FStar_SMTEncoding_Term.decl Prims.list ->
-    (Prims.string,Prims.string FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2)
+    (Prims.string * Prims.string FStar_Pervasives_Native.option))
   =
   fun theory  ->
     let options = FStar_ST.op_Bang z3_options  in
@@ -1126,8 +1110,7 @@ let (cache_hit :
 let (ask_1_core :
   FStar_Range.range ->
     (FStar_SMTEncoding_Term.decls_t ->
-       (FStar_SMTEncoding_Term.decls_t,Prims.bool)
-         FStar_Pervasives_Native.tuple2)
+       (FStar_SMTEncoding_Term.decls_t * Prims.bool))
       ->
       Prims.string FStar_Pervasives_Native.option ->
         FStar_SMTEncoding_Term.error_labels ->
@@ -1168,8 +1151,7 @@ let (ask_1_core :
 let (ask_n_cores :
   FStar_Range.range ->
     (FStar_SMTEncoding_Term.decls_t ->
-       (FStar_SMTEncoding_Term.decls_t,Prims.bool)
-         FStar_Pervasives_Native.tuple2)
+       (FStar_SMTEncoding_Term.decls_t * Prims.bool))
       ->
       Prims.string FStar_Pervasives_Native.option ->
         FStar_SMTEncoding_Term.error_labels ->
@@ -1220,8 +1202,7 @@ let (ask_n_cores :
 let (ask :
   FStar_Range.range ->
     (FStar_SMTEncoding_Term.decls_t ->
-       (FStar_SMTEncoding_Term.decls_t,Prims.bool)
-         FStar_Pervasives_Native.tuple2)
+       (FStar_SMTEncoding_Term.decls_t * Prims.bool))
       ->
       Prims.string FStar_Pervasives_Native.option ->
         FStar_SMTEncoding_Term.error_labels ->
