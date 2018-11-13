@@ -19,7 +19,6 @@ module LowStar.Vector
 open FStar.Integers
 open LowStar.Modifies
 
-module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
@@ -190,7 +189,7 @@ let rec loc_vector_within_union_rev #a vec i j =
 		    (loc_vector_within vec (j - 1ul) j)
   end
 
-unfold val frameOf: #a:Type -> vector a -> Tot HH.rid
+unfold val frameOf: #a:Type -> vector a -> Tot HS.rid
 unfold let frameOf #a vec =
   B.frameOf (Vec?.vs vec)
 
@@ -254,7 +253,7 @@ let alloc_empty_as_seq_empty a h = ()
 
 val alloc_rid:
   #a:Type -> len:uint32_t{len > 0ul} -> v:a ->
-  rid:HH.rid{HST.is_eternal_region rid} ->
+  rid:HS.rid{HST.is_eternal_region rid} ->
   HST.ST (vector a)
 	 (requires (fun h0 -> true))
 	 (ensures (fun h0 vec h1 -> 
@@ -275,7 +274,7 @@ val alloc:
   HST.ST (vector a)
 	 (requires (fun h0 -> true))
 	 (ensures (fun h0 vec h1 -> 
-	   frameOf vec = HH.root /\
+	   frameOf vec = HS.root /\
 	   live h1 vec /\ freeable vec /\
 	   modifies loc_none h0 h1 /\
 	   Set.equal (Map.domain (HS.get_hmap h0))
@@ -283,13 +282,13 @@ val alloc:
 	   size_of vec = len /\
 	   S.equal (as_seq h1 vec) (S.create (U32.v len) v)))
 let alloc #a len v =
-  alloc_rid len v HH.root
+  alloc_rid len v HS.root
 
 // Allocate a vector with the _capacity_ `len`; we still need to provide an
 // initial value `ia` in order to allocate space.
 val alloc_reserve:
   #a:Type -> len:uint32_t{len > 0ul} -> ia:a ->
-  rid:HH.rid{HST.is_eternal_region rid} ->
+  rid:HS.rid{HST.is_eternal_region rid} ->
   HST.ST (vector a)
 	 (requires (fun h0 -> true))
 	 (ensures (fun h0 vec h1 -> 

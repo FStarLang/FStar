@@ -22,7 +22,6 @@ open LowStar.Modifies
 open LowStar.Regional
 open LowStar.Vector
 
-module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module S = FStar.Seq
@@ -42,7 +41,7 @@ noeq type copyable a (rg: regional a) =
       HST.ST unit
     	(requires (fun h0 ->
     	  Rgl?.r_inv rg h0 src /\ Rgl?.r_inv rg h0 dst /\
-    	  HH.disjoint (Rgl?.region_of rg src)
+    	  HS.disjoint (Rgl?.region_of rg src)
 		      (Rgl?.region_of rg dst)))
     	(ensures (fun h0 _ h1 ->
     	  modifies (loc_all_regions_from 
@@ -87,14 +86,14 @@ let elems_inv #a #rg h rv =
 
 val rs_elems_reg:
   #a:Type0 -> rg:regional a ->
-  rs:S.seq a -> prid:HH.rid ->
+  rs:S.seq a -> prid:HS.rid ->
   i:nat -> j:nat{i <= j && j <= S.length rs} ->
   GTot Type0
 let rs_elems_reg #a rg rs prid i j =
   V.forall_seq rs i j
-    (fun v -> HH.extends (Rgl?.region_of rg v) prid) /\
+    (fun v -> HS.extends (Rgl?.region_of rg v) prid) /\
   V.forall2_seq rs i j
-    (fun v1 v2 -> HH.disjoint (Rgl?.region_of rg v1)
+    (fun v1 v2 -> HS.disjoint (Rgl?.region_of rg v1)
 			      (Rgl?.region_of rg v2))
 
 val rv_elems_reg:
@@ -217,7 +216,7 @@ let rec rs_loc_elems_includes #a rg rs i j k =
   else rs_loc_elems_includes #a rg rs i (j - 1) k
 
 val loc_all_exts_from: 
-  preserve_liveness: bool -> r: HH.rid -> GTot loc
+  preserve_liveness: bool -> r: HS.rid -> GTot loc
 let loc_all_exts_from preserve_liveness r =
   B.loc_regions 
     preserve_liveness
@@ -227,16 +226,16 @@ let loc_all_exts_from preserve_liveness r =
 
 val rs_loc_elem_included:
   #a:Type0 -> rg:regional a ->
-  rs:S.seq a -> prid:HH.rid ->
+  rs:S.seq a -> prid:HS.rid ->
   i:nat{i < S.length rs} ->
-  Lemma (requires (HH.extends (Rgl?.region_of rg (S.index rs i)) prid))
+  Lemma (requires (HS.extends (Rgl?.region_of rg (S.index rs i)) prid))
 	(ensures (loc_includes (loc_all_exts_from false prid)
   			       (rs_loc_elem rg rs i)))
 let rs_loc_elem_included #a rg rs prid i = ()
 
 val rs_loc_elems_included:
   #a:Type0 -> rg:regional a ->
-  rs:S.seq a -> prid:HH.rid ->
+  rs:S.seq a -> prid:HS.rid ->
   i:nat -> j:nat{i <= j && j <= S.length rs} -> 
   Lemma (requires (rs_elems_reg rg rs prid i j))
 	(ensures (loc_includes (loc_all_exts_from false prid)
@@ -261,7 +260,7 @@ let rv_loc_elems_included #a #rg h rv i j =
 
 val rs_loc_elem_disj:
   #a:Type0 -> rg:regional a ->
-  rs:S.seq a -> prid:HH.rid ->
+  rs:S.seq a -> prid:HS.rid ->
   i:nat -> j:nat{i <= j && j <= S.length rs} -> 
   k:nat{i <= k && k < j} ->
   l:nat{i <= l && l < j && k <> l} ->
@@ -272,7 +271,7 @@ let rs_loc_elem_disj #a rg rs prid i j k l = ()
 
 val rs_loc_elem_disj_forall:
   #a:Type0 -> rg:regional a ->
-  rs:S.seq a -> prid:HH.rid ->
+  rs:S.seq a -> prid:HS.rid ->
   i:nat -> j:nat{i <= j && j <= S.length rs} -> 
   Lemma (requires (rs_elems_reg rg rs prid i j))
 	(ensures (
@@ -284,7 +283,7 @@ let rs_loc_elem_disj_forall #a rg rs prid i j = ()
 
 val rs_loc_elems_elem_disj:
   #a:Type0 -> rg:regional a ->
-  rs:S.seq a -> prid:HH.rid ->
+  rs:S.seq a -> prid:HS.rid ->
   i:nat -> j:nat{i <= j && j <= S.length rs} -> 
   k1:nat{i <= k1} ->
   k2:nat{k1 <= k2 && k2 <= j} ->
@@ -300,7 +299,7 @@ let rec rs_loc_elems_elem_disj #a rg rs prid i j k1 k2 l =
 
 val rs_loc_elems_disj:
   #a:Type0 -> rg:regional a ->
-  rs:S.seq a -> prid:HH.rid ->
+  rs:S.seq a -> prid:HS.rid ->
   i:nat -> j:nat{i <= j && j <= S.length rs} -> 
   k1:nat{i <= k1} ->
   k2:nat{k1 <= k2 && k2 <= j} ->
@@ -332,7 +331,7 @@ let rv_loc_elems_disj #a #rg h rv i j k1 k2 l1 l2 =
 
 val rs_loc_elems_parent_disj:
   #a:Type0 -> rg:regional a ->
-  rs:S.seq a -> prid:HH.rid ->
+  rs:S.seq a -> prid:HS.rid ->
   i:nat -> j:nat{i <= j && j <= S.length rs} -> 
   Lemma (requires (rs_elems_reg rg rs prid i j))
 	(ensures (loc_disjoint (rs_loc_elems rg rs i j)
@@ -354,10 +353,10 @@ let rv_loc_elems_parent_disj #a #rg h rv i j =
 
 val rs_loc_elems_each_disj:
   #a:Type0 -> rg:regional a ->
-  rs:S.seq a -> drid:HH.rid ->
+  rs:S.seq a -> drid:HS.rid ->
   i:nat -> j:nat{i <= j && j <= S.length rs} -> 
   Lemma (requires (V.forall_seq rs i j
-		    (fun r -> HH.disjoint (Rgl?.region_of rg r) drid)))
+		    (fun r -> HS.disjoint (Rgl?.region_of rg r) drid)))
 	(ensures (loc_disjoint (rs_loc_elems rg rs i j)
 			       (loc_all_regions_from false drid)))
 	(decreases j)
@@ -369,9 +368,9 @@ val rv_loc_elems_each_disj:
   #a:Type0 -> #rg:regional a ->
   h:HS.mem -> rv:rvector rg ->
   i:uint32_t -> j:uint32_t{i <= j && j <= V.size_of rv} ->
-  drid:HH.rid ->
+  drid:HS.rid ->
   Lemma (requires (V.forall_ h rv i j
-		    (fun r -> HH.disjoint (Rgl?.region_of rg r) drid)))
+		    (fun r -> HS.disjoint (Rgl?.region_of rg r) drid)))
 	(ensures (loc_disjoint (rv_loc_elems h rv i j)
 			       (loc_all_regions_from false drid)))
 let rv_loc_elems_each_disj #a #rg h rv i j drid =
@@ -718,7 +717,7 @@ let rec alloc_ #a #rg rv cidx =
 	 (V.loc_vector_within rv 0ul (cidx - 1ul))
 	 hh2 hh3;
        V.forall2_extend hh3 rv 0ul (cidx - 1ul)
-       	 (fun r1 r2 -> HH.disjoint (Rgl?.region_of rg r1)
+       	 (fun r1 r2 -> HS.disjoint (Rgl?.region_of rg r1)
        				   (Rgl?.region_of rg r2));
        V.loc_vector_within_union_rev rv 0ul cidx)
 
@@ -769,7 +768,7 @@ val alloc:
       S.equal (as_seq h1 rv)
       	      (S.create (U32.v len) (Ghost.reveal (Rgl?.irepr rg)))))
 let alloc #a rg len =
-  let nrid = HST.new_region HH.root in
+  let nrid = HST.new_region HS.root in
   alloc_rid rg len nrid
 
 val insert:
@@ -778,9 +777,9 @@ val insert:
   HST.ST (rvector rg)
     (requires (fun h0 ->
       rv_inv h0 rv /\ Rgl?.r_inv rg h0 v /\
-      HH.extends (Rgl?.region_of rg v) (V.frameOf rv) /\
+      HS.extends (Rgl?.region_of rg v) (V.frameOf rv) /\
       V.forall_all h0 rv
-	(fun b -> HH.disjoint (Rgl?.region_of rg b)
+	(fun b -> HS.disjoint (Rgl?.region_of rg b)
 			      (Rgl?.region_of rg v))))
     (ensures (fun h0 irv h1 ->
       V.size_of irv = V.size_of rv + 1ul /\
@@ -826,7 +825,7 @@ val insert_copy:
   HST.ST (rvector rg)
     (requires (fun h0 -> 
       rv_inv h0 rv /\ Rgl?.r_inv rg h0 v /\
-      HH.disjoint (Rgl?.region_of rg v) (V.frameOf rv)))
+      HS.disjoint (Rgl?.region_of rg v) (V.frameOf rv)))
     (ensures (fun h0 irv h1 ->
       V.size_of irv = V.size_of rv + 1ul /\
       V.frameOf rv = V.frameOf irv /\
@@ -865,13 +864,13 @@ val assign:
       elems_reg h0 rv /\
       
       V.forall_ h0 rv 0ul i
-	(fun b -> HH.disjoint (Rgl?.region_of rg b)
+	(fun b -> HS.disjoint (Rgl?.region_of rg b)
 			      (Rgl?.region_of rg v)) /\
       V.forall_ h0 rv (i + 1ul) (V.size_of rv)
-      	(fun b -> HH.disjoint (Rgl?.region_of rg b)
+      	(fun b -> HS.disjoint (Rgl?.region_of rg b)
       			      (Rgl?.region_of rg v)) /\
       Rgl?.r_inv rg h0 v /\
-      HH.extends (Rgl?.region_of rg v) (V.frameOf rv)))
+      HS.extends (Rgl?.region_of rg v) (V.frameOf rv)))
     (ensures (fun h0 _ h1 -> 
       modifies (V.loc_vector_within rv i (i + 1ul)) h0 h1 /\
       rv_inv h1 rv /\
@@ -929,7 +928,7 @@ val assign_copy:
     (requires (fun h0 -> 
       rv_inv h0 rv /\
       Rgl?.r_inv rg h0 v /\
-      HH.disjoint (Rgl?.region_of rg v) (V.frameOf rv)))
+      HS.disjoint (Rgl?.region_of rg v) (V.frameOf rv)))
     (ensures (fun h0 _ h1 -> 
       modifies (loc_all_regions_from
 	         false (Rgl?.region_of rg (V.get h1 rv i))) h0 h1 /\

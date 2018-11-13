@@ -18,7 +18,6 @@ module LowStar.Regional
 
 open LowStar.Modifies
 
-module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
@@ -29,7 +28,7 @@ module HST = FStar.HyperStack.ST
 noeq type regional a =
 | Rgl:
     // The target type should have a region where it belongs.
-    region_of: (a -> GTot HH.rid) ->
+    region_of: (a -> GTot HS.rid) ->
 
     // A stateless value of type `a`.
     // It does not have to satisfy the invariant `r_inv` described below.

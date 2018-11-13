@@ -21,7 +21,6 @@ open LowStar.Buffer
 open LowStar.Regional
 open LowStar.RVector
 
-module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module S = FStar.Seq
@@ -32,7 +31,7 @@ module RV = LowStar.RVector
 /// `LowStar.Buffer` is regional
 
 val buffer_region_of:
-  #a:Type -> v:B.buffer a -> GTot HH.rid
+  #a:Type -> v:B.buffer a -> GTot HS.rid
 let buffer_region_of #a v =
   B.frameOf v
 
@@ -119,7 +118,7 @@ val buffer_copy:
   HST.ST unit
     (requires (fun h0 ->
       buffer_r_inv len h0 src /\ buffer_r_inv len h0 dst /\
-      HH.disjoint (buffer_region_of src) (buffer_region_of dst)))
+      HS.disjoint (buffer_region_of src) (buffer_region_of dst)))
     (ensures (fun h0 _ h1 ->
       modifies (loc_all_regions_from false (buffer_region_of dst)) h0 h1 /\
       buffer_r_inv len h1 dst /\
@@ -152,7 +151,7 @@ let buffer_copyable #a ia len =
 /// If `a` is regional, then `vector a` is also regional
 
 val vector_region_of: 
-  #a:Type -> #rg:regional a -> v:rvector rg -> GTot HH.rid
+  #a:Type -> #rg:regional a -> v:rvector rg -> GTot HS.rid
 let vector_region_of #a #rg v = V.frameOf v
 
 val vector_dummy:
