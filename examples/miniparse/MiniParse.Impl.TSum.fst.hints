@@ -116,7 +116,7 @@
         "unit_typing"
       ],
       0,
-      "9f00d5fafc17c7898f28e8f528566b78"
+      "e3150383d56ccacf1c8ebd8ef00de425"
     ],
     [
       "MiniParse.Impl.TSum.serialize_tagged_union_impl",
@@ -222,7 +222,7 @@
         "unit_typing"
       ],
       0,
-      "4ea08982606dae6960e79955e599d5bd"
+      "ac790a73137dce39d90ca5d5db3129b3"
     ],
     [
       "MiniParse.Impl.TSum.parse_tagged_union_impl",
@@ -339,7 +339,7 @@
         "unit_typing"
       ],
       0,
-      "1199bac6ce1bdf04d9ecc00049462039"
+      "c159c848e70adb1fa97f07103b4f0f4e"
     ],
     [
       "MiniParse.Impl.TSum.serialize_tagged_union_impl",
@@ -445,7 +445,7 @@
         "unit_typing"
       ],
       0,
-      "49f6a9806442241f9253f637b25b8f63"
+      "9cdd305f3fe08283e327825568703bc2"
     ]
   ]
 ]

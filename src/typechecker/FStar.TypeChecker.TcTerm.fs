@@ -1490,6 +1490,18 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                       BU.print_string "... not lifting\n";
                    None, (e, q)
                end else begin
+                   //this argument is effectful, warn if the function would be erased
+                   //special casing for ignore, may be use an attribute instead?
+                   let warn_effectful_args  =
+                     (TcUtil.must_erase_for_extraction env chead.res_typ) &&
+                     (not (match (U.un_uinst head).n with
+                           | Tm_fvar fv -> S.fv_eq_lid fv (Parser.Const.psconst "ignore")
+                           | _ -> true))
+                   in
+                   if warn_effectful_args then
+                     Errors.log_issue e.pos (Errors.Warning_EffectfulArgumentToErasedFunction,
+                                             (format3 "Effectful argument %s (%s) to erased function %s, consider let binding it"
+                                                      (Print.term_to_string e) c.eff_name.str (Print.term_to_string head)));
                    if Env.debug env Options.Extreme then
                        BU.print_string "... lifting!\n";
                    let x = S.new_bv None c.res_typ in

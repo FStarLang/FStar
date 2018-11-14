@@ -4,8 +4,8 @@ let (disentangle_abbrevs_from_bundle :
     FStar_Syntax_Syntax.qualifier Prims.list ->
       FStar_Ident.lident Prims.list ->
         FStar_Range.range ->
-          (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.sigelt Prims.list)
-            FStar_Pervasives_Native.tuple2)
+          (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.sigelt
+            Prims.list))
   =
   fun sigelts  ->
     fun quals  ->

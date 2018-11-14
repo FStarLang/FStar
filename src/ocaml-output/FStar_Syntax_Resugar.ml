@@ -40,12 +40,10 @@ let (bv_as_unique_ident : FStar_Syntax_Syntax.bv -> FStar_Ident.ident) =
   
 let filter_imp :
   'Auu____74 .
-    ('Auu____74,FStar_Syntax_Syntax.arg_qualifier
-                  FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list ->
-      ('Auu____74,FStar_Syntax_Syntax.arg_qualifier
-                    FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2 Prims.list
+    ('Auu____74 * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list ->
+      ('Auu____74 * FStar_Syntax_Syntax.arg_qualifier
+        FStar_Pervasives_Native.option) Prims.list
   =
   fun a  ->
     FStar_All.pipe_right a
@@ -64,8 +62,8 @@ let filter_imp :
   
 let filter_pattern_imp :
   'Auu____170 .
-    ('Auu____170,Prims.bool) FStar_Pervasives_Native.tuple2 Prims.list ->
-      ('Auu____170,Prims.bool) FStar_Pervasives_Native.tuple2 Prims.list
+    ('Auu____170 * Prims.bool) Prims.list ->
+      ('Auu____170 * Prims.bool) Prims.list
   =
   fun xs  ->
     FStar_List.filter
@@ -86,7 +84,7 @@ let (label : Prims.string -> FStar_Parser_AST.term -> FStar_Parser_AST.term)
 let rec (universe_to_int :
   Prims.int ->
     FStar_Syntax_Syntax.universe ->
-      (Prims.int,FStar_Syntax_Syntax.universe) FStar_Pervasives_Native.tuple2)
+      (Prims.int * FStar_Syntax_Syntax.universe))
   =
   fun n1  ->
     fun u  ->
@@ -186,8 +184,8 @@ and (resugar_universe :
 
 let (string_to_op :
   Prims.string ->
-    (Prims.string,Prims.int FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+    (Prims.string * Prims.int FStar_Pervasives_Native.option)
+      FStar_Pervasives_Native.option)
   =
   fun s  ->
     let name_of_op uu___199_510 =
@@ -274,8 +272,7 @@ let (string_to_op :
 type expected_arity = Prims.int FStar_Pervasives_Native.option
 let rec (resugar_term_as_op :
   FStar_Syntax_Syntax.term ->
-    (Prims.string,expected_arity) FStar_Pervasives_Native.tuple2
-      FStar_Pervasives_Native.option)
+    (Prims.string * expected_arity) FStar_Pervasives_Native.option)
   =
   fun t  ->
     let infix_prim_ops =
@@ -1929,8 +1926,7 @@ let (resugar_typ :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.sigelt Prims.list ->
       FStar_Syntax_Syntax.sigelt ->
-        (FStar_Syntax_Syntax.sigelts,FStar_Parser_AST.tycon)
-          FStar_Pervasives_Native.tuple2)
+        (FStar_Syntax_Syntax.sigelts * FStar_Parser_AST.tycon))
   =
   fun env  ->
     fun datacon_ses  ->

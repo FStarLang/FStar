@@ -45,21 +45,18 @@ let (__proj__Mkexp_binding__item__exp_b_inst_ok : exp_binding -> Prims.bool)
   
 type ty_or_exp_b = (ty_binding,exp_binding) FStar_Util.either
 type binding =
-  | Bv of (FStar_Syntax_Syntax.bv,ty_or_exp_b) FStar_Pervasives_Native.tuple2
-  
-  | Fv of (FStar_Syntax_Syntax.fv,exp_binding) FStar_Pervasives_Native.tuple2 
+  | Bv of (FStar_Syntax_Syntax.bv * ty_or_exp_b) 
+  | Fv of (FStar_Syntax_Syntax.fv * exp_binding) 
 let (uu___is_Bv : binding -> Prims.bool) =
   fun projectee  -> match projectee with | Bv _0 -> true | uu____141 -> false 
 let (__proj__Bv__item___0 :
-  binding ->
-    (FStar_Syntax_Syntax.bv,ty_or_exp_b) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | Bv _0 -> _0 
+  binding -> (FStar_Syntax_Syntax.bv * ty_or_exp_b)) =
+  fun projectee  -> match projectee with | Bv _0 -> _0 
 let (uu___is_Fv : binding -> Prims.bool) =
   fun projectee  -> match projectee with | Fv _0 -> true | uu____177 -> false 
 let (__proj__Fv__item___0 :
-  binding ->
-    (FStar_Syntax_Syntax.fv,exp_binding) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | Fv _0 -> _0 
+  binding -> (FStar_Syntax_Syntax.fv * exp_binding)) =
+  fun projectee  -> match projectee with | Fv _0 -> _0 
 type tydef =
   {
   tydef_fv: FStar_Syntax_Syntax.fv ;
@@ -223,10 +220,9 @@ let rec (lookup_ty_local :
   
 let tyscheme_of_td :
   'Auu____666 'Auu____667 'Auu____668 'Auu____669 .
-    ('Auu____666,'Auu____667,'Auu____668,FStar_Extraction_ML_Syntax.mlidents,
-      'Auu____669,FStar_Extraction_ML_Syntax.mltybody
-                    FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple6 ->
+    ('Auu____666 * 'Auu____667 * 'Auu____668 *
+      FStar_Extraction_ML_Syntax.mlidents * 'Auu____669 *
+      FStar_Extraction_ML_Syntax.mltybody FStar_Pervasives_Native.option) ->
       FStar_Extraction_ML_Syntax.mltyscheme FStar_Pervasives_Native.option
   =
   fun uu____690  ->
@@ -370,8 +366,8 @@ let (lookup_bv : uenv -> FStar_Syntax_Syntax.bv -> ty_or_exp_b) =
 let (lookup :
   uenv ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ->
-      (ty_or_exp_b,FStar_Syntax_Syntax.fv_qual FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2)
+      (ty_or_exp_b * FStar_Syntax_Syntax.fv_qual
+        FStar_Pervasives_Native.option))
   =
   fun g  ->
     fun x  ->
@@ -387,8 +383,8 @@ let (lookup :
 let (lookup_term :
   uenv ->
     FStar_Syntax_Syntax.term ->
-      (ty_or_exp_b,FStar_Syntax_Syntax.fv_qual FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2)
+      (ty_or_exp_b * FStar_Syntax_Syntax.fv_qual
+        FStar_Pervasives_Native.option))
   =
   fun g  ->
     fun t  ->
@@ -477,8 +473,7 @@ let (extend_bv :
         Prims.bool ->
           Prims.bool ->
             Prims.bool ->
-              (uenv,FStar_Extraction_ML_Syntax.mlident,exp_binding)
-                FStar_Pervasives_Native.tuple3)
+              (uenv * FStar_Extraction_ML_Syntax.mlident * exp_binding))
   =
   fun g  ->
     fun x  ->
@@ -576,8 +571,7 @@ let (extend_fv' :
         FStar_Extraction_ML_Syntax.mltyscheme ->
           Prims.bool ->
             Prims.bool ->
-              (uenv,FStar_Extraction_ML_Syntax.mlident,exp_binding)
-                FStar_Pervasives_Native.tuple3)
+              (uenv * FStar_Extraction_ML_Syntax.mlident * exp_binding))
   =
   fun g  ->
     fun x  ->
@@ -642,8 +636,7 @@ let (extend_fv :
       FStar_Extraction_ML_Syntax.mltyscheme ->
         Prims.bool ->
           Prims.bool ->
-            (uenv,FStar_Extraction_ML_Syntax.mlident,exp_binding)
-              FStar_Pervasives_Native.tuple3)
+            (uenv * FStar_Extraction_ML_Syntax.mlident * exp_binding))
   =
   fun g  ->
     fun x  ->
@@ -663,8 +656,7 @@ let (extend_lb :
         FStar_Extraction_ML_Syntax.mltyscheme ->
           Prims.bool ->
             Prims.bool ->
-              (uenv,FStar_Extraction_ML_Syntax.mlident,exp_binding)
-                FStar_Pervasives_Native.tuple3)
+              (uenv * FStar_Extraction_ML_Syntax.mlident * exp_binding))
   =
   fun g  ->
     fun l  ->
@@ -685,8 +677,7 @@ let (extend_lb :
 let (extend_tydef :
   uenv ->
     FStar_Syntax_Syntax.fv ->
-      FStar_Extraction_ML_Syntax.one_mltydecl ->
-        (uenv,tydef) FStar_Pervasives_Native.tuple2)
+      FStar_Extraction_ML_Syntax.one_mltydecl -> (uenv * tydef))
   =
   fun g  ->
     fun fv  ->
@@ -775,9 +766,7 @@ let (mkContext : FStar_TypeChecker_Env.env -> uenv) =
   
 let (monad_op_name :
   FStar_Syntax_Syntax.eff_decl ->
-    Prims.string ->
-      (FStar_Extraction_ML_Syntax.mlpath,FStar_Ident.lident)
-        FStar_Pervasives_Native.tuple2)
+    Prims.string -> (FStar_Extraction_ML_Syntax.mlpath * FStar_Ident.lident))
   =
   fun ed  ->
     fun nm  ->
@@ -792,8 +781,7 @@ let (monad_op_name :
 let (action_name :
   FStar_Syntax_Syntax.eff_decl ->
     FStar_Syntax_Syntax.action ->
-      (FStar_Extraction_ML_Syntax.mlpath,FStar_Ident.lident)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Extraction_ML_Syntax.mlpath * FStar_Ident.lident))
   =
   fun ed  ->
     fun a  ->

@@ -5,8 +5,7 @@ type constant =
   | Unit 
   | Bool of Prims.bool 
   | Int of FStar_BigInt.t 
-  | String of (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
-  
+  | String of (Prims.string * FStar_Range.range) 
   | Char of FStar_Char.char 
   | Range of FStar_Range.range 
 let (uu___is_Unit : constant -> Prims.bool) =
@@ -26,8 +25,8 @@ let (uu___is_String : constant -> Prims.bool) =
     match projectee with | String _0 -> true | uu____105 -> false
   
 let (__proj__String__item___0 :
-  constant -> (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | String _0 -> _0 
+  constant -> (Prims.string * FStar_Range.range)) =
+  fun projectee  -> match projectee with | String _0 -> _0 
 let (uu___is_Char : constant -> Prims.bool) =
   fun projectee  ->
     match projectee with | Char _0 -> true | uu____141 -> false
@@ -42,76 +41,46 @@ let (__proj__Range__item___0 : constant -> FStar_Range.range) =
   fun projectee  -> match projectee with | Range _0 -> _0 
 type atom =
   | Var of var 
-  | Match of
-  (t,t -> t,(t -> FStar_Syntax_Syntax.term) ->
-              FStar_Syntax_Syntax.branch Prims.list)
-  FStar_Pervasives_Native.tuple3 
+  | Match of (t * (t -> t) *
+  ((t -> FStar_Syntax_Syntax.term) -> FStar_Syntax_Syntax.branch Prims.list)) 
 and t =
-  | Lam of
-  (t Prims.list -> t,(t Prims.list ->
-                        (t,FStar_Syntax_Syntax.aqual)
-                          FStar_Pervasives_Native.tuple2)
-                       Prims.list,Prims.int,(unit -> residual_comp)
-                                              FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.tuple4 
-  | Accu of
-  (atom,(t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2
-          Prims.list)
-  FStar_Pervasives_Native.tuple2 
-  | Construct of
-  (FStar_Syntax_Syntax.fv,FStar_Syntax_Syntax.universe Prims.list,(t,
-                                                                    FStar_Syntax_Syntax.aqual)
-                                                                    FStar_Pervasives_Native.tuple2
-                                                                    Prims.list)
-  FStar_Pervasives_Native.tuple3 
-  | FV of
-  (FStar_Syntax_Syntax.fv,FStar_Syntax_Syntax.universe Prims.list,(t,
-                                                                    FStar_Syntax_Syntax.aqual)
-                                                                    FStar_Pervasives_Native.tuple2
-                                                                    Prims.list)
-  FStar_Pervasives_Native.tuple3 
+  | Lam of ((t Prims.list -> t) *
+  (t Prims.list -> (t * FStar_Syntax_Syntax.aqual)) Prims.list * Prims.int *
+  (unit -> residual_comp) FStar_Pervasives_Native.option) 
+  | Accu of (atom * (t * FStar_Syntax_Syntax.aqual) Prims.list) 
+  | Construct of (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universe
+  Prims.list * (t * FStar_Syntax_Syntax.aqual) Prims.list) 
+  | FV of (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universe Prims.list *
+  (t * FStar_Syntax_Syntax.aqual) Prims.list) 
   | Constant of constant 
   | Type_t of FStar_Syntax_Syntax.universe 
   | Univ of FStar_Syntax_Syntax.universe 
   | Unknown 
-  | Arrow of
-  (t Prims.list -> comp,(t Prims.list ->
-                           (t,FStar_Syntax_Syntax.aqual)
-                             FStar_Pervasives_Native.tuple2)
-                          Prims.list)
-  FStar_Pervasives_Native.tuple2 
-  | Refinement of
-  (t -> t,unit ->
-            (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2)
-  FStar_Pervasives_Native.tuple2 
+  | Arrow of ((t Prims.list -> comp) *
+  (t Prims.list -> (t * FStar_Syntax_Syntax.aqual)) Prims.list) 
+  | Refinement of ((t -> t) * (unit -> (t * FStar_Syntax_Syntax.aqual))) 
   | Reflect of t 
-  | Quote of (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.quoteinfo)
-  FStar_Pervasives_Native.tuple2 
+  | Quote of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.quoteinfo) 
   | Lazy of
-  ((FStar_Syntax_Syntax.lazyinfo,(FStar_Dyn.dyn,FStar_Syntax_Syntax.emb_typ)
-                                   FStar_Pervasives_Native.tuple2)
-     FStar_Util.either,t FStar_Common.thunk)
-  FStar_Pervasives_Native.tuple2 
-  | Rec of
-  (FStar_Syntax_Syntax.letbinding,FStar_Syntax_Syntax.letbinding Prims.list,
-  t Prims.list,(t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2
-                 Prims.list,Prims.int,Prims.bool Prims.list,t Prims.list ->
-                                                              FStar_Syntax_Syntax.letbinding
-                                                                -> t)
-  FStar_Pervasives_Native.tuple7 
+  ((FStar_Syntax_Syntax.lazyinfo,(FStar_Dyn.dyn *
+                                   FStar_Syntax_Syntax.emb_typ))
+  FStar_Util.either * t FStar_Common.thunk) 
+  | Rec of (FStar_Syntax_Syntax.letbinding * FStar_Syntax_Syntax.letbinding
+  Prims.list * t Prims.list * (t * FStar_Syntax_Syntax.aqual) Prims.list *
+  Prims.int * Prims.bool Prims.list *
+  (t Prims.list -> FStar_Syntax_Syntax.letbinding -> t)) 
 and comp =
-  | Tot of (t,FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.tuple2 
-  | GTot of (t,FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.tuple2 
+  | Tot of (t * FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
+  
+  | GTot of (t * FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
+  
   | Comp of comp_typ 
 and comp_typ =
   {
   comp_univs: FStar_Syntax_Syntax.universes ;
   effect_name: FStar_Ident.lident ;
   result_typ: t ;
-  effect_args:
-    (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2 Prims.list ;
+  effect_args: (t * FStar_Syntax_Syntax.aqual) Prims.list ;
   flags: cflag Prims.list }
 and cflag =
   | TOTAL 
@@ -141,9 +110,9 @@ let (uu___is_Match : atom -> Prims.bool) =
   
 let (__proj__Match__item___0 :
   atom ->
-    (t,t -> t,(t -> FStar_Syntax_Syntax.term) ->
-                FStar_Syntax_Syntax.branch Prims.list)
-      FStar_Pervasives_Native.tuple3)
+    (t * (t -> t) *
+      ((t -> FStar_Syntax_Syntax.term) ->
+         FStar_Syntax_Syntax.branch Prims.list)))
   = fun projectee  -> match projectee with | Match _0 -> _0 
 let (uu___is_Lam : t -> Prims.bool) =
   fun projectee  ->
@@ -151,44 +120,32 @@ let (uu___is_Lam : t -> Prims.bool) =
   
 let (__proj__Lam__item___0 :
   t ->
-    (t Prims.list -> t,(t Prims.list ->
-                          (t,FStar_Syntax_Syntax.aqual)
-                            FStar_Pervasives_Native.tuple2)
-                         Prims.list,Prims.int,(unit -> residual_comp)
-                                                FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple4)
+    ((t Prims.list -> t) * (t Prims.list -> (t * FStar_Syntax_Syntax.aqual))
+      Prims.list * Prims.int * (unit -> residual_comp)
+      FStar_Pervasives_Native.option))
   = fun projectee  -> match projectee with | Lam _0 -> _0 
 let (uu___is_Accu : t -> Prims.bool) =
   fun projectee  ->
     match projectee with | Accu _0 -> true | uu____805 -> false
   
 let (__proj__Accu__item___0 :
-  t ->
-    (atom,(t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2
-            Prims.list)
-      FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | Accu _0 -> _0 
+  t -> (atom * (t * FStar_Syntax_Syntax.aqual) Prims.list)) =
+  fun projectee  -> match projectee with | Accu _0 -> _0 
 let (uu___is_Construct : t -> Prims.bool) =
   fun projectee  ->
     match projectee with | Construct _0 -> true | uu____869 -> false
   
 let (__proj__Construct__item___0 :
   t ->
-    (FStar_Syntax_Syntax.fv,FStar_Syntax_Syntax.universe Prims.list,(t,
-                                                                    FStar_Syntax_Syntax.aqual)
-                                                                    FStar_Pervasives_Native.tuple2
-                                                                    Prims.list)
-      FStar_Pervasives_Native.tuple3)
+    (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universe Prims.list * (t *
+      FStar_Syntax_Syntax.aqual) Prims.list))
   = fun projectee  -> match projectee with | Construct _0 -> _0 
 let (uu___is_FV : t -> Prims.bool) =
   fun projectee  -> match projectee with | FV _0 -> true | uu____945 -> false 
 let (__proj__FV__item___0 :
   t ->
-    (FStar_Syntax_Syntax.fv,FStar_Syntax_Syntax.universe Prims.list,(t,
-                                                                    FStar_Syntax_Syntax.aqual)
-                                                                    FStar_Pervasives_Native.tuple2
-                                                                    Prims.list)
-      FStar_Pervasives_Native.tuple3)
+    (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universe Prims.list * (t *
+      FStar_Syntax_Syntax.aqual) Prims.list))
   = fun projectee  -> match projectee with | FV _0 -> _0 
 let (uu___is_Constant : t -> Prims.bool) =
   fun projectee  ->
@@ -218,22 +175,16 @@ let (uu___is_Arrow : t -> Prims.bool) =
   
 let (__proj__Arrow__item___0 :
   t ->
-    (t Prims.list -> comp,(t Prims.list ->
-                             (t,FStar_Syntax_Syntax.aqual)
-                               FStar_Pervasives_Native.tuple2)
-                            Prims.list)
-      FStar_Pervasives_Native.tuple2)
+    ((t Prims.list -> comp) *
+      (t Prims.list -> (t * FStar_Syntax_Syntax.aqual)) Prims.list))
   = fun projectee  -> match projectee with | Arrow _0 -> _0 
 let (uu___is_Refinement : t -> Prims.bool) =
   fun projectee  ->
     match projectee with | Refinement _0 -> true | uu____1192 -> false
   
 let (__proj__Refinement__item___0 :
-  t ->
-    (t -> t,unit ->
-              (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2)
-      FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | Refinement _0 -> _0 
+  t -> ((t -> t) * (unit -> (t * FStar_Syntax_Syntax.aqual)))) =
+  fun projectee  -> match projectee with | Refinement _0 -> _0 
 let (uu___is_Reflect : t -> Prims.bool) =
   fun projectee  ->
     match projectee with | Reflect _0 -> true | uu____1254 -> false
@@ -245,20 +196,17 @@ let (uu___is_Quote : t -> Prims.bool) =
     match projectee with | Quote _0 -> true | uu____1278 -> false
   
 let (__proj__Quote__item___0 :
-  t ->
-    (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.quoteinfo)
-      FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | Quote _0 -> _0 
+  t -> (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.quoteinfo)) =
+  fun projectee  -> match projectee with | Quote _0 -> _0 
 let (uu___is_Lazy : t -> Prims.bool) =
   fun projectee  ->
     match projectee with | Lazy _0 -> true | uu____1324 -> false
   
 let (__proj__Lazy__item___0 :
   t ->
-    ((FStar_Syntax_Syntax.lazyinfo,(FStar_Dyn.dyn,FStar_Syntax_Syntax.emb_typ)
-                                     FStar_Pervasives_Native.tuple2)
-       FStar_Util.either,t FStar_Common.thunk)
-      FStar_Pervasives_Native.tuple2)
+    ((FStar_Syntax_Syntax.lazyinfo,(FStar_Dyn.dyn *
+                                     FStar_Syntax_Syntax.emb_typ))
+      FStar_Util.either * t FStar_Common.thunk))
   = fun projectee  -> match projectee with | Lazy _0 -> _0 
 let (uu___is_Rec : t -> Prims.bool) =
   fun projectee  ->
@@ -266,30 +214,24 @@ let (uu___is_Rec : t -> Prims.bool) =
   
 let (__proj__Rec__item___0 :
   t ->
-    (FStar_Syntax_Syntax.letbinding,FStar_Syntax_Syntax.letbinding Prims.list,
-      t Prims.list,(t,FStar_Syntax_Syntax.aqual)
-                     FStar_Pervasives_Native.tuple2 Prims.list,Prims.int,
-      Prims.bool Prims.list,t Prims.list ->
-                              FStar_Syntax_Syntax.letbinding -> t)
-      FStar_Pervasives_Native.tuple7)
+    (FStar_Syntax_Syntax.letbinding * FStar_Syntax_Syntax.letbinding
+      Prims.list * t Prims.list * (t * FStar_Syntax_Syntax.aqual) Prims.list
+      * Prims.int * Prims.bool Prims.list *
+      (t Prims.list -> FStar_Syntax_Syntax.letbinding -> t)))
   = fun projectee  -> match projectee with | Rec _0 -> _0 
 let (uu___is_Tot : comp -> Prims.bool) =
   fun projectee  ->
     match projectee with | Tot _0 -> true | uu____1556 -> false
   
 let (__proj__Tot__item___0 :
-  comp ->
-    (t,FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2)
+  comp -> (t * FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option))
   = fun projectee  -> match projectee with | Tot _0 -> _0 
 let (uu___is_GTot : comp -> Prims.bool) =
   fun projectee  ->
     match projectee with | GTot _0 -> true | uu____1600 -> false
   
 let (__proj__GTot__item___0 :
-  comp ->
-    (t,FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2)
+  comp -> (t * FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option))
   = fun projectee  -> match projectee with | GTot _0 -> _0 
 let (uu___is_Comp : comp -> Prims.bool) =
   fun projectee  ->
@@ -318,9 +260,7 @@ let (__proj__Mkcomp_typ__item__result_typ : comp_typ -> t) =
         -> result_typ
   
 let (__proj__Mkcomp_typ__item__effect_args :
-  comp_typ ->
-    (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2 Prims.list)
-  =
+  comp_typ -> (t * FStar_Syntax_Syntax.aqual) Prims.list) =
   fun projectee  ->
     match projectee with
     | { comp_univs; effect_name; result_typ; effect_args; flags = flags1;_}
@@ -392,9 +332,8 @@ let (__proj__Mkresidual_comp__item__residual_flags :
     match projectee with
     | { residual_effect; residual_typ; residual_flags;_} -> residual_flags
   
-type arg = (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2
-type args =
-  (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2 Prims.list
+type arg = (t * FStar_Syntax_Syntax.aqual)
+type args = (t * FStar_Syntax_Syntax.aqual) Prims.list
 type head = t
 type annot = t FStar_Pervasives_Native.option
 let (isAccu : t -> Prims.bool) =
@@ -996,11 +935,7 @@ let e_option :
        in
     mk_emb em un uu____4724 etyp
   
-let e_tuple2 :
-  'a 'b .
-    'a embedding ->
-      'b embedding -> ('a,'b) FStar_Pervasives_Native.tuple2 embedding
-  =
+let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
   fun ea  ->
     fun eb  ->
       let etyp =
@@ -1502,8 +1437,7 @@ let arg_as_list :
   
 let (arg_as_bounded_int :
   arg ->
-    (FStar_Syntax_Syntax.fv,FStar_BigInt.t) FStar_Pervasives_Native.tuple2
-      FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.fv * FStar_BigInt.t) FStar_Pervasives_Native.option)
   =
   fun uu____6526  ->
     match uu____6526 with

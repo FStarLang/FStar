@@ -9,8 +9,8 @@ let (unfold_whnf :
 let (tc_tycon :
   FStar_TypeChecker_Env.env_t ->
     FStar_Syntax_Syntax.sigelt ->
-      (FStar_TypeChecker_Env.env_t,FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universe,
-        FStar_TypeChecker_Env.guard_t) FStar_Pervasives_Native.tuple4)
+      (FStar_TypeChecker_Env.env_t * FStar_Syntax_Syntax.sigelt *
+        FStar_Syntax_Syntax.universe * FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun s  ->
@@ -236,11 +236,9 @@ let (tc_tycon :
   
 let (tc_data :
   FStar_TypeChecker_Env.env_t ->
-    (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universe)
-      FStar_Pervasives_Native.tuple2 Prims.list ->
+    (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universe) Prims.list ->
       FStar_Syntax_Syntax.sigelt ->
-        (FStar_Syntax_Syntax.sigelt,FStar_TypeChecker_Env.guard_t)
-          FStar_Pervasives_Native.tuple2)
+        (FStar_Syntax_Syntax.sigelt * FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun tcs  ->
@@ -693,12 +691,11 @@ let (tc_data :
 let (generalize_and_inst_within :
   FStar_TypeChecker_Env.env_t ->
     FStar_TypeChecker_Env.guard_t ->
-      (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universe)
-        FStar_Pervasives_Native.tuple2 Prims.list ->
+      (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universe) Prims.list
+        ->
         FStar_Syntax_Syntax.sigelt Prims.list ->
-          (FStar_Syntax_Syntax.sigelt Prims.list,FStar_Syntax_Syntax.sigelt
-                                                   Prims.list)
-            FStar_Pervasives_Native.tuple2)
+          (FStar_Syntax_Syntax.sigelt Prims.list * FStar_Syntax_Syntax.sigelt
+            Prims.list))
   =
   fun env  ->
     fun g  ->
@@ -999,8 +996,7 @@ let (ty_occurs_in :
   
 let (try_get_fv :
   FStar_Syntax_Syntax.term ->
-    (FStar_Syntax_Syntax.fv,FStar_Syntax_Syntax.universes)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universes))
   =
   fun t  ->
     let uu____2279 =
@@ -1016,8 +1012,7 @@ let (try_get_fv :
     | uu____2305 -> failwith "Node is not an fvar or a Tm_uinst"
   
 type unfolded_memo_elt =
-  (FStar_Ident.lident,FStar_Syntax_Syntax.args)
-    FStar_Pervasives_Native.tuple2 Prims.list
+  (FStar_Ident.lident * FStar_Syntax_Syntax.args) Prims.list
 type unfolded_memo_t = unfolded_memo_elt FStar_ST.ref
 let (already_unfolded :
   FStar_Ident.lident ->
@@ -1719,9 +1714,9 @@ let (get_optimized_haseq_axiom :
     FStar_Syntax_Syntax.sigelt ->
       FStar_Syntax_Syntax.subst_elt Prims.list ->
         FStar_Syntax_Syntax.univ_names ->
-          (FStar_Ident.lident,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.binders,
-            FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.term)
-            FStar_Pervasives_Native.tuple5)
+          (FStar_Ident.lident * FStar_Syntax_Syntax.term *
+            FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.binders *
+            FStar_Syntax_Syntax.term))
   =
   fun en  ->
     fun ty  ->
@@ -1994,17 +1989,15 @@ let (optimized_haseq_ty :
   FStar_Syntax_Syntax.sigelts ->
     FStar_Syntax_Syntax.subst_elt Prims.list ->
       FStar_Syntax_Syntax.univ_name Prims.list ->
-        ((FStar_Ident.lident,FStar_Syntax_Syntax.term)
-           FStar_Pervasives_Native.tuple2 Prims.list,FStar_TypeChecker_Env.env,
-          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.term'
-                                                                 FStar_Syntax_Syntax.syntax)
-          FStar_Pervasives_Native.tuple4 ->
+        ((FStar_Ident.lident * FStar_Syntax_Syntax.term) Prims.list *
+          FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.term'
+          FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.term'
+          FStar_Syntax_Syntax.syntax) ->
           FStar_Syntax_Syntax.sigelt ->
-            ((FStar_Ident.lident,FStar_Syntax_Syntax.term)
-               FStar_Pervasives_Native.tuple2 Prims.list,FStar_TypeChecker_Env.env,
-              FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.term'
-                                                                    FStar_Syntax_Syntax.syntax)
-              FStar_Pervasives_Native.tuple4)
+            ((FStar_Ident.lident * FStar_Syntax_Syntax.term) Prims.list *
+              FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.term'
+              FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.term'
+              FStar_Syntax_Syntax.syntax))
   =
   fun all_datas_in_the_bundle  ->
     fun usubst  ->
@@ -2522,9 +2515,8 @@ let (check_inductive_well_typedness :
     FStar_Syntax_Syntax.sigelt Prims.list ->
       FStar_Syntax_Syntax.qualifier Prims.list ->
         FStar_Ident.lident Prims.list ->
-          (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.sigelt Prims.list,
-            FStar_Syntax_Syntax.sigelt Prims.list)
-            FStar_Pervasives_Native.tuple3)
+          (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.sigelt Prims.list
+            * FStar_Syntax_Syntax.sigelt Prims.list))
   =
   fun env  ->
     fun ses  ->

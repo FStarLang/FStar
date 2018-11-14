@@ -1,39 +1,20 @@
 open Prims
 type decl =
-  | DGlobal of
-  (flag Prims.list,(Prims.string Prims.list,Prims.string)
-                     FStar_Pervasives_Native.tuple2,Prims.int,typ,expr)
-  FStar_Pervasives_Native.tuple5 
-  | DFunction of
-  (cc FStar_Pervasives_Native.option,flag Prims.list,Prims.int,typ,(Prims.string
-                                                                    Prims.list,
-                                                                    Prims.string)
-                                                                    FStar_Pervasives_Native.tuple2,
-  binder Prims.list,expr) FStar_Pervasives_Native.tuple7 
-  | DTypeAlias of
-  ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-  flag Prims.list,Prims.int,typ) FStar_Pervasives_Native.tuple4 
-  | DTypeFlat of
-  ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-  flag Prims.list,Prims.int,(Prims.string,(typ,Prims.bool)
-                                            FStar_Pervasives_Native.tuple2)
-                              FStar_Pervasives_Native.tuple2 Prims.list)
-  FStar_Pervasives_Native.tuple4 
-  | DExternal of
-  (cc FStar_Pervasives_Native.option,flag Prims.list,(Prims.string Prims.list,
-                                                       Prims.string)
-                                                       FStar_Pervasives_Native.tuple2,
-  typ) FStar_Pervasives_Native.tuple4 
-  | DTypeVariant of
-  ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-  flag Prims.list,Prims.int,(Prims.string,(Prims.string,(typ,Prims.bool)
-                                                          FStar_Pervasives_Native.tuple2)
-                                            FStar_Pervasives_Native.tuple2
-                                            Prims.list)
-                              FStar_Pervasives_Native.tuple2 Prims.list)
-  FStar_Pervasives_Native.tuple4 
-  | DTypeAbstractStruct of (Prims.string Prims.list,Prims.string)
-  FStar_Pervasives_Native.tuple2 
+  | DGlobal of (flag Prims.list * (Prims.string Prims.list * Prims.string) *
+  Prims.int * typ * expr) 
+  | DFunction of (cc FStar_Pervasives_Native.option * flag Prims.list *
+  Prims.int * typ * (Prims.string Prims.list * Prims.string) * binder
+  Prims.list * expr) 
+  | DTypeAlias of ((Prims.string Prims.list * Prims.string) * flag Prims.list
+  * Prims.int * typ) 
+  | DTypeFlat of ((Prims.string Prims.list * Prims.string) * flag Prims.list
+  * Prims.int * (Prims.string * (typ * Prims.bool)) Prims.list) 
+  | DExternal of (cc FStar_Pervasives_Native.option * flag Prims.list *
+  (Prims.string Prims.list * Prims.string) * typ) 
+  | DTypeVariant of ((Prims.string Prims.list * Prims.string) * flag
+  Prims.list * Prims.int * (Prims.string * (Prims.string * (typ *
+  Prims.bool)) Prims.list) Prims.list) 
+  | DTypeAbstractStruct of (Prims.string Prims.list * Prims.string) 
 and cc =
   | StdCall 
   | CDecl 
@@ -56,47 +37,41 @@ and lifetime =
   | ManuallyManaged 
 and expr =
   | EBound of Prims.int 
-  | EQualified of (Prims.string Prims.list,Prims.string)
-  FStar_Pervasives_Native.tuple2 
-  | EConstant of (width,Prims.string) FStar_Pervasives_Native.tuple2 
+  | EQualified of (Prims.string Prims.list * Prims.string) 
+  | EConstant of (width * Prims.string) 
   | EUnit 
-  | EApp of (expr,expr Prims.list) FStar_Pervasives_Native.tuple2 
-  | ETypApp of (expr,typ Prims.list) FStar_Pervasives_Native.tuple2 
-  | ELet of (binder,expr,expr) FStar_Pervasives_Native.tuple3 
-  | EIfThenElse of (expr,expr,expr) FStar_Pervasives_Native.tuple3 
+  | EApp of (expr * expr Prims.list) 
+  | ETypApp of (expr * typ Prims.list) 
+  | ELet of (binder * expr * expr) 
+  | EIfThenElse of (expr * expr * expr) 
   | ESequence of expr Prims.list 
-  | EAssign of (expr,expr) FStar_Pervasives_Native.tuple2 
-  | EBufCreate of (lifetime,expr,expr) FStar_Pervasives_Native.tuple3 
-  | EBufRead of (expr,expr) FStar_Pervasives_Native.tuple2 
-  | EBufWrite of (expr,expr,expr) FStar_Pervasives_Native.tuple3 
-  | EBufSub of (expr,expr) FStar_Pervasives_Native.tuple2 
-  | EBufBlit of (expr,expr,expr,expr,expr) FStar_Pervasives_Native.tuple5 
-  | EMatch of (expr,(pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list)
-  FStar_Pervasives_Native.tuple2 
-  | EOp of (op,width) FStar_Pervasives_Native.tuple2 
-  | ECast of (expr,typ) FStar_Pervasives_Native.tuple2 
+  | EAssign of (expr * expr) 
+  | EBufCreate of (lifetime * expr * expr) 
+  | EBufRead of (expr * expr) 
+  | EBufWrite of (expr * expr * expr) 
+  | EBufSub of (expr * expr) 
+  | EBufBlit of (expr * expr * expr * expr * expr) 
+  | EMatch of (expr * (pattern * expr) Prims.list) 
+  | EOp of (op * width) 
+  | ECast of (expr * typ) 
   | EPushFrame 
   | EPopFrame 
   | EBool of Prims.bool 
   | EAny 
   | EAbort 
   | EReturn of expr 
-  | EFlat of
-  (typ,(Prims.string,expr) FStar_Pervasives_Native.tuple2 Prims.list)
-  FStar_Pervasives_Native.tuple2 
-  | EField of (typ,expr,Prims.string) FStar_Pervasives_Native.tuple3 
-  | EWhile of (expr,expr) FStar_Pervasives_Native.tuple2 
-  | EBufCreateL of (lifetime,expr Prims.list) FStar_Pervasives_Native.tuple2
-  
+  | EFlat of (typ * (Prims.string * expr) Prims.list) 
+  | EField of (typ * expr * Prims.string) 
+  | EWhile of (expr * expr) 
+  | EBufCreateL of (lifetime * expr Prims.list) 
   | ETuple of expr Prims.list 
-  | ECons of (typ,Prims.string,expr Prims.list)
-  FStar_Pervasives_Native.tuple3 
-  | EBufFill of (expr,expr,expr) FStar_Pervasives_Native.tuple3 
+  | ECons of (typ * Prims.string * expr Prims.list) 
+  | EBufFill of (expr * expr * expr) 
   | EString of Prims.string 
-  | EFun of (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3 
+  | EFun of (binder Prims.list * expr * typ) 
   | EAbortS of Prims.string 
   | EBufFree of expr 
-  | EBufCreateNoInit of (lifetime,expr) FStar_Pervasives_Native.tuple2 
+  | EBufCreateNoInit of (lifetime * expr) 
 and op =
   | Add 
   | AddW 
@@ -127,12 +102,10 @@ and pattern =
   | PUnit 
   | PBool of Prims.bool 
   | PVar of binder 
-  | PCons of (Prims.string,pattern Prims.list) FStar_Pervasives_Native.tuple2
-  
+  | PCons of (Prims.string * pattern Prims.list) 
   | PTuple of pattern Prims.list 
-  | PRecord of (Prims.string,pattern) FStar_Pervasives_Native.tuple2
-  Prims.list 
-  | PConstant of (width,Prims.string) FStar_Pervasives_Native.tuple2 
+  | PRecord of (Prims.string * pattern) Prims.list 
+  | PConstant of (width * Prims.string) 
 and width =
   | UInt8 
   | UInt16 
@@ -152,15 +125,12 @@ and typ =
   | TInt of width 
   | TBuf of typ 
   | TUnit 
-  | TQualified of (Prims.string Prims.list,Prims.string)
-  FStar_Pervasives_Native.tuple2 
+  | TQualified of (Prims.string Prims.list * Prims.string) 
   | TBool 
   | TAny 
-  | TArrow of (typ,typ) FStar_Pervasives_Native.tuple2 
+  | TArrow of (typ * typ) 
   | TBound of Prims.int 
-  | TApp of
-  ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-  typ Prims.list) FStar_Pervasives_Native.tuple2 
+  | TApp of ((Prims.string Prims.list * Prims.string) * typ Prims.list) 
   | TTuple of typ Prims.list 
 let (uu___is_DGlobal : decl -> Prims.bool) =
   fun projectee  ->
@@ -168,9 +138,8 @@ let (uu___is_DGlobal : decl -> Prims.bool) =
   
 let (__proj__DGlobal__item___0 :
   decl ->
-    (flag Prims.list,(Prims.string Prims.list,Prims.string)
-                       FStar_Pervasives_Native.tuple2,Prims.int,typ,expr)
-      FStar_Pervasives_Native.tuple5)
+    (flag Prims.list * (Prims.string Prims.list * Prims.string) * Prims.int *
+      typ * expr))
   = fun projectee  -> match projectee with | DGlobal _0 -> _0 
 let (uu___is_DFunction : decl -> Prims.bool) =
   fun projectee  ->
@@ -178,9 +147,8 @@ let (uu___is_DFunction : decl -> Prims.bool) =
   
 let (__proj__DFunction__item___0 :
   decl ->
-    (cc FStar_Pervasives_Native.option,flag Prims.list,Prims.int,typ,
-      (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-      binder Prims.list,expr) FStar_Pervasives_Native.tuple7)
+    (cc FStar_Pervasives_Native.option * flag Prims.list * Prims.int * typ *
+      (Prims.string Prims.list * Prims.string) * binder Prims.list * expr))
   = fun projectee  -> match projectee with | DFunction _0 -> _0 
 let (uu___is_DTypeAlias : decl -> Prims.bool) =
   fun projectee  ->
@@ -188,8 +156,8 @@ let (uu___is_DTypeAlias : decl -> Prims.bool) =
   
 let (__proj__DTypeAlias__item___0 :
   decl ->
-    ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-      flag Prims.list,Prims.int,typ) FStar_Pervasives_Native.tuple4)
+    ((Prims.string Prims.list * Prims.string) * flag Prims.list * Prims.int *
+      typ))
   = fun projectee  -> match projectee with | DTypeAlias _0 -> _0 
 let (uu___is_DTypeFlat : decl -> Prims.bool) =
   fun projectee  ->
@@ -197,11 +165,8 @@ let (uu___is_DTypeFlat : decl -> Prims.bool) =
   
 let (__proj__DTypeFlat__item___0 :
   decl ->
-    ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-      flag Prims.list,Prims.int,(Prims.string,(typ,Prims.bool)
-                                                FStar_Pervasives_Native.tuple2)
-                                  FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple4)
+    ((Prims.string Prims.list * Prims.string) * flag Prims.list * Prims.int *
+      (Prims.string * (typ * Prims.bool)) Prims.list))
   = fun projectee  -> match projectee with | DTypeFlat _0 -> _0 
 let (uu___is_DExternal : decl -> Prims.bool) =
   fun projectee  ->
@@ -209,11 +174,8 @@ let (uu___is_DExternal : decl -> Prims.bool) =
   
 let (__proj__DExternal__item___0 :
   decl ->
-    (cc FStar_Pervasives_Native.option,flag Prims.list,(Prims.string
-                                                          Prims.list,
-                                                         Prims.string)
-                                                         FStar_Pervasives_Native.tuple2,
-      typ) FStar_Pervasives_Native.tuple4)
+    (cc FStar_Pervasives_Native.option * flag Prims.list * (Prims.string
+      Prims.list * Prims.string) * typ))
   = fun projectee  -> match projectee with | DExternal _0 -> _0 
 let (uu___is_DTypeVariant : decl -> Prims.bool) =
   fun projectee  ->
@@ -221,13 +183,9 @@ let (uu___is_DTypeVariant : decl -> Prims.bool) =
   
 let (__proj__DTypeVariant__item___0 :
   decl ->
-    ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-      flag Prims.list,Prims.int,(Prims.string,(Prims.string,(typ,Prims.bool)
-                                                              FStar_Pervasives_Native.tuple2)
-                                                FStar_Pervasives_Native.tuple2
-                                                Prims.list)
-                                  FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple4)
+    ((Prims.string Prims.list * Prims.string) * flag Prims.list * Prims.int *
+      (Prims.string * (Prims.string * (typ * Prims.bool)) Prims.list)
+      Prims.list))
   = fun projectee  -> match projectee with | DTypeVariant _0 -> _0 
 let (uu___is_DTypeAbstractStruct : decl -> Prims.bool) =
   fun projectee  ->
@@ -236,9 +194,8 @@ let (uu___is_DTypeAbstractStruct : decl -> Prims.bool) =
     | uu____1435 -> false
   
 let (__proj__DTypeAbstractStruct__item___0 :
-  decl ->
-    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | DTypeAbstractStruct _0 -> _0 
+  decl -> (Prims.string Prims.list * Prims.string)) =
+  fun projectee  -> match projectee with | DTypeAbstractStruct _0 -> _0 
 let (uu___is_StdCall : cc -> Prims.bool) =
   fun projectee  ->
     match projectee with | StdCall  -> true | uu____1478 -> false
@@ -326,15 +283,13 @@ let (uu___is_EQualified : expr -> Prims.bool) =
     match projectee with | EQualified _0 -> true | uu____1750 -> false
   
 let (__proj__EQualified__item___0 :
-  expr ->
-    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | EQualified _0 -> _0 
+  expr -> (Prims.string Prims.list * Prims.string)) =
+  fun projectee  -> match projectee with | EQualified _0 -> _0 
 let (uu___is_EConstant : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EConstant _0 -> true | uu____1799 -> false
   
-let (__proj__EConstant__item___0 :
-  expr -> (width,Prims.string) FStar_Pervasives_Native.tuple2) =
+let (__proj__EConstant__item___0 : expr -> (width * Prims.string)) =
   fun projectee  -> match projectee with | EConstant _0 -> _0 
 let (uu___is_EUnit : expr -> Prims.bool) =
   fun projectee  ->
@@ -344,29 +299,25 @@ let (uu___is_EApp : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EApp _0 -> true | uu____1851 -> false
   
-let (__proj__EApp__item___0 :
-  expr -> (expr,expr Prims.list) FStar_Pervasives_Native.tuple2) =
+let (__proj__EApp__item___0 : expr -> (expr * expr Prims.list)) =
   fun projectee  -> match projectee with | EApp _0 -> _0 
 let (uu___is_ETypApp : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | ETypApp _0 -> true | uu____1895 -> false
   
-let (__proj__ETypApp__item___0 :
-  expr -> (expr,typ Prims.list) FStar_Pervasives_Native.tuple2) =
+let (__proj__ETypApp__item___0 : expr -> (expr * typ Prims.list)) =
   fun projectee  -> match projectee with | ETypApp _0 -> _0 
 let (uu___is_ELet : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | ELet _0 -> true | uu____1939 -> false
   
-let (__proj__ELet__item___0 :
-  expr -> (binder,expr,expr) FStar_Pervasives_Native.tuple3) =
+let (__proj__ELet__item___0 : expr -> (binder * expr * expr)) =
   fun projectee  -> match projectee with | ELet _0 -> _0 
 let (uu___is_EIfThenElse : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EIfThenElse _0 -> true | uu____1983 -> false
   
-let (__proj__EIfThenElse__item___0 :
-  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3) =
+let (__proj__EIfThenElse__item___0 : expr -> (expr * expr * expr)) =
   fun projectee  -> match projectee with | EIfThenElse _0 -> _0 
 let (uu___is_ESequence : expr -> Prims.bool) =
   fun projectee  ->
@@ -378,66 +329,55 @@ let (uu___is_EAssign : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EAssign _0 -> true | uu____2053 -> false
   
-let (__proj__EAssign__item___0 :
-  expr -> (expr,expr) FStar_Pervasives_Native.tuple2) =
+let (__proj__EAssign__item___0 : expr -> (expr * expr)) =
   fun projectee  -> match projectee with | EAssign _0 -> _0 
 let (uu___is_EBufCreate : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufCreate _0 -> true | uu____2091 -> false
   
-let (__proj__EBufCreate__item___0 :
-  expr -> (lifetime,expr,expr) FStar_Pervasives_Native.tuple3) =
+let (__proj__EBufCreate__item___0 : expr -> (lifetime * expr * expr)) =
   fun projectee  -> match projectee with | EBufCreate _0 -> _0 
 let (uu___is_EBufRead : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufRead _0 -> true | uu____2133 -> false
   
-let (__proj__EBufRead__item___0 :
-  expr -> (expr,expr) FStar_Pervasives_Native.tuple2) =
+let (__proj__EBufRead__item___0 : expr -> (expr * expr)) =
   fun projectee  -> match projectee with | EBufRead _0 -> _0 
 let (uu___is_EBufWrite : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufWrite _0 -> true | uu____2171 -> false
   
-let (__proj__EBufWrite__item___0 :
-  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3) =
+let (__proj__EBufWrite__item___0 : expr -> (expr * expr * expr)) =
   fun projectee  -> match projectee with | EBufWrite _0 -> _0 
 let (uu___is_EBufSub : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufSub _0 -> true | uu____2213 -> false
   
-let (__proj__EBufSub__item___0 :
-  expr -> (expr,expr) FStar_Pervasives_Native.tuple2) =
+let (__proj__EBufSub__item___0 : expr -> (expr * expr)) =
   fun projectee  -> match projectee with | EBufSub _0 -> _0 
 let (uu___is_EBufBlit : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufBlit _0 -> true | uu____2255 -> false
   
-let (__proj__EBufBlit__item___0 :
-  expr -> (expr,expr,expr,expr,expr) FStar_Pervasives_Native.tuple5) =
-  fun projectee  -> match projectee with | EBufBlit _0 -> _0 
+let (__proj__EBufBlit__item___0 : expr -> (expr * expr * expr * expr * expr))
+  = fun projectee  -> match projectee with | EBufBlit _0 -> _0 
 let (uu___is_EMatch : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EMatch _0 -> true | uu____2315 -> false
   
-let (__proj__EMatch__item___0 :
-  expr ->
-    (expr,(pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple2)
+let (__proj__EMatch__item___0 : expr -> (expr * (pattern * expr) Prims.list))
   = fun projectee  -> match projectee with | EMatch _0 -> _0 
 let (uu___is_EOp : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EOp _0 -> true | uu____2369 -> false
   
-let (__proj__EOp__item___0 :
-  expr -> (op,width) FStar_Pervasives_Native.tuple2) =
+let (__proj__EOp__item___0 : expr -> (op * width)) =
   fun projectee  -> match projectee with | EOp _0 -> _0 
 let (uu___is_ECast : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | ECast _0 -> true | uu____2405 -> false
   
-let (__proj__ECast__item___0 :
-  expr -> (expr,typ) FStar_Pervasives_Native.tuple2) =
+let (__proj__ECast__item___0 : expr -> (expr * typ)) =
   fun projectee  -> match projectee with | ECast _0 -> _0 
 let (uu___is_EPushFrame : expr -> Prims.bool) =
   fun projectee  ->
@@ -472,30 +412,25 @@ let (uu___is_EFlat : expr -> Prims.bool) =
     match projectee with | EFlat _0 -> true | uu____2536 -> false
   
 let (__proj__EFlat__item___0 :
-  expr ->
-    (typ,(Prims.string,expr) FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | EFlat _0 -> _0 
+  expr -> (typ * (Prims.string * expr) Prims.list)) =
+  fun projectee  -> match projectee with | EFlat _0 -> _0 
 let (uu___is_EField : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EField _0 -> true | uu____2596 -> false
   
-let (__proj__EField__item___0 :
-  expr -> (typ,expr,Prims.string) FStar_Pervasives_Native.tuple3) =
+let (__proj__EField__item___0 : expr -> (typ * expr * Prims.string)) =
   fun projectee  -> match projectee with | EField _0 -> _0 
 let (uu___is_EWhile : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EWhile _0 -> true | uu____2641 -> false
   
-let (__proj__EWhile__item___0 :
-  expr -> (expr,expr) FStar_Pervasives_Native.tuple2) =
+let (__proj__EWhile__item___0 : expr -> (expr * expr)) =
   fun projectee  -> match projectee with | EWhile _0 -> _0 
 let (uu___is_EBufCreateL : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufCreateL _0 -> true | uu____2679 -> false
   
-let (__proj__EBufCreateL__item___0 :
-  expr -> (lifetime,expr Prims.list) FStar_Pervasives_Native.tuple2) =
+let (__proj__EBufCreateL__item___0 : expr -> (lifetime * expr Prims.list)) =
   fun projectee  -> match projectee with | EBufCreateL _0 -> _0 
 let (uu___is_ETuple : expr -> Prims.bool) =
   fun projectee  ->
@@ -508,14 +443,13 @@ let (uu___is_ECons : expr -> Prims.bool) =
     match projectee with | ECons _0 -> true | uu____2754 -> false
   
 let (__proj__ECons__item___0 :
-  expr -> (typ,Prims.string,expr Prims.list) FStar_Pervasives_Native.tuple3)
-  = fun projectee  -> match projectee with | ECons _0 -> _0 
+  expr -> (typ * Prims.string * expr Prims.list)) =
+  fun projectee  -> match projectee with | ECons _0 -> _0 
 let (uu___is_EBufFill : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufFill _0 -> true | uu____2807 -> false
   
-let (__proj__EBufFill__item___0 :
-  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3) =
+let (__proj__EBufFill__item___0 : expr -> (expr * expr * expr)) =
   fun projectee  -> match projectee with | EBufFill _0 -> _0 
 let (uu___is_EString : expr -> Prims.bool) =
   fun projectee  ->
@@ -527,8 +461,7 @@ let (uu___is_EFun : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EFun _0 -> true | uu____2877 -> false
   
-let (__proj__EFun__item___0 :
-  expr -> (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3) =
+let (__proj__EFun__item___0 : expr -> (binder Prims.list * expr * typ)) =
   fun projectee  -> match projectee with | EFun _0 -> _0 
 let (uu___is_EAbortS : expr -> Prims.bool) =
   fun projectee  ->
@@ -546,8 +479,7 @@ let (uu___is_EBufCreateNoInit : expr -> Prims.bool) =
   fun projectee  ->
     match projectee with | EBufCreateNoInit _0 -> true | uu____2969 -> false
   
-let (__proj__EBufCreateNoInit__item___0 :
-  expr -> (lifetime,expr) FStar_Pervasives_Native.tuple2) =
+let (__proj__EBufCreateNoInit__item___0 : expr -> (lifetime * expr)) =
   fun projectee  -> match projectee with | EBufCreateNoInit _0 -> _0 
 let (uu___is_Add : op -> Prims.bool) =
   fun projectee  -> match projectee with | Add  -> true | uu____3000 -> false 
@@ -640,8 +572,8 @@ let (uu___is_PCons : pattern -> Prims.bool) =
     match projectee with | PCons _0 -> true | uu____3338 -> false
   
 let (__proj__PCons__item___0 :
-  pattern -> (Prims.string,pattern Prims.list) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | PCons _0 -> _0 
+  pattern -> (Prims.string * pattern Prims.list)) =
+  fun projectee  -> match projectee with | PCons _0 -> _0 
 let (uu___is_PTuple : pattern -> Prims.bool) =
   fun projectee  ->
     match projectee with | PTuple _0 -> true | uu____3381 -> false
@@ -653,14 +585,13 @@ let (uu___is_PRecord : pattern -> Prims.bool) =
     match projectee with | PRecord _0 -> true | uu____3414 -> false
   
 let (__proj__PRecord__item___0 :
-  pattern -> (Prims.string,pattern) FStar_Pervasives_Native.tuple2 Prims.list)
-  = fun projectee  -> match projectee with | PRecord _0 -> _0 
+  pattern -> (Prims.string * pattern) Prims.list) =
+  fun projectee  -> match projectee with | PRecord _0 -> _0 
 let (uu___is_PConstant : pattern -> Prims.bool) =
   fun projectee  ->
     match projectee with | PConstant _0 -> true | uu____3460 -> false
   
-let (__proj__PConstant__item___0 :
-  pattern -> (width,Prims.string) FStar_Pervasives_Native.tuple2) =
+let (__proj__PConstant__item___0 : pattern -> (width * Prims.string)) =
   fun projectee  -> match projectee with | PConstant _0 -> _0 
 let (uu___is_UInt8 : width -> Prims.bool) =
   fun projectee  ->
@@ -729,9 +660,8 @@ let (uu___is_TQualified : typ -> Prims.bool) =
     match projectee with | TQualified _0 -> true | uu____3701 -> false
   
 let (__proj__TQualified__item___0 :
-  typ ->
-    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | TQualified _0 -> _0 
+  typ -> (Prims.string Prims.list * Prims.string)) =
+  fun projectee  -> match projectee with | TQualified _0 -> _0 
 let (uu___is_TBool : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TBool  -> true | uu____3744 -> false
@@ -744,8 +674,7 @@ let (uu___is_TArrow : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TArrow _0 -> true | uu____3771 -> false
   
-let (__proj__TArrow__item___0 :
-  typ -> (typ,typ) FStar_Pervasives_Native.tuple2) =
+let (__proj__TArrow__item___0 : typ -> (typ * typ)) =
   fun projectee  -> match projectee with | TArrow _0 -> _0 
 let (uu___is_TBound : typ -> Prims.bool) =
   fun projectee  ->
@@ -758,10 +687,8 @@ let (uu___is_TApp : typ -> Prims.bool) =
     match projectee with | TApp _0 -> true | uu____3841 -> false
   
 let (__proj__TApp__item___0 :
-  typ ->
-    ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-      typ Prims.list) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | TApp _0 -> _0 
+  typ -> ((Prims.string Prims.list * Prims.string) * typ Prims.list)) =
+  fun projectee  -> match projectee with | TApp _0 -> _0 
 let (uu___is_TTuple : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TTuple _0 -> true | uu____3905 -> false
@@ -770,38 +697,30 @@ let (__proj__TTuple__item___0 : typ -> typ Prims.list) =
   fun projectee  -> match projectee with | TTuple _0 -> _0 
 type program = decl Prims.list
 type ident = Prims.string
-type fields_t =
-  (Prims.string,(typ,Prims.bool) FStar_Pervasives_Native.tuple2)
-    FStar_Pervasives_Native.tuple2 Prims.list
+type fields_t = (Prims.string * (typ * Prims.bool)) Prims.list
 type branches_t =
-  (Prims.string,(Prims.string,(typ,Prims.bool) FStar_Pervasives_Native.tuple2)
-                  FStar_Pervasives_Native.tuple2 Prims.list)
-    FStar_Pervasives_Native.tuple2 Prims.list
+  (Prims.string * (Prims.string * (typ * Prims.bool)) Prims.list) Prims.list
 type fsdoc = Prims.string
-type branch = (pattern,expr) FStar_Pervasives_Native.tuple2
-type branches = (pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list
-type constant = (width,Prims.string) FStar_Pervasives_Native.tuple2
+type branch = (pattern * expr)
+type branches = (pattern * expr) Prims.list
+type constant = (width * Prims.string)
 type var = Prims.int
-type lident =
-  (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2
+type lident = (Prims.string Prims.list * Prims.string)
 type version = Prims.int
 let (current_version : version) = (Prims.parse_int "27") 
-type file = (Prims.string,program) FStar_Pervasives_Native.tuple2
-type binary_format = (version,file Prims.list) FStar_Pervasives_Native.tuple2
+type file = (Prims.string * program)
+type binary_format = (version * file Prims.list)
 let fst3 :
   'Auu____4008 'Auu____4009 'Auu____4010 .
-    ('Auu____4008,'Auu____4009,'Auu____4010) FStar_Pervasives_Native.tuple3
-      -> 'Auu____4008
+    ('Auu____4008 * 'Auu____4009 * 'Auu____4010) -> 'Auu____4008
   = fun uu____4021  -> match uu____4021 with | (x,uu____4029,uu____4030) -> x 
 let snd3 :
   'Auu____4040 'Auu____4041 'Auu____4042 .
-    ('Auu____4040,'Auu____4041,'Auu____4042) FStar_Pervasives_Native.tuple3
-      -> 'Auu____4041
+    ('Auu____4040 * 'Auu____4041 * 'Auu____4042) -> 'Auu____4041
   = fun uu____4053  -> match uu____4053 with | (uu____4060,x,uu____4062) -> x 
 let thd3 :
   'Auu____4072 'Auu____4073 'Auu____4074 .
-    ('Auu____4072,'Auu____4073,'Auu____4074) FStar_Pervasives_Native.tuple3
-      -> 'Auu____4074
+    ('Auu____4072 * 'Auu____4073 * 'Auu____4074) -> 'Auu____4074
   = fun uu____4085  -> match uu____4085 with | (uu____4092,uu____4093,x) -> x 
 let (mk_width : Prims.string -> width FStar_Pervasives_Native.option) =
   fun uu___280_4103  ->
@@ -959,11 +878,7 @@ let (find_t : env -> Prims.string -> Prims.int) =
           failwith uu____4449
   
 let add_binders :
-  'Auu____4460 .
-    env ->
-      (Prims.string,'Auu____4460) FStar_Pervasives_Native.tuple2 Prims.list
-        -> env
-  =
+  'Auu____4460 . env -> (Prims.string * 'Auu____4460) Prims.list -> env =
   fun env  ->
     fun binders  ->
       FStar_List.fold_left
@@ -1018,12 +933,9 @@ let rec (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                   FStar_Pervasives_Native.None)) modules
 
 and (translate_module :
-  (FStar_Extraction_ML_Syntax.mlpath,(FStar_Extraction_ML_Syntax.mlsig,
-                                       FStar_Extraction_ML_Syntax.mlmodule)
-                                       FStar_Pervasives_Native.tuple2
-                                       FStar_Pervasives_Native.option,
-    FStar_Extraction_ML_Syntax.mllib) FStar_Pervasives_Native.tuple3 -> 
-    file)
+  (FStar_Extraction_ML_Syntax.mlpath * (FStar_Extraction_ML_Syntax.mlsig *
+    FStar_Extraction_ML_Syntax.mlmodule) FStar_Pervasives_Native.option *
+    FStar_Extraction_ML_Syntax.mllib) -> file)
   =
   fun uu____4873  ->
     match uu____4873 with
@@ -1611,14 +1523,14 @@ and (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
 
 and (translate_binders :
   env ->
-    (FStar_Extraction_ML_Syntax.mlident,FStar_Extraction_ML_Syntax.mlty)
-      FStar_Pervasives_Native.tuple2 Prims.list -> binder Prims.list)
+    (FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty)
+      Prims.list -> binder Prims.list)
   = fun env  -> fun args  -> FStar_List.map (translate_binder env) args
 
 and (translate_binder :
   env ->
-    (FStar_Extraction_ML_Syntax.mlident,FStar_Extraction_ML_Syntax.mlty)
-      FStar_Pervasives_Native.tuple2 -> binder)
+    (FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty) ->
+      binder)
   =
   fun env  ->
     fun uu____6458  ->
@@ -2654,19 +2566,17 @@ and (assert_lid : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
 
 and (translate_branches :
   env ->
-    (FStar_Extraction_ML_Syntax.mlpattern,FStar_Extraction_ML_Syntax.mlexpr
-                                            FStar_Pervasives_Native.option,
-      FStar_Extraction_ML_Syntax.mlexpr) FStar_Pervasives_Native.tuple3
-      Prims.list -> (pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list)
+    (FStar_Extraction_ML_Syntax.mlpattern * FStar_Extraction_ML_Syntax.mlexpr
+      FStar_Pervasives_Native.option * FStar_Extraction_ML_Syntax.mlexpr)
+      Prims.list -> (pattern * expr) Prims.list)
   =
   fun env  -> fun branches  -> FStar_List.map (translate_branch env) branches
 
 and (translate_branch :
   env ->
-    (FStar_Extraction_ML_Syntax.mlpattern,FStar_Extraction_ML_Syntax.mlexpr
-                                            FStar_Pervasives_Native.option,
-      FStar_Extraction_ML_Syntax.mlexpr) FStar_Pervasives_Native.tuple3 ->
-      (pattern,expr) FStar_Pervasives_Native.tuple2)
+    (FStar_Extraction_ML_Syntax.mlpattern * FStar_Extraction_ML_Syntax.mlexpr
+      FStar_Pervasives_Native.option * FStar_Extraction_ML_Syntax.mlexpr) ->
+      (pattern * expr))
   =
   fun env  ->
     fun uu____8176  ->
@@ -2682,8 +2592,8 @@ and (translate_branch :
           else failwith "todo: translate_branch"
 
 and (translate_width :
-  (FStar_Const.signedness,FStar_Const.width) FStar_Pervasives_Native.tuple2
-    FStar_Pervasives_Native.option -> width)
+  (FStar_Const.signedness * FStar_Const.width) FStar_Pervasives_Native.option
+    -> width)
   =
   fun uu___287_8222  ->
     match uu___287_8222 with
@@ -2706,10 +2616,7 @@ and (translate_width :
         -> UInt64
 
 and (translate_pat :
-  env ->
-    FStar_Extraction_ML_Syntax.mlpattern ->
-      (env,pattern) FStar_Pervasives_Native.tuple2)
-  =
+  env -> FStar_Extraction_ML_Syntax.mlpattern -> (env * pattern)) =
   fun env  ->
     fun p  ->
       match p with

@@ -14,7 +14,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e5b8a13850dddd4ac9080f8adfaae581"
+      "5b2634c4d83243ebd808e2e831783d45"
     ],
     [
       "Bug138.foo",
@@ -27,7 +27,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7c6c9102bb374c1c5ca3271416522a9a"
+      "ecdd65810614460bea5f16ec0d9efa9c"
     ],
     [
       "Bug138.arg_precede",
@@ -39,7 +39,7 @@
         "disc_equation_Bug138.Foo", "fuel_guarded_inversion_Bug138.arg"
       ],
       0,
-      "c1a6a381947f979c0da993de4d21fdbe"
+      "cd2327782dcdfafb24b9fd3962cd00a0"
     ],
     [
       "Bug138.foo_bar",
@@ -61,7 +61,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8d8451654364ee2383c3cfa02739f0da"
+      "becd9ea058b874c847ad4bdfc7f4d652"
     ]
   ]
 ]

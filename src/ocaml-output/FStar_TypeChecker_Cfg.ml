@@ -3046,9 +3046,7 @@ let (primop_time_report : unit -> Prims.string) =
                Prims.strcat uu____13162 rest) pairs1 ""
   
 let (plugins :
-  (primitive_step -> unit,unit -> primitive_step Prims.list)
-    FStar_Pervasives_Native.tuple2)
-  =
+  ((primitive_step -> unit) * (unit -> primitive_step Prims.list))) =
   let plugins = FStar_Util.mk_ref []  in
   let register p =
     let uu____13197 =

@@ -121,8 +121,7 @@ let (goal_to_string_verbose : FStar_Tactics_Types.goal -> Prims.string) =
   
 let (goal_to_string :
   Prims.string ->
-    (Prims.int,Prims.int) FStar_Pervasives_Native.tuple2
-      FStar_Pervasives_Native.option ->
+    (Prims.int * Prims.int) FStar_Pervasives_Native.option ->
       FStar_Tactics_Types.proofstate ->
         FStar_Tactics_Types.goal -> Prims.string)
   =
@@ -232,9 +231,7 @@ let (debugging : unit -> Prims.bool tac) =
          ret uu____603)
   
 let (ps_to_string :
-  (Prims.string,FStar_Tactics_Types.proofstate)
-    FStar_Pervasives_Native.tuple2 -> Prims.string)
-  =
+  (Prims.string * FStar_Tactics_Types.proofstate) -> Prims.string) =
   fun uu____618  ->
     match uu____618 with
     | (msg,ps) ->
@@ -351,9 +348,7 @@ let (goal_to_json : FStar_Tactics_Types.goal -> FStar_Util.json) =
     FStar_Util.JsonAssoc uu____765
   
 let (ps_to_json :
-  (Prims.string,FStar_Tactics_Types.proofstate)
-    FStar_Pervasives_Native.tuple2 -> FStar_Util.json)
-  =
+  (Prims.string * FStar_Tactics_Types.proofstate) -> FStar_Util.json) =
   fun uu____881  ->
     match uu____881 with
     | (msg,ps) ->
@@ -1176,8 +1171,7 @@ let (new_uvar :
   Prims.string ->
     env ->
       FStar_Reflection_Data.typ ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.ctx_uvar)
-          FStar_Pervasives_Native.tuple2 tac)
+        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar) tac)
   =
   fun reason  ->
     fun env  ->
@@ -1343,8 +1337,8 @@ let (mk_irrelevant_goal :
 let (__tc :
   env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Reflection_Data.typ,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3 tac)
+      (FStar_Syntax_Syntax.term * FStar_Reflection_Data.typ *
+        FStar_TypeChecker_Env.guard_t) tac)
   =
   fun e  ->
     fun t  ->
@@ -1476,8 +1470,8 @@ let (__tc :
 let (__tc_ghost :
   env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Reflection_Data.typ,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3 tac)
+      (FStar_Syntax_Syntax.term * FStar_Reflection_Data.typ *
+        FStar_TypeChecker_Env.guard_t) tac)
   =
   fun e  ->
     fun t  ->
@@ -1613,8 +1607,8 @@ let (__tc_ghost :
 let (__tc_lax :
   env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Reflection_Data.typ,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple3 tac)
+      (FStar_Syntax_Syntax.term * FStar_Reflection_Data.typ *
+        FStar_TypeChecker_Env.guard_t) tac)
   =
   fun e  ->
     fun t  ->
@@ -2140,11 +2134,7 @@ let (trivial : unit -> unit tac) =
               tts uu____3441 uu____3442  in
             fail1 "Not a trivial goal: %s" uu____3439))
   
-let divide :
-  'a 'b .
-    FStar_BigInt.t ->
-      'a tac -> 'b tac -> ('a,'b) FStar_Pervasives_Native.tuple2 tac
-  =
+let divide : 'a 'b . FStar_BigInt.t -> 'a tac -> 'b tac -> ('a * 'b) tac =
   fun n1  ->
     fun l  ->
       fun r  ->
@@ -2380,10 +2370,7 @@ let (intro : unit -> FStar_Syntax_Syntax.binder tac) =
     FStar_All.pipe_left (wrap_err "intro") uu____3848
   
 let (intro_rec :
-  unit ->
-    (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.binder)
-      FStar_Pervasives_Native.tuple2 tac)
-  =
+  unit -> (FStar_Syntax_Syntax.binder * FStar_Syntax_Syntax.binder) tac) =
   fun uu____3981  ->
     let uu____3988 = cur_goal ()  in
     bind uu____3988
@@ -2783,13 +2770,13 @@ let rec mapM : 'a 'b . ('a -> 'b tac) -> 'a Prims.list -> 'b Prims.list tac =
                bind uu____4818 (fun ys  -> ret (y :: ys)))
   
 let rec (__try_match_by_application :
-  (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.aqual,FStar_Syntax_Syntax.ctx_uvar)
-    FStar_Pervasives_Native.tuple3 Prims.list ->
+  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
+    FStar_Syntax_Syntax.ctx_uvar) Prims.list ->
     env ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
-          (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.aqual,FStar_Syntax_Syntax.ctx_uvar)
-            FStar_Pervasives_Native.tuple3 Prims.list tac)
+          (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
+            FStar_Syntax_Syntax.ctx_uvar) Prims.list tac)
   =
   fun acc  ->
     fun e  ->
@@ -2841,8 +2828,8 @@ let (try_match_by_application :
   env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.aqual,FStar_Syntax_Syntax.ctx_uvar)
-          FStar_Pervasives_Native.tuple3 Prims.list tac)
+        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual *
+          FStar_Syntax_Syntax.ctx_uvar) Prims.list tac)
   = fun e  -> fun ty1  -> fun ty2  -> __try_match_by_application [] e ty1 ty2 
 let (t_apply : Prims.bool -> FStar_Syntax_Syntax.term -> unit tac) =
   fun uopt  ->
@@ -2953,8 +2940,8 @@ let (t_apply : Prims.bool -> FStar_Syntax_Syntax.term -> unit tac) =
   
 let (lemma_or_sq :
   FStar_Syntax_Syntax.comp ->
-    (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.option)
   =
   fun c  ->
     let ct = FStar_Syntax_Util.comp_to_comp_typ_nouniv c  in
@@ -3629,8 +3616,8 @@ let (apply_lemma : FStar_Syntax_Syntax.term -> unit tac) =
   
 let (destruct_eq' :
   FStar_Reflection_Data.typ ->
-    (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.option)
   =
   fun typ  ->
     let uu____6528 = FStar_Syntax_Util.destruct_typ_as_formula typ  in
@@ -3644,8 +3631,8 @@ let (destruct_eq' :
   
 let (destruct_eq :
   FStar_Reflection_Data.typ ->
-    (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.option)
   =
   fun typ  ->
     let uu____6628 = destruct_eq' typ  in
@@ -3660,8 +3647,8 @@ let (destruct_eq :
 let (split_env :
   FStar_Syntax_Syntax.bv ->
     env ->
-      (env,FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.bv Prims.list)
-        FStar_Pervasives_Native.tuple3 FStar_Pervasives_Native.option)
+      (env * FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.bv Prims.list)
+        FStar_Pervasives_Native.option)
   =
   fun bvar  ->
     fun e  ->
@@ -4644,7 +4631,7 @@ let (globalStop : FStar_BigInt.bigint) =
 type rewrite_result = Prims.bool
 let (skipThisTerm : Prims.bool) = false 
 let (rewroteThisTerm : Prims.bool) = true 
-type 'a ctrl_tac = ('a,ctrl) FStar_Pervasives_Native.tuple2 tac
+type 'a ctrl_tac = ('a * ctrl) tac
 let rec (ctrl_tac_fold :
   (env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term ctrl_tac) ->
     env ->
@@ -5007,9 +4994,8 @@ let (rewrite_rec :
                                                    focus uu____9864)))))))
   
 let (topdown_rewrite :
-  (FStar_Syntax_Syntax.term ->
-     (Prims.bool,FStar_BigInt.t) FStar_Pervasives_Native.tuple2 tac)
-    -> unit tac -> unit tac)
+  (FStar_Syntax_Syntax.term -> (Prims.bool * FStar_BigInt.t) tac) ->
+    unit tac -> unit tac)
   =
   fun ctrl  ->
     fun rewriter  ->
@@ -5260,9 +5246,7 @@ let rec longest_prefix :
   'a .
     ('a -> 'a -> Prims.bool) ->
       'a Prims.list ->
-        'a Prims.list ->
-          ('a Prims.list,'a Prims.list,'a Prims.list)
-            FStar_Pervasives_Native.tuple3
+        'a Prims.list -> ('a Prims.list * 'a Prims.list * 'a Prims.list)
   =
   fun f  ->
     fun l1  ->
@@ -5491,8 +5475,7 @@ let (join : unit -> unit tac) =
   
 let (cases :
   FStar_Syntax_Syntax.term ->
-    (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-      FStar_Pervasives_Native.tuple2 tac)
+    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term) tac)
   =
   fun t  ->
     let uu____10881 =
@@ -5978,8 +5961,7 @@ let failwhen : 'a . Prims.bool -> Prims.string -> (unit -> 'a tac) -> 'a tac
   = fun b  -> fun msg  -> fun k  -> if b then fail msg else k () 
 let (t_destruct :
   FStar_Syntax_Syntax.term ->
-    (FStar_Syntax_Syntax.fv,FStar_BigInt.t) FStar_Pervasives_Native.tuple2
-      Prims.list tac)
+    (FStar_Syntax_Syntax.fv * FStar_BigInt.t) Prims.list tac)
   =
   fun s_tm  ->
     let uu____12043 =
@@ -6996,8 +6978,7 @@ let (lset :
 let (goal_of_goal_ty :
   env ->
     FStar_Reflection_Data.typ ->
-      (FStar_Tactics_Types.goal,FStar_TypeChecker_Env.guard_t)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Tactics_Types.goal * FStar_TypeChecker_Env.guard_t))
   =
   fun env  ->
     fun typ  ->
@@ -7021,8 +7002,7 @@ let (proofstate_of_goal_ty :
   FStar_Range.range ->
     env ->
       FStar_Reflection_Data.typ ->
-        (FStar_Tactics_Types.proofstate,FStar_Syntax_Syntax.term)
-          FStar_Pervasives_Native.tuple2)
+        (FStar_Tactics_Types.proofstate * FStar_Syntax_Syntax.term))
   =
   fun rng  ->
     fun env  ->

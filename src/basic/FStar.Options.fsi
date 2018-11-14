@@ -142,6 +142,7 @@ val indent                      : unit    -> bool
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
 val interactive                 : unit    -> bool
+val keep_query_captions         : unit    -> bool
 val lax                         : unit    -> bool
 val load                        : unit    -> list<string>
 val legacy_interactive          : unit    -> bool
