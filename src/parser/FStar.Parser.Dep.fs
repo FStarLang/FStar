@@ -121,9 +121,7 @@ type dependences = list<dependence>
 let empty_dependences = []
 type dep_node = {
     edges:dependences;
-    color:color;
-    friends:list<module_name>;
-    interfaces_needing_inlining:list<module_name>
+    color:color
 }
 type dependence_graph = //maps file names to the modules it depends on
      | Deps of smap<dep_node> //(dependences * color)>
@@ -1007,8 +1005,6 @@ let collect (all_cmd_line_files: list<file_name>)
       let dep_node : dep_node = {
         edges = List.unique deps;
         color = White;
-        friends = [];
-        interfaces_needing_inlining = []
       } in
       deps_add_dep dep_graph file_name dep_node;
       List.iter

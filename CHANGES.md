@@ -86,6 +86,9 @@ Guidelines for the changelog:
    comments; otherwise comments are not printed. Note, the comments
    can be quite verbose.
 
+   `--already_cached "(* | [+|-]namespace)*"`, insists that .checked files be
+   present or absent for modules that match the namespace pattern provided.
+
 ## Type inference
 
    We had a significant overhaul of the type inference algorithm and
