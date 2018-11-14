@@ -1105,7 +1105,7 @@ let deps_of deps (f:file_name)
     dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
 
 (* In public interface *)
-let hash_dependences deps fn =
+let hash_dependences deps fn cache_file =
     let file_system_map = deps.file_system_map in
     let all_cmd_line_files = deps.cmd_line_files in
     let deps = deps.dep_graph in
@@ -1114,7 +1114,6 @@ let hash_dependences deps fn =
         | Some fn -> fn
         | _ -> fn
     in
-    let cache_file = cache_file_name fn in
     let digest_of_file fn =
         if Options.debug_any()
         then BU.print2 "%s: contains digest of %s\n" cache_file fn;
@@ -1142,17 +1141,14 @@ let hash_dependences deps fn =
         | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
           let digest =
-            let fn = cache_file_name fn in
-            if BU.file_exists fn
-            then Some (digest_of_file fn)
-            else match FStar.Options.find_file (FStar.Util.basename fn) with
-                 | None -> None
-                 | Some fn -> Some (digest_of_file fn)
+            match FStar.Options.find_file (FStar.Util.basename (cache_file_name fn)) with
+            | None -> None
+            | Some fn -> Some (digest_of_file fn)
           in
           match digest with
           | None ->
             if Options.debug_any()
-            then BU.print2 "%s: missed digest of file %s\n" cache_file (cache_file_name fn);
+            then BU.print2 "%s: missed digest of file %s\n" cache_file (FStar.Util.basename (cache_file_name fn));
             None
           | Some dig ->
             hash_deps ((lowercase_module_name fn, dig) :: out) deps
