@@ -16,6 +16,24 @@
 
 module LowStar.Regional
 
+(**
+ * This module defines what is conceptually a typeclass called
+ * `regional` (although it is not syntactically marked as a `class`
+ * yet).
+ *
+ * `regional a` is the the class of types whose values have explicit
+ * memory allocations confined spatially within a single heap region
+ * in the hyperstack memory model.
+ *
+ * Being confined to a region, values of regional types support a
+ * natural framing principles: state mutations that do not overlap
+ * with a regional value's region are noninterfering.
+ *
+ * Instances of regional types are given for buffers and vectors:
+ * See LowStar.Regional.Instances, LowStar.RVector for samples.
+ *
+ *)
+
 open LowStar.Modifies
 
 module HS = FStar.HyperStack
@@ -41,7 +59,7 @@ noeq type regional a =
     r_inv_reg:
       (h:HS.mem -> v:a ->
       Lemma (requires (r_inv h v))
-	    (ensures (HS.live_region h (region_of v)))) ->
+            (ensures (HS.live_region h (region_of v)))) ->
 
     // A representation type of `a` and a corresponding conversion function
     repr: Type0 ->
@@ -52,9 +70,9 @@ noeq type regional a =
     r_sep:
       (v:a -> p:loc -> h:HS.mem -> h':HS.mem ->
       Lemma (requires (r_inv h v /\
-		      loc_disjoint (loc_all_regions_from false (region_of v)) p /\
-		      modifies p h h'))
-	    (ensures (r_inv h' v /\ r_repr h v == r_repr h' v))) ->
+                      loc_disjoint (loc_all_regions_from false (region_of v)) p /\
+                      modifies p h h'))
+            (ensures (r_inv h' v /\ r_repr h v == r_repr h' v))) ->
 
     /// Allocation
     // The representation for the initial value of type `a`
@@ -68,21 +86,20 @@ noeq type regional a =
     // defined, and each of them can be used properly.
     r_alloc: (r:HST.erid ->
       HST.ST a
-	(requires (fun h0 -> True))
-	(ensures (fun h0 v h1 ->
-	  Set.subset (Map.domain (HS.get_hmap h0))
-	  	     (Map.domain (HS.get_hmap h1)) /\
-	  modifies loc_none h0 h1 /\ 
-	  r_alloc_p v /\ r_inv h1 v /\ region_of v == r /\
-	  r_repr h1 v == Ghost.reveal irepr))) ->
+        (requires (fun h0 -> True))
+        (ensures (fun h0 v h1 ->
+          Set.subset (Map.domain (HS.get_hmap h0))
+                     (Map.domain (HS.get_hmap h1)) /\
+          modifies loc_none h0 h1 /\
+          r_alloc_p v /\ r_inv h1 v /\ region_of v == r /\
+          r_repr h1 v == Ghost.reveal irepr))) ->
 
     // Destruction: note that it allows to `modify` all the regions, including
-    // its subregions. It is fair when we want to `free` a vector and its 
+    // its subregions. It is fair when we want to `free` a vector and its
     // elements as well, assuming the elements belong to subregions.
     r_free: (v:a ->
       HST.ST unit
-	(requires (fun h0 -> r_inv h0 v))
-	(ensures (fun h0 _ h1 ->
-	  modifies (loc_all_regions_from false (region_of v)) h0 h1))) ->
+        (requires (fun h0 -> r_inv h0 v))
+        (ensures (fun h0 _ h1 ->
+          modifies (loc_all_regions_from false (region_of v)) h0 h1))) ->
     regional a
-
