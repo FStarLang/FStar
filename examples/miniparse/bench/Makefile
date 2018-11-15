@@ -37,6 +37,6 @@ Bench.%.fst: ./makemini.sh MiniStub.fst
 	./makemini.sh $@
 
 _cache/Bench.%.fst.checked: Bench.%.fst
-	$(FSTAR) --cache_off --odir _output --cache_dir _cache $< --include ..
+	$(FSTAR) --cache_off --odir _output --cache_dir _cache $< $(addprefix --include ,$(INCLUDE_PATHS))
 
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))

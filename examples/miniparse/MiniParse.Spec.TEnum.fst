@@ -154,7 +154,8 @@ val synth_inverse_forall_bounded_u16_intro
 : Tot (u' : squash (synth_inverse f2 f1))
 
 let synth_inverse_forall_bounded_u16_intro b t f1 f2 u
-= Classical.forall_intro (Classical.move_requires (forall_bounded_u16_elim b (synth_inverse_forall_bounded_u16_pred b t f1 f2)))
+= Classical.forall_intro (Classical.move_requires (forall_bounded_u16_elim b (synth_inverse_forall_bounded_u16_pred b t f1 f2)));
+  synth_inverse_intro f2 f1
 
 let synth_inverse_forall_tenum_solve' () : T.Tac unit =
   T.norm [delta; zeta; iota; primops];

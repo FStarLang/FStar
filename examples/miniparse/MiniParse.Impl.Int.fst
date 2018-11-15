@@ -54,16 +54,12 @@ let parse_bounded_u16_impl
   (b: nat)
 : Tot (parser_impl (parse_bounded_u16 b)) =
   if b >= 65536
-  then (fun input len -> parse_synth_impl parse_u16_impl (fun x -> x <: bounded_u16 b) (fun x -> x <: bounded_u16 b) (fun x -> x) () input len)
+  then
+    (parse_filter_impl parse_u16_impl (bounded_u16_pred b) (fun x -> true))
   else
     [@inline_let]
     let b' = U16.uint_to_t b in
-    parse_synth_impl
-      (parse_filter_impl parse_u16_impl (fun x -> U16.v x < b) (fun x -> x `U16.lt` b'))
-      (fun x -> x <: bounded_u16 b)
-      (fun x -> x <: bounded_u16 b)
-      (fun x -> x)
-      ()
+    (parse_filter_impl parse_u16_impl (bounded_u16_pred b) (fun x -> x `U16.lt` b'))
 
 #reset-options
 

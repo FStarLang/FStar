@@ -11,6 +11,7 @@ module Seq = FStar.Seq
 inline_for_extraction
 let buffer8 = B.buffer U8.t
 
+[@unifier_hint_injective]
 inline_for_extraction
 let parser_impl
   (#t: Type0)
@@ -36,6 +37,7 @@ let coerce_parser_impl
 : Tot (parser_impl (coerce_parser t2 p))
 = p32
 
+[@unifier_hint_injective]
 inline_for_extraction
 let serializer_impl
   (#t: Type0)

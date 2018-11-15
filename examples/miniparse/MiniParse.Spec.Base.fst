@@ -219,6 +219,7 @@ let no_lookahead_ext
   ))
 = Classical.forall_intro_2 (fun b1 -> Classical.move_requires (no_lookahead_on_ext p1 p2 b1))
 
+[@unifier_hint_injective]
 noeq
 type parser_spec
   (t: Type0)
@@ -321,6 +322,7 @@ let serializer_correct_implies_complete
   in
   Classical.forall_intro (Classical.move_requires prf)
 
+[@unifier_hint_injective]
 noeq
 type serializer_spec
   (#t: Type0)

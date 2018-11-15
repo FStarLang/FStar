@@ -550,13 +550,49 @@ unfold
 let parse_fret (#t #t':Type) (f: t -> GTot t') (v:t) : Tot (parser_spec t') =
   Parser (parse_fret' f v)
 
+let apply_squash
+  (#a: Type)
+  (#b: a -> Tot Type)
+  ($f: squash ((x: a) -> Tot (squash (b x))))
+  (x: a)
+: Tot (squash (b x))
+= ()
+
+abstract
 let synth_inverse
   (#t1: Type0)
   (#t2: Type0)
   (f2: (t1 -> GTot t2))
   (g1: (t2 -> GTot t1))
 : GTot Type0
-= (forall (x : t2) . f2 (g1 x) == x)
+= squash ((x: t2) -> Tot (squash (f2 (g1 x) == x)))
+
+abstract
+let synth_inverse_elim
+  (#t1: Type0)
+  (#t2: Type0)
+  (f2: (t1 -> GTot t2))
+  (g1: (t2 -> GTot t1))
+  (x: t2)
+: Lemma
+  (requires (synth_inverse f2 g1))
+  (ensures (f2 (g1 x) == x))
+//  [SMTPat (synth_inverse f2 g1); SMTPat (f2 (g1 x))]
+= let f0 : squash (synth_inverse f2 g1) = () in
+  let f : synth_inverse f2 g1 = FStar.Squash.join_squash f0 in
+  apply_squash f x
+
+abstract
+let synth_inverse_elim'
+  (#t1: Type0)
+  (#t2: Type0)
+  (f2: (t1 -> GTot t2))
+  (g1: (t2 -> GTot t1))
+: Lemma
+  (requires (synth_inverse f2 g1))
+  (ensures (forall x . f2 (g1 x) == x))
+  [SMTPat (synth_inverse f2 g1)]
+= Classical.forall_intro (Classical.move_requires (synth_inverse_elim f2 g1))
 
 let parse_synth'
   (#t1: Type0)
@@ -626,6 +662,7 @@ val bare_serialize_synth_correct
 let bare_serialize_synth_correct #k #t1 p1 f2 s1 g1 =
   ()
 
+abstract
 let synth_inverse_intro
   (#t1: Type0)
   (#t2: Type0)
@@ -634,7 +671,8 @@ let synth_inverse_intro
 : Lemma
   (requires (forall (x : t2) . f2 (g1 x) == x))
   (ensures (synth_inverse f2 g1))
-= ()
+  [SMTPat (synth_inverse f2 g1)]
+= FStar.Squash.return_squash (fun (x: t2) -> (() <: squash (f2 (g1 x) == x)))
 
 let serialize_synth
   (#t1: Type0)
@@ -674,24 +712,28 @@ let lift_parser
 
 (** Refinements *)
 
+[@unifier_hint_injective]
+let filter_t (#t: Type) (p: (t -> GTot bool)) =
+  (x: t { p x == true } )
+
 let parse_filter_payload
   (#t: Type0)
   (f: (t -> GTot bool))
   (v: t)
-: Tot (parser_spec (x: t { f x == true }))
+: Tot (parser_spec (filter_t f))
 = lift_parser (fun () ->
     if f v
     then
-      let v' : (x: t { f x == true } ) = v in
+      let v' : (x: filter_t f) = v in
       (parse_ret v')
-    else fail_parser (x: t {f x == true} )
+    else fail_parser (x: filter_t f)
   )
 
 let parse_filter
   (#t: Type0)
   (p: parser_spec t)
   (f: (t -> GTot bool))
-: Tot (parser_spec (x: t { f x == true }))
+: Tot (parser_spec (filter_t f))
 = p `and_then` (parse_filter_payload f)
 
 let serialize_filter'
@@ -699,8 +741,8 @@ let serialize_filter'
   (#p: parser_spec t)
   (s: serializer_spec p)
   (f: (t -> GTot bool))
-: Tot (bare_serializer (x: t { f x == true } ))
-= fun (input: t { f input == true } ) -> serialize s input
+: Tot (bare_serializer (filter_t f))
+= fun (input: filter_t f) -> serialize s input
 
 let serialize_filter
   (#t: Type0)

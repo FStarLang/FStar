@@ -155,7 +155,7 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
         | Some _ -> ()
         | _ ->
           if T.debugging () then
-            T.dump "MUST USE SMT FOR THIS ONE";
+            T.fail "MUST USE SMT FOR THIS ONE";
           T.smt ();
           tsuccess "smt"
         end

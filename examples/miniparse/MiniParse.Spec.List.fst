@@ -41,12 +41,12 @@ let synth_nlist_recip (#t: Type) (n: nat) (xy: nlist (n + 1) t) : Tot (t * nlist
 // abstract
 let synth_inverse_1 (t: Type) (n: nat) : Lemma
   (synth_inverse (synth_nlist #t n) (synth_nlist_recip n))
-= ()
+= (synth_inverse_intro (synth_nlist #t n) (synth_nlist_recip n))
 
 // abstract
 let synth_inverse_2 (t: Type) (n: nat) : Lemma
   (synth_inverse (synth_nlist_recip #t n) (synth_nlist n))
-= ()
+= (synth_inverse_intro (synth_nlist_recip #t n) (synth_nlist n))
 
 let rec parse_nlist'
   (n: nat)
@@ -56,6 +56,8 @@ let rec parse_nlist'
 = if n = 0
   then parse_ret nlist_nil
   else begin
+    synth_inverse_1 t (n - 1);
+    synth_inverse_2 t (n - 1);
     parse_synth
       (p `nondep_then` parse_nlist' (n - 1) p)
       (synth_nlist (n - 1))
@@ -91,6 +93,8 @@ let parse_nlist_eq
 = if n = 0
   then ()
   else begin
+    synth_inverse_1 t (n - 1);
+    synth_inverse_2 t (n - 1);
     parse_synth_eq
       (p `nondep_then` parse_nlist' (n - 1) p)
       (synth_nlist (n - 1))

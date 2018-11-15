@@ -27,8 +27,10 @@ let serialize_u16 : serializer_spec parse_u16 = Serializer serialize_u16'
 inline_for_extraction
 let mk_u16 (n: nat { n < 65536 } ) : Tot U16.t = U16.uint_to_t n
 
+let bounded_u16_pred (b: nat) (x: U16.t) : GTot bool = U16.v x < b
+
 inline_for_extraction
-let bounded_u16 (b: nat) : Tot eqtype = (x: U16.t { U16.v x < b } )
+let bounded_u16 (b: nat) : Tot eqtype = filter_t (bounded_u16_pred b)
 
 inline_for_extraction
 let bounded_fun (a: Type) (b: nat) : Tot Type =
@@ -102,14 +104,7 @@ let bounded_u16_eq (b: nat) : Tot (bounded_u16 b -> bounded_u16 b -> Tot bool) =
   op_Equality
 
 let parse_bounded_u16 (b: nat) : Tot (parser_spec (bounded_u16 b)) =
-  parse_synth
-    (parse_filter parse_u16 (fun x -> U16.v x < b))
-    (fun x -> x <: bounded_u16 b)
-    (fun x -> x)
+  (parse_filter parse_u16 (bounded_u16_pred b))
 
 let serialize_bounded_u16 (b: nat) : Tot (serializer_spec (parse_bounded_u16 b)) =
-  serialize_synth
-    (serialize_filter serialize_u16 (fun x -> U16.v x < b))
-    (fun x -> x <: bounded_u16 b)
-    (fun x -> x)
-    ()
+  (serialize_filter serialize_u16 (bounded_u16_pred b))
