@@ -327,8 +327,8 @@ let do_unify env t1 t2 : tac<bool> =
     bind (__do_unify env t1 t2) (fun r ->
     if Env.debug env (Options.Other "1346") then
         Options.pop ();
-    bind compress_implicits (fun _ ->
-    ret r)))
+    (* bind compress_implicits (fun _ -> *)
+    ret r))
 
 let remove_solved_goals : tac<unit> =
     bind get (fun ps ->
