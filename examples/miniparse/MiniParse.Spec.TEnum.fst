@@ -275,3 +275,54 @@ let gen_enum_parser (pol: T.guard_policy) (enum: T.term) : T.Tac unit =
     synth_inverse_forall_bounded_u16_solve;
     synth_inverse_forall_tenum_solve;
   ])
+
+let gen_enum_parser2' (enum: T.term) : T.Tac T.term =
+  let bound = tenum_bound' enum in
+  let f = gen_synth_bounded' enum in
+  let val_t = T.mk_app (`bounded_u16) [bound, T.Q_Explicit] in
+  let val_eq = T.mk_app (`bounded_u16_eq) [bound, T.Q_Explicit] in
+  let g = invert_function' enum val_t val_eq f in
+  let pbound = T.mk_app (`parse_bounded_u16) [bound, T.Q_Explicit] in
+  let vf_arg = T.fresh_binder enum in
+  let vf = T.fresh_binder (T.mk_tot_arr [vf_arg] val_t) in
+  let vg_arg = T.fresh_binder val_t in
+  let vg = T.fresh_binder (T.mk_tot_arr [vg_arg] enum) in
+  let vf_tm = T.binder_to_term vf in
+  let vg_tm = T.binder_to_term vg in
+  let p' =
+    T.mk_app (`parse_synth) [
+      val_t, T.Q_Implicit;
+      enum, T.Q_Implicit;
+      pbound, T.Q_Explicit;
+      vg_tm, T.Q_Explicit;
+      vf_tm, T.Q_Explicit;
+    ]
+  in
+  let synth_inv =
+    T.mk_app (`synth_inverse) [
+      enum, T.Q_Implicit;
+      val_t, T.Q_Implicit;
+      vf_tm, T.Q_Explicit;
+      vg_tm, T.Q_Explicit;
+    ]
+  in
+  let vu = T.fresh_binder (T.mk_app (`squash) [synth_inv, T.Q_Explicit]) in
+  let tac =
+    T.mk_app (`T.assert_by_tactic) [
+      synth_inv, T.Q_Explicit;
+      (`synth_inverse_forall_bounded_u16_solve), T.Q_Explicit;
+    ]
+  in
+  let p =
+    T.pack (T.Tv_Let false (T.bv_of_binder vf) f (
+      T.pack (T.Tv_Let false (T.bv_of_binder vg) g (
+        T.pack (T.Tv_Let false (T.bv_of_binder vu) tac (
+          p'
+    ))))))
+  in
+  T.print (T.term_to_string p);
+  p
+
+let gen_enum_parser2 (pol: T.guard_policy) (enum: T.term) : T.Tac unit =
+  T.exact_guard (gen_enum_parser2' enum);
+  according_to pol tconclude
