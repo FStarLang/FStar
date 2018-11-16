@@ -158,6 +158,7 @@ let synth_inverse_forall_bounded_u16_intro b t f1 f2 u
   synth_inverse_intro f2 f1
 
 let synth_inverse_forall_tenum_solve' () : T.Tac unit =
+  T.apply (`synth_inverse_intro');
   T.norm [delta; zeta; iota; primops];
   let x = tforall_intro () in
   T.destruct (T.pack (T.Tv_Var (T.bv_of_binder x)));

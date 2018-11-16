@@ -674,6 +674,16 @@ let synth_inverse_intro
   [SMTPat (synth_inverse f2 g1)]
 = FStar.Squash.return_squash (fun (x: t2) -> (() <: squash (f2 (g1 x) == x)))
 
+abstract
+let synth_inverse_intro'
+  (#t1: Type0)
+  (#t2: Type0)
+  (f2: (t1 -> GTot t2))
+  (g1: (t2 -> GTot t1))
+  (u: squash (forall (x : t2) . f2 (g1 x) == x))
+: Tot (squash (synth_inverse f2 g1))
+= synth_inverse_intro f2 g1
+
 let serialize_synth
   (#t1: Type0)
   (#t2: Type0)
