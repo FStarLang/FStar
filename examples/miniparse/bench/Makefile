@@ -10,7 +10,7 @@ POLYS= $(foreach SIZE, 4 7 10,\
        $(foreach POLICY, Goal ,\
        Bench.MiniParse.Size$(SIZE).Factor1.Seed00.$(POLICY).fst )) \
  $(foreach SIZE, 4 7 10,\
-       $(foreach FACTOR, 64 256 1024,\
+       $(foreach FACTOR, 64,\
        $(foreach SE, 0,\
        $(foreach ED, 0,\
        $(foreach POLICY, SMT ,\

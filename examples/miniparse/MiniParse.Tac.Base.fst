@@ -174,9 +174,15 @@ let rec tconclude_with (l: list (unit -> T.Tac unit)) : T.Tac unit =
   end else T.debug "No goals left"
 
 let tconclude () : T.Tac unit = tconclude_with []
-
+  
 let according_to (pol: T.guard_policy) (t: (unit -> T.Tac unit)) : T.Tac unit =
   match pol with
-  | T.SMT -> to_all_goals T.smt
+  | T.SMT -> 
+    to_all_goals 
+      (fun () -> T.prune "MiniParse"; 
+              T.addns "MiniParse.Spec.Combinators";
+              T.addns "MiniParse.Spec.Int";
+              T.addns "MiniParse.Tac.Base";
+              T.smt())
   | T.Drop -> to_all_goals T.tadmit
   | _ -> T.with_policy pol t
