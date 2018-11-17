@@ -4,7 +4,7 @@ open MiniParse.Tac.Impl
 
 module T = FStar.Tactics
 
-#reset-options "--z3rlimit 1 --z3rlimit_factor __FACTOR__ --z3seed __SEED__"
+#reset-options "--z3rlimit 1 --z3rlimit_factor __FACTOR__ --z3seed __SEED__ --using_facts_from '* prims FStar -MiniParse MiniParse.Spec.Combinators MiniParse.Spec.Int MiniParse.Tac.Base'"
 #set-options "--hint_info"
 #set-options "--tactics_info"
 #set-options "--log_queries"
