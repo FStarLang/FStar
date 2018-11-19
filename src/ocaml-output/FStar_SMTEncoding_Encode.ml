@@ -851,7 +851,7 @@ let (primitive_type_axioms :
               let uu____3626 =
                 let uu____3629 =
                   FStar_SMTEncoding_Util.mkITE
-                    (valid_a, b, FStar_SMTEncoding_Term.mk_Term_unit)
+                    (valid_a, b, FStar_SMTEncoding_Term.mk_Witness_term)
                    in
                 [uu____3629]  in
               a :: uu____3626  in
@@ -903,7 +903,8 @@ let (primitive_type_axioms :
                 let uu____3812 =
                   let uu____3813 =
                     let uu____3820 = FStar_SMTEncoding_Util.mkNot valid_a  in
-                    (uu____3820, b, FStar_SMTEncoding_Term.mk_Term_unit)  in
+                    (uu____3820, b, FStar_SMTEncoding_Term.mk_Witness_term)
+                     in
                   FStar_SMTEncoding_Util.mkITE uu____3813  in
                 [uu____3812]  in
               a :: uu____3809  in
@@ -954,7 +955,7 @@ let (primitive_type_axioms :
               let uu____4000 =
                 let uu____4003 =
                   FStar_SMTEncoding_Util.mkITE
-                    (valid_a, b, FStar_SMTEncoding_Term.mk_Term_unit)
+                    (valid_a, b, FStar_SMTEncoding_Term.mk_Witness_term)
                    in
                 [uu____4003]  in
               a :: uu____4000  in
