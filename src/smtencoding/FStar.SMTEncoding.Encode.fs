@@ -118,26 +118,45 @@ let pretype_axiom rng env tapp vars =
                          Some "pretyping",
                          (varops.mk_unique (module_name ^ "_pretyping_" ^ (BU.digest_of_string tapp_hash))))
 
-let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
+let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * env_t =
     let xx = ("x", Term_sort) in
     let x = mkFreeV xx in
 
     let yy = ("y", Term_sort) in
     let y = mkFreeV yy in
 
+    let wrap (f:env -> string -> term -> decls_t) = fun env s t ->
+      f env.tcenv s t, env
+    in
     let mk_unit : env -> string -> term -> decls_t = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
-        [Util.mkAssume(mk_HasType mk_Term_unit tt, Some "unit typing", "unit_typing");
+        [Util.mkAssume(mk_HasType mk_Term_unit tt,
+                       Some "unit typing",
+                       "unit_typing");
          Util.mkAssume(mkForall_fuel (Env.get_range env)
-                                     ([[typing_pred]], [xx], mkImp(typing_pred, mkEq(x, mk_Term_unit))),  Some "unit inversion", "unit_inversion");] in
+                                     ([[typing_pred]],
+                                       [xx],
+                                       mkImp(typing_pred, mkEq(x, mk_Term_unit))),
+                                     Some "unit inversion",
+                                     "unit_inversion");]
+    in
     let mk_bool : env -> string -> term -> decls_t = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         let bb = ("b", Bool_sort) in
         let b = mkFreeV bb in
         [Util.mkAssume(mkForall (Env.get_range env)
-                                ([[Term.boxBool b]], [bb], mk_HasType (Term.boxBool b) tt), Some "bool typing", "bool_typing");
+                                ([[Term.boxBool b]],
+                                  [bb],
+                                  mk_HasType (Term.boxBool b) tt),
+                                Some "bool typing",
+                                "bool_typing");
          Util.mkAssume(mkForall_fuel (Env.get_range env)
-                                     ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxBoolFun) x)), Some "bool inversion", "bool_inversion")] in
+                                     ([[typing_pred]],
+                                       [xx],
+                                       mkImp(typing_pred, mk_tester (fst boxBoolFun) x)),
+                                     Some "bool inversion",
+                                     "bool_inversion")]
+    in
     let mk_int : env -> string -> term -> decls_t  = fun env nm tt ->
         let lex_t = mkFreeV (text_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
@@ -147,30 +166,60 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let bb = ("b", Int_sort) in
         let b = mkFreeV bb in
         let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [lex_t; lex_t;y;x]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[Term.boxInt b]], [bb], mk_HasType (Term.boxInt b) tt), Some "int typing", "int_typing");
-         Util.mkAssume(mkForall_fuel (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxIntFun) x)), Some "int inversion", "int_inversion");
-         Util.mkAssume(mkForall_fuel (Env.get_range env) ([[typing_pred; typing_pred_y;precedes_y_x]],
-                                   [xx;yy],
-                                   mkImp(mk_and_l [typing_pred;
-                                                   typing_pred_y;
-                                                   mkGT (Term.unboxInt x, mkInteger' 0);
-                                                   mkGTE (Term.unboxInt y, mkInteger' 0);
-                                                   mkLT (Term.unboxInt y, Term.unboxInt x)],
-                                         precedes_y_x)),
-                                  Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[Term.boxInt b]], [bb], mk_HasType (Term.boxInt b) tt),
+                                Some "int typing",
+                                "int_typing");
+         Util.mkAssume(mkForall_fuel (Env.get_range env)
+                                     ([[typing_pred]],
+                                       [xx],
+                                       mkImp(typing_pred, mk_tester (fst boxIntFun) x)),
+                                     Some "int inversion",
+                                     "int_inversion");
+         Util.mkAssume(mkForall_fuel (Env.get_range env)
+                                     ([[typing_pred; typing_pred_y;precedes_y_x]],
+                                     [xx;yy],
+                                     mkImp(mk_and_l
+                                            [typing_pred;
+                                             typing_pred_y;
+                                             mkGT (Term.unboxInt x, mkInteger' 0);
+                                             mkGTE (Term.unboxInt y, mkInteger' 0);
+                                             mkLT (Term.unboxInt y, Term.unboxInt x)],
+                                           precedes_y_x)),
+                                  Some "well-founded ordering on nat (alt)",
+                                  "well-founded-ordering-on-nat")] in
     let mk_str : env -> string -> term -> decls_t  = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         let bb = ("b", String_sort) in
         let b = mkFreeV bb in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[Term.boxString b]], [bb], mk_HasType (Term.boxString b) tt), Some "string typing", "string_typing");
-         Util.mkAssume(mkForall_fuel (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxStringFun) x)),  Some "string inversion", "string_inversion")] in
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[Term.boxString b]],
+                                  [bb],
+                                  mk_HasType (Term.boxString b) tt),
+                                Some "string typing",
+                                "string_typing");
+         Util.mkAssume(mkForall_fuel (Env.get_range env)
+                                     ([[typing_pred]],
+                                       [xx],
+                                       mkImp(typing_pred, mk_tester (fst boxStringFun) x)),
+                                     Some "string inversion",
+                                     "string_inversion")] in
     let mk_true_interp : env -> string -> term -> decls_t = fun env nm true_tm ->
         let valid = mkApp("Valid", [true_tm]) in
-        [Util.mkAssume(valid, Some "True interpretation", "true_interp")] in
+        [Util.mkAssume(valid, Some "True interpretation", "true_interp")]
+    in
     let mk_false_interp : env -> string -> term -> decls_t = fun env nm false_tm ->
         let valid = mkApp("Valid", [false_tm]) in
-        [Util.mkAssume(mkIff(mkFalse, valid), Some "False interpretation", "false_interp")] in
-    let mk_and_interp : env -> string -> term -> decls_t = fun env conj _ ->
+        [Util.mkAssume(mkIff(mkFalse, valid), Some "False interpretation", "false_interp")]
+    in
+    let mk_macro_name s =
+        FStar.Ident.reserved_prefix ^ s
+    in
+    let bind_macro env lid macro_name =
+        let fvb = lookup_lid env lid in
+        push_free_var env lid fvb.smt_arity macro_name fvb.smt_token
+    in
+    let mk_and_interp : env_t -> string -> term -> decls_t * env_t = fun env conj _ ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let a = mkFreeV aa in
@@ -179,8 +228,29 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid = mkApp("Valid", [l_and_a_b]) in
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[l_and_a_b]], [aa;bb], mkIff(mkAnd(valid_a, valid_b), valid)), Some "/\ interpretation", "l_and-interp")] in
-    let mk_or_interp : env -> string -> term -> decls_t = fun env disj _ ->
+        (*
+             (define-fun l_and_macro  ((a Term) (b Term)) Term
+                         (l_and a (ite (Valid a) b mk_Term_unit)))
+
+        *)
+        let macro_name = mk_macro_name conj in
+        let macro =
+          mkDefineFun(macro_name,
+                      [aa;bb],
+                      Term_sort,
+                      mkApp(conj, [a; mkITE(valid_a, b, mk_Term_unit)]),
+                      Some "macro for embedded conjunction")
+        in
+        [Util.mkAssume(mkForall (Env.get_range env.tcenv)
+                                ([[l_and_a_b]],
+                                 [aa;bb],
+                                 mkIff(mkAnd(valid_a, valid_b), valid)),
+                                 Some "/\ interpretation",
+                                 "l_and-interp");
+         macro],
+         bind_macro env FStar.Parser.Const.and_lid macro_name
+    in
+    let mk_or_interp : env_t -> string -> term -> decls_t * env_t = fun env disj _ ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let a = mkFreeV aa in
@@ -189,7 +259,82 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid = mkApp("Valid", [l_or_a_b]) in
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[l_or_a_b]], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation", "l_or-interp")] in
+          (*
+             (define-fun l_or_macro  ((a Term) (b Term)) Term
+                         (l_or a (ite (not (Valid a)) b mk_Term_unit)))
+
+          *)
+        let macro_name = mk_macro_name disj in
+        let macro =
+          mkDefineFun(macro_name,
+                      [aa;bb],
+                      Term_sort,
+                      mkApp(disj, [a; mkITE(mkNot valid_a, b, mk_Term_unit)]),
+                      Some "macro for embedded disjunction")
+        in
+        [Util.mkAssume(mkForall (Env.get_range env.tcenv)
+                                ([[l_or_a_b]],
+                                 [aa;bb],
+                                 mkIff(mkOr(valid_a, valid_b), valid)),
+                                 Some "\/ interpretation",
+                                 "l_or-interp");
+         macro],
+         bind_macro env FStar.Parser.Const.or_lid macro_name
+    in
+    let mk_imp_interp : env_t -> string -> term -> decls_t * env_t = fun env imp tt ->
+        let aa = ("a", Term_sort) in
+        let bb = ("b", Term_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let l_imp_a_b = mkApp(imp, [a;b]) in
+        let valid = mkApp("Valid", [l_imp_a_b]) in
+        let valid_a = mkApp("Valid", [a]) in
+        let valid_b = mkApp("Valid", [b]) in
+          (*
+             (define-fun l_imp_macro  ((a Term) (b Term)) Term
+                         (l_imp a (ite (Valid a) b mk_Term_unit)))
+
+          *)
+        let macro_name = mk_macro_name imp in
+        let macro =
+          mkDefineFun(macro_name,
+                      [aa;bb],
+                      Term_sort,
+                      mkApp(imp, [a; mkITE(valid_a, b, mk_Term_unit)]),
+                      Some "macro for embedded implication")
+        in
+        [Util.mkAssume(mkForall (Env.get_range env.tcenv)
+                                ([[l_imp_a_b]], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)),
+                                Some "==> interpretation",
+                                "l_imp-interp");
+         macro],
+        bind_macro env FStar.Parser.Const.imp_lid macro_name
+    in
+    let mk_iff_interp : env -> string -> term -> decls_t = fun env iff tt ->
+        let aa = ("a", Term_sort) in
+        let bb = ("b", Term_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let l_iff_a_b = mkApp(iff, [a;b]) in
+        let valid = mkApp("Valid", [l_iff_a_b]) in
+        let valid_a = mkApp("Valid", [a]) in
+        let valid_b = mkApp("Valid", [b]) in
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[l_iff_a_b]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)),
+                                Some "<==> interpretation",
+                                "l_iff-interp")]
+    in
+    let mk_not_interp : env -> string -> term -> decls_t = fun env l_not tt ->
+        let aa = ("a", Term_sort) in
+        let a = mkFreeV aa in
+        let l_not_a = mkApp(l_not, [a]) in
+        let valid = mkApp("Valid", [l_not_a]) in
+        let not_valid_a = mkNot <| mkApp("Valid", [a]) in
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[l_not_a]], [aa], mkIff(not_valid_a, valid)),
+                                Some "not interpretation",
+                                "l_not-interp")]
+    in
     let mk_eq2_interp : env -> string -> term -> decls_t = fun env eq2 tt ->
         let aa = ("a", Term_sort) in
         let xx = ("x", Term_sort) in
@@ -199,7 +344,13 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let y = mkFreeV yy in
         let eq2_x_y = mkApp(eq2, [a;x;y]) in
         let valid = mkApp("Valid", [eq2_x_y]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[eq2_x_y]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", "eq2-interp")] in
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[eq2_x_y]],
+                                 [aa;xx;yy],
+                                 mkIff(mkEq(x, y), valid)),
+                                Some "Eq2 interpretation",
+                                "eq2-interp")]
+    in
     let mk_eq3_interp : env -> string -> term -> decls_t = fun env eq3 tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -211,63 +362,17 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let y = mkFreeV yy in
         let eq3_x_y = mkApp(eq3, [a;b;x;y]) in
         let valid = mkApp("Valid", [eq3_x_y]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[eq3_x_y]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq3 interpretation", "eq3-interp")] in
-    let mk_imp_interp : env -> string -> term -> decls_t = fun env imp tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let l_imp_a_b = mkApp(imp, [a;b]) in
-        let valid = mkApp("Valid", [l_imp_a_b]) in
-        let valid_a = mkApp("Valid", [a]) in
-        let valid_b = mkApp("Valid", [b]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[l_imp_a_b]], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)), Some "==> interpretation", "l_imp-interp")] in
-    let mk_iff_interp : env -> string -> term -> decls_t = fun env iff tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let l_iff_a_b = mkApp(iff, [a;b]) in
-        let valid = mkApp("Valid", [l_iff_a_b]) in
-        let valid_a = mkApp("Valid", [a]) in
-        let valid_b = mkApp("Valid", [b]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[l_iff_a_b]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)), Some "<==> interpretation", "l_iff-interp")] in
-    let mk_not_interp : env -> string -> term -> decls_t = fun env l_not tt ->
-        let aa = ("a", Term_sort) in
-        let a = mkFreeV aa in
-        let l_not_a = mkApp(l_not, [a]) in
-        let valid = mkApp("Valid", [l_not_a]) in
-        let not_valid_a = mkNot <| mkApp("Valid", [a]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
-    // let mk_forall_interp : env -> string -> term -> decls_t = fun env for_all tt ->
-    //     let aa = ("a", Term_sort) in
-    //     let bb = ("b", Term_sort) in
-    //     let xx = ("x", Term_sort) in
-    //     let a = mkFreeV aa in
-    //     let b = mkFreeV bb in
-    //     let x = mkFreeV xx in
-    //     let l_forall_a_b = mkApp(for_all, [a;b]) in
-    //     let valid = mkApp("Valid", [l_forall_a_b]) in
-    //     let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
-    //     [Util.mkAssume(mkForall (Env.get_range env) ([[l_forall_a_b]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
-    //                  Some "forall interpretation",
-    //                  "forall-interp")] in
-    // let mk_exists_interp : env -> string -> term -> decls_t = fun env for_some tt ->
-    //     let aa = ("a", Term_sort) in
-    //     let bb = ("b", Term_sort) in
-    //     let xx = ("x", Term_sort) in
-    //     let a = mkFreeV aa in
-    //     let b = mkFreeV bb in
-    //     let x = mkFreeV xx in
-    //     let l_exists_a_b = mkApp(for_some, [a;b]) in
-    //     let valid = mkApp("Valid", [l_exists_a_b]) in
-    //     let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
-    //     [Util.mkAssume(mkForall (Env.get_range env) ([[l_exists_a_b]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
-    //                  Some "exists interpretation",
-    //                  "exists-interp")] in
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[eq3_x_y]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)),
+                                Some "Eq3 interpretation",
+                                "eq3-interp")]
+   in
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = mkApp(range, []) in
-        [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
+        [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty,
+                       Some "Range_const typing",
+                       varops.mk_unique "typing_range_const")]
+   in
    let mk_inversion_axiom : env -> string -> term -> decls_t = fun env inversion tt ->
        // (assert (forall ((t Term))
        //            (! (implies (Valid (FStar.Pervasives.inversion t))
@@ -287,7 +392,10 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
           let hastypeS = mk_HasTypeFuel (n_fuel 1) x t in
           mkForall (Env.get_range env) ([[hastypeZ]], [xx], mkImp(hastypeZ, hastypeS))
         in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[inversion_t]], [tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")]
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[inversion_t]], [tt], mkImp(valid, body)),
+                                Some "inversion interpretation",
+                                "inversion-interp")]
    in
    let mk_with_type_axiom : env -> string -> term -> decls_t = fun env with_type tt ->
         (* (assert (forall ((t Term) (e Term))
@@ -310,28 +418,26 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                        Some "with_type primitive axiom",
                        "@with_type_primitive_axiom")] //the "@" in the name forces it to be retained even when the contex is pruned
    in
-   let prims =  [(Const.unit_lid,   mk_unit);
-                 (Const.bool_lid,   mk_bool);
-                 (Const.int_lid,    mk_int);
-                 (Const.string_lid, mk_str);
-                 (Const.true_lid,   mk_true_interp);
-                 (Const.false_lid,  mk_false_interp);
-                 (Const.and_lid,    mk_and_interp);
-                 (Const.or_lid,     mk_or_interp);
-                 (Const.eq2_lid,    mk_eq2_interp);
-                 (Const.eq3_lid,    mk_eq3_interp);
-                 (Const.imp_lid,    mk_imp_interp);
-                 (Const.iff_lid,    mk_iff_interp);
-                 (Const.not_lid,    mk_not_interp);
-                 //(Const.forall_lid, mk_forall_interp);
-                 //(Const.exists_lid, mk_exists_interp);
-                 (Const.range_lid,  mk_range_interp);
-                 (Const.inversion_lid,mk_inversion_axiom);
-                 (Const.with_type_lid, mk_with_type_axiom)
+   let prims =  [(Const.unit_lid,      wrap mk_unit);
+                 (Const.bool_lid,      wrap mk_bool);
+                 (Const.int_lid,       wrap mk_int);
+                 (Const.string_lid,    wrap mk_str);
+                 (Const.true_lid,      wrap mk_true_interp);
+                 (Const.false_lid,     wrap mk_false_interp);
+                 (Const.and_lid,       mk_and_interp);
+                 (Const.or_lid,        mk_or_interp);
+                 (Const.imp_lid,       mk_imp_interp);
+                 (Const.iff_lid,       wrap mk_iff_interp);
+                 (Const.not_lid,       wrap mk_not_interp);
+                 (Const.eq2_lid,       wrap mk_eq2_interp);
+                 (Const.eq3_lid,       wrap mk_eq3_interp);
+                 (Const.range_lid,     wrap mk_range_interp);
+                 (Const.inversion_lid, wrap mk_inversion_axiom);
+                 (Const.with_type_lid, wrap mk_with_type_axiom)
                 ] in
-    (fun (env:env) (t:lident) (s:string) (tt:term) ->
+    (fun (env:env_t) (t:lident) (s:string) (tt:term) ->
         match BU.find_opt (fun (l, _) -> lid_equals l t) prims with
-            | None -> []
+            | None -> [], env
             | Some(_, f) -> f env s tt)
 
 let encode_smt_lemma env fv t =
@@ -704,7 +810,8 @@ let encode_top_level_let :
                                                  ([[pat]], vars, mkEq(app,body)),
                                     Some (BU.format1 "Equation for %s" flid.str),
                                     ("equation_"^fvb.smt_id)) in
-                decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid fvb.smt_id app,
+                let pt_axioms, env = primitive_type_axioms env flid fvb.smt_id app in
+                decls@binder_decls@decls2@[eqn]@pt_axioms,
                 env
             | _ -> failwith "Impossible"
         in
@@ -945,8 +1052,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  env fv t quals in
              let tname = lid.str in
              let tsym = mkFreeV(tname, Term_sort) in
+             let pt_axioms, env = primitive_type_axioms env lid tname tsym in
              decls
-             @ primitive_type_axioms env.tcenv lid tname tsym,
+             @ pt_axioms,
              env
 
      | Sig_assume(l, us, f) ->

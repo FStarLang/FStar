@@ -190,6 +190,7 @@ val mkLet: (list<term> * term) -> Range.range -> term
 val mkLet': (list<(fv * term)> * term) -> Range.range -> term
 
 val fresh_token: (string * sort) -> int -> decl
+val mkDefineFun: (string * list<(string * sort)> * sort * term * caption) -> decl
 val injective_constructor : Range.range -> (string * list<constructor_field> * sort) -> decls_t
 val fresh_constructor : Range.range -> (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
