@@ -11,12 +11,15 @@ module PropExt = FStar.PropositionalExtensionality
 
 (** Definition of a monoid *)
 
+unfold
 let right_unitality_lemma (m:Type) (u:m) (mult:m -> m -> m) =
   forall (x:m). x `mult` u == x
 
+unfold
 let left_unitality_lemma (m:Type) (u:m) (mult:m -> m -> m) =
   forall (x:m). u `mult` x == x
 
+unfold
 let associativity_lemma (m:Type) (mult:m -> m -> m) =
   forall (x y z:m). x `mult` y `mult` z == x `mult` (y `mult` z)
 
@@ -48,11 +51,11 @@ let nat_plus_monoid : monoid nat =
 let int_plus_monoid : monoid int =
   intro_monoid int 0 (+)
 
-(* let int_mul_monoid : monoid int = *)
-(*   intro_monoid int 1 op_Multiply *)
+let int_mul_monoid : monoid int =
+  intro_monoid int 1 op_Multiply
 
 let conjunction_monoid : monoid prop =
-  let u : prop = singleton True in
+  let u : prop = True in
   let mult (p q : prop) : prop = p /\ q in
 
   let left_unitality_helper (p:prop) : Lemma ((u `mult` p) == p) =
@@ -64,6 +67,7 @@ let conjunction_monoid : monoid prop =
     assert ((p `mult` u) <==> p) ;
     PropExt.apply (p `mult` u) p
   in
+
 
   let associativity_helper (p1 p2 p3 : prop) : Lemma (p1 `mult` p2 `mult` p3 == p1 `mult` (p2 `mult` p3)) =
     assert (p1 `mult` p2 `mult` p3 <==> p1 `mult` (p2 `mult` p3)) ;
@@ -78,9 +82,8 @@ let conjunction_monoid : monoid prop =
   assert (associativity_lemma prop mult) ;
   intro_monoid prop u mult
 
-
 let disjunction_monoid : monoid prop =
-  let u : prop = singleton False in
+  let u : prop = False in
   let mult (p q : prop) : prop = p \/ q in
 
   let left_unitality_helper (p:prop) : Lemma ((u `mult` p) == p) =
@@ -128,9 +131,11 @@ let lift_monoid_option (#a:Type) (m:monoid a) : monoid (option a) =
 
 (* Definition of a morphism of monoid *)
 
+unfold
 let monoid_morphism_unit_lemma (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
   f (Monoid?.unit ma) == Monoid?.unit mb
 
+unfold
 let monoid_morphism_mult_lemma (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
   forall (x y:a). Monoid?.mult mb (f x) (f y) == f (Monoid?.mult ma x y)
 
@@ -150,15 +155,31 @@ let intro_monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b)
 let embed_nat_int (n:nat) : int = n
 let _ = intro_monoid_morphism embed_nat_int nat_plus_monoid int_plus_monoid
 
+unfold
 let neg (p:prop) : prop = ~p
+module T = FStar.Tactics
+
 let _ =
   assert (neg True <==> False) ;
   PropExt.apply (neg True) False ;
-  let mult_lemma_helper (p q:prop) : Lemma (neg (p /\ q) == (neg p \/ neg q)) =
-    assert (neg (p /\ q) <==> (neg p \/ neg q)) ;
+  let mult_lemma_helper (p q:prop) : Lemma (neg (p /\ q) == ((neg p) \/ (neg q))) =
+      PropExt.apply (neg (p /\ q)) (neg p \/ neg q)
+  in
+  let mult_lemma_helper (p q:prop) : Lemma (neg (p /\ q) == ((neg p) \/ (neg q))) =
+    assert (neg (p /\ q) <==> ((neg p) \/ (neg q))) ;
     PropExt.apply (neg (p /\ q)) (neg p \/ neg q)
   in
   forall_intro_2 mult_lemma_helper ;
+  assert (monoid_morphism_unit_lemma neg conjunction_monoid disjunction_monoid /\
+          monoid_morphism_mult_lemma neg conjunction_monoid disjunction_monoid)
+      by (T.norm [delta_only [`%Monoid?.mult; `%Monoid?.unit;
+                              `%monoid_morphism_unit_lemma;
+                              `%monoid_morphism_mult_lemma;
+                              `%neg;
+                              `%disjunction_monoid;
+                              `%conjunction_monoid;
+                              `%intro_monoid];
+                 iota]);
   intro_monoid_morphism neg conjunction_monoid disjunction_monoid
 
 let _ =
@@ -169,6 +190,16 @@ let _ =
     PropExt.apply (neg (p \/ q)) (neg p /\ neg q)
   in
   forall_intro_2 mult_lemma_helper ;
+  assert (monoid_morphism_unit_lemma neg disjunction_monoid conjunction_monoid /\
+          monoid_morphism_mult_lemma neg disjunction_monoid conjunction_monoid)
+      by (T.norm [delta_only [`%Monoid?.mult; `%Monoid?.unit;
+                              `%monoid_morphism_unit_lemma;
+                              `%monoid_morphism_mult_lemma;
+                              `%neg;
+                              `%disjunction_monoid;
+                              `%conjunction_monoid;
+                              `%intro_monoid];
+                 iota]);
   intro_monoid_morphism neg disjunction_monoid conjunction_monoid
 
 (* Definition of a left action *)

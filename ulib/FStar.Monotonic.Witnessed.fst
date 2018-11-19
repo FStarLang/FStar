@@ -1,4 +1,4 @@
- module FStar.Monotonic.Witnessed
+module FStar.Monotonic.Witnessed
 
 open FStar.Preorder
 

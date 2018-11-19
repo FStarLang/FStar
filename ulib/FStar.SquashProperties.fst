@@ -47,13 +47,17 @@ let excluded_middle (p:Type) = map_squash (join_squash (get_proof (p \/ (~p)))) 
 
 val excluded_middle_squash : p:Type0 -> GTot (p \/ ~p)
 let excluded_middle_squash p =
-  bind_squash (excluded_middle p) (fun x ->
-  if x then
-    map_squash (get_proof p) Left
-  else
-    return_squash (Right (return_squash (fun (h:p) ->
-                          give_proof (return_squash h);
-                          false_elim #False ()))))
+  bind_squash
+    #_
+    #(c_or p (~p))
+    (excluded_middle p)
+    (fun x ->
+      if x then
+        map_squash (get_proof p) Left
+      else
+        return_squash (Right (return_squash (fun (h:p) ->
+                             give_proof (return_squash h);
+                             false_elim #False ()))))
 
 (* we thought we might prove proof irrelevance by Berardi ... but didn't manage *)
 
