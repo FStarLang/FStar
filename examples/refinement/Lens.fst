@@ -116,7 +116,7 @@ let return_elab (#hstate:Type) (#a:Type) (x : a) : high #hstate a (return_wp x) 
 let bind_elab #hstate #a #b #f_w (f:high #hstate a f_w) #g_w ($g:(x:a) -> high #hstate b (g_w x)) 
 : high #hstate b (bind_wp f_w g_w) = fun s0 -> let (r1, s1) = run_high f s0 in run_high (g r1) s1
 
-let read_elab #hstate : high hstate read_wp = fun (s : hstate) -> (s, s) 
+let read_elab #hstate (_ : unit) : high hstate read_wp = fun (s : hstate) -> (s, s) 
 
 let write_elab #hstate (s : hstate) : high unit (write_wp s) = fun (s0 : hstate) -> ((), s) 
 
@@ -185,7 +185,17 @@ let lbind #lstate #state (#p: state_lens lstate state) #a #b
   
     (* ********************************************* *)
     y_b
-  
 
 
+let lread #lstate #state (#p: state_lens lstate state) (_ : unit) : low #_ #_ #p state read_wp (read_elab ()) = 
+  fun ls ->
+    let h0 = ST.get () in 
+    let p = high_low h0 ls in 
+    to_high' ls
+
+
+let lwrite #lstate #state (#p: state_lens lstate state) (s : state) : low #_ #_ #p unit (write_wp s) (write_elab s) =
+   fun ls ->
+     let h0 = ST.get () in 
+     to_low' ls s
 
