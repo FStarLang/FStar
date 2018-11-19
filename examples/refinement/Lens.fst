@@ -61,6 +61,9 @@ instance tuple_lens : state_lens lstate state =
 (* WPs of high computations *)
 type hwp hstate a = hstate -> (a * hstate -> Type) -> GTot Type
 
+type hpre #hstate = hstate -> Type0
+type hpost #hstate a = hstate -> a -> hstate -> Type0
+
 let monotonic #hstate #a (wp:hwp hstate a) =
   forall p1 p2 s. {:pattern wp s p1; wp s p2}
     (forall x.{:pattern (p1 x) \/ (p2 x)} p1 x ==> p2 x) ==>
@@ -69,8 +72,16 @@ let monotonic #hstate #a (wp:hwp hstate a) =
 
 type hwp_mon #hstate 'a = (wp:hwp hstate 'a{monotonic wp})
 
+unfold
+let as_wp (#state : Type) (#a : Type) (pre : hpre #state) (post : hpost a) : hwp_mon #state a =
+  (fun s0 p -> pre s0 /\ (forall r s1. post s0 r s1 ==> p (r, s1)))
+
 (* High compuations *)
 type high #hstate a (wp : hwp_mon #hstate a) = s0:hstate -> PURE (a * hstate) (wp s0)
+
+// Better name?
+type high_p #hstate 'a (pre : hpre #hstate) (post : hpost #hstate 'a) = high 'a (as_wp #hstate #'a pre post)
+
 
 (* Low computations *)
 type low #lstate #hstate (#p: state_lens lstate hstate)
@@ -83,6 +94,13 @@ type low #lstate #hstate (#p: state_lens lstate hstate)
                       (let s0 = to_high #_ #_ #p h ls in
                        let (x, s1) = c s0 in
                        h' == to_low #_ #_ #p h ls s1 /\ x == r )))
+
+
+let low_p #lstate #hstate (#p: state_lens lstate hstate)
+        (a : Type) pre post (c : high_p a pre post) = 
+  low #lstate #hstate #p a
+      (fun s0 p -> pre s0 /\ (forall r s1. post s0 r s1 ==> p (r, s1))) c
+
 
 let run_high #hstate #a #wp (c:high #hstate a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * hstate) = c s0
 
@@ -120,9 +138,21 @@ let read_elab #hstate (_ : unit) : high hstate read_wp = fun (s : hstate) -> (s,
 
 let write_elab #hstate (s : hstate) : high unit (write_wp s) = fun (s0 : hstate) -> ((), s) 
 
+let rec for_elab (#hstate:Type) (inv : hstate -> int -> Type0)
+                 (f : (i:int) -> high_p unit (requires (fun h0 -> inv h0 i))
+                                          (ensures (fun h0 _ h1 -> inv h1 (i + 1)))) 
+                  (lo : int) (hi : int{lo <= hi}) 
+: Tot (high_p unit (requires (fun h0 -> inv h0 lo))
+                   (ensures (fun h0 _ h1 -> inv h1 hi))) (decreases (hi - lo)) =
+  if lo = hi then (return_elab ())
+  else 
+    begin 
+      let k () = for_elab inv f (lo + 1) hi in 
+      bind_elab (f lo) k
+    end
 
 (* Low combinators *)
-let lreturn #lstate #state (#p: state_lens lstate state) (a:Type) (x : a)
+let lreturn #lstate #state (#p: state_lens lstate state) (#a:Type) (x : a)
 : low #_ #_ #p a (return_wp x) (return_elab x) = 
   fun ls -> 
      let h0 = ST.get () in
@@ -199,3 +229,28 @@ let lwrite #lstate #state (#p: state_lens lstate state) (s : state) : low #_ #_ 
      let h0 = ST.get () in 
      to_low' ls s
 
+
+let rec lfor' #lstate #hstate (#p: state_lens lstate hstate) 
+              (inv : hstate -> int -> Type0) 
+              (fh : (i:int) -> high_p unit (fun h0 -> inv h0 i) (fun h0 _ h1 -> inv h1 (i + 1)))
+              (f : (i:int) -> low_p #lstate #hstate #p unit (fun h0 -> inv h0 i)
+                                                        (fun h0 _ h1 -> inv h1 (i + 1)) (fh i)) 
+              (lo : int) (hi : int{lo <= hi}) : Tot (low_p #lstate #hstate #p unit 
+                                                      (requires (fun h0 -> inv h0 lo))
+                                                      (ensures (fun h0 _ h1 -> inv h1 hi))
+                                                      (for_elab inv fh lo hi)) (decreases (hi - lo)) =
+  if lo = hi then (lreturn #_ #_ #p ())
+  else 
+    begin 
+      let k () = lfor' #_ #_ #p inv fh f (lo + 1) hi in 
+      lbind #_ #_ #p (f lo) (fun _ -> 
+      k ())
+    end
+
+
+
+(* TBD : 
+   1.) Effect declaration -> the same as before but parametric in the hstate 
+   2.) form of morph lemmas
+
+*)
