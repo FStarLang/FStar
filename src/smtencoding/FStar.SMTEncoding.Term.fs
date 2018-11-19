@@ -802,6 +802,7 @@ and mkPrelude z3options =
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
+                (declare-fun __witness_term () Term)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
                 (declare-datatypes () ((Fuel \n\
                                         (ZFuel) \n\
@@ -898,6 +899,7 @@ let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r
 let mk_Term_unit        = mkApp("Tm_unit", []) norng
+let mk_Witness_term     = mkApp("__witness_Term", []) norng
 let elim_box cond u v t =
     match t.tm with
     | App(Var v', [t]) when v=v' && cond -> t

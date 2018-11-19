@@ -238,16 +238,33 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
           mkDefineFun(macro_name,
                       [aa;bb],
                       Term_sort,
-                      mkApp(conj, [a; mkITE(valid_a, b, mk_Term_unit)]),
+                      mkApp(conj, [a; mkITE(valid_a, b, mk_Witness_term)]),
                       Some "macro for embedded conjunction")
         in
+        //let squashed_c_and =
+        //  let sq = lookup_lid env FStar.Parser.Const.squash_lid in
+        //  let c_and = lookup_lid env FStar.Parser.Const.c_and_lid in
+        //  mkApp(sq.smt_id,
+        //        [mkApp(c_and.smt_id, [aa;bb])])
+        //in
+        //let macro_app =
+        //  mkApp(macro_name, [aa;bb])
+        //in
         [Util.mkAssume(mkForall (Env.get_range env.tcenv)
                                 ([[l_and_a_b]],
                                  [aa;bb],
                                  mkIff(mkAnd(valid_a, valid_b), valid)),
                                  Some "/\ interpretation",
                                  "l_and-interp");
-         macro],
+         macro
+         //;
+         //Util.mkAssume(mkForall (Env.get_range env.tcenv)
+         //                       ([[squashed_c_and]]],
+         //                        [aa;bb],
+         //                        mkEq(squash_c_and, macro_app),
+         //                        Some "l_and-sq_c_and-equiv",
+         //                        "l_and-sq_c_and-equiv")
+                                 ],
          bind_macro env FStar.Parser.Const.and_lid macro_name
     in
     let mk_or_interp : env_t -> string -> term -> decls_t * env_t = fun env disj _ ->
@@ -269,16 +286,32 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
           mkDefineFun(macro_name,
                       [aa;bb],
                       Term_sort,
-                      mkApp(disj, [a; mkITE(mkNot valid_a, b, mk_Term_unit)]),
+                      mkApp(disj, [a; mkITE(mkNot valid_a, b, mk_Witness_term)]),
                       Some "macro for embedded disjunction")
         in
+        //let squashed_c_or =
+        //  let sq = lookup_lid env FStar.Parser.Const.squash_lid in
+        //  let c_and = lookup_lid env FStar.Parser.Const.c_or_lid in
+        //  mkApp(sq.smt_id,
+        //        [mkApp(c_or.smt_id, [aa;bb])])
+        //in
+        //let macro_app =
+        //  mkApp(macro_name, [aa;bb])
+        //in
         [Util.mkAssume(mkForall (Env.get_range env.tcenv)
                                 ([[l_or_a_b]],
                                  [aa;bb],
                                  mkIff(mkOr(valid_a, valid_b), valid)),
                                  Some "\/ interpretation",
                                  "l_or-interp");
-         macro],
+         macro;
+         //Util.mkAssume(mkForall (Env.get_range env.tcenv)
+         //                       ([[squashed_c_or]]],
+         //                        [aa;bb],
+         //                        mkEq(squash_c_or, macro_app),
+         //                        Some "l_or-sq_c_or-equiv",
+         //                        "l_or-sq_c_or-equiv")
+                                      ],
          bind_macro env FStar.Parser.Const.or_lid macro_name
     in
     let mk_imp_interp : env_t -> string -> term -> decls_t * env_t = fun env imp tt ->
@@ -300,14 +333,21 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
           mkDefineFun(macro_name,
                       [aa;bb],
                       Term_sort,
-                      mkApp(imp, [a; mkITE(valid_a, b, mk_Term_unit)]),
+                      mkApp(imp, [a; mkITE(valid_a, b, mk_Witness_term)]),
                       Some "macro for embedded implication")
         in
         [Util.mkAssume(mkForall (Env.get_range env.tcenv)
                                 ([[l_imp_a_b]], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)),
                                 Some "==> interpretation",
                                 "l_imp-interp");
-         macro],
+         macro;
+         //Util.mkAssume(mkForall (Env.get_range env.tcenv)
+         //                       ([[squashed_c_or]]],
+         //                        [aa;bb],
+         //                        mkEq(squash_c_or, macro_app),
+         //                        Some "l_or-sq_c_or-equiv",
+         //                        "l_or-sq_c_or-equiv")
+         ],
         bind_macro env FStar.Parser.Const.imp_lid macro_name
     in
     let mk_iff_interp : env -> string -> term -> decls_t = fun env iff tt ->

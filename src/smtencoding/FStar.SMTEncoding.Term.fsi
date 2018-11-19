@@ -216,6 +216,7 @@ val unboxBitVec: int -> term -> term
 // Thunked, produces a different opaque constant on each call
 val mk_Range_const:  unit -> term
 val mk_Term_unit:    term
+val mk_Witness_term:  term
 
 val mk_PreType:      term -> term
 val mk_Valid:        term -> term
