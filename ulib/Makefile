@@ -18,7 +18,7 @@ include ml/Makefile.include
 
 REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
 
-FSTARLIB_MODULES=$(filter-out $(REALIZED) FStar.Crypto.fst FStar.Tcp.fst FStar.Reflection.% FStar.Tactics.%,$(wildcard FStar.*.fst FStar.*.fsti)) $(wildcard LowStar.*.fst LowStar.*.fsti)
+FSTARLIB_MODULES=$(filter-out $(REALIZED) FStar.Crypto.fst FStar.Tcp.fst FStar.Algebra.Monoid.fst FStar.Reflection.% FStar.Tactics.%,$(wildcard FStar.*.fst FStar.*.fsti)) $(wildcard LowStar.*.fst LowStar.*.fsti)
 
 FSTAR_TAC_LIB_MODULES=$(filter-out $(REALIZED),$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar.Tactics.*.fst FStar.Tactics.*.fsti))
 
