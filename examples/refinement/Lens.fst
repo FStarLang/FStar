@@ -59,22 +59,22 @@ instance tuple_lens : state_lens lstate state =
     low_low = state_as_lstate_put_put; } 
 
 (* WPs of high computations *)
-type hwp state a = state -> (a * state -> Type) -> GTot Type
+type hwp hstate a = hstate -> (a * hstate -> Type) -> GTot Type
 
-let monotonic #state #a (wp:hwp state a) =
+let monotonic #hstate #a (wp:hwp hstate a) =
   forall p1 p2 s. {:pattern wp s p1; wp s p2}
     (forall x.{:pattern (p1 x) \/ (p2 x)} p1 x ==> p2 x) ==>
     wp s p1 ==>
     wp s p2
 
-type hwp_mon state 'a = (wp:hwp state 'a{monotonic wp})
+type hwp_mon #hstate 'a = (wp:hwp hstate 'a{monotonic wp})
 
 (* High compuations *)
-type high state a (wp : hwp_mon state a) = s0:state -> PURE (a * state) (wp s0)
+type high #hstate a (wp : hwp_mon #hstate a) = s0:hstate -> PURE (a * hstate) (wp s0)
 
 (* Low computations *)
-type low lstate hstate (#p: state_lens lstate hstate)
-         (a:Type) (wp : hwp_mon hstate a) (c : high hstate a wp) =
+type low #lstate #hstate (#p: state_lens lstate hstate)
+         (a:Type) (wp : hwp_mon a) (c : high #hstate a wp) =
          ls:lstate ->
          Stack a
            (requires (fun h -> wf #_ #_ #p h ls /\ (let s0 = to_high #_ #_ #p h ls in wp s0 (fun _ -> True))))
@@ -84,11 +84,11 @@ type low lstate hstate (#p: state_lens lstate hstate)
                        let (x, s1) = c s0 in
                        h' == to_low #_ #_ #p h ls s1 /\ x == r )))
 
-let run_high #hstate #a #wp (c:high hstate a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * hstate) = c s0
+let run_high #hstate #a #wp (c:high #hstate a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * hstate) = c s0
 
 // Lifting of high programs to low programs
-let morph lstate hstate (#p: state_lens lstate hstate)
-           (a:Type) (wp : hwp_mon hstate a) (c : high hstate a wp) : low lstate hstate #p a wp c =
+let morph #lstate #hstate (#p: state_lens lstate hstate)
+           (a:Type) (wp : hwp_mon a) (c : high #hstate a wp) : low #lstate #hstate #p a wp c =
   fun ls ->
     let hs = to_high' #_ #_ #p ls in 
     let (x, hs') = run_high c hs in
@@ -97,22 +97,33 @@ let morph lstate hstate (#p: state_lens lstate hstate)
 
 (* High WPS *)
 unfold
-let return_wp #state (#a:Type) (x : a) : hwp_mon state a = fun s0 p -> p (x, s0)
+let return_wp #hstate (#a:Type) (x : a) : hwp_mon a = fun (s0 : hstate) p -> p (x, s0)
 
 unfold
-let bind_wp #state #a #b (wp1:hwp_mon state a) (fwp2 : (a -> hwp_mon state b)) : (wp:hwp_mon state b) =
-    fun s0 p -> wp1 s0 (fun (x, s1) -> fwp2 x s1 p)
+let bind_wp #hstate #a #b (wp1:hwp_mon a) (fwp2 : (a -> hwp_mon b)) : (wp:hwp_mon b) =
+    fun (s0:hstate) p -> wp1 s0 (fun ((x, s1) : (a * hstate)) -> fwp2 x s1 p)
 
-(* High combinators *)
-let return_elab #state (#a:Type) (x : a) : high state a (return_wp x) = fun s0 -> (x, s0)
+unfold 
+let read_wp #hstate : hwp_mon hstate = fun (s: hstate) p -> p (s, s)
 
-let bind_elab #state #a #b #f_w (f:high state a f_w) #g_w ($g:(x:a) -> high state b (g_w x)) 
-    : high state b (bind_wp f_w g_w) = fun s0 -> let (r1, s1) = run_high f s0 in run_high (g r1) s1
-                                     
+unfold 
+let write_wp #hstate (s : hstate) : hwp_mon unit = fun (s0: hstate) p -> p ((), s)
+
+
+(* High combinatoers *)
+let return_elab (#hstate:Type) (#a:Type) (x : a) : high #hstate a (return_wp x) = fun (s0 : hstate) -> (x, s0)
+
+let bind_elab #hstate #a #b #f_w (f:high #hstate a f_w) #g_w ($g:(x:a) -> high #hstate b (g_w x)) 
+: high #hstate b (bind_wp f_w g_w) = fun s0 -> let (r1, s1) = run_high f s0 in run_high (g r1) s1
+
+let read_elab #hstate : high hstate read_wp = fun (s : hstate) -> (s, s) 
+
+let write_elab #hstate (s : hstate) : high unit (write_wp s) = fun (s0 : hstate) -> ((), s) 
+
+
 (* Low combinators *)
-
 let lreturn #lstate #state (#p: state_lens lstate state) (a:Type) (x : a)
-: low lstate state #p a (return_wp x) (return_elab x) = 
+: low #_ #_ #p a (return_wp x) (return_elab x) = 
   fun ls -> 
      let h0 = ST.get () in
      let p = high_low #_ #_ #p h0 ls in (* 1st lens law *)
@@ -120,10 +131,10 @@ let lreturn #lstate #state (#p: state_lens lstate state) (a:Type) (x : a)
      x
 
 let lbind #lstate #state (#p: state_lens lstate state) #a #b
-    (#wp1:hwp_mon state a) (#fwp2:(a -> hwp_mon state b))
-    (#c1:high state a wp1) (#c2:(x:a -> high state b (fwp2 x)))
-    (m:low lstate state #p a wp1 c1) (f:(x:a) -> low lstate state #p b (fwp2 x) (c2 x)) :
-    low lstate state #p b (bind_wp wp1 fwp2) (bind_elab c1 c2) =
+    (#wp1:hwp_mon a) (#fwp2:(a -> hwp_mon #state b))
+    (#c1:high #state a wp1) (#c2:(x:a -> high #state b (fwp2 x)))
+    (m:low #lstate #state #p a wp1 c1) (f:(x:a) -> low #lstate #state #p b (fwp2 x) (c2 x)) :
+    low #lstate #state #p b (bind_wp wp1 fwp2) (bind_elab c1 c2) =
   fun ls -> 
     (* almost verbatim from specialized [lbind] *)
     (* ********************************************* *)
@@ -176,4 +187,5 @@ let lbind #lstate #state (#p: state_lens lstate state) #a #b
     y_b
   
 
- 
+
+
