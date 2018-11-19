@@ -1987,7 +1987,7 @@ let (mk_Term_uvar : Prims.int -> FStar_Range.range -> term) =
       mkApp uu____8286 r
   
 let (mk_Term_unit : term) = mkApp ("Tm_unit", []) norng 
-let (mk_Witness_term : term) = mkApp ("__witness_Term", []) norng 
+let (mk_Witness_term : term) = mkApp ("__witness_term", []) norng 
 let (elim_box : Prims.bool -> Prims.string -> Prims.string -> term -> term) =
   fun cond  ->
     fun u  ->

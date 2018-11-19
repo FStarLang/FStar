@@ -899,7 +899,7 @@ let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r
 let mk_Term_unit        = mkApp("Tm_unit", []) norng
-let mk_Witness_term     = mkApp("__witness_Term", []) norng
+let mk_Witness_term     = mkApp("__witness_term", []) norng
 let elim_box cond u v t =
     match t.tm with
     | App(Var v', [t]) when v=v' && cond -> t
