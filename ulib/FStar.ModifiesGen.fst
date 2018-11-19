@@ -451,12 +451,14 @@ let loc_includes_region_addresses #al #c s preserve_liveness1 preserve_liveness2
 
 let loc_includes_region_region #al #c preserve_liveness1 preserve_liveness2 s1 s2 = ()
 
+#push-options "--z3rlimit_factor 2"
 let loc_includes_region_union_l #al #c preserve_liveness l s1 s2 =
   assert ((loc_regions #_ #c preserve_liveness (Set.intersect s2 (Set.complement s1)) `loc_union` loc_regions #_ #c preserve_liveness (Set.intersect s2 s1)) `loc_equal` loc_regions preserve_liveness s2);
   loc_includes_region_region #_ #c preserve_liveness preserve_liveness s1 (Set.intersect s2 s1);
   loc_includes_union_l (loc_regions preserve_liveness s1) l (loc_regions preserve_liveness (Set.intersect s2 (Set.complement s1)));
   loc_includes_union_l (loc_regions preserve_liveness s1) l (loc_regions preserve_liveness (Set.intersect s2 s1));
   loc_includes_union_r (loc_union (loc_regions preserve_liveness s1) l) (loc_regions preserve_liveness (Set.intersect s2 (Set.complement s1))) (loc_regions preserve_liveness (Set.intersect s2 s1))
+#pop-options
 
 let loc_includes_addresses_addresses #al c preserve_liveness1 preserve_liveness2 r s1 s2 = ()
 
@@ -1387,8 +1389,10 @@ let loc_addresses_unused_in #al c r a h = ()
 
 let loc_addresses_not_unused_in #al c r a h = ()
 
+#push-options "--z3rlimit_factor 5"
 let loc_unused_in_not_unused_in_disjoint #al c h =
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)))
+#pop-options
 
 let not_live_region_loc_not_unused_in_disjoint #al c h0 r
 = let l1 = loc_region_only false r in
