@@ -11,15 +11,12 @@ module PropExt = FStar.PropositionalExtensionality
 
 (** Definition of a monoid *)
 
-unfold
 let right_unitality_lemma (m:Type) (u:m) (mult:m -> m -> m) =
   forall (x:m). x `mult` u == x
 
-unfold
 let left_unitality_lemma (m:Type) (u:m) (mult:m -> m -> m) =
   forall (x:m). u `mult` x == x
 
-unfold
 let associativity_lemma (m:Type) (mult:m -> m -> m) =
   forall (x y z:m). x `mult` y `mult` z == x `mult` (y `mult` z)
 
@@ -53,7 +50,19 @@ let int_plus_monoid : monoid int =
 
 let int_mul_monoid : monoid int =
   intro_monoid int 1 op_Multiply
+#set-options "--max_fuel 0 --max_ifuel 0"
+let test (a b:prop) =
+  assume a;
+  assume b;
+  assert (a /\ b)
 
+let prop_ext_apply (p1 p2:prop)
+  : Lemma (requires (p1 <==> p2))
+          (ensures (p1 == p2))
+  = PropExt.apply p1 p2
+
+
+module T = FStar.Tactics
 let conjunction_monoid : monoid prop =
   let u : prop = True in
   let mult (p q : prop) : prop = p /\ q in
@@ -68,18 +77,16 @@ let conjunction_monoid : monoid prop =
     PropExt.apply (p `mult` u) p
   in
 
-
-  let associativity_helper (p1 p2 p3 : prop) : Lemma (p1 `mult` p2 `mult` p3 == p1 `mult` (p2 `mult` p3)) =
-    assert (p1 `mult` p2 `mult` p3 <==> p1 `mult` (p2 `mult` p3)) ;
-    PropExt.apply (p1 `mult` p2 `mult` p3) (p1 `mult` (p2 `mult` p3))
-  in
-
   forall_intro right_unitality_helper ;
-  assert (right_unitality_lemma prop u mult) ;
+  assert (right_unitality_lemma prop u mult)
+      by (T.norm [delta_only [`%right_unitality_lemma]]);
   forall_intro left_unitality_helper ;
-  assert (left_unitality_lemma prop u mult) ;
-  forall_intro_3 associativity_helper;
-  assert (associativity_lemma prop mult) ;
+  assert (left_unitality_lemma prop u mult)
+      by (T.norm [delta_only [`%left_unitality_lemma]]);
+  assert (associativity_lemma prop mult)
+      by (T.norm [delta_only [`%associativity_lemma]];
+          let bs = T.forall_intros () in
+          T.mapply (`prop_ext_apply));
   intro_monoid prop u mult
 
 let disjunction_monoid : monoid prop =
@@ -96,17 +103,16 @@ let disjunction_monoid : monoid prop =
     PropExt.apply (p `mult` u) p
   in
 
-  let associativity_helper (p1 p2 p3 : prop) : Lemma (p1 `mult` p2 `mult` p3 == p1 `mult` (p2 `mult` p3)) =
-    assert (p1 `mult` p2 `mult` p3 <==> p1 `mult` (p2 `mult` p3)) ;
-    PropExt.apply (p1 `mult` p2 `mult` p3) (p1 `mult` (p2 `mult` p3))
-  in
-
   forall_intro right_unitality_helper ;
-  assert (right_unitality_lemma prop u mult) ;
+  assert (right_unitality_lemma prop u mult)
+      by (T.norm [delta_only [`%right_unitality_lemma]]);
   forall_intro left_unitality_helper ;
-  assert (left_unitality_lemma prop u mult) ;
-  forall_intro_3 associativity_helper;
-  assert (associativity_lemma prop mult) ;
+  assert (left_unitality_lemma prop u mult)
+      by (T.norm [delta_only [`%left_unitality_lemma]]);
+  assert (associativity_lemma prop mult)
+      by (T.norm [delta_only [`%associativity_lemma]];
+          let bs = T.forall_intros () in
+          T.mapply (`prop_ext_apply));
   intro_monoid prop u mult
 
 let bool_and_monoid : monoid bool =
@@ -127,6 +133,7 @@ let lift_monoid_option (#a:Type) (m:monoid a) : monoid (option a) =
     | Some x0, Some y0 -> Some (m.mult x0 y0)
     | _, _ -> None
   in
+  admit();
   intro_monoid (option a) (Some m.unit) mult
 
 (* Definition of a morphism of monoid *)
@@ -157,7 +164,7 @@ let _ = intro_monoid_morphism embed_nat_int nat_plus_monoid int_plus_monoid
 
 unfold
 let neg (p:prop) : prop = ~p
-module T = FStar.Tactics
+
 
 let _ =
   assert (neg True <==> False) ;
