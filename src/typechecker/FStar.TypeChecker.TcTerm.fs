@@ -1731,6 +1731,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
                               && not (TcUtil.is_pure_effect env c.eff_name)) in
                 seen@[as_arg e], Env.conj_guard guard g, ghost) ([], g_head, false) args bs in
           let e = mk_Tm_app head args None r  in
+          let e = mk (Tm_meta (e, Meta_short_circuit)) None r in  //wrap the term inside a meta node
           let c = if ghost then S.mk_GTotal res_t |> U.lcomp_of_comp else U.lcomp_of_comp c in
           let c, g = TcUtil.strengthen_precondition None env e c guard in
           e, c, g

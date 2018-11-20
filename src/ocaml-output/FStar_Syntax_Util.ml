@@ -4385,7 +4385,8 @@ let rec (unbound_variables :
               unbound_variables t'
           | FStar_Syntax_Syntax.Meta_labeled uu____17931 -> []
           | FStar_Syntax_Syntax.Meta_desugared uu____17940 -> []
-          | FStar_Syntax_Syntax.Meta_named uu____17941 -> []  in
+          | FStar_Syntax_Syntax.Meta_named uu____17941 -> []
+          | FStar_Syntax_Syntax.Meta_short_circuit  -> []  in
         FStar_List.append uu____17855 uu____17858
 
 and (unbound_variables_comp :

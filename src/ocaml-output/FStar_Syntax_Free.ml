@@ -265,7 +265,8 @@ let rec (free_names_and_uvs' :
                union u1 uu____856
            | FStar_Syntax_Syntax.Meta_labeled uu____857 -> u1
            | FStar_Syntax_Syntax.Meta_desugared uu____866 -> u1
-           | FStar_Syntax_Syntax.Meta_named uu____867 -> u1)
+           | FStar_Syntax_Syntax.Meta_named uu____867 -> u1
+           | FStar_Syntax_Syntax.Meta_short_circuit  -> u1)
 
 and (free_names_and_uvars :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->

@@ -1358,7 +1358,8 @@ let rec (resugar_term' :
                      mk1 uu____5906  in
                    (uu____5904, uu____5905, FStar_Pervasives_Native.None)  in
                  FStar_Parser_AST.Ascribed uu____5895  in
-               mk1 uu____5894)
+               mk1 uu____5894
+           | FStar_Syntax_Syntax.Meta_short_circuit  -> resugar_term' env e)
       | FStar_Syntax_Syntax.Tm_unknown  -> mk1 FStar_Parser_AST.Wild
 
 and (resugar_comp' :
