@@ -1993,7 +1993,8 @@ let rec unbound_variables tm :  list<bv> =
 
            | Meta_labeled _
            | Meta_desugared _
-           | Meta_named _ -> [])
+           | Meta_named _
+           | Meta_short_circuit -> [])
 
 
 and unbound_variables_comp c =

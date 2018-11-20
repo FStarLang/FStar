@@ -164,7 +164,8 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
 
         | Meta_labeled _
         | Meta_desugared _
-        | Meta_named _ -> u1
+        | Meta_named _
+        | Meta_short_circuit -> u1
         end
 
 

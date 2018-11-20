@@ -309,6 +309,8 @@ and term_to_string x =
       | Tm_meta(t, Meta_desugared _) ->
         U.format1 "Meta_desugared{%s}"  (term_to_string t)
 
+      | Tm_meta (t, Meta_short_circuit) -> U.format1 "Meta_shortcircuit{%s}" (term_to_string t)
+
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x
       | Tm_fvar f ->        fv_to_string f
@@ -576,6 +578,8 @@ and metadata_to_string = function
 
     | Meta_monadic_lift (m, m', t) ->
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
+
+    | Meta_short_circuit -> "{Meta_shortcircuit}"
 
 let term_to_string' env x =
   if Options.ugly ()

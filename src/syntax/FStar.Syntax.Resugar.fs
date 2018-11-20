@@ -711,6 +711,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         mk (A.Ascribed(resugar_term' env e,
                        mk (A.Construct(name,[resugar_term' env t, A.Nothing])),
                        None))
+      | Meta_short_circuit -> resugar_term' env e
       end
 
     | Tm_unknown -> mk A.Wild

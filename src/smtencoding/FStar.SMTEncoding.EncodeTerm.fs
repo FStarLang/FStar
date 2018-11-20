@@ -567,6 +567,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                                     (Print.term_to_string tv);
         let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
         encode_term t env
+    
+      | Tm_meta (t, Meta_short_circuit) ->
+        BU.print2 "\nTerm %s:%s has been checked with short circuit semantics, but is deep embedded to smt\n"
+                  env.tcenv.curmodule.str (Print.term_to_string t);
+        encode_term t env
 
       | Tm_meta(t, Meta_pattern _) ->
         encode_term t ({env with encoding_quantifier=false})

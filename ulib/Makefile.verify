@@ -10,7 +10,7 @@ FLAKY=FStar.Relational.State.fst
 # Those files are the roots from where all dependencies are computed
 FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))  $(wildcard LowStar.*.fst LowStar.*.fsti)
 
-OTHERFLAGS+=--use_extracted_interfaces true
+OTHERFLAGS+=--use_extracted_interfaces false
 
 include gmake/z3.mk
 include gmake/fstar.mk

@@ -835,7 +835,8 @@ let rec maybe_weakly_reduced tm :  bool =
 
            | Meta_labeled _
            | Meta_desugared _
-           | Meta_named _ -> false)
+           | Meta_named _
+           | Meta_short_circuit -> false)
 
 type should_unfold_res =
     | Should_unfold_no
