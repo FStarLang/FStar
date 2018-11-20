@@ -275,7 +275,7 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
                                  [aa;bb],
                                  mkIff(interp(valid_a, valid_b), valid_conn_a_b)),
                                  Some (vname ^ " interpretation"),
-                                 "l_and-interp");
+                                 vname ^ "-interp");
          macro
          ],
          bind_macro env conn macro_name
@@ -378,6 +378,16 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
                        Some "with_type primitive axiom",
                        "@with_type_primitive_axiom")] //the "@" in the name forces it to be retained even when the contex is pruned
    in
+   let mk_squash_interp : env -> string -> term -> decls_t = fun env sq _ ->
+       let aa = ("a", Term_sort) in
+       let a = mkFreeV aa in
+       let valid_a = mkApp("Valid", [a]) in
+       let valid_sq_a = mkApp("Valid", [mkApp(sq, [a])]) in
+       [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[valid_sq_a]], [aa], mkIff(valid_sq_a, valid_a)),
+                                Some "valid-squash interpretation",
+                                "valid-squash-interp")]
+   in
    let prims =  [(Const.unit_lid,      wrap mk_unit);
                  (Const.bool_lid,      wrap mk_bool);
                  (Const.int_lid,       wrap mk_int);
@@ -393,7 +403,8 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
                  (Const.eq3_lid,       wrap mk_eq3_interp);
                  (Const.range_lid,     wrap mk_range_interp);
                  (Const.inversion_lid, wrap mk_inversion_axiom);
-                 (Const.with_type_lid, wrap mk_with_type_axiom)
+                 (Const.with_type_lid, wrap mk_with_type_axiom);
+                 (Const.squash_lid,    wrap mk_squash_interp)
                 ] in
     (fun (env:env_t) (t:lident) (s:string) (tt:term) ->
         match BU.find_opt (fun (l, _) -> lid_equals l t) prims with
