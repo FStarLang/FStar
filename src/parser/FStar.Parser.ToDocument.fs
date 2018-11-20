@@ -47,13 +47,32 @@ let min x y = if x > y then y else x
 let max x y = if x > y then x else y
 
 // VD: copied over from NBE, should both probably go in FStar.List
-let map_rev (f : 'a -> 'b) (l : list<'a>) : list<'b> =
+let map_rev (f: 'a -> 'b) (l: list<'a>): list<'b> =
   let rec aux (l:list<'a>) (acc:list<'b>) =
     match l with
     | [] -> acc
     | x :: xs -> aux xs (f x :: acc)
-  in  aux l []
+  in
+  aux l []
 
+let rec map_if_all (f: 'a -> option<'b>) (l: list<'a>): option<list<'b>> =
+  let rec aux l acc =
+    match l with
+    | [] -> acc
+    | x :: xs ->
+      (match f x with
+       | Some r -> aux xs (r :: acc)
+       | None -> [])
+  in
+  let r = aux l [] in
+  if List.length l = List.length r then
+    Some r
+  else None
+
+let rec all (f: 'a -> bool) (l: list<'a>): bool =
+  match l with
+  | [] -> true
+  | x :: xs -> if f x then all f xs else false
 
 (* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
 (* reset at the end of each module. If you are using individual print function you *)
@@ -421,8 +440,10 @@ let handleable_op op args =
 // computation type. In case (3), first parameter is indentation for each
 // of the binders, second parameter is indendation for the computation
 // type.
+// The third parameter in Binders controls whether each binder is
+// paranthesised
 type annotation_style =
-  | Binders of int * int // val f (x1:t1) ... (xn:tn) : C
+  | Binders of int * int * bool // val f (x1:t1) ... (xn:tn) : C
   | Arrows of int * int //  val f : x1:t1 -> ... -> xn:tn -> C
 
 // decide whether a type signature can be printed in the format
@@ -741,11 +762,7 @@ and p_rawDecl d = match d.d with
           has_attrs = false;
           is_fsdoc = false })
   | Val(lid, t) ->
-    group <| str "val" ^^ space ^^ p_lident lid ^^
-      (if all_binders_annot t then
-         space ^^ (p_typ_top (Binders (4,0)) false false t)
-       else
-         group (colon ^^ space ^^ p_typ_top (Arrows (2,2)) false false t))
+    group <| str "val" ^^ space ^^ p_lident lid ^^ (sig_as_binders_if_possible t false)
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
@@ -860,18 +877,32 @@ and p_constructorBranch (uid, t_opt, doc_opt, use_of) =
 
 and p_letlhs kw (pat, _) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
-  let pat, ascr_doc =
+  let pat, ascr =
+    // if the let binding was written in arrow style, the arguments will be in t
+    // if it was written in binders style then they will be in pat
     match pat.pat with
-    | PatAscribed (pat, (t, None)) -> pat, group (colon ^^ space ^^ p_tmArrow (Arrows (2, 2)) p_tmNoEq t)
-    | PatAscribed (pat, (t, Some tac)) -> pat, group (colon ^^ space ^^ p_tmArrow (Arrows (2, 2)) p_tmNoEq t) ^^ group (str "by" ^^ space ^^ p_atomicTerm tac)
-    | _ -> pat, empty
+    | PatAscribed (pat, (t, None)) -> pat, Some (t, empty)
+    | PatAscribed (pat, (t, Some tac)) -> pat, Some (t, group (str "by" ^^ space ^^ p_atomicTerm tac))
+    | _ -> pat, None
   in
   match pat.pat with
-  | PatApp ({pat=PatVar (x, _)}, pats) ->
+  | PatApp ({pat=PatVar (lid, _)}, pats) ->
       (* has binders *)
-      prefix2_nonempty (prefix2 (group (kw ^/^ p_lident x)) (flow_map break1 p_atomicPattern pats)) ascr_doc
+      let ascr_doc =
+        (match ascr with
+         | Some (t, tac) -> (sig_as_binders_if_possible t true) ^^ tac
+         | None -> empty)
+      in
+      let bs, style = pats_as_binders_if_possible pats in
+      let terms = bs @ [ascr_doc] in
+      group <| kw ^^ space ^^ p_lident lid ^^ (format_sig style terms true)
   | _ ->
       (* doesn't have binders *)
+      let ascr_doc =
+        (match ascr with
+         | Some (t, tac) -> (sig_as_binders_if_possible t false) ^^ tac
+         | None -> empty)
+      in
       group (group (kw ^/^ p_tuplePattern pat) ^^ ascr_doc)
 
 and p_letbinding kw (pat, e) =
@@ -1357,6 +1388,61 @@ and p_typ_top style ps pb e = with_comment (p_typ_top' style ps pb) e e.range "!
 
 and p_typ_top' style ps pb e = p_tmArrow style p_tmFormula e
 
+and sig_as_binders_if_possible t extra_space =
+  let s = if extra_space then space else empty in
+  if all_binders_annot t then
+    (s ^^ p_typ_top (Binders (4, 0, true)) false false t)
+  else
+    group (colon ^^ s ^^ p_typ_top (Arrows (2, 2)) false false t)
+
+and collapse_pats (pats: list<(document * document)>): list<document> =
+  let fold_fun (bs: list<(list<document> * document)>) (x: document * document) =
+    let b1, t1 = x in
+    match bs with
+    | [] -> [([b1], t1)]
+    | hd::tl ->
+      let b2s, t2 = hd in
+      if t1 = t2 then
+        (b2s @ [b1], t1) :: tl
+      else
+        ([b1], t1) :: hd :: tl
+  in
+  let p_collapsed_binder (cb: list<document> * document): document =
+    let bs, typ = cb in
+    match bs with
+    | [] -> failwith "Impossible" // can't have dangling type
+    | [b] -> cat_with_colon b typ
+    | hd::tl -> cat_with_colon (List.fold_left (fun x y -> x ^^ space ^^ y) hd tl) typ
+  in
+  let binders = List.fold_left fold_fun [] (List.rev pats) in
+  map_rev p_collapsed_binder binders
+
+and pats_as_binders_if_possible pats =
+  let all_binders p = match p.pat with
+  | PatAscribed(pat, (t, None)) ->
+    (match pat.pat, t.tm  with
+     | PatVar (lid, aqual), Refine({b = Annotated(lid', t)}, phi)
+       when lid.idText = lid'.idText ->
+         Some (p_refinement' aqual (p_ident lid) t phi)
+     | PatVar (lid, aqual), _ ->
+       Some (optional p_aqual aqual ^^ p_ident lid, p_tmEqNoRefinement t)
+     | _ -> None)
+  | _ -> None
+  in
+  let all_unbound p = match p.pat with
+  | PatAscribed _ -> false
+  | _ -> true
+  in
+  match map_if_all all_binders pats with
+  | Some bs -> // flow break1 (collapse_pats bs)
+      collapse_pats bs, Binders (4, 0, true)
+      // List.fold_left (fun x y -> x ^/^ y) empty (map_rev (fun (x, y) -> soft_parens_with_nesting (x ^^ colon ^^ y)) bs)
+  | None -> // flow_map break1 p_atomicPattern pats
+      if all all_unbound pats then
+        List.map p_atomicPattern pats, Binders (4, 0, false)
+      else
+        List.map p_atomicPattern pats, Arrows (2, 2)
+
 and p_quantifier e = match e.tm with
     | QForall _ -> str "forall"
     | QExists _ -> str "exists"
@@ -1451,26 +1537,34 @@ and p_tmImplies e = match e.tm with
 // It also needs to make adjustments depending on which style a signature
 // is to be printed in. For more details see the `annotation_style` type
 // definition.
+and format_sig style terms no_last_op =
+  let terms', last = List.splitAt (List.length terms - 1) terms in
+  let n, last_n, terms', sep, last_op, one_line_space =
+    match style with
+    | Arrows (n, ln)->
+        n, ln, terms', space ^^ rarrow ^^ break1, rarrow ^^ space, space
+    | Binders (n, ln, parens) ->
+        n, ln,
+        (if parens then List.map soft_parens_with_nesting terms' else terms'),
+        break1, colon ^^ space,
+        (if parens then space else empty)
+  in
+  let last_op = if List.length terms > 1 && (not no_last_op) then last_op else empty in
+  let single_line_arg_indent = repeat n space in
+  match List.length terms with
+  | 1 -> List.hd terms
+  | _ -> group (ifflat (space ^^ (separate sep terms') ^^ one_line_space ^^ last_op ^^ List.hd last)
+           (prefix n 1 (group ((ifflat (space ^^ separate sep terms')
+             (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms')))))))
+               (align (hang last_n (last_op ^^ List.hd last)))))
+
 and p_tmArrow style p_Tm e =
   let terms =
     match style with
     | Arrows _ -> p_tmArrow' p_Tm e
     | Binders _ -> collapse_binders p_Tm e
   in
-  let terms', last = List.splitAt (List.length terms - 1) terms in
-  let n, last_n, terms', sep, last_op =
-    match style with
-    | Arrows (n, ln)-> n, ln, terms', space ^^ rarrow ^^ break1, rarrow ^^ space
-    | Binders (n, ln) -> n, ln, List.map soft_parens_with_nesting terms', break1, colon ^^ space
-  in
-  let last_op = if List.length terms > 1 then last_op else empty in
-  let single_line_arg_indent = repeat n space in
-  match List.length terms with
-  | 1 -> List.hd terms
-  | _ -> group (ifflat ((separate sep terms') ^^ space ^^ last_op ^^ List.hd last)
-           (prefix n 1 (group ((ifflat (separate sep terms')
-             (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms')))))))
-               (align (hang last_n (last_op ^^ List.hd last)))))
+  format_sig style terms false
 
 and p_tmArrow' p_Tm e =
   match e.tm with
