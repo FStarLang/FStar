@@ -210,7 +210,7 @@ let modifies_bufs_and_refs (bufs:TSet.set abuffer) (refs:Set.set nat) h h' : GTo
 let modifies_buffers (bufs:TSet.set abuffer) h h' : GTot Type0 =
   (forall rid. Set.mem rid (Map.domain (HS.get_hmap h)) ==>
     (HS.modifies_ref rid (arefs bufs) h h' /\
-      (forall (#a:Type) (b:buffer a). {:pattern (frameOf b == rid /\ live h b /\ disjoint_from_bufs b bufs)}
+      (forall (#a:Type) (b:buffer a). {:pattern live h b; disjoint_from_bufs b bufs}
 	(frameOf b == rid /\ live h b /\ disjoint_from_bufs b bufs ==> equal h b h' b /\ live h' b))))
 
 (* General modifies clause for buffers only *)
