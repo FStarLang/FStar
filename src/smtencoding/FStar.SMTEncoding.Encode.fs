@@ -79,41 +79,20 @@ let prims =
     let axy = [(asym, Term_sort); (xsym, Term_sort); (ysym, Term_sort)] in
     let xy = [(xsym, Term_sort); (ysym, Term_sort)] in
     let qx = [(xsym, Term_sort)] in
-    let mk_macro_name s = FStar.Ident.reserved_prefix ^ s in
-    let mk_op_and : Range.range -> string -> string * term * int * list<decl> =
-        fun rng vname ->
-            let _, tok, arity, decls =
-                quant xy  (boxBool <| mkAnd(unboxBool x, unboxBool y)) rng vname
-            in
-            let macro_name = mk_macro_name vname in
-            let macro =
-                mkDefineFun(macro_name, xy, Term_sort,
-                            mkApp(vname, [x;
-                                         mkITE (unboxBool x, y, boxBool mkFalse)]),
-                            Some "&& macro")
-            in
-            mk_macro_name vname,
-            tok,
-            arity,
-            decls@[macro]
+    let mk_binary_boolean_connective
+            (interp:(term * term) -> term)
+            (rng:Range.range) (vname:string) : string * term * int * list<decl> =
+        let macro_name = FStar.Ident.reserved_prefix ^ vname in
+        let i = boxBool (interp(unboxBool x, unboxBool y)) in
+        let _, tok, arity, decls = quant xy i rng vname in
+        let macro = mkDefineFun(macro_name, xy, Term_sort, i,Some (vname ^ " macro")) in
+        macro_name,
+        tok,
+        arity,
+        decls@[macro]
     in
-    let mk_op_or : Range.range -> string -> string * term * int * list<decl> =
-        fun rng vname ->
-            let _, tok, arity, decls =
-                quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y)) rng vname
-            in
-            let macro_name = mk_macro_name vname in
-            let macro =
-                mkDefineFun(macro_name, xy, Term_sort,
-                            mkApp(vname, [x;
-                                         mkITE (mkNot (unboxBool x), y, boxBool mkTrue)]),
-                            Some "|| macro")
-            in
-            macro_name,
-            tok,
-            arity,
-            decls@[macro]
-    in
+    let mk_op_and = mk_binary_boolean_connective mkAnd in
+    let mk_op_or = mk_binary_boolean_connective mkOr in
     let prims = [
         (Const.op_Eq,          (quant axy (boxBool <| mkEq(x,y))));
         (Const.op_notEq,       (quant axy (boxBool <| mkNot(mkEq(x,y)))));
@@ -251,115 +230,60 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
     let mk_macro_name s =
         FStar.Ident.reserved_prefix ^ s
     in
-    let bind_macro env lid macro_name =
-        let fvb = lookup_lid env lid in
-        push_free_var env lid fvb.smt_arity macro_name fvb.smt_token
-    in
-    let mk_and_interp : env_t -> string -> term -> decls_t * env_t = fun env conj _ ->
+    let mk_binary_prop_connective (conn:lid) (interp: (term * term) -> term)
+                                  (env:env_t) (vname:string) (_:term) : decls_t * env_t =
+
+        let mkValid t = mkApp("Valid", [t]) in
+        let squash env t =
+            let sq = lookup_lid env FStar.Parser.Const.squash_lid in
+            let b2t = lookup_lid env FStar.Parser.Const.b2t_lid in
+            mkApp(sq.smt_id, [mkApp(b2t.smt_id, [boxBool t])])
+        in
+        let bind_macro env lid macro_name =
+            let fvb = lookup_lid env lid in
+            push_free_var env lid fvb.smt_arity macro_name fvb.smt_token
+        in
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let a = mkFreeV aa in
         let b = mkFreeV bb in
-        let l_and_a_b = mkApp(conj, [a;b]) in
-        let valid = mkApp("Valid", [l_and_a_b]) in
-        let valid_a = mkApp("Valid", [a]) in
-        let valid_b = mkApp("Valid", [b]) in
+        let conn_a_b = mkApp(vname, [a;b]) in
+        let valid_conn_a_b = mkValid conn_a_b in
+        let valid_a = mkValid a in
+        let valid_b = mkValid b in
         (*
              (define-fun l_and_macro  ((a Term) (b Term)) Term
-                         (l_and a (ite (Valid a) b mk_Term_unit)))
+                         (squash (Valid (BoxBool (and (Valid a) (Valid b))))
+
+             (define-fun l_or_macro  ((a Term) (b Term)) Term
+                         (squash (Valid (BoxBool (or (Valid a) (Valid b))))
+
+             (define-fun l_imp_macro  ((a Term) (b Term)) Term
+                         (squash (Valid (BoxBool (implies (Valid a) (Valid b))))
 
         *)
-        let macro_name = mk_macro_name conj in
+        let macro_name = mk_macro_name vname in
         let macro =
-          mkDefineFun(macro_name,
-                      [aa;bb],
-                      Term_sort,
-                      mkApp(conj, [a; mkITE(valid_a, b, mk_Witness_term)]),
-                      Some "macro for embedded conjunction")
+            mkDefineFun(macro_name,
+                        [aa;bb],
+                        Term_sort,
+                        squash env (interp (valid_a, valid_b)),
+                        Some "macro for embedded connective")
         in
         [Util.mkAssume(mkForall (Env.get_range env.tcenv)
-                                ([[l_and_a_b]],
+                                ([[conn_a_b]],
                                  [aa;bb],
-                                 mkIff(mkAnd(valid_a, valid_b), valid)),
-                                 Some "/\ interpretation",
+                                 mkIff(interp(valid_a, valid_b), valid_conn_a_b)),
+                                 Some (vname ^ " interpretation"),
                                  "l_and-interp");
-         macro],
-         bind_macro env FStar.Parser.Const.and_lid macro_name
+         macro
+         ],
+         bind_macro env conn macro_name
     in
-    let mk_or_interp : env_t -> string -> term -> decls_t * env_t = fun env disj _ ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let l_or_a_b = mkApp(disj, [a;b]) in
-        let valid = mkApp("Valid", [l_or_a_b]) in
-        let valid_a = mkApp("Valid", [a]) in
-        let valid_b = mkApp("Valid", [b]) in
-          (*
-             (define-fun l_or_macro  ((a Term) (b Term)) Term
-                         (l_or a (ite (not (Valid a)) b mk_Term_unit)))
-
-          *)
-        let macro_name = mk_macro_name disj in
-        let macro =
-          mkDefineFun(macro_name,
-                      [aa;bb],
-                      Term_sort,
-                      mkApp(disj, [a; mkITE(mkNot valid_a, b, mk_Witness_term)]),
-                      Some "macro for embedded disjunction")
-        in
-        [Util.mkAssume(mkForall (Env.get_range env.tcenv)
-                                ([[l_or_a_b]],
-                                 [aa;bb],
-                                 mkIff(mkOr(valid_a, valid_b), valid)),
-                                 Some "\/ interpretation",
-                                 "l_or-interp");
-         macro],
-         bind_macro env FStar.Parser.Const.or_lid macro_name
-    in
-    let mk_imp_interp : env_t -> string -> term -> decls_t * env_t = fun env imp tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let l_imp_a_b = mkApp(imp, [a;b]) in
-        let valid = mkApp("Valid", [l_imp_a_b]) in
-        let valid_a = mkApp("Valid", [a]) in
-        let valid_b = mkApp("Valid", [b]) in
-          (*
-             (define-fun l_imp_macro  ((a Term) (b Term)) Term
-                         (l_imp a (ite (Valid a) b mk_Term_unit)))
-
-          *)
-        let macro_name = mk_macro_name imp in
-        let macro =
-          mkDefineFun(macro_name,
-                      [aa;bb],
-                      Term_sort,
-                      mkApp(imp, [a; mkITE(valid_a, b, mk_Witness_term)]),
-                      Some "macro for embedded implication")
-        in
-        [Util.mkAssume(mkForall (Env.get_range env.tcenv)
-                                ([[l_imp_a_b]], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)),
-                                Some "==> interpretation",
-                                "l_imp-interp");
-         macro],
-        bind_macro env FStar.Parser.Const.imp_lid macro_name
-    in
-    let mk_iff_interp : env -> string -> term -> decls_t = fun env iff tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let l_iff_a_b = mkApp(iff, [a;b]) in
-        let valid = mkApp("Valid", [l_iff_a_b]) in
-        let valid_a = mkApp("Valid", [a]) in
-        let valid_b = mkApp("Valid", [b]) in
-        [Util.mkAssume(mkForall (Env.get_range env)
-                                ([[l_iff_a_b]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)),
-                                Some "<==> interpretation",
-                                "l_iff-interp")]
-    in
+    let mk_and_interp = mk_binary_prop_connective FStar.Parser.Const.and_lid mkAnd in
+    let mk_or_interp = mk_binary_prop_connective FStar.Parser.Const.or_lid mkOr in
+    let mk_imp_interp = mk_binary_prop_connective FStar.Parser.Const.imp_lid mkImp in
+    let mk_iff_interp = mk_binary_prop_connective FStar.Parser.Const.iff_lid mkIff in
     let mk_not_interp : env -> string -> term -> decls_t = fun env l_not tt ->
         let aa = ("a", Term_sort) in
         let a = mkFreeV aa in
@@ -463,7 +387,7 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
                  (Const.and_lid,       mk_and_interp);
                  (Const.or_lid,        mk_or_interp);
                  (Const.imp_lid,       mk_imp_interp);
-                 (Const.iff_lid,       wrap mk_iff_interp);
+                 (Const.iff_lid,       mk_iff_interp);
                  (Const.not_lid,       wrap mk_not_interp);
                  (Const.eq2_lid,       wrap mk_eq2_interp);
                  (Const.eq3_lid,       wrap mk_eq3_interp);
