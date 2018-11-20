@@ -48,7 +48,7 @@ open FStar.Parser
 module Env = FStar.TypeChecker.Env
 
 type prims_t = {
-    mk:lident -> string -> term * int * list<decl>;
+    mk:lident -> string -> string * term * int * list<decl>;
     is:lident -> bool;
 }
 
@@ -57,13 +57,14 @@ let prims =
     let asym, a = fresh_fvar "a" Term_sort in
     let xsym, x = fresh_fvar "x" Term_sort in
     let ysym, y = fresh_fvar "y" Term_sort in
-    let quant vars body : Range.range -> string -> term * int * list<decl> = fun rng x ->
+    let quant vars body : Range.range -> string -> string * term * int * list<decl> = fun rng x ->
         let xname_decl = Term.DeclFun(x, vars |> List.map snd, Term_sort, None) in
         let xtok = x ^ "@tok" in
         let xtok_decl = Term.DeclFun(xtok, [], Term_sort, None) in
         let xapp = mkApp(x, List.map mkFreeV vars) in //arity ok, see decl (#1383)
         let xtok = mkApp(xtok, []) in //arity ok, see decl (#1383)
         let xtok_app = mk_Apply xtok vars in
+        x,
         xtok,
         List.length vars,
         [xname_decl;
@@ -78,6 +79,41 @@ let prims =
     let axy = [(asym, Term_sort); (xsym, Term_sort); (ysym, Term_sort)] in
     let xy = [(xsym, Term_sort); (ysym, Term_sort)] in
     let qx = [(xsym, Term_sort)] in
+    let mk_macro_name s = FStar.Ident.reserved_prefix ^ s in
+    let mk_op_and : Range.range -> string -> string * term * int * list<decl> =
+        fun rng vname ->
+            let _, tok, arity, decls =
+                quant xy  (boxBool <| mkAnd(unboxBool x, unboxBool y)) rng vname
+            in
+            let macro_name = mk_macro_name vname in
+            let macro =
+                mkDefineFun(macro_name, xy, Term_sort,
+                            mkApp(vname, [x;
+                                         mkITE (unboxBool x, y, boxBool mkFalse)]),
+                            Some "&& macro")
+            in
+            mk_macro_name vname,
+            tok,
+            arity,
+            decls@[macro]
+    in
+    let mk_op_or : Range.range -> string -> string * term * int * list<decl> =
+        fun rng vname ->
+            let _, tok, arity, decls =
+                quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y)) rng vname
+            in
+            let macro_name = mk_macro_name vname in
+            let macro =
+                mkDefineFun(macro_name, xy, Term_sort,
+                            mkApp(vname, [x;
+                                         mkITE (mkNot (unboxBool x), y, boxBool mkTrue)]),
+                            Some "|| macro")
+            in
+            macro_name,
+            tok,
+            arity,
+            decls@[macro]
+    in
     let prims = [
         (Const.op_Eq,          (quant axy (boxBool <| mkEq(x,y))));
         (Const.op_notEq,       (quant axy (boxBool <| mkNot(mkEq(x,y)))));
@@ -91,12 +127,12 @@ let prims =
         (Const.op_Multiply,    (quant xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
         (Const.op_Division,    (quant xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
         (Const.op_Modulus,     (quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
-        (Const.op_And,         (quant xy  (boxBool <| mkAnd(unboxBool x, unboxBool y))));
-        (Const.op_Or,          (quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y))));
+        (Const.op_And,         mk_op_and);
+        (Const.op_Or,          mk_op_or);
         (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
         ]
     in
-    let mk : lident -> string -> term * int * list<decl> =
+    let mk : lident -> string -> string * term * int * list<decl> =
         fun l v ->
             prims |>
             List.find (fun (l', _) -> lid_equals l l') |>
@@ -241,30 +277,13 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
                       mkApp(conj, [a; mkITE(valid_a, b, mk_Witness_term)]),
                       Some "macro for embedded conjunction")
         in
-        //let squashed_c_and =
-        //  let sq = lookup_lid env FStar.Parser.Const.squash_lid in
-        //  let c_and = lookup_lid env FStar.Parser.Const.c_and_lid in
-        //  mkApp(sq.smt_id,
-        //        [mkApp(c_and.smt_id, [aa;bb])])
-        //in
-        //let macro_app =
-        //  mkApp(macro_name, [aa;bb])
-        //in
         [Util.mkAssume(mkForall (Env.get_range env.tcenv)
                                 ([[l_and_a_b]],
                                  [aa;bb],
                                  mkIff(mkAnd(valid_a, valid_b), valid)),
                                  Some "/\ interpretation",
                                  "l_and-interp");
-         macro
-         //;
-         //Util.mkAssume(mkForall (Env.get_range env.tcenv)
-         //                       ([[squashed_c_and]]],
-         //                        [aa;bb],
-         //                        mkEq(squash_c_and, macro_app),
-         //                        Some "l_and-sq_c_and-equiv",
-         //                        "l_and-sq_c_and-equiv")
-                                 ],
+         macro],
          bind_macro env FStar.Parser.Const.and_lid macro_name
     in
     let mk_or_interp : env_t -> string -> term -> decls_t * env_t = fun env disj _ ->
@@ -289,29 +308,13 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
                       mkApp(disj, [a; mkITE(mkNot valid_a, b, mk_Witness_term)]),
                       Some "macro for embedded disjunction")
         in
-        //let squashed_c_or =
-        //  let sq = lookup_lid env FStar.Parser.Const.squash_lid in
-        //  let c_and = lookup_lid env FStar.Parser.Const.c_or_lid in
-        //  mkApp(sq.smt_id,
-        //        [mkApp(c_or.smt_id, [aa;bb])])
-        //in
-        //let macro_app =
-        //  mkApp(macro_name, [aa;bb])
-        //in
         [Util.mkAssume(mkForall (Env.get_range env.tcenv)
                                 ([[l_or_a_b]],
                                  [aa;bb],
                                  mkIff(mkOr(valid_a, valid_b), valid)),
                                  Some "\/ interpretation",
                                  "l_or-interp");
-         macro;
-         //Util.mkAssume(mkForall (Env.get_range env.tcenv)
-         //                       ([[squashed_c_or]]],
-         //                        [aa;bb],
-         //                        mkEq(squash_c_or, macro_app),
-         //                        Some "l_or-sq_c_or-equiv",
-         //                        "l_or-sq_c_or-equiv")
-                                      ],
+         macro],
          bind_macro env FStar.Parser.Const.or_lid macro_name
     in
     let mk_imp_interp : env_t -> string -> term -> decls_t * env_t = fun env imp tt ->
@@ -340,14 +343,7 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
                                 ([[l_imp_a_b]], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)),
                                 Some "==> interpretation",
                                 "l_imp-interp");
-         macro;
-         //Util.mkAssume(mkForall (Env.get_range env.tcenv)
-         //                       ([[squashed_c_or]]],
-         //                        [aa;bb],
-         //                        mkEq(squash_c_or, macro_app),
-         //                        Some "l_or-sq_c_or-equiv",
-         //                        "l_or-sq_c_or-equiv")
-         ],
+         macro],
         bind_macro env FStar.Parser.Const.imp_lid macro_name
     in
     let mk_iff_interp : env -> string -> term -> decls_t = fun env iff tt ->
@@ -500,7 +496,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
          [d;dd], env
     else if prims.is lid
          then let vname = varops.new_fvar lid in
-              let tok, arity, definition = prims.mk lid vname in
+              let vname, tok, arity, definition = prims.mk lid vname in
               let env = push_free_var env lid arity vname (Some tok) in
               definition, env
          else let encode_non_total_function_typ = lid.nsstr <> "Prims" in
