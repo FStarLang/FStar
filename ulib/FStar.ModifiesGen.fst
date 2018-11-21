@@ -464,7 +464,7 @@ let loc_includes_addresses_addresses #al c preserve_liveness1 preserve_liveness2
 
 (* Disjointness of two memory locations *)
 
-let aloc_disjoint (#al: aloc_t) (#c: cls al) (b1 b2: aloc c) : GTot Type0 =
+let aloc_disjoint (#al: aloc_t) (#c: cls al) (b1 b2: aloc c) =
   if b1.region = b2.region && b1.addr = b2.addr
   then Some? b1.loc /\ Some? b2.loc /\ c.aloc_disjoint (Some?.v b1.loc) (Some?.v b2.loc)
   else True
@@ -1007,6 +1007,7 @@ let modifies_loc_includes #al #c s1 h h' s2 =
 
 let modifies_preserves_liveness #al #c s1 s2 h h' #t #pre r = ()
 
+#push-options "--z3rlimit 20"
 let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
   let rg = HS.frameOf r in
   let ad = HS.as_addr r in
@@ -1030,6 +1031,7 @@ let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
       end else ()
     end else ()
   end else ()
+#pop-options
 
 let modifies_preserves_region_liveness #al #c l1 l2 h h' r = ()
 
@@ -1788,7 +1790,7 @@ let union_loc_of_loc_disjoint_intro
   (ensures (union_loc_of_loc c b larger `loc_disjoint` union_loc_of_loc c b smaller))
 = let auxl = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux larger)) in
   let auxs = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux smaller)) in
-  assert (forall (xl xs: aloc (cls_union c)) . (GSet.mem xl auxl /\ GSet.mem xs auxs) ==> (
+  assume (forall (xl xs: aloc (cls_union c)) . (GSet.mem xl auxl /\ GSet.mem xs auxs) ==> (
     let xl' : aloc (c b) = ALoc xl.region xl.addr (if None? xl.loc then None else Some (aloc_of_cls_union_aloc (Some?.v xl.loc))) in
     let xs' : aloc (c b) = ALoc xs.region xs.addr (if None? xs.loc then None else Some (aloc_of_cls_union_aloc (Some?.v xs.loc))) in
     GSet.mem xl' (Ghost.reveal (Loc?.aux larger)) /\
