@@ -230,19 +230,45 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
     let mk_macro_name s =
         FStar.Ident.reserved_prefix ^ s
     in
+    let mkValid t = mkApp("Valid", [t]) in
+    let squash env t =
+      let sq = lookup_lid env FStar.Parser.Const.squash_lid in
+      let b2t = lookup_lid env FStar.Parser.Const.b2t_lid in
+      mkApp(sq.smt_id, [mkApp(b2t.smt_id, [boxBool t])])
+    in
+    let bind_macro env lid macro_name =
+      let fvb = lookup_lid env lid in
+      push_free_var env lid fvb.smt_arity macro_name fvb.smt_token
+    in
+    let mk_unary_prop_connective (conn:lid) (interp: term -> term)
+                                 (env:env_t) (vname:string) (_:term) : decls_t * env_t =
+        let aa = ("a", Term_sort) in
+        let a = mkFreeV aa in
+        let conn_a = mkApp (vname, [a]) in
+        let valid_conn_a = mkValid conn_a in
+        let valid_a = mkValid a in
+        let macro_name = mk_macro_name vname in
+        let macro =
+            mkDefineFun(macro_name,
+                        [aa],
+                        Term_sort,
+                        squash env (interp (valid_a)),
+                        Some "macro for embedded unary connective")
+        in
+        [Util.mkAssume(mkForall (Env.get_range env.tcenv)
+                                ([[conn_a]],
+                                 [aa],
+                                 mkIff(interp(valid_a), valid_conn_a)),
+                                 Some (vname ^ " interpretation"),
+                                 vname ^ "-interp");
+         macro
+         ],
+         bind_macro env conn macro_name
+    in
     let mk_binary_prop_connective (conn:lid) (interp: (term * term) -> term)
                                   (env:env_t) (vname:string) (_:term) : decls_t * env_t =
 
-        let mkValid t = mkApp("Valid", [t]) in
-        let squash env t =
-            let sq = lookup_lid env FStar.Parser.Const.squash_lid in
-            let b2t = lookup_lid env FStar.Parser.Const.b2t_lid in
-            mkApp(sq.smt_id, [mkApp(b2t.smt_id, [boxBool t])])
-        in
-        let bind_macro env lid macro_name =
-            let fvb = lookup_lid env lid in
-            push_free_var env lid fvb.smt_arity macro_name fvb.smt_token
-        in
+        
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let a = mkFreeV aa in
@@ -284,17 +310,7 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
     let mk_or_interp = mk_binary_prop_connective FStar.Parser.Const.or_lid mkOr in
     let mk_imp_interp = mk_binary_prop_connective FStar.Parser.Const.imp_lid mkImp in
     let mk_iff_interp = mk_binary_prop_connective FStar.Parser.Const.iff_lid mkIff in
-    let mk_not_interp : env -> string -> term -> decls_t = fun env l_not tt ->
-        let aa = ("a", Term_sort) in
-        let a = mkFreeV aa in
-        let l_not_a = mkApp(l_not, [a]) in
-        let valid = mkApp("Valid", [l_not_a]) in
-        let not_valid_a = mkNot <| mkApp("Valid", [a]) in
-        [Util.mkAssume(mkForall (Env.get_range env)
-                                ([[l_not_a]], [aa], mkIff(not_valid_a, valid)),
-                                Some "not interpretation",
-                                "l_not-interp")]
-    in
+    let mk_not_interp = mk_unary_prop_connective FStar.Parser.Const.not_lid mkNot in
     let mk_eq2_interp : env -> string -> term -> decls_t = fun env eq2 tt ->
         let aa = ("a", Term_sort) in
         let xx = ("x", Term_sort) in
@@ -398,7 +414,7 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
                  (Const.or_lid,        mk_or_interp);
                  (Const.imp_lid,       mk_imp_interp);
                  (Const.iff_lid,       mk_iff_interp);
-                 (Const.not_lid,       wrap mk_not_interp);
+                 (Const.not_lid,       mk_not_interp);
                  (Const.eq2_lid,       wrap mk_eq2_interp);
                  (Const.eq3_lid,       wrap mk_eq3_interp);
                  (Const.range_lid,     wrap mk_range_interp);
