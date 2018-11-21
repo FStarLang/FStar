@@ -690,6 +690,7 @@ let loc_disjoint_addresses = MG.loc_disjoint_addresses_intro #_ #cls
 let loc_disjoint_regions = MG.loc_disjoint_regions #_ #cls
 
 let modifies = MG.modifies
+let modifies_linear = modifies
 
 let modifies_live_region = MG.modifies_live_region
 
@@ -747,6 +748,12 @@ let modifies_liveness_insensitive_region_buffer l1 l2 h h' #_ #_ #_ x =
   else MG.modifies_preserves_region_liveness_aloc l1 l2 h h' #(frameOf x) #(as_addr x) (ubuffer_of_buffer x)
 
 let modifies_trans = MG.modifies_trans
+
+let modifies_linear_refl _ _ = ()
+
+let modifies_linear_trans s l h1 h2 h3 = modifies_trans s h1 h2 l h3
+
+let modifies_iff_modifies_linear _ _ _ = ()
 
 let modifies_only_live_regions = MG.modifies_only_live_regions
 

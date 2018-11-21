@@ -890,6 +890,8 @@ val modifies
   (h1 h2: HS.mem)
 : GTot Type0
 
+val modifies_linear (l:loc) (h1 h2:HS.mem) :GTot Type0
+
 /// If a region ``r`` is disjoint from a set ``s`` of memory locations
 /// which is modified, then its liveness is preserved.
 
@@ -1095,7 +1097,19 @@ val modifies_trans
 : Lemma
   (requires (modifies s12 h1 h2 /\ modifies s23 h2 h3))
   (ensures (modifies (loc_union s12 s23) h1 h3))
-  [SMTPat (modifies s12 h1 h2); SMTPat (modifies s23 h2 h3)]
+
+val modifies_linear_refl (s:loc) (h:HS.mem)
+  : Lemma (modifies_linear s h h)
+          [SMTPat (modifies_linear s h h)]
+
+val modifies_linear_trans (s l:loc) (h1 h2 h3:HS.mem)
+  : Lemma (requires (modifies s h1 h2 /\ modifies_linear l h2 h3 /\ loc_includes l s))
+          (ensures  (modifies_linear l h1 h3))
+	  [SMTPat (modifies s h1 h2); SMTPat (modifies_linear l h1 h3)]
+
+val modifies_iff_modifies_linear (l:loc) (h1 h2:HS.mem)
+  : Lemma (modifies l h1 h2 <==> modifies_linear l h1 h2)
+
 
 /// Regions that are not live can be removed from sets of memory
 /// locations that are modified.
