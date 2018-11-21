@@ -79,6 +79,16 @@ let prims =
     let axy = [(asym, Term_sort); (xsym, Term_sort); (ysym, Term_sort)] in
     let xy = [(xsym, Term_sort); (ysym, Term_sort)] in
     let qx = [(xsym, Term_sort)] in
+    let mk_unary_boolean_connective (interp:term -> term) (rng:Range.range) (vname:string) : string * term * int * list<decl> =
+        let macro_name = FStar.Ident.reserved_prefix ^ vname in
+        let i = boxBool (interp (unboxBool x)) in
+        let _, tok, arity, decls = quant xy i rng vname in
+        let macro = mkDefineFun (macro_name, xy, Term_sort, i,Some (vname ^ " macro")) in
+        macro_name,
+        tok,
+        arity,
+        decls@[macro]
+    in
     let mk_binary_boolean_connective
             (interp:(term * term) -> term)
             (rng:Range.range) (vname:string) : string * term * int * list<decl> =
@@ -91,11 +101,12 @@ let prims =
         arity,
         decls@[macro]
     in
+    let mk_op_not = mk_unary_boolean_connective mkNot in
     let mk_op_and = mk_binary_boolean_connective mkAnd in
     let mk_op_or = mk_binary_boolean_connective mkOr in
     let prims = [
         (Const.op_Eq,          (quant axy (boxBool <| mkEq(x,y))));
-        (Const.op_notEq,       (quant axy (boxBool <| mkNot(mkEq(x,y)))));
+        (Const.op_notEq,       mk_op_not);
         (Const.op_LT,          (quant xy  (boxBool <| mkLT(unboxInt x, unboxInt y))));
         (Const.op_LTE,         (quant xy  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
         (Const.op_GT,          (quant xy  (boxBool <| mkGT(unboxInt x, unboxInt y))));
