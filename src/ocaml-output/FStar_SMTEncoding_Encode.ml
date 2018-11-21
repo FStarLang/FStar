@@ -118,12 +118,12 @@ let (prims : prims_t) =
                       interp uu____532  in
                     FStar_SMTEncoding_Term.boxBool uu____531  in
                   let uu____533 =
-                    let uu____546 = quant xy i  in uu____546 rng vname  in
+                    let uu____546 = quant qx i  in uu____546 rng vname  in
                   match uu____533 with
                   | (uu____580,tok,arity,decls) ->
                       let macro =
                         FStar_SMTEncoding_Term.mkDefineFun
-                          (macro_name, xy, FStar_SMTEncoding_Term.Term_sort,
+                          (macro_name, qx, FStar_SMTEncoding_Term.Term_sort,
                             i,
                             (FStar_Pervasives_Native.Some
                                (Prims.strcat vname " macro")))
