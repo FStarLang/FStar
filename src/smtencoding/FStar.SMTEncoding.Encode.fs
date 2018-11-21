@@ -82,8 +82,8 @@ let prims =
     let mk_unary_boolean_connective (interp:term -> term) (rng:Range.range) (vname:string) : string * term * int * list<decl> =
         let macro_name = FStar.Ident.reserved_prefix ^ vname in
         let i = boxBool (interp (unboxBool x)) in
-        let _, tok, arity, decls = quant xy i rng vname in
-        let macro = mkDefineFun (macro_name, xy, Term_sort, i,Some (vname ^ " macro")) in
+        let _, tok, arity, decls = quant qx i rng vname in
+        let macro = mkDefineFun (macro_name, qx, Term_sort, i, Some (vname ^ " macro")) in
         macro_name,
         tok,
         arity,
@@ -95,7 +95,7 @@ let prims =
         let macro_name = FStar.Ident.reserved_prefix ^ vname in
         let i = boxBool (interp(unboxBool x, unboxBool y)) in
         let _, tok, arity, decls = quant xy i rng vname in
-        let macro = mkDefineFun(macro_name, xy, Term_sort, i,Some (vname ^ " macro")) in
+        let macro = mkDefineFun(macro_name, xy, Term_sort, i, Some (vname ^ " macro")) in
         macro_name,
         tok,
         arity,
