@@ -106,7 +106,7 @@ let prims =
     let mk_op_or = mk_binary_boolean_connective mkOr in
     let prims = [
         (Const.op_Eq,          (quant axy (boxBool <| mkEq(x,y))));
-        (Const.op_notEq,       mk_op_not);
+        (Const.op_notEq,       (quant axy (boxBool <| mkNot(mkEq(x,y)))));
         (Const.op_LT,          (quant xy  (boxBool <| mkLT(unboxInt x, unboxInt y))));
         (Const.op_LTE,         (quant xy  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
         (Const.op_GT,          (quant xy  (boxBool <| mkGT(unboxInt x, unboxInt y))));
@@ -119,7 +119,7 @@ let prims =
         (Const.op_Modulus,     (quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
         (Const.op_And,         mk_op_and);
         (Const.op_Or,          mk_op_or);
-        (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
+        (Const.op_Negation,    mk_op_not);
         ]
     in
     let mk : lident -> string -> string * term * int * list<decl> =
