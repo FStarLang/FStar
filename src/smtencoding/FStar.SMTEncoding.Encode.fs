@@ -247,6 +247,10 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
         let conn_a = mkApp (vname, [a]) in
         let valid_conn_a = mkValid conn_a in
         let valid_a = mkValid a in
+        (*
+             (define-fun l_not_macro  ((a Term)) Term
+                         (squash (b2t (BoxBool (not (Valid a)))))
+        *)
         let macro_name = mk_macro_name vname in
         let macro =
             mkDefineFun(macro_name,
@@ -279,13 +283,13 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
         let valid_b = mkValid b in
         (*
              (define-fun l_and_macro  ((a Term) (b Term)) Term
-                         (squash (Valid (BoxBool (and (Valid a) (Valid b))))
+                         (squash (b2t (BoxBool (and (Valid a) (Valid b))))
 
              (define-fun l_or_macro  ((a Term) (b Term)) Term
-                         (squash (Valid (BoxBool (or (Valid a) (Valid b))))
+                         (squash (b2t (BoxBool (or (Valid a) (Valid b))))
 
              (define-fun l_imp_macro  ((a Term) (b Term)) Term
-                         (squash (Valid (BoxBool (implies (Valid a) (Valid b))))
+                         (squash (b2t (BoxBool (implies (Valid a) (Valid b))))
 
         *)
         let macro_name = mk_macro_name vname in
