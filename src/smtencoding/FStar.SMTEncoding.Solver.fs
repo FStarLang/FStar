@@ -117,7 +117,7 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
         || Option.isSome (BU.smap_try_find include_assumption_names a.assumption_name)
     in
     //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
-    let theory_rev = List.rev theory in
+    let theory_rev = List.rev theory in  //List.rev is already the tail recursive version of rev
     let pruned_theory =
         let include_assumption_names =
             //this map typically grows to 10k+ elements
@@ -125,17 +125,18 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
             //becomes near quadratic in the # of facts
             BU.smap_create 10000
         in
-        List.fold_left (fun out d ->
-          match d with
-          | Assume a ->
-            if matches_fact_ids include_assumption_names a
-            then d::out
-            else out
+        let keep_decl :decl -> bool = function  //effectful function, adds decls to the include_assumption_names map
+          | Assume a -> matches_fact_ids include_assumption_names a
           | RetainAssumptions names ->
             List.iter (fun x -> BU.smap_add include_assumption_names x true) names;
-            d::out
-          | _ -> d::out)
-        [] theory_rev
+            true
+          | Module _ -> failwith "Solver.fs::keep_decl should never have been called with a Module decl"
+          | _ -> true
+        in
+        List.fold_left (fun out d ->
+          match d with
+          | Module (name, decls) -> decls |> List.filter keep_decl |> (fun decls -> Module (name, decls)::out)
+          | _ -> if keep_decl d then d::out else out) [] theory_rev
     in
     pruned_theory
 
