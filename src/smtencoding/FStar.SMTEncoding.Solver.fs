@@ -106,14 +106,14 @@ let with_hints_db fname f =
 let filter_using_facts_from (e:env) (theory:decls_t) =
     let should_enc_fid fid =
         match fid with
-        | Namespace lid -> Env.should_enc_lid e lid
-        | _ -> false
+        | Name lid -> Env.should_enc_lid e lid
+        | _ -> failwith "Solver.fs::filter_using_facts_from expected only Name fact ids"
     in
     let matches_fact_ids (include_assumption_names:BU.smap<bool>) (a:Term.assumption) =
       match a.assumption_fact_ids with
       | [] -> true //retaining `a` because it is not tagged with a fact id
       | _ ->
-        a.assumption_fact_ids |> BU.for_some should_enc_fid
+        a.assumption_fact_ids |> List.filter (function | Name _ -> true | _ -> false) |> BU.for_some should_enc_fid
         || Option.isSome (BU.smap_try_find include_assumption_names a.assumption_name)
     in
     //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
