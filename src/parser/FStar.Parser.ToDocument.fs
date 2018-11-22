@@ -894,8 +894,8 @@ and p_letlhs kw (pat, _) inner_let =
          | None -> empty)
       in
       let terms, style =
+        // VD: should we indent inner lets less?
         if inner_let then
-          // let bs = [pats_for_inner_let pats] in
           let bs, style = pats_as_binders_if_possible pats in
           bs @ [ascr_doc], style
         else
@@ -907,7 +907,7 @@ and p_letlhs kw (pat, _) inner_let =
       (* doesn't have binders *)
       let ascr_doc =
         (match ascr with
-         | Some (t, tac) -> group (colon ^^ p_typ_top (Arrows (2, 2)) false false t) ^^ tac //(sig_as_binders_if_possible t false) ^^ tac
+         | Some (t, tac) -> group (colon ^^ p_typ_top (Arrows (2, 2)) false false t) ^^ tac
          | None -> empty)
       in
       group (group (kw ^/^ p_tuplePattern pat) ^^ ascr_doc)
@@ -1545,25 +1545,26 @@ and p_tmImplies e = match e.tm with
 // definition.
 and format_sig style terms no_last_op flat_space =
   let terms', last = List.splitAt (List.length terms - 1) terms in
-  let n, last_n, terms', sep, last_op, one_line_space =
+  let n, last_n, terms', sep, last_op =
     match style with
     | Arrows (n, ln)->
-        n, ln, terms', space ^^ rarrow ^^ break1, rarrow ^^ space, space
+        n, ln, terms', space ^^ rarrow ^^ break1, rarrow ^^ space
     | Binders (n, ln, parens) ->
         n, ln,
         (if parens then List.map soft_parens_with_nesting terms' else terms'),
-        break1, colon ^^ space,
-        (if parens then space else empty)
+        break1, colon ^^ space
   in
+  let last = List.hd last in
   let last_op = if List.length terms > 1 && (not no_last_op) then last_op else empty in
+  let one_line_space = if not (last = empty) || not no_last_op then space else empty in
   let single_line_arg_indent = repeat n space in
   let fs = if flat_space then space else empty in
   match List.length terms with
   | 1 -> List.hd terms
-  | _ -> group (ifflat (fs ^^ (separate sep terms') ^^ one_line_space ^^ last_op ^^ List.hd last)
+  | _ -> group (ifflat (fs ^^ (separate sep terms') ^^ one_line_space ^^ last_op ^^ last)
            (prefix n 1 (group ((ifflat (fs ^^ separate sep terms')
              (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms')))))))
-               (align (hang last_n (last_op ^^ List.hd last)))))
+               (align (hang last_n (last_op ^^ last)))))
 
 and p_tmArrow style flat_space p_Tm e =
   let terms =
