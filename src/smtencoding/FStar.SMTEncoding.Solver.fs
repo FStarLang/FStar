@@ -140,10 +140,10 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
     in
     pruned_theory
 
-let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
+let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:decls_t) :(decls_t * bool * int * int) =  //filtered theory, if core used, retained, pruned
     match core with
     | None ->
-      filter_using_facts_from e theory, false
+      filter_using_facts_from e theory, false, 0, 0  //no stats if no core
     | Some core ->
         let theory', n_retained, n_pruned =
             List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
@@ -153,9 +153,15 @@ let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
                 else if BU.starts_with a.assumption_name "@"
                 then d::theory, n_retained, n_pruned
                 else theory, n_retained, n_pruned+1
+            | Module (name, decls) ->
+              decls |> filter_assertions_with_stats e (Some core)
+                    |> (fun (decls, _, r, p) -> Module (name, decls)::theory, n_retained + r, n_pruned + p)
             | _ -> d::theory, n_retained, n_pruned)
             theory ([], 0, 0) in
-        theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
+        theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true, n_retained, n_pruned
+
+let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
+  let (theory, b, _, _) = filter_assertions_with_stats e core theory in theory, b
 
 let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
 
