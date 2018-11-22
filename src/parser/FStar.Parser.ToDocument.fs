@@ -720,7 +720,7 @@ and p_justSig d = match d.d with
   | Val (lid, t) ->
       (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^^ p_typ false false t
   | TopLevelLet (_, lbs) ->
-      separate_map hardline (fun lb -> group (p_letlhs (str "let") lb)) lbs
+      separate_map hardline (fun lb -> group (p_letlhs (str "let") lb false)) lbs
   | _ ->
       empty
 
@@ -875,14 +875,14 @@ and p_constructorBranch (uid, t_opt, doc_opt, use_of) =
   (* TODO : Should we allow tagging individual constructor with a comment ? *)
   optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep ^^ space ^^ p_typ false false t))) t_opt
 
-and p_letlhs kw (pat, _) =
+and p_letlhs kw (pat, _) inner_let =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
   let pat, ascr =
     // if the let binding was written in arrow style, the arguments will be in t
     // if it was written in binders style then they will be in pat
     match pat.pat with
     | PatAscribed (pat, (t, None)) -> pat, Some (t, empty)
-    | PatAscribed (pat, (t, Some tac)) -> pat, Some (t, group (str "by" ^^ space ^^ p_atomicTerm tac))
+    | PatAscribed (pat, (t, Some tac)) -> pat, Some (t, group (space ^^ str "by" ^^ space ^^ p_atomicTerm tac))
     | _ -> pat, None
   in
   match pat.pat with
@@ -893,20 +893,27 @@ and p_letlhs kw (pat, _) =
          | Some (t, tac) -> (sig_as_binders_if_possible t true) ^^ tac
          | None -> empty)
       in
-      let bs, style = pats_as_binders_if_possible pats in
-      let terms = bs @ [ascr_doc] in
-      group <| kw ^^ space ^^ p_lident lid ^^ (format_sig style terms true)
+      let terms, style =
+        if inner_let then
+          // let bs = [pats_for_inner_let pats] in
+          let bs, style = pats_as_binders_if_possible pats in
+          bs @ [ascr_doc], style
+        else
+          let bs, style = pats_as_binders_if_possible pats in
+          bs @ [ascr_doc], style
+      in
+      group <| kw ^^ space ^^ p_lident lid ^^ (format_sig style terms true true)
   | _ ->
       (* doesn't have binders *)
       let ascr_doc =
         (match ascr with
-         | Some (t, tac) -> (sig_as_binders_if_possible t false) ^^ tac
+         | Some (t, tac) -> group (colon ^^ p_typ_top (Arrows (2, 2)) false false t) ^^ tac //(sig_as_binders_if_possible t false) ^^ tac
          | None -> empty)
       in
       group (group (kw ^/^ p_tuplePattern pat) ^^ ascr_doc)
 
 and p_letbinding kw (pat, e) =
-  let doc_pat = p_letlhs kw (pat, e) in
+  let doc_pat = p_letlhs kw (pat, e) false in
   let comm, doc_expr = p_term_sep false false e in
   let doc_expr = inline_comment_or_above comm doc_expr empty in
   ifflat (doc_pat ^/^ equals ^/^ doc_expr) (doc_pat ^^ space ^^ group (equals ^^ jump2 doc_expr))
@@ -1325,7 +1332,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
         | Some NoLetQualifier -> str "let"
         | _ -> str "and"
       in
-      let doc_pat = p_letlhs doc_let_or_and (pat, e) in
+      let doc_pat = p_letlhs doc_let_or_and (pat, e) true in
       let comm, doc_expr = p_term_sep false false e in
      let doc_expr = inline_comment_or_above comm doc_expr empty in
      attrs ^^
@@ -1386,7 +1393,7 @@ and p_typ' ps pb e = match e.tm with
 
 and p_typ_top style ps pb e = with_comment (p_typ_top' style ps pb) e e.range "!41"
 
-and p_typ_top' style ps pb e = p_tmArrow style p_tmFormula e
+and p_typ_top' style ps pb e = p_tmArrow style true p_tmFormula e
 
 and sig_as_binders_if_possible t extra_space =
   let s = if extra_space then space else empty in
@@ -1434,14 +1441,13 @@ and pats_as_binders_if_possible pats =
   | _ -> true
   in
   match map_if_all all_binders pats with
-  | Some bs -> // flow break1 (collapse_pats bs)
+  | Some bs ->
       collapse_pats bs, Binders (4, 0, true)
-      // List.fold_left (fun x y -> x ^/^ y) empty (map_rev (fun (x, y) -> soft_parens_with_nesting (x ^^ colon ^^ y)) bs)
-  | None -> // flow_map break1 p_atomicPattern pats
-      if all all_unbound pats then
-        List.map p_atomicPattern pats, Binders (4, 0, false)
-      else
-        List.map p_atomicPattern pats, Arrows (2, 2)
+  | None ->
+      List.map p_atomicPattern pats, Binders (4, 0, false)
+
+// and pats_for_inner_let pats =
+//   str "/inner let/"
 
 and p_quantifier e = match e.tm with
     | QForall _ -> str "forall"
@@ -1524,8 +1530,8 @@ and p_tmIff e = match e.tm with
     | _ -> p_tmImplies e
 
 and p_tmImplies e = match e.tm with
-    | Op({idText = "==>"}, [e1;e2]) -> infix0 (str "==>") (p_tmArrow (Arrows (2, 2)) p_tmFormula e1) (p_tmImplies e2)
-    | _ -> p_tmArrow (Arrows (2, 2)) p_tmFormula e
+    | Op({idText = "==>"}, [e1;e2]) -> infix0 (str "==>") (p_tmArrow (Arrows (2, 2)) false p_tmFormula e1) (p_tmImplies e2)
+    | _ -> p_tmArrow (Arrows (2, 2)) false p_tmFormula e
 
 // This function is somewhat convoluted because it is used in a few
 // different contexts and it is trying to properly indent for each of
@@ -1537,7 +1543,7 @@ and p_tmImplies e = match e.tm with
 // It also needs to make adjustments depending on which style a signature
 // is to be printed in. For more details see the `annotation_style` type
 // definition.
-and format_sig style terms no_last_op =
+and format_sig style terms no_last_op flat_space =
   let terms', last = List.splitAt (List.length terms - 1) terms in
   let n, last_n, terms', sep, last_op, one_line_space =
     match style with
@@ -1551,20 +1557,21 @@ and format_sig style terms no_last_op =
   in
   let last_op = if List.length terms > 1 && (not no_last_op) then last_op else empty in
   let single_line_arg_indent = repeat n space in
+  let fs = if flat_space then space else empty in
   match List.length terms with
   | 1 -> List.hd terms
-  | _ -> group (ifflat (space ^^ (separate sep terms') ^^ one_line_space ^^ last_op ^^ List.hd last)
-           (prefix n 1 (group ((ifflat (space ^^ separate sep terms')
+  | _ -> group (ifflat (fs ^^ (separate sep terms') ^^ one_line_space ^^ last_op ^^ List.hd last)
+           (prefix n 1 (group ((ifflat (fs ^^ separate sep terms')
              (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms')))))))
                (align (hang last_n (last_op ^^ List.hd last)))))
 
-and p_tmArrow style p_Tm e =
+and p_tmArrow style flat_space p_Tm e =
   let terms =
     match style with
     | Arrows _ -> p_tmArrow' p_Tm e
     | Binders _ -> collapse_binders p_Tm e
   in
-  format_sig style terms false
+  format_sig style terms false flat_space
 
 and p_tmArrow' p_Tm e =
   match e.tm with
