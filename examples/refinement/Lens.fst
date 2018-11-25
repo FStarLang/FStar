@@ -1,8 +1,5 @@
 module Lens 
 
-
-open LowComp
-open HighComp
 open FStar.HyperStack
 open FStar.HyperStack.ST
 open LowStar.Buffer
@@ -19,8 +16,6 @@ module U32 = FStar.UInt32
 module Map = FStar.Map
 module M = LowStar.Modifies
 
-
-
 (* Standard lens class *)
 class lens a b = 
   { put : a -> b -> a; 
@@ -32,7 +27,7 @@ class lens a b =
 class low_state low = 
   { wf : HS.mem -> low -> Type } 
 
-(* A more specific one for our case *)
+(* "Stack" lens  *)
 class state_lens low (#c : low_state low) high = 
   { (* pure versions *)
     to_low : h:HS.mem -> ls:low{wf #_ #c h ls} -> high -> GTot (h':HS.mem{wf #_ #c h' ls}); 
@@ -49,18 +44,34 @@ class state_lens low (#c : low_state low) high =
     low_low : h:HS.mem -> ls:low{wf h ls} -> hs1:high -> hs2:high ->
               Lemma (to_low h ls hs2 == to_low (to_low h ls hs1) ls hs2) }
 
-// instance tuple_lens : state_lens lstate state = 
-//   { wf = well_formed; 
-//     to_low = state_as_lstate;
-//     to_high = lstate_as_state;
-//     to_low' = admit ();
-//     to_high' = admit ();
-//     high_low = state_as_lstate_get_put;
-//     low_high = state_as_lstate_put_get;
-//     low_low = state_as_lstate_put_put; } 
+(* Effect definition *)
+
+let comp hstate a = hstate -> M (a * hstate) 
+
+let hreturn hstate (a:Type) (x : a) : comp hstate a = fun s -> (x, s)
+
+let hbind hstate (a:Type) (b:Type) (m : comp hstate a) (f : a -> comp hstate b) : comp hstate b =
+  fun s -> let (x, s1) = m s in f x s1
+
+let hread hstate () : comp hstate hstate =
+  fun s -> (s, s)
+
+let hwrite hstate (s':hstate) : comp hstate unit =
+  fun s -> ((), s')
+  
+// Effect definition
+total reifiable reflectable new_effect {
+  HIGH_h (s:Type0) : a:Type -> Effect
+        with repr  = comp s
+        ; bind     = hbind s
+        ; return   = hreturn s
+        ; get      = hread s
+        ; put      = hwrite s
+  }
 
 (* WPs of high computations *)
-type hwp hstate a = hstate -> (a * hstate -> Type) -> GTot Type
+type hwp hstate a = HIGH_h?.wp hstate a
+// hstate -> (a * hstate -> Type) -> GTot Type
 
 type hpre #hstate = hstate -> Type0
 type hpost #hstate a = hstate -> a -> hstate -> Type0
@@ -114,12 +125,17 @@ let morph #lstate (#l : low_state lstate) #hstate (#p: state_lens lstate hstate)
 
 
 (* High WPS *)
+
+assume val range0: range
+
 unfold
-let return_wp #hstate (#a:Type) (x : a) : hwp_mon a = fun (s0 : hstate) p -> p (x, s0)
+let return_wp #hstate (#a:Type) (x : a) : hwp_mon a = HIGH_h?.return_wp hstate a x
+// fun (s0 : hstate) p -> p (x, s0)
 
 unfold
 let bind_wp #hstate #a #b (wp1:hwp_mon a) (fwp2 : (a -> hwp_mon b)) : (wp:hwp_mon b) =
-    fun (s0:hstate) p -> wp1 s0 (fun ((x, s1) : (a * hstate)) -> fwp2 x s1 p)
+    HIGH_h?.bind_wp hstate range0 a b wp1 fwp2
+// fun (s0:hstate) p -> wp1 s0 (fun ((x, s1) : (a * hstate)) -> fwp2 x s1 p)
 
 unfold 
 let read_wp #hstate : hwp_mon hstate = fun (s: hstate) p -> p (s, s)
@@ -132,12 +148,16 @@ let read_comp_wp #hstate #a (l : lens hstate a) : hwp_mon a = fun (s: hstate) p 
 
 unfold 
 let write_comp_wp #hstate #a (l : lens hstate a) (x : a) : hwp_mon unit = fun (s0: hstate) p -> p ((), put #hstate #a #l s0 x)
-
-(* High combinators *)
-let return_elab (#hstate:Type) (#a:Type) (x : a) : high #hstate a (return_wp x) = fun (s0 : hstate) -> (x, s0)
+  
+(** Elaborated combinators **)
+let return_elab (#hstate:Type) (#a:Type) (x : a) : high #hstate a (return_wp x) =
+  HIGH_h?.return_elab hstate a x
+// fun (s0 : hstate) -> (x, s0)
 
 let bind_elab #hstate #a #b #f_w (f:high #hstate a f_w) #g_w ($g:(x:a) -> high #hstate b (g_w x)) 
-: high #hstate b (bind_wp f_w g_w) = fun s0 -> let (r1, s1) = run_high f s0 in run_high (g r1) s1
+: high #hstate b (bind_wp f_w g_w) = 
+  HIGH_h?.bind_elab hstate a b f_w f g_w g
+//fun s0 -> let (r1, s1) = run_high f s0 in run_high (g r1) s1
 
 let read_elab #hstate (_ : unit) : high hstate read_wp = fun (s : hstate) -> (s, s) 
 
@@ -160,7 +180,9 @@ let rec for_elab (#hstate:Type) (inv : hstate -> int -> Type0)
       bind_elab (f lo) k
     end
 
+
 (* Low combinators *)
+
 let lreturn #lstate (#l : low_state lstate) #state (#p: state_lens lstate state) (#a:Type) (x : a)
 : low #_ #l #_ #p a (return_wp x) (return_elab x) = 
   fun ls -> 
