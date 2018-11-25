@@ -242,6 +242,7 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
         FStar.Ident.reserved_prefix ^ s
     in
     let mkValid t = mkApp("Valid", [t]) in
+    let mkBoxLogical t = mkApp ("BoxLogical", [t]) in
     let squash env t =
       let sq = lookup_lid env FStar.Parser.Const.squash_lid in
       let b2t = lookup_lid env FStar.Parser.Const.b2t_lid in
@@ -260,14 +261,14 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
         let valid_a = mkValid a in
         (*
              (define-fun l_not_macro  ((a Term)) Term
-                         (squash (b2t (BoxBool (not (Valid a)))))
+                         (BoxLogical (not (Valid a))))
         *)
         let macro_name = mk_macro_name vname in
         let macro =
             mkDefineFun(macro_name,
                         [aa],
                         Term_sort,
-                        squash env (interp (valid_a)),
+                        mkBoxLogical (interp (valid_a)),
                         Some "macro for embedded unary connective")
         in
         [Util.mkAssume(mkForall (Env.get_range env.tcenv)
@@ -294,13 +295,13 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
         let valid_b = mkValid b in
         (*
              (define-fun l_and_macro  ((a Term) (b Term)) Term
-                         (squash (b2t (BoxBool (and (Valid a) (Valid b))))
+                         (BoxLogical (and (Valid a) (Valid b))))
 
              (define-fun l_or_macro  ((a Term) (b Term)) Term
-                         (squash (b2t (BoxBool (or (Valid a) (Valid b))))
+                         (BoxLogical (or (Valid a) (Valid b))))
 
              (define-fun l_imp_macro  ((a Term) (b Term)) Term
-                         (squash (b2t (BoxBool (implies (Valid a) (Valid b))))
+                         (BoxLogical (implies (Valid a) (Valid b))))
 
         *)
         let macro_name = mk_macro_name vname in
@@ -308,7 +309,7 @@ let primitive_type_axioms : env_t -> lident -> string -> term -> list<decl> * en
             mkDefineFun(macro_name,
                         [aa;bb],
                         Term_sort,
-                        squash env (interp (valid_a, valid_b)),
+                        mkBoxLogical (interp (valid_a, valid_b)),
                         Some "macro for embedded connective")
         in
         [Util.mkAssume(mkForall (Env.get_range env.tcenv)

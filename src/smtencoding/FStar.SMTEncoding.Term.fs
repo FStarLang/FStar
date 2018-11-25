@@ -877,7 +877,16 @@ and mkPrelude z3options =
                                       (< (Rank t1) (Rank t2)))\n\
                                       :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
 
-   basic ^ bcons ^ lex_ordering
+   let box_logical = "\n(declare-fun BoxLogical (bool) Term)\n\
+                        (assert (forall ((b bool))\n\
+		                                (! (HasType (BoxLogical b) Tm_type)\n\
+		                                   :pattern ((BoxLogical b)))))\n\
+                       (assert (forall ((b bool))\n\
+		                               (! (iff (Valid (BoxLogical b))\n\
+			                                   b)\n\
+		                                  :pattern ((Valid (BoxLogical b))))))\n" in
+
+   basic ^ bcons ^ lex_ordering ^ box_logical
 
 
 (* Generate boxing/unboxing functions for bitvectors of various sizes. *)
