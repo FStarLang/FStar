@@ -1094,7 +1094,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     Util.mkAssume(mkForall (S.range_of_fv b2t) ([[b2t_x]], [xx],
                                            mkEq(valid_b2t_x, mkApp(snd boxBoolFun, [x]))),
                                 Some "b2t def",
-                                "b2t_def")] in
+                                "b2t_def");
+                    //Util.mkAssume(mkForall (S.range_of_fv b2t) ([[b2t_x]], [xx],
+                    //              mk_HasType b2t_x mk_Term_type),
+                    //              Some "b2t typing",
+                    //              "b2t_typing");
+                    ] in
        let boxlogical_theory =
          let mkValid t = mkApp ("Valid", [t]) in
          let sq = lookup_lid env FStar.Parser.Const.squash_lid in
@@ -1111,14 +1116,32 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
          in
          let box_equation =
            let boxlogical_b = mkApp ("BoxLogical", [b]) in
-           Util.mkAssume (mkForall (Env.get_range env.tcenv)
-                                   ([[boxlogical_b]],
-                                    [bb],
-                                    mkEq (boxlogical_b, mkApp(sq.smt_id, [mkApp ("Prims.b2t", [boxBool b])]))),
-                                    Some ("BoxLogical equation"),
-                                    "boxlogical-equation")
+           let ff = ("f", Fuel_sort) in
+           let f = Util.mkFreeV ff in
+           let tt = ("t", Term_sort) in
+           let t = Util.mkFreeV tt in
+           let t_hastypefuelbox = mk_HasTypeFuel f t boxlogical_b in
+           let t_hastypefuelsq = mk_HasTypeFuel f t (mkApp (sq.smt_id, [mkApp ("Prims.b2t", [boxBool b])])) in
+           let ty1 = Util.mkAssume (mkForall (Env.get_range env.tcenv)
+                                             ([[t_hastypefuelbox]],
+                                              [ff; bb; tt],
+                                              mkIff (t_hastypefuelbox, t_hastypefuelsq)),
+                                              Some ("BoxLogical typing - 1"),
+                                              "boxlogical-typing-1")
+           in
+           let box_hastypefuelt = mk_HasTypeFuel f boxlogical_b t in
+           let sq_hastypefuelt = mk_HasTypeFuel f (mkApp (sq.smt_id, [mkApp ("Prims.b2t", [boxBool b])])) t in
+           let ty2 = Util.mkAssume (mkForall (Env.get_range env.tcenv)
+                                             ([[box_hastypefuelt]],
+                                              [ff; bb; tt],
+                                              mkIff (box_hastypefuelt, sq_hastypefuelt)),
+                                              Some ("BoxLogical typing - 2"),
+                                              "boxlogical-typing-2")
+
+           in
+           [ty1] //; ty2]
          in
-         [Term.DeclFun ("BoxLogical", [Bool_sort], Term_sort, None); box_validity_axiom; box_equation]
+         Term.DeclFun ("BoxLogical", [Bool_sort], Term_sort, None)::box_validity_axiom::box_equation
        in
        decls @ boxlogical_theory, env
 
