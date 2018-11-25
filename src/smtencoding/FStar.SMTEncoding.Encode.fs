@@ -1139,7 +1139,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                               "boxlogical-typing-2")
 
            in
-           [ty1] //; ty2]
+           [ty1; ty2]
          in
          Term.DeclFun ("BoxLogical", [Bool_sort], Term_sort, None)::box_validity_axiom::box_equation
        in

@@ -4065,7 +4065,7 @@ and (encode_sigelt' :
                             "BoxLogical typing - 2"), "boxlogical-typing-2")
                         in
                      FStar_SMTEncoding_Util.mkAssume uu____12970  in
-                   [ty1]  in
+                   [ty1; ty2]  in
                  (FStar_SMTEncoding_Term.DeclFun
                     ("BoxLogical", [FStar_SMTEncoding_Term.Bool_sort],
                       FStar_SMTEncoding_Term.Term_sort,
