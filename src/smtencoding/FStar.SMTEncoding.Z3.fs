@@ -109,9 +109,9 @@ let check_z3hash () =
 
 let ini_params () =
   check_z3hash ();
-  List.append ["-smt2"; "-in"; "auto_config=false";
-               "model=true"; "smt.relevancy=2"; "smt.case_split=3";
-               (Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed ())))]
+  List.append ["-smt2";
+               "-in";
+               Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed ()))]
               (Options.z3_cliopt ())
 
 type label = string
@@ -387,7 +387,11 @@ let z3_options = BU.mk_ref
     "(set-option :global-decls false)\n\
      (set-option :smt.mbqi false)\n\
      (set-option :auto_config false)\n\
-     (set-option :produce-unsat-cores true)\n"
+     (set-option :produce-unsat-cores true)\n
+     (set-option :model true)\n\
+     (set-option :smt.case_split=3)\n\
+     (set-option :smt.relevancy=2)\n\
+     (set-option :smt.qi.eager_threshold=100)"
 
 // Use by F*.js
 let set_z3_options opts =
