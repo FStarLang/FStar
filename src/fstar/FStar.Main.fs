@@ -96,6 +96,11 @@ let init_warn_error() =
   if s <> "" then
     FStar.Parser.ParseIt.parse_warn_error s
 
+(* Need to keep names of input files for a second pass when prettyprinting *)
+(* This reference is set once in `go` and read in `main` if the print or *)
+(* print_in_place options are passed *)
+let fstar_files: ref<option<list<string>>> = Util.mk_ref None
+
 (****************************************************************************)
 (* Main function                                                            *)
 (****************************************************************************)
@@ -107,6 +112,7 @@ let go _ =
     | Error msg ->
         Util.print_string msg; exit 1
     | Success ->
+        fstar_files := Some filenames;
         load_native_tactics ();
         init_warn_error();
 
@@ -155,9 +161,9 @@ let go _ =
           FStar.Fsdoc.Generator.generate filenames
 
         (* --print: Emit files in canonical source syntax *)
-        else if Options.indent () then
+        else if Options.indent () || Options.indent_in_place () then
           if FStar.Platform.is_fstar_compiler_using_ocaml
-          then FStar.Indent.generate filenames
+          then FStar.Indent.generate FStar.Indent.ToTempFile filenames
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
 
@@ -211,9 +217,20 @@ let handle_error e =
 let main () =
   try
     setup_hooks ();
-    let _, time = FStar.Util.record_time go in
+    let _, time = Util.record_time go in
+    if Options.indent () || Options.indent_in_place () then
+      match !fstar_files with
+      | Some filenames ->
+          let printing_mode =
+            if Options.indent () then
+              FStar.Indent.FromTempToStdout
+            else
+              FStar.Indent.FromTempToFile
+          in
+          FStar.Indent.generate printing_mode filenames
+      | None -> Util.print_error "Internal error: List of source files not properly set";
     if FStar.Options.query_stats()
-    then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"
+    then Util.print2 "TOTAL TIME %s ms: %s\n"
               (FStar.Util.string_of_int time)
               (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();

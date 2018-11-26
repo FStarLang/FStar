@@ -139,6 +139,7 @@ val hint_file                   : unit    -> option<string>
 val ide                         : unit    -> bool
 val include_path                : unit    -> list<string>
 val indent                      : unit    -> bool
+val indent_in_place             : unit    -> bool
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
 val interactive                 : unit    -> bool

@@ -194,6 +194,7 @@ let defaults =
       ("ide"                          , Bool false);
       ("include"                      , List []);
       ("indent"                       , Bool false);
+      ("indent_in_place"              , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("lax"                          , Bool false);
@@ -316,6 +317,7 @@ let get_in                      ()      = lookup_opt "in"                       
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_indent                  ()      = lookup_opt "indent"                   as_bool
+let get_indent_in_place         ()      = lookup_opt "indent_in_place"          as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
@@ -720,7 +722,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "indent",
         Const (mk_bool true),
-        "Parses and outputs the files on the command line");
+        "Parses and prettyprints the files on the command line");
+
+       ( noshort,
+        "indent_in_place",
+        Const (mk_bool true),
+        "Parses and prettyprints the files on the command line in place");
 
        ( noshort,
         "initial_fuel",
@@ -1391,6 +1398,7 @@ let hint_info                    () = get_hint_info                   ()
 let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
 let indent                       () = get_indent                      ()
+let indent_in_place              () = get_indent_in_place             ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
