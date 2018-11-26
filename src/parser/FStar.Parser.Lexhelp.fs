@@ -147,6 +147,7 @@ let keywords =
     ALWAYS, "assume"     ,ASSUME;
     ALWAYS, "begin"      ,BEGIN;
     ALWAYS, "by"         ,BY;
+    ALWAYS, "calc"       ,CALC;
     ALWAYS, "class"      ,CLASS;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;

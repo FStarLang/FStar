@@ -49,6 +49,7 @@ let () =
   Hashtbl.add keywords "assume"        ASSUME      ;
   Hashtbl.add keywords "begin"         BEGIN       ;
   Hashtbl.add keywords "by"            BY          ;
+  Hashtbl.add keywords "calc"          CALC        ;
   Hashtbl.add keywords "class"         CLASS       ;
   Hashtbl.add keywords "default"       DEFAULT     ;
   Hashtbl.add keywords "effect"        EFFECT      ;

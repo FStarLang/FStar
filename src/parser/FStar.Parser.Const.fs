@@ -377,3 +377,9 @@ let binders_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binders"]) FSta
 let bv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "bv"]) FStar.Range.dummyRange
 let fv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "fv"]) FStar.Range.dummyRange
 let norm_step_lid = lid_of_path (["FStar"; "Syntax"; "Embeddings"; "norm_step"]) FStar.Range.dummyRange
+
+(* Calculational proofs, from FStar.Calc *)
+let calc_lid i : lid = lid_of_path ["FStar"; "Calc"; i] FStar.Range.dummyRange
+let calc_init_lid   = calc_lid "calc_init"
+let calc_step_lid   = calc_lid "calc_step"
+let calc_finish_lid = calc_lid "calc_finish"
