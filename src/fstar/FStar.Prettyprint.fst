@@ -1,5 +1,5 @@
 #light "off"
-module FStar.Indent
+module FStar.Prettyprint
 open FStar.ST
 open FStar.All
 
@@ -14,10 +14,10 @@ type printing_mode =
   | FromTempToStdout
   | FromTempToFile
 
-let temp_file_name f = format1 "%s.indent_.fst" f
+let temp_file_name f = format1 "%s.print_.fst" f
 
 let generate (m: printing_mode) filenames =
-    let parse_and_indent (m: printing_mode) filename =
+    let parse_and_prettyprint (m: printing_mode) filename =
         let inf, outf =
           match m with
           | ToTempFile -> filename, Some (open_file_for_writing (temp_file_name filename))
@@ -43,7 +43,7 @@ let generate (m: printing_mode) filenames =
           | Some f -> append_to_file f <| P.pretty_string (float_of_string "1.0") 100 left_over_doc
           | None -> P.pretty_out_channel (float_of_string "1.0") 100 left_over_doc stdout
     in
-    List.iter (parse_and_indent m) filenames;
+    List.iter (parse_and_prettyprint m) filenames;
     match m with
     | FromTempToFile
     | FromTempToStdout -> List.iter (fun f -> delete_file (temp_file_name f)) filenames

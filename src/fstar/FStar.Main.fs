@@ -161,9 +161,9 @@ let go _ =
           FStar.Fsdoc.Generator.generate filenames
 
         (* --print: Emit files in canonical source syntax *)
-        else if Options.indent () || Options.indent_in_place () then
+        else if Options.print () || Options.print_in_place () then
           if FStar.Platform.is_fstar_compiler_using_ocaml
-          then FStar.Indent.generate FStar.Indent.ToTempFile filenames
+          then FStar.Prettyprint.generate FStar.Prettyprint.ToTempFile filenames
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
 
@@ -218,16 +218,16 @@ let main () =
   try
     setup_hooks ();
     let _, time = Util.record_time go in
-    if Options.indent () || Options.indent_in_place () then
+    if Options.print () || Options.print_in_place () then
       match !fstar_files with
       | Some filenames ->
           let printing_mode =
-            if Options.indent () then
-              FStar.Indent.FromTempToStdout
+            if Options.print () then
+              FStar.Prettyprint.FromTempToStdout
             else
-              FStar.Indent.FromTempToFile
+              FStar.Prettyprint.FromTempToFile
           in
-          FStar.Indent.generate printing_mode filenames
+          FStar.Prettyprint.generate printing_mode filenames
       | None -> Util.print_error "Internal error: List of source files not properly set";
     if FStar.Options.query_stats()
     then Util.print2 "TOTAL TIME %s ms: %s\n"
