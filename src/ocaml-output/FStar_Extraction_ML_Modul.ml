@@ -2041,8 +2041,7 @@ let (extract' :
                   (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface))
            then
              ((let uu____5688 =
-                 FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name
-                  in
+                 FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name  in
                FStar_Util.print1 "Extracted module %s\n" uu____5688);
               (g2,
                 (FStar_Pervasives_Native.Some
