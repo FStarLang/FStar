@@ -31,9 +31,7 @@ let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
   
 let snapshot :
   'a 'b 'c .
-    ('a -> 'b) ->
-      'c Prims.list FStar_ST.ref ->
-        'a -> (Prims.int,'b) FStar_Pervasives_Native.tuple2
+    ('a -> 'b) -> 'c Prims.list FStar_ST.ref -> 'a -> (Prims.int * 'b)
   =
   fun push  ->
     fun stackref  ->

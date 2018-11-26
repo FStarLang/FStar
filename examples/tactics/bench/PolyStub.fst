@@ -17,7 +17,7 @@ assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
 #set-options "--log_queries"
 
 [@tcdecltime]
-let lemma_poly_multiply___SUFFIX__ (p:pos) (n r h r0 r1 h0 h1 h2 s1 d0 d1 d2 h1 h2 hh : int) : Lemma
+let lemma_poly_multiply___SUFFIX__ (p:pos) (n r h r0 r1 h0 h1_ h2_ s1 d0 d1 d2 h1 h2 hh : int) : Lemma
   (requires r1 >= 0 /\ n > 0 /\ 4 * (n * n) == p + 5 /\ r == r1 * n + r0 /\
             h == h2 * (n * n) + h1 * n + h0 /\ s1 == r1 + (r1 / 4) /\ r1 % 4 == 0 /\
             d0 == h0 * r0 + h1 * s1 /\ d1 == h0 * r1 + h1 * r0 + h2 * s1 /\

@@ -1456,18 +1456,18 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_let(lbs, lids) ->
     let env = Env.set_range env r in
-    let check_quals_eq l qopt q = match qopt with
-      | None -> Some q
+    let check_quals_eq l qopt val_q = match qopt with
+      | None -> Some val_q
       | Some q' ->
         //logic is now a deprecated qualifier, so discard it from the checking
         let drop_logic = List.filter (fun x -> not (x = Logic)) in
-        let q, q' = drop_logic q, drop_logic q' in
-        if List.length q = List.length q'
-        && List.forall2 U.qualifier_equal q q'
-        then Some q
+        if (let val_q, q' = drop_logic val_q, drop_logic q' in
+            List.length val_q = List.length q'
+            && List.forall2 U.qualifier_equal val_q q')
+        then Some q'  //but retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
         else raise_error (Errors.Fatal_InconsistentQualifierAnnotation, (BU.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
                               (Print.lid_to_string l)
-                              (Print.quals_to_string q)
+                              (Print.quals_to_string val_q)
                               (Print.quals_to_string q'))) r
     in
 

@@ -170,11 +170,9 @@ let unembed' :
   
 let (hd'_and_args :
   FStar_Syntax_Syntax.term ->
-    (FStar_Syntax_Syntax.term',(FStar_Syntax_Syntax.term'
-                                  FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                               FStar_Pervasives_Native.option)
-                                 FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_Syntax_Syntax.term' * (FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list))
   =
   fun tm  ->
     let tm1 = FStar_Syntax_Util.unascribe tm  in
@@ -226,8 +224,7 @@ let (unfold_lazy_proofstate :
 let (mkFV :
   FStar_Syntax_Syntax.fv ->
     FStar_Syntax_Syntax.universe Prims.list ->
-      (FStar_TypeChecker_NBETerm.t,FStar_Syntax_Syntax.aqual)
-        FStar_Pervasives_Native.tuple2 Prims.list ->
+      (FStar_TypeChecker_NBETerm.t * FStar_Syntax_Syntax.aqual) Prims.list ->
         FStar_TypeChecker_NBETerm.t)
   =
   fun fv  ->
@@ -239,8 +236,7 @@ let (mkFV :
 let (mkConstruct :
   FStar_Syntax_Syntax.fv ->
     FStar_Syntax_Syntax.universe Prims.list ->
-      (FStar_TypeChecker_NBETerm.t,FStar_Syntax_Syntax.aqual)
-        FStar_Pervasives_Native.tuple2 Prims.list ->
+      (FStar_TypeChecker_NBETerm.t * FStar_Syntax_Syntax.aqual) Prims.list ->
         FStar_TypeChecker_NBETerm.t)
   =
   fun fv  ->

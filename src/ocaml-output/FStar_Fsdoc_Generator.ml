@@ -1,8 +1,8 @@
 open Prims
 let (one_toplevel :
   FStar_Parser_AST.decl Prims.list ->
-    (FStar_Parser_AST.decl,FStar_Parser_AST.decl Prims.list)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+    (FStar_Parser_AST.decl * FStar_Parser_AST.decl Prims.list)
+      FStar_Pervasives_Native.option)
   =
   fun decls  ->
     let uu____18 =
@@ -19,14 +19,13 @@ let (one_toplevel :
          | uu____70 -> FStar_Pervasives_Native.None)
   
 type mforest =
-  | Leaf of (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 
+  | Leaf of (Prims.string * Prims.string) 
   | Branch of mforest FStar_Util.smap 
 let (uu___is_Leaf : mforest -> Prims.bool) =
   fun projectee  ->
     match projectee with | Leaf _0 -> true | uu____113 -> false
   
-let (__proj__Leaf__item___0 :
-  mforest -> (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2) =
+let (__proj__Leaf__item___0 : mforest -> (Prims.string * Prims.string)) =
   fun projectee  -> match projectee with | Leaf _0 -> _0 
 let (uu___is_Branch : mforest -> Prims.bool) =
   fun projectee  ->
@@ -50,10 +49,8 @@ let string_of_optiont :
         | FStar_Pervasives_Native.None  -> y
   
 let (string_of_fsdoco :
-  (Prims.string,(Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
-                  Prims.list)
-    FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option ->
-    Prims.string)
+  (Prims.string * (Prims.string * Prims.string) Prims.list)
+    FStar_Pervasives_Native.option -> Prims.string)
   =
   fun d  ->
     string_of_optiont
@@ -259,9 +256,8 @@ let document_toplevel :
   'Auu____1391 .
     'Auu____1391 ->
       FStar_Parser_AST.decl ->
-        (Prims.string FStar_Pervasives_Native.option,Prims.string
-                                                       FStar_Pervasives_Native.option)
-          FStar_Pervasives_Native.tuple2
+        (Prims.string FStar_Pervasives_Native.option * Prims.string
+          FStar_Pervasives_Native.option)
   =
   fun name  ->
     fun topdecl  ->

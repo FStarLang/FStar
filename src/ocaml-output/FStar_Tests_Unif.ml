@@ -103,7 +103,7 @@ let (should_fail :
   fun x1  ->
     fun y1  ->
       try
-        (fun uu___478_286  ->
+        (fun uu___477_286  ->
            match () with
            | () ->
                let g =
@@ -162,8 +162,7 @@ let (norm : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
 let (inst :
   Prims.int ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term Prims.list)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term Prims.list))
   =
   fun n1  ->
     fun tm1  ->

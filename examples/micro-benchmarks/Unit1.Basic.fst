@@ -332,3 +332,13 @@ noeq type star_1078 (l: string -> GTot Type) : language_1078 =
   | Star_nil : star_1078 l ""
   | Star_append : s1:string -> s2:string ->
       l s1 -> star_1078 l s2 -> star_1078 l s1
+
+(*
+ * Testing bind
+ *)
+assume type bind_test_p :Type0
+assume val lemma_bind_test_p (_:unit) :Tot (squash bind_test_p)
+
+let bind_test1 () :Lemma bind_test_p = lemma_bind_test_p ()
+let bind_test2 () :Lemma bind_test_p = let _ = lemma_bind_test_p () in ()
+let bind_test3 () :Lemma bind_test_p = let x = lemma_bind_test_p () in x

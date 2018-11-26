@@ -541,7 +541,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       | Equal -> g()
       | _ -> Unknown
     in
-    let equal_data f1 (args1:Syntax.args) f2 (args2:Syntax.args) =
+    let equal_data (f1:fv) (args1:Syntax.args) (f2:fv) (args2:Syntax.args) =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
         if fv_eq f1 f2
@@ -557,6 +557,14 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
     in
+    let heads_and_args_in_case_both_data :option<(fv * args * fv * args)> =
+      let head1, args1 = t1 |> unmeta |> head_and_args in
+      let head2, args2 = t2 |> unmeta |> head_and_args in
+      match (un_uinst head1).n, (un_uinst head2).n with
+      | Tm_fvar f, Tm_fvar g when f.fv_qual = Some Data_ctor &&
+                                  g.fv_qual = Some Data_ctor -> Some (f, args1, g, args2)
+      | _ -> None
+    in
     match (unmeta t1).n, (unmeta t2).n with
     // We sometimes compare open terms, as we get alpha-equivalence
     // for free.
@@ -569,10 +577,12 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
 
-    | Tm_fvar f, Tm_fvar g ->
-      if f.fv_qual = Some Data_ctor && g.fv_qual = Some Data_ctor
-      then equal_data f [] g []
-      else equal_if (fv_eq f g)
+    | _ when heads_and_args_in_case_both_data |> is_some ->  //matches only when both are data constructors
+      heads_and_args_in_case_both_data |> must |> (fun (f, args1, g, args2) ->
+        equal_data f args1 g args2
+      )
+
+    | Tm_fvar f, Tm_fvar g -> equal_if (fv_eq f g)
 
     | Tm_uinst(f, us), Tm_uinst(g, vs) ->
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
@@ -590,9 +600,6 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
 
     | Tm_app (h1, args1), Tm_app (h2, args2) ->
       begin match (un_uinst h1).n, (un_uinst h2).n with
-      | Tm_fvar f1, Tm_fvar f2 when f1.fv_qual = Some Data_ctor && f2.fv_qual = Some Data_ctor ->
-        equal_data f1 args1 f2 args2
-
       | Tm_fvar f1, Tm_fvar f2 when fv_eq f1 f2 && List.mem (string_of_lid (lid_of_fv f1)) injectives ->
         equal_data f1 args1 f2 args2
 
@@ -701,6 +708,7 @@ let rec is_unit t =
       fv_eq_lid fv PC.unit_lid
       || fv_eq_lid fv PC.squash_lid
       || fv_eq_lid fv PC.auto_squash_lid
+    | Tm_app (head, _) -> is_unit head
     | Tm_uinst (t, _) -> is_unit t
     | _ -> false
 

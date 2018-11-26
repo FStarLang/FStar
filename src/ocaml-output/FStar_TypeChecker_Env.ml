@@ -178,8 +178,7 @@ let rec (eq_step : step -> step -> Prims.bool) =
       | uu____455 -> false
   
 type sig_binding =
-  (FStar_Ident.lident Prims.list,FStar_Syntax_Syntax.sigelt)
-    FStar_Pervasives_Native.tuple2
+  (FStar_Ident.lident Prims.list * FStar_Syntax_Syntax.sigelt)
 type delta_level =
   | NoDelta 
   | InliningDelta 
@@ -258,38 +257,36 @@ let (__proj__Mkedge__item__mlift : edge -> mlift) =
 type effects =
   {
   decls:
-    (FStar_Syntax_Syntax.eff_decl,FStar_Syntax_Syntax.qualifier Prims.list)
-      FStar_Pervasives_Native.tuple2 Prims.list
+    (FStar_Syntax_Syntax.eff_decl * FStar_Syntax_Syntax.qualifier Prims.list)
+      Prims.list
     ;
   order: edge Prims.list ;
   joins:
-    (FStar_Ident.lident,FStar_Ident.lident,FStar_Ident.lident,mlift,mlift)
-      FStar_Pervasives_Native.tuple5 Prims.list
+    (FStar_Ident.lident * FStar_Ident.lident * FStar_Ident.lident * mlift *
+      mlift) Prims.list
     }
 let (__proj__Mkeffects__item__decls :
   effects ->
-    (FStar_Syntax_Syntax.eff_decl,FStar_Syntax_Syntax.qualifier Prims.list)
-      FStar_Pervasives_Native.tuple2 Prims.list)
+    (FStar_Syntax_Syntax.eff_decl * FStar_Syntax_Syntax.qualifier Prims.list)
+      Prims.list)
   =
   fun projectee  -> match projectee with | { decls; order; joins;_} -> decls 
 let (__proj__Mkeffects__item__order : effects -> edge Prims.list) =
   fun projectee  -> match projectee with | { decls; order; joins;_} -> order 
 let (__proj__Mkeffects__item__joins :
   effects ->
-    (FStar_Ident.lident,FStar_Ident.lident,FStar_Ident.lident,mlift,mlift)
-      FStar_Pervasives_Native.tuple5 Prims.list)
+    (FStar_Ident.lident * FStar_Ident.lident * FStar_Ident.lident * mlift *
+      mlift) Prims.list)
   =
   fun projectee  -> match projectee with | { decls; order; joins;_} -> joins 
 type name_prefix = Prims.string Prims.list
-type proof_namespace =
-  (name_prefix,Prims.bool) FStar_Pervasives_Native.tuple2 Prims.list
+type proof_namespace = (name_prefix * Prims.bool) Prims.list
 type cached_elt =
-  (((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
-      FStar_Pervasives_Native.tuple2,(FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universes
-                                                                   FStar_Pervasives_Native.option)
-                                       FStar_Pervasives_Native.tuple2)
-     FStar_Util.either,FStar_Range.range)
-    FStar_Pervasives_Native.tuple2
+  (((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ),(FStar_Syntax_Syntax.sigelt
+                                                                *
+                                                                FStar_Syntax_Syntax.universes
+                                                                FStar_Pervasives_Native.option))
+    FStar_Util.either * FStar_Range.range)
 type goal = FStar_Syntax_Syntax.term
 type env =
   {
@@ -308,8 +305,8 @@ type env =
   effects: effects ;
   generalize: Prims.bool ;
   letrecs:
-    (FStar_Syntax_Syntax.lbname,FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.univ_names)
-      FStar_Pervasives_Native.tuple3 Prims.list
+    (FStar_Syntax_Syntax.lbname * FStar_Syntax_Syntax.typ *
+      FStar_Syntax_Syntax.univ_names) Prims.list
     ;
   top_level: Prims.bool ;
   check_uvars: Prims.bool ;
@@ -325,14 +322,12 @@ type env =
   tc_term:
     env ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,guard_t)
-          FStar_Pervasives_Native.tuple3
+        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp * guard_t)
     ;
   type_of:
     env ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.typ,guard_t)
-          FStar_Pervasives_Native.tuple3
+        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ * guard_t)
     ;
   universe_of:
     env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe ;
@@ -342,10 +337,8 @@ type env =
     ;
   use_bv_sorts: Prims.bool ;
   qtbl_name_and_index:
-    (Prims.int FStar_Util.smap,(FStar_Ident.lident,Prims.int)
-                                 FStar_Pervasives_Native.tuple2
-                                 FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2
+    (Prims.int FStar_Util.smap * (FStar_Ident.lident * Prims.int)
+      FStar_Pervasives_Native.option)
     ;
   normalized_eff_names: FStar_Ident.lident FStar_Util.smap ;
   fv_delta_depths: FStar_Syntax_Syntax.delta_depth FStar_Util.smap ;
@@ -376,24 +369,16 @@ and solver_t =
   init: env -> unit ;
   push: Prims.string -> unit ;
   pop: Prims.string -> unit ;
-  snapshot:
-    Prims.string ->
-      ((Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3,
-        unit) FStar_Pervasives_Native.tuple2
-    ;
+  snapshot: Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit) ;
   rollback:
     Prims.string ->
-      (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
-        FStar_Pervasives_Native.option -> unit
+      (Prims.int * Prims.int * Prims.int) FStar_Pervasives_Native.option ->
+        unit
     ;
   encode_modul: env -> FStar_Syntax_Syntax.modul -> unit ;
   encode_sig: env -> FStar_Syntax_Syntax.sigelt -> unit ;
   preprocess:
-    env ->
-      goal ->
-        (env,goal,FStar_Options.optionstate) FStar_Pervasives_Native.tuple3
-          Prims.list
-    ;
+    env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list ;
   solve:
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
       env -> FStar_Syntax_Syntax.typ -> unit
@@ -405,9 +390,8 @@ and guard_t =
   guard_f: FStar_TypeChecker_Common.guard_formula ;
   deferred: FStar_TypeChecker_Common.deferred ;
   univ_ineqs:
-    (FStar_Syntax_Syntax.universe Prims.list,FStar_TypeChecker_Common.univ_ineq
-                                               Prims.list)
-      FStar_Pervasives_Native.tuple2
+    (FStar_Syntax_Syntax.universe Prims.list *
+      FStar_TypeChecker_Common.univ_ineq Prims.list)
     ;
   implicits: implicit Prims.list }
 and implicit =
@@ -611,8 +595,8 @@ let (__proj__Mkenv__item__generalize : env -> Prims.bool) =
   
 let (__proj__Mkenv__item__letrecs :
   env ->
-    (FStar_Syntax_Syntax.lbname,FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.univ_names)
-      FStar_Pervasives_Native.tuple3 Prims.list)
+    (FStar_Syntax_Syntax.lbname * FStar_Syntax_Syntax.typ *
+      FStar_Syntax_Syntax.univ_names) Prims.list)
   =
   fun projectee  ->
     match projectee with
@@ -773,8 +757,7 @@ let (__proj__Mkenv__item__tc_term :
   env ->
     env ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,guard_t)
-          FStar_Pervasives_Native.tuple3)
+        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp * guard_t))
   =
   fun projectee  ->
     match projectee with
@@ -792,8 +775,7 @@ let (__proj__Mkenv__item__type_of :
   env ->
     env ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.typ,guard_t)
-          FStar_Pervasives_Native.tuple3)
+        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ * guard_t))
   =
   fun projectee  ->
     match projectee with
@@ -853,10 +835,8 @@ let (__proj__Mkenv__item__use_bv_sorts : env -> Prims.bool) =
   
 let (__proj__Mkenv__item__qtbl_name_and_index :
   env ->
-    (Prims.int FStar_Util.smap,(FStar_Ident.lident,Prims.int)
-                                 FStar_Pervasives_Native.tuple2
-                                 FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2)
+    (Prims.int FStar_Util.smap * (FStar_Ident.lident * Prims.int)
+      FStar_Pervasives_Native.option))
   =
   fun projectee  ->
     match projectee with
@@ -1057,11 +1037,7 @@ let (__proj__Mksolver_t__item__pop : solver_t -> Prims.string -> unit) =
         finish = finish1; refresh;_} -> pop1
   
 let (__proj__Mksolver_t__item__snapshot :
-  solver_t ->
-    Prims.string ->
-      ((Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3,
-        unit) FStar_Pervasives_Native.tuple2)
-  =
+  solver_t -> Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit)) =
   fun projectee  ->
     match projectee with
     | { init = init1; push = push1; pop = pop1; snapshot = snapshot1;
@@ -1071,8 +1047,8 @@ let (__proj__Mksolver_t__item__snapshot :
 let (__proj__Mksolver_t__item__rollback :
   solver_t ->
     Prims.string ->
-      (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
-        FStar_Pervasives_Native.option -> unit)
+      (Prims.int * Prims.int * Prims.int) FStar_Pervasives_Native.option ->
+        unit)
   =
   fun projectee  ->
     match projectee with
@@ -1098,10 +1074,7 @@ let (__proj__Mksolver_t__item__encode_sig :
   
 let (__proj__Mksolver_t__item__preprocess :
   solver_t ->
-    env ->
-      goal ->
-        (env,goal,FStar_Options.optionstate) FStar_Pervasives_Native.tuple3
-          Prims.list)
+    env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list)
   =
   fun projectee  ->
     match projectee with
@@ -1148,9 +1121,8 @@ let (__proj__Mkguard_t__item__deferred :
   
 let (__proj__Mkguard_t__item__univ_ineqs :
   guard_t ->
-    (FStar_Syntax_Syntax.universe Prims.list,FStar_TypeChecker_Common.univ_ineq
-                                               Prims.list)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_Syntax_Syntax.universe Prims.list *
+      FStar_TypeChecker_Common.univ_ineq Prims.list))
   =
   fun projectee  ->
     match projectee with
@@ -1192,8 +1164,7 @@ let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
     match projectee with
     | { tc_push_in_gamma_hook;_} -> tc_push_in_gamma_hook
   
-type solver_depth_t =
-  (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
+type solver_depth_t = (Prims.int * Prims.int * Prims.int)
 type implicits = implicit Prims.list
 let (postprocess :
   env ->
@@ -1426,13 +1397,11 @@ let (initial_env :
   FStar_Parser_Dep.deps ->
     (env ->
        FStar_Syntax_Syntax.term ->
-         (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,guard_t)
-           FStar_Pervasives_Native.tuple3)
+         (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp * guard_t))
       ->
       (env ->
          FStar_Syntax_Syntax.term ->
-           (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.typ,guard_t)
-             FStar_Pervasives_Native.tuple3)
+           (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ * guard_t))
         ->
         (env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe) ->
           (Prims.bool ->
@@ -1533,9 +1502,8 @@ let (attrtab : env -> FStar_Syntax_Syntax.sigelt Prims.list FStar_Util.smap)
 let (gamma_cache : env -> cached_elt FStar_Util.smap) =
   fun env  -> env.gamma_cache 
 let (query_indices :
-  (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 Prims.list
-    Prims.list FStar_ST.ref)
-  = FStar_Util.mk_ref [[]] 
+  (FStar_Ident.lident * Prims.int) Prims.list Prims.list FStar_ST.ref) =
+  FStar_Util.mk_ref [[]] 
 let (push_query_indices : unit -> unit) =
   fun uu____12503  ->
     let uu____12504 = FStar_ST.op_Bang query_indices  in
@@ -1558,16 +1526,14 @@ let (pop_query_indices : unit -> unit) =
     | [] -> failwith "Empty query indices!"
     | hd1::tl1 -> FStar_ST.op_Colon_Equals query_indices tl1
   
-let (snapshot_query_indices :
-  unit -> (Prims.int,unit) FStar_Pervasives_Native.tuple2) =
+let (snapshot_query_indices : unit -> (Prims.int * unit)) =
   fun uu____12865  ->
     FStar_Common.snapshot push_query_indices query_indices ()
   
 let (rollback_query_indices :
   Prims.int FStar_Pervasives_Native.option -> unit) =
   fun depth  -> FStar_Common.rollback pop_query_indices query_indices depth 
-let (add_query_index :
-  (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 -> unit) =
+let (add_query_index : (FStar_Ident.lident * Prims.int) -> unit) =
   fun uu____12902  ->
     match uu____12902 with
     | (l,n1) ->
@@ -1578,9 +1544,7 @@ let (add_query_index :
          | uu____13034 -> failwith "Empty query indices")
   
 let (peek_query_indices :
-  unit ->
-    (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 Prims.list)
-  =
+  unit -> (FStar_Ident.lident * Prims.int) Prims.list) =
   fun uu____13057  ->
     let uu____13058 = FStar_ST.op_Bang query_indices  in
     FStar_List.hd uu____13058
@@ -1665,16 +1629,12 @@ let (pop_stack : unit -> env) =
     | env::tl1 -> (FStar_ST.op_Colon_Equals stack tl1; env)
     | uu____13414 -> failwith "Impossible: Too many pops"
   
-let (snapshot_stack : env -> (Prims.int,env) FStar_Pervasives_Native.tuple2)
-  = fun env  -> FStar_Common.snapshot push_stack stack env 
+let (snapshot_stack : env -> (Prims.int * env)) =
+  fun env  -> FStar_Common.snapshot push_stack stack env 
 let (rollback_stack : Prims.int FStar_Pervasives_Native.option -> env) =
   fun depth  -> FStar_Common.rollback pop_stack stack depth 
-type tcenv_depth_t =
-  (Prims.int,Prims.int,solver_depth_t,Prims.int)
-    FStar_Pervasives_Native.tuple4
-let (snapshot :
-  env -> Prims.string -> (tcenv_depth_t,env) FStar_Pervasives_Native.tuple2)
-  =
+type tcenv_depth_t = (Prims.int * Prims.int * solver_depth_t * Prims.int)
+let (snapshot : env -> Prims.string -> (tcenv_depth_t * env)) =
   fun env  ->
     fun msg  ->
       FStar_Util.atomically
@@ -2088,18 +2048,14 @@ let (find_in_sigtab :
       FStar_Util.smap_try_find (sigtab env) uu____14414
   
 let (name_not_found :
-  FStar_Ident.lid ->
-    (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
-  =
+  FStar_Ident.lid -> (FStar_Errors.raw_error * Prims.string)) =
   fun l  ->
     let uu____14427 =
       FStar_Util.format1 "Name \"%s\" not found" l.FStar_Ident.str  in
     (FStar_Errors.Fatal_NameNotFound, uu____14427)
   
 let (variable_not_found :
-  FStar_Syntax_Syntax.bv ->
-    (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2)
-  =
+  FStar_Syntax_Syntax.bv -> (FStar_Errors.raw_error * Prims.string)) =
   fun v1  ->
     let uu____14442 =
       let uu____14444 = FStar_Syntax_Print.bv_to_string v1  in
@@ -2125,8 +2081,7 @@ let (mk_univ_subst :
 let (inst_tscheme_with :
   FStar_Syntax_Syntax.tscheme ->
     FStar_Syntax_Syntax.universes ->
-      (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.term))
   =
   fun ts  ->
     fun us  ->
@@ -2139,8 +2094,7 @@ let (inst_tscheme_with :
   
 let (inst_tscheme :
   FStar_Syntax_Syntax.tscheme ->
-    (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.term))
   =
   fun uu___232_14595  ->
     match uu___232_14595 with
@@ -2155,8 +2109,7 @@ let (inst_tscheme :
 let (inst_tscheme_with_range :
   FStar_Range.range ->
     FStar_Syntax_Syntax.tscheme ->
-      (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.term))
   =
   fun r  ->
     fun t  ->
@@ -2263,12 +2216,11 @@ let (in_cur_mod : env -> FStar_Ident.lident -> tri) =
         else No
   
 type qninfo =
-  (((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
-      FStar_Pervasives_Native.tuple2,(FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universes
-                                                                   FStar_Pervasives_Native.option)
-                                       FStar_Pervasives_Native.tuple2)
-     FStar_Util.either,FStar_Range.range)
-    FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
+  (((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ),(FStar_Syntax_Syntax.sigelt
+                                                                *
+                                                                FStar_Syntax_Syntax.universes
+                                                                FStar_Pervasives_Native.option))
+    FStar_Util.either * FStar_Range.range) FStar_Pervasives_Native.option
 let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
   fun env  ->
     fun lid  ->
@@ -2449,8 +2401,8 @@ and (add_sigelts : env -> FStar_Syntax_Syntax.sigelt Prims.list -> unit) =
 let (try_lookup_bv :
   env ->
     FStar_Syntax_Syntax.bv ->
-      (FStar_Syntax_Syntax.typ,FStar_Range.range)
-        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+      (FStar_Syntax_Syntax.typ * FStar_Range.range)
+        FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun bv  ->
@@ -2468,9 +2420,8 @@ let (lookup_type_of_let :
   FStar_Syntax_Syntax.universes FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.sigelt ->
       FStar_Ident.lident ->
-        ((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
-           FStar_Pervasives_Native.tuple2,FStar_Range.range)
-          FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+        ((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.term) *
+          FStar_Range.range) FStar_Pervasives_Native.option)
   =
   fun us_opt  ->
     fun se  ->
@@ -2519,9 +2470,8 @@ let (lookup_type_of_let :
 let (effect_signature :
   FStar_Syntax_Syntax.universes FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.sigelt ->
-      ((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
-         FStar_Pervasives_Native.tuple2,FStar_Range.range)
-        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+      ((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.term) *
+        FStar_Range.range) FStar_Pervasives_Native.option)
   =
   fun us_opt  ->
     fun se  ->
@@ -2565,10 +2515,9 @@ let (try_lookup_lid_aux :
   FStar_Syntax_Syntax.universes FStar_Pervasives_Native.option ->
     env ->
       FStar_Ident.lident ->
-        ((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term'
-                                          FStar_Syntax_Syntax.syntax)
-           FStar_Pervasives_Native.tuple2,FStar_Range.range)
-          FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+        ((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.term'
+          FStar_Syntax_Syntax.syntax) * FStar_Range.range)
+          FStar_Pervasives_Native.option)
   =
   fun us_opt  ->
     fun env  ->
@@ -2744,9 +2693,7 @@ let (lid_exists : env -> FStar_Ident.lident -> Prims.bool) =
   
 let (lookup_bv :
   env ->
-    FStar_Syntax_Syntax.bv ->
-      (FStar_Syntax_Syntax.typ,FStar_Range.range)
-        FStar_Pervasives_Native.tuple2)
+    FStar_Syntax_Syntax.bv -> (FStar_Syntax_Syntax.typ * FStar_Range.range))
   =
   fun env  ->
     fun bv  ->
@@ -2766,9 +2713,8 @@ let (lookup_bv :
 let (try_lookup_lid :
   env ->
     FStar_Ident.lident ->
-      ((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
-         FStar_Pervasives_Native.tuple2,FStar_Range.range)
-        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+      ((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ) *
+        FStar_Range.range) FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun l  ->
@@ -2793,8 +2739,8 @@ let (try_lookup_and_inst_lid :
   env ->
     FStar_Syntax_Syntax.universes ->
       FStar_Ident.lident ->
-        (FStar_Syntax_Syntax.typ,FStar_Range.range)
-          FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+        (FStar_Syntax_Syntax.typ * FStar_Range.range)
+          FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun us  ->
@@ -2817,9 +2763,8 @@ let (try_lookup_and_inst_lid :
 let (lookup_lid :
   env ->
     FStar_Ident.lident ->
-      ((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
-         FStar_Pervasives_Native.tuple2,FStar_Range.range)
-        FStar_Pervasives_Native.tuple2)
+      ((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ) *
+        FStar_Range.range))
   =
   fun env  ->
     fun l  ->
@@ -2845,8 +2790,8 @@ let (lookup_univ : env -> FStar_Syntax_Syntax.univ_name -> Prims.bool) =
 let (try_lookup_val_decl :
   env ->
     FStar_Ident.lident ->
-      (FStar_Syntax_Syntax.tscheme,FStar_Syntax_Syntax.qualifier Prims.list)
-        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+      (FStar_Syntax_Syntax.tscheme * FStar_Syntax_Syntax.qualifier
+        Prims.list) FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun lid  ->
@@ -2876,8 +2821,7 @@ let (try_lookup_val_decl :
 let (lookup_val_decl :
   env ->
     FStar_Ident.lident ->
-      (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ))
   =
   fun env  ->
     fun lid  ->
@@ -2904,8 +2848,7 @@ let (lookup_val_decl :
 let (lookup_datacon :
   env ->
     FStar_Ident.lident ->
-      (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ))
   =
   fun env  ->
     fun lid  ->
@@ -2930,10 +2873,7 @@ let (lookup_datacon :
           FStar_Errors.raise_error uu____17715 uu____17721
   
 let (datacons_of_typ :
-  env ->
-    FStar_Ident.lident ->
-      (Prims.bool,FStar_Ident.lident Prims.list)
-        FStar_Pervasives_Native.tuple2)
+  env -> FStar_Ident.lident -> (Prims.bool * FStar_Ident.lident Prims.list))
   =
   fun env  ->
     fun lid  ->
@@ -2978,9 +2918,9 @@ let (lookup_definition_qninfo_aux :
     delta_level Prims.list ->
       FStar_Ident.lident ->
         qninfo ->
-          (FStar_Syntax_Syntax.univ_name Prims.list,FStar_Syntax_Syntax.term'
-                                                      FStar_Syntax_Syntax.syntax)
-            FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+          (FStar_Syntax_Syntax.univ_name Prims.list *
+            FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+            FStar_Pervasives_Native.option)
   =
   fun rec_ok  ->
     fun delta_levels  ->
@@ -3021,8 +2961,8 @@ let (lookup_definition_qninfo :
   delta_level Prims.list ->
     FStar_Ident.lident ->
       qninfo ->
-        (FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.term)
-          FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+        (FStar_Syntax_Syntax.univ_names * FStar_Syntax_Syntax.term)
+          FStar_Pervasives_Native.option)
   =
   fun delta_levels  ->
     fun lid  ->
@@ -3033,8 +2973,8 @@ let (lookup_definition :
   delta_level Prims.list ->
     env ->
       FStar_Ident.lident ->
-        (FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.term)
-          FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+        (FStar_Syntax_Syntax.univ_names * FStar_Syntax_Syntax.term)
+          FStar_Pervasives_Native.option)
   =
   fun delta_levels  ->
     fun env  ->
@@ -3047,8 +2987,8 @@ let (lookup_nonrec_definition :
   delta_level Prims.list ->
     env ->
       FStar_Ident.lident ->
-        (FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.term)
-          FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+        (FStar_Syntax_Syntax.univ_names * FStar_Syntax_Syntax.term)
+          FStar_Pervasives_Native.option)
   =
   fun delta_levels  ->
     fun env  ->
@@ -3281,8 +3221,8 @@ let (lookup_effect_abbrev :
   env ->
     FStar_Syntax_Syntax.universes ->
       FStar_Ident.lident ->
-        (FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.comp)
-          FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+        (FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.comp)
+          FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun univ_insts  ->
@@ -3649,8 +3589,8 @@ let (num_inductive_ty_params :
 let (effect_decl_opt :
   env ->
     FStar_Ident.lident ->
-      (FStar_Syntax_Syntax.eff_decl,FStar_Syntax_Syntax.qualifier Prims.list)
-        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+      (FStar_Syntax_Syntax.eff_decl * FStar_Syntax_Syntax.qualifier
+        Prims.list) FStar_Pervasives_Native.option)
   =
   fun env  ->
     fun l  ->
@@ -3684,8 +3624,7 @@ let (identity_mlift : mlift) =
 let (join :
   env ->
     FStar_Ident.lident ->
-      FStar_Ident.lident ->
-        (FStar_Ident.lident,mlift,mlift) FStar_Pervasives_Native.tuple3)
+      FStar_Ident.lident -> (FStar_Ident.lident * mlift * mlift))
   =
   fun env  ->
     fun l1  ->
@@ -3762,12 +3701,10 @@ let (monad_leq :
   
 let wp_sig_aux :
   'Auu____20521 .
-    (FStar_Syntax_Syntax.eff_decl,'Auu____20521)
-      FStar_Pervasives_Native.tuple2 Prims.list ->
+    (FStar_Syntax_Syntax.eff_decl * 'Auu____20521) Prims.list ->
       FStar_Ident.lident ->
-        (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
-                                  FStar_Syntax_Syntax.syntax)
-          FStar_Pervasives_Native.tuple2
+        (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
+          FStar_Syntax_Syntax.syntax)
   =
   fun decls  ->
     fun m  ->
@@ -3808,9 +3745,7 @@ let wp_sig_aux :
   
 let (wp_signature :
   env ->
-    FStar_Ident.lident ->
-      (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term)
-        FStar_Pervasives_Native.tuple2)
+    FStar_Ident.lident -> (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term))
   = fun env  -> fun m  -> wp_sig_aux (env.effects).decls m 
 let (null_wp_for_eff :
   env ->
@@ -4639,10 +4574,7 @@ let (push_bvs : env -> FStar_Syntax_Syntax.bv Prims.list -> env) =
       FStar_List.fold_left (fun env1  -> fun bv  -> push_bv env1 bv) env bvs
   
 let (pop_bv :
-  env ->
-    (FStar_Syntax_Syntax.bv,env) FStar_Pervasives_Native.tuple2
-      FStar_Pervasives_Native.option)
-  =
+  env -> (FStar_Syntax_Syntax.bv * env) FStar_Pervasives_Native.option) =
   fun env  ->
     match env.gamma with
     | (FStar_Syntax_Syntax.Binding_var x)::rest ->
@@ -4707,9 +4639,8 @@ let (push_binders : env -> FStar_Syntax_Syntax.binders -> env) =
   
 let (binding_of_lb :
   FStar_Syntax_Syntax.lbname ->
-    (FStar_Syntax_Syntax.univ_name Prims.list,FStar_Syntax_Syntax.term'
-                                                FStar_Syntax_Syntax.syntax)
-      FStar_Pervasives_Native.tuple2 -> FStar_Syntax_Syntax.binding)
+    (FStar_Syntax_Syntax.univ_name Prims.list * FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax) -> FStar_Syntax_Syntax.binding)
   =
   fun x  ->
     fun t  ->
@@ -4798,9 +4729,8 @@ let (open_universes_in :
   env ->
     FStar_Syntax_Syntax.univ_names ->
       FStar_Syntax_Syntax.term Prims.list ->
-        (env,FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.term
-                                              Prims.list)
-          FStar_Pervasives_Native.tuple3)
+        (env * FStar_Syntax_Syntax.univ_names * FStar_Syntax_Syntax.term
+          Prims.list))
   =
   fun env  ->
     fun uvs  ->
@@ -4871,10 +4801,7 @@ let (expected_typ :
     | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
   
 let (clear_expected_typ :
-  env ->
-    (env,FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2)
-  =
+  env -> (env * FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)) =
   fun env_  ->
     let uu____23147 = expected_typ env_  in
     ((let uu___267_23153 = env_  in
@@ -5687,14 +5614,10 @@ let (new_implicit_var_aux :
       env ->
         FStar_Syntax_Syntax.typ ->
           FStar_Syntax_Syntax.should_check_uvar ->
-            (FStar_Dyn.dyn,FStar_Syntax_Syntax.term)
-              FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
-              ->
-              (FStar_Syntax_Syntax.term,(FStar_Syntax_Syntax.ctx_uvar,
-                                          FStar_Range.range)
-                                          FStar_Pervasives_Native.tuple2
-                                          Prims.list,guard_t)
-                FStar_Pervasives_Native.tuple3)
+            (FStar_Dyn.dyn * FStar_Syntax_Syntax.term)
+              FStar_Pervasives_Native.option ->
+              (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.ctx_uvar *
+                FStar_Range.range) Prims.list * guard_t))
   =
   fun reason  ->
     fun r  ->

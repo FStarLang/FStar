@@ -534,8 +534,8 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       else g, empty_iface
 
 let extract_iface (g:env_t) modul =
-    ignore <| Options.restore_cmd_line_options true;
     if Options.interactive() then g, empty_iface else
+    let _ = Options.restore_cmd_line_options true in
     let decls = modul.declarations in
     let iface = {empty_iface with iface_module_name=g.currentModule} in
     let res =
@@ -843,7 +843,7 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
   if m.name.str <> "Prims"
   && (is_kremlin || not m.is_interface)
   then begin
-    BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
+    BU.print1 "Extracted module %s\n" (string_of_lid m.name);
     g, Some (MLLib ([name, Some ([], mlm), (MLLib [])]))
   end
   else g, None

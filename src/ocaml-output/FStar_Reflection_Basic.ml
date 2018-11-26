@@ -596,8 +596,7 @@ let (pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv) =
   
 let (inspect_binder :
   FStar_Syntax_Syntax.binder ->
-    (FStar_Syntax_Syntax.bv,FStar_Reflection_Data.aqualv)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_Syntax_Syntax.bv * FStar_Reflection_Data.aqualv))
   =
   fun b  ->
     let uu____1826 = b  in

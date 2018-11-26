@@ -154,13 +154,13 @@ let (pred_nat :
       let uu____481 =
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_bvar
-             (let uu___479_486 = FStar_Tests_Util.x  in
+             (let uu___478_486 = FStar_Tests_Util.x  in
               {
                 FStar_Syntax_Syntax.ppname =
-                  (uu___479_486.FStar_Syntax_Syntax.ppname);
+                  (uu___478_486.FStar_Syntax_Syntax.ppname);
                 FStar_Syntax_Syntax.index = (Prims.parse_int "0");
                 FStar_Syntax_Syntax.sort =
-                  (uu___479_486.FStar_Syntax_Syntax.sort)
+                  (uu___478_486.FStar_Syntax_Syntax.sort)
               })) FStar_Pervasives_Native.None FStar_Range.dummyRange
          in
       (uu____415, FStar_Pervasives_Native.None, uu____481)  in
@@ -260,9 +260,8 @@ let (encode_nat : Prims.int -> FStar_Syntax_Syntax.term) =
     aux znat n1
   
 let (tests :
-  (Prims.int,FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.term'
-                                                                    FStar_Syntax_Syntax.syntax)
-    FStar_Pervasives_Native.tuple3 Prims.list)
+  (Prims.int * FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax) Prims.list)
   =
   FStar_Tests_Pars.pars_and_tc_fragment
     "let rec copy (x:list int) : Tot (list int) = match x with | [] -> []  | hd::tl -> hd::copy tl";
@@ -1480,7 +1479,7 @@ let (run_interpreter_with_time :
   Prims.int ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        (Prims.int,FStar_BaseTypes.float) FStar_Pervasives_Native.tuple2)
+        (Prims.int * FStar_BaseTypes.float))
   =
   fun i  ->
     fun r  ->
@@ -1495,7 +1494,7 @@ let (run_nbe_with_time :
   Prims.int ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        (Prims.int,FStar_BaseTypes.float) FStar_Pervasives_Native.tuple2)
+        (Prims.int * FStar_BaseTypes.float))
   =
   fun i  ->
     fun r  ->
@@ -1517,8 +1516,8 @@ let run_tests :
     FStar_Options.__set_unit_tests ();
     (let l =
        FStar_List.map
-         (fun uu___478_4112  ->
-            match uu___478_4112 with | (no,test,res) -> run1 no test res)
+         (fun uu___477_4112  ->
+            match uu___477_4112 with | (no,test,res) -> run1 no test res)
          tests
         in
      FStar_Options.__clear_unit_tests (); l)
@@ -1536,20 +1535,14 @@ let (run_all_interpreter : unit -> unit) =
      FStar_Util.print_string "Normalizer ok\n")
   
 let (run_all_nbe_with_time :
-  unit ->
-    (Prims.int,FStar_BaseTypes.float) FStar_Pervasives_Native.tuple2
-      Prims.list)
-  =
+  unit -> (Prims.int * FStar_BaseTypes.float) Prims.list) =
   fun uu____4174  ->
     FStar_Util.print_string "Testing NBE\n";
     (let l = run_tests run_nbe_with_time  in
      FStar_Util.print_string "NBE ok\n"; l)
   
 let (run_all_interpreter_with_time :
-  unit ->
-    (Prims.int,FStar_BaseTypes.float) FStar_Pervasives_Native.tuple2
-      Prims.list)
-  =
+  unit -> (Prims.int * FStar_BaseTypes.float) Prims.list) =
   fun uu____4204  ->
     FStar_Util.print_string "Testing the normalizer\n";
     (let l = run_tests run_interpreter_with_time  in
@@ -1583,10 +1576,8 @@ let (compare : unit -> unit) =
      run_both_with_time (Prims.parse_int "14") uu____4271 z)
   
 let (compare_times :
-  (Prims.int,FStar_BaseTypes.float) FStar_Pervasives_Native.tuple2 Prims.list
-    ->
-    (Prims.int,FStar_BaseTypes.float) FStar_Pervasives_Native.tuple2
-      Prims.list -> unit)
+  (Prims.int * FStar_BaseTypes.float) Prims.list ->
+    (Prims.int * FStar_BaseTypes.float) Prims.list -> unit)
   =
   fun l_int  ->
     fun l_nbe  ->

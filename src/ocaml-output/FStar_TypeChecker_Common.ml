@@ -155,10 +155,9 @@ let (uu___is_NonTrivial : guard_formula -> Prims.bool) =
 let (__proj__NonTrivial__item___0 :
   guard_formula -> FStar_Syntax_Syntax.formula) =
   fun projectee  -> match projectee with | NonTrivial _0 -> _0 
-type deferred = (Prims.string,prob) FStar_Pervasives_Native.tuple2 Prims.list
+type deferred = (Prims.string * prob) Prims.list
 type univ_ineq =
-  (FStar_Syntax_Syntax.universe,FStar_Syntax_Syntax.universe)
-    FStar_Pervasives_Native.tuple2
+  (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
 let (mk_by_tactic :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -254,9 +253,8 @@ let (__proj__Mkidentifier_info__item__identifier_range :
 let (insert_col_info :
   Prims.int ->
     identifier_info ->
-      (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
-        ->
-        (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list)
+      (Prims.int * identifier_info) Prims.list ->
+        (Prims.int * identifier_info) Prims.list)
   =
   fun col  ->
     fun info  ->
@@ -275,7 +273,7 @@ let (insert_col_info :
   
 let (find_nearest_preceding_col_info :
   Prims.int ->
-    (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list ->
+    (Prims.int * identifier_info) Prims.list ->
       identifier_info FStar_Pervasives_Native.option)
   =
   fun col  ->
@@ -290,8 +288,7 @@ let (find_nearest_preceding_col_info :
          in
       aux FStar_Pervasives_Native.None col_infos
   
-type id_info_by_col =
-  (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
+type id_info_by_col = (Prims.int * identifier_info) Prims.list
 type col_info_by_row = id_info_by_col FStar_Util.pimap
 type row_info_by_file = col_info_by_row FStar_Util.psmap
 type id_info_table =
@@ -322,11 +319,11 @@ let (id_info_table_empty : id_info_table) =
   { id_info_enabled = false; id_info_db = uu____1293; id_info_buffer = [] } 
 let (id_info__insert :
   (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) ->
-    (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
-      FStar_Util.pimap FStar_Util.psmap ->
+    (Prims.int * identifier_info) Prims.list FStar_Util.pimap
+      FStar_Util.psmap ->
       identifier_info ->
-        (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
-          FStar_Util.pimap FStar_Util.psmap)
+        (Prims.int * identifier_info) Prims.list FStar_Util.pimap
+          FStar_Util.psmap)
   =
   fun ty_map  ->
     fun db  ->
