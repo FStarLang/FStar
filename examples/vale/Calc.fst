@@ -36,7 +36,7 @@ let ( &|| ) #a (#req : Type0) (#ens : (_:a{req}) -> GTot Type0) ($f:(unit -> Pur
         //(see XXX)
 #reset-options
 
-let calc = ignore
+let tcalc = ignore
 let using x = fun () -> x
 let z3 = ()
 let done = ()
