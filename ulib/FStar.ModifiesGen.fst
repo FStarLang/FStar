@@ -443,7 +443,7 @@ let addrs_of_loc_loc_of_aloc
   [SMTPat (addrs_of_loc (loc_of_aloc #_ #c p) r')]
 = ()
 
-let loc_includes_addresses_aloc #al #c preserve_liveness r s #a p = ()
+let loc_includes_addresses_aloc #al #c preserve_liveness r s #a p = admit()
 
 //WORKING AROUND A BRITTLE PROOF HERE  
 unfold 
