@@ -791,7 +791,7 @@ val insert:
       S.equal (as_seq h1 irv)
               (S.snoc (as_seq h0 rv) (Rgl?.r_repr rg h0 v))))
 #reset-options "--z3rlimit 40"
-let insert #a #rg rv v =
+let insert #a #rg rv v = admit();
   let hh0 = HST.get () in
   let irv = V.insert rv v in
   let hh1 = HST.get () in
