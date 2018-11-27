@@ -104,20 +104,18 @@ let with_hints_db fname f =
     result
 
 let filter_using_facts_from (e:env) (theory:decls_t) =
-    let should_enc_fid fid =
-        match fid with
-        | Namespace lid -> Env.should_enc_lid e lid
-        | _ -> false
-    in
     let matches_fact_ids (include_assumption_names:BU.smap<bool>) (a:Term.assumption) =
       match a.assumption_fact_ids with
       | [] -> true //retaining `a` because it is not tagged with a fact id
       | _ ->
-        a.assumption_fact_ids |> BU.for_some should_enc_fid
+        a.assumption_fact_ids |> BU.for_some (function | Name lid -> Env.should_enc_lid e lid | _ -> false)
         || Option.isSome (BU.smap_try_find include_assumption_names a.assumption_name)
     in
     //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
-    let theory_rev = List.rev theory in
+    //AR: reversing the list is also crucial for correctness because of RetainAssumption 
+    //    specifically (RetainAssumption a) comes after (a) in the theory list
+    //    as a result, it is crucial that we consider the (RetainAssumption a) before we encounter (a)
+    let theory_rev = List.rev theory in  //List.rev is already the tail recursive version of rev
     let pruned_theory =
         let include_assumption_names =
             //this map typically grows to 10k+ elements
@@ -125,36 +123,45 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
             //becomes near quadratic in the # of facts
             BU.smap_create 10000
         in
-        List.fold_left (fun out d ->
-          match d with
-          | Assume a ->
-            if matches_fact_ids include_assumption_names a
-            then d::out
-            else out
+        let keep_decl :decl -> bool = function  //effectful function, adds decls to the include_assumption_names map
+          | Assume a -> matches_fact_ids include_assumption_names a
           | RetainAssumptions names ->
             List.iter (fun x -> BU.smap_add include_assumption_names x true) names;
-            d::out
-          | _ -> d::out)
-        [] theory_rev
+            true
+          | Module _ -> failwith "Solver.fs::keep_decl should never have been called with a Module decl"
+          | _ -> true
+        in
+        List.fold_left (fun out d ->
+          match d with
+          | Module (name, decls) -> decls |> List.filter keep_decl |> (fun decls -> Module (name, decls)::out)
+          | _ -> if keep_decl d then d::out else out) [] theory_rev
     in
     pruned_theory
 
-let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
+let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:decls_t) :(decls_t * bool * int * int) =  //(filtered theory, if core used, retained, pruned)
     match core with
     | None ->
-      filter_using_facts_from e theory, false
+      filter_using_facts_from e theory, false, 0, 0  //no stats if no core
     | Some core ->
+        //so that we can use the tail-recursive fold_left
+        let theory_rev = List.rev theory in
         let theory', n_retained, n_pruned =
-            List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
+            List.fold_left (fun (theory, n_retained, n_pruned) d -> match d with
             | Assume a ->
                 if List.contains a.assumption_name core
                 then d::theory, n_retained+1, n_pruned
                 else if BU.starts_with a.assumption_name "@"
                 then d::theory, n_retained, n_pruned
                 else theory, n_retained, n_pruned+1
+            | Module (name, decls) ->
+              decls |> filter_assertions_with_stats e (Some core)
+                    |> (fun (decls, _, r, p) -> Module (name, decls)::theory, n_retained + r, n_pruned + p)
             | _ -> d::theory, n_retained, n_pruned)
-            theory ([], 0, 0) in
-        theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
+            ([Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], 0, 0) theory_rev in  //start with the unsat core caption at the end
+        theory', true, n_retained, n_pruned
+
+let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
+  let (theory, b, _, _) = filter_assertions_with_stats e core theory in theory, b
 
 let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
 
