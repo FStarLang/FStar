@@ -713,6 +713,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         let tm_has_type_with_fuel = mk_HasTypeWithFuel (Some fterm) xtm base_t in
 
+        (* `encoding` includes `x.sort` via `tm_has_type_with_fuel` *)
         let encoding = mkAnd(tm_has_type_with_fuel, refinement) in
 
         //earlier we used to get cvars from encoding
@@ -983,7 +984,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   | None   -> cvars, key_body
                   | Some t ->
                     BU.remove_dups fv_eq (Term.free_variables t @ cvars),
-                    mkAnd (key_body, t)
+                    mkAnd (key_body, t) (* we make the encoding depend on the type of the abstraction, see #1595 *)
                 in
                 let tkey = mkForall t0.pos ([], cvars, key_body) in
                 let tkey_hash = Term.hash_of_term tkey in
