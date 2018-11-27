@@ -112,6 +112,9 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
         || Option.isSome (BU.smap_try_find include_assumption_names a.assumption_name)
     in
     //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
+    //AR: reversing the list is also crucial for correctness because of RetainAssumption 
+    //    specifically (RetainAssumption a) comes after (a) in the theory list
+    //    as a result, it is crucial that we consider the (RetainAssumption a) before we encounter (a)
     let theory_rev = List.rev theory in  //List.rev is already the tail recursive version of rev
     let pruned_theory =
         let include_assumption_names =
@@ -140,8 +143,10 @@ let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:decls_
     | None ->
       filter_using_facts_from e theory, false, 0, 0  //no stats if no core
     | Some core ->
+        //so that we can use the tail-recursive fold_left
+        let theory_rev = List.rev theory in
         let theory', n_retained, n_pruned =
-            List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
+            List.fold_left (fun (theory, n_retained, n_pruned) d -> match d with
             | Assume a ->
                 if List.contains a.assumption_name core
                 then d::theory, n_retained+1, n_pruned
@@ -152,8 +157,8 @@ let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:decls_
               decls |> filter_assertions_with_stats e (Some core)
                     |> (fun (decls, _, r, p) -> Module (name, decls)::theory, n_retained + r, n_pruned + p)
             | _ -> d::theory, n_retained, n_pruned)
-            theory ([], 0, 0) in
-        theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true, n_retained, n_pruned
+            ([Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], 0, 0) theory_rev in  //start with the unsat core caption at the end
+        theory', true, n_retained, n_pruned
 
 let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
   let (theory, b, _, _) = filter_assertions_with_stats e core theory in theory, b
