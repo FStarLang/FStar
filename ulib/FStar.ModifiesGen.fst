@@ -266,14 +266,14 @@ let loc_aux_includes_buffer
   (b: aloc c)
 : GTot Type0
   (decreases s)
-= exists (b0 : aloc c) . {:pattern (b0 `GSet.mem` s) \/ (b0 `aloc_includes` b)} b0 `GSet.mem` s /\ b0 `aloc_includes` b
+= exists (b0 : aloc c) . b0 `GSet.mem` s /\ b0 `aloc_includes` b
 
 let loc_aux_includes
   (#al: aloc_t) (#c: cls al)
   (s1 s2: GSet.set (aloc c))
 : GTot Type0
   (decreases s2)
-= forall (b2: aloc c) . {:pattern (GSet.mem b2 s2) \/ (loc_aux_includes_buffer s1 b2)} GSet.mem b2 s2 ==> loc_aux_includes_buffer s1 b2
+= forall (b2: aloc c) . GSet.mem b2 s2 ==> loc_aux_includes_buffer s1 b2
 
 let loc_aux_includes_union_l
   (#al: aloc_t) (#c: cls al)
@@ -443,42 +443,9 @@ let addrs_of_loc_loc_of_aloc
   [SMTPat (addrs_of_loc (loc_of_aloc #_ #c p) r')]
 = ()
 
-let loc_includes_addresses_aloc #al #c preserve_liveness r s #a p = admit()
+let loc_includes_addresses_aloc #al #c preserve_liveness r s #a p = ()
 
-//WORKING AROUND A BRITTLE PROOF HERE  
-unfold 
-let loc_includes'
-  (#aloc: aloc_t) (#c: cls aloc)
-  (s1 s2: loc c) =
-  let regions1 = Ghost.reveal (Loc?.regions s1) in
-  let regions2 = Ghost.reveal (Loc?.regions s2) in (
-    Set.subset regions2 regions1 /\
-    Set.subset (Ghost.reveal (Loc?.region_liveness_tags s2)) (Ghost.reveal (Loc?.region_liveness_tags s1)) /\
-    (
-      forall (r: HS.rid { Set.mem r regions2 } ) .
-      GSet.subset (Loc?.non_live_addrs s2 r) (Loc?.non_live_addrs s1 r)
-    ) /\
-    (
-      forall (r: HS.rid) .
-      GSet.subset (addrs_of_loc_weak s2 r) (addrs_of_loc_weak s1 r)
-    ) /\ (
-      forall (r: HS.rid) .
-      GSet.subset (addrs_of_loc s2 r) (addrs_of_loc s1 r)
-    ) /\ (
-      (Ghost.reveal (Loc?.aux s1)) `loc_aux_includes` (Ghost.reveal (Loc?.aux s2))
-    )
-  )
-
-let lem_loc_includes'
-  (#aloc: aloc_t) (#c: cls aloc)
-  (s1 s2: loc c) : Lemma (requires (loc_includes' s1 s2)) (ensures (loc_includes s1 s2)) =()
-
-
-let loc_includes_region_aloc #al #c preserve_liveness s #r #a b =
-  let s1 = (loc_regions preserve_liveness s) in
-  let s2 = (loc_of_aloc #_ #c b) in
-  // assert (loc_includes' s1 s2);
-  lem_loc_includes' s1 s2 //WHY WHY WHY?
+let loc_includes_region_aloc #al #c preserve_liveness s #r #a b = ()
 
 let loc_includes_region_addresses #al #c s preserve_liveness1 preserve_liveness2 r a = ()
 
@@ -497,7 +464,7 @@ let loc_includes_addresses_addresses #al c preserve_liveness1 preserve_liveness2
 
 (* Disjointness of two memory locations *)
 
-let aloc_disjoint (#al: aloc_t) (#c: cls al) (b1 b2: aloc c) =
+let aloc_disjoint (#al: aloc_t) (#c: cls al) (b1 b2: aloc c) : GTot Type0 =
   if b1.region = b2.region && b1.addr = b2.addr
   then Some? b1.loc /\ Some? b2.loc /\ c.aloc_disjoint (Some?.v b1.loc) (Some?.v b2.loc)
   else True
@@ -625,9 +592,11 @@ let loc_disjoint_aloc_elim #al #c #r1 #a1 #r2 #a2 b1 b2 =
   // FIXME: WHY WHY WHY this assert?
   assert (aloc_disjoint (ALoc #_ #c r1 a1 (Some b1)) (ALoc #_ #c r2 a2 (Some b2)))
 
+#push-options "--z3rlimit 100"
 let loc_disjoint_addresses_intro #al #c preserve_liveness1 preserve_liveness2 r1 r2 n1 n2 =
   // FIXME: WHY WHY WHY this assert?
   assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_addresses #_ #c preserve_liveness1 r1 n1))) (Ghost.reveal (Loc?.aux (loc_addresses #_ #c preserve_liveness2 r2 n2))))
+#pop-options
 
 let loc_disjoint_addresses_elim #al #c preserve_liveness1 preserve_liveness2 r1 r2 n1 n2 = ()
 
@@ -635,11 +604,11 @@ let loc_disjoint_aloc_addresses_intro #al #c #r' #a' p preserve_liveness r n = (
 
 let loc_disjoint_aloc_addresses_elim #al #c #r' #a' p preserve_liveness r n = ()
 
+#push-options "--z3rlimit 30"
 let loc_disjoint_regions #al #c preserve_liveness1 preserve_liveness2 rs1 rs2 =
   // FIXME: WHY WHY WHY this assert?
-  assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_regions #_ #c preserve_liveness1 rs1))) 
-                           (Ghost.reveal (Loc?.aux (loc_regions #_ #c preserve_liveness2 rs2))))
-
+  assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_regions #_ #c preserve_liveness1 rs1))) (Ghost.reveal (Loc?.aux (loc_regions #_ #c preserve_liveness2 rs2))))
+#pop-options
 
 (** Liveness-insensitive memory locations *)
 
@@ -651,8 +620,7 @@ let address_liveness_insensitive_locs #al c =
     (mk_live_addrs (fun _ -> GSet.complement GSet.empty))
     (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) (fun _ -> GSet.complement GSet.empty)))
 
-#push-options "--z3rlimit_factor 4"
-let loc_includes_address_liveness_insensitive_locs_aloc #al #c #r #n a = admit()
+let loc_includes_address_liveness_insensitive_locs_aloc #al #c #r #n a = ()
 
 let loc_includes_address_liveness_insensitive_locs_addresses #al c r a = ()
 
@@ -670,7 +638,7 @@ let loc_includes_region_liveness_insensitive_locs_loc_regions #al c r = ()
 
 let loc_includes_region_liveness_insensitive_locs_loc_addresses #al c preserve_liveness r a = ()
 
-let loc_includes_region_liveness_insensitive_locs_loc_of_aloc #al c #r #a x = admit()
+let loc_includes_region_liveness_insensitive_locs_loc_of_aloc #al c #r #a x = ()
 
 (** The modifies clause proper *)
 
@@ -1747,10 +1715,6 @@ let union_loc_of_loc_includes_intro
 
 #set-options "--z3rlimit 64"
 
-
-//WORKING AROUND A BRITTLE PROOF HERE  
-
-
 let union_loc_of_loc_includes_elim
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1809,8 +1773,7 @@ let union_loc_of_loc_includes_elim
     (GSet.mem x auxs /\ GSet.mem x.addr (addrs_of_loc_weak smaller x.region)) ==>
     GSet.mem x (GSet.union auxl doml)
   );
-  assert (larger `loc_includes'` smaller)
-     
+  assert (larger `loc_includes` smaller)
 
 #reset-options
 

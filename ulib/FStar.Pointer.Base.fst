@@ -4077,6 +4077,7 @@ let owrite
     (fun _ _ _ -> ())
     (fun _ _ -> ())
     (fun r' a' b' ->
+      admit ();
       MG.loc_disjoint_aloc_elim #_ #cls #r' #a' #(frameOf b) #(as_addr b) b' (LocPointer b)
     )
 

@@ -236,7 +236,7 @@ let lt_multiple_is_equal (a:nat) (b:nat) (x:int) (n:pos) =
   assert (0 * n == 0);
   bounded_multiple_is_zero x n
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 1 --z3seed 1"
+#reset-options "--z3rlimit 150 --initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 1 --z3seed 3"
 
 private let lemma_mod_plus_0 (a:int) (b:int) (p:pos) : Lemma
   ((a + b * p) % p - a % p = p * (b + a / p - (a + b * p) / p))
