@@ -708,6 +708,7 @@ let rec is_unit t =
       fv_eq_lid fv PC.unit_lid
       || fv_eq_lid fv PC.squash_lid
       || fv_eq_lid fv PC.auto_squash_lid
+    | Tm_app (head, _) -> is_unit head
     | Tm_uinst (t, _) -> is_unit t
     | _ -> false
 

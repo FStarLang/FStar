@@ -125,7 +125,7 @@ let go _ =
           Errors.raise_error (Errors.Error_TooManyFiles,
                               "Only one command line file is allowed if \
                                --use_extracted_interfaces is set, \
-                               found %s" ^ (string_of_int (List.length filenames)))
+                               found " ^ (string_of_int (List.length filenames)))
                              Range.dummyRange
 
         (* --ide: Interactive mode *)

@@ -10,16 +10,9 @@ https://www.mpi-sws.org/~beta/papers/metacoq-paper.pdf
 https://github.com/MetaCoq/MetaCoq/
 *)
 
-#reset-options "--__temp_no_proj MetaCoq"
-
 noeq type goal : Type =
 | Goal : #a:Type -> a -> goal
 | AHyp : #a:Type -> option a -> (a -> Tot goal) -> goal
-
-(* Without --__temp_no_proj hitting bug (#736)
-./MetaCoq.fst(12,2-12,6) : Error
-Expected expression of type "(uu___:(MetaCoq.AHyp.a projectee) -> Tot MetaCoq.goal)";
-got expression "_2" of type "(uu___:a -> Tot MetaCoq.goal)" *)
 
 let tactic : Type = goal -> ML (list goal)
 

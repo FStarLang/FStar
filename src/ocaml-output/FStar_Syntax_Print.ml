@@ -50,9 +50,7 @@ let (db_to_string : FStar_Syntax_Syntax.bv -> Prims.string) =
       Prims.strcat "@" uu____87  in
     Prims.strcat (bv.FStar_Syntax_Syntax.ppname).FStar_Ident.idText uu____85
   
-let (infix_prim_ops :
-  (FStar_Ident.lident,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list)
-  =
+let (infix_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list) =
   [(FStar_Parser_Const.op_Addition, "+");
   (FStar_Parser_Const.op_Subtraction, "-");
   (FStar_Parser_Const.op_Multiply, "*");
@@ -74,9 +72,7 @@ let (infix_prim_ops :
   (FStar_Parser_Const.precedes_lid, "<<");
   (FStar_Parser_Const.eq2_lid, "==");
   (FStar_Parser_Const.eq3_lid, "===")] 
-let (unary_prim_ops :
-  (FStar_Ident.lident,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list)
-  =
+let (unary_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list) =
   [(FStar_Parser_Const.op_Negation, "not");
   (FStar_Parser_Const.op_Minus, "-");
   (FStar_Parser_Const.not_lid, "~")] 
@@ -111,9 +107,7 @@ let (is_unary_prim_op : FStar_Syntax_Syntax.term -> Prims.bool) =
     is_prim_op
       (FStar_Pervasives_Native.fst (FStar_List.split unary_prim_ops)) e
   
-let (quants :
-  (FStar_Ident.lident,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list)
-  =
+let (quants : (FStar_Ident.lident * Prims.string) Prims.list) =
   [(FStar_Parser_Const.forall_lid, "forall");
   (FStar_Parser_Const.exists_lid, "exists")] 
 type exp = FStar_Syntax_Syntax.term
@@ -140,12 +134,10 @@ let is_inr :
   
 let filter_imp :
   'Auu____450 .
-    ('Auu____450,FStar_Syntax_Syntax.arg_qualifier
-                   FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list ->
-      ('Auu____450,FStar_Syntax_Syntax.arg_qualifier
-                     FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2 Prims.list
+    ('Auu____450 * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list ->
+      ('Auu____450 * FStar_Syntax_Syntax.arg_qualifier
+        FStar_Pervasives_Native.option) Prims.list
   =
   fun a  ->
     FStar_All.pipe_right a
@@ -206,8 +198,7 @@ let rec find : 'a . ('a -> Prims.bool) -> 'a Prims.list -> 'a =
   
 let (find_lid :
   FStar_Ident.lident ->
-    (FStar_Ident.lident,Prims.string) FStar_Pervasives_Native.tuple2
-      Prims.list -> Prims.string)
+    (FStar_Ident.lident * Prims.string) Prims.list -> Prims.string)
   =
   fun x  ->
     fun xs  ->
@@ -255,8 +246,7 @@ let (version_to_string : FStar_Syntax_Syntax.version -> Prims.string) =
   
 let (univ_uvar_to_string :
   (FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
-     FStar_Unionfind.p_uvar,FStar_Syntax_Syntax.version)
-    FStar_Pervasives_Native.tuple2 -> Prims.string)
+    FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version) -> Prims.string)
   =
   fun u  ->
     let uu____863 = FStar_Options.hide_uvar_nums ()  in
@@ -277,8 +267,8 @@ let (univ_uvar_to_string :
 let rec (int_of_univ :
   Prims.int ->
     FStar_Syntax_Syntax.universe ->
-      (Prims.int,FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2)
+      (Prims.int * FStar_Syntax_Syntax.universe
+        FStar_Pervasives_Native.option))
   =
   fun n1  ->
     fun u  ->
@@ -923,9 +913,8 @@ and (imp_to_string :
 
 and (binder_to_string' :
   Prims.bool ->
-    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                              FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 -> Prims.string)
+    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) -> Prims.string)
   =
   fun is_arrow  ->
     fun b  ->
@@ -976,9 +965,8 @@ and (binder_to_string : FStar_Syntax_Syntax.binder -> Prims.string) =
   fun b  -> binder_to_string' false b
 
 and (arrow_binder_to_string :
-  (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.arg_qualifier
-                            FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 -> Prims.string)
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
+    FStar_Pervasives_Native.option) -> Prims.string)
   = fun b  -> binder_to_string' true b
 
 and (binders_to_string :
@@ -1000,9 +988,8 @@ and (binders_to_string :
          FStar_All.pipe_right uu____3079 (FStar_String.concat sep))
 
 and (arg_to_string :
-  (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.arg_qualifier
-                              FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 -> Prims.string)
+  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.arg_qualifier
+    FStar_Pervasives_Native.option) -> Prims.string)
   =
   fun uu___220_3093  ->
     match uu___220_3093 with

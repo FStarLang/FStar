@@ -1,7 +1,5 @@
 open Prims
-type inst_t =
-  (FStar_Ident.lident,FStar_Syntax_Syntax.universes)
-    FStar_Pervasives_Native.tuple2 Prims.list
+type inst_t = (FStar_Ident.lident * FStar_Syntax_Syntax.universes) Prims.list
 let mk :
   'Auu____15 'Auu____16 .
     'Auu____15 FStar_Syntax_Syntax.syntax ->
@@ -200,12 +198,12 @@ and (inst_args :
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
     ->
-    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                            FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list ->
-      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.arg_qualifier
-                                                              FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2 Prims.list)
+    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+      FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+      Prims.list ->
+      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+        FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+        Prims.list)
   =
   fun s  ->
     fun args  ->

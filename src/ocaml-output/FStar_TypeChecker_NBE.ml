@@ -110,8 +110,8 @@ let (pickBranch :
   FStar_TypeChecker_Cfg.cfg ->
     FStar_TypeChecker_NBETerm.t ->
       FStar_Syntax_Syntax.branch Prims.list ->
-        (FStar_Syntax_Syntax.term,FStar_TypeChecker_NBETerm.t Prims.list)
-          FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+        (FStar_Syntax_Syntax.term * FStar_TypeChecker_NBETerm.t Prims.list)
+          FStar_Pervasives_Native.option)
   =
   fun cfg  ->
     fun scrut  ->
@@ -242,11 +242,10 @@ let (pickBranch :
         pickBranch_aux scrut branches branches
   
 let (test_args :
-  (FStar_TypeChecker_NBETerm.t,FStar_Syntax_Syntax.aqual)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
+  (FStar_TypeChecker_NBETerm.t * FStar_Syntax_Syntax.aqual) Prims.list ->
     Prims.bool Prims.list ->
-      (Prims.bool,FStar_TypeChecker_NBETerm.args,FStar_TypeChecker_NBETerm.args)
-        FStar_Pervasives_Native.tuple3)
+      (Prims.bool * FStar_TypeChecker_NBETerm.args *
+        FStar_TypeChecker_NBETerm.args))
   =
   fun ts  ->
     fun ar_list  ->
@@ -1693,9 +1692,8 @@ and (readback_flag :
           FStar_Syntax_Syntax.DECREASES uu____6233
 
 and (translate_monadic :
-  (FStar_Syntax_Syntax.monad_name,FStar_Syntax_Syntax.term'
-                                    FStar_Syntax_Syntax.syntax)
-    FStar_Pervasives_Native.tuple2 ->
+  (FStar_Syntax_Syntax.monad_name * FStar_Syntax_Syntax.term'
+    FStar_Syntax_Syntax.syntax) ->
     FStar_TypeChecker_Cfg.cfg ->
       FStar_TypeChecker_NBETerm.t Prims.list ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -2069,9 +2067,8 @@ and (translate_monadic :
                    failwith uu____6968)
 
 and (translate_monadic_lift :
-  (FStar_Syntax_Syntax.monad_name,FStar_Syntax_Syntax.monad_name,FStar_Syntax_Syntax.term'
-                                                                   FStar_Syntax_Syntax.syntax)
-    FStar_Pervasives_Native.tuple3 ->
+  (FStar_Syntax_Syntax.monad_name * FStar_Syntax_Syntax.monad_name *
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax) ->
     FStar_TypeChecker_Cfg.cfg ->
       FStar_TypeChecker_NBETerm.t Prims.list ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->

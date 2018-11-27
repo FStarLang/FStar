@@ -358,7 +358,7 @@ let modifies_2_modifies #a1 #a2 b1 b2 h1 h2 =
       MG.loc_disjoint_aloc_elim #_ #cls #r' #a' #(B.frameOf b2) #(B.as_addr b2) b' (LocBuffer b2)
     )
 
-#set-options "--z3rlimit 16"
+#set-options "--z3rlimit 20"
 
 let modifies_3_modifies #a1 #a2 #a3 b1 b2 b3 h1 h2 =
   B.lemma_reveal_modifies_3 b1 b2 b3 h1 h2;

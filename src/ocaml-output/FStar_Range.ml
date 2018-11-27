@@ -218,14 +218,9 @@ let (extend_to_end_of_line : range -> range) =
     mk_range uu____549 uu____551 uu____552
   
 let (prims_to_fstar_range :
-  ((Prims.string,(Prims.int,Prims.int) FStar_Pervasives_Native.tuple2,
-     (Prims.int,Prims.int) FStar_Pervasives_Native.tuple2)
-     FStar_Pervasives_Native.tuple3,(Prims.string,(Prims.int,Prims.int)
-                                                    FStar_Pervasives_Native.tuple2,
-                                      (Prims.int,Prims.int)
-                                        FStar_Pervasives_Native.tuple2)
-                                      FStar_Pervasives_Native.tuple3)
-    FStar_Pervasives_Native.tuple2 -> range)
+  ((Prims.string * (Prims.int * Prims.int) * (Prims.int * Prims.int)) *
+    (Prims.string * (Prims.int * Prims.int) * (Prims.int * Prims.int))) ->
+    range)
   =
   fun r  ->
     let uu____644 = r  in

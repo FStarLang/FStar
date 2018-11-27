@@ -27,16 +27,13 @@ type sconst =
   | Const_effect 
   | Const_unit 
   | Const_bool of Prims.bool 
-  | Const_int of
-  (Prims.string,(signedness,width) FStar_Pervasives_Native.tuple2
-                  FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.tuple2 
+  | Const_int of (Prims.string * (signedness * width)
+  FStar_Pervasives_Native.option) 
   | Const_char of FStar_BaseTypes.char 
   | Const_float of FStar_BaseTypes.double 
-  | Const_bytearray of (FStar_BaseTypes.byte Prims.array,FStar_Range.range)
-  FStar_Pervasives_Native.tuple2 
-  | Const_string of (Prims.string,FStar_Range.range)
-  FStar_Pervasives_Native.tuple2 
+  | Const_bytearray of (FStar_BaseTypes.byte Prims.array * FStar_Range.range)
+  
+  | Const_string of (Prims.string * FStar_Range.range) 
   | Const_range_of 
   | Const_set_range_of 
   | Const_range of FStar_Range.range 
@@ -62,9 +59,7 @@ let (uu___is_Const_int : sconst -> Prims.bool) =
   
 let (__proj__Const_int__item___0 :
   sconst ->
-    (Prims.string,(signedness,width) FStar_Pervasives_Native.tuple2
-                    FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2)
+    (Prims.string * (signedness * width) FStar_Pervasives_Native.option))
   = fun projectee  -> match projectee with | Const_int _0 -> _0 
 let (uu___is_Const_char : sconst -> Prims.bool) =
   fun projectee  ->
@@ -83,17 +78,15 @@ let (uu___is_Const_bytearray : sconst -> Prims.bool) =
     match projectee with | Const_bytearray _0 -> true | uu____300 -> false
   
 let (__proj__Const_bytearray__item___0 :
-  sconst ->
-    (FStar_BaseTypes.byte Prims.array,FStar_Range.range)
-      FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | Const_bytearray _0 -> _0 
+  sconst -> (FStar_BaseTypes.byte Prims.array * FStar_Range.range)) =
+  fun projectee  -> match projectee with | Const_bytearray _0 -> _0 
 let (uu___is_Const_string : sconst -> Prims.bool) =
   fun projectee  ->
     match projectee with | Const_string _0 -> true | uu____343 -> false
   
 let (__proj__Const_string__item___0 :
-  sconst -> (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2)
-  = fun projectee  -> match projectee with | Const_string _0 -> _0 
+  sconst -> (Prims.string * FStar_Range.range)) =
+  fun projectee  -> match projectee with | Const_string _0 -> _0 
 let (uu___is_Const_range_of : sconst -> Prims.bool) =
   fun projectee  ->
     match projectee with | Const_range_of  -> true | uu____377 -> false
@@ -143,11 +136,7 @@ let rec (pow2 : FStar_BigInt.bigint -> FStar_BigInt.bigint) =
        FStar_BigInt.mult_big_int FStar_BigInt.two uu____542)
   
 let (bounds :
-  signedness ->
-    width ->
-      (FStar_BigInt.bigint,FStar_BigInt.bigint)
-        FStar_Pervasives_Native.tuple2)
-  =
+  signedness -> width -> (FStar_BigInt.bigint * FStar_BigInt.bigint)) =
   fun signedness  ->
     fun width  ->
       let n1 =

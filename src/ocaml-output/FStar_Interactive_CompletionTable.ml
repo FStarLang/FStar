@@ -3,7 +3,7 @@ let (string_compare : Prims.string -> Prims.string -> Prims.int) =
   fun s1  -> fun s2  -> FStar_String.compare s1 s2 
 type 'a heap =
   | EmptyHeap 
-  | Heap of ('a,'a heap Prims.list) FStar_Pervasives_Native.tuple2 
+  | Heap of ('a * 'a heap Prims.list) 
 let uu___is_EmptyHeap : 'a . 'a heap -> Prims.bool =
   fun projectee  ->
     match projectee with | EmptyHeap  -> true | uu____53 -> false
@@ -12,8 +12,7 @@ let uu___is_Heap : 'a . 'a heap -> Prims.bool =
   fun projectee  ->
     match projectee with | Heap _0 -> true | uu____83 -> false
   
-let __proj__Heap__item___0 :
-  'a . 'a heap -> ('a,'a heap Prims.list) FStar_Pervasives_Native.tuple2 =
+let __proj__Heap__item___0 : 'a . 'a heap -> ('a * 'a heap Prims.list) =
   fun projectee  -> match projectee with | Heap _0 -> _0 
 let heap_merge :
   'Auu____129 .
@@ -67,8 +66,7 @@ let heap_pop :
   'Auu____384 .
     ('Auu____384 -> 'Auu____384 -> Prims.int) ->
       'Auu____384 heap ->
-        ('Auu____384,'Auu____384 heap) FStar_Pervasives_Native.tuple2
-          FStar_Pervasives_Native.option
+        ('Auu____384 * 'Auu____384 heap) FStar_Pervasives_Native.option
   =
   fun cmp  ->
     fun uu___88_411  ->
@@ -109,9 +107,8 @@ let push_nodup :
 let rec add_priorities :
   'Auu____557 .
     Prims.int ->
-      (Prims.int,'Auu____557) FStar_Pervasives_Native.tuple2 Prims.list ->
-        'Auu____557 Prims.list ->
-          (Prims.int,'Auu____557) FStar_Pervasives_Native.tuple2 Prims.list
+      (Prims.int * 'Auu____557) Prims.list ->
+        'Auu____557 Prims.list -> (Prims.int * 'Auu____557) Prims.list
   =
   fun n1  ->
     fun acc  ->
@@ -159,8 +156,7 @@ let merge_increasing_lists_rev :
   
 type 'a btree =
   | StrEmpty 
-  | StrBranch of (Prims.string,'a,'a btree,'a btree)
-  FStar_Pervasives_Native.tuple4 
+  | StrBranch of (Prims.string * 'a * 'a btree * 'a btree) 
 let uu___is_StrEmpty : 'a . 'a btree -> Prims.bool =
   fun projectee  ->
     match projectee with | StrEmpty  -> true | uu____1185 -> false
@@ -170,16 +166,13 @@ let uu___is_StrBranch : 'a . 'a btree -> Prims.bool =
     match projectee with | StrBranch _0 -> true | uu____1220 -> false
   
 let __proj__StrBranch__item___0 :
-  'a .
-    'a btree ->
-      (Prims.string,'a,'a btree,'a btree) FStar_Pervasives_Native.tuple4
-  = fun projectee  -> match projectee with | StrBranch _0 -> _0 
+  'a . 'a btree -> (Prims.string * 'a * 'a btree * 'a btree) =
+  fun projectee  -> match projectee with | StrBranch _0 -> _0 
 let rec btree_to_list_rev :
   'Auu____1274 .
     'Auu____1274 btree ->
-      (Prims.string,'Auu____1274) FStar_Pervasives_Native.tuple2 Prims.list
-        ->
-        (Prims.string,'Auu____1274) FStar_Pervasives_Native.tuple2 Prims.list
+      (Prims.string * 'Auu____1274) Prims.list ->
+        (Prims.string * 'Auu____1274) Prims.list
   =
   fun btree  ->
     fun acc  ->
@@ -194,11 +187,9 @@ let rec btree_to_list_rev :
   
 let rec btree_from_list :
   'Auu____1353 .
-    (Prims.string,'Auu____1353) FStar_Pervasives_Native.tuple2 Prims.list ->
+    (Prims.string * 'Auu____1353) Prims.list ->
       Prims.int ->
-        ('Auu____1353 btree,(Prims.string,'Auu____1353)
-                              FStar_Pervasives_Native.tuple2 Prims.list)
-          FStar_Pervasives_Native.tuple2
+        ('Auu____1353 btree * (Prims.string * 'Auu____1353) Prims.list)
   =
   fun nodes  ->
     fun size  ->
@@ -259,9 +250,7 @@ let rec btree_find_exact :
   
 let rec btree_extract_min :
   'a .
-    'a btree ->
-      (Prims.string,'a,'a btree) FStar_Pervasives_Native.tuple3
-        FStar_Pervasives_Native.option
+    'a btree -> (Prims.string * 'a * 'a btree) FStar_Pervasives_Native.option
   =
   fun bt  ->
     match bt with
@@ -329,11 +318,7 @@ let (matched_prefix_of_path_elem :
 let (mk_path_el : Prims.string Prims.list -> prefix_match -> path_elem) =
   fun imports  -> fun segment  -> { imports; segment } 
 let rec btree_find_prefix :
-  'a .
-    'a btree ->
-      Prims.string ->
-        (prefix_match,'a) FStar_Pervasives_Native.tuple2 Prims.list
-  =
+  'a . 'a btree -> Prims.string -> (prefix_match * 'a) Prims.list =
   fun bt  ->
     fun prefix1  ->
       let rec aux bt1 prefix2 acc =
@@ -380,8 +365,7 @@ let (query_to_string : Prims.string Prims.list -> Prims.string) =
   fun q  -> FStar_String.concat "." q 
 type 'a name_collection =
   | Names of 'a btree 
-  | ImportedNames of (Prims.string,'a name_collection Prims.list)
-  FStar_Pervasives_Native.tuple2 
+  | ImportedNames of (Prims.string * 'a name_collection Prims.list) 
 let uu___is_Names : 'a . 'a name_collection -> Prims.bool =
   fun projectee  ->
     match projectee with | Names _0 -> true | uu____2368 -> false
@@ -393,11 +377,8 @@ let uu___is_ImportedNames : 'a . 'a name_collection -> Prims.bool =
     match projectee with | ImportedNames _0 -> true | uu____2420 -> false
   
 let __proj__ImportedNames__item___0 :
-  'a .
-    'a name_collection ->
-      (Prims.string,'a name_collection Prims.list)
-        FStar_Pervasives_Native.tuple2
-  = fun projectee  -> match projectee with | ImportedNames _0 -> _0 
+  'a . 'a name_collection -> (Prims.string * 'a name_collection Prims.list) =
+  fun projectee  -> match projectee with | ImportedNames _0 -> _0 
 type 'a names = 'a name_collection Prims.list
 type 'a trie = {
   bindings: 'a names ;
@@ -613,10 +594,7 @@ let trie_add_alias :
   
 let names_revmap :
   'a 'b .
-    ('a btree -> 'b) ->
-      'a names ->
-        (Prims.string Prims.list,'b) FStar_Pervasives_Native.tuple2
-          Prims.list
+    ('a btree -> 'b) -> 'a names -> (Prims.string Prims.list * 'b) Prims.list
   =
   fun fn  ->
     fun name_collections  ->
@@ -638,7 +616,7 @@ let names_revmap :
 let btree_find_all :
   'a .
     Prims.string FStar_Pervasives_Native.option ->
-      'a btree -> (prefix_match,'a) FStar_Pervasives_Native.tuple2 Prims.list
+      'a btree -> (prefix_match * 'a) Prims.list
   =
   fun prefix1  ->
     fun bt  ->
@@ -667,11 +645,7 @@ let (uu___is_NSTPrefix : name_search_term -> Prims.bool) =
 let (__proj__NSTPrefix__item___0 : name_search_term -> Prims.string) =
   fun projectee  -> match projectee with | NSTPrefix _0 -> _0 
 let names_find_rev :
-  'a .
-    'a names ->
-      name_search_term ->
-        (path_elem,'a) FStar_Pervasives_Native.tuple2 Prims.list
-  =
+  'a . 'a names -> name_search_term -> (path_elem * 'a) Prims.list =
   fun names  ->
     fun id1  ->
       let matching_values_per_collection_with_imports =
@@ -705,10 +679,7 @@ let names_find_rev :
 let rec trie_find_prefix' :
   'a .
     'a trie ->
-      path ->
-        query ->
-          (path,'a) FStar_Pervasives_Native.tuple2 Prims.list ->
-            (path,'a) FStar_Pervasives_Native.tuple2 Prims.list
+      path -> query -> (path * 'a) Prims.list -> (path * 'a) Prims.list
   =
   fun tr  ->
     fun path_acc  ->
@@ -741,10 +712,8 @@ let rec trie_find_prefix' :
                        ((FStar_List.rev (path_el :: path_acc)), v1))
                 matching_bindings_rev acc_with_recursive_bindings
   
-let trie_find_prefix :
-  'a .
-    'a trie -> query -> (path,'a) FStar_Pervasives_Native.tuple2 Prims.list
-  = fun tr  -> fun query  -> trie_find_prefix' tr [] query [] 
+let trie_find_prefix : 'a . 'a trie -> query -> (path * 'a) Prims.list =
+  fun tr  -> fun query  -> trie_find_prefix' tr [] query [] 
 type ns_info = {
   ns_name: Prims.string ;
   ns_loaded: Prims.bool }
@@ -948,17 +917,13 @@ let (first_import_of_path :
         FStar_List.last imports
   
 let (alist_of_ns_info :
-  ns_info ->
-    (Prims.string,FStar_Util.json) FStar_Pervasives_Native.tuple2 Prims.list)
-  =
+  ns_info -> (Prims.string * FStar_Util.json) Prims.list) =
   fun ns_info  ->
     [("name", (FStar_Util.JsonStr (ns_info.ns_name)));
     ("loaded", (FStar_Util.JsonBool (ns_info.ns_loaded)))]
   
 let (alist_of_mod_info :
-  mod_info ->
-    (Prims.string,FStar_Util.json) FStar_Pervasives_Native.tuple2 Prims.list)
-  =
+  mod_info -> (Prims.string * FStar_Util.json) Prims.list) =
   fun mod_info  ->
     [("name", (FStar_Util.JsonStr (mod_info.mod_name)));
     ("path", (FStar_Util.JsonStr (mod_info.mod_path)));
@@ -998,9 +963,7 @@ let (json_of_completion_result : completion_result -> FStar_Util.json) =
       FStar_Util.JsonStr (result.completion_candidate)]
   
 let completion_result_of_lid :
-  'Auu____5272 .
-    (path,'Auu____5272) FStar_Pervasives_Native.tuple2 -> completion_result
-  =
+  'Auu____5272 . (path * 'Auu____5272) -> completion_result =
   fun uu____5281  ->
     match uu____5281 with
     | (path,_lid) ->
@@ -1031,7 +994,7 @@ let (completion_result_of_mod :
         }
   
 let (completion_result_of_ns_or_mod :
-  (path,mod_symbol) FStar_Pervasives_Native.tuple2 -> completion_result) =
+  (path * mod_symbol) -> completion_result) =
   fun uu____5341  ->
     match uu____5341 with
     | (path,symb) ->
@@ -1055,9 +1018,8 @@ let (autocomplete_lid : table -> query -> completion_result Prims.list) =
 let (autocomplete_mod_or_ns :
   table ->
     query ->
-      ((path,mod_symbol) FStar_Pervasives_Native.tuple2 ->
-         (path,mod_symbol) FStar_Pervasives_Native.tuple2
-           FStar_Pervasives_Native.option)
+      ((path * mod_symbol) ->
+         (path * mod_symbol) FStar_Pervasives_Native.option)
         -> completion_result Prims.list)
   =
   fun tbl  ->

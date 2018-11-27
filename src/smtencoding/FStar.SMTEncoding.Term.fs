@@ -140,6 +140,7 @@ type decl =
   | DefineFun  of string * list<sort> * sort * term * caption
   | Assume     of assumption
   | Caption    of string
+  | Module     of string * list<decl>
   | Eval       of term
   | Echo       of string
   | RetainAssumptions of list<string>
@@ -716,27 +717,49 @@ let termToSmt
       in
       aux 0 0 [] t
 
-let caption_to_string = function
-    | None -> ""
-    | Some c ->
+let caption_to_string print_captions =
+    function
+    | Some c
+       when print_captions ->
         let c = String.split ['\n'] c |> List.map BU.trim_string |> String.concat " " in
         ";;;;;;;;;;;;;;;;" ^ c ^ "\n"
+    | _ -> ""
 
-let rec declToSmt' print_ranges z3options decl =
+
+let rec declToSmt' print_captions z3options decl =
   match decl with
   | DefPrelude ->
     mkPrelude z3options
+  | Module (s, decls) ->
+    let res = List.map (declToSmt' print_captions z3options) decls |> String.concat "\n" in
+    if Options.keep_query_captions()
+    then BU.format5 "\n;;; Start module %s\n%s\n;;; End module %s (%s decls; total size %s)"
+                    s
+                    res
+                    s
+                    (BU.string_of_int (List.length decls))
+                    (BU.string_of_int (String.length res))
+    else res
   | Caption c ->
-    if Options.log_queries ()
+    if print_captions
     then "\n" ^ (BU.splitlines c |> List.map (fun s -> "; " ^ s ^ "\n") |> String.concat "")
     else ""
   | DeclFun(f,argsorts,retsort,c) ->
     let l = List.map strSort argsorts in
-    format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort)
+    format4 "%s(declare-fun %s (%s) %s)"
+      (caption_to_string print_captions c)
+      f
+      (String.concat " " l)
+      (strSort retsort)
   | DefineFun(f,arg_sorts,retsort,body,c) ->
     let names, binders = name_macro_binders arg_sorts in
     let body = inst (List.map (fun x -> mkFreeV x norng) names) body in
-    format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt print_ranges (escape f) body)
+    format5 "%s(define-fun %s (%s) %s\n %s)"
+      (caption_to_string print_captions c)
+      f
+      (String.concat " " binders)
+      (strSort retsort)
+      (termToSmt print_captions (escape f) body)
   | Assume a ->
     let fact_ids_to_string ids =
         ids |> List.map (function
@@ -745,17 +768,18 @@ let rec declToSmt' print_ranges z3options decl =
         | Tag t -> "Tag " ^t)
     in
     let fids =
-        if Options.log_queries()
-        then BU.format1 ";;; Fact-ids: %s\n" (String.concat "; " (fact_ids_to_string a.assumption_fact_ids))
+        if print_captions
+        then BU.format1 ";;; Fact-ids: %s\n"
+                        (String.concat "; " (fact_ids_to_string a.assumption_fact_ids))
         else "" in
     let n = a.assumption_name in
     format4 "%s%s(assert (! %s\n:named %s))"
-            (caption_to_string a.assumption_caption)
+            (caption_to_string print_captions a.assumption_caption)
             fids
-            (termToSmt print_ranges n a.assumption_term)
+            (termToSmt print_captions n a.assumption_term)
             n
   | Eval t ->
-    format1 "(eval %s)" (termToSmt print_ranges "eval" t)
+    format1 "(eval %s)" (termToSmt print_captions "eval" t)
   | Echo s ->
     format1 "(echo \"%s\")" s
   | RetainAssumptions _ ->
@@ -768,8 +792,9 @@ let rec declToSmt' print_ranges z3options decl =
   | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
 
-and declToSmt         z3options decl = declToSmt' true  z3options decl
+and declToSmt         z3options decl = declToSmt' (Options.keep_query_captions())  z3options decl
 and declToSmt_no_caps z3options decl = declToSmt' false z3options decl
+and declsToSmt        z3options decls = List.map (declToSmt z3options) decls |> String.concat "\n"
 
 and mkPrelude z3options =
   let basic = z3options ^
@@ -792,15 +817,15 @@ and mkPrelude z3options =
                     (HasTypeFuel MaxIFuel x t))\n\
                 ;;fuel irrelevance\n\
                 (assert (forall ((f Fuel) (x Term) (t Term))\n\
-		                (! (= (HasTypeFuel (SFuel f) x t)\n\
-			                  (HasTypeZ x t))\n\
-		                   :pattern ((HasTypeFuel (SFuel f) x t)))))\n\
+                                (! (= (HasTypeFuel (SFuel f) x t)\n\
+                                          (HasTypeZ x t))\n\
+                                   :pattern ((HasTypeFuel (SFuel f) x t)))))\n\
                 (declare-fun NoHoist (Term Bool) Bool)\n\
                 ;;no-hoist\n\
                 (assert (forall ((dummy Term) (b Bool))\n\
-		                (! (= (NoHoist dummy b)\n\
-			                  b)\n\
-		                   :pattern ((NoHoist dummy b)))))\n\
+                                (! (= (NoHoist dummy b)\n\
+                                          b)\n\
+                                   :pattern ((NoHoist dummy b)))))\n\
                 (define-fun  IsTyped ((x Term)) Bool\n\
                     (exists ((t Term)) (HasTypeZ x t)))\n\
                 (declare-fun ApplyTF (Term Fuel) Term)\n\
@@ -843,9 +868,9 @@ and mkPrelude z3options =
                                              (and (= x1 y1)\n\
                                                   (Valid (Prims.precedes Prims.lex_t Prims.lex_t x2 y2)))))))\n\
                       (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
-					                  (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
-					                          (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
-					                  :pattern (Prims.precedes t1 t2 e1 e2))))\n\
+                                                          (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
+                                                                  (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
+                                                          :pattern (Prims.precedes t1 t2 e1 e2))))\n\
                       (assert (forall ((t1 Term) (t2 Term))\n\
                                       (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
                                       (< (Rank t1) (Rank t2)))\n\
