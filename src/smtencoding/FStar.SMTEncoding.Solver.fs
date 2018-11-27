@@ -104,16 +104,11 @@ let with_hints_db fname f =
     result
 
 let filter_using_facts_from (e:env) (theory:decls_t) =
-    let should_enc_fid fid =
-        match fid with
-        | Name lid -> Env.should_enc_lid e lid
-        | _ -> failwith "Solver.fs::filter_using_facts_from expected only Name fact ids"
-    in
     let matches_fact_ids (include_assumption_names:BU.smap<bool>) (a:Term.assumption) =
       match a.assumption_fact_ids with
       | [] -> true //retaining `a` because it is not tagged with a fact id
       | _ ->
-        a.assumption_fact_ids |> List.filter (function | Name _ -> true | _ -> false) |> BU.for_some should_enc_fid
+        a.assumption_fact_ids |> BU.for_some (function | Name lid -> Env.should_enc_lid e lid | _ -> false)
         || Option.isSome (BU.smap_try_find include_assumption_names a.assumption_name)
     in
     //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
@@ -140,7 +135,7 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
     in
     pruned_theory
 
-let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:decls_t) :(decls_t * bool * int * int) =  //filtered theory, if core used, retained, pruned
+let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:decls_t) :(decls_t * bool * int * int) =  //(filtered theory, if core used, retained, pruned)
     match core with
     | None ->
       filter_using_facts_from e theory, false, 0, 0  //no stats if no core
