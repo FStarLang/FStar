@@ -8,7 +8,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ad3e6f1d3cd1ae01fdf252df37a1866f"
+      "102e1279502e1b4c9f2d7ba76a022e75"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -20,7 +20,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "74f72e46a9e871b8ff234b79e3bed4c7"
+      "0c6064de25c4d9dae8d460c082a21643"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -47,7 +47,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "205961f64c007ff1da2333feeafb67dc"
+      "4a18d2a04ca6588ac27c4f30554d49f9"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -67,7 +67,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b73ac65bdff05a6afe20dea2dad48d38"
+      "8e4497d1b1ce729badeb866929c2ae37"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -98,7 +98,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "54396d2ec389a1f143ed0f61a123d7d1"
+      "758b2c955773128f4e8079ff1a11208e"
     ],
     [
       "X64.Poly1305.Spec_s.uu___53",
@@ -107,7 +107,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "989f194caeac2c7da8eb5f7529da6eee"
+      "583edad65fb74ef63499144fd1916b4b"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -119,7 +119,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6c89c4c0f16e8b9fc5fccdde50ae55db"
+      "ccc9d33f59e817a2ed1c0f52ac245049"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -146,7 +146,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "93e1458d4eb11c7e966c198ea1790181"
+      "01b567941af2242118fedda4b3ea7eb9"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -166,7 +166,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "54e9df8b946a755767fb8e9a133db04f"
+      "4c9148f38a25e788a77bc98c38218fef"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -197,7 +197,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "d0ee2f72ffeb56e7158fef623e26d67b"
+      "1761d2b523c4a0bb9aee645ea5136276"
     ]
   ]
 ]

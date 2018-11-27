@@ -12,7 +12,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "4274219211c38009fcbac6eb08ddf7d6"
+      "449bda5af7f4e9ec4c1ae563e80b5e6f"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "9ab95c3f1d010e0fb09f8ace3a168ada"
+      "13ea7879c580b12c38c7c5fa17e61962"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "44160ed51faae9fa32d43af9b4b6e103"
+      "e0fc262729dd75909a4cdbe65aa2eeb1"
     ],
     [
       "Ex10a.revoke",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "079e59b1bb446d37f87878919293d24d"
+      "f55f4796ad3e10551e5abe90850799b7"
     ],
     [
       "Ex10a.grant",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "fa3c011769e0210f573862445d5af2eb"
+      "6272b412b1f3828390c875d2a1a4527c"
     ],
     [
       "Ex10a.revoke",
@@ -79,7 +79,7 @@
         "equation_FStar.ST.mref", "equation_FStar.ST.ref",
         "equation_Prims.eqtype", "function_token_typing_Ex10a.acls",
         "function_token_typing_Ex10a.db",
-        "interpretation_Ex10a_Tm_abs_f2cecc49b12d616bde57bf0e98039db1",
+        "interpretation_Ex10a_Tm_abs_5e22fed2da350fb303c4f49019d14b06",
         "kinding_Ex10a.entry@tok",
         "lemma_FStar.List.Tot.Base.mem_filter_forall",
         "primitive_Prims.op_disEquality",
@@ -90,7 +90,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "28255a79c96b6bb69f280fd48f1fd06b"
+      "7a8daa83981d834206cf092da8153d87"
     ],
     [
       "Ex10a.safe_delete",
@@ -111,7 +111,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "6926b8c6b63ea21d51a918914e1f8604"
+      "c7babc608340f2c363a1e6224c1cf085"
     ],
     [
       "Ex10a.test_acls",
@@ -122,25 +122,23 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
-        "constructor_distinct_Ex10a.Readable",
+        "bool_typing", "constructor_distinct_Ex10a.Readable",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
-        "disc_equation_FStar.Pervasives.Native.Some", "eq2-interp",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Ex10a.canRead", "equation_Ex10a.canRead_t",
         "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.result",
-        "interpretation_Ex10a_Tm_abs_bfa07ed00b702381db27b21147165776",
+        "interpretation_Ex10a_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e",
         "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "unit_typing"
+        "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "8d80cd9e844a36c7706c06bdadce8bd4"
+      "4850ecc23cf43fea31f8feee7cf9cff5"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -153,7 +151,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "6e708953a7a70dc008e61b7ba022859e"
+      "d26213025a097ac76dc0f378e36d82bf"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -166,7 +164,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "f4c76ef13e0237e4c37402ae2c54ed4f"
+      "d5faa23950cc7d8bc2426b3a60043093"
     ],
     [
       "Ex10a.canRead",
@@ -179,7 +177,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "029ddf6f1868388f3936956e28e16f04"
+      "db27190d10b8f76b1d2c0f4c87e76921"
     ],
     [
       "Ex10a.revoke",
@@ -188,7 +186,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "8d614e0ab8bccdcddebac93f006eda04"
+      "e68830221706ee7c56dc027f10b834fb"
     ]
   ]
 ]

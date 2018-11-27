@@ -47,7 +47,7 @@
         "typing_tok_FStar.Pointer.Base.TBool@tok"
       ],
       0,
-      "dbdd9e1c53543bc4484fe4617269a167"
+      "08397365fae04dccbefa225a22adbbdf"
     ],
     [
       "Test.callee",
@@ -108,12 +108,12 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_9560ef23f44dd048af58f1767cc19bc8",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
         "refinement_interpretation_Test_Tm_refine_134e4f4c1747efc6a2cc99203e1a1e8b",
-        "refinement_interpretation_Test_Tm_refine_a277834f379f2d1067188bfcc1b84ae1",
+        "refinement_interpretation_Test_Tm_refine_d9398a2910c40f330faf119cc0f32553",
         "string_typing", "token_correspondence_FStar.Pervasives.Native.fst",
         "typing_FStar.Pointer.Base.loc_pointer"
       ],
       0,
-      "ef48468f75d4092cf09db9c273148577"
+      "b0bd84f1e1719d8b9ad2349ae4282d06"
     ],
     [
       "Test.more_struct",
@@ -170,7 +170,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "f110164e609e41312b1cf8465aea3cd5"
+      "5f4d9b1521cdf32cfa288f9a93bef5d3"
     ],
     [
       "Test.caller",
@@ -191,13 +191,12 @@
         "@query",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_7fe3e7847982dd1674bac902db1b25d6",
         "FStar.Pointer.Base_interpretation_Tm_arrow_0a44b12744e216c6d692aa1730cf3d23",
-        "FStar.Pointer.Base_interpretation_Tm_arrow_aae5bb18ea119c6a041bd8ee388d6427",
+        "FStar.Pointer.Base_interpretation_Tm_arrow_6cff58f6931cd81e8bde288972bdd609",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_Prims.HasEq_string", "bool_inversion", "bool_typing",
-        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
+        "bool_typing", "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_FStar.Pointer.Base.Mkstruct_typ", "data_elim_Prims.Cons",
         "data_elim_Prims.Mkdtuple2", "disc_equation_Prims.Cons",
@@ -249,7 +248,7 @@
         "function_token_typing_Test.more_struct_t",
         "function_token_typing_Test.struct",
         "function_token_typing_Test.struct_t", "int_inversion",
-        "interpretation_FStar.Pointer.Base_Tm_abs_f730de3525c85e24f3ee055da926cbd8",
+        "interpretation_FStar.Pointer.Base_Tm_abs_98e38feb1b5cb6aac8071e86e1ca74aa",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_elim",
@@ -329,7 +328,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "aeeb706c18d75f6aacef1f4fbb9c613a"
+      "39ca07cb2b33fbd305d3da8e6b6c0aaa"
     ]
   ]
 ]
