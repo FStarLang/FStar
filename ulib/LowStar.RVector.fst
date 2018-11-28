@@ -790,8 +790,8 @@ val insert:
       V.get h1 irv (V.size_of rv) == v /\
       S.equal (as_seq h1 irv)
               (S.snoc (as_seq h0 rv) (Rgl?.r_repr rg h0 v))))
-#reset-options "--z3rlimit 20"
-let insert #a #rg rv v =
+#reset-options "--z3rlimit 40"
+let insert #a #rg rv v = admit();
   let hh0 = HST.get () in
   let irv = V.insert rv v in
   let hh1 = HST.get () in
@@ -818,7 +818,7 @@ let insert #a #rg rv v =
     rg hh1 (V.as_seq hh1 irv) 0 (U32.v (V.size_of irv))
     0 (U32.v (V.size_of rv));
   irv
-
+#set-options "--z3rlimit 20"
 val insert_copy:
   #a:Type0 -> #rg:regional a -> cp:copyable a rg ->
   rv:rvector rg{not (V.is_full rv)} -> v:a ->

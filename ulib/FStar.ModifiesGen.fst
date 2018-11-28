@@ -266,14 +266,16 @@ let loc_aux_includes_buffer
   (b: aloc c)
 : GTot Type0
   (decreases s)
-= exists (b0 : aloc c) . b0 `GSet.mem` s /\ b0 `aloc_includes` b
+= exists (b0 : aloc c) . {:pattern (b0 `GSet.mem` s) \/ (b0 `aloc_includes` b)}
+    b0 `GSet.mem` s /\ b0 `aloc_includes` b
 
 let loc_aux_includes
   (#al: aloc_t) (#c: cls al)
   (s1 s2: GSet.set (aloc c))
 : GTot Type0
   (decreases s2)
-= forall (b2: aloc c) . GSet.mem b2 s2 ==> loc_aux_includes_buffer s1 b2
+= forall (b2: aloc c) . {:pattern (GSet.mem b2 s2) \/ (loc_aux_includes_buffer s1 b2)}
+    GSet.mem b2 s2 ==> loc_aux_includes_buffer s1 b2
 
 let loc_aux_includes_union_l
   (#al: aloc_t) (#c: cls al)

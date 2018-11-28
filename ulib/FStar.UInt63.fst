@@ -200,7 +200,7 @@ let eq_mask (a:t) (b:t)
       assert (v c = zero n)
     end;
     c
-
+#set-options "--z3rlimit_factor 2"
 private
 let lemma_sub_msbs (a:t) (b:t)
   : Lemma ((msb (v a) = msb (v b)) ==> (v a < v b <==> msb (v (sub_mod a b))))
