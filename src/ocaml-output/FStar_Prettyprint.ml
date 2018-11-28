@@ -68,9 +68,10 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                                (Prims.parse_int "100") doc1 FStar_Util.stdout);
                         comments2)
                     in
-                 if Prims.op_Negation (FStar_List.isEmpty leftover_comments)
-                 then
-                   let left_over_doc =
+                 let left_over_doc =
+                   if
+                     Prims.op_Negation (FStar_List.isEmpty leftover_comments)
+                   then
                      let uu____219 =
                        let uu____222 =
                          let uu____225 =
@@ -81,34 +82,40 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                            [uu____228]  in
                          FStar_Pprint.hardline :: uu____225  in
                        FStar_Pprint.hardline :: uu____222  in
-                     FStar_Pprint.concat uu____219  in
-                   (match outf with
-                    | FStar_Pervasives_Native.Some f ->
-                        let uu____230 =
-                          FStar_Pprint.pretty_string
-                            (FStar_Util.float_of_string "1.0")
-                            (Prims.parse_int "100") left_over_doc
-                           in
-                        FStar_All.pipe_left (FStar_Util.append_to_file f)
-                          uu____230
-                    | FStar_Pervasives_Native.None  ->
-                        FStar_Pprint.pretty_out_channel
+                     FStar_Pprint.concat uu____219
+                   else
+                     if m1 = FromTempToStdout
+                     then
+                       FStar_Pprint.concat
+                         [FStar_Pprint.hardline; FStar_Pprint.hardline]
+                     else FStar_Pprint.empty
+                    in
+                 (match outf with
+                  | FStar_Pervasives_Native.Some f ->
+                      let uu____235 =
+                        FStar_Pprint.pretty_string
                           (FStar_Util.float_of_string "1.0")
                           (Prims.parse_int "100") left_over_doc
-                          FStar_Util.stdout)
-                 else ())
+                         in
+                      FStar_All.pipe_left (FStar_Util.append_to_file f)
+                        uu____235
+                  | FStar_Pervasives_Native.None  ->
+                      FStar_Pprint.pretty_out_channel
+                        (FStar_Util.float_of_string "1.0")
+                        (Prims.parse_int "100") left_over_doc
+                        FStar_Util.stdout))
          in
       FStar_List.iter (parse_and_prettyprint m) filenames;
       (match m with
        | FromTempToFile  ->
            FStar_List.iter
              (fun f  ->
-                let uu____246 = temp_file_name f  in
-                FStar_Util.delete_file uu____246) filenames
+                let uu____249 = temp_file_name f  in
+                FStar_Util.delete_file uu____249) filenames
        | FromTempToStdout  ->
            FStar_List.iter
              (fun f  ->
-                let uu____253 = temp_file_name f  in
-                FStar_Util.delete_file uu____253) filenames
+                let uu____256 = temp_file_name f  in
+                FStar_Util.delete_file uu____256) filenames
        | ToTempFile  -> ())
   

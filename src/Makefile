@@ -179,7 +179,7 @@ ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 # Getting parallelism from this target
-uregressions: ulib-extra tutorial uexamples interactive-test #prettyprinting-tests
+uregressions: ulib-extra tutorial uexamples interactive-test prettyprinting-tests
 
 # Getting parallelism from this target as well
 # This is a hook for nightly builds (on Linux)
