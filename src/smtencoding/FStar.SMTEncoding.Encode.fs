@@ -771,7 +771,8 @@ let encode_top_level_let :
             //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
             //But, the pattern ensures that this only applies to well-typed terms
             //NS 08/10: Setting the weight of this quantifier to 0, since its instantiations are controlled by F* fuel
-            let eqn_g = Util.mkAssume(mkForall' (U.range_of_lbname lbn) ([[gsapp]], Some 0, fuel::vars, mkEq(gsapp, body_tm)),
+            //NS 11/28/2018: Restoring the mkImp (mk_and_l guards, mkEq(gsapp, body_tm))
+            let eqn_g = Util.mkAssume(mkForall' (U.range_of_lbname lbn) ([[gsapp]], Some 0, fuel::vars, mkImp(mk_and_l guards, mkEq(gsapp, body_tm))),
                                     Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" fvb.fvar_lid.str),
                                     ("equation_with_fuel_" ^g)) in
             let eqn_f = Util.mkAssume(mkForall (U.range_of_lbname lbn) ([[app]], vars, mkEq(app, gmax)),
