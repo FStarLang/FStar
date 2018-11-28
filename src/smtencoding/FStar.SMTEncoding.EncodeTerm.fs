@@ -866,9 +866,49 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             in
 
             let encode_full_app fv =
-                let fname, fuel_args, arity = lookup_free_var_sym env fv in
-                let tm = maybe_curry_app t0.pos fname arity (fuel_args@args) in
-                tm, decls
+                let prims_connectives =
+                  let mkValid t = mkApp ("Valid", [t]) in
+                  let mkBoxLogical t = mkApp ("BoxLogical", [t]) in
+                  let mk_unary_logical_connective (interp:term -> term) :list<term> -> term =
+                    function
+                    | [{ tm = App (Var "BoxLogical", [t]) }] -> mkBoxLogical (interp t)
+                    | [t] -> mkBoxLogical (interp (mkValid t))
+                    | _ -> failwith "Impossible: expected logical unary connective to be applied to one argument"
+                  in
+                  let mk_binary_logical_connective (interp:(term * term) -> term) :list<term> -> term =
+                    function
+                    | [{ tm = App (Var "BoxLogical", [t1]) }; { tm = App (Var "BoxLogical", [t2]) }] -> mkBoxLogical (interp (t1, t2))
+                    | [{ tm = App (Var "BoxLogical", [t1]) }; t2] -> mkBoxLogical (interp (t1, mkValid t2))
+                    | [t1; { tm = App (Var "BoxLogical", [t2]) }] -> mkBoxLogical (interp (mkValid t1, t2))
+                    | [t1; t2] -> mkBoxLogical (interp (mkValid t1, mkValid t2))
+                    | _ -> failwith "Impossible: mk_binary_logical_connective expects two arguments only"
+                  in
+                  let mk_unary_boolean_connective (interp:term -> term) :list<term> -> term =
+                    function
+                    | [t] -> boxBool (interp (unboxBool t))
+                    | _ -> failwith "Impossible: expected boolean unary connective to be applied to one argument"
+                  in
+                  let mk_binary_boolean_connective (interp:(term * term) -> term) :list<term> -> term =
+                    function
+                    | [t1; t2] -> boxBool (interp (unboxBool t1, unboxBool t2))
+                    | _ -> failwith "Impossible: expected boolean binary connective to be applied to two arguments"
+                  in
+                  [Const.and_lid, mk_binary_logical_connective mkAnd;
+                   Const.or_lid, mk_binary_logical_connective mkOr;
+                   Const.imp_lid, mk_binary_logical_connective mkImp;
+                   Const.iff_lid, mk_binary_logical_connective mkIff;
+                   Const.not_lid, mk_unary_logical_connective mkNot;
+                   Const.op_And, mk_binary_boolean_connective mkAnd;
+                   Const.op_Or, mk_binary_boolean_connective mkOr;
+                   Const.op_Negation, mk_unary_boolean_connective mkNot]
+                in
+
+                match BU.find_opt (fun (l, _) -> lid_equals l fv.v) prims_connectives with
+                | Some (_, f) -> f args, decls
+                | None ->
+                  let fname, fuel_args, arity = lookup_free_var_sym env fv in
+                  let tm = maybe_curry_app t0.pos fname arity (fuel_args@args) in
+                  tm, decls
             in
 
             let head = SS.compress head in
