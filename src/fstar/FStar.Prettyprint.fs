@@ -34,14 +34,18 @@ let generate (m: printing_mode) filenames =
              | None -> P.pretty_out_channel (float_of_string "1.0") 100 doc stdout);
             comments
         in
-        if not (FStar.List.isEmpty leftover_comments) then
-          (* TODO : We could setup the leftover comments a little more nicely *)
-          let left_over_doc =
-             P.concat  [P.hardline ; P.hardline ; comments_to_document leftover_comments]
-          in
-          match outf with
-          | Some f -> append_to_file f <| P.pretty_string (float_of_string "1.0") 100 left_over_doc
-          | None -> P.pretty_out_channel (float_of_string "1.0") 100 left_over_doc stdout
+        let left_over_doc =
+          if not (FStar.List.isEmpty leftover_comments) then
+            P.concat  [P.hardline ; P.hardline ; comments_to_document leftover_comments]
+          else if m = FromTempToStdout then
+            // This isn't needed for FromTempToFile, when using `append_to_file` a newline is added to EoF
+            P.concat [P.hardline; P.hardline]
+          else
+            P.empty
+        in
+        match outf with
+        | Some f -> append_to_file f <| P.pretty_string (float_of_string "1.0") 100 left_over_doc
+        | None -> P.pretty_out_channel (float_of_string "1.0") 100 left_over_doc stdout
     in
     List.iter (parse_and_prettyprint m) filenames;
     match m with
