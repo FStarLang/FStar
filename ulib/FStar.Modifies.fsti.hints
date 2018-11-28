@@ -13,7 +13,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c6b71ccf3109dff8cc5c1f3051a4b963"
+      "3dc035ace93e723ad1fafe97b8d3f1be"
     ],
     [
       "FStar.Modifies.loc_mreference",
@@ -30,7 +30,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "bb43d7989cc8dc5ad6bdfe7679acddec"
+      "f853b73589a2f29770ace7b6b6b9f0a1"
     ],
     [
       "FStar.Modifies.loc_freed_mreference",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0c07c1fe47521cc403c1216452bd0d5c"
+      "7fb5210e09d34a5308b51e3c82dacc2e"
     ],
     [
       "FStar.Modifies.loc_includes_gsub_buffer_l",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "5920b90a3acca7eeb9a6fd235ad3fd02"
+      "4f2a165a44d1d70985f59b7de8641166"
     ],
     [
       "FStar.Modifies.loc_includes_addresses_buffer",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "55a9ebd3031c0e8bf01932b475018669"
+      "292ca0f36707ab55863ad89d0d26a70e"
     ],
     [
       "FStar.Modifies.loc_includes_region_addresses",
@@ -87,7 +87,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1116ac2f99f071f4c0dff16ee4ac5a04"
+      "a2c12d698e8268c079826a7db65ea192"
     ],
     [
       "FStar.Modifies.loc_includes_addresses_addresses",
@@ -104,7 +104,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fc222dabca8a2efb9eca0a37409fa5ef"
+      "7166a914c53917e543e64c6784041415"
     ],
     [
       "FStar.Modifies.loc_disjoint_sym'",
@@ -113,7 +113,7 @@
       1,
       [ "@query" ],
       0,
-      "169f3c5472c2162b46b6c29a045015d0"
+      "0b175342d95a64506f66202af1cc86e2"
     ],
     [
       "FStar.Modifies.loc_disjoint_gsub_buffer",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "f300b51e950e23992a0c8b3d230fe3fb"
+      "87650f61684c08fc400e6d7938b4311e"
     ],
     [
       "FStar.Modifies.loc_disjoint_addresses",
@@ -139,7 +139,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d60e974899e4740e97e66a24dc4d5152"
+      "7c3fc8254eba9282f8c562feb675e8c1"
     ],
     [
       "FStar.Modifies.loc_disjoint_buffer_addresses",
@@ -156,7 +156,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e8258d4045c41490e9827a2089f17812"
+      "42a9ff71c1906b85cfd5606b5402cfdb"
     ],
     [
       "FStar.Modifies.modifies_buffer_elim",
@@ -165,7 +165,7 @@
       1,
       [ "@query" ],
       0,
-      "f64a8c62b5810930ffe2f606df2b726e"
+      "b40861ec56912de0752dc2c06c538b0b"
     ],
     [
       "FStar.Modifies.address_liveness_insensitive_addresses",
@@ -179,7 +179,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8650371c16148ccf4b7f4e3d59081888"
+      "0a51522355cb04260b0f52e23c0e4383"
     ],
     [
       "FStar.Modifies.region_liveness_insensitive_addresses",
@@ -193,7 +193,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5a00b7c0b147c44cfed19a9cf067cdfd"
+      "85c1dc76725a989e699f5b5ac544ad91"
     ],
     [
       "FStar.Modifies.modifies_liveness_insensitive_mreference_weak",
@@ -212,7 +212,7 @@
         "typing_FStar.Modifies.loc_mreference"
       ],
       0,
-      "8fea749f517402b30267bc2d7a543357"
+      "3b8a88ba03273c27e0abe6c29819b535"
     ],
     [
       "FStar.Modifies.modifies_liveness_insensitive_buffer_weak",
@@ -229,7 +229,7 @@
         "typing_FStar.Modifies.loc_buffer"
       ],
       0,
-      "59b7c439dc9f3d55dd9ff8bab235c6ed"
+      "26cd2bb94a4833139d183c53a3fb208b"
     ],
     [
       "FStar.Modifies.modifies_liveness_insensitive_region_weak",
@@ -245,7 +245,7 @@
         "typing_FStar.Modifies.loc_region_only"
       ],
       0,
-      "b4162b6215cfcaf03ade77d1b90811a8"
+      "9db6dc0741cd98f5cb84d0798b1b41df"
     ],
     [
       "FStar.Modifies.modifies_liveness_insensitive_region_mreference_weak",
@@ -266,7 +266,7 @@
         "typing_FStar.Monotonic.HyperStack.frameOf"
       ],
       0,
-      "b31e5e0000c6109ac79c83653198f27b"
+      "1f115bf96ee4aff442f02423c6816c87"
     ],
     [
       "FStar.Modifies.modifies_liveness_insensitive_region_buffer_weak",
@@ -284,7 +284,7 @@
         "typing_FStar.Buffer.frameOf", "typing_FStar.Modifies.loc_buffer"
       ],
       0,
-      "9ee5d2f97038ea9df16ff3fc61088af0"
+      "39da39399f7a04514d0576792d8f07f8"
     ],
     [
       "FStar.Modifies.modifies_loc_addresses_intro",
@@ -298,7 +298,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "95a6a190753bda8a215173e19e700734"
+      "e1ed2ef829cabce76588304014342679"
     ],
     [
       "FStar.Modifies.unused_in_does_not_contain_addr",
@@ -307,7 +307,7 @@
       1,
       [ "@query" ],
       0,
-      "a8d3064204f11744c940b67c1c1c991e"
+      "e982e9e9ef9a41f85785f73a22192543"
     ],
     [
       "FStar.Modifies.free_does_not_contain_addr",
@@ -315,12 +315,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.l_and",
-        "equation_Prims.squash", "l_and-interp",
+        "@MaxIFuel_assumption", "@query", "b2t_def", "boxlogical-validity",
+        "equation_Prims.squash",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "5c72d2c2e03915bf11ca860e5486ed25"
+      "7da4419f39d67a72f6a9cbdb880355cf"
     ],
     [
       "FStar.Modifies.does_not_contain_addr_elim",
@@ -329,7 +329,7 @@
       1,
       [ "@query" ],
       0,
-      "22c97093abc7872c43de0c3e01c9d3f5"
+      "d4e50c852221539025ab0ca8a30425f1"
     ],
     [
       "FStar.Modifies.modifies_only_live_addresses",
@@ -346,7 +346,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c169e1526a5b8e1efa9c5cd5ffd8122f"
+      "6b934e46e9ace1c3a424385bc4f7a2cb"
     ],
     [
       "FStar.Modifies.cloc_of_loc_addresses",
@@ -360,7 +360,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d9696458ba90fd2da8f2cd6c66bc7247"
+      "eeb5dcb7096b1eaff76dfc5aeffdc1c2"
     ]
   ]
 ]

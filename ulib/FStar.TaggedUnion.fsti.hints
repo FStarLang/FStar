@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "ba90766ba969506b9be488f6b290519f"
+      "f158056f5083e23a1314f56b7f651fd1"
     ],
     [
       "FStar.TaggedUnion.field_of_tag'",
@@ -78,7 +78,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "74fe85abc5cb0defcdafb0fb405dcd57"
+      "3a50db8a75780944b010e80d3c480a84"
     ],
     [
       "FStar.TaggedUnion.field_of_tag'",
@@ -149,7 +149,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "014ea54c6c4c0f7b25f22ab97383b164"
+      "8934a4a71f368473c24bf523260b51c4"
     ],
     [
       "FStar.TaggedUnion.field_of_tag",
@@ -161,7 +161,7 @@
         "equation_FStar.Pointer.Base.struct_field"
       ],
       0,
-      "e05b71654f6b5804317b8b530cb926e3"
+      "544053db417cef5ced8c157c82730d00"
     ],
     [
       "FStar.TaggedUnion.tag_of_field'",
@@ -230,7 +230,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "c40919485cb49ba33963f4e85a9cc917"
+      "4f3ed26201667ee8d5c89fa2205adb38"
     ],
     [
       "FStar.TaggedUnion.tag_of_field'",
@@ -302,7 +302,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "355f6670fe521cb176a5ded5d12f7b01"
+      "a46ad561f26b634355769462f9bdcb86"
     ],
     [
       "FStar.TaggedUnion.tag_of_field",
@@ -311,7 +311,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "1bd7855fa2eb01811a22050541d0c38a"
+      "69445228aab611c357eb59561538fd3e"
     ],
     [
       "FStar.TaggedUnion.field_of_tag_of_field",
@@ -320,7 +320,7 @@
       1,
       [ "@query" ],
       0,
-      "5e962c8ebd0486f2297ec2e326d3fa20"
+      "98996387b35a24b5fd4f781172fcebab"
     ],
     [
       "FStar.TaggedUnion.tag_of_field_of_tag",
@@ -329,7 +329,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "ae88f3db2c89abfe9b4f2ff25de5c2c1"
+      "c3264821d2499d6b8bafa54f2444c1bb"
     ],
     [
       "FStar.TaggedUnion.read_tag",
@@ -338,7 +338,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "0ca1c55ac25492fb1287259a3eddf6d2"
+      "dd36249f0d0150b5f37922b9e0417709"
     ],
     [
       "FStar.TaggedUnion.includes_gfield_gen",
@@ -347,7 +347,7 @@
       1,
       [ "@query" ],
       0,
-      "c8ee679e1b64167013e65efb29eb87a1"
+      "68617c4d4d292c79fbcdfaed8a4f7ebc"
     ],
     [
       "FStar.TaggedUnion.matching_tags",
@@ -356,7 +356,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "49b63ca56e1fe954e8f215ae5c9d9fca"
+      "d14adb2251add7c4647cd477be136b4a"
     ],
     [
       "FStar.TaggedUnion.get_tag",
@@ -368,17 +368,19 @@
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@query", "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44",
-        "assumption_FStar.UInt32.t__uu___haseq", "b2t_def", "eq2-interp",
+        "assumption_FStar.UInt32.t__uu___haseq", "b2t_def",
+        "boxlogical-validity", "eq2-interp",
         "equation_FStar.Pointer.Base.union_typ",
         "equation_FStar.TaggedUnion.get_field",
         "equation_FStar.TaggedUnion.matching_tags",
-        "equation_FStar.TaggedUnion.t",
+        "equation_FStar.TaggedUnion.t", "equation_FStar.UInt32.n_minus_one",
         "fuel_guarded_inversion_FStar.Pointer.Base.struct_typ",
-        "l_and-interp", "lemma_FStar.TaggedUnion.tag_of_field_of_tag",
+        "function_token_typing_FStar.UInt32.n_minus_one",
+        "lemma_FStar.TaggedUnion.tag_of_field_of_tag",
         "refinement_interpretation_FStar.TaggedUnion_Tm_refine_b1bf8f1568fdea244a500a7e69890ee4"
       ],
       0,
-      "e56a40887e0509f1015ad4afd172c5d7"
+      "3d9a30bec60d2dcd7d9acfa972793c63"
     ],
     [
       "FStar.TaggedUnion.get_value",
@@ -394,7 +396,7 @@
         "refinement_interpretation_FStar.TaggedUnion_Tm_refine_b1bf8f1568fdea244a500a7e69890ee4"
       ],
       0,
-      "12450fe468694e11de5b33920452c480"
+      "ee5cecbfccfa5d6bbbb63a796d367503"
     ]
   ]
 ]
