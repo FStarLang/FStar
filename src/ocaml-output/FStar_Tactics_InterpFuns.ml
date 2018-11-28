@@ -48,8 +48,7 @@ let extract_2 :
       'b FStar_Syntax_Embeddings.embedding ->
         FStar_Syntax_Embeddings.norm_cb ->
           FStar_Syntax_Syntax.args ->
-            ('a,'b) FStar_Pervasives_Native.tuple2
-              FStar_Pervasives_Native.option
+            ('a * 'b) FStar_Pervasives_Native.option
   =
   fun ea  ->
     fun eb  ->
@@ -72,8 +71,7 @@ let extract_3 :
         'c FStar_Syntax_Embeddings.embedding ->
           FStar_Syntax_Embeddings.norm_cb ->
             FStar_Syntax_Syntax.args ->
-              ('a,'b,'c) FStar_Pervasives_Native.tuple3
-                FStar_Pervasives_Native.option
+              ('a * 'b * 'c) FStar_Pervasives_Native.option
   =
   fun ea  ->
     fun eb  ->
@@ -102,8 +100,7 @@ let extract_4 :
           'd FStar_Syntax_Embeddings.embedding ->
             FStar_Syntax_Embeddings.norm_cb ->
               FStar_Syntax_Syntax.args ->
-                ('a,'b,'c,'d) FStar_Pervasives_Native.tuple4
-                  FStar_Pervasives_Native.option
+                ('a * 'b * 'c * 'd) FStar_Pervasives_Native.option
   =
   fun ea  ->
     fun eb  ->
@@ -139,8 +136,7 @@ let extract_5 :
             'e FStar_Syntax_Embeddings.embedding ->
               FStar_Syntax_Embeddings.norm_cb ->
                 FStar_Syntax_Syntax.args ->
-                  ('a,'b,'c,'d,'e) FStar_Pervasives_Native.tuple5
-                    FStar_Pervasives_Native.option
+                  ('a * 'b * 'c * 'd * 'e) FStar_Pervasives_Native.option
   =
   fun ea  ->
     fun eb  ->
@@ -182,7 +178,7 @@ let extract_6 :
               'f FStar_Syntax_Embeddings.embedding ->
                 FStar_Syntax_Embeddings.norm_cb ->
                   FStar_Syntax_Syntax.args ->
-                    ('a,'b,'c,'d,'e,'f) FStar_Pervasives_Native.tuple6
+                    ('a * 'b * 'c * 'd * 'e * 'f)
                       FStar_Pervasives_Native.option
   =
   fun ea  ->
@@ -233,7 +229,7 @@ let extract_7 :
                 'g FStar_Syntax_Embeddings.embedding ->
                   FStar_Syntax_Embeddings.norm_cb ->
                     FStar_Syntax_Syntax.args ->
-                      ('a,'b,'c,'d,'e,'f,'g) FStar_Pervasives_Native.tuple7
+                      ('a * 'b * 'c * 'd * 'e * 'f * 'g)
                         FStar_Pervasives_Native.option
   =
   fun ea  ->
@@ -299,10 +295,9 @@ let extract_14 :
                               't14 FStar_Syntax_Embeddings.embedding ->
                                 FStar_Syntax_Embeddings.norm_cb ->
                                   FStar_Syntax_Syntax.args ->
-                                    ('t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,
-                                      't9,'t10,'t11,'t12,'t13,'t14)
-                                      FStar_Pervasives_Native.tuple14
-                                      FStar_Pervasives_Native.option
+                                    ('t1 * 't2 * 't3 * 't4 * 't5 * 't6 * 't7
+                                      * 't8 * 't9 * 't10 * 't11 * 't12 * 't13
+                                      * 't14) FStar_Pervasives_Native.option
   =
   fun e_t1  ->
     fun e_t2  ->
@@ -472,8 +467,7 @@ let extract_2_nbe :
       'a FStar_TypeChecker_NBETerm.embedding ->
         'b FStar_TypeChecker_NBETerm.embedding ->
           FStar_TypeChecker_NBETerm.args ->
-            ('a,'b) FStar_Pervasives_Native.tuple2
-              FStar_Pervasives_Native.option
+            ('a * 'b) FStar_Pervasives_Native.option
   =
   fun cb  ->
     fun ea  ->
@@ -497,8 +491,7 @@ let extract_3_nbe :
         'b FStar_TypeChecker_NBETerm.embedding ->
           'c FStar_TypeChecker_NBETerm.embedding ->
             FStar_TypeChecker_NBETerm.args ->
-              ('a,'b,'c) FStar_Pervasives_Native.tuple3
-                FStar_Pervasives_Native.option
+              ('a * 'b * 'c) FStar_Pervasives_Native.option
   =
   fun cb  ->
     fun ea  ->
@@ -531,8 +524,7 @@ let extract_4_nbe :
           'c FStar_TypeChecker_NBETerm.embedding ->
             'd FStar_TypeChecker_NBETerm.embedding ->
               FStar_TypeChecker_NBETerm.args ->
-                ('a,'b,'c,'d) FStar_Pervasives_Native.tuple4
-                  FStar_Pervasives_Native.option
+                ('a * 'b * 'c * 'd) FStar_Pervasives_Native.option
   =
   fun cb  ->
     fun ea  ->
@@ -574,8 +566,7 @@ let extract_5_nbe :
             'd FStar_TypeChecker_NBETerm.embedding ->
               'e FStar_TypeChecker_NBETerm.embedding ->
                 FStar_TypeChecker_NBETerm.args ->
-                  ('a,'b,'c,'d,'e) FStar_Pervasives_Native.tuple5
-                    FStar_Pervasives_Native.option
+                  ('a * 'b * 'c * 'd * 'e) FStar_Pervasives_Native.option
   =
   fun cb  ->
     fun ea  ->
@@ -626,7 +617,7 @@ let extract_6_nbe :
               'e FStar_TypeChecker_NBETerm.embedding ->
                 'f FStar_TypeChecker_NBETerm.embedding ->
                   FStar_TypeChecker_NBETerm.args ->
-                    ('a,'b,'c,'d,'e,'f) FStar_Pervasives_Native.tuple6
+                    ('a * 'b * 'c * 'd * 'e * 'f)
                       FStar_Pervasives_Native.option
   =
   fun cb  ->
@@ -688,7 +679,7 @@ let extract_7_nbe :
                 'f FStar_TypeChecker_NBETerm.embedding ->
                   'g FStar_TypeChecker_NBETerm.embedding ->
                     FStar_TypeChecker_NBETerm.args ->
-                      ('a,'b,'c,'d,'e,'f,'g) FStar_Pervasives_Native.tuple7
+                      ('a * 'b * 'c * 'd * 'e * 'f * 'g)
                         FStar_Pervasives_Native.option
   =
   fun cb  ->

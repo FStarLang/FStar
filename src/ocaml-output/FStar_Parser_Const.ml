@@ -220,8 +220,7 @@ let (postprocess_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"] 
 let (postprocess_extr_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"] 
-let (gen_reset :
-  (unit -> Prims.int,unit -> unit) FStar_Pervasives_Native.tuple2) =
+let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
   let gen1 uu____826 = FStar_Util.incr x; FStar_Util.read x  in
   let reset uu____889 = FStar_Util.write x (Prims.parse_int "0")  in

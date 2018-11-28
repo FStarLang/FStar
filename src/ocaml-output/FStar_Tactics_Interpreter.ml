@@ -1712,8 +1712,7 @@ let (run_tactic_on_typ :
       FStar_Syntax_Syntax.term ->
         FStar_TypeChecker_Env.env ->
           FStar_Syntax_Syntax.typ ->
-            (FStar_Tactics_Types.goal Prims.list,FStar_Syntax_Syntax.term)
-              FStar_Pervasives_Native.tuple2)
+            (FStar_Tactics_Types.goal Prims.list * FStar_Syntax_Syntax.term))
   =
   fun rng_tac  ->
     fun rng_goal  ->
@@ -2278,10 +2277,8 @@ let (uu___is_Both : pol -> Prims.bool) =
   
 type 'a tres_m =
   | Unchanged of 'a 
-  | Simplified of ('a,FStar_Tactics_Types.goal Prims.list)
-  FStar_Pervasives_Native.tuple2 
-  | Dual of ('a,'a,FStar_Tactics_Types.goal Prims.list)
-  FStar_Pervasives_Native.tuple3 
+  | Simplified of ('a * FStar_Tactics_Types.goal Prims.list) 
+  | Dual of ('a * 'a * FStar_Tactics_Types.goal Prims.list) 
 let uu___is_Unchanged : 'a . 'a tres_m -> Prims.bool =
   fun projectee  ->
     match projectee with | Unchanged _0 -> true | uu____2950 -> false
@@ -2293,20 +2290,15 @@ let uu___is_Simplified : 'a . 'a tres_m -> Prims.bool =
     match projectee with | Simplified _0 -> true | uu____2995 -> false
   
 let __proj__Simplified__item___0 :
-  'a .
-    'a tres_m ->
-      ('a,FStar_Tactics_Types.goal Prims.list) FStar_Pervasives_Native.tuple2
-  = fun projectee  -> match projectee with | Simplified _0 -> _0 
+  'a . 'a tres_m -> ('a * FStar_Tactics_Types.goal Prims.list) =
+  fun projectee  -> match projectee with | Simplified _0 -> _0 
 let uu___is_Dual : 'a . 'a tres_m -> Prims.bool =
   fun projectee  ->
     match projectee with | Dual _0 -> true | uu____3054 -> false
   
 let __proj__Dual__item___0 :
-  'a .
-    'a tres_m ->
-      ('a,'a,FStar_Tactics_Types.goal Prims.list)
-        FStar_Pervasives_Native.tuple3
-  = fun projectee  -> match projectee with | Dual _0 -> _0 
+  'a . 'a tres_m -> ('a * 'a * FStar_Tactics_Types.goal Prims.list) =
+  fun projectee  -> match projectee with | Dual _0 -> _0 
 type tres = FStar_Syntax_Syntax.term tres_m
 let tpure : 'Auu____3098 . 'Auu____3098 -> 'Auu____3098 tres_m =
   fun x  -> Unchanged x 
@@ -2391,11 +2383,7 @@ let (by_tactic_interp :
              | uu____3380 -> Unchanged t)
   
 let explode :
-  'a .
-    'a tres_m ->
-      ('a,'a,FStar_Tactics_Types.goal Prims.list)
-        FStar_Pervasives_Native.tuple3
-  =
+  'a . 'a tres_m -> ('a * 'a * FStar_Tactics_Types.goal Prims.list) =
   fun t  ->
     match t with
     | Unchanged t1 -> (t1, t1, [])
@@ -2712,8 +2700,8 @@ let (getprop :
 let (preprocess :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_TypeChecker_Env.env,FStar_Syntax_Syntax.term,FStar_Options.optionstate)
-        FStar_Pervasives_Native.tuple3 Prims.list)
+      (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.term *
+        FStar_Options.optionstate) Prims.list)
   =
   fun env  ->
     fun goal  ->

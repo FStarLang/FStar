@@ -26,8 +26,7 @@ let (__proj__Mklident__item__nsstr : lident -> Prims.string) =
 let (__proj__Mklident__item__str : lident -> Prims.string) =
   fun projectee  -> match projectee with | { ns; ident; nsstr; str;_} -> str 
 type lid = lident[@@deriving yojson,show]
-let (mk_ident :
-  (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2 -> ident) =
+let (mk_ident : (Prims.string * FStar_Range.range) -> ident) =
   fun uu____132  ->
     match uu____132 with | (text,range) -> { idText = text; idRange = range }
   

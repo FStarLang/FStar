@@ -197,6 +197,7 @@ let defaults =
       ("print_in_place"               , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
+      ("keep_query_captions"          , Bool true);
       ("lax"                          , Bool false);
       ("load"                         , List []);
       ("log_queries"                  , Bool false);
@@ -320,6 +321,7 @@ let get_print                   ()      = lookup_opt "print"                    
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
+let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
@@ -738,6 +740,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "initial_ifuel",
         IntStr "non-negative integer",
         "Number of unrolling of inductive datatypes to try at first (default 1)");
+
+       ( noshort,
+        "keep_query_captions",
+        BoolStr,
+        "Retain comments in the logged SMT queries (requires --log_queries; default true)");
 
        ( noshort,
         "lax",
@@ -1406,6 +1413,8 @@ let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
+let keep_query_captions          () = log_queries                     ()
+                                    && get_keep_query_captions        ()
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()

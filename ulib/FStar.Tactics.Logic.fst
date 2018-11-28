@@ -27,16 +27,12 @@ private val fa_intro_lem : (#a:Type) -> (#p : (a -> Type)) ->
 let fa_intro_lem #a #p f = FStar.Classical.lemma_forall_intro_gtot f
 
 let forall_intro () : Tac binder =
-    let g = cur_goal () in
-    match term_as_formula g with
-    | Forall _ _ -> begin apply_lemma (`fa_intro_lem); intro () end
-    | _          -> fail "not a forall"
+    apply_lemma (`fa_intro_lem);
+    intro ()
 
 let forall_intro_as (s:string) : Tac binder =
-    let g = cur_goal () in
-    match term_as_formula g with
-    | Forall _ _ -> begin apply_lemma (`fa_intro_lem); intro_as s end
-    | _          -> fail "not a forall"
+    apply_lemma (`fa_intro_lem);
+    intro_as s
 
 let forall_intros () : Tac binders = repeat1 forall_intro
 
@@ -57,10 +53,8 @@ let imp_intro_lem #a #b f =
   FStar.Classical.give_witness (FStar.Classical.arrow_to_impl (fun (x:squash a) -> FStar.Squash.bind_squash x f))
 
 let implies_intro () : Tac binder =
-    let g = cur_goal () in
-    match term_as_formula g with
-    | Implies _ _ -> begin apply_lemma (`imp_intro_lem); intro () end
-    | _           -> fail "not an implication"
+    apply_lemma (`imp_intro_lem);
+    intro ()
 
 let implies_intros () : Tac binders = repeat1 implies_intro
 

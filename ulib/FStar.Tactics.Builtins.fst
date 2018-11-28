@@ -156,7 +156,7 @@ of printing [str] on the compiler's standard output. *)
 assume val print : string -> Tac unit
 
 (** [debugging ()] returns true if the current module has the debug flag
-on, i.e. when [--debug MyModule] was passed in. *)
+on, i.e. when [--debug MyModule --debug_level Tac] was passed in. *)
 assume val debugging : unit -> Tac bool
 
 (** Similar to [print], but will dump a text representation of the proofstate

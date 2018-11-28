@@ -37,51 +37,45 @@ let (uu___is_Infix : fixity -> Prims.bool) =
   
 let (__proj__Infix__item___0 : fixity -> assoc) =
   fun projectee  -> match projectee with | Infix _0 -> _0 
-type opprec = (Prims.int,fixity) FStar_Pervasives_Native.tuple2
-type level = (opprec,assoc) FStar_Pervasives_Native.tuple2
-let (t_prio_fun : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+type opprec = (Prims.int * fixity)
+type level = (opprec * assoc)
+let (t_prio_fun : (Prims.int * fixity)) =
   ((Prims.parse_int "10"), (Infix Right)) 
-let (t_prio_tpl : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (t_prio_tpl : (Prims.int * fixity)) =
   ((Prims.parse_int "20"), (Infix NonAssoc)) 
-let (t_prio_name : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
-  ((Prims.parse_int "30"), Postfix) 
-let (e_bin_prio_lambda : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (t_prio_name : (Prims.int * fixity)) = ((Prims.parse_int "30"), Postfix) 
+let (e_bin_prio_lambda : (Prims.int * fixity)) =
   ((Prims.parse_int "5"), Prefix) 
-let (e_bin_prio_if : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
-  ((Prims.parse_int "15"), Prefix) 
-let (e_bin_prio_letin : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_if : (Prims.int * fixity)) = ((Prims.parse_int "15"), Prefix) 
+let (e_bin_prio_letin : (Prims.int * fixity)) =
   ((Prims.parse_int "19"), Prefix) 
-let (e_bin_prio_or : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_or : (Prims.int * fixity)) =
   ((Prims.parse_int "20"), (Infix Left)) 
-let (e_bin_prio_and : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_and : (Prims.int * fixity)) =
   ((Prims.parse_int "25"), (Infix Left)) 
-let (e_bin_prio_eq : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_eq : (Prims.int * fixity)) =
   ((Prims.parse_int "27"), (Infix NonAssoc)) 
-let (e_bin_prio_order : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_order : (Prims.int * fixity)) =
   ((Prims.parse_int "29"), (Infix NonAssoc)) 
-let (e_bin_prio_op1 : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_op1 : (Prims.int * fixity)) =
   ((Prims.parse_int "30"), (Infix Left)) 
-let (e_bin_prio_op2 : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_op2 : (Prims.int * fixity)) =
   ((Prims.parse_int "40"), (Infix Left)) 
-let (e_bin_prio_op3 : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_op3 : (Prims.int * fixity)) =
   ((Prims.parse_int "50"), (Infix Left)) 
-let (e_bin_prio_op4 : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_op4 : (Prims.int * fixity)) =
   ((Prims.parse_int "60"), (Infix Left)) 
-let (e_bin_prio_comb : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_comb : (Prims.int * fixity)) =
   ((Prims.parse_int "70"), (Infix Left)) 
-let (e_bin_prio_seq : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_bin_prio_seq : (Prims.int * fixity)) =
   ((Prims.parse_int "100"), (Infix Left)) 
-let (e_app_prio : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (e_app_prio : (Prims.int * fixity)) =
   ((Prims.parse_int "10000"), (Infix Left)) 
-let (min_op_prec : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (min_op_prec : (Prims.int * fixity)) =
   ((~- (Prims.parse_int "1")), (Infix NonAssoc)) 
-let (max_op_prec : (Prims.int,fixity) FStar_Pervasives_Native.tuple2) =
+let (max_op_prec : (Prims.int * fixity)) =
   (FStar_Util.max_int, (Infix NonAssoc)) 
-let rec in_ns :
-  'a .
-    ('a Prims.list,'a Prims.list) FStar_Pervasives_Native.tuple2 ->
-      Prims.bool
-  =
+let rec in_ns : 'a . ('a Prims.list * 'a Prims.list) -> Prims.bool =
   fun x  ->
     match x with
     | ([],uu____290) -> true
@@ -192,9 +186,7 @@ let (ptctor :
           FStar_String.concat "." (FStar_List.append p [s1])
   
 let (infix_prim_ops :
-  (Prims.string,(Prims.int,fixity) FStar_Pervasives_Native.tuple2,Prims.string)
-    FStar_Pervasives_Native.tuple3 Prims.list)
-  =
+  (Prims.string * (Prims.int * fixity) * Prims.string) Prims.list) =
   [("op_Addition", e_bin_prio_op1, "+");
   ("op_Subtraction", e_bin_prio_op1, "-");
   ("op_Multiply", e_bin_prio_op1, "*");
@@ -209,10 +201,7 @@ let (infix_prim_ops :
   ("op_LessThan", e_bin_prio_order, "<");
   ("op_GreaterThan", e_bin_prio_order, ">");
   ("op_Modulus", e_bin_prio_order, "mod")] 
-let (prim_uni_ops :
-  unit ->
-    (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list)
-  =
+let (prim_uni_ops : unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu____1013  ->
     let op_minus =
       let uu____1016 =
@@ -225,18 +214,15 @@ let (prim_uni_ops :
   
 let prim_types : 'Auu____1067 . unit -> 'Auu____1067 Prims.list =
   fun uu____1070  -> [] 
-let (prim_constructors :
-  (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list) =
+let (prim_constructors : (Prims.string * Prims.string) Prims.list) =
   [("Some", "Some"); ("None", "None"); ("Nil", "[]"); ("Cons", "::")] 
 let (is_prims_ns :
   FStar_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.bool) =
   fun ns  -> ns = ["Prims"] 
 let (as_bin_op :
   FStar_Extraction_ML_Syntax.mlpath ->
-    (FStar_Extraction_ML_Syntax.mlsymbol,(Prims.int,fixity)
-                                           FStar_Pervasives_Native.tuple2,
-      Prims.string) FStar_Pervasives_Native.tuple3
-      FStar_Pervasives_Native.option)
+    (FStar_Extraction_ML_Syntax.mlsymbol * (Prims.int * fixity) *
+      Prims.string) FStar_Pervasives_Native.option)
   =
   fun uu____1165  ->
     match uu____1165 with
@@ -256,8 +242,8 @@ let (is_bin_op : FStar_Extraction_ML_Syntax.mlpath -> Prims.bool) =
   
 let (as_uni_op :
   FStar_Extraction_ML_Syntax.mlpath ->
-    (FStar_Extraction_ML_Syntax.mlsymbol,Prims.string)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+    (FStar_Extraction_ML_Syntax.mlsymbol * Prims.string)
+      FStar_Pervasives_Native.option)
   =
   fun uu____1336  ->
     match uu____1336 with
@@ -279,8 +265,8 @@ let (is_standard_type : FStar_Extraction_ML_Syntax.mlpath -> Prims.bool) =
   fun p  -> false 
 let (as_standard_constructor :
   FStar_Extraction_ML_Syntax.mlpath ->
-    (FStar_Extraction_ML_Syntax.mlsymbol,Prims.string)
-      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+    (FStar_Extraction_ML_Syntax.mlsymbol * Prims.string)
+      FStar_Pervasives_Native.option)
   =
   fun uu____1456  ->
     match uu____1456 with
@@ -300,10 +286,8 @@ let (is_standard_constructor :
     uu____1523 <> FStar_Pervasives_Native.None
   
 let (maybe_paren :
-  ((Prims.int,fixity) FStar_Pervasives_Native.tuple2,assoc)
-    FStar_Pervasives_Native.tuple2 ->
-    (Prims.int,fixity) FStar_Pervasives_Native.tuple2 ->
-      FStar_Format.doc -> FStar_Format.doc)
+  ((Prims.int * fixity) * assoc) ->
+    (Prims.int * fixity) -> FStar_Format.doc -> FStar_Format.doc)
   =
   fun uu____1573  ->
     fun inner  ->
@@ -1097,9 +1081,8 @@ and (doc_of_branch :
 
 and (doc_of_lets :
   FStar_Extraction_ML_Syntax.mlsymbol ->
-    (FStar_Extraction_ML_Syntax.mlletflavor,Prims.bool,FStar_Extraction_ML_Syntax.mllb
-                                                         Prims.list)
-      FStar_Pervasives_Native.tuple3 -> FStar_Format.doc)
+    (FStar_Extraction_ML_Syntax.mlletflavor * Prims.bool *
+      FStar_Extraction_ML_Syntax.mllb Prims.list) -> FStar_Format.doc)
   =
   fun currentModule  ->
     fun uu____3194  ->
@@ -1464,7 +1447,7 @@ let (doc_of_mod :
   
 let rec (doc_of_mllib_r :
   FStar_Extraction_ML_Syntax.mllib ->
-    (Prims.string,FStar_Format.doc) FStar_Pervasives_Native.tuple2 Prims.list)
+    (Prims.string * FStar_Format.doc) Prims.list)
   =
   fun uu____3877  ->
     match uu____3877 with
@@ -1611,7 +1594,7 @@ let rec (doc_of_mllib_r :
   
 let (doc_of_mllib :
   FStar_Extraction_ML_Syntax.mllib ->
-    (Prims.string,FStar_Format.doc) FStar_Pervasives_Native.tuple2 Prims.list)
+    (Prims.string * FStar_Format.doc) Prims.list)
   = fun mllib  -> doc_of_mllib_r mllib 
 let (string_of_mlexpr :
   FStar_Extraction_ML_Syntax.mlpath ->

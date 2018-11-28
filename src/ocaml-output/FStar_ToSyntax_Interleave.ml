@@ -60,8 +60,7 @@ let (is_definition_of :
 let rec (prefix_with_iface_decls :
   FStar_Parser_AST.decl Prims.list ->
     FStar_Parser_AST.decl ->
-      (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Parser_AST.decl Prims.list * FStar_Parser_AST.decl Prims.list))
   =
   fun iface1  ->
     fun impl  ->
@@ -250,8 +249,7 @@ let (check_initial_interface :
 let rec (ml_mode_prefix_with_iface_decls :
   FStar_Parser_AST.decl Prims.list ->
     FStar_Parser_AST.decl ->
-      (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Parser_AST.decl Prims.list * FStar_Parser_AST.decl Prims.list))
   =
   fun iface1  ->
     fun impl  ->
@@ -283,8 +281,7 @@ let (ml_mode_check_initial_interface :
 let (prefix_one_decl :
   FStar_Parser_AST.decl Prims.list ->
     FStar_Parser_AST.decl ->
-      (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
-        FStar_Pervasives_Native.tuple2)
+      (FStar_Parser_AST.decl Prims.list * FStar_Parser_AST.decl Prims.list))
   =
   fun iface1  ->
     fun impl  ->

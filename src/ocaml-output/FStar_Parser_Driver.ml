@@ -39,9 +39,7 @@ let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
   
 let (parse_file :
   Prims.string ->
-    (FStar_Parser_AST.file,(Prims.string,FStar_Range.range)
-                             FStar_Pervasives_Native.tuple2 Prims.list)
-      FStar_Pervasives_Native.tuple2)
+    (FStar_Parser_AST.file * (Prims.string * FStar_Range.range) Prims.list))
   =
   fun fn  ->
     let uu____173 =
