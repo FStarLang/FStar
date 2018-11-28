@@ -683,8 +683,8 @@ let rec seq_to_list #a s =
   if length s = 0 then []
   else index s 0::seq_to_list (slice s 1 (length s))
 
-val seq_of_list: #a:Type -> l:list a -> Tot (s:seq a{L.length l = length s})
-let rec seq_of_list #a l =
+[@"opaque_to_smt"]
+let rec seq_of_list (#a:Type) (l:list a) : Tot (s:seq a{L.length l = length s})  =
   match l with
   | [] -> Seq.empty #a
   | hd::tl -> create 1 hd @| seq_of_list tl
