@@ -1795,14 +1795,20 @@ let union_loc_of_loc_disjoint_intro
   (ensures (union_loc_of_loc c b larger `loc_disjoint` union_loc_of_loc c b smaller))
 = let auxl = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux larger)) in
   let auxs = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux smaller)) in
-  assume (forall (xl xs: aloc (cls_union c)) . (GSet.mem xl auxl /\ GSet.mem xs auxs) ==> (
+  let g
+    (xl xs: aloc (cls_union c))
+  : Lemma
+    (requires (GSet.mem xl auxl /\ GSet.mem xs auxs))
+    (ensures (GSet.mem xl auxl /\ GSet.mem xs auxs /\ aloc_disjoint xl xs))
+  =
     let xl' : aloc (c b) = ALoc xl.region xl.addr (if None? xl.loc then None else Some (aloc_of_cls_union_aloc (Some?.v xl.loc))) in
     let xs' : aloc (c b) = ALoc xs.region xs.addr (if None? xs.loc then None else Some (aloc_of_cls_union_aloc (Some?.v xs.loc))) in
-    GSet.mem xl' (Ghost.reveal (Loc?.aux larger)) /\
-    GSet.mem xs' (Ghost.reveal (Loc?.aux smaller)) /\
-    aloc_disjoint xl' xs' /\
-    aloc_disjoint xl xs
-  ));
+    assert (GSet.mem xl' (Ghost.reveal (Loc?.aux larger)));
+    assert (GSet.mem xs' (Ghost.reveal (Loc?.aux smaller)));
+    assert (aloc_disjoint xl' xs');
+    assert (aloc_disjoint xl xs)
+  in
+  Classical.forall_intro_2 (fun xl -> Classical.move_requires (g xl));
   assert (forall xl xs . (GSet.mem xl auxl /\ GSet.mem xs auxs) ==> aloc_disjoint xl xs);
   assert (auxl `loc_aux_disjoint` auxs);
   let larger' = union_loc_of_loc c b larger in
