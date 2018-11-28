@@ -570,7 +570,7 @@ val as_seq_seq_slice:
   k:nat -> l:nat{k <= l && l <= j - i} ->
   Lemma (S.equal (S.slice (as_seq_seq rg h rs i j) k l)
                  (as_seq_seq rg h (S.slice rs (i + k) (i + l)) 0 (l - k)))
-#reset-options "--z3rlimit 10"
+#reset-options "--z3rlimit 20"
 let rec as_seq_seq_slice #a rg h rs i j k l =
   if k = l then ()
   else (as_seq_seq_slice rg h rs i j k (l - 1);
@@ -791,7 +791,7 @@ val insert:
       S.equal (as_seq h1 irv)
               (S.snoc (as_seq h0 rv) (Rgl?.r_repr rg h0 v))))
 #reset-options "--z3rlimit 40"
-let insert #a #rg rv v = admit();
+let insert #a #rg rv v =
   let hh0 = HST.get () in
   let irv = V.insert rv v in
   let hh1 = HST.get () in
