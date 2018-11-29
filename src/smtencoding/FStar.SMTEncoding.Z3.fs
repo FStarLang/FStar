@@ -387,7 +387,7 @@ let z3_options = BU.mk_ref
     "(set-option :global-decls false)\n\
      (set-option :smt.mbqi false)\n\
      (set-option :auto_config false)\n\
-     (set-option :produce-unsat-cores true)\n
+     (set-option :produce-unsat-cores true)\n\
      (set-option :model true)\n\
      (set-option :smt.case_split 3)\n\
      (set-option :smt.relevancy 2)"

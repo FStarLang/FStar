@@ -50,11 +50,6 @@ let int_plus_monoid : monoid int =
 
 let int_mul_monoid : monoid int =
   intro_monoid int 1 op_Multiply
-#set-options "--max_fuel 0 --max_ifuel 0"
-let test (a b:prop) =
-  assume a;
-  assume b;
-  assert (a /\ b)
 
 let prop_ext_apply (p1 p2:prop)
   : Lemma (requires (p1 <==> p2))
@@ -133,7 +128,6 @@ let lift_monoid_option (#a:Type) (m:monoid a) : monoid (option a) =
     | Some x0, Some y0 -> Some (m.mult x0 y0)
     | _, _ -> None
   in
-  admit();
   intro_monoid (option a) (Some m.unit) mult
 
 (* Definition of a morphism of monoid *)
