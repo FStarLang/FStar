@@ -62,6 +62,7 @@ let assign_list_t #a (l: list a) = (b: buffer a) -> HST.Stack unit
 
 let rec assign_list #a (l: list a): assign_list_t l
 = fun b ->
+  Seq.lemma_seq_of_list_induction l;
   match l with
   | [] ->
       let h = HST.get () in
