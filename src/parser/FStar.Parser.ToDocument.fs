@@ -13,11 +13,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 *)
+
 #light "off"
-
-
-
-
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
@@ -74,15 +71,15 @@ let rec all (f: 'a -> bool) (l: list<'a>): bool =
   | [] -> true
   | x :: xs -> if f x then all f xs else false
 
-(* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
-(* reset at the end of each module. If you are using individual print function you *)
-(* should wrap them in [with_fs_typ_app] *)
-let should_print_fs_typ_app = BU.mk_ref false
-
 let all_explicit (args:list<(term*imp)>) : bool =
     BU.for_all (function
                 | (_, Nothing) -> true
                 | _ -> false) args
+
+(* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
+(* reset at the end of each module. If you are using individual print function you *)
+(* should wrap them in [with_fs_typ_app] *)
+let should_print_fs_typ_app = BU.mk_ref false
 
 (* Tuples which come from a resugared AST, via term_to_document are already flattened *)
 (* This reference is set to false in term_to_document and checked in p_tmNoEqWith'    *)
@@ -95,8 +92,6 @@ let with_fs_typ_app b printer t =
   should_print_fs_typ_app := b0 ;
   res
 
-
-(* TODO : everything is printed under the assumption of the universe option *)
 
 // abbrev
 let str s = doc_of_string s
@@ -458,7 +453,11 @@ let all_binders_annot e =
   in
   let rec all_binders e l =
     match e.tm with
-    | Product(bs, tgt) -> if List.for_all is_binder_annot bs then all_binders tgt (l+ List.length bs) else (false, 0)
+    | Product(bs, tgt) ->
+      if List.for_all is_binder_annot bs then
+        all_binders tgt (l+ List.length bs)
+      else
+        (false, 0)
     | _ -> (true, l+1)
   in
   let b, l = all_binders e 0 in
@@ -508,7 +507,7 @@ type decl_meta =
      is_fsdoc: bool} //is a standalone fsdoc
 let dummy_meta = {r = dummyRange; has_qs = false; has_attrs = false; has_fsdoc = false; is_fsdoc = false}
 
-// TODO: rewrite in terms of with_comment_sep
+// TODO: rewrite in terms of with_comment_sep (some tricky issues with spacing)
 let with_comment printer tm tmrange =
   let rec comments_before_pos acc print_pos lookahead_pos =
     match !comment_stack with
@@ -617,6 +616,7 @@ let rec place_comments_until_pos (k: int) (lbegin: int) pos meta_decl doc (r: bo
       let lnum = if init then 2 else lnum in
 
       doc ^^ repeat lnum hardline
+
 
 (* [separate_map_with_comments prefix sep f xs extract_meta] is the document *)
 (*                                                                            *)
@@ -1865,11 +1865,6 @@ and p_projectionLHS e = match e.tm with
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
 
-  (* KM : I still think that it is wrong to print a term that's not parseable... *)
-  | Labeled (e, s, b) ->
-      (* JP: what is this? can we remove it? *)
-      str ("(*" ^ s ^ "*)") ^/^ p_term false false e
-
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
   (* to prevent the pretty printer from looping *)
@@ -1877,8 +1872,9 @@ and p_projectionLHS e = match e.tm with
     failwith ("Operation " ^ Ident.text_of_id op ^ " with " ^ string_of_int (List.length args) ^
               " arguments couldn't be handled by the pretty printer")
   | Uvar id ->
-    str "u#" ^^ str id.idText
-//    failwith "Unexpected universe variable out of universe context"
+    failwith "Unexpected universe variable out of universe context"
+  | Labeled _ ->
+    failwith "Unexpected labeled term"
 
   (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
   (* We must also make sure that all the constructors listed below are handled somewhere *)
