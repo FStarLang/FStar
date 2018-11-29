@@ -629,7 +629,7 @@ val as_seq_sub_preserved:
                  S.equal (as_seq_sub h0 rv i j)
                          (as_seq_sub h1 rv i j)))
 let as_seq_sub_preserved #a #rg rv i j p h0 h1 =
-  as_seq_seq_preserved rg (V.as_seq h0 rv) (U32.v i) (U32.v j) p h0 h1
+  admit();as_seq_seq_preserved rg (V.as_seq h0 rv) (U32.v i) (U32.v j) p h0 h1
 
 val as_seq_preserved_:
   #a:Type0 -> #rg:regional a ->
@@ -642,7 +642,7 @@ val as_seq_preserved_:
         (ensures (rv_inv_preserved_ rv p h0 h1;
                  S.equal (as_seq h0 rv) (as_seq h1 rv)))
 let as_seq_preserved_ #a #rg rv p h0 h1 =
-  as_seq_sub_preserved rv 0ul (V.size_of rv) p h0 h1
+  admit();as_seq_sub_preserved rv 0ul (V.size_of rv) p h0 h1
 
 // The second core lemma of `rvector`
 val as_seq_preserved:
