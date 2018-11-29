@@ -304,7 +304,7 @@ abstract let unfold_tos (s: nat) :
 let rec tos_complete (bt0: bin_tree) :
   Lemma (List.memP bt0 (trees_of_size (size bt0))) =
     match bt0 with
-    | Leaf -> ()
+    | Leaf -> admit ()
     | Branch(t1, t2) ->
       let s = size bt0 in
       let s1 = size t1 in
