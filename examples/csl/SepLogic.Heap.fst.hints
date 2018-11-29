@@ -278,7 +278,7 @@
         "typing_SepLogic.Heap_Tm_abs_8e79f8338fa78ede6dd0d546095ef0e8"
       ],
       0,
-      "6935d08c84abaff487de10ef82e51159"
+      "6a3b772ab19fd8ad83fd4c623e676567"
     ],
     [
       "SepLogic.Heap.op_Bar_Greater",
@@ -388,7 +388,7 @@
         "typing_SepLogic.Heap_Tm_abs_2bdbc6de0b69881a0cf7e8cd6d7363f3"
       ],
       0,
-      "3facaa88df9e8513e11bcf928b520c77"
+      "c6e41f633b9aa132f257de496275f91a"
     ],
     [
       "SepLogic.Heap.split_heap",
@@ -2858,7 +2858,7 @@
         "typing_SepLogic.Heap.restrict_memory", "unit_typing"
       ],
       0,
-      "5b937d73926208fb7c24ff1f315fa558"
+      "d860e109a2b5149faefe0c0fe59beeb3"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_trans''",

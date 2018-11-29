@@ -10,7 +10,12 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.Reflection.Data.forall_list.fuel_instrumented",
         "@fuel_irrelevance_FStar.Reflection.Data.forall_list.fuel_instrumented",
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "@query",
+        "FStar.Reflection.Derived.Lemmas_interpretation_Tm_arrow_ddb110116104047fad289f36e66e464e",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_45cac57f38e27b96eab3a3f21e0703ab_2",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil",
         "equation_with_fuel_FStar.Reflection.Data.forall_list.fuel_instrumented",
@@ -19,7 +24,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "08cff7d15e26c1b73956152e0748f7c8"
+      "40ab351d2cb3a75cc119ff1a83f2acff"
     ],
     [
       "FStar.Reflection.Derived.Lemmas.list_ref",
@@ -30,7 +35,12 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.Reflection.Data.forall_list.fuel_instrumented",
         "@fuel_irrelevance_FStar.Reflection.Data.forall_list.fuel_instrumented",
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "@query",
+        "FStar.Reflection.Derived.Lemmas_interpretation_Tm_arrow_ddb110116104047fad289f36e66e464e",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_45cac57f38e27b96eab3a3f21e0703ab_2",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil",
         "equation_with_fuel_FStar.Reflection.Data.forall_list.fuel_instrumented",
@@ -39,7 +49,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d964f38bf27358e94acdac97e1144f86"
+      "d154e23e48c7c1f587c81ef2be547f00"
     ]
   ]
 ]

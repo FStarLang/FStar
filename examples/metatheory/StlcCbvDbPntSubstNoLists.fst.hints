@@ -458,7 +458,7 @@
         "typing_StlcCbvDbPntSubstNoLists.step"
       ],
       0,
-      "81d9731599ba61b35eb02e22b69d4bdb"
+      "a546362547df44d133156558a0707a8f"
     ],
     [
       "StlcCbvDbPntSubstNoLists.appears_free_in",
@@ -540,7 +540,7 @@
         "typing_StlcCbvDbPntSubstNoLists.appears_free_in"
       ],
       0,
-      "f7493ca95f019d571fbbf44b1b837483"
+      "c82a253c5d99a86fffaa0e7edafe187c"
     ],
     [
       "StlcCbvDbPntSubstNoLists.typable_empty_closed",
@@ -638,7 +638,7 @@
         "typing_StlcCbvDbPntSubstNoLists.appears_free_in"
       ],
       0,
-      "90e411aa21be2b52517fae5b6a33e8a0"
+      "7fea969a31a410c0bafd13a22dddbe49"
     ],
     [
       "StlcCbvDbPntSubstNoLists.typing_extensional",
@@ -719,7 +719,7 @@
         "typing_StlcCbvDbPntSubstNoLists.appears_free_in"
       ],
       0,
-      "121f846dfbf2a15913f436bd0c194aed"
+      "89f3ef4e5aad60aa1c68389d66ffef0b"
     ],
     [
       "StlcCbvDbPntSubstNoLists.preservation",
@@ -792,7 +792,7 @@
         "typing_StlcCbvDbPntSubstNoLists.step"
       ],
       0,
-      "983300e81fd98cd9d383329afb808824"
+      "01d6ab71796aee5a2ad007064d879ff6"
     ],
     [
       "StlcCbvDbPntSubstNoLists.ty",
@@ -1311,7 +1311,7 @@
         "typing_StlcCbvDbPntSubstNoLists.appears_free_in"
       ],
       0,
-      "65d36fcf08cf97b04e8cf22f6c781096"
+      "b090f0d61d586360614342effb9bb4cf"
     ],
     [
       "StlcCbvDbPntSubstNoLists.typing_extensional",
@@ -1392,7 +1392,7 @@
         "typing_StlcCbvDbPntSubstNoLists.appears_free_in"
       ],
       0,
-      "d6a8b45467a33d282dd320c6b2a986e9"
+      "9ee7997b5e34d575c582fb94eb912532"
     ],
     [
       "StlcCbvDbPntSubstNoLists.preservation",
@@ -1453,7 +1453,7 @@
         "typing_StlcCbvDbPntSubstNoLists.step"
       ],
       0,
-      "bfac460e98999555b0017afd272a1749"
+      "a713c8a91fade6cda76e57dcbd5659fe"
     ]
   ]
 ]

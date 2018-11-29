@@ -35,18 +35,22 @@
       2,
       1,
       [
-        "@MaxFuel_assumption",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_IntSort.sorted.fuel_instrumented", "@query",
-        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "constructor_distinct_Prims.Cons",
+        "data_typing_intro_Prims.Cons@tok", "disc_equation_Prims.Cons",
+        "equation_Prims.eqtype",
         "equation_with_fuel_IntSort.sorted.fuel_instrumented",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
-        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "function_token_typing_Prims.int", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual", "proj_equation_Prims.Cons_hd",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl"
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "78caea8d5bd1f3097af2be17ead7f66f"
+      "9f4c70078761b4d085b6d2899238bd09"
     ],
     [
       "IntSort.test_sorted2",
@@ -54,14 +58,18 @@
       2,
       1,
       [
-        "@MaxFuel_assumption",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_IntSort.sorted.fuel_instrumented", "@query",
-        "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Nil@tok",
+        "equation_Prims.eqtype",
         "equation_with_fuel_IntSort.sorted.fuel_instrumented",
-        "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.Nil_a"
+        "function_token_typing_Prims.int",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0b7ce4f1c38f466155b8402fd8f90fb4"
+      "1660a2610ad8adadcec044e7a7a6700b"
     ],
     [
       "IntSort.sorted_smaller",
@@ -98,7 +106,7 @@
         "typing_FStar.List.Tot.Base.mem", "unit_inversion", "unit_typing"
       ],
       0,
-      "c43584b7be2b9185a1e74949dd41bd21"
+      "cd687fc7ed7571e1d8a37c2e7415d6dd"
     ],
     [
       "IntSort.permutation",
@@ -148,14 +156,18 @@
       2,
       1,
       [
-        "@MaxFuel_assumption",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_IntSort.sorted.fuel_instrumented", "@query",
-        "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Nil@tok",
+        "equation_Prims.eqtype",
         "equation_with_fuel_IntSort.sorted.fuel_instrumented",
-        "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.Nil_a"
+        "function_token_typing_Prims.int",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "41d25ac4cba7f7982bca5cc2a54e7457"
+      "7de647e187cf67e31209896b97e47aa7"
     ],
     [
       "IntSort.permutation",
