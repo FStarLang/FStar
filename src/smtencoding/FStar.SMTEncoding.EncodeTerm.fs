@@ -1050,11 +1050,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     in
                     let interp_f =
                       let a_name = "interpretation_" ^fsym in
-                      match body.tm with
-                      | App (Var "BoxLogical", [t]) ->
-                        Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(mk_Valid app, t)), Some a_name, a_name)
-                      | _ ->
-                        Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
+                      Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
                     in
                     let f_decls = decls@decls'@decls''@(fdecl::typing_f)@[interp_f] in
                     BU.smap_add env.cache tkey_hash (mk_cache_entry env fsym cvar_sorts f_decls);
