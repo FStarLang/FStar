@@ -50,18 +50,23 @@
         "@fuel_correspondence_Bug026.filter.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "equation_Bug026.evenb", "equation_Prims.nat",
-        "equation_with_fuel_Bug026.filter.fuel_instrumented", "int_typing",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_Bug026.evenb",
+        "equation_Prims.nat",
+        "equation_with_fuel_Bug026.filter.fuel_instrumented",
+        "function_token_typing_Bug026.evenb",
+        "function_token_typing_Prims.nat", "int_typing",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_Bug026.evenb"
       ],
       0,
-      "ed6dde04fc5eb7e9b0585e698e962cc5"
+      "aea6ac4768792421fe89795821e0b679"
     ],
     [
       "Bug026.test_filter2",
@@ -89,18 +94,23 @@
         "@fuel_correspondence_Bug026.filter.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "equation_Bug026.evenb2", "equation_Prims.pos",
-        "equation_with_fuel_Bug026.filter.fuel_instrumented", "int_typing",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_Bug026.evenb2",
+        "equation_Prims.pos",
+        "equation_with_fuel_Bug026.filter.fuel_instrumented",
+        "function_token_typing_Bug026.evenb2",
+        "function_token_typing_Prims.pos", "int_typing",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "token_correspondence_Bug026.evenb2"
       ],
       0,
-      "3e5bcfbf2e2fc6c0ddd1927ebb2421e1"
+      "dfdd04544be88afa01454e704f713b57"
     ],
     [
       "Bug026.test_filter3",
@@ -126,20 +136,28 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug026.filter.fuel_instrumented", "@query",
+        "Bug026_interpretation_Tm_arrow_f9ca95eec22b220a003264ba49064de6",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "equation_Bug026.evenb3",
-        "equation_with_fuel_Bug026.filter.fuel_instrumented", "int_typing",
+        "data_elim_Prims.Cons", "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_Bug026.evenb3",
+        "equation_Prims.pos",
+        "equation_with_fuel_Bug026.filter.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Bug026.evenb3",
+        "function_token_typing_Prims.pos", "int_typing",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "token_correspondence_Bug026.evenb3"
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "token_correspondence_Bug026.evenb3", "typing_Bug026.filter"
       ],
       0,
-      "bcd91dee756a413a81623b7eb5f22f7e"
+      "4fef1fbcd0679724debbf66cf7da9ff8"
     ]
   ]
 ]

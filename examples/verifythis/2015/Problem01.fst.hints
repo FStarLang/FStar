@@ -49,7 +49,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "dda1f4b84ec7d3fe67efafac2887dd9c"
+      "ccf59e9949b191b746d10870503939f5"
     ],
     [
       "Problem01.prefix",
@@ -83,7 +83,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7e6e73e21358673ad392a491dd616dcf"
+      "52011fff06802f64058e319dbb10fc17"
     ],
     [
       "Problem01.remove_elem_from_list",
@@ -95,13 +95,13 @@
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int",
         "binder_x_323b8b24dedcbcde84b47deb8aeac554_1",
         "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_0",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "int_inversion",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.nat", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_tl",
@@ -110,7 +110,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "63e3ed91f271f44f167b039dab9719a3"
+      "9167043b5a167ee6e727b388abec9162"
     ],
     [
       "Problem01.test_prefix",
@@ -159,7 +159,7 @@
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "43355285358e5e8b5867449d35504cd6"
+      "bc758d3b5f87566768e10bc1d5de0af0"
     ],
     [
       "Problem01.test_prefix",
@@ -196,7 +196,7 @@
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "75870afc5013f8018074c95f2aca4676"
+      "4f3e34433d39a4e9884905a052913ffc"
     ],
     [
       "Problem01.test_relaxed_prefix",
@@ -228,7 +228,7 @@
         "typing_Problem01.test_prefix"
       ],
       0,
-      "f642ab810a0bae4c7898607720074529"
+      "0c54cf84fccf586a9e84f0091879451d"
     ]
   ]
 ]

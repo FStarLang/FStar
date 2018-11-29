@@ -107,7 +107,37 @@
         "unit_typing"
       ],
       0,
-      "233c5e9c408eaaa7737f894f93ce929d"
+      "e0166d37724e735a853c4b2b6304aaf9"
+    ],
+    [
+      "MiniParseExample.q",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_MiniParse.Spec.Combinators.synth_inverse",
+        "equation_Prims.squash",
+        "interpretation_MiniParseExample_Tm_abs_6d075b789beb186e46d8594526fcfb43",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "abb30590967642f82d130982d07e19a4"
+    ],
+    [
+      "MiniParseExample.q",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_MiniParse.Spec.Combinators.synth_inverse",
+        "equation_Prims.squash",
+        "interpretation_MiniParseExample_Tm_abs_6d075b789beb186e46d8594526fcfb43",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "169a62ace3a27b20e098e9f72829b02b"
     ]
   ]
 ]

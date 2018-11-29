@@ -172,11 +172,13 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Bug281.exp__uu___haseq",
         "constructor_distinct_Bug281.EApp",
-        "constructor_distinct_Bug281.EVar", "equation_Bug281.eesh",
-        "equation_Bug281.sub_einc", "equation_Bug281.test",
-        "equation_Prims.nat",
+        "constructor_distinct_Bug281.EVar", "data_elim_Bug281.EApp",
+        "disc_equation_Bug281.EVar", "equation_Bug281.eesh",
+        "equation_Bug281.sub", "equation_Bug281.sub_einc",
+        "equation_Bug281.test", "equation_Prims.nat",
         "equation_with_fuel_Bug281.esubst.fuel_instrumented",
-        "equation_with_fuel_Bug281.sub_elam.fuel_instrumented", "int_typing",
+        "equation_with_fuel_Bug281.sub_elam.fuel_instrumented",
+        "function_token_typing_Bug281.sub_einc", "int_typing",
         "interpretation_Bug281_Tm_abs_b3379ccd25d1d687c47c53bc368789e2",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction",
@@ -185,10 +187,15 @@
         "projection_inverse_Bug281.EApp__0",
         "projection_inverse_Bug281.EApp__1",
         "projection_inverse_Bug281.EVar__0",
-        "token_correspondence_Bug281.sub_einc"
+        "refinement_interpretation_Bug281_Tm_refine_31af0e7d55c8cded8d4a1b0e962a69f8",
+        "refinement_interpretation_Bug281_Tm_refine_9eeb2fe43433bda3ba01b74f4dd6684d",
+        "token_correspondence_Bug281.esubst.fuel_instrumented",
+        "token_correspondence_Bug281.sub_einc", "typing_Bug281.sub_elam",
+        "typing_Bug281.test",
+        "typing_Bug281_Tm_abs_b3379ccd25d1d687c47c53bc368789e2"
       ],
       0,
-      "cbb81874b718ddf7e9cb48dbc4916b2b"
+      "e1e6df98dc6855973a9d9295c406fa3b"
     ],
     [
       "Bug281.plouf1",
@@ -204,11 +211,13 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Bug281.exp__uu___haseq",
         "constructor_distinct_Bug281.EApp",
-        "constructor_distinct_Bug281.EVar", "equation_Bug281.eesh",
-        "equation_Bug281.sub_einc", "equation_Bug281.test",
-        "equation_Prims.nat",
+        "constructor_distinct_Bug281.EVar", "data_elim_Bug281.EApp",
+        "disc_equation_Bug281.EVar", "equation_Bug281.eesh",
+        "equation_Bug281.sub", "equation_Bug281.sub_einc",
+        "equation_Bug281.test", "equation_Prims.nat",
         "equation_with_fuel_Bug281.esubst.fuel_instrumented",
-        "equation_with_fuel_Bug281.sub_elam.fuel_instrumented", "int_typing",
+        "equation_with_fuel_Bug281.sub_elam.fuel_instrumented",
+        "function_token_typing_Bug281.sub_einc", "int_typing",
         "interpretation_Bug281_Tm_abs_b3379ccd25d1d687c47c53bc368789e2",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction",
@@ -217,10 +226,15 @@
         "projection_inverse_Bug281.EApp__0",
         "projection_inverse_Bug281.EApp__1",
         "projection_inverse_Bug281.EVar__0",
-        "token_correspondence_Bug281.sub_einc"
+        "refinement_interpretation_Bug281_Tm_refine_31af0e7d55c8cded8d4a1b0e962a69f8",
+        "refinement_interpretation_Bug281_Tm_refine_9eeb2fe43433bda3ba01b74f4dd6684d",
+        "token_correspondence_Bug281.esubst.fuel_instrumented",
+        "token_correspondence_Bug281.sub_einc", "typing_Bug281.sub_elam",
+        "typing_Bug281.test",
+        "typing_Bug281_Tm_abs_b3379ccd25d1d687c47c53bc368789e2"
       ],
       0,
-      "ba27d2a4730b0bb2fe24b9c861fd779d"
+      "01daace8c4240365dabf110d23926530"
     ],
     [
       "Bug281.plouf2",
@@ -242,13 +256,16 @@
         "@fuel_correspondence_Bug281.sub_elam.fuel_instrumented",
         "@fuel_irrelevance_Bug281.esubst.fuel_instrumented",
         "@fuel_irrelevance_Bug281.sub_elam.fuel_instrumented", "@query",
+        "Bug281_pretyping_7e21bffa49d5b2e317ed0427c0c4bf73",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_Bug281.EApp",
-        "constructor_distinct_Bug281.EVar", "equation_Bug281.eesh",
-        "equation_Bug281.sub_einc", "equation_Bug281.test",
-        "equation_Prims.nat",
+        "constructor_distinct_Bug281.EVar", "data_elim_Bug281.EApp",
+        "disc_equation_Bug281.EVar", "equation_Bug281.eesh",
+        "equation_Bug281.sub", "equation_Bug281.sub_einc",
+        "equation_Bug281.test", "equation_Prims.nat",
         "equation_with_fuel_Bug281.esubst.fuel_instrumented",
-        "equation_with_fuel_Bug281.sub_elam.fuel_instrumented", "int_typing",
+        "equation_with_fuel_Bug281.sub_elam.fuel_instrumented",
+        "function_token_typing_Bug281.sub_einc", "int_typing",
         "interpretation_Bug281_Tm_abs_b3379ccd25d1d687c47c53bc368789e2",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction",
@@ -257,10 +274,15 @@
         "projection_inverse_Bug281.EApp__0",
         "projection_inverse_Bug281.EApp__1",
         "projection_inverse_Bug281.EVar__0",
-        "token_correspondence_Bug281.sub_einc"
+        "refinement_interpretation_Bug281_Tm_refine_31af0e7d55c8cded8d4a1b0e962a69f8",
+        "refinement_interpretation_Bug281_Tm_refine_9eeb2fe43433bda3ba01b74f4dd6684d",
+        "token_correspondence_Bug281.esubst.fuel_instrumented",
+        "token_correspondence_Bug281.sub_einc", "typing_Bug281.sub_elam",
+        "typing_Bug281.test",
+        "typing_Bug281_Tm_abs_b3379ccd25d1d687c47c53bc368789e2"
       ],
       0,
-      "b7b7bec6e04fe0fd3b96185fb9c7d2a2"
+      "08859c8c59f2ca871360f95db2367680"
     ],
     [
       "Bug281.plouf4",
@@ -282,13 +304,16 @@
         "@fuel_correspondence_Bug281.sub_elam.fuel_instrumented",
         "@fuel_irrelevance_Bug281.esubst.fuel_instrumented",
         "@fuel_irrelevance_Bug281.sub_elam.fuel_instrumented", "@query",
+        "Bug281_pretyping_7e21bffa49d5b2e317ed0427c0c4bf73",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_Bug281.EApp",
-        "constructor_distinct_Bug281.EVar", "disc_equation_Bug281.EVar",
-        "equation_Bug281.eesh", "equation_Bug281.sub_einc",
+        "constructor_distinct_Bug281.EVar", "data_elim_Bug281.EApp",
+        "disc_equation_Bug281.EVar", "equation_Bug281.eesh",
+        "equation_Bug281.sub", "equation_Bug281.sub_einc",
         "equation_Bug281.test", "equation_Prims.nat",
         "equation_with_fuel_Bug281.esubst.fuel_instrumented",
-        "equation_with_fuel_Bug281.sub_elam.fuel_instrumented", "int_typing",
+        "equation_with_fuel_Bug281.sub_elam.fuel_instrumented",
+        "function_token_typing_Bug281.sub_einc", "int_typing",
         "interpretation_Bug281_Tm_abs_b3379ccd25d1d687c47c53bc368789e2",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction",
@@ -297,10 +322,16 @@
         "projection_inverse_Bug281.EApp__0",
         "projection_inverse_Bug281.EApp__1",
         "projection_inverse_Bug281.EVar__0",
-        "token_correspondence_Bug281.sub_einc", "unit_inversion"
+        "refinement_interpretation_Bug281_Tm_refine_31af0e7d55c8cded8d4a1b0e962a69f8",
+        "refinement_interpretation_Bug281_Tm_refine_9eeb2fe43433bda3ba01b74f4dd6684d",
+        "token_correspondence_Bug281.esubst.fuel_instrumented",
+        "token_correspondence_Bug281.sub_einc", "typing_Bug281.esubst",
+        "typing_Bug281.sub_elam", "typing_Bug281.test",
+        "typing_Bug281_Tm_abs_b3379ccd25d1d687c47c53bc368789e2",
+        "unit_inversion"
       ],
       0,
-      "90a08fee21696ec9823058cd47826b51"
+      "e7aa94d8244d35ad9a035d79f4dc5d20"
     ]
   ]
 ]

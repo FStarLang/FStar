@@ -332,7 +332,7 @@
         "token_correspondence_FStar.Math.Lib.powx.fuel_instrumented"
       ],
       0,
-      "f0af189daf6fefcb1dacc1f47d86d1e2"
+      "992d87a962c9e9424aa257aa245d844f"
     ],
     [
       "FStar.Math.Lib.powx_lemma2",
@@ -385,7 +385,7 @@
         "typing_FStar.Math.Lib.powx", "well-founded-ordering-on-nat"
       ],
       0,
-      "5d0183e87b9b473f443921c5c2337f78"
+      "dc4087dfb08d9d00d9c7b27cf2de2b83"
     ],
     [
       "FStar.Math.Lib.abs_mul_lemma",

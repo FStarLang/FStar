@@ -207,7 +207,7 @@
         "typing_Termination.list_subterm_ordering_coercion"
       ],
       0,
-      "a9c4063957a433d6b35a57bc29655dd0"
+      "5c663c736fb435c82be6f3d215118e5a"
     ],
     [
       "Termination.list_subterm_ordering_coercion",
@@ -239,7 +239,7 @@
         "typing_Termination.list_subterm_ordering_coercion"
       ],
       0,
-      "7fd120d7540206d0861df4c07c512564"
+      "73e9df9e94a0970243569b9a6e274b0b"
     ],
     [
       "Termination.list_subterm_ordering_lemma",
@@ -251,7 +251,8 @@
         "@fuel_correspondence_Termination.mem.fuel_instrumented",
         "@fuel_irrelevance_Termination.mem.fuel_instrumented", "@query",
         "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
-        "binder_x_63893f6163361bb7b4db46296cfdfc01_3", "bool_inversion",
+        "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
+        "binder_x_a81196f4caaaa4b43052179035836caa_5", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.eqtype",
@@ -264,7 +265,7 @@
         "subterm_ordering_Prims.Cons", "typing_Termination.mem"
       ],
       0,
-      "b028704df4624b8005d6d3f4565d9225"
+      "11386805586738d47e4e33143bb0bab4"
     ],
     [
       "Termination.move_refinement",
@@ -275,6 +276,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Termination.mem.fuel_instrumented",
         "@fuel_irrelevance_Termination.mem.fuel_instrumented", "@query",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_0",
         "binder_x_b61d515802515b2fbf412a0a06819e8f_2",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
@@ -289,7 +291,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0649da96f44a7b33066c0f2d04f00915"
+      "8bec9aa37a02b096cb99b543ee5a0d5d"
     ],
     [
       "Termination.tree",
@@ -641,6 +643,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Termination.mem.fuel_instrumented",
         "@fuel_irrelevance_Termination.mem.fuel_instrumented", "@query",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
         "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
         "binder_x_d2232cb7e0ee20c45b91c3002dc74749_4",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
@@ -657,7 +660,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e4412f3014b22a18aef51c9461e39271"
+      "06756d4a7eefcf912836bae4ed86dae4"
     ],
     [
       "Termination.move_refinement",
@@ -668,6 +671,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Termination.mem.fuel_instrumented",
         "@fuel_irrelevance_Termination.mem.fuel_instrumented", "@query",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_0",
         "binder_x_b61d515802515b2fbf412a0a06819e8f_2",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
@@ -682,7 +686,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "45c8f74817650a94010a22261a3d8c46"
+      "972408a90816a66c70251323b26779f4"
     ],
     [
       "Termination.tree",
