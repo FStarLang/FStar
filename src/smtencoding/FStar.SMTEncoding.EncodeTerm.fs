@@ -867,20 +867,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
             let encode_full_app fv =
                 let prims_connectives =
-                  let mkValid t = mkApp ("Valid", [t]) in
                   let mkBoxLogical t = mkApp ("BoxLogical", [t]) in
                   let mk_unary_logical_connective (interp:term -> term) :list<term> -> term =
                     function
-                    | [{ tm = App (Var "BoxLogical", [t]) }] -> mkBoxLogical (interp t)
-                    | [t] -> mkBoxLogical (interp (mkValid t))
+                    | [t] -> mkBoxLogical (interp (mk_Valid t))
                     | _ -> failwith "Impossible: expected logical unary connective to be applied to one argument"
                   in
                   let mk_binary_logical_connective (interp:(term * term) -> term) :list<term> -> term =
                     function
-                    | [{ tm = App (Var "BoxLogical", [t1]) }; { tm = App (Var "BoxLogical", [t2]) }] -> mkBoxLogical (interp (t1, t2))
-                    | [{ tm = App (Var "BoxLogical", [t1]) }; t2] -> mkBoxLogical (interp (t1, mkValid t2))
-                    | [t1; { tm = App (Var "BoxLogical", [t2]) }] -> mkBoxLogical (interp (mkValid t1, t2))
-                    | [t1; t2] -> mkBoxLogical (interp (mkValid t1, mkValid t2))
+                    | [t1; t2] -> mkBoxLogical (interp (mk_Valid t1, mk_Valid t2))
                     | _ -> failwith "Impossible: mk_binary_logical_connective expects two arguments only"
                   in
                   let mk_unary_boolean_connective (interp:term -> term) :list<term> -> term =
@@ -1055,7 +1050,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     in
                     let interp_f =
                       let a_name = "interpretation_" ^fsym in
-                      Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
+                      match body.tm with
+                      | App (Var "BoxLogical", [t]) ->
+                        Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(mk_Valid app, t)), Some a_name, a_name)
+                      | _ ->
+                        Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
                     in
                     let f_decls = decls@decls'@decls''@(fdecl::typing_f)@[interp_f] in
                     BU.smap_add env.cache tkey_hash (mk_cache_entry env fsym cvar_sorts f_decls);

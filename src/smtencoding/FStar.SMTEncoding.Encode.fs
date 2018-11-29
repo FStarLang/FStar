@@ -797,7 +797,7 @@ let encode_top_level_let :
                   else U.ascribe body (BU.Inl t_body, None)
                 in
                 let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
-                let pat, app, (body, decls2) =
+                let pat, app, (body, decls2), gen_prop_typing =
                   let is_logical =
                     match (SS.compress t_body).n with
                     | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
@@ -805,8 +805,12 @@ let encode_top_level_let :
                   in
                   let is_prims = lbn |> FStar.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids lid.ns) Const.prims_lid) in
                   if not is_prims && (quals |> List.contains Logic || is_logical)
-                  then app, mk_Valid app, encode_formula body env'
-                  else app, app, encode_term body env'
+                  then app, mk_Valid app, encode_formula body env', false
+                  else
+                    let (body_encoding, decls) = encode_term body env' in
+                    match body_encoding.tm with
+                    | App (Var "BoxLogical", [t]) -> app, mk_Valid app, (t, decls), true
+                    | _ -> app, app, (body_encoding, decls), false
                 in
 
                 //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
@@ -1101,12 +1105,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     //              "b2t_typing");
                     ] in
        let boxlogical_theory =
-         let mkValid t = mkApp ("Valid", [t]) in
          let sq = lookup_lid env FStar.Parser.Const.squash_lid in
          let bb = ("b", Bool_sort) in
          let b = Util.mkFreeV bb in
          let box_validity_axiom =
-           let valid_boxlogical_b = mkValid (mkApp ("BoxLogical", [b])) in
+           let valid_boxlogical_b = mkApp ("Valid", [mkApp ("BoxLogical", [b])]) in
            Util.mkAssume (mkForall (Env.get_range env.tcenv)
                                    ([[valid_boxlogical_b]],
                                     [bb],

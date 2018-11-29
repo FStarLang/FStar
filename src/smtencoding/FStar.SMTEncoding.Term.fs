@@ -957,6 +957,7 @@ let mk_Valid t        = match t.tm with
         let sz = match getBoxedInteger t0 with | Some sz -> sz | _ -> failwith "impossible" in
         mkBvUlt (unboxBitVec sz t1, unboxBitVec sz t2) t.rng
     | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
+    | App (Var "BoxLogical", [t]) -> t
     | _ ->
         mkApp("Valid",  [t]) t.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
