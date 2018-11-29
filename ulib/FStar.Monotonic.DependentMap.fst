@@ -64,9 +64,10 @@ let lookup #a #b #inv #r t x =
 let rec mmap_f #a #b #c m f =
   match m with
   | [] ->
-    assert (DM.equal (empty_partial_dependent_map #a #c)
-                     (DM.map (f_opt f) (empty_partial_dependent_map #a #b)));
-    []
+   assert (DM.equal (empty_partial_dependent_map #a #c)
+                    (DM.map (f_opt f) (empty_partial_dependent_map #a #b)));
+   assert_norm (repr #a #c [] == empty_partial_dependent_map #a #c);
+   []
   | (| x, y |)::tl -> (| x, f x y |)::(mmap_f #a #b #c tl f)  //AR: doesn't work without these implicits
 
 let map_f #a #b #c #inv #inv' #r #r' t f
