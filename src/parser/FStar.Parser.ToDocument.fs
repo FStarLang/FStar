@@ -1865,6 +1865,11 @@ and p_projectionLHS e = match e.tm with
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
 
+  (* KM : I still think that it is wrong to print a term that's not parseable... *)
+  (* VD: Not parsable, but it can be called with a Labeled term via term_to_string *)
+  | Labeled (e, s, b) ->
+      str ("(*" ^ s ^ "*)") ^/^ p_term false false e
+
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
   (* to prevent the pretty printer from looping *)
@@ -1873,8 +1878,6 @@ and p_projectionLHS e = match e.tm with
               " arguments couldn't be handled by the pretty printer")
   | Uvar id ->
     failwith "Unexpected universe variable out of universe context"
-  | Labeled _ ->
-    failwith "Unexpected labeled term"
 
   (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
   (* We must also make sure that all the constructors listed below are handled somewhere *)
