@@ -2208,7 +2208,8 @@ let (mk_Valid : term -> term) =
           freevars = (uu___126_8897.freevars);
           rng = (t.rng)
         }
-    | uu____8898 -> mkApp ("Valid", [t]) t.rng
+    | App (Var "BoxLogical",t1::[]) -> t1
+    | uu____8902 -> mkApp ("Valid", [t]) t.rng
   
 let (mk_HasType : term -> term -> term) =
   fun v1  -> fun t  -> mkApp ("HasType", [v1; t]) t.rng 
@@ -2219,8 +2220,8 @@ let (mk_HasTypeFuel : term -> term -> term -> term) =
   fun f  ->
     fun v1  ->
       fun t  ->
-        let uu____8959 = FStar_Options.unthrottle_inductives ()  in
-        if uu____8959
+        let uu____8963 = FStar_Options.unthrottle_inductives ()  in
+        if uu____8963
         then mk_HasType v1 t
         else mkApp ("HasTypeFuel", [f; v1; t]) t.rng
   
@@ -2247,19 +2248,19 @@ let (mk_ApplyTT : term -> term -> FStar_Range.range -> term) =
   fun t  -> fun t'  -> fun r  -> mkApp ("ApplyTT", [t; t']) r 
 let (kick_partial_app : term -> term) =
   fun t  ->
-    let uu____9092 =
-      let uu____9093 = mkApp ("__uu__PartialApp", []) t.rng  in
-      mk_ApplyTT uu____9093 t t.rng  in
-    FStar_All.pipe_right uu____9092 mk_Valid
+    let uu____9096 =
+      let uu____9097 = mkApp ("__uu__PartialApp", []) t.rng  in
+      mk_ApplyTT uu____9097 t t.rng  in
+    FStar_All.pipe_right uu____9096 mk_Valid
   
 let (mk_String_const : Prims.int -> FStar_Range.range -> term) =
   fun i  ->
     fun r  ->
-      let uu____9111 =
-        let uu____9119 = let uu____9122 = mkInteger' i norng  in [uu____9122]
+      let uu____9115 =
+        let uu____9123 = let uu____9126 = mkInteger' i norng  in [uu____9126]
            in
-        ("FString_const", uu____9119)  in
-      mkApp uu____9111 r
+        ("FString_const", uu____9123)  in
+      mkApp uu____9115 r
   
 let (mk_Precedes : term -> term -> term -> term -> FStar_Range.range -> term)
   =
@@ -2268,8 +2269,8 @@ let (mk_Precedes : term -> term -> term -> term -> FStar_Range.range -> term)
       fun x3  ->
         fun x4  ->
           fun r  ->
-            let uu____9153 = mkApp ("Prims.precedes", [x1; x2; x3; x4]) r  in
-            FStar_All.pipe_right uu____9153 mk_Valid
+            let uu____9157 = mkApp ("Prims.precedes", [x1; x2; x3; x4]) r  in
+            FStar_All.pipe_right uu____9157 mk_Valid
   
 let (mk_LexCons : term -> term -> term -> FStar_Range.range -> term) =
   fun x1  ->
@@ -2280,12 +2281,12 @@ let rec (n_fuel : Prims.int -> term) =
     if n1 = (Prims.parse_int "0")
     then mkApp ("ZFuel", []) norng
     else
-      (let uu____9200 =
-         let uu____9208 =
-           let uu____9211 = n_fuel (n1 - (Prims.parse_int "1"))  in
-           [uu____9211]  in
-         ("SFuel", uu____9208)  in
-       mkApp uu____9200 norng)
+      (let uu____9204 =
+         let uu____9212 =
+           let uu____9215 = n_fuel (n1 - (Prims.parse_int "1"))  in
+           [uu____9215]  in
+         ("SFuel", uu____9212)  in
+       mkApp uu____9204 norng)
   
 let (fuel_2 : term) = n_fuel (Prims.parse_int "2") 
 let (fuel_100 : term) = n_fuel (Prims.parse_int "100") 
@@ -2300,8 +2301,8 @@ let (mk_and_opt :
         match (p1, p2) with
         | (FStar_Pervasives_Native.Some p11,FStar_Pervasives_Native.Some p21)
             ->
-            let uu____9259 = mkAnd (p11, p21) r  in
-            FStar_Pervasives_Native.Some uu____9259
+            let uu____9263 = mkAnd (p11, p21) r  in
+            FStar_Pervasives_Native.Some uu____9263
         | (FStar_Pervasives_Native.Some p,FStar_Pervasives_Native.None ) ->
             FStar_Pervasives_Native.Some p
         | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.Some p) ->
@@ -2321,18 +2322,18 @@ let (mk_and_opt_l :
 let (mk_and_l : term Prims.list -> FStar_Range.range -> term) =
   fun l  ->
     fun r  ->
-      let uu____9322 = mkTrue r  in
+      let uu____9326 = mkTrue r  in
       FStar_List.fold_right (fun p1  -> fun p2  -> mkAnd (p1, p2) r) l
-        uu____9322
+        uu____9326
   
 let (mk_or_l : term Prims.list -> FStar_Range.range -> term) =
   fun l  ->
     fun r  ->
-      let uu____9342 = mkFalse r  in
+      let uu____9346 = mkFalse r  in
       FStar_List.fold_right (fun p1  -> fun p2  -> mkOr (p1, p2) r) l
-        uu____9342
+        uu____9346
   
 let (mk_haseq : term -> term) =
   fun t  ->
-    let uu____9353 = mkApp ("Prims.hasEq", [t]) t.rng  in mk_Valid uu____9353
+    let uu____9357 = mkApp ("Prims.hasEq", [t]) t.rng  in mk_Valid uu____9357
   
