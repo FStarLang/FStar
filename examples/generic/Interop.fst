@@ -165,7 +165,11 @@ let rec wrap
           fun (x:uint_64) -> 
             let i = (1 + max_arity - m) in //`x` is the `i`th argument
             let regs1 = (Map.upd regs (as_reg i) x) in //add it to the registers
-            aux (m - 1) regs1 //recurse
+            //explicit typing annotation to allow unfolding recursive definition
+            let v : as_lowstar_sig (m - 1) (elim_m (m - 1) pre regs1) (elim_m (m - 1) post regs1) =
+              aux (m - 1) regs1 //recurse
+            in
+            v
       in
       f
     in

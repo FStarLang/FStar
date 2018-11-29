@@ -35,8 +35,8 @@ demos \
 refinement \
 indexed_effects \
 doublylinkedlist \
-regional
-# generic
+regional \
+generic
 
 # low-level \  ... NS: removing from CI for this branch
 
