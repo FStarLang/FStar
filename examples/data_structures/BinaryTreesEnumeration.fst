@@ -2,14 +2,19 @@ module BinaryTreesEnumeration
 
 open FStar.List
 
-abstract val pairs_with_sum' : m:nat -> n:nat -> list (p: (nat * nat){fst p + snd p == m + n})
+(*
+ * AR: 11/29: hoisting it cf. recursive guards
+ *)
+type prod_with_sum (n:nat) = p:(nat & nat){fst p + snd p == n}
+
+abstract val pairs_with_sum' : m:nat -> n:nat -> list (prod_with_sum (m + n))
 abstract let rec pairs_with_sum' m n =
   (m, n) ::
     (if m = 0
      then []
      else pairs_with_sum' (m - 1) (n + 1))
 
-let pairs_with_sum (n: nat) : list (p: (nat * nat){fst p + snd p == n}) =
+let pairs_with_sum (n: nat) : list (prod_with_sum n) =
   pairs_with_sum' n 0
 
 let product #a #b (l1: list a) (l2: list b) =
@@ -34,7 +39,7 @@ let rec trees_of_size (s: nat) : list (bt: bin_tree{size bt == s}) =
   if s = 0 then
     [Leaf]
   else
-    List.Tot.concatMap #(p: (nat * nat){(fst p) + (snd p) == s - 1})
+    List.Tot.concatMap #(prod_with_sum (s - 1))
       (fun (s1, s2) ->
        List.Tot.map #((t1: bin_tree{size t1 == s1}) * (t2: bin_tree{size t2 == s2}))
                     #(bt: bin_tree{size bt == s})
@@ -260,7 +265,7 @@ abstract let unfold_tos (s: nat) :
          (if s = 0 then
             [Leaf]
           else
-            List.Tot.concatMap #(p: (nat * nat){(fst p) + (snd p) == s - 1})
+            List.Tot.concatMap #(prod_with_sum (s - 1))
               (fun (s1, s2) ->
                List.Tot.map #((t1: bin_tree{size t1 == s1}) * (t2: bin_tree{size t2 == s2}))
                             #(bt: bin_tree{size bt == s})
@@ -271,7 +276,7 @@ abstract let unfold_tos (s: nat) :
                (if s = 0 then
                   [Leaf]
                 else
-                  List.Tot.concatMap #(p: (nat * nat){(fst p) + (snd p) == s - 1})
+                  List.Tot.concatMap #(prod_with_sum (s - 1))
                     (fun (s1, s2) ->
                      List.Tot.map #((t1: bin_tree{size t1 == s1}) * (t2: bin_tree{size t2 == s2}))
                                   #(bt: bin_tree{size bt == s})
@@ -331,7 +336,7 @@ let rec tos_complete (bt0: bin_tree) :
       (* assert (List.memP (s1, s2) (pairs_with_sum (s - 1))); *)
 
       memP_concatMap_intro
-        #(p: (nat * nat){(fst p) + (snd p) == s - 1})
+        #(prod_with_sum (s - 1))
         (s1, s2)
         (Branch (t1, t2))
         (fun (s1, s2) ->
