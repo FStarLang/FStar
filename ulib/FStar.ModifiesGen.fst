@@ -1374,14 +1374,20 @@ let loc_not_unused_in #al c h =
 
 let loc_unused_in #al c h =
   let f (r: HS.rid) : GTot (GSet.set nat) =
-    GSet.comprehend (fun a -> StrongExcludedMiddle.strong_excluded_middle (h `does_not_contain_addr` (r, a)))
+    if Set.mem r (Set.complement (FStar.Map.domain (HS.get_hmap h)))
+    then
+      GSet.complement GSet.empty
+    else
+      GSet.comprehend (fun a -> StrongExcludedMiddle.strong_excluded_middle (h `does_not_contain_addr` (r, a)))
   in
   Loc
     (Ghost.hide (Set.complement Set.empty))
-    (Ghost.hide Set.empty)
-    (mk_non_live_addrs f)
+    (Ghost.hide (Set.complement (FStar.Map.domain (HS.get_hmap h))))
+    (mk_non_live_addrs (fun x -> f x))
     (mk_live_addrs (fun x -> f x))
     (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) f))
+
+let loc_regions_unused_in #al c h rs = ()
 
 let loc_addresses_unused_in #al c r a h = ()
 
