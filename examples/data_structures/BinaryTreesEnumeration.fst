@@ -29,20 +29,22 @@ let rec size bt : nat =
   | Leaf -> 0
   | Branch(l, r) -> 1 + size l + size r
 
+type bt_with_size (n:nat) = t:bin_tree{size t == n}
+
 (*> * Why do I need type annotations on [concatMap] and [map]?
     * When I reduce this definition I see that the lambda desugared to a match
       with 4 arguments (not 2). Why?
     * I had to eta-expand [Branch]; why?  Is it because there's a implicit cast
       from [bintree] to [bt: bin_tree{size bt == s}]?  If so, why is it not
       enough to add a coercion [Branch <: _ -> bt: bin_tree{size bt == s}]? *)
-let rec trees_of_size (s: nat) : list (bt: bin_tree{size bt == s}) =
+let rec trees_of_size (s: nat) : list (bt_with_size s) =
   if s = 0 then
     [Leaf]
   else
     List.Tot.concatMap #(prod_with_sum (s - 1))
       (fun (s1, s2) ->
-       List.Tot.map #((t1: bin_tree{size t1 == s1}) * (t2: bin_tree{size t2 == s2}))
-                    #(bt: bin_tree{size bt == s})
+       List.Tot.map #((bt_with_size s1) * (bt_with_size s2))
+                    #(bt_with_size s)
          (fun (t1, t2) -> Branch (t1, t2))
          (product (trees_of_size s1) (trees_of_size s2)))
       (pairs_with_sum (s - 1))
@@ -267,8 +269,8 @@ abstract let unfold_tos (s: nat) :
           else
             List.Tot.concatMap #(prod_with_sum (s - 1))
               (fun (s1, s2) ->
-               List.Tot.map #((t1: bin_tree{size t1 == s1}) * (t2: bin_tree{size t2 == s2}))
-                            #(bt: bin_tree{size bt == s})
+               List.Tot.map #(bt_with_size s1 * bt_with_size s2)
+                            #(bt_with_size s)
                  (fun (t1, t2) -> Branch (t1, t2))
                  (product (trees_of_size s1) (trees_of_size s2)))
               (pairs_with_sum (s - 1)))) =
@@ -278,8 +280,8 @@ abstract let unfold_tos (s: nat) :
                 else
                   List.Tot.concatMap #(prod_with_sum (s - 1))
                     (fun (s1, s2) ->
-                     List.Tot.map #((t1: bin_tree{size t1 == s1}) * (t2: bin_tree{size t2 == s2}))
-                                  #(bt: bin_tree{size bt == s})
+                     List.Tot.map #(bt_with_size s1 * bt_with_size s2)
+                                  #(bt_with_size s)
                        (fun (t1, t2) -> Branch (t1, t2))
                        (product (trees_of_size s1) (trees_of_size s2)))
                     (pairs_with_sum (s - 1))))
@@ -304,7 +306,7 @@ abstract let unfold_tos (s: nat) :
 let rec tos_complete (bt0: bin_tree) :
   Lemma (List.memP bt0 (trees_of_size (size bt0))) =
     match bt0 with
-    | Leaf -> admit ()
+    | Leaf -> ()
     | Branch(t1, t2) ->
       let s = size bt0 in
       let s1 = size t1 in
@@ -321,8 +323,8 @@ let rec tos_complete (bt0: bin_tree) :
       product_complete trees1 trees2 t1 t2;
       (* assert (List.memP (t1, t2) (product trees1 trees2)); *)
 
-      memP_map_intro #((t1: bin_tree{size t1 == s1}) * (t2: bin_tree{size t2 == s2}))
-        (fun (t1, t2) -> Branch (t1, t2) <: (bt: bin_tree{size bt == s}))
+      memP_map_intro #(bt_with_size s1 * bt_with_size s2)
+        (fun (t1, t2) -> Branch (t1, t2) <: (bt_with_size s))
         (t1, t2)
         (product trees1 trees2);
       (* assert (List.memP (Branch (t1, t2)) *)
@@ -340,8 +342,8 @@ let rec tos_complete (bt0: bin_tree) :
         (s1, s2)
         (Branch (t1, t2))
         (fun (s1, s2) ->
-         List.Tot.map #((t1: bin_tree{size t1 == s1}) * (t2: bin_tree{size t2 == s2}))
-                      #(bt: bin_tree{size bt == s})
+         List.Tot.map #(bt_with_size s1 * bt_with_size s2)
+                      #(bt_with_size s)
            (fun (t1, t2) -> Branch (t1, t2))
            (product (trees_of_size s1) (trees_of_size s2)))
         (pairs_with_sum (s - 1));
