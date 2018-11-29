@@ -108,6 +108,7 @@ private let fail #a s = fun i -> Inl s
 val as_arith_expr : term -> tm expr
 let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
+    admit();
     let tl = List.list_unref tl in
     match inspect_ln hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
