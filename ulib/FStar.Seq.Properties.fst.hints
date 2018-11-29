@@ -1,5 +1,5 @@
 [
-  "*åO&ù6\u0015 Ñ\u001be\rÇ⁄Ã•",
+  "ﬂt{\nHê\u0018©t•ïÈîª¢±",
   [
     [
       "FStar.Seq.Properties.lemma_append_inj_l",
@@ -14,7 +14,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ae1894babe2c06f3e1811c86f5842f19"
+      "eaba074205a1bf9483646e7514eed346"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj_l",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8b99db469d1fa9a1348e46e10f0f6ad9"
+      "c392c742e4cb5714b4975dee39204e9d"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj_l",
@@ -53,7 +53,7 @@
         "unit_typing"
       ],
       0,
-      "2647ef160b5adf7c32ce7599c413cc64"
+      "ab780b72265bba7a4afbf9266c951ff0"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj_r",
@@ -68,7 +68,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "347a03aabae8c60d3c0d044805206ec5"
+      "5858e6df54be56810a9b93f8c1357a78"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj_r",
@@ -82,7 +82,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1d7dd03fbec1ac213083f578a3759c99"
+      "de906d2497177cf55c6b22ab9c0bf7a7"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj_r",
@@ -104,7 +104,7 @@
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "f83e1de9848bbdceaa315c67de98d1f2"
+      "ff3fab0852df8ba316eae8515cab6c36"
     ],
     [
       "FStar.Seq.Properties.lemma_append_len_disj",
@@ -118,7 +118,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "99d6ac7f9c7cb1e4b6dfe3c0525bc74e"
+      "e546493f8910600209fa1a83000ad2ac"
     ],
     [
       "FStar.Seq.Properties.lemma_append_len_disj",
@@ -132,7 +132,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ebd6fca99e517a0b0d6d9b26691f7ed3"
+      "ca6ed67e44d93347af57914790dba904"
     ],
     [
       "FStar.Seq.Properties.lemma_append_len_disj",
@@ -149,7 +149,7 @@
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "a879a69bc91d459b2f8ae78270cdf61a"
+      "52edfaa25a0b7b9f14a9b790f4569fb4"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj",
@@ -163,7 +163,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2522929032c8e774f642d005da72ddca"
+      "0f7d6aefeda5a15042093eea4377b503"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj",
@@ -177,7 +177,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6e2f3e3400e677094d98dd53506ba6e9"
+      "f42ccb57a14327b212f2a96c8360accd"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj",
@@ -190,7 +190,7 @@
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_4d9c92860015ea426c4f6ed9b5e23b20"
       ],
       0,
-      "00f1e1c39303f236b67b65f38bf8da2c"
+      "03e23b0808c979fd7480942e6158cff8"
     ],
     [
       "FStar.Seq.Properties.head",
@@ -202,7 +202,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c"
       ],
       0,
-      "00f2e931b005bd28bc93dd97fc681aca"
+      "f6b58ba34466e5edfa98915db486f562"
     ],
     [
       "FStar.Seq.Properties.tail",
@@ -217,7 +217,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c"
       ],
       0,
-      "a2d8c86da637e5d3e024fc4b9b4c3a4b"
+      "21c212c35e5aca9c5dc7b38d1a446000"
     ],
     [
       "FStar.Seq.Properties.lemma_head_append",
@@ -235,7 +235,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "a9ce10e4435d07f0ce1314d0871e6c23"
+      "fe5f8f2b6ce682bdfe2ab7beb73cce56"
     ],
     [
       "FStar.Seq.Properties.lemma_head_append",
@@ -252,7 +252,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "008f623d1e9dcd719e4e455c98a959c6"
+      "80e2ed6a90c87bc97681be512365cfe6"
     ],
     [
       "FStar.Seq.Properties.lemma_tail_append",
@@ -270,7 +270,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "b63166806db62e1ae06670b1f38cb9cf"
+      "d7f4e16aa05e302f6dd5f5556de0519e"
     ],
     [
       "FStar.Seq.Properties.lemma_tail_append",
@@ -297,13 +297,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "f737c39b25606f3b94117245afb0beff"
+      "4bb5c6cba3d26dad67a0c36529aa4284"
     ],
     [
       "FStar.Seq.Properties.last",
@@ -316,7 +316,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c"
       ],
       0,
-      "493efd9708dbdb347ccce29a935a4bc1"
+      "f24249bcc34a5c4298f12984357eb96e"
     ],
     [
       "FStar.Seq.Properties.lemma_cons_inj",
@@ -336,7 +336,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "43481135d7a41875457227c47c3397ac"
+      "5141f041eb36e1c74681a053bb9525bf"
     ],
     [
       "FStar.Seq.Properties.split",
@@ -351,7 +351,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "205b167b76e53deeae341c5b7d132ba7"
+      "154bcbe25981d29f628753f080dfbac9"
     ],
     [
       "FStar.Seq.Properties.lemma_split",
@@ -384,14 +384,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3421154546287b0f0c012dd3d63b4945",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "838bf327a551da3e5055ccecc74ab7af"
+      "fefd5fed84dc21f8f846d0dfdd9a96ef"
     ],
     [
       "FStar.Seq.Properties.split_eq",
@@ -400,7 +400,7 @@
       0,
       [ "@query" ],
       0,
-      "023aeee6f8868393ef108bddb29149b7"
+      "97cb43ed8417d917493443915f769b8c"
     ],
     [
       "FStar.Seq.Properties.count",
@@ -421,13 +421,13 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "2ee10567151d6318ba4cf5d41aba079a"
+      "9a0df0111adb7c69e49d8177ad755cbc"
     ],
     [
       "FStar.Seq.Properties.mem_index",
@@ -459,7 +459,7 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3d6f660a2461c4360d26d0578b879a46",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d199505faa58934ff0867c2a8ef68875",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -468,7 +468,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "1759a9e3a8d6c13b940f28cc199e1feb"
+      "def631a9280a93f1f33d1c58ad717cef"
     ],
     [
       "FStar.Seq.Properties.index_mem",
@@ -507,7 +507,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f024dbca1af00ae2df385f3a3cf85324"
+      "d5b13116cba9cf547893a6ad00ffc818"
     ],
     [
       "FStar.Seq.Properties.index_mem",
@@ -539,14 +539,14 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Properties.mem",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9798e6b4ab678befac00996ec669aa01"
+      "446e2a69df2f14f8bba63c57132b987d"
     ],
     [
       "FStar.Seq.Properties.swap",
@@ -562,7 +562,7 @@
         "typing_FStar.Seq.Base.index"
       ],
       0,
-      "ddf847e86f169dc1aa6c8d6bd5a7b48c"
+      "950a8b3dc793f9b3949059df373ba3b0"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_append",
@@ -576,7 +576,7 @@
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_422b9532c2df78e1e3319ee46753029a"
       ],
       0,
-      "152ef0e29ebf08d1dff3c2ccfde8f3ca"
+      "ca8e49f5257f8cbf3ea8180a6aedde8f"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_append",
@@ -601,14 +601,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_422b9532c2df78e1e3319ee46753029a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "00264a7d2482ebe4582d6f7ef0a8be80"
+      "70a088303a437553a773d939c2569dfd"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_first_in_append",
@@ -629,7 +629,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "84262791ead6fd68253162d52537006a"
+      "38b3945079073d0eda91303bd8089c5e"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_first_in_append",
@@ -649,7 +649,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "c435a4ab29fb21f85704417324f941e1"
+      "f10569545715d572599f6b765c580a40"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_first_in_append",
@@ -680,14 +680,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b8f429635665e640b1945e3725727c62",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice", "well-founded-ordering-on-nat"
       ],
       0,
-      "3447eddf059ac44f2834599b4110a730"
+      "e2b6fd44af5f2bbd234cfb0879f08440"
     ],
     [
       "FStar.Seq.Properties.slice_upd",
@@ -705,7 +705,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "215f81e58adeb89e7dcaec90dfa5f729"
+      "427f049cdeb1a39a8bf0cde58ee79d5c"
     ],
     [
       "FStar.Seq.Properties.slice_upd",
@@ -730,13 +730,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b5ad1dbfbd48faaf34d92bafda76205d",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_eb2138b73bd97b98c85f91dd46555a57",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "dcddb6a57346972131170d94be011943"
+      "4a6f183af28074dc2a07f77645f08fe8"
     ],
     [
       "FStar.Seq.Properties.upd_slice",
@@ -757,13 +757,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "becdf88eb043970e61093cbe2057d183"
+      "714d3076206cfbcffcd397270366f65b"
     ],
     [
       "FStar.Seq.Properties.upd_slice",
@@ -789,13 +789,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b5ad1dbfbd48faaf34d92bafda76205d",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_bff9fba3859041b36afe5df294bb369c",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "f33fdc909eeb466e461e3a2077cc0365"
+      "04f0edd9fef50d3142cab059f2ec136f"
     ],
     [
       "FStar.Seq.Properties.lemma_append_cons",
@@ -830,7 +830,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b2a02c31f4fd7c144911c07d8cd10a87",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.create",
@@ -839,7 +839,7 @@
         "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "2623c51c27dcb5bc4dfddebdf0b6c197"
+      "c1299df6115491fe9e93218ab3a9d7d8"
     ],
     [
       "FStar.Seq.Properties.lemma_tl",
@@ -857,7 +857,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "f44c5044b436eba2bdc99551def7bb17"
+      "88ead436b9908c68d3e858db5fdec393"
     ],
     [
       "FStar.Seq.Properties.lemma_tl",
@@ -885,14 +885,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Properties.cons",
         "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "3cc03afc451704f2f3b3aec2d095a3eb"
+      "5c76bb031e7ccce68fb6cebd1c2c01c3"
     ],
     [
       "FStar.Seq.Properties.sorted",
@@ -912,12 +912,12 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "04fbbd8895d3d2f974f96aa8c2bcfee6"
+      "550117c64522064b7ed124a5e18edbe0"
     ],
     [
       "FStar.Seq.Properties.sorted_feq",
@@ -942,14 +942,14 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_56a213e734cf24597ce1a211bcbb447a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Properties.head", "well-founded-ordering-on-nat"
       ],
       0,
-      "4ba3a69a735e7fb7daa5806d2e6679e5"
+      "9b8c4e6ca25ce1708cbb4c3fc9eb7505"
     ],
     [
       "FStar.Seq.Properties.lemma_append_count",
@@ -990,7 +990,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.create",
@@ -998,7 +998,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "92cdfa09c250c77264956aa159345419"
+      "69727334c65f3987dcbe39aec88a11b2"
     ],
     [
       "FStar.Seq.Properties.lemma_append_count_aux",
@@ -1007,7 +1007,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "718f0f5019beb12a8de26d141540519d"
+      "7968cc8c0c0c0f66cc61208618af2f03"
     ],
     [
       "FStar.Seq.Properties.lemma_mem_inversion",
@@ -1036,7 +1036,7 @@
         "typing_FStar.Seq.Properties.mem", "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "e606f807d9124eaa4d2634452faa0b24"
+      "c5e66a8a461bac693986091cf7581480"
     ],
     [
       "FStar.Seq.Properties.lemma_mem_count",
@@ -1070,7 +1070,7 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_75a2083fb8ca78d78cf6764a98801231",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_8d75edbda2b303c84807f45d4608e214",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -1079,7 +1079,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4b3d4166a7d0787b85a09c453186e851"
+      "632b712d1f99cb94e1b69e194bcc6819"
     ],
     [
       "FStar.Seq.Properties.lemma_count_slice",
@@ -1097,7 +1097,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "a90c4c3afedca2e25bd784ae3fa8e922"
+      "af79d7db0a0841fc5d0c4119fed6a922"
     ],
     [
       "FStar.Seq.Properties.lemma_count_slice",
@@ -1123,14 +1123,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_cd046bc4a887ee7e1b05946e0bf5772b",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "bc7691d49dcd4c7abe6150175f7372dc"
+      "16dccc3a16a5ee1d5f65d69993d32895"
     ],
     [
       "FStar.Seq.Properties.sorted_concat_lemma",
@@ -1184,7 +1184,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_31067b137866d91cc3d6223c4d7fb485",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_ae3612efc002db277e43c3fe90ed4370",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -1200,7 +1200,7 @@
         "typing_FStar.Seq.Properties.tail", "well-founded-ordering-on-nat"
       ],
       0,
-      "be9a7e9b6cbb3b74a7da07fb130d5e68"
+      "6b4b9287deae83c82526985f94d0342d"
     ],
     [
       "FStar.Seq.Properties.split_5",
@@ -1214,12 +1214,12 @@
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_e8a9570a838c7ccf4088a18dea3b2824",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_95411abb9988392cbd2c79a9e5b56718",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "e7e61e8dfbccd5949a783fc519eb36c7"
+      "811b74423b816559f856f6c27692d934"
     ],
     [
       "FStar.Seq.Properties.split_5",
@@ -1254,15 +1254,15 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b5ad1dbfbd48faaf34d92bafda76205d",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_e8a9570a838c7ccf4088a18dea3b2824",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_95411abb9988392cbd2c79a9e5b56718",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.create",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "f74e7a459df4a064844b9b6f7fcf3842"
+      "3a55220813c95650ef2d4d20949941ee"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes_aux_frag_eq",
@@ -1280,14 +1280,14 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_bbb4c04cf0d3499d5a984d9896e706ff",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "1ab18c42f0b763334c1cab297889534f"
+      "b214a9d97c878d0f72ec2c023fcbfb21"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes_aux_frag_eq",
@@ -1317,16 +1317,16 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b5ad1dbfbd48faaf34d92bafda76205d",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5db676168d758f8a45b9caa459dd2276",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_51ad2da6bf22d2db71779b48dfd20f05",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_bbb4c04cf0d3499d5a984d9896e706ff",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "2e176aadf364756f8254d057fbf237d1"
+      "85171c2af4c0474b064a3825c6011669"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes_aux",
@@ -1345,7 +1345,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "073bf259e7b57addc1948a6b08cdd455"
+      "8a4eb593f79e402c3f6085dc681d9acd"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes_aux",
@@ -1381,8 +1381,8 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b5ad1dbfbd48faaf34d92bafda76205d",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.index",
@@ -1390,7 +1390,7 @@
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "6f9b1b42f976be92082abd1159d11cbb"
+      "c356e505351c77111f81b133b23e799c"
     ],
     [
       "FStar.Seq.Properties.permutation",
@@ -1404,7 +1404,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "41720db44d93c2f237b58a2073c132c0"
+      "d6c189c841ce2c75937cb2e2c7a74428"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes",
@@ -1423,13 +1423,13 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a2878537ab602fcf2fb92678740de75a"
+      "b0e31e1d8ca1e8213a0705da47690dee"
     ],
     [
       "FStar.Seq.Properties.perm_len",
       1,
       1,
-      2,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.Seq.Properties.count.fuel_instrumented",
@@ -1452,7 +1452,6 @@
         "equation_FStar.Seq.Properties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "equation_with_fuel_FStar.Seq.Properties.count.fuel_instrumented",
-        "equation_with_fuel_FStar.Seq.Properties.index_mem.fuel_instrumented",
         "int_inversion", "int_typing",
         "lemma_FStar.Seq.Base.lemma_create_len",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
@@ -1479,7 +1478,8 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_6a51d05f81d806a28730659e28d5df28",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Seq.Properties.count.fuel_instrumented",
@@ -1488,11 +1488,12 @@
         "typing_FStar.Pervasives.Native.snd", "typing_FStar.Seq.Base.create",
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.seq",
         "typing_FStar.Seq.Properties.count",
+        "typing_FStar.Seq.Properties.index_mem",
         "typing_FStar.Seq.Properties.tail", "unit_inversion", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4b5cbf068aea75279d54e8604a1748c7"
+      "fda3135a1fbb6552b0d6f03e580d1737"
     ],
     [
       "FStar.Seq.Properties.cons_perm",
@@ -1529,7 +1530,7 @@
         "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "4c0c0aad320ed561ab4aaeb225cc8d20"
+      "e5d04e10afde7550a30e8177c88f9df8"
     ],
     [
       "FStar.Seq.Properties.lemma_mem_append",
@@ -1551,7 +1552,7 @@
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Properties.count"
       ],
       0,
-      "12b66e3a80af289cba610e84427a5129"
+      "d5883204194748eb18e0b974538efad0"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_cons",
@@ -1564,11 +1565,11 @@
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b462fb3fbbf1000bf5739e36daac1a43"
+      "ff92c19817dad46af68e87d9da6276db"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_cons",
@@ -1607,8 +1608,8 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Seq.Properties.count.fuel_instrumented",
@@ -1616,7 +1617,7 @@
         "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "593d49de9a975bfa0401ac7fa261395f"
+      "ea8bf638b6955e22eeb80f4c5083029b"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_snoc",
@@ -1631,13 +1632,13 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "8c14c7d1429d9e0e622c4d7c481ac29e"
+      "17e15c1d782832c9f898905ccda67580"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_snoc",
@@ -1676,16 +1677,16 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Seq.Properties.count.fuel_instrumented",
-        "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
-        "typing_FStar.Seq.Properties.mem", "typing_FStar.Seq.Properties.tail"
+        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Properties.mem",
+        "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "9d020e58b5e525127135b23b8db133e4"
+      "7dff372d633e146e0e88a9ffbaa3e302"
     ],
     [
       "FStar.Seq.Properties.lemma_ordering_lo_snoc",
@@ -1700,13 +1701,13 @@
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "9da7d714ad07393a096d9e5c4427cadf"
+      "aad91ea00f4bacba35b1a45ecec1e9fe"
     ],
     [
       "FStar.Seq.Properties.lemma_ordering_lo_snoc",
@@ -1749,18 +1750,17 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_9ce4f6ad1c92c32c38de8f84d1da6dde",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Seq.Properties.count.fuel_instrumented",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
-        "typing_FStar.Seq.Properties.count",
         "typing_FStar.Seq.Properties.mem", "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "a6957f45a30a98c7dd50d5def942a568"
+      "8dc5c3ddec7b604dbe164c38f3e762ca"
     ],
     [
       "FStar.Seq.Properties.lemma_ordering_hi_cons",
@@ -1773,11 +1773,11 @@
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "17e83449243b7345ae6957767e8bc367"
+      "c6e3fa4b4f2fd4923770926329a45698"
     ],
     [
       "FStar.Seq.Properties.lemma_ordering_hi_cons",
@@ -1818,15 +1818,15 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_9ce4f6ad1c92c32c38de8f84d1da6dde",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "2ad71b59b57fc8c5e60a67254a5b4c65"
+      "c7a94c087d188ef215b0c59f27fdadb3"
     ],
     [
       "FStar.Seq.Properties.swap_frame_lo",
@@ -1843,13 +1843,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "9bbf4544307c43790a2320476d77e148"
+      "1f09841a479c2c4016d937ca0f576bac"
     ],
     [
       "FStar.Seq.Properties.swap_frame_lo",
@@ -1869,13 +1869,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "e193c65f2ceb861dda698cc5d2a56b69"
+      "26170c03126ba520b9c03a6255fd0ae7"
     ],
     [
       "FStar.Seq.Properties.swap_frame_lo'",
@@ -1892,13 +1892,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "ac10ca34ef0c250bd73fd2c865d8a641"
+      "d51405869e3324f063a1bbf620110140"
     ],
     [
       "FStar.Seq.Properties.swap_frame_lo'",
@@ -1918,13 +1918,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "3c1c81471c5dbab8953246a06161cebb"
+      "9d1c22dbb7f2b18a5f8b48c5bd2ba091"
     ],
     [
       "FStar.Seq.Properties.swap_frame_hi",
@@ -1946,7 +1946,7 @@
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "6e681b2ea140b225e4e5f39e638200f0"
+      "ca2c9ad33f38cdec5f8243dc335e035d"
     ],
     [
       "FStar.Seq.Properties.swap_frame_hi",
@@ -1970,7 +1970,7 @@
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "f8185bd41c62a584375b0e160cda6a54"
+      "100c35479de011fcdc15a919e5f1df3b"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_slice_commute",
@@ -1988,14 +1988,14 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "a032794a9c993dc8f0bbf485cacd18a3"
+      "5f10e13a9d7dc5902785e87d4493a0be"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_slice_commute",
@@ -2020,15 +2020,15 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a2f1690b8776ea00baf7f534fa34a7c2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "20d0ca2732c15ca7fa3822a4811e7245"
+      "af2e13933a9171e87e870e314d884702"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes_slice",
@@ -2044,14 +2044,14 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "031e3e5c21945e62408d7d8c92bb4cfb"
+      "797d4b2ee2d5028b4fa907aeaf06b626"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes_slice",
@@ -2066,14 +2066,14 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7e511be030b8eda157aafe46ac45c9da"
+      "b2c05d17648235c26236f7f02b6760ca"
     ],
     [
       "FStar.Seq.Properties.splice",
@@ -2087,7 +2087,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9bb97d80928de002e44eace175132bf5"
+      "794bc1939ebcfde96364335dcce5a34b"
     ],
     [
       "FStar.Seq.Properties.splice",
@@ -2101,7 +2101,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a3c8802467786579fff91cb830e84d37"
+      "9aa99658a9fe63d27d5c8b7fa3137f1f"
     ],
     [
       "FStar.Seq.Properties.splice",
@@ -2119,7 +2119,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "29a512b7652ddbef02ee16b25171b842"
+      "d87a32d6f2a687c253ca8456c017cf63"
     ],
     [
       "FStar.Seq.Properties.replace_subseq",
@@ -2137,7 +2137,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "80202a7c950a20532cf39e3f955f625e"
+      "5a427ebf2d670b0b303e67f8a0ec62a2"
     ],
     [
       "FStar.Seq.Properties.splice_refl",
@@ -2149,7 +2149,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "faad1b9522e9d8e03067bdb7488d64da"
+      "a8db780d4d96b84f29c1f63f156d2f6f"
     ],
     [
       "FStar.Seq.Properties.splice_refl",
@@ -2175,13 +2175,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "0cc71b58fe6bff431a919d0570092a51"
+      "cb7afa403c9cfe45ab7c65a8e723b576"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_splice",
@@ -2196,13 +2196,13 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "7f83c9e29d63c86fb6e3db3e0407c41c"
+      "f77f40e73fb0deb174ad58a54d1b0e30"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_splice",
@@ -2234,16 +2234,16 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b5ad1dbfbd48faaf34d92bafda76205d",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.index",
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.slice",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "b9dbda56476e60de7843cda9ffe87551"
+      "c8c6bf6d181a018afd696db9888311a5"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_frame_hi",
@@ -2258,13 +2258,13 @@
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8edaec1bbf06dab16848d2968989b5eb"
+      "7fc61b62a3ca64ee84bd9afdafcf898c"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_frame_hi",
@@ -2278,7 +2278,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9f2a72055a3221c556537bcce349bfd8"
+      "263d651405bd810451ef7445a3e6f768"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_frame_hi",
@@ -2305,15 +2305,15 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "b8e973d1ca07d1df02dc0aaee3c25499"
+      "d46199ee847ecc61aee57faf4c6f59ce"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_frame_lo",
@@ -2327,14 +2327,14 @@
         "int_inversion", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_85e9bb54d06cdc6388e1f9b9ed33ad11",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "26593f71e41ad5c74eca5f63f2eeb64d"
+      "070a14d18a6f6d319fe83ee6747d11e0"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_frame_lo",
@@ -2348,7 +2348,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9ebd354dbd5c907d5892d60088ea5f34"
+      "8f8d4d9dd5ef93853e2e85f4b7ec64a7"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_frame_lo",
@@ -2372,7 +2372,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_85e9bb54d06cdc6388e1f9b9ed33ad11",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -2380,7 +2380,7 @@
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "b1915fb1e90d50b208bfa9776db44b78"
+      "2c14eb95f0360bb93b68dbf00b11cab3"
     ],
     [
       "FStar.Seq.Properties.lemma_tail_slice",
@@ -2395,12 +2395,12 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5f73bf73666b8544ca78534edc60347a"
+      "ad2184a78c7509adc92fb8803ef854dd"
     ],
     [
       "FStar.Seq.Properties.lemma_tail_slice",
@@ -2423,13 +2423,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "3d09e71f9ab155618d57b647019cc4e5"
+      "cad73f54b7301c57ca1edfa3a240e0a8"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_frame_right",
@@ -2443,12 +2443,12 @@
         "int_inversion", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_17e053ccd37bcc04a722364eb31328e1",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_9cb05e328b51d39648aa813d8339694d",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fbb88b260d25b4787ad78d4f372798ba"
+      "890c6023fc2954f5d8c107c28316aa03"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_frame_right",
@@ -2462,7 +2462,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b88004e30b08b7cf40cb31164a680a43"
+      "28c3212244c724e553a9da5c1ecd3c4b"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_frame_right",
@@ -2489,14 +2489,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_17e053ccd37bcc04a722364eb31328e1",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_9cb05e328b51d39648aa813d8339694d",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "57d04cbdcb9c8b2c78e520b99c7a88f2"
+      "408b47cb254cb2e32f41f98212b58985"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_frame_left",
@@ -2514,7 +2514,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b3d1670308d977160774f6bc33288226"
+      "00ad589ba3040b71af6cd13c9963041a"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_frame_left",
@@ -2528,7 +2528,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7f33333933c212e3a80c220b42465840"
+      "eb177012d4d0a7e8c143e777ba0ca4dc"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_frame_left",
@@ -2555,14 +2555,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_17e053ccd37bcc04a722364eb31328e1",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_9cb05e328b51d39648aa813d8339694d",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "841e4bcbd949bafce2bd051e792dbd85"
+      "dcee3281606fb2e3a540f18d6e575ea6"
     ],
     [
       "FStar.Seq.Properties.lemma_trans_frame",
@@ -2580,7 +2580,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c7eaa1ac136844f0fac875855229c518"
+      "a4d61e9810263bc1c6487731213cc625"
     ],
     [
       "FStar.Seq.Properties.lemma_trans_frame",
@@ -2594,7 +2594,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "68b245314fe9d325f9e0fd3f7d36a4ad"
+      "1e140c0bdf912e8c74a8adf563a22f3c"
     ],
     [
       "FStar.Seq.Properties.lemma_trans_frame",
@@ -2620,14 +2620,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_80d3ec204d8dc5bca159f07cb028ec9b",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "b456bb87e8e1d4eee4ba172643d6a040"
+      "8733fea3183bc083cc0a143146bc37ad"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_perm_left",
@@ -2646,7 +2646,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "23ad6ed5ec785f75efae3577f14eae77"
+      "e764e9b35ecffa4547cbfdf617f38ec7"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_perm_left",
@@ -2660,7 +2660,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7625c1ebc1fa48d38cca44497d61cad3"
+      "79293c0f17c4ac6bc69e9abb023bbb55"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_perm_left",
@@ -2689,7 +2689,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_902052ed663478ddd976c225e9304224",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -2697,7 +2697,7 @@
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "5e5b7b1d9b6609d39a48257b3a02b8d0"
+      "4774e715647f4088973b7dcc53a0833b"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_perm_right",
@@ -2716,7 +2716,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4bc98a9f3b84c96b6a139592074c3a1b"
+      "0a0ba8b62d23cb27e2038ccfeb95dfc7"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_perm_right",
@@ -2730,7 +2730,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e84d0482f387d31da800f0602583dbfb"
+      "06613dd6c37762acb4d74ce77440ccba"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_perm_right",
@@ -2759,7 +2759,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_902052ed663478ddd976c225e9304224",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -2767,7 +2767,7 @@
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "b63934e1ecc19b415e9734c0c8e9ab27"
+      "1e3b77c1a99fc64a00db1804d7c83c54"
     ],
     [
       "FStar.Seq.Properties.lemma_trans_perm",
@@ -2783,7 +2783,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e5cc6b01fb4c35f83e8581e8b246b7f7"
+      "ed158a2d5773bf09af6f8de3bab27803"
     ],
     [
       "FStar.Seq.Properties.lemma_trans_perm",
@@ -2797,7 +2797,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0e94b94da90567bba9facb39e07d21b4"
+      "501b76dd648d734cd53ae4eed7fb4bb4"
     ],
     [
       "FStar.Seq.Properties.lemma_trans_perm",
@@ -2806,7 +2806,7 @@
       1,
       [ "@query", "equation_FStar.Seq.Properties.permutation" ],
       0,
-      "7f4224d3342099c78fc985b73d6abdc2"
+      "b25dea2baaca140374f8403184702605"
     ],
     [
       "FStar.Seq.Properties.lemma_cons_snoc",
@@ -2836,7 +2836,7 @@
         "typing_FStar.Seq.Properties.snoc", "unit_typing"
       ],
       0,
-      "2ba88f5ad522b3f96c363848340f79e0"
+      "d55c7d08d73ea00fb72f98421f580f36"
     ],
     [
       "FStar.Seq.Properties.lemma_tail_snoc",
@@ -2855,7 +2855,7 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-      "69afd87231d94edd64dc881d3cc9243f"
+      "8fa44661b8ff8ee624e54ef2e229cdb9"
     ],
     [
       "FStar.Seq.Properties.lemma_tail_snoc",
@@ -2877,7 +2877,7 @@
         "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "5fb0de533dd9a7339f247fb68dca5453"
+      "881210b644ee138cf490c95c1d19c87e"
     ],
     [
       "FStar.Seq.Properties.lemma_snoc_inj",
@@ -2897,7 +2897,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "d82375ae85c20f802eeb2956641bf255"
+      "23d6d133f5b3a7b119916512ea61afe3"
     ],
     [
       "FStar.Seq.Properties.lemma_mem_snoc",
@@ -2927,7 +2927,7 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Seq.Properties.count.fuel_instrumented",
@@ -2938,7 +2938,7 @@
         "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "ba35d9ea2a235a0ec73f9483042c42f5"
+      "3c8eb9d851b838c827fed4ebb0eb162f"
     ],
     [
       "FStar.Seq.Properties.find_l",
@@ -2962,12 +2962,12 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "2d5140484890f3d60509c9d4b198cd05"
+      "00de170e82c064efa9074cc950a2ae2a"
     ],
     [
       "FStar.Seq.Properties.ghost_find_l",
@@ -2991,12 +2991,12 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "b7f9a38ddb57504cd95f824240d5fe25"
+      "ac9a3d286ba19c90619f147b5068d48e"
     ],
     [
       "FStar.Seq.Properties.find_append_some",
@@ -3047,7 +3047,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b7184960cd4853543c5eea78fdd3e34b"
+      "4f881276ce261efbaee6f7b9b73e3d1d"
     ],
     [
       "FStar.Seq.Properties.find_append_some",
@@ -3098,7 +3098,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "14d94c072e8a70c4d193d38372f0bbf9"
+      "aad19f64ee372f145fe1ae039925daef"
     ],
     [
       "FStar.Seq.Properties.find_append_some",
@@ -3141,7 +3141,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_aba7638072c8f1ba6a01b95ec6f9a485",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Seq.Properties.find_l.fuel_instrumented",
@@ -3149,7 +3149,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "17f53420fcffe07af7463d908102a67d"
+      "7688186f3b46f888a84057cf446b52ec"
     ],
     [
       "FStar.Seq.Properties.find_append_none",
@@ -3201,7 +3201,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "02687b6d7815b9d0259dfcea3f4d3511"
+      "25e4b5c95f0917f012cd153432e6280e"
     ],
     [
       "FStar.Seq.Properties.find_append_none",
@@ -3254,7 +3254,7 @@
         "typing_FStar.Seq.Properties.head", "well-founded-ordering-on-nat"
       ],
       0,
-      "38377c20ec9c2c5b605937310c3b33b8"
+      "56a6d6b75d72080ff560e176cd36e7bb"
     ],
     [
       "FStar.Seq.Properties.find_append_none",
@@ -3299,16 +3299,15 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_aba7638072c8f1ba6a01b95ec6f9a485",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b2a02c31f4fd7c144911c07d8cd10a87",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Seq.Properties.find_l.fuel_instrumented",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Properties.head", "well-founded-ordering-on-nat"
       ],
       0,
-      "5c392cbcbd39d790955fccda012fa3d1"
+      "e2f9d1fef49149b6375006c91a657b9f"
     ],
     [
       "FStar.Seq.Properties.find_append_none_s2",
@@ -3358,7 +3357,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "8cbe54c90ac8f3a6b648eb9e52300578"
+      "1d8c8c9588db08f26ee526c48ef3501b"
     ],
     [
       "FStar.Seq.Properties.find_append_none_s2",
@@ -3408,7 +3407,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "1133c571638aa7818fca0a54a050374d"
+      "4dd5b3983785ce907b1951b939e66a21"
     ],
     [
       "FStar.Seq.Properties.find_append_none_s2",
@@ -3450,7 +3449,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_aba7638072c8f1ba6a01b95ec6f9a485",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Seq.Properties.find_l.fuel_instrumented",
@@ -3458,7 +3457,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "c0ab6ebf5314dffb634707ae2d611537"
+      "c9cd911e755001458e4a4e3b8db698df"
     ],
     [
       "FStar.Seq.Properties.find_snoc",
@@ -3477,7 +3476,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "1177195b1aeb5ed553f26595950d6d11"
+      "99d17846324af367e42c5f54f2753fa5"
     ],
     [
       "FStar.Seq.Properties.find_snoc",
@@ -3509,13 +3508,13 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_aba7638072c8f1ba6a01b95ec6f9a485",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Properties.find_l"
       ],
       0,
-      "5f75f44c60e5db017bdb851be0472364"
+      "c0092e39f866bc113deb1e3c3034aa28"
     ],
     [
       "FStar.Seq.Properties.un_snoc",
@@ -3553,14 +3552,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3421154546287b0f0c012dd3d63b4945",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5739deb21d8cba89243fec27b35b7ef0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "e62cdacc1a4e8e55f3365e6c9cf89eee"
+      "a33f4c9eece02ac435c8fdd7a5371705"
     ],
     [
       "FStar.Seq.Properties.un_snoc_snoc",
@@ -3604,7 +3603,7 @@
         "unit_typing"
       ],
       0,
-      "15e480f93aacd6cb78114b03f0eb0078"
+      "71cd350ce744ad8cf8aa1f9b71cad1fa"
     ],
     [
       "FStar.Seq.Properties.find_r",
@@ -3644,7 +3643,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4d873856692f89597a9812ccede715e4"
+      "cac07af9f9927450c4942892d195c89c"
     ],
     [
       "FStar.Seq.Properties.seq_find_aux",
@@ -3656,10 +3655,10 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Prims.nat",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_186855239f20473b65ae3954c69c7b3d"
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_7b4eb54cd0374a421c41adf7520a179a"
       ],
       0,
-      "6e4429e1d76188cb267d3939cf728e44"
+      "d40ccc5989c026372051ab1e42329ae6"
     ],
     [
       "FStar.Seq.Properties.seq_find_aux",
@@ -3671,10 +3670,10 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Prims.nat",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_186855239f20473b65ae3954c69c7b3d"
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_7b4eb54cd0374a421c41adf7520a179a"
       ],
       0,
-      "929cd67114e4c13c0efbbf2d44298c04"
+      "d4d0ff0614aec137932a0c8ede620bd2"
     ],
     [
       "FStar.Seq.Properties.seq_find_aux",
@@ -3709,7 +3708,7 @@
         "typing_FStar.Seq.Base.index", "well-founded-ordering-on-nat"
       ],
       0,
-      "fc700d930f6410325a839a14241ffe76"
+      "cf97230122d385a506a1e4107bf77d1a"
     ],
     [
       "FStar.Seq.Properties.seq_find",
@@ -3726,7 +3725,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "335db0cc0849f69e6f4e24574d8c90b3"
+      "8f1e6181e8638f029b56b1b92486d05a"
     ],
     [
       "FStar.Seq.Properties.seq_find",
@@ -3738,7 +3737,7 @@
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d3ebb8a91fb397785fd8a66c962cd7"
       ],
       0,
-      "a458f29aa2accbf888664f9b857d73f3"
+      "85ec31c1d32348a80238967c88b6c95a"
     ],
     [
       "FStar.Seq.Properties.find_mem",
@@ -3761,7 +3760,7 @@
         "unit_typing"
       ],
       0,
-      "42ad2a15a6b42a7eb9d9b8a99317f35f"
+      "46c0ef6673f7d1747fc392682686609c"
     ],
     [
       "FStar.Seq.Properties.for_all",
@@ -3785,7 +3784,7 @@
         "typing_FStar.Seq.Properties_Tm_abs_646eec380c4b703a82e093534123df6f"
       ],
       0,
-      "af4da073ca919736cafc8f2ddf031de9"
+      "0ab92423ee21af1040b92cb1589b3a25"
     ],
     [
       "FStar.Seq.Properties.seq_mem_k",
@@ -3830,7 +3829,7 @@
         "typing_FStar.Seq.Properties.tail", "well-founded-ordering-on-nat"
       ],
       0,
-      "8b472aa666b72e8e0a4cbf8f74a8cc79"
+      "49fe9b53a5494c72a87a9186dc94bc9d"
     ],
     [
       "FStar.Seq.Properties.seq_mem_k",
@@ -3864,7 +3863,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_75a2083fb8ca78d78cf6764a98801231",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_89fbcffd6dd249fc3ba92b141ec888d3",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -3875,7 +3874,7 @@
         "typing_FStar.Seq.Properties.tail", "well-founded-ordering-on-nat"
       ],
       0,
-      "b3e89afe5c7c8e0e6a9e069c6eb5fe3a"
+      "77c49ce93438dbe1dc3549e81560a368"
     ],
     [
       "FStar.Seq.Properties.seq_to_list",
@@ -3889,7 +3888,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "bf8b79164c033ac186e022dad11a5334"
+      "843515aaf966e3492c1974b36b1aa481"
     ],
     [
       "FStar.Seq.Properties.seq_to_list",
@@ -3927,7 +3926,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "989284abb2c66a8daf972f16ee186385"
+      "61f93a2418127f867b2dff3d3558d31a"
     ],
     [
       "FStar.Seq.Properties.seq_to_list",
@@ -3957,8 +3956,8 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_aadd8c6d48b57bcef02d12546bc7cdae",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_111aeeecc2d4c2db1fdb54b983455c4b",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_ab78a70a4bd0f3bbca3a8c1cea845cc0",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -3966,7 +3965,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "665b5cdc52f7117dc516d757bab0f04f"
+      "0037d6e569311424d8dffd367546a03d"
     ],
     [
       "FStar.Seq.Properties.seq_of_list",
@@ -3980,7 +3979,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "cab59583f817c2bf45e0f86451ee1369"
+      "e07e118129f2945a2bed02e7269e3d59"
     ],
     [
       "FStar.Seq.Properties.seq_of_list",
@@ -4014,11 +4013,11 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.Seq.Base.create"
       ],
       0,
-      "51a58fa8d1ef9eadff3c62be471cd245"
+      "2cfb1b49dbad0e13491b34c48acded49"
     ],
     [
-      "FStar.Seq.Properties.seq_of_list",
-      3,
+      "FStar.Seq.Properties.lemma_seq_of_list_induction",
+      1,
       1,
       1,
       [
@@ -4026,29 +4025,43 @@
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Seq.Base.op_At_Bar", "equation_Prims.eqtype",
+        "constructor_distinct_Tm_unit", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Seq.Base.op_At_Bar",
+        "equation_FStar.Seq.Properties.cons",
+        "equation_FStar.Seq.Properties.head",
+        "equation_FStar.Seq.Properties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_typing", "lemma_FStar.Seq.Base.lemma_create_len",
+        "int_inversion", "int_typing",
+        "lemma_FStar.Seq.Base.lemma_create_len",
+        "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "lemma_FStar.Seq.Base.lemma_eq_refl",
+        "lemma_FStar.Seq.Base.lemma_index_app1",
+        "lemma_FStar.Seq.Base.lemma_index_create",
         "lemma_FStar.Seq.Base.lemma_len_append",
-        "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d70e4d424343b9276244f42d95a631bd",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_35d9c03819ef6605e1a42791b3099e25",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "subterm_ordering_Prims.Cons", "typing_FStar.Seq.Base.create"
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "typing_FStar.List.Tot.Base.length", "typing_FStar.Seq.Base.create",
+        "typing_FStar.Seq.Base.length",
+        "typing_FStar.Seq.Properties.seq_of_list",
+        "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "df46826f25891de49823b7b8b073746d"
+      "cf5190bfa5996c04b00f3b1929afa24f"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_list_bij",
@@ -4058,27 +4071,29 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@fuel_correspondence_FStar.Seq.Properties.seq_to_list.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.Seq.Properties.seq_to_list.fuel_instrumented",
-        "@query", "assumption_Prims.HasEq_int",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_4ba5d02fdaa2a4e1a80f4f1dfd4982d6_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "constructor_distinct_Prims.Cons", "data_elim_Prims.Cons",
-        "equality_tok_Prims.LexTop@tok", "equation_FStar.Seq.Base.op_At_Bar",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_elim_Prims.Cons", "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.Seq.Properties.cons",
+        "equation_FStar.Seq.Properties.head",
+        "equation_FStar.Seq.Properties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "equation_with_fuel_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "equation_with_fuel_FStar.Seq.Properties.seq_to_list.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
+        "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion", "int_typing",
         "lemma_FStar.Seq.Base.lemma_create_len",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Base.lemma_index_app1",
         "lemma_FStar.Seq.Base.lemma_index_app2",
-        "lemma_FStar.Seq.Base.lemma_index_create",
         "lemma_FStar.Seq.Base.lemma_index_slice",
-        "lemma_FStar.Seq.Base.lemma_len_append",
         "lemma_FStar.Seq.Base.lemma_len_slice",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThanOrEqual",
@@ -4087,27 +4102,27 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_03127b5d59ee3055620018693b4264e8",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_04665cce707af4f7e4c640ad84ec0285",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_436be70bfa7d12df18ce91b984647360",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_c4e3a92f9bd1d01a07e4fb66c5de2e7e",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_feb6ca92920ce30ede38a5058bc8e3d5",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "token_correspondence_FStar.Seq.Properties.seq_to_list.fuel_instrumented",
-        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length",
+        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.empty",
+        "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Properties.seq_of_list",
-        "typing_FStar.Seq.Properties.seq_to_list",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1aa54f6d58213fe200ee125556eb5558"
+      "22c70b135d983e39c668112b2a0e844b"
     ],
     [
       "FStar.Seq.Properties.lemma_list_seq_bij",
@@ -4117,54 +4132,39 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@fuel_correspondence_FStar.Seq.Properties.seq_to_list.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@fuel_irrelevance_FStar.Seq.Properties.seq_to_list.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
-        "disc_equation_Prims.Cons", "equality_tok_Prims.LexTop@tok",
-        "equation_FStar.List.Tot.Base.hd",
-        "equation_FStar.List.Tot.Base.tail",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "equality_tok_Prims.LexTop@tok", "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl",
-        "equation_FStar.Seq.Base.op_At_Bar", "equation_Prims.nat",
+        "equation_FStar.Seq.Properties.cons",
+        "equation_FStar.Seq.Properties.head",
+        "equation_FStar.Seq.Properties.tail", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "equation_with_fuel_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "equation_with_fuel_FStar.Seq.Properties.seq_to_list.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
+        "fuel_guarded_inversion_Prims.list", "int_typing",
         "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "lemma_FStar.Seq.Base.lemma_index_app1",
-        "lemma_FStar.Seq.Base.lemma_index_app2",
-        "lemma_FStar.Seq.Base.lemma_index_create",
-        "lemma_FStar.Seq.Base.lemma_index_slice",
+        "lemma_FStar.Seq.Base.lemma_eq_refl",
         "lemma_FStar.Seq.Base.lemma_len_append",
-        "lemma_FStar.Seq.Base.lemma_len_slice",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_hd",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_03127b5d59ee3055620018693b4264e8",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_fe1cdee11c60cae6693d112c0e5a64a0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_FStar.List.Tot.Base.length", "typing_FStar.Seq.Base.create",
+        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Properties.head",
         "typing_FStar.Seq.Properties.seq_of_list",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "05829d2529b3c00e6eda3dcbc9a24acf"
+      "acdc45aeff2e03860696c9376f81f628"
     ],
     [
       "FStar.Seq.Properties.createL_post",
@@ -4178,7 +4178,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "33c12fbdf6912f5bebf6b73eb44dbd33"
+      "3cc8ad1225006a55bcf3af57b2379fc4"
     ],
     [
       "FStar.Seq.Properties.createL",
@@ -4199,7 +4199,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d7c22cbdc8d20abf9bddd0cb14238d36"
+      "1b55804e78216b3e9b300bab65c35f40"
     ],
     [
       "FStar.Seq.Properties.lemma_index_is_nth",
@@ -4214,7 +4214,7 @@
         "typing_FStar.Seq.Properties.seq_to_list"
       ],
       0,
-      "fa6d36a4ecad3314380072eb8a68d877"
+      "ea4f9aa85234b9590285a72e9dee507a"
     ],
     [
       "FStar.Seq.Properties.lemma_index_is_nth",
@@ -4229,7 +4229,7 @@
         "typing_FStar.Seq.Properties.seq_to_list"
       ],
       0,
-      "34b0a1dae6bd516f0510abadfd473b23"
+      "23225b8043cea8e2a39030fa946cc642"
     ],
     [
       "FStar.Seq.Properties.lemma_index_is_nth",
@@ -4265,15 +4265,15 @@
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_352391122908f9fb8435988dd49b78ee",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_111aeeecc2d4c2db1fdb54b983455c4b",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_436be70bfa7d12df18ce91b984647360",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_aadd8c6d48b57bcef02d12546bc7cdae",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_bae79c72bf1d7404b31d7b57569922ff",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "892f7ebe82c2b5fb55dc95e7df87366f"
+      "33864aea91f27bc869745f3484f8a0e1"
     ],
     [
       "FStar.Seq.Properties.contains_intro",
@@ -4288,7 +4288,7 @@
         "unit_typing"
       ],
       0,
-      "f54251931632664e21945740eeeab104"
+      "6103d966c062b62bff59b762b10b8a9c"
     ],
     [
       "FStar.Seq.Properties.contains_elim",
@@ -4297,7 +4297,7 @@
       1,
       [ "@query", "equation_FStar.Seq.Properties.contains", "unit_typing" ],
       0,
-      "e212f728bab5275a19b364d57be6f91d"
+      "a3f76da1e0308f3d1c2c071448c704a0"
     ],
     [
       "FStar.Seq.Properties.lemma_contains_empty",
@@ -4312,7 +4312,7 @@
         "typing_FStar.Seq.Base.empty"
       ],
       0,
-      "20a5171c51c0941bf71bd45dfe46c471"
+      "10b7c4fed5fb888ee2466395342eda2e"
     ],
     [
       "FStar.Seq.Properties.lemma_contains_singleton",
@@ -4332,7 +4332,7 @@
         "unit_typing"
       ],
       0,
-      "1b091ffe8b8a032f693bc9d158c3c5bd"
+      "1ebc856fddd4fd4488dbc223863e2521"
     ],
     [
       "FStar.Seq.Properties.intro_append_contains_from_disjunction",
@@ -4359,7 +4359,7 @@
         "typing_FStar.Seq.Base.length", "unit_typing"
       ],
       0,
-      "98e7143f1eabe7623f799887543c1f05"
+      "95b359583b311f8276d989dd4ff50543"
     ],
     [
       "FStar.Seq.Properties.append_contains_equiv",
@@ -4381,7 +4381,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "cab194cc05bc4adba81f1ff77ab14df6"
+      "00d03dd84d39cbe852f619bfe6b18509"
     ],
     [
       "FStar.Seq.Properties.contains_snoc",
@@ -4401,7 +4401,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7d9b6e5220133ef1a5bd9f8ef3829d9c"
+      "b9184da8cd18d009e813fd7fe430ad1b"
     ],
     [
       "FStar.Seq.Properties.lemma_find_l_contains",
@@ -4450,7 +4450,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "d68a5f189d9cd38cc1cbded36676c36a"
+      "848bc21d243e663312600bb64cde52be"
     ],
     [
       "FStar.Seq.Properties.lemma_find_l_contains",
@@ -4484,13 +4484,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "unit_inversion", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7c2c655bdbb1bff9c75dd0ddd0e90945"
+      "22c52031f298c1321d80191ccd393331"
     ],
     [
       "FStar.Seq.Properties.contains_cons",
@@ -4510,7 +4510,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "4f46acaf45120474a7908e7ee54ba88c"
+      "058d927c26116995366c70ff2d633891"
     ],
     [
       "FStar.Seq.Properties.append_cons_snoc",
@@ -4538,7 +4538,7 @@
         "typing_FStar.Seq.Properties.snoc", "unit_typing"
       ],
       0,
-      "0c0dfd6492766bc41a216062029eca3c"
+      "483a21a9347104ef4d9c05b2416dac1a"
     ],
     [
       "FStar.Seq.Properties.append_slices",
@@ -4564,13 +4564,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "068e5a472b0e4f3d8d82650186c99613"
+      "2fb740315129b82f09345e99a260a072"
     ],
     [
       "FStar.Seq.Properties.find_l_none_no_index",
@@ -4615,7 +4615,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_21623e058b0621926ca64aa7169947bf",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_436be70bfa7d12df18ce91b984647360",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_9afbfc0baa3a8b43f1dcb130b330cf26",
@@ -4624,7 +4624,7 @@
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "1b414884a690ecf49853b8bc28eca6ca"
+      "3f521b0f6e1c42e20df8acef51be8a67"
     ],
     [
       "FStar.Seq.Properties.cons_head_tail",
@@ -4658,12 +4658,12 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "09c006c9833f18fb07a3ae50f7562bf9"
+      "82057919686b7114f329db0f979c131c"
     ],
     [
       "FStar.Seq.Properties.head_cons",
@@ -4687,7 +4687,7 @@
         "unit_typing"
       ],
       0,
-      "016dfe9b75ab363b77981c5de4c91ba1"
+      "00942679aabb7583b1358e3853a6317b"
     ],
     [
       "FStar.Seq.Properties.suffix_of_tail",
@@ -4706,7 +4706,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Properties.head"
       ],
       0,
-      "ec1937e2b8922ed0a486b179c7eaed44"
+      "d6e39142b498ef1f8af46ab3844654e4"
     ],
     [
       "FStar.Seq.Properties.index_cons_l",
@@ -4729,7 +4729,7 @@
         "unit_typing"
       ],
       0,
-      "834a82afa74796803e608885ec2c305c"
+      "68ac84e6c80cc354a12df9d40311fb46"
     ],
     [
       "FStar.Seq.Properties.index_cons_r",
@@ -4752,7 +4752,7 @@
         "typing_FStar.Seq.Base.create", "unit_typing"
       ],
       0,
-      "d6480ef4ce28bcddb882fc09762def35"
+      "b7a777520fec5de632710bfc87643516"
     ],
     [
       "FStar.Seq.Properties.append_cons",
@@ -4778,7 +4778,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "a8dabaf64588be4cf6c0f656a395a751"
+      "c98016bfe94520fcac2c1d32bf3dec6a"
     ],
     [
       "FStar.Seq.Properties.index_tail",
@@ -4799,13 +4799,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_520b07e3f7a0a0a12b40968b63b25b73",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "ff3fc30596e6608ceb256fd5ec65187f"
+      "29caf98f887295691aba023989287746"
     ],
     [
       "FStar.Seq.Properties.mem_cons",
@@ -4838,7 +4838,7 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Seq.Properties.count.fuel_instrumented",
@@ -4848,7 +4848,7 @@
         "typing_FStar.Seq.Properties.mem"
       ],
       0,
-      "5563d086928120748f24158e6c0971fd"
+      "291f7ea68bd6f31182598c7ae9c4518b"
     ],
     [
       "FStar.Seq.Properties.snoc_slice_index",
@@ -4877,13 +4877,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_f874e2190eee7a2db7ea0e274c3085a5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "dcce61ad16f75c57d74d515672a46e28"
+      "4689bacaba38efc36feca9c8efe1b62d"
     ],
     [
       "FStar.Seq.Properties.cons_index_slice",
@@ -4912,13 +4912,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_c0cfbe9eeebfb6939e2f5016a358bdf1",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "f50fc7b79ebdf2c8856c91c268a110f6"
+      "bc00ac180d2776fdd52cb04890426d16"
     ],
     [
       "FStar.Seq.Properties.slice_is_empty",
@@ -4936,13 +4936,13 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_cd046bc4a887ee7e1b05946e0bf5772b",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.empty", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "ff3431d6d931233d3c8385fd947deac0"
+      "6238dffb1947774819c188d755fa01b6"
     ],
     [
       "FStar.Seq.Properties.slice_length",
@@ -4963,13 +4963,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_6bebd57faa83152662ad749719d97043",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_7f689fba10235dfc2d9b40a1a8a3f558",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "d6f6bbb2debfe07ff2baea5df28e7757"
+      "666e313aa42acd3a11598a7e065b2302"
     ],
     [
       "FStar.Seq.Properties.slice_slice",
@@ -4990,68 +4990,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_528d1ac7a4a801fe55aa0f436f85ad2a",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_6674fe6a855add7f844965a8f8d794b7",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_ede17b0a46a2a5ecf603e924307134aa",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "76ba8b8b002cd4fdb9707681b50f0c55"
-    ],
-    [
-      "FStar.Seq.Properties.lemma_seq_of_list_induction",
-      1,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
-        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_FStar.List.Tot.Base.hd",
-        "equation_FStar.List.Tot.Base.tail",
-        "equation_FStar.List.Tot.Base.tl",
-        "equation_FStar.Seq.Base.op_At_Bar",
-        "equation_FStar.Seq.Properties.cons",
-        "equation_FStar.Seq.Properties.head", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "equation_with_fuel_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Prims.int",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_inversion", "int_typing",
-        "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "lemma_FStar.Seq.Base.lemma_eq_intro",
-        "lemma_FStar.Seq.Base.lemma_index_app1",
-        "lemma_FStar.Seq.Base.lemma_index_create",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_7fe452dfd266b5ee1befa1ad6261d242",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "token_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.length", "typing_FStar.Seq.Base.create",
-        "typing_FStar.Seq.Base.empty", "typing_FStar.Seq.Properties.tail"
-      ],
-      0,
-      "0e3d9e2156d22bc08e072514f8d3dc2c"
+      "f858fe3e587e04bdcd78d7bdf30b468b"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_of_list_index",
@@ -5105,7 +5051,7 @@
         "unit_typing"
       ],
       0,
-      "ab87fba7a1e6ce42a63cf30a4e6a0467"
+      "87fe9819d3fcca78bd40de8a843eb58c"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_of_list_index",
@@ -5116,49 +5062,40 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "binder_x_4f4cd09e8a1b40f7b940281c0731cdef_3",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "disc_equation_Prims.Cons", "equation_FStar.List.Tot.Base.hd",
+        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl",
-        "equation_FStar.Seq.Base.op_At_Bar", "equation_Prims.nat",
+        "equation_FStar.Seq.Properties.cons",
+        "equation_FStar.Seq.Properties.head", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "equation_with_fuel_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
         "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_index_app1",
         "lemma_FStar.Seq.Base.lemma_index_app2",
-        "lemma_FStar.Seq.Base.lemma_index_create",
         "lemma_FStar.Seq.Base.lemma_len_append",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_03127b5d59ee3055620018693b4264e8",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3cfaf837c90eb9e6a6ed98cdd829dbd1",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "subterm_ordering_Prims.Cons",
-        "token_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
-        "typing_FStar.Seq.Base.create",
+        "subterm_ordering_Prims.Cons", "typing_FStar.Seq.Base.create",
         "typing_FStar.Seq.Properties.seq_of_list", "unit_inversion",
         "unit_typing"
       ],
       0,
-      "6d8b1747b32ef5d365d85aea4abe4b54"
+      "4182fd27f0a1094e3ca322b4ac01be4a"
     ],
     [
       "FStar.Seq.Properties.seq_of_list_tl",
@@ -5180,7 +5117,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "d3b9562b2a818f93883320f493c09014"
+      "4ec69e06a49edb47603dd5813183adb6"
     ],
     [
       "FStar.Seq.Properties.mem_seq_of_list",
@@ -5240,7 +5177,7 @@
         "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "e3fe3726d289862231d9cc50e8f3ac91"
+      "453280f2e0223a06d4f10a78d536f657"
     ],
     [
       "FStar.Seq.Properties.explode_and",
@@ -5268,7 +5205,7 @@
         "typing_FStar.List.Tot.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "635034e0f8f011d611ad208379c4498a"
+      "7d6615b9671e95440b72e97cc7dfb6bf"
     ],
     [
       "FStar.Seq.Properties.intro_of_list'",
@@ -5285,7 +5222,7 @@
         "unit_typing"
       ],
       0,
-      "a740ef68ccda2a301e1de5d8027c15ec"
+      "321d61d4511bd4610c55bec04ac8b893"
     ],
     [
       "FStar.Seq.Properties.intro_of_list'",
@@ -5302,7 +5239,7 @@
         "unit_typing"
       ],
       0,
-      "485271f7f527a9b105382c817ec396f4"
+      "d0dd910513e2c1cd21c2833f5f310695"
     ],
     [
       "FStar.Seq.Properties.intro_of_list'",
@@ -5313,58 +5250,43 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.Seq.Properties.explode_and.fuel_instrumented",
-        "@fuel_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.Seq.Properties.explode_and.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_4",
         "binder_x_4ba5d02fdaa2a4e1a80f4f1dfd4982d6_3",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1", "boxlogical-validity",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
-        "equality_tok_Prims.LexTop@tok", "equation_FStar.Seq.Base.op_At_Bar",
+        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "eq2-interp",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eq2",
         "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.Seq.Properties.explode_and.fuel_instrumented",
-        "equation_with_fuel_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
-        "lemma_FStar.Seq.Base.lemma_create_len",
+        "fuel_guarded_inversion_Prims.equals", "int_inversion", "int_typing",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
-        "lemma_FStar.Seq.Base.lemma_index_app1",
-        "lemma_FStar.Seq.Base.lemma_index_app2",
-        "lemma_FStar.Seq.Base.lemma_index_create",
-        "lemma_FStar.Seq.Base.lemma_index_slice",
-        "lemma_FStar.Seq.Base.lemma_len_append",
+        "lemma_FStar.Seq.Base.lemma_eq_refl",
         "lemma_FStar.Seq.Base.lemma_len_slice",
+        "lemma_FStar.Seq.Properties.cons_index_slice",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_3d7b649663b4fab04cceb6e2c2c28fc1",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_03127b5d59ee3055620018693b4264e8",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_c0cfbe9eeebfb6939e2f5016a358bdf1",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "token_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.length", "typing_FStar.Seq.Base.create",
-        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.op_At_Bar",
+        "typing_FStar.List.Tot.Base.length", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice",
-        "typing_FStar.Seq.Properties.seq_of_list",
+        "typing_FStar.Seq.Properties.seq_of_list", "valid-squash-interp",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "25c4f0ffa724dd7e167a46c347db9eb8"
+      "eff9f797d728ab2858be8bc0e6c3ca3d"
     ],
     [
       "FStar.Seq.Properties.intro_of_list",
@@ -5392,7 +5314,7 @@
         "typing_FStar.Seq.Properties.seq_of_list"
       ],
       0,
-      "cf0a1f2779dcdc6233ca20b976d5ef8c"
+      "7ec2c775198bf86fcb751533197c8218"
     ],
     [
       "FStar.Seq.Properties.elim_of_list'",
@@ -5415,7 +5337,7 @@
         "unit_typing"
       ],
       0,
-      "6c5721d02189e228e299c47a2846dea5"
+      "f193ab42c897969aa6d6508637d6cbac"
     ],
     [
       "FStar.Seq.Properties.elim_of_list'",
@@ -5438,7 +5360,7 @@
         "unit_typing"
       ],
       0,
-      "417eaa173a352ff14870741a29b22e98"
+      "0d0701022e73fedc4d10a6679816f783"
     ],
     [
       "FStar.Seq.Properties.elim_of_list'",
@@ -5449,10 +5371,8 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.Seq.Properties.explode_and.fuel_instrumented",
-        "@fuel_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.Seq.Properties.explode_and.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_4",
         "binder_x_4ba5d02fdaa2a4e1a80f4f1dfd4982d6_3",
@@ -5473,9 +5393,10 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_3d7b649663b4fab04cceb6e2c2c28fc1",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
@@ -5485,7 +5406,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "287eab7cff772b34dd5d162d710cc532"
+      "a10d50c7ff6370e0dfea070aeafb5e5f"
     ],
     [
       "FStar.Seq.Properties.elim_of_list",
@@ -5515,7 +5436,7 @@
         "typing_FStar.Seq.Properties.seq_of_list"
       ],
       0,
-      "e694ea4462eeb90a0d29703d221723b9"
+      "48d1b46c36cc197d179dd747ee43de07"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_to_list_permutation",
@@ -5551,8 +5472,8 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_818c0cbc64a25eb4ffba63855c21c76a",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_6e093fc0f218cf4991f81354f07e1774",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_c4e3a92f9bd1d01a07e4fb66c5de2e7e",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -5561,7 +5482,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "fcc8b9d68d621c35ac8a7753fe7fe976"
+      "d44780916505c994f5a28555ac3d0257"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_of_list_permutation",
@@ -5604,7 +5525,7 @@
         "typing_FStar.Seq.Properties.seq_of_list"
       ],
       0,
-      "89cbff7e237f8a986cc6b8d28be8ddb2"
+      "b343a985cd0f3b64fb6ab5dcdff0a9c7"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_of_list_sorted",
@@ -5615,11 +5536,9 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Properties.sorted.fuel_instrumented",
-        "@fuel_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@fuel_correspondence_FStar.Seq.Properties.sorted.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Properties.sorted.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "@fuel_irrelevance_FStar.Seq.Properties.sorted.fuel_instrumented",
         "@query",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
@@ -5633,40 +5552,36 @@
         "bool_typing", "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl",
-        "equation_FStar.Seq.Base.op_At_Bar", "equation_Prims.nat",
+        "equation_FStar.Seq.Properties.cons",
+        "equation_FStar.Seq.Properties.head",
+        "equation_FStar.Seq.Properties.tail", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Properties.sorted.fuel_instrumented",
-        "equation_with_fuel_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "equation_with_fuel_FStar.Seq.Properties.sorted.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
         "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_index_app1",
-        "lemma_FStar.Seq.Base.lemma_index_app2",
-        "lemma_FStar.Seq.Base.lemma_index_create",
+        "lemma_FStar.Seq.Base.lemma_index_slice",
         "lemma_FStar.Seq.Base.lemma_len_append",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_03127b5d59ee3055620018693b4264e8",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3d7b649663b4fab04cceb6e2c2c28fc1",
+        "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_3d7b649663b4fab04cceb6e2c2c28fc1",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "token_correspondence_FStar.List.Tot.Properties.sorted.fuel_instrumented",
-        "token_correspondence_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
-        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.index",
-        "typing_FStar.Seq.Base.length",
+        "typing_FStar.List.Tot.Base.length", "typing_FStar.Seq.Base.create",
+        "typing_FStar.Seq.Properties.head",
         "typing_FStar.Seq.Properties.seq_of_list",
         "typing_FStar.Seq.Properties.sorted"
       ],
       0,
-      "42d74fd55a9b4b40f94c6454360792c9"
+      "6aa7498a1d9eb0e01466c336bac4f572"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_sortwith_correctness",
@@ -5695,7 +5610,7 @@
         "typing_FStar.Seq.Properties.sorted"
       ],
       0,
-      "07bc02aed467c13168c6cb00a5dedc87"
+      "7e2c3d9a08f8b6df97179d58f842f3f9"
     ],
     [
       "FStar.Seq.Properties.sort_lseq",
@@ -5721,7 +5636,7 @@
         "token_correspondence_FStar.List.Tot.Base.compare_of_bool"
       ],
       0,
-      "67d2fe43fb3bca0cf1f28039a32027f9"
+      "69fd323dc23642e2aaa4e963497392a1"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj_l",
@@ -5736,7 +5651,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a72a551cb439a49ed15e3537852f5eb4"
+      "b04013cb20f46731de5174681faf3880"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj_r",
@@ -5751,7 +5666,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "30da8091013eda3edeb4438b5813f877"
+      "9048be0811aa6f1aaeea45f7f6b78d5a"
     ],
     [
       "FStar.Seq.Properties.lemma_append_len_disj",
@@ -5765,7 +5680,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d59809a3b792ad8d81c6dee1fcd42ad4"
+      "d02827c798da2182cc0307539f9e9774"
     ],
     [
       "FStar.Seq.Properties.lemma_append_inj",
@@ -5779,7 +5694,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "03c16197685bd7139719abfb4388f948"
+      "c00b576c37c2e1d59eecd2130b365b40"
     ],
     [
       "FStar.Seq.Properties.head",
@@ -5791,7 +5706,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c"
       ],
       0,
-      "c05d8a23b0be2336bb7d951d2011a7fa"
+      "9c4489c3754bf0d840b9c993fb4211db"
     ],
     [
       "FStar.Seq.Properties.tail",
@@ -5808,7 +5723,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "43ff14f2c252343a9ee5ade86e70f41f"
+      "1987703a624bfdc76e6449d1128e1c50"
     ],
     [
       "FStar.Seq.Properties.lemma_head_append",
@@ -5826,7 +5741,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "dcb0420c8914d8b1692070dc6a06cd9a"
+      "ae3d5fb859d946463162cfa0f685e1d5"
     ],
     [
       "FStar.Seq.Properties.lemma_tail_append",
@@ -5844,7 +5759,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "83eee4afe411fb8f18be1111fa6435d1"
+      "680d351a9f26db2b30b9e7679c4df913"
     ],
     [
       "FStar.Seq.Properties.last",
@@ -5860,7 +5775,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "dc478e65b74521fd6e38c4a745e689f4"
+      "190d7dfa5311797ee44781c13c01fe2f"
     ],
     [
       "FStar.Seq.Properties.split",
@@ -5876,7 +5791,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "4e8c0577d9311c9dbd1b5cddccff238e"
+      "b11b4673c931f297831a760228daaab6"
     ],
     [
       "FStar.Seq.Properties.split_eq",
@@ -5885,7 +5800,7 @@
       0,
       [ "@query" ],
       0,
-      "a0384040e57ed21ed6886f2f63a4ada1"
+      "d12a55a98940ddfe03676f4258e0821f"
     ],
     [
       "FStar.Seq.Properties.count",
@@ -5906,13 +5821,13 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "62f193a9855b907832726ee5ee70c635"
+      "843d56890633fe629b21a738ba6bd290"
     ],
     [
       "FStar.Seq.Properties.index_mem",
@@ -5921,7 +5836,7 @@
       0,
       [ "@query" ],
       0,
-      "983855df4bebca0b03c90cd86d22e00e"
+      "9e9bfa872180c06127346d6fbff377af"
     ],
     [
       "FStar.Seq.Properties.index_mem",
@@ -5953,14 +5868,14 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Properties.mem",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "16dbc420a69b6ee0a26cca63f5024c6f"
+      "8ea37451516eb55d82e8f95d03c494cd"
     ],
     [
       "FStar.Seq.Properties.swap",
@@ -5976,7 +5891,7 @@
         "typing_FStar.Seq.Base.index"
       ],
       0,
-      "721e58785e97936092d8df00edb1547f"
+      "115b434b1815756ffc856f59736a9bd2"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_append",
@@ -5992,7 +5907,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "7b2c01c326260a4f109085fc8e11d0e4"
+      "b00b94cbf2a3650a0ead1c58d5ae563c"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_first_in_append",
@@ -6012,7 +5927,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "cff9eab37b2c5ac40bfe84da6c562910"
+      "c9e4edb4765909198b9b5602b7d42e5d"
     ],
     [
       "FStar.Seq.Properties.slice_upd",
@@ -6030,7 +5945,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0e1b2a0d1d96ace277f02f22a63d0db8"
+      "b0cf87bf866ce3edd873ca1a50d3254f"
     ],
     [
       "FStar.Seq.Properties.upd_slice",
@@ -6051,13 +5966,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "b158ce836e8da56055390c0e4f638f53"
+      "ada9db2c2b9d75c3ab5769365038e07e"
     ],
     [
       "FStar.Seq.Properties.lemma_tl",
@@ -6075,7 +5990,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "2d98e189bd0a30fac82f9fb9bf17af40"
+      "8b11fefa218f5d17a393e0a1ec91d36d"
     ],
     [
       "FStar.Seq.Properties.sorted",
@@ -6095,12 +6010,12 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "0fccb6507d25959ca0dc42bfb91af062"
+      "bb9ba599e22b1f4b3aeb755a6783b7ef"
     ],
     [
       "FStar.Seq.Properties.lemma_count_slice",
@@ -6118,7 +6033,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "8d281a926ac726edc8f6776e5fbfdc7d"
+      "82c22b3b0a2537d7f809bd4ecaa75a3a"
     ],
     [
       "FStar.Seq.Properties.split_5",
@@ -6132,12 +6047,12 @@
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_e8a9570a838c7ccf4088a18dea3b2824",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_95411abb9988392cbd2c79a9e5b56718",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "394c6330b3abfa080043deeab35d445c"
+      "5d7ed547cea1d92e13f1df3bbbcb0422"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes_aux_frag_eq",
@@ -6155,14 +6070,14 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_bbb4c04cf0d3499d5a984d9896e706ff",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "57c627f6669cd7442e2562167d205a39"
+      "59dc4f07e1024bd8383a7053fb0d4cd5"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes_aux",
@@ -6181,7 +6096,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f1d07f28adc208efdce50289738f746a"
+      "57ca87b0ae8c2459cdad5ac955202c77"
     ],
     [
       "FStar.Seq.Properties.permutation",
@@ -6195,7 +6110,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "349b61c2b8443e60b7dbb0c8b740b7da"
+      "f2f5e1acc819145879b265d5179ab2b5"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes",
@@ -6213,7 +6128,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f9e302f34830210dbfd4e5f546a7bba5"
+      "1884275fb53a12e2b3fe87773e834569"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_cons",
@@ -6226,11 +6141,11 @@
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "71ba22937d44255bb6457e62228ef5ed"
+      "56e794957bd7341b8ccdff768dd5cc8e"
     ],
     [
       "FStar.Seq.Properties.lemma_slice_snoc",
@@ -6245,13 +6160,13 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "b763d9efe5af6f982f432f2528a79921"
+      "012ed43812e62632418b4a3109bad109"
     ],
     [
       "FStar.Seq.Properties.lemma_ordering_lo_snoc",
@@ -6266,13 +6181,13 @@
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "b5c52ce0da49bf0e651d081d5b19408d"
+      "7a66e4b8955471a1ae6f7ca07f541f23"
     ],
     [
       "FStar.Seq.Properties.lemma_ordering_hi_cons",
@@ -6285,11 +6200,11 @@
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7451725a5364ce1033e85ab557a68ab9"
+      "3f79d7970450dfc1cab32e48f0e07d06"
     ],
     [
       "FStar.Seq.Properties.swap_frame_lo",
@@ -6306,13 +6221,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "248a7572e968984ea7b4b01974f923a9"
+      "2a8009a7133d87180f88649dfa7fc9d1"
     ],
     [
       "FStar.Seq.Properties.swap_frame_lo'",
@@ -6329,13 +6244,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a52713edd06bc36d78e7761fc70d5bec",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d0e7d574dacc7c344513e8dfc13c8a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "e24f72f6a4ccef09981d4fa3752813ad"
+      "0633ab740529aa297e4863f7f84ca335"
     ],
     [
       "FStar.Seq.Properties.swap_frame_hi",
@@ -6359,7 +6274,7 @@
         "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "4ff605d393b886c5bbc340429fa5fc18"
+      "2da11322cb9b157ab854db101a879d4f"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_slice_commute",
@@ -6377,14 +6292,14 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "22a81e558e3a1ce9f4120f365e41f9fd"
+      "1d344dd4f20078769c6f5b9ff6a7a53a"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_permutes_slice",
@@ -6400,14 +6315,14 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "53a22d9341b2bf09c380fd898ae003bc"
+      "33b6ee6a13e8a181cf62d692b6f48e60"
     ],
     [
       "FStar.Seq.Properties.splice",
@@ -6421,7 +6336,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "824e65eb0480f56af44c250310bf2c5d"
+      "6fff1109fda70282b7f8ed52ab6d04bf"
     ],
     [
       "FStar.Seq.Properties.splice",
@@ -6439,7 +6354,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f967b17cb61ad1dc9c325265bc3f23bc"
+      "ecba7763034f84cba0ea11ca6a3e8419"
     ],
     [
       "FStar.Seq.Properties.replace_subseq",
@@ -6457,7 +6372,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "3901b3fe644e823c428f6e19ad3fa6d8"
+      "e4fa3fb1c6d066787887c1e445e08fa6"
     ],
     [
       "FStar.Seq.Properties.splice_refl",
@@ -6469,7 +6384,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "7db5c7899e95a37fbbd4e35271b297f0"
+      "54661dac40c972eb73b9cf6eec34c663"
     ],
     [
       "FStar.Seq.Properties.lemma_swap_splice",
@@ -6484,13 +6399,13 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.upd"
       ],
       0,
-      "71ea153e2ffc94ef67a39619b03a4c7c"
+      "7941a5ac19f9a4487cf60d581f9fef2b"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_frame_hi",
@@ -6505,13 +6420,13 @@
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "dbdb376669007aa91391d02823403ce8"
+      "350748a8cade97c0ea53a5b2efe4cf6e"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_frame_lo",
@@ -6525,14 +6440,14 @@
         "int_inversion", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_85e9bb54d06cdc6388e1f9b9ed33ad11",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ba74ab728d1101f29aebe14f3f514439"
+      "49bb3b338b6f330b700da69496395b93"
     ],
     [
       "FStar.Seq.Properties.lemma_tail_slice",
@@ -6547,12 +6462,12 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3f81f150586c78937ac8dca7f1770d8d",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_76fd7eada4e9e8164ba41d1015ae7cd2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "6b568ce97d910619bbae662eef3f2479"
+      "a98b08cd5bc51ebd3a1f694eb351c130"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_frame_right",
@@ -6566,12 +6481,12 @@
         "int_inversion", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_4639d389381bee5cf8cf77b7a6585074",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_17e053ccd37bcc04a722364eb31328e1",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_9cb05e328b51d39648aa813d8339694d",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b0f34f4ca6a430b456a78060361d8724"
+      "eada3b9eba8ed65938a9bb9fe616a09a"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_frame_left",
@@ -6589,7 +6504,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "06729ca30f233f3daa97aa895100319c"
+      "163cdfd88fda74e4607313d3f5f727c1"
     ],
     [
       "FStar.Seq.Properties.lemma_trans_frame",
@@ -6607,7 +6522,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "711e327aaf247e6e0e0d4bd769a17c5f"
+      "61f2ee4af8f2d30198314c36efb325fc"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_perm_left",
@@ -6626,7 +6541,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "36e6037c865542ae877ff8bea65193e9"
+      "d0315c4b31c42f35eea3069700a92178"
     ],
     [
       "FStar.Seq.Properties.lemma_weaken_perm_right",
@@ -6645,7 +6560,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5d696096d31fe76c1a29f3578790314f"
+      "8fd36deeb9c5c11514c9d9e93961fd95"
     ],
     [
       "FStar.Seq.Properties.lemma_trans_perm",
@@ -6661,7 +6576,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "00d427bdf0376432c0cd8b61cfe6ea5b"
+      "59b8fff7fbac0163f893a2cd46af19d8"
     ],
     [
       "FStar.Seq.Properties.lemma_tail_snoc",
@@ -6682,7 +6597,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "3323862e7a06b0c19e0a30fbf9a767b5"
+      "e7031db871f6c5f474659d89b186feeb"
     ],
     [
       "FStar.Seq.Properties.find_l",
@@ -6706,12 +6621,12 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "40e80bbf4323c0f032850c6230695d79"
+      "f61c522166f8e1d73a6f3f6949aa46d6"
     ],
     [
       "FStar.Seq.Properties.ghost_find_l",
@@ -6735,12 +6650,12 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "61a2960324e61826d92db0da52cb368b"
+      "ecf5fb83fc25bb71e9a4aa6a80c66f3c"
     ],
     [
       "FStar.Seq.Properties.find_append_some",
@@ -6756,7 +6671,7 @@
         "typing_FStar.Seq.Properties.find_l"
       ],
       0,
-      "ba1a4d986645107f5879ead2516f33ea"
+      "4eb63c0473811e0706d42f28d87a6175"
     ],
     [
       "FStar.Seq.Properties.find_append_none",
@@ -6765,7 +6680,7 @@
       1,
       [ "@query" ],
       0,
-      "65dc5a3f8857aec9e1f286f555d184b8"
+      "f57e129ce79d8e78db7da53b35e15018"
     ],
     [
       "FStar.Seq.Properties.find_append_none_s2",
@@ -6774,7 +6689,7 @@
       1,
       [ "@query" ],
       0,
-      "0360515e74cbca463d236d6558d512ea"
+      "fb4ac6e963bc81249cd99ec6bcba62e0"
     ],
     [
       "FStar.Seq.Properties.find_snoc",
@@ -6795,7 +6710,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "e97ed5feea07dc66a149fd64abe8ae91"
+      "eb4ee0ae2a7be542d065770b1bae612a"
     ],
     [
       "FStar.Seq.Properties.un_snoc",
@@ -6833,14 +6748,14 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_3421154546287b0f0c012dd3d63b4945",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5739deb21d8cba89243fec27b35b7ef0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "d3f3655dc2507fcbfdd8da503d78c05a"
+      "34e1dfbb9fbdbe152d6c3485a1fdb91d"
     ],
     [
       "FStar.Seq.Properties.un_snoc_snoc",
@@ -6858,7 +6773,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "3b242f4154f9c2ececdd8ee3527013c9"
+      "a75b09b32c3209691e6863b211f84cb0"
     ],
     [
       "FStar.Seq.Properties.find_r",
@@ -6898,7 +6813,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "dab11cdd270fbc9c4bd09d12f4fcd2ab"
+      "d69c3193b3530c41be4d04fb67de7576"
     ],
     [
       "FStar.Seq.Properties.seq_find_aux",
@@ -6910,10 +6825,10 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Prims.nat",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_186855239f20473b65ae3954c69c7b3d"
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_7b4eb54cd0374a421c41adf7520a179a"
       ],
       0,
-      "6b69734481f302512cacc95884f22dcd"
+      "47d62f51040c94aba556cf8c54ff5de2"
     ],
     [
       "FStar.Seq.Properties.seq_find_aux",
@@ -6948,7 +6863,7 @@
         "typing_FStar.Seq.Base.index", "well-founded-ordering-on-nat"
       ],
       0,
-      "0c02f7645dc5547afc7277fd712fc62c"
+      "ecd7304e608607681d09cf7fb4bddf52"
     ],
     [
       "FStar.Seq.Properties.seq_find",
@@ -6960,7 +6875,7 @@
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b9d3ebb8a91fb397785fd8a66c962cd7"
       ],
       0,
-      "de776a160ba46dc0b5b2eaf771220b45"
+      "0e6322e6263c5b6f5e1ad772fd591842"
     ],
     [
       "FStar.Seq.Properties.find_mem",
@@ -6969,7 +6884,7 @@
       1,
       [ "@query" ],
       0,
-      "c5482182398a67f57bb7cf240afb19f7"
+      "b9547b15860bde210a3149ffb1c8e126"
     ],
     [
       "FStar.Seq.Properties.for_all",
@@ -6993,7 +6908,7 @@
         "typing_FStar.Seq.Properties_Tm_abs_646eec380c4b703a82e093534123df6f"
       ],
       0,
-      "d882d9e835b5354d375e8be99993f332"
+      "ce13ad8b5d883164f82c98f0b7d77ae6"
     ],
     [
       "FStar.Seq.Properties.seq_to_list",
@@ -7007,7 +6922,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ca07f9edb9d3720297940a4dee256dbc"
+      "6e7b99834131475124a1612c2840a240"
     ],
     [
       "FStar.Seq.Properties.seq_to_list",
@@ -7037,8 +6952,8 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_aadd8c6d48b57bcef02d12546bc7cdae",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_111aeeecc2d4c2db1fdb54b983455c4b",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_ab78a70a4bd0f3bbca3a8c1cea845cc0",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -7046,25 +6961,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "839e2470c081483f8ddf817df86b3e3d"
+      "624a04cf683d7696e6913c0dfc14de64"
     ],
     [
       "FStar.Seq.Properties.seq_of_list",
-      4,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "d04e02b6317c9b0b59ad2557858272b0"
-    ],
-    [
-      "FStar.Seq.Properties.seq_of_list",
-      5,
+      3,
       1,
       1,
       [
@@ -7094,272 +6995,41 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.Seq.Base.create"
       ],
       0,
-      "91575ae018fcebefd140e291d8b36fcf"
+      "1668c5f79a026ade18b9ac0384dbf926"
     ],
     [
-      "FStar.Seq.Properties.createL_post",
-      2,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "1bb570b08a58383145b34852de6dde95"
-    ],
-    [
-      "FStar.Seq.Properties.createL",
-      2,
+      "FStar.Seq.Properties.seq_of_list",
+      4,
       1,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "equation_Prims.eqtype", "equation_Prims.nat",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_FStar.Seq.Base.op_At_Bar", "equation_Prims.eqtype",
+        "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "primitive_Prims.op_Equality",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "9275ed3bb5d9ca0c5a58f2fe607898be"
-    ],
-    [
-      "FStar.Seq.Properties.createL",
-      3,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "34edc634ff52fd8889028a4541575ad9"
-    ],
-    [
-      "FStar.Seq.Properties.lemma_index_is_nth",
-      4,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.Seq.Properties.seq_to_list.fuel_instrumented",
-        "@query",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_c4e3a92f9bd1d01a07e4fb66c5de2e7e",
-        "typing_FStar.Seq.Properties.seq_to_list"
-      ],
-      0,
-      "7e9b4a8e933387e95b2625c74a58a6e3"
-    ],
-    [
-      "FStar.Seq.Properties.lemma_find_l_contains",
-      3,
-      1,
-      1,
-      [ "@query" ],
-      0,
-      "f9957c85e31c0e30b4a3cdf27582f46a"
-    ],
-    [
-      "FStar.Seq.Properties.append_slices",
-      2,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat", "int_inversion", "int_typing",
-        "lemma_FStar.Seq.Base.lemma_len_append",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "ddafb15b85c7b08cca795bb71539d572"
-    ],
-    [
-      "FStar.Seq.Properties.head_cons",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.Seq.Properties.cons", "equation_Prims.nat",
         "int_typing", "lemma_FStar.Seq.Base.lemma_create_len",
         "lemma_FStar.Seq.Base.lemma_len_append",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "c6d728b0adac40b474dc43fc1ba0b202"
-    ],
-    [
-      "FStar.Seq.Properties.index_cons_l",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.Seq.Properties.cons", "equation_Prims.nat",
-        "int_typing", "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_len_append",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "a6308f8201bdee8cdd8788d7d0430511"
-    ],
-    [
-      "FStar.Seq.Properties.index_cons_r",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.Seq.Properties.cons", "equation_Prims.nat",
-        "int_inversion", "int_typing",
-        "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_len_append",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b8d5985661392169635ec5799ecf6768",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d70e4d424343b9276244f42d95a631bd",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
+        "subterm_ordering_Prims.Cons", "typing_FStar.Seq.Base.create"
       ],
       0,
-      "77c40f537e46f53b18b4ab39d22cb413"
-    ],
-    [
-      "FStar.Seq.Properties.index_tail",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.Seq.Properties.tail", "equation_Prims.nat",
-        "int_inversion", "int_typing",
-        "lemma_FStar.Seq.Base.lemma_len_slice",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_520b07e3f7a0a0a12b40968b63b25b73",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "d4f4ec5afa2a7cfc5ac84e2163df503c"
-    ],
-    [
-      "FStar.Seq.Properties.snoc_slice_index",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_f874e2190eee7a2db7ea0e274c3085a5",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "80718ff7727fa51a47e519aa0167ef88"
-    ],
-    [
-      "FStar.Seq.Properties.cons_index_slice",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_c0cfbe9eeebfb6939e2f5016a358bdf1",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "bc9a6f5bc000e527f90fe43dad10d83c"
-    ],
-    [
-      "FStar.Seq.Properties.slice_is_empty",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_cd046bc4a887ee7e1b05946e0bf5772b",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "7bd84157cb3285254fdcd4bddc1c7e0c"
-    ],
-    [
-      "FStar.Seq.Properties.slice_length",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "40ef40004e39677bd3dfdef30fd4d6fe"
-    ],
-    [
-      "FStar.Seq.Properties.slice_slice",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat", "int_inversion",
-        "lemma_FStar.Seq.Base.lemma_len_slice",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_c6cfdb21fbfbcef72f9db00f2b9c8fb2",
-        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_528d1ac7a4a801fe55aa0f436f85ad2a",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "aee9f0a24764e8e74528e5e503f2c8ec"
+      "aef5dde7e6e67ca87039d8a0f4906b1e"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_of_list_induction",
@@ -7389,7 +7059,272 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "8914118defbeaacc822f9a4448472c18"
+      "8c062adf3447af1ab404f737551c6e6f"
+    ],
+    [
+      "FStar.Seq.Properties.createL_post",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "ef07c33d861897127e2fc258166d6a4a"
+    ],
+    [
+      "FStar.Seq.Properties.createL",
+      2,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@query", "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "primitive_Prims.op_Equality",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "08ec4e55118f7eb1d32a88640617dd2b"
+    ],
+    [
+      "FStar.Seq.Properties.createL",
+      3,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "16b569dd2796f76a4bc02ed7bdd5f658"
+    ],
+    [
+      "FStar.Seq.Properties.lemma_index_is_nth",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.Seq.Properties.seq_to_list.fuel_instrumented",
+        "@query",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_c4e3a92f9bd1d01a07e4fb66c5de2e7e",
+        "typing_FStar.Seq.Properties.seq_to_list"
+      ],
+      0,
+      "cfe8b2503461d14b0a528251e2c9ed30"
+    ],
+    [
+      "FStar.Seq.Properties.lemma_find_l_contains",
+      3,
+      1,
+      1,
+      [ "@query" ],
+      0,
+      "25714fe6a023e34e23b8dac6e9a743dc"
+    ],
+    [
+      "FStar.Seq.Properties.append_slices",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat", "int_inversion", "int_typing",
+        "lemma_FStar.Seq.Base.lemma_len_append",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "31d322780136989c5b728b9cb63f58f5"
+    ],
+    [
+      "FStar.Seq.Properties.head_cons",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Seq.Properties.cons", "equation_Prims.nat",
+        "int_typing", "lemma_FStar.Seq.Base.lemma_create_len",
+        "lemma_FStar.Seq.Base.lemma_len_append",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "6c0ab1a831b7a1ceb38a4911647e5f3e"
+    ],
+    [
+      "FStar.Seq.Properties.index_cons_l",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Seq.Properties.cons", "equation_Prims.nat",
+        "int_typing", "lemma_FStar.Seq.Base.lemma_create_len",
+        "lemma_FStar.Seq.Base.lemma_len_append",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "3639ae8b257a1f875e08fab432c1db33"
+    ],
+    [
+      "FStar.Seq.Properties.index_cons_r",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Seq.Properties.cons", "equation_Prims.nat",
+        "int_inversion", "int_typing",
+        "lemma_FStar.Seq.Base.lemma_create_len",
+        "lemma_FStar.Seq.Base.lemma_len_append",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_b8d5985661392169635ec5799ecf6768",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "a675ec18e8bc3d86a707263c413e9c16"
+    ],
+    [
+      "FStar.Seq.Properties.index_tail",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Seq.Properties.tail", "equation_Prims.nat",
+        "int_inversion", "int_typing",
+        "lemma_FStar.Seq.Base.lemma_len_slice",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_167ef714932ec832fb671890fc3eee6c",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_520b07e3f7a0a0a12b40968b63b25b73",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "6c87e57f2b438e9e83ea75191707d2c7"
+    ],
+    [
+      "FStar.Seq.Properties.snoc_slice_index",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_f874e2190eee7a2db7ea0e274c3085a5",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "9adb249e265c588de57c5f946a7a1e52"
+    ],
+    [
+      "FStar.Seq.Properties.cons_index_slice",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_c0cfbe9eeebfb6939e2f5016a358bdf1",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "32eabcd78c9ede766abf32d29066ef43"
+    ],
+    [
+      "FStar.Seq.Properties.slice_is_empty",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_cd046bc4a887ee7e1b05946e0bf5772b",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "daf4b801f0c7bc2ba4356b3709984781"
+    ],
+    [
+      "FStar.Seq.Properties.slice_length",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "3d09d092c264d7a886d8c7dcc0379c77"
+    ],
+    [
+      "FStar.Seq.Properties.slice_slice",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat", "int_inversion",
+        "lemma_FStar.Seq.Base.lemma_len_slice",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_e9e0c61f18da5d850826be7c2c2d1d18",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_528d1ac7a4a801fe55aa0f436f85ad2a",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "f175c34a1b6a184d4bea90952d842099"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_of_list_index",
@@ -7404,7 +7339,7 @@
         "typing_FStar.Seq.Properties.seq_of_list"
       ],
       0,
-      "e168ad35b0f1d97ad35ec9af32a67c8b"
+      "b1005b2ba181e808152b84cc7cf9e66c"
     ],
     [
       "FStar.Seq.Properties.seq_of_list_tl",
@@ -7424,7 +7359,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "6436ca14adfbc8cd9348e1bab759b3d3"
+      "70e7b480e170745d39ce29668cabe830"
     ],
     [
       "FStar.Seq.Properties.explode_and",
@@ -7452,7 +7387,7 @@
         "typing_FStar.List.Tot.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "d8dcd7577018272d01e943d123f3ecc6"
+      "b28b4840672374dae0b9f771775124de"
     ],
     [
       "FStar.Seq.Properties.intro_of_list'",
@@ -7469,7 +7404,7 @@
         "unit_typing"
       ],
       0,
-      "24ba04caa63d122585c70cc6ce782230"
+      "e3eacab9fe85b179f5fe354f5d9d4ea2"
     ],
     [
       "FStar.Seq.Properties.intro_of_list",
@@ -7487,7 +7422,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "4db895bdf7308b11aef43f06a9fa212c"
+      "827d7efc1d29c3f4cafdf8d27cad822e"
     ],
     [
       "FStar.Seq.Properties.elim_of_list'",
@@ -7510,7 +7445,7 @@
         "unit_typing"
       ],
       0,
-      "0f17b47d3ad7c0c81749bbf179df3d3e"
+      "94fdaf1c82d63b677adacc534f7e6aa7"
     ],
     [
       "FStar.Seq.Properties.elim_of_list",
@@ -7529,7 +7464,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "a5f9e71e53b5c079d2fa16c93c84279a"
+      "d899d2e11ddf7c740a1a91fb50de1309"
     ],
     [
       "FStar.Seq.Properties.sort_lseq",
@@ -7555,7 +7490,7 @@
         "token_correspondence_FStar.List.Tot.Base.compare_of_bool"
       ],
       0,
-      "9938b4b8c433f70f1633ee10a5486a85"
+      "512edc44b1294ad08b315aff85e65e38"
     ]
   ]
 ]
