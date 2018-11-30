@@ -654,7 +654,7 @@ let encode_top_level_let :
                                 (Print.term_to_string body);
                 (* Encode binders *)
                 let vars, _guards, env', binder_decls, _ = encode_binders None binders env' in
-                let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
+                let app = maybe_curry_fvb (FStar.Syntax.Util.range_of_lbname lbn) fvb (List.map mkFreeV vars) in
                 let pat, app, (body, decls2) =
                   let is_logical =
                     match (SS.compress t_body).n with
