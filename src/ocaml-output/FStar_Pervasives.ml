@@ -125,6 +125,7 @@ type __internal_ocaml_attributes =
   | CConst of Prims.string 
   | CCConv of Prims.string 
   | CAbstractStruct 
+  | CIfDef 
 let (uu___is_PpxDerivingShow : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
     match projectee with | PpxDerivingShow  -> true | uu____1854 -> false
@@ -188,6 +189,10 @@ let (__proj__CCConv__item___0 : __internal_ocaml_attributes -> Prims.string)
 let (uu___is_CAbstractStruct : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
     match projectee with | CAbstractStruct  -> true | uu____2053 -> false
+  
+let (uu___is_CIfDef : __internal_ocaml_attributes -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | CIfDef  -> true | uu____2064 -> false
   
 
 
