@@ -239,32 +239,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid = mkApp("Valid", [l_not_a]) in
         let not_valid_a = mkNot <| mkApp("Valid", [a]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
-    // let mk_forall_interp : env -> string -> term -> decls_t = fun env for_all tt ->
-    //     let aa = ("a", Term_sort) in
-    //     let bb = ("b", Term_sort) in
-    //     let xx = ("x", Term_sort) in
-    //     let a = mkFreeV aa in
-    //     let b = mkFreeV bb in
-    //     let x = mkFreeV xx in
-    //     let l_forall_a_b = mkApp(for_all, [a;b]) in
-    //     let valid = mkApp("Valid", [l_forall_a_b]) in
-    //     let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
-    //     [Util.mkAssume(mkForall (Env.get_range env) ([[l_forall_a_b]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
-    //                  Some "forall interpretation",
-    //                  "forall-interp")] in
-    // let mk_exists_interp : env -> string -> term -> decls_t = fun env for_some tt ->
-    //     let aa = ("a", Term_sort) in
-    //     let bb = ("b", Term_sort) in
-    //     let xx = ("x", Term_sort) in
-    //     let a = mkFreeV aa in
-    //     let b = mkFreeV bb in
-    //     let x = mkFreeV xx in
-    //     let l_exists_a_b = mkApp(for_some, [a;b]) in
-    //     let valid = mkApp("Valid", [l_exists_a_b]) in
-    //     let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
-    //     [Util.mkAssume(mkForall (Env.get_range env) ([[l_exists_a_b]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
-    //                  Some "exists interpretation",
-    //                  "exists-interp")] in
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = mkApp(range, []) in
         [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
@@ -531,7 +505,7 @@ let encode_top_level_let :
     let destruct_bound_function flid t_norm e
       : (S.binders    //arguments of the lambda abstraction
       * S.term        //body of the lambda abstraction
-      * S.binders     //arguments of the function type, length of this component is equal to the first
+      //* S.binders     //arguments of the function type, length of this component is equal to the first
       * S.comp)       //result comp
       * bool          //if set, we should generate a curried application of f
     =
@@ -541,7 +515,10 @@ let encode_top_level_let :
           then S.mk_Total <| reify_comp ({env.tcenv with lax = true}) c U_unknown
           else c
       in
-
+      let subst_comp formals actuals comp =
+          let subst = List.map2 (fun (x, _) (b, _) -> NT(x, S.bv_to_name b)) formals actuals in
+          SS.subst_comp subst comp
+      in
       let rec aux norm t_norm =
         let binders, body, lopt = U.abs_formals e in
         match binders with
@@ -554,15 +531,15 @@ let encode_top_level_let :
               let tres_comp = get_result_comp c in
               if nformals < nbinders && U.is_total_comp c (* explicit currying *)
               then let bs0, rest = BU.first_N nformals binders in
-                      let c =
-                          let subst = List.map2 (fun (x, _) (b, _) -> NT(x, S.bv_to_name b)) formals bs0 in
-                          SS.subst_comp subst c in
+                      //let c =
+                      //    let subst = List.map2 (fun (x, _) (b, _) -> NT(x, S.bv_to_name b)) formals bs0 in
+                      //    SS.subst_comp subst c in
                       let body = U.abs rest body lopt in
-                      (bs0, body, bs0, tres_comp), false
+                      (bs0, body, subst_comp formals bs0 tres_comp), false
               else if nformals > nbinders (* eta-expand before translating it *)
               then let binders, body = eta_expand binders formals body (U.comp_result tres_comp) in
-                      (binders, body, formals, tres_comp), false
-              else (binders, body, formals, c), false
+                      (binders, body, subst_comp formals binders tres_comp), false
+              else (binders, body, subst_comp formals binders c), false
 
             | Tm_refine(x, _) ->
                 fst (aux norm x.sort), true
@@ -587,9 +564,9 @@ let encode_top_level_let :
                 let formals, c = SS.open_comp formals c in
                 let tres_comp = get_result_comp c in
                 let binders, body = eta_expand [] formals e (U.comp_result tres_comp) in
-                (binders, body, formals, tres_comp), false
+                (binders, body, subst_comp formals binders tres_comp), false
               | Tm_refine (bv, _) -> aux' bv.sort
-              | _ -> ([], e, [], S.mk_Total t_norm), false
+              | _ -> ([], e, S.mk_Total t_norm), false
             in
             aux' t_norm
           end
@@ -671,7 +648,7 @@ let encode_top_level_let :
                 in
 
                 (* Open binders *)
-                let (binders, body, _, t_body_comp), curry = destruct_bound_function flid t_norm e in
+                let (binders, body, t_body_comp), curry = destruct_bound_function flid t_norm e in
                 let t_body = U.comp_result t_body_comp in
                 if Env.debug env.tcenv <| Options.Other "SMTEncoding"
                 then BU.print2 "Encoding let : binders=[%s], body=%s\n"
@@ -748,13 +725,12 @@ let encode_top_level_let :
                         (Print.term_to_string e);
 
             (* Open binders *)
-            let (binders, body, formals, tres_comp), curry = destruct_bound_function fvb.fvar_lid t_norm e in
-            let tres = U.comp_result tres_comp in
+            let (binders, body, tres_comp), curry = destruct_bound_function fvb.fvar_lid t_norm e in
+            let pre_opt, tres = TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp in
             if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
-            then BU.print4 "Encoding let rec: binders=[%s], body=%s, formals=[%s], tres=%s\n"
+            then BU.print3 "Encoding let rec: binders=[%s], body=%s, tres=%s\n"
                               (Print.binders_to_string ", " binders)
                               (Print.term_to_string body)
-                              (Print.binders_to_string ", " formals)
                               (Print.term_to_string tres);
             let _ =
                 if curry
@@ -765,7 +741,6 @@ let encode_top_level_let :
 
             let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
             let guard, guard_decls =
-                let pre_opt, _ = TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp in
                 match pre_opt with
                 | None -> mk_and_l guards, []
                 | Some pre ->
@@ -801,18 +776,17 @@ let encode_top_level_let :
                                     Some "Fuel irrelevance",
                                     ("@fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
-              let vars, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
-              let vars_tm = List.map mkFreeV vars in
               let gapp = mkApp(g, fuel_tm::vars_tm) in
               let tok_corr =
                 let tok_app = mk_Apply (mkFreeV (gtok, Term_sort)) (fuel::vars) in
                 Util.mkAssume(mkForall (U.range_of_lbname lbn) ([[tok_app]], fuel::vars, mkEq(tok_app, gapp)),
-                            Some "Fuel token correspondence",
-                            ("fuel_token_correspondence_"^gtok))
+                              Some "Fuel token correspondence",
+                              ("fuel_token_correspondence_"^gtok))
               in
               let aux_decls, typing_corr =
-                let g_typing, d3 = encode_term_pred None tres env gapp in
-                d3, [Util.mkAssume(mkForall (U.range_of_lbname lbn) ([[gapp]], fuel::vars, mkImp(mk_and_l v_guards, g_typing)),
+                let g_typing, d3 = encode_term_pred None tres env' gapp in
+                d3, [Util.mkAssume(mkForall (U.range_of_lbname lbn)
+                                            ([[gapp]], fuel::vars, mkImp(guard, g_typing)),
                                     Some "Typing correspondence of token to term",
                                     ("token_correspondence_"^g))]
               in
