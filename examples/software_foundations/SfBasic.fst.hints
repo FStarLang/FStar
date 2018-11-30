@@ -345,7 +345,7 @@
         "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "0fef8f9e3203cd36ede1d43f605c499a"
+      "380ba57ece590c0a64819e754bfcdba6"
     ],
     [
       "SfBasic.minus",
@@ -432,7 +432,7 @@
         "projection_inverse_SfBasic.S__0", "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "8434b11a914dc92f2017511558f3f582"
+      "ec7b3ea349b2f413858515fc4e66b84d"
     ],
     [
       "SfBasic.test_ble_nat2",
@@ -460,7 +460,7 @@
         "projection_inverse_SfBasic.S__0", "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "79e49cc64e8a42f3f8d7ffc3f55f6f67"
+      "d782bc5b54bee445428cf0401de8d3ed"
     ],
     [
       "SfBasic.test_ble_nat3",
@@ -488,7 +488,7 @@
         "projection_inverse_SfBasic.S__0", "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "1852d9271a461b7dc2064b828bb7a906"
+      "04c2a9f5add0d7f02ad2ec20b954b77f"
     ],
     [
       "SfBasic.plus_O_n",
@@ -512,7 +512,7 @@
         "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "f2f7e7ca7f5b8dc604dce9e2a03405f7"
+      "212a19ca72acf1a940f7567a0277699e"
     ],
     [
       "SfBasic.plus_id_example",
@@ -554,7 +554,7 @@
         "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "327d1ac35da350c4e243e28d599d12b1"
+      "3f977ecc41f624351d81dc0f19855ac6"
     ],
     [
       "SfBasic.plus_1_neq_0",
@@ -585,7 +585,7 @@
         "typing_SfBasic.plus", "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "655396fb01f143873ddc96300383a8fd"
+      "2c35182964d17b907bffb744d72d1556"
     ],
     [
       "SfBasic.negb_involutive",
@@ -693,7 +693,7 @@
         "typing_SfBasic.plus", "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "561fd923ffb8ff5aeb6484507fa96159"
+      "7fa689ff5781352d13f5dcf9f5dc89de"
     ],
     [
       "SfBasic.plus_comm",
@@ -735,7 +735,7 @@
         "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "fe4592a5f2f06d90bfaf66cae809158a"
+      "5dd4e1130aadfef0454ee300666b7ad1"
     ],
     [
       "SfBasic.plus_rearrange",

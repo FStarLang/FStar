@@ -11,7 +11,7 @@
         "refinement_interpretation_Bug590_Tm_refine_de9aeb070296eed20d879692d0254af0"
       ],
       0,
-      "eb7b0ad3dd7815404572c70c349f5e8b"
+      "c47cb73d26363ce8a42e96eb4384b6b8"
     ],
     [
       "Bug590.coerce",
@@ -30,7 +30,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9f6f4a8940a36e200135563f9d066e53"
+      "c0f471c459164d7fa5835281a24c5e39"
     ],
     [
       "Bug590.blah2",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "85b5a66c7a3d758c40463680dce53e0c"
+      "d22a9fb22ba331e8836ae6f67e63d4e7"
     ],
     [
       "Bug590.flatten_lemma",
@@ -68,7 +68,7 @@
         "typing_Bug590.coerce"
       ],
       0,
-      "3368b18762e61122dfc9a554b017069a"
+      "837197742a5f02cdd6935e1851064c07"
     ]
   ]
 ]
