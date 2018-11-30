@@ -8,6 +8,7 @@ open LowStar.BufferOps
 open LowStar.Modifies
 open Mem_eq
 open Relations
+open FStar.UInt32
 
 module H = FStar.Monotonic.Heap
 module B = LowStar.Buffer
@@ -148,6 +149,24 @@ instance fib_lens : state_lens lstate #fib_st state =
 
 new_effect FIB = HIGH_h state 
 
+// TODO : Can we define the Hoare version of the HIGH_h effect before instantiaton?
+effect Fib (a:Type) (pre : hpre #state) (post : hpost #state a) = FIB a (as_wp pre post)
+
+
+// for combinator. Annoyingly we can't seem to define this for the general, uninstantiated effect.
+let rec for (inv : state -> int -> Type0)
+            (f : (i:int) -> Fib unit (requires (fun h0 -> inv h0 i))
+                                  (ensures (fun h0 _ h1 -> inv h1 (i + 1)))) 
+            (lo : int) (hi : int{lo <= hi}) 
+: Fib unit (requires (fun h0 -> inv h0 lo))
+           (ensures (fun h0 _ h1 -> inv h1 hi)) (decreases (hi - lo)) = 
+  if lo = hi then ()
+  else 
+    (f lo; for inv f (lo + 1) hi)
+
+
+(* Other lenses *)
+
 instance focus_i (i:nat) : lens state mint = 
 { put = (fun s m -> if i = 0 then (m, snd s) else (fst s, m));
   get = (fun s -> if i = 0 then fst s else snd s);
@@ -244,9 +263,46 @@ instance fib_lens_i (i : nat) : state_lens lstate #fib_st mint =
   low_low =  put_put_i i 
   } 
 
-// instance fib_commutes (i : nat) : commutes f
 
-//  (* Shorthand for actions *) 
-// let get (i : nat) () : FIB mint =  
-// let put (i : nat) (m : mint) : FIB unit =
+let get_i (i : nat) : FIB mint (read_comp_wp #state #mint (focus_i i)) = 
+  Lens.get #state #mint #(focus_i i)(FIB?.get ())
+
+let put_i (i : nat) (m : mint) : FIB unit (write_comp_wp #state #mint (focus_i i) m) = 
+  let s = FIB?.get () in
+  FIB?.put (Lens.put #state #mint #(focus_i i) s m)
+
+
+(* *********** Fibonacci Example ************ *)
+
+(* Purely functional spec *)
+let rec fib (n : int) : Tot mint (decreases n) = 
+  if n <= 0 then 0ul
+  else if n = 1 then 1ul
+  else 
+    let f1 : mint = fib (n - 1) in
+    let f2 : mint = fib (n - 2) in 
+    f1 +%^ f2
+
+(* Loop invariant *)
+let inv (s : state) (i:int) = i >= 1 /\ (fst s = fib (i - 1) /\ snd s = fib i)
+
+
+let shift i : Fib unit (fun s0 -> inv s0 i)
+                       (fun s0 () s1 -> inv s1 (i + 1)) = 
+    let x0 = get_i 0 in
+    let x1 = get_i 1 in
+    let _  = put_i 0 x1 in 
+    let _  = put_i 1 (x0 +%^ x1) in
+    ()
+
+
+let fib_fast n : Fib mint (fun s0 -> True) (fun s0 r s1 -> r = fib n) = 
+  if (n <= 0) then 0ul
+  else 
+    begin 
+      put_i 0 0ul; // 0 has fib 0
+      put_i 1 1ul; // 1 has fib 1
+      for inv shift 1 n;
+      get_i 1
+    end
 
