@@ -1374,7 +1374,7 @@ let loc_not_unused_in #al c h =
 
 let loc_unused_in #al c h =
   let f (r: HS.rid) : GTot (GSet.set nat) =
-    if Set.mem r (Set.complement (FStar.Map.domain (HS.get_hmap h)))
+    if not (HS.live_region h r)
     then
       GSet.complement GSet.empty
     else
