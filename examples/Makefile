@@ -9,7 +9,6 @@ crypto \
 termination \
 software_foundations \
 maths \
-rel \
 paradoxes \
 printf \
 metatheory \
@@ -37,6 +36,8 @@ indexed_effects \
 doublylinkedlist \
 regional \
 generic
+
+# rel \ temporary
 
 # low-level \  ... NS: removing from CI for this branch
 
