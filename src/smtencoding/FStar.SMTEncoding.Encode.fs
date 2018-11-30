@@ -532,14 +532,14 @@ let encode_top_level_let :
       : (S.binders    //arguments of the lambda abstraction
       * S.term        //body of the lambda abstraction
       * S.binders     //arguments of the function type, length of this component is equal to the first
-      * S.typ)        //result type
+      * S.comp)       //result comp
       * bool          //if set, we should generate a curried application of f
     =
       (* The input type [t_norm] might contain reifiable computation type which must be reified at this point *)
-      let get_result_type c =
+      let get_result_comp c =
           if is_reifiable_comp env.tcenv c
-          then reify_comp ({env.tcenv with lax = true}) c U_unknown
-          else U.comp_result c
+          then S.mk_Total <| reify_comp ({env.tcenv with lax = true}) c U_unknown
+          else c
       in
 
       let rec aux norm t_norm =
@@ -551,18 +551,18 @@ let encode_top_level_let :
               let formals, c = SS.open_comp formals c in
               let nformals = List.length formals in
               let nbinders = List.length binders in
-              let tres = get_result_type c in
+              let tres_comp = get_result_comp c in
               if nformals < nbinders && U.is_total_comp c (* explicit currying *)
               then let bs0, rest = BU.first_N nformals binders in
                       let c =
                           let subst = List.map2 (fun (x, _) (b, _) -> NT(x, S.bv_to_name b)) formals bs0 in
                           SS.subst_comp subst c in
                       let body = U.abs rest body lopt in
-                      (bs0, body, bs0, get_result_type c), false
+                      (bs0, body, bs0, tres_comp), false
               else if nformals > nbinders (* eta-expand before translating it *)
-              then let binders, body = eta_expand binders formals body tres in
-                      (binders, body, formals, tres), false
-              else (binders, body, formals, tres), false
+              then let binders, body = eta_expand binders formals body (U.comp_result tres_comp) in
+                      (binders, body, formals, tres_comp), false
+              else (binders, body, formals, c), false
 
             | Tm_refine(x, _) ->
                 fst (aux norm x.sort), true
@@ -585,11 +585,11 @@ let encode_top_level_let :
               match (SS.compress t_norm).n with
               | Tm_arrow(formals, c) ->
                 let formals, c = SS.open_comp formals c in
-                let tres = get_result_type c in
-                let binders, body = eta_expand [] formals e tres in
-                (binders, body, formals, tres), false
+                let tres_comp = get_result_comp c in
+                let binders, body = eta_expand [] formals e (U.comp_result tres_comp) in
+                (binders, body, formals, tres_comp), false
               | Tm_refine (bv, _) -> aux' bv.sort
-              | _ -> ([], e, [], t_norm), false
+              | _ -> ([], e, [], S.mk_Total t_norm), false
             in
             aux' t_norm
           end
@@ -671,7 +671,8 @@ let encode_top_level_let :
                 in
 
                 (* Open binders *)
-                let (binders, body, _, t_body), curry = destruct_bound_function flid t_norm e in
+                let (binders, body, _, t_body_comp), curry = destruct_bound_function flid t_norm e in
+                let t_body = U.comp_result t_body_comp in
                 if Env.debug env.tcenv <| Options.Other "SMTEncoding"
                 then BU.print2 "Encoding let : binders=[%s], body=%s\n"
                                 (Print.binders_to_string ", " binders)
@@ -747,17 +748,31 @@ let encode_top_level_let :
                         (Print.term_to_string e);
 
             (* Open binders *)
-            let (binders, body, formals, tres), curry = destruct_bound_function fvb.fvar_lid t_norm e in
+            let (binders, body, formals, tres_comp), curry = destruct_bound_function fvb.fvar_lid t_norm e in
+            let tres = U.comp_result tres_comp in
             if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
             then BU.print4 "Encoding let rec: binders=[%s], body=%s, formals=[%s], tres=%s\n"
                               (Print.binders_to_string ", " binders)
                               (Print.term_to_string body)
                               (Print.binders_to_string ", " formals)
                               (Print.term_to_string tres);
-            let _ = if curry then failwith "Unexpected type of let rec in SMT Encoding; expected it to be annotated with an arrow type" in
+            let _ =
+                if curry
+                then failwith "Unexpected type of let rec in SMT Encoding; \
+                               expected it to be annotated with an arrow type"
+            in
 
 
             let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
+            let guard, guard_decls =
+                let pre_opt, _ = TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp in
+                match pre_opt with
+                | None -> mk_and_l guards, []
+                | Some pre ->
+                  let guard, decls0 = encode_formula pre env' in
+                  mk_and_l (guards@[guard]), decls0
+            in
+            let binder_decls = binder_decls @ guard_decls in
             let decl_g = Term.DeclFun(g, Fuel_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
             let env0 = push_zfuel_name env0 fvb.fvar_lid g in
             let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
@@ -772,9 +787,13 @@ let encode_top_level_let :
             //But, the pattern ensures that this only applies to well-typed terms
             //NS 08/10: Setting the weight of this quantifier to 0, since its instantiations are controlled by F* fuel
             //NS 11/28/2018: Restoring the mkImp (mk_and_l guards, mkEq(gsapp, body_tm))
-            let eqn_g = Util.mkAssume(mkForall' (U.range_of_lbname lbn) ([[gsapp]], Some 0, fuel::vars, mkImp(mk_and_l guards, mkEq(gsapp, body_tm))),
-                                    Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" fvb.fvar_lid.str),
-                                    ("equation_with_fuel_" ^g)) in
+            //   11/29/2018: Also guarding by the precondition of a Pure/Ghost function in addition to typing guards
+            let eqn_g =
+                Util.mkAssume
+                    (mkForall' (U.range_of_lbname lbn)
+                               ([[gsapp]], Some 0, fuel::vars, mkImp(guard, mkEq(gsapp, body_tm))),
+                     Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" fvb.fvar_lid.str),
+                     "equation_with_fuel_" ^g) in
             let eqn_f = Util.mkAssume(mkForall (U.range_of_lbname lbn) ([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
                                     ("@fuel_correspondence_"^g)) in
