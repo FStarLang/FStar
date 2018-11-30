@@ -518,9 +518,17 @@ let encode_top_level_let :
       in
 
       let rec arrow_formals_comp_norm norm t =
-        let formals, comp = U.arrow_formals_comp t in
-        match formals with
-        | [] when not norm ->
+        //NS: tried using U.arrow_formals_comp here
+        //    but that flattens Tot effects quite aggressively
+        let t = U.unascribe <| SS.compress t in
+        match t.n with
+        | Tm_arrow (formals, comp) ->
+          SS.open_comp formals comp
+
+        | Tm_refine _ ->
+          arrow_formals_comp_norm norm (U.unrefine t)
+
+        | _ when not norm ->
           let t_norm = N.normalize [Env.AllowUnboundUniverses; Env.Beta; Env.Weak; Env.HNF;
                                     (* we don't know if this will terminate; so don't do recursive steps *)
                                     Env.Exclude Env.Zeta;
@@ -528,14 +536,12 @@ let encode_top_level_let :
                         tcenv t
           in
           arrow_formals_comp_norm true t_norm
-        | [] ->
-          [], S.mk_Total t
+
         | _ ->
-          formals, comp
+          [], S.mk_Total t
       in
 
       let aux t e =
-          let t = U.unascribe <| SS.compress t in
           let formals, comp = arrow_formals_comp_norm false t in
           let binders, body, lopt = U.abs_formals e in
           let nformals = List.length formals in
