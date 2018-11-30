@@ -327,12 +327,12 @@ let is_lemma t =
     | _ -> false
 
 let rec head_of (t : term) : term =
+    let t = unmeta_safe t in
     match (compress t).n with
     | Tm_app (t, _)
     | Tm_match (t, _)
     | Tm_abs (_, t, _)
-    | Tm_ascribed (t, _, _)
-    | Tm_meta (t, _) -> head_of t
+    | Tm_ascribed (t, _, _) -> head_of t
     | _ -> t
 
 let head_and_args t =

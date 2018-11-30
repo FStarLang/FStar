@@ -463,7 +463,7 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
-let whnf env t     = SS.compress (N.normalize [Env.Beta; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
+let whnf env t     = SS.compress (N.normalize [Env.Beta; Env.Weak; Env.HNF] env (U.unmeta_safe t)) |> U.unlazy_emb
 let sn env t       = SS.compress (N.normalize [Env.Beta] env t) |> U.unlazy_emb
 let norm_arg env t = sn env (fst t), snd t
 let sn_binders env (binders:binders) =
@@ -495,7 +495,7 @@ let base_and_refinement_maybe_delta should_delta env t1 =
        N.normalize_refinement steps env t
    in
    let rec aux norm t1 =
-        let t1 = U.unmeta t1 in
+        let t1 = U.unmeta_safe t1 in
         match t1.n with
         | Tm_refine(x, phi) ->
             if norm
@@ -891,8 +891,8 @@ let rec delta_depth_of_term env t =
 
 
 let rec head_matches env t1 t2 : match_result =
-  let t1 = U.unmeta t1 in
-  let t2 = U.unmeta t2 in
+  let t1 = U.unmeta_safe t1 in
+  let t2 = U.unmeta_safe t2 in
   match t1.n, t2.n with
     | Tm_lazy ({lkind=Lazy_embedding _}), _ -> head_matches env (U.unlazy t1) t2
     |  _, Tm_lazy({lkind=Lazy_embedding _}) -> head_matches env t1 (U.unlazy t2)
@@ -2323,7 +2323,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             then BU.print2 "Trying match heuristic for %s vs. %s\n"
                             (Print.term_to_string t1)
                             (Print.term_to_string t2);
-            match (s1, U.unmeta t1), (s2, U.unmeta t2) with
+            match (s1, U.unmeta_safe t1), (s2, U.unmeta_safe t2) with
             | (_, {n=Tm_match (scrutinee, branches)}), (s, t)
             | (s, t), (_, {n=Tm_match(scrutinee, branches)}) ->
               if not (is_flex scrutinee)
@@ -2406,6 +2406,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         match m, o  with
         | (MisMatch _, _) -> //heads definitely do not match
             let rec may_relate head =
+                let head = U.unmeta_safe head in
                 match (SS.compress head).n with
                 | Tm_name _
                 | Tm_match _ -> true
@@ -2420,8 +2421,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                        problem.relation = EQ
                     | _ -> false)
                 | Tm_ascribed (t, _, _)
-                | Tm_uinst (t, _)
-                | Tm_meta (t, _) -> may_relate t
+                | Tm_uinst (t, _) -> may_relate t
                 | _ -> false
             in
             begin
@@ -2487,36 +2487,23 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             (rel_to_string problem.relation)
                             in
     let r = Env.get_range env in
+    let t1 = U.unmeta t1 in
+    let t2 = U.unmeta t2 in
     match t1.n, t2.n with
       | Tm_delayed _, _
-      | _, Tm_delayed _ ->
-        // GM: I imagine there is some reason these terms are always
-        // compressed, since the original code didn't call compress and
-        // it never failed. Adding surely implies a performance hit, so
-        // I didn't do that, but it'd be nice to document the reason
-        // this works (I couldn't figure it out).
-
-        // NS: we reach this point only after call compress_tprob
-        //     or something that does a compress already, e.g., unascribe, or unmeta etc.
-        //     See all the callers to solve_t'
-        failwith "Impossible: terms were not compressed"
-
-      | Tm_ascribed _, _ ->
-        solve_t' env ({problem with lhs=U.unascribe t1}) wl
-
-      | Tm_meta _, _ ->
-        solve_t' env ({problem with lhs=U.unmeta t1}) wl
-
-      | _, Tm_ascribed _ ->
-        solve_t' env ({problem with rhs=U.unascribe t2}) wl
-
+      | _, Tm_delayed _
+      | Tm_ascribed _, _
+      | Tm_meta _, _
+      | _, Tm_ascribed _
       | _, Tm_meta _ ->
-        solve_t' env ({problem with rhs=U.unmeta t2}) wl
+        // the `unmeta` calls should make all these cases impossible
+        raise_error (Errors.Fatal_UnificationNotWellFormed,
+                     BU.format4 "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
+                           (Print.tag_of_term t1) (Print.tag_of_term t2)
+                           (Print.term_to_string t1) (Print.term_to_string t2)) (p_loc orig)
 
       | Tm_quoted (t1, _), Tm_quoted (t2, _) ->
-        (* solve_prob orig None [] wl *)
         solve env (solve_prob orig None [] wl)
-        (* solve_t' env ({problem with lhs = t1; rhs = t2}) wl *)
 
       | Tm_bvar _, _
       | _, Tm_bvar _ -> failwith "Only locally nameless! We should never see a de Bruijn variable"
@@ -2807,9 +2794,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          let head2 = U.head_and_args t2 |> fst in
          let _ =
              if debug env (Options.Other "Rel")
-             then BU.print3 ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" (string_of_int problem.pid)
+             then BU.print4 ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n>>> smt_ok = %s\n"
+                                 (string_of_int problem.pid)
                                  (Print.term_to_string head1)
                                  (Print.term_to_string head2)
+                                 (string_of_bool wl.smt_ok)
          in
          let no_free_uvars t = BU.set_is_empty (Free.uvars t) && BU.set_is_empty (Free.univs t) in
          let equal t1 t2 =
@@ -2842,9 +2831,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
       | Tm_let _, _
       | _, Tm_let _ ->
-         raise_error (Errors.Fatal_UnificationNotWellFormed, BU.format4 "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
-                            (Print.tag_of_term t1) (Print.tag_of_term t2)
-                            (Print.term_to_string t1) (Print.term_to_string t2)) t1.pos
+        raise_error (Errors.Fatal_UnificationNotWellFormed,
+                     BU.format4 "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
+                           (Print.tag_of_term t1) (Print.tag_of_term t2)
+                           (Print.term_to_string t1) (Print.term_to_string t2)) (p_loc orig)
 
       | _ -> giveup env "head tag mismatch" orig
 
@@ -3085,7 +3075,7 @@ let simplify_guard env g = match g.guard_f with
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
       let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
-      let f = match (U.unmeta f).n with
+      let f = match (U.unmeta_safe f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
         | _ -> NonTrivial f in
       {g with guard_f=f}

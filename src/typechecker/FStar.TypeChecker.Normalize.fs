@@ -1822,7 +1822,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
     let w t = {t with pos=tm.pos} in
     let simp_t t =
         // catch annotated subformulae too
-        match (U.unmeta t).n with
+        match (U.unmeta_safe t).n with
         | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
         | _ -> None
@@ -1972,7 +1972,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
         S.mk_Tm_app head args None t.pos
     in
     let rec clearly_inhabited (ty : typ) : bool =
-        match (U.unmeta ty).n with
+        match (U.unmeta_safe ty).n with
         | Tm_uinst (t, _) -> clearly_inhabited t
         | Tm_arrow (_, c) -> clearly_inhabited (U.comp_result c)
         | Tm_fvar fv ->
@@ -2395,7 +2395,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             (* Inl ts: p matches t and ts are bindings for the branch *)
             (* Inr false: p definitely does not match t *)
             (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
-          = let scrutinee = U.unmeta scrutinee_orig in
+          = let scrutinee = U.unmeta_safe scrutinee_orig in
             let scrutinee = U.unlazy scrutinee in
             let head, args = U.head_and_args scrutinee in
             match p.v with
