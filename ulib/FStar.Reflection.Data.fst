@@ -4,12 +4,14 @@ open FStar.Reflection.Types
 
 noeq
 type vconst =
-  | C_Unit   : vconst
-  | C_Int    : int -> vconst // Not exposing the full details of our integer repr.
-  | C_True   : vconst
-  | C_False  : vconst
-  | C_String : string -> vconst
-  | C_Range  : range -> vconst
+  | C_Unit      : vconst
+  | C_Int       : int -> vconst // Not exposing the full details of our integer repr.
+  | C_True      : vconst
+  | C_False     : vconst
+  | C_String    : string -> vconst
+  | C_Range     : range -> vconst
+  | C_Reify     : vconst
+  | C_Reflect   : name -> vconst
   (* TODO: complete *)
 
 // This is shadowing `pattern` from Prims (for smt_pats)
