@@ -3389,9 +3389,7 @@ let (encode_top_level_let :
                                                                     | 
                                                                     (aux_decls,typing_corr)
                                                                     ->
-                                                                    ((FStar_List.append
-                                                                    binder_decls1
-                                                                    aux_decls),
+                                                                    (aux_decls,
                                                                     (FStar_List.append
                                                                     typing_corr
                                                                     [tok_corr]))
