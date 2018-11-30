@@ -529,13 +529,13 @@ let encode_top_level_let :
               let nformals = List.length formals in
               let nbinders = List.length binders in
               let tres_comp = get_result_comp c in
-              if nformals < nbinders && U.is_total_comp c (* explicit currying *)
+              if nformals < nbinders (* explicit currying *)
               then let bs0, rest = BU.first_N nformals binders in
-                      //let c =
-                      //    let subst = List.map2 (fun (x, _) (b, _) -> NT(x, S.bv_to_name b)) formals bs0 in
-                      //    SS.subst_comp subst c in
-                      let body = U.abs rest body lopt in
-                      (bs0, body, subst_comp formals bs0 tres_comp), false
+                    //let c =
+                    //    let subst = List.map2 (fun (x, _) (b, _) -> NT(x, S.bv_to_name b)) formals bs0 in
+                    //    SS.subst_comp subst c in
+                    let body = U.abs rest body lopt in
+                    (bs0, body, subst_comp formals bs0 (if U.is_total_comp c then tres_comp else c)), false
               else if nformals > nbinders (* eta-expand before translating it *)
               then let binders, body = eta_expand binders formals body (U.comp_result tres_comp) in
                       (binders, body, subst_comp formals binders tres_comp), false
