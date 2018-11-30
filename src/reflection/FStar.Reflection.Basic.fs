@@ -105,6 +105,8 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_bool false -> C_False
     | FStar.Const.Const_string (s, _) -> C_String s
     | FStar.Const.Const_range r -> C_Range r
+    | FStar.Const.Const_reify -> C_Reify
+    | FStar.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 let rec inspect_ln (t:term) : term_view =
@@ -240,12 +242,14 @@ let pack_comp (cv : comp_view) : comp =
 
 let pack_const (c:vconst) : sconst =
     match c with
-    | C_Unit    -> C.Const_unit
-    | C_Int i   -> C.Const_int (Z.string_of_big_int i, None)
-    | C_True    -> C.Const_bool true
-    | C_False   -> C.Const_bool false
-    | C_String s -> C.Const_string (s, Range.dummyRange)
-    | C_Range  r -> C.Const_range r
+    | C_Unit         -> C.Const_unit
+    | C_Int i        -> C.Const_int (Z.string_of_big_int i, None)
+    | C_True         -> C.Const_bool true
+    | C_False        -> C.Const_bool false
+    | C_String s     -> C.Const_string (s, Range.dummyRange)
+    | C_Range  r     -> C.Const_range r
+    | C_Reify        -> C.Const_reify
+    | C_Reflect ns   -> C.Const_reflect (Ident.lid_of_path ns Range.dummyRange)
 
 // TODO: pass in range?
 let pack_ln (tv:term_view) : term =
