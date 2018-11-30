@@ -542,10 +542,15 @@ let encode_top_level_let :
       in
 
       let aux t e =
-          let formals, comp = arrow_formals_comp_norm false t in
           let binders, body, lopt = U.abs_formals e in
+          let formals, comp =
+              match binders with
+              | [] -> arrow_formals_comp_norm true t
+                //don't normalize t to avoid poorly encoding points-free code
+                //see, e.g., Benton2004.RHL.Example2
+              | _ -> arrow_formals_comp_norm false t
+          in
           let nformals = List.length formals in
-          let nbinder = List.length binders in
           let nbinders = List.length binders in
           let binders, body, comp =
               if nformals < nbinders (* explicit currying *)
