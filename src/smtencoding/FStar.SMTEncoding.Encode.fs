@@ -790,7 +790,7 @@ let encode_top_level_let :
                                     Some "Typing correspondence of token to term",
                                     ("token_correspondence_"^g))]
               in
-              binder_decls@aux_decls, typing_corr@[tok_corr]
+              aux_decls, typing_corr@[tok_corr]
             in
 
             binder_decls@decls2@aux_decls@[decl_g;decl_g_tok], [eqn_g;eqn_g';eqn_f]@g_typing, env0
