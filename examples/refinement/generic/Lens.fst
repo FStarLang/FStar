@@ -58,7 +58,13 @@ let hread hstate () : comp hstate hstate =
 
 let hwrite hstate (s':hstate) : comp hstate unit =
   fun s -> ((), s')
-  
+
+let hwrite_comp hstate (a:Type0) (l : lens hstate a) (s':hstate) : comp hstate unit =
+  fun s -> ((), s')
+
+let hread_comp hstate (a:Type0) (l : lens hstate a) (_ : unit) : comp hstate a =
+  fun (s : hstate) -> (get #_ #_ #l s, s) 
+
 // Effect definition
 total reifiable reflectable new_effect {
   HIGH_h (s:Type0) : a:Type -> Effect
@@ -68,6 +74,7 @@ total reifiable reflectable new_effect {
         ; get      = hread s
         ; put      = hwrite s
   }
+
 
 (* WPs of high computations *)
 type hwp hstate a = HIGH_h?.wp hstate a
@@ -148,7 +155,8 @@ let read_comp_wp #hstate #a (l : lens hstate a) : hwp_mon a = fun (s: hstate) p 
 
 unfold 
 let write_comp_wp #hstate #a (l : lens hstate a) (x : a) : hwp_mon unit = fun (s0: hstate) p -> p ((), put #hstate #a #l s0 x)
-  
+
+
 (** Elaborated combinators **)
 let return_elab (#hstate:Type) (#a:Type) (x : a) : high #hstate a (return_wp x) =
   HIGH_h?.return_elab hstate a x
