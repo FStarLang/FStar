@@ -59,6 +59,23 @@ Guidelines for the changelog:
      in client code. Currently guarded by the --cmi flag, this will
      soon be the default behavior.
 
+## SMT Encoding
+
+   * A soundness bug was fixed in the encoding of recursive functions
+     to SMT. The flaw resulted from omitting typing guards in the
+     axioms corresponding to the equational behavior of pure and ghost
+     recursive functions. The fix makes reasoning about recursive
+     functions with SMT slightly more demanding: if the typing of an
+     application of a recursive functions requires some non-trivial
+     proof, the SMT solver may require some assistance with that proof
+     before it can unfold the definition of the recursive
+     function. For an example of the kind of additional proof that may
+     be needed, see this commit:
+     936ce47f2479af52f3c3001bd87bed810dbf6e1f. We need to call lemmas
+     to prove that the recursive function that appears in the
+     inductive hypothesis is well-typed.
+
+
 # Version 0.9.6.0
 
 ## Command line options
