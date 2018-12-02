@@ -57,7 +57,9 @@ Guidelines for the changelog:
    * Cross-module inlining: Declarations in interfaces marked with the
      `inline_for_extraction` qualifier have their definitions inlined
      in client code. Currently guarded by the --cmi flag, this will
-     soon be the default behavior.
+     soon be the default behavior. Also see:
+     https://github.com/FStarLang/FStar/wiki/Cross-module-Inlining
+     and https://github.com/FStarLang/FStar/tree/master/examples/extraction/cmi.
 
 ## SMT Encoding
 
@@ -70,10 +72,22 @@ Guidelines for the changelog:
      proof, the SMT solver may require some assistance with that proof
      before it can unfold the definition of the recursive
      function. For an example of the kind of additional proof that may
-     be needed, see this commit:
-     936ce47f2479af52f3c3001bd87bed810dbf6e1f. We need to call lemmas
+     be needed, see these commits:
+     https://github.com/FStarLang/FStar/commit/936ce47f2479af52f3c3001bd87bed810dbf6e1f
+     and https://github.com/project-everest/hacl-star/commit/2220ab81bbae735495a42ced6485665d9facdb0b.
+     We need to call lemmas
      to prove that the recursive function that appears in the
-     inductive hypothesis is well-typed.
+     inductive hypothesis is well-typed
+     (e.g. calling `wp_monotone` lemma for well-typedness of `wp_compute` in the second commit) .
+     In some cases, it may also be possible to use the normalizer to
+     do the unfolding:
+     https://github.com/project-everest/hacl-star/commit/6e9175e607e591faa5b6a0d6052fc4a336f7bf41#diff-127ee9d47350eff0fa0d79847257d493R290.
+     Another kind of change required hoisting some type declarations:
+     https://github.com/FStarLang/FStar/commit/819ad64065f1e70aec3665f5df6b58a7d43cdce1
+     to get around imprecision in the SMT encoding. This can be handled in F*
+     with an additional SMT axiom on type constructors like `list`, but
+     we only found a couple of instances of this. So, for now, we are going with the
+     hoisting workaround.
 
 
 # Version 0.9.6.0
