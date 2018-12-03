@@ -43,6 +43,7 @@ module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
+module FC = FStar.Const
 
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
@@ -911,7 +912,12 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch(None, None)
     | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
-    | Tm_constant c, Tm_constant d -> if FStar.Const.eq_const c d then FullMatch else MisMatch(None, None)
+
+    | Tm_constant FC.Const_reify, Tm_constant FC.Const_reify -> FullMatch
+    | Tm_constant FC.Const_reify, _
+    | _, Tm_constant FC.Const_reify -> HeadMatch true
+    | Tm_constant c, Tm_constant d -> if FC.eq_const c d then FullMatch else MisMatch(None, None)
+
     | Tm_uvar (uv, _), Tm_uvar (uv', _) -> if UF.equiv uv.ctx_uvar_head uv'.ctx_uvar_head then FullMatch else MisMatch(None, None)
 
     | Tm_refine(x, _), Tm_refine(y, _) -> head_matches env x.sort y.sort |> head_match
