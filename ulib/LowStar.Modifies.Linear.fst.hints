@@ -1,0 +1,20 @@
+[
+  "_”\u0016¸ó»)CÂ?AþÁ\u001aXò",
+  [
+    [
+      "LowStar.Modifies.Linear.modifies_trans_linear",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
+        "lemma_LowStar.Monotonic.Buffer.loc_includes_union_r_",
+        "lemma_LowStar.Monotonic.Buffer.modifies_loc_includes",
+        "lemma_LowStar.Monotonic.Buffer.modifies_trans",
+        "typing_LowStar.Monotonic.Buffer.loc_union"
+      ],
+      0,
+      "e2b08e03a0eebc02f0a83425b262941b"
+    ]
+  ]
+]

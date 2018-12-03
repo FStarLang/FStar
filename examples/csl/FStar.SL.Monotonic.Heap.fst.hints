@@ -3113,7 +3113,7 @@
         "typing_FStar.SL.Monotonic.Heap_Tm_abs_fe298dcedc085ce585ac642ebe6af668"
       ],
       0,
-      "1fc872abc5631bad0722b89e39e5ace1"
+      "86b0f3bd7d9fa3be7e73738944e8c8ab"
     ],
     [
       "FStar.SL.Monotonic.Heap.lemma_join_tot_emp_with_next_addr_h",
@@ -4065,6 +4065,7 @@
         "lemma_FStar.SL.Monotonic.Heap.lemma_contains_r_join_tot_points_to_minus",
         "lemma_FStar.SL.Monotonic.Heap.lemma_ref_unused_iff_addr_unused",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThan",
         "proj_equation_FStar.SL.Monotonic.Heap.Mkheap_rec_memory",
         "proj_equation_FStar.SL.Monotonic.Heap.Mkheap_rec_next_addr",
         "proj_equation_FStar.SL.Monotonic.Heap.Mkmref__addr",
@@ -4090,7 +4091,7 @@
         "typing_FStar.SL.Monotonic.Heap_Tm_abs_fe298dcedc085ce585ac642ebe6af668"
       ],
       0,
-      "c20dad16515ed039fb215084f1f464ef"
+      "331af8aea7ebbd97b62ff32923ad71df"
     ],
     [
       "FStar.SL.Monotonic.Heap.lemma_restrict_r1_join_tot_points_to_minus",
@@ -4195,7 +4196,7 @@
         "typing_FStar.SL.Monotonic.Heap_Tm_abs_fe298dcedc085ce585ac642ebe6af668"
       ],
       0,
-      "e4b44222c0f7c9f01a8e3842ea80f90f"
+      "aa81453e438dd6352809008203bcabcd"
     ],
     [
       "FStar.SL.Monotonic.Heap.lemma_restrict_join_tot_h_emp_with_next_addr",
@@ -4805,7 +4806,7 @@
         "typing_FStar.SL.Monotonic.Heap_Tm_abs_8dfdb93a0310895ebeb06b9ed27afac2"
       ],
       0,
-      "ce02a2d7e03b1a1e0964e55ae131cc8f"
+      "2daa78c9bca64632ba3bf790b9729914"
     ],
     [
       "FStar.SL.Monotonic.Heap.aref_equal",
