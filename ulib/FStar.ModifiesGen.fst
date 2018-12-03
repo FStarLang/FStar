@@ -1393,8 +1393,12 @@ let loc_addresses_unused_in #al c r a h = ()
 
 let loc_addresses_not_unused_in #al c r a h = ()
 
+#set-options "--z3rlimit 16"
+
 let loc_unused_in_not_unused_in_disjoint #al c h =
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)))
+
+#reset-options
 
 let not_live_region_loc_not_unused_in_disjoint #al c h0 r
 = let l1 = loc_region_only false r in
