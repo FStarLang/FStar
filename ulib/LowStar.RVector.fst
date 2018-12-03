@@ -504,14 +504,14 @@ val as_seq_sub:
     rv_elems_inv h rv i j} ->
   GTot (s:S.seq (Rgl?.repr rg){S.length s = U32.v j - U32.v i})
        (decreases (U32.v j))
-let rec as_seq_sub #a #rg h rv i j =
+let as_seq_sub #a #rg h rv i j =
   as_seq_seq rg h (V.as_seq h rv) (U32.v i) (U32.v j)
 
 val as_seq:
   #a:Type0 -> #rg:regional a ->
   h:HS.mem -> rv:rvector rg{rv_inv h rv} ->
   GTot (s:S.seq (Rgl?.repr rg){S.length s = U32.v (V.size_of rv)})
-let rec as_seq #a #rg h rv =
+let as_seq #a #rg h rv =
   as_seq_sub h rv 0ul (V.size_of rv)
 
 val as_seq_sub_as_seq:
@@ -631,6 +631,7 @@ val as_seq_sub_preserved:
 let as_seq_sub_preserved #a #rg rv i j p h0 h1 =
   as_seq_seq_preserved rg (V.as_seq h0 rv) (U32.v i) (U32.v j) p h0 h1
 
+
 val as_seq_preserved_:
   #a:Type0 -> #rg:regional a ->
   rv:rvector rg ->
@@ -640,9 +641,10 @@ val as_seq_preserved_:
                   loc_disjoint p (rv_loc_elems h0 rv 0ul (V.size_of rv)) /\
                   modifies p h0 h1))
         (ensures (rv_inv_preserved_ rv p h0 h1;
-                 S.equal (as_seq h0 rv) (as_seq h1 rv)))
+                  S.equal (as_seq h0 rv) (as_seq h1 rv)))
 let as_seq_preserved_ #a #rg rv p h0 h1 =
   as_seq_sub_preserved rv 0ul (V.size_of rv) p h0 h1
+
 
 // The second core lemma of `rvector`
 val as_seq_preserved:

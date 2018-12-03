@@ -34,7 +34,9 @@ extraction \
 demos \
 refinement \
 indexed_effects \
-regional
+doublylinkedlist \
+regional \
+generic
 
 # low-level \  ... NS: removing from CI for this branch
 

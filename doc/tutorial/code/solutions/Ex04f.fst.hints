@@ -54,6 +54,9 @@
         "@fuel_correspondence_Ex04f.append.fuel_instrumented",
         "@fuel_irrelevance_Ex04f.append.fuel_instrumented", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_4",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_with_fuel_Ex04f.append.fuel_instrumented",
@@ -61,10 +64,10 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons"
+        "subterm_ordering_Prims.Cons", "typing_Ex04f.append"
       ],
       0,
-      "9d43d1271022c7ff3903be51a43c0c1c"
+      "8f37825ea6f19276688dfc58a9f1d5cd"
     ],
     [
       "Ex04f.fold_left_Cons_is_rev",
@@ -78,21 +81,27 @@
         "@fuel_correspondence_Ex04f.reverse.fuel_instrumented",
         "@fuel_irrelevance_Ex04f.fold_left.fuel_instrumented",
         "@fuel_irrelevance_Ex04f.reverse.fuel_instrumented", "@query",
+        "Ex04f_interpretation_Tm_arrow_9e9c93a55e1e248e3e57131f3486f198",
+        "Ex04f_interpretation_Tm_arrow_e47c724b0e4db2746fb50f9c4ccfd808",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.Cons@tok",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_Prims.Cons@tok",
         "equation_with_fuel_Ex04f.append.fuel_instrumented",
         "equation_with_fuel_Ex04f.fold_left.fuel_instrumented",
         "equation_with_fuel_Ex04f.reverse.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
+        "fuel_guarded_inversion_Prims.list", "kinding_Prims.list@tok",
+        "partial_app_typing_cfb1df26f1522e18dea6bfa7443c7b3d",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons"
+        "subterm_ordering_Prims.Cons", "typing_Ex04f.reverse"
       ],
       0,
-      "9c441804f0190135c1b1502833bdaf56"
+      "22ec79a4df5807af82a3276993095ed1"
     ],
     [
       "Ex04f.append",

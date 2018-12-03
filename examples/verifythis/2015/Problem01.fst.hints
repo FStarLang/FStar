@@ -15,7 +15,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0581d2b7370ce608490d69eb27632132"
+      "34e90c6adc65b59770270ed137d8d4d9"
     ],
     [
       "Problem01.prefix",
@@ -49,7 +49,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "dda1f4b84ec7d3fe67efafac2887dd9c"
+      "632e97252e25040ee46c1b431fef81a7"
     ],
     [
       "Problem01.prefix",
@@ -83,7 +83,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7e6e73e21358673ad392a491dd616dcf"
+      "26c89d6c29bcfcf55492637ea539155e"
     ],
     [
       "Problem01.remove_elem_from_list",
@@ -95,13 +95,13 @@
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int",
         "binder_x_323b8b24dedcbcde84b47deb8aeac554_1",
         "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_0",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "int_inversion",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.nat", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_tl",
@@ -110,7 +110,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "63e3ed91f271f44f167b039dab9719a3"
+      "8946b30fe18d8abe45e5970bdcce33ba"
     ],
     [
       "Problem01.test_prefix",
@@ -122,7 +122,7 @@
         "refinement_interpretation_Problem01_Tm_refine_5ec69b392d18c536c7a2f6f1921608e0"
       ],
       0,
-      "cf2c749a18d757604c5a9448785250c0"
+      "0a291a734562da569ba6ac4017fec42c"
     ],
     [
       "Problem01.test_prefix",
@@ -159,7 +159,7 @@
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "43355285358e5e8b5867449d35504cd6"
+      "1d8e05a2b497a59c1f4e7aaede369693"
     ],
     [
       "Problem01.test_prefix",
@@ -196,7 +196,7 @@
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "75870afc5013f8018074c95f2aca4676"
+      "76b5685976be3338e31801d22ddf4e6a"
     ],
     [
       "Problem01.test_relaxed_prefix",
@@ -228,7 +228,7 @@
         "typing_Problem01.test_prefix"
       ],
       0,
-      "f642ab810a0bae4c7898607720074529"
+      "54cdda169f3c278720de4579a938a2af"
     ]
   ]
 ]
