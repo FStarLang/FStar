@@ -5504,7 +5504,7 @@ and (maybe_simplify_aux :
                }  in
              let simp_t t =
                let uu____16492 =
-                 let uu____16493 = FStar_Syntax_Util.unmeta t  in
+                 let uu____16493 = FStar_Syntax_Util.unmeta_safe t  in
                  uu____16493.FStar_Syntax_Syntax.n  in
                match uu____16492 with
                | FStar_Syntax_Syntax.Tm_fvar fv when
@@ -5786,7 +5786,7 @@ and (maybe_simplify_aux :
                 in
              let rec clearly_inhabited ty =
                let uu____17534 =
-                 let uu____17535 = FStar_Syntax_Util.unmeta ty  in
+                 let uu____17535 = FStar_Syntax_Util.unmeta_safe ty  in
                  uu____17535.FStar_Syntax_Syntax.n  in
                match uu____17534 with
                | FStar_Syntax_Syntax.Tm_uinst (t,uu____17540) ->
@@ -7424,7 +7424,7 @@ and (rebuild :
                        in
                     let rec matches_pat scrutinee_orig p =
                       let scrutinee1 =
-                        FStar_Syntax_Util.unmeta scrutinee_orig  in
+                        FStar_Syntax_Util.unmeta_safe scrutinee_orig  in
                       let scrutinee2 = FStar_Syntax_Util.unlazy scrutinee1
                          in
                       let uu____25212 =
