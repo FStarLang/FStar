@@ -50,7 +50,7 @@ module Dep     = FStar.Parser.Dep
 module NBE     = FStar.TypeChecker.NBE
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
-let cache_version_number = 6
+let cache_version_number = 7
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -58,11 +58,10 @@ type uenv = FStar.Extraction.ML.UEnv.uenv
 
 type tc_result = {
   checked_module: Syntax.modul; //persisted
-  extracted_iface: Extraction.ML.Modul.iface; //persisted
   mii:module_inclusion_info; //persisted
 
   tc_time:int;
-  extraction_time: int;
+  extraction_time:int
 }
 
 let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv<'a>) : 'a * TcEnv.env =
@@ -316,7 +315,6 @@ let store_module_to_cache (env:uenv) fn (tc_result:tc_result) =
           //cache_version_number should always be the first field here
           let tc_result = {
               tc_result with
-                extraction_time=0;
                 tc_time=0;
           } in
           BU.save_value_to_file cache_file (cache_version_number, hashes, tc_result)
@@ -390,6 +388,15 @@ let tc_one_file
             let _, defs = FStar.Extraction.ML.Modul.extract env tcmod in
             defs)
   in
+  let maybe_extract_ml_iface tcmod env =
+       if Options.codegen() = None
+       then env, 0
+       else let (env, _extracted_iface), iface_extract_time =
+              FStar.Util.record_time (fun () ->
+                  FStar.Extraction.ML.Modul.extract_iface env tcmod)
+            in
+            env, iface_extract_time
+  in
   let tc_source_file () =
       let env = apply_delta_env env delta in
       let fmod, env = parse env pre_fn fn in
@@ -405,17 +412,12 @@ let tc_one_file
                  Tc.check_module tcenv fmod (is_some pre_fn)))
           in
           let extracted_defs, extract_time = with_env env (maybe_extract_mldefs tcmod) in
-          let (env, extracted_iface), iface_extract_time =
-            FStar.Util.record_time (fun () ->
-                FStar.Extraction.ML.Modul.extract_iface env tcmod)
-          in
+          let env, iface_extraction_time = with_env env (maybe_extract_ml_iface tcmod) in
           {
             checked_module=tcmod;
             tc_time=tc_time;
 
-            extracted_iface = extracted_iface;
-            extraction_time = iface_extract_time + extract_time;
-
+            extraction_time = extract_time + iface_extraction_time;
             mii = mii
           },
           extracted_defs,
@@ -486,7 +488,8 @@ let tc_one_file
 
         let delta_env env =
             let _, env = with_tcenv_of_env env (delta_tcenv tcmod) in
-            FStar.Extraction.ML.Modul.extend_with_iface env tc_result.extracted_iface
+            let env, _time = with_env env (maybe_extract_ml_iface tcmod) in
+            env
         in
         tc_result,
         mllib,
