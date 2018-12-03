@@ -368,7 +368,9 @@ type lex_t =
   | LexTop  : lex_t
   | LexCons : #a:Type -> a -> lex_t -> lex_t
 
+unfold
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
+unfold
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
 assume
