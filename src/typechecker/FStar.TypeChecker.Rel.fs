@@ -1395,11 +1395,11 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
         if BU.physical_equality tp.lhs tp.rhs then solve env (solve_prob hd None [] probs) else
         if rank=Rigid_rigid
         || (tp.relation = EQ && rank <> Flex_flex)
-        then solve_t' env tp probs
+        then solve_t env tp probs
         else if probs.defer_ok
         then solve env (defer "deferring flex_rigid or flex_flex subtyping" hd probs)
         else if rank=Flex_flex
-        then solve_t' env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
+        then solve_t env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
         else solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
       end
 
