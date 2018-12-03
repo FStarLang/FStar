@@ -1162,12 +1162,13 @@ let (tc_one_file :
                               with_env env3 (maybe_extract_ml_iface tcmod)
                                in
                             (match uu____2174 with
-                             | (env4,_iface_extraction_time) ->
+                             | (env4,iface_extraction_time) ->
                                  ({
                                     checked_module = tcmod;
                                     mii;
                                     tc_time;
-                                    extraction_time = extract_time
+                                    extraction_time =
+                                      (extract_time + iface_extraction_time)
                                   }, extracted_defs, env4)))
                     in
                  let uu____2199 =
