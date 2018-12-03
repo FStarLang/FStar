@@ -1,6 +1,6 @@
 module L
 
 let uint_t = function
-  | U8 -> UInt8.t
+  | U8 -> bool
 
-let u8 n = UInt8.uint_to_t n
+let u8 n = n < 128
