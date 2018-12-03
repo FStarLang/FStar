@@ -175,6 +175,7 @@ val rv_loc_elems:
 let rv_loc_elems #a #rg h rv i j =
   rs_loc_elems rg (V.as_seq h rv) (U32.v i) (U32.v j)
 
+
 // Properties about inclusion of locations
 
 val rs_loc_elems_rec_inverse:
@@ -1058,6 +1059,107 @@ let flush #a #rg rv i =
   assert (S.equal (S.slice (as_seq hh0 rv) (U32.v i) (U32.v (V.size_of rv)))
                   (as_seq hh2 frv));
   frv
+
+val free_elems_from:
+  #a:Type0 -> #rg:regional a -> rv:rvector rg ->
+  idx:uint32_t{idx < V.size_of rv} ->
+  HST.ST unit
+    (requires (fun h0 ->
+      V.live h0 rv /\
+      rv_elems_inv h0 rv idx (V.size_of rv) /\
+      rv_elems_reg h0 rv idx (V.size_of rv)))
+    (ensures (fun h0 _ h1 ->
+      modifies (rv_loc_elems h0 rv idx (V.size_of rv)) h0 h1))
+let rec free_elems_from #a #rg rv idx =
+  let sz = U32.v (V.size_of rv) in
+  let hh0 = HST.get () in
+  Rgl?.r_free rg (V.index rv idx);
+
+  let hh1 = HST.get () in
+  rs_loc_elems_elem_disj
+    rg (V.as_seq hh0 rv) (V.frameOf rv)
+    (U32.v idx) sz
+    (U32.v idx) (sz-1)
+    (sz-1);
+  if idx + 1ul < V.size_of rv then
+  begin
+    // rv_elems_inv_preserved
+    //   rv (idx+1ul) (V.size_of rv) (rs_loc_elem rg (V.as_seq hh0 rv) (U32.v idx)) hh0 hh1;
+    assume (rv_elems_inv hh1 rv (idx+1ul) (V.size_of rv)); // cwinter: couldn't get rv_elems_inv_preserved to give us this
+    free_elems_from rv (idx + 1ul);
+    let hh2 = HST.get() in
+    assert (modifies (rv_loc_elems hh0 rv idx (idx+1ul)) hh0 hh1);
+    assert (modifies (rv_loc_elems hh1 rv (idx+1ul) (V.size_of rv)) hh1 hh2);
+    assume (modifies (rv_loc_elems hh0 rv idx (V.size_of rv)) hh0 hh2)
+  end
+
+val shrink:
+  #a:Type0 -> #rg:regional a ->
+  rv:rvector rg -> new_size:uint32_t{new_size <= V.size_of rv} ->
+  HST.ST (rvector rg)
+    (requires (fun h0 -> rv_inv h0 rv))
+    (ensures (fun h0 frv h1 ->
+      V.size_of frv = new_size /\
+      V.frameOf rv = V.frameOf frv /\
+      modifies (loc_rvector rv) h0 h1 /\
+      rv_inv h1 frv /\
+      S.equal (as_seq h1 frv)
+              (S.slice (as_seq h0 rv) 0 (U32.v new_size))))
+#reset-options "--z3rlimit 40"
+let shrink #a #rg rv new_size =
+  let size = V.size_of rv in
+  let sz = U32.v size in
+  let nsz = U32.v new_size in
+  let hh0 = HST.get () in
+  if new_size >= size then rv else
+  begin
+    free_elems_from rv new_size;
+    rv_loc_elems_included hh0 rv new_size size;
+    let hh1 = HST.get () in
+    assert (modifies (rs_loc_elems rg (V.as_seq hh0 rv) nsz sz) hh0 hh1);
+    let frv = V.shrink rv new_size in
+
+    let hh2 = HST.get () in
+    assert (modifies (loc_region_only false (V.frameOf rv)) hh1 hh2);
+
+    // Safety
+    rs_loc_elems_disj
+      rg (V.as_seq hh0 rv) (V.frameOf rv) 0 sz
+      0 nsz nsz sz;
+    rs_loc_elems_parent_disj
+      rg (V.as_seq hh0 rv) (V.frameOf rv) 0 nsz;
+    assert (rs_elems_inv rg hh0 (V.as_seq hh0 rv) 0 nsz);
+    assert (let p = loc_union (rs_loc_elems rg (V.as_seq hh0 rv) nsz sz)
+                              (loc_region_only false (V.frameOf rv)) in
+           loc_disjoint p (rs_loc_elems rg (V.as_seq hh0 rv) 0 nsz));
+    assert (let p = loc_union (rs_loc_elems rg (V.as_seq hh0 rv) nsz sz)
+                              (loc_region_only false (V.frameOf rv)) in
+           modifies p hh0 hh2);
+    rs_elems_inv_preserved
+      rg (V.as_seq hh0 rv) 0 nsz
+      (loc_union (rs_loc_elems rg (V.as_seq hh0 rv) nsz sz)
+                 (loc_region_only false (V.frameOf rv)))
+      hh0 hh2;
+    assert (rv_inv #a #rg hh2 frv);
+
+    // Correctness
+    as_seq_seq_preserved
+      rg (V.as_seq hh0 rv) 0 nsz
+      (loc_union (rs_loc_elems rg (V.as_seq hh0 rv) nsz sz)
+                   (loc_region_only false (V.frameOf rv)))
+      hh0 hh2;
+    as_seq_seq_slice
+      rg hh0 (V.as_seq hh0 rv) 0 sz 0 nsz;
+    assert (S.equal (S.slice (as_seq hh0 rv) 0 nsz)
+                    (as_seq_seq rg hh2 (V.as_seq hh0 rv) 0 nsz));
+    as_seq_seq_eq
+      rg hh2 (V.as_seq hh0 rv) (V.as_seq hh2 frv) 0 nsz 0 nsz;
+    assert (S.equal (as_seq_seq rg hh2 (V.as_seq hh2 frv) 0 nsz)
+                    (as_seq_seq rg hh2 (V.as_seq hh0 rv) 0 nsz));
+    assert (S.equal (S.slice (as_seq hh0 rv) 0 nsz)
+                    (as_seq hh2 frv));
+    frv
+end
 
 val free:
   #a:Type0 -> #rg:regional a -> rv:rvector rg ->
