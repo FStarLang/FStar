@@ -463,8 +463,20 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
-let whnf env t     = SS.compress (N.normalize [Env.Beta; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
-let sn env t       = SS.compress (N.normalize [Env.Beta] env t) |> U.unlazy_emb
+let whnf' env t    = SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
+let sn env t       = SS.compress (N.normalize [Env.Beta; Env.Reify] env t) |> U.unlazy_emb
+
+let should_strongly_reduce t =
+    let h, _ = U.head_and_args t in
+    match (SS.compress h).n with
+    | Tm_constant FStar.Const.Const_reify -> true
+    | _ -> false
+
+let whnf env t =
+    if should_strongly_reduce t
+    then SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] env t) |> U.unlazy_emb
+    else whnf' env t
+
 let norm_arg env t = sn env (fst t), snd t
 let sn_binders env (binders:binders) =
     binders |> List.map (fun (x, imp) -> {x with sort=sn env x.sort}, imp)
