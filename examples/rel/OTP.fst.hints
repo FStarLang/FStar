@@ -17,7 +17,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "16696f0fde034b0daec364d0a736ac78"
+      "abc674eb42106814ac83d865e6ed6318"
     ],
     [
       "OTP.xor_idempotent",
@@ -53,7 +53,7 @@
         "typing_FStar.BitVector.logxor_vec", "typing_FStar.Seq.Base.index"
       ],
       0,
-      "559ab17c83926fb18fb0b4378ed5d62f"
+      "16054eff745c8a0212301c71c6bbeb81"
     ],
     [
       "OTP.bij",
@@ -86,7 +86,7 @@
         "typing_FStar.DM4F.OTP.Heap.upd"
       ],
       0,
-      "ee1a369706f179aa91e124b094ff593c"
+      "25060db10eb75e58f760ab435059a04f"
     ],
     [
       "OTP.xor_prop",
@@ -104,7 +104,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1cc9465699f2a5f4f2726355d63ada0d"
+      "5cbf595b1ad289b99a99c51925d49a0c"
     ],
     [
       "OTP.xor_prop",
@@ -143,7 +143,7 @@
         "typing_FStar.BitVector.logxor_vec", "typing_FStar.Seq.Base.index"
       ],
       0,
-      "23e18cd82966554d6252992b28487b79"
+      "41031d1ccedde02b7af4f6be2c657317"
     ],
     [
       "OTP.otp_secure",
@@ -163,7 +163,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "028569ab3537fc8528ecc532d9075913"
+      "22dc91e22d585b0fc9ca46eb6386a717"
     ],
     [
       "OTP.otp_secure",
@@ -174,16 +174,14 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.BitVector_interpretation_Tm_arrow_3a656a9c42cd07d7f3caa5bf33717900",
         "FStar.DM4F.OTP.Random.__proj__RAND__item__get_equality",
-        "FStar.DM4F.OTP.Random.__proj__RAND__item__put_equality",
-        "FStar.DM4F.OTP.Random.__proj__RAND__item__raise_equality",
+        "FStar.DM4F.OTP.Random_interpretation_Tm_arrow_5f0b9e2b000571bed236a75b8d123d15",
         "OTP_interpretation_Tm_arrow_47bf4cc39a02d867ef093bf2c915524e",
         "OTP_interpretation_Tm_arrow_4b4eb92eb3a7aeefa9a11e7930641435",
-        "OTP_interpretation_Tm_arrow_7019e928280837af723f22a0549d4e61",
+        "OTP_interpretation_Tm_arrow_f6d9c46dbb85f994d71846d697ea35a1",
         "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_FStar.Seq.Base.seq__uu___haseq",
-        "assumption_Prims.HasEq_bool", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Tm_unit",
@@ -193,11 +191,9 @@
         "equation_FStar.DM4F.OTP.Heap.sel",
         "equation_FStar.DM4F.OTP.Heap.size",
         "equation_FStar.DM4F.OTP.Random.point",
-        "equation_FStar.DM4F.OTP.Random.sample",
-        "equation_FStar.Pervasives.Native.snd", "equation_OTP.bij",
+        "equation_FStar.DM4F.OTP.Random.sample", "equation_OTP.bij",
         "equation_OTP.op_Hat_Hat", "equation_OTP.otp",
-        "equation_Prims.as_requires", "equation_Prims.eqtype",
-        "equation_Prims.l_True", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_FStar.BitVector.logxor_vec",
         "function_token_typing_FStar.DM4F.OTP.Heap.id",
@@ -208,24 +204,14 @@
         "function_token_typing_Prims.bool",
         "haseqFStar.Seq.Properties_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
         "int_inversion", "int_typing",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_06ba19465bf8a1763eb3983c3b8c386f",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_16a38a369d941f86939cb8741a5e49e2",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_6aa0d323b977002a383b07caaa6005b4",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_8f423da22a85e1d516586f9fa74dffee",
         "interpretation_FStar.DM4F.OTP.Random_Tm_abs_9db29db46153c4404783fe7ac1f4ce6e",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_a819e8bb3636b28a63b659e491bcebc0",
-        "interpretation_FStar.DM4F.OTP.Random_Tm_abs_d95f274dbe9c9b0a31a7de4e0d8cb946",
         "interpretation_FStar.DM4F.OTP.Random_Tm_abs_eb5a642e5085f84ef6a9ea94652b8cbc",
-        "interpretation_OTP_Tm_abs_92314ef3a5b0aa466dd6025ff08a2823",
-        "interpretation_OTP_Tm_abs_ba3fb22ce803c9d319da0025889ae3a7",
         "interpretation_OTP_Tm_abs_ece719c3a1a611fb54564d84ffd27f40",
-        "interpretation_Prims_Tm_abs_65a2e960d61ec783b59c1bd1dd30ed10",
-        "l_quant_interp__3771", "lemma_FStar.DM4F.OTP.Heap.lemma_eq_elim",
+        "lemma_FStar.DM4F.OTP.Heap.lemma_eq_elim",
         "lemma_FStar.DM4F.OTP.Heap.lemma_index_upd1",
         "lemma_OTP.xor_idempotent", "lemma_OTP.xor_prop",
         "primitive_Prims.op_Equality",
         "proj_equation_FStar.DM4F.OTP.Random.Bijection_f",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.DM4F.OTP.Random.Bijection_f",
@@ -234,22 +220,23 @@
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.DM4F.OTP.Random_Tm_refine_8a730f9be4fc3e6d9b4fbd3fe5cbcbf8",
+        "refinement_interpretation_FStar.DM4F.OTP.Random_Tm_refine_ed5305f37534e0ae92a1b6703466f27c",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_OTP_Tm_refine_068380a969abd5ad59b78421d1cbc77e",
+        "refinement_interpretation_OTP_Tm_refine_889065bd6dbc226e8efd5972222a6d00",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "token_correspondence_FStar.BitVector.logxor_vec",
         "token_correspondence_FStar.DM4F.OTP.Random.__proj__Bijection__item__f",
-        "token_correspondence_OTP.op_Hat_Hat", "true_interp",
+        "token_correspondence_OTP.op_Hat_Hat",
         "typing_FStar.BitVector.logxor_vec",
-        "typing_FStar.DM4F.OTP.Heap.incrementable",
         "typing_FStar.DM4F.OTP.Heap.sel", "typing_FStar.DM4F.OTP.Heap.to_id",
-        "typing_OTP.bij", "typing_OTP.otp",
+        "typing_FStar.DM4F.OTP.Random.sample", "typing_OTP.bij",
+        "typing_OTP.otp",
         "typing_OTP_Tm_abs_ece719c3a1a611fb54564d84ffd27f40", "unit_typing"
       ],
       0,
-      "7bfc3ff8e4bd34f99e77d39d7e18fed2"
+      "0dd77beb96e5b5762fc678f30c91caab"
     ],
     [
       "OTP.one_time_pad",
@@ -277,7 +264,7 @@
         "typing_FStar.DM4F.OTP.Heap.incr"
       ],
       0,
-      "c8d69945fb1bf4e3104851845d91b722"
+      "650f6c390bd107863622ffae41c0f307"
     ],
     [
       "OTP.op_Hat_Hat",
@@ -289,7 +276,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ede8cae3b04fa28efe0c533441c662ee"
+      "f702a579dbcc489c6db0305a56b29f20"
     ],
     [
       "OTP.xor_idempotent",
@@ -323,7 +310,7 @@
         "typing_FStar.BitVector.logxor_vec", "typing_FStar.Seq.Base.index"
       ],
       0,
-      "cb4fcccf48d51cdbcd911b585d912a17"
+      "c13824e7d1c674d3233132be79227be1"
     ],
     [
       "OTP.bij",
@@ -354,7 +341,7 @@
         "typing_FStar.DM4F.OTP.Heap.upd"
       ],
       0,
-      "779cf65dc907c563da70f5810b0594b3"
+      "7abad0804bbcf105cd00db4474a7cb91"
     ],
     [
       "OTP.xor_prop",
@@ -388,7 +375,7 @@
         "typing_FStar.BitVector.logxor_vec", "typing_FStar.Seq.Base.index"
       ],
       0,
-      "d49f1a825f32b90199d6ac85e3baa6a7"
+      "998d1cd69ad822f8a26feb725e586931"
     ],
     [
       "OTP.otp_secure",
@@ -408,7 +395,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "8d9b2a41e49c1181cbe2ec7ae1988b1e"
+      "7c471845c17df3dc2fe3dee0e468226c"
     ],
     [
       "OTP.one_time_pad",
@@ -436,7 +423,7 @@
         "typing_FStar.DM4F.OTP.Heap.incr"
       ],
       0,
-      "43757354ad94dc5bd6145b5a6bbc3c02"
+      "861a9dba8d2bacb0d8c30ace4df935ba"
     ]
   ]
 ]
