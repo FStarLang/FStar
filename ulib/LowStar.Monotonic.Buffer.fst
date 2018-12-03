@@ -853,6 +853,8 @@ let loc_not_unused_in = MG.loc_not_unused_in _
 
 let loc_unused_in = MG.loc_unused_in _
 
+let loc_regions_unused_in = MG.loc_regions_unused_in cls
+
 let loc_unused_in_not_unused_in_disjoint =
   MG.loc_unused_in_not_unused_in_disjoint cls
 
