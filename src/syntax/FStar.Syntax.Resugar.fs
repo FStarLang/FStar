@@ -152,8 +152,12 @@ let string_to_op s =
   match s with
   | "op_String_Assignment" -> Some (".[]<-", None)
   | "op_Array_Assignment" -> Some (".()<-", None)
+  | "op_Brack_Lens_Assignment" -> Some (".[||]<-", None)
+  | "op_Lens_Assignment" -> Some (".(||)<-", None)
   | "op_String_Access" -> Some (".[]", None)
   | "op_Array_Access" -> Some (".()", None)
+  | "op_Brack_Lens_Access" -> Some (".[||]", None)
+  | "op_Lens_Access" -> Some (".(||)", None)
   | _ ->
     if BU.starts_with s "op_" then
       let s = BU.split (BU.substring_from s (String.length "op_"))  "_" in
