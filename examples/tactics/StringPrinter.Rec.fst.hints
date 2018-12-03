@@ -17,7 +17,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "38c399e62fcde1ad0db90bf9e2f35827"
+      "a734a2a5b93f957c547870d33f690eac"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
@@ -31,7 +31,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_fccbd444730e179142d53d00da45706a"
       ],
       0,
-      "0ab2eeca275b9fd007ca8c61ef92f914"
+      "72175a8516ae596dda9dd94d020b04a0"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -48,7 +48,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "0c68333ebe72af058471e99c1d07985b"
+      "6499a64b6059ed90c0308dcbdd44b716"
     ],
     [
       "StringPrinter.Rec.do_while_correct",
@@ -61,9 +61,15 @@
         "@fuel_irrelevance_StringPrinter.Rec.do_while.fuel_instrumented",
         "@query", "Prims_pretyping_e4836109f73687024ac3edd113084865",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "StringPrinter.Rec_interpretation_Tm_arrow_a6dc529af6a0f900201bf743710d909e",
         "StringPrinter.Rec_interpretation_Tm_arrow_ac7b50106d4d0ee7dd2755b6a1fd0e8f",
+        "StringPrinter.Rec_interpretation_Tm_arrow_f0878a0c8d5abd66649829ac7aa95622",
+        "StringPrinter.Rec_interpretation_Tm_arrow_f5fefdb76cc7683fab1a71dea19a4547",
         "binder_x_0efe4bfc81302ae193e1fdcda56aacfd_5",
         "binder_x_e09860b75d8922ab497a3e5bc9347578_6",
+        "binder_x_eff4306f0fa90d5333001233ad6829f0_4",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_2",
         "constructor_distinct_StringPrinter.Base.Left",
         "constructor_distinct_StringPrinter.Base.Right",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
@@ -79,6 +85,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_StringPrinter.Base.c_or",
         "function_token_typing_StringPrinter.Base.string",
+        "function_token_typing_StringPrinter.Rec.do_while",
         "interpretation_StringPrinter.Base_Tm_abs_972811362465780fcd7fe3adc2465d7b",
         "interpretation_StringPrinter.Rec_Tm_abs_9fcb29f49b1a967aac023c39a3f286de",
         "interpretation_StringPrinter.Rec_Tm_abs_ef1d448ec7eefb3d146e05cb7330bea4",
@@ -95,7 +102,7 @@
         "typing_tok_Prims.LexTop@tok", "unit_typing"
       ],
       0,
-      "6c3a258d1a2b1ee3f3688b336a0578dc"
+      "0a94a326feed5020a2af18d13ac66172"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -108,23 +115,28 @@
         "@query", "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "StringPrinter.Base_interpretation_Tm_arrow_24a2a4d1e53c09d32cfbf766e43b87de",
         "StringPrinter.Base_interpretation_Tm_arrow_e399938126b1035c0ddca38172d3c37e",
+        "StringPrinter.Rec_interpretation_Tm_arrow_ac7b50106d4d0ee7dd2755b6a1fd0e8f",
+        "StringPrinter.Rec_interpretation_Tm_arrow_f5fefdb76cc7683fab1a71dea19a4547",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "equation_StringPrinter.Base.bind", "equation_StringPrinter.Base.m",
         "equation_StringPrinter.Base.ret",
         "equation_StringPrinter.Base.s_append",
         "equation_StringPrinter.Base.string",
+        "equation_StringPrinter.Rec.do_while_body_res_t",
+        "equation_StringPrinter.Rec.do_while_body_t_",
         "equation_with_fuel_StringPrinter.Rec.do_while.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "interpretation_StringPrinter.Base_Tm_abs_4c50bbbe56844d388bf03a990422ffe9",
         "interpretation_StringPrinter.Base_Tm_abs_972811362465780fcd7fe3adc2465d7b",
         "interpretation_StringPrinter.Rec_Tm_abs_7a2a871e2e5a521cc262ddc91f6761f3",
         "lemma_StringPrinter.Rec.seq_append_empty_l",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_StringPrinter.Rec_Tm_refine_fccbd444730e179142d53d00da45706a",
         "token_correspondence_StringPrinter.Base.bind",
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "dc924b700ebf0a5fbf87c7c0e2754746"
+      "095ff96cbab6c977644bdb7074354e57"
     ],
     [
       "StringPrinter.Rec.do_while_body_post",
@@ -142,7 +154,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "0d040130854411c34985cdf1fd085814"
+      "102958d302c53da52ab07d8a6ddc7063"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
@@ -156,7 +168,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_fccbd444730e179142d53d00da45706a"
       ],
       0,
-      "b34b54313c939db6ff4ea8fe6fe3cda0"
+      "d92072a623bd9a61b66964c2e79e8ff1"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -173,7 +185,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "5e4661cdd4f862e0453e0100ff838c77"
+      "f76de48c1a19ec0c680efec01cc8192b"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -186,23 +198,28 @@
         "@query", "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "StringPrinter.Base_interpretation_Tm_arrow_24a2a4d1e53c09d32cfbf766e43b87de",
         "StringPrinter.Base_interpretation_Tm_arrow_e399938126b1035c0ddca38172d3c37e",
+        "StringPrinter.Rec_interpretation_Tm_arrow_ac7b50106d4d0ee7dd2755b6a1fd0e8f",
+        "StringPrinter.Rec_interpretation_Tm_arrow_f5fefdb76cc7683fab1a71dea19a4547",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "equation_StringPrinter.Base.bind", "equation_StringPrinter.Base.m",
         "equation_StringPrinter.Base.ret",
         "equation_StringPrinter.Base.s_append",
         "equation_StringPrinter.Base.string",
+        "equation_StringPrinter.Rec.do_while_body_res_t",
+        "equation_StringPrinter.Rec.do_while_body_t_",
         "equation_with_fuel_StringPrinter.Rec.do_while.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "interpretation_StringPrinter.Base_Tm_abs_4c50bbbe56844d388bf03a990422ffe9",
         "interpretation_StringPrinter.Base_Tm_abs_972811362465780fcd7fe3adc2465d7b",
         "interpretation_StringPrinter.Rec_Tm_abs_7a2a871e2e5a521cc262ddc91f6761f3",
         "lemma_StringPrinter.Rec.seq_append_empty_l",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_StringPrinter.Rec_Tm_refine_fccbd444730e179142d53d00da45706a",
         "token_correspondence_StringPrinter.Base.bind",
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "616e536b171109a09795b6651b6a280f"
+      "9b070250c309ffd1435b402d0acc816e"
     ]
   ]
 ]

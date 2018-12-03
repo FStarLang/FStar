@@ -906,28 +906,31 @@
         "Ex11a_pretyping_cfb04784214c7b625dc274210af5ad8b", "b2t_def",
         "binder_x_41426a8db77017461f501d8dbb1627a9_2",
         "binder_x_4f61251c0ef4abe5deff6b49815c3dbf_1",
+        "binder_x_600a78c6f9753595e2678d33a0ba4727_0",
         "constructor_distinct_Ex11a.Cons", "constructor_distinct_Ex11a.Nil",
-        "data_elim_Ex11a.Cons", "data_elim_Ex11a.Nil",
-        "data_typing_intro_Ex11a.Nil@tok", "disc_equation_Ex11a.Cons",
-        "disc_equation_Ex11a.Nil", "eq2-interp",
+        "data_elim_Ex11a.Bot", "data_elim_Ex11a.Cons",
+        "disc_equation_Ex11a.Cons", "disc_equation_Ex11a.Nil", "eq2-interp",
         "equality_tok_Ex11a.Nil@tok", "equality_tok_Prims.LexTop@tok",
-        "equation_Ex11a.op_Plus_Plus_Hat", "equation_Prims.eqtype",
+        "equation_Ex11a.op_Plus_Plus_Hat",
+        "equation_FStar.Monotonic.HyperHeap.disjoint",
         "equation_with_fuel_Ex11a.mem.fuel_instrumented",
         "fuel_guarded_inversion_Ex11a.bot",
         "fuel_guarded_inversion_Ex11a.bots",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid", "l_or-interp",
         "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "proj_equation_Ex11a.Bot_r", "projection_inverse_BoxBool_proj_0",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "proj_equation_Ex11a.Bot_r",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Ex11a.Cons_hd",
         "projection_inverse_Ex11a.Cons_rs",
         "projection_inverse_Ex11a.Cons_tl",
+        "refinement_interpretation_Ex11a_Tm_refine_206fb67ac8a0944a9ab5261a6c1a4470",
         "refinement_interpretation_Ex11a_Tm_refine_4efe13829b491a3f7fb86203b96ea2c7",
         "subterm_ordering_Ex11a.Cons", "typing_Ex11a.__proj__Bot__item__r",
         "typing_FStar.Set.singleton", "typing_tok_Ex11a.Nil@tok"
       ],
       0,
-      "2ae6d5f151a5814d3ab2b13bd1a4a228"
+      "12c4665aabab5dd16092b48b6c3fa9e6"
     ],
     [
       "Ex11a.lemma_bots_tl_disjoint",
@@ -1128,7 +1131,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "7d910dd32b2f2adcfa6425c4dc4d75ee"
+      "1f300fe341451e8ec160339e6beb5ec1"
     ],
     [
       "Ex11a.main",
