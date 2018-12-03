@@ -1331,6 +1331,10 @@ val loc_not_unused_in (h: HS.mem) : GTot loc
 
 val loc_unused_in (h: HS.mem) : GTot loc
 
+val loc_regions_unused_in (h: HS.mem) (rs: Set.set HS.rid) : Lemma
+  (requires (forall r . Set.mem r rs ==> (~ (HS.live_region h r))))
+  (ensures (loc_unused_in h `loc_includes` loc_regions false rs))
+
 val loc_unused_in_not_unused_in_disjoint (h: HS.mem) : Lemma
   (loc_disjoint (loc_unused_in h) (loc_not_unused_in h))
 

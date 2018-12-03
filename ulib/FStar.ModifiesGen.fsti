@@ -957,6 +957,10 @@ val loc_not_unused_in (#al: aloc_t) (c: cls al) (h: HS.mem) : GTot (loc c)
 
 val loc_unused_in (#al: aloc_t) (c: cls al) (h: HS.mem) : GTot (loc c)
 
+val loc_regions_unused_in (#al: aloc_t) (c: cls al) (h: HS.mem) (rs: Set.set HS.rid) : Lemma
+  (requires (forall r . Set.mem r rs ==> (~ (HS.live_region h r))))
+  (ensures (loc_unused_in c h `loc_includes` loc_regions false rs))
+
 val loc_addresses_unused_in (#al: aloc_t) (c: cls al) (r: HS.rid) (a: Set.set nat) (h: HS.mem) : Lemma
   (requires (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x)))
   (ensures (loc_unused_in c h `loc_includes` loc_addresses false r a))
