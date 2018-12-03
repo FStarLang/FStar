@@ -15,7 +15,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4e253f2695e2ae866f793096dc1e6eec"
+      "cb9b28e87e28ef93a3d21aba2fea30c6"
     ],
     [
       "Bug606.g",
@@ -31,7 +31,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "28f181a9e0c09726154e42b4a0be919b"
+      "42531ac0b6d23025b3c606e93e128d80"
     ],
     [
       "Bug606.f_eq_g",
@@ -58,7 +58,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "dbff122d5fc526a7fce960a246567e46"
+      "fc6c8c1e03376dea146157f895769c50"
     ],
     [
       "Bug606.h",
@@ -74,7 +74,7 @@
         "lemma_Bug606.f_eq_g"
       ],
       0,
-      "e1d117277c43d042a8004eb53e68901f"
+      "9b694c9ceb0a86328a071c5fad95ac2d"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -83,7 +83,7 @@
       1,
       [ "@query" ],
       0,
-      "12bea69bfd12546158143e2140e20d3f"
+      "c2fc20c1638571d32f4d6a2c62f8fcce"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -92,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "e8e309fc018a5a540b822eec14de72d4"
+      "3d07a71b43f08fed5c3ebb675a4d5197"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -113,7 +113,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "38f4d10e44b5be4301450b8948b89246"
+      "0305d473eeccf8c75cfa23714e7d0bec"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "6d92c222ddfacb6df269820746790236"
+      "abfc199ddd32a558dea27a85c620f213"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -131,7 +131,7 @@
       1,
       [ "@query" ],
       0,
-      "dc9f21b1542e869eac6ca2b4690adac0"
+      "5d4807511e743203a04538ccd2a56951"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -152,7 +152,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "4b0c365fc47546328e868a2fde999578"
+      "937368ce6b6d68907d998f5c74e97f40"
     ]
   ]
 ]

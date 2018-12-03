@@ -12,7 +12,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "449bda5af7f4e9ec4c1ae563e80b5e6f"
+      "92238f218074c80152fe7891639078ca"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "13ea7879c580b12c38c7c5fa17e61962"
+      "bdff030378c731aef0c0eb50e8ca8965"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "e0fc262729dd75909a4cdbe65aa2eeb1"
+      "35b9250c2868b80329fd1bc79ff1ae71"
     ],
     [
       "Ex10a.safe_delete",
@@ -59,7 +59,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "c0b03f251ffe956d53850c11fc2fecf5"
+      "2f9b96dadae7f0ed09f2be7e3a4db590"
     ],
     [
       "Ex10a.test_acls",
@@ -69,7 +69,10 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
-        "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "@query",
+        "Ex10a_interpretation_Tm_arrow_449d659811cde73f2fac6653669a9d13",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_Ex10a.entry__uu___haseq", "bool_typing",
         "constructor_distinct_Ex10a.Readable",
@@ -77,19 +80,21 @@
         "constructor_distinct_Prims.Cons",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Ex10a.canRead", "equation_Ex10a.canRead_t",
+        "equation_Ex10a.db",
         "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "interpretation_Ex10a_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e",
-        "primitive_Prims.op_Equality",
+        "kinding_Ex10a.entry@tok", "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "unit_typing"
+        "projection_inverse_Prims.Cons_tl",
+        "typing_Ex10a_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e", "unit_typing"
       ],
       0,
-      "1eca46a4c36d975bb62c0c4a0bed2245"
+      "c16f07164c64486b0c211fb84307795d"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -102,7 +107,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "cb6fedcfa47683e835916206c13ecabd"
+      "c963ee4034e46243225e3a9a3b4730e9"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -115,7 +120,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "698531f0c21b3f6bf862861242b2b98b"
+      "4a6934ab35976afd538d33be4062e05c"
     ],
     [
       "Ex10a.canRead",
@@ -128,7 +133,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "75ef235caf85671c5994ee4bd30e1235"
+      "2e79b42d83e8f0797924a61ad9eaa372"
     ],
     [
       "Ex10a.revoke",
@@ -141,7 +146,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "a0a03e92ab836c4f7f80be9f6bc1898a"
+      "70b60a17068dc01f7d54ef63b7bbebde"
     ]
   ]
 ]

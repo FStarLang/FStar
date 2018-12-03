@@ -1,5 +1,5 @@
 [
-  "\tЉѓ¶ќх\u000fA<ю#л\u0010?ещ",
+  "п\u0001=\u001e\u0014Сe\u001f\u000emЙ\u0011”\u0010L#",
   [
     [
       "Calc.op_Amp_Equals",
@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "0080d3d02237a769e0068fc93b886f51"
+      "9a7529fbaa21bc5dd848769221171f53"
     ],
     [
       "Calc.op_Amp_Bar",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "b20abc6b2f7276ebedbcee3c04794768"
+      "a2cbc3e807ee48795cd9c30db55b5af1"
     ],
     [
       "Calc.op_Amp_Bar_Bar",
@@ -26,10 +26,10 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Calc_Tm_refine_9d01de1dd32be4c22286fce6debed277"
+        "refinement_interpretation_Calc_Tm_refine_35e1c7f7fc861d93339e93fe8197fecb"
       ],
       0,
-      "f31fc5abb91443487a9ffc9bfcaad79a"
+      "8d36d54c8a745595a0af21f977b43c3b"
     ],
     [
       "Calc.op_Amp_Equals",
@@ -38,7 +38,7 @@
       0,
       [ "@query" ],
       0,
-      "804a368525a2ffd09b8acf74be9533d3"
+      "6eb96e3fbd6c088a4f7c0e988bedd2fd"
     ],
     [
       "Calc.op_Amp_Bar",
@@ -47,7 +47,7 @@
       0,
       [ "@query" ],
       0,
-      "68639a6de0a02b117bb2246eb89eae07"
+      "df14b8590a3d26343a65ccfe02b0c836"
     ],
     [
       "Calc.op_Amp_Bar_Bar",
@@ -56,10 +56,10 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Calc_Tm_refine_9235d02fe9937de65d5cbf319493973b"
+        "refinement_interpretation_Calc_Tm_refine_94787c8b4b475cf93d4722530ab5e297"
       ],
       0,
-      "46b9dd335feb67bc2cee59a4e749daee"
+      "65852634f239a4dbad2c586b26c455e9"
     ]
   ]
 ]

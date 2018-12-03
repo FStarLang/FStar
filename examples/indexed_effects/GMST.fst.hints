@@ -9,12 +9,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_GMST.op_At",
         "interpretation_GMST_Tm_abs_e1c12a6762f5a5993deabcb425221d90",
-        "l_quant_interp__1720",
+        "l_quant_interp__1680",
         "refinement_interpretation_GMST_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
         "token_correspondence_GMST.op_At"
       ],
       0,
-      "c05d54fa3b0a79f9d94becb300dd4703"
+      "e4bfa051751a8028418a408a0b95430e"
     ],
     [
       "GMST.gst_put",
@@ -23,7 +23,7 @@
       1,
       [ "@query" ],
       0,
-      "ede054053827818e277fa6a5cd0c5bc3"
+      "3c7149d8481c7ad4e7fbe62c27641bae"
     ],
     [
       "GMST.gst_witness",
@@ -38,7 +38,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "5be35d50e7c3c7844732ed512d97cbcd"
+      "9e60e8b5d3f866e676409d5f753aebd5"
     ],
     [
       "GMST.gst_recall",
@@ -53,7 +53,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "5e6cadecab4b08d059b530ab5f74b8d0"
+      "1d5850161f39ce71a263f006060bc70a"
     ],
     [
       "GMST.app",
@@ -64,12 +64,12 @@
         "@MaxIFuel_assumption", "@query", "equation_GMST.op_At",
         "equation_GMST.state", "int_inversion",
         "interpretation_GMST_Tm_abs_e1c12a6762f5a5993deabcb425221d90",
-        "l_quant_interp__1720",
+        "l_quant_interp__1680",
         "refinement_interpretation_GMST_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
         "token_correspondence_GMST.op_At"
       ],
       0,
-      "615c92f8648509b41cf0bb6903fda817"
+      "d003e4988ab0c0fd2981268c6ef6b84e"
     ],
     [
       "GMST.lemma_preorder_comp_equiv",
@@ -78,16 +78,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive", "equation_GMST.op_At",
+        "equation_FStar.Preorder.preorder_rel", "equation_GMST.op_At",
         "interpretation_GMST_Tm_abs_e1c12a6762f5a5993deabcb425221d90",
-        "l_quant_interp__1720",
+        "l_quant_interp__1680",
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "token_correspondence_GMST.op_At"
       ],
       0,
-      "2268517d53f3603c55d06cf11dee84c9"
+      "766b4f6f4b688acf82f1f8913f1f3d59"
     ],
     [
       "GMST.preorder_app'",
@@ -95,17 +93,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_GMST.op_At",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel", "equation_GMST.op_At",
         "equation_GMST.state", "equation_Prims.eqtype",
         "function_token_typing_Prims.int", "int_inversion",
         "interpretation_GMST_Tm_abs_e1c12a6762f5a5993deabcb425221d90",
-        "l_quant_interp__1720", "lemma_GMST.lemma_preorder_comp_equal",
+        "l_quant_interp__1680", "lemma_GMST.lemma_preorder_comp_equal",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_GMST_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_GMST.op_At"
       ],
       0,
-      "102b313e60799889a23c53144346aa32"
+      "1163f09da0550c3b2767ab25a91095eb"
     ],
     [
       "GMST.transport_gmst_rel",
@@ -117,7 +117,7 @@
         "refinement_interpretation_GMST_Tm_refine_58b5760b9dc8afe2282a377442f6f031"
       ],
       0,
-      "48df687c3e63edfdc41fea02893ea111"
+      "d7dc943dec97cf877b549d0c5f925532"
     ],
     [
       "GMST.preorder_app",
@@ -129,17 +129,16 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "eq2-interp",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.relation",
-        "equation_FStar.Preorder.transitive", "equation_GMST.lift_div_gmst",
+        "equation_FStar.Preorder.relation", "equation_GMST.lift_div_gmst",
         "equation_GMST.state", "equation_Prims.eqtype",
         "equation_Prims.l_True", "equation_Prims.logical",
         "equation_Prims.pure_pre", "function_token_typing_Prims.int",
         "int_inversion",
         "interpretation_GMST_Tm_abs_39a475fdb63a2ff02e343235d8a91f5d",
         "interpretation_GMST_Tm_abs_793e33c41a7ec9caaca0af428c5dc363",
-        "interpretation_GMST_Tm_abs_7f609eb32bea94be28d408059edf3895",
-        "interpretation_GMST_Tm_abs_d6f5b60923c2087b56398b264c53d203",
-        "l_and-interp", "l_quant_interp__1843",
+        "interpretation_GMST_Tm_abs_ba5f851a4a2dfc919d2f77326eb14b14",
+        "interpretation_GMST_Tm_abs_fb422b409125902e73e2c0953e078bc5",
+        "l_and-interp", "l_quant_interp__1803",
         "lemma_GMST.lemma_preorder_comp_equal",
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_GMST_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
@@ -147,7 +146,7 @@
         "token_correspondence_GMST.op_At", "true_interp", "unit_typing"
       ],
       0,
-      "6f45e7b8d0bc0fd8b5ac92227de89539"
+      "5c052d082958ce890aa0bf73d81d45c8"
     ],
     [
       "GMST.gmst_bind",
@@ -157,12 +156,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_GMST.op_At",
         "interpretation_GMST_Tm_abs_e1c12a6762f5a5993deabcb425221d90",
-        "l_quant_interp__2015",
+        "l_quant_interp__1975",
         "refinement_interpretation_GMST_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
         "token_correspondence_GMST.op_At"
       ],
       0,
-      "bea364d82520f2ae459684a09e27da37"
+      "a6b705b12fcf1376d29b7c8f91a15fd1"
     ],
     [
       "GMST.gst_put",
@@ -171,7 +170,7 @@
       1,
       [ "@query" ],
       0,
-      "54532174788be65f364f3463ef9aed44"
+      "c6a64f37f00ce7574648988e4171c2f4"
     ],
     [
       "GMST.gst_witness",
@@ -186,7 +185,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "dc6ae1fd35e3b2f03860a14f0c467dd8"
+      "976dd78e29ef44e4797b57d676f4bd94"
     ],
     [
       "GMST.gst_recall",
@@ -201,7 +200,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "59f092f851c423932838e8af0086bcd6"
+      "844b19427ba7a0411367f2485af5a085"
     ],
     [
       "GMST.app",
@@ -212,12 +211,12 @@
         "@MaxIFuel_assumption", "@query", "equation_GMST.op_At",
         "equation_GMST.state", "int_inversion",
         "interpretation_GMST_Tm_abs_e1c12a6762f5a5993deabcb425221d90",
-        "l_quant_interp__2015",
+        "l_quant_interp__1975",
         "refinement_interpretation_GMST_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
         "token_correspondence_GMST.op_At"
       ],
       0,
-      "96dd42d506b99ea3d5556a4ed0485a89"
+      "c593565074be0041eea07d67cd5ab7c0"
     ],
     [
       "GMST.preorder_app'",
@@ -225,17 +224,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_GMST.op_At",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel", "equation_GMST.op_At",
         "equation_GMST.state", "equation_Prims.eqtype",
         "function_token_typing_Prims.int", "int_inversion",
         "interpretation_GMST_Tm_abs_e1c12a6762f5a5993deabcb425221d90",
-        "l_quant_interp__2015", "lemma_GMST.lemma_preorder_comp_equal",
+        "l_quant_interp__1975", "lemma_GMST.lemma_preorder_comp_equal",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_GMST_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_GMST.op_At"
       ],
       0,
-      "d1a416fd983b748a0ec7bd248b5406fa"
+      "589ccc7db3fd05ef2dc7a17517338d56"
     ],
     [
       "GMST.transport_gmst_rel",
@@ -247,7 +248,7 @@
         "refinement_interpretation_GMST_Tm_refine_58b5760b9dc8afe2282a377442f6f031"
       ],
       0,
-      "4a76759306d3074b9b14e20a0bde3a32"
+      "bf934abcdb37be979b9d7cb786563a8d"
     ],
     [
       "GMST.preorder_app",
@@ -255,17 +256,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_GMST.op_At",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel", "equation_GMST.op_At",
         "equation_GMST.state", "equation_Prims.eqtype",
         "function_token_typing_Prims.int", "int_inversion",
         "interpretation_GMST_Tm_abs_e1c12a6762f5a5993deabcb425221d90",
-        "l_quant_interp__2015", "lemma_GMST.lemma_preorder_comp_equal",
+        "l_quant_interp__1975", "lemma_GMST.lemma_preorder_comp_equal",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_GMST_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_GMST.op_At"
       ],
       0,
-      "6686beb778266e0be5c61fe22176b218"
+      "083ccbf89a55f4a563a3affc1571d045"
     ]
   ]
 ]

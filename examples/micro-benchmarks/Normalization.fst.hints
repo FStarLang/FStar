@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "c6b0a47cf7816802ca2e32009f2a0fb9"
+      "b3c74e65efb5918f43ab78d2a69b5482"
     ],
     [
       "Normalization.id",
@@ -25,7 +25,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "229c0272eba64f705a33fc5147301085"
+      "4018b278d3ffd67cf589b2ba856912da"
     ],
     [
       "Normalization.test2",
@@ -34,7 +34,7 @@
       0,
       [ "@query" ],
       0,
-      "41f5ee9a4d15a84ac6797d2e6b1edede"
+      "1b34a1f89026d28d27fe3c69b5c2e0b4"
     ],
     [
       "Normalization.pow2_values",
@@ -43,7 +43,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3cb811a90fe8a61b057a8f4fc2905c19"
+      "06ddb5889fe7bd4ceee0fa635960cce6"
     ],
     [
       "Normalization.test_sort",
@@ -57,7 +57,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4c920e0e4de39855e180971415d3129d"
+      "019060fc1600d979ca9c4a8a33efe190"
     ],
     [
       "Normalization.test_sort1",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3a9fa52f1e16b59df404be25beec8693"
+      "1ce5385b14ad13dfc99750c2b0c8d7dc"
     ],
     [
       "Normalization.id",
@@ -88,7 +88,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e851409d0c1c3df6796fbec625265c63"
+      "0d9fcfca9e3546cfc3be43b169c04d8c"
     ],
     [
       "Normalization.test_sort",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d454969eb6277a4a17bbda5d76a8dc66"
+      "371a395198ce76778da62c5fe046f262"
     ],
     [
       "Normalization.test_sort1",
@@ -116,7 +116,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7fe219858f46b558781f4c3f4e689fd6"
+      "7aa76f8555b063ffa6eefb39a6d37209"
     ]
   ]
 ]

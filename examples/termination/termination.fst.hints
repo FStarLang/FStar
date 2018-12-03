@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9f28fe7078392ce0ec9ec625d6e588e3"
+      "fc93403ca8e9bc1c99fb972e7a1faa2c"
     ],
     [
       "Termination.fibonacci",
@@ -34,7 +34,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0ed3728dee4d082b5b0f45b4edd9b637"
+      "87e73eacedc312ccfc5c62f8b1fbbe6e"
     ],
     [
       "Termination.ackermann",
@@ -54,7 +54,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7b074d174954a60f880e325e698cdbd6"
+      "57d47053a338fa8e441b05d78bb258b7"
     ],
     [
       "Termination.ack_swap",
@@ -74,7 +74,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3e39fb291e8079aa76a61db6d7f007c9"
+      "e3a7ca195df85d86db0b4d63a6b42b5d"
     ],
     [
       "Termination.length",
@@ -91,7 +91,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0e0445e8f91c5b3223b632bf955b1c35"
+      "6303eaab1288c7cf0ebc30db8aa4ee4d"
     ],
     [
       "Termination.half_length",
@@ -113,7 +113,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "0a4946d08318f33173956b365352c202"
+      "58cafe8b8cb5785724050beadf6058d2"
     ],
     [
       "Termination.sumto",
@@ -130,7 +130,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "20430c33240a0d58c086491f84545f64"
+      "2277a2184a183aa9cfd197d69d749d3c"
     ],
     [
       "Termination.strangeZero",
@@ -146,7 +146,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "366b4ec6a364e14142a8e43ce5c54f80"
+      "6ceaf1e0fc6647c04dbe72658328652e"
     ],
     [
       "Termination.map",
@@ -160,7 +160,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ed592bb4087003fc75bc56da236202aa"
+      "d3cc38620f0892b6e996ccfa92951ee5"
     ],
     [
       "Termination.mem",
@@ -175,7 +175,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4c55fa07f024e64b1e4c386a6684a560"
+      "1cda995e23b335c2afa081556bf8c693"
     ],
     [
       "Termination.list_subterm_ordering_coercion",
@@ -207,7 +207,7 @@
         "typing_Termination.list_subterm_ordering_coercion"
       ],
       0,
-      "de7effa1e5c599eb87044df35dca7c25"
+      "7c6e68ba6d527160b25a5f272053b36d"
     ],
     [
       "Termination.list_subterm_ordering_coercion",
@@ -239,7 +239,7 @@
         "typing_Termination.list_subterm_ordering_coercion"
       ],
       0,
-      "121ab812a258ba84e9a60b55aff26618"
+      "3b006bdafb31d772371cf41779dbe1a3"
     ],
     [
       "Termination.list_subterm_ordering_lemma",
@@ -251,7 +251,8 @@
         "@fuel_correspondence_Termination.mem.fuel_instrumented",
         "@fuel_irrelevance_Termination.mem.fuel_instrumented", "@query",
         "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
-        "binder_x_63893f6163361bb7b4db46296cfdfc01_3", "bool_inversion",
+        "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
+        "binder_x_a81196f4caaaa4b43052179035836caa_5", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.eqtype",
@@ -264,7 +265,7 @@
         "subterm_ordering_Prims.Cons", "typing_Termination.mem"
       ],
       0,
-      "bd98855e0644b43c34f723ae0b05e2f2"
+      "07eb148fcd14c31a342ffb97524fa3a9"
     ],
     [
       "Termination.move_refinement",
@@ -275,6 +276,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Termination.mem.fuel_instrumented",
         "@fuel_irrelevance_Termination.mem.fuel_instrumented", "@query",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_0",
         "binder_x_b61d515802515b2fbf412a0a06819e8f_2",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
@@ -289,7 +291,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ad6196ed18dc34df8520ff5b9842b8af"
+      "236fe43170edfdb6c37de7d6f5926372"
     ],
     [
       "Termination.tree",
@@ -301,7 +303,7 @@
         "kinding_Termination.tree@tok"
       ],
       0,
-      "05cc66a5cb4c8ee114699a145131bb12"
+      "a22e04178d3ac93a27a302d6ead9f7ce"
     ],
     [
       "Termination.__proj__Leaf__item___0",
@@ -314,7 +316,7 @@
         "refinement_interpretation_Termination_Tm_refine_eecc20c444854ed8824621455f36b0bc"
       ],
       0,
-      "5204cb74fe76d35fc93420622ea688a0"
+      "e69f835d84bfaad71e3d8a5a47afb6bb"
     ],
     [
       "Termination.__proj__Node__item___0",
@@ -327,7 +329,7 @@
         "refinement_interpretation_Termination_Tm_refine_ef7437472d1ef108a142a5a0fa28c50f"
       ],
       0,
-      "d960d6e2dc0dc573e7a1b27c9fcb9085"
+      "7f3e33e55cb63d9a8d6849048a174c2f"
     ],
     [
       "Termination.treeMap",
@@ -350,7 +352,7 @@
         "subterm_ordering_Termination.Node"
       ],
       0,
-      "568a0cdeb2225d79b1d5c66e66cb99fc"
+      "23bc7f51bb34a7416ae4e7308a5502ff"
     ],
     [
       "Termination.list_map",
@@ -364,7 +366,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8f104a247ff94a325ac4441005c0d561"
+      "50e27c48fba0f81224f01916d4419f6d"
     ],
     [
       "Termination.tree_map",
@@ -379,7 +381,7 @@
         "subterm_ordering_Termination.Node"
       ],
       0,
-      "0c69480d88da585ca8c870877756a776"
+      "89d24efca9aca8b08068e630e6178d47"
     ],
     [
       "Termination.flatten_list",
@@ -393,7 +395,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8e681d07d5a8fffd5bd2560abc2c46b6"
+      "0629d7a7ee963af5f2687dd803b8db93"
     ],
     [
       "Termination.flatten_tree",
@@ -416,7 +418,7 @@
         "subterm_ordering_Termination.Node"
       ],
       0,
-      "4ffcc238eeb7baff4fdf4060ed05c459"
+      "177e8e47f050336f9e190c651f9e43a3"
     ],
     [
       "Termination.flatten_list'",
@@ -430,7 +432,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c709720eab464d764a7e3e64b484523a"
+      "497f1dff5ea95bf2f7f42c3a7374468b"
     ],
     [
       "Termination.flatten_tree'",
@@ -445,7 +447,7 @@
         "subterm_ordering_Termination.Node"
       ],
       0,
-      "f7fe7f311bb706559c91cccaaa725f4a"
+      "fbec4ffafb4c60430b9db0dd43f25667"
     ],
     [
       "Termination.factorial",
@@ -462,7 +464,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4f5a1003155e789d7bd9274f222a49f0"
+      "f7c3b1304ab1512f7c75dcf3b0eb1363"
     ],
     [
       "Termination.fibonacci",
@@ -480,7 +482,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9d0e16c37b4cf16c0a77a513203b0dfe"
+      "dbcc12326034733ae11ff7b421b39514"
     ],
     [
       "Termination.ackermann",
@@ -500,7 +502,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "caf48651caa7e721b53972fbc56b7129"
+      "b8a7f6a8f7295d55fd0555249e20d057"
     ],
     [
       "Termination.ack_swap",
@@ -520,7 +522,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5f23749124ab0306150c2281a7d44254"
+      "be3c9ca1ec93353c392ca737085adea2"
     ],
     [
       "Termination.length",
@@ -537,7 +539,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "857a6ff3c260ee2e997ed35473b03fcc"
+      "22926721c3c2d349773cf8d3667267e7"
     ],
     [
       "Termination.half_length",
@@ -559,7 +561,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "de90ffa3522ae0174802d42657bed993"
+      "b050746e71ac4a617e621a1468f48dc2"
     ],
     [
       "Termination.sumto",
@@ -576,7 +578,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1a16a6643cc55445637609c6e0ebf758"
+      "870e29c58d9f9733c28854676e35fc01"
     ],
     [
       "Termination.strangeZero",
@@ -592,7 +594,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "369e656094e8316cd8c94aa283821c42"
+      "f38b96ca67d021593170049d1c441f45"
     ],
     [
       "Termination.map",
@@ -606,7 +608,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "35b1ee4ddfb55502a4a5f7099bff8f1e"
+      "9f24f95105ca1275f3c83704a6782d50"
     ],
     [
       "Termination.mem",
@@ -621,7 +623,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "139ec68716cf4699eebbd45954c81a58"
+      "d2aec1506b6de99913ddeeda0ea3d890"
     ],
     [
       "Termination.list_subterm_ordering_coercion",
@@ -630,7 +632,7 @@
       1,
       [ "@query" ],
       0,
-      "9e288a9a085df2d12123dd546dbf72be"
+      "06e311bf609dc22a3d674658aeff7146"
     ],
     [
       "Termination.list_subterm_ordering_coercion",
@@ -641,6 +643,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Termination.mem.fuel_instrumented",
         "@fuel_irrelevance_Termination.mem.fuel_instrumented", "@query",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
         "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
         "binder_x_d2232cb7e0ee20c45b91c3002dc74749_4",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
@@ -657,7 +660,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d5ccd99365a86289d6be801f0b764a5d"
+      "beb50216a73066d3317b380d598b1d33"
     ],
     [
       "Termination.move_refinement",
@@ -668,6 +671,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Termination.mem.fuel_instrumented",
         "@fuel_irrelevance_Termination.mem.fuel_instrumented", "@query",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_0",
         "binder_x_b61d515802515b2fbf412a0a06819e8f_2",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
@@ -682,7 +686,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b19ddc540b38eb9141bda049d98b428d"
+      "076b15c38e39cf4368579719d9624b4b"
     ],
     [
       "Termination.tree",
@@ -694,7 +698,7 @@
         "kinding_Termination.tree@tok"
       ],
       0,
-      "88905f01be3c4944f056ca2ef39de576"
+      "a1f91644051fb3b4ffece9eea3244473"
     ],
     [
       "Termination.__proj__Leaf__item___0",
@@ -707,7 +711,7 @@
         "refinement_interpretation_Termination_Tm_refine_eecc20c444854ed8824621455f36b0bc"
       ],
       0,
-      "986d08976f3145c62fdf2837061ba8d1"
+      "4453ec28f81e213263bd33ea83a67e3e"
     ],
     [
       "Termination.__proj__Node__item___0",
@@ -720,7 +724,7 @@
         "refinement_interpretation_Termination_Tm_refine_ef7437472d1ef108a142a5a0fa28c50f"
       ],
       0,
-      "f2355c356b6ca9503be147d2564bd421"
+      "278152862c57edac0d47edbf940db29b"
     ],
     [
       "Termination.treeMap",
@@ -743,7 +747,7 @@
         "subterm_ordering_Termination.Node"
       ],
       0,
-      "6988d8c054619de95cd22e134b407de2"
+      "000fb63eb95572283d75ccd3ae156fbb"
     ],
     [
       "Termination.list_map",
@@ -757,7 +761,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c24999e0931759a3e491b35839693eba"
+      "f522763888e76a1769ccf2a62aba7980"
     ],
     [
       "Termination.tree_map",
@@ -772,7 +776,7 @@
         "subterm_ordering_Termination.Node"
       ],
       0,
-      "82db7c6925ec9107156ad454702885a5"
+      "d28c1e61ad87799137306f93f7659b1a"
     ],
     [
       "Termination.flatten_list",
@@ -786,7 +790,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "18b560f418e56eb31e8f8037c88fa832"
+      "cf7027396d33a9b8e9f2fdb62a13f959"
     ],
     [
       "Termination.flatten_tree",
@@ -809,7 +813,7 @@
         "subterm_ordering_Termination.Node"
       ],
       0,
-      "21c2e35a8e231e3e4389cdd4414f995e"
+      "79cb0b4b454cc558446c559e35ed7714"
     ],
     [
       "Termination.flatten_list'",
@@ -823,7 +827,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f1dce1d485f5e9217ce4c96938a31dcb"
+      "cb6282896b66db6ea21db5184fc9f0c6"
     ],
     [
       "Termination.flatten_tree'",
@@ -838,7 +842,7 @@
         "subterm_ordering_Termination.Node"
       ],
       0,
-      "8399a13d5f272b9838d59425157fd82d"
+      "b73caf367532c4a13aed3855fbe81822"
     ]
   ]
 ]

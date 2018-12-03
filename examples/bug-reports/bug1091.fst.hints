@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
       0,
-      "99bf33960753cffdd690e60d7455ab4b"
+      "e421ff6e01a39cd42b023e9521101dc9"
     ],
     [
       "Bug1091.jun21_2017_logand_fail",
@@ -25,7 +25,7 @@
         "uvar_typing_19"
       ],
       0,
-      "7ba0459e3ae54fe415ff28eb04429825"
+      "25c310d54b1dc5dcc28368a2dff7ee81"
     ],
     [
       "Bug1091.jun21_2017_logand",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "87c99aa8b642501062aedceec0544235"
+      "43e620dafc0d0488cf38a065284c4e0d"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -54,7 +54,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "008ab6e898d4b62ecf7760677dd4249a"
+      "f3a503f838493a212fcf8be9c59acc87"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -66,7 +66,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1c911ce3df11f69b397743305ebdabe9"
+      "75614f06d178569d2fc1ae070e098305"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0561ff21e1fa322cc2c608df77524486"
+      "d693b12425c4b04feb4e4bc060a3a498"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ee4b6954d57e2a3f388ea7f26b8646bd"
+      "ee54f43c8a68717d8844cd0fb7422bc4"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "757536174220077f8a38f4d454b0e436"
+      "c4debcfebfd61b4baf2d45cc9ba858b3"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -124,7 +124,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b74c78309e76d693085c157a66e23e26"
+      "bf7f5a6eef7b5d73fc2f3772ddbe42a4"
     ]
   ]
 ]
