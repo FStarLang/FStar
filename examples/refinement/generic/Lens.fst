@@ -101,7 +101,7 @@ type high #hstate a (wp : hwp_mon #hstate a) = s0:hstate -> PURE (a * hstate) (w
 // Better name?
 type high_p #hstate 'a (pre : hpre #hstate) (post : hpost #hstate 'a) = high 'a (as_wp #hstate #'a pre post)
 
-
+subs
 (* Low computations *)
 type low #lstate (#l:low_state lstate) #hstate (#p: state_lens lstate hstate)
          (a:Type) (wp : hwp_mon a) (c : high #hstate a wp) =
@@ -321,9 +321,11 @@ let rec lfor' #lstate (#l:low_state lstate) #hstate (#p: state_lens lstate hstat
 
 
 (* TBD : 
-   1.) Effect declaration -> the same as before but parametric in the hstate 
+   1.) Effect declaration 
+       - Right now we cannot define generically operations such as 
+         actions with lens composition and for loop for the High_h effect.
+         That might be problematic for rewriting. 
    2.) form of morph lemmas
-
 
   - Write morph lemmas with subsumption hyp 
     conclusion : l_eq 
