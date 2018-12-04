@@ -389,3 +389,10 @@ let (norm_step_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Syntax"; "Embeddings"; "norm_step"]
     FStar_Range.dummyRange
   
+let (calc_lid : Prims.string -> FStar_Ident.lid) =
+  fun i  ->
+    FStar_Ident.lid_of_path ["FStar"; "Calc"; i] FStar_Range.dummyRange
+  
+let (calc_init_lid : FStar_Ident.lid) = calc_lid "calc_init" 
+let (calc_step_lid : FStar_Ident.lid) = calc_lid "calc_step" 
+let (calc_finish_lid : FStar_Ident.lid) = calc_lid "calc_finish" 

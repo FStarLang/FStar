@@ -266,14 +266,14 @@ let (e_proofstate_nbe :
         FStar_Syntax_Syntax.ltyp = t_proofstate;
         FStar_Syntax_Syntax.rng = FStar_Range.dummyRange
       }  in
-    let thunk =
+    let thunk1 =
       FStar_Common.mk_thunk
         (fun uu____721  ->
            FStar_TypeChecker_NBETerm.Constant
              (FStar_TypeChecker_NBETerm.String
                 ("(((proofstate.nbe)))", FStar_Range.dummyRange)))
        in
-    FStar_TypeChecker_NBETerm.Lazy ((FStar_Util.Inl li), thunk)  in
+    FStar_TypeChecker_NBETerm.Lazy ((FStar_Util.Inl li), thunk1)  in
   let unembed_proofstate _cb t =
     match t with
     | FStar_TypeChecker_NBETerm.Lazy
@@ -351,14 +351,14 @@ let (e_goal_nbe :
         FStar_Syntax_Syntax.ltyp = t_goal;
         FStar_Syntax_Syntax.rng = FStar_Range.dummyRange
       }  in
-    let thunk =
+    let thunk1 =
       FStar_Common.mk_thunk
         (fun uu____927  ->
            FStar_TypeChecker_NBETerm.Constant
              (FStar_TypeChecker_NBETerm.String
                 ("(((goal.nbe)))", FStar_Range.dummyRange)))
        in
-    FStar_TypeChecker_NBETerm.Lazy ((FStar_Util.Inl li), thunk)  in
+    FStar_TypeChecker_NBETerm.Lazy ((FStar_Util.Inl li), thunk1)  in
   let unembed_goal _cb t =
     match t with
     | FStar_TypeChecker_NBETerm.Lazy
@@ -405,11 +405,11 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
            in
         uu____1114 FStar_Pervasives_Native.None rng
     | FStar_Tactics_Types.EExn t ->
-        let uu___359_1150 = t  in
+        let uu___360_1150 = t  in
         {
-          FStar_Syntax_Syntax.n = (uu___359_1150.FStar_Syntax_Syntax.n);
+          FStar_Syntax_Syntax.n = (uu___360_1150.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = rng;
-          FStar_Syntax_Syntax.vars = (uu___359_1150.FStar_Syntax_Syntax.vars)
+          FStar_Syntax_Syntax.vars = (uu___360_1150.FStar_Syntax_Syntax.vars)
         }
     | e1 ->
         let s =
