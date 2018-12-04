@@ -55,10 +55,12 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "typing_Ex06b.mem"
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "subterm_ordering_Prims.Cons", "typing_Ex06b.append",
+        "typing_Ex06b.mem"
       ],
       0,
-      "2a0cf87466de143a5e10882dd3a85f2b"
+      "db4c6db1984aea3fe659f0f7324ebf64"
     ],
     [
       "Ex06b.length",
@@ -162,7 +164,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "6a65f4e5ba6c3db39a2813c146fa7c90"
+      "b74490440e786704a0de86e26bbbda09"
     ],
     [
       "Ex06b.sorted_concat_lemma",
@@ -205,7 +207,7 @@
         "typing_Ex06b.append", "typing_Ex06b.mem", "typing_Ex06b.sorted"
       ],
       0,
-      "45aa19c83905699202a31de445cda02e"
+      "a29865390f7ffa563ef14cea8dba2220"
     ],
     [
       "Ex06b.sort",
@@ -225,12 +227,12 @@
         "@fuel_irrelevance_Ex06b.partition.fuel_instrumented",
         "@fuel_irrelevance_Ex06b.sorted.fuel_instrumented", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_Prims.HasEq_int",
         "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0", "bool_inversion",
         "bool_typing", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
         "equation_Prims.nat",
@@ -261,15 +263,14 @@
         "token_correspondence_Ex06b.length.fuel_instrumented",
         "token_correspondence_Ex06b.mem.fuel_instrumented",
         "token_correspondence_Ex06b.sorted.fuel_instrumented",
-        "typing_Ex06b.length", "typing_Ex06b.mem", "typing_Ex06b.partition",
+        "typing_Ex06b.append", "typing_Ex06b.length", "typing_Ex06b.mem",
+        "typing_Ex06b.partition",
         "typing_Ex06b_Tm_abs_fd63deea4bb4a02dbce24fcc03ee002e",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
         "typing_FStar.Pervasives.Native.fst",
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "e84adf8bb6c343e8e9cea00122de3dac"
+      "ca72a9c80ddd381f6346e6a8e0c88b12"
     ],
     [
       "Ex06b.mem",
@@ -412,7 +413,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "4892e5be2e31842dd95b9feb3a947c73"
+      "b92fb4c2c6fc9eeedf417a7842d3eeab"
     ]
   ]
 ]

@@ -128,6 +128,8 @@ let maybe_curry_app rng (head:op) (arity:int) (args:list<term>) =
          let head = Util.mkApp'(head, args) in
          mk_Apply_args head rest
     else raise_arity_mismatch (Term.op_to_string head) arity n_args rng
+let maybe_curry_fvb rng fvb args =
+    maybe_curry_app rng (Var fvb.smt_id) fvb.smt_arity args
 
 let is_app = function
     | Var "ApplyTT"

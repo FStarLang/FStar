@@ -175,10 +175,12 @@ let to_memo_pack (f : dom -> Tot codom) : Tot (memo_pack f) =
   MemoPack [] (memo_extr f)
 
 
+type t (p:dom -> Type0) = x:dom{p x} -> Memo codom
+
 (* Specification-less memoization of a memoized function and its extrinsic proof *)
 
 (*  *)
-let memo_extr_p (p:dom -> Type0) (f : (x:dom{p x} -> Memo codom)) (x:dom{p x}) : Memo codom
+let memo_extr_p (p:dom -> Type0) (f : t p) (x:dom{p x}) : Memo codom
 = match MEMO?.get x with
   | Some y -> y
   | None ->
@@ -186,7 +188,7 @@ let memo_extr_p (p:dom -> Type0) (f : (x:dom{p x} -> Memo codom)) (x:dom{p x}) :
     MEMO?.put x y ;
     y
 
-let memo_extr_p_lemma (p:dom -> Type0) (f: (x:dom{p x} -> Memo codom)) (g:dom -> Tot codom) (h0:heap) (x:dom)
+let memo_extr_p_lemma (p:dom -> Type0) (f: t p) (g:dom -> Tot codom) (h0:heap) (x:dom)
   : Lemma (requires (valid_memo h0 g /\ f `computes` g))
     (ensures (p x ==> (let (y, h1) = reify (memo_extr_p p f x) h0 in y == g x /\ valid_memo h1 g)))
 = match reify (MEMO?.get x) h0 with
