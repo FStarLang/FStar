@@ -6179,8 +6179,8 @@ let (encode_sig :
             FStar_SMTEncoding_Term.Caption uu____15738  in
           uu____15737 :: decls
         else decls  in
-      (let uu____15761 = FStar_TypeChecker_Env.debug tcenv FStar_Options.Low
-          in
+      (let uu____15761 =
+         FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium  in
        if uu____15761
        then
          let uu____15764 = FStar_Syntax_Print.sigelt_to_string se  in
@@ -6212,7 +6212,7 @@ let (encode_modul :
               else "module") (modul.FStar_Syntax_Syntax.name).FStar_Ident.str
             in
          (let uu____15814 =
-            FStar_TypeChecker_Env.debug tcenv FStar_Options.Low  in
+            FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium  in
           if uu____15814
           then
             let uu____15817 =
@@ -6305,7 +6305,7 @@ let (encode_modul :
                       (uu___397_15952.FStar_SMTEncoding_Env.encoding_quantifier)
                   });
                (let uu____15955 =
-                  FStar_TypeChecker_Env.debug tcenv FStar_Options.Low  in
+                  FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium  in
                 if uu____15955
                 then
                   FStar_Util.print1 "Done encoding externals for %s\n" name
@@ -6394,7 +6394,8 @@ let (encode_query :
              (match uu____16177 with
               | (env_decls,env1) ->
                   ((let uu____16199 =
-                      ((FStar_TypeChecker_Env.debug tcenv FStar_Options.Low)
+                      ((FStar_TypeChecker_Env.debug tcenv
+                          FStar_Options.Medium)
                          ||
                          (FStar_All.pipe_left
                             (FStar_TypeChecker_Env.debug tcenv)
