@@ -1098,13 +1098,7 @@ let rec free_elems_from #a #rg rv idx =
   if idx + 1ul < V.size_of rv then
   begin
     free_elems_from rv (idx + 1ul);
-    let hh2 = HST.get() in
-    assert (modifies (rv_loc_elem hh0 rv idx) hh0 hh1);
-    assert (modifies (rv_loc_elems hh1 rv (idx+1ul) (V.size_of rv)) hh1 hh2);
-    assert (modifies (loc_union (rv_loc_elem hh0 rv idx)
-                                (rv_loc_elems hh1 rv (idx+1ul) (V.size_of rv))) hh0 hh2);
-    // cwinter: not sure how to connect the location union to the elems range.
-    assume (modifies (rv_loc_elems hh0 rv idx (V.size_of rv)) hh0 hh2)
+    rs_loc_elems_rec_inverse rg (V.as_seq hh0 rv) (U32.v idx) (U32.v (V.size_of rv))
   end
 
 val shrink:
