@@ -713,7 +713,6 @@ let collect_one
     | Attributes cattributes  ->
         List.iter collect_term cattributes
     | CalcProof (rel, init, steps) ->
-        (* TODO: add the Calc module too *)
         add_dep_on_module (Ident.lid_of_str "FStar.Calc");
         begin
         collect_term rel;
