@@ -1116,8 +1116,8 @@ val shrink:
 #reset-options "--z3rlimit 40"
 let shrink #a #rg rv new_size =
   let size = V.size_of rv in
-  let sz = U32.v size in
-  let nsz = U32.v new_size in
+  [@inline_let] let sz = U32.v size in
+  [@inline_let] let nsz = U32.v new_size in
   let hh0 = HST.get () in
   if new_size >= size then rv else
   begin
