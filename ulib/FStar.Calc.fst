@@ -40,6 +40,6 @@ let calc_step (#t:Type) (#rs : list (relation t)) (#x #y : t)
          = CalcStep rs #p (pf ()) (j ())
 
 let calc_finish (#t:Type) (#rs : list (relation t)) (p : relation t) (#x #y :t) (pf : calc_proof rs x y)
-  : Lemma (requires (calc_chain_compatible rs p))
+  : Lemma (requires (normalize_term (calc_chain_compatible rs p)))
           (ensures (p x y))
   = elim_calc_proof rs pf
