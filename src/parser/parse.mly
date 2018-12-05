@@ -1132,7 +1132,7 @@ range:
 %inline dotOperator:
   | DOT_LPAREN e=term RPAREN { mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 }
   | DOT_LBRACK e=term RBRACK { mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 }
-  | DOT_LBRACK_BAR e=term RBRACE { mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 }
+  | DOT_LBRACK_BAR e=term BAR_RBRACK { mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 }
   | DOT_LENS_PAREN_LEFT e=term LENS_PAREN_RIGHT { mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 }
 
 some(X):

@@ -451,9 +451,9 @@ let x =                              ( mk_ident (".()", rhs parseState 1), e, rh
     {let (_1, e, _3) = ((), $2, ()) in
 let x =                              ( mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( [ x ] )}
-| DOT_LBRACK_BAR term RBRACE
+| DOT_LBRACK_BAR term BAR_RBRACK
     {let (_1, e, _3) = ((), $2, ()) in
-let x =                                  ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 ) in
+let x =                                      ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( [ x ] )}
 | DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT
     {let (_1, e, _3) = ((), $2, ()) in
@@ -467,9 +467,9 @@ let x =                              ( mk_ident (".()", rhs parseState 1), e, rh
     {let (_1, e, _3, xs) = ((), $2, (), $4) in
 let x =                              ( mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( x :: xs )}
-| DOT_LBRACK_BAR term RBRACE nonempty_list_dotOperator_
+| DOT_LBRACK_BAR term BAR_RBRACK nonempty_list_dotOperator_
     {let (_1, e, _3, xs) = ((), $2, (), $4) in
-let x =                                  ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 ) in
+let x =                                      ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 ) in
     ( x :: xs )}
 | DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT nonempty_list_dotOperator_
     {let (_1, e, _3, xs) = ((), $2, (), $4) in
@@ -1457,11 +1457,11 @@ in
         let (op, e2, _) = op_expr in
         mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
-| atomicTermNotQUident DOT_LBRACK_BAR term RBRACE LARROW noSeqTerm
+| atomicTermNotQUident DOT_LBRACK_BAR term BAR_RBRACK LARROW noSeqTerm
     {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
   let _3 = _3_inlined1 in
-                                   ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 )
+                                       ( mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 )
 in
       (
         let (op, e2, _) = op_expr in
