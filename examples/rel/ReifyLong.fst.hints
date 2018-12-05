@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6c066b15e82f07a85f52040e1b97f3b9"
+      "ce700cb6f23ed992aeff79715b188db0"
     ],
     [
       "ReifyLong.bidule",
@@ -19,19 +19,16 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_equality",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_unit",
         "equation_FStar.DM4F.IntStoreFixed.write",
         "equation_FStar.Pervasives.Native.fst", "equation_ReifyLong.p1",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_66262f99c7536942ce4dbb9789eda0ec",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_d118813f5b63d6276a92d2454f10fa10",
-        "interpretation_ReifyLong_Tm_abs_6e9afa0c594f10d8fda5cf8af28d1383",
+        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_c9960a4ad5ec1f034c374837e8bbd099",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "unit_typing"
       ],
       0,
-      "b2adc810db7abf7addfb11ec5b8c9539"
+      "14bf51916a43b40b521ae16275d7c113"
     ],
     [
       "ReifyLong.is_x",
@@ -40,7 +37,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1dd5925437446b2329e122acb2938c5d"
+      "0d80a1a8e0fbc79dcb52a424ea73dfff"
     ]
   ]
 ]

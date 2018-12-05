@@ -1413,7 +1413,7 @@ let encode_sig tcenv se =
     if Options.log_queries()
     then Term.Caption ("encoding sigelt " ^ (U.lids_of_sigelt se |> List.map Print.lid_to_string |> String.concat ", "))::decls
     else decls in
-   if Env.debug tcenv Options.Low
+   if Env.debug tcenv Options.Medium
    then BU.print1 "+++++++++++Encoding sigelt %s\n" (Print.sigelt_to_string se);
    let env = get_env (Env.current_module tcenv) tcenv in
    let decls, env = encode_top_level_facts env se in
@@ -1423,7 +1423,7 @@ let encode_sig tcenv se =
 let encode_modul tcenv modul =
     if Options.lax() && Options.ml_ish() then () else
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
-    if Env.debug tcenv Options.Low
+    if Env.debug tcenv Options.Medium
     then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
     let env = get_env modul.name tcenv in
     let encode_signature (env:env_t) (ses:sigelts) =
@@ -1438,7 +1438,7 @@ let encode_modul tcenv modul =
          [Module(name, Caption msg::decls@[Caption ("End " ^ msg)])]
     else decls in
     set_env ({env with warn=true});
-    if Env.debug tcenv Options.Low then BU.print1 "Done encoding externals for %s\n" name;
+    if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
     let decls = caption decls in
     Z3.giveZ3 decls
 
@@ -1469,7 +1469,7 @@ let encode_query use_env_msg tcenv q
         U.close_forall_no_univs (List.rev closing) q, bindings
     in
     let env_decls, env = encode_env_bindings env bindings in
-    if debug tcenv Options.Low
+    if debug tcenv Options.Medium
     || debug tcenv <| Options.Other "SMTEncoding"
     || debug tcenv <| Options.Other "SMTQuery"
     then BU.print1 "Encoding query formula: %s\n" (Print.term_to_string q);

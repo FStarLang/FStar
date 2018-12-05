@@ -10,21 +10,20 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_Prims.eqtype", "equation_TransparentMap.sel",
         "equation_TransparentMap.upd",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "interpretation_TransparentMap_Tm_abs_de8bee169fb0726b90c0a5f5baf23552",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "primitive_Prims.op_Equality",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "typing_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071"
+        "typing_FStar.FunctionalExtensionality_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "typing_TransparentMap_Tm_abs_de8bee169fb0726b90c0a5f5baf23552"
       ],
       0,
-      "56facbb65eef5d892296cba22336efeb"
+      "0bee65592c1f66d4e35faa40b27046b2"
     ],
     [
       "TransparentMap.sel_upd2",
@@ -35,21 +34,20 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_Prims.eqtype", "equation_TransparentMap.sel",
         "equation_TransparentMap.upd",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "interpretation_TransparentMap_Tm_abs_de8bee169fb0726b90c0a5f5baf23552",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "typing_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071"
+        "typing_FStar.FunctionalExtensionality_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "typing_TransparentMap_Tm_abs_de8bee169fb0726b90c0a5f5baf23552"
       ],
       0,
-      "8eb6212ddbfeef8f624f4490e3c09fc3"
+      "b67fbc8bb76e4499bb5f5f65d7b08d3a"
     ],
     [
       "TransparentMap.lemma_equal_intro",
@@ -61,7 +59,7 @@
         "equation_TransparentMap.equal", "equation_TransparentMap.sel"
       ],
       0,
-      "90b6cd4ef4e9403e6e9d5b16d018a90d"
+      "591b33aff3a014fd8a95c161402d418d"
     ],
     [
       "TransparentMap.lemma_equal_elim",
@@ -77,10 +75,10 @@
         "lemma_FStar.FunctionalExtensionality.extensionality",
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0"
+        "typing_FStar.FunctionalExtensionality_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "a6c0af85d44cf93f3f2c5d63aef94dd4"
+      "b2332b72851deac18dfbdbf712d50576"
     ],
     [
       "TransparentMap.lemma_equal_refl",
@@ -89,7 +87,7 @@
       0,
       [ "@query", "lemma_TransparentMap.lemma_equal_intro" ],
       0,
-      "2ed4293b23b8446bceff327bc9317888"
+      "5ec4d5f28d7c888e5f5c5d478b6c8359"
     ]
   ]
 ]
