@@ -1528,7 +1528,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e = List.fold_left (fun e (CalcStep (rel, just, next_expr)) ->
                                   mkApp (step rel.range)
                                         [(eta_and_annot rel, Nothing); (next_expr, Nothing); (thunk e, Nothing); (thunk just, Nothing)] just.range) e steps in
-      let e = mkApp finish [(e, Nothing)] init_expr.range in
+      let e = mkApp finish [(thunk e, Nothing)] init_expr.range in
       desugar_term_maybe_top top_level env e
 
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs

@@ -27,19 +27,19 @@ let rec elim_calc_proof #t rs (#x #y : t) (pf : calc_proof rs x y)
   | CalcStep rs #p' #x #y #z pf p'xy -> elim_calc_proof rs pf
 
 abstract
-let calc_init (#t:Type) (x:t) : calc_proof [] x x = CalcRefl
+let calc_init (#t:Type) (x : t) : calc_proof [] x x = CalcRefl
 
 abstract
 let calc_step (#t:Type) (#rs : list (relation t)) (#x #y : t)
-         (p : relation t)                 (* Preorder for this step *)
-         (z : t)                          (* Next expression *)
-         (pf : unit -> calc_proof rs x y) (* Rest of the proof *)
-         (j : unit -> squash (p y z))     (* Justification, thunked to avoid confusion such as #1397 *)
+         (p : relation t)                  (* Relation for this step *)
+         (z : t)                           (* Next expression *)
+         (pf : unit -> calc_proof rs x y)  (* Rest of the proof *)
+         (j : unit -> squash (p y z))      (* Justification, thunked to avoid confusion such as #1397 *)
          : Tot (calc_proof (p::rs) x z)
          (* Need to annotate #p seemingly due to #1486 *)
          = CalcStep rs #p (pf ()) (j ())
 
-let calc_finish (#t:Type) (#rs : list (relation t)) (p : relation t) (#x #y :t) (pf : calc_proof rs x y)
+let calc_finish (#t:Type) (#rs : list (relation t)) (p : relation t) (#x #y : t) (pf : unit -> calc_proof rs x y)
   : Lemma (requires (normalize_term (calc_chain_compatible rs p)))
           (ensures (p x y))
-  = elim_calc_proof rs pf
+  = elim_calc_proof rs (pf ())
