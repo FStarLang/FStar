@@ -498,6 +498,24 @@ let flush #a vec ia i =
   B.free vs;
   Vec fsz asz fvs
 
+val shrink:
+  #a:Type -> vec:vector a ->
+  new_size:uint32_t{new_size <= size_of vec} ->
+  HST.ST (vector a)
+    (requires (fun h0 ->
+      live h0 vec /\ freeable vec /\
+      HST.is_eternal_region (frameOf vec)))
+    (ensures (fun h0 fvec h1 ->
+      frameOf vec = frameOf fvec /\
+      hmap_dom_eq h0 h1 /\
+      live h1 fvec /\ freeable fvec /\
+      size_of fvec = new_size /\
+      S.equal (as_seq h1 fvec)
+              (S.slice (as_seq h0 vec) 0 (U32.v new_size))))
+let shrink #a vec new_size =
+  Vec new_size (Vec?.cap vec) (Vec?.vs vec)
+
+
 /// Iteration
 
 val fold_left_seq:
