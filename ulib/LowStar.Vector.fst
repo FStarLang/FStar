@@ -411,7 +411,8 @@ val assign:
       hmap_dom_eq h0 h1 /\
       modifies (loc_vector_within #a vec i (i + 1ul)) h0 h1 /\
       get h1 vec i == v /\
-      S.equal (as_seq h1 vec) (S.upd (as_seq h0 vec) (U32.v i) v)))
+      S.equal (as_seq h1 vec) (S.upd (as_seq h0 vec) (U32.v i) v) /\
+      live h1 vec))
 #reset-options "--z3rlimit 10"
 let assign #a vec i v =
   let hh0 = HST.get () in
