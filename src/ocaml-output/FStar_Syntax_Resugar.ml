@@ -1432,7 +1432,11 @@ and (resugar_comp' :
             let uu____6149 =
               resugar_term' env c1.FStar_Syntax_Syntax.result_typ  in
             (uu____6149, FStar_Parser_AST.Nothing)  in
-          let uu____6150 = FStar_Options.print_effect_args ()  in
+          let uu____6150 =
+            (FStar_Options.print_effect_args ()) ||
+              (FStar_Ident.lid_equals c1.FStar_Syntax_Syntax.effect_name
+                 FStar_Parser_Const.effect_Lemma_lid)
+             in
           if uu____6150
           then
             let universe =
