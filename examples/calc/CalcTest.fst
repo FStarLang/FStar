@@ -23,8 +23,6 @@ let calc0_desugared (a : pos) : Lemma (a + a > a) =
     ) (fun () -> ())
   )
 
-let check a = assert_norm (calc0 a == calc0_desugared a)
-  
 let calc1 (a b c d e : int)
           (h1 : unit -> Lemma (a * (c + 1) = 24))
           (h2 : unit -> Lemma (b + d == 25))
