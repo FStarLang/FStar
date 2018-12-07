@@ -9,10 +9,11 @@ type calc_proof #t : list (relation t) -> t -> t -> Type =
   | CalcStep : rs:(list (relation t)) -> #p:(relation t) ->
                #x:t -> #y:t -> #z:t -> calc_proof rs x y -> squash (p y z) -> calc_proof (p::rs) x z
 
-let rec calc_chain_related (#t : Type) (rs : list (relation t)) (x y : t) : Type0 =
+let rec calc_chain_related (#t : Type) (rs : list (relation t)) (x y : t) : Tot Type0 (decreases rs) =
   match rs with
   | [] -> x == y
-  | r1::rs -> exists w. calc_chain_related rs x w /\ r1 w y
+  (* GM: The `:t` annotation below matters a lot for compactness of the formula! *)
+  | r1::rs -> exists (w:t). calc_chain_related rs x w /\ r1 w y
 
 (* Every chain of `t`'s related by `rs` **(reversed!)** has its endpoints related by p *)
 [@"opaque_to_smt"]
@@ -41,6 +42,8 @@ let calc_step (#t:Type) (#rs : list (relation t)) (#x #y : t)
          = CalcStep rs #p (pf ()) (j ())
 
 let calc_finish (#t:Type) (#rs : list (relation t)) (p : relation t) (#x #y : t) (pf : unit -> calc_proof rs x y)
-  : Lemma (requires (normalize_term (calc_chain_compatible rs p)))
+  : Lemma (requires (norm [delta_only [`%calc_chain_compatible; `%calc_chain_related];
+                           iota;
+                           zeta] (calc_chain_compatible rs p)))
           (ensures (p x y))
   = elim_calc_proof rs (pf ())
