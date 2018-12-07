@@ -15,6 +15,7 @@ let rec calc_chain_related (#t : Type) (rs : list (relation t)) (x y : t) : Type
   | r1::rs -> exists w. calc_chain_related rs x w /\ r1 w y
 
 (* Every chain of `t`'s related by `rs` **(reversed!)** has its endpoints related by p *)
+[@"opaque_to_smt"]
 let calc_chain_compatible (#t : Type) (rs : list (relation t)) (p : relation t) : Type0 =
   forall x y. calc_chain_related rs x y ==> p x y
 
