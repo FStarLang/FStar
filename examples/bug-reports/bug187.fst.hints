@@ -15,10 +15,10 @@
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_Bug187_Tm_abs_33c425e9d5a70900b1deadec7d52bee0"
+        "typing_Bug187_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "9217d4ba26436cb7bb3245231f24667f"
+      "2bb6896d066ad295366bdf9258bb06ab"
     ],
     [
       "Bug187.no_fail",
@@ -27,7 +27,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "b017c8e3ea8851d257bc920bbe69364a"
+      "065a93e8e19d0f9f4ef1775e631787cd"
     ]
   ]
 ]

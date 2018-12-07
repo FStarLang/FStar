@@ -13,7 +13,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1e492ecf534e7d093b70143598aa77b0"
+      "b4b2abff237512edc57d3620c88baae9"
     ],
     [
       "StlcCbvDbParSubst.extend_gen",
@@ -31,7 +31,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f73349347043e1ac130490c6d7eb1b14"
+      "03f230ef32cdfc2896c89abfc8547be6"
     ],
     [
       "StlcCbvDbParSubst.weakening",
@@ -63,8 +63,8 @@
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_StlcCbvDbParSubst.extend_gen",
         "int_inversion", "int_typing",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_f03fe719bc7d3b603d7afe85135bc87d",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_c46c806ff630c9ee5035fa24e8ce91cd",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_b2ff7981df6c84510d62a9dd4ec12341",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_c275489c7af05faed8bf59779d89095a",
         "kinding_StlcStrongDbParSubst.typ@tok",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
@@ -76,7 +76,7 @@
         "token_correspondence_StlcCbvDbParSubst.extend_gen"
       ],
       0,
-      "85807a325d54b4f6381b8f2309d6d37a"
+      "05f66813a3408c3bbe968adfd5da6f77"
     ],
     [
       "StlcCbvDbParSubst.step",
@@ -97,7 +97,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "780ae11e083053a70a569fa0c9f7ad66"
+      "830b83f8288adf5c58ee2a637798ffaf"
     ],
     [
       "StlcCbvDbParSubst.progress",
@@ -166,7 +166,7 @@
         "typing_StlcStrongDbParSubst.is_value"
       ],
       0,
-      "488a9fff112edfa2b735411b9e33f7e4"
+      "44b08a3490fd472ce98cb24a62b4e001"
     ],
     [
       "StlcCbvDbParSubst.typing_extensional",
@@ -176,7 +176,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_5febf58dec946fd27e3c51a933acf448_4",
+        "binder_x_928845f4cd0ab45bf5c3db9ca6a369bf_4",
         "binder_x_963540a20a0f9ee2ea8ad130988b76bc_3",
         "data_elim_StlcStrongDbParSubst.TyApp",
         "data_elim_StlcStrongDbParSubst.TyLam",
@@ -195,17 +195,17 @@
         "fuel_guarded_inversion_StlcStrongDbParSubst.typing",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "int_typing",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_c46c806ff630c9ee5035fa24e8ce91cd",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_c275489c7af05faed8bf59779d89095a",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_093cc60585d208e0232e11a6f205ea91",
+        "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_0eab4cb417f4c1b372c32e24f4318fca",
         "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_7414eee80b22bba253a9c605eb7a8bda",
         "subterm_ordering_StlcStrongDbParSubst.TyApp",
         "subterm_ordering_StlcStrongDbParSubst.TyLam"
       ],
       0,
-      "f7a2fbc3e0a98134033b317ea80be21b"
+      "4d9124311f402ca0d28e2f4c18672246"
     ],
     [
       "StlcCbvDbParSubst.appears_free_in",
@@ -234,7 +234,7 @@
         "subterm_ordering_StlcStrongDbParSubst.ELam"
       ],
       0,
-      "8abcfb91582af216210c0a7f9bce3a53"
+      "22dc030bf8f2491295bdaa8acd85cee5"
     ],
     [
       "StlcCbvDbParSubst.envEqualE",
@@ -247,7 +247,7 @@
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "b56eb04e0bd249f0d89ba6cbb0494a2b"
+      "b17d2aae86b6a7262043b054f4e49c69"
     ],
     [
       "StlcCbvDbParSubst.context_invariance",
@@ -277,15 +277,16 @@
         "disc_equation_StlcStrongDbParSubst.TyLam",
         "disc_equation_StlcStrongDbParSubst.TyUnit",
         "disc_equation_StlcStrongDbParSubst.TyVar",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
-        "equation_StlcCbvDbParSubst.envEqualE",
+        "equality_tok_Prims.LexTop@tok", "equation_FStar.UInt32.n",
+        "equation_Prims.nat", "equation_StlcCbvDbParSubst.envEqualE",
         "equation_StlcStrongDbParSubst.env",
         "equation_StlcStrongDbParSubst.extend",
         "equation_StlcStrongDbParSubst.var",
         "equation_with_fuel_StlcCbvDbParSubst.appears_free_in.fuel_instrumented",
         "fuel_guarded_inversion_StlcStrongDbParSubst.typing",
-        "int_inversion", "int_typing",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_c46c806ff630c9ee5035fa24e8ce91cd",
+        "function_token_typing_FStar.UInt32.n", "int_inversion",
+        "int_typing",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_c275489c7af05faed8bf59779d89095a",
         "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -304,7 +305,7 @@
         "typing_StlcCbvDbParSubst.appears_free_in"
       ],
       0,
-      "f89a13998534bcb6837c590412d62fb5"
+      "bf9ba598b5f58cd5b07df4ce3008f80e"
     ],
     [
       "StlcCbvDbParSubst.free_in_context",
@@ -313,11 +314,13 @@
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_correspondence_StlcCbvDbParSubst.appears_free_in.fuel_instrumented",
+        "@fuel_irrelevance_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_StlcCbvDbParSubst.appears_free_in.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "StlcStrongDbParSubst_pretyping_fcf8df75f2957ee85ada8a1f90a7cec8",
-        "binder_x_00c2c856e702f50718a37c394bb4dba3_1",
+        "b2t_def", "binder_x_00c2c856e702f50718a37c394bb4dba3_1",
         "binder_x_4f967934e12fef5c15afc13913046f99_4",
         "binder_x_efdd934bb8b090f4e1b7156061e14150_0", "bool_inversion",
         "constructor_distinct_StlcStrongDbParSubst.EApp",
@@ -336,15 +339,22 @@
         "disc_equation_StlcStrongDbParSubst.TyUnit",
         "disc_equation_StlcStrongDbParSubst.TyVar",
         "equality_tok_Prims.LexTop@tok",
-        "equality_tok_StlcStrongDbParSubst.EUnit@tok", "equation_Prims.nat",
+        "equality_tok_StlcStrongDbParSubst.EUnit@tok",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt32.n", "equation_Prims.nat",
         "equation_StlcStrongDbParSubst.extend",
         "equation_StlcStrongDbParSubst.var",
         "equation_with_fuel_StlcCbvDbParSubst.appears_free_in.fuel_instrumented",
         "fuel_guarded_inversion_StlcStrongDbParSubst.typing",
+        "function_token_typing_FStar.UInt32.n",
         "function_token_typing_StlcStrongDbParSubst.extend", "int_inversion",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_c46c806ff630c9ee5035fa24e8ce91cd",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "int_typing",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_c275489c7af05faed8bf59779d89095a",
+        "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_StlcStrongDbParSubst.EApp__0",
@@ -356,10 +366,10 @@
         "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_7414eee80b22bba253a9c605eb7a8bda",
         "subterm_ordering_StlcStrongDbParSubst.TyApp",
         "subterm_ordering_StlcStrongDbParSubst.TyLam",
-        "typing_StlcCbvDbParSubst.appears_free_in"
+        "typing_FStar.UInt.fits", "typing_StlcCbvDbParSubst.appears_free_in"
       ],
       0,
-      "551c0cf58b5ac80c997300bcc7abd50f"
+      "02c8f8e9f7bbe07b2575782fb205ecc1"
     ],
     [
       "StlcCbvDbParSubst.typable_empty_not_free",
@@ -376,7 +386,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5e14d2291731f979df3ddbd308c860fc"
+      "ccce7ed764510257d06acba532f349a3"
     ],
     [
       "StlcCbvDbParSubst.below",
@@ -400,7 +410,7 @@
         "subterm_ordering_StlcStrongDbParSubst.ELam"
       ],
       0,
-      "a0e8b3a6bdc268ad5a4de36ec01cde85"
+      "7371d97ab9087a903afba1316c6f78f0"
     ],
     [
       "StlcCbvDbParSubst.below_env",
@@ -413,7 +423,7 @@
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "0595349b0d561878b0a3283239c8827b"
+      "d7c1a282f190e0f355b7eced6171e45f"
     ],
     [
       "StlcCbvDbParSubst.typable_below",
@@ -454,7 +464,7 @@
         "fuel_guarded_inversion_StlcStrongDbParSubst.typing",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "int_typing",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_c46c806ff630c9ee5035fa24e8ce91cd",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_c275489c7af05faed8bf59779d89095a",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_Subtraction",
@@ -474,7 +484,7 @@
         "typing_tok_StlcStrongDbParSubst.EUnit@tok"
       ],
       0,
-      "a1ceb4961d7532dfec6106142c0a11e5"
+      "a811a13dcc408684f38fa2d60c5ad09b"
     ],
     [
       "StlcCbvDbParSubst.typable_empty_closed",
@@ -488,7 +498,7 @@
         "token_correspondence_StlcStrongDbParSubst.empty"
       ],
       0,
-      "07c677ba7aa07780ed562a21b76253b1"
+      "003a6fbc828bae126fee496f006283bb"
     ],
     [
       "StlcCbvDbParSubst.sub_beta_gen",
@@ -509,7 +519,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0370543924d23e75f48ed937dae77f6e"
+      "6277b6fdd339b57b5c490d2e96d3c051"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_var_lt",
@@ -518,7 +528,7 @@
       1,
       [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "bd9f522054a5380892fc9917c7a7292e"
+      "5972c1b73e7bff8f14c53fab3a8fab86"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_var_lt",
@@ -534,7 +544,7 @@
         "equation_StlcStrongDbParSubst.var",
         "equation_with_fuel_StlcStrongDbParSubst.subst.fuel_instrumented",
         "int_inversion",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_81b90bedb849c16616695a93083743fa",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_10a1efac22edd7b7e51f22265fd6665e",
         "primitive_Prims.op_LessThan",
         "projection_inverse_StlcStrongDbParSubst.EVar__0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
@@ -542,7 +552,7 @@
         "typing_StlcCbvDbParSubst.sub_beta_gen"
       ],
       0,
-      "91751bf0a5e1991e36c34c358306040f"
+      "1cfdb0c2e0f631d304bf3901f55b540a"
     ],
     [
       "StlcCbvDbParSubst.extend_lt",
@@ -555,7 +565,7 @@
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "80a9b34e7f9f95eab067cd1d41ed1818"
+      "60a9d115b39e5d5fef39d88ac01a563f"
     ],
     [
       "StlcCbvDbParSubst.extend_lt",
@@ -570,7 +580,7 @@
         "equation_StlcStrongDbParSubst.var",
         "fuel_guarded_inversion_StlcStrongDbParSubst.typ",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_f03fe719bc7d3b603d7afe85135bc87d",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_b2ff7981df6c84510d62a9dd4ec12341",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
@@ -578,7 +588,7 @@
         "token_correspondence_StlcCbvDbParSubst.extend_gen"
       ],
       0,
-      "0ad91b98b3afa831e0648367cb7a60f4"
+      "e8348e71babeef3af0ee41470a5e2c77"
     ],
     [
       "StlcCbvDbParSubst.extend_gt",
@@ -598,7 +608,7 @@
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_8bc57b47ea1eb56e7fd13ac08bf9b683"
       ],
       0,
-      "0c227c4623cb6ca9c657ea782c873ca0"
+      "71dbfc22b6973f6575a9fe4aa531d3c9"
     ],
     [
       "StlcCbvDbParSubst.extend_gt",
@@ -614,8 +624,8 @@
         "equation_StlcStrongDbParSubst.var",
         "fuel_guarded_inversion_StlcStrongDbParSubst.typ",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_f03fe719bc7d3b603d7afe85135bc87d",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_c46c806ff630c9ee5035fa24e8ce91cd",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_b2ff7981df6c84510d62a9dd4ec12341",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_c275489c7af05faed8bf59779d89095a",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -623,7 +633,7 @@
         "token_correspondence_StlcCbvDbParSubst.extend_gen"
       ],
       0,
-      "e63c97b6bbf5d68101b360a05ac1e580"
+      "fd915e212ca9a4af28ce054ed53d2b36"
     ],
     [
       "StlcCbvDbParSubst.extend_twice",
@@ -637,7 +647,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "58b36b4718ca0d8f32ddf74d40680732"
+      "1ee299a26cac5f3618594abe15747a9e"
     ],
     [
       "StlcCbvDbParSubst.extend_twice",
@@ -654,8 +664,8 @@
         "equation_StlcStrongDbParSubst.var",
         "fuel_guarded_inversion_StlcStrongDbParSubst.typ",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_f03fe719bc7d3b603d7afe85135bc87d",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_c46c806ff630c9ee5035fa24e8ce91cd",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_b2ff7981df6c84510d62a9dd4ec12341",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_c275489c7af05faed8bf59779d89095a",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -663,7 +673,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "bc6828fd97b63d5c9539600932f0117b"
+      "8b9708de2b19ca4f15d6bfb3e3e396fa"
     ],
     [
       "StlcCbvDbParSubst.sub_below",
@@ -672,7 +682,7 @@
       1,
       [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "c4d5c8c330c679c3f125cf019f7768e1"
+      "e9b6203037b7d9aba800072521b2b9ee"
     ],
     [
       "StlcCbvDbParSubst.subst_below",
@@ -681,7 +691,7 @@
       1,
       [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "c92fd272cdba0aaeccbceca5e68a5ae7"
+      "d476203521fef259b776390b66f450f3"
     ],
     [
       "StlcCbvDbParSubst.subst_below",
@@ -753,7 +763,7 @@
         "typing_StlcStrongDbParSubst.uu___is_EVar"
       ],
       0,
-      "0819b1e7b63976898fbcfc5ba343dfd6"
+      "82a62c0860f78a79302c06ddd73639cc"
     ],
     [
       "StlcCbvDbParSubst.subst_below",
@@ -814,8 +824,8 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_aed57c45c26bc1a288eeeab78c02e426",
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_d0dbb011f2b1b00c3673c42052db1f3e",
+        "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_17b092c521be75c549e01dd351448ffc",
         "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_3949545d6bf3f1c8a6f29ddc1f66f50e",
-        "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_42ffa9c2632d1d92343200d45f81a0b4",
         "subterm_ordering_StlcStrongDbParSubst.EApp",
         "subterm_ordering_StlcStrongDbParSubst.ELam",
         "token_correspondence_StlcCbvDbParSubst.below.fuel_instrumented",
@@ -827,7 +837,7 @@
         "typing_tok_StlcStrongDbParSubst.EUnit@tok"
       ],
       0,
-      "50470505e2c95dedfb6c11d49b8c878d"
+      "3952dc0053b532bc557db2b48da5d2ff"
     ],
     [
       "StlcCbvDbParSubst.subst_closed",
@@ -836,7 +846,7 @@
       1,
       [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "eef1e6462778e88524e52d90e6b4c0be"
+      "4b95cc57588da95f90611d9560428e72"
     ],
     [
       "StlcCbvDbParSubst.subst_closed",
@@ -845,7 +855,7 @@
       1,
       [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "df0db9d7909a19caae34109b75fbb4e6"
+      "7bfd0cb2533f5d15315031a0d417e1c6"
     ],
     [
       "StlcCbvDbParSubst.subst_closed",
@@ -865,7 +875,7 @@
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_bf0131f13155cbc90a3c62011d12629b"
       ],
       0,
-      "b4552754095e8a591515590500b13f99"
+      "bed0029c599774adaf34d555833fd4e0"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam_aux",
@@ -880,7 +890,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "21cb665aae50f4ce68db1047f6491d0a"
+      "d117f688f532218adf917e538be94273"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam_aux",
@@ -906,7 +916,7 @@
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_StlcStrongDbParSubst.sub_inc",
         "int_inversion",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_81b90bedb849c16616695a93083743fa",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_10a1efac22edd7b7e51f22265fd6665e",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -921,7 +931,7 @@
         "unit_typing"
       ],
       0,
-      "966f8d8c820dad69315bf78a80c03a59"
+      "7bcdb9770838930ce1ec6acd1a02392d"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam_aux_forall",
@@ -935,7 +945,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "de66088153e1f18325610da79c20afdf"
+      "05009241b00be9365ad9c7cfd27513f1"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam",
@@ -950,7 +960,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9ca704d56755dd27273fde364cef91e1"
+      "e765b84d9c11da6ca1ce54dcc54eb9d4"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam",
@@ -979,14 +989,14 @@
         "projection_inverse_StlcStrongDbParSubst.ELam__0",
         "projection_inverse_StlcStrongDbParSubst.ELam__1",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_17b092c521be75c549e01dd351448ffc",
         "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_3949545d6bf3f1c8a6f29ddc1f66f50e",
-        "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_42ffa9c2632d1d92343200d45f81a0b4",
         "token_correspondence_StlcStrongDbParSubst.sub_elam",
         "token_correspondence_StlcStrongDbParSubst.sub_elam.fuel_instrumented",
-        "typing_StlcCbvDbParSubst_Tm_abs_81b90bedb849c16616695a93083743fa"
+        "typing_StlcCbvDbParSubst_Tm_abs_10a1efac22edd7b7e51f22265fd6665e"
       ],
       0,
-      "9590243863ca119b1f726c8950cb3fe4"
+      "a3b5071c9ca9771e88fb5805f2174a57"
     ],
     [
       "StlcCbvDbParSubst.substitution_preserves_typing",
@@ -1044,9 +1054,9 @@
         "function_token_typing_FStar.Reflection.Data.var",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "int_typing",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_81b90bedb849c16616695a93083743fa",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_f03fe719bc7d3b603d7afe85135bc87d",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_c46c806ff630c9ee5035fa24e8ce91cd",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_10a1efac22edd7b7e51f22265fd6665e",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_b2ff7981df6c84510d62a9dd4ec12341",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_c275489c7af05faed8bf59779d89095a",
         "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
@@ -1068,7 +1078,7 @@
         "typing_tok_StlcStrongDbParSubst.EUnit@tok"
       ],
       0,
-      "677a24bca180a195ca98b725099fa96f"
+      "78e8e7b496baf9aca438e235c1f777d3"
     ],
     [
       "StlcCbvDbParSubst.extend_gen_0_aux",
@@ -1081,7 +1091,7 @@
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "b15052fd58775f61289a8bbf93ccd78d"
+      "3ea760cfb40b7add3dc0952aebd73ad9"
     ],
     [
       "StlcCbvDbParSubst.extend_gen_0_aux",
@@ -1103,7 +1113,7 @@
         "token_correspondence_StlcStrongDbParSubst.extend"
       ],
       0,
-      "f68aa884a028f2501bea3bcfa38b077c"
+      "d9f9a5639e49480055392e146f7b4c56"
     ],
     [
       "StlcCbvDbParSubst.extend_gen_0",
@@ -1123,7 +1133,7 @@
         "token_correspondence_StlcStrongDbParSubst.extend"
       ],
       0,
-      "3143e3a4c7016014b5a3c302c357cbaa"
+      "16210751cea667b21dc0b31b09adf3e6"
     ],
     [
       "StlcCbvDbParSubst.extend_gen_typing_conversion",
@@ -1135,7 +1145,7 @@
         "primitive_Prims.op_Equality"
       ],
       0,
-      "faa80d1debd7ceca75ce350577bf51ff"
+      "a48ffcb2df8b0eca6d31a2174adda00c"
     ],
     [
       "StlcCbvDbParSubst.preservation",
@@ -1147,7 +1157,7 @@
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_818eb8deeb41e1ac5b8e965c162075af"
       ],
       0,
-      "6454d4bb89b028c9dd6a5eadea9b5690"
+      "49606a6af70b09d3e7e6c2217d744e6f"
     ],
     [
       "StlcCbvDbParSubst.preservation",
@@ -1159,7 +1169,7 @@
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_d88f214d7750952ff05fd787870d77a3"
       ],
       0,
-      "921063935ecc224dbe2b9c439ceaad25"
+      "6a43d2e888e978330ba7debd11449498"
     ],
     [
       "StlcCbvDbParSubst.preservation",
@@ -1210,8 +1220,8 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_StlcStrongDbParSubst.typing",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_81b90bedb849c16616695a93083743fa",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_ff21ff81ef3d60a97f989080a38623ee",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_10a1efac22edd7b7e51f22265fd6665e",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_1a8f62e35bc2e93780f266730f3dcb0a",
         "kinding_StlcStrongDbParSubst.exp@tok",
         "lemma_FStar.Pervasives.invertOption",
         "lemma_StlcStrongDbParSubst.subst_extensional",
@@ -1228,16 +1238,16 @@
         "projection_inverse_StlcStrongDbParSubst.TArr__1",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_dde411585801ce14e0dcb2a95405db5e",
-        "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_42ffa9c2632d1d92343200d45f81a0b4",
+        "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_17b092c521be75c549e01dd351448ffc",
         "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_7414eee80b22bba253a9c605eb7a8bda",
         "subterm_ordering_StlcStrongDbParSubst.EApp",
         "token_correspondence_StlcStrongDbParSubst.empty",
         "typing_StlcCbvDbParSubst.step",
-        "typing_StlcCbvDbParSubst_Tm_abs_81b90bedb849c16616695a93083743fa",
+        "typing_StlcCbvDbParSubst_Tm_abs_10a1efac22edd7b7e51f22265fd6665e",
         "typing_StlcStrongDbParSubst.sub_beta"
       ],
       0,
-      "677b3212a1e85badeae5e02782348eec"
+      "5691094a1227cc5f0ec1fc05f775a3f9"
     ],
     [
       "StlcCbvDbParSubst.sub_inc_above",
@@ -1251,7 +1261,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "6f5b08be017a9b19530fa3186ead4148"
+      "f79c093793908bf838d10647a4f3a957"
     ],
     [
       "StlcCbvDbParSubst.extend_gen",
@@ -1269,7 +1279,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "20f310e1dab071dead9441e7fabde466"
+      "3b273806a7c9284822cc350b740120be"
     ],
     [
       "StlcCbvDbParSubst.step",
@@ -1290,7 +1300,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "06188064fc797ccb202ed23dd16664a1"
+      "cd2f3cf6fba2ef475294c5724dd92e4f"
     ],
     [
       "StlcCbvDbParSubst.appears_free_in",
@@ -1319,7 +1329,7 @@
         "subterm_ordering_StlcStrongDbParSubst.ELam"
       ],
       0,
-      "38efe17879a78604e5cbc3d9f03bcca3"
+      "12ebd0efcb286775fa813daff322d694"
     ],
     [
       "StlcCbvDbParSubst.envEqualE",
@@ -1332,7 +1342,7 @@
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "4e3bb8ee47709639b6984121cecff9d0"
+      "783dd535c183ff1eeea1297b3aff475e"
     ],
     [
       "StlcCbvDbParSubst.context_invariance",
@@ -1362,15 +1372,16 @@
         "disc_equation_StlcStrongDbParSubst.TyLam",
         "disc_equation_StlcStrongDbParSubst.TyUnit",
         "disc_equation_StlcStrongDbParSubst.TyVar",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
-        "equation_StlcCbvDbParSubst.envEqualE",
+        "equality_tok_Prims.LexTop@tok", "equation_FStar.UInt32.n",
+        "equation_Prims.nat", "equation_StlcCbvDbParSubst.envEqualE",
         "equation_StlcStrongDbParSubst.env",
         "equation_StlcStrongDbParSubst.extend",
         "equation_StlcStrongDbParSubst.var",
         "equation_with_fuel_StlcCbvDbParSubst.appears_free_in.fuel_instrumented",
         "fuel_guarded_inversion_StlcStrongDbParSubst.typing",
-        "int_inversion", "int_typing",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_c46c806ff630c9ee5035fa24e8ce91cd",
+        "function_token_typing_FStar.UInt32.n", "int_inversion",
+        "int_typing",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_c275489c7af05faed8bf59779d89095a",
         "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -1389,7 +1400,7 @@
         "typing_StlcCbvDbParSubst.appears_free_in"
       ],
       0,
-      "cbdda192d9f5b5d2b41cccf61b7cca31"
+      "f81abf61d4d11addc824b5aee47b18cd"
     ],
     [
       "StlcCbvDbParSubst.below",
@@ -1413,7 +1424,7 @@
         "subterm_ordering_StlcStrongDbParSubst.ELam"
       ],
       0,
-      "8535c9a7a432960bcf77beef74bab2d8"
+      "40e4878b685ac419ae41e7fc6eaab79a"
     ],
     [
       "StlcCbvDbParSubst.below_env",
@@ -1426,7 +1437,7 @@
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "60ad8f4d6dcaee50474486dd9df45a3f"
+      "c1d9eb8a44ca1279d1ca622e67240e55"
     ],
     [
       "StlcCbvDbParSubst.sub_beta_gen",
@@ -1447,7 +1458,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "890d7405b968588dd345fce3cdb49088"
+      "f2602ceae3d90309782062d2ad25a1fe"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_var_lt",
@@ -1456,7 +1467,7 @@
       1,
       [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "548e440aa0452432a056b2d19b10c487"
+      "362244ee6dcd035a89e2d4960ff64dcd"
     ],
     [
       "StlcCbvDbParSubst.extend_lt",
@@ -1469,7 +1480,7 @@
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "bdf695c17799ae27b0b629abe0afe9a0"
+      "63d664449f4b8b3d7ef748a205c03750"
     ],
     [
       "StlcCbvDbParSubst.extend_gt",
@@ -1489,7 +1500,7 @@
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_8bc57b47ea1eb56e7fd13ac08bf9b683"
       ],
       0,
-      "d05fec7f97f8206b5ea17919508c6f57"
+      "33a79fe902ee3489191363df873f3ee9"
     ],
     [
       "StlcCbvDbParSubst.extend_twice",
@@ -1503,7 +1514,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "03ff8fa6808e31223de566c63297f4e0"
+      "aafa8cfaef258ea8d7522c72a5302af0"
     ],
     [
       "StlcCbvDbParSubst.sub_below",
@@ -1512,7 +1523,7 @@
       1,
       [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "6f7d924bc9d23000ed14d212549b5f84"
+      "0004a42b8481cd75d54b293cf1d70783"
     ],
     [
       "StlcCbvDbParSubst.subst_below",
@@ -1521,7 +1532,7 @@
       1,
       [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "f5e5f1634fdc5d4161ea7af63856253a"
+      "937ba653c3dcb3bae27853418833ec47"
     ],
     [
       "StlcCbvDbParSubst.subst_closed",
@@ -1530,7 +1541,7 @@
       1,
       [ "@query", "assumption_StlcStrongDbParSubst.exp__uu___haseq" ],
       0,
-      "77c4608ce40204019caaf5033f47548f"
+      "2bdc6a426af1c01f345ff18c5dd9c405"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam_aux",
@@ -1565,7 +1576,7 @@
         "typing_StlcCbvDbParSubst.closed", "unit_inversion", "unit_typing"
       ],
       0,
-      "44b54ce6116579ab88fb3c358b654106"
+      "e6ce1195c4e86ac3f3c96221872086fb"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam_aux_forall",
@@ -1579,7 +1590,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b16cb5035985bbd4a7eea5c2b7309604"
+      "368556dee0ee60d2e086ad2daaa8edb2"
     ],
     [
       "StlcCbvDbParSubst.subst_gen_elam",
@@ -1632,7 +1643,7 @@
         "typing_StlcStrongDbParSubst_Tm_abs_c636cdcc538f5ce27d02a83ecd813b7b"
       ],
       0,
-      "73ef05b0b8026a24ec9754bef7058a6d"
+      "e8ccb459a998a0c14774f2259fe7b0a6"
     ],
     [
       "StlcCbvDbParSubst.substitution_preserves_typing",
@@ -1690,9 +1701,9 @@
         "function_token_typing_FStar.Reflection.Data.var",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "int_typing",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_81b90bedb849c16616695a93083743fa",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_f03fe719bc7d3b603d7afe85135bc87d",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_c46c806ff630c9ee5035fa24e8ce91cd",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_10a1efac22edd7b7e51f22265fd6665e",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_b2ff7981df6c84510d62a9dd4ec12341",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_c275489c7af05faed8bf59779d89095a",
         "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
@@ -1714,7 +1725,7 @@
         "typing_tok_StlcStrongDbParSubst.EUnit@tok"
       ],
       0,
-      "b934c99465e16f0114cea2748b5fb8dd"
+      "d07b247866ce790a6876edf22d2bcf15"
     ],
     [
       "StlcCbvDbParSubst.extend_gen_0_aux",
@@ -1727,7 +1738,7 @@
         "kinding_StlcStrongDbParSubst.typ@tok"
       ],
       0,
-      "ffb707855f9bb6793eb6711ae38fa91a"
+      "82b0ce1d836a3b1a34c4f484f7d0a4b8"
     ],
     [
       "StlcCbvDbParSubst.extend_gen_typing_conversion",
@@ -1739,7 +1750,7 @@
         "primitive_Prims.op_Equality"
       ],
       0,
-      "a8c2164161e4e1074fabfca53e06cc15"
+      "8efce47f846d7afc997a264dbe195abf"
     ],
     [
       "StlcCbvDbParSubst.preservation",
@@ -1751,7 +1762,7 @@
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_d88f214d7750952ff05fd787870d77a3"
       ],
       0,
-      "02e70dd189b112337bde9ed6a35d68dd"
+      "78233647c2b89ec5cd9c04c3a4e7f75c"
     ],
     [
       "StlcCbvDbParSubst.preservation",
@@ -1802,8 +1813,8 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_StlcStrongDbParSubst.typing",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "interpretation_StlcCbvDbParSubst_Tm_abs_81b90bedb849c16616695a93083743fa",
-        "interpretation_StlcStrongDbParSubst_Tm_abs_ff21ff81ef3d60a97f989080a38623ee",
+        "interpretation_StlcCbvDbParSubst_Tm_abs_10a1efac22edd7b7e51f22265fd6665e",
+        "interpretation_StlcStrongDbParSubst_Tm_abs_1a8f62e35bc2e93780f266730f3dcb0a",
         "kinding_StlcStrongDbParSubst.exp@tok",
         "lemma_FStar.Pervasives.invertOption",
         "lemma_StlcStrongDbParSubst.subst_extensional",
@@ -1820,16 +1831,16 @@
         "projection_inverse_StlcStrongDbParSubst.TArr__1",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_StlcCbvDbParSubst_Tm_refine_dde411585801ce14e0dcb2a95405db5e",
-        "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_42ffa9c2632d1d92343200d45f81a0b4",
+        "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_17b092c521be75c549e01dd351448ffc",
         "refinement_interpretation_StlcStrongDbParSubst_Tm_refine_7414eee80b22bba253a9c605eb7a8bda",
         "subterm_ordering_StlcStrongDbParSubst.EApp",
         "token_correspondence_StlcStrongDbParSubst.empty",
         "typing_StlcCbvDbParSubst.step",
-        "typing_StlcCbvDbParSubst_Tm_abs_81b90bedb849c16616695a93083743fa",
+        "typing_StlcCbvDbParSubst_Tm_abs_10a1efac22edd7b7e51f22265fd6665e",
         "typing_StlcStrongDbParSubst.sub_beta"
       ],
       0,
-      "278f42ace5ce45509296f87d89a9dbe5"
+      "89ff471708379541f2a948e9e3e1f3d2"
     ]
   ]
 ]

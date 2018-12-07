@@ -22,7 +22,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "654d2b6b5a02e56561e2e0402bd4f6cb"
+      "2ad20d4a7badc9b4e2afa54d244a400e"
     ],
     [
       "DoublyLinkedList.op_At",
@@ -35,7 +35,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "6276b9834e273a1f7b8d2b203cc90fce"
+      "2fb64d7569a1d30508408a617bf11003"
     ],
     [
       "DoublyLinkedList.op_Hat_At",
@@ -84,7 +84,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "35ab77ee352c6082b911bb593f845497"
+      "2d2465072eedc7fb1905ea3514a4ee33"
     ],
     [
       "DoublyLinkedList.__proj__Frag1__item___0",
@@ -98,7 +98,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_d56d2c22716a132051de7449f1f9f54c"
       ],
       0,
-      "c2da13b9a67ada3d9acd97d7eef0e751"
+      "64e21027ba1c93ab936ac876ff1b65ab"
     ],
     [
       "DoublyLinkedList.__proj__Frag2__item___0",
@@ -112,7 +112,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_70bbde2f8ce7313b7302658284bddacb"
       ],
       0,
-      "328522827a59906be78ea1e85ecd7413"
+      "e29c4cb87cbbe80465aa5626f2ac59c9"
     ],
     [
       "DoublyLinkedList.__proj__Frag2__item___1",
@@ -126,7 +126,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_70bbde2f8ce7313b7302658284bddacb"
       ],
       0,
-      "c1caec56ede4661a54a5dedb65ad4b04"
+      "7261dd672320ff26195160de1676a949"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___0",
@@ -140,7 +140,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "ab6b91975e02ac2a3672d0879f5f4235"
+      "6b6b739b73f1f7d6044de56f5acfb378"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___1",
@@ -154,7 +154,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "7bcac01ae227c45a0c534db87887b135"
+      "d6610a1da0ab4b5a61a0394aeb4c02f5"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___2",
@@ -168,7 +168,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "b09eb30b8dacd78c34e4567c1c132385"
+      "98a9bdf79751a3fa4fc05867c456adc8"
     ],
     [
       "DoublyLinkedList.empty_node",
@@ -184,7 +184,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "516ab4fe38af9d79cfd7aad5a95dd14a"
+      "304139add36b76f7fb3ba563806b2573"
     ],
     [
       "DoublyLinkedList.empty_list",
@@ -200,7 +200,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "9d0e6a0c354b3360dc26832c90c48792"
+      "3733694babbd165d107763b519fe39df"
     ],
     [
       "DoublyLinkedList.fragment_for_each0",
@@ -216,7 +216,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "dc5613f40fea20aba6129cc00eaf2d4c"
+      "b173a759b1dd0981711b7a0575385efb"
     ],
     [
       "DoublyLinkedList.fragment_for_each1",
@@ -232,7 +232,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "5fd66585e6eac04bbfbef270978f5aad"
+      "016b2294a413e32d59bfeb5bc3f3555d"
     ],
     [
       "DoublyLinkedList.fragment_length",
@@ -248,7 +248,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "c223d781fa813fb1131591058cf96a53"
+      "4c20f3c0b90c2e8e93e0b2a446fd6086"
     ],
     [
       "DoublyLinkedList.dll_ghostly_connections",
@@ -268,7 +268,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "226c77d21ff8468f6859bb5053ab392e"
+      "39df779b53c3d92fdd7bd1e50f87cc36"
     ],
     [
       "DoublyLinkedList.piece_ghostly_connections",
@@ -288,7 +288,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "df6a4b0e3ca8c22e772c1eb848cc2a35"
+      "9760a4bf70897986696beee8b0c73d22"
     ],
     [
       "DoublyLinkedList.nodelist_contained0",
@@ -306,7 +306,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3bf39ab3c9785b995b89fcb1d91377a5"
+      "5b512e2cdce692cb58a46739c43ebd98"
     ],
     [
       "DoublyLinkedList.nodelist_fp0",
@@ -322,7 +322,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3cb54b34f13ec9fd4c4548ddc51bfba6"
+      "a1e3a6b5969a162b9ad4c933c23900b4"
     ],
     [
       "DoublyLinkedList.nodelist_fp_f",
@@ -340,7 +340,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0ce96b779903da68348b85248acd0245"
+      "220d29391464c6af283a845f893673b9"
     ],
     [
       "DoublyLinkedList.nodelist_fp_b",
@@ -358,7 +358,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1e8ceac8a236d4124193a6be16ab39a7"
+      "0cce04f9200ac6142bc27644802841c0"
     ],
     [
       "DoublyLinkedList.dll_fp_f",
@@ -375,7 +375,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "a1aa085ef1e1fa9bfc1fee13a95ad525"
+      "6b9ff7c641c930400108e8be5863c3e3"
     ],
     [
       "DoublyLinkedList.dll_fp_b",
@@ -392,7 +392,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "4754d377d2942fc7f8f7fd9807966392"
+      "65b03bd13125fae9db9b6261ca221084"
     ],
     [
       "DoublyLinkedList.fragment_fp0",
@@ -409,7 +409,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "a09372f373179d7e5b1a11aecb0610d9"
+      "6fc652b1079d63f9a09b623382914c9a"
     ],
     [
       "DoublyLinkedList.loc_includes_union_l_nodelist_fp0",
@@ -418,7 +418,7 @@
       1,
       [ "@query" ],
       0,
-      "17dc3fa84abf2dcb5e5d127e28f78774"
+      "c9c2d2d0e5211b4f21b28bfb313c11ed"
     ],
     [
       "DoublyLinkedList.loc_includes_union_l_dll_fp0",
@@ -427,7 +427,7 @@
       1,
       [ "@query" ],
       0,
-      "4aeafe4e4df7d29ad85d02702849387f"
+      "1d65d12a90111918ba17fc36fece9b1b"
     ],
     [
       "DoublyLinkedList.loc_includes_union_l_piece_fp0",
@@ -436,7 +436,7 @@
       1,
       [ "@query" ],
       0,
-      "d79ec3e4e4e1277439751da027136f04"
+      "025b9678d5de170c9db505f0370f5f54"
     ],
     [
       "DoublyLinkedList.loc_includes_union_l_fragment_fp0",
@@ -445,7 +445,7 @@
       1,
       [ "@query" ],
       0,
-      "f980149b22b544ae6d1e167528f9fe23"
+      "a9826096bd60fa862ccebb03165c14c6"
     ],
     [
       "DoublyLinkedList.loc_equiv_trans",
@@ -454,7 +454,7 @@
       1,
       [ "@query", "equation_DoublyLinkedList.loc_equiv" ],
       0,
-      "d1e5d653e0b9870ac05649d8552b773b"
+      "6de1cb3e7dd032fce411dfd4b1ca8a38"
     ],
     [
       "DoublyLinkedList.loc_equiv_union_union_loc",
@@ -469,7 +469,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "ca9f66a4c78894fad359c07f8441df10"
+      "0ec47df1d83f1c714a367d7427e07a2e"
     ],
     [
       "DoublyLinkedList.nodelist_aa_r",
@@ -485,7 +485,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3aa714c3676e8b6355434ed5ac65187f"
+      "5ba54602f024e1dffa68dbb86ea1f4f7"
     ],
     [
       "DoublyLinkedList.nodelist_aa_l",
@@ -517,7 +517,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5f30d1031a90c63fe4875a61fce03fe0"
+      "3f54ad61c164984cf7342b6d1488f9a4"
     ],
     [
       "DoublyLinkedList.fragment_aa_lr",
@@ -534,7 +534,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "5d938278414d5aece8fcf9118fb91e02"
+      "6e71fa0bd7a36c047f5db64d0f67b924"
     ],
     [
       "DoublyLinkedList.op_Bar_Greater",
@@ -543,7 +543,7 @@
       1,
       [ "@query" ],
       0,
-      "3ac1465d42dcd6d37e421546273f7f34"
+      "1bc42df2ff63742c761ad3152f2568ef"
     ],
     [
       "DoublyLinkedList.op_Less_Bar",
@@ -552,7 +552,7 @@
       1,
       [ "@query" ],
       0,
-      "64e918908e98ee673e97012999351c99"
+      "e898207bbaf04a961f55c55e64cb2442"
     ],
     [
       "DoublyLinkedList.nodelist_conn",
@@ -584,7 +584,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "61720338a09fed70239238605caf8e98"
+      "ac640fcb9c923ffe4ac95611791e5e04"
     ],
     [
       "DoublyLinkedList.dll_conn",
@@ -626,7 +626,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "70b2c7117506fc0bc8e03c0f217ca6ad"
+      "38dc5157660fea6fbfa7b39cecefa4a3"
     ],
     [
       "DoublyLinkedList.op_Equals_Bar_Greater",
@@ -650,7 +650,7 @@
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_LowStar.Buffer.trivial_preorder",
         "int_typing",
-        "interpretation_LowStar.Buffer_Tm_abs_d359dc64ac5a79b32b9828a25bf0bd72",
+        "interpretation_LowStar.Buffer_Tm_abs_2d4a1d05236e82a428a71813e1ca9661",
         "kinding_DoublyLinkedList.node@tok",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_elim",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_non_tip_regions_intro",
@@ -667,8 +667,8 @@
         "projection_inverse_DoublyLinkedList.Mknode_blink",
         "projection_inverse_DoublyLinkedList.Mknode_flink",
         "projection_inverse_DoublyLinkedList.Mknode_p",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_34881b792a1d39d9a6df78c80d10fb71",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_a5a095fc5a56e1c9cc82fb4448710cd8",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_df0f47acea0b626f36992dc2a652236d",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
@@ -682,7 +682,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "b451d58b65c45855215a28fd9ba1e44e"
+      "faf574034563ef1982e29c713190ba04"
     ],
     [
       "DoublyLinkedList.op_Less_Bar_Equals",
@@ -706,7 +706,7 @@
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_LowStar.Buffer.trivial_preorder",
         "int_typing",
-        "interpretation_LowStar.Buffer_Tm_abs_d359dc64ac5a79b32b9828a25bf0bd72",
+        "interpretation_LowStar.Buffer_Tm_abs_2d4a1d05236e82a428a71813e1ca9661",
         "kinding_DoublyLinkedList.node@tok",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_elim",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_non_tip_regions_intro",
@@ -722,8 +722,8 @@
         "projection_inverse_DoublyLinkedList.Mknode_blink",
         "projection_inverse_DoublyLinkedList.Mknode_flink",
         "projection_inverse_DoublyLinkedList.Mknode_p",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_34881b792a1d39d9a6df78c80d10fb71",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_a5a095fc5a56e1c9cc82fb4448710cd8",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_df0f47acea0b626f36992dc2a652236d",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
@@ -737,7 +737,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "da36e37e01fe5b3011fec61dbfb1eb09"
+      "f6c05147354798e443104fc66eff6a9b"
     ],
     [
       "DoublyLinkedList.op_Bang_Equals_Bar_Greater",
@@ -759,7 +759,7 @@
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_LowStar.Buffer.trivial_preorder",
-        "interpretation_LowStar.Buffer_Tm_abs_d359dc64ac5a79b32b9828a25bf0bd72",
+        "interpretation_LowStar.Buffer_Tm_abs_2d4a1d05236e82a428a71813e1ca9661",
         "kinding_DoublyLinkedList.node@tok",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_elim",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_non_tip_regions_intro",
@@ -774,7 +774,7 @@
         "projection_inverse_DoublyLinkedList.Mknode_blink",
         "projection_inverse_DoublyLinkedList.Mknode_flink",
         "projection_inverse_DoublyLinkedList.Mknode_p",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_7cf6897179fc3f753e4c7d673b33f1f2",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_3ead78d44040470adbd6731d02e1fdd5",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_a5a095fc5a56e1c9cc82fb4448710cd8",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
@@ -791,7 +791,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "2e4103ead0284725baea9f34737d4eab"
+      "4490424017e31852d1fc52e97025b9de"
     ],
     [
       "DoublyLinkedList.op_Bang_Less_Bar_Equals",
@@ -813,7 +813,7 @@
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_LowStar.Buffer.trivial_preorder",
-        "interpretation_LowStar.Buffer_Tm_abs_d359dc64ac5a79b32b9828a25bf0bd72",
+        "interpretation_LowStar.Buffer_Tm_abs_2d4a1d05236e82a428a71813e1ca9661",
         "kinding_DoublyLinkedList.node@tok",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_elim",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_non_tip_regions_intro",
@@ -828,7 +828,7 @@
         "projection_inverse_DoublyLinkedList.Mknode_blink",
         "projection_inverse_DoublyLinkedList.Mknode_flink",
         "projection_inverse_DoublyLinkedList.Mknode_p",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_7cf6897179fc3f753e4c7d673b33f1f2",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_3ead78d44040470adbd6731d02e1fdd5",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_a5a095fc5a56e1c9cc82fb4448710cd8",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
@@ -845,7 +845,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "d9f0b95979e26b0f3c1c17bfaa220c87"
+      "17a52b4f82a0eff384cc5f92c1ed733f"
     ],
     [
       "DoublyLinkedList.extract_nodelist_contained",
@@ -854,7 +854,7 @@
       1,
       [ "@query" ],
       0,
-      "d096e39d140c3596f8f5a7813d42c5fa"
+      "b5dc16db980e127760dbc81c608b56fd"
     ],
     [
       "DoublyLinkedList.extract_nodelist_contained",
@@ -904,7 +904,7 @@
         "typing_LowStar.Buffer.trivial_preorder"
       ],
       0,
-      "f9beb9b1d0b0456a367377467f020de2"
+      "a7069e4b6b82fd82f39667cac13891b9"
     ],
     [
       "DoublyLinkedList.extract_nodelist_fp0",
@@ -913,7 +913,7 @@
       1,
       [ "@query" ],
       0,
-      "234fc51de59d15b4b5c2530f4eb944bb"
+      "3a0647faa4f54438e4d8ef0e4b4d3f54"
     ],
     [
       "DoublyLinkedList.extract_nodelist_fp0",
@@ -965,7 +965,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "56dfc4ed61d431ddb14fa492e12b732a"
+      "2a6110d5d68bd84278e039db54f2e59d"
     ],
     [
       "DoublyLinkedList.extract_nodelist_aa_r",
@@ -974,7 +974,7 @@
       1,
       [ "@query" ],
       0,
-      "913079dd040144d71086bcbc4274c5f8"
+      "33e4afcf79a4fb28ab689561a9462fa3"
     ],
     [
       "DoublyLinkedList.extract_nodelist_aa_r",
@@ -1026,7 +1026,7 @@
         "typing_LowStar.Buffer.trivial_preorder"
       ],
       0,
-      "8af67de7b9c9eea5a5bd72cdc9910c5e"
+      "0d4d75becafaf0085b1f8c5cbd9ec887"
     ],
     [
       "DoublyLinkedList.extract_nodelist_aa_l",
@@ -1035,7 +1035,7 @@
       1,
       [ "@query" ],
       0,
-      "f2799d2b73747cd3a169ce8d3f5783e3"
+      "23499d3389f4d9ec4646d7156a4ed19b"
     ],
     [
       "DoublyLinkedList.extract_nodelist_aa_l",
@@ -1091,7 +1091,7 @@
         "typing_LowStar.Monotonic.Buffer.len", "well-founded-ordering-on-nat"
       ],
       0,
-      "5b26f0b857f84d396315671a6da6f56e"
+      "50e57b9479dcb04bcbda07f310535636"
     ],
     [
       "DoublyLinkedList.extract_nodelist_conn",
@@ -1111,7 +1111,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "19524f3e3f1f4e12f6d57009f95e0865"
+      "1af9735034b01c9ac1570331831d692d"
     ],
     [
       "DoublyLinkedList.extract_nodelist_conn",
@@ -1163,7 +1163,7 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction",
         "proj_equation_DoublyLinkedList.Mknode_blink",
-        "proj_equation_DoublyLinkedList.Mknode_flink",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_1066b945f517b7898e5fbf05edb20539",
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_5b76b1c4682092d8298d5677347b4a58",
@@ -1183,7 +1183,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7c5670dca298f9937c51b996959dab8b"
+      "eccb35653ce0aab884285e724e18a3b5"
     ],
     [
       "DoublyLinkedList.nodelist_remains_aa_l",
@@ -1210,7 +1210,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "fcb48f74c0dc5a549429d72f9096f622"
+      "01b06a93035fdb5f369a70dd25b6bdb4"
     ],
     [
       "DoublyLinkedList.nodelist_remains_aa_l",
@@ -1232,10 +1232,9 @@
         "binder_x_f1423d82bf01b6617461d37febfab8cb_1",
         "binder_x_fe28d8bcde588226b4e538b35321de05_0",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Tm_unit",
-        "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
-        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok",
         "equation_DoublyLinkedList.nodelist",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl",
@@ -1278,7 +1277,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "73544aee446a17c49f1a1b88cc263e1e"
+      "44408a3d34191f243d920328ed9134cb"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_fp0",
@@ -1292,7 +1291,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "73496e1720ac8155aaa879c747575fa9"
+      "2b3a2f7473f522dccbad2f04e4bb25ed"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_fp0",
@@ -1357,7 +1356,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "965e8a378c8c8765468875c057be28cb"
+      "590a949aa193bdaa219a3e40879bf899"
     ],
     [
       "DoublyLinkedList.snd_unsnoc_nodelist_fp0",
@@ -1371,7 +1370,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "e822aace528d4d9ef9fd559e92f6078d"
+      "45ef73fdd3cd214b85a1df0e9d3bf64a"
     ],
     [
       "DoublyLinkedList.snd_unsnoc_nodelist_fp0",
@@ -1391,7 +1390,7 @@
         "binder_x_f1423d82bf01b6617461d37febfab8cb_1",
         "binder_x_fe28d8bcde588226b4e538b35321de05_0",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
+        "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_DoublyLinkedList.nodelist",
         "equation_FStar.List.Tot.Base.hd",
@@ -1408,8 +1407,7 @@
         "int_typing", "kinding_DoublyLinkedList.node@tok",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_union_l_buffer",
-        "lemma_LowStar.Monotonic.Buffer.loc_union_comm",
-        "lemma_LowStar.Monotonic.Buffer.loc_union_loc_none_l",
+        "lemma_LowStar.Monotonic.Buffer.loc_union_loc_none_r",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -1420,23 +1418,18 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_3f6b38b2852708f36615f9b4db0f9ff1",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
-        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "typing_DoublyLinkedList.nodelist",
         "typing_DoublyLinkedList.nodelist_fp0",
-        "typing_FStar.List.Tot.Base.unsnoc",
-        "typing_FStar.Pervasives.Native.snd",
-        "typing_LowStar.Buffer.pointer",
+        "typing_FStar.List.Tot.Base.unsnoc", "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
-        "typing_LowStar.Monotonic.Buffer.loc_buffer",
-        "typing_Prims.__proj__Cons__item__tl", "unit_typing"
+        "typing_LowStar.Monotonic.Buffer.loc_buffer", "unit_typing"
       ],
       0,
-      "46b9b4b1269a1bb11974d46cb5a94851"
+      "8166a095728ba6222a82a2026ddf87ad"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_contained",
@@ -1451,7 +1444,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "1aead854c48a2380f24d2fbec4893abe"
+      "2161a575c776c7141d1950e000766ff5"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_contained",
@@ -1473,9 +1466,8 @@
         "binder_x_f1423d82bf01b6617461d37febfab8cb_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_0", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
         "equation_DoublyLinkedList.nodelist",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl",
@@ -1491,7 +1483,6 @@
         "equation_with_fuel_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.splitAt.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.c_and",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_FStar.Monotonic.Heap.heap",
@@ -1511,23 +1502,19 @@
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_3f6b38b2852708f36615f9b4db0f9ff1",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
-        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "true_interp", "typing_DoublyLinkedList.nodelist",
-        "typing_FStar.List.Tot.Base.splitAt",
         "typing_FStar.List.Tot.Base.unsnoc", "typing_FStar.Map.contains",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Pervasives.Native.fst",
-        "typing_LowStar.Buffer.pointer",
-        "typing_Prims.__proj__Cons__item__tl", "unit_typing"
+        "typing_LowStar.Buffer.pointer", "unit_typing"
       ],
       0,
-      "3fe8f147909904312bb72829931a0426"
+      "cb5bb9e779a1d8e8cb9c756378077515"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_aa",
@@ -1542,7 +1529,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "e318bc624b095c1b2471a0e4c577a67f"
+      "7932acba85dc36106bedec090908b5be"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_aa",
@@ -1581,7 +1568,7 @@
         "equation_with_fuel_FStar.List.Tot.Base.splitAt.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "int_typing", "kinding_DoublyLinkedList.node@tok", "l_and-interp",
+        "kinding_DoublyLinkedList.node@tok", "l_and-interp",
         "lemma_DoublyLinkedList.fst_unsnoc_nodelist_fp0",
         "lemma_DoublyLinkedList.nodelist_remains_aa_l",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
@@ -1595,19 +1582,17 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_3f6b38b2852708f36615f9b4db0f9ff1",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
-        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "typing_DoublyLinkedList.nodelist",
+        "true_interp", "typing_DoublyLinkedList.nodelist",
         "typing_FStar.List.Tot.Base.unsnoc",
         "typing_FStar.Pervasives.Native.fst",
-        "typing_LowStar.Buffer.pointer",
-        "typing_Prims.__proj__Cons__item__tl", "unit_typing"
+        "typing_LowStar.Buffer.pointer", "unit_typing"
       ],
       0,
-      "c51f6d578eacfebb5c6b8aef160bc316"
+      "4ce549432ee22301d9d2e3afa7e1f096"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_conn",
@@ -1622,7 +1607,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "48b56dd676e9e60d2f7f674206d9c773"
+      "558619c666e0d39d703d28d46f4f7442"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_conn",
@@ -1637,8 +1622,7 @@
         "@fuel_irrelevance_DoublyLinkedList.nodelist_conn.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.splitAt.fuel_instrumented",
-        "@query", "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
         "binder_x_0c8c560ea1f64597ac6752d770b1c7b5_1",
         "binder_x_f1423d82bf01b6617461d37febfab8cb_2",
@@ -1677,12 +1661,12 @@
         "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_3f6b38b2852708f36615f9b4db0f9ff1",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
-        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
@@ -1696,11 +1680,10 @@
         "typing_FStar.Pervasives.Native.fst",
         "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
-        "typing_LowStar.Monotonic.Buffer.get",
-        "typing_Prims.__proj__Cons__item__tl", "unit_typing"
+        "typing_LowStar.Monotonic.Buffer.get", "unit_typing"
       ],
       0,
-      "ebea0753a1d333a91550c638899ec3b8"
+      "642ed9459807b7d48fc4211aa49ecb24"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_valid",
@@ -1720,72 +1703,10 @@
         "unit_typing"
       ],
       0,
-      "314a83cb887db7cdc88d0f919c8eb023"
+      "65780b57b52c02d8f75878b90ba526f0"
     ],
     [
       "DoublyLinkedList.nodelist_includes_r_fp0",
-      1,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Base.splitAt.fuel_instrumented",
-        "@fuel_irrelevance_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_2",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_3",
-        "binder_x_f1423d82bf01b6617461d37febfab8cb_1",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
-        "constructor_distinct_Prims.Cons",
-        "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
-        "equality_tok_Prims.LexTop@tok",
-        "equation_DoublyLinkedList.nodelist", "equation_FStar.UInt32.n",
-        "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "equation_with_fuel_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Base.splitAt.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_Prims.int",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_inversion", "int_typing", "kinding_DoublyLinkedList.node@tok",
-        "lemma_DoublyLinkedList.loc_includes_union_l_nodelist_fp0",
-        "lemma_FStar.List.Tot.Properties.append_l_nil",
-        "lemma_LowStar.Monotonic.Buffer.length_null_1",
-        "lemma_LowStar.Monotonic.Buffer.length_null_2",
-        "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
-        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "typing_DoublyLinkedList.nodelist_fp0",
-        "typing_FStar.List.Tot.Base.splitAt",
-        "typing_LowStar.Buffer.pointer",
-        "typing_LowStar.Buffer.trivial_preorder",
-        "typing_LowStar.Monotonic.Buffer.length",
-        "typing_LowStar.Monotonic.Buffer.loc_buffer", "unit_inversion",
-        "unit_typing", "well-founded-ordering-on-nat"
-      ],
-      0,
-      "0a9a5b3291117859ce638e6cf0dac453"
-    ],
-    [
-      "DoublyLinkedList.nodelist_includes_l_fp0",
       1,
       2,
       1,
@@ -1804,8 +1725,67 @@
         "binder_x_fe28d8bcde588226b4e538b35321de05_0",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
-        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
         "equality_tok_Prims.LexTop@tok",
+        "equation_DoublyLinkedList.nodelist",
+        "equation_FStar.List.Tot.Base.op_At", "equation_FStar.UInt32.n",
+        "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_with_fuel_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.splitAt.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion", "int_typing", "kinding_DoublyLinkedList.node@tok",
+        "lemma_DoublyLinkedList.loc_includes_union_l_nodelist_fp0",
+        "lemma_FStar.List.Tot.Properties.append_l_nil",
+        "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "typing_DoublyLinkedList.nodelist_fp0",
+        "typing_FStar.List.Tot.Base.splitAt",
+        "typing_LowStar.Buffer.pointer",
+        "typing_LowStar.Buffer.trivial_preorder",
+        "typing_LowStar.Monotonic.Buffer.loc_buffer", "unit_inversion",
+        "unit_typing", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "80e92f36dc029af87de243cc58df74d0"
+    ],
+    [
+      "DoublyLinkedList.nodelist_includes_l_fp0",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.splitAt.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_2",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_3",
+        "binder_x_f1423d82bf01b6617461d37febfab8cb_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
+        "disc_equation_Prims.Cons", "equality_tok_Prims.LexTop@tok",
         "equation_DoublyLinkedList.nodelist",
         "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.op_At",
@@ -1842,19 +1822,16 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_DoublyLinkedList.nodelist_fp0",
-        "typing_FStar.List.Tot.Base.append",
         "typing_FStar.List.Tot.Base.length",
         "typing_FStar.List.Tot.Base.splitAt",
         "typing_LowStar.Buffer.pointer",
-        "typing_LowStar.Buffer.trivial_preorder",
-        "typing_LowStar.Monotonic.Buffer.length", "unit_inversion",
+        "typing_LowStar.Buffer.trivial_preorder", "unit_inversion",
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "3610ce8b35830219463a3c3628f3dd23"
+      "8f4a606950584fcb31e76e8f9ad87e50"
     ],
     [
       "DoublyLinkedList.tot_dll_to_piece",
@@ -1913,7 +1890,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "cee63b26ea9825065a9151b96a7692da"
+      "60e75a5833956f4fe1f454fd03d0a038"
     ],
     [
       "DoublyLinkedList.tot_dll_to_fragment",
@@ -1961,7 +1938,7 @@
         "true_interp"
       ],
       0,
-      "c02bd379050942eccecac9ee2c9c53d0"
+      "ccbc22f743668bfc3a86a34beb50af86"
     ],
     [
       "DoublyLinkedList.tot_piece_to_dll",
@@ -1980,8 +1957,7 @@
         "equation_DoublyLinkedList.piece_contained",
         "equation_DoublyLinkedList.piece_ghostly_connections",
         "equation_DoublyLinkedList.piece_valid",
-        "equation_FStar.List.Tot.Base.hd", "equation_LowStar.Buffer.buffer",
-        "equation_LowStar.Buffer.pointer",
+        "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
         "equation_LowStar.Buffer.pointer_or_null", "false_interp",
         "fuel_guarded_inversion_DoublyLinkedList.piece",
         "kinding_DoublyLinkedList.node@tok", "l_and-interp", "l_not-interp",
@@ -2005,7 +1981,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "bac475e7b71abfec375bd46c32940c5f"
+      "2237e9d5e3fd61a4c9f71ef4721a70c9"
     ],
     [
       "DoublyLinkedList.nodelist_append_contained",
@@ -2044,7 +2020,7 @@
         "typing_LowStar.Buffer.pointer", "unit_typing"
       ],
       0,
-      "438d8bca6128815c01ac67ce360c9797"
+      "0d6e7210482e175dd85c3211c8ff7ffe"
     ],
     [
       "DoublyLinkedList.nodelist_append_fp0",
@@ -2090,7 +2066,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "e7c4134b12320b0307d7ca20e2b57e5f"
+      "ded3a43548a0317766de9bcc566a9965"
     ],
     [
       "DoublyLinkedList.nodelist_append_aa_l",
@@ -2137,12 +2113,12 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "true_interp", "typing_DoublyLinkedList.nodelist",
         "typing_DoublyLinkedList.nodelist_fp0",
         "typing_FStar.List.Tot.Base.append",
         "typing_FStar.List.Tot.Base.length",
-        "typing_FStar.List.Tot.Base.op_At",
         "typing_FStar.Pervasives.Native.fst",
         "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
@@ -2151,7 +2127,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7ec934a4ee140c47d7ca5abeabf5494c"
+      "6941e6318e265c50a5841324a0711ee3"
     ],
     [
       "DoublyLinkedList.nodelist_append_aa_r",
@@ -2190,6 +2166,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "subterm_ordering_Prims.Cons",
+        "token_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "typing_DoublyLinkedList.nodelist_fp0",
         "typing_FStar.List.Tot.Base.append", "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
@@ -2197,7 +2174,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "34b6ff7c9e168c52330a165a0eb5bb1d"
+      "967f8e94d666682321faba809291d5b8"
     ],
     [
       "DoublyLinkedList.nodelist_append_aa",
@@ -2206,7 +2183,7 @@
       1,
       [ "@query", "equation_DoublyLinkedList.nodelist_aa" ],
       0,
-      "038d8d23bd024924e3133ff9dfa779ff"
+      "f203e4b1c98f8e9fd028a959a4ac35aa"
     ],
     [
       "DoublyLinkedList.nodelist_append_conn",
@@ -2246,7 +2223,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "cf0714cb6620162bd52aa1976ac3dc5b"
+      "cce63632dce87e647d89c456a75e0e6b"
     ],
     [
       "DoublyLinkedList.nodelist_append_conn",
@@ -2312,11 +2289,11 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
@@ -2332,7 +2309,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "1d9487adc2887b236ffc7c5f9eceba19"
+      "1db18d072ba3511c100322a8a8fe0ead"
     ],
     [
       "DoublyLinkedList.nodelist_append_valid",
@@ -2357,7 +2334,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "f8b2531df3e6200fb044cc16eee3a2e6"
+      "1acbcc201fa34de8043775a6877adba8"
     ],
     [
       "DoublyLinkedList.loc_includes_union_r_inv",
@@ -2369,7 +2346,7 @@
         "lemma_LowStar.Monotonic.Buffer.loc_includes_union_r_"
       ],
       0,
-      "995976f581800be2885277d6aa4ff6be"
+      "415f3b2af9a4308df5edabae043cba7d"
     ],
     [
       "DoublyLinkedList.piece_merge",
@@ -2454,7 +2431,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "0a2f9f81c7558521f8aa02ffb804a790"
+      "fe0f4923c4fad970ae43af981aae65ca"
     ],
     [
       "DoublyLinkedList.piece_merge_fp0",
@@ -2501,10 +2478,10 @@
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "kinding_DoublyLinkedList.node@tok", "l_and-interp",
         "lemma_DoublyLinkedList.loc_includes_union_l_nodelist_fp0",
-        "lemma_DoublyLinkedList.loc_includes_union_l_piece_fp0",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_trans_backwards",
+        "lemma_LowStar.Monotonic.Buffer.loc_includes_union_l_buffer",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_union_r_",
         "lemma_LowStar.Monotonic.Buffer.loc_union_comm",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
@@ -2546,7 +2523,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union", "unit_typing"
       ],
       0,
-      "071c9dd974330355c50dfcd5352f9453"
+      "e16bb907a67b05f3ad2b336ac9d9ce32"
     ],
     [
       "DoublyLinkedList.fragment_defragmentable",
@@ -2618,7 +2595,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "5d07b92f8343c1e0f7555e88d6db9bc5"
+      "cddc88dc13055711d11f72be5c80cc5d"
     ],
     [
       "DoublyLinkedList.single_piece_fragment_valid",
@@ -2653,7 +2630,7 @@
         "projection_inverse_DoublyLinkedList.Frag1_t", "true_interp"
       ],
       0,
-      "fb7de1d0688b5088360210a0132aace4"
+      "a0aa17a61f8122dc8ee9fa4f1d0026e8"
     ],
     [
       "DoublyLinkedList.tot_defragmentable_fragment_to_dll",
@@ -2669,7 +2646,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "8d3c1a12682b8e7385c92126a9e42650"
+      "e92fe8c170dd7c350258d89ee177f8aa"
     ],
     [
       "DoublyLinkedList.tot_defragmentable_fragment_to_dll",
@@ -2733,7 +2710,7 @@
         "equation_with_fuel_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_DoublyLinkedList.fragment",
-        "interpretation_DoublyLinkedList_Tm_abs_303bc754827f964c4dc725fe622d82db",
+        "interpretation_DoublyLinkedList_Tm_abs_d886790b7cf817487ea4fe17ce8f6d84",
         "kinding_DoublyLinkedList.node@tok", "l_and-interp",
         "lemma_FStar.Ghost.reveal_hide",
         "lemma_LowStar.Monotonic.Buffer.live_is_null",
@@ -2779,7 +2756,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "698247541cf4ecf51af74a84902c1ca0"
+      "9fd275fd2ed6c3505f19052bd3bcdb4e"
     ],
     [
       "DoublyLinkedList.nodelist_split_contained",
@@ -2814,7 +2791,7 @@
         "typing_FStar.List.Tot.Base.append", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "0f8890a594ad05a8ef8253f578c88a25"
+      "71209ddd05eab064d864aa195904d332"
     ],
     [
       "DoublyLinkedList.nodelist_split_fp0",
@@ -2884,7 +2861,7 @@
         "unit_typing"
       ],
       0,
-      "b30e717c7f08ec22d9beb3768b03f4cd"
+      "0d683dd4d8853dbfdd0900de35f8b14d"
     ],
     [
       "DoublyLinkedList.nodelist_split_fp0_equiv",
@@ -2931,7 +2908,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "d6a0cb1a9d23955341b7bc297f6bf863"
+      "1943b9447f215d75380224cf70f61970"
     ],
     [
       "DoublyLinkedList.nodelist_split_aa_l",
@@ -2987,7 +2964,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "229071fc1df7cb5f3dbedbc78f00df82"
+      "dabb3cfb2fdc1b33bb9f7b521f07b367"
     ],
     [
       "DoublyLinkedList.nodelist_split_aa_r",
@@ -3030,7 +3007,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "ebbb3dff63cbf25523a26c2f4dab4c13"
+      "5f173635c10a10d25bf55a561e797cf8"
     ],
     [
       "DoublyLinkedList.nodelist_split_aa",
@@ -3048,11 +3025,10 @@
         "equation_with_fuel_DoublyLinkedList.nodelist_aa_l.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_aa_r.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
-        "kinding_DoublyLinkedList.node@tok", "typing_LowStar.Buffer.pointer"
+        "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "7bb8e8028d16edbbc3fa05601bd6552e"
+      "efdb7d8110916519a2107a95e9315cd3"
     ],
     [
       "DoublyLinkedList.nodelist_split_conn",
@@ -3062,6 +3038,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
@@ -3080,10 +3057,11 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "ca0751098838afa9cf9db166662faef5"
+      "869fa94164a08888de458f8d697de731"
     ],
     [
       "DoublyLinkedList.nodelist_split_conn",
@@ -3144,11 +3122,11 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
@@ -3162,7 +3140,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "08cc7017e52c95cb429003a6072f6372"
+      "2779dc5385a0c08b2fcd14e61b3d27cb"
     ],
     [
       "DoublyLinkedList.nodelist_split_valid",
@@ -3201,7 +3179,7 @@
         "typing_LowStar.Buffer.pointer", "unit_typing"
       ],
       0,
-      "847389a0bd074f6e11e78d296fb60f5a"
+      "80b96de45da4a5ed370655f6bbc6c28a"
     ],
     [
       "DoublyLinkedList.dll_fp0_is_nodelist_fp0",
@@ -3257,7 +3235,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "9717365d118ad23491ba4d86ac8ce5e3"
+      "2ad7c87e33e6eabf91ff192d3ffe98e3"
     ],
     [
       "DoublyLinkedList.piece_fp0_is_nodelist_fp0",
@@ -3308,7 +3286,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "721ae371db368681e9f12552eeca2424"
+      "f1b98080031832b05de14fecec36e6bd"
     ],
     [
       "DoublyLinkedList.tot_dll_to_fragment_split",
@@ -3326,9 +3304,9 @@
         "@fuel_correspondence_DoublyLinkedList.nodelist_contained.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Properties.split_using.fuel_instrumented",
         "@fuel_irrelevance_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query",
@@ -3336,12 +3314,11 @@
         "FStar.Pervasives.Native_interpretation_Tm_arrow_caf985f824d0c8c31cc1333a92d97b40",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
         "constructor_distinct_DoublyLinkedList.Frag2",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Cons", "eq2-interp",
-        "equation_DoublyLinkedList.dll_aa",
+        "constructor_distinct_Tm_unit",
+        "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
+        "eq2-interp", "equation_DoublyLinkedList.dll_aa",
         "equation_DoublyLinkedList.dll_conn",
         "equation_DoublyLinkedList.dll_contained",
         "equation_DoublyLinkedList.dll_fp0",
@@ -3364,7 +3341,6 @@
         "equation_DoublyLinkedList.piece_ghostly_connections",
         "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.op_At",
-        "equation_FStar.Monotonic.HyperHeap.hmap",
         "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_FStar.UInt32.n",
@@ -3373,8 +3349,7 @@
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.Monotonic.Buffer.get",
         "equation_LowStar.Monotonic.Buffer.length", "equation_Prims.eq2",
-        "equation_Prims.logical", "equation_Prims.nat",
-        "equation_Prims.squash",
+        "equation_Prims.nat", "equation_Prims.squash",
         "equation_with_fuel_DoublyLinkedList.fragment_aa0.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.fragment_aa_lr.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.fragment_conn.fuel_instrumented",
@@ -3383,27 +3358,25 @@
         "equation_with_fuel_DoublyLinkedList.fragment_ghostly_connections.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_contained.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Properties.split_using.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_DoublyLinkedList.dll",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.equals",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_DoublyLinkedList.piece_ghostly_connections",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
-        "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_FStar.Pervasives.Native.fst",
         "function_token_typing_FStar.Pervasives.Native.snd",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "kinding_DoublyLinkedList.node@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok", "l_and-interp",
-        "l_not-interp", "l_or-interp",
-        "lemma_DoublyLinkedList.lemma_non_null",
+        "l_not-interp", "lemma_DoublyLinkedList.lemma_non_null",
         "lemma_DoublyLinkedList.loc_equiv_trans",
         "lemma_DoublyLinkedList.loc_includes_union_l_nodelist_fp0",
         "lemma_DoublyLinkedList.loc_includes_union_l_piece_fp0",
-        "lemma_FStar.Ghost.reveal_hide", "lemma_FStar.Map.lemma_ContainsDom",
-        "lemma_FStar.UInt32.uv_inv",
+        "lemma_FStar.Ghost.reveal_hide", "lemma_FStar.UInt32.uv_inv",
+        "lemma_LowStar.Monotonic.Buffer.length_null_1",
         "lemma_LowStar.Monotonic.Buffer.length_null_2",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_includes_r",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_sym_",
@@ -3427,15 +3400,10 @@
         "projection_inverse_DoublyLinkedList.Mkpiece_ptail",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_1e5438d14bb17f473f9a1e9d1a7cf83c",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_6e14d887d8a2f331e441fa58c68d3a85",
         "refinement_interpretation_FStar.Ghost_Tm_refine_785b445c1ccb59eaa8c666ff5bddec28",
-        "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_ca5b6dc4e0a851997703798a1ffc5f70",
-        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
-        "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
         "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_3daf37ab3cd19c1e74e63f8f5e0fb16a",
@@ -3447,6 +3415,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "token_correspondence_FStar.Pervasives.Native.fst",
         "token_correspondence_FStar.Pervasives.Native.snd",
+        "typing_DoublyLinkedList.__proj__Mkdll__item__lhead",
         "typing_DoublyLinkedList.__proj__Mkdll__item__ltail",
         "typing_DoublyLinkedList.__proj__Mkdll__item__nodes",
         "typing_DoublyLinkedList.dll_fp0",
@@ -3454,20 +3423,15 @@
         "typing_DoublyLinkedList.nodelist_fp0",
         "typing_DoublyLinkedList.piece_fp0", "typing_FStar.Ghost.elift1",
         "typing_FStar.Ghost.reveal", "typing_FStar.List.Tot.Base.length",
-        "typing_FStar.Map.contains",
-        "typing_FStar.Monotonic.HyperStack.get_hmap",
-        "typing_FStar.Monotonic.HyperStack.get_tip",
-        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.Monotonic.Buffer.g_is_null",
         "typing_LowStar.Monotonic.Buffer.len",
         "typing_LowStar.Monotonic.Buffer.loc_union",
-        "typing_LowStar.Monotonic.Buffer.mnull", "typing_Prims.eq2",
-        "unit_typing"
+        "typing_LowStar.Monotonic.Buffer.mnull", "unit_typing"
       ],
       0,
-      "49ffd085e3739e189f6fe1d4b6fde6b0"
+      "65e85123c8f3ba50500f7669b04fd482"
     ],
     [
       "DoublyLinkedList.tot_node_to_dll",
@@ -3540,7 +3504,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "f941d7118a764b07a415a2be0838234c"
+      "9c9dbc29b739b204d7f8ef8a4aa1360f"
     ],
     [
       "DoublyLinkedList.singleton_dll",
@@ -3562,7 +3526,7 @@
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_LowStar.Monotonic.Buffer.loc_union_idem",
         "lemma_LowStar.Monotonic.Buffer.modifies_trans",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_7cf6897179fc3f753e4c7d673b33f1f2",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_3ead78d44040470adbd6731d02e1fdd5",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
@@ -3570,7 +3534,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "f6ee3865d3da0b544261ed09d57a8359"
+      "a0fe0f82f6234f26c261a27df217d64d"
     ],
     [
       "DoublyLinkedList.tot_node_to_piece",
@@ -3650,7 +3614,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "bee5a5cf6d629ec57e8f91967fc22367"
+      "428393170ba0a2cb63e2aabc93381ba3"
     ],
     [
       "DoublyLinkedList.tot_piece_tail",
@@ -3719,7 +3683,6 @@
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_DoublyLinkedList.__proj__Mkpiece__item__pnodes",
         "typing_DoublyLinkedList.nodelist", "typing_FStar.Ghost.reveal",
         "typing_FStar.List.Tot.Base.length", "typing_FStar.Map.contains",
@@ -3728,7 +3691,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "40c5ef8f400bd2c50998d22fd0a8a169"
+      "75c550c0e18be66efbb1c0e9851ba066"
     ],
     [
       "DoublyLinkedList.lemma_dll_links_contained",
@@ -3743,11 +3706,12 @@
         "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.last.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.splitAt.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
         "bool_inversion", "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Prims.Nil", "data_elim_DoublyLinkedList.Mkdll",
+        "constructor_distinct_Prims.Nil",
         "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
         "equation_DoublyLinkedList.dll_conn",
@@ -3762,7 +3726,8 @@
         "equation_FStar.Monotonic.HyperHeap.hmap",
         "equation_FStar.Monotonic.HyperStack.is_tip",
         "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
-        "equation_FStar.Monotonic.HyperStack.mem", "equation_FStar.UInt32.n",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_FStar.Pervasives.Native.snd", "equation_FStar.UInt32.n",
         "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
         "equation_LowStar.Buffer.pointer_or_null",
         "equation_LowStar.Monotonic.Buffer.get",
@@ -3775,6 +3740,7 @@
         "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.last.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.splitAt.fuel_instrumented",
         "fuel_guarded_inversion_DoublyLinkedList.dll",
         "fuel_guarded_inversion_Prims.equals",
         "fuel_guarded_inversion_Prims.list",
@@ -3792,6 +3758,8 @@
         "proj_equation_DoublyLinkedList.Mkdll_lhead",
         "proj_equation_DoublyLinkedList.Mkdll_ltail",
         "proj_equation_DoublyLinkedList.Mknode_blink",
+        "proj_equation_DoublyLinkedList.Mknode_flink",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -3806,21 +3774,24 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_DoublyLinkedList.__proj__Mkdll__item__lhead",
-        "typing_FStar.List.Tot.Base.index",
+        "typing_DoublyLinkedList.__proj__Mknode__item__flink",
+        "typing_FStar.List.Tot.Base.hd", "typing_FStar.List.Tot.Base.index",
         "typing_FStar.List.Tot.Base.unsnoc", "typing_FStar.Map.contains",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.Monotonic.Buffer.g_is_null",
+        "typing_LowStar.Monotonic.Buffer.get",
         "typing_LowStar.Monotonic.Buffer.len",
         "typing_LowStar.Monotonic.Buffer.mnull",
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "e0933f0b2fe5c1cf32fff123d5014a67"
+      "377236970ac442ff7b8b00ea7d6dd8eb"
     ],
     [
       "DoublyLinkedList.lemma_dll_links_disjoint",
@@ -3829,7 +3800,6 @@
       2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_DoublyLinkedList.nodelist_conn.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.last.fuel_instrumented",
@@ -3841,8 +3811,7 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
         "bool_inversion", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "constructor_distinct_Tm_unit",
-        "data_elim_DoublyLinkedList.Mkdll",
-        "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
+        "data_elim_DoublyLinkedList.Mkdll", "data_elim_Prims.Cons",
         "disc_equation_Prims.Cons", "eq2-interp",
         "equation_DoublyLinkedList.dll_aa",
         "equation_DoublyLinkedList.dll_conn",
@@ -3868,7 +3837,6 @@
         "equation_LowStar.Monotonic.Buffer.length", "equation_Prims.eq2",
         "equation_Prims.l_and", "equation_Prims.nat",
         "equation_Prims.squash",
-        "equation_with_fuel_DoublyLinkedList.nodelist_conn.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.last.fuel_instrumented",
@@ -3886,6 +3854,7 @@
         "lemma_DoublyLinkedList.snd_unsnoc_nodelist_fp0",
         "lemma_FStar.List.Tot.Properties.append_length",
         "lemma_FStar.Map.lemma_ContainsDom", "lemma_FStar.UInt32.uv_inv",
+        "lemma_LowStar.Monotonic.Buffer.length_as_seq",
         "lemma_LowStar.Monotonic.Buffer.length_null_1",
         "lemma_LowStar.Monotonic.Buffer.length_null_2",
         "lemma_LowStar.Monotonic.Buffer.loc_buffer_null",
@@ -3895,6 +3864,7 @@
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_union_r_",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_union_l_buffer",
+        "lemma_LowStar.Monotonic.Buffer.loc_union_comm",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
         "proj_equation_DoublyLinkedList.Mkdll_lhead",
@@ -3903,7 +3873,7 @@
         "proj_equation_DoublyLinkedList.Mknode_flink",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -3911,13 +3881,12 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_52fd52c3e96fb4b41742efc8f738b032",
-        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_3f6b38b2852708f36615f9b4db0f9ff1",
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_5b76b1c4682092d8298d5677347b4a58",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
         "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_3daf37ab3cd19c1e74e63f8f5e0fb16a",
-        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
@@ -3925,31 +3894,28 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_DoublyLinkedList.__proj__Mkdll__item__lhead",
         "typing_DoublyLinkedList.__proj__Mkdll__item__ltail",
-        "typing_DoublyLinkedList.__proj__Mknode__item__blink",
         "typing_DoublyLinkedList.__proj__Mknode__item__flink",
         "typing_DoublyLinkedList.nodelist",
         "typing_DoublyLinkedList.nodelist_fp0",
         "typing_FStar.List.Tot.Base.index",
-        "typing_FStar.List.Tot.Base.length",
-        "typing_FStar.List.Tot.Base.splitAt",
-        "typing_FStar.List.Tot.Base.unsnoc", "typing_FStar.Map.contains",
+        "typing_FStar.List.Tot.Base.splitAt", "typing_FStar.Map.contains",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_FStar.Pervasives.Native.fst",
-        "typing_FStar.Pervasives.Native.snd",
+        "typing_FStar.Pervasives.Native.snd", "typing_FStar.Seq.Base.index",
         "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
+        "typing_LowStar.Monotonic.Buffer.as_seq",
         "typing_LowStar.Monotonic.Buffer.g_is_null",
         "typing_LowStar.Monotonic.Buffer.get",
         "typing_LowStar.Monotonic.Buffer.len",
         "typing_LowStar.Monotonic.Buffer.length",
         "typing_LowStar.Monotonic.Buffer.loc_buffer",
-        "typing_LowStar.Monotonic.Buffer.mnull",
-        "typing_Prims.__proj__Cons__item__tl", "unit_inversion",
+        "typing_LowStar.Monotonic.Buffer.mnull", "unit_inversion",
         "unit_typing"
       ],
       0,
-      "4fab82d9b397b445b536696fd169c2a2"
+      "8ff72501538e2ccb3e08e2df9b995116"
     ],
     [
       "DoublyLinkedList.nodelist_remains_valid",
@@ -4018,7 +3984,10 @@
         "lemma_LowStar.Monotonic.Buffer.modifies_inert_buffer_elim",
         "lemma_LowStar.Monotonic.Buffer.modifies_inert_intro",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_3f6b38b2852708f36615f9b4db0f9ff1",
@@ -4040,7 +4009,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "2f91ca3140858a9063d2fe4a28ff5bc7"
+      "be9e8f29a59b0bf84f06bd4de6607114"
     ],
     [
       "DoublyLinkedList.piece_remains_valid",
@@ -4053,9 +4022,7 @@
         "@fuel_correspondence_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.last.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "bool_inversion", "disc_equation_Prims.Cons", "eq2-interp",
-        "equation_DoublyLinkedList.nodelist",
+        "@query", "eq2-interp", "equation_DoublyLinkedList.nodelist",
         "equation_DoublyLinkedList.nodelist_valid",
         "equation_DoublyLinkedList.piece_aa",
         "equation_DoublyLinkedList.piece_conn",
@@ -4063,51 +4030,30 @@
         "equation_DoublyLinkedList.piece_fp0",
         "equation_DoublyLinkedList.piece_ghostly_connections",
         "equation_DoublyLinkedList.piece_valid",
-        "equation_FStar.List.Tot.Base.hd",
-        "equation_FStar.Monotonic.HyperHeap.hmap",
-        "equation_FStar.Monotonic.HyperStack.is_tip",
-        "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
-        "equation_FStar.Monotonic.HyperStack.mem", "equation_FStar.UInt32.n",
-        "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
-        "equation_LowStar.Monotonic.Buffer.get", "equation_Prims.nat",
+        "equation_FStar.List.Tot.Base.hd", "equation_LowStar.Buffer.buffer",
+        "equation_LowStar.Buffer.pointer",
         "equation_with_fuel_DoublyLinkedList.nodelist_contained.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "false_interp", "fuel_guarded_inversion_DoublyLinkedList.node",
-        "fuel_guarded_inversion_DoublyLinkedList.piece",
+        "false_interp", "fuel_guarded_inversion_DoublyLinkedList.piece",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
-        "function_token_typing_FStar.Monotonic.HyperHeap.rid",
-        "function_token_typing_FStar.UInt32.n", "int_typing",
         "kinding_DoublyLinkedList.node@tok", "l_and-interp",
-        "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_sym_",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_union_r_",
         "lemma_LowStar.Monotonic.Buffer.modifies_inert_buffer_elim",
         "lemma_LowStar.Monotonic.Buffer.modifies_inert_intro",
         "proj_equation_DoublyLinkedList.Mkpiece_phead",
         "proj_equation_DoublyLinkedList.Mkpiece_ptail",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
-        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "typing_DoublyLinkedList.__proj__Mkpiece__item__phead",
         "typing_DoublyLinkedList.__proj__Mkpiece__item__ptail",
         "typing_DoublyLinkedList.nodelist_fp0",
-        "typing_FStar.List.Tot.Base.hd", "typing_FStar.List.Tot.Base.last",
-        "typing_FStar.Map.contains",
-        "typing_FStar.Monotonic.HyperStack.get_hmap",
-        "typing_FStar.Monotonic.HyperStack.get_tip",
-        "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
-        "typing_LowStar.Monotonic.Buffer.get",
         "typing_LowStar.Monotonic.Buffer.loc_buffer",
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "2b51564712478bcf4c1e6c8e95c4c0ca"
+      "04711e39db95d237e8191dea99eb8d2a"
     ],
     [
       "DoublyLinkedList.piece_remains_valid_b",
@@ -4122,7 +4068,6 @@
         "@fuel_correspondence_DoublyLinkedList.nodelist_contained.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.last.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.splitAt.fuel_instrumented",
@@ -4130,6 +4075,7 @@
         "@fuel_irrelevance_DoublyLinkedList.nodelist_aa_r.fuel_instrumented",
         "@fuel_irrelevance_DoublyLinkedList.nodelist_conn.fuel_instrumented",
         "@fuel_irrelevance_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
+        "@fuel_irrelevance_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.splitAt.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
@@ -4166,7 +4112,6 @@
         "equation_with_fuel_DoublyLinkedList.nodelist_contained.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.last.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.splitAt.fuel_instrumented",
@@ -4183,6 +4128,8 @@
         "l_and-interp", "lemma_DoublyLinkedList.nodelist_remains_aa_l",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_LowStar.Monotonic.Buffer.address_liveness_insensitive_addresses",
+        "lemma_LowStar.Monotonic.Buffer.length_null_1",
+        "lemma_LowStar.Monotonic.Buffer.length_null_2",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_sym_",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_union_r_",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_addresses_buffer_",
@@ -4190,8 +4137,8 @@
         "lemma_LowStar.Monotonic.Buffer.modifies_inert_buffer_elim",
         "lemma_LowStar.Monotonic.Buffer.modifies_inert_intro",
         "lemma_LowStar.Monotonic.Buffer.modifies_inert_liveness_insensitive_buffer_weak",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
         "proj_equation_DoublyLinkedList.Mkpiece_phead",
         "proj_equation_DoublyLinkedList.Mkpiece_ptail",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -4202,8 +4149,6 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_3f6b38b2852708f36615f9b4db0f9ff1",
-        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_5b76b1c4682092d8298d5677347b4a58",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
@@ -4217,9 +4162,8 @@
         "true_interp", "typing_DoublyLinkedList.__proj__Mknode__item__flink",
         "typing_DoublyLinkedList.__proj__Mkpiece__item__phead",
         "typing_DoublyLinkedList.__proj__Mkpiece__item__ptail",
-        "typing_FStar.List.Tot.Base.last",
         "typing_FStar.List.Tot.Base.length", "typing_FStar.List.Tot.Base.tl",
-        "typing_FStar.List.Tot.Base.unsnoc", "typing_FStar.Map.contains",
+        "typing_FStar.Map.contains",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_FStar.Set.singleton", "typing_LowStar.Buffer.pointer",
@@ -4231,7 +4175,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "4063c7791bfb223f488428bbe4c6976e"
+      "942b775a6fe627ba2f6998a4ec4c9001"
     ],
     [
       "DoublyLinkedList.piece_remains_valid_f",
@@ -4245,6 +4189,7 @@
         "@fuel_correspondence_DoublyLinkedList.nodelist_contained.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.last.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
@@ -4252,14 +4197,13 @@
         "@fuel_irrelevance_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "bool_inversion", "constructor_distinct_BoxInt",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
-        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
-        "eq2-interp", "equation_DoublyLinkedList.nodelist",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
+        "disc_equation_Prims.Cons", "eq2-interp",
+        "equation_DoublyLinkedList.nodelist",
         "equation_DoublyLinkedList.nodelist_aa",
         "equation_DoublyLinkedList.nodelist_valid",
-        "equation_DoublyLinkedList.op_Bar_Greater",
         "equation_DoublyLinkedList.op_Less_Bar",
         "equation_DoublyLinkedList.piece_aa",
         "equation_DoublyLinkedList.piece_conn",
@@ -4268,6 +4212,8 @@
         "equation_DoublyLinkedList.piece_valid",
         "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.snoc",
+        "equation_FStar.List.Tot.Base.tail",
+        "equation_FStar.List.Tot.Base.tl",
         "equation_FStar.List.Tot.Base.unsnoc",
         "equation_FStar.Monotonic.HyperHeap.hmap",
         "equation_FStar.Monotonic.HyperStack.is_tip",
@@ -4277,20 +4223,17 @@
         "equation_FStar.Pervasives.Native.snd", "equation_FStar.UInt32.n",
         "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
         "equation_LowStar.Buffer.trivial_preorder",
-        "equation_LowStar.Monotonic.Buffer.get", "equation_Prims.eq2",
-        "equation_Prims.nat", "equation_Prims.squash",
+        "equation_LowStar.Monotonic.Buffer.get", "equation_Prims.nat",
         "equation_with_fuel_DoublyLinkedList.nodelist_aa_l.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_conn.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_contained.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.last.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.splitAt.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_DoublyLinkedList.piece",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_Prims.equals",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
@@ -4311,7 +4254,6 @@
         "lemma_LowStar.Monotonic.Buffer.modifies_inert_liveness_insensitive_buffer_weak",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
-        "proj_equation_DoublyLinkedList.Mknode_blink",
         "proj_equation_DoublyLinkedList.Mkpiece_phead",
         "proj_equation_DoublyLinkedList.Mkpiece_ptail",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -4323,29 +4265,32 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_efd98c8c5b65f3cca318fe6b2bf337bd",
+        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_3f6b38b2852708f36615f9b4db0f9ff1",
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_5b76b1c4682092d8298d5677347b4a58",
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_e88aba6d4c79a5625ab4330932edf7ed",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "true_interp",
         "typing_DoublyLinkedList.__proj__Mkpiece__item__phead",
         "typing_DoublyLinkedList.__proj__Mkpiece__item__ptail",
+        "typing_DoublyLinkedList.nodelist",
         "typing_DoublyLinkedList.nodelist_fp0",
         "typing_FStar.List.Tot.Base.index",
-        "typing_FStar.List.Tot.Base.splitAt", "typing_FStar.Map.contains",
+        "typing_FStar.List.Tot.Base.length", "typing_FStar.List.Tot.Base.tl",
+        "typing_FStar.List.Tot.Base.unsnoc", "typing_FStar.Map.contains",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip",
+        "typing_FStar.Pervasives.Native.snd",
         "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
-        "typing_LowStar.Monotonic.Buffer.loc_buffer", "unit_typing"
+        "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "e6802ead4ccabc782438379e7bbf5718"
+      "cc6e0a59af1153f3d92c59e1b7919b4a"
     ],
     [
       "DoublyLinkedList.dll_insert_at_head",
@@ -4429,7 +4374,7 @@
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "interpretation_DoublyLinkedList_Tm_abs_303bc754827f964c4dc725fe622d82db",
+        "interpretation_DoublyLinkedList_Tm_abs_d886790b7cf817487ea4fe17ce8f6d84",
         "kinding_DoublyLinkedList.node@tok", "l_and-interp", "l_not-interp",
         "lemma_DoublyLinkedList.lemma_non_null",
         "lemma_FStar.Ghost.reveal_hide",
@@ -4470,18 +4415,18 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_0012266d384e1cb0af739b02c33f9220",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_0ca25738efef246d9d81de0eeb2bedab",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_2a7e9c31800cd4a66118e4e5c0d2f66b",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_3ead78d44040470adbd6731d02e1fdd5",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_64fd66712866fd699083320bb3e5fbbc",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_6e14d887d8a2f331e441fa58c68d3a85",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_7cf6897179fc3f753e4c7d673b33f1f2",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_bcd69caee5c0a8f30b4b5a2702c5fcee",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_ed67a49e7765f4bfc329a9d51ec1270c",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
         "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_3daf37ab3cd19c1e74e63f8f5e0fb16a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "token_correspondence_DoublyLinkedList.piece_conn",
         "token_correspondence_DoublyLinkedList.piece_contained",
         "true_interp", "typing_DoublyLinkedList.__proj__Mkdll__item__lhead",
@@ -4509,7 +4454,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "6659d0d6b06f5c9564c4f4da4cb070ec"
+      "703d5775cda5a7aef5854f3f673907f2"
     ],
     [
       "DoublyLinkedList.dll_insert_at_tail",
@@ -4591,7 +4536,7 @@
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "interpretation_DoublyLinkedList_Tm_abs_303bc754827f964c4dc725fe622d82db",
+        "interpretation_DoublyLinkedList_Tm_abs_d886790b7cf817487ea4fe17ce8f6d84",
         "kinding_DoublyLinkedList.node@tok", "l_and-interp", "l_not-interp",
         "lemma_DoublyLinkedList.lemma_non_null",
         "lemma_FStar.Ghost.reveal_hide",
@@ -4635,19 +4580,19 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_0012266d384e1cb0af739b02c33f9220",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_0ca25738efef246d9d81de0eeb2bedab",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_2a7e9c31800cd4a66118e4e5c0d2f66b",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_3ead78d44040470adbd6731d02e1fdd5",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_64fd66712866fd699083320bb3e5fbbc",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_6e14d887d8a2f331e441fa58c68d3a85",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_7cf6897179fc3f753e4c7d673b33f1f2",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_bcd69caee5c0a8f30b4b5a2702c5fcee",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_ed67a49e7765f4bfc329a9d51ec1270c",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
         "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_3daf37ab3cd19c1e74e63f8f5e0fb16a",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "token_correspondence_DoublyLinkedList.piece_conn",
         "token_correspondence_DoublyLinkedList.piece_contained",
         "true_interp", "typing_DoublyLinkedList.__proj__Mkdll__item__lhead",
@@ -4676,7 +4621,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "e40137faae9e665ec4e44c609b6ac2b4"
+      "d1eedbced6243f49825e5adc7b2b21fa"
     ],
     [
       "DoublyLinkedList.dll_insert_after",
@@ -4719,13 +4664,10 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
-        "bool_typing", "constructor_distinct_BoxInt",
-        "constructor_distinct_DoublyLinkedList.Frag2",
+        "bool_typing", "constructor_distinct_DoublyLinkedList.Frag2",
         "constructor_distinct_DoublyLinkedList.Frag3",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Tm_unit", "data_elim_DoublyLinkedList.Frag2",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_elim_FStar.Pervasives.Native.Mktuple3", "data_elim_Prims.Cons",
+        "data_elim_DoublyLinkedList.Frag2", "data_elim_Prims.Cons",
         "data_typing_intro_DoublyLinkedList.Frag2@tok",
         "data_typing_intro_DoublyLinkedList.Frag3@tok",
         "data_typing_intro_Prims.Cons@tok",
@@ -4760,12 +4702,10 @@
         "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl",
-        "equation_FStar.List.Tot.Base.unsnoc",
         "equation_FStar.Monotonic.Heap.equal_dom",
         "equation_FStar.Monotonic.HyperHeap.hmap",
         "equation_FStar.Monotonic.HyperStack.is_stack_region",
-        "equation_FStar.Monotonic.HyperStack.mem",
-        "equation_FStar.Pervasives.Native.snd", "equation_FStar.UInt32.n",
+        "equation_FStar.Monotonic.HyperStack.mem", "equation_FStar.UInt32.n",
         "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
         "equation_LowStar.Buffer.pointer_or_null",
         "equation_LowStar.Buffer.trivial_preorder",
@@ -4785,11 +4725,11 @@
         "equation_with_fuel_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.last.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Properties.index_of.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_DoublyLinkedList.dll",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple3",
         "fuel_guarded_inversion_Prims.equals",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_DoublyLinkedList.piece_aa",
@@ -4802,8 +4742,8 @@
         "function_token_typing_FStar.Pervasives.Native.snd",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "int_typing",
-        "interpretation_DoublyLinkedList_Tm_abs_303bc754827f964c4dc725fe622d82db",
-        "interpretation_DoublyLinkedList_Tm_abs_34378e53770e7cd88797ce8c10a99478",
+        "interpretation_DoublyLinkedList_Tm_abs_d0f4d0750aee5c6c21de612f4760a681",
+        "interpretation_DoublyLinkedList_Tm_abs_d886790b7cf817487ea4fe17ce8f6d84",
         "kinding_DoublyLinkedList.node@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_Prims.list@tok", "l_and-interp", "l_not-interp",
@@ -4846,7 +4786,6 @@
         "proj_equation_DoublyLinkedList.Mkpiece_phead",
         "proj_equation_DoublyLinkedList.Mkpiece_pnodes",
         "proj_equation_DoublyLinkedList.Mkpiece_ptail",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_DoublyLinkedList.Frag2__0",
@@ -4865,24 +4804,23 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_0012266d384e1cb0af739b02c33f9220",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_0ca25738efef246d9d81de0eeb2bedab",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_34881b792a1d39d9a6df78c80d10fb71",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_3c9c26f108b4f96451341b660241dc5d",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_2a7e9c31800cd4a66118e4e5c0d2f66b",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_60615e112db050dff0da18a1fe8ab035",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_61bdd0e8dbbdcbe4e208cd41f59ba087",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_6e14d887d8a2f331e441fa58c68d3a85",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_bcd69caee5c0a8f30b4b5a2702c5fcee",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_98ca670bd55536995d93a04216011e2e",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_df0f47acea0b626f36992dc2a652236d",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_f91d486b69f3dae78b717a88fc16aabd",
         "refinement_interpretation_FStar.Ghost_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
         "refinement_interpretation_FStar.Ghost_Tm_refine_50e552dc638ed7dac9f2492d99576667",
         "refinement_interpretation_FStar.Ghost_Tm_refine_65079789b5ee069d4dcb71b5d5562419",
         "refinement_interpretation_FStar.Ghost_Tm_refine_785b445c1ccb59eaa8c666ff5bddec28",
-        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_3f6b38b2852708f36615f9b4db0f9ff1",
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_5b76b1c4682092d8298d5677347b4a58",
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_3d7b649663b4fab04cceb6e2c2c28fc1",
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_ca5b6dc4e0a851997703798a1ffc5f70",
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_d19bdea4645e737a8e9dbfa7dd17a72f",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
@@ -4890,7 +4828,6 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "token_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "token_correspondence_DoublyLinkedList.piece_aa",
         "token_correspondence_DoublyLinkedList.piece_conn",
@@ -4911,12 +4848,11 @@
         "typing_DoublyLinkedList.nodelist_fp_f",
         "typing_DoublyLinkedList.piece_fp0",
         "typing_DoublyLinkedList.tot_dll_to_fragment_split",
-        "typing_DoublyLinkedList.tot_node_to_piece",
-        "typing_DoublyLinkedList_Tm_abs_34378e53770e7cd88797ce8c10a99478",
+        "typing_DoublyLinkedList_Tm_abs_d0f4d0750aee5c6c21de612f4760a681",
         "typing_FStar.Ghost.elift1", "typing_FStar.Ghost.elift2_p",
-        "typing_FStar.Ghost.hide", "typing_FStar.List.Tot.Base.index",
-        "typing_FStar.List.Tot.Base.split3", "typing_FStar.List.Tot.Base.tl",
-        "typing_FStar.List.Tot.Base.unsnoc",
+        "typing_FStar.Ghost.hide", "typing_FStar.List.Tot.Base.hd",
+        "typing_FStar.List.Tot.Base.index",
+        "typing_FStar.List.Tot.Base.last", "typing_FStar.List.Tot.Base.tl",
         "typing_FStar.List.Tot.Properties.index_of",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
@@ -4932,7 +4868,7 @@
         "unit_typing"
       ],
       0,
-      "c243f0d1de629aad122e73003a09c001"
+      "d8968a9e0e49d22eb7c4a0ea968cc12d"
     ],
     [
       "DoublyLinkedList.dll_insert_before",
@@ -4941,7 +4877,6 @@
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_DoublyLinkedList.nodelist_conn.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.last.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
@@ -4952,13 +4887,12 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Properties.index_of.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
-        "data_elim_Prims.Cons", "eq2-interp",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
+        "bool_typing", "disc_equation_Prims.Cons", "eq2-interp",
         "equation_DoublyLinkedList.dll_conn",
         "equation_DoublyLinkedList.dll_contained",
         "equation_DoublyLinkedList.dll_ghostly_connections",
         "equation_DoublyLinkedList.dll_valid",
-        "equation_DoublyLinkedList.nodelist",
         "equation_DoublyLinkedList.op_Bar_Greater",
         "equation_DoublyLinkedList.op_Less_Bar",
         "equation_FStar.List.Tot.Base.hd",
@@ -4970,18 +4904,16 @@
         "equation_LowStar.Buffer.pointer_or_null",
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.Monotonic.Buffer.get", "equation_Prims.eq2",
-        "equation_Prims.nat", "equation_Prims.squash",
-        "equation_with_fuel_DoublyLinkedList.nodelist_conn.fuel_instrumented",
+        "equation_Prims.logical", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.last.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Properties.index_of.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_DoublyLinkedList.dll",
-        "fuel_guarded_inversion_Prims.equals",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "int_typing", "kinding_DoublyLinkedList.node@tok", "l_and-interp",
-        "l_not-interp", "l_or-interp",
-        "lemma_FStar.List.Tot.Properties.lemma_index_memP",
+        "kinding_DoublyLinkedList.node@tok", "l_and-interp", "l_not-interp",
+        "l_or-interp", "lemma_FStar.List.Tot.Properties.lemma_index_memP",
         "lemma_LowStar.Monotonic.Buffer.length_null_1",
         "lemma_LowStar.Monotonic.Buffer.length_null_2",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
@@ -4993,32 +4925,32 @@
         "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
         "proj_equation_DoublyLinkedList.Mkdll_lhead",
         "proj_equation_DoublyLinkedList.Mkdll_ltail",
-        "proj_equation_DoublyLinkedList.Mknode_blink",
         "proj_equation_DoublyLinkedList.Mknode_flink",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_0ca25738efef246d9d81de0eeb2bedab",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_3c9c26f108b4f96451341b660241dc5d",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_2a7e9c31800cd4a66118e4e5c0d2f66b",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_52fd52c3e96fb4b41742efc8f738b032",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_60615e112db050dff0da18a1fe8ab035",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_61bdd0e8dbbdcbe4e208cd41f59ba087",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_98ca670bd55536995d93a04216011e2e",
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_5b76b1c4682092d8298d5677347b4a58",
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_3d7b649663b4fab04cceb6e2c2c28fc1",
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_ca5b6dc4e0a851997703798a1ffc5f70",
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_d19bdea4645e737a8e9dbfa7dd17a72f",
-        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
         "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_3daf37ab3cd19c1e74e63f8f5e0fb16a",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "token_correspondence_FStar.List.Tot.Properties.index_of.fuel_instrumented",
         "typing_DoublyLinkedList.__proj__Mkdll__item__lhead",
         "typing_DoublyLinkedList.__proj__Mkdll__item__ltail",
         "typing_DoublyLinkedList.__proj__Mknode__item__flink",
-        "typing_FStar.List.Tot.Base.index",
-        "typing_FStar.List.Tot.Properties.index_of",
+        "typing_FStar.List.Tot.Base.hd", "typing_FStar.List.Tot.Base.index",
+        "typing_FStar.List.Tot.Base.last", "typing_FStar.List.Tot.Base.tl",
+        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.Monotonic.Buffer.g_is_null",
@@ -5026,10 +4958,10 @@
         "typing_LowStar.Monotonic.Buffer.length",
         "typing_LowStar.Monotonic.Buffer.loc_buffer",
         "typing_LowStar.Monotonic.Buffer.loc_union",
-        "typing_LowStar.Monotonic.Buffer.mnull", "unit_typing"
+        "typing_LowStar.Monotonic.Buffer.mnull", "typing_Prims.eq2"
       ],
       0,
-      "c923c41f5de420169c3ae6c928e702c8"
+      "4ae0ee7fd645b72f94c6b8c4fd59828c"
     ],
     [
       "DoublyLinkedList.dll_remove_head",
@@ -5134,9 +5066,7 @@
         "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_0012266d384e1cb0af739b02c33f9220",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_1a3131810ca45941a5ff10e548140be0",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_503bcd37191e340f6465f9d403e36673",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_6e14d887d8a2f331e441fa58c68d3a85",
-        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
         "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_3daf37ab3cd19c1e74e63f8f5e0fb16a",
@@ -5159,7 +5089,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "200e3e88ded4b2261cbeafa401d6f38d"
+      "ce9d8bf88fb35914bff0f36dd604f04e"
     ],
     [
       "DoublyLinkedList.dll_remove_tail",
@@ -5270,10 +5200,8 @@
         "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_0012266d384e1cb0af739b02c33f9220",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_1a3131810ca45941a5ff10e548140be0",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_503bcd37191e340f6465f9d403e36673",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_6e14d887d8a2f331e441fa58c68d3a85",
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_3d7b649663b4fab04cceb6e2c2c28fc1",
-        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
         "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_3daf37ab3cd19c1e74e63f8f5e0fb16a",
@@ -5296,7 +5224,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "e6995536aa31ff6d4307f0dfdbf18c0b"
+      "9eec2a4ef2819fcc6e14848762941290"
     ],
     [
       "DoublyLinkedList.dll_remove_node",
@@ -5312,8 +5240,6 @@
         "@fuel_correspondence_DoublyLinkedList.fragment_defragmentable.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.fragment_ghostly_connections.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_conn.fuel_instrumented",
-        "@fuel_correspondence_DoublyLinkedList.nodelist_contained.fuel_instrumented",
-        "@fuel_correspondence_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.last.fuel_instrumented",
@@ -5338,7 +5264,7 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
         "bool_inversion", "bool_typing",
         "constructor_distinct_DoublyLinkedList.Frag2",
-        "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Tm_unit",
         "data_elim_DoublyLinkedList.Mknode", "data_elim_Prims.Cons",
         "data_typing_intro_DoublyLinkedList.Frag2@tok",
         "disc_equation_DoublyLinkedList.Frag2", "disc_equation_Prims.Cons",
@@ -5384,8 +5310,6 @@
         "equation_with_fuel_DoublyLinkedList.fragment_defragmentable.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.fragment_ghostly_connections.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_conn.fuel_instrumented",
-        "equation_with_fuel_DoublyLinkedList.nodelist_contained.fuel_instrumented",
-        "equation_with_fuel_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.last.fuel_instrumented",
@@ -5408,8 +5332,8 @@
         "function_token_typing_FStar.Pervasives.Native.snd",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "int_typing",
-        "interpretation_DoublyLinkedList_Tm_abs_303bc754827f964c4dc725fe622d82db",
-        "interpretation_DoublyLinkedList_Tm_abs_34378e53770e7cd88797ce8c10a99478",
+        "interpretation_DoublyLinkedList_Tm_abs_d0f4d0750aee5c6c21de612f4760a681",
+        "interpretation_DoublyLinkedList_Tm_abs_d886790b7cf817487ea4fe17ce8f6d84",
         "kinding_DoublyLinkedList.node@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok", "l_and-interp",
         "l_not-interp", "l_or-interp",
@@ -5455,9 +5379,7 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_0012266d384e1cb0af739b02c33f9220",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_41cdce62a19dd5583462367080e310b2",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_503bcd37191e340f6465f9d403e36673",
-        "refinement_interpretation_DoublyLinkedList_Tm_refine_52fd52c3e96fb4b41742efc8f738b032",
+        "refinement_interpretation_DoublyLinkedList_Tm_refine_1a3131810ca45941a5ff10e548140be0",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_60615e112db050dff0da18a1fe8ab035",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_61bdd0e8dbbdcbe4e208cd41f59ba087",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_6e14d887d8a2f331e441fa58c68d3a85",
@@ -5471,6 +5393,7 @@
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_ca5b6dc4e0a851997703798a1ffc5f70",
         "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_d19bdea4645e737a8e9dbfa7dd17a72f",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
@@ -5479,7 +5402,6 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "token_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "token_correspondence_DoublyLinkedList.piece_aa",
         "token_correspondence_DoublyLinkedList.piece_conn",
@@ -5495,10 +5417,10 @@
         "typing_DoublyLinkedList.nodelist",
         "typing_DoublyLinkedList.nodelist_fp0",
         "typing_DoublyLinkedList.piece_fp0",
-        "typing_DoublyLinkedList_Tm_abs_34378e53770e7cd88797ce8c10a99478",
+        "typing_DoublyLinkedList_Tm_abs_d0f4d0750aee5c6c21de612f4760a681",
         "typing_FStar.Ghost.elift1", "typing_FStar.Ghost.elift2_p",
         "typing_FStar.Ghost.hide", "typing_FStar.Ghost.reveal",
-        "typing_FStar.List.Tot.Base.tl",
+        "typing_FStar.List.Tot.Base.index", "typing_FStar.List.Tot.Base.tl",
         "typing_FStar.List.Tot.Properties.index_of",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
@@ -5514,7 +5436,7 @@
         "unit_typing"
       ],
       0,
-      "2a23380872de379d8907866bd2a3ca05"
+      "79f0229e8bc05db3bbb3be2d8835678b"
     ],
     [
       "DoublyLinkedList.lemma_non_null",
@@ -5523,7 +5445,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "9a6e584a205d9cc4c586b2de77cf29ec"
+      "cf8003fd266448097b79b5b4c6475015"
     ],
     [
       "DoublyLinkedList.op_At",
@@ -5536,7 +5458,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "d009d451907176f3fa9af21c03deb99d"
+      "29aa858594a7e8c44976624df7aebbca"
     ],
     [
       "DoublyLinkedList.op_Hat_At",
@@ -5585,7 +5507,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "0402e7c3b96f251bf39545b9d3a4a6d9"
+      "c797a74ddda42e8799ab72cb835ee731"
     ],
     [
       "DoublyLinkedList.__proj__Frag1__item___0",
@@ -5599,7 +5521,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_d56d2c22716a132051de7449f1f9f54c"
       ],
       0,
-      "1453b4341fcf5964ac150b67ec37ae21"
+      "bdeb163ca628b99a1045d9fdd358212f"
     ],
     [
       "DoublyLinkedList.__proj__Frag2__item___0",
@@ -5613,7 +5535,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_70bbde2f8ce7313b7302658284bddacb"
       ],
       0,
-      "d6aecb0c8093701c92e05625f17e8526"
+      "3c141b92d5afc3027cb7a3de31c333ef"
     ],
     [
       "DoublyLinkedList.__proj__Frag2__item___1",
@@ -5627,7 +5549,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_70bbde2f8ce7313b7302658284bddacb"
       ],
       0,
-      "38f7a615719bda0129dea72a54a7b980"
+      "884eb768d9502a91a4cab176a8c45ad8"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___0",
@@ -5641,7 +5563,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "13647d92d5bd5944e0308aebc901fda6"
+      "bf5d8eccf4760976d6075040207b0832"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___1",
@@ -5655,7 +5577,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "c2649b5c9f255523c3ba2803b220311e"
+      "1f2355361a97c583e422dd79b6db2ff2"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___2",
@@ -5669,7 +5591,7 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "51c6a72d88f608d67fd87b7bcc8a08fd"
+      "36c6ea5c43058722780130d973dca2a0"
     ],
     [
       "DoublyLinkedList.empty_node",
@@ -5685,7 +5607,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "ef102f764bd5f7d64d8f5986a0e6c32e"
+      "c74af9027c21a2bdeddb278006b22351"
     ],
     [
       "DoublyLinkedList.empty_list",
@@ -5701,7 +5623,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "1741632e376cc6a08e9a9b4f7a5bfab6"
+      "1c792fc1482e33bacdcc27a399f9c4b4"
     ],
     [
       "DoublyLinkedList.fragment_for_each0",
@@ -5717,7 +5639,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "02ab1978a57baca00088d59abe21c14c"
+      "bff9462ab01b280d36abe2871cf3c2c0"
     ],
     [
       "DoublyLinkedList.fragment_for_each1",
@@ -5733,7 +5655,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "49eef377bdc751aed4017edbad13c40a"
+      "9de37ddb0e76a39112771311f9841630"
     ],
     [
       "DoublyLinkedList.fragment_length",
@@ -5749,7 +5671,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "c34e0a9efcdd2d48abb4828655257232"
+      "b30187cadbcc1422e7e04b2b4a8ff33b"
     ],
     [
       "DoublyLinkedList.dll_ghostly_connections",
@@ -5769,7 +5691,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "a621957ed57df8bf3343f55212693952"
+      "af72cf364629c07346eef098bd155354"
     ],
     [
       "DoublyLinkedList.piece_ghostly_connections",
@@ -5789,7 +5711,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "36678064f6a06509e1e0d0f793513013"
+      "7c288185cab21cb7cf8852a4fcde118b"
     ],
     [
       "DoublyLinkedList.nodelist_contained0",
@@ -5807,7 +5729,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a5d7513a03863f4a168e3a391cf85166"
+      "014edf992a60e450e884b355395c434a"
     ],
     [
       "DoublyLinkedList.nodelist_fp0",
@@ -5823,7 +5745,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1cb8ef1a0231e8634f1bc93ea73b4b1a"
+      "c3762bffbc1816247ef047e5f945f61a"
     ],
     [
       "DoublyLinkedList.nodelist_fp_f",
@@ -5841,7 +5763,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d6e9da114f8c0299146f11ec2151c546"
+      "a6426a30391611b08a1ba82bc5f2049c"
     ],
     [
       "DoublyLinkedList.nodelist_fp_b",
@@ -5859,7 +5781,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6662a49a7f4b36a54ff248738727489c"
+      "94d23610316165bf20e415bb89024a64"
     ],
     [
       "DoublyLinkedList.dll_fp_f",
@@ -5876,7 +5798,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "44db15ad72d8205342b6fa27dd54ce61"
+      "fbe42d3a35ed35fcb07ff040b67e0786"
     ],
     [
       "DoublyLinkedList.dll_fp_b",
@@ -5893,7 +5815,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "92576d17d719996183e4552451b32622"
+      "1309c0a14d3f630ee9daced83bc5f9e8"
     ],
     [
       "DoublyLinkedList.fragment_fp0",
@@ -5910,7 +5832,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "80609b5b6064612eac67fb0892c71b40"
+      "df8b495c3c156310d3ef9ed4c4ffb223"
     ],
     [
       "DoublyLinkedList.nodelist_aa_r",
@@ -5926,7 +5848,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f3061a4a28c81aa7d9a43fec0235f049"
+      "36e6f56e8d8e1494e61aa19833acbbf5"
     ],
     [
       "DoublyLinkedList.nodelist_aa_l",
@@ -5958,7 +5880,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "46a96d36060f822cce7476435752e78d"
+      "364ab75f795efa79f792fb4676633339"
     ],
     [
       "DoublyLinkedList.fragment_aa_lr",
@@ -5975,7 +5897,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "9730217d1f9d33f81b04b559df08bc1f"
+      "970c19cf88703745cbfc2caa9ffc28ac"
     ],
     [
       "DoublyLinkedList.op_Bar_Greater",
@@ -5984,7 +5906,7 @@
       1,
       [ "@query" ],
       0,
-      "07abba61aa9bfdfcb16c248d3d730298"
+      "c17c3aa8dbb5c53ed3118758e843091e"
     ],
     [
       "DoublyLinkedList.op_Less_Bar",
@@ -5993,7 +5915,7 @@
       1,
       [ "@query" ],
       0,
-      "f417787d55cd95ec7df2a049656edd62"
+      "58ebd1e7d60966794e8e9dd65b834821"
     ],
     [
       "DoublyLinkedList.nodelist_conn",
@@ -6025,7 +5947,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f4fad2ecee92bf93679c0c7bda10398d"
+      "03eee73392541284bc855ba26ea1dd30"
     ],
     [
       "DoublyLinkedList.dll_conn",
@@ -6037,10 +5959,10 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
-        "equation_LowStar.Buffer.buffer",
+        "data_elim_DoublyLinkedList.Mkdll", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt32.n", "equation_LowStar.Buffer.buffer",
         "equation_LowStar.Buffer.pointer_or_null",
         "equation_LowStar.Monotonic.Buffer.length", "equation_Prims.nat",
         "equation_Prims.pos",
@@ -6063,10 +5985,11 @@
         "token_correspondence_Prims.pow2.fuel_instrumented",
         "typing_DoublyLinkedList.__proj__Mkdll__item__lhead",
         "typing_DoublyLinkedList.__proj__Mkdll__item__ltail",
-        "typing_LowStar.Buffer.trivial_preorder"
+        "typing_FStar.UInt32.v", "typing_LowStar.Buffer.trivial_preorder",
+        "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "1a066f27afb219ace55ab09304c454c0"
+      "13892ad503834715c67849a4e3fe2f9e"
     ],
     [
       "DoublyLinkedList.extract_nodelist_conn",
@@ -6086,7 +6009,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "58e465c64383ca69fe035b191598ae39"
+      "197891084d75e69314a13c5adea8f8eb"
     ],
     [
       "DoublyLinkedList.nodelist_remains_aa_l",
@@ -6096,6 +6019,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "b2t_def", "constructor_distinct_Tm_unit",
         "disc_equation_Prims.Cons", "equation_DoublyLinkedList.nodelist",
@@ -6112,7 +6036,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "0b636768c92caa59545a24b985b9a4c4"
+      "a036ee8cf3a803fb371c9cd17f98bd76"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_fp0",
@@ -6126,7 +6050,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "20772f7f483029c5c2d2bb03a2f4cae5"
+      "810405611833b9ebb4489e142b12fa30"
     ],
     [
       "DoublyLinkedList.snd_unsnoc_nodelist_fp0",
@@ -6140,7 +6064,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "388ecb14ca5b6b0eb1b2f3db6ac76113"
+      "16b7bd041ad18d65754248f37043c0d6"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_contained",
@@ -6155,7 +6079,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "ecc25eb0ba968995326d0d479ed18855"
+      "0c9a53933d2e400461bf1a55bcca236f"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_aa",
@@ -6170,7 +6094,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "c7a13b94dda4152acb80e89c3ec7795a"
+      "1d7ffaa5ebcf7e18a78e27c329347293"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_conn",
@@ -6185,7 +6109,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "61d7edb81e1b9c3ebfe9f9258bc880be"
+      "651676d23fca05e6b45ce3f4ed37bc6a"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_valid",
@@ -6200,7 +6124,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "a36d8ab4038b03e34fcc28d10e7e4f48"
+      "0b685a9c00e2dcaa59d872cf771e5396"
     ],
     [
       "DoublyLinkedList.tot_dll_to_piece",
@@ -6259,7 +6183,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "5ae4e6d26aa2bad540db7106cf84d7f8"
+      "58f5e0cc23487771beffce6e6fca55f0"
     ],
     [
       "DoublyLinkedList.tot_dll_to_fragment",
@@ -6307,7 +6231,7 @@
         "true_interp"
       ],
       0,
-      "348b2bd0a818e697d5e1f86085106a73"
+      "87868e574623ead4e375c20e243a0a04"
     ],
     [
       "DoublyLinkedList.tot_piece_to_dll",
@@ -6326,8 +6250,7 @@
         "equation_DoublyLinkedList.piece_contained",
         "equation_DoublyLinkedList.piece_ghostly_connections",
         "equation_DoublyLinkedList.piece_valid",
-        "equation_FStar.List.Tot.Base.hd", "equation_LowStar.Buffer.buffer",
-        "equation_LowStar.Buffer.pointer",
+        "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
         "equation_LowStar.Buffer.pointer_or_null", "false_interp",
         "fuel_guarded_inversion_DoublyLinkedList.piece",
         "kinding_DoublyLinkedList.node@tok", "l_and-interp", "l_not-interp",
@@ -6351,7 +6274,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "c5715c823e48a0c006285a8ca036eda7"
+      "d56a68f09b5acc9c4cd5aaf57dc1133c"
     ],
     [
       "DoublyLinkedList.tot_piece_to_dll",
@@ -6369,7 +6292,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "7eed6ef3ce04dfe17e761c32a9fb24cc"
+      "09dc0d26c68afd19ca8974b96051669e"
     ],
     [
       "DoublyLinkedList.nodelist_append_conn",
@@ -6396,7 +6319,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "b9bf8790dd0111afb308b6c4bc391a2e"
+      "24efddc04dc06731ee406a9ccd226cf2"
     ],
     [
       "DoublyLinkedList.nodelist_append_valid",
@@ -6419,7 +6342,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "e270a94dd86ef6d710df435d0ffc0ddf"
+      "4d19cddf7c4a9cc1afc4c2201b42e9f7"
     ],
     [
       "DoublyLinkedList.piece_merge",
@@ -6436,7 +6359,6 @@
         "@fuel_irrelevance_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query",
-        "DoublyLinkedList_pretyping_3af7365c5f7bdaf0dff061828b22fd81",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_9105589d4b48c1456d0057b53f4c3752",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_c04f0dbd7149fd597225c7e6a7fb4b23",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
@@ -6504,7 +6426,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "ae0c27699d326e2b223a47abf35214c1"
+      "f9ef8e3f792562d5fec9b53c8f10a505"
     ],
     [
       "DoublyLinkedList.piece_merge",
@@ -6547,7 +6469,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "b1d144907489ff4ec271958988f1d6d9"
+      "cb368101be886081c307a833efa31fd9"
     ],
     [
       "DoublyLinkedList.piece_merge_fp0",
@@ -6588,7 +6510,7 @@
         "typing_LowStar.Buffer.pointer", "unit_typing"
       ],
       0,
-      "3288a92147a79bb7820a2d289e94cf31"
+      "56e3fd7207860640e1a37fc475ba855f"
     ],
     [
       "DoublyLinkedList.fragment_defragmentable",
@@ -6660,7 +6582,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "495a55149dac40c52a3fa8c4165c3692"
+      "43a665b976cfc2e5e52452ba7dd01b83"
     ],
     [
       "DoublyLinkedList.tot_defragmentable_fragment_to_dll",
@@ -6676,7 +6598,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "0f2fac5153ba9747e6e69f809c05d2af"
+      "6d099e6558322ac9e24ddb491745e34c"
     ],
     [
       "DoublyLinkedList.tot_defragmentable_fragment_to_dll",
@@ -6740,7 +6662,7 @@
         "equation_with_fuel_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_DoublyLinkedList.fragment",
-        "interpretation_DoublyLinkedList_Tm_abs_303bc754827f964c4dc725fe622d82db",
+        "interpretation_DoublyLinkedList_Tm_abs_d886790b7cf817487ea4fe17ce8f6d84",
         "kinding_DoublyLinkedList.node@tok", "l_and-interp",
         "lemma_FStar.Ghost.reveal_hide",
         "lemma_LowStar.Monotonic.Buffer.live_is_null",
@@ -6786,7 +6708,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "7a5129687cf2a356f6b3fc37f91e8d14"
+      "5354a645eaaaaee1f6dfbb31a6f432cb"
     ],
     [
       "DoublyLinkedList.tot_defragmentable_fragment_to_dll",
@@ -6826,7 +6748,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "9c94afa623cc4b2d1f83345cd48e5e7f"
+      "4ef4ffdd1be15a2c8d48a10b93a4efe6"
     ],
     [
       "DoublyLinkedList.nodelist_split_conn",
@@ -6836,6 +6758,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
@@ -6855,7 +6778,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "50c16c7a4ff83ee18e3730fb6f7612bf"
+      "55c1acb5a50722abf0ed580d8617e1ec"
     ],
     [
       "DoublyLinkedList.nodelist_split_valid",
@@ -6865,6 +6788,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_Tm_unit", "disc_equation_Prims.Cons",
@@ -6881,7 +6805,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "af6db1b7b9b48d0d2ccaea59284198c5"
+      "b271f2719ac8b98ee657157245473667"
     ],
     [
       "DoublyLinkedList.tot_dll_to_fragment_split",
@@ -6899,8 +6823,11 @@
         "@fuel_correspondence_DoublyLinkedList.nodelist_contained.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
         "@fuel_correspondence_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.splitAt.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Properties.split_using.fuel_instrumented",
         "@fuel_irrelevance_DoublyLinkedList.nodelist_fp0.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
@@ -6909,11 +6836,10 @@
         "FStar.Pervasives.Native_interpretation_Tm_arrow_caf985f824d0c8c31cc1333a92d97b40",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
         "constructor_distinct_DoublyLinkedList.Frag2",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Cons", "disc_equation_Prims.Cons", "eq2-interp",
+        "data_elim_Prims.Cons", "eq2-interp",
         "equation_DoublyLinkedList.dll_aa",
         "equation_DoublyLinkedList.dll_conn",
         "equation_DoublyLinkedList.dll_contained",
@@ -6937,6 +6863,7 @@
         "equation_DoublyLinkedList.piece_ghostly_connections",
         "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.op_At",
+        "equation_FStar.List.Tot.Base.unsnoc",
         "equation_FStar.Monotonic.HyperHeap.hmap",
         "equation_FStar.Monotonic.HyperStack.is_tip",
         "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
@@ -6944,10 +6871,10 @@
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_FStar.UInt32.n",
         "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
+        "equation_LowStar.Buffer.pointer_or_null",
         "equation_LowStar.Monotonic.Buffer.get",
         "equation_LowStar.Monotonic.Buffer.length", "equation_Prims.eq2",
-        "equation_Prims.logical", "equation_Prims.nat",
-        "equation_Prims.squash",
+        "equation_Prims.nat", "equation_Prims.squash",
         "equation_with_fuel_DoublyLinkedList.fragment_aa0.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.fragment_aa_lr.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.fragment_conn.fuel_instrumented",
@@ -6956,9 +6883,11 @@
         "equation_with_fuel_DoublyLinkedList.fragment_ghostly_connections.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_contained.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.nodelist_contained0.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Properties.split_using.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.splitAt.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_DoublyLinkedList.dll",
         "fuel_guarded_inversion_Prims.equals",
         "fuel_guarded_inversion_Prims.list",
@@ -6969,19 +6898,21 @@
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "kinding_DoublyLinkedList.node@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok", "l_and-interp",
-        "l_not-interp", "l_or-interp",
-        "lemma_DoublyLinkedList.lemma_non_null",
+        "l_not-interp", "lemma_DoublyLinkedList.lemma_non_null",
         "lemma_DoublyLinkedList.loc_equiv_trans",
         "lemma_DoublyLinkedList.loc_includes_union_l_nodelist_fp0",
         "lemma_DoublyLinkedList.loc_includes_union_l_piece_fp0",
-        "lemma_FStar.Ghost.reveal_hide", "lemma_FStar.Map.lemma_ContainsDom",
-        "lemma_FStar.UInt32.uv_inv",
+        "lemma_FStar.Ghost.reveal_hide",
+        "lemma_FStar.List.Tot.Properties.append_length",
+        "lemma_FStar.Map.lemma_ContainsDom", "lemma_FStar.UInt32.uv_inv",
         "lemma_LowStar.Monotonic.Buffer.length_null_2",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_includes_r",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_sym_",
+        "lemma_LowStar.Monotonic.Buffer.loc_includes_trans_backwards",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_union_r_",
         "lemma_LowStar.Monotonic.Buffer.loc_union_comm",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
         "proj_equation_DoublyLinkedList.Mknode_blink",
         "proj_equation_DoublyLinkedList.Mknode_flink",
         "proj_equation_DoublyLinkedList.Mkpiece_phead",
@@ -6989,6 +6920,7 @@
         "proj_equation_DoublyLinkedList.Mkpiece_ptail",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_DoublyLinkedList.Frag2__0",
         "projection_inverse_DoublyLinkedList.Frag2__1",
@@ -7004,12 +6936,10 @@
         "refinement_interpretation_DoublyLinkedList_Tm_refine_1e5438d14bb17f473f9a1e9d1a7cf83c",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_6e14d887d8a2f331e441fa58c68d3a85",
         "refinement_interpretation_FStar.Ghost_Tm_refine_785b445c1ccb59eaa8c666ff5bddec28",
-        "refinement_interpretation_FStar.List.Tot.Properties_Tm_refine_ca5b6dc4e0a851997703798a1ffc5f70",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
-        "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
+        "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
         "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_3daf37ab3cd19c1e74e63f8f5e0fb16a",
-        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_DoublyLinkedList.piece_aa",
@@ -7019,28 +6949,26 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "token_correspondence_FStar.Pervasives.Native.fst",
         "token_correspondence_FStar.Pervasives.Native.snd",
+        "typing_DoublyLinkedList.__proj__Mkdll__item__lhead",
         "typing_DoublyLinkedList.__proj__Mkdll__item__ltail",
         "typing_DoublyLinkedList.__proj__Mkdll__item__nodes",
         "typing_DoublyLinkedList.dll_fp0",
         "typing_DoublyLinkedList.nodelist",
         "typing_DoublyLinkedList.nodelist_fp0",
         "typing_DoublyLinkedList.piece_fp0", "typing_FStar.Ghost.elift1",
-        "typing_FStar.Ghost.reveal", "typing_FStar.List.Tot.Base.hd",
-        "typing_FStar.List.Tot.Base.last",
-        "typing_FStar.List.Tot.Base.length", "typing_FStar.Map.contains",
+        "typing_FStar.Ghost.reveal", "typing_FStar.List.Tot.Base.length",
+        "typing_FStar.Map.contains",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip",
-        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.Monotonic.Buffer.g_is_null",
         "typing_LowStar.Monotonic.Buffer.len",
         "typing_LowStar.Monotonic.Buffer.loc_union",
-        "typing_LowStar.Monotonic.Buffer.mnull", "typing_Prims.eq2",
-        "unit_typing"
+        "typing_LowStar.Monotonic.Buffer.mnull", "unit_typing"
       ],
       0,
-      "95236dd8b39c48c54ec6d99057795b7e"
+      "9b5db092538e4c0cd8124846ab3ba6df"
     ],
     [
       "DoublyLinkedList.tot_dll_to_fragment_split",
@@ -7053,7 +6981,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "d0cab97cd7b89061732eeba48103caa5"
+      "c1db50e371fc65d01ab4126e1bbd0ff8"
     ],
     [
       "DoublyLinkedList.tot_node_to_dll",
@@ -7141,7 +7069,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull", "unit_typing"
       ],
       0,
-      "728b10f78fe3bb337fd6e361d06e403d"
+      "c9c08a7f41d38bcdc0d1ce10a84c28c0"
     ],
     [
       "DoublyLinkedList.tot_node_to_dll",
@@ -7154,7 +7082,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "c0deef8d23e9377b4079b34c70967c73"
+      "0696466f13bf1dd37cbec467b96a3574"
     ],
     [
       "DoublyLinkedList.tot_node_to_piece",
@@ -7238,7 +7166,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer", "unit_typing"
       ],
       0,
-      "70110a1e7c28e6bd213abc5b4b2f70eb"
+      "66f0a41e389f1f49058879590f082770"
     ],
     [
       "DoublyLinkedList.tot_piece_tail",
@@ -7317,7 +7245,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "c14bf028e373eec84c405fcb17ba9dd5"
+      "519776fb948c8ed2c8c9ee0ad23449b5"
     ],
     [
       "DoublyLinkedList.tot_piece_tail",
@@ -7346,7 +7274,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "173b1285459e7fe7495562507497be96"
+      "5592be7ffcb1d6121cd5995468d90f5b"
     ],
     [
       "DoublyLinkedList.lemma_dll_links_contained",
@@ -7360,7 +7288,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "dd53cfb681424f27c284a6c9034ba439"
+      "9bd0b6ef49cb2f94a19ab12430d75456"
     ],
     [
       "DoublyLinkedList.lemma_dll_links_disjoint",
@@ -7374,7 +7302,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "97a3b2f294238b3ce21ea4fef7bf2534"
+      "700018dd7ceb771a92ed66f3242317fc"
     ],
     [
       "DoublyLinkedList.dll_remove_head",
@@ -7403,7 +7331,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "9bd6db2e3ee96e4bc2c9c3de1f3648f1"
+      "d32fe47c2ad78b5f4ab5c796c0303c22"
     ],
     [
       "DoublyLinkedList.dll_remove_tail",
@@ -7442,7 +7370,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "66b7b01be8d1cc5fc32f061816cf666f"
+      "0e1ac341de7be1954f22f8bb542218bc"
     ],
     [
       "DoublyLinkedList.dll_remove_node",
@@ -7451,7 +7379,6 @@
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.last.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
@@ -7463,6 +7390,7 @@
         "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.Monotonic.HyperStack.mem", "equation_FStar.UInt32.n",
         "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
+        "equation_LowStar.Buffer.pointer_or_null",
         "equation_LowStar.Monotonic.Buffer.length", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
@@ -7471,11 +7399,15 @@
         "function_token_typing_FStar.UInt32.n",
         "kinding_DoublyLinkedList.node@tok", "l_and-interp", "l_not-interp",
         "lemma_DoublyLinkedList.lemma_non_null", "lemma_FStar.UInt32.uv_inv",
+        "lemma_LowStar.Monotonic.Buffer.length_null_1",
+        "lemma_LowStar.Monotonic.Buffer.length_null_2",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_DoublyLinkedList_Tm_refine_f8cb2c2656add503443e3a800fddd532",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
+        "refinement_interpretation_LowStar.Buffer_Tm_refine_cd18e9962a0d204005dcfcda04529ffc",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "typing_DoublyLinkedList.__proj__Mkdll__item__lhead",
         "typing_DoublyLinkedList.__proj__Mkdll__item__ltail",
         "typing_DoublyLinkedList.__proj__Mkdll__item__nodes",
         "typing_DoublyLinkedList.nodelist", "typing_FStar.Ghost.reveal",
@@ -7484,7 +7416,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "41dd7abd22ca0999bcc69cf5d1d3a354"
+      "8f867e2db2fae9959e4822880ebacaa8"
     ]
   ]
 ]

@@ -16,7 +16,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "335ca12fbb0c9f0db537e4c4266e1789"
+      "fe7775fd39004657c0848c386ba3b204"
     ],
     [
       "Tests.uu___73",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "64f0afad556b7cc0abb436a0984ff5ad"
+      "26568cb25d343b38937d5e4bbd289958"
     ],
     [
       "Tests.uu___74",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "effbf515a8e85a364a2a3f31bedf4728"
+      "6452729f2c8343fa920f99a8e99c6c05"
     ],
     [
       "Tests.test1",
@@ -69,7 +69,7 @@
         "token_correspondence_Prims.op_Addition", "typing_Tests.sum"
       ],
       0,
-      "de2b2d4e40a71575336270f83b4ca9cd"
+      "eaa5c3ccd28c7d59de67ce8d134f42bc"
     ],
     [
       "Tests.test2",
@@ -92,7 +92,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "9c0e1d3bc5d600b1b49705fa3b4b1210"
+      "73d85b914296a9901135fa02a656620f"
     ],
     [
       "Tests.sum",
@@ -109,7 +109,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "89cd3233021cbd1df8591f31342cce64"
+      "d81cffecb9b5758693d7aa0d99c5eefe"
     ],
     [
       "Tests.uu___73",
@@ -118,7 +118,7 @@
       1,
       [ "@query" ],
       0,
-      "d3a772781e9a97e32c1efdd99cda2259"
+      "b15088f41dcf1a687309ff535d4af73a"
     ],
     [
       "Tests.uu___74",
@@ -127,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "5063fda5bb7f9cdbeccdfc90618c8860"
+      "f71e1e9206c98982bb3a2d9395046fc5"
     ],
     [
       "Tests.test1",
@@ -162,7 +162,7 @@
         "token_correspondence_Prims.op_Addition", "typing_Tests.sum"
       ],
       0,
-      "42f6acc25b36ed4027e82daf587a807e"
+      "724b827e88246c59447053b3bbf7ed6c"
     ],
     [
       "Tests.test2",
@@ -185,7 +185,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "8ae7962ff271d51e5dd851d2f5797e75"
+      "7c1e927ec3971ee8302a33b073f5c68a"
     ]
   ]
 ]

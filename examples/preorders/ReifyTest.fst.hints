@@ -12,15 +12,17 @@
         "equation_FStar.Preorder.predicate",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.stable", "equation_MRefHeap.preorder_t",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.stable",
+        "equation_FStar.Preorder.transitive", "equation_MRefHeap.preorder_t",
         "equation_MRefST.contains", "equation_MRefST.heap_rel",
         "equation_MRefST.mref", "equation_MRefST.stable_on_heap",
         "equation_MRefST.stable_on_heap_aux", "equation_Prims.logical",
         "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Prims.nat", "int_typing",
-        "interpretation_ReifyTest_Tm_abs_1c4bca45afaddd1ca3d451b0c2f0d343",
-        "interpretation_ReifyTest_Tm_abs_82fd8f7d068132bb7a72ce0e8641b3ab",
+        "interpretation_ReifyTest_Tm_abs_cfa7c693463f657b773e8e0b5970a475",
+        "interpretation_ReifyTest_Tm_abs_eda2c43f6dbdcedd7223bc56b8d132d5",
         "l_and-interp", "lemma_MRefST.stable_on_heap_stable",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual",
@@ -36,7 +38,7 @@
         "typing_MRefHeap.upd"
       ],
       0,
-      "28a6a0e089521e96cdd6e3d24a541930"
+      "7d802ba0cf3c7179ae4ed66154edca8d"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -49,15 +51,17 @@
         "equation_FStar.Preorder.predicate",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.stable", "equation_MRefHeap.preorder_t",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.stable",
+        "equation_FStar.Preorder.transitive", "equation_MRefHeap.preorder_t",
         "equation_MRefST.contains", "equation_MRefST.heap_rel",
         "equation_MRefST.mref", "equation_MRefST.stable_on_heap",
         "equation_MRefST.stable_on_heap_aux", "equation_Prims.logical",
         "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Prims.nat", "int_typing",
-        "interpretation_ReifyTest_Tm_abs_1c4bca45afaddd1ca3d451b0c2f0d343",
-        "interpretation_ReifyTest_Tm_abs_82fd8f7d068132bb7a72ce0e8641b3ab",
+        "interpretation_ReifyTest_Tm_abs_cfa7c693463f657b773e8e0b5970a475",
+        "interpretation_ReifyTest_Tm_abs_eda2c43f6dbdcedd7223bc56b8d132d5",
         "l_and-interp", "lemma_MRefST.stable_on_heap_stable",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual",
@@ -73,7 +77,7 @@
         "typing_MRefHeap.upd"
       ],
       0,
-      "cf467ee663fd20cdf75fd4f1ef0d0855"
+      "27b50fa27878dd58f5e3ccd58872497d"
     ]
   ]
 ]

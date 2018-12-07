@@ -8,12 +8,24 @@ assume new type fd_write : Type0
 
 assume val print_newline : unit -> ML unit
 assume val print_string : string -> ML unit
+
+(* assume val print_nat_hex : nat -> ML unit *)
+(* assume val print_nat_dec : nat -> ML unit *)
+
 assume val print_uint8 : FStar.UInt8.t -> ML unit
 assume val print_uint8_dec : FStar.UInt8.t -> ML unit
 assume val print_uint32 : FStar.UInt32.t -> ML unit
 assume val print_uint32_dec : FStar.UInt32.t -> ML unit
 assume val print_uint64 : FStar.UInt64.t -> ML unit
 assume val print_uint64_dec : FStar.UInt64.t -> ML unit
+
+assume val print_uint8_hex_pad : FStar.UInt8.t -> ML unit
+assume val print_uint8_dec_pad : FStar.UInt8.t -> ML unit
+assume val print_uint32_hex_pad : FStar.UInt32.t -> ML unit
+assume val print_uint32_dec_pad : FStar.UInt32.t -> ML unit
+assume val print_uint64_hex_pad : FStar.UInt64.t -> ML unit
+assume val print_uint64_dec_pad : FStar.UInt64.t -> ML unit
+
 assume val print_any : 'a -> ML unit
 assume val input_line : unit -> ML string
 assume val input_int : unit -> ML int
