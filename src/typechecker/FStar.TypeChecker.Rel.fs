@@ -3132,12 +3132,17 @@ let subtype_fail env e t1 t2 =
 
 let sub_comp env c1 c2 =
   let rel = if env.use_eq then EQ else SUB in
-  if debug env <| Options.Other "Rel"
-  then BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
+  if debug env <| Options.Other "Rel" then
+    BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
   let prob, wl = new_problem (empty_worklist env) env c1 rel c2 None (Env.get_range env) "sub_comp" in
   let prob = CProb prob in
   def_check_prob "sub_comp" prob;
-  with_guard env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None)
+  let (r, ms) = BU.record_time
+                  (fun () -> with_guard env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None))
+  in
+  if Env.debug env <| Options.Other "Rel" then
+    BU.print4 "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB") (string_of_int ms);
+  r
 
 let solve_universe_inequalities' tx env (variables, ineqs) =
    //variables: ?u1, ..., ?un are the universes of the inductive types we're trying to compute
