@@ -3066,10 +3066,19 @@ let new_t_prob wl env t1 rel t2 =
 
 let solve_and_commit env probs err =
   let tx = UF.new_transaction () in
-  let sol = solve env probs in
+
+  if Env.debug env <| Options.Other "RelBench" then
+    BU.print1 "solving problems %s {\n"
+      (FStar.Common.string_of_list (fun p -> string_of_int (p_pid p)) probs.attempting);
+  let (sol, ms) = BU.record_time (fun () -> solve env probs) in
+  if Env.debug env <| Options.Other "RelBench" then
+    BU.print1 "} solved in %s ms\n" (string_of_int ms);
+
   match sol with
     | Success (deferred, implicits) ->
-      UF.commit tx;
+      let ((), ms) = BU.record_time (fun () -> UF.commit tx) in
+      if Env.debug env <| Options.Other "RelBench" then
+        BU.print1 "committed in %s ms\n" (string_of_int ms);
       Some (deferred, implicits)
     | Failed (d,s) ->
       if Env.debug env <| Options.Other "ExplainRel"
@@ -3140,7 +3149,7 @@ let sub_comp env c1 c2 =
   let (r, ms) = BU.record_time
                   (fun () -> with_guard env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None))
   in
-  if Env.debug env <| Options.Other "Rel" then
+  if Env.debug env <| Options.Other "RelBench" then
     BU.print4 "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB") (string_of_int ms);
   r
 
