@@ -119,8 +119,12 @@ let dep_to_string = function
     | FriendImplementation f -> "FriendImplementation " ^ f
 type dependences = list<dependence>
 let empty_dependences = []
+type dep_node = {
+    edges:dependences;
+    color:color
+}
 type dependence_graph = //maps file names to the modules it depends on
-     | Deps of smap<(dependences * color)>
+     | Deps of smap<dep_node> //(dependences * color)>
 type deps = {
     dep_graph:dependence_graph;              //dependences of the entire project, not just those reachable from the command line
     file_system_map:files_for_module_name;   //an abstraction of the file system
@@ -243,7 +247,7 @@ let dependences_of (file_system_map:files_for_module_name)
     : list<file_name> =
     match deps_try_find deps fn with
     | None -> empty_dependences
-    | Some (deps, _) ->
+    | Some ({edges=deps}) ->
       List.map (file_of_dep file_system_map all_cmd_line_files) deps
 
 let print_graph (graph:dependence_graph) =
@@ -254,7 +258,7 @@ let print_graph (graph:dependence_graph) =
     "digraph {\n" ^
     String.concat "\n" (List.collect
       (fun k ->
-          let deps = fst (must (deps_try_find graph k)) in
+          let deps = (must (deps_try_find graph k)).edges in
           let r s = replace_char s '.' '_' in
           let print dep =
             Util.format2 "  \"%s\" -> \"%s\""
@@ -792,8 +796,8 @@ let topological_dependences_of
             (cycle:list<file_name>)
             (all_friends, all_files)
             filename =
-    let direct_deps, color = must (deps_try_find dep_graph filename) in
-    match color with
+    let dep_node = must (deps_try_find dep_graph filename) in
+    match dep_node.color with
     | Gray ->
         failwith "Impossible: cycle detected after cycle detection has passed"
     | Black ->
@@ -804,9 +808,9 @@ let topological_dependences_of
         if Options.debug_any()
         then BU.print2 "Visiting %s: direct deps are %s\n"
                 filename
-                (String.concat ", " (List.map dep_to_string direct_deps));
+                (String.concat ", " (List.map dep_to_string dep_node.edges));
         (* Unvisited. Compute. *)
-        deps_add_dep dep_graph filename (direct_deps, Gray);
+        deps_add_dep dep_graph filename ({dep_node with color=Gray});
         let all_friends, all_files =
             all_friend_deps
                 dep_graph cycle (all_friends, all_files)
@@ -816,14 +820,14 @@ let topological_dependences_of
                                 filename)
         in
         (* Mutate the graph to mark the node as visited *)
-        deps_add_dep dep_graph filename (direct_deps, Black);
+        deps_add_dep dep_graph filename ({dep_node with color=Black});
         if Options.debug_any()
         then BU.print1 "Adding %s\n" filename;
         (* Also build the topological sort (Tarjan's algorithm). *)
         List.collect
           (function | FriendImplementation m -> [m]
                     | d -> [])
-          direct_deps
+         dep_node.edges
         @all_friends,
         filename :: all_files
     and all_friend_deps dep_graph cycle all_friends filenames =
@@ -914,11 +918,11 @@ let topological_dependences_of
         in
         BU.smap_fold
            dg
-           (fun filename (dependences, color) () ->
+           (fun filename dep_node () ->
               BU.smap_add
                 dg'
                 filename
-                (widen_one dependences, White))
+                ({dep_node with edges=widen_one dep_node.edges; color=White}))
            ();
         Deps dg'
     in
@@ -998,7 +1002,11 @@ let collect (all_cmd_line_files: list<file_name>)
           then deps @ [UseInterface module_name]
           else deps
       in
-      deps_add_dep dep_graph file_name (List.unique deps, White);
+      let dep_node : dep_node = {
+        edges = List.unique deps;
+        color = White;
+      } in
+      deps_add_dep dep_graph file_name dep_node;
       List.iter
             discover_one
             (List.map (file_of_dep file_system_map all_cmd_line_files)
@@ -1022,13 +1030,13 @@ let collect (all_cmd_line_files: list<file_name>)
   let full_cycle_detection all_command_line_files =
     let dep_graph = dep_graph_copy dep_graph in
     let rec aux (cycle:list<file_name>) filename =
-        let direct_deps, color =
+        let node =
             match deps_try_find dep_graph filename with
-            | Some (d, c) -> d, c
+            | Some node -> node
             | None ->
               failwith (BU.format1 "Failed to find dependences of %s" filename)
         in
-        let direct_deps = direct_deps |> List.collect (fun x ->
+        let direct_deps = node.edges |> List.collect (fun x ->
             match x with
             | UseInterface f
             | PreferInterface f ->
@@ -1045,7 +1053,7 @@ let collect (all_cmd_line_files: list<file_name>)
                [x; UseImplementation f]
               end
             | _ -> [x]) in
-        match color with
+        match node.color with
         | Gray ->
            cycle_detected dep_graph cycle filename
         | Black ->
@@ -1054,14 +1062,14 @@ let collect (all_cmd_line_files: list<file_name>)
             ()
         | White ->
             (* Unvisited. Compute. *)
-            deps_add_dep dep_graph filename (direct_deps, Gray);
+            deps_add_dep dep_graph filename ({node with edges=direct_deps; color=Gray});
             List.iter (fun k -> aux (k :: cycle) k)
                       (dependences_of file_system_map
                                       dep_graph
                                       all_command_line_files
                                       filename);
             (* Mutate the graph (to mark the node as visited) *)
-            deps_add_dep dep_graph filename (direct_deps, Black)
+            deps_add_dep dep_graph filename ({node with edges=direct_deps; color=Black})
       in
       List.iter (aux []) all_command_line_files
   in
@@ -1093,7 +1101,7 @@ let deps_of deps (f:file_name)
     dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
 
 (* In public interface *)
-let hash_dependences deps fn =
+let hash_dependences deps fn cache_file =
     let file_system_map = deps.file_system_map in
     let all_cmd_line_files = deps.cmd_line_files in
     let deps = deps.dep_graph in
@@ -1102,7 +1110,6 @@ let hash_dependences deps fn =
         | Some fn -> fn
         | _ -> fn
     in
-    let cache_file = cache_file_name fn in
     let digest_of_file fn =
         if Options.debug_any()
         then BU.print2 "%s: contains digest of %s\n" cache_file fn;
@@ -1130,17 +1137,14 @@ let hash_dependences deps fn =
         | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
           let digest =
-            let fn = cache_file_name fn in
-            if BU.file_exists fn
-            then Some (digest_of_file fn)
-            else match FStar.Options.find_file (FStar.Util.basename fn) with
-                 | None -> None
-                 | Some fn -> Some (digest_of_file fn)
+            match FStar.Options.find_file (FStar.Util.basename (cache_file_name fn)) with
+            | None -> None
+            | Some fn -> Some (digest_of_file fn)
           in
           match digest with
           | None ->
             if Options.debug_any()
-            then BU.print2 "%s: missed digest of file %s\n" cache_file (cache_file_name fn);
+            then BU.print2 "%s: missed digest of file %s\n" cache_file (FStar.Util.basename (cache_file_name fn));
             None
           | Some dig ->
             hash_deps ((lowercase_module_name fn, dig) :: out) deps
@@ -1165,8 +1169,8 @@ let print_make deps : unit =
     let keys = deps_keys deps in
     keys |> List.iter
         (fun f ->
-          let f_deps, _ = deps_try_find deps f |> Option.get in
-          let files = List.map (file_of_dep file_system_map all_cmd_line_files) f_deps in
+          let dep_node = deps_try_find deps f |> Option.get in
+          let files = List.map (file_of_dep file_system_map all_cmd_line_files) dep_node.edges in
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           //this one prints:
           //   a.fst: b.fst c.fsti a.fsti
@@ -1175,8 +1179,8 @@ let print_make deps : unit =
 (* In public interface *)
 let print_raw (deps:deps) =
     let (Deps deps) = deps.dep_graph in
-      smap_fold deps (fun k (dep, _) out ->
-        BU.format2 "%s -> [\n\t%s\n] " k (List.map dep_to_string dep |> String.concat ";\n\t") :: out) []
+      smap_fold deps (fun k dep_node out ->
+        BU.format2 "%s -> [\n\t%s\n] " k (List.map dep_to_string dep_node.edges |> String.concat ";\n\t") :: out) []
       |> String.concat ";;\n"
       |> BU.print_endline
 
@@ -1218,7 +1222,7 @@ let print_full (deps:deps) : unit =
                 | Some file_name ->
                   match deps_try_find deps.dep_graph file_name with
                   | None -> failwith (BU.format2 "Impossible: module %s: %s not found" lc_module_name file_name)
-                  | Some (immediate_deps, _) ->
+                  | Some ({edges=immediate_deps}) ->
                     let immediate_deps =
                         List.map (fun x -> String.lowercase (module_name_of_dep x)) immediate_deps
                     in
@@ -1251,7 +1255,7 @@ let print_full (deps:deps) : unit =
     let transitive_krml = smap_create 41 in
     keys |> List.iter
         (fun file_name ->
-          let f_deps, _ = deps_try_find deps.dep_graph file_name |> Option.get in
+          let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
           let iface_deps =
               if is_interface file_name
               then None
@@ -1259,15 +1263,15 @@ let print_full (deps:deps) : unit =
                    | None ->
                      None
                    | Some iface ->
-                     Some (fst (Option.get (deps_try_find deps.dep_graph iface)))
+                     Some ((Option.get (deps_try_find deps.dep_graph iface)).edges)
           in
           let iface_deps =
               BU.map_opt iface_deps
                          (List.filter (fun iface_dep ->
-                             not (BU.for_some (dep_subsumed_by iface_dep) f_deps)))
+                             not (BU.for_some (dep_subsumed_by iface_dep) dep_node.edges)))
           in
           let norm_f = norm_path file_name in
-          let files = List.map (file_of_dep_aux true deps.file_system_map deps.cmd_line_files) f_deps in
+          let files = List.map (file_of_dep_aux true deps.file_system_map deps.cmd_line_files) dep_node.edges in
           let files =
               match iface_deps with
               | None -> files
@@ -1320,7 +1324,7 @@ let print_full (deps:deps) : unit =
                          file_of_dep_aux false deps.file_system_map deps.cmd_line_files dep)
                     f_deps
                 in
-                let fst_files = maybe_widen_deps f_deps in
+                let fst_files = maybe_widen_deps dep_node.edges in
                 let fst_files_from_iface =
                     match iface_deps with
                     | None -> []

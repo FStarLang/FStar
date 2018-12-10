@@ -12,7 +12,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_abc8984d7fb6dc87dbd65572f74bda11"
       ],
       0,
-      "4fb55fcf06b5c04fc7ad98c6ba06a116"
+      "44dd23228c46ca88103eb2f92c996705"
     ],
     [
       "SnapshotST.__proj__Tmp__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
-      "9c2571d137c26064d55b10c59b05ead4"
+      "ffbd7be63349003103a22ca71052b30e"
     ],
     [
       "SnapshotST.__proj__Tmp__item___1",
@@ -38,7 +38,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
-      "c33941f9ebf43b9e8d7cb4ee5c611bd4"
+      "e8b3458e02e37ed0ed4dfdfe01168276"
     ],
     [
       "SnapshotST.rel_t",
@@ -56,7 +56,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "c36d59e7df940761defadccb44c93f95"
+      "46b0f3a616c0085185a5453da6ed1bb3"
     ],
     [
       "SnapshotST.lift_predicate",
@@ -68,7 +68,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "0d4bfa33f0d4f619a404b0f555c778e4"
+      "fd54f5a80240f039022c8a627828545c"
     ],
     [
       "SnapshotST.lift_stability",
@@ -87,7 +87,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_99f53608a2d93ee6ac1800c4e882081f"
       ],
       0,
-      "821336aa82079c6b6f3abdae7cc979ac"
+      "121da924e1a0f0736ae9b2fbb5211c96"
     ],
     [
       "SnapshotST.witnessed",
@@ -99,7 +99,9 @@
         "SnapshotST_pretyping_1ed7584a366d2d38a675fc91a6e7e5f1",
         "data_elim_SnapshotST.Ok", "data_elim_SnapshotST.Tmp",
         "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_SnapshotST.rel_t",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_SnapshotST.rel_t",
         "fuel_guarded_inversion_SnapshotST.t",
         "function_token_typing_SnapshotST.rel_s",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -108,7 +110,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "19c725d32279f1cb08cc111d213063b0"
+      "a5fb7256403f4566231aecbcee2865b5"
     ],
     [
       "SnapshotST.witness",
@@ -120,7 +122,9 @@
         "SnapshotST_pretyping_1ed7584a366d2d38a675fc91a6e7e5f1",
         "data_elim_SnapshotST.Ok", "data_elim_SnapshotST.Tmp",
         "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_SnapshotST.rel_t",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_SnapshotST.rel_t",
         "fuel_guarded_inversion_SnapshotST.t",
         "function_token_typing_SnapshotST.rel_s",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -129,7 +133,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "157ff1aecd434e16c4ca8f079fa9bcce"
+      "1403a6f89c396db98df36621ecca3de9"
     ],
     [
       "SnapshotST.recall",
@@ -141,7 +145,9 @@
         "SnapshotST_pretyping_1ed7584a366d2d38a675fc91a6e7e5f1",
         "data_elim_SnapshotST.Ok", "data_elim_SnapshotST.Tmp",
         "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_SnapshotST.rel_t",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_SnapshotST.rel_t",
         "fuel_guarded_inversion_SnapshotST.t",
         "function_token_typing_SnapshotST.rel_s",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -150,7 +156,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "dbf487eb1f3e3ce0adc7d672dd3ec611"
+      "55009d93b28201ef9149d7512de7ebba"
     ],
     [
       "SnapshotST.get_s",
@@ -162,7 +168,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "767822c9ca63477c54adfc4a4c99b6c6"
+      "bab550ff3c5f01fdca79ed3084a6c64c"
     ],
     [
       "SnapshotST.get_s",
@@ -180,7 +186,7 @@
         "projection_inverse_SnapshotST.Tmp__1"
       ],
       0,
-      "ac47312fa04fb90fedc417ccc5ba5be8"
+      "f2d32b304b435174e6973f5f2a533f1e"
     ],
     [
       "SnapshotST.put_s",
@@ -192,7 +198,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "e9ba30712c0fc67057428ae3e4c8cb36"
+      "0621aee808653eb0f01cacede6def74b"
     ],
     [
       "SnapshotST.put_s",
@@ -203,9 +209,13 @@
         "@MaxIFuel_assumption", "@query",
         "SnapshotST_pretyping_1ed7584a366d2d38a675fc91a6e7e5f1",
         "constructor_distinct_SnapshotST.Ok",
-        "constructor_distinct_SnapshotST.Tmp", "disc_equation_SnapshotST.Ok",
-        "disc_equation_SnapshotST.Tmp", "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_SnapshotST.rel_t",
+        "constructor_distinct_SnapshotST.Tmp",
+        "data_typing_intro_SnapshotST.Ok@tok",
+        "data_typing_intro_SnapshotST.Tmp@tok",
+        "disc_equation_SnapshotST.Ok", "disc_equation_SnapshotST.Tmp",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive", "equation_SnapshotST.rel_t",
         "fuel_guarded_inversion_SnapshotST.t",
         "function_token_typing_SnapshotST.rel_s",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -213,10 +223,11 @@
         "projection_inverse_SnapshotST.Ok__0",
         "projection_inverse_SnapshotST.Tmp__0",
         "projection_inverse_SnapshotST.Tmp__1",
-        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "unit_inversion", "unit_typing"
       ],
       0,
-      "014a029cf771680314a63ad4dabcad48"
+      "5533d79d00a3ea072ca49151a513a3b6"
     ],
     [
       "SnapshotST.witness_s",
@@ -228,7 +239,7 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "c2f0261bd8d9d71ea7a61418c6860c61"
+      "b97708e4acb0c532f874dbaaded9f832"
     ],
     [
       "SnapshotST.witness_s",
@@ -243,14 +254,14 @@
         "equation_SnapshotST.lift_predicate", "equation_SnapshotST.rel_t",
         "equation_SnapshotST.witnessed_s",
         "fuel_guarded_inversion_SnapshotST.t",
-        "interpretation_SnapshotST_Tm_abs_e3cbfdcb60ce95bede26590a2dbd888a",
+        "interpretation_SnapshotST_Tm_abs_73a1115b799b1dd058fa4210eb1e9020",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_SnapshotST_Tm_refine_99f53608a2d93ee6ac1800c4e882081f",
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "572f8a8af478a363ee1537dbc97a9b7a"
+      "6bd3f03addd31f6d57c808e7eacfc34c"
     ],
     [
       "SnapshotST.recall_s",
@@ -262,7 +273,7 @@
         "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "5430bb1c542338789ce076268abf269e"
+      "418f5cc5bd8a198e007644bb66410c35"
     ],
     [
       "SnapshotST.recall_s",
@@ -277,7 +288,7 @@
         "equation_SnapshotST.lift_predicate", "equation_SnapshotST.rel_t",
         "equation_SnapshotST.witnessed_s",
         "fuel_guarded_inversion_SnapshotST.t",
-        "interpretation_SnapshotST_Tm_abs_e3cbfdcb60ce95bede26590a2dbd888a",
+        "interpretation_SnapshotST_Tm_abs_73a1115b799b1dd058fa4210eb1e9020",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -285,7 +296,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "a5e3328ecdea11ed78d9e5197d96b9e8"
+      "acf8975cec5da5f503bedc36cbd4c695"
     ],
     [
       "SnapshotST.break",
@@ -297,7 +308,7 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "e5b06eb810f74a4d52e942ebd4a64231"
+      "0a8484ba5eb996d99a5abb6692069177"
     ],
     [
       "SnapshotST.break",
@@ -308,8 +319,10 @@
         "@MaxIFuel_assumption", "@query",
         "SnapshotST_pretyping_1ed7584a366d2d38a675fc91a6e7e5f1",
         "bool_inversion", "constructor_distinct_SnapshotST.Tmp",
+        "data_typing_intro_SnapshotST.Tmp@tok",
         "disc_equation_SnapshotST.Ok", "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_SnapshotST.rel_t",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive", "equation_SnapshotST.rel_t",
         "function_token_typing_SnapshotST.rel_s",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -321,7 +334,7 @@
         "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "330a83fb2453fafda3bed0cdcc1b032d"
+      "8b521cfa47e7b003c1cfd69a5b00d20e"
     ],
     [
       "SnapshotST.restore",
@@ -333,7 +346,7 @@
         "disc_equation_SnapshotST.Tmp", "typing_SnapshotST.uu___is_Tmp"
       ],
       0,
-      "0731352b9c5487eadf5e62344cab4fcd"
+      "86576c9aaa92bce06cee9c8e19e8b167"
     ],
     [
       "SnapshotST.restore",
@@ -351,7 +364,7 @@
         "projection_inverse_SnapshotST.Tmp__1"
       ],
       0,
-      "7637a81a295329e84629e58424032e3d"
+      "3b0f9699646992e8ca0fbb4484a16ffc"
     ],
     [
       "SnapshotST.__proj__Ok__item___0",
@@ -364,7 +377,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_abc8984d7fb6dc87dbd65572f74bda11"
       ],
       0,
-      "dff6f062d0f804e95133db90fa13d8b1"
+      "cca74041b25151db224471ea9ab5a99f"
     ],
     [
       "SnapshotST.__proj__Tmp__item___0",
@@ -377,7 +390,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
-      "b73787be7e23e225e42cc5509cef1057"
+      "8a8e7dd6474e39d510da97dcaff41393"
     ],
     [
       "SnapshotST.__proj__Tmp__item___1",
@@ -390,7 +403,7 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
-      "7930d6b569afaddd9c277e9be8f3235b"
+      "a4c5d7f4de70e82871b2e4d27b73df40"
     ],
     [
       "SnapshotST.rel_t",
@@ -408,7 +421,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "7d0759f1a9c013ea5934936c4ee4d27c"
+      "2fa2800bcf99fbb0d1a0b21175e2d41f"
     ],
     [
       "SnapshotST.lift_predicate",
@@ -420,7 +433,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "08814bbbcddf997acd5ca12f991d609f"
+      "4170c2e7685bf7b9b3ad001695583584"
     ],
     [
       "SnapshotST.witnessed",
@@ -432,7 +445,9 @@
         "SnapshotST_pretyping_1ed7584a366d2d38a675fc91a6e7e5f1",
         "data_elim_SnapshotST.Ok", "data_elim_SnapshotST.Tmp",
         "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_SnapshotST.rel_t",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_SnapshotST.rel_t",
         "fuel_guarded_inversion_SnapshotST.t",
         "function_token_typing_SnapshotST.rel_s",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -441,7 +456,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "c58ff9305987b006e2cf72ec4ba12979"
+      "7ef754d98b624768e892f80495878a5a"
     ],
     [
       "SnapshotST.witness",
@@ -453,7 +468,9 @@
         "SnapshotST_pretyping_1ed7584a366d2d38a675fc91a6e7e5f1",
         "data_elim_SnapshotST.Ok", "data_elim_SnapshotST.Tmp",
         "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_SnapshotST.rel_t",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_SnapshotST.rel_t",
         "fuel_guarded_inversion_SnapshotST.t",
         "function_token_typing_SnapshotST.rel_s",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -462,7 +479,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "5193009af7bac38eb9c3f6412a0f6f49"
+      "373cf55f85fae88cf308a992e8879025"
     ],
     [
       "SnapshotST.recall",
@@ -474,7 +491,9 @@
         "SnapshotST_pretyping_1ed7584a366d2d38a675fc91a6e7e5f1",
         "data_elim_SnapshotST.Ok", "data_elim_SnapshotST.Tmp",
         "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_SnapshotST.rel_t",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_SnapshotST.rel_t",
         "fuel_guarded_inversion_SnapshotST.t",
         "function_token_typing_SnapshotST.rel_s",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -483,7 +502,7 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
-      "63fea1c4906cfee002345f7eca92df98"
+      "1f05ea362087bd6a0002bd97fb94a3e7"
     ],
     [
       "SnapshotST.get_s",
@@ -495,7 +514,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "90f39cb5a89eca0edd0894756b30e618"
+      "de6e29767ca54b1fde4836800833cd1b"
     ],
     [
       "SnapshotST.put_s",
@@ -507,7 +526,7 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
-      "123dfe154acf336eeb6225d7468a5010"
+      "5446c8ef30069684146d57bdaa09a828"
     ],
     [
       "SnapshotST.witness_s",
@@ -519,7 +538,7 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "a9d1dcb70da40be20ac2576c75389cea"
+      "7870f9f6391aed638570effd3cbf86e1"
     ],
     [
       "SnapshotST.recall_s",
@@ -531,7 +550,7 @@
         "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "65bfa104717af71c9dada6ecfafe90c5"
+      "d4a2253fb088aa782cd8a84662ebf64e"
     ],
     [
       "SnapshotST.break",
@@ -543,7 +562,7 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
-      "7eac94a0ffb70296494495d26a73f7f5"
+      "c812b37be012b7dfe81da8974d4da173"
     ],
     [
       "SnapshotST.restore",
@@ -555,7 +574,7 @@
         "disc_equation_SnapshotST.Tmp", "typing_SnapshotST.uu___is_Tmp"
       ],
       0,
-      "2cc88e8cac5e1558870d2f43fc0d0383"
+      "0d5d0b81a40b5d7763a8d28bc2adc0ef"
     ]
   ]
 ]

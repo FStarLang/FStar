@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module LowStar.Monotonic.Buffer
 
 module P = FStar.Preorder
@@ -1330,6 +1345,10 @@ val modifies_only_live_addresses
 val loc_not_unused_in (h: HS.mem) : GTot loc
 
 val loc_unused_in (h: HS.mem) : GTot loc
+
+val loc_regions_unused_in (h: HS.mem) (rs: Set.set HS.rid) : Lemma
+  (requires (forall r . Set.mem r rs ==> (~ (HS.live_region h r))))
+  (ensures (loc_unused_in h `loc_includes` loc_regions false rs))
 
 val loc_unused_in_not_unused_in_disjoint (h: HS.mem) : Lemma
   (loc_disjoint (loc_unused_in h) (loc_not_unused_in h))
