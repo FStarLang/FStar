@@ -75,26 +75,41 @@ let l_eq_alt_implies_l_eq #lstate (#lw:low_state lstate) #hstate (#p: state_lens
 
 (** Morph lemmas *)
 
-let cast #hstate #a #wp1 wp2 (#h:squash (implies wp2 wp1)) (c : high #hstate a wp1) : high #hstate a wp2 = c 
+unfold
+let cast #hstate #a #wp1 (wp2:hwp_mon a{implies wp2 wp1}) (c : high #hstate a wp1) : high #hstate a wp2 = c 
 
+unfold
+let lcast #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstate hstate) #a 
+          (wp1 : hwp_mon a) (wp2: hwp_mon a{implies wp2 wp1}) (c : high #hstate a wp1) (l : low #_ #lw #_ #p a wp1 c) : low #_ #lw #_ #p a wp2 c = l
+
+(** RETURN *)
+
+(* The "easy" version *)
+let morph_return' #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstate hstate) #a
+   (x:a) :
+   Lemma
+    (l_eq  #_ #lw  #_ #p (morph #_ #lw  #_ #p a (return_wp x) (return_elab x)) (lreturn x)) = () 
+
+(* This formulation does not seem provable *)
+[@expect_failure]
 let morph_return #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstate hstate) #a
   (wp : hwp_mon #hstate a) (c:high a wp) (x:a) :
   Lemma
     (requires (implies wp (return_wp x) /\ c == return_elab x))
-    (ensures (l_eq  #_ #lw  #_ #p (morph #_ #lw  #_ #p a wp c) (lreturn x))) = 
-    // let i () : Lemma (implies wp (return_wp x)) = () in
-    // let i' = Classical.lemma_to_squash_gtot i () in 
-    // assert (c == cast #hstate #a #_ wp #i' (return_elab x));
-    // assert (c === return_elab x);
-    admit () 
-  
+    (ensures (l_eq  #_ #lw  #_ #p (morph #_ #lw  #_ #p a wp c) (lreturn x))) =
+  let i () : Lemma (implies wp (return_wp x)) = () in
+  let i' = Classical.lemma_to_squash_gtot i () in 
+  assert (c == cast #hstate #a #_ wp #i' (return_elab x));
+  ()
 
-    // let p = return_inv c x in
-    // assert (subsumes (return_wp x) wp);
-    // assert (l_eq #a
-    //              #wp #(cast wp (return_elab x)) (morph wp c)
-    //              #wp #(cast wp (return_elab x)) (lreturn x));
-    // let p' = l_eq_axiom #a
-    //                     #wp #(cast wp (return_elab x)) (morph wp c)
-    //                     #wp #(cast wp (return_elab x)) (lreturn x) in
-    // ()
+(* We would have to write something like this instead *)
+let morph_return'' #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstate hstate) #a
+    (wp : hwp_mon #hstate a) (c:high a wp) (x:a) :
+  Lemma
+    (requires (implies wp (return_wp x) /\ c == return_elab x))
+    (ensures (l_eq #_ #lw #_ #p #a 
+                   #wp #c (morph #_ #lw  #_ #p a wp c) 
+                   #wp #(return_elab x) (lcast (return_wp x) wp (return_elab x) (lreturn x)))) =
+  ()
+      
+

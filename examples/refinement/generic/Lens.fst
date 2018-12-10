@@ -101,7 +101,6 @@ type high #hstate a (wp : hwp_mon #hstate a) = s0:hstate -> PURE (a * hstate) (w
 // Better name?
 type high_p #hstate 'a (pre : hpre #hstate) (post : hpost #hstate 'a) = high 'a (as_wp #hstate #'a pre post)
 
-subs
 (* Low computations *)
 type low #lstate (#l:low_state lstate) #hstate (#p: state_lens lstate hstate)
          (a:Type) (wp : hwp_mon a) (c : high #hstate a wp) =
