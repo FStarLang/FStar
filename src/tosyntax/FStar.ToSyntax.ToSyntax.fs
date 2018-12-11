@@ -2229,12 +2229,19 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
       let data_ops = docs_tps_sigelts |> List.collect (fun (_, tps, se) -> mk_data_projector_names quals env se) in
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
-        | Sig_inductive_typ(tname, _, tps, k, _, constrs) when (List.length constrs > 1)->
+        | Sig_inductive_typ(tname, _, tps, k, _, constrs) ->
           let quals = se.sigquals in
           let quals = if List.contains S.Abstract quals && not (List.contains S.Private quals)
                       then S.Private::quals
                       else quals in
-          mk_data_discriminators quals env constrs
+          mk_data_discriminators quals env
+            (constrs |> List.filter (fun data_lid ->  //AR: create data discriminators only for non-record data constructors
+                                     let data_quals =
+                                       let data_se = sigelts |> List.find (fun se -> match se.sigel with
+                                                                                     | Sig_datacon (name, _, _, _, _, _) -> lid_equals name data_lid
+                                                                                     | _ -> false) |> must in
+                                       data_se.sigquals in
+                                     not (data_quals |> List.existsb (function | RecordConstructor _ -> true | _ -> false))))
         | _ -> []) in
       let ops = discs@data_ops in
       let env = List.fold_left push_sigelt env ops in
