@@ -1524,7 +1524,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let finish = mkApp (mk_term (Var C.calc_finish_lid) top.range Expr) [(rel, Nothing)] top.range in
 
       let e = mkApp init [(init_expr, Nothing)] init_expr.range in
-      (* TODO: this ignores the internal rels *)
       let e = List.fold_left (fun e (CalcStep (rel, just, next_expr)) ->
                                   mkApp (step rel.range)
                                         [(eta_and_annot rel, Nothing); (next_expr, Nothing); (thunk e, Nothing); (thunk just, Nothing)] just.range) e steps in
