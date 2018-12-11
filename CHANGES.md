@@ -89,6 +89,14 @@ Guidelines for the changelog:
      we only found a couple of instances of this. So, for now, we are going with the
      hoisting workaround.
 
+## Calculational proofs
+
+   * F\* now supports proofs in calculational style, i.e. where an
+     equality between two expressions is expressed via a sequence of
+     equalities each of which is proven individually. In fact, these
+     proofs can be done for any relation, provided that steps compose
+     properly (e.g., `a < b == c` implies `a < c`, but `a <= b == c`
+     does not imply `a < c`). For some examples, see `examples/calc/`.
 
 # Version 0.9.6.0
 
