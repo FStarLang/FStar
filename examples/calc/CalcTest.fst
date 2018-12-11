@@ -3,12 +3,14 @@ module CalcTest
 open FStar.Mul
 open FStar.Calc
 
+let lem1 (a : pos) : Lemma (2 * a > a) = ()
+
 let calc0 (a : pos) : Lemma (a + a > a) =
   calc (>) {
     a + a;
-    == { () }
+    == {}
     2 * a;
-    > { () }
+    > { lem1 a }
     a;
   }
 
@@ -20,7 +22,7 @@ let calc0_desugared (a : pos) : Lemma (a + a > a) =
       calc_step (fun x y -> (==) x y <: Type) (2 * a) (fun () ->
         calc_init (a + a)
       ) (fun () -> ())
-    ) (fun () -> ())
+    ) (fun () -> lem1 a)
   )
 
 let calc1 (a b c d e : int)
