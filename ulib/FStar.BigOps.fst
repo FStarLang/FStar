@@ -58,3 +58,19 @@ let pairwise_or_nil (#a:Type) (f:a -> a -> Type0)
 let pairwise_or_cons #a (f:a -> a -> Type0) (hd:a) (tl:list a)
   = assert (pairwise_or f (hd::tl) == (big_or (f hd) tl \/ pairwise_or f tl))
         by (T.trefl())
+
+let rec big_and_forall (#a:Type) (f: a -> Type) (l:list a)
+  : Lemma (big_and f l <==> (forall x. L.memP x l ==> f x))
+  = match l with
+    | [] -> ()
+    | hd::tl ->
+      big_and_cons f hd tl;
+      big_and_forall f tl
+
+let rec big_or_exists (#a:Type) (f: a -> Type) (l:list a)
+  : Lemma (big_or f l <==> (exists x. L.memP x l /\ f x))
+  = match l with
+    | [] -> ()
+    | hd::tl ->
+      big_or_cons f hd tl;
+      big_or_exists f tl

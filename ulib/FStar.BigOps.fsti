@@ -94,3 +94,11 @@ val pairwise_or_nil (#a:Type) (f:a -> a -> Type0)
 
 val pairwise_or_cons (#a:Type) (f:a -> a -> Type0) (hd:a) (tl:list a)
   : Lemma (pairwise_or f (hd::tl) == (big_or (f hd) tl \/ pairwise_or f tl))
+
+module L = FStar.List.Tot
+
+val big_and_forall (#a:Type) (f: a -> Type) (l:list a)
+  : Lemma (big_and f l <==> (forall x. L.memP x l ==> f x))
+
+val big_or_exists (#a:Type) (f: a -> Type) (l:list a)
+  : Lemma (big_or f l <==> (exists x. L.memP x l /\ f x))
