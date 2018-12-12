@@ -224,6 +224,8 @@ let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = (
 let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
 let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
 
+unfold let reveal_opaque = norm_spec
+
 (*
  * Pure and ghost inner let bindings are now always inlined during the wp computation, if:
  * the return type is not unit and the head symbol is not marked irreducible.
