@@ -72,3 +72,7 @@ let f_1529_1 () =
 let f_1529_2 () =
   let f_local = norm [delta] f_1529 in
   assert (f_local 2 == 5)
+
+let f_1529_3 () =
+  reveal_opaque (`%f_1529) f_1529;
+  assert (f_1529 4 == 5)
