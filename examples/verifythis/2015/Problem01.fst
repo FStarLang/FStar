@@ -29,14 +29,26 @@ let rec remove_elem_from_list p i =
   match p with
   | a::q -> if i = 0 then q else a::remove_elem_from_list q (i-1)
 
-#reset-options "--z3rlimit 20"
-
 val test_prefix: p:list nat -> n:nat{n < length p} -> str:list nat ->
-  Tot (b:bool{b <==> (exists (i:nat). i <= n && prefix (remove_elem_from_list p i) str)})
+  Tot (b:bool{b ==> (exists (i:nat). i <= n /\ prefix (remove_elem_from_list p i) str)})
 let rec test_prefix p n str =
   match n with
   | 0 -> prefix (remove_elem_from_list p n) str
   | n -> prefix (remove_elem_from_list p n) str || test_prefix p (n - 1) str
+
+let test_prefix_exists_to_b (p:list nat) (n:nat{n < length p}) (str:list nat)
+  (h:squash (exists (i:nat). i <= n && prefix (remove_elem_from_list p i) str))
+  : Lemma (test_prefix p n str)
+  = let goal n = test_prefix p n str in
+    let rec aux (n:nat{n < length p}) (i:nat{i <= n /\ prefix (remove_elem_from_list p i) str}) : GTot (squash (goal n))
+      = if n > i then aux (n - 1) i
+    in
+    Classical.exists_elim (goal n) h (aux n)
+
+let test_prefix_iff (p:list nat) (n:nat{n < length p}) (str:list nat)
+  : Lemma (test_prefix p n str <==> (exists (i:nat). i <= n && prefix (remove_elem_from_list p i) str))
+          [SMTPat (test_prefix p n str)]
+  = Classical.impl_intro (test_prefix_exists_to_b p n str)
 
 val test_relaxed_prefix: p:list nat -> str:list nat ->
   Tot (b:bool{b <==> (b2t (prefix p str) \/
