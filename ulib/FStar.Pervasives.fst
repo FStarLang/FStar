@@ -460,6 +460,12 @@ let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
 let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
 
 (*
+ * Use the following to expose an `opaque_to_smt` definition to the solver
+ *   as: `reveal_opaque (`%defn) defn
+ *)
+let reveal_opaque (s:string) = norm_spec [delta_only [s]]
+
+(*
  * Pure and ghost inner let bindings are now always inlined during the wp computation, if:
  * the return type is not unit and the head symbol is not marked irreducible.
  * To circumvent this behavior, singleton can be used.
