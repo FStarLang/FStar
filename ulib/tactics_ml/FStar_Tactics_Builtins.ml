@@ -1,5 +1,6 @@
 open Prims
 open FStar_Pervasives_Native
+open FStar_Pervasives
 open FStar_Tactics_Result
 open FStar_Tactics_Types
 open FStar_Tactics_Effect
