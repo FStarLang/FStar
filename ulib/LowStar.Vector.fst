@@ -501,22 +501,10 @@ let flush #a vec ia i =
 val shrink:
   #a:Type -> vec:vector a ->
   new_size:uint32_t{new_size <= size_of vec} ->
-  HST.ST (vector a)
-    (requires (fun h0 ->
-      live h0 vec /\ freeable vec /\
-      HST.is_eternal_region (frameOf vec)))
-    (ensures (fun h0 fvec h1 ->
-      frameOf vec = frameOf fvec /\
-      hmap_dom_eq h0 h1 /\
-      live h1 fvec /\ freeable fvec /\
-      modifies (loc_union (loc_addr_of_vector vec) 
-                          (loc_vector fvec)) h0 h1 /\
-      size_of fvec = new_size /\
-      S.equal (as_seq h1 fvec)
-              (S.slice (as_seq h0 vec) 0 (U32.v new_size))))
+  Tot (vector a)
 let shrink #a vec new_size =
   Vec new_size (Vec?.cap vec) (Vec?.vs vec)
-
+  
 
 /// Iteration
 
