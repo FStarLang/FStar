@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="FStar.Syntax.Syntax.fsi" />
     <Compile Include="FStar.Syntax.Syntax.fs" />
+    <Compile Include="FStar.Syntax.Cache.fs" />
     <Compile Include="FStar.Syntax.Unionfind.fsi" />
     <Compile Include="FStar.Syntax.Unionfind.fs" />
     <Compile Include="FStar.Syntax.Subst.fsi" />
