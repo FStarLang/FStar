@@ -509,6 +509,8 @@ val shrink:
       frameOf vec = frameOf fvec /\
       hmap_dom_eq h0 h1 /\
       live h1 fvec /\ freeable fvec /\
+      modifies (loc_union (loc_addr_of_vector vec) 
+                          (loc_vector fvec)) h0 h1 /\
       size_of fvec = new_size /\
       S.equal (as_seq h1 fvec)
               (S.slice (as_seq h0 vec) 0 (U32.v new_size))))
