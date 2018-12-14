@@ -359,6 +359,9 @@ val expand_environment_variable: string -> option<string>
 val physical_equality: 'a -> 'a -> bool
 val check_sharing: 'a -> 'a -> string -> unit
 
+//structural hash
+val generic_hash: 'a -> int
+
 val is_letter: char -> bool
 val is_digit: char -> bool
 val is_letter_or_digit: char -> bool

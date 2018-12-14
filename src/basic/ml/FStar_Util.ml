@@ -821,6 +821,8 @@ let expand_environment_variable x = try Some (Sys.getenv x) with Not_found -> No
 let physical_equality (x:'a) (y:'a) = x == y
 let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
 
+let generic_hash x = Z.of_int (BatHashtbl.hash x)
+                          
 type oWriter = {
   write_byte: char -> unit;
   write_bool: bool -> unit;
