@@ -44,6 +44,8 @@ module PP = FStar.Syntax.Print
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 
+module UF = FStar.Syntax.Unionfind
+
 (* Some local utilities *)
 let instantiate_both env = {env with Env.instantiate_imp=true}
 let no_inst env = {env with Env.instantiate_imp=false}
@@ -334,19 +336,29 @@ let rec tc_term env e =
         BU.print3 "(%s) Starting tc_term of %s (%s) {\n" (Range.string_of_range <| Env.get_range env)
                                                          (Print.term_to_string e)
                                                          (Print.tag_of_term (SS.compress e));
-    let r, ms = BU.record_time (fun () ->
-                    tc_maybe_toplevel_term ({env with top_level=false}) e) in
-    if Env.debug env Options.Medium then begin
+
+    let el_opt = UF.query_tc e (Some (fun t1 t2 -> U.eq_tm t1 t2 = U.Equal)) in
+    match el_opt with
+    | Some (eres, lc) ->
+      if Env.debug env <| Options.Other "MemoTC" then
+       BU.print2 "tc_term of %s hit the tc cache with lcomp %s\n"
+                 (Print.term_to_string e) (Print.lcomp_to_string lc);
+      (eres, lc, Env.trivial_guard)  //trivial guard ok?
+    | None ->
+      let r, ms = BU.record_time (fun () ->
+                                  tc_maybe_toplevel_term ({env with top_level=false}) e) in
+      if Env.debug env Options.Medium then begin
         BU.print4 "(%s) } tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
-                                                        (Print.term_to_string e)
-                                                        (Print.tag_of_term (SS.compress e))
-                                                        (string_of_int ms);
+                                                          (Print.term_to_string e)
+                                                          (Print.tag_of_term (SS.compress e))
+                                                          (string_of_int ms);
         let e, _ , _ = r in
         BU.print3 "(%s) Result is: %s (%s)\n" (Range.string_of_range <| Env.get_range env)
                                               (Print.term_to_string e)
                                               (Print.tag_of_term (SS.compress e))
-    end;
-    r
+      end;
+      let (eres, lc, _) = r in UF.cache_tc e (eres, lc);  //hash key is the input term?
+      r
 
 and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked and elaborated version of e            *)
                                         * lcomp                 (* computation type where the WPs are lazily evaluated *)
