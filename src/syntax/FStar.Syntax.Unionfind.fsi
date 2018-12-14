@@ -33,3 +33,6 @@ val univ_find   : S.universe_uvar -> option<S.universe>
 val univ_change : S.universe_uvar -> S.universe -> unit
 val univ_equiv  : S.universe_uvar -> S.universe_uvar -> bool
 val univ_union  : S.universe_uvar -> S.universe_uvar -> unit
+
+val cache_tc : S.term -> (S.term * S.lcomp) -> unit
+val query_tc : S.term -> option<(S.term -> S.term -> bool)> -> option<(S.term * S.lcomp)>

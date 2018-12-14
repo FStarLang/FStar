@@ -6,6 +6,8 @@ module S = FStar.Syntax.Syntax
 module PU = FStar.Unionfind
 module BU = FStar.Util
 module L = FStar.List
+module C = FStar.Syntax.Cache
+
 
 type vops_t = {
     next_major : unit -> S.version;
@@ -36,13 +38,15 @@ type ugraph = PU.puf<option<S.universe>>
 type uf = {
   term_graph: tgraph;
   univ_graph: ugraph;
-  version:version;
+  version: version;
+  tc_cache: C.cache<(S.term * S.lcomp)>
 }
 
 let empty (v:version) = {
     term_graph = PU.puf_empty();
     univ_graph = PU.puf_empty();
-    version = v
+    version = v;
+    tc_cache = C.create ()
   }
 
 (*private*)
@@ -123,3 +127,7 @@ let univ_find u     = PU.puf_find (get_univ_graph()) (chk_v u)
 let univ_change u t = set_univ_graph (PU.puf_change (get_univ_graph()) (chk_v u) (Some t))
 let univ_equiv  u v = PU.puf_equivalent (get_univ_graph()) (chk_v u) (chk_v v)
 let univ_union  u v = set_univ_graph (PU.puf_union (get_univ_graph()) (chk_v u) (chk_v v))
+
+let cache_tc e t = C.add ((get ()).tc_cache) e t
+  
+let query_tc e f_opt = C.find ((get ()).tc_cache) e f_opt
