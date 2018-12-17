@@ -390,6 +390,15 @@ let rec noRepeats #a la =
   | [] -> true
   | h :: tl -> not(mem h tl) && noRepeats tl
 
+
+(** [no_repeats_p l] valid if, and only if, no element of [l]
+appears in [l] more than once. *)
+val no_repeats_p : #a:Type -> list a -> Tot prop
+let rec no_repeats_p #a la =
+  match la with
+  | [] -> True
+  | h :: tl -> ~(memP h tl) /\ no_repeats_p tl
+
 (** List of tuples **)
 
 (** [assoc x l] returns [Some y] where [(x, y)] is the first element
