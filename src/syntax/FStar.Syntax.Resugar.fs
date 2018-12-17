@@ -756,7 +756,7 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
 
   | Comp c ->
     let result = (resugar_term' env c.result_typ, A.Nothing) in
-    if (Options.print_effect_args()) then
+    if (Options.print_effect_args()) || lid_equals c.effect_name C.effect_Lemma_lid then
       let universe = List.map (fun u -> resugar_universe u) c.comp_univs in
       let args =
        if (lid_equals c.effect_name C.effect_Lemma_lid) then (

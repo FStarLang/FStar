@@ -1,9 +1,24 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Monad
 
 open FStar.Tactics.Typeclasses
 
 (* Fails... due to unification? check it out *)
-// noeq type monad (m:Type0 -> Type0) : Type = {
+// class monad (m:Type0 -> Type0) : Type = {
 //   return : #a:_ -> a -> m a;
 //   bind   : #a:_ -> #b:_ -> m a -> (a -> m b) -> m b;
 //   idL    : #a:_ -> #b:_ -> x:a -> f:(a -> m b) -> Lemma (bind (return x) f == f x);
@@ -28,7 +43,6 @@ class monad (m : Type0 -> Type0) = {
   laws   : monad_laws m return bind;
 }
 
-
 let f #a #b #m [|monad m|] (x : m (a -> b)) (y : m a) : m b =
   bind #_ #_ #m x (fun x ->
   bind #_ #_ #m y (fun y ->
@@ -40,9 +54,9 @@ let g #a #b #m [|d : monad m|] (x : m a) =
   assert (bind #_ #_ #m x (return #_ #m) == bind #_ #_ #m (return #_ #m ()) (fun () -> x))
 
 (* Same bug as EnumEq, I think, requiring the #d in for laws *)
-let g' #a #b #m [|d : monad m|] (x : m a) =
-  (laws #m #d).idL () (fun () -> x);
-  (laws #m #d).idR x;
+let g' #a #b #m [|monad m|] (x : m a) =
+  (laws #m).idL () (fun () -> x);
+  (laws #m).idR x;
   assert (bind #_ #_ #m x (return #_ #m) == bind #_ #_ #m (return #_ #m ()) (fun () -> x))
 
 open Functor

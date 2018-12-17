@@ -59,7 +59,7 @@ let logic_qualifier_deprecation_warning =
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
-%token FRIEND OPEN REC THEN TRUE TRY TYPE CLASS INSTANCE EFFECT VAL
+%token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -628,7 +628,8 @@ noSeqTerm:
       }
   | ASSUME e=atomicTerm
       { let a = set_lid_range assume_lid (rhs parseState 1) in
-        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
+        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
+      }
 
   | ASSERT e=atomicTerm tactic_opt=option(BY tactic=thunk2(typ) {tactic})
       {
@@ -645,18 +646,32 @@ noSeqTerm:
      {
          let a = set_lid_range synth_lid (rhs parseState 1) in
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
-
      }
 
    | SYNTH tactic=atomicTerm
      {
          let a = set_lid_range synth_lid (rhs parseState 1) in
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+     }
 
+   | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=nonempty_list(calcStep) RBRACE
+     {
+         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
+     }
+
+calcStep:
+   | rel=binop LBRACE justif=option(term) RBRACE next=noSeqTerm SEMICOLON
+     {
+         let justif =
+             match justif with
+             | Some t -> t
+             | None -> mk_term (Const Const_unit) (rhs2 parseState 2 4) Expr
+         in
+         CalcStep (rel, justif, next)
      }
 
 typ:
-  | t=simpleTerm  { t }
+  | t=simpleTerm { t }
 
   | q=quantifier bs=binders DOT trigger=trigger e=noSeqTerm
       {
@@ -828,6 +843,20 @@ tmNoEqWith(X):
   | op=TILDE e=atomicTerm
       { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
   | e=X { e }
+
+binop:
+  | o=OPINFIX0a { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX0b { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX0c { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=EQUALS    { let i = mk_ident ("=", rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX0d { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX1  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX2  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX3  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX4  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }
+  | t=atomicTerm { t }
+
 
 tmEqNoRefinement:
   | e=tmEqWith(appTerm) { e }

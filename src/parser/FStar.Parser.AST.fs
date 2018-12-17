@@ -80,8 +80,12 @@ type term' =
   | Antiquote of term  (* Antiquotation within a quoted term *)
   | Quote     of term * quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
+  | CalcProof of term * term * list<calc_step> (* A calculational proof with relation, initial expression, and steps *)
 
 and term = {tm:term'; range:range; level:level}
+
+and calc_step =
+  | CalcStep of term * term * term (* Relation, justification and next expression *)
 
 and attributes_ = list<term>
 
@@ -610,7 +614,13 @@ let rec term_to_string (x:term) = match x.tm with
   | Product(bs, t) ->
         Util.format2 "Unidentified product: [%s] %s"
           (bs |> List.map binder_to_string |> String.concat ",") (t|> term_to_string)
-  | t -> "_"
+  | CalcProof (rel, init, steps) ->
+    Util.format3 "calc (%s) { %s %s }" (term_to_string rel)
+                                       (term_to_string init)
+                                       (String.concat " " <| List.map calc_step_to_string steps)
+
+and calc_step_to_string (CalcStep (rel, just, next)) =
+    Util.format3 "%s{ %s } %s" (term_to_string rel) (term_to_string just) (term_to_string next)
 
 and binder_to_string x =
   let s = match x.b with
@@ -691,3 +701,7 @@ let decl_is_val id decl =
     | Val (id', _) ->
       Ident.ident_equals id id'
     | _ -> false
+
+let thunk (ens : term) : term =
+    let wildpat = mk_pattern (PatWild None) ens.range in
+    mk_term (Abs ([wildpat], ens)) ens.range Expr

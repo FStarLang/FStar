@@ -17,7 +17,7 @@ OTHERFLAGS+=--cache_dir .cache
 
 .depend:
 	mkdir -p .cache
-	$(FSTAR) --dep full $(ROOTS) B.fst $(addprefix --extract ,$(ROOTS)) --cmi > .depend
+	$(FSTAR) --dep full $(ROOTS) $(addprefix --extract ,$(ROOTS)) --cmi > .depend
 
 depend: .depend
 

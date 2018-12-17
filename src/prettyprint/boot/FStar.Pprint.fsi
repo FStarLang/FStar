@@ -47,8 +47,7 @@ val doc_of_char: FStar.Char.char -> document
     not contain a newline. *)
 val doc_of_string: string -> document
 
-(** [doc_of_bool b] is a document that consists of the boolean [b]. This boolean must
-    not contain a newline. *)
+(** [doc_of_bool b] is a document that consists of the boolean [b]. *)
 val doc_of_bool: bool -> document
 
 (** [substring s ofs len] is a document that consists of the portion of the
