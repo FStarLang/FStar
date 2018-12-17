@@ -943,7 +943,7 @@ and tc_value env (e:term) : term
   | Tm_abs(bs, body, _) ->
     (* in case we use type variables which are implicitly quantified, we add quantifiers here *)
     let bs = TcUtil.maybe_add_implicit_binders env bs in
-    if Env.debug env Options.Low
+    if Env.debug env Options.Medium
     then BU.print1 "Abstraction is: %s\n" (Print.term_to_string ({top with n=Tm_abs(bs, body, None)}));
     let bs, body = SS.open_term bs body in
     tc_abs env top bs body

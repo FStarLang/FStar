@@ -8,12 +8,14 @@
       1,
       [
         "@query", "equation_FStar.Heap.trivial_rel",
-        "equation_FStar.Preorder.preorder_rel", "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_fa0cb1fe1698a880aba4dd22bebacfbf",
         "true_interp"
       ],
       0,
-      "66dc8972f2216f9a71201f9ac1f7d2b5"
+      "13bea9e1cd0c31f81ea1b5cbf3b966f3"
     ],
     [
       "FStar.Heap.trivial_preorder",
@@ -22,12 +24,14 @@
       1,
       [
         "@query", "equation_FStar.Heap.trivial_rel",
-        "equation_FStar.Preorder.preorder_rel", "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_fa0cb1fe1698a880aba4dd22bebacfbf",
         "true_interp"
       ],
       0,
-      "f7d3fe36a6d9a6416937aac65f090a20"
+      "8cb5c5beb3f78e1f5892d970d698a661"
     ]
   ]
 ]

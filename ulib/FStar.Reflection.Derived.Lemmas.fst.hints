@@ -24,7 +24,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f93e777c9f912c7e7f80a7d30aa24aec"
+      "8f325b02bb8a4d8a6b3f00a7a6df3a64"
     ],
     [
       "FStar.Reflection.Derived.Lemmas.list_ref",
@@ -45,11 +45,12 @@
         "disc_equation_Prims.Nil",
         "equation_with_fuel_FStar.Reflection.Data.forall_list.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "l_and-interp",
+        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "15488837c21107a39e2799d04d947bf3"
+      "23888c10b05c7f7f42100bb0ce0170ae"
     ]
   ]
 ]

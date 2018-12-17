@@ -283,33 +283,3 @@ let __proj__Mktuple14__item___13 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14) -> _13
 let __proj__Mktuple14__item___14 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14) -> _14
-
-
-type norm_step =
-    | Simpl
-    | Weak
-    | HNF
-    | Primops
-    | Delta
-    | Zeta
-    | Iota
-    | Reify
-    | NBE
-    | UnfoldOnly  : string list -> norm_step
-    | UnfoldFully : string list -> norm_step
-    | UnfoldAttr  : string list -> norm_step
-
-let simplify : norm_step = Simpl
-let weak    : norm_step = Weak
-let hnf     : norm_step = HNF
-let primops : norm_step = Primops
-let delta   : norm_step = Delta
-let zeta    : norm_step = Zeta
-let iota    : norm_step = Iota
-let delta_only  (s : string list) : norm_step = UnfoldOnly  s
-let delta_fully (s : string list) : norm_step = UnfoldFully s
-let delta_attr  (s : string list) : norm_step = UnfoldAttr  s
-let reify   : norm_step = Reify
-let nbe     : norm_step = NBE
-
-let singleton x = x

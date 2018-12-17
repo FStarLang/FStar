@@ -196,6 +196,13 @@ let e_const =
         | C_Range r ->
             S.mk_Tm_app ref_C_Range.t [S.as_arg (embed e_range rng r)]
                         None Range.dummyRange
+
+        | C_Reify -> ref_C_Reify.t
+
+        | C_Reflect ns ->
+            S.mk_Tm_app ref_C_Reflect.t [S.as_arg (embed e_string_list rng ns)]
+                        None Range.dummyRange
+
         in { r with pos = rng }
     in
     let unembed_const w (t:term) : option<vconst> =
@@ -222,6 +229,13 @@ let e_const =
         | Tm_fvar fv, [(r, _)] when S.fv_eq_lid fv ref_C_Range.lid ->
             BU.bind_opt (unembed' w e_range r) (fun r ->
             Some <| C_Range r)
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Reify.lid ->
+            Some <| C_Reify
+
+        | Tm_fvar fv, [(ns, _)] when S.fv_eq_lid fv ref_C_Reflect.lid ->
+            BU.bind_opt (unembed' w e_string_list ns) (fun ns ->
+            Some <| C_Reflect ns)
 
         | _ ->
             if w then

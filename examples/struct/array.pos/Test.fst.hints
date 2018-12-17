@@ -51,7 +51,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "a33d62289b2e0f2e16fad6409a323210"
+      "5a363a010ab821ec4f815a83de0c5bbb"
     ],
     [
       "Test.callee",
@@ -127,7 +127,7 @@
         "typing_FStar.Pointer.Base.loc_pointer"
       ],
       0,
-      "869466864e271b508f94b9991b05e921"
+      "8cd227dfa79d9166e1d09f66fefda3af"
     ],
     [
       "Test.caller",
@@ -146,10 +146,10 @@
         "@fuel_irrelevance_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "@query",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_7fe3e7847982dd1674bac902db1b25d6",
+        "FStar.Pointer.Base_interpretation_Tm_arrow_0773fa5384ff968824aea60bbfab68ce",
         "FStar.Pointer.Base_interpretation_Tm_arrow_0a44b12744e216c6d692aa1730cf3d23",
-        "FStar.Pointer.Base_interpretation_Tm_arrow_5988522d167334653a4417aca8392df0",
-        "FStar.Pointer.Base_interpretation_Tm_arrow_aae5bb18ea119c6a041bd8ee388d6427",
-        "FStar.Pointer.Base_interpretation_Tm_arrow_f8e5b91ddbd2e00b1ba40177493d562b",
+        "FStar.Pointer.Base_interpretation_Tm_arrow_6cff58f6931cd81e8bde288972bdd609",
+        "FStar.Pointer.Base_interpretation_Tm_arrow_de8f27eb3e5c9ff0236807e4741d7ab4",
         "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
@@ -206,7 +206,7 @@
         "function_token_typing_Prims.string",
         "function_token_typing_Test.struct",
         "function_token_typing_Test.struct_t", "int_inversion", "int_typing",
-        "interpretation_FStar.Pointer.Base_Tm_abs_f730de3525c85e24f3ee055da926cbd8",
+        "interpretation_FStar.Pointer.Base_Tm_abs_98e38feb1b5cb6aac8071e86e1ca74aa",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok", "kinding_Prims.dtuple2@tok",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_elim",
@@ -288,13 +288,13 @@
         "typing_FStar.Pointer.Base.struct",
         "typing_FStar.Pointer.Base.struct_field",
         "typing_FStar.Pointer.Base.type_of_typ",
-        "typing_FStar.Pointer.Base_Tm_abs_f730de3525c85e24f3ee055da926cbd8",
+        "typing_FStar.Pointer.Base_Tm_abs_98e38feb1b5cb6aac8071e86e1ca74aa",
         "typing_FStar.Set.complement", "typing_FStar.Set.mem",
         "typing_FStar.Set.singleton", "typing_FStar.Set.union",
         "typing_FStar.UInt32.v"
       ],
       0,
-      "a6d10589e80c75f89bf037d954c6edd7"
+      "221dfb4ea915e0d87253a501240a3c06"
     ]
   ]
 ]

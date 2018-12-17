@@ -273,30 +273,41 @@ let load_module_from_cache
     in
     fun env fn ->
         let cache_file = Dep.cache_file_name fn in
-        let fail tag should_warn cache_file =
+        let fail maybe_warn cache_file =
              invalidate_cache();
-             if should_warn then
-                 FStar.Errors.log_issue
+             match maybe_warn with
+             | None -> ()
+             | Some tag ->
+               FStar.Errors.log_issue
                     (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
                     (Errors.Warning_CachedFile,
-                     BU.format3 "%s cache file %s; will recheck %s and all subsequent files" tag cache_file fn);
-             None
+                     BU.format3 "%s cache file %s; will recheck %s and all subsequent files" tag cache_file fn)
         in
         match !some_cache_invalid with
         | Some _ -> None
         | _ ->
-          match FStar.Options.find_file (FStar.Util.basename cache_file) with
-          | None -> fail "Absent" false cache_file //do not warn if the file was not found
-          | Some alt_cache_file ->
-            match load env.env_tcenv fn alt_cache_file with
-            | Inl msg -> fail msg true alt_cache_file
-            | Inr res ->
-              //if we found a valid .checked file somewhere in the include path
-              //copy it to the destination, if we are supposed to be verifying this file
-              if Options.should_verify_file fn
-              && BU.normalize_file_path alt_cache_file <> BU.normalize_file_path cache_file
-              then FStar.Util.copy_file alt_cache_file cache_file;
-              Some res
+          let load_cache_from_include_path maybe_warn =
+            match FStar.Options.find_file (FStar.Util.basename cache_file) with
+            | None -> fail maybe_warn cache_file; None
+            | Some alt_cache_file ->
+              match load env.env_tcenv fn alt_cache_file with
+              | Inl msg ->
+                fail maybe_warn cache_file;
+                fail (Some msg) alt_cache_file;
+                None
+              | Inr res ->
+                //if we found a valid .checked file somewhere in the include path
+                //copy it to the destination, if we are supposed to be verifying this file
+                if Options.should_verify_file fn
+                && BU.normalize_file_path alt_cache_file <> BU.normalize_file_path cache_file
+                then FStar.Util.copy_file alt_cache_file cache_file;
+                Some res
+          in
+          if BU.file_exists cache_file then
+            match load env.env_tcenv fn cache_file with
+            | Inl msg -> load_cache_from_include_path (Some msg)
+            | Inr res -> Some res
+          else load_cache_from_include_path None
 
 
 let store_module_to_cache (env:uenv) fn (tc_result:tc_result) =

@@ -54,8 +54,8 @@ all:  ../parser/parse.fsy fstar.exe tests.exe install-compiler-lib
 #   control
 parse.mly: ../parser/parse.mly
 ifeq ($(HAS_VALID_MENHIR), 1)
-	# TODO : call menhir directly when positions are fixed instead of
-	# letting OCamlbuild go through ocamlyacc
+	@# TODO : call menhir directly when positions are fixed instead of
+	@# letting OCamlbuild go through ocamlyacc
 	$(MENHIR) --only-preprocess-for-ocamlyacc $< > $@
 else
 	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
@@ -80,7 +80,7 @@ endif
 	echo "open FStar.Const" >> $@
 	echo "open FStar.Ident" >> $@
 	echo "open FStar.String" >> $@
-	# TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
+	@# TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
 	cat parse.mly | sed -e '/%{/d' \
 	                    -e '/^open /d' \
 	                    -e '/%token/s/[a-zA-Z0-9_]*\.//g' \
@@ -98,14 +98,14 @@ fstar.exe: $(GENERATED_FILES)
 
 install-compiler-lib: fstar.exe
 	mkdir -p ../../bin/fstar-compiler-lib/
-	# VD: forcing the recompilation of modules in ulib/tactics_ml whenever the compiler is rebuilt
-	# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
+	@# VD: forcing the recompilation of modules in ulib/tactics_ml whenever the compiler is rebuilt
+	@# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
 	$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
 	$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
 
 FStar_Parser_Parse.ml: parse.mly
-	# We are opening the same module twice but we need these modules
-	# open for the definition of tokens
+	@# We are opening the same module twice but we need these modules
+	@# open for the definition of tokens
 	echo "open Prims" > $@
 	echo "open FStar_Errors" >> $@
 	echo "open FStar_List" >> $@
@@ -120,12 +120,12 @@ FStar_Parser_Parse.ml: parse.mly
 	echo "open FStar_Const" >> $@
 	echo "open FStar_Ident" >> $@
 	echo "open FStar_String" >> $@
-	# TODO: create a proper OCamlbuild rule for this production so that
-	# OCamlbuild knows how to generate parse.mly first (possibly using
-	# menhir) and removes the production as needed.
+	@# TODO: create a proper OCamlbuild rule for this production so that
+	@# OCamlbuild knows how to generate parse.mly first (possibly using
+	@# menhir) and removes the production as needed.
 	ocamlyacc parse.mly 2> yac-log
 	cat yac-log
-	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 7 ]; then \
+	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 6 ]; then \
 	  echo "shift-reduce conflicts have increased; please fix" && exit 255; \
 	fi
 	@if grep -q "reduce/reduce" yac-log ; then \
@@ -185,21 +185,21 @@ install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar
 # fstar-tactics-lib and fstar-compiler-lib packages. It works with the
 # opam package, but it has not been tested in any other settings.
 install: all
-        # Install the binary
+	@# Install the binary
 	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
-	# Then the standard library
+	@# Then the standard library
 	$(call install_dir,ulib,lib/fstar)
-	# Then the binary library
+	@# Then the binary library
 	cd ../../bin/fstarlib && ocamlfind install fstarlib *
 	cd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib *
 	cd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib *
-        # Then the rest of the static files.
-	# (those are not used in the opam package, not sure if their Makefiles work)
+	@# Then the rest of the static files.
+	@# (those are not used in the opam package, not sure if their Makefiles work)
 	$(call install_dir,examples,share/fstar/examples)
 	$(call install_dir,ucontrib,share/fstar/contrib)
-	# Then the tutorial
+	@# Then the tutorial
 ifeq ($(MADOKO),Madoko)
-        # Build the tutorial first
+	@# Build the tutorial first
 	$(MAKE) -C ../../doc/tutorial
 endif
 	$(call install_dir,doc/tutorial,share/fstar/tutorial)
@@ -231,15 +231,15 @@ ulib:
 # proper license files.
 package: all
 	$(MAKE) ulib
-	# Clean previous packages.
+	@# Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
-	# Install the F* binary
+	@# Install the F* binary
 	mkdir -p $(PREFIX)/bin/
 	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
-	# Then the standard library.
+	@# Then the standard library.
 	$(call fexport,ulib)
-	# Then the rest of the static files.
+	@# Then the rest of the static files.
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
@@ -248,17 +248,17 @@ package: all
 	$(call fexport-all,bin/fstar-tactics-lib)
 
 ifeq ($(MADOKO),Madoko)
-        # Build the tutorial
+	@# Build the tutorial
 	$(MAKE) -C fstar/doc/tutorial
 else
 	@echo " ********** You don't have Madoko installed. Binary package will not include tutorial in html form."
 	false
 endif
-        # Documentation and licenses
+	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
 
-	# Z3
+	@# Z3
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
 	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin

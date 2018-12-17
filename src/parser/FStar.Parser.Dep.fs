@@ -487,6 +487,14 @@ let collect_one
         false
   in
 
+  let add_dep_on_module (module_name : lid) =
+      if add_dependence_edge working_map module_name
+      then ()
+      else if Options.debug_any () then
+            FStar.Errors.log_issue (range_of_lid module_name)
+                (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
+                                (Ident.string_of_lid module_name)))
+  in
   let record_lid lid =
     (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
        module name itself, so only its namespace part is to be
@@ -495,12 +503,7 @@ let collect_one
     | [] -> ()
     | _ ->
       let module_name = Ident.lid_of_ids lid.ns in
-      if add_dependence_edge working_map module_name
-      then ()
-      else if Options.debug_any () then
-            FStar.Errors.log_issue (range_of_lid lid)
-                (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
-                                (Ident.string_of_lid module_name)))
+      add_dep_on_module module_name
   in
 
   let auto_open = hard_coded_dependencies filename in
@@ -713,6 +716,16 @@ let collect_one
         collect_term t
     | Attributes cattributes  ->
         List.iter collect_term cattributes
+    | CalcProof (rel, init, steps) ->
+        add_dep_on_module (Ident.lid_of_str "FStar.Calc");
+        begin
+        collect_term rel;
+        collect_term init;
+        List.iter (function CalcStep (rel, just, next) ->
+            collect_term rel;
+            collect_term just;
+            collect_term next) steps
+        end
 
   and collect_patterns ps =
     List.iter collect_pattern ps

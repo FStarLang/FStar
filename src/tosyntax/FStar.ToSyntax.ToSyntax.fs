@@ -258,6 +258,14 @@ and free_type_vars env t = match (unparen t).tm with
       (* attributes should be closed but better safe than sorry *)
       List.collect (free_type_vars env) cattributes
 
+  | CalcProof (rel, init, steps) ->
+    free_type_vars env rel
+    @ free_type_vars env init
+    @ List.collect (fun (CalcStep (rel, just, next)) ->
+                            free_type_vars env rel
+                            @ free_type_vars env just
+                            @ free_type_vars env next) steps
+
   | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
   | Let _
   | LetOpen _
@@ -1489,6 +1497,39 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                } in
       mk <| Tm_quoted (desugar_term env e, qi), noaqs
 
+    | CalcProof (rel, init_expr, steps) ->
+      (* We elaborate it into surface syntax and recursively desugar it *)
+
+      (* Annoying: (<) is not a preorder since it has type
+       * `int -> int -> Tot bool`, and it's not subtyped to
+       * `int -> int -> Tot Type0`, so we eta-expand and annotate
+       * to make it kick in. *)
+      let eta_and_annot rel =
+        let x = Ident.gen rel.range in
+        let y = Ident.gen rel.range in
+        let xt = mk_term (Tvar x) rel.range Expr in
+        let yt = mk_term (Tvar y) rel.range Expr in
+        let pats = [mk_pattern (PatVar (x, None)) rel.range; mk_pattern (PatVar (y, None)) rel.range] in
+        mk_term (Abs (pats,
+            mk_term (Ascribed (
+                mkApp rel [(xt, Nothing); (yt, Nothing)] rel.range,
+                mk_term (Name (Ident.lid_of_str "Type0")) rel.range Expr,
+                None)) rel.range Expr)) rel.range Expr
+      in
+      let rel = eta_and_annot rel in
+
+      let wild r = mk_term Wild r Expr in
+      let init   = mk_term (Var C.calc_init_lid) init_expr.range Expr in
+      let step r = mk_term (Var C.calc_step_lid) r Expr in
+      let finish = mkApp (mk_term (Var C.calc_finish_lid) top.range Expr) [(rel, Nothing)] top.range in
+
+      let e = mkApp init [(init_expr, Nothing)] init_expr.range in
+      let e = List.fold_left (fun e (CalcStep (rel, just, next_expr)) ->
+                                  mkApp (step rel.range)
+                                        [(eta_and_annot rel, Nothing); (next_expr, Nothing); (thunk e, Nothing); (thunk just, Nothing)] just.range) e steps in
+      let e = mkApp finish [(thunk e, Nothing)] init_expr.range in
+      desugar_term_maybe_top top_level env e
+
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
 
     | _ ->
@@ -1549,11 +1590,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
         in
         (* The postcondition for Lemma is thunked, to allow to assume the precondition
          * (c.f. #57), so add the thunking here *)
-        let thunk_ens_ (ens : AST.term) : AST.term =
-            let wildpat = mk_pattern (PatWild None) ens.range in
-            mk_term (Abs ([wildpat], ens)) ens.range Expr
-        in
-        let thunk_ens (e, i) = (thunk_ens_ e, i) in
+        let thunk_ens (e, i) = (thunk e, i) in
         let fail_lemma () =
              let expected_one_of = ["Lemma post";
                                     "Lemma (ensures post)";
@@ -2191,12 +2228,19 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
       let data_ops = docs_tps_sigelts |> List.collect (fun (_, tps, se) -> mk_data_projector_names quals env se) in
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
-        | Sig_inductive_typ(tname, _, tps, k, _, constrs) when (List.length constrs > 1)->
+        | Sig_inductive_typ(tname, _, tps, k, _, constrs) ->
           let quals = se.sigquals in
           let quals = if List.contains S.Abstract quals && not (List.contains S.Private quals)
                       then S.Private::quals
                       else quals in
-          mk_data_discriminators quals env constrs
+          mk_data_discriminators quals env
+            (constrs |> List.filter (fun data_lid ->  //AR: create data discriminators only for non-record data constructors
+                                     let data_quals =
+                                       let data_se = sigelts |> List.find (fun se -> match se.sigel with
+                                                                                     | Sig_datacon (name, _, _, _, _, _) -> lid_equals name data_lid
+                                                                                     | _ -> false) |> must in
+                                       data_se.sigquals in
+                                     not (data_quals |> List.existsb (function | RecordConstructor _ -> true | _ -> false))))
         | _ -> []) in
       let ops = discs@data_ops in
       let env = List.fold_left push_sigelt env ops in

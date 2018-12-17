@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.dfst" ],
       0,
-      "a4e63eacb2461509e405356b9f0466d1"
+      "adcdaa73ac98f7b67c60234fa6699b95"
     ],
     [
       "IMST.nat_rel",
@@ -17,13 +17,14 @@
       1,
       [
         "@query", "b2t_def", "equation_FStar.Preorder.preorder_rel",
-        "equation_IMST.nat_rel_", "equation_Prims.nat",
-        "primitive_Prims.op_LessThanOrEqual",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_IMST.nat_rel_",
+        "equation_Prims.nat", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "token_correspondence_IMST.nat_rel_"
       ],
       0,
-      "530995feebd0c6b8585d85c23fdd5fc6"
+      "e0a3d508c735a1213cca0d912e0d8788"
     ],
     [
       "IMST.f",
@@ -36,10 +37,11 @@
         "equation_FStar.Pervasives.dfst", "equation_FStar.Pervasives.dsnd",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
         "equation_FStar.Preorder.stable", "equation_IMST.nat_rel",
         "equation_IMST.nat_rel_", "equation_Prims.nat",
         "function_token_typing_IMST.nat_rel", "int_inversion",
-        "interpretation_IMST_Tm_abs_1661f7094403c88cb824263727456b29",
+        "interpretation_IMST_Tm_abs_2d126cb16e6816800d2f2c3cfba837ab",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
         "proj_equation_Prims.Mkdtuple2__1",
@@ -54,7 +56,7 @@
         "token_correspondence_IMST.nat_rel_"
       ],
       0,
-      "aae551e9121041fe058e07c521b3e916"
+      "52f08490336751c6dafbb180b374f78c"
     ],
     [
       "IMST.op_Greater_Less",
@@ -63,7 +65,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.dfst" ],
       0,
-      "c7b8cec1dece90f1934597ea60ad1642"
+      "ebefb8f0ac5266ddaedeebff7ae39141"
     ],
     [
       "IMST.nat_rel",
@@ -72,13 +74,14 @@
       1,
       [
         "@query", "b2t_def", "equation_FStar.Preorder.preorder_rel",
-        "equation_IMST.nat_rel_", "equation_Prims.nat",
-        "primitive_Prims.op_LessThanOrEqual",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_IMST.nat_rel_",
+        "equation_Prims.nat", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "token_correspondence_IMST.nat_rel_"
       ],
       0,
-      "be46b1d92a96346b062cce44166bea57"
+      "dc416cbc2345b3a3ccfad14d04d31a1b"
     ],
     [
       "IMST.f",
@@ -95,7 +98,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b7c1f897580af45852c1a9e191eb1efc"
+      "73b192912f5abd65eb2cdf7e972dce2d"
     ]
   ]
 ]
