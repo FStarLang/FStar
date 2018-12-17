@@ -17,29 +17,27 @@ module FStar.BigOps
 module T = FStar.Tactics
 
 let normal_eq (#a:Type) (f:a)
-  : Lemma (f == normal f)
   = ()
+
 ////////////////////////////////////////////////////////////////////////////////
-let big_op_nil
+let map_op'_nil
       (#a:Type) (#b:Type) (#c:Type)
       (op:b -> c -> GTot c) (f:a -> GTot b) (z:c)
   : Lemma (map_op' op f [] z == z)
   = ()
 
-let big_op_cons #a #b #c (op:b -> c -> GTot c) (f:a -> GTot b) (hd:a) (tl:list a) (z:c)
+let map_op'_cons #a #b #c (op:b -> c -> GTot c) (f:a -> GTot b) (hd:a) (tl:list a) (z:c)
   : Lemma (map_op' op f (hd::tl) z == f hd `op` map_op' op f tl z)
   = ()
 
 ////////////////////////////////////////////////////////////////////////////////
 let big_and'_nil (#a:Type) (f:a -> Type)
-  : Tot (big_and' f [] == True)
-    by (T.compute())
+  : Tot (big_and' f [] == True) by (T.compute())
   = ()
 let big_and_nil (#a:Type) (f:a -> Type) = normal_eq (big_and' f []); big_and'_nil f
 
 let big_and'_cons (#a:Type) (f:a -> Type) (hd:a) (tl:list a)
-  : Tot (big_and' f (hd :: tl) == (f hd /\ big_and' f tl))
-    by (T.compute())
+  : Tot (big_and' f (hd :: tl) == (f hd /\ big_and' f tl)) by (T.compute())
   = ()
 
 let big_and_cons (#a:Type) (f:a -> Type) (hd:a) (tl:list a)
@@ -62,8 +60,7 @@ let big_and_forall (#a:Type) (f:a -> Type) (l:list a)
 
 ////////////////////////////////////////////////////////////////////////////////
 let big_or'_nil (#a:Type) (f:a -> Type)
-  : Tot (big_or' f [] == False)
-     by (T.compute())
+  : Tot (big_or' f [] == False) by (T.compute())
   = ()
 
 let big_or_nil (#a:Type) (f:a -> Type)
@@ -71,8 +68,7 @@ let big_or_nil (#a:Type) (f:a -> Type)
   = ()
 
 let big_or'_cons (#a:Type) (f:a -> Type) (hd:a) (tl:list a)
-  : Tot (big_or' f (hd :: tl) == (f hd \/ big_or' f tl))
-     by (T.compute())
+  : Tot (big_or' f (hd :: tl) == (f hd \/ big_or' f tl)) by (T.compute())
   = ()
 
 let big_or_cons (#a:Type) (f:a -> Type) (hd:a) (tl:list a)
@@ -95,8 +91,7 @@ let big_or_exists (#a:Type) (f:a -> Type) (l:list a)
 
 ////////////////////////////////////////////////////////////////////////////////
 let pairwise_and'_nil (#a:Type) (f:a -> a -> Type0)
-  : Tot (pairwise_and f [] == True)
-    by (T.compute())
+  : Tot (pairwise_and f [] == True) by (T.compute())
   = ()
 
 let pairwise_and_nil (#a:Type) (f:a -> a -> Type0)
@@ -119,6 +114,16 @@ let pairwise_and_prop (#a:Type) (f:a -> a -> Type) (l:list a)
     | [] -> pairwise_and_nil f
     | hd::tl -> pairwise_and_cons f hd tl
 
+(* Note, this is good example of where the difference between
+   the implicitly and explicitly reducing variants of the definitions
+   makes a difference.
+
+   Proving this lemma directly on the `pairwise_and` is much harder
+   since one has to reason about many partially reduced forms.
+
+   Instead, we first prove the lemma on the non-reducing primed
+   version of the definition, and then obtain the lemma we want
+   at the end using `normal_eq` *)
 let rec pairwise_and'_forall (#a:Type) (f: a -> a -> Type) (l:list a)
   : Lemma
     (requires symmetric f /\ (L.no_repeats_p l \/ reflexive f))
@@ -137,8 +142,7 @@ let pairwise_and_forall (#a:Type) (f: a -> a -> Type) (l:list a)
 ////////////////////////////////////////////////////////////////////////////////
 
 let pairwise_or'_nil (#a:Type) (f:a -> a -> Type0)
-  : Tot (pairwise_or f [] == False)
-    by (T.compute())
+  : Tot (pairwise_or f [] == False) by (T.compute())
   = ()
 
 let pairwise_or_nil (#a:Type) (f:a -> a -> Type0)
