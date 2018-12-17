@@ -39,7 +39,8 @@ private
 let __reduce__ = ()
 
 (* Implicitly reducing terms are defined using applications of `normal` *)
-unfold let normal (#a:Type) (x:a) : a =
+unfold
+let normal (#a:Type) (x:a) : a =
   FStar.Pervasives.norm
     [iota;
      zeta;
@@ -53,28 +54,11 @@ unfold let normal (#a:Type) (x:a) : a =
 val normal_eq (#a:Type) (f:a)
   : Lemma (f == normal f)
 
-(* foldr_gtot is an implicitly reducing form of L.fold_right_gtot *)
-[@__reduce__] unfold
-let foldr_gtot #a #b (l:list a) (f:a -> b -> GTot b) (x:b)
-  : GTot b
-  = normal (L.fold_right_gtot l f x)
-
-(* We define map in terms of fold, to share simple lemmas;
-   the primed variant does not reduce impliclitly *)
-[@__reduce__]
-let map_gtot' #a #b (f:a -> GTot b) (x:list a)
-  : GTot (list b)
-  = foldr_gtot x (fun x tl -> f x :: tl) []
-[@__reduce__] unfold
-let map_gtot #a #b (f:a -> GTot b) (x:list a)
-  : GTot (list b)
-  = normal (map_gtot' f x)
-
 (* A generalized version of `map` where we map into a type `c` *)
 [@__reduce__] private
 let map_op' #a #b #c (op:b -> c -> GTot c) (f:a -> GTot b) (l:list a) (z:c)
   : GTot c
-  = foldr_gtot #a #c l (fun x acc -> f x `op` acc) z
+  = L.fold_right_gtot #a #c l (fun x acc -> f x `op` acc) z
 
 (* `big_and f l = /\_{x in l} f x` *)
 [@__reduce__]

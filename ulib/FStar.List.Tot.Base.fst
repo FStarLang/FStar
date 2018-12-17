@@ -192,10 +192,16 @@ let rec fold_right f l x = match l with
 
 (** [fold_right_gtot] is just like [fold_right], except `f` is
     a ghost function **)
-let rec fold_right_gtot (#a:Type) (#b:Type) (l:list a) (f:a -> b -> GTot b) (x:b) : GTot b =
-  match l with
-  | [] -> x
-  | hd::tl -> f hd (fold_right_gtot tl f x)
+let rec fold_right_gtot (#a:Type) (#b:Type) (l:list a) (f:a -> b -> GTot b) (x:b)
+  : GTot b
+  = match l with
+    | [] -> x
+    | hd::tl -> f hd (fold_right_gtot tl f x)
+
+(* We define map in terms of fold, to share simple lemmas *)
+let map_gtot #a #b (f:a -> GTot b) (x:list a)
+  : GTot (list b)
+  = fold_right_gtot x (fun x tl -> f x :: tl) []
 
 (** [fold_left2 f x [y1; y2; ...; yn] [z1; z2; ...; zn]] computes (f
 (... (f x y1 z1) y2 z2) ... yn zn). Requires, at type-checking time,
