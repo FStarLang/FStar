@@ -283,7 +283,7 @@ let lread_comp' #lstate (#l:low_state lstate) #state (#p: state_lens lstate stat
 
 (* add a third lens instance and require all three instances to commute *)
 let lread_comp #lstate (#l:low_state lstate) #state (#p: state_lens lstate state) 
-   (#a:eqtype) (#l1:lens state a) (l2:state_lens lstate a) (#c:commutes p l1 l2) (_ : unit) 
+   (#a:Type) (#l1:lens state a) (l2:state_lens lstate a) (#c:commutes p l1 l2) (_ : unit) 
  : low #_ #l #_ #p a (read_comp_wp l1) (read_comp l1 ()) = 
   fun ls ->
     let h0 = ST.get () in 
@@ -292,7 +292,7 @@ let lread_comp #lstate (#l:low_state lstate) #state (#p: state_lens lstate state
     to_high' #_ #l #_ #l2 ls
 
 let lwrite_comp #lstate (#l:low_state lstate) #state (#p: state_lens lstate state) 
-  (#a:eqtype) (#l1 : lens state a) (l2: state_lens lstate a) (#c : commutes p l1 l2) (x : a) 
+  (#a:Type) (#l1 : lens state a) (l2: state_lens lstate a) (#c : commutes p l1 l2) (x : a) 
  : low #_ #l #_ #p unit (write_comp_wp l1 x) (write_comp l1 x) =
   fun ls ->
     let h0 = ST.get () in 
@@ -300,7 +300,7 @@ let lwrite_comp #lstate (#l:low_state lstate) #state (#p: state_lens lstate stat
     let p = put_eq #_ #_ #_ #_ #p #l1 #l2 h0 ls (to_high h0 ls) x in 
     to_low' #_ #l #_ #l2 ls x
 
-
+(* TODO with Low* conbinators *)
 let rec lfor' #lstate (#l:low_state lstate) #hstate (#p: state_lens lstate hstate) 
               (inv : hstate -> int -> Type0) 
               (fh : (i:int) -> high_p unit (fun h0 -> inv h0 i) (fun h0 _ h1 -> inv h1 (i + 1)))
