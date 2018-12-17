@@ -44,7 +44,7 @@ let normal (#a:Type) (x:a) : a =
   FStar.Pervasives.norm
     [iota;
      zeta;
-     delta_only [`%L.fold_right_gtot];
+     delta_only [`%L.fold_right_gtot; `%L.map_gtot];
      delta_attr [`%__reduce__];
      primops;
      simplify]
