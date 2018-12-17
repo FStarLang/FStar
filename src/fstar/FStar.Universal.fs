@@ -287,29 +287,25 @@ let load_module_from_cache
         match !some_cache_invalid with
         | Some _ -> None
         | _ ->
-          let load_cache_from_include_path maybe_warn =
+          begin
             match FStar.Options.find_file (FStar.Util.basename cache_file) with
-            | None -> fail maybe_warn cache_file; None
+            | None -> None
             | Some alt_cache_file ->
               match load env.env_tcenv fn alt_cache_file with
               | Inl msg ->
-                fail maybe_warn cache_file;
                 fail (Some msg) alt_cache_file;
                 None
               | Inr res ->
                 //if we found a valid .checked file somewhere in the include path
+                //and it differs from the destination file
                 //copy it to the destination, if we are supposed to be verifying this file
                 if Options.should_verify_file fn
                 && BU.normalize_file_path alt_cache_file <> BU.normalize_file_path cache_file
+                && (not (BU.file_exists cache_file)
+                    || BU.digest_of_file cache_file <> BU.digest_of_file alt_cache_file)
                 then FStar.Util.copy_file alt_cache_file cache_file;
                 Some res
-          in
-          if BU.file_exists cache_file then
-            match load env.env_tcenv fn cache_file with
-            | Inl msg -> load_cache_from_include_path (Some msg)
-            | Inr res -> Some res
-          else load_cache_from_include_path None
-
+          end
 
 let store_module_to_cache (env:uenv) fn (tc_result:tc_result) =
     if Options.cache_checked_modules()
