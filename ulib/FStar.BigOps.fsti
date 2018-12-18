@@ -39,7 +39,7 @@ private
 let __reduce__ = ()
 
 (* Implicitly reducing terms are defined using applications of `normal` *)
-unfold
+[@__reduce__] unfold
 let normal (#a:Type) (x:a) : a =
   FStar.Pervasives.norm
     [iota;
