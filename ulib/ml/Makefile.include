@@ -8,25 +8,31 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn
 	List List.Tot.Base Mul Option Pervasives.Native Set ST Exn String \
 	UInt16 UInt32 UInt63 UInt64 UInt8 \
 	Pointer.Derived1 Pointer.Derived2 \
-        Pointer.Derived3 \
+	Pointer.Derived3 \
 	BufferNG Tactics.Builtins \
-        TaggedUnion \
+	TaggedUnion \
 	Reflection.Types Reflection.Basic Reflection.Data \
 	Tactics.Result Tactics.Types Bytes Util \
 	Pervasives Order Range \
-        Vector.Base Vector.Properties Vector TSet
+	Vector.Base Vector.Properties Vector TSet
 	# prims is realized by default hence not included in this list
 
-NOEXTRACT_MODULES=$(addprefix FStar., $(FSTAR_REALIZED_MODULES)) prims FStar.BigOps FStar.Printf
+NOEXTRACT_MODULES=+FStar +LowStar \
+	$(addprefix -FStar., $(FSTAR_REALIZED_MODULES) \
+		Tactics \
+		Reflection \
+		BigOps \
+		Printf) \
+	-Prims
 
-FSTAR_DEFAULT_ARGS=$(addprefix --no_extract ,$(NOEXTRACT_MODULES))
+FSTAR_DEFAULT_ARGS=--extract '$(NOEXTRACT_MODULES)'
 ULIB_ML=$(FSTAR_HOME)/ulib/ml
 FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
 FSTARLIB=$(FSTARLIB_DIR)/fstarlib.cmxa
 
 # Left as an example if we were to add multiple versions of fstarlib
 # ifeq ($(MEM),HST)
-# 	OCAML_DEFAULT_FLAGS=-predicates hyperstack
+#	OCAML_DEFAULT_FLAGS=-predicates hyperstack
 # endif
 
 OCAMLOPT_BARE=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind opt

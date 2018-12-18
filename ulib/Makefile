@@ -31,7 +31,7 @@ fstarlib.mgen: *.fst *.fsti
 	rm -f .depend.extract
 	FSTAR_FILES='$(FSTARLIB_MODULES)' \
 	OUTPUT_DIRECTORY=ml/extracted \
-	EXTRACT_MODULES='$(FSTAR_DEFAULT_ARGS)' \
+	EXTRACT_MODULES="$(FSTAR_DEFAULT_ARGS)" \
 	$(MAKE) -f Makefile.extract all-ml
 	# the next cp is done because FStar_Pervasives.ml is needed to bootstrap the compiler
 	# we could follow this style for other files too, e.g., FStar_Option.ml
