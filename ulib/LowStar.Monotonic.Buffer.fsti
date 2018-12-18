@@ -878,6 +878,7 @@ val loc_disjoint_regions
 let buf_t = a:Type0 & rrel:srel a & rel:srel a & mbuffer a rrel rel
 
 (* A convenience to construct a buf_t *)
+[@BigOps.__reduce__]
 let buf (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : buf_t = (|a, rrel, rel, b|)
 
 (* A conjunction of liveness conditions on the buffers in `l`
@@ -885,10 +886,7 @@ let buf (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : buf_t = (|a, rre
 [@"opaque_to_smt"]
 unfold
 let all_live (h:HS.mem) (l:list buf_t) : Type0 =
-  norm [iota;
-        delta_only [`%buf; `%Mkdtuple4?._1; `%Mkdtuple4?._2; `%Mkdtuple4?._3; `%Mkdtuple4?._4];
-	primops; simplify]
-    (BigOps.big_and #buf_t (fun (| _, _, _, b |) -> live h b) l)
+  BigOps.big_and #buf_t (fun (| _, _, _, b |) -> live h b) l
 
 (* Pairwise disjointness of locations;
    Implicitly reduced at typechecking time *)
