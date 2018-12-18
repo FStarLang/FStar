@@ -98,29 +98,3 @@ let rec assign_list #a (l: list a): assign_list_t l
       assert (as_seq h1 b_tl == Seq.seq_of_list tl);
       assert (Seq.equal (as_seq h1 b) (Seq.append (as_seq h1 b_hd) (as_seq h1 b_tl)));
       assert ((Seq.seq_of_list l) == (Seq.cons hd (Seq.seq_of_list tl)))
-
-
-(* Some utilities to work with lists of buffers *)
-
-(* buf_t is a `buffer` at some type `a` *)
-let buf_t = a:Type & buffer a
-(* A convenience to construct a buf_t *)
-let buf (#a:Type) (b:buffer a) : buf_t = (|a, b|)
-
-(* A conjunction of liveness conditions on the buffers in `l`
-   Implicitly reduced at typechecking time *)
-unfold
-let all_live (h:HS.mem) (l:list buf_t) : Type0 =
-  BigOps.big_and #buf_t (fun (| _, b |) -> live h b) l
-
-(* Pairwise disjointness of locations;
-   Implicitly reduced at typechecking time *)
-unfold
-let all_disjoint (l:list loc) : Type0 =
-  BigOps.pairwise_and loc_disjoint l
-
-(* Union of a list of locations;
-   Implicitly reduced at typechecking time *)
-unfold
-let loc_union_l (l:list loc) =
-  BigOps.normal (List.Tot.fold_right_gtot l loc_union loc_none)
