@@ -87,7 +87,7 @@ instance l_eq_equiv #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstat
                                               trans' = (fun x y z p1 p2 -> ()); }
 
 
-(** Morph lemmas *)
+(** Casting WPs -- Unused *)
 
 unfold
 let cast #hstate #a #wp1 (wp2:hwp_mon a{implies wp2 wp1}) (c : high #hstate a wp1) : high #hstate a wp2 = c 
@@ -95,6 +95,8 @@ let cast #hstate #a #wp1 (wp2:hwp_mon a{implies wp2 wp1}) (c : high #hstate a wp
 unfold
 let lcast #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstate hstate) #a 
           (wp1 : hwp_mon a) (wp2: hwp_mon a{implies wp2 wp1}) (c : high #hstate a wp1) (l : low #_ #lw #_ #p a wp1 c) : low #_ #lw #_ #p a wp2 c = l
+
+(** Morph lemmas *)
 
 (** RETURN *)
 
@@ -136,6 +138,7 @@ let morph_return #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstate h
                    wp (return_elab x) (lreturn #_ #lw #_ #p #a x))) =
   ()
 
+(** BIND *)
 
 let morph_bind #lstate (lw:low_state lstate) #hstate (#p: state_lens lstate hstate) #a #b
     (wp : hwp_mon #hstate b) (c:high b wp)
@@ -148,6 +151,8 @@ let morph_bind #lstate (lw:low_state lstate) #hstate (#p: state_lens lstate hsta
                    wp (bind_elab c1 fc) (lbind #_ #lw #_ #p (morph #_ #lw #_ #p a wp1 c1) (fun x -> morph #_ #lw #_ #p b (fwp x) (fc x))))) =
   ()
 
+(** WRITE *)
+
 let morph_write lstate (lw:low_state lstate) #hstate (#p: state_lens lstate hstate)
     (wp : hwp_mon #hstate unit) (c:high unit wp) (s:hstate) :
   Lemma
@@ -156,6 +161,8 @@ let morph_write lstate (lw:low_state lstate) #hstate (#p: state_lens lstate hsta
                    wp (write_elab s) (lwrite #_ #lw #_ #p s))) =
    ()
 
+(** READ *)
+
 let morph_read lstate (lw:low_state lstate) #hstate (#p: state_lens lstate hstate)
     (wp : hwp_mon #hstate hstate) (c:high hstate wp) :
   Lemma
@@ -163,6 +170,8 @@ let morph_read lstate (lw:low_state lstate) #hstate (#p: state_lens lstate hstat
     (ensures (l_eq wp c (morph #_ #lw  #_ #p hstate wp c) 
                    wp (read_elab ()) (lread #_ #lw #_ #p ()))) =
   ()
+
+(* READ COMP *)
 
 let morph_write_comp lstate (lw:low_state lstate) #hstate (#p: state_lens lstate hstate)
     (#a:Type) (#l1:lens hstate a) (l2:state_lens lstate a) (#cm:commutes p l1 l2)
@@ -173,6 +182,8 @@ let morph_write_comp lstate (lw:low_state lstate) #hstate (#p: state_lens lstate
                    wp (write_comp l1 x) (lwrite_comp #_ #lw #_ #p #a #l1 l2 #cm x))) =
   ()
 
+(** WRITE COMP *)
+
 let morph_read_comp lstate (lw:low_state lstate) #hstate (#p: state_lens lstate hstate)
     (#a:Type) (#l1:lens hstate a) (l2:state_lens lstate a) (#cm:commutes p l1 l2)
     (wp : hwp_mon #hstate a) (c:high a wp) :
@@ -181,6 +192,9 @@ let morph_read_comp lstate (lw:low_state lstate) #hstate (#p: state_lens lstate 
     (ensures (l_eq wp c (morph #_ #lw  #_ #p a wp c) 
                    wp (read_comp l1 ()) (lread_comp #_ #lw #_ #p #a #l1 l2 #cm ()))) =
   ()
+
+
+(** FOR *)
 
 unfold
 let inv_as_wp (#state : Type) (#a : Type) (inv : state -> int -> Type0) lo hi
