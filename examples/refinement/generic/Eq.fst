@@ -72,6 +72,20 @@ let l_eq_alt_implies_l_eq #lstate (#lw:low_state lstate) #hstate (#p: state_lens
     Lemma (requires (l_eq_alt #_ #lw  #_ #p lc1 lc2))
           (ensures (l_eq wp1 c1 lc1 wp2 c2 lc2)) = ()
 
+(* l_eq is equivalence *)
+
+(* TODO : generic curry - uncurry operators for dependent pairs? *)
+
+let l_eq' #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstate hstate) #a 
+: relation (wp:hwp_mon #hstate a & c:high a wp & low #_ #lw #_ #p a wp c) =
+  fun (|x, y, z|) (|x', y', z'|) -> l_eq #lstate #lw #hstate #p #a x y z x' y' z'
+
+
+instance l_eq_equiv #lstate (#lw:low_state lstate) #hstate (#p: state_lens lstate hstate) #a 
+: equiv (l_eq' #lstate #lw #hstate #p #a) = { refl'  = (fun x -> ());
+                                              symm'  = (fun x y p -> ());
+                                              trans' = (fun x y z p1 p2 -> ()); }
+
 
 (** Morph lemmas *)
 
