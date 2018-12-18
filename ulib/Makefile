@@ -22,16 +22,12 @@ FSTARLIB_MODULES=$(filter-out $(REALIZED) FStar.Crypto.fst FStar.Tcp.fst FStar.R
 
 FSTAR_TAC_LIB_MODULES=$(filter-out $(REALIZED),$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar.Tactics.*.fst FStar.Tactics.*.fsti))
 
-FSTAR_TAC_LIB_DROPPED_FST=$(FSTAR_TAC_LIB_MODULES:.fst=)
-FSTAR_TAC_LIB_DROPPED_EXTENSIONS=$(FSTAR_TAC_LIB_DROPPED_FST:.fsti=)
-FSTAR_TAC_LIB_EXTRACT=$(addprefix --extract_module ,$(sort $(FSTAR_TAC_LIB_DROPPED_EXTENSIONS)))
-
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
 	rm -f .depend.extract
 	FSTAR_FILES='$(FSTARLIB_MODULES)' \
 	OUTPUT_DIRECTORY=ml/extracted \
-	EXTRACT_MODULES="$(FSTAR_DEFAULT_ARGS)" \
+	EXTRACT_MODULES="--extract '+FStar +LowStar -FStar.Tactics -FStar.Reflection $(NOEXTRACT_MODULES)'" \
 	$(MAKE) -f Makefile.extract all-ml
 	# the next cp is done because FStar_Pervasives.ml is needed to bootstrap the compiler
 	# we could follow this style for other files too, e.g., FStar_Option.ml
@@ -46,7 +42,7 @@ fstartaclib.mgen: fstarlib.mgen
 	FSTAR_FILES='$(FSTAR_TAC_LIB_MODULES)' \
 	OUTPUT_DIRECTORY=tactics_ml/extracted \
 	CODEGEN=Plugin \
-	EXTRACT_MODULES='$(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_DEFAULT_ARGS)' \
+	EXTRACT_MODULES="--extract '+FStar +LowStar $(NOEXTRACT_MODULES)'" \
 	$(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
