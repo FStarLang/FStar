@@ -1,5 +1,5 @@
 [
-  "z\u00129‹\u0006ÊÆÇ¦Y%\b]\u0002«ˆ",
+  "\u0014óÓ´NÎ Áø,\u000bí%[À/",
   [
     [
       "Bug138.foo",
@@ -14,7 +14,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7df695930c7b222f427fd30d9cb480ed"
+      "caf4801909c33c75d704f09cb0136f14"
     ],
     [
       "Bug138.foo",
@@ -27,7 +27,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b2b7693cb5f609024e6f20f1fe7dceb4"
+      "3dcb99553aa4bf52fdf46633814a2c4d"
     ],
     [
       "Bug138.arg_precede",
@@ -39,7 +39,7 @@
         "disc_equation_Bug138.Foo", "fuel_guarded_inversion_Bug138.arg"
       ],
       0,
-      "c05b90d7c2437032b7ef9c556ee71400"
+      "4335e2ccdd14cfa11b110fd96a5ea001"
     ],
     [
       "Bug138.foo_bar",
@@ -61,7 +61,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a64b79e40fc66e83655b9f967c6e9bfa"
+      "4ccc846ececfeff956cf156f29ec50c4"
     ]
   ]
 ]
