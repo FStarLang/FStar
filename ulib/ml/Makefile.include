@@ -25,7 +25,7 @@ NOEXTRACT_MODULES=+FStar +LowStar \
 		Printf) \
 	-Prims
 
-FSTAR_DEFAULT_ARGS=--extract '$(NOEXTRACT_MODULES)'
+FSTAR_DEFAULT_ARGS=
 ULIB_ML=$(FSTAR_HOME)/ulib/ml
 FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
 FSTARLIB=$(FSTARLIB_DIR)/fstarlib.cmxa
