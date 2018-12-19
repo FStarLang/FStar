@@ -17,6 +17,8 @@ type vconst =
     | C_False
     | C_String of string
     | C_Range of Range.range
+    | C_Reify
+    | C_Reflect of name
 
 type pattern =
     | Pat_Constant of vconst
@@ -184,12 +186,14 @@ let ref_Q_Implicit = fstar_refl_data_const "Q_Implicit"
 let ref_Q_Meta     = fstar_refl_data_const "Q_Meta"
 
 (* const *)
-let ref_C_Unit   = fstar_refl_data_const "C_Unit"
-let ref_C_True   = fstar_refl_data_const "C_True"
-let ref_C_False  = fstar_refl_data_const "C_False"
-let ref_C_Int    = fstar_refl_data_const "C_Int"
-let ref_C_String = fstar_refl_data_const "C_String"
-let ref_C_Range  = fstar_refl_data_const "C_Range"
+let ref_C_Unit      = fstar_refl_data_const "C_Unit"
+let ref_C_True      = fstar_refl_data_const "C_True"
+let ref_C_False     = fstar_refl_data_const "C_False"
+let ref_C_Int       = fstar_refl_data_const "C_Int"
+let ref_C_String    = fstar_refl_data_const "C_String"
+let ref_C_Range     = fstar_refl_data_const "C_Range"
+let ref_C_Reify     = fstar_refl_data_const "C_Reify"
+let ref_C_Reflect   = fstar_refl_data_const "C_Reflect"
 
 (* pattern *)
 let ref_Pat_Constant = fstar_refl_data_const "Pat_Constant"

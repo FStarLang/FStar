@@ -1,5 +1,5 @@
 [
-  "¸o1P—\u000fÓ÷Ö\u000fóñ~ûý,",
+  "WÃ$à—;”œŠ\u001c^\b8³\u000eê",
   [
     [
       "Ex12c.Format.append_inj_lemma",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "2c6b0a57cdc66c8872f8d52dc6448c6b"
+      "56d79dbc8109b3ab1424b72d12fee387"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -26,7 +26,7 @@
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "134a4753fc21de27985e2370967368b9"
+      "26576a7dc9f3822e3fa30fe66e61a760"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "8fdbd11fa8f272c687eb895bcdf65a7b"
+      "92ce815df9f821634ca5a88d13129543"
     ]
   ]
 ]

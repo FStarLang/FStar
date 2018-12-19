@@ -1,5 +1,5 @@
 [
-  "ò\u0006\u0003\u0013ã˜/\t©\u0016\u000e•#Ã)z",
+  "BWvÂpâ\u007f0\u0019¾1È÷¦›s",
   [
     [
       "Effects.Def.monad_laws_via_eq",
@@ -16,7 +16,7 @@
         "typing_Effects.Def_Tm_abs_2814ab78f1ec085ea6966d552a2e5be0"
       ],
       0,
-      "756108d20bc3611a42f9ccba5b138fbe"
+      "83e440dc0d282604498398d9c7d30544"
     ],
     [
       "Effects.Def.morphism_laws_via_eq",
@@ -33,7 +33,7 @@
         "typing_Effects.Def_Tm_abs_cdab0838a98b60fad4414a65cba3416e"
       ],
       0,
-      "cfc7b26d5d3530b1c89068c9c59ac59c"
+      "4908549203ddb972057140782bda8e1a"
     ],
     [
       "Effects.Def.st_laws",
@@ -73,7 +73,7 @@
         "typing_Effects.Def_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "d7136f930282e7be10b902048970cd3d"
+      "01e6a6b9796b51612d0676dfdb6ae1fc"
     ],
     [
       "Effects.Def.bind_ex",
@@ -94,7 +94,7 @@
         "unit_typing"
       ],
       0,
-      "8c9f8ef88d067000c09a9a3cabd13746"
+      "9a48f825c2eaa6ea50f6cc18de080a89"
     ],
     [
       "Effects.Def.handle",
@@ -115,7 +115,7 @@
         "unit_typing"
       ],
       0,
-      "b57b195bf5bcbda07f4f3f4ef76d26e2"
+      "5e11f09061e7b11ffcce3bbb6b46ba79"
     ],
     [
       "Effects.Def.ex_laws",
@@ -161,7 +161,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "b88da178c64eefe409c1c42c8f6f4915"
+      "057f85a40217d842d44eff6acf62676d"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -185,7 +185,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "d6937794c8883dbeb8ba1a9aa9b392a4"
+      "79574fceb569ad1cd9351319244d7cef"
     ],
     [
       "Effects.Def.stexn_laws",
@@ -252,7 +252,7 @@
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4"
       ],
       0,
-      "716e6768c9822af859170c7de6326215"
+      "d914acc32f556967e45599da41f20ea5"
     ],
     [
       "Effects.Def.exnst_laws",
@@ -299,7 +299,7 @@
         "typing_Effects.Def_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "0dbe0e6ee73ea63916a7763b33753abb"
+      "f2a1f8d8147f61a2604f78f83b8b02bd"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -352,7 +352,7 @@
         "typing_Effects.Def_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "f54b6618e660831db8b13bfbadff7bd0"
+      "cc5ac6b372ff01813bb57de678a4fa43"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -407,7 +407,7 @@
         "unit_typing"
       ],
       0,
-      "54cc0eda0322faacc86e1b2343a495ed"
+      "94d157d816f0b7b5c169232cddb1cca4"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -459,7 +459,7 @@
         "typing_Effects.Def_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "9a8f5b69df58ed5a8a9bd2cd57a3e2c1"
+      "3b4694b15c09cf1f8c662d5c8f32fbd5"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -480,7 +480,7 @@
         "unit_typing"
       ],
       0,
-      "dced505ef35b9895db81e819a35d1b41"
+      "2cde481dd4800bd56ba074137aefbd3f"
     ],
     [
       "Effects.Def.morphism_lift_ex_exnst",
@@ -543,7 +543,7 @@
         "unit_typing"
       ],
       0,
-      "fac589a84b4bbc2402b3a0a0f5e90e85"
+      "0e2a60368b1b677467554fb0ec83698e"
     ],
     [
       "Effects.Def.st_laws",
@@ -583,7 +583,7 @@
         "typing_Effects.Def_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "bcfe9b1b7fa701ed8a3ca71e04861079"
+      "481f86577aa2534bf03131a5afaf15b8"
     ],
     [
       "Effects.Def.bind_ex",
@@ -604,7 +604,7 @@
         "unit_typing"
       ],
       0,
-      "c82eb1a61d5779d42e2c406cd260aa40"
+      "aef1f8ef121d48c6ec869509d871937d"
     ],
     [
       "Effects.Def.handle",
@@ -625,7 +625,7 @@
         "unit_typing"
       ],
       0,
-      "095692a504a044f4c628e10d872f90bd"
+      "068f00c46b3753eb21b589b4db386361"
     ],
     [
       "Effects.Def.ex_laws",
@@ -671,7 +671,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "7f93b16ae717ee3c612c1677bd81b461"
+      "cb573368510f64a759459f4dae3b96b2"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -695,7 +695,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "0dcb5216ea44aaf10a9fbe571f5f8cb3"
+      "479040a43bcc13736ff69254b33bed62"
     ],
     [
       "Effects.Def.stexn_laws",
@@ -762,7 +762,7 @@
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4"
       ],
       0,
-      "5dd01d6b1223e6353b677684218375b7"
+      "a2c36ed384551cfa5d4ed0ea84aceb3a"
     ],
     [
       "Effects.Def.exnst_laws",
@@ -809,7 +809,7 @@
         "typing_Effects.Def_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "79d3888459968e08867955479e243b24"
+      "980abf895a834d8063568f4ebda2d7b6"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -862,7 +862,7 @@
         "typing_Effects.Def_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "b2c2cb26defdd205a4cb8de2aedb74f7"
+      "65d5177084255ad401cf72f13d6aed67"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -917,7 +917,7 @@
         "unit_typing"
       ],
       0,
-      "ed40287c53acf9c494653abb5172ebd3"
+      "7195e78e8be14639a78a4dfbd71d6d1e"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -969,7 +969,7 @@
         "typing_Effects.Def_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "b423789e4fb42ef3059675afa96fcfc7"
+      "f3cb48e1e259fdcf568503b45715884c"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -990,7 +990,7 @@
         "unit_typing"
       ],
       0,
-      "9e21054301f9b85ed6ab7c841d5cfe5e"
+      "956c73afb7831dcd9015feef40e44c6a"
     ],
     [
       "Effects.Def.morphism_lift_ex_exnst",
@@ -1053,7 +1053,7 @@
         "unit_typing"
       ],
       0,
-      "86d469d08945295a95234e4ee8db03f6"
+      "68390c1a9a42b22ac35657e0f1eea9fd"
     ]
   ]
 ]

@@ -1358,6 +1358,15 @@ let prepend_cache_dir fpath =
 let path_of_text text = String.split ['.'] text
 
 let parse_settings ns : list<(list<string> * bool)> =
+    let cache = Util.smap_create 31 in
+    let with_cache f s =
+      match Util.smap_try_find cache s with
+      | Some s -> s
+      | None ->
+        let res = f s in
+        Util.smap_add cache s res;
+        res
+    in
     let parse_one_setting s =
         if s = "*" then ([], true)
         else if FStar.Util.starts_with s "-"
@@ -1369,8 +1378,10 @@ let parse_settings ns : list<(list<string> * bool)> =
              (path_of_text s, true)
     in
     ns |> List.collect (fun s ->
+      let s = FStar.Util.trim_string s in
+      with_cache (fun s ->
           FStar.Util.split s " "
-          |> List.map parse_one_setting)
+          |> List.map parse_one_setting) s)
        |> List.rev
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s

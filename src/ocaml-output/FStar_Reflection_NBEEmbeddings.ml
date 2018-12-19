@@ -71,13 +71,13 @@ let mk_lazy :
               FStar_Syntax_Syntax.ltyp = ty;
               FStar_Syntax_Syntax.rng = FStar_Range.dummyRange
             }  in
-          let thunk =
+          let thunk1 =
             FStar_Common.mk_thunk
               (fun uu____191  ->
                  let uu____192 = FStar_Syntax_Util.unfold_lazy li  in
                  FStar_TypeChecker_NBETerm.translate_cb cb uu____192)
              in
-          FStar_TypeChecker_NBETerm.Lazy ((FStar_Util.Inl li), thunk)
+          FStar_TypeChecker_NBETerm.Lazy ((FStar_Util.Inl li), thunk1)
   
 let (e_bv : FStar_Syntax_Syntax.bv FStar_TypeChecker_NBETerm.embedding) =
   let embed_bv cb bv =

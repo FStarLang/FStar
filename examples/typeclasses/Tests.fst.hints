@@ -1,5 +1,5 @@
 [
-  "#Ê≠Ñ¡¬z˙R\u0001†ühÚê\u0014",
+  "èÖ˙H·ÛiŒsÜ∆ºπx}\\",
   [
     [
       "Tests.sum",
@@ -16,7 +16,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fe7775fd39004657c0848c386ba3b204"
+      "494a8fd9e55fb2b5ba6a38935624c5ae"
     ],
     [
       "Tests.uu___73",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "26568cb25d343b38937d5e4bbd289958"
+      "60f6f1708152bd503a5fecfb69e79be0"
     ],
     [
       "Tests.uu___74",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "6452729f2c8343fa920f99a8e99c6c05"
+      "0da11ea039243fad20bb7f4038806e58"
     ],
     [
       "Tests.test1",
@@ -69,7 +69,7 @@
         "token_correspondence_Prims.op_Addition", "typing_Tests.sum"
       ],
       0,
-      "eaa5c3ccd28c7d59de67ce8d134f42bc"
+      "7a92a9a2b21aa5589ec0d1100b2e860a"
     ],
     [
       "Tests.test2",
@@ -92,7 +92,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "73d85b914296a9901135fa02a656620f"
+      "5935953e499f604da45bd4077dac2764"
     ],
     [
       "Tests.sum",
@@ -109,7 +109,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d81cffecb9b5758693d7aa0d99c5eefe"
+      "aeb5fac03c9e2e2bc36b4dd26907cd5e"
     ],
     [
       "Tests.uu___73",
@@ -118,7 +118,7 @@
       1,
       [ "@query" ],
       0,
-      "b15088f41dcf1a687309ff535d4af73a"
+      "deac8a3aab72fd2a683df82821ffc74b"
     ],
     [
       "Tests.uu___74",
@@ -127,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "f71e1e9206c98982bb3a2d9395046fc5"
+      "817e7112d82b4c547db0c999b673c22e"
     ],
     [
       "Tests.test1",
@@ -162,7 +162,7 @@
         "token_correspondence_Prims.op_Addition", "typing_Tests.sum"
       ],
       0,
-      "724b827e88246c59447053b3bbf7ed6c"
+      "4a00900c27fce40f01c13e696c2b6167"
     ],
     [
       "Tests.test2",
@@ -185,7 +185,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "7c1e927ec3971ee8302a33b073f5c68a"
+      "84714445f86b6d7a964c64a0ddec1881"
     ]
   ]
 ]
