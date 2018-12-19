@@ -1369,8 +1369,9 @@ let parse_settings ns : list<(list<string> * bool)> =
              (path_of_text s, true)
     in
     ns |> List.collect (fun s ->
-          FStar.Util.split s " "
-          |> List.map parse_one_setting)
+          if s = "" then []
+          else FStar.Util.split s " "
+               |> List.map parse_one_setting)
        |> List.rev
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
