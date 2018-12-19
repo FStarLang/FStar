@@ -35,6 +35,7 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
+open FStar.Parser
 
 module Const = FStar.Parser.Const
 module BU = FStar.Util
@@ -179,12 +180,20 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
-(* In public interface *)
-let cache_file_name fn =
-  FStar.Options.prepend_cache_dir
-    (if Options.lax()
-     then fn ^ ".checked.lax"
-     else fn ^ ".checked")
+(*
+ * Public interface
+ *)
+let cache_file_name (fn:string) : string =
+  let cache_fn = fn |> Util.basename |> (fun fn -> fn ^ (if Options.lax () then ".checked.lax" else ".checked")) in
+  let mname = fn |> module_name_of_file in
+  let should_already_be_there = mname |> Options.should_be_already_cached in
+  let error_msg_exists (path:string) = BU.format2 "Expected %s to not be already checked but found %s" mname path in
+  let error_msg_does_not_exist = BU.format1 "Expected %s to be already checked but could not find it" mname in
+  let raise_error (msg:string) = FStar.Errors.raise_err (FStar.Errors.Error_AlreadyCachedAssertionFailure, msg) in
+  
+  match Options.find_file cache_fn with
+  | Some path -> path
+  | None      -> if should_already_be_there then raise_error error_msg_does_not_exist else FStar.Options.prepend_cache_dir cache_fn
 
 let file_of_dep_aux
                 (use_checked_file:bool)
@@ -198,7 +207,9 @@ let file_of_dep_aux
            is_implementation fn &&
            key = lowercase_module_name fn)
     in
-    let maybe_add_suffix f = if use_checked_file then cache_file_name f else f in
+
+    let maybe_use_cache_of f = if use_checked_file then cache_file_name f else f in
+
     match d with
     | UseInterface key ->
       //This key always resolves to an interface source file
@@ -214,7 +225,7 @@ let file_of_dep_aux
       if cmd_line_has_impl key //unless the cmd line contains 'a.fst'
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
-           then maybe_add_suffix (Option.get (implementation_of file_system_map key))
+           then maybe_use_cache_of (Option.get (implementation_of file_system_map key))
            else raise_err (Errors.Fatal_MissingExposeInterfacesOption,
                            BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
                                        Alternatively, invoking fstar with %s on the command line breaks \
@@ -223,7 +234,7 @@ let file_of_dep_aux
                                        key
                                        (Option.get (implementation_of file_system_map key))
                                        (Option.get (interface_of file_system_map key)))
-      else maybe_add_suffix (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
+      else maybe_use_cache_of (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
     | UseImplementation key
@@ -236,7 +247,7 @@ let file_of_dep_aux
           //     since if the implementation was on the command line, it must exist because of option validation
           raise_err (Errors.Fatal_MissingImplementation,
                      BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
-        | Some f -> maybe_add_suffix f
+        | Some f -> maybe_use_cache_of f
 
 let file_of_dep = file_of_dep_aux false
 
@@ -1149,15 +1160,12 @@ let hash_dependences deps fn cache_file =
     let rec hash_deps out = function
         | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
-          let digest =
-            match FStar.Options.find_file (FStar.Util.basename (cache_file_name fn)) with
-            | None -> None
-            | Some fn -> Some (digest_of_file fn)
-          in
+          let cache_fn = cache_file_name fn in
+          let digest = if Util.file_exists cache_fn then Some (digest_of_file fn) else None in
           match digest with
           | None ->
             if Options.debug_any()
-            then BU.print2 "%s: missed digest of file %s\n" cache_file (FStar.Util.basename (cache_file_name fn));
+            then BU.print2 "%s: missed digest of file %s\n" cache_file (FStar.Util.basename cache_fn);
             None
           | Some dig ->
             hash_deps ((lowercase_module_name fn, dig) :: out) deps
