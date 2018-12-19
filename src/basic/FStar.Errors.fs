@@ -324,7 +324,7 @@ type raw_error =
   | Error_FieldShadow
   | Error_UnexpectedDM4FType
   | Fatal_EffectAbbreviationResultTypeMismatch
-  | Error_UncheckedFile
+  | Error_AlreadyCachedAssertionFailure
   | Error_MustEraseMissing
   | Warning_EffectfulArgumentToErasedFunction
 
@@ -659,7 +659,7 @@ let default_flags =
   (Error_FieldShadow                                 , CFatal);
   (Error_UnexpectedDM4FType                          , CFatal);
   (Fatal_EffectAbbreviationResultTypeMismatch        , CFatal);
-  (Error_UncheckedFile                               , CFatal);
+  (Error_AlreadyCachedAssertionFailure               , CFatal);
   (Error_MustEraseMissing                            , CWarning);
   (Warning_EffectfulArgumentToErasedFunction         , CWarning);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
