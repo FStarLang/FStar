@@ -55,7 +55,7 @@ val normal_eq (#a:Type) (f:a)
 
 ////////////////////////////////////////////////////////////////////////////////
 (* A generalized version of `map` where we map into a type `c` *)
-[@__reduce__] private
+[@__reduce__]
 let map_op' #a #b #c (op:b -> c -> GTot c) (f:a -> GTot b) (l:list a) (z:c)
   : GTot c
   = L.fold_right_gtot #a #c l (fun x acc -> f x `op` acc) z
@@ -144,7 +144,6 @@ let big_or #a (f:a -> Type) (l:list a)
 
 ////////////////////////////////////////////////////////////////////////////////
 [@__reduce__]
-private
 let rec pairwise_op' #a #b (op:b -> b -> GTot b) (f:a -> a -> b) (l:list a) (z:b)
   : GTot b
   = match l with
