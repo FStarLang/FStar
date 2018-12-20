@@ -17,7 +17,7 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn
 	Vector.Base Vector.Properties Vector TSet
 	# prims is realized by default hence not included in this list
 
-NOEXTRACT_MODULES=$(addprefix -FStar., $(FSTAR_REALIZED_MODULES) BigOps Printf)
+NOEXTRACT_MODULES=$(addprefix -FStar., $(FSTAR_REALIZED_MODULES) BigOps Printf) +FStar.List.Tot.Properties
 
 FSTAR_DEFAULT_ARGS=
 ULIB_ML=$(FSTAR_HOME)/ulib/ml
