@@ -42,7 +42,7 @@ fstartaclib.mgen: fstarlib.mgen
 	FSTAR_FILES='$(FSTAR_TAC_LIB_MODULES)' \
 	OUTPUT_DIRECTORY=tactics_ml/extracted \
 	CODEGEN=Plugin \
-	EXTRACT_MODULES="--extract '-* +FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
+	EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
 	$(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
