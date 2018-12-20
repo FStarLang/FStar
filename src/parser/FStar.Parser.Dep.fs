@@ -180,10 +180,8 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
-(*
- * Public interface
- *)
-let cache_file_name (fn:string) : string =
+
+let cache_file_name_internal (fn:string) : string * bool =  //bool indicates if the cache file exists
   let cache_fn = fn ^ (if Options.lax () then ".checked.lax" else ".checked") in
   let mname = fn |> module_name_of_file in
   let should_already_be_there = mname |> Options.should_be_already_cached in
@@ -191,8 +189,13 @@ let cache_file_name (fn:string) : string =
   let raise_error (msg:string) = FStar.Errors.raise_err (FStar.Errors.Error_AlreadyCachedAssertionFailure, msg) in
   
   match Options.find_file (cache_fn |> Util.basename) with
-  | Some path -> path
-  | None      -> if should_already_be_there then raise_error error_msg_does_not_exist else FStar.Options.prepend_cache_dir cache_fn
+  | Some path -> path, true
+  | None      -> if should_already_be_there then raise_error error_msg_does_not_exist else FStar.Options.prepend_cache_dir cache_fn, false
+
+(*
+ * Public interface
+ *)
+let cache_file_name fn = fn |> cache_file_name_internal |> fst
 
 let file_of_dep_aux
                 (use_checked_file:bool)
@@ -1271,10 +1274,10 @@ let print_full (deps:deps) : unit =
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
-    let cache_file f = norm_path (cache_file_name f) in
+    let cache_file f = f |> cache_file_name_internal |> (fun (f, b) -> norm_path f, b) in
     let transitive_krml = smap_create 41 in
-    keys |> List.iter
-        (fun file_name ->
+    let set_of_unchecked_files = keys |> List.fold_left
+        (fun set_of_unchecked_files file_name ->
           let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
           let iface_deps =
               if is_interface file_name
@@ -1304,11 +1307,15 @@ let print_full (deps:deps) : unit =
           let files = List.map norm_path files in
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           let files = String.concat "\\\n\t" files in
+          let cache_file_name, b = cache_file file_name in
+          let set_of_unchecked_files = if b then set_of_unchecked_files
+                                       else BU.set_add file_name set_of_unchecked_files
+          in
 
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
           Util.print3 "%s: %s \\\n\t%s\n\n"
-                      (cache_file file_name)
+                      cache_file_name
                       norm_f
                       files;
 
@@ -1353,27 +1360,28 @@ let print_full (deps:deps) : unit =
                 BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface),
                 false
         in
-        let all_checked_fst_files = List.map cache_file all_fst_files_dep in
+        let all_checked_fst_dep_files = all_fst_files_dep |> List.map (fun f -> f |> cache_file |> fst) in
+        let _ = 
           if is_implementation file_name then (
             if Options.cmi()
             && widened
             then begin
                 Util.print3 "%s: %s \\\n\t%s\n\n"
                             (output_ml_file file_name)
-                            (cache_file file_name)
-                            (String.concat " \\\n\t" all_checked_fst_files);
+                            (cache_file_name)
+                            (String.concat " \\\n\t" all_checked_fst_dep_files);
                 Util.print3 "%s: %s \\\n\t%s\n\n"
                             (output_krml_file file_name)
-                            (cache_file file_name)
-                            (String.concat " \\\n\t" all_checked_fst_files)
+                            (cache_file_name)
+                            (String.concat " \\\n\t" all_checked_fst_dep_files)
             end
             else begin
                 Util.print2 "%s: %s \n\n"
                             (output_ml_file file_name)
-                            (cache_file file_name);
+                            (cache_file_name);
                 Util.print2 "%s: %s\n\n"
                             (output_krml_file file_name)
-                            (cache_file file_name)
+                            (cache_file_name)
             end;
             let cmx_files =
                 let extracted_fst_files =
@@ -1396,14 +1404,18 @@ let print_full (deps:deps) : unit =
             then
                 Util.print3 "%s: %s \\\n\t%s\n\n"
                             (output_krml_file file_name)
-                            (cache_file file_name)
-                            (String.concat " \\\n\t" all_checked_fst_files)
+                            (cache_file_name)
+                            (String.concat " \\\n\t" all_checked_fst_dep_files)
             else
                 Util.print2 "%s: %s \n\n"
                     (output_krml_file file_name)
-                    (cache_file file_name)
-          ));
-    let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
+                    (cache_file_name))
+        in
+        set_of_unchecked_files) (BU.new_set BU.compare) in
+    let all_fst_files, all_unchecked_fst_files =
+      keys |> List.filter is_implementation
+           |> Util.sort_with String.compare
+           |> (fun l -> l, l |> List.filter (fun f -> BU.set_mem f set_of_unchecked_files)) in
     let all_ml_files =
         let ml_file_map = BU.smap_create 41 in
         all_fst_files
@@ -1447,9 +1459,10 @@ let print_full (deps:deps) : unit =
       Util.print2 "%s: %s\n\n" wasm deps
     ) (smap_keys transitive_krml);
 
-    Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"  (all_fst_files  |> List.map norm_path |> String.concat " \\\n\t");
-    Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"   (all_ml_files   |> List.map norm_path |> String.concat " \\\n\t");
-    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"   (all_krml_files |> List.map norm_path |> String.concat " \\\n\t")
+    Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"            (all_fst_files           |> List.map norm_path |> String.concat " \\\n\t");
+    Util.print1 "ALL_UNCHECKED_FST_FILES=\\\n\t%s\n\n"  (all_unchecked_fst_files |> List.map norm_path |> String.concat " \\\n\t");
+    Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"             (all_ml_files            |> List.map norm_path |> String.concat " \\\n\t");
+    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"             (all_krml_files          |> List.map norm_path |> String.concat " \\\n\t")
 
 (* In public interface *)
 let print deps =
