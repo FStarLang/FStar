@@ -329,6 +329,9 @@ let rec inline_closure_env cfg (env:env) stack t =
         let t = mk (Tm_refine(List.hd x |> fst, phi)) t.pos in
         rebuild_closure cfg env stack t
 
+      | Tm_ascribed(t1, (annot,tacopt), lopt) when cfg.steps.unascribe ->
+        inline_closure_env cfg env stack t1
+
       | Tm_ascribed(t1, (annot,tacopt), lopt) ->
         let annot =
             match annot with
