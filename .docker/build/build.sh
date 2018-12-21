@@ -278,10 +278,10 @@ function build_fstar() {
             } &
 
             {
-                OTHERFLAGS='--warn_error -276 --use_hint_hashes' make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
+                OTHERFLAGS='--warn_error -276 --use_hint_hashes' make -C hacl-star -j $threads $HACL_HOME/code/hash/Hacl.Hash.MD.fst.checked ||
                     {
-                        echo "Error - Hacl.Impl.SHA2_256.fst-verify (HACL*)"
-                        echo " - Hacl.Impl.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
+                        echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
+                        echo " - Hacl.Hash.MD.fst.checked (HACL*)" >>$ORANGE_FILE
                     }
             } &
 
