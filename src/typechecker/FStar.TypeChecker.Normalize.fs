@@ -320,6 +320,9 @@ let rec inline_closure_env cfg (env:env) stack t =
         let t = mk (Tm_arrow(bs, c)) t.pos in
         rebuild_closure cfg env stack t
 
+      | Tm_refine(x, _) when cfg.steps.for_extraction ->
+        inline_closure_env cfg env stack x.sort
+
       | Tm_refine(x, phi) ->
         let x, env = close_binders cfg env [mk_binder x] in
         let phi = non_tail_inline_closure_env cfg env phi in
@@ -1210,6 +1213,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack) args in
             log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
             norm cfg env stack head
+
+          | Tm_refine(x, _) when cfg.steps.for_extraction ->
+            norm cfg env stack x.sort
 
           | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
             if cfg.steps.weak
