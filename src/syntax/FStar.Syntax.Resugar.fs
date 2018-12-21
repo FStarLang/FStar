@@ -712,9 +712,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           mk (A.Name t)
       | Meta_monadic (name, t)
       | Meta_monadic_lift (name, _, t) ->
-        mk (A.Ascribed(resugar_term' env e,
-                       mk (A.Construct(name,[resugar_term' env t, A.Nothing])),
-                       None))
+        resugar_term' env e
       end
 
     | Tm_unknown -> mk A.Wild
