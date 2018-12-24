@@ -183,14 +183,15 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
 
 let cache_file_name_internal (fn:string) : string * bool =  //bool indicates if the cache file exists
   let cache_fn = fn ^ (if Options.lax () then ".checked.lax" else ".checked") in
-  let mname = fn |> module_name_of_file in
-  let should_already_be_there = mname |> Options.should_be_already_cached in
-  let error_msg_does_not_exist = BU.format1 "Expected %s to be already checked but could not find it" mname in
-  let raise_error (msg:string) = FStar.Errors.raise_err (FStar.Errors.Error_AlreadyCachedAssertionFailure, msg) in
-  
+
   match Options.find_file (cache_fn |> Util.basename) with
   | Some path -> path, true
-  | None      -> if should_already_be_there then raise_error error_msg_does_not_exist else FStar.Options.prepend_cache_dir cache_fn, false
+  | None      ->
+    let mname = fn |> module_name_of_file in
+    if mname |> Options.should_be_already_cached then
+      FStar.Errors.raise_err (FStar.Errors.Error_AlreadyCachedAssertionFailure,
+                              BU.format1 "Expected %s to be already checked but could not find it" mname)
+    else FStar.Options.prepend_cache_dir cache_fn, false
 
 (*
  * Public interface
