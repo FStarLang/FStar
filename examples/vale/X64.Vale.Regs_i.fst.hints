@@ -1,5 +1,5 @@
 [
-  "\u0016\u0005bë¤léöçqcC\f\u001e\nó",
+  "³ò¡i5&Ò#\u0012®3XÛµjc",
   [
     [
       "X64.Vale.Regs_i.lemma_equal_intro",
@@ -15,7 +15,7 @@
         "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "a89fcb056e85d5da9d090df9cbf91236"
+      "74a69df640a893eebe1143cb1b1e7764"
     ],
     [
       "X64.Vale.Regs_i.lemma_equal_elim",
@@ -38,7 +38,7 @@
         "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "fb02474223cba02ffd5c2274df56de77"
+      "c6dcbc84a018a9eb8d7fbbf464384b59"
     ]
   ]
 ]

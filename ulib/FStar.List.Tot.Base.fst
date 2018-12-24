@@ -190,6 +190,19 @@ let rec fold_right f l x = match l with
   | [] -> x
   | hd::tl -> f hd (fold_right f tl x)
 
+(** [fold_right_gtot] is just like [fold_right], except `f` is
+    a ghost function **)
+let rec fold_right_gtot (#a:Type) (#b:Type) (l:list a) (f:a -> b -> GTot b) (x:b)
+  : GTot b
+  = match l with
+    | [] -> x
+    | hd::tl -> f hd (fold_right_gtot tl f x)
+
+(* We define map in terms of fold, to share simple lemmas *)
+let map_gtot #a #b (f:a -> GTot b) (x:list a)
+  : GTot (list b)
+  = fold_right_gtot x (fun x tl -> f x :: tl) []
+
 (** [fold_left2 f x [y1; y2; ...; yn] [z1; z2; ...; zn]] computes (f
 (... (f x y1 z1) y2 z2) ... yn zn). Requires, at type-checking time,
 [f] to be a pure total function, and the lists [y1; y2; ...; yn] and
@@ -389,6 +402,15 @@ let rec noRepeats #a la =
   match la with
   | [] -> true
   | h :: tl -> not(mem h tl) && noRepeats tl
+
+
+(** [no_repeats_p l] valid if, and only if, no element of [l]
+appears in [l] more than once. *)
+val no_repeats_p : #a:Type -> list a -> Tot prop
+let rec no_repeats_p #a la =
+  match la with
+  | [] -> True
+  | h :: tl -> ~(memP h tl) /\ no_repeats_p tl
 
 (** List of tuples **)
 

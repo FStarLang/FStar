@@ -1,5 +1,5 @@
 [
-  "\u001a²Ô7ÀHI4x\bQ÷\u001f D",
+  "u\u001a¿û6ï¡o\u001b\u001ah¨J-b>",
   [
     [
       "DoNotation.add",
@@ -15,7 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "fdb96aab6c6ecc40aceb746a3b0361ed"
+      "8fd4dbbbcb02a18839ead19956a0af40"
     ],
     [
       "DoNotation.uu___8",
@@ -30,7 +30,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "dbe9459beb3c05daff0797af2eb30961"
+      "dccb77ff239ac8f603c0423d858c0157"
     ],
     [
       "DoNotation.add",
@@ -46,7 +46,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0a0b1fdb3ed8ec11c0c4552c85cdf58b"
+      "ea1f5687f273179837625938c28bd1d5"
     ],
     [
       "DoNotation.uu___8",
@@ -61,7 +61,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b55ecb06d33dd816c8f3be9aa5811317"
+      "b803f5d30d5a502ff1b554669c7ec235"
     ]
   ]
 ]
