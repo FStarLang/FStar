@@ -518,7 +518,7 @@
         "refinement_interpretation_Ex07c_Tm_refine_47cea64b36ffb5d473f3348532f4ba46"
       ],
       0,
-      "8443510a5803026f1dfce7af4e3d862f"
+      "3a5f3f4f6bd9eaf26a3f95d872479738"
     ],
     [
       "Ex07c.substitution_preserves_typing",
@@ -618,7 +618,7 @@
         "refinement_interpretation_Ex07c_Tm_refine_6fdf7a48449ca387880c5a0c7035a1c2"
       ],
       0,
-      "69b2fd5ddef878acba7fc6cc79a72fa5"
+      "3da82ec03cf9bcc85f5f1723565be990"
     ],
     [
       "Ex07c.preservation",
@@ -964,7 +964,7 @@
         "refinement_interpretation_Ex07c_Tm_refine_47cea64b36ffb5d473f3348532f4ba46"
       ],
       0,
-      "c1106c2e95ea1e612222bf75866a0cd1"
+      "4c9a6e1c4e7d61eae8252656f37686ae"
     ],
     [
       "Ex07c.substitution_preserves_typing",
@@ -1052,7 +1052,7 @@
         "refinement_interpretation_Ex07c_Tm_refine_6fdf7a48449ca387880c5a0c7035a1c2"
       ],
       0,
-      "f24bc235c7080253fc0e81a148aeb8c9"
+      "23138d97aa16a63a138d03cf71afdf80"
     ],
     [
       "Ex07c.preservation",
