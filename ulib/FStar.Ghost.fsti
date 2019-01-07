@@ -63,6 +63,7 @@ let bind (#a:Type) (#b:Type) (x:erased a) (f: (a -> Tot (erased b)))
   = let y = reveal x in
     f y
 
+irreducible
 let elift1 (#a #b:Type)
            (f:(a -> GTot b))
            (x:erased a)
@@ -70,6 +71,7 @@ let elift1 (#a #b:Type)
   = xx <-- x ;
     return (f xx)
 
+irreducible
 let elift2 (#a #b #c:Type)
            (f:(a -> b -> GTot c))
            (x:erased a)
@@ -79,6 +81,7 @@ let elift2 (#a #b #c:Type)
     yy <-- y;
     return (f xx yy)
 
+irreducible
 let elift3 (#a #b #c #d:Type)
            (f:(a -> b -> c -> GTot d))
            (ga:erased a)
@@ -90,6 +93,7 @@ let elift3 (#a #b #c #d:Type)
     c <-- gc;
     return (f a b c)
 
+irreducible
 let elift1_p (#a #b:Type)
              (#p:(a -> Type))
              ($f:(x:a{p x} -> GTot b))
@@ -98,6 +102,7 @@ let elift1_p (#a #b:Type)
   = let x : (x:a { p x }) = reveal r in
     return (f x)
 
+irreducible
 let elift2_p (#a #b #c:Type)
              (#p: (a -> b -> Type))
              ($f:(xa:a -> xb:b{p xa xb} -> GTot c))
@@ -108,6 +113,7 @@ let elift2_p (#a #b #c:Type)
     let y : (y:b { p x y }) = reveal rb in
     return (f x y)
 
+irreducible
 let elift1_pq (#a #b:Type)
               (#p:(a -> Type))
               (#q:(x:a{p x} -> b -> Type))
@@ -117,6 +123,7 @@ let elift1_pq (#a #b:Type)
   = let x : (x:a { p x }) = reveal r in
     return (f x)
 
+irreducible
 let elift2_pq (#a #b #c:Type)
               (#p:(a -> b -> Type))
               (#q:(x:a -> y:b{p x y} -> c -> Type))
