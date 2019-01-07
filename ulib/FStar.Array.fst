@@ -27,23 +27,21 @@ open FStar.Ref
 
 abstract type array (t:Type) = ref (seq t)
 
-      (* #a:Type -> heap -> ref a ->  GTot a *)
-abstract val sel: #a:Type -> heap -> array a -> GTot (seq a)
-let sel #a h s = Heap.sel h s
+abstract let as_ref (#a:Type) (arr:array a) : ref (seq a) = arr
 
-abstract val contains: #a:Type -> heap -> array a -> GTot (bool)
-let contains #a h s =
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains h s)
+let sel (#a:Type) (h:heap) (s:array a) = Heap.sel h (as_ref s)
 
-abstract let unused_in (#a:Type) (arr:array a) (h:heap) :GTot bool
- = FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in arr h)
+let contains (#a:Type) (h:heap) (s:array a) : GTot bool =
+  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains h (as_ref s))
 
-abstract val heap_upd: #a:Type -> heap -> array a -> seq a -> GTot heap
-let heap_upd #a h r v = Heap.upd h r v
+let unused_in (#a:Type) (arr:array a) (h:heap) : GTot bool
+ = FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref arr) h)
 
-abstract let addr_of (#a:Type) (arr:array a) :GTot nat = addr_of arr
+let heap_upd (#a:Type) (h:heap) (r:array a) (v:seq a) = Heap.upd h (as_ref r) v
 
-let only (#a:Type) (arr:array a) :GTot (Set.set nat) = Set.singleton (addr_of arr)
+let addr_of (#a:Type) (arr:array a) : GTot nat = addr_of (as_ref arr)
+
+let only (#a:Type) (arr:array a) : GTot (Set.set nat) = Set.singleton (addr_of arr)
 
 abstract val op_At_Bar: #a:Type -> s1:array a -> s2:array a -> ST (array a)
   (requires (fun h -> contains h s1 /\ contains h s2))
