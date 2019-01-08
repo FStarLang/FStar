@@ -19,7 +19,7 @@ open FStar.Seq
 open FStar.Bytes
 open CoreCrypto
 
-type text  = b:bytes{UInt.fits (length b) 31}    (* a type abbreviation, for clarity *)
+type text  = b:bytes    (* a type abbreviation, for clarity *)
 
 
 (* we rely on some external crypto library implementing HMAC-SHA1 *)
@@ -37,7 +37,7 @@ let sample n = random32 n
 val sha1 : bytes -> Tot (h:bytes{length h = 20})
 let sha1 b = hash SHA1 b
 
-val hmac_sha1: key -> text -> Tot tag
+val hmac_sha1: key -> (t:text{length t < pow2 32 - (hashSize SHA1)}) -> Tot tag
 let hmac_sha1 k t =
   let x5c = byte_of_int 92 in
   let x36 = byte_of_int 54 in
@@ -45,6 +45,5 @@ let hmac_sha1 k t =
   let ipad = create blocksize x36 in
   let xor_key_opad = xor keysize k opad in
   let xor_key_ipad = xor keysize k ipad in
-  sha1 ( xor_key_opad @|
-                (sha1 (xor_key_ipad @| t))
-       )
+  sha1 (xor_key_opad @| 
+           (sha1 (xor_key_ipad @| t)))
