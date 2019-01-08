@@ -1354,7 +1354,18 @@ and p_noSeqTerm' ps pb e = match e.tm with
     group (str "`@" ^^ p_noSeqTermAndComment ps pb e)
   | Antiquote e ->
     group (str "`#" ^^ p_noSeqTermAndComment ps pb e)
+  | CalcProof (rel, init, steps) ->
+    let head = str "calc" ^^ space ^^ p_noSeqTermAndComment false false rel ^^ space ^^ lbrace in
+    let bot = rbrace in
+    enclose head (hardline ^^ bot)
+         (nest 2 <| hardline
+                    ^^ p_noSeqTermAndComment false false init ^^ str ";" ^^ hardline
+                    ^^ separate_map_last hardline p_calcStep steps)
   | _ -> p_typ ps pb e
+
+and p_calcStep _ (CalcStep (rel, just, next)) =
+  group (p_noSeqTermAndComment false false rel ^^ space ^^ lbrace ^^ space ^^ p_noSeqTermAndComment false false just ^^ space ^^ rbrace ^^ hardline
+         ^^ p_noSeqTermAndComment false false next ^^ str ";")
 
 and p_attrs_opt = function
   | None -> empty
@@ -1912,6 +1923,7 @@ and p_projectionLHS e = match e.tm with
   | Quote _     (* p_noSeqTerm *)
   | VQuote _    (* p_noSeqTerm *)
   | Antiquote _ (* p_noSeqTerm *)
+  | CalcProof _ (* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term false false e)
 
 and p_constant = function

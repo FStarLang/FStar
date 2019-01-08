@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.ModifiesGen
 
 module HS = FStar.HyperStack
@@ -1374,21 +1389,31 @@ let loc_not_unused_in #al c h =
 
 let loc_unused_in #al c h =
   let f (r: HS.rid) : GTot (GSet.set nat) =
-    GSet.comprehend (fun a -> StrongExcludedMiddle.strong_excluded_middle (h `does_not_contain_addr` (r, a)))
+    if not (HS.live_region h r)
+    then
+      GSet.complement GSet.empty
+    else
+      GSet.comprehend (fun a -> StrongExcludedMiddle.strong_excluded_middle (h `does_not_contain_addr` (r, a)))
   in
   Loc
     (Ghost.hide (Set.complement Set.empty))
-    (Ghost.hide Set.empty)
-    (mk_non_live_addrs f)
+    (Ghost.hide (Set.complement (FStar.Map.domain (HS.get_hmap h))))
+    (mk_non_live_addrs (fun x -> f x))
     (mk_live_addrs (fun x -> f x))
     (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) f))
+
+let loc_regions_unused_in #al c h rs = ()
 
 let loc_addresses_unused_in #al c r a h = ()
 
 let loc_addresses_not_unused_in #al c r a h = ()
 
+#set-options "--z3rlimit 16"
+
 let loc_unused_in_not_unused_in_disjoint #al c h =
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)))
+
+#reset-options
 
 let not_live_region_loc_not_unused_in_disjoint #al c h0 r
 = let l1 = loc_region_only false r in
@@ -1784,14 +1809,20 @@ let union_loc_of_loc_disjoint_intro
   (ensures (union_loc_of_loc c b larger `loc_disjoint` union_loc_of_loc c b smaller))
 = let auxl = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux larger)) in
   let auxs = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux smaller)) in
-  assert (forall (xl xs: aloc (cls_union c)) . (GSet.mem xl auxl /\ GSet.mem xs auxs) ==> (
+  let g
+    (xl xs: aloc (cls_union c))
+  : Lemma
+    (requires (GSet.mem xl auxl /\ GSet.mem xs auxs))
+    (ensures (GSet.mem xl auxl /\ GSet.mem xs auxs /\ aloc_disjoint xl xs))
+  =
     let xl' : aloc (c b) = ALoc xl.region xl.addr (if None? xl.loc then None else Some (aloc_of_cls_union_aloc (Some?.v xl.loc))) in
     let xs' : aloc (c b) = ALoc xs.region xs.addr (if None? xs.loc then None else Some (aloc_of_cls_union_aloc (Some?.v xs.loc))) in
-    GSet.mem xl' (Ghost.reveal (Loc?.aux larger)) /\
-    GSet.mem xs' (Ghost.reveal (Loc?.aux smaller)) /\
-    aloc_disjoint xl' xs' /\
-    aloc_disjoint xl xs
-  ));
+    assert (GSet.mem xl' (Ghost.reveal (Loc?.aux larger)));
+    assert (GSet.mem xs' (Ghost.reveal (Loc?.aux smaller)));
+    assert (aloc_disjoint xl' xs');
+    assert (aloc_disjoint xl xs)
+  in
+  Classical.forall_intro_2 (fun xl -> Classical.move_requires (g xl));
   assert (forall xl xs . (GSet.mem xl auxl /\ GSet.mem xs auxs) ==> aloc_disjoint xl xs);
   assert (auxl `loc_aux_disjoint` auxs);
   let larger' = union_loc_of_loc c b larger in

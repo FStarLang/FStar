@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Reflection.Arith
 
 open FStar.Tactics
@@ -105,10 +120,21 @@ private let atom (t:term) : tm expr = fun (n, atoms) ->
 private val fail : (#a:Type) -> string -> tm a
 private let fail #a s = fun i -> Inl s
 
+let refined_list_t (#a:Type) (p:(a -> Type0)) = list (x:a{p x})
+
+val list_unref : #a:Type -> #p:(a -> Type0) -> refined_list_t p -> Tot (list a)
+let rec list_unref #a #p l =
+    match l with
+    | [] -> []
+    | x::xs -> x :: list_unref xs
+
+let collect_app_ref (t:term) : ((h:term{h == t \/ h << t}) * refined_list_t (fun (a:argv) -> fst a << t)) =
+  collect_app_ref t
+
 val as_arith_expr : term -> tm expr
 let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
-    let tl = List.list_unref tl in
+    let tl = list_unref tl in //need to be careful to instantiate list_unref at the right type to allow SMT to unfold its recursive definition properly
     match inspect_ln hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in

@@ -50,7 +50,7 @@ module Dep     = FStar.Parser.Dep
 module NBE     = FStar.TypeChecker.NBE
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
-let cache_version_number = 6
+let cache_version_number = 7
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -58,11 +58,10 @@ type uenv = FStar.Extraction.ML.UEnv.uenv
 
 type tc_result = {
   checked_module: Syntax.modul; //persisted
-  extracted_iface: Extraction.ML.Modul.iface; //persisted
   mii:module_inclusion_info; //persisted
 
   tc_time:int;
-  extraction_time: int;
+  extraction_time:int
 }
 
 let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv<'a>) : 'a * TcEnv.env =
@@ -241,7 +240,11 @@ let load_module_from_cache
         | Some (vnum, digest, tc_result) ->
             if vnum <> cache_version_number then Inl "Stale, because inconsistent cache version"
             else
-            match FStar.Parser.Dep.hash_dependences (TcEnv.dep_graph env) source_file with
+            match FStar.Parser.Dep.hash_dependences
+                    (TcEnv.dep_graph env)
+                    source_file
+                    cache_file
+            with
             | Some digest' ->
                 if digest=digest'
                 then Inr tc_result
@@ -270,48 +273,55 @@ let load_module_from_cache
     in
     fun env fn ->
         let cache_file = Dep.cache_file_name fn in
-        let fail tag should_warn cache_file =
+        let fail maybe_warn cache_file =
              invalidate_cache();
-             if should_warn then
-                 FStar.Errors.log_issue
+             match maybe_warn with
+             | None -> ()
+             | Some tag ->
+               FStar.Errors.log_issue
                     (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
                     (Errors.Warning_CachedFile,
-                     BU.format3 "%s cache file %s; will recheck %s and all subsequent files" tag cache_file fn);
-             None
+                     BU.format3 "%s cache file %s; will recheck %s and all subsequent files" tag cache_file fn)
         in
         match !some_cache_invalid with
         | Some _ -> None
         | _ ->
-          if BU.file_exists cache_file then
-            match load env.env_tcenv fn cache_file with
-            | Inl msg -> fail msg true cache_file
-            | Inr res -> Some res
-          else
+          begin
             match FStar.Options.find_file (FStar.Util.basename cache_file) with
-            | None -> fail "Absent" false cache_file //do not warn if the file was not found
+            | None -> None
             | Some alt_cache_file ->
               match load env.env_tcenv fn alt_cache_file with
-              | Inl msg -> fail msg true alt_cache_file
+              | Inl msg ->
+                fail (Some msg) alt_cache_file;
+                None
               | Inr res ->
-                //found a valid .checked file somewhere else in the include path
+                //if we found a valid .checked file somewhere in the include path
+                //and it differs from the destination file
                 //copy it to the destination, if we are supposed to be verifying this file
                 if Options.should_verify_file fn
+                && BU.normalize_file_path alt_cache_file <> BU.normalize_file_path cache_file
+                && (not (BU.file_exists cache_file)
+                    || BU.digest_of_file cache_file <> BU.digest_of_file alt_cache_file)
                 then FStar.Util.copy_file alt_cache_file cache_file;
                 Some res
-
+          end
 
 let store_module_to_cache (env:uenv) fn (tc_result:tc_result) =
     if Options.cache_checked_modules()
     && not (Options.cache_off())
     then begin
         let cache_file = FStar.Parser.Dep.cache_file_name fn in
-        let digest = FStar.Parser.Dep.hash_dependences (TcEnv.dep_graph env.env_tcenv) fn in
+        let digest =
+          FStar.Parser.Dep.hash_dependences
+            (TcEnv.dep_graph env.env_tcenv)
+            fn
+            cache_file
+        in
         match digest with
         | Some hashes ->
           //cache_version_number should always be the first field here
           let tc_result = {
               tc_result with
-                extraction_time=0;
                 tc_time=0;
           } in
           BU.save_value_to_file cache_file (cache_version_number, hashes, tc_result)
@@ -385,6 +395,15 @@ let tc_one_file
             let _, defs = FStar.Extraction.ML.Modul.extract env tcmod in
             defs)
   in
+  let maybe_extract_ml_iface tcmod env =
+       if Options.codegen() = None
+       then env, 0
+       else let (env, _extracted_iface), iface_extract_time =
+              FStar.Util.record_time (fun () ->
+                  FStar.Extraction.ML.Modul.extract_iface env tcmod)
+            in
+            env, iface_extract_time
+  in
   let tc_source_file () =
       let env = apply_delta_env env delta in
       let fmod, env = parse env pre_fn fn in
@@ -400,17 +419,12 @@ let tc_one_file
                  Tc.check_module tcenv fmod (is_some pre_fn)))
           in
           let extracted_defs, extract_time = with_env env (maybe_extract_mldefs tcmod) in
-          let (env, extracted_iface), iface_extract_time =
-            FStar.Util.record_time (fun () ->
-                FStar.Extraction.ML.Modul.extract_iface env tcmod)
-          in
+          let env, iface_extraction_time = with_env env (maybe_extract_ml_iface tcmod) in
           {
             checked_module=tcmod;
             tc_time=tc_time;
 
-            extracted_iface = extracted_iface;
-            extraction_time = iface_extract_time + extract_time;
-
+            extraction_time = extract_time + iface_extraction_time;
             mii = mii
           },
           extracted_defs,
@@ -425,12 +439,18 @@ let tc_one_file
   if not (Options.cache_off()) then
       match load_module_from_cache env fn with
       | None ->
-        if Option.isSome (Options.codegen())
-        && Options.cmi()
+        if Options.should_be_already_cached (FStar.Parser.Dep.module_name_of_file fn)
+        then FStar.Errors.raise_err
+                (FStar.Errors.Error_UncheckedFile,
+                 BU.format1 "Expected %s to already be checked" fn);
+
+        if (Option.isSome (Options.codegen())
+        && Options.cmi())
         then FStar.Errors.raise_err
                 (FStar.Errors.Error_UncheckedFile,
                  BU.format1 "Cross-module inlining expects all modules to be checked first; %s was not checked"
                             fn);
+
 
         let tc_result, mllib, env = tc_source_file () in
         if FStar.Errors.get_err_count() = 0
@@ -475,7 +495,8 @@ let tc_one_file
 
         let delta_env env =
             let _, env = with_tcenv_of_env env (delta_tcenv tcmod) in
-            FStar.Extraction.ML.Modul.extend_with_iface env tc_result.extracted_iface
+            let env, _time = with_env env (maybe_extract_ml_iface tcmod) in
+            env
         in
         tc_result,
         mllib,

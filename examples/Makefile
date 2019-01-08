@@ -36,7 +36,8 @@ refinement \
 indexed_effects \
 doublylinkedlist \
 regional \
-generic
+generic \
+calc
 
 # low-level \  ... NS: removing from CI for this branch
 

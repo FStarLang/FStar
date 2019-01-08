@@ -1,5 +1,5 @@
 [
-  ";LÔØÅx±\u0014qU.ˆ3}«8",
+  ",i£,Í)ú˙\u000eQ\u001a‘tQô\u001e",
   [
     [
       "Sum_and_swap.sum_wp",
@@ -19,12 +19,12 @@
         "function_token_typing_FStar.UInt32.t",
         "function_token_typing_HighComp.state",
         "function_token_typing_Prims.int", "int_typing",
-        "interpretation_Sum_and_swap_Tm_abs_f1c72f1c620135d5faad30a31f861388",
+        "interpretation_Sum_and_swap_Tm_abs_2368b0d4ad188f65187809c9431f2cbb",
         "primitive_Prims.op_Addition",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "97d07eb07840dc8e1ce2fe551af38a3d"
+      "9f3d03cadcc6d69b8d81db6848db7b81"
     ],
     [
       "Sum_and_swap.wp_impl",
@@ -52,7 +52,7 @@
         "token_correspondence_HighComp.hwrite", "unit_typing"
       ],
       0,
-      "050c488b5a01ff40c13c0f9fc4a32751"
+      "133e3bf0fff17424465419c189d4243e"
     ],
     [
       "Sum_and_swap.sum_post",
@@ -61,7 +61,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "c3aabd559a13a6a1c70438a54f912fa7"
+      "28c09693003ecefb7d782c3bab5dcf8d"
     ],
     [
       "Sum_and_swap.hswap_and_sum",
@@ -76,7 +76,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "89d26feea952e4bf3c7df801791c6924"
+      "3d066c34bdce46fc700994ba356cc8d1"
     ],
     [
       "Sum_and_swap.lswap_and_sum",
@@ -104,69 +104,7 @@
         "token_correspondence_HighComp.hwrite", "unit_typing"
       ],
       0,
-      "83cd93683e429edaff78a7adb24729f7"
-    ],
-    [
-      "Sum_and_swap.lswap_and_sum",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "HighComp.__proj__HIGH__item__get_equality",
-        "HighComp.__proj__HIGH__item__put_equality",
-        "HighComp_interpretation_Tm_arrow_770258a7853e5d835839cf0bb41ad15e",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "Sum_and_swap_interpretation_Tm_arrow_acde852efd0a1d9819e2ee063b6b670a",
-        "data_elim_FStar.Pervasives.Native.Mktuple2", "eq2-interp",
-        "equation_FStar.Pervasives.Native.fst", "equation_FStar.UInt32.n",
-        "equation_HighComp.bind_elab", "equation_HighComp.comp_wp",
-        "equation_HighComp.get_action", "equation_HighComp.hread",
-        "equation_HighComp.hread_elab", "equation_HighComp.hwrite",
-        "equation_HighComp.mint", "equation_HighComp.put_action",
-        "equation_HighComp.reif", "equation_HighComp.state",
-        "equation_LowComp.lstate", "equation_LowComp.lstate_as_state",
-        "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
-        "equation_Prims.as_ensures", "equation_Prims.as_requires",
-        "equation_Prims.l_True", "equation_Sum_and_swap.hswap_and_sum",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_FStar.UInt32.t",
-        "interpretation_HighComp_Tm_abs_237848800817a6f7caf76b490a9738a4",
-        "interpretation_HighComp_Tm_abs_459b8ca050f4e4cc415acd8c9f20acbc",
-        "interpretation_HighComp_Tm_abs_7b393533a1a9c78f125094e210a00c85",
-        "interpretation_HighComp_Tm_abs_a40614c69e5d71f6e37de37ca7ce32f9",
-        "interpretation_HighComp_Tm_abs_b90077ee13f6630e4c68820d24f9bc97",
-        "interpretation_HighComp_Tm_abs_e6222a0ee1d4ecc6995b85513137eff6",
-        "interpretation_HighComp_Tm_abs_fbdcfaad2f505b31c71af51c18e52fd5",
-        "interpretation_Prims_Tm_abs_65a2e960d61ec783b59c1bd1dd30ed10",
-        "interpretation_Prims_Tm_abs_cc0ce251c10a6cba9664080c8e806896",
-        "interpretation_Sum_and_swap_Tm_abs_2ce97fd2b925352a168ad8f348337fd2",
-        "interpretation_Sum_and_swap_Tm_abs_c5bfe65494fc5b5127ff2eef1d20f649",
-        "interpretation_Sum_and_swap_Tm_abs_d901f8bc1511b950438d706daf489177",
-        "l_not-interp", "lemma_LowStar.Monotonic.Buffer.length_null_1",
-        "lemma_LowStar.Monotonic.Buffer.length_null_2",
-        "primitive_Prims.op_Equality",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_HighComp_Tm_refine_a2b5a0bf4e59fca5db178694207de822",
-        "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
-        "token_correspondence_HighComp.bind_elab",
-        "token_correspondence_HighComp.hread",
-        "token_correspondence_HighComp.hwrite",
-        "token_correspondence_HighComp.reif",
-        "token_correspondence_Sum_and_swap.hswap_and_sum", "true_interp",
-        "typing_FStar.Pervasives.Native.fst",
-        "typing_LowComp.lstate_as_state",
-        "typing_LowStar.Buffer.trivial_preorder",
-        "typing_Sum_and_swap_Tm_abs_c5bfe65494fc5b5127ff2eef1d20f649",
-        "unit_typing"
-      ],
-      0,
-      "34ce32d491076a8239870af8d00f6416"
+      "87c0a6daa22a006293f34d7164db8ba3"
     ]
   ]
 ]

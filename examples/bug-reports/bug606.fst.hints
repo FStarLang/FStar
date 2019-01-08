@@ -1,5 +1,5 @@
 [
-  "\u001f⁄H´©.ÈD\u000e@ ˆ.Ú#\u001b",
+  "í\u001e\u0001÷aëºÑ…|‘‡So\fè",
   [
     [
       "Bug606.f",
@@ -15,7 +15,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4ed2a3175930b1ceeb61e4e456b42e16"
+      "e4a484a6da1f5e3c916985883ccfceb8"
     ],
     [
       "Bug606.g",
@@ -31,7 +31,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fa38ccde980f7ff777ffa024515fd516"
+      "3f77d80cee39e0aa48ed57fec48a8945"
     ],
     [
       "Bug606.f_eq_g",
@@ -58,7 +58,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f96b304c6aa518c1c67efce8fb0ea09b"
+      "3d7aaad89898d3f39342c671bceed3d3"
     ],
     [
       "Bug606.h",
@@ -74,7 +74,7 @@
         "lemma_Bug606.f_eq_g"
       ],
       0,
-      "935db1b5fc5b4136a7361b978eef90c1"
+      "e039864aa79042b93e14649deb70d5b5"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -83,7 +83,7 @@
       1,
       [ "@query" ],
       0,
-      "0488146769ec3be3182554972a0bf52e"
+      "0198572d3eef3df3b4de767ef9e6b478"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -92,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "69ee3f099369604071a3a1142a5a5a97"
+      "6d5e709f5f1fea980d0b7b53cebf4d98"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -113,7 +113,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "bb57422809c46d74919818df3c4bba04"
+      "034d9856cab58ddc41045df382732f31"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "351ab69655a39827f8a4aee2699f3e99"
+      "45706f1d7fa40576e6cd90c4fd0e47c9"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -131,7 +131,7 @@
       1,
       [ "@query" ],
       0,
-      "ef5595049c853cb27b5e3755a91b4da3"
+      "c6745a9295af3472c0b39c47009c4254"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -152,7 +152,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "e821508eb9ec898681e23a012f255c50"
+      "a7847d5d7f362ce7fbac75e6266b4b0a"
     ]
   ]
 ]

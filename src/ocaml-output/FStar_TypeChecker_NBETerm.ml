@@ -359,14 +359,14 @@ let (mkAccuMatch :
         -> t)
   = fun s  -> fun cases  -> fun bs  -> Accu ((Match (s, cases, bs)), []) 
 let (equal_if : Prims.bool -> FStar_Syntax_Util.eq_result) =
-  fun uu___235_2118  ->
-    if uu___235_2118
+  fun uu___236_2118  ->
+    if uu___236_2118
     then FStar_Syntax_Util.Equal
     else FStar_Syntax_Util.Unknown
   
 let (equal_iff : Prims.bool -> FStar_Syntax_Util.eq_result) =
-  fun uu___236_2129  ->
-    if uu___236_2129
+  fun uu___237_2129  ->
+    if uu___237_2129
     then FStar_Syntax_Util.Equal
     else FStar_Syntax_Util.NotEqual
   
@@ -747,10 +747,10 @@ let lazy_embed : 'a . FStar_Syntax_Syntax.emb_typ -> 'a -> (unit -> t) -> t =
          if uu____3852
          then f ()
          else
-           (let thunk = FStar_Common.mk_thunk f  in
+           (let thunk1 = FStar_Common.mk_thunk f  in
             let li = let uu____3886 = FStar_Dyn.mkdyn x  in (uu____3886, et)
                in
-            Lazy ((FStar_Util.Inr li), thunk)))
+            Lazy ((FStar_Util.Inr li), thunk1)))
   
 let lazy_unembed :
   'Auu____3954 'a .
@@ -765,10 +765,10 @@ let lazy_unembed :
       fun x  ->
         fun f  ->
           match x with
-          | Lazy (FStar_Util.Inl li,thunk) ->
-              let uu____4005 = FStar_Common.force_thunk thunk  in
+          | Lazy (FStar_Util.Inl li,thunk1) ->
+              let uu____4005 = FStar_Common.force_thunk thunk1  in
               f uu____4005
-          | Lazy (FStar_Util.Inr (b,et'),thunk) ->
+          | Lazy (FStar_Util.Inr (b,et'),thunk1) ->
               let uu____4065 =
                 (et <> et') ||
                   (FStar_ST.op_Bang FStar_Options.eager_embedding)
@@ -776,7 +776,7 @@ let lazy_unembed :
               if uu____4065
               then
                 let res =
-                  let uu____4094 = FStar_Common.force_thunk thunk  in
+                  let uu____4094 = FStar_Common.force_thunk thunk1  in
                   f uu____4094  in
                 ((let uu____4136 =
                     FStar_ST.op_Bang FStar_Options.debug_embedding  in
@@ -1729,13 +1729,13 @@ let (string_substring' : args -> t FStar_Pervasives_Native.option) =
              let n11 = FStar_BigInt.to_int_fs n1  in
              let n21 = FStar_BigInt.to_int_fs n2  in
              (try
-                (fun uu___238_7696  ->
+                (fun uu___239_7696  ->
                    match () with
                    | () ->
                        let r = FStar_String.substring s1 n11 n21  in
                        let uu____7701 = embed e_string bogus_cbs r  in
                        FStar_Pervasives_Native.Some uu____7701) ()
-              with | uu___237_7704 -> FStar_Pervasives_Native.None)
+              with | uu___238_7704 -> FStar_Pervasives_Native.None)
          | uu____7707 -> FStar_Pervasives_Native.None)
     | uu____7721 -> FStar_Pervasives_Native.None
   

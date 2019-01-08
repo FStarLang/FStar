@@ -62,7 +62,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # ensures that if this rule is successful then %.checked.lax is more
 # recent than its dependences.
 %.checked.lax:
-	$(FSTAR_C) $<
+	$(FSTAR_C) $< --already_cached "* -$(basename $(notdir $<))"
 	touch $@
 
 # And then, in a separate invocation, from each .checked.lax we

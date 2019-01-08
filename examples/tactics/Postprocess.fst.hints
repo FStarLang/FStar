@@ -1,5 +1,5 @@
 [
-  ">8Æ◊~ºÃ\u0011¬\tiV9ì6¬",
+  "ŸlõP\u001aí>§ÍÀ≈ï@£≤≠",
   [
     [
       "Postprocess.uu___68",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Postprocess.x" ],
       0,
-      "93a33866628bb46569961dad2fc4c48b"
+      "bdce8764122cc95afe7788269ab62a18"
     ],
     [
       "Postprocess.uu___69",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_Postprocess.y" ],
       0,
-      "0420e265f33bfaabd9fd94ba1bfbc209"
+      "a95caefc3cb80afeec222bb7e683ef6b"
     ],
     [
       "Postprocess.__proj__B1__item___0",
@@ -30,7 +30,7 @@
         "refinement_interpretation_Postprocess_Tm_refine_17e22ae7e75398217bad910401b33530"
       ],
       0,
-      "d691917281ddc9ff6d14065a423e8af6"
+      "bbf681cbd3e74e2964fcd0cd97144366"
     ],
     [
       "Postprocess.__proj__C1__item___0",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Postprocess_Tm_refine_60aa030648fef8e7bd28516f822e9a0c"
       ],
       0,
-      "c837e672f235ef44d5a37721af1f8c5f"
+      "324ff91f3c4c03eb722f6a7b2354cabc"
     ],
     [
       "Postprocess.__proj__B2__item___0",
@@ -56,7 +56,7 @@
         "refinement_interpretation_Postprocess_Tm_refine_a571d0930fe419c0a3557e389115132f"
       ],
       0,
-      "bc9692a1a43c3ddbec761936f594fd77"
+      "f01233b114d1a7d2fc9c05a957d4c69f"
     ],
     [
       "Postprocess.__proj__C2__item___0",
@@ -69,7 +69,7 @@
         "refinement_interpretation_Postprocess_Tm_refine_d350a2c0136fefb41ae2d218a2b66a7b"
       ],
       0,
-      "00eecbd3373c328b50ccb6137aaf8c76"
+      "60e87c872bbe1863b94298d46693d8b1"
     ],
     [
       "Postprocess.lift",
@@ -86,7 +86,7 @@
         "subterm_ordering_Postprocess.C1", "typing_tok_Postprocess.A1@tok"
       ],
       0,
-      "9728e4299925b51392629f0c8fd648dd"
+      "a86faab63354aa00c31ca9cf86a79ab4"
     ],
     [
       "Postprocess.lemA",
@@ -98,10 +98,11 @@
         "@fuel_correspondence_Postprocess.lift.fuel_instrumented", "@query",
         "constructor_distinct_Postprocess.A1",
         "equality_tok_Postprocess.A1@tok",
-        "equation_with_fuel_Postprocess.lift.fuel_instrumented"
+        "equation_with_fuel_Postprocess.lift.fuel_instrumented",
+        "typing_tok_Postprocess.A1@tok"
       ],
       0,
-      "52f2ae5d24e43a68763ddc4b688e4400"
+      "f3b5d39a9b1a33cb6bb31fb651a6eb74"
     ],
     [
       "Postprocess.lemB",
@@ -109,14 +110,15 @@
       2,
       1,
       [
-        "@MaxFuel_assumption",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Postprocess.lift.fuel_instrumented", "@query",
         "constructor_distinct_Postprocess.B1",
+        "data_typing_intro_Postprocess.B1@tok",
         "equation_with_fuel_Postprocess.lift.fuel_instrumented",
         "projection_inverse_Postprocess.B1__0"
       ],
       0,
-      "7fdd676dd5f902d343d8a85610b3661c"
+      "294dad5b414f7f6404eb092ce18dde64"
     ],
     [
       "Postprocess.lemC",
@@ -125,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "e7bed7f743f3a2f21ac7013983fff351"
+      "3f7813a62eff9c7d06fa5c3287724c5f"
     ],
     [
       "Postprocess.congB",
@@ -138,7 +140,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "44a82b7b9aeffd85791991dffe79a588"
+      "ba43744c07198d75b4a5a6e3fa603449"
     ],
     [
       "Postprocess.congC",
@@ -151,7 +153,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "ce6561d48c4b5ca2938ec8361d1c376b"
+      "3095ac74292c4af002b8d0271c414f89"
     ],
     [
       "Postprocess.apply_feq_lem",
@@ -162,14 +164,13 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "interpretation_FStar.FunctionalExtensionality_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
         "lemma_FStar.FunctionalExtensionality.extensionality",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0"
+        "typing_FStar.FunctionalExtensionality_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "25b630de761a0b4bc95a8f2b0a07ffba"
+      "d956c1022cb382b993d0b6b0aea90ede"
     ],
     [
       "Postprocess._onL",
@@ -182,7 +183,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "30a27c71cb11efaed68232000c52d0a9"
+      "cfdf773bde8b3664e5b2ec4dfc281b06"
     ],
     [
       "Postprocess.push_lifts'",
@@ -208,7 +209,7 @@
         "typing_FStar.Tactics.Result.uu___is_Success", "unit_typing"
       ],
       0,
-      "a03db32b832e7d6e2c84978bf5e6227f"
+      "0d7d7582ae48173cc1706f7dd5ac3477"
     ],
     [
       "Postprocess.uu___68",
@@ -217,7 +218,7 @@
       1,
       [ "@query", "equation_Postprocess.x" ],
       0,
-      "c64bba4c4b1bcf40766d10bbb1b5a472"
+      "af3bf64d3c187f310478b660c43e5afb"
     ],
     [
       "Postprocess.uu___69",
@@ -226,7 +227,7 @@
       1,
       [ "@query", "equation_Postprocess.y" ],
       0,
-      "6f8991979dc4f605256bc8175ce121bd"
+      "5388e4e5cc342594180ca1abc10b86f0"
     ],
     [
       "Postprocess.__proj__B1__item___0",
@@ -239,7 +240,7 @@
         "refinement_interpretation_Postprocess_Tm_refine_17e22ae7e75398217bad910401b33530"
       ],
       0,
-      "f4506928e83a8d3c506f4acf811221f8"
+      "40d5ac2fa143ed3f77b829ee88e84f67"
     ],
     [
       "Postprocess.__proj__C1__item___0",
@@ -252,7 +253,7 @@
         "refinement_interpretation_Postprocess_Tm_refine_60aa030648fef8e7bd28516f822e9a0c"
       ],
       0,
-      "fedce2b2943b5a9e43d1433d63d34874"
+      "6ad5ce3b64ccf558182e35f3490389b2"
     ],
     [
       "Postprocess.__proj__B2__item___0",
@@ -265,7 +266,7 @@
         "refinement_interpretation_Postprocess_Tm_refine_a571d0930fe419c0a3557e389115132f"
       ],
       0,
-      "f8f17868becfd5e504edf35138e5f4e9"
+      "eb78920e99311fa61c606cd23cf82bf3"
     ],
     [
       "Postprocess.__proj__C2__item___0",
@@ -278,7 +279,7 @@
         "refinement_interpretation_Postprocess_Tm_refine_d350a2c0136fefb41ae2d218a2b66a7b"
       ],
       0,
-      "927c1fe798896c47402ee5fb56554167"
+      "f4372fc7dca7c6119d7cd4868881215a"
     ],
     [
       "Postprocess.lift",
@@ -295,7 +296,7 @@
         "subterm_ordering_Postprocess.C1", "typing_tok_Postprocess.A1@tok"
       ],
       0,
-      "52ce40e425778a581ace8b5b1eb92b1a"
+      "4b4459bb11f40337e9df353ac20af5a4"
     ],
     [
       "Postprocess.fext",
@@ -317,7 +318,7 @@
         "typing_FStar.Tactics.Result.uu___is_Success", "unit_typing"
       ],
       0,
-      "e516e6f293c17d77a9638c96f9a3220a"
+      "14fad605b3152edd3869b544ecbb012a"
     ],
     [
       "Postprocess.push_lifts'",
@@ -342,7 +343,7 @@
         "typing_FStar.Tactics.Result.uu___is_Success", "unit_typing"
       ],
       0,
-      "1d90d18628c16f7cf198568627411d3a"
+      "f7340180cc50a63ce1844e6b7e215ef5"
     ]
   ]
 ]

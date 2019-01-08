@@ -1,5 +1,5 @@
 [
-  "ìH\u0010\u0000æ$ WGó%eÄh:ˆ",
+  "—++\u0016\"˛ÜÃd∆ﬁ®$ê\r€",
   [
     [
       "IfcExampleReify3.is_x",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "31fd5d58ee63f505499a75aa9f73f922"
+      "079c0fe2eeffacbee4ffc8ebe6179195"
     ],
     [
       "IfcExampleReify3.p1_x",
@@ -29,15 +29,11 @@
         "equation_IfcExampleReify3.is_x", "equation_IfcExampleReify3.p1",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "int_inversion", "int_typing",
+        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_16003139f70cbb4ad8f9922bc36cb268",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_5a2e82f243eb09f8f3c90ee9e11c43f1",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_66262f99c7536942ce4dbb9789eda0ec",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_7c14753a5b99774e3e0081a9f2de5e5d",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_be1f098a73b727536eabaf253dd83852",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_d118813f5b63d6276a92d2454f10fa10",
-        "interpretation_IfcExampleReify3_Tm_abs_1c058c495fb708d82853bb37cc764ca2",
+        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_c9960a4ad5ec1f034c374837e8bbd099",
         "interpretation_IfcExampleReify3_Tm_abs_7ec298f91538d42bce4fe9b448a559f5",
-        "interpretation_IfcExampleReify3_Tm_abs_83210c85633a6c251cca7096a01a062a",
         "interpretation_IfcExampleReify3_Tm_abs_e43ceb024e3b93aa0d9df91d5bcb71cf",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd1",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd2",
@@ -53,7 +49,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "502dd8c4c50d9b205f61ab651a8b32eb"
+      "63e3608f8cc47352e030d3714427ec86"
     ],
     [
       "IfcExampleReify3.ni_p1",
@@ -65,9 +61,7 @@
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_equality",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_equality",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
-        "disc_equation_IfcExampleReify3.Low",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.DM4F.Heap.IntStoreFixed.sel",
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "equation_FStar.DM4F.IntStoreFixed.read",
@@ -79,17 +73,12 @@
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "int_typing",
+        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_16003139f70cbb4ad8f9922bc36cb268",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_5a2e82f243eb09f8f3c90ee9e11c43f1",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_66262f99c7536942ce4dbb9789eda0ec",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_7c14753a5b99774e3e0081a9f2de5e5d",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_be1f098a73b727536eabaf253dd83852",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_d118813f5b63d6276a92d2454f10fa10",
-        "interpretation_IfcExampleReify3_Tm_abs_1c058c495fb708d82853bb37cc764ca2",
+        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_c9960a4ad5ec1f034c374837e8bbd099",
         "interpretation_IfcExampleReify3_Tm_abs_7ec298f91538d42bce4fe9b448a559f5",
-        "interpretation_IfcExampleReify3_Tm_abs_83210c85633a6c251cca7096a01a062a",
         "interpretation_IfcExampleReify3_Tm_abs_e43ceb024e3b93aa0d9df91d5bcb71cf",
-        "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd1",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd2",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -104,7 +93,7 @@
         "unit_typing"
       ],
       0,
-      "a675bd2e0e2d5d6b8be2f8aa084c6bd8"
+      "549520ab96e1d9d348331c271efaa961"
     ],
     [
       "IfcExampleReify3.is_x",
@@ -113,7 +102,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8f7f153d3709956518bdfa3b771bdf87"
+      "fbb98d359cdad1eafc3ceb9961890961"
     ]
   ]
 ]

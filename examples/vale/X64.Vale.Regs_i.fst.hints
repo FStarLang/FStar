@@ -1,5 +1,5 @@
 [
-  "\u0016\u0005bë¤léöçqcC\f\u001e\nó",
+  "³ò¡i5&Ò#\u0012®3XÛµjc",
   [
     [
       "X64.Vale.Regs_i.lemma_equal_intro",
@@ -15,7 +15,7 @@
         "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "058cd314d1c08c148f6d051da0258d8f"
+      "74a69df640a893eebe1143cb1b1e7764"
     ],
     [
       "X64.Vale.Regs_i.lemma_equal_elim",
@@ -34,11 +34,11 @@
         "equation_X64.Vale.Regs_i.t", "kinding_X64.Machine_s.reg@tok",
         "lemma_FStar.FunctionalExtensionality.extensionality",
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
-        "typing_X64.Vale.Regs_i_Tm_abs_1bf39616a74f1454291cdea0f832200d",
+        "typing_X64.Vale.Regs_i_Tm_abs_5ddf544b15726955644c2e2b7b9e7d8e",
         "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "cb5bd7b84b3b1cd399a2f57ab14de433"
+      "c6dcbc84a018a9eb8d7fbbf464384b59"
     ]
   ]
 ]

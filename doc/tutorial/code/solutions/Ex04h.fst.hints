@@ -1,5 +1,5 @@
 [
-  "L§∫¢∆@@\u0000qgP\u0010ÚDÁß",
+  "¨\u0000Û£„Ωê8^◊{}GT)'",
   [
     [
       "Ex04h.length",
@@ -16,7 +16,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "795e9522687c560e040b11d7f63f4d87"
+      "08c09973d9b9fb1627446c437272102b"
     ],
     [
       "Ex04h.nth",
@@ -28,22 +28,22 @@
         "@fuel_correspondence_Ex04h.length.fuel_instrumented",
         "@fuel_irrelevance_Ex04h.length.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "binder_x_2204d3c8fa2da81b2aec3d0853792e9d_3",
-        "disc_equation_Prims.Cons", "equation_Prims.nat",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "equation_Prims.nat",
         "equation_with_fuel_Ex04h.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Ex04h_Tm_refine_33ad50f9ae1fb0041e95b0d903542e0b",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6e50e490f03d3a1dfbd097b4e56ba396"
+      "33fdc9a3ca0368d64080b924cab80197"
     ],
     [
       "Ex04h.length",
@@ -60,7 +60,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0f4b84baaf873bd6bd2b34fbf19290fb"
+      "64251bc018e804dfad9ac212ed5e4a46"
     ],
     [
       "Ex04h.nth",
@@ -72,24 +72,22 @@
         "@fuel_correspondence_Ex04h.length.fuel_instrumented",
         "@fuel_irrelevance_Ex04h.length.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "binder_x_2204d3c8fa2da81b2aec3d0853792e9d_3",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "equation_Prims.nat",
         "equation_with_fuel_Ex04h.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Ex04h_Tm_refine_33ad50f9ae1fb0041e95b0d903542e0b",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b98356371181fb6c28d67f8b3c68ee5e"
+      "7db29a38fb80484fa3f1b99d9859e1b1"
     ]
   ]
 ]

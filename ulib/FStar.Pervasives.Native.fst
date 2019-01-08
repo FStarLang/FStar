@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Pervasives.Native
 open Prims
 
@@ -162,66 +177,3 @@ type tuple14 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n =
             -> _13:'m
             -> _14:'n
            -> tuple14 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n
-
-
-(*********************************************************************************)
-(* Marking terms for normalization *)
-(*********************************************************************************)
-abstract let normalize_term (#a:Type) (x:a) : a = x
-abstract let normalize (a:Type0) :Type0 = a
-
-abstract
-noeq type norm_step =
-  | Simpl
-  | Weak
-  | HNF
-  | Primops
-  | Delta
-  | Zeta
-  | Iota
-  | NBE // use NBE instead of the normalizer
-  | Reify
-  | UnfoldOnly  : list string -> norm_step // each string is a fully qualified name like `A.M.f`
-  | UnfoldFully : list string -> norm_step // idem
-  | UnfoldAttr  : list string -> norm_step
-
-// Helpers, so we don't expose the actual inductive
-abstract let simplify : norm_step = Simpl
-abstract let weak     : norm_step = Weak
-abstract let hnf      : norm_step = HNF
-abstract let primops  : norm_step = Primops
-abstract let delta    : norm_step = Delta
-abstract let zeta     : norm_step = Zeta
-abstract let iota     : norm_step = Iota
-abstract let nbe      : norm_step = NBE
-abstract let reify_   : norm_step = Reify
-abstract let delta_only  (s : list string) : norm_step = UnfoldOnly s
-abstract let delta_fully (s : list string) : norm_step = UnfoldFully s
-abstract let delta_attr  (s : list string) : norm_step = UnfoldAttr s
-
-// Normalization marker
-abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
-
-abstract val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
-let assert_norm p = ()
-
-let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
-let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
-let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
-
-(*
- * Pure and ghost inner let bindings are now always inlined during the wp computation, if:
- * the return type is not unit and the head symbol is not marked irreducible.
- * To circumvent this behavior, singleton can be used.
- * See the example usage in ulib/FStar.Algebra.Monoid.fst.
- *)
-irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
-
-
-(*
- * `with_type t e` is just an identity function, but it receives special treatment
- *  in the SMT encoding, where in addition to being an identity function, we have
- *  an SMT axiom:
- *  `forall t e.{:pattern (with_type t e)} has_type (with_type t e) t`
- *)
-let with_type (#t:Type) (e:t) = e

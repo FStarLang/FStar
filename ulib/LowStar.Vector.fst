@@ -411,7 +411,8 @@ val assign:
       hmap_dom_eq h0 h1 /\
       modifies (loc_vector_within #a vec i (i + 1ul)) h0 h1 /\
       get h1 vec i == v /\
-      S.equal (as_seq h1 vec) (S.upd (as_seq h0 vec) (U32.v i) v)))
+      S.equal (as_seq h1 vec) (S.upd (as_seq h0 vec) (U32.v i) v) /\
+      live h1 vec))
 #reset-options "--z3rlimit 10"
 let assign #a vec i v =
   let hh0 = HST.get () in
@@ -496,6 +497,14 @@ let flush #a vec ia i =
   B.blit vs i fvs 0ul fsz;
   B.free vs;
   Vec fsz asz fvs
+
+val shrink:
+  #a:Type -> vec:vector a ->
+  new_size:uint32_t{new_size <= size_of vec} ->
+  Tot (vector a)
+let shrink #a vec new_size =
+  Vec new_size (Vec?.cap vec) (Vec?.vs vec)
+  
 
 /// Iteration
 

@@ -1,5 +1,5 @@
 [
-  "ñ\r~Ş„ï]=–­ËG\u000f\u0000ÖZ",
+  "ğòğÚjáíI\u007f¼\u0006a\nâ’",
   [
     [
       "Bug279.t",
@@ -10,7 +10,7 @@
         "@query", "assumption_Prims.list__uu___haseq", "kinding_Bug279.t@tok"
       ],
       0,
-      "5179b2887c5b9433c759d449ff0457b6"
+      "3da0b6220076e311363f1d08ec7ae2fd"
     ],
     [
       "Bug279.f",
@@ -23,7 +23,7 @@
         "subterm_ordering_Bug279.T"
       ],
       0,
-      "06c9863a293d66a755cc40ce08054c7f"
+      "091c5508fa2b43e3446fac065f33555d"
     ]
   ]
 ]

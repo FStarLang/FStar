@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module LowStar.Monotonic.Buffer
 
 module P = FStar.Preorder
@@ -764,27 +779,6 @@ val loc_disjoint
   (s1 s2: loc)
 : GTot Type0
 
-[@"opaque_to_smt"]
-private let rec loc_disjoint_from_list (l:loc) (ls:list loc) :Type0 =
-  match ls with
-  | []    -> True
-  | hd::tl -> loc_disjoint l hd /\ loc_disjoint_from_list l tl
-
-[@"opaque_to_smt"]
-private let rec loc_pairwise_disjoint_aux (l:list loc) :Type0 =
-  match l with
-  | []    -> True
-  | hd::tl -> loc_disjoint_from_list hd tl /\ loc_pairwise_disjoint_aux tl
-
-(*
- * Use this to state pairwise disjointness for the locations in l
- * It is unfolded to conjunction of loc_disjoint for all pairs of locations in l
- *)
-[@"opaque_to_smt"]
-unfold let loc_pairwise_disjoint (l:list loc) :Type0 =
-  norm [iota; zeta; delta_only [`%loc_disjoint_from_list;
-                                `%loc_pairwise_disjoint_aux]] (loc_pairwise_disjoint_aux l)
-
 val loc_disjoint_sym
   (s1 s2: loc)
 : Lemma
@@ -877,6 +871,43 @@ val loc_disjoint_regions
   (ensures (loc_disjoint (loc_regions preserve_liveness1 rs1) (loc_regions preserve_liveness2 rs2)))
   [SMTPat (loc_disjoint (loc_regions preserve_liveness1 rs1) (loc_regions preserve_liveness2 rs2))]
 
+
+/// Some utilities to work with lists of buffers and locs
+
+(* buf_t is a `buffer` at some type `a` *)
+let buf_t = a:Type0 & rrel:srel a & rel:srel a & mbuffer a rrel rel
+
+(* A convenience to construct a buf_t *)
+[@BigOps.__reduce__]
+let buf (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : buf_t = (|a, rrel, rel, b|)
+
+(* A conjunction of liveness conditions on the buffers in `l`
+   Implicitly reduced at typechecking time *)
+[@"opaque_to_smt"]
+unfold
+let all_live (h:HS.mem) (l:list buf_t) : Type0 =
+  BigOps.big_and #buf_t (fun (| _, _, _, b |) -> live h b) l
+
+(* Pairwise disjointness of locations;
+   Implicitly reduced at typechecking time *)
+[@"opaque_to_smt"]
+unfold
+let all_disjoint (l:list loc) : Type0 =
+  BigOps.pairwise_and loc_disjoint l
+
+(* Union of a list of locations;
+   Implicitly reduced at typechecking time *)
+[@"opaque_to_smt"]
+unfold
+let loc_union_l (l:list loc) =
+  BigOps.normal (List.Tot.fold_right_gtot l loc_union loc_none)
+
+(*
+ * Same as all_disjoint, retaining for backward compatibility
+ *)
+[@"opaque_to_smt"]
+unfold
+let loc_pairwise_disjoint (l:list loc) :Type0 = BigOps.pairwise_and loc_disjoint l
 
 /// The modifies clauses proper.
 ///
@@ -1330,6 +1361,10 @@ val modifies_only_live_addresses
 val loc_not_unused_in (h: HS.mem) : GTot loc
 
 val loc_unused_in (h: HS.mem) : GTot loc
+
+val loc_regions_unused_in (h: HS.mem) (rs: Set.set HS.rid) : Lemma
+  (requires (forall r . Set.mem r rs ==> (~ (HS.live_region h r))))
+  (ensures (loc_unused_in h `loc_includes` loc_regions false rs))
 
 val loc_unused_in_not_unused_in_disjoint (h: HS.mem) : Lemma
   (loc_disjoint (loc_unused_in h) (loc_not_unused_in h))

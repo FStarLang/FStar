@@ -127,8 +127,8 @@ abstract val lemma_index_create: #a:Type -> n:nat -> v:a -> i:nat{i < n} -> Lemm
   [SMTPat (index (create n v) i)]
 let rec lemma_index_create #a n v i =
   if n = 0 then ()
-  else
-    if i = 0 then () else lemma_index_create #a (n - 1) v (i - 1)
+  else if i = 0 then ()
+       else (lemma_create_len (n - 1) v; lemma_index_create #a (n - 1) v (i - 1))
 
 abstract val lemma_index_upd1: #a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> Lemma
   (requires True)
@@ -138,7 +138,8 @@ let rec lemma_index_upd1 #a s n v = if n = 0 then () else lemma_index_upd1 #a (t
 
 abstract val lemma_index_upd2: #a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> i:nat{i<>n /\ i < length s} -> Lemma
   (requires True)
-  (ensures (index (upd s n v) i == index s i)) (decreases (length s))
+  (ensures (index (upd s n v) i == index s i))
+  (decreases (length s))
   [SMTPat (index (upd s n v) i)]
 let rec lemma_index_upd2 #a s n v i = match (MkSeq?.l s) with
   | []     -> ()
@@ -146,16 +147,18 @@ let rec lemma_index_upd2 #a s n v i = match (MkSeq?.l s) with
     if i = 0 then ()
     else
       if n = 0 then ()
-      else lemma_index_upd2 #a (MkSeq tl) (n - 1) v (i - 1)
+      else (lemma_len_upd (n - 1) v (MkSeq tl); lemma_index_upd2 #a (MkSeq tl) (n - 1) v (i - 1))
 
 abstract val lemma_index_app1: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i < length s1} -> Lemma
   (requires True)
   (ensures (index (append s1 s2) i == index s1 i)) (decreases (length s1))
   [SMTPat (index (append s1 s2) i)]
-let rec lemma_index_app1 #a s1 s2 i  = match (MkSeq?.l s1) with
+let rec lemma_index_app1 #a s1 s2 i  =
+  match (MkSeq?.l s1) with
   | []    -> ()
   | hd::tl ->
-    if i = 0 then () else lemma_index_app1 #a (MkSeq tl) s2 (i - 1)
+    if i = 0 then ()
+    else (lemma_len_append (MkSeq tl) s2; lemma_index_app1 #a (MkSeq tl) s2 (i - 1))
 
 abstract val lemma_index_app2: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i < length s1 + length s2 /\ length s1 <= i} -> Lemma
   (requires True)

@@ -70,7 +70,7 @@ make package
 # 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version
 diag "*** Unzip and verify the Package  ***"
 TIME_STAMP=$(date +%Y%m%d%H%M)
-COMMIT=_$(git log --pretty=format:%h -n 1)
+COMMIT=_$(git rev-parse --short HEAD)
 
 TYPE="_Windows_x64.zip"
 MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
