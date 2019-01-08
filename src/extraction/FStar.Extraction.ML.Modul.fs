@@ -860,7 +860,7 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
   if m.name.str <> "Prims"
   && (is_kremlin || not m.is_interface)
   then begin
-    BU.print1 "Extracted module %s\n" (string_of_lid m.name);
+    if not (Options.silent()) then (BU.print1 "Extracted module %s\n" (string_of_lid m.name));
     g, Some (MLLib ([name, Some ([], mlm), (MLLib [])]))
   end
   else g, None
