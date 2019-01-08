@@ -1448,7 +1448,8 @@ let rec (specs_with_types :
                                                                     (FStar_Getopt.noshort,
                                                                     "silent",
                                                                     uu____6297,
-                                                                    " ")  in
+                                                                    "Disable all non-critical output")
+                                                                     in
                                                                     let uu____6305
                                                                     =
                                                                     let uu____6319

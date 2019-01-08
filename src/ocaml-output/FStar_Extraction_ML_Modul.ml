@@ -2080,8 +2080,14 @@ let (extract' :
                   (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface))
            then
              ((let uu____5770 =
-                 FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name  in
-               FStar_Util.print1 "Extracted module %s\n" uu____5770);
+                 let uu____5772 = FStar_Options.silent ()  in
+                 Prims.op_Negation uu____5772  in
+               if uu____5770
+               then
+                 let uu____5775 =
+                   FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name  in
+                 FStar_Util.print1 "Extracted module %s\n" uu____5775
+               else ());
               (g2,
                 (FStar_Pervasives_Native.Some
                    (FStar_Extraction_ML_Syntax.MLLib
@@ -2097,42 +2103,42 @@ let (extract :
   =
   fun g  ->
     fun m  ->
-      (let uu____5843 = FStar_Options.restore_cmd_line_options true  in
-       FStar_All.pipe_left (fun a2  -> ()) uu____5843);
-      (let uu____5846 =
-         let uu____5848 =
+      (let uu____5850 = FStar_Options.restore_cmd_line_options true  in
+       FStar_All.pipe_left (fun a2  -> ()) uu____5850);
+      (let uu____5853 =
+         let uu____5855 =
            FStar_Options.should_extract
              (m.FStar_Syntax_Syntax.name).FStar_Ident.str
             in
-         Prims.op_Negation uu____5848  in
-       if uu____5846
+         Prims.op_Negation uu____5855  in
+       if uu____5853
        then
-         let uu____5851 =
-           let uu____5853 =
+         let uu____5858 =
+           let uu____5860 =
              FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name  in
            FStar_Util.format1
              "Extract called on a module %s that should not be extracted"
-             uu____5853
+             uu____5860
             in
-         failwith uu____5851
+         failwith uu____5858
        else ());
-      (let uu____5858 = FStar_Options.interactive ()  in
-       if uu____5858
+      (let uu____5865 = FStar_Options.interactive ()  in
+       if uu____5865
        then (g, FStar_Pervasives_Native.None)
        else
          (let res =
-            let uu____5878 = FStar_Options.debug_any ()  in
-            if uu____5878
+            let uu____5885 = FStar_Options.debug_any ()  in
+            if uu____5885
             then
               let msg =
-                let uu____5889 =
+                let uu____5896 =
                   FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name
                    in
-                FStar_Util.format1 "Extracting module %s\n" uu____5889  in
+                FStar_Util.format1 "Extracting module %s\n" uu____5896  in
               FStar_Util.measure_execution_time msg
-                (fun uu____5899  -> extract' g m)
+                (fun uu____5906  -> extract' g m)
             else extract' g m  in
-          (let uu____5903 = FStar_Options.restore_cmd_line_options true  in
-           FStar_All.pipe_left (fun a3  -> ()) uu____5903);
+          (let uu____5910 = FStar_Options.restore_cmd_line_options true  in
+           FStar_All.pipe_left (fun a3  -> ()) uu____5910);
           res))
   
