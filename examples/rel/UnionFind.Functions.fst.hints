@@ -446,7 +446,7 @@
         "typing_UnionFind.Forest.id", "typing_UnionFind.Forest.set_n"
       ],
       0,
-      "8986f0c830afe3ccbc7c5acc2339a2ed"
+      "3155352ef812a327bec2723d121ecc8c"
     ],
     [
       "UnionFind.Functions.merge_opt",
@@ -518,7 +518,7 @@
         "typing_UnionFind.Forest.id", "typing_UnionFind.Forest.set_n"
       ],
       0,
-      "e1eeaaffe1feff89cc53865f7f5e985a"
+      "cf0bbd0b9fe8dd86b8e488cfe478cab1"
     ],
     [
       "UnionFind.Functions.parent",
@@ -868,7 +868,7 @@
         "typing_UnionFind.Forest.id", "typing_UnionFind.Forest.set_n"
       ],
       0,
-      "d29af992ee167a3ac4ff6fb345860e27"
+      "3e458d017ab7cbbd3600fe884042eed1"
     ],
     [
       "UnionFind.Functions.merge_opt",
@@ -940,7 +940,7 @@
         "typing_UnionFind.Forest.id", "typing_UnionFind.Forest.set_n"
       ],
       0,
-      "959814e169916d3b331808649fed2e6e"
+      "e4f4a7cbf78a8a8034e240c1a54b948e"
     ]
   ]
 ]
