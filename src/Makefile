@@ -19,6 +19,7 @@ fstar-in-fsharp: nuget-restore
 	$(DOS2UNIX) parser/parse.fsi
 	chmod a+x $(BIN)/tests.exe
 	chmod a+x $(BIN)/fstar.exe
+	cp $(BIN)/fstar.exe $(BIN)/fstar.fsharp
 
 # SAD! Can't make clean if fslex and fsyacc haven't be restored... what...
 clean: clean-ocaml nuget-restore
