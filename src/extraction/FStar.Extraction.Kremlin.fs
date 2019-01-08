@@ -837,6 +837,7 @@ and translate_expr env e: expr =
       EConstant (must (mk_width m), c)
 
   | MLE_App ({ expr = MLE_Name ([ "C" ], "string_of_literal") }, [ { expr = e } ])
+  | MLE_App ({ expr = MLE_Name ([ "C"; "Compat"; "String" ], "of_literal") }, [ { expr = e } ])
   | MLE_App ({ expr = MLE_Name ([ "C"; "String" ], "of_literal") }, [ { expr = e } ]) ->
       begin match e with
       | MLE_Const (MLC_String s) ->
