@@ -34,11 +34,9 @@ val as_ref (#a:Type0) (arr:array a) : GTot (ref (seq a))
 
 let sel (#a:Type0) (h:heap) (s:array a) : GTot (seq a) = Heap.sel h (as_ref s)
 
-let contains (#a:Type0) (h:heap) (s:array a) : GTot bool =
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains h (as_ref s))
+let contains (#a:Type0) (h:heap) (s:array a) : Type0 = Heap.contains h (as_ref s)
 
-let unused_in (#a:Type0) (arr:array a) (h:heap) : GTot bool
- = FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref arr) h)
+let unused_in (#a:Type0) (arr:array a) (h:heap) : Type0 = Heap.unused_in (as_ref arr) h
 
 let heap_upd (#a:Type0) (h:heap) (r:array a) (v:seq a) : GTot heap = Heap.upd h (as_ref r) v
 
