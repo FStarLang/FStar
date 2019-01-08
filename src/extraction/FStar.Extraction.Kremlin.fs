@@ -341,7 +341,7 @@ let rec translate (MLLib modules): list<file> =
       Syntax.string_of_mlpath path
     in
     try
-      BU.print1 "Attempting to translate module %s\n" m_name;
+      if not (Options.silent()) then (BU.print1 "Attempting to translate module %s\n" m_name);
       Some (translate_module m)
     with
     | e ->

@@ -880,7 +880,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "silent",
         Const (mk_bool true),
-        " ");
+        "Disable all non-critical output");
 
        ( noshort,
         "smt",
