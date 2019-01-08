@@ -2,7 +2,7 @@ FSTAR_HOME=../..
 KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
 INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib
 # Poly files are here for benchmarking, and expected to fail without tactics
-EXCLUDED_FSTAR_FILES=Launch.fst Test.Math.Lemmas.fst CanonDeep.fst Poly1.fst Poly2.fst
+EXCLUDED_FSTAR_FILES=Launch.fst Test.Math.Lemmas.fst CanonDeep.fst Poly1.fst Poly2.fst Splice2.fst
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
 all: verify-all #stringprintertest

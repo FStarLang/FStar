@@ -327,6 +327,7 @@ type raw_error =
   | Error_AlreadyCachedAssertionFailure
   | Error_MustEraseMissing
   | Warning_EffectfulArgumentToErasedFunction
+  | Fatal_EmptySurfaceLet
 
 type flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
@@ -662,6 +663,7 @@ let default_flags =
   (Error_AlreadyCachedAssertionFailure               , CFatal);
   (Error_MustEraseMissing                            , CWarning);
   (Warning_EffectfulArgumentToErasedFunction         , CWarning);
+  (Fatal_EmptySurfaceLet                             , CFatal);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]
