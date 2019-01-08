@@ -26,7 +26,7 @@ type msg (l:nat) = lbytes l
 (* ----- a lemma on array append *)
 val append_inj_lemma: b1:message -> b2:message {UInt.fits (Bytes.length b1 + Bytes.length b2) 32}
                    -> c1:message -> c2:message {UInt.fits (Bytes.length c1 + Bytes.length c2) 32}
-                   -> Lemma (requires (Bytes.length b1==Bytes.length c1 /\ b2t ((Bytes.append b1 b2) = (Bytes.append c1 c2))))
+                   -> Lemma (requires (Bytes.length b1==Bytes.length c1 /\ (Bytes.append b1 b2) == (Bytes.append c1 c2)))
                             (ensures (Bytes.equal b1 c1 /\ Bytes.equal b2 c2))
                             [SMTPat (Bytes.append b1 b2); SMTPat (Bytes.append c1 c2)] (* given to the SMT solver *)
 let append_inj_lemma b1 b2 c1 c2 =

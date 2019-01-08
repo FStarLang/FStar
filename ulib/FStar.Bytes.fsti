@@ -210,7 +210,7 @@ val int_of_byte:
   -> Tot (uint_k 1)
 
 val byte_of_int:
-    k:nat
+    k:nat{k < 256}
   -> byte
 
 val bytes_of_int_of_bytes:
