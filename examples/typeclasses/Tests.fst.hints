@@ -16,7 +16,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "494a8fd9e55fb2b5ba6a38935624c5ae"
+      "ea6d30429662feb58018f21a22d88a3b"
     ],
     [
       "Tests.uu___73",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "60f6f1708152bd503a5fecfb69e79be0"
+      "8fb3cca36e7696f22338c3b956178516"
     ],
     [
       "Tests.uu___74",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "0da11ea039243fad20bb7f4038806e58"
+      "d93f07b89a7875f7b3ec5ed142bb27a5"
     ],
     [
       "Tests.test1",
@@ -69,7 +69,7 @@
         "token_correspondence_Prims.op_Addition", "typing_Tests.sum"
       ],
       0,
-      "7a92a9a2b21aa5589ec0d1100b2e860a"
+      "cb5d6cc8fc69b55829a1430faaa0d3bf"
     ],
     [
       "Tests.test2",
@@ -92,7 +92,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "5935953e499f604da45bd4077dac2764"
+      "e2966f769b3ac9bebbb05c823d373f78"
     ],
     [
       "Tests.sum",
@@ -109,7 +109,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "aeb5fac03c9e2e2bc36b4dd26907cd5e"
+      "a5ec8b7fb38dfc57108fb007837d149b"
     ],
     [
       "Tests.uu___73",
@@ -118,7 +118,7 @@
       1,
       [ "@query" ],
       0,
-      "deac8a3aab72fd2a683df82821ffc74b"
+      "547a09f0a80aaf27fa36df8058b4b04f"
     ],
     [
       "Tests.uu___74",
@@ -127,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "817e7112d82b4c547db0c999b673c22e"
+      "ff0b4487be0fc76b6e055217316b937e"
     ],
     [
       "Tests.test1",
@@ -162,7 +162,7 @@
         "token_correspondence_Prims.op_Addition", "typing_Tests.sum"
       ],
       0,
-      "4a00900c27fce40f01c13e696c2b6167"
+      "82dd5b69eeae68247983f107c25f0218"
     ],
     [
       "Tests.test2",
@@ -185,7 +185,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "84714445f86b6d7a964c64a0ddec1881"
+      "2688d7c36248c523e2f6ddb29d323b60"
     ]
   ]
 ]
