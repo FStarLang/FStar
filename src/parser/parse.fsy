@@ -2325,9 +2325,9 @@ tmNoEqWith_appTerm_:
 | tmNoEqWith_appTerm_ OPINFIX3 tmNoEqWith_appTerm_
     {let (e1, op, e2) = ($1, $2, $3) in
       ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmNoEqWith_appTerm_ BACKTICK qlident BACKTICK tmNoEqWith_appTerm_
-    {let (e1, _2, id, _4, e2) = ($1, (), $3, (), $5) in
-      ( mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Infix; e2, Nothing ] (rhs2 parseState 1 5) )}
+| tmNoEqWith_appTerm_ BACKTICK tmNoEqWith_appTerm_ BACKTICK tmNoEqWith_appTerm_
+    {let (e1, _2, op, _4, e2) = ($1, (), $3, (), $5) in
+      ( mkApp op [ e1, Infix; e2, Nothing ] (rhs2 parseState 1 5) )}
 | tmNoEqWith_appTerm_ OPINFIX4 tmNoEqWith_appTerm_
     {let (e1, op, e2) = ($1, $2, $3) in
       ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
@@ -2370,9 +2370,9 @@ tmNoEqWith_tmRefinement_:
 | tmNoEqWith_tmRefinement_ OPINFIX3 tmNoEqWith_tmRefinement_
     {let (e1, op, e2) = ($1, $2, $3) in
       ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
-| tmNoEqWith_tmRefinement_ BACKTICK qlident BACKTICK tmNoEqWith_tmRefinement_
-    {let (e1, _2, id, _4, e2) = ($1, (), $3, (), $5) in
-      ( mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Infix; e2, Nothing ] (rhs2 parseState 1 5) )}
+| tmNoEqWith_tmRefinement_ BACKTICK tmNoEqWith_tmRefinement_ BACKTICK tmNoEqWith_tmRefinement_
+    {let (e1, _2, op, _4, e2) = ($1, (), $3, (), $5) in
+      ( mkApp op [ e1, Infix; e2, Nothing ] (rhs2 parseState 1 5) )}
 | tmNoEqWith_tmRefinement_ OPINFIX4 tmNoEqWith_tmRefinement_
     {let (e1, op, e2) = ($1, $2, $3) in
       ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
