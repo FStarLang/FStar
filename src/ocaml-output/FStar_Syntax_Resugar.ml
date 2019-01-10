@@ -2173,7 +2173,7 @@ let (resugar_eff_decl' :
                    in
                 let bind_wp =
                   resugar_tscheme'' env "bind_wp"
-                    ed.FStar_Syntax_Syntax.ret_wp
+                    ed.FStar_Syntax_Syntax.bind_wp
                    in
                 let if_then_else1 =
                   resugar_tscheme'' env "if_then_else"
