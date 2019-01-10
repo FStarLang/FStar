@@ -40,12 +40,10 @@ endif
 # Final sanity check for the OCaml version
 OCAML_BRANCH=$(shell ocaml get_branch.ml)
 
-.PHONY: fstar.exe
-
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all:  ../parser/parse.fsy fstar.exe ../../bin/tests.exe install-compiler-lib
+all:  ../parser/parse.fsy ../../bin/fstar.exe ../../bin/tests.exe install-compiler-lib
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser
@@ -90,10 +88,10 @@ endif
 	              | cat -s >> $@
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
-fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-fstar.exe: $(GENERATED_FILES)
+../../bin/fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+../../bin/fstar.exe: $(GENERATED_FILES)
 	$(OCAMLBUILD) main.native src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
-	./copy_if_diff.sh _build/src/fstar/ml/main.native ../../bin/$@
+	./copy_if_diff.sh _build/src/fstar/ml/main.native $@
 	./copy_if_diff.sh _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
 
 install-compiler-lib: ../../bin/fstar.exe
