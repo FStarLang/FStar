@@ -2331,26 +2331,25 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let env, binders = desugar_binders monad_env eff_binders in
     let eff_t = desugar_term env eff_typ in
 
-    (* An effect for free has a type of the shape "a:Type -> Effect" *)
-    let for_free = List.length (fst (U.arrow_formals eff_t)) = 1 in
+    (* [> An effect for free has a type of the shape "a:Type -> Effect" <] *)
+    (* let for_free = List.length (fst (U.arrow_formals eff_t)) = 1 in *)
+    (* BU.print1 "GG for_free = %s\n" (string_of_bool for_free); *)
 
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
-      if for_free then rr_members
-      else
-        (* the first 3 are optional but must not be counted as actions *)
-        rr_members @ [
-          "return_wp";
-          "bind_wp";
-          "if_then_else";
-          "ite_wp";
-          "stronger";
-          "close_wp";
-          "assert_p";
-          "assume_p";
-          "null_wp";
-          "trivial"
-        ]
+      (* the first 3 are optional but must not be counted as actions *)
+      rr_members @ [
+        "return_wp";
+        "bind_wp";
+        "if_then_else";
+        "ite_wp";
+        "stronger";
+        "close_wp";
+        "assert_p";
+        "assume_p";
+        "null_wp";
+        "trivial"
+      ]
     in
 
     let name_of_eff_decl decl =
@@ -2371,20 +2370,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let binders = Subst.close_binders binders in
     let actions_docs = actions |> List.map (fun d ->
         match d.d with
-        | Tycon(_, _,[TyconAbbrev(name, action_params, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), doc]) when not for_free ->
-            // When the effect is not for free, user has to provide a pair of
-            // the definition and its cps'd type.
-            let env, action_params = desugar_binders env action_params in
-            let action_params = Subst.close_binders action_params in
-            {
-              action_name=Env.qualify env name;
-              action_unqualified_name = name;
-              action_univs=[];
-              action_params = action_params;
-              action_defn=Subst.close (binders @ action_params) (desugar_term env def);
-              action_typ=Subst.close (binders @ action_params) (desugar_typ env cps_type)
-            }, doc
-        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn), doc]) when for_free ->
+        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn), doc]) ->
             // When for free, the user just provides the definition and the rest
             // is elaborated
             let env, action_params = desugar_binders env action_params in
@@ -2398,79 +2384,59 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
               action_typ=S.tun
             }, doc
         | _ ->
-            raise_error (Errors.Fatal_MalformedActionDeclaration, ("Malformed action declaration; if this is an \"effect \
-              for free\", just provide the direct-style declaration. If this is \
-              not an \"effect for free\", please provide a pair of the definition \
-              and its cps-type with arrows inserted in the right place (see \
-              examples).")) d.drange
+            raise_error (Errors.Fatal_MalformedActionDeclaration,
+                "GG REVISE Malformed action declaration; if this is an \"effect \
+                 for free\", just provide the direct-style declaration. If this is \
+                 not an \"effect for free\", please provide a pair of the definition \
+                 and its cps-type with arrows inserted in the right place (see \
+                 examples).") d.drange
     ) in
     let actions = List.map fst actions_docs in
     let eff_t = Subst.close binders eff_t in
     let lookup s =
         let l = Env.qualify env (mk_ident(s, d.drange)) in
         [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
+    let lookup_or_dummy s =
+        let l = Env.qualify env (mk_ident(s, d.drange)) in
+        let t = match try_lookup_definition env l with
+                | None -> mk Tm_unknown None Range.dummyRange
+                | Some t -> Subst.close binders t
+        in
+        [], t in
     let mname       =qualify env0 eff_name in
     let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
     let se =
-      if for_free then
-        let dummy_tscheme = [], mk Tm_unknown None Range.dummyRange in
-        { sigel =
-          (Sig_new_effect_for_free ({
-             mname       = mname;
-             cattributes  = [];
-             univs       = [];
-             binders     = binders;
-             signature   = eff_t;
-             ret_wp      = dummy_tscheme;
-             bind_wp     = dummy_tscheme;
-             if_then_else= dummy_tscheme;
-             ite_wp      = dummy_tscheme;
-             stronger    = dummy_tscheme;
-             close_wp    = dummy_tscheme;
-             assert_p    = dummy_tscheme;
-             assume_p    = dummy_tscheme;
-             null_wp     = dummy_tscheme;
-             trivial     = dummy_tscheme;
-             repr        = snd (lookup "repr");
-             bind_repr   = lookup "bind";
-             return_repr = lookup "return";
-             actions     = actions;
-             eff_attrs   = List.map (desugar_term env) attrs;
-           }));
-           sigquals = qualifiers;
-           sigrng = d.drange;
-           sigmeta = default_sigmeta  ;
-           sigattrs = [] }
-      else
-        let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
-        let un_ts = [], Syntax.tun in
-        { sigel =
-          (Sig_new_effect({
-             mname       = mname;
-             cattributes  = [];
-             univs       = [];
-             binders     = binders;
-             signature   = eff_t;
-             ret_wp      = lookup "return_wp";
-             bind_wp     = lookup "bind_wp";
-             if_then_else= lookup "if_then_else";
-             ite_wp      = lookup "ite_wp";
-             stronger    = lookup "stronger";
-             close_wp    = lookup "close_wp";
-             assert_p    = lookup "assert_p";
-             assume_p    = lookup "assume_p";
-             null_wp     = lookup "null_wp";
-             trivial     = lookup "trivial";
-             repr        = (if rr then snd <| lookup "repr" else S.tun);
-             bind_repr   = (if rr then lookup "bind" else un_ts);
-             return_repr = (if rr then lookup "return" else un_ts);
-             actions     = actions;
-             eff_attrs   = List.map (desugar_term env) attrs;
-           }));
-           sigquals = qualifiers;
-           sigrng = d.drange;
-           sigmeta = default_sigmeta  ;
-           sigattrs = [] }
+      let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
+      let un_ts = [], Syntax.tun in
+      { sigel =
+        (Sig_new_effect({
+           mname       = mname;
+           cattributes = [];
+           univs       = [];
+           binders     = binders;
+           signature   = eff_t;
+           ret_wp      = lookup_or_dummy "return_wp";
+           bind_wp     = lookup_or_dummy "bind_wp";
+           if_then_else= lookup_or_dummy "if_then_else";
+           ite_wp      = lookup_or_dummy "ite_wp";
+           stronger    = lookup_or_dummy "stronger";
+           close_wp    = lookup_or_dummy "close_wp";
+           assert_p    = lookup_or_dummy "assert_p";
+           assume_p    = lookup_or_dummy "assume_p";
+           null_wp     = lookup_or_dummy "null_wp";
+           trivial     = lookup_or_dummy "trivial";
+           repr        = (if rr then snd <| lookup "repr" else S.tun);
+           elaborated  = false;
+           bind_repr   = (if rr then lookup "bind" else un_ts);
+           return_repr = (if rr then lookup "return" else un_ts);
+           actions     = actions;
+           eff_attrs   = List.map (desugar_term env) attrs;
+         }));
+         sigquals = qualifiers;
+         sigrng = d.drange;
+         sigmeta = default_sigmeta  ;
+         sigattrs = []
+       }
     in
     let env = push_sigelt env0 se in
     let env = push_doc env mname d.doc in
@@ -2534,6 +2500,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             trivial     =sub ed.trivial;
 
             repr        =snd (sub ([], ed.repr));
+            elaborated  =ed.elaborated;
             bind_repr   =sub ed.bind_repr;
             return_repr =sub ed.return_repr;
             actions     = List.map (fun action ->
@@ -2555,8 +2522,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     } in
     let se =
       (* An effect for free has a type of the shape "a:Type -> Effect" *)
-      let for_free = List.length (fst (U.arrow_formals ed.signature)) = 1 in
-      { sigel = if for_free then Sig_new_effect_for_free (ed) else Sig_new_effect (ed);
+      { sigel = Sig_new_effect ed;
         sigquals = List.map (trans_qual (Some mname)) quals;
         sigrng = d.drange;
         sigmeta = default_sigmeta  ;
@@ -3107,10 +3073,6 @@ let add_modul_to_env (m:Syntax.modul)
           match se.sigel with
           | Sig_new_effect ed ->
             let se' = {se with sigel=Sig_new_effect (erase_univs_ed ed)} in
-            let env = Env.push_sigelt env se' in
-            push_reflect_effect env se.sigquals ed.mname se.sigrng
-          | Sig_new_effect_for_free ed ->
-            let se' = {se with sigel=Sig_new_effect_for_free (erase_univs_ed ed)} in
             let env = Env.push_sigelt env se' in
             push_reflect_effect env se.sigquals ed.mname se.sigrng
           | _ -> Env.push_sigelt env se

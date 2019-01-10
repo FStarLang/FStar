@@ -390,6 +390,7 @@ type eff_decl = {
     //NEW FIELDS
     //representation of the effect as pure type
     repr        :term;
+    elaborated  :bool;
     //operations on the representation
     return_repr :tscheme;
     bind_repr   :tscheme;
@@ -433,7 +434,6 @@ type sigelt' =
                        * univ_names
                        * formula
   | Sig_new_effect     of eff_decl
-  | Sig_new_effect_for_free of eff_decl
   | Sig_sub_effect     of sub_eff
   | Sig_effect_abbrev  of lident
                        * univ_names

@@ -351,9 +351,9 @@ type action = {
     action_name:lident;
     action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
     action_univs:univ_names;
-    action_params : binders;
+    action_params:binders;
     action_defn:term;
-    action_typ: typ
+    action_typ:typ;
 }
 type eff_decl = {
     cattributes :list<cflag>;      // default cflags
@@ -374,6 +374,7 @@ type eff_decl = {
     //NEW FIELDS
     //representation of the effect as pure type
     repr        :term;
+    elaborated  :bool;
     //operations on the representation
     return_repr :tscheme;
     bind_repr   :tscheme;
@@ -428,7 +429,6 @@ type sigelt' =
                        * univ_names
                        * formula
   | Sig_new_effect     of eff_decl
-  | Sig_new_effect_for_free of eff_decl
   | Sig_sub_effect     of sub_eff
   | Sig_effect_abbrev  of lident
                        * univ_names

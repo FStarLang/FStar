@@ -588,7 +588,6 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       g, iface_of_bindings bindings
 
     | Sig_main _
-    | Sig_new_effect_for_free _
     | Sig_assume _
     | Sig_sub_effect  _
     | Sig_effect_abbrev _ ->
@@ -910,9 +909,6 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_main(e) ->
          let ml_main, _, _ = Term.term_as_mlexpr g e in
          g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Top ml_main]
-
-       | Sig_new_effect_for_free _ ->
-           failwith "impossible -- removed by tc.fs"
 
        | Sig_assume _ //not needed; purely logical
        | Sig_sub_effect  _

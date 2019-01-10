@@ -2798,10 +2798,9 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let us, _, t = elim_uvars_aux_t env us [] t in
       {s with sigel = Sig_assume (l, us, t)}
 
-    | Sig_new_effect_for_free _ -> failwith "Impossible: should have been desugared already"
-
     | Sig_new_effect ed ->
-      let univs, binders, signature = elim_uvars_aux_t env ed.univs ed.binders ed.signature in
+      let signature = ed.signature in
+      let univs, binders, signature = elim_uvars_aux_t env ed.univs ed.binders signature in
       let univs_opening, univs_closing =
         let univs_opening, univs = SS.univ_var_opening univs in
         univs_opening, SS.univ_var_closing univs

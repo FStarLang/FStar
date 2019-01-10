@@ -792,7 +792,6 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
       | Sig_main   _
       | Sig_assume _
       | Sig_new_effect _
-      | Sig_new_effect_for_free _
       | Sig_sub_effect _
       | Sig_effect_abbrev _ (* None? *)
       | Sig_pragma  _ -> None
@@ -1041,9 +1040,11 @@ let wp_sig_aux decls m =
   | Some (md, _q) ->
     let _, s = inst_tscheme (md.univs, md.signature) in
     let s = Subst.compress s in
-    match md.binders, s.n with
+    begin match md.binders, s.n with
       | [], Tm_arrow([(a, _); (wp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
       | _ -> failwith "Impossible"
+    end
+    
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
 

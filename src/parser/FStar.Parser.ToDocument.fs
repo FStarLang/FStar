@@ -928,7 +928,7 @@ and p_effectDefinition uid bs t eff_decls =
   let binders = p_binders true bs in
   braces_with_nesting (
     group (surround_maybe_empty 2 1 (p_uident uid) (p_binders true bs) (prefix2 colon (p_typ false false t))) ^/^
-    (str "with") ^^ hardline ^^ space ^^ space ^^ (separate_map_last (hardline ^^ semi ^^ space) p_effectDecl eff_decls))
+    (str "with") ^^ hardline ^^ space ^^ space ^^ (separate_map_last (hardline ^^ semi ^^ space) p_effectDecl eff_decls)) ^^ hardline
 
 and p_effectDecl ps d = match d.d with
   | Tycon(false, _, [TyconAbbrev(lid, [], None, e), None]) ->

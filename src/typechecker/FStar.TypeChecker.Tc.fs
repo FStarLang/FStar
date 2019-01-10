@@ -110,8 +110,354 @@ let monad_signature env m s =
     end
   | _ -> fail()
 
-let tc_eff_decl env0 (ed:Syntax.eff_decl) =
-//  printfn "initial eff_decl :\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
+let open_and_check env eff_binders other_binders t =
+  let subst = SS.opening_of_binders (eff_binders @ other_binders) in
+  let t = SS.subst subst t in
+  let t, comp, _ = tc_term env t in
+  t, comp
+
+// TODO: we assume that reading the top-level definitions in the order that
+// they come in the effect definition is enough... probably not
+let elaborate_and_star (dmff_env : DMFF.env) (eff_binders : binders)
+                       (other_binders : binders) (item : tscheme)
+                       : DMFF.env * typ * term * term =
+  let env = DMFF.get_env dmff_env in
+  let u_item, item = item in
+  // TODO: assert no universe polymorphism
+  let item, item_comp = open_and_check env eff_binders other_binders item in
+  if not (U.is_total_lcomp item_comp) then
+    raise_err (Errors.Fatal_ComputationNotTotal, (BU.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (Print.lcomp_to_string item_comp)));
+  let item_t, item_wp, item_elab = DMFF.star_expr dmff_env item in
+  let _ = recheck_debug "*" env item_wp in
+  let _ = recheck_debug "_" env item_elab in
+  dmff_env, item_t, item_wp, item_elab
+
+let cps_and_elaborate_ed env ed =
+  let signature = ed.signature in
+  // Using [STInt: a:Type -> Effect] as an example...
+  let effect_binders_un, signature_un = SS.open_term ed.binders signature in
+  // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
+  let effect_binders, env, _ = tc_tparams env effect_binders_un in
+  // [signature] is a:Type -> effect
+  let signature, _ = tc_trivial_guard env signature_un in
+  // We will open binders through [open_and_check]
+
+  BU.print1 "GG cps_and_elaborate (%s)\n" (Print.eff_decl_to_string ed);
+
+  let raise_error : (Errors.raw_error * string) -> 'a = fun (e, err_msg) ->
+    Errors.raise_error (e, err_msg) signature.pos
+  in
+
+  (* GM: Erasing universes from the sorts of all effect_binders. Why? *)
+  let effect_binders = List.map (fun (bv, qual) ->
+    { bv with sort = N.normalize [ Env.EraseUniverses ] env bv.sort }, qual
+  ) effect_binders in
+
+  // Every combinator found in the effect declaration is parameterized over
+  // [binders], then [a]. This is a variant of [open_effect_signature] where we
+  // just extract the binder [a].
+  BU.print1 "GG sig = %s\n" (Print.term_to_string signature);
+  let a, effect_marker =
+    // TODO: more stringent checks on the shape of the signature; better errors
+    match (SS.compress signature_un).n with
+    | Tm_arrow ([(a, _)], effect_marker) ->
+        a, effect_marker
+    | _ ->
+        raise_error (Errors.Fatal_BadSignatureShape, "bad shape for effect-for-free signature")
+  in
+
+  (* TODO : having "_" as a variable name can create a really strange shadowing
+            behaviour between uu___ variables in the tcterm ; needs to be investigated *)
+  let a =
+      if S.is_null_bv a
+      then S.gen_bv "a" (Some (S.range_of_bv a)) a.sort
+      else a
+  in
+
+  let mk x = mk x None signature.pos in
+
+  // TODO: check that [_comp] is [Tot Type]
+  let repr, _comp = open_and_check env effect_binders [] ed.repr in
+  (* if Env.debug env (Options.Other "ED") then *)
+    BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
+
+  let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
+  let wp_type = DMFF.star_type dmff_env repr in
+  let _ = recheck_debug "*" env wp_type in
+  let wp_a = N.normalize [ Env.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ]))) in
+
+  // Building: [a -> wp a -> Effect]
+  let effect_signature =
+    let binders = [ (a, S.as_implicit false); S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
+    let binders = close_binders binders in
+    mk (Tm_arrow (binders, effect_marker))
+  in
+  let _ = recheck_debug "turned into the effect signature" env effect_signature in
+
+  let sigelts = BU.mk_ref [] in
+  let mk_lid name : lident = U.dm4f_lid ed name in
+
+  BU.print_string "GG2\n";
+  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env effect_binders [] ed.bind_repr in
+  BU.print_string "GG3\n";
+  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env effect_binders [] ed.return_repr in
+  let rc_gtot = {
+            residual_effect = PC.effect_GTot_lid;
+            residual_typ = None;
+            residual_flags = []
+  } in
+
+  (* Starting from [return_wp (b1:Type) (b2:b1) : M.wp b1 = fun bs -> body <: Type0], we elaborate *)
+  (* [lift_from_pure (b1:Type) (wp:(b1 -> Type0)-> Type0) : M.wp b1 = fun bs -> wp (fun b2 -> body)] *)
+  let lift_from_pure_wp =
+      match (SS.compress return_wp).n with
+      | Tm_abs (b1 :: b2 :: bs, body, what) ->
+        let b1,b2, body =
+          match SS.open_term [b1 ; b2] (U.abs bs body None) with
+          | [b1 ; b2], body -> b1, b2, body
+          | _ -> failwith "Impossible : open_term not preserving binders arity"
+        in
+        (* WARNING : pushing b1 and b2 in env might break the well-typedness *)
+        (* invariant but we need them for normalization *)
+        let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
+        let wp_b1 =
+          let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ])) in
+          N.normalize [ Env.Beta ] env0 raw_wp_b1
+        in
+        let bs, body, what' = U.abs_formals <| N.eta_expand_with_type env0 body (U.unascribe wp_b1) in
+
+        (* We check that what' is Tot Type0 *)
+        let fail () =
+          let error_msg =
+            BU.format2 "The body of return_wp (%s) should be of type Type0 but is of type %s"
+              (Print.term_to_string body)
+              (match what' with
+               | None -> "None"
+               | Some rc -> FStar.Ident.text_of_lid rc.residual_effect)
+          in raise_error (Errors.Fatal_WrongBodyTypeForReturnWP, error_msg)
+        in
+        begin match what' with
+        | None -> fail ()
+        | Some rc ->
+          if not (U.is_pure_effect rc.residual_effect) then fail ();
+          BU.map_opt rc.residual_typ (fun rt ->
+              let g_opt = Rel.try_teq true env rt U.ktype0 in
+              match g_opt with
+                | Some g' -> Rel.force_trivial_guard env g'
+                | None -> fail ()) |> ignore
+        end ;
+
+        let wp =
+          let t2 = (fst b2).sort in
+          let pure_wp_type = DMFF.double_star t2 in
+          S.gen_bv "wp" None pure_wp_type
+        in
+
+        (* fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a *)
+        let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
+        U.abs ([ b1; S.mk_binder wp ])
+              (U.abs (bs) body what)
+              (Some rc_gtot)
+
+      | _ ->
+          raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
+  in
+
+  let return_wp =
+    // TODO: fix [tc_eff_decl] to deal with currying
+    match (SS.compress return_wp).n with
+    | Tm_abs (b1 :: b2 :: bs, body, what) ->
+        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
+    | _ ->
+        raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
+  in
+  let bind_wp =
+    match (SS.compress bind_wp).n with
+    | Tm_abs (binders, body, what) ->
+        // TODO: figure out how to deal with ranges
+        let r = S.lid_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
+        U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
+    | _ ->
+        raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
+  in
+
+  let apply_close t =
+    if List.length effect_binders = 0 then
+      t
+    else
+      close effect_binders (mk (Tm_app (t, snd (U.args_of_binders effect_binders))))
+  in
+  let rec apply_last f l = match l with
+    | [] -> failwith "empty path.."
+    | [a] -> [f a]
+    | (x::xs) -> x :: (apply_last f xs)
+  in
+  let register name item =
+    let p = path_of_lid ed.mname in
+    let p' = apply_last (fun s -> "__" ^ s ^ "_eff_override_" ^ name) p in
+    let l' = lid_of_path p' Range.dummyRange in
+    match try_lookup_lid env l' with
+    | Some (_us,_t) -> begin
+      if Options.debug_any () then
+          BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
+      // TODO: GM: get exact delta depth, needs a change of interfaces
+      fv_to_tm (lid_as_fv l' delta_equational None)
+      end
+    | None ->
+      let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
+      sigelts := sigelt :: !sigelts;
+      fv
+  in
+  let lift_from_pure_wp = register "lift_from_pure" lift_from_pure_wp in
+
+  // we do not expect the return_elab to verify, since that may require internalizing monotonicity of WPs (i.e. continuation monad)
+  let return_wp = register "return_wp" return_wp in
+  sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
+  let return_elab = register "return_elab" return_elab in
+  sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
+
+  // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
+  let bind_wp = register "bind_wp" bind_wp in
+  sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
+  let bind_elab = register "bind_elab" bind_elab in
+  sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
+
+  let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
+    BU.print1 "GG proc action %s\n" (string_of_lid action.action_name);
+    let params_un = SS.open_binders action.action_params in
+    let action_params, env', _ = tc_tparams (DMFF.get_env dmff_env) params_un in
+    let action_params = List.map (fun (bv, qual) ->
+      { bv with sort = N.normalize [ Env.EraseUniverses ] env' bv.sort }, qual
+    ) action_params in
+    let dmff_env' = DMFF.set_env dmff_env env' in
+    // We need to reverse-engineer what tc_eff_decl wants here...
+    BU.print_string "GG1\n";
+    let dmff_env, action_t, action_wp, action_elab =
+      elaborate_and_star dmff_env' effect_binders action_params (action.action_univs, action.action_defn)
+    in
+    let name = action.action_name.ident.idText in
+    let action_typ_with_wp = DMFF.trans_F dmff_env' action_t action_wp in
+    let action_params = SS.close_binders action_params in
+    let action_elab = SS.close action_params action_elab in
+    let action_typ_with_wp = SS.close action_params action_typ_with_wp in
+    let action_elab = abs action_params action_elab None in
+    let action_typ_with_wp =
+      match action_params with
+      | [] -> action_typ_with_wp
+      | _ -> flat_arrow action_params (S.mk_Total action_typ_with_wp)
+    in
+    (* if Env.debug env <| Options.Other "ED" *)
+    BU.print4 "original action_params %s, end action_params %s, type %s, term %s\n"
+        (Print.binders_to_string "," params_un)
+        (Print.binders_to_string "," action_params)
+        (Print.term_to_string action_typ_with_wp)
+        (Print.term_to_string action_elab);
+    let action_elab = register (name ^ "_elab") action_elab in
+    let action_typ_with_wp = register (name ^ "_complete_type") action_typ_with_wp in
+    (* it does not seem that dmff_env' has been modified  by elaborate_and_star so it should be okay to return the original env *)
+    dmff_env,
+    { action with
+      action_params = [] ;
+      action_defn = apply_close action_elab;
+      action_typ = apply_close action_typ_with_wp
+    } :: actions
+  ) (dmff_env, []) ed.actions in
+  let actions = List.rev actions in
+
+  let repr =
+    let wp = S.gen_bv "wp_a" None wp_a in
+    let binders = [ S.mk_binder a; S.mk_binder wp ] in
+    U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
+  in
+  let _ = recheck_debug "FC" env repr in
+  let repr = register "repr" repr in
+
+  (* We are still lacking a principled way to generate pre/post condition *)
+  (* Current algorithm takes the type of wps : fun (a: Type) -> (t1 -> t2 ... -> tn -> Type0) *)
+  (* Checks that there is exactly one ti containing the type variable a and returns that ti *)
+  (* as type of postconditons, the rest as type of preconditions *)
+  let pre, post =
+    match (unascribe <| SS.compress wp_type).n with
+    | Tm_abs (type_param :: effect_param, arrow, _) ->
+        let type_param , effect_param, arrow =
+            match SS.open_term (type_param :: effect_param) arrow with
+                | (b :: bs), body -> b, bs, body
+                | _ -> failwith "Impossible : open_term nt preserving binders arity"
+        in
+        begin match (unascribe <| SS.compress arrow).n with
+        | Tm_arrow (wp_binders, c) ->
+            let wp_binders, c = SS.open_comp wp_binders c in
+            let pre_args, post_args =
+                List.partition (fun (bv,_) ->
+                  Free.names bv.sort |> BU.set_mem (fst type_param) |> not
+                ) wp_binders
+            in
+            let post = match post_args with
+                | [post] -> post
+                | [] ->
+                  let err_msg =
+                    BU.format1 "Impossible to generate DM effect: no post candidate %s (Type variable does not appear)"
+                      (Print.term_to_string arrow)
+                  in
+                  raise_err (Errors.Fatal_ImpossibleToGenerateDMEffect, err_msg)
+                | _ ->
+                  let err_msg =
+                      BU.format1 "Impossible to generate DM effect: multiple post candidates %s" (Print.term_to_string arrow)
+                  in
+                  raise_err (Errors.Fatal_ImpossibleToGenerateDMEffect, err_msg)
+            in
+            // Pre-condition does not mention the return type; don't close over it
+            U.arrow pre_args c,
+            // Post-condition does, however!
+            U.abs (type_param :: effect_param) (fst post).sort None
+        | _ ->
+            raise_error (Errors.Fatal_ImpossiblePrePostArrow, (BU.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow)))
+        end
+    | _ ->
+        raise_error (Errors.Fatal_ImpossiblePrePostAbs, (BU.format1 "Impossible: pre/post abs %s" (Print.term_to_string wp_type)))
+  in
+  // Desugaring is aware of these names and generates references to them when
+  // the user writes something such as [STINT.repr]
+  ignore (register "pre" pre);
+  ignore (register "post" post);
+  ignore (register "wp" wp_type);
+
+  let ed = { ed with
+    signature = close effect_binders effect_signature;
+    repr = apply_close repr;
+    ret_wp = [], apply_close return_wp;
+    bind_wp = [], apply_close bind_wp;
+    return_repr = [], apply_close return_elab;
+    bind_repr = [], apply_close bind_elab;
+    actions = actions; // already went through apply_close
+    binders = close_binders effect_binders
+  }
+  in
+
+
+  // Generate the missing combinators.
+  let sigelts', ed = DMFF.gen_wps_for_free env effect_binders a wp_a ed in
+  (* if Env.debug env (Options.Other "ED") then *)
+    BU.print_string (Print.eff_decl_to_string ed);
+
+  let lift_from_pure_opt =
+    if List.length effect_binders = 0 then begin
+      // Won't work with parameterized effect
+      let lift_from_pure = {
+          source = PC.effect_PURE_lid;
+          target = ed.mname ;
+          lift_wp = Some ([], apply_close lift_from_pure_wp) ;
+          lift = None //Some ([], apply_close return_elab)
+      } in
+      Some (mk_sigelt (Sig_sub_effect (lift_from_pure)))
+    end else None
+  in
+
+  List.rev !sigelts @ sigelts', ed, lift_from_pure_opt
+
+let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
+  if Env.debug env0 (Options.Other "ED") then
+    BU.print1 "initial eff_decl :\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string ed);
   let open_annotated_univs, annotated_univ_names = SS.univ_var_opening ed.univs in
   let open_univs n_binders t =
       SS.subst (SS.shift_subst n_binders open_annotated_univs) t
@@ -120,9 +466,10 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
       SS.subst_binders (SS.shift_subst n_binders open_annotated_univs) bs
   in
   let n_effect_params = List.length ed.binders in
+  let signature = ed.signature in
   let effect_params_un, signature_un, opening =
       SS.open_term' (open_univs_binders 0 ed.binders)
-                    (open_univs n_effect_params ed.signature) in
+                    (open_univs n_effect_params signature) in
 
   let env = Env.push_univ_vars env0 annotated_univ_names in  //AR: push the univs in the environment
 
@@ -161,7 +508,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                 action_typ  = snd (op (a.action_univs, a.action_typ)) }) ed.actions
         }
   in
-//  printfn "eff_decl after opening:\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
+  if Env.debug env0 (Options.Other "ED") then
+    BU.print1 "eff_decl after opening:\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string ed);
    //Returns (a:Type) and M.WP a, for a fresh name a
   let wp_with_fresh_result_type env mname signature =
        let fail t =
@@ -176,7 +524,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
          end
        | _ -> fail signature
   in
-  let a, wp_a = wp_with_fresh_result_type env ed.mname ed.signature in
+  let a, wp_a = wp_with_fresh_result_type env ed.mname signature in
   let fresh_effect_signature ()  =
       match annotated_univ_names with
       | [] ->
@@ -191,13 +539,13 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
   in
 
   //put the signature in the environment to prevent generalizing its free universe variables until we're done
-  let env = Env.push_bv env (S.new_bv None ed.signature) in
+  let env = Env.push_bv env (S.new_bv None signature) in
 
-  if Env.debug env0 <| Options.Other "ED"
-  then BU.print5 "Checking effect signature: %s %s : %s\n(a is %s:%s)\n"
+  (* if Env.debug env0 <| Options.Other "ED" *)
+  BU.print5 "Checking effect signature: %s %s : %s\n(a is %s:%s)\n"
                         (Print.lid_to_string ed.mname)
                         (Print.binders_to_string " " ed.binders)
-                        (Print.term_to_string ed.signature)
+                        (Print.term_to_string signature)
                         (Print.term_to_string (S.bv_to_name a))
                         (Print.term_to_string a.sort);
 
@@ -406,7 +754,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           // 1) Check action definition, setting its expected type to
           //    [action_typ]
           let env' = { Env.set_expected_typ env act_typ with instantiate_imp = false } in
-          if Env.debug env (Options.Other "ED") then
+          (* if Env.debug env (Options.Other "ED") then *)
             BU.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
               (text_of_lid act.action_name) (Print.term_to_string act.action_defn)
               (Print.term_to_string act_typ);
@@ -471,7 +819,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
   //generalize and close
   (* QUESTION (KM) : Why do we close with ed.binders and not effect_params ?? *)
-  let t0 = U.arrow ed.binders (S.mk_Total ed.signature) in
+  let t0 = U.arrow ed.binders (S.mk_Total signature) in
   let (univs, t) =
       let gen_univs, t = TcUtil.generalize_universes env0 t0 in
       match annotated_univ_names with
@@ -485,7 +833,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
         else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, (BU.format2 "Expected an effect definition with %s universes; but found %s"
                                         (BU.string_of_int (List.length annotated_univ_names))
                                         (BU.string_of_int (List.length gen_univs))))
-                          ed.signature.pos
+                          signature.pos
   in
   let signature = match effect_params, (SS.compress t).n with
     | [], _ -> t
@@ -535,346 +883,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
     ; bind_repr   = close 1 bind_repr
     ; actions     = List.map close_action actions} in
 
-  if Env.debug env Options.Low
-  || Env.debug env <| Options.Other "ED"
-  then BU.print_string (Print.eff_decl_to_string false ed);
+  BU.print_string (Print.eff_decl_to_string ed);
   ed
-
-
-let cps_and_elaborate env ed =
-  // Using [STInt: a:Type -> Effect] as an example...
-  let effect_binders_un, signature_un = SS.open_term ed.binders ed.signature in
-  // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
-  let effect_binders, env, _ = tc_tparams env effect_binders_un in
-  // [signature] is a:Type -> effect
-  let signature, _ = tc_trivial_guard env signature_un in
-  // We will open binders through [open_and_check]
-
-  let raise_error : (Errors.raw_error * string) -> 'a = fun (e, err_msg) ->
-    Errors.raise_error (e, err_msg) signature.pos
-  in
-
-  let effect_binders = List.map (fun (bv, qual) ->
-    { bv with sort = N.normalize [ Env.EraseUniverses ] env bv.sort }, qual
-  ) effect_binders in
-
-  // Every combinator found in the effect declaration is parameterized over
-  // [binders], then [a]. This is a variant of [open_effect_signature] where we
-  // just extract the binder [a].
-  let a, effect_marker =
-    // TODO: more stringent checks on the shape of the signature; better errors
-    match (SS.compress signature_un).n with
-    | Tm_arrow ([(a, _)], effect_marker) ->
-        a, effect_marker
-    | _ ->
-        raise_error (Errors.Fatal_BadSignatureShape, "bad shape for effect-for-free signature")
-  in
-
-  (* TODO : having "_" as a variable name can create a really strange shadowing
-            behaviour between uu___ variables in the tcterm ; needs to be investigated *)
-  let a =
-      if S.is_null_bv a
-      then S.gen_bv "a" (Some (S.range_of_bv a)) a.sort
-      else a
-  in
-
-  let open_and_check env other_binders t =
-    let subst = SS.opening_of_binders (effect_binders @ other_binders) in
-    let t = SS.subst subst t in
-    let t, comp, _ = tc_term env t in
-    t, comp
-  in
-  let mk x = mk x None signature.pos in
-
-  // TODO: check that [_comp] is [Tot Type]
-  let repr, _comp = open_and_check env [] ed.repr in
-  if Env.debug env (Options.Other "ED") then
-    BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
-
-  let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
-  let wp_type = DMFF.star_type dmff_env repr in
-  let _ = recheck_debug "*" env wp_type in
-  let wp_a = N.normalize [ Env.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ]))) in
-
-  // Building: [a -> wp a -> Effect]
-  let effect_signature =
-    let binders = [ (a, S.as_implicit false); S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
-    let binders = close_binders binders in
-    mk (Tm_arrow (binders, effect_marker))
-  in
-  let _ = recheck_debug "turned into the effect signature" env effect_signature in
-
-  let sigelts = BU.mk_ref [] in
-  let mk_lid name : lident = U.dm4f_lid ed name in
-
-  // TODO: we assume that reading the top-level definitions in the order that
-  // they come in the effect definition is enough... probably not
-  let elaborate_and_star dmff_env other_binders item =
-    let env = DMFF.get_env dmff_env in
-    let u_item, item = item in
-    // TODO: assert no universe polymorphism
-    let item, item_comp = open_and_check env other_binders item in
-    if not (U.is_total_lcomp item_comp) then
-      raise_err (Errors.Fatal_ComputationNotTotal, (BU.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (Print.lcomp_to_string item_comp)));
-    let item_t, item_wp, item_elab = DMFF.star_expr dmff_env item in
-    let _ = recheck_debug "*" env item_wp in
-    let _ = recheck_debug "_" env item_elab in
-    dmff_env, item_t, item_wp, item_elab
-  in
-
-  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env [] ed.bind_repr in
-  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env [] ed.return_repr in
-  let rc_gtot = {
-            residual_effect = PC.effect_GTot_lid;
-            residual_typ = None;
-            residual_flags = []
-  } in
-
-  (* Starting from [return_wp (b1:Type) (b2:b1) : M.wp b1 = fun bs -> body <: Type0], we elaborate *)
-  (* [lift_from_pure (b1:Type) (wp:(b1 -> Type0)-> Type0) : M.wp b1 = fun bs -> wp (fun b2 -> body)] *)
-  let lift_from_pure_wp =
-      match (SS.compress return_wp).n with
-      | Tm_abs (b1 :: b2 :: bs, body, what) ->
-        let b1,b2, body =
-          match SS.open_term [b1 ; b2] (U.abs bs body None) with
-          | [b1 ; b2], body -> b1, b2, body
-          | _ -> failwith "Impossible : open_term not preserving binders arity"
-        in
-        (* WARNING : pushing b1 and b2 in env might break the well-typedness *)
-        (* invariant but we need them for normalization *)
-        let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
-        let wp_b1 =
-          let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ])) in
-          N.normalize [ Env.Beta ] env0 raw_wp_b1
-        in
-        let bs, body, what' = U.abs_formals <| N.eta_expand_with_type env0 body (U.unascribe wp_b1) in
-
-        (* We check that what' is Tot Type0 *)
-        let fail () =
-          let error_msg =
-            BU.format2 "The body of return_wp (%s) should be of type Type0 but is of type %s"
-              (Print.term_to_string body)
-              (match what' with
-               | None -> "None"
-               | Some rc -> FStar.Ident.text_of_lid rc.residual_effect)
-          in raise_error (Errors.Fatal_WrongBodyTypeForReturnWP, error_msg)
-        in
-        begin match what' with
-        | None -> fail ()
-        | Some rc ->
-          if not (U.is_pure_effect rc.residual_effect) then fail ();
-          BU.map_opt rc.residual_typ (fun rt ->
-              let g_opt = Rel.try_teq true env rt U.ktype0 in
-              match g_opt with
-                | Some g' -> Rel.force_trivial_guard env g'
-                | None -> fail ()) |> ignore
-        end ;
-
-        let wp =
-          let t2 = (fst b2).sort in
-          let pure_wp_type = DMFF.double_star t2 in
-          S.gen_bv "wp" None pure_wp_type
-        in
-
-        (* fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a *)
-        let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
-        U.abs ([ b1; S.mk_binder wp ])
-              (U.abs (bs) body what)
-              (Some rc_gtot)
-
-      | _ ->
-          raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
-  in
-
-  let return_wp =
-    // TODO: fix [tc_eff_decl] to deal with currying
-    match (SS.compress return_wp).n with
-    | Tm_abs (b1 :: b2 :: bs, body, what) ->
-        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
-    | _ ->
-        raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
-  in
-  let bind_wp =
-    match (SS.compress bind_wp).n with
-    | Tm_abs (binders, body, what) ->
-        // TODO: figure out how to deal with ranges
-        let r = S.lid_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
-        U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
-    | _ ->
-        raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
-  in
-
-  let apply_close t =
-    if List.length effect_binders = 0 then
-      t
-    else
-      close effect_binders (mk (Tm_app (t, snd (U.args_of_binders effect_binders))))
-  in
-  let rec apply_last f l = match l with
-    | [] -> failwith "empty path.."
-    | [a] -> [f a]
-    | (x::xs) -> x :: (apply_last f xs)
-  in
-  let register name item =
-    let p = path_of_lid ed.mname in
-    let p' = apply_last (fun s -> "__" ^ s ^ "_eff_override_" ^ name) p in
-    let l' = lid_of_path p' Range.dummyRange in
-    match try_lookup_lid env l' with
-    | Some (_us,_t) -> begin
-      if Options.debug_any () then
-          BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
-      // TODO: GM: get exact delta depth, needs a change of interfaces
-      fv_to_tm (lid_as_fv l' delta_equational None)
-      end
-    | None ->
-      let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
-      sigelts := sigelt :: !sigelts;
-      fv
-  in
-  let lift_from_pure_wp = register "lift_from_pure" lift_from_pure_wp in
-
-  // we do not expect the return_elab to verify, since that may require internalizing monotonicity of WPs (i.e. continuation monad)
-  let return_wp = register "return_wp" return_wp in
-  sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
-  let return_elab = register "return_elab" return_elab in
-  sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
-
-  // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
-  let bind_wp = register "bind_wp" bind_wp in
-  sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
-  let bind_elab = register "bind_elab" bind_elab in
-  sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
-
-  let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
-    let params_un = SS.open_binders action.action_params in
-    let action_params, env', _ = tc_tparams (DMFF.get_env dmff_env) params_un in
-    let action_params = List.map (fun (bv, qual) ->
-      { bv with sort = N.normalize [ Env.EraseUniverses ] env' bv.sort }, qual
-    ) action_params in
-    let dmff_env' = DMFF.set_env dmff_env env' in
-    // We need to reverse-engineer what tc_eff_decl wants here...
-    let dmff_env, action_t, action_wp, action_elab =
-      elaborate_and_star dmff_env' action_params (action.action_univs, action.action_defn)
-    in
-    let name = action.action_name.ident.idText in
-    let action_typ_with_wp = DMFF.trans_F dmff_env' action_t action_wp in
-    let action_params = SS.close_binders action_params in
-    let action_elab = SS.close action_params action_elab in
-    let action_typ_with_wp = SS.close action_params action_typ_with_wp in
-    let action_elab = abs action_params action_elab None in
-    let action_typ_with_wp =
-      match action_params with
-      | [] -> action_typ_with_wp
-      | _ -> flat_arrow action_params (S.mk_Total action_typ_with_wp)
-    in
-    if Env.debug env <| Options.Other "ED"
-    then BU.print4 "original action_params %s, end action_params %s, type %s, term %s\n"
-        (Print.binders_to_string "," params_un)
-        (Print.binders_to_string "," action_params)
-        (Print.term_to_string action_typ_with_wp)
-        (Print.term_to_string action_elab);
-    let action_elab = register (name ^ "_elab") action_elab in
-    let action_typ_with_wp = register (name ^ "_complete_type") action_typ_with_wp in
-    (* it does not seem that dmff_env' has been modified  by elaborate_and_star so it should be okay to return the original env *)
-    dmff_env,
-    { action with
-      action_params = [] ;
-      action_defn = apply_close action_elab;
-      action_typ = apply_close action_typ_with_wp
-    } :: actions
-  ) (dmff_env, []) ed.actions in
-  let actions = List.rev actions in
-
-  let repr =
-    let wp = S.gen_bv "wp_a" None wp_a in
-    let binders = [ S.mk_binder a; S.mk_binder wp ] in
-    U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
-  in
-  let _ = recheck_debug "FC" env repr in
-  let repr = register "repr" repr in
-
-  (* We are still lacking a principled way to generate pre/post condition *)
-  (* Current algorithm takes the type of wps : fun (a: Type) -> (t1 -> t2 ... -> tn -> Type0) *)
-  (* Checks that there is exactly one ti containing the type variable a and returns that ti *)
-  (* as type of postconditons, the rest as type of preconditions *)
-  let pre, post =
-    match (unascribe <| SS.compress wp_type).n with
-    | Tm_abs (type_param :: effect_param, arrow, _) ->
-        let type_param , effect_param, arrow =
-            match SS.open_term (type_param :: effect_param) arrow with
-                | (b :: bs), body -> b, bs, body
-                | _ -> failwith "Impossible : open_term nt preserving binders arity"
-        in
-        begin match (unascribe <| SS.compress arrow).n with
-        | Tm_arrow (wp_binders, c) ->
-            let wp_binders, c = SS.open_comp wp_binders c in
-            let pre_args, post_args =
-                List.partition (fun (bv,_) ->
-                  Free.names bv.sort |> BU.set_mem (fst type_param) |> not
-                ) wp_binders
-            in
-            let post = match post_args with
-                | [post] -> post
-                | [] ->
-                  let err_msg =
-                    BU.format1 "Impossible to generate DM effect: no post candidate %s (Type variable does not appear)"
-                      (Print.term_to_string arrow)
-                  in
-                  raise_err (Errors.Fatal_ImpossibleToGenerateDMEffect, err_msg)
-                | _ ->
-                  let err_msg =
-                      BU.format1 "Impossible to generate DM effect: multiple post candidates %s" (Print.term_to_string arrow)
-                  in
-                  raise_err (Errors.Fatal_ImpossibleToGenerateDMEffect, err_msg)
-            in
-            // Pre-condition does not mention the return type; don't close over it
-            U.arrow pre_args c,
-            // Post-condition does, however!
-            U.abs (type_param :: effect_param) (fst post).sort None
-        | _ ->
-            raise_error (Errors.Fatal_ImpossiblePrePostArrow, (BU.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow)))
-        end
-    | _ ->
-        raise_error (Errors.Fatal_ImpossiblePrePostAbs, (BU.format1 "Impossible: pre/post abs %s" (Print.term_to_string wp_type)))
-  in
-  // Desugaring is aware of these names and generates references to them when
-  // the user writes something such as [STINT.repr]
-  ignore (register "pre" pre);
-  ignore (register "post" post);
-  ignore (register "wp" wp_type);
-
-  let ed = { ed with
-    signature = close effect_binders effect_signature;
-    repr = apply_close repr;
-    ret_wp = [], apply_close return_wp;
-    bind_wp = [], apply_close bind_wp;
-    return_repr = [], apply_close return_elab;
-    bind_repr = [], apply_close bind_elab;
-    actions = actions; // already went through apply_close
-    binders = close_binders effect_binders
-  } in
-
-
-  // Generate the missing combinators.
-  let sigelts', ed = DMFF.gen_wps_for_free env effect_binders a wp_a ed in
-  if Env.debug env (Options.Other "ED") then
-    BU.print_string (Print.eff_decl_to_string true ed);
-
-  let lift_from_pure_opt =
-    if List.length effect_binders = 0 then begin
-      // Won't work with parameterized effect
-      let lift_from_pure = {
-          source = PC.effect_PURE_lid;
-          target = ed.mname ;
-          lift_wp = Some ([], apply_close lift_from_pure_wp) ;
-          lift = None //Some ([], apply_close return_elab)
-      } in
-      Some (mk_sigelt (Sig_sub_effect (lift_from_pure)))
-    end else None
-  in
-
-  List.rev !sigelts @ sigelts', ed, lift_from_pure_opt
-
 
 let tc_lex_t env ses quals lids =
     (* We specifically type lex_t as:
@@ -1202,29 +1212,35 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     U.process_pragma p r;
     [se], [], env0
 
-  | Sig_new_effect_for_free (ne) ->  //no need for two-phase here, the elaborated ses are typechecked from the main loop in tc_decls
-      (* This is only an elaboration rule not a typechecking one *)
-
-      // Let the power of Dijkstra generate everything "for free", then defer
-      // the rest of the job to [tc_decl].
-      let ses, ne, lift_from_pure_opt = cps_and_elaborate env ne in
-      let effect_and_lift_ses = match lift_from_pure_opt with
-          | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
-          | None -> [ { se with sigel = Sig_new_effect (ne) } ]
-      in
-
-      [], ses @ effect_and_lift_ses, env0
-
   | Sig_new_effect(ne) ->
+    let forfree =
+      match (SS.compress ne.repr).n with
+      | Tm_unknown -> false 
+      | _ -> not ne.elaborated
+    in
+    if forfree then begin
+        // Let the power of Dijkstra generate everything "for free", then defer
+        // the rest of the job to [tc_decl].
+        let ses, ne, lift_from_pure_opt = cps_and_elaborate_ed env0 ne in
+        let ne = { ne with elaborated = true } in
+        let effect_and_lift_ses = match lift_from_pure_opt with
+            | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
+            | None -> [ { se with sigel = Sig_new_effect (ne) } ]
+        in
+        [], ses @ effect_and_lift_ses, env0
+    end
+    else
     let ne =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let ne = tc_eff_decl ({ env with phase1 = true; lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
+        let ne = tc_eff_decl ({ env with phase1 = true; lax = true }) se ne
+                    |> (fun ne -> { se with sigel = Sig_new_effect ne })
+                    |> N.elim_uvars env |> U.eff_decl_of_new_effect in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Effect decl after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
         ne
       end
       else ne
     in
-    let ne = tc_eff_decl env ne in
+    let ne = tc_eff_decl env se ne in
     let se = { se with sigel = Sig_new_effect(ne) } in
     [se], [], env0
 
@@ -1768,7 +1784,6 @@ let for_export env hidden se : list<sigelt> * list<lident> =
   | Sig_main  _ -> [], hidden
 
   | Sig_new_effect     _
-  | Sig_new_effect_for_free _
   | Sig_sub_effect     _
   | Sig_effect_abbrev  _ -> [se], hidden
 
@@ -1802,8 +1817,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_pragma (ResetOptions _) -> z3_reset_options env
-  | Sig_pragma _
-  | Sig_new_effect_for_free _ -> env
+  | Sig_pragma _ -> env
   | Sig_new_effect ne ->
     let env = Env.push_sigelt env se in
     ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
@@ -1934,7 +1948,6 @@ let check_exports env (modul:modul) exports =
         | Sig_main _
         | Sig_assume _
         | Sig_new_effect _
-        | Sig_new_effect_for_free _
         | Sig_sub_effect _
         | Sig_splice _
         | Sig_pragma _ -> ()
@@ -2073,7 +2086,6 @@ let extract_interface (en:env) (m:modul) :modul =
         else []
       else [ { s with sigquals = filter_out_abstract s.sigquals } ]
     | Sig_new_effect _
-    | Sig_new_effect_for_free _
     | Sig_sub_effect _
     | Sig_effect_abbrev _ -> [s]
     | Sig_pragma _ -> [s]

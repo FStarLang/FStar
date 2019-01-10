@@ -1794,13 +1794,6 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
               || visibility x
               || reification x))
         then err' ()
-      | Sig_new_effect_for_free _ ->
-        if not (quals |> BU.for_all (fun x ->
-              x=TotalEffect
-              || inferred x
-              || visibility x
-              || reification x))
-        then err' ()
       | Sig_effect_abbrev _ ->
         if not (quals |> BU.for_all (fun x -> inferred x || visibility x))
         then err' ()

@@ -1030,8 +1030,8 @@ let resugar_tscheme'' env name (ts:S.tscheme) =
 let resugar_tscheme' env (ts:S.tscheme) =
   resugar_tscheme'' env "tscheme" ts
 
-let resugar_eff_decl' env for_free r q ed =
-  let resugar_action d for_free =
+let resugar_eff_decl' env r q ed =
+  let resugar_action d =
     let action_params = SS.open_binders d.action_params in
     let bs, action_defn = SS.open_term action_params d.action_defn in
     let bs, action_typ = SS.open_term action_params d.action_typ in
@@ -1039,15 +1039,17 @@ let resugar_eff_decl' env for_free r q ed =
     let action_params = action_params |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
     let action_defn = resugar_term' env action_defn in
     let action_typ = resugar_term' env action_typ in
-    if for_free then
-      let a = A.Construct ((I.lid_of_str "construct"), [(action_defn, A.Nothing);(action_typ, A.Nothing)]) in
-      let t = A.mk_term a r A.Un in
-      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ), None)]))
-    else
+    (* GG fix, and wasn't this backwards? *)
+    (* if for_free then *)
+    (*   let a = A.Construct ((I.lid_of_str "construct"), [(action_defn, A.Nothing);(action_typ, A.Nothing)]) in *)
+    (*   let t = A.mk_term a r A.Un in *)
+    (*   mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ), None)])) *)
+    (* else *)
       mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn), None)]))
   in
   let eff_name = ed.mname.ident in
-  let eff_binders, eff_typ = SS.open_term ed.binders ed.signature in
+  let signature = ed.signature in
+  let eff_binders, eff_typ = SS.open_term ed.binders signature in
   let eff_binders = if (Options.print_implicits()) then eff_binders else filter_imp eff_binders in
   let eff_binders = eff_binders |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
   let eff_typ = resugar_term' env eff_typ in
@@ -1065,14 +1067,13 @@ let resugar_eff_decl' env for_free r q ed =
   let return_repr = resugar_tscheme'' env "return_repr" ed.return_repr in
   let bind_repr = resugar_tscheme'' env "bind_repr" ed.bind_repr in
   let mandatory_members_decls =
-    if for_free then
-      [repr; return_repr; bind_repr]
-    else
+    (* GG FIX *)
       [repr; return_repr; bind_repr; ret_wp; bind_wp;
        if_then_else; ite_wp; stronger; close_wp; assert_p;
         assume_p; null_wp; trivial] in
-  let actions = ed.actions |> List.map (fun a -> resugar_action a false) in
+  let actions = ed.actions |> List.map resugar_action in
   let decls = mandatory_members_decls@actions in
+  (*GG FIXME, Some below *)
   mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
 
 let resugar_sigelt' env se : option<A.decl> =
@@ -1124,10 +1125,7 @@ let resugar_sigelt' env se : option<A.decl> =
     Some (decl'_to_decl se (Assume (lid.ident, resugar_term' env fml)))
 
   | Sig_new_effect ed ->
-    Some (resugar_eff_decl' env false se.sigrng se.sigquals ed)
-
-  | Sig_new_effect_for_free ed ->
-    Some (resugar_eff_decl' env true se.sigrng se.sigquals ed)
+    Some (resugar_eff_decl' env se.sigrng se.sigquals ed)
 
   | Sig_sub_effect e ->
     let src = e.source in
@@ -1205,5 +1203,5 @@ let resugar_binder (b:S.binder) r : option<A.binder> =
 let resugar_tscheme (ts:S.tscheme) =
   noenv resugar_tscheme' ts
 
-let resugar_eff_decl for_free r q ed =
-  noenv resugar_eff_decl' for_free r q ed
+let resugar_eff_decl r q ed =
+  noenv resugar_eff_decl' r q ed

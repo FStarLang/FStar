@@ -626,9 +626,9 @@ let action_to_string a =
         (term_to_string a.action_typ)
         (term_to_string a.action_defn)
 
-let eff_decl_to_string' for_free r q ed =
+let eff_decl_to_string' r q ed =
  if not (Options.ugly()) then
-    let d = Resugar.resugar_eff_decl for_free r q ed in
+    let d = Resugar.resugar_eff_decl r q ed in
     let d = ToDocument.decl_to_document d in
     Pp.pretty_string (float_of_string "1.0") 100 d
  else
@@ -636,7 +636,7 @@ let eff_decl_to_string' for_free r q ed =
         actions |>
         List.map action_to_string |>
         String.concat ",\n\t" in
-    U.format "new_effect%s { \
+    U.format "new_effect { \
       %s%s %s : %s \n  \
         return_wp   = %s\n\
       ; bind_wp     = %s\n\
@@ -652,8 +652,7 @@ let eff_decl_to_string' for_free r q ed =
       ; bind_repr   = %s\n\
       ; return_repr = %s\n\
       and effect_actions\n\t%s\n}\n"
-        [(if for_free then "_for_free " else "");
-         lid_to_string ed.mname;
+        [lid_to_string ed.mname;
          enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
          term_to_string ed.signature;
@@ -672,8 +671,8 @@ let eff_decl_to_string' for_free r q ed =
          tscheme_to_string ed.return_repr;
          actions_to_string ed.actions]
 
-let eff_decl_to_string for_free ed =
-  eff_decl_to_string' for_free Range.dummyRange [] ed
+let eff_decl_to_string ed =
+  eff_decl_to_string' Range.dummyRange [] ed
 
 let rec sigelt_to_string (x: sigelt) =
  // if not (Options.ugly()) then
@@ -718,8 +717,7 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
-      | Sig_new_effect(ed) -> eff_decl_to_string' false x.sigrng x.sigquals ed
-      | Sig_new_effect_for_free (ed) -> eff_decl_to_string' true x.sigrng x.sigquals ed
+      | Sig_new_effect(ed) -> eff_decl_to_string' x.sigrng x.sigquals ed
       | Sig_sub_effect (se) ->
         let lift_wp = match se.lift_wp, se.lift with
           // TODO pretty-print this better
