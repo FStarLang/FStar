@@ -887,7 +887,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "silent",
         Const (mk_bool true),
-        " ");
+        "Disable all non-critical output");
 
        ( noshort,
         "smt",
@@ -1386,10 +1386,11 @@ let parse_settings ns : list<(list<string> * bool)> =
     in
     ns |> List.collect (fun s ->
       let s = FStar.Util.trim_string s in
-      with_cache (fun s ->
-          FStar.Util.split s " "
-          |> List.map parse_one_setting) s)
-       |> List.rev
+      if s = "" then []
+      else with_cache (fun s ->
+             FStar.Util.split s " "
+             |> List.map parse_one_setting) s)
+             |> List.rev
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool

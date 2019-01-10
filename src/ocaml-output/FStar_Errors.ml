@@ -317,7 +317,7 @@ type raw_error =
   | Error_FieldShadow 
   | Error_UnexpectedDM4FType 
   | Fatal_EffectAbbreviationResultTypeMismatch 
-  | Error_UncheckedFile 
+  | Error_AlreadyCachedAssertionFailure 
   | Error_MustEraseMissing 
   | Warning_EffectfulArgumentToErasedFunction 
   | Fatal_EmptySurfaceLet 
@@ -2196,9 +2196,11 @@ let (uu___is_Fatal_EffectAbbreviationResultTypeMismatch :
     | Fatal_EffectAbbreviationResultTypeMismatch  -> true
     | uu____3485 -> false
   
-let (uu___is_Error_UncheckedFile : raw_error -> Prims.bool) =
+let (uu___is_Error_AlreadyCachedAssertionFailure : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_UncheckedFile  -> true | uu____3496 -> false
+    match projectee with
+    | Error_AlreadyCachedAssertionFailure  -> true
+    | uu____3496 -> false
   
 let (uu___is_Error_MustEraseMissing : raw_error -> Prims.bool) =
   fun projectee  ->
@@ -2563,7 +2565,7 @@ let (default_flags : (raw_error * flag) Prims.list) =
   (Error_FieldShadow, CFatal);
   (Error_UnexpectedDM4FType, CFatal);
   (Fatal_EffectAbbreviationResultTypeMismatch, CFatal);
-  (Error_UncheckedFile, CFatal);
+  (Error_AlreadyCachedAssertionFailure, CFatal);
   (Error_MustEraseMissing, CWarning);
   (Warning_EffectfulArgumentToErasedFunction, CWarning);
   (Fatal_EmptySurfaceLet, CFatal)] 

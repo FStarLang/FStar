@@ -107,7 +107,7 @@
         "typing_tok_BinarySearchTree.Leaf@tok"
       ],
       0,
-      "bbe293be6be96b8e548e48a59271e809"
+      "c881c329515056f1f083b2011c8bd817"
     ],
     [
       "BinarySearchTree.is_bst",
@@ -329,7 +329,7 @@
         "typing_tok_BinarySearchTree.Leaf@tok"
       ],
       0,
-      "3f3898f1fc6ed8537f7f81be64780f25"
+      "34b3ba4e46ec76a76da6260a3d38e62a"
     ],
     [
       "BinarySearchTree.is_bst",
