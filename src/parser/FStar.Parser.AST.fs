@@ -124,6 +124,7 @@ and imp =
     | Hash
     | UnivApp
     | HashBrace of term
+    | Infix
     | Nothing
 
 type knd = term

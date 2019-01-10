@@ -75,7 +75,7 @@
     <Compile Include="FStar.Interactive.CompletionTable.fs" />
     <Compile Include="FStar.Interactive.Ide.fs" />
     <Compile Include="FStar.Interactive.Legacy.fs" />
-    <Compile Include="FStar.Indent.fs" />
+    <Compile Include="FStar.Prettyprint.fs" />
     <Compile Include="FStar.Main.fs" />
     <Compile Include="FStar.Top.fs" />
     <None Include="app.config" />

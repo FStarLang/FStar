@@ -25,6 +25,7 @@ let collect f s =
   BatUTF8.iter (fun c -> r := !r ^ f (BatUChar.code c)) s; !r
 let lowercase = BatString.lowercase
 let uppercase = BatString.uppercase
+let escaped = BatString.escaped
 let index = get
 exception Found of int
 let index_of s c =
