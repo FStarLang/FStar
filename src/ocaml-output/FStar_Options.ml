@@ -628,7 +628,7 @@ let (universe_include_path_base_dirs : Prims.string Prims.list) =
 let (_version : Prims.string FStar_ST.ref) = FStar_Util.mk_ref "" 
 let (_platform : Prims.string FStar_ST.ref) = FStar_Util.mk_ref "" 
 let (_compiler : Prims.string FStar_ST.ref) = FStar_Util.mk_ref "" 
-let (_date : Prims.string FStar_ST.ref) = FStar_Util.mk_ref "" 
+let (_date : Prims.string FStar_ST.ref) = FStar_Util.mk_ref "<not set>" 
 let (_commit : Prims.string FStar_ST.ref) = FStar_Util.mk_ref "" 
 let (display_version : unit -> unit) =
   fun uu____3610  ->
