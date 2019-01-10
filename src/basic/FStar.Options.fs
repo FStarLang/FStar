@@ -413,7 +413,7 @@ let universe_include_path_base_dirs =
 let _version = FStar.Util.mk_ref ""
 let _platform = FStar.Util.mk_ref ""
 let _compiler = FStar.Util.mk_ref ""
-let _date = FStar.Util.mk_ref ""
+let _date = FStar.Util.mk_ref "<not set>"
 let _commit = FStar.Util.mk_ref ""
 
 let display_version () =

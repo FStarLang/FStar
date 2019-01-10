@@ -45,7 +45,7 @@ OCAML_BRANCH=$(shell ocaml get_branch.ml)
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all:  ../parser/parse.fsy fstar.exe tests.exe install-compiler-lib
+all:  ../parser/parse.fsy fstar.exe ../../bin/tests.exe install-compiler-lib
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser
@@ -93,15 +93,16 @@ endif
 fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 fstar.exe: $(GENERATED_FILES)
 	$(OCAMLBUILD) main.native src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
-	cp -f _build/src/fstar/ml/main.native ../../bin/$@
-	cp -f _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
+	./copy_if_diff.sh _build/src/fstar/ml/main.native ../../bin/$@
+	./copy_if_diff.sh _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
 
-install-compiler-lib: fstar.exe
+install-compiler-lib: ../../bin/fstar.exe
 	mkdir -p ../../bin/fstar-compiler-lib/
 	@# VD: forcing the recompilation of modules in ulib/tactics_ml whenever the compiler is rebuilt
 	@# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
 	$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
 	$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
+	touch $@
 
 FStar_Parser_Parse.ml: parse.mly
 	@# We are opening the same module twice but we need these modules
@@ -134,10 +135,10 @@ FStar_Parser_Parse.ml: parse.mly
 	cat parse.ml >> $@
 	rm parse.ml parse.mli
 
-tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-tests.exe: fstar.exe
+../../bin/tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+../../bin/tests.exe: ../../bin/fstar.exe
 	$(OCAMLBUILD) FStar_Tests_Main.native
-	cp -f _build/src/tests/ml/FStar_Tests_Main.native ../../bin/$@
+	cp -f _build/src/tests/ml/FStar_Tests_Main.native $@
 
 # always bump version for a release; always bump it when recompiling so that one
 # can easily help debugging
@@ -157,13 +158,13 @@ COMMIT = $(shell ../tools/get_commit)
 
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
-	echo 'open FStar_Util' > $@
-	echo 'let dummy () = ();;' >> $@
-	echo 'FStar_Options._version := "$(VERSION)";;' >> $@
-	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
-	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
-	echo 'FStar_Options._date := "$(DATE)";;' >> $@
-	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
+	echo 'open FStar_Util' > $@.tmp
+	echo 'let dummy () = ();;' >> $@.tmp
+	echo 'FStar_Options._version := "$(VERSION)";;' >> $@.tmp
+	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@.tmp
+	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@.tmp
+	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@.tmp
+	./copy_if_diff.sh $@.tmp $@
 
 
 # ------------------------------------------------------------------------------
