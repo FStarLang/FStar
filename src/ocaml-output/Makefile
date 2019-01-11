@@ -161,13 +161,12 @@ COMMIT = $(shell ../tools/get_commit)
 
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
-	echo 'open FStar_Util' > $@.tmp
-	echo 'let dummy () = ();;' >> $@.tmp
-	echo 'FStar_Options._version := "$(VERSION)";;' >> $@.tmp
-	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@.tmp
-	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@.tmp
-	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@.tmp
-	./copy_if_diff.sh $@.tmp $@
+	echo 'open FStar_Util' > $@
+	echo 'let dummy () = ();;' >> $@
+	echo 'FStar_Options._version := "$(VERSION)";;' >> $@
+	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
+	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
+	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
 
 
 # ------------------------------------------------------------------------------
