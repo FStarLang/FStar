@@ -98,6 +98,12 @@ Guidelines for the changelog:
      properly (e.g., `a < b == c` implies `a < c`, but `a <= b == c`
      does not imply `a < c`). For some examples, see `examples/calc/`.
 
+## Miscellaneous
+
+   * Development builds of F\* no longer report the date of the build
+     in `fstar --version`. This is to prevent needlessly rebuilding
+     F\* even when the code does not change.
+
 # Version 0.9.6.0
 
 ## Command line options
