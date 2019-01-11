@@ -43,7 +43,7 @@ OCAML_BRANCH=$(shell ocaml get_branch.ml)
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all:  ../parser/parse.fsy ../../bin/fstar.exe ../../bin/tests.exe install-compiler-lib
+all:  ../parser/parse.fsy ../../bin/fstar.exe ../../bin/fstar.ocaml ../../bin/tests.exe install-compiler-lib
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser
@@ -88,13 +88,18 @@ endif
 	              | cat -s >> $@
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
-../../bin/fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-../../bin/fstar.exe: $(GENERATED_FILES)
-	$(OCAMLBUILD) main.native src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
-	./copy_if_diff.sh _build/src/fstar/ml/main.native $@
-	./copy_if_diff.sh _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
+FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native
+$(FSTAR_MAIN_NATIVE): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+$(FSTAR_MAIN_NATIVE): $(GENERATED_FILES)
+	$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
 
-install-compiler-lib: ../../bin/fstar.exe
+../../bin/fstar.exe: $(FSTAR_MAIN_NATIVE)
+	cp $^ $@
+
+../../bin/fstar.ocaml: $(FSTAR_MAIN_NATIVE)
+	cp $^ $@
+
+install-compiler-lib: $(FSTAR_MAIN_NATIVE)
 	mkdir -p ../../bin/fstar-compiler-lib/
 	@# VD: forcing the recompilation of modules in ulib/tactics_ml whenever the compiler is rebuilt
 	@# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
@@ -185,7 +190,7 @@ install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar
 # opam package, but it has not been tested in any other settings.
 install: all
 	@# Install the binary
-	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 -D $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
 	@# Then the standard library
 	$(call install_dir,ulib,lib/fstar)
 	@# Then the binary library
@@ -235,7 +240,7 @@ package: all
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
 	@# Install the F* binary
 	mkdir -p $(PREFIX)/bin/
-	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
 	@# Then the standard library.
 	$(call fexport,ulib)
 	@# Then the rest of the static files.
