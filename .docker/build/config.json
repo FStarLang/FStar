@@ -7,7 +7,7 @@
     "BranchName" : "master",
     "CommitId" : "latest",
     "GithubCommitUrl" : "https://github.com/project-everest/everest-ci/commit",
-    "OnDemandBuildDefinition" : "Infrastructure/Everest-Infrastructure-{agentOS}",
+    "OnDemandBuildDefinition" : "Infrastructure\\Everest-Infrastructure-{agentOS}",
 
     "DockerFile": ".docker/build/{agentOS}/Dockerfile",
     "DependencyFiles" : [
