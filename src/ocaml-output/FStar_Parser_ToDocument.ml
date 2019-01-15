@@ -2098,17 +2098,25 @@ and (p_aqual : FStar_Parser_AST.arg_qualifier -> FStar_Pprint.document) =
     | FStar_Parser_AST.Implicit  -> str "#"
     | FStar_Parser_AST.Equality  -> str "$"
     | FStar_Parser_AST.Meta t ->
-        (match t.FStar_Parser_AST.tm with
-         | FStar_Parser_AST.Abs (uu____6711,e) ->
-             let uu____6717 = str "#["  in
-             let uu____6719 =
-               let uu____6720 = p_term false false e  in
-               let uu____6723 =
-                 let uu____6724 = str "]"  in
-                 FStar_Pprint.op_Hat_Hat uu____6724 break1  in
-               FStar_Pprint.op_Hat_Hat uu____6720 uu____6723  in
-             FStar_Pprint.op_Hat_Hat uu____6717 uu____6719
-         | uu____6726 -> failwith "Invalid term for typeclass")
+        let t1 =
+          match t.FStar_Parser_AST.tm with
+          | FStar_Parser_AST.Abs (uu____6712,e) -> e
+          | uu____6718 ->
+              FStar_Parser_AST.mk_term
+                (FStar_Parser_AST.App
+                   (t,
+                     (FStar_Parser_AST.unit_const t.FStar_Parser_AST.range),
+                     FStar_Parser_AST.Nothing)) t.FStar_Parser_AST.range
+                FStar_Parser_AST.Expr
+           in
+        let uu____6719 = str "#["  in
+        let uu____6721 =
+          let uu____6722 = p_term false false t1  in
+          let uu____6725 =
+            let uu____6726 = str "]"  in
+            FStar_Pprint.op_Hat_Hat uu____6726 break1  in
+          FStar_Pprint.op_Hat_Hat uu____6722 uu____6725  in
+        FStar_Pprint.op_Hat_Hat uu____6719 uu____6721
 
 and (p_disjunctivePattern :
   FStar_Parser_AST.pattern -> FStar_Pprint.document) =
