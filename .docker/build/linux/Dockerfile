@@ -5,7 +5,7 @@
 # In case you would like to reference a specific commit,
 # replace latest with the commit id from github using 12 characters.
 ARG COMMITID
-FROM everestvstsacr.azurecr.io/everest-ci-linux:${COMMITID}
+FROM everest-ci-linux:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
@@ -37,7 +37,7 @@ RUN chmod +x build.sh
 COPY --chown=everest build_helper.sh ${MYHOME}/build_helper.sh
 RUN chmod +x build_helper.sh
 
-RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} ${FSTARSOURCEVERSION} || true
+RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
 
 # Remove ssh key
 RUN rm .ssh/id_rsa
