@@ -2,8 +2,8 @@
     "ProjectName" : "FStar",
 
     "BaseContainerIsEverestImage" : true,
-    "BaseContainerImageName" : "",
-    "BaseContainerImageTag": "",
+    "BaseContainerImageName" : "everest-ci",
+    "BaseContainerImageTag": "latest",
     "BranchName" : "master",
     "CommitId" : "latest",
     "GithubCommitUrl" : "https://github.com/project-everest/everest-ci/commit",
@@ -16,8 +16,8 @@
     ],
 
     "DockerCacheEnabled" : true,
-    "CIBuildTarget" : "",
-    "NightlyBuildTarget" : "",
+    "CIBuildTarget" : "uregressions",
+    "NightlyBuildTarget" : "uregressions-ulong",
     "HasLogsToExtract" : true,
 
     "NotificationEnabled" : true,
