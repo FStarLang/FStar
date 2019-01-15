@@ -1,0 +1,26 @@
+{
+    "ProjectName" : "FStar",
+
+    "BaseContainerIsEverestImage" : true,
+    "BaseContainerImageName" : "",
+    "BaseContainerImageTag": "",
+    "BranchName" : "master",
+    "CommitId" : "latest",
+    "GithubCommitUrl" : "https://github.com/project-everest/everest-ci/commit",
+    "OnDemandBuildDefinition" : "Infrastructure/Everest-Infrastructure-{agentOS}",
+
+    "DockerFile": ".docker/build/{agentOS}/Dockerfile",
+    "DependencyFiles" : [
+        ".docker/build/build_helper.sh",
+        ".docker/build/build.sh"
+    ],
+
+    "DockerCacheEnabled" : true,
+    "CIBuildTarget" : "",
+    "NightlyBuildTarget" : "",
+    "HasLogsToExtract" : true,
+
+    "NotificationEnabled" : true,
+    "NotificationChannel" : "#fstar-build",
+    "PublicBranches" : [ "master" ]
+}
