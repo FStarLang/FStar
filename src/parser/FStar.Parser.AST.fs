@@ -328,14 +328,15 @@ let mkExplicitApp t args r = match args with
       | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
       | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
 
+let unit_const r = mk_term(Const Const_unit) r Expr
+
 let mkAdmitMagic r =
-    let unit_const = mk_term(Const Const_unit) r Expr in
     let admit =
         let admit_name = mk_term(Var(set_lid_range C.admit_lid r)) r Expr in
-        mkExplicitApp admit_name [unit_const] r in
+        mkExplicitApp admit_name [unit_const r] r in
     let magic =
         let magic_name = mk_term(Var(set_lid_range C.magic_lid r)) r Expr in
-        mkExplicitApp magic_name [unit_const] r in
+        mkExplicitApp magic_name [unit_const r] r in
     let admit_magic = mk_term(Seq(admit, magic)) r Expr in
     admit_magic
 

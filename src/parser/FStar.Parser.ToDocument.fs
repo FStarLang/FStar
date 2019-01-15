@@ -995,9 +995,12 @@ and p_aqual = function
   | Implicit -> str "#"
   | Equality -> str "$"
   | Meta t ->
-      (match t.tm with
-       | Abs (_ ,e) -> str "#[" ^^ p_term false false e ^^ str "]" ^^ break1
-       | _ -> failwith "Invalid term for typeclass")
+    let t =
+      match t.tm with
+      | Abs (_ ,e) -> e
+      | _ -> mk_term (App (t, unit_const t.range, Nothing)) t.range Expr
+    in
+    str "#[" ^^ p_term false false t ^^ str "]" ^^ break1
 
 (* ****************************************************************************)
 (*                                                                            *)
