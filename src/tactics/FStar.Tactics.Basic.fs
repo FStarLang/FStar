@@ -894,7 +894,14 @@ let t_apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
     // Focus helps keep the goal order
     let typ = bnorm e typ in
     bind (try_match_by_application e typ (goal_type goal)) (fun uvs ->
-    let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, q)]) uvs tm in
+    (* use normal implicit application for meta-args: meta application does
+     * make sense and the typechecker complains. *)
+    let fix_qual q =
+      match q with
+      | Some (Meta _) -> Some (Implicit false)
+      | _ -> q
+    in
+    let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, fix_qual q)]) uvs tm in
 
     let uvset = List.fold_right (fun (_, _, uv) s -> BU.set_union s (SF.uvars uv.ctx_uvar_typ)) uvs (SF.new_uv_set ()) in
     let free_in_some_goal uv =
