@@ -213,3 +213,16 @@ let morph_for lstate (lw:low_state lstate) #hstate (#p: state_lens lstate hstate
                    wp (for_elab inv f lo hi) (lfor' #_ #lw #_ #p inv f (fun i -> morph #_ #lw #_ #p unit _ (f i)) lo hi))) = 
   ()
 
+
+let bind_compat 
+  #lstate (lw:low_state lstate) #hstate (#p: state_lens lstate hstate) #a #b
+          (wp : hwp_mon #hstate b)
+          (wp1 : hwp_mon #hstate a) (c1:high a wp1) (m : low #_ #lw #_ #p a wp1 c1) (m' : low a wp1 c1)
+          (fwp : a -> hwp_mon #hstate b) (fc:(x:a) -> high b (fwp x)) (f : (x:a) -> low b (fwp x) (fc x)) (f' : (x:a) -> low b (fwp x) (fc x)):
+  Lemma
+    (requires (implies wp (bind_wp wp1 fwp) /\ 
+               l_eq wp1 c1 m wp1 c1 m' /\ (forall (x:a). l_eq (fwp x) (fc x) (f x) (fwp x) (fc x) (f' x))))
+    (ensures (l_eq #_ #lw #_ #p #b wp (bind_elab c1 fc) (lbind m f)
+                   wp (bind_elab c1 fc) (lbind m' f'))) =
+    ()
+
