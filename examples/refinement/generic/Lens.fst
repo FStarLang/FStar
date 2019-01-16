@@ -123,13 +123,17 @@ let run_high #hstate #a #wp (c:high #hstate a wp) (s0:_{wp s0 (fun _ -> True)}) 
 
 // "Lifting" of high programs to low programs
 let morph #lstate (#l : low_state lstate) #hstate (#p: state_lens lstate hstate)
-           (a:Type) (wp : hwp_mon a) (c : high #hstate a wp) : low #lstate #l #hstate #p a wp c =
+          (a:Type) (wp : hwp_mon a) (c : high #hstate a wp) : low #lstate #l #hstate #p a wp c =
   fun ls ->
     let hs = to_high' #_ #l #_ #p ls in 
     let (x, hs') = run_high c hs in
     to_low' #_ #l #_ #p ls hs'; x
 
-
+let morph_p #lstate (#l : low_state lstate) #hstate (#p: state_lens lstate hstate)
+            (a:Type) pre post (c : high_p #hstate a pre post) 
+: low_p #lstate #l #hstate #p a pre post c =
+  morph a (as_wp pre post) c
+  
 (* High WPS *)
 
 assume val range0: range
