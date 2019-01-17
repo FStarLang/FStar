@@ -320,10 +320,18 @@ let fib_fast n : Fib mint (fun s0 -> True) (fun s0 r s1 -> r = fib n) =
       get_i 1
     end
 
-(* 
+
 let lshift i = 
-    lbind (lget_i 0) (fun x0 ->
-    lbind #_ #fib_st #_ #fib_lens #mint #unit (lget_i 1) (fun x1 ->
+    lbind (lget_i 0) (fun x0 -> 
+    lbind (lget_i 1) (fun x1 ->
+    lbind (lput_i 0 x1) (fun _ ->   
+    let (t : mint) = x0 +%^ x1 in
+    lbind (lput_i 1 x0) (fun _ ->          
+    lreturn ()))))
+
+
+(* 
+    #_ #fib_st #_ #fib_lens #mint #unit 
     lbind (lput_i 0 x1) (fun _ ->  
     lbind #_ #fib_st #_ #fib_lens #unit #unit (lput_i 1 (x0 +%^ x1)) (fun _ -> 
     lreturn ()))))
@@ -345,3 +353,4 @@ let low_fib n : low_p #_ #fib_st #_ #fib_lens mint (fun s0 -> True) (fun s0 r s1
     (reify (fib_fast n))
  
 *)
+
