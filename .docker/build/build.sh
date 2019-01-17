@@ -49,7 +49,7 @@ function fetch_hacl() {
 
     cd hacl-star
     git fetch origin
-    local ref=$(if [ -f ../.hacl_version ]; then cat ../.hacl_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(cat ../.hacl_version | tr -d '\r\n')
     echo Switching to HACL $ref
     git reset --hard $ref
     git clean -fdx
@@ -66,7 +66,7 @@ function fetch_kremlin() {
 
     cd kremlin
     git fetch origin
-    local ref=$(if [ -f ../.kremlin_version ]; then cat ../.kremlin_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(cat ../.kremlin_version | tr -d '\r\n')
     echo Switching to KreMLin $ref
     git reset --hard $ref
     cd ..
@@ -98,7 +98,7 @@ function fetch_qd() {
 
     cd qd
     git fetch origin
-    local ref=$(if [ -f ../.qd_version ]; then cat ../.qd_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(cat ../.qd_version | tr -d '\r\n')
     echo Switching to QuackyDucky $ref
     git reset --hard $ref
     cd ..
@@ -128,7 +128,7 @@ function fetch_mitls() {
     fi
     cd mitls-fstar
     git fetch origin
-    local ref=$(if [ -f ../.mitls_version ]; then cat ../.mitls_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(cat ../.mitls_version | tr -d '\r\n')
     echo Switching to mitls-fstar $ref
     git reset --hard $ref
     git clean -fdx
