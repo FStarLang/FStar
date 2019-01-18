@@ -5,7 +5,7 @@
 # In case you would like to reference a specific commit,
 # replace latest with the commit id from github using 12 characters.
 ARG COMMITID
-FROM everest-ci-windows:${COMMITID}
+FROM everest-ci-windows-nt:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
