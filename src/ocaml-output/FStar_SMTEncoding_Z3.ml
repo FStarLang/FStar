@@ -746,7 +746,7 @@ let (doZ3Exe :
   
 let (z3_options : Prims.string FStar_ST.ref) =
   FStar_Util.mk_ref
-    "(set-option :global-decls false)\n(set-option :smt.mbqi false)\n(set-option :auto_config false)\n(set-option :produce-unsat-cores true)\n\n     (set-option :model true)\n(set-option :smt.case_split=3)\n(set-option :smt.relevancy=2)"
+    "(set-option :global-decls false)\n(set-option :smt.mbqi false)\n(set-option :auto_config false)\n(set-option :produce-unsat-cores true)\n(set-option :model true)\n(set-option :smt.case_split 3)\n(set-option :smt.relevancy 2)\n"
   
 let (set_z3_options : Prims.string -> unit) =
   fun opts  -> FStar_ST.op_Colon_Equals z3_options opts 
