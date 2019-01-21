@@ -1758,6 +1758,7 @@ val g_upd_seq_as_seq (#a:Type0) (#rrel #rel:srel a)
            (Seq.length s > 0 ==> not (g_is_null b)) /\
            modifies (loc_buffer b) h h' /\
            live h' b /\
+           HST.equal_stack_domains h h' /\
            as_seq h' b == s)
 
 /// ``g_upd b i v h`` updates the buffer `b` in heap `h` at location
