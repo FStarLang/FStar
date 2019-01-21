@@ -272,6 +272,7 @@ let load_module_from_cache
                 Inl "Unable to compute digest of"
     in
     fun env fn ->
+      let load_it () =
         let cache_file = Dep.cache_file_name fn in
         let fail maybe_warn cache_file =
              invalidate_cache();
@@ -292,6 +293,13 @@ let load_module_from_cache
                  fail (Some msg) cache_file;
                  None
                | Inr res -> Some res
+      in
+      let res, time = FStar.Util.record_time load_it in
+      if Options.profile()
+      then BU.print2 "[Elapsed time: %s] Loading checked file %s\n"
+                     (BU.string_of_int time)
+                     (Dep.cache_file_name fn);
+      res
 
 let store_module_to_cache (env:uenv) fn (tc_result:tc_result) =
     if Options.cache_checked_modules()
