@@ -76,7 +76,7 @@ unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
     fun ps post -> forall k. (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
 
 private
-unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) =
+unfold let g_bind_wp (_:range) (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) =
     g_compact b (g_bind a b wp f)
 
 [@ dm4f_bind_range ]
@@ -85,6 +85,7 @@ new_effect {
   with repr     = __tac
      ; bind     = __bind
      ; return   = __ret
+     ; bind_wp  = g_bind_wp
      ; __raise  = __raise
      ; __get    = __get
 }

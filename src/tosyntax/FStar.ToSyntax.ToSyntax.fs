@@ -2389,9 +2389,9 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     ) in
     let actions = List.map fst actions_docs in
     let eff_t = Subst.close binders eff_t in
-    let lookup s =
-        let l = Env.qualify env (mk_ident(s, d.drange)) in
-        [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
+    (* let lookup s = *)
+    (*     let l = Env.qualify env (mk_ident(s, d.drange)) in *)
+    (*     [], Subst.close binders <| fail_or env (try_lookup_definition env) l in *)
     let lookup_or_dummy s =
         let l = Env.qualify env (mk_ident(s, d.drange)) in
         let t = match try_lookup_definition env l with
@@ -2403,7 +2403,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
     let se =
       let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
-      let un_ts = [], Syntax.tun in
+      (* let un_ts = [], Syntax.tun in *)
       { sigel =
         (Sig_new_effect({
            mname       = mname;
@@ -2425,9 +2425,9 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
            null_wp     = lookup_or_dummy "null_wp";
            trivial     = lookup_or_dummy "trivial";
            repr = {
-             monad_m     = (if rr then snd <| lookup "repr" else S.tun);
-             monad_bind  = (if rr then lookup "bind" else un_ts);
-             monad_ret   = (if rr then lookup "return" else un_ts);
+             monad_m     = snd <| lookup_or_dummy "repr";
+             monad_bind  = lookup_or_dummy "bind";
+             monad_ret   = lookup_or_dummy "return";
            };
            elaborated  = false;
            actions     = actions;

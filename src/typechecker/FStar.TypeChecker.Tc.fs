@@ -197,10 +197,27 @@ let cps_and_elaborate_ed env ed =
   let sigelts = BU.mk_ref [] in
   let mk_lid name : lident = U.dm4f_lid ed name in
 
+  let is_unk t =
+    match (SS.compress t).n with
+    | Tm_unknown -> true
+    | _ -> false
+  in
+
   BU.print_string "GG2\n";
   let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env effect_binders [] ed.repr.monad_bind in
+  let bind_wp =
+    if is_unk (snd ed.spec.monad_bind)
+    then U.abs [S.null_binder (S.tabbrev PC.range_lid)] bind_wp None
+    else snd ed.spec.monad_bind
+  in
   BU.print_string "GG3\n";
   let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env effect_binders [] ed.repr.monad_ret in
+  let return_wp = if is_unk (snd ed.spec.monad_ret) then return_wp else snd ed.spec.monad_ret in
+  (* let return_wp = *)
+  (*   if is_unk (snd ed.spec.monad_ret) *)
+  (*   then U.abs [S.null_binder (S.tabbrev PC.range_lid)] return_wp None *)
+  (*   else snd ed.spec.monad_ret *)
+  (* in *)
   let rc_gtot = {
             residual_effect = PC.effect_GTot_lid;
             residual_typ = None;
@@ -263,50 +280,30 @@ let cps_and_elaborate_ed env ed =
           raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
   in
 
-  let return_wp =
-    // TODO: fix [tc_eff_decl] to deal with currying
-    match (SS.compress return_wp).n with
-    | Tm_abs (b1 :: b2 :: bs, body, what) ->
-        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
-    | _ ->
-        raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
-  in
-  let bind_wp =
-    match (SS.compress bind_wp).n with
-    | Tm_abs (binders, body, what) ->
-        // TODO: figure out how to deal with ranges
-        let r = S.lid_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
-        U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
-    | _ ->
-        raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
-  in
-
+  (* let return_wp = *)
+  (*   // TODO: fix [tc_eff_decl] to deal with currying *)
+  (*   match (SS.compress return_wp).n with *)
+  (*   | Tm_abs (b1 :: b2 :: bs, body, what) -> *)
+  (*       U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot) *)
+  (*   | _ -> *)
+  (*       raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return") *)
+  (* in *)
   let apply_close t =
     if List.length effect_binders = 0 then
       t
     else
       close effect_binders (mk (Tm_app (t, snd (U.args_of_binders effect_binders))))
   in
-  let rec apply_last f l = match l with
-    | [] -> failwith "empty path.."
-    | [a] -> [f a]
-    | (x::xs) -> x :: (apply_last f xs)
-  in
+  (* let rec apply_last (f : 'a -> 'a) (l : list<'a>) : list<'a> = *)
+  (*   match l with *)
+  (*   | [] -> failwith "empty path.." *)
+  (*   | [a] -> [f a] *)
+  (*   | (x::xs) -> x :: (apply_last f xs) *)
+  (* in *)
   let register name item =
-    let p = path_of_lid ed.mname in
-    let p' = apply_last (fun s -> "__" ^ s ^ "_eff_override_" ^ name) p in
-    let l' = lid_of_path p' Range.dummyRange in
-    match try_lookup_lid env l' with
-    | Some (_us,_t) -> begin
-      if Options.debug_any () then
-          BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
-      // TODO: GM: get exact delta depth, needs a change of interfaces
-      fv_to_tm (lid_as_fv l' delta_equational None)
-      end
-    | None ->
-      let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
-      sigelts := sigelt :: !sigelts;
-      fv
+    let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
+    sigelts := sigelt :: !sigelts;
+    fv
   in
   let lift_from_pure_wp = register "lift_from_pure" lift_from_pure_wp in
 
@@ -1231,12 +1228,16 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     [se], [], env0
 
   | Sig_new_effect(ne) ->
+    if Env.debug env (Options.Other "ED") then
+      BU.print2 "GG repr = %s (%s)\n" (Print.term_to_string ne.repr.monad_m) (Print.tag_of_term ne.repr.monad_m);
     let forfree =
       match (SS.compress ne.repr.monad_m).n with
       | Tm_unknown -> false 
       | _ -> not ne.elaborated
     in
     if forfree then begin
+        if Env.debug env (Options.Other "ED") then
+          BU.print_string "Beginning DM4F run\n";
         // Let the power of Dijkstra generate everything "for free", then defer
         // the rest of the job to [tc_decl].
         let ses, ne, lift_from_pure_opt = cps_and_elaborate_ed env0 ne in
