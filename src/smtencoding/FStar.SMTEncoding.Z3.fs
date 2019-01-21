@@ -390,8 +390,7 @@ let z3_options = BU.mk_ref
      (set-option :produce-unsat-cores true)\n
      (set-option :model true)\n\
      (set-option :smt.case_split=3)\n\
-     (set-option :smt.relevancy=2)\n\
-     (set-option :smt.qi.eager_threshold=100)"
+     (set-option :smt.relevancy=2)"
 
 // Use by F*.js
 let set_z3_options opts =
