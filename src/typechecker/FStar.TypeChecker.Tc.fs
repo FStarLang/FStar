@@ -178,7 +178,7 @@ let cps_and_elaborate_ed env ed =
 
   // TODO: check that [_comp] is [Tot Type]
   let repr, _comp = open_and_check env effect_binders [] ed.repr.monad_m in
-  (* if Env.debug env (Options.Other "ED") then *)
+  if Env.debug env (Options.Other "ED") then
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
   let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
@@ -343,8 +343,8 @@ let cps_and_elaborate_ed env ed =
       | [] -> action_typ_with_wp
       | _ -> flat_arrow action_params (S.mk_Total action_typ_with_wp)
     in
-    (* if Env.debug env <| Options.Other "ED" *)
-    BU.print4 "original action_params %s, end action_params %s, type %s, term %s\n"
+    if Env.debug env <| Options.Other "ED" then
+      BU.print4 "original action_params %s, end action_params %s, type %s, term %s\n"
         (Print.binders_to_string "," params_un)
         (Print.binders_to_string "," action_params)
         (Print.term_to_string action_typ_with_wp)
@@ -439,7 +439,7 @@ let cps_and_elaborate_ed env ed =
 
   // Generate the missing combinators.
   let sigelts', ed = DMFF.gen_wps_for_free env effect_binders a wp_a ed in
-  (* if Env.debug env (Options.Other "ED") then *)
+  if Env.debug env (Options.Other "ED") then
     BU.print_string (Print.eff_decl_to_string ed);
 
   let lift_from_pure_opt =
@@ -548,8 +548,8 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
   //put the signature in the environment to prevent generalizing its free universe variables until we're done
   let env = Env.push_bv env (S.new_bv None signature) in
 
-  (* if Env.debug env0 <| Options.Other "ED" *)
-  BU.print5 "Checking effect signature: %s %s : %s\n(a is %s:%s)\n"
+  if Env.debug env0 <| Options.Other "ED" then
+    BU.print5 "Checking effect signature: %s %s : %s\n(a is %s:%s)\n"
                         (Print.lid_to_string ed.mname)
                         (Print.binders_to_string " " ed.binders)
                         (Print.term_to_string signature)
@@ -764,7 +764,7 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
           // 1) Check action definition, setting its expected type to
           //    [action_typ]
           let env' = { Env.set_expected_typ env act_typ with instantiate_imp = false } in
-          (* if Env.debug env (Options.Other "ED") then *)
+          if Env.debug env (Options.Other "ED") then
             BU.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
               (text_of_lid act.action_name) (Print.term_to_string act.action_defn)
               (Print.term_to_string act_typ);
