@@ -142,8 +142,6 @@ let cps_and_elaborate_ed env ed =
   let signature, _ = tc_trivial_guard env signature_un in
   // We will open binders through [open_and_check]
 
-  BU.print1 "GG cps_and_elaborate (%s)\n" (Print.eff_decl_to_string ed);
-
   let raise_error : (Errors.raw_error * string) -> 'a = fun (e, err_msg) ->
     Errors.raise_error (e, err_msg) signature.pos
   in
@@ -156,7 +154,6 @@ let cps_and_elaborate_ed env ed =
   // Every combinator found in the effect declaration is parameterized over
   // [binders], then [a]. This is a variant of [open_effect_signature] where we
   // just extract the binder [a].
-  BU.print1 "GG sig = %s\n" (Print.term_to_string signature);
   let a, effect_marker =
     // TODO: more stringent checks on the shape of the signature; better errors
     match (SS.compress signature_un).n with
@@ -203,14 +200,12 @@ let cps_and_elaborate_ed env ed =
     | _ -> false
   in
 
-  BU.print_string "GG2\n";
   let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env effect_binders [] ed.repr.monad_bind in
   let bind_wp =
     if is_unk (snd ed.spec.monad_bind)
     then U.abs [S.null_binder (S.tabbrev PC.range_lid)] bind_wp None
     else snd ed.spec.monad_bind
   in
-  BU.print_string "GG3\n";
   let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env effect_binders [] ed.repr.monad_ret in
   let return_wp = if is_unk (snd ed.spec.monad_ret) then return_wp else snd ed.spec.monad_ret in
   (* let return_wp = *)
@@ -320,7 +315,6 @@ let cps_and_elaborate_ed env ed =
   sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
-    BU.print1 "GG proc action %s\n" (string_of_lid action.action_name);
     let params_un = SS.open_binders action.action_params in
     let action_params, env', _ = tc_tparams (DMFF.get_env dmff_env) params_un in
     let action_params = List.map (fun (bv, qual) ->
@@ -328,7 +322,6 @@ let cps_and_elaborate_ed env ed =
     ) action_params in
     let dmff_env' = DMFF.set_env dmff_env env' in
     // We need to reverse-engineer what tc_eff_decl wants here...
-    BU.print_string "GG1\n";
     let dmff_env, action_t, action_wp, action_elab =
       elaborate_and_star dmff_env' effect_binders action_params (action.action_univs, action.action_defn)
     in
@@ -896,9 +889,8 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
       ; monad_ret  = close 0 return_repr
       ; monad_bind = close 1 bind_repr
     }
-    ; actions     = List.map close_action actions} in
-
-  BU.print_string (Print.eff_decl_to_string ed);
+    ; actions     = List.map close_action actions}
+  in
   ed
 
 let tc_lex_t env ses quals lids =
@@ -1228,8 +1220,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     [se], [], env0
 
   | Sig_new_effect(ne) ->
-    if Env.debug env (Options.Other "ED") then
-      BU.print2 "GG repr = %s (%s)\n" (Print.term_to_string ne.repr.monad_m) (Print.tag_of_term ne.repr.monad_m);
     let forfree =
       match (SS.compress ne.repr.monad_m).n with
       | Tm_unknown -> false 
