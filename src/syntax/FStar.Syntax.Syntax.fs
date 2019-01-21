@@ -371,32 +371,36 @@ type action = {
     action_defn:term;
     action_typ: typ
 }
+
+type term_monad = {
+    monad_m         : term;
+    monad_ret       : tscheme;
+    monad_bind      : tscheme;
+}
+
 type eff_decl = {
-    cattributes :list<cflag>;
-    mname       :lident;
-    univs       :univ_names;
-    binders     :binders;
-    signature   :term;
-    ret_wp      :tscheme;
-    bind_wp     :tscheme;
-    if_then_else:tscheme;
-    ite_wp      :tscheme;
-    stronger    :tscheme;
-    close_wp    :tscheme;
-    assert_p    :tscheme;
-    assume_p    :tscheme;
-    null_wp     :tscheme;
-    trivial     :tscheme;
+    cattributes : list<cflag>;
+    mname       : lident;
+    univs       : univ_names;
+    binders     : binders;
+    spec        : term_monad;
+    signature   : term;
+    if_then_else: tscheme;
+    ite_wp      : tscheme;
+    stronger    : tscheme;
+    close_wp    : tscheme;
+    assert_p    : tscheme;
+    assume_p    : tscheme;
+    null_wp     : tscheme;
+    trivial     : tscheme;
     //NEW FIELDS
     //representation of the effect as pure type
-    repr        :term;
-    elaborated  :bool;
+    repr        : term_monad;
+    elaborated  : bool;
     //operations on the representation
-    return_repr :tscheme;
-    bind_repr   :tscheme;
     //actions for the effect
-    actions     :list<action>;
-    eff_attrs   :list<attribute>;
+    actions     : list<action>;
+    eff_attrs   : list<attribute>;
 }
 
 type sig_metadata = {

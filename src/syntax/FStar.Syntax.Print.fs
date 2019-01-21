@@ -656,8 +656,8 @@ let eff_decl_to_string' r q ed =
          enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
          term_to_string ed.signature;
-         tscheme_to_string ed.ret_wp;
-         tscheme_to_string ed.bind_wp;
+         tscheme_to_string ed.spec.monad_ret;
+         tscheme_to_string ed.spec.monad_bind;
          tscheme_to_string ed.if_then_else;
          tscheme_to_string ed.ite_wp;
          tscheme_to_string ed.stronger;
@@ -666,9 +666,9 @@ let eff_decl_to_string' r q ed =
          tscheme_to_string ed.assume_p;
          tscheme_to_string ed.null_wp;
          tscheme_to_string ed.trivial;
-         term_to_string ed.repr;
-         tscheme_to_string ed.bind_repr;
-         tscheme_to_string ed.return_repr;
+         term_to_string ed.repr.monad_m;
+         tscheme_to_string ed.repr.monad_bind;
+         tscheme_to_string ed.repr.monad_ret;
          actions_to_string ed.actions]
 
 let eff_decl_to_string ed =

@@ -498,13 +498,13 @@ let extract_reifiable_effect g ed
     in
 
     let g, return_iface, return_decl =
-        let return_tm, ty_sc = extract_fv (snd ed.return_repr) in
+        let return_tm, ty_sc = extract_fv (snd ed.repr.monad_ret) in
         let return_nm, return_lid = monad_op_name ed "return" in
         extend_env g return_lid return_nm return_tm ty_sc
     in
 
     let g, bind_iface, bind_decl =
-        let bind_tm, ty_sc = extract_fv (snd ed.bind_repr) in
+        let bind_tm, ty_sc = extract_fv (snd ed.repr.monad_bind) in
         let bind_nm, bind_lid = monad_op_name ed "bind" in
         extend_env g bind_lid bind_nm bind_tm ty_sc
     in

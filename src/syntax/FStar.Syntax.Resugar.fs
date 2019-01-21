@@ -1053,8 +1053,8 @@ let resugar_eff_decl' env r q ed =
   let eff_binders = if (Options.print_implicits()) then eff_binders else filter_imp eff_binders in
   let eff_binders = eff_binders |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
   let eff_typ = resugar_term' env eff_typ in
-  let ret_wp = resugar_tscheme'' env "ret_wp" ed.ret_wp in
-  let bind_wp = resugar_tscheme'' env "bind_wp" ed.bind_wp in
+  let ret_wp = resugar_tscheme'' env "ret_wp" ed.spec.monad_ret in
+  let bind_wp = resugar_tscheme'' env "bind_wp" ed.spec.monad_bind in
   let if_then_else = resugar_tscheme'' env "if_then_else" ed.if_then_else in
   let ite_wp = resugar_tscheme'' env "ite_wp" ed.ite_wp in
   let stronger = resugar_tscheme'' env "stronger" ed.stronger in
@@ -1063,9 +1063,9 @@ let resugar_eff_decl' env r q ed =
   let assume_p = resugar_tscheme'' env "assume_p" ed.assume_p in
   let null_wp = resugar_tscheme'' env "null_wp" ed.null_wp in
   let trivial = resugar_tscheme'' env "trivial" ed.trivial in
-  let repr = resugar_tscheme'' env "repr" ([], ed.repr) in
-  let return_repr = resugar_tscheme'' env "return_repr" ed.return_repr in
-  let bind_repr = resugar_tscheme'' env "bind_repr" ed.bind_repr in
+  let repr = resugar_tscheme'' env "repr" ([], ed.repr.monad_m) in
+  let return_repr = resugar_tscheme'' env "return_repr" ed.repr.monad_ret in
+  let bind_repr = resugar_tscheme'' env "bind_repr" ed.repr.monad_bind in
   let mandatory_members_decls =
     (* GG FIX *)
       [repr; return_repr; bind_repr; ret_wp; bind_wp;

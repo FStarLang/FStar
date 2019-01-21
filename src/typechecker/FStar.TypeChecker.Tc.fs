@@ -177,7 +177,7 @@ let cps_and_elaborate_ed env ed =
   let mk x = mk x None signature.pos in
 
   // TODO: check that [_comp] is [Tot Type]
-  let repr, _comp = open_and_check env effect_binders [] ed.repr in
+  let repr, _comp = open_and_check env effect_binders [] ed.repr.monad_m in
   (* if Env.debug env (Options.Other "ED") then *)
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
@@ -198,9 +198,9 @@ let cps_and_elaborate_ed env ed =
   let mk_lid name : lident = U.dm4f_lid ed name in
 
   BU.print_string "GG2\n";
-  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env effect_binders [] ed.bind_repr in
+  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env effect_binders [] ed.repr.monad_bind in
   BU.print_string "GG3\n";
-  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env effect_binders [] ed.return_repr in
+  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env effect_binders [] ed.repr.monad_ret in
   let rc_gtot = {
             residual_effect = PC.effect_GTot_lid;
             residual_typ = None;
@@ -424,11 +424,16 @@ let cps_and_elaborate_ed env ed =
 
   let ed = { ed with
     signature = close effect_binders effect_signature;
-    repr = apply_close repr;
-    ret_wp = [], apply_close return_wp;
-    bind_wp = [], apply_close bind_wp;
-    return_repr = [], apply_close return_elab;
-    bind_repr = [], apply_close bind_elab;
+    repr = {
+      monad_m = apply_close repr;
+      monad_ret = [], apply_close return_elab;
+      monad_bind = [], apply_close bind_elab;
+    };
+    spec = {
+      monad_m = S.tun;
+      monad_ret = [], apply_close return_wp;
+      monad_bind = [], apply_close bind_wp;
+    };
     actions = actions; // already went through apply_close
     binders = close_binders effect_binders
   }
@@ -488,11 +493,17 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
                          (open_univs n_us t)  //AR:used to be n_effect_params + n_us, but i think it should just be n_us, effect_params come after n_us, and they are being opened in opening
         in
         { ed with
-            univs         = annotated_univ_names;
-            ret_wp        =op ed.ret_wp
-            ; bind_wp     =op ed.bind_wp
-            ; return_repr =op ed.return_repr
-            ; bind_repr   =op ed.bind_repr
+            univs         = annotated_univ_names
+            ; spec = {
+                monad_m    = snd (op ([], ed.spec.monad_m));
+                monad_ret  = op ed.spec.monad_ret;
+                monad_bind = op ed.spec.monad_bind;
+            }
+            ; repr = {
+                monad_m    = snd (op ([], ed.repr.monad_m));
+                monad_ret  = op ed.repr.monad_ret;
+                monad_bind = op ed.repr.monad_bind;
+            }
             ; if_then_else=op ed.if_then_else
             ; ite_wp      =op ed.ite_wp
             ; stronger    =op ed.stronger
@@ -501,7 +512,6 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
             ; assume_p    =op ed.assume_p
             ; null_wp     =op ed.null_wp
             ; trivial     =op ed.trivial
-            ; repr        = snd (op ([], ed.repr))
             ; actions     = List.map (fun a ->
             { a with
                 action_defn = snd (op (a.action_univs, a.action_defn));  //AR: can't assume that the action univs are empty
@@ -561,7 +571,7 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
 
   let return_wp =
     let expected_k = U.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
-    check_and_gen' env ed.ret_wp expected_k in
+    check_and_gen' env ed.spec.monad_ret expected_k in
 
   let bind_wp =
     let b, wp_b = fresh_effect_signature () in
@@ -571,7 +581,7 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
                                  S.null_binder wp_a;
                                  S.null_binder a_wp_b]
                                  (S.mk_Total wp_b) in
-    check_and_gen' env ed.bind_wp expected_k in
+    check_and_gen' env ed.spec.monad_bind expected_k in
 
   let if_then_else =
     let p = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
@@ -629,9 +639,12 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     check_and_gen' env ed.trivial expected_k in
 
   let repr, bind_repr, return_repr, actions =
-      match (SS.compress ed.repr).n with
+      match (SS.compress ed.repr.monad_m).n with
       | Tm_unknown -> //This is not a DM4F effect definition; so nothing to do
-        ed.repr, ed.bind_repr, ed.return_repr, ed.actions
+        (ed.repr.monad_m,
+         ed.repr.monad_bind,
+         ed.repr.monad_ret,
+         ed.actions)
       | _ ->
         //This is a DM4F effect definition
         //Need to check that the repr, bind, return and actions have their expected types
@@ -640,8 +653,8 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
             let expected_k = U.arrow [S.mk_binder a;
                                          S.null_binder wp_a]
                                          (S.mk_GTotal t) in
-            (* printfn "About to check repr=%s\nat type %s\n" (Print.term_to_string ed.repr) (Print.term_to_string expected_k); *)
-            tc_check_trivial_guard env ed.repr expected_k in
+            (* printfn "About to check repr=%s\nat type %s\n" (Print.term_to_string ed.repr.monad_m) (Print.term_to_string expected_k); *)
+            tc_check_trivial_guard env ed.repr.monad_m expected_k in
 
         let mk_repr' t wp =
             let repr = N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env repr in
@@ -689,11 +702,11 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
             let expected_k, _, _ =
                 tc_tot_or_gtot_term env expected_k in
 //            printfn "About to check bind=%s\n\n, at type %s\n"
-//                     (Print.term_to_string (snd ed.bind_repr))
+//                     (Print.term_to_string (snd ed.repr.monad_bind))
 //                     (Print.term_to_string expected_k);
-            let env = Env.set_range env (snd (ed.bind_repr)).pos in
+            let env = Env.set_range env (snd (ed.repr.monad_bind)).pos in
             let env = {env with lax=true} in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
-            let br = check_and_gen' env ed.bind_repr expected_k in
+            let br = check_and_gen' env ed.repr.monad_bind expected_k in
 //            let _ = printfn "After checking bind_repr is %s\nexpected_k is %s\n" (Print.tscheme_to_string br) (Print.term_to_string expected_k) in
             br in
 
@@ -710,10 +723,10 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
             let expected_k, _, _ =
                 tc_tot_or_gtot_term env expected_k in
             (* printfn "About to check return_repr=%s, at type %s\n" *)
-            (*         (Print.term_to_string (snd ed.return_repr)) *)
+            (*         (Print.term_to_string (snd ed.repr.monad_ret)) *)
             (*         (Print.term_to_string expected_k); *)
-            let env = Env.set_range env (snd (ed.return_repr)).pos in
-            let univs, repr = check_and_gen' env ed.return_repr expected_k in
+            let env = Env.set_range env (snd (ed.repr.monad_ret)).pos in
+            let univs, repr = check_and_gen' env ed.repr.monad_ret expected_k in
             match univs with
             | [] -> [], repr
             | _ -> raise_error (Errors.Fatal_UnexpectedUniversePolymorphicReturn, "Unexpected universe-polymorphic return for effect") repr.pos in
@@ -868,8 +881,11 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
       univs       = univs
     ; binders     = effect_params (* QUESTION (KM) : don't we need to close the effect params ? *)
     ; signature   = signature
-    ; ret_wp      = close 0 return_wp
-    ; bind_wp     = close 1 bind_wp
+    ; spec = {
+        monad_m    = S.tun
+      ; monad_ret  = close 0 return_wp
+      ; monad_bind = close 1 bind_wp
+    }
     ; if_then_else= close 0 if_then_else
     ; ite_wp      = close 0 ite_wp
     ; stronger    = close 0 stronger
@@ -878,9 +894,11 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     ; assume_p    = close 0 assume_p
     ; null_wp     = close 0 null_wp
     ; trivial     = close 0 trivial_wp
-    ; repr        = (snd (close 0 ([], repr)))
-    ; return_repr = close 0 return_repr
-    ; bind_repr   = close 1 bind_repr
+    ; repr = {
+        monad_m    = snd (close 0 ([], repr))
+      ; monad_ret  = close 0 return_repr
+      ; monad_bind = close 1 bind_repr
+    }
     ; actions     = List.map close_action actions} in
 
   BU.print_string (Print.eff_decl_to_string ed);
@@ -1214,7 +1232,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_new_effect(ne) ->
     let forfree =
-      match (SS.compress ne.repr).n with
+      match (SS.compress ne.repr.monad_m).n with
       | Tm_unknown -> false 
       | _ -> not ne.elaborated
     in
@@ -1257,7 +1275,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       match Env.effect_decl_opt env eff_name with
       | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->
-          let repr = Env.inst_effect_fun_with [U_unknown] env ed ([], ed.repr) in
+          let repr = Env.inst_effect_fun_with [U_unknown] env ed ([], ed.repr.monad_m) in
           mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
     in
     let lift, lift_wp =

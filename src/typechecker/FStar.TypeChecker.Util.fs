@@ -412,7 +412,7 @@ let return_value env u_t_opt t v =
                  let k = SS.subst [NT(a, t)] kwp in
                  N.normalize [Env.Beta; Env.NoFullNorm]
                             env
-                            (mk_Tm_app (inst_effect_fun_with [u_t] env m m.ret_wp)
+                            (mk_Tm_app (inst_effect_fun_with [u_t] env m m.spec.monad_ret)
                                        [S.as_arg t; S.as_arg v]
                                        None
                                        v.pos) in
@@ -652,7 +652,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                     S.as_arg wp1;
                     S.as_arg (mk_lam wp2)]
                 in
-                let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp) wp_args None t2.pos in
+                let wp = mk_Tm_app (inst_effect_fun_with [u_t1;u_t2] env md md.spec.monad_bind) wp_args None t2.pos in
                 mk_comp md u_t2 t2 wp bind_flags
             in
             let mk_seq c1 b c2 =

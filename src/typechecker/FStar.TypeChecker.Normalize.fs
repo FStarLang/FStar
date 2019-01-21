@@ -1531,7 +1531,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
       (*                                                                            *)
       (* ****************************************************************************)
       let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
-      let _, bind_repr = ed.bind_repr in
+      let _, bind_repr = ed.repr.monad_bind in
       begin match lb.lbname with
         | Inr _ -> failwith "Cannot reify a top-level let binding"
         | Inl x ->
@@ -1705,7 +1705,7 @@ and reify_lift cfg e msrc mtgt t : term =
   if U.is_pure_effect msrc || U.is_div_effect msrc
   then
     let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
-    let _, return_repr = ed.return_repr in
+    let _, return_repr = ed.repr.monad_ret in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
@@ -2863,8 +2863,11 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                univs        = univs;
                binders      = binders;
                signature    = signature;
-               ret_wp       = elim_tscheme ed.ret_wp;
-               bind_wp      = elim_tscheme ed.bind_wp;
+               spec = {
+                 monad_m = elim_term ed.spec.monad_m;
+                 monad_ret = elim_tscheme ed.spec.monad_ret;
+                 monad_bind = elim_tscheme ed.spec.monad_bind;
+               };
                if_then_else = elim_tscheme ed.if_then_else;
                ite_wp       = elim_tscheme ed.ite_wp;
                stronger     = elim_tscheme ed.stronger;
@@ -2873,9 +2876,11 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                assume_p     = elim_tscheme ed.assume_p;
                null_wp      = elim_tscheme ed.null_wp;
                trivial      = elim_tscheme ed.trivial;
-               repr         = elim_term    ed.repr;
-               return_repr  = elim_tscheme ed.return_repr;
-               bind_repr    = elim_tscheme ed.bind_repr;
+               repr = {
+                 monad_m = elim_term ed.repr.monad_m;
+                 monad_ret = elim_tscheme ed.repr.monad_ret;
+                 monad_bind = elim_tscheme ed.repr.monad_bind;
+               };
                actions      = List.map elim_action ed.actions } in
       {s with sigel=Sig_new_effect ed}
 

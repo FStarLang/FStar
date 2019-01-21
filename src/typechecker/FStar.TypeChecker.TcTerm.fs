@@ -645,7 +645,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let env_no_ex, topt = Env.clear_expected_typ env in
         let expected_repr_typ, res_typ, wp, g0 =
           let u = Env.new_u_univ () in
-          let repr = Env.inst_effect_fun_with [u] env ed ([], ed.repr) in
+          let repr = Env.inst_effect_fun_with [u] env ed ([], ed.repr.monad_m) in
           let t = mk (Tm_app(repr, [as_arg S.tun; as_arg S.tun])) None top.pos in
           let t, _, g = tc_tot_or_gtot_term (Env.clear_expected_typ env |> fst) t in
           match (SS.compress t).n with
@@ -657,7 +657,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           if not <| U.is_total_lcomp c
           then Err.add_errors env [Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
           match Rel.try_teq true env_no_ex c.res_typ expected_repr_typ with
-          | None -> Err.add_errors env [Errors.Error_UnexpectedInstance, BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
+          | None -> Err.add_errors env [Errors.Error_UnexpectedInstance, BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr.monad_m) (Print.term_to_string c.res_typ), e.pos];
                     e, Env.conj_guard g g0
           | Some g' -> e, Env.conj_guard g' (Env.conj_guard g g0)
         in

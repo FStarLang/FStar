@@ -725,7 +725,7 @@ and translate_monadic (m, ty) cfg bs e : t =
            else []
        in
        let t =
-       iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (snd ed.bind_repr)))
+       iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (snd ed.repr.monad_bind)))
                       [Univ U_unknown, None;  //We are cheating here a bit
                       Univ U_unknown, None])  //to avoid re-computing the universe of lb.lbtyp
                                               //and ty below; but this should be okay since these
@@ -799,7 +799,7 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
    let e = U.unascribe e in
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv mtgt) in
-        let ret = match (SS.compress (snd ed.return_repr)).n with
+        let ret = match (SS.compress (snd ed.repr.monad_ret)).n with
                   | Tm_uinst (ret, [_]) -> S.mk (Tm_uinst (ret, [U_unknown])) None e.pos
                   | _ -> failwith "NYI: Reification of indexed effect (NBE)"
         in

@@ -2331,10 +2331,6 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let env, binders = desugar_binders monad_env eff_binders in
     let eff_t = desugar_term env eff_typ in
 
-    (* [> An effect for free has a type of the shape "a:Type -> Effect" <] *)
-    (* let for_free = List.length (fst (U.arrow_formals eff_t)) = 1 in *)
-    (* BU.print1 "GG for_free = %s\n" (string_of_bool for_free); *)
-
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
       (* the first 3 are optional but must not be counted as actions *)
@@ -2415,8 +2411,11 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
            univs       = [];
            binders     = binders;
            signature   = eff_t;
-           ret_wp      = lookup_or_dummy "return_wp";
-           bind_wp     = lookup_or_dummy "bind_wp";
+           spec        = {
+             monad_m     = S.tun;
+             monad_ret   = lookup_or_dummy "return_wp";
+             monad_bind  = lookup_or_dummy "bind_wp";
+           };
            if_then_else= lookup_or_dummy "if_then_else";
            ite_wp      = lookup_or_dummy "ite_wp";
            stronger    = lookup_or_dummy "stronger";
@@ -2425,10 +2424,12 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
            assume_p    = lookup_or_dummy "assume_p";
            null_wp     = lookup_or_dummy "null_wp";
            trivial     = lookup_or_dummy "trivial";
-           repr        = (if rr then snd <| lookup "repr" else S.tun);
+           repr = {
+             monad_m     = (if rr then snd <| lookup "repr" else S.tun);
+             monad_bind  = (if rr then lookup "bind" else un_ts);
+             monad_ret   = (if rr then lookup "return" else un_ts);
+           };
            elaborated  = false;
-           bind_repr   = (if rr then lookup "bind" else un_ts);
-           return_repr = (if rr then lookup "return" else un_ts);
            actions     = actions;
            eff_attrs   = List.map (desugar_term env) attrs;
          }));
@@ -2488,8 +2489,11 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             univs       =ed.univs;
             binders     =binders;
             signature   =snd (sub ([], ed.signature));
-            ret_wp      =sub ed.ret_wp;
-            bind_wp     =sub ed.bind_wp;
+            spec = {
+              monad_m = snd (sub ([], ed.spec.monad_m));
+              monad_ret = sub ed.spec.monad_ret;
+              monad_bind = sub ed.spec.monad_bind;
+            };
             if_then_else=sub ed.if_then_else;
             ite_wp      =sub ed.ite_wp;
             stronger    =sub ed.stronger;
@@ -2499,10 +2503,12 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             null_wp     =sub ed.null_wp;
             trivial     =sub ed.trivial;
 
-            repr        =snd (sub ([], ed.repr));
             elaborated  =ed.elaborated;
-            bind_repr   =sub ed.bind_repr;
-            return_repr =sub ed.return_repr;
+            repr = {
+              monad_m = snd (sub ([], ed.repr.monad_m));
+              monad_ret = sub ed.repr.monad_ret;
+              monad_bind = sub ed.repr.monad_bind;
+            };
             actions     = List.map (fun action ->
                 let nparam = List.length action.action_params in
                 {
@@ -3053,8 +3059,11 @@ let add_modul_to_env (m:Syntax.modul)
                univs = [];
                binders   = Subst.close_binders binders;
                signature = erase_term ed.signature;
-               ret_wp    = erase_tscheme ed.ret_wp;
-               bind_wp   = erase_tscheme ed.bind_wp;
+               spec = {
+                 monad_m     = erase_term ed.spec.monad_m;
+                 monad_ret   = erase_tscheme ed.spec.monad_ret;
+                 monad_bind  = erase_tscheme ed.spec.monad_bind;
+               };
                if_then_else= erase_tscheme ed.if_then_else;
                ite_wp      = erase_tscheme ed.ite_wp;
                stronger    = erase_tscheme ed.stronger;
@@ -3063,9 +3072,11 @@ let add_modul_to_env (m:Syntax.modul)
                assume_p    = erase_tscheme ed.assume_p;
                null_wp     = erase_tscheme ed.null_wp;
                trivial     = erase_tscheme ed.trivial;
-               repr        = erase_term ed.repr;
-               return_repr = erase_tscheme ed.return_repr;
-               bind_repr   = erase_tscheme ed.bind_repr;
+               repr = {
+                 monad_m     = erase_term ed.repr.monad_m;
+                 monad_ret   = erase_tscheme ed.repr.monad_ret;
+                 monad_bind  = erase_tscheme ed.repr.monad_bind;
+               };
                actions     = List.map erase_action ed.actions
           }
       in
