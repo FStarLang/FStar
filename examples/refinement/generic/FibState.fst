@@ -147,22 +147,21 @@ instance fib_lens : state_lens lstate #fib_st state =
    low_high = state_as_lstate_put_get;
    low_low = state_as_lstate_put_put; } 
 
-new_effect FIB = HIGH_h state 
+reifiable reflectable total new_effect FIB = HIGH_h state 
 
 // TODO : Can we define the Hoare version of the HIGH_h effect before instantiaton?
 effect Fib (a:Type) (pre : hpre #state) (post : hpost #state a) = FIB a (as_wp pre post)
 
 
 // for combinator. Annoyingly we can't seem to define this for the general, uninstantiated effect.
+// TODO define it as reflect for_elab
 let rec for (inv : state -> int -> Type0)
             (f : (i:int) -> Fib unit (requires (fun h0 -> inv h0 i))
                                   (ensures (fun h0 _ h1 -> inv h1 (i + 1)))) 
             (lo : int) (hi : int{lo <= hi}) 
 : Fib unit (requires (fun h0 -> inv h0 lo))
            (ensures (fun h0 _ h1 -> inv h1 hi)) (decreases (hi - lo)) = 
-  if lo = hi then ()
-  else 
-    (f lo; for inv f (lo + 1) hi)
+ FIB?.reflect (for_elab inv (fun i -> reify (f i)) lo hi)
 
 
 (* Other lenses *)
@@ -263,13 +262,28 @@ instance fib_lens_i (i : nat) : state_lens lstate #fib_st mint =
   low_low =  put_put_i i 
   } 
 
+instance fib_commutes i : commutes fib_lens (focus_i i) (fib_lens_i i) = 
+ { get_eq = (fun h ls -> ());
+   put_eq = admit () }
+
 
 let get_i (i : nat) : FIB mint (read_comp_wp #state #mint (focus_i i)) = 
-  Lens.get #state #mint #(focus_i i)(FIB?.get ())
+  FIB?.reflect (read_comp #state #mint (focus_i i) ())
+  // Lens.get #state #mint #(focus_i i) (FIB?.get ())
 
 let put_i (i : nat) (m : mint) : FIB unit (write_comp_wp #state #mint (focus_i i) m) = 
-  let s = FIB?.get () in
-  FIB?.put (Lens.put #state #mint #(focus_i i) s m)
+  FIB?.reflect (write_comp #state #mint (focus_i i) m)
+  // let s = FIB?.get () in
+  // FIB?.put (Lens.put #state #mint #(focus_i i) s m)
+
+let lget_i (i : nat) : low mint (read_comp_wp #state #mint (focus_i i)) 
+                              (read_comp #state #mint (focus_i i) ()) =
+  lread_comp #_ #fib_st #_ #fib_lens #mint #(focus_i i) (fib_lens_i i) #(fib_commutes i) ()
+  
+let lput_i (i : nat) (m : mint) : low unit (write_comp_wp #state #mint (focus_i i) m)
+                                         (write_comp #state #mint (focus_i i) m)= 
+  lwrite_comp #_ #fib_st #_ #fib_lens #mint #(focus_i i) (fib_lens_i i) #(fib_commutes i) m
+    
 
 
 (* *********** Fibonacci Example ************ *)
@@ -305,4 +319,38 @@ let fib_fast n : Fib mint (fun s0 -> True) (fun s0 r s1 -> r = fib n) =
       for inv shift 1 n;
       get_i 1
     end
+
+
+let lshift i = 
+    lbind (lget_i 0) (fun x0 -> 
+    lbind (lget_i 1) (fun x1 ->
+    lbind (lput_i 0 x1) (fun _ ->   
+    let (t : mint) = x0 +%^ x1 in
+    lbind (lput_i 1 x0) (fun _ ->          
+    lreturn ()))))
+
+
+(* 
+    #_ #fib_st #_ #fib_lens #mint #unit 
+    lbind (lput_i 0 x1) (fun _ ->  
+    lbind #_ #fib_st #_ #fib_lens #unit #unit (lput_i 1 (x0 +%^ x1)) (fun _ -> 
+    lreturn ()))))
+    
+    ()
+    
+let low_fib n = 
+  if (n <= 0) then 0ul
+  else 
+    begin 
+      lput_i 0 0ul; // 0 has fib 0
+      lput_i 1 1ul; // 1 has fib 1
+      lfor inv shift 1 n;
+      get_i 1
+    end
+
+let low_fib n : low_p #_ #fib_st #_ #fib_lens mint (fun s0 -> True) (fun s0 r s1 -> r = fib n) (reify (fib_fast n)) = 
+  morph_p #_ #fib_st #_ #fib_lens mint (fun s0 -> True) (fun s0 r s1 -> r = fib n) 
+    (reify (fib_fast n))
+ 
+*)
 

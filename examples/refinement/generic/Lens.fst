@@ -101,7 +101,6 @@ type high #hstate a (wp : hwp_mon #hstate a) = s0:hstate -> PURE (a * hstate) (w
 // Better name?
 type high_p #hstate 'a (pre : hpre #hstate) (post : hpost #hstate 'a) = high 'a (as_wp #hstate #'a pre post)
 
-
 (* Low computations *)
 type low #lstate (#l:low_state lstate) #hstate (#p: state_lens lstate hstate)
          (a:Type) (wp : hwp_mon a) (c : high #hstate a wp) =
@@ -124,13 +123,17 @@ let run_high #hstate #a #wp (c:high #hstate a wp) (s0:_{wp s0 (fun _ -> True)}) 
 
 // "Lifting" of high programs to low programs
 let morph #lstate (#l : low_state lstate) #hstate (#p: state_lens lstate hstate)
-           (a:Type) (wp : hwp_mon a) (c : high #hstate a wp) : low #lstate #l #hstate #p a wp c =
+          (a:Type) (wp : hwp_mon a) (c : high #hstate a wp) : low #lstate #l #hstate #p a wp c =
   fun ls ->
     let hs = to_high' #_ #l #_ #p ls in 
     let (x, hs') = run_high c hs in
     to_low' #_ #l #_ #p ls hs'; x
 
-
+let morph_p #lstate (#l : low_state lstate) #hstate (#p: state_lens lstate hstate)
+            (a:Type) pre post (c : high_p #hstate a pre post) 
+: low_p #lstate #l #hstate #p a pre post c =
+  morph a (as_wp pre post) c
+  
 (* High WPS *)
 
 assume val range0: range
@@ -284,7 +287,7 @@ let lread_comp' #lstate (#l:low_state lstate) #state (#p: state_lens lstate stat
 
 (* add a third lens instance and require all three instances to commute *)
 let lread_comp #lstate (#l:low_state lstate) #state (#p: state_lens lstate state) 
-   (#a:eqtype) (#l1:lens state a) (l2:state_lens lstate a) (#c:commutes p l1 l2) (_ : unit) 
+   (#a:Type) (#l1:lens state a) (l2:state_lens lstate a) (#c:commutes p l1 l2) (_ : unit) 
  : low #_ #l #_ #p a (read_comp_wp l1) (read_comp l1 ()) = 
   fun ls ->
     let h0 = ST.get () in 
@@ -293,7 +296,7 @@ let lread_comp #lstate (#l:low_state lstate) #state (#p: state_lens lstate state
     to_high' #_ #l #_ #l2 ls
 
 let lwrite_comp #lstate (#l:low_state lstate) #state (#p: state_lens lstate state) 
-  (#a:eqtype) (#l1 : lens state a) (l2: state_lens lstate a) (#c : commutes p l1 l2) (x : a) 
+  (#a:Type) (#l1 : lens state a) (l2: state_lens lstate a) (#c : commutes p l1 l2) (x : a) 
  : low #_ #l #_ #p unit (write_comp_wp l1 x) (write_comp l1 x) =
   fun ls ->
     let h0 = ST.get () in 
@@ -301,7 +304,7 @@ let lwrite_comp #lstate (#l:low_state lstate) #state (#p: state_lens lstate stat
     let p = put_eq #_ #_ #_ #_ #p #l1 #l2 h0 ls (to_high h0 ls) x in 
     to_low' #_ #l #_ #l2 ls x
 
-
+(* TODO with Low* conbinators *)
 let rec lfor' #lstate (#l:low_state lstate) #hstate (#p: state_lens lstate hstate) 
               (inv : hstate -> int -> Type0) 
               (fh : (i:int) -> high_p unit (fun h0 -> inv h0 i) (fun h0 _ h1 -> inv h1 (i + 1)))
@@ -321,9 +324,11 @@ let rec lfor' #lstate (#l:low_state lstate) #hstate (#p: state_lens lstate hstat
 
 
 (* TBD : 
-   1.) Effect declaration -> the same as before but parametric in the hstate 
+   1.) Effect declaration 
+       - Right now we cannot define generically operations such as 
+         actions with lens composition and for loop for the High_h effect.
+         That might be problematic for rewriting. 
    2.) form of morph lemmas
-
 
   - Write morph lemmas with subsumption hyp 
     conclusion : l_eq 
