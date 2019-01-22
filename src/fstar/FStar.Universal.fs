@@ -495,7 +495,11 @@ let tc_one_file
             Options.profile
               (fun () ->
                 let _, env = with_tcenv_of_env env (delta_tcenv tcmod) in
-                let env, _time = with_env env (maybe_extract_ml_iface tcmod) in
+                let env =
+                  if Options.codegen() <> None
+                  then fst (with_env env (maybe_extract_ml_iface tcmod))
+                  else env
+                in
                 env)
              (fun _ ->
                BU.format1 "Extending environment with module %s"
