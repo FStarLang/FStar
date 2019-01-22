@@ -24,7 +24,7 @@
     "NotificationChannel" : "#fstar-build",
     "PublicBranches" : [ "master" ],
 
-    "hacl_version" : "origin/master",
+    "hacl_version" : "origin/fstar-master",
     "kremlin_version" : "origin/master",
     "qd_version" : "origin/master",
     "mitls_version" : "origin/master"
