@@ -294,12 +294,15 @@ let load_module_from_cache
                  None
                | Inr res -> Some res
       in
-      let res, time = FStar.Util.record_time load_it in
-      if Options.profile()
-      then BU.print2 "[Elapsed time: %s] Loading checked file %s\n"
-                     (BU.string_of_int time)
-                     (Dep.cache_file_name fn);
-      res
+      Options.profile load_it (fun res ->
+        let msg =
+          if Option.isSome res
+          then "ok"
+          else "failed"
+        in
+        BU.format2 "Loading checked file %s ... %s"
+                     (Dep.cache_file_name fn)
+                     msg)
 
 let store_module_to_cache (env:uenv) fn (tc_result:tc_result) =
     if Options.cache_checked_modules()
@@ -489,9 +492,14 @@ let tc_one_file
         in
 
         let delta_env env =
-            let _, env = with_tcenv_of_env env (delta_tcenv tcmod) in
-            let env, _time = with_env env (maybe_extract_ml_iface tcmod) in
-            env
+            Options.profile
+              (fun () ->
+                let _, env = with_tcenv_of_env env (delta_tcenv tcmod) in
+                let env, _time = with_env env (maybe_extract_ml_iface tcmod) in
+                env)
+             (fun _ ->
+               BU.format1 "Extending environment with module %s"
+                 tcmod.name.str)
         in
         tc_result,
         mllib,

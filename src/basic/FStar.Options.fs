@@ -1438,7 +1438,14 @@ let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
 let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
-let profile                      () = get_profile                     ()
+let profile (f:unit -> 'a) (msg:'a -> string) : 'a =
+    if get_profile()
+    then let a, time = Util.record_time f in
+         Util.print2 "Elapsed time %s ms: %s\n"
+                     (Util.string_of_int time)
+                     (msg a);
+         a
+    else f ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
