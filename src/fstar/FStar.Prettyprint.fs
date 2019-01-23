@@ -60,7 +60,11 @@ let generate (m: printing_mode) filenames =
             P.empty
         in
         match outf with
-        | Some f -> append_to_file f <| P.pretty_string (float_of_string "1.0") 100 left_over_doc
+        | Some f ->
+            begin
+            append_to_file f <| P.pretty_string (float_of_string "1.0") 100 left_over_doc;
+            close_file f
+            end
         | None -> P.pretty_out_channel (float_of_string "1.0") 100 left_over_doc stdout
     in
     List.iter (parse_and_prettyprint m) filenames;
