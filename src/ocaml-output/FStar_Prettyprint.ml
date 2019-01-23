@@ -92,13 +92,14 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                     in
                  (match outf with
                   | FStar_Pervasives_Native.Some f ->
-                      let uu____235 =
-                        FStar_Pprint.pretty_string
-                          (FStar_Util.float_of_string "1.0")
-                          (Prims.parse_int "100") left_over_doc
-                         in
-                      FStar_All.pipe_left (FStar_Util.append_to_file f)
-                        uu____235
+                      ((let uu____236 =
+                          FStar_Pprint.pretty_string
+                            (FStar_Util.float_of_string "1.0")
+                            (Prims.parse_int "100") left_over_doc
+                           in
+                        FStar_All.pipe_left (FStar_Util.append_to_file f)
+                          uu____236);
+                       FStar_Util.close_file f)
                   | FStar_Pervasives_Native.None  ->
                       FStar_Pprint.pretty_out_channel
                         (FStar_Util.float_of_string "1.0")
@@ -110,12 +111,12 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
        | FromTempToFile  ->
            FStar_List.iter
              (fun f  ->
-                let uu____249 = temp_file_name f  in
-                FStar_Util.delete_file uu____249) filenames
+                let uu____250 = temp_file_name f  in
+                FStar_Util.delete_file uu____250) filenames
        | FromTempToStdout  ->
            FStar_List.iter
              (fun f  ->
-                let uu____256 = temp_file_name f  in
-                FStar_Util.delete_file uu____256) filenames
+                let uu____257 = temp_file_name f  in
+                FStar_Util.delete_file uu____257) filenames
        | ToTempFile  -> ())
   
