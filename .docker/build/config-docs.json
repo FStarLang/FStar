@@ -5,7 +5,7 @@
     "BaseContainerImageName" : "fstar",
     "BaseContainerImageTagOrCommitId": "latest",
     "BranchName" : "master",
-    "GithubCommitUrl" : "https://github.com/FStarLang/FStar/commits",
+    "GithubCommitUrl" : "https://github.com/FStarLang/FStar/commit",
     "OnDemandBuildDefinition" : "FStar\\FStar-{agentOS}",
 
     "DockerFile": ".docker/build/{agentOS}/Dockerfile-docs",
