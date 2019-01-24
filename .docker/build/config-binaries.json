@@ -15,8 +15,8 @@
     ],
 
     "DockerCacheEnabled" : true,
-    "CIBuildTarget" : "fstar-docs",
-    "NightlyBuildTarget" : "fstar-docs",
+    "CIBuildTarget" : "fstar-binary-build",
+    "NightlyBuildTarget" : "fstar-binary-build",
     "HasLogsToExtract" : true,
 
     "NotificationEnabled" : true,
