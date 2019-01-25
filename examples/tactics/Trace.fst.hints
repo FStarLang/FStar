@@ -1,5 +1,5 @@
 [
-  "?◊ÁS\u0010ÍQÿèZÈ¡\u0019ÕÑ8",
+  "¡Í∑∑F\u0007iÚÆ%Œ»Ô‡Á\u0000",
   [
     [
       "Trace.mynat",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ffef78c4c1743dbefadea86cd6bd6ca8"
+      "637b96c53276bc3187040fd876ac2e75"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Trace_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "e178829f3fcebd729dd4145eb9a17f7f"
+      "5b1af0efe85e4a869e91ac5a285b9316"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e49364a89489e7f1e89afa31554f290d"
+      "6e2fc7023ad78c0846a721c8fff89fe2"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d0d2b48963871639952f6807c8a3d75f"
+      "f307334a1fd43ba56622a9ed8d830566"
     ],
     [
       "Trace.fall",
@@ -63,7 +63,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "3dc754419b27754f8a41aaaa3d07e8e9"
+      "027dbfec9dc31a76099da263847fc87c"
     ],
     [
       "Trace.uu___64",
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "3a4d1ec5b2e30114dafddea3608b3c75"
+      "97653b90d4c62d79f286716f16a2b6a9"
     ],
     [
       "Trace.fact_aux",
@@ -100,7 +100,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "560c9816e4d2e515172ccb1d50bcdd5b"
+      "a29a48ac4690a47af8a4806133a08df3"
     ],
     [
       "Trace.uu___65",
@@ -133,7 +133,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "cc394aff2828ded01042261a22b25f5f"
+      "997b17ce469d441c489f457d2e7eb93f"
     ],
     [
       "Trace.uu___66",
@@ -167,7 +167,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "f0c19f249d35837a8f37fb0e2053cd11"
+      "010f8b73de916a028a9e0b2e1d3e4b37"
     ],
     [
       "Trace.mynat",
@@ -176,7 +176,7 @@
       1,
       [ "@query" ],
       0,
-      "4df734536775698286df953dd9e1b809"
+      "00ba1c35c10ba180bb2530bbe650cbfc"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -189,7 +189,7 @@
         "refinement_interpretation_Trace_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "7b1a4b1156ee87b51373c15f85996f76"
+      "fec7ec875816f8e7620a19d1600856d2"
     ],
     [
       "Trace.tick_last",
@@ -203,7 +203,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "865d2d35ec3bc5c342a8d5aca5262551"
+      "f5eac0f440ff73f051e02382fb30ad74"
     ],
     [
       "Trace.term_is_fv",
@@ -220,7 +220,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "55d7bc664daa8142a83cc40fab7f8ada"
+      "f4ab14a61ea487fc29e2336d275f0222"
     ],
     [
       "Trace.cutlast",
@@ -234,7 +234,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b10c6adbcb016a6ded403062290d6ae7"
+      "8d0403743c6e6b9beff5bc0e95766fce"
     ],
     [
       "Trace.fall",
@@ -248,7 +248,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "13c43c6aca16bd6c867e914517541ed9"
+      "5ecf002957f5c02296488d1d112c62a0"
     ],
     [
       "Trace.uu___64",
@@ -267,7 +267,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "54fda9e7ed73df455ccf18b6a0c0a685"
+      "ba80895560b5cb97a28099ae58fa6927"
     ],
     [
       "Trace.fact_aux",
@@ -285,7 +285,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9c1598a8cce779e62f042a84cf2f2bbb"
+      "cfd1aade41bd8f8e834eb0e357ba802c"
     ],
     [
       "Trace.uu___65",
@@ -318,7 +318,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "0da4bca7722b6b2c17c5e5c6c25f5cb4"
+      "4596b67f9e120d00e166140efdac2e8f"
     ],
     [
       "Trace.uu___66",
@@ -352,7 +352,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "d20019858700fde5a041eb9d646d152e"
+      "e3d12e3daf00d8bbf4aba672be850ad2"
     ]
   ]
 ]

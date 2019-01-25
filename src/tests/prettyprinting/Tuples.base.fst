@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
 module Tuples
 
 val split: list ('a * 'b) -> Tot (list 'a * list 'b)
@@ -37,12 +38,12 @@ val r_unzip3: list ('a * ('b * 'c)) -> Tot (list 'a * (list 'b * list 'c))
 
 val unzip4: list ('a * 'b * 'c * 'd) -> Tot (list 'a * list 'b * list 'c * list 'd)
 
-val zip3: #a1: Type -> #a2: Type -> #a3: Type -> l1: list a1 -> l2: list a2 -> l3: list a3 ->
-  Pure (list ((a1 * a2) * a3))
+val zip3 (#a1 #a2 #a3: Type) (l1: list a1) (l2: list a2) (l3: list a3)
+    : Pure (list ((a1 * a2) * a3))
 
-let ccc: nat * (string * int) = (123 <: nat), bbb
+let ccc:nat * (string * int) = (123 <: nat), bbb
 
-val a: ((a * (b * (c * d * (e * f) * g)) * h) * (i * j))
+val a:((a * (b * (c * d * (e * f) * g)) * h) * (i * j))
 
 let m2 = fun x y -> x * y
 

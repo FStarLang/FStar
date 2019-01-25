@@ -1,1 +1,2 @@
-*.test
+*.print.fst
+*.print_in_place.fst

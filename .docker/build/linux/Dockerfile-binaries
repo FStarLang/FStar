@@ -1,14 +1,13 @@
-# Fstar docs container used to build fstar documentation.
-# Docs should always use the latest fstar image available.
-FROM fstar-linux:latest
+# Fstar binaries container used to build fstar binaries.
+ARG COMMITID
+FROM fstar-linux:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
 ARG TARGET
 ARG BRANCHNAME
-ARG FSTARSOURCEVERSION
 
-#BUILD FSTAR Docs
+#BUILD FSTAR Binaries
 RUN rm -f ${BUILDLOGFILE}
 RUN rm -f log_no_replay.html
 RUN rm -f log_worst.html
@@ -24,8 +23,8 @@ RUN chmod 700 ${MYHOME}/.ssh
 COPY --chown=everest id_rsa ${MYHOME}/.ssh/id_rsa
 RUN chmod 600 ${MYHOME}/.ssh/id_rsa
 
-# Build FStar docs
-RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} ${FSTARSOURCEVERSION} || true
+# Build FStar Binaries
+RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
 
 # Remove ssh identities.
 RUN rm ${MYHOME}/.ssh/id_rsa

@@ -1,5 +1,5 @@
 [
-  "\u001f⁄H´©.ÈD\u000e@ ˆ.Ú#\u001b",
+  "í\u001e\u0001÷aëºÑ…|‘‡So\fè",
   [
     [
       "Bug606.f",
@@ -15,7 +15,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cb9b28e87e28ef93a3d21aba2fea30c6"
+      "42109eefd46d6e7e81ddb55a78bb269b"
     ],
     [
       "Bug606.g",
@@ -31,7 +31,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "42531ac0b6d23025b3c606e93e128d80"
+      "d00bc506255e823155090d0223eb982a"
     ],
     [
       "Bug606.f_eq_g",
@@ -58,7 +58,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fc6c8c1e03376dea146157f895769c50"
+      "983823eb9ce0e0bdee1540ad730942dc"
     ],
     [
       "Bug606.h",
@@ -74,7 +74,7 @@
         "lemma_Bug606.f_eq_g"
       ],
       0,
-      "9b694c9ceb0a86328a071c5fad95ac2d"
+      "f04e84ffd9c43a5a0788960e0ec092bb"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -83,7 +83,7 @@
       1,
       [ "@query" ],
       0,
-      "c2fc20c1638571d32f4d6a2c62f8fcce"
+      "0af4fb7c1773612b587a2014dc8e153f"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -92,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "3d07a71b43f08fed5c3ebb675a4d5197"
+      "c3db8ab75c35a00076da5e663c127d6c"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -113,7 +113,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "0305d473eeccf8c75cfa23714e7d0bec"
+      "c122ce5219d0b738fd7bd01a49e860a0"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "abfc199ddd32a558dea27a85c620f213"
+      "a5bc1aabd230b037083c8c145a3f68f1"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -131,7 +131,7 @@
       1,
       [ "@query" ],
       0,
-      "5d4807511e743203a04538ccd2a56951"
+      "00e217d67e70a9cf5d3d988a56ee1fee"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -152,7 +152,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "937368ce6b6d68907d998f5c74e97f40"
+      "1487f50a34e067411df7664f4e74c759"
     ]
   ]
 ]

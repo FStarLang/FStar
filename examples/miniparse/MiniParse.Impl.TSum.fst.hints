@@ -1,5 +1,5 @@
 [
-  "'\u0016Œ@\u001a'~¶Ï”vsMmÃq",
+  ")\u001dV Œ1ø+$'Î/¿ã\tX",
   [
     [
       "MiniParse.Impl.TSum.parse_tagged_union_impl",
@@ -114,7 +114,7 @@
         "typing_MiniParse.Spec.TSum.refine_with_tag", "unit_typing"
       ],
       0,
-      "90914fbd257e316bb8781ab8fe7b2be8"
+      "bd139fdc4a822ac474d6225221b4a814"
     ],
     [
       "MiniParse.Impl.TSum.serialize_tagged_union_impl",
@@ -219,7 +219,7 @@
         "typing_MiniParse.Spec.TSum.serialize_tagged_union", "unit_typing"
       ],
       0,
-      "dd3364173b5dfac9dee517ae2baa6937"
+      "832d63391d5ad717e904398afc485736"
     ],
     [
       "MiniParse.Impl.TSum.parse_tagged_union_impl",
@@ -336,7 +336,7 @@
         "typing_MiniParse.Spec.TSum.refine_with_tag", "unit_typing"
       ],
       0,
-      "09991324bcac7fc4a5d44adf22e60826"
+      "d4b5f245a621e9b9a3cf91467190a536"
     ],
     [
       "MiniParse.Impl.TSum.serialize_tagged_union_impl",
@@ -441,7 +441,7 @@
         "typing_MiniParse.Spec.TSum.serialize_tagged_union", "unit_typing"
       ],
       0,
-      "d440fbe6ff6390327adcbeacbfe37cbe"
+      "208a0c0ec6598207c38e67056665afd2"
     ]
   ]
 ]

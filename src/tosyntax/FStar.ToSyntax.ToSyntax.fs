@@ -2490,11 +2490,12 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     if List.length args <> List.length ed.binders
     then raise_error (Errors.Fatal_ArgumentLengthMismatch, "Unexpected number of arguments to effect constructor") defn.range;
     let ed_binders, _, ed_binders_opening = Subst.open_term' ed.binders S.t_unit in
-    let sub (us, x) =
-        let x = Subst.subst (Subst.shift_subst (List.length us) ed_binders_opening) x in
+    let sub' shift_n (us, x) =
+        let x = Subst.subst (Subst.shift_subst (shift_n + List.length us) ed_binders_opening) x in
         let s = U.subst_of_list ed_binders args in
         Subst.close_tscheme binders (us, (Subst.subst s x))
     in
+    let sub = sub' 0 in
     let mname=qualify env0 eff_name in
     let ed = {
             mname       =mname;
@@ -2517,6 +2518,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             bind_repr   =sub ed.bind_repr;
             return_repr =sub ed.return_repr;
             actions     = List.map (fun action ->
+                let nparam = List.length action.action_params in
                 {
                     // Since we called enter_monad_env before, this is going to generate
                     // a name of the form FStar.ST.uu___proj__STATE__item__get
@@ -2524,8 +2526,10 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                     action_unqualified_name = action.action_unqualified_name;
                     action_univs = action.action_univs ;
                     action_params = action.action_params ;
-                    action_defn =snd (sub ([], action.action_defn)) ;
-                    action_typ =snd (sub ([], action.action_typ))
+                    (* These need to be shifted further since they have the action's parameters also in scope *)
+                    action_defn =snd (sub' nparam ([], action.action_defn)) ;
+                    action_typ =snd (sub' nparam ([], action.action_typ))
+                        // GM: ^ Although isn't this one always Tm_unknown at this point?
                 })
                 ed.actions;
             eff_attrs   = ed.eff_attrs;

@@ -35,6 +35,7 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
+open FStar.Parser
 
 module Const = FStar.Parser.Const
 module BU = FStar.Util
@@ -179,12 +180,23 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
-(* In public interface *)
-let cache_file_name fn =
-  FStar.Options.prepend_cache_dir
-    (if Options.lax()
-     then fn ^ ".checked.lax"
-     else fn ^ ".checked")
+
+let cache_file_name_internal (fn:string) : string * bool =  //bool indicates if the cache file exists
+  let cache_fn = fn ^ (if Options.lax () then ".checked.lax" else ".checked") in
+
+  match Options.find_file (cache_fn |> Util.basename) with
+  | Some path -> path, true
+  | None      ->
+    let mname = fn |> module_name_of_file in
+    if mname |> Options.should_be_already_cached then
+      FStar.Errors.raise_err (FStar.Errors.Error_AlreadyCachedAssertionFailure,
+                              BU.format1 "Expected %s to be already checked but could not find it" mname)
+    else FStar.Options.prepend_cache_dir cache_fn, false
+
+(*
+ * Public interface
+ *)
+let cache_file_name fn = fn |> cache_file_name_internal |> fst
 
 let file_of_dep_aux
                 (use_checked_file:bool)
@@ -198,7 +210,9 @@ let file_of_dep_aux
            is_implementation fn &&
            key = lowercase_module_name fn)
     in
-    let maybe_add_suffix f = if use_checked_file then cache_file_name f else f in
+
+    let maybe_use_cache_of f = if use_checked_file then cache_file_name f else f in
+
     match d with
     | UseInterface key ->
       //This key always resolves to an interface source file
@@ -214,7 +228,7 @@ let file_of_dep_aux
       if cmd_line_has_impl key //unless the cmd line contains 'a.fst'
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
-           then maybe_add_suffix (Option.get (implementation_of file_system_map key))
+           then maybe_use_cache_of (Option.get (implementation_of file_system_map key))
            else raise_err (Errors.Fatal_MissingExposeInterfacesOption,
                            BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
                                        Alternatively, invoking fstar with %s on the command line breaks \
@@ -223,7 +237,7 @@ let file_of_dep_aux
                                        key
                                        (Option.get (implementation_of file_system_map key))
                                        (Option.get (interface_of file_system_map key)))
-      else maybe_add_suffix (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
+      else maybe_use_cache_of (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
     | UseImplementation key
@@ -236,7 +250,7 @@ let file_of_dep_aux
           //     since if the implementation was on the command line, it must exist because of option validation
           raise_err (Errors.Fatal_MissingImplementation,
                      BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
-        | Some f -> maybe_add_suffix f
+        | Some f -> maybe_use_cache_of f
 
 let file_of_dep = file_of_dep_aux false
 
@@ -1149,15 +1163,12 @@ let hash_dependences deps fn cache_file =
     let rec hash_deps out = function
         | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
-          let digest =
-            match FStar.Options.find_file (FStar.Util.basename (cache_file_name fn)) with
-            | None -> None
-            | Some fn -> Some (digest_of_file fn)
-          in
+          let cache_fn = cache_file_name fn in
+          let digest = if Util.file_exists cache_fn then Some (digest_of_file fn) else None in
           match digest with
           | None ->
             if Options.debug_any()
-            then BU.print2 "%s: missed digest of file %s\n" cache_file (FStar.Util.basename (cache_file_name fn));
+            then BU.print2 "%s: missed digest of file %s\n" cache_file (FStar.Util.basename cache_fn);
             None
           | Some dig ->
             hash_deps ((lowercase_module_name fn, dig) :: out) deps
@@ -1264,10 +1275,10 @@ let print_full (deps:deps) : unit =
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
-    let cache_file f = norm_path (cache_file_name f) in
+    let cache_file f = f |> cache_file_name_internal |> (fun (f, b) -> norm_path f, b) in
     let transitive_krml = smap_create 41 in
-    keys |> List.iter
-        (fun file_name ->
+    let set_of_unchecked_files = keys |> List.fold_left
+        (fun set_of_unchecked_files file_name ->
           let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
           let iface_deps =
               if is_interface file_name
@@ -1297,11 +1308,15 @@ let print_full (deps:deps) : unit =
           let files = List.map norm_path files in
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           let files = String.concat "\\\n\t" files in
+          let cache_file_name, b = cache_file file_name in
+          let set_of_unchecked_files = if b then set_of_unchecked_files
+                                       else BU.set_add file_name set_of_unchecked_files
+          in
 
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
           Util.print3 "%s: %s \\\n\t%s\n\n"
-                      (cache_file file_name)
+                      cache_file_name
                       norm_f
                       files;
 
@@ -1346,27 +1361,28 @@ let print_full (deps:deps) : unit =
                 BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface),
                 false
         in
-        let all_checked_fst_files = List.map cache_file all_fst_files_dep in
+        let all_checked_fst_dep_files = all_fst_files_dep |> List.map (fun f -> f |> cache_file |> fst) in
+        let _ = 
           if is_implementation file_name then (
             if Options.cmi()
             && widened
             then begin
                 Util.print3 "%s: %s \\\n\t%s\n\n"
                             (output_ml_file file_name)
-                            (cache_file file_name)
-                            (String.concat " \\\n\t" all_checked_fst_files);
+                            (cache_file_name)
+                            (String.concat " \\\n\t" all_checked_fst_dep_files);
                 Util.print3 "%s: %s \\\n\t%s\n\n"
                             (output_krml_file file_name)
-                            (cache_file file_name)
-                            (String.concat " \\\n\t" all_checked_fst_files)
+                            (cache_file_name)
+                            (String.concat " \\\n\t" all_checked_fst_dep_files)
             end
             else begin
                 Util.print2 "%s: %s \n\n"
                             (output_ml_file file_name)
-                            (cache_file file_name);
+                            (cache_file_name);
                 Util.print2 "%s: %s\n\n"
                             (output_krml_file file_name)
-                            (cache_file file_name)
+                            (cache_file_name)
             end;
             let cmx_files =
                 let extracted_fst_files =
@@ -1389,14 +1405,18 @@ let print_full (deps:deps) : unit =
             then
                 Util.print3 "%s: %s \\\n\t%s\n\n"
                             (output_krml_file file_name)
-                            (cache_file file_name)
-                            (String.concat " \\\n\t" all_checked_fst_files)
+                            (cache_file_name)
+                            (String.concat " \\\n\t" all_checked_fst_dep_files)
             else
                 Util.print2 "%s: %s \n\n"
                     (output_krml_file file_name)
-                    (cache_file file_name)
-          ));
-    let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
+                    (cache_file_name))
+        in
+        set_of_unchecked_files) (BU.new_set BU.compare) in
+    let all_fst_files, all_unchecked_fst_files =
+      keys |> List.filter is_implementation
+           |> Util.sort_with String.compare
+           |> (fun l -> l, l |> List.filter (fun f -> BU.set_mem f set_of_unchecked_files)) in
     let all_ml_files =
         let ml_file_map = BU.smap_create 41 in
         all_fst_files
@@ -1440,9 +1460,10 @@ let print_full (deps:deps) : unit =
       Util.print2 "%s: %s\n\n" wasm deps
     ) (smap_keys transitive_krml);
 
-    Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"  (all_fst_files  |> List.map norm_path |> String.concat " \\\n\t");
-    Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"   (all_ml_files   |> List.map norm_path |> String.concat " \\\n\t");
-    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"   (all_krml_files |> List.map norm_path |> String.concat " \\\n\t")
+    Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"            (all_fst_files           |> List.map norm_path |> String.concat " \\\n\t");
+    Util.print1 "ALL_UNCHECKED_FST_FILES=\\\n\t%s\n\n"  (all_unchecked_fst_files |> List.map norm_path |> String.concat " \\\n\t");
+    Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"             (all_ml_files            |> List.map norm_path |> String.concat " \\\n\t");
+    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"             (all_krml_files          |> List.map norm_path |> String.concat " \\\n\t")
 
 (* In public interface *)
 let print deps =

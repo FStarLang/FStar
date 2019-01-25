@@ -45,7 +45,7 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
 		FStar.Format FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
 		FStar.Interactive.Ide FStar.Interactive.Legacy		\
-		FStar.Universal FStar.Indent FStar.Main
+		FStar.Universal FStar.Prettyprint FStar.Main
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES

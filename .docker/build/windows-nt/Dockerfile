@@ -1,11 +1,16 @@
 # Fstar build container
-FROM everest-base-windows-nt:1
+
+# Define on config.json what base container image build should use.
+# By default it always look for the latest container available
+# In case you would like to reference a specific commit,
+# replace latest with the commit id from github using 12 characters.
+ARG COMMITID
+FROM everest-ci-windows-nt:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
 ARG TARGET
 ARG BRANCHNAME
-ARG FSTARSOURCEVERSION
 
 # Add ssh key
 # We cannot copy directly to the .ssh folder, instead we copy to a temp folder
@@ -31,7 +36,7 @@ WORKDIR ".."
 COPY build.sh build.sh
 COPY build_helper.sh build_helper.sh
 
-RUN Invoke-BashCmd ./build_helper.sh $Env:TARGET $Env:BUILDLOGFILE $Env:MAXTHREADS $Env:BRANCHNAME $Env:FSTARSOURCEVERSION '||' true
+RUN Invoke-BashCmd ./build_helper.sh $Env:TARGET $Env:BUILDLOGFILE $Env:MAXTHREADS $Env:BRANCHNAME '||' true
 
 # Remove ssh key.
 RUN Invoke-BashCmd rm .ssh/id_rsa

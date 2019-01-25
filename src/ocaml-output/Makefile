@@ -40,12 +40,10 @@ endif
 # Final sanity check for the OCaml version
 OCAML_BRANCH=$(shell ocaml get_branch.ml)
 
-.PHONY: fstar.exe
-
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all:  ../parser/parse.fsy fstar.exe tests.exe install-compiler-lib
+all:  ../parser/parse.fsy ../../bin/fstar.exe ../../bin/fstar.ocaml ../../bin/tests.exe install-compiler-lib
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser
@@ -90,18 +88,24 @@ endif
 	              | cat -s >> $@
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
-fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-fstar.exe: $(GENERATED_FILES)
-	$(OCAMLBUILD) main.native src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
-	cp -f _build/src/fstar/ml/main.native ../../bin/$@
-	cp -f _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
+FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native
+$(FSTAR_MAIN_NATIVE): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+$(FSTAR_MAIN_NATIVE): $(GENERATED_FILES)
+	$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
 
-install-compiler-lib: fstar.exe
+../../bin/fstar.exe: $(FSTAR_MAIN_NATIVE)
+	cp $^ $@
+
+../../bin/fstar.ocaml: $(FSTAR_MAIN_NATIVE)
+	cp $^ $@
+
+install-compiler-lib: $(FSTAR_MAIN_NATIVE)
 	mkdir -p ../../bin/fstar-compiler-lib/
 	@# VD: forcing the recompilation of modules in ulib/tactics_ml whenever the compiler is rebuilt
 	@# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
 	$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
 	$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
+	touch $@
 
 FStar_Parser_Parse.ml: parse.mly
 	@# We are opening the same module twice but we need these modules
@@ -134,10 +138,10 @@ FStar_Parser_Parse.ml: parse.mly
 	cat parse.ml >> $@
 	rm parse.ml parse.mli
 
-tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-tests.exe: fstar.exe
+../../bin/tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+../../bin/tests.exe: ../../bin/fstar.exe
 	$(OCAMLBUILD) FStar_Tests_Main.native
-	cp -f _build/src/tests/ml/FStar_Tests_Main.native ../../bin/$@
+	cp -f _build/src/tests/ml/FStar_Tests_Main.native $@
 
 # always bump version for a release; always bump it when recompiling so that one
 # can easily help debugging
@@ -162,7 +166,6 @@ FStar_Version.ml:
 	echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
 	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
-	echo 'FStar_Options._date := "$(DATE)";;' >> $@
 	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
 
 
@@ -186,7 +189,7 @@ install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar
 # opam package, but it has not been tested in any other settings.
 install: all
 	@# Install the binary
-	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 -D $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
 	@# Then the standard library
 	$(call install_dir,ulib,lib/fstar)
 	@# Then the binary library
@@ -236,7 +239,7 @@ package: all
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
 	@# Install the F* binary
 	mkdir -p $(PREFIX)/bin/
-	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
 	@# Then the standard library.
 	$(call fexport,ulib)
 	@# Then the rest of the static files.

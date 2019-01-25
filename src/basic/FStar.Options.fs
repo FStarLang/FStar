@@ -194,7 +194,8 @@ let defaults =
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
       ("include"                      , List []);
-      ("indent"                       , Bool false);
+      ("print"                        , Bool false);
+      ("print_in_place"               , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("keep_query_captions"          , Bool true);
@@ -318,7 +319,8 @@ let get_hint_file               ()      = lookup_opt "hint_file"                
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
-let get_indent                  ()      = lookup_opt "indent"                   as_bool
+let get_print                   ()      = lookup_opt "print"                    as_bool
+let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
@@ -413,7 +415,7 @@ let universe_include_path_base_dirs =
 let _version = FStar.Util.mk_ref ""
 let _platform = FStar.Util.mk_ref ""
 let _compiler = FStar.Util.mk_ref ""
-let _date = FStar.Util.mk_ref ""
+let _date = FStar.Util.mk_ref "<not set>"
 let _commit = FStar.Util.mk_ref ""
 
 let display_version () =
@@ -728,9 +730,14 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "A directory in which to search for files included on the command line");
 
        ( noshort,
-        "indent",
+        "print",
         Const (mk_bool true),
-        "Parses and outputs the files on the command line");
+        "Parses and prettyprints the files included on the command line");
+
+       ( noshort,
+        "print_in_place",
+        Const (mk_bool true),
+        "Parses and prettyprints in place the files included on the command line");
 
        ( noshort,
         "initial_fuel",
@@ -880,7 +887,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "silent",
         Const (mk_bool true),
-        " ");
+        "Disable all non-critical output");
 
        ( noshort,
         "smt",
@@ -1358,6 +1365,15 @@ let prepend_cache_dir fpath =
 let path_of_text text = String.split ['.'] text
 
 let parse_settings ns : list<(list<string> * bool)> =
+    let cache = Util.smap_create 31 in
+    let with_cache f s =
+      match Util.smap_try_find cache s with
+      | Some s -> s
+      | None ->
+        let res = f s in
+        Util.smap_add cache s res;
+        res
+    in
     let parse_one_setting s =
         if s = "*" then ([], true)
         else if FStar.Util.starts_with s "-"
@@ -1369,9 +1385,12 @@ let parse_settings ns : list<(list<string> * bool)> =
              (path_of_text s, true)
     in
     ns |> List.collect (fun s ->
-          FStar.Util.split s " "
-          |> List.map parse_one_setting)
-       |> List.rev
+      let s = FStar.Util.trim_string s in
+      if s = "" then []
+      else with_cache (fun s ->
+             FStar.Util.split s " "
+             |> List.map parse_one_setting) s)
+             |> List.rev
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
@@ -1407,10 +1426,11 @@ let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
-                                    || get_query_stats                 ()
+                                    || get_query_stats                ()
 let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
-let indent                       () = get_indent                      ()
+let print                        () = get_print                       ()
+let print_in_place               () = get_print_in_place              ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()

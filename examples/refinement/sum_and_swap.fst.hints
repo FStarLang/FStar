@@ -1,5 +1,5 @@
 [
-  ";LÔØÅx±\u0014qU.ˆ3}«8",
+  ",i£,Í)ú˙\u000eQ\u001a‘tQô\u001e",
   [
     [
       "Sum_and_swap.sum_wp",
@@ -24,7 +24,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "00b2a557301e45fa7ed29f37915f067c"
+      "42c4c5f1e2c61ff1d6204401cf2bec4d"
     ],
     [
       "Sum_and_swap.wp_impl",
@@ -52,7 +52,7 @@
         "token_correspondence_HighComp.hwrite", "unit_typing"
       ],
       0,
-      "70804dbce246807c470d58c7c73cd0c9"
+      "7dcd21c78ee2dc3fffc71b1b2b01519c"
     ],
     [
       "Sum_and_swap.sum_post",
@@ -61,7 +61,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "48ccf3fd77461100c8eed470d9ed931a"
+      "dcb4c7c6a0d3cf68de2241ebf8dd0c78"
     ],
     [
       "Sum_and_swap.hswap_and_sum",
@@ -76,7 +76,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "d881a4a327eb05c779b08867ba8c7465"
+      "7dcb95a89ed168f89f42011664b8326d"
     ],
     [
       "Sum_and_swap.lswap_and_sum",
@@ -104,73 +104,7 @@
         "token_correspondence_HighComp.hwrite", "unit_typing"
       ],
       0,
-      "7894ec9445682971d4b63f65726d7a9a"
-    ],
-    [
-      "Sum_and_swap.lswap_and_sum",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Pervasives.Native_pretyping_4894c30cf477acf9a27e7a844279eb08",
-        "HighComp.__proj__HIGH__item__get_equality",
-        "HighComp.__proj__HIGH__item__put_equality",
-        "HighComp_interpretation_Tm_arrow_eba7e1a4ba7c9e92cb1cbd42358b28e1",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "Sum_and_swap_interpretation_Tm_arrow_a369e05e68ce3503ef31d10dc136676f",
-        "Sum_and_swap_interpretation_Tm_arrow_d84e32c65e1e201e9907e4e4c07bd0fd",
-        "data_elim_FStar.Pervasives.Native.Mktuple2", "eq2-interp",
-        "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd", "equation_FStar.UInt32.n",
-        "equation_HighComp.bind_elab", "equation_HighComp.comp_wp",
-        "equation_HighComp.get_action", "equation_HighComp.hread",
-        "equation_HighComp.hread_elab", "equation_HighComp.hwrite",
-        "equation_HighComp.mint", "equation_HighComp.put_action",
-        "equation_HighComp.reif", "equation_HighComp.state",
-        "equation_LowComp.lstate", "equation_LowComp.lstate_as_state",
-        "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
-        "equation_Prims.l_True", "equation_Sum_and_swap.hswap_and_sum",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_FStar.UInt32.t",
-        "interpretation_HighComp_Tm_abs_28ae0ab2a175dd7cb7b5be646c193a94",
-        "interpretation_HighComp_Tm_abs_3b000a4e274ee1adc89c72f842328786",
-        "interpretation_HighComp_Tm_abs_459b8ca050f4e4cc415acd8c9f20acbc",
-        "interpretation_HighComp_Tm_abs_5519f242fbe54927a0848f5626583a94",
-        "interpretation_HighComp_Tm_abs_7b393533a1a9c78f125094e210a00c85",
-        "interpretation_HighComp_Tm_abs_b90077ee13f6630e4c68820d24f9bc97",
-        "interpretation_HighComp_Tm_abs_e6222a0ee1d4ecc6995b85513137eff6",
-        "interpretation_HighComp_Tm_abs_ef09445887c0e7593ef83aff8e84864b",
-        "interpretation_HighComp_Tm_abs_fbdcfaad2f505b31c71af51c18e52fd5",
-        "interpretation_Sum_and_swap_Tm_abs_d96e48de067ddf30cc484cd1fe3b06d1",
-        "interpretation_Sum_and_swap_Tm_abs_dec6cf02cf4280d49fe275e5cbb7eb3e",
-        "l_not-interp", "lemma_LowStar.Monotonic.Buffer.length_null_1",
-        "lemma_LowStar.Monotonic.Buffer.length_null_2",
-        "primitive_Prims.op_Equality",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_HighComp_Tm_refine_16161bfdb8470b6d0377f4ac28dcb68f",
-        "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
-        "refinement_interpretation_Sum_and_swap_Tm_refine_699b4d0ce765c6e17170d4225a62d577",
-        "token_correspondence_HighComp.bind_elab",
-        "token_correspondence_HighComp.hread",
-        "token_correspondence_HighComp.hwrite",
-        "token_correspondence_HighComp.reif",
-        "token_correspondence_Sum_and_swap.hswap_and_sum", "true_interp",
-        "typing_FStar.Pervasives.Native.fst",
-        "typing_LowComp.lstate_as_state",
-        "typing_LowStar.Buffer.trivial_preorder",
-        "typing_Sum_and_swap.hswap_and_sum",
-        "typing_Sum_and_swap_Tm_abs_dec6cf02cf4280d49fe275e5cbb7eb3e",
-        "unit_typing"
-      ],
-      0,
-      "9f981000008527161d251ab32e1b82e1"
+      "2377a3e52c4a7ecc165ab03852c65070"
     ]
   ]
 ]

@@ -1,0 +1,480 @@
+[
+  "ãüXwd\u000f\f\t~F¯i½£™¾",
+  [
+    [
+      "FStar.BigOps.map_op'_nil",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Nil",
+        "data_typing_intro_Prims.Nil@tok", "equation_FStar.BigOps.map_op_",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
+        "projection_inverse_Prims.Nil_a",
+        "typing_FStar.BigOps_Tm_abs_18f611049baa5958dd71971dc9839fee"
+      ],
+      0,
+      "a57a3d8dfce8cacaa57817ff8667f784"
+    ],
+    [
+      "FStar.BigOps.map_op'_cons",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "data_typing_intro_Prims.Cons@tok", "equation_FStar.BigOps.map_op_",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
+        "interpretation_FStar.BigOps_Tm_abs_18f611049baa5958dd71971dc9839fee",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "typing_FStar.BigOps_Tm_abs_18f611049baa5958dd71971dc9839fee"
+      ],
+      0,
+      "bfd801f1d3a89d509d1847cd6ccc467a"
+    ],
+    [
+      "FStar.BigOps.big_and'_nil",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "bd2d1723251b5f23a14892f902ac99c0"
+    ],
+    [
+      "FStar.BigOps.big_and'_cons",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "f1787278c01f99807b9702a28bab5961"
+    ],
+    [
+      "FStar.BigOps.big_and'_cons",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d9b258c855afb4f86d87e48bc343c79f"
+    ],
+    [
+      "FStar.BigOps.big_and'_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.T@tok", "equation_FStar.BigOps.big_and_",
+        "equation_Prims.l_True", "equation_Prims.l_and",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "fuel_guarded_inversion_Prims.list", "l_quant_interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_tok_Prims.T@tok", "unit_typing"
+      ],
+      0,
+      "7871f81cf1f4c7c0ea9d2d99efb0449a"
+    ],
+    [
+      "FStar.BigOps.big_and'_forall",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list", "l_and-interp",
+        "l_or-interp", "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons", "true_interp"
+      ],
+      0,
+      "73b7adbbc6a5780f080a682adfe5a681"
+    ],
+    [
+      "FStar.BigOps.big_and",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
+        "@query", "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.BigOps.big_and_", "equation_FStar.BigOps.map_op_",
+        "equation_Prims.l_True", "equation_Prims.l_and",
+        "equation_Prims.logical", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.l_True",
+        "function_token_typing_Prims.logical", "l_quant_interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_FStar.BigOps_Tm_abs_18f611049baa5958dd71971dc9839fee",
+        "unit_typing"
+      ],
+      0,
+      "23af00dcfcee435fc3d476feb110c5f4"
+    ],
+    [
+      "FStar.BigOps.big_or'_nil",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "ac1a8e3ad1f1a69992df245582569017"
+    ],
+    [
+      "FStar.BigOps.big_or'_cons",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "630852149a4f900ae49ed9df079c4957"
+    ],
+    [
+      "FStar.BigOps.big_or'_cons",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a8fac4aa72a34087e8a043ae0f3af610"
+    ],
+    [
+      "FStar.BigOps.big_or'_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_FStar.BigOps.big_or_", "equation_Prims.l_False",
+        "equation_Prims.l_or", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "false_interp",
+        "fuel_guarded_inversion_Prims.list", "l_quant_interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_typing"
+      ],
+      0,
+      "a885d518d5b41bc39af9292dfbdf3b0d"
+    ],
+    [
+      "FStar.BigOps.big_or'_exists",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list", "l_or-interp",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "5ae4dc1792b0f5bf07f85e8047933804"
+    ],
+    [
+      "FStar.BigOps.big_or",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
+        "@query", "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.BigOps.big_or_", "equation_FStar.BigOps.map_op_",
+        "equation_Prims.l_False", "equation_Prims.l_or",
+        "equation_Prims.logical", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.l_False",
+        "function_token_typing_Prims.logical", "l_quant_interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_FStar.BigOps_Tm_abs_18f611049baa5958dd71971dc9839fee",
+        "unit_typing"
+      ],
+      0,
+      "de9e7b7596cfdbb558b26a12c1ca2833"
+    ],
+    [
+      "FStar.BigOps.pairwise_op'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_3dddec8ced2db740e4e8aaf70542be7a_6",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "6ca6979dbc5a9d6e30200d01ad1d17a2"
+    ],
+    [
+      "FStar.BigOps.pairwise_and'_nil",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "ae93a29a1ab15fbd3692ef12ecb557fa"
+    ],
+    [
+      "FStar.BigOps.pairwise_and'_cons",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "f2902d7f2d6faccf567010405fbbe160"
+    ],
+    [
+      "FStar.BigOps.pairwise_and'_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.T@tok", "equation_FStar.BigOps.big_and_",
+        "equation_FStar.BigOps.pairwise_and_", "equation_Prims.l_True",
+        "equation_Prims.l_and", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "fuel_guarded_inversion_Prims.list",
+        "l_quant_interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_tok_Prims.T@tok", "unit_typing"
+      ],
+      0,
+      "b051ecb1ed29286a0de0a060883c620a"
+    ],
+    [
+      "FStar.BigOps.pairwise_and'_forall",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_FStar.BigOps.reflexive", "equation_FStar.BigOps.symmetric",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list", "l_and-interp",
+        "l_or-interp", "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons", "true_interp"
+      ],
+      0,
+      "abfbaf8cf4684837b0de8769575e8de4"
+    ],
+    [
+      "FStar.BigOps.pairwise_and'_forall_no_repeats",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.no_repeats_p.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.no_repeats_p.fuel_instrumented",
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_FStar.BigOps.symmetric",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.no_repeats_p.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list", "l_and-interp",
+        "l_not-interp", "l_or-interp", "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons", "true_interp"
+      ],
+      0,
+      "384f734fbd260f4305bc490189e7fa75"
+    ],
+    [
+      "FStar.BigOps.pairwise_and",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.BigOps.pairwise_op_.fuel_instrumented",
+        "@query", "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.l_and", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "fuel_guarded_inversion_Prims.list",
+        "l_quant_interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_tok_Prims.T@tok", "unit_typing"
+      ],
+      0,
+      "b0099c4cfb5f497354a2c1f3245f583b"
+    ],
+    [
+      "FStar.BigOps.pairwise_or'_nil",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "8da5e42bef22d3835b3df9168f2b5875"
+    ],
+    [
+      "FStar.BigOps.pairwise_or'_cons",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.BigOps.pairwise_op_.fuel_instrumented",
+        "@fuel_irrelevance_FStar.BigOps.pairwise_op_.fuel_instrumented",
+        "@query",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
+        "FStar.Preorder_interpretation_Tm_arrow_76a60dab4e3b3182a3b4dae5a57cfb2d",
+        "constructor_distinct_Prims.Cons",
+        "data_typing_intro_Prims.Cons@tok", "equation_FStar.BigOps.big_or_",
+        "equation_FStar.BigOps.pairwise_or_", "equation_Prims.l_False",
+        "equation_Prims.logical",
+        "equation_with_fuel_FStar.BigOps.pairwise_op_.fuel_instrumented",
+        "function_token_typing_Prims.l_False",
+        "function_token_typing_Prims.l_or",
+        "function_token_typing_Prims.logical",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl"
+      ],
+      0,
+      "9caceb490f895d3bc047d99282aee5c6"
+    ],
+    [
+      "FStar.BigOps.pairwise_or'_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_FStar.BigOps.big_or_",
+        "equation_FStar.BigOps.pairwise_or_", "equation_Prims.l_False",
+        "equation_Prims.l_or", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "false_interp",
+        "fuel_guarded_inversion_Prims.list", "l_quant_interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_typing"
+      ],
+      0,
+      "003e70227c4d21ebdda2425b7677e292"
+    ],
+    [
+      "FStar.BigOps.pairwise_or'_exists",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_FStar.BigOps.anti_reflexive",
+        "equation_FStar.BigOps.symmetric",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list", "l_or-interp",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "5bff359f7fc251264468e54ebad61003"
+    ],
+    [
+      "FStar.BigOps.pairwise_or'_exists_no_repeats",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.no_repeats_p.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.no_repeats_p.fuel_instrumented",
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_FStar.BigOps.symmetric",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.no_repeats_p.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list", "l_and-interp",
+        "l_not-interp", "l_or-interp", "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "50ccbcd123dce756776d71cae145d3da"
+    ],
+    [
+      "FStar.BigOps.pairwise_or",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.BigOps.pairwise_op_.fuel_instrumented",
+        "@query", "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_False", "equation_Prims.l_or",
+        "equation_Prims.squash", "equation_Prims.subtype_of", "false_interp",
+        "fuel_guarded_inversion_Prims.list", "l_quant_interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_typing"
+      ],
+      0,
+      "937a111f9fa1f7170fcd211598dd9895"
+    ]
+  ]
+]

@@ -1,11 +1,16 @@
 # Fstar build container
-FROM everest-base-linux:1
+
+# Define on config.json what base container image build should use.
+# By default it always look for the latest container available
+# In case you would like to reference a specific commit,
+# replace latest with the commit id from github using 12 characters.
+ARG COMMITID
+FROM everest-ci-linux:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
 ARG TARGET
 ARG BRANCHNAME
-ARG FSTARSOURCEVERSION
 
 # ADD SSH KEY
 RUN mkdir -p ${MYHOME}/.ssh
@@ -32,7 +37,7 @@ RUN chmod +x build.sh
 COPY --chown=everest build_helper.sh ${MYHOME}/build_helper.sh
 RUN chmod +x build_helper.sh
 
-RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} ${FSTARSOURCEVERSION} || true
+RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
 
 # Remove ssh key
 RUN rm .ssh/id_rsa

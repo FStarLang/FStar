@@ -1,5 +1,5 @@
 [
-  "¦ðÎþ \u0004`BÓŽ\u001c^Éðªc",
+  "ô87¾¨äË_œAö)€nâR",
   [
     [
       "Ex04a.length",
@@ -16,7 +16,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "39a3044e9ece69b725b3ac2917132dc4"
+      "336c6ff04a35bcba6303945143d7b67d"
     ],
     [
       "Ex04a.append",
@@ -44,7 +44,7 @@
         "subterm_ordering_Prims.Cons", "typing_Ex04a.length"
       ],
       0,
-      "ecc008c78054bc04baba4a29463b7f0e"
+      "10412177b3c799f8695083c80e7923b0"
     ],
     [
       "Ex04a.length",
@@ -61,7 +61,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ef8ce12cd46b498b501940b9c26cd48c"
+      "93d06d9fec6e6483027975e29a123193"
     ],
     [
       "Ex04a.append",
@@ -93,7 +93,7 @@
         "typing_Ex04a.length"
       ],
       0,
-      "72e3233ea75d6a2518c052a7951c4bb1"
+      "f64e7457e46402c490f13e9b48061fea"
     ]
   ]
 ]
