@@ -207,10 +207,10 @@ val upd_modifies (#b: _)
 
 /// `upd_equal_domains`: `upd` does not modify the memory domains
 val upd_equal_domains (#b: _)
-                 (h:HS.mem)
-                 (vb:buffer b{live h vb})
-                 (i:nat{i < length vb})
-                 (x:b)
+                      (h:HS.mem)
+                      (vb:buffer b{live h vb})
+                      (i:nat{i < length vb})
+                      (x:b)
     : Lemma (FStar.HyperStack.ST.equal_domains h (upd h vb i x))
 
 /// `as_seq h vb`: Viewing the entire buffer as a sequence of `b`
