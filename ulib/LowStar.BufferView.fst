@@ -163,7 +163,15 @@ let upd_modifies #b h vb i x
     let prefix, _, suffix = split_at_i vb i h in
     let s1 = prefix `Seq.append` (View?.put v x `Seq.append` suffix) in
     B.g_upd_seq_as_seq (as_buffer vb) s1 h
-
+    
+let upd_equal_domains #b h vb i x
+  = let open FStar.Mul in
+    let v = get_view vb in
+    let prefix, _, suffix = split_at_i vb i h in
+    let s1 = prefix `Seq.append` (View?.put v x `Seq.append` suffix) in
+    upd_modifies h vb i x;
+    B.g_upd_seq_as_seq (as_buffer vb) s1 h
+    
 let rec as_seq' (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i <= length vb})
   : GTot (Seq.lseq b (length vb - i))
          (decreases (length vb - i))
