@@ -266,7 +266,8 @@ let defaults =
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , String "");
       ("use_extracted_interfaces"     , Bool false);
-      ("use_nbe"                      , Bool false)]
+      ("use_nbe"                      , Bool false);
+      ("use_tc_cache"                 , Bool false)]
 
 let init () =
    let o = peek () in
@@ -391,6 +392,7 @@ let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertio
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
+let get_use_tc_cache            ()      = lookup_opt "use_tc_cache"             as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -1111,7 +1113,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          "use_nbe",
           BoolStr,
          "Use normalization by evaluation as the default normalization srategy (default 'false')");
-
+        
+        ( noshort,
+         "use_tc_cache",
+          BoolStr,
+         "Use typechecker cache, EXPERIMENTAL (default 'false')");
 
         ( noshort,
           "__debug_embedding",
@@ -1514,6 +1520,7 @@ let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 let use_nbe                      () = get_use_nbe                     ()
+let use_tc_cache                 () = get_use_tc_cache                ()
 
 let with_saved_options f =
   // take some care to not mess up the stack on errors

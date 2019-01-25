@@ -336,8 +336,11 @@ let rec tc_term env e =
         BU.print3 "(%s) Starting tc_term of %s (%s) {\n" (Range.string_of_range <| Env.get_range env)
                                                          (Print.term_to_string e)
                                                          (Print.tag_of_term (SS.compress e));
-
-    let el_opt = UF.query_tc e (Some (fun t1 t2 -> U.eq_tm t1 t2 = U.Equal)) in
+    
+    let use_tc_cache = Options.use_tc_cache () && not (env.lax || Options.lax ()) in
+    let el_opt =
+      if use_tc_cache then UF.query_tc e (Some (fun t1 t2 -> U.eq_tm t1 t2 = U.Equal))
+      else None in
     match el_opt with
     | Some (eres, lc) ->
       if Env.debug env <| Options.Other "MemoTC" then
@@ -357,7 +360,10 @@ let rec tc_term env e =
                                               (Print.term_to_string e)
                                               (Print.tag_of_term (SS.compress e))
       end;
-      let (eres, lc, _) = r in UF.cache_tc e (eres, lc);  //hash key is the input term?
+      if use_tc_cache then begin
+        let (eres, lc, _) = r in
+        UF.cache_tc e (eres, lc)  //hash key is the input term?
+      end;
       r
 
 and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked and elaborated version of e            *)
