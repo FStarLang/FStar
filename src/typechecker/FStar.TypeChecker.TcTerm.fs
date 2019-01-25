@@ -362,6 +362,9 @@ let rec tc_term env e =
       end;
       if use_tc_cache then begin
         let (eres, lc, _) = r in
+        if Env.debug env <| Options.Other "MemoTC" then
+        BU.print3 "adding to the tc cache, key (original term): %s, elaborated term: %s, and lc: %s\n"
+                  (Print.term_to_string e) (Print.term_to_string eres) (Print.lcomp_to_string lc);
         UF.cache_tc e (eres, lc)  //hash key is the input term?
       end;
       r
