@@ -912,7 +912,7 @@ let branch b = Subst.close_branch b
  *     the function also descends under the refinements (e.g. t -> Tot (f:(t1 -> C){phi}))
  *)
 let rec arrow_formals_comp k =
-    let k = Subst.compress k in
+    let k = unascribe k in
     match k.n with
         | Tm_arrow(bs, c) ->
             let bs, c = Subst.open_comp bs c in
