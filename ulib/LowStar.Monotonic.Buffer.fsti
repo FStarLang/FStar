@@ -1126,7 +1126,13 @@ val modifies_trans
 : Lemma
   (requires (modifies s12 h1 h2 /\ modifies s23 h2 h3))
   (ensures (modifies (loc_union s12 s23) h1 h3))
-  [SMTPat (modifies s12 h1 h2); SMTPat (modifies s23 h2 h3)]
+
+let modifies_trans_linear (l l_goal:loc) (h1 h2 h3:HS.mem)
+  : Lemma (requires (modifies l h1 h2 /\ modifies l_goal h2 h3 /\ l_goal `loc_includes` l))
+          (ensures  (modifies l_goal h1 h3))
+	  [SMTPat (modifies l h1 h2); SMTPat (modifies l_goal h1 h3)]
+  = modifies_trans l h1 h2 l_goal h3
+
 
 /// Regions that are not live can be removed from sets of memory
 /// locations that are modified.
