@@ -553,6 +553,14 @@ val loc_includes_union_l
   (requires (loc_includes s1 s \/ loc_includes s2 s))
   (ensures (loc_includes (loc_union s1 s2) s))
 
+val loc_includes_union_l_struct
+  (s1 s2: loc)
+: Lemma
+  (ensures (loc_union s1 s2 `loc_includes` s1 /\
+            loc_union s1 s2 `loc_includes` s2))
+  [SMTPatOr [[SMTPat (loc_union s1 s2 `loc_includes` s1)];
+             [SMTPat (loc_union s1 s2 `loc_includes` s2)]]]
+
 let loc_includes_union_r'
   (s s1 s2: loc)
 : Lemma
@@ -1236,7 +1244,7 @@ val modifies_fresh_frame_popped
     modifies s h0 h3 /\
     (HS.get_tip h3) == HS.get_tip h0
   ))
-  [SMTPat (HS.fresh_frame h0 h1); SMTPat (HS.popped h2 h3); SMTPat (modifies s h0 h3)]
+  //[SMTPat (HS.fresh_frame h0 h1); SMTPat (HS.popped h2 h3); SMTPat (modifies s h0 h3)]
 
 /// Compatibility lemmas to rescue modifies clauses specified in the
 /// standard F* HyperStack library.
@@ -1436,11 +1444,13 @@ let fresh_frame_loc_not_unused_in_disjoint
 = not_live_region_loc_not_unused_in_disjoint h0 (HS.get_tip h1)
 
 val live_loc_not_unused_in (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem)
-  :Lemma (live h b <==> loc_not_unused_in h `loc_includes` loc_addr_of_buffer b)
+  :Lemma (requires (live h b))
+         (ensures  (loc_not_unused_in h `loc_includes` loc_addr_of_buffer b))
          [SMTPat (live h b)]
 
 val unused_in_loc_unused_in (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem)
-  :Lemma (unused_in b h <==> loc_unused_in h `loc_includes` loc_addr_of_buffer b)
+  :Lemma (requires (unused_in b h))
+         (ensures  (loc_unused_in h `loc_includes` loc_addr_of_buffer b))
          [SMTPat (unused_in b h)]
 
 val modifies_address_liveness_insensitive_unused_in
@@ -1843,7 +1853,8 @@ unfold let lmbuffer (a:Type0) (rrel rel:srel a) (len:nat)
 unfold
 let alloc_post_mem_common (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (h0 h1:HS.mem) (s:Seq.seq a)
-  = fresh_loc (loc_addr_of_buffer b) h0 h1 /\
+  = live h1 b /\
+    unused_in b h0 /\
     Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\
     (HS.get_tip h1) == (HS.get_tip h0) /\
     modifies loc_none h0 h1 /\

@@ -628,6 +628,9 @@ let loc_includes_union_r = MG.loc_includes_union_r
 
 let loc_includes_union_l = MG.loc_includes_union_l
 
+let loc_includes_union_l_struct s1 s2 =
+  loc_includes_union_l s1 s2 s1; loc_includes_union_l s1 s2 s2
+
 let loc_includes_none = MG.loc_includes_none
 
 val loc_includes_buffer (#a:Type0) (#rrel1:srel a) (#rrel2:srel a) (#rel1:srel a) (#rel2:srel a)
@@ -767,11 +770,7 @@ let modifies_only_live_regions = MG.modifies_only_live_regions
 
 let no_upd_fresh_region = MG.no_upd_fresh_region
 
-let fresh_frame_modifies = MG.fresh_frame_modifies #_ cls
-
 let new_region_modifies = MG.new_region_modifies #_ cls
-
-let popped_modifies = MG.popped_modifies #_ cls
 
 let modifies_fresh_frame_popped = MG.modifies_fresh_frame_popped
 
@@ -898,36 +897,20 @@ let mreference_live_loc_not_unused_in =
 let mreference_unused_in_loc_unused_in =
   MG.mreference_unused_in_loc_unused_in cls
 
-(* Duplicate the modifies clause to cope with cases that must not be used with transitivity *)
-
-let modifies_inert = modifies
-
-let modifies_inert_intro s h1 h2 = ()
-
-let modifies_inert_live_region = modifies_live_region
-
-let modifies_inert_mreference_elim = modifies_mreference_elim
-
-let modifies_inert_buffer_elim = modifies_buffer_elim
-
-let modifies_inert_liveness_insensitive_mreference_weak = modifies_liveness_insensitive_mreference_weak
-
-let modifies_inert_liveness_insensitive_buffer_weak = modifies_liveness_insensitive_buffer_weak
-
-let modifies_inert_liveness_insensitive_region_weak = modifies_liveness_insensitive_region_weak
-
-let modifies_inert_liveness_insensitive_region_mreference_weak = modifies_liveness_insensitive_region_mreference_weak
-
-let modifies_inert_liveness_insensitive_region_buffer_weak = modifies_liveness_insensitive_region_buffer_weak
-
-let fresh_frame_modifies_inert = fresh_frame_modifies
-
-let popped_modifies_inert = popped_modifies
-
-let modifies_inert_loc_unused_in l h1 h2 l' =
+let modifies_loc_unused_in l h1 h2 l' =
   modifies_loc_includes address_liveness_insensitive_locs h1 h2 l;
   modifies_address_liveness_insensitive_unused_in h1 h2;
   loc_includes_trans (loc_unused_in h1) (loc_unused_in h2) l'
+
+let fresh_frame_modifies h0 h1 =
+  MG.fresh_frame_modifies #_ cls h0 h1;
+  let l = loc_region_only false (HS.get_tip h1) in
+  loc_regions_unused_in h0 (Set.singleton (HS.get_tip h1));
+  assume (loc_not_unused_in h1 `loc_includes` l)
+
+let popped_modifies = MG.popped_modifies #_ cls
+
+let modifies_remove_new_locs l_fresh l_goal h1 h2 h3 = admit ()
 
 let disjoint_neq #_ #_ #_ #_ #_ #_ b1 b2 =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2 then
