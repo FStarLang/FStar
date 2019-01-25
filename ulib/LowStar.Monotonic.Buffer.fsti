@@ -553,13 +553,14 @@ val loc_includes_union_l
   (requires (loc_includes s1 s \/ loc_includes s2 s))
   (ensures (loc_includes (loc_union s1 s2) s))
 
-val loc_includes_union_l_struct
-  (s1 s2: loc)
-: Lemma
-  (ensures (loc_union s1 s2 `loc_includes` s1 /\
-            loc_union s1 s2 `loc_includes` s2))
-  [SMTPatOr [[SMTPat (loc_union s1 s2 `loc_includes` s1)];
-             [SMTPat (loc_union s1 s2 `loc_includes` s2)]]]
+// AR: not as helpful, need some sort of patterns for above two
+// val loc_includes_union_l_struct
+//   (s1 s2: loc)
+// : Lemma
+//   (ensures (loc_union s1 s2 `loc_includes` s1 /\
+//             loc_union s1 s2 `loc_includes` s2))
+//   [SMTPatOr [[SMTPat (loc_union s1 s2 `loc_includes` s1)];
+//              [SMTPat (loc_union s1 s2 `loc_includes` s2)]]]
 
 let loc_includes_union_r'
   (s s1 s2: loc)
@@ -1541,7 +1542,7 @@ let ralloc_post_fresh_loc (#a:Type) (#rel:Preorder.preorder a) (i: HS.rid) (init
 
 val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.fresh_frame h0 h1))
-  (ensures  (modifies loc_none h0 h1 /\ fresh_loc (loc_region_only false (HS.get_tip h1)) h0 h1))
+  (ensures  (modifies loc_none h0 h1 /\ fresh_loc (loc_region_only true (HS.get_tip h1)) h0 h1))
   [SMTPat (HS.fresh_frame h0 h1)]
 
 val popped_modifies (h0 h1: HS.mem) : Lemma

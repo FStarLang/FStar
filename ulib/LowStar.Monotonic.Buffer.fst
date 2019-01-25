@@ -628,8 +628,8 @@ let loc_includes_union_r = MG.loc_includes_union_r
 
 let loc_includes_union_l = MG.loc_includes_union_l
 
-let loc_includes_union_l_struct s1 s2 =
-  loc_includes_union_l s1 s2 s1; loc_includes_union_l s1 s2 s2
+// let loc_includes_union_l_struct s1 s2 =
+//   loc_includes_union_l s1 s2 s1; loc_includes_union_l s1 s2 s2
 
 let loc_includes_none = MG.loc_includes_none
 
@@ -904,7 +904,7 @@ let modifies_loc_unused_in l h1 h2 l' =
 
 let fresh_frame_modifies h0 h1 =
   MG.fresh_frame_modifies #_ cls h0 h1;
-  let l = loc_region_only false (HS.get_tip h1) in
+  let l = loc_region_only true (HS.get_tip h1) in
   loc_regions_unused_in h0 (Set.singleton (HS.get_tip h1));
   assume (loc_not_unused_in h1 `loc_includes` l)
 
