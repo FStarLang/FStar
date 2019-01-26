@@ -553,6 +553,16 @@ val loc_includes_union_l
   (requires (loc_includes s1 s \/ loc_includes s2 s))
   (ensures (loc_includes (loc_union s1 s2) s))
 
+
+let loc_includes_union_l'
+  (s1 s2 s: loc)
+  : Lemma
+      (requires (loc_includes s1 s \/ loc_includes s2 s))
+      (ensures (loc_includes (loc_union s1 s2) s))
+      [SMTPat (loc_includes (loc_union s1 s2) s)]
+  = loc_includes_union_l s1 s2 s
+
+
 // AR: not as helpful, need some sort of patterns for above two
 // val loc_includes_union_l_struct
 //   (s1 s2: loc)
@@ -1539,10 +1549,10 @@ let ralloc_post_fresh_loc (#a:Type) (#rel:Preorder.preorder a) (i: HS.rid) (init
     [SMTPat (HST.ralloc_post i init m0 x m1)]
 =  ()
 
-
+//AR: this is needed for liveness across fresh_frame
 val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.fresh_frame h0 h1))
-  (ensures  (modifies loc_none h0 h1 /\ fresh_loc (loc_region_only true (HS.get_tip h1)) h0 h1))
+  (ensures  (modifies loc_none h0 h1)) ///\ fresh_loc (loc_region_only true (HS.get_tip h1)) h0 h1))
   [SMTPat (HS.fresh_frame h0 h1)]
 
 val popped_modifies (h0 h1: HS.mem) : Lemma
@@ -1554,6 +1564,11 @@ val modifies_remove_new_locs (l_fresh l_goal:loc) (h1 h2 h3:HS.mem)
   : Lemma (requires (fresh_loc l_fresh h1 h2 /\ modifies (loc_union l_fresh l_goal) h2 h3))
           (ensures  (modifies l_goal h1 h3))
 	  [SMTPat (fresh_loc l_fresh h1 h2); SMTPat (modifies l_goal h1 h3)]
+
+val modifies_remove_fresh_frame (h1 h2 h3:HS.mem) (l:loc)
+  : Lemma (requires (HS.fresh_frame h1 h2 /\ modifies (loc_union (loc_all_regions_from false (HS.get_tip h2)) l) h2 h3))
+          (ensures  (modifies l h1 h3))
+	  [SMTPat (modifies l h1 h3); SMTPat (HS.fresh_frame h1 h2)]
 
 /// Legacy shorthands for disjointness and inclusion of buffers
 ///

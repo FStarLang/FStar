@@ -902,15 +902,13 @@ let modifies_loc_unused_in l h1 h2 l' =
   modifies_address_liveness_insensitive_unused_in h1 h2;
   loc_includes_trans (loc_unused_in h1) (loc_unused_in h2) l'
 
-let fresh_frame_modifies h0 h1 =
-  MG.fresh_frame_modifies #_ cls h0 h1;
-  let l = loc_region_only true (HS.get_tip h1) in
-  loc_regions_unused_in h0 (Set.singleton (HS.get_tip h1));
-  assume (loc_not_unused_in h1 `loc_includes` l)
+let fresh_frame_modifies h0 h1 = MG.fresh_frame_modifies #_ cls h0 h1
 
 let popped_modifies = MG.popped_modifies #_ cls
 
 let modifies_remove_new_locs l_fresh l_goal h1 h2 h3 = admit ()
+
+let modifies_remove_fresh_frame h1 h2 h3 l = admit ()
 
 let disjoint_neq #_ #_ #_ #_ #_ #_ b1 b2 =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2 then
