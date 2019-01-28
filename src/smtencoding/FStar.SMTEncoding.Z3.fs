@@ -531,7 +531,7 @@ let giveZ3 decls =
 let refresh () =
     if (Options.n_cores() < 2) then
         (!bg_z3_proc).refresh();
-        bg_scope := List.flatten (List.rev !fresh_scope)
+    bg_scope := List.flatten (List.rev !fresh_scope)
 
 let mk_input theory =
     let options = !z3_options in
