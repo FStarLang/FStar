@@ -1561,7 +1561,7 @@ val popped_modifies (h0 h1: HS.mem) : Lemma
   [SMTPat (HS.popped h0 h1)]
 
 val modifies_remove_new_locs (l_fresh l_goal:loc) (h1 h2 h3:HS.mem)
-  : Lemma (requires (fresh_loc l_fresh h1 h2 /\ modifies (loc_union l_fresh l_goal) h2 h3))
+  : Lemma (requires (fresh_loc l_fresh h1 h2 /\ modifies l_goal h1 h2 /\ modifies (loc_union l_fresh l_goal) h2 h3))
           (ensures  (modifies l_goal h1 h3))
 	  [SMTPat (fresh_loc l_fresh h1 h2); SMTPat (modifies l_goal h1 h3)]
 
