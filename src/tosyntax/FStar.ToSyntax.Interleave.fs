@@ -125,6 +125,19 @@ let is_definition_of x d =
 
  *)
 
+ (*
+  * AR: when interleaving the interface decls, we wrap them with
+  *     admit_smt_queries true, since they are already verified
+  *     as part of the interface
+  *)
+
+let wrap_iface_decl_with_admit_smt (d:decl) : list<decl> =
+  let mk_decl d = mk_decl d Range.dummyRange [] in
+  let admit_smt_queries = "--admit_smt_queries true" in
+  let push_admit_smt_queries = mk_decl (Pragma (PushOptions (Some admit_smt_queries))) in
+  let pop = mk_decl (Pragma PopOptions) in
+  push_admit_smt_queries::d::[pop]
+
 let rec prefix_with_iface_decls
         (iface:list<decl>)
         (impl:decl)
@@ -177,12 +190,12 @@ let rec prefix_with_iface_decls
                   else aux ys iface //no val given for 'y'; ok
             in
             let take_iface, rest_iface = aux mutually_defined_with_x iface_tl in
-            rest_iface, iface_hd::take_iface@[impl]
+            rest_iface, (wrap_iface_decl_with_admit_smt iface_hd) @ take_iface @ [impl]
 
 
      | _ ->
        let iface, ds = prefix_with_iface_decls iface_tl impl in
-       iface, iface_hd::ds
+       iface, (wrap_iface_decl_with_admit_smt iface_hd) @ ds
     end
 
 let check_initial_interface (iface:list<decl>) =
@@ -297,7 +310,10 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> 
             | None -> iface, []
             | Some (lets, one_val, rest) -> lets, one_val::rest
         in
-        let impls = impls@iface_lets in
+        //AR: before adding iface_lets to impls, wrap them with admit_smt_queries true
+        let impls = impls @ (List.fold_left (
+          fun accum iface_let -> accum @ (wrap_iface_decl_with_admit_smt iface_let)
+        ) [] iface_lets) in
         let env =
             if Options.interactive()
             then E.set_iface_decls env l remaining_iface_vals
