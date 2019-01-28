@@ -23,6 +23,12 @@ clean:
 1:
 	$(MAKE) -C src/ocaml-output
 
+# Bootstrap just the compiler, not the library and tests;
+# fastest way to incrementally build a patch to the compiler
+boot:
+	$(MAKE) -C src/ ocaml
+	$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
+
 # Generate a new OCaml snapshot
 2:
 	$(MAKE) -C src fstar-ocaml
