@@ -1240,6 +1240,10 @@ val new_region_modifies (m0: HS.mem) (r0: HS.rid) (col: option int) : Lemma
 /// extending regions) that is pushed, modified and popped can be
 /// removed from a modifies clause.
 
+/// AR: 01/29/2019: Removing the smt pattern from this lemma.
+///                 Clients are no longer expected to call it explicitly,
+///                 if you are having to, please raise an issue.
+
 val modifies_fresh_frame_popped
   (h0 h1: HS.mem)
   (s: loc)
@@ -1255,7 +1259,6 @@ val modifies_fresh_frame_popped
     modifies s h0 h3 /\
     (HS.get_tip h3) == HS.get_tip h0
   ))
-  //[SMTPat (HS.fresh_frame h0 h1); SMTPat (HS.popped h2 h3); SMTPat (modifies s h0 h3)]
 
 /// Compatibility lemmas to rescue modifies clauses specified in the
 /// standard F* HyperStack library.
