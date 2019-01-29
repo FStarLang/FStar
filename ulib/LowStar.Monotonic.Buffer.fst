@@ -906,7 +906,7 @@ let fresh_frame_modifies h0 h1 = MG.fresh_frame_modifies #_ cls h0 h1
 
 let popped_modifies = MG.popped_modifies #_ cls
 
-let modifies_remove_new_locs l_fresh l_goal h1 h2 h3 =
+let modifies_remove_new_locs l_fresh l_aux l_goal h1 h2 h3 =
   modifies_only_not_unused_in l_goal h1 h3
 
 let disjoint_neq #_ #_ #_ #_ #_ #_ b1 b2 =

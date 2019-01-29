@@ -1552,7 +1552,7 @@ let ralloc_post_fresh_loc (#a:Type) (#rel:Preorder.preorder a) (i: HS.rid) (init
 //AR: this is needed for liveness across fresh_frame
 val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.fresh_frame h0 h1))
-  (ensures  (modifies loc_none h0 h1)) ///\ fresh_loc (loc_region_only true (HS.get_tip h1)) h0 h1))
+  (ensures  (modifies loc_none h0 h1))
   [SMTPat (HS.fresh_frame h0 h1)]
 
 val popped_modifies (h0 h1: HS.mem) : Lemma
@@ -1560,17 +1560,18 @@ val popped_modifies (h0 h1: HS.mem) : Lemma
   (ensures  (modifies (loc_region_only false (HS.get_tip h0)) h0 h1))
   [SMTPat (HS.popped h0 h1)]
 
-val modifies_remove_new_locs (l_fresh l_goal:loc) (h1 h2 h3:HS.mem)
-  : Lemma (requires (fresh_loc l_fresh h1 h2 /\ modifies l_goal h1 h2 /\ modifies (loc_union l_fresh l_goal) h2 h3))
+val modifies_remove_new_locs (l_fresh l_aux l_goal:loc) (h1 h2 h3:HS.mem)
+  : Lemma (requires (fresh_loc l_fresh h1 h2 /\ modifies l_aux h1 h2 /\ l_goal `loc_includes` l_aux /\
+                     modifies (loc_union l_fresh l_goal) h2 h3))
           (ensures  (modifies l_goal h1 h3))
-	  [SMTPat (fresh_loc l_fresh h1 h2); SMTPat (modifies l_goal h1 h3)]
+	  [SMTPat (fresh_loc l_fresh h1 h2); SMTPat (modifies l_aux h1 h2); SMTPat (modifies l_goal h1 h3)]
 
 let modifies_remove_fresh_frame (h1 h2 h3:HS.mem) (l:loc)
   : Lemma (requires (HS.fresh_frame h1 h2 /\ modifies (loc_union (loc_all_regions_from false (HS.get_tip h2)) l) h2 h3))
           (ensures  (modifies l h1 h3))
 	  [SMTPat (modifies l h1 h3); SMTPat (HS.fresh_frame h1 h2)]
-= loc_regions_unused_in h1 (HS.mod_set (Set.singleton (HS.get_tip h2)));
-  modifies_only_not_unused_in l h1 h3
+  = loc_regions_unused_in h1 (HS.mod_set (Set.singleton (HS.get_tip h2)));
+    modifies_only_not_unused_in l h1 h3
 
 /// Legacy shorthands for disjointness and inclusion of buffers
 ///
