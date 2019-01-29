@@ -242,3 +242,6 @@ val op_to_string: op -> string
 val print_smt_term: term -> string
 val print_smt_term_list: list<term> -> string
 val print_smt_term_list_list: list<list<term>> -> string
+
+val dummy_sort : sort
+val dummy_value : term

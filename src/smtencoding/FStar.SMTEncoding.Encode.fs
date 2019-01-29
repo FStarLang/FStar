@@ -343,11 +343,6 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                 then args, TypeChecker.Util.pure_or_ghost_pre_and_post env.tcenv comp
                 else args, (None, U.comp_result comp)
               in
-              let arity = List.length formals in
-              let vname, vtok, env = new_term_constant_and_tok_from_lid env lid arity in
-              let vtok_tm = match formals with
-                | [] -> mkFreeV(vname, Term_sort)
-                | _ -> mkApp(vtok, []) in
               let mk_disc_proj_axioms guard encoded_res_t vapp vars = quals |> List.collect (function
                 | Discriminator d ->
                     let _, (xxsym, _) = BU.prefix vars in
@@ -370,28 +365,51 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
               let guard, decls1 = match pre_opt with
                 | None -> mk_and_l guards, decls1
                 | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
+              let dummy_var = ("@dummy", dummy_sort) in
+              let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
+              let should_thunk =
+                not (prims.is lid)
+                && not (quals |> List.contains Logic)
+                && not (Option.isSome (U.is_squash t_norm))
+              in
+              let thunked, vars =
+                 match vars with
+                 | [] when should_thunk -> true, [dummy_var]
+                 | _ -> false, vars
+              in
+              let arity = List.length formals in
+              let vname, vtok, env = new_term_constant_and_tok_from_lid_maybe_thunked env lid arity thunked in
+              let vtok_tm =
+                    match formals with
+                    | [] when not thunked -> mkFreeV(vname, Term_sort)
+                    | _ when thunked -> mkApp(vname, [dummy_tm])
+                    | _ -> mkApp(vtok, [])
+              in
               let vtok_app = mk_Apply vtok_tm vars in
-
-              let vapp = mkApp(vname, List.map mkFreeV vars) in //arity ok, see decl below, arity is |formals| = |vars| (#1383)
+              let vapp = mkApp(vname, List.map mkFreeV vars) in //arity ok, see decl below, arity is |vars| (#1383)
               let decls2, env =
-                let vname_decl = Term.DeclFun(vname, formals |> List.map (fun _ -> Term_sort), Term_sort, None) in
+                let vname_decl = Term.DeclFun(vname, vars |> List.map snd, Term_sort, None) in
                 let tok_typing, decls2 =
                     let env = {env with encode_non_total_function_typ=encode_non_total_function_typ} in
                     if not(head_normal env tt)
                     then encode_term_pred None tt env vtok_tm
-                    else encode_term_pred None t_norm env vtok_tm in //NS:Unfortunately, this is duplicated work --- we effectively encode the function type twice
+                    else encode_term_pred None t_norm env vtok_tm
+                in //NS:Unfortunately, this is duplicated work --- we effectively encode the function type twice
                 let tok_decl, env =
-                    match formals with
+                    match vars with
                     | [] ->
                       let tok_typing =
                         Util.mkAssume(tok_typing, Some "function token typing", ("function_token_typing_"^vname))
                       in
                       decls2@[tok_typing], push_free_var env lid arity vname (Some <| mkFreeV(vname, Term_sort))
+
+                    | _ when thunked ->
+                      [], env
+
                     | _ ->
                      (* Generate a token and a function symbol;
                         equate the two, and use the function symbol for full applications *)
                       let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
-                      let vtok_app_0 = mk_Apply vtok_tm [List.hd vars] in
                       let name_tok_corr_formula pat =
                           mkForall (S.range_of_fv fv) ([[pat]], vars, mkEq(vtok_app, vapp))
                       in
@@ -404,7 +422,6 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                       let tok_typing =
                         let ff = ("ty", Term_sort) in
                         let f = mkFreeV ff in
-                        let vtok_app_l = mk_Apply vtok_tm [ff] in
                         let vtok_app_r = mk_Apply f [(vtok, Term_sort)] in
                         //guard the token typing assumption with a Apply(f, tok), where f is typically __uu__PartialApp
                         //Additionally, the body of the term becomes
@@ -427,7 +444,8 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                       in
                       decls2@[vtok_decl;name_tok_corr;tok_typing], env
                 in
-                vname_decl::tok_decl, env in
+                vname_decl::tok_decl, env
+              in
               let encoded_res_t, ty_pred, decls3 =
                    let res_t = SS.compress res_t in
                    let encoded_res_t, decls = encode_term res_t env' in

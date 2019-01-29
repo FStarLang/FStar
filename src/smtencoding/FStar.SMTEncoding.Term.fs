@@ -803,6 +803,8 @@ and mkPrelude z3options =
                 \n\
                 (declare-sort Term)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
+                (declare-sort Dummy_sort)\n\
+                (declare-fun Dummy_value () Dummy_sort)\n\
                 (declare-datatypes () ((Fuel \n\
                                         (ZFuel) \n\
                                         (SFuel (prec Fuel)))))\n\
@@ -997,3 +999,5 @@ let mk_and_l l r = List.fold_right (fun p1 p2 -> mkAnd(p1, p2) r) l (mkTrue r)
 let mk_or_l l r = List.fold_right (fun p1 p2 -> mkOr(p1,p2) r) l (mkFalse r)
 
 let mk_haseq t = mk_Valid (mkApp ("Prims.hasEq", [t]) t.rng)
+let dummy_sort = Sort "Dummy_sort"
+let dummy_value = mkApp ("Dummy_value", []) Range.dummyRange
