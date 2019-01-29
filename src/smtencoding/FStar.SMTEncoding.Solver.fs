@@ -314,6 +314,8 @@ let report_errors settings : unit =
 
 let query_info settings z3result =
     let process_unsat_core (core:unsat_core) =
+        (* A generic accumulator of unique strings,
+           extracted in sorted order *)
         let accumulator () =
             let r : ref<list<string>> = BU.mk_ref [] in
             let add, get =
@@ -327,19 +329,41 @@ let query_info settings z3result =
             in
             add, get
        in
+       (* Accumulator for module names *)
        let add_module_name, get_module_names =
            accumulator()
        in
+       (* Accumulator for discarded names *)
        let add_discarded_name, get_discarded_names =
            accumulator()
        in
+       (* SMT Axioms are named using an ad hoc naming convention
+          that includes the F* source name within it.
+
+          This function reversed the naming convention to extract
+          the source name of the F* entity from `s`, an axiom name
+          mentioned in an unsat core (but also in smt.qi.profile, etc.)
+
+          The basic structure of the name is
+
+            <lowercase_prefix><An F* lid, i.e., a dot-separated name beginning with upper case letter><some reserved suffix>
+
+          So, the code below strips off the <lowercase_prefix>
+          and any of the reserved suffixes.
+
+          What's left is an F* name, which can be decomposed as usual
+          into a module name + a top-level identifier
+       *)
        let parse_axiom_name (s:string) =
             let chars = String.list_of_string s in
             let first_upper_index =
                 BU.try_find_index BU.is_upper chars
             in
             match first_upper_index with
-            | None -> add_discarded_name s; []
+            | None ->
+              //Has no embedded F* name (discard it, and record it in the discarded set)
+              add_discarded_name s;
+              []
             | Some first_upper_index ->
                 let name_and_suffix = BU.substring_from s first_upper_index in
                 let components = String.split ['.'] name_and_suffix in
@@ -368,14 +392,20 @@ let query_info settings z3result =
                     | None -> if s = "" then [] else [s]
                     | Some s -> if s = "" then [] else [s]
                 in
-                let components = List.collect exclude_suffix components in
-                let _ =
+                let components =
                     match components with
-                    | []
-                    | [_] -> ()
+                    | [] -> []
                     | _ ->
-                      let module_name = BU.prefix components |> fst |> String.concat "." in
-                      add_module_name module_name
+                      let module_name, last = BU.prefix components in
+                      let components = module_name @ exclude_suffix last in
+                      let _ =
+                          match components with
+                          | []
+                          | [_] -> () //no module name
+                          | _ ->
+                            add_module_name (String.concat "." module_name)
+                      in
+                      components
                 in
                 if components = []
                 then (add_discarded_name s; [])
@@ -386,10 +416,11 @@ let query_info settings z3result =
            BU.print_string "no unsat core\n"
         | Some core ->
            let core = List.collect parse_axiom_name core in
-           BU.print2 "Query Stats: Modules relevant to this proof:\nQuery Stats:\t%s\nQuery Stats:Specifically:\nQuery Stats:\t%s\n"
-                     (get_module_names() |> String.concat "\nQuery Stats:\t")
-                     (String.concat "\nQuery Stats:\t" core);
-           BU.print1 "Note, this report ignored the following names in the context: %s\n"
+           BU.print1 "Query Stats: Modules relevant to this proof:\nQuery Stats:\t%s\n"
+                     (get_module_names() |> String.concat "\nQuery Stats:\t");
+           BU.print1 "Query Stats (Detail 1): Specifically:\nQuery Stats (Detail 1):\t%s\n"
+                     (String.concat "\nQuery Stats (Detail 1):\t" core);
+           BU.print1 "Query Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
                      (get_discarded_names() |> String.concat ", ")
     in
     if Options.hint_info()
@@ -408,7 +439,7 @@ let query_info settings z3result =
                 let str = smap_fold z3result.z3result_statistics f "statistics={" in
                     (substring str 0 ((String.length str) - 1)) ^ "}"
             else "" in
-        BU.print "Query Stats: %s\t (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s\nQuery Stats Z3 Details: %s\n"
+        BU.print "Query Stats: %s\t (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s\n"
              [  range;
                 settings.query_name;
                 BU.string_of_int settings.query_index;
@@ -417,8 +448,9 @@ let query_info settings z3result =
                 BU.string_of_int z3result.z3result_time;
                 BU.string_of_int settings.query_fuel;
                 BU.string_of_int settings.query_ifuel;
-                BU.string_of_int settings.query_rlimit;
-                stats ];
+                BU.string_of_int settings.query_rlimit
+             ];
+        BU.print1 "Query Stats (Detail Z3): %s\n" stats;
         process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
             let tag = if used_hint settings then "(Hint-replay failed): " else "" in
