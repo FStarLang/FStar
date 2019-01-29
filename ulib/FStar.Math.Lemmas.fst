@@ -135,12 +135,14 @@ let mul_binds_tighter a b c = ()
 
 (* Lemma: multiplication keeps symetric bounds :
     b > 0 && d > 0 && -b < a < b && -d < c < d ==> - b * d < a * c < b * d *)
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0 --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr wrapped"
 val mul_ineq1: a:int -> b:nat -> c:int -> d:nat -> Lemma
-    (requires (a < b /\ a > -b /\ c < d /\ c > -d))
-    (ensures  (a * c < b * d /\ a * c > - (b * d)))
+    (requires (-b < a /\ a < b /\
+               -d < c /\ c < d))
+    (ensures  (-(b * d) < a * c /\ a * c < b * d))
 let mul_ineq1 a b c d = ()
 
+#reset-options "--initial_fuel 0 --max_fuel 0"
 val nat_times_nat_is_nat: a:nat -> b:nat -> Lemma (a * b >= 0)
 let nat_times_nat_is_nat a b = ()
 
