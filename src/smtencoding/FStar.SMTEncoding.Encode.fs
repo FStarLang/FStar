@@ -368,22 +368,31 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
               let dummy_var = ("@dummy", dummy_sort) in
               let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
               let should_thunk =
-                not (prims.is lid)
-                && not (quals |> List.contains Logic)
-                && not (Option.isSome (U.is_squash t_norm))
+                let is_type t =
+                    match (SS.compress t).n with
+                    | Tm_type _ -> true
+                    | _ -> false
+                in
+                //Do not thunk ...
+                lid.nsstr <> "Prims"  //things in prims
+                && not (quals |> List.contains Logic) //logic qualified terms
+                && not (Option.isSome (U.is_squash t_norm)) //ambient squashed properties
+                && not (is_type t_norm) // : Type terms, since ambient typing hypotheses for these are cheap
               in
               let thunked, vars =
                  match vars with
-                 | [] when should_thunk -> true, [dummy_var]
+                 | [] when should_thunk ->
+                   true, [dummy_var]
                  | _ -> false, vars
               in
               let arity = List.length formals in
-              let vname, vtok, env = new_term_constant_and_tok_from_lid_maybe_thunked env lid arity thunked in
+              let vname, vtok_opt, env = new_term_constant_and_tok_from_lid_maybe_thunked env lid arity thunked in
+              let get_vtok () = Option.get vtok_opt in
               let vtok_tm =
-                    match formals with
-                    | [] when not thunked -> mkFreeV(vname, Term_sort)
+                    match formals, vtok_opt with
+                    | [], _ when not thunked -> mkFreeV(vname, Term_sort)
                     | _ when thunked -> mkApp(vname, [dummy_tm])
-                    | _ -> mkApp(vtok, [])
+                    | _ -> mkApp(get_vtok(), []) //not thunked
               in
               let vtok_app = mk_Apply vtok_tm vars in
               let vapp = mkApp(vname, List.map mkFreeV vars) in //arity ok, see decl below, arity is |vars| (#1383)
@@ -404,11 +413,12 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                       decls2@[tok_typing], push_free_var env lid arity vname (Some <| mkFreeV(vname, Term_sort))
 
                     | _ when thunked ->
-                      [], env
+                      decls2, env
 
                     | _ ->
                      (* Generate a token and a function symbol;
                         equate the two, and use the function symbol for full applications *)
+                      let vtok = get_vtok() in
                       let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
                       let name_tok_corr_formula pat =
                           mkForall (S.range_of_fv fv) ([[pat]], vars, mkEq(vtok_app, vapp))
@@ -520,7 +530,7 @@ let encode_top_level_let :
       binders@extra_formals, body
     in
 
-    let destruct_bound_function flid t e
+    let destruct_bound_function t e
       : (S.binders    //arguments of the (possibly reified) lambda abstraction
        * S.term       //body of the (possibly reified) lambda abstraction
        * S.comp)      //result comp
@@ -628,25 +638,6 @@ let encode_top_level_let :
         let env_decls = copy_env env in
         let typs = List.rev typs in
 
-        let mk_app rng curry fvb vars =
-            let mk_fv () =
-              if fvb.smt_arity = 0
-              then mkFreeV(fvb.smt_id, Term_sort)
-              else raise_arity_mismatch fvb.smt_id fvb.smt_arity 0 rng
-            in
-            match vars with
-            | [] ->
-              mk_fv ()
-            | _ ->
-              if curry
-              then match fvb.smt_token with
-                   | Some ftok ->
-                     mk_Apply ftok vars
-                   | None ->
-                     mk_Apply (mk_fv()) vars
-              else maybe_curry_app rng (Var fvb.smt_id) fvb.smt_arity (List.map mkFreeV vars)
-        in
-
         let encode_non_rec_lbdef
                 (bindings:list<letbinding>)
                 (typs:list<S.term>)
@@ -668,8 +659,7 @@ let encode_top_level_let :
                 in
 
                 (* Open binders *)
-                let (binders, body, t_body_comp) = destruct_bound_function flid t_norm e in
-                let curry = fvb.smt_arity <> List.length binders in
+                let (binders, body, t_body_comp) = destruct_bound_function t_norm e in
                 let t_body = U.comp_result t_body_comp in
                 if Env.debug env.tcenv <| Options.Other "SMTEncoding"
                 then BU.print2 "Encoding let : binders=[%s], body=%s\n"
@@ -739,7 +729,7 @@ let encode_top_level_let :
                         (Print.term_to_string e);
 
             (* Open binders *)
-            let (binders, body, tres_comp) = destruct_bound_function fvb.fvar_lid t_norm e in
+            let (binders, body, tres_comp) = destruct_bound_function t_norm e in
             let curry = fvb.smt_arity <> List.length binders in
             let pre_opt, tres = TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp in
             if Env.debug env0.tcenv <| Options.Other "SMTEncodingReify"
@@ -771,7 +761,7 @@ let encode_top_level_let :
             let vars_tm = List.map mkFreeV vars in
             let rng = (FStar.Syntax.Util.range_of_lbname lbn) in
             let app = maybe_curry_fvb rng fvb (List.map mkFreeV vars) in
-            let mk_g_app args = maybe_curry_app rng (Var g) (fvb.smt_arity + 1) args in
+            let mk_g_app args = maybe_curry_app rng (BU.Inl (Var g)) (fvb.smt_arity + 1) args in
             let gsapp = mk_g_app (mkApp("SFuel", [fuel_tm])::vars_tm) in
             let gmax = mk_g_app (mkApp("MaxFuel", [])::vars_tm) in
             let body_tm, decls2 = encode_term body env' in
@@ -1187,7 +1177,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             match (SS.compress head).n with
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv ->
-                  let encoded_head, encoded_head_arity = lookup_free_var_name env' fv.fv_name in
+                  let encoded_head_fvb = lookup_free_var_name env' fv.fv_name in
                   let encoded_args, arg_decls = encode_args args env' in
                   let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
                     let fv =
@@ -1220,7 +1210,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       (env', [], [], 0) (FStar.List.zip args encoded_args)
                   in
                   let arg_vars = List.rev arg_vars in
-                  let ty = maybe_curry_app fv.fv_name.p (Var encoded_head) encoded_head_arity arg_vars in
+                  let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in
                   let xvars = List.map mkFreeV vars in
                   let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
                   let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in

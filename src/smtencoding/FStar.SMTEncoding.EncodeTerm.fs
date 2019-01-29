@@ -118,18 +118,25 @@ let raise_arity_mismatch head arity n_args rng =
                                         (BU.string_of_int arity)
                                         (BU.string_of_int n_args))
                                 rng
-
-let maybe_curry_app rng (head:op) (arity:int) (args:list<term>) =
+ let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>) : term =
     let n_args = List.length args in
-    if n_args = arity
-    then Util.mkApp'(head, args)
-    else if n_args > arity
-    then let args, rest = BU.first_N arity args in
-         let head = Util.mkApp'(head, args) in
-         mk_Apply_args head rest
-    else raise_arity_mismatch (Term.op_to_string head) arity n_args rng
+    match head with
+    | BU.Inr head -> //must curry
+      mk_Apply_args head args
+
+    | BU.Inl head ->
+        if n_args = arity
+        then Util.mkApp'(head, args)
+        else if n_args > arity
+        then let args, rest = BU.first_N arity args in
+             let head = Util.mkApp'(head, args) in
+             mk_Apply_args head rest
+        else raise_arity_mismatch (Term.op_to_string head) arity n_args rng
+
 let maybe_curry_fvb rng fvb args =
-    maybe_curry_app rng (Var fvb.smt_id) fvb.smt_arity args
+    if fvb.fvb_thunked
+    then mk_Apply_args (force_thunk fvb) args
+    else maybe_curry_app rng (BU.Inl (Var fvb.smt_id)) fvb.smt_arity args
 
 let is_app = function
     | Var "ApplyTT"
@@ -243,7 +250,13 @@ let rec curried_arrow_formals_comp k =
   let k = Subst.compress k in
   match k.n with
   | Tm_arrow(bs, c)  -> Subst.open_comp bs c
-  | Tm_refine(bv, _) -> curried_arrow_formals_comp bv.sort
+  | Tm_refine(bv, _) ->
+    let args, res = curried_arrow_formals_comp bv.sort in
+    begin
+    match args with
+    | [] -> [], Syntax.mk_Total k
+    | _ -> args, res
+    end
   | _                -> [], Syntax.mk_Total k
 
 let is_arithmetic_primitive head args =
@@ -583,10 +596,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_fvar v ->
         if head_redex env t
         then encode_term (whnf env t) env
-        else let _, arity = lookup_free_var_name env v.fv_name in
+        else let fvb = lookup_free_var_name env v.fv_name in
              let tok = lookup_free_var env v.fv_name in
              let aux_decls =
-               if arity > 0
+               if fvb.smt_arity > 0
                then //kick partial application axioms if arity > 0; see #613
                     //and if the head symbol is just a variable
                     //rather than maybe a fuel-instrumented name (cf. #1433)
