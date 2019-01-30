@@ -5,7 +5,10 @@ include ../Makefile.include
 
 uall: all
 
+.PHONY: benton2004
+
 all:\
+  benton2004\
   Bijection.uver\
   Equivalence.uver\
   IfcComposeReify.uver\
