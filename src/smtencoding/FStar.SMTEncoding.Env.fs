@@ -275,7 +275,7 @@ let push_zfuel_name env (x:lident) f =
 let force_thunk fvb =
     if not (fvb.fvb_thunked) || fvb.smt_arity <> 0
     then failwith "Forcing a non-thunk in the SMT encoding";
-    mkApp(fvb.smt_id, [Term.dummy_value])
+    mkFreeV <| (fvb.smt_id, Term_sort, true)
 let try_lookup_free_var env l =
     match lookup_fvar_binding env l with
     | None -> None

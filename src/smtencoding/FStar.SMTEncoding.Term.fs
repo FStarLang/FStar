@@ -665,6 +665,7 @@ let termToSmt
         | Integer i     -> i
         | BoundV i ->
           List.nth names i |> fv_name
+        | FreeV x when fv_force x -> "(" ^ fv_name x ^ " Dummy_value)" //force a thunked name
         | FreeV x -> fv_name x
         | App(op, []) -> op_to_string op
         | App(op, tms) -> BU.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
@@ -1001,4 +1002,3 @@ let mk_or_l l r = List.fold_right (fun p1 p2 -> mkOr(p1,p2) r) l (mkFalse r)
 
 let mk_haseq t = mk_Valid (mkApp ("Prims.hasEq", [t]) t.rng)
 let dummy_sort = Sort "Dummy_sort"
-let dummy_value = mkApp ("Dummy_value", []) Range.dummyRange
