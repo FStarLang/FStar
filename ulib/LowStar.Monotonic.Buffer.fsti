@@ -562,16 +562,6 @@ let loc_includes_union_l'
       [SMTPat (loc_includes (loc_union s1 s2) s)]
   = loc_includes_union_l s1 s2 s
 
-
-// AR: not as helpful, need some sort of patterns for above two
-// val loc_includes_union_l_struct
-//   (s1 s2: loc)
-// : Lemma
-//   (ensures (loc_union s1 s2 `loc_includes` s1 /\
-//             loc_union s1 s2 `loc_includes` s2))
-//   [SMTPatOr [[SMTPat (loc_union s1 s2 `loc_includes` s1)];
-//              [SMTPat (loc_union s1 s2 `loc_includes` s2)]]]
-
 let loc_includes_union_r'
   (s s1 s2: loc)
 : Lemma
@@ -1072,11 +1062,14 @@ val modifies_liveness_insensitive_buffer
   (h h':HS.mem)
   (#a:Type0) (#rrel #rel:srel a)
   (x:mbuffer a rrel rel)
-  :Lemma (requires (modifies (loc_union l1 l2) h h' /\ loc_disjoint l1 (loc_buffer x) /\ address_liveness_insensitive_locs `loc_includes` l2 /\ live h x))
+  :Lemma (requires (modifies (loc_union l1 l2) h h' /\
+                    loc_disjoint l1 (loc_buffer x)  /\
+		    address_liveness_insensitive_locs `loc_includes` l2 /\
+		    live h x))
          (ensures  (live h' x))
          [SMTPatOr [
-             [SMTPat (live h x); SMTPat (modifies (loc_union l1 l2) h h');];
-             [SMTPat (live h' x); SMTPat (modifies (loc_union l1 l2) h h');];
+           [SMTPat (live h x); SMTPat (modifies (loc_union l1 l2) h h');];
+           [SMTPat (live h' x); SMTPat (modifies (loc_union l1 l2) h h');];
          ]]
 
 let modifies_liveness_insensitive_mreference_weak
@@ -1085,14 +1078,15 @@ let modifies_liveness_insensitive_mreference_weak
   (#t: Type)
   (#pre: Preorder.preorder t)
   (x: HS.mreference t pre)
-: Lemma
-  (requires (modifies l h h' /\ address_liveness_insensitive_locs `loc_includes` l /\ h `HS.contains` x))
-  (ensures (h' `HS.contains` x))
-  [SMTPatOr [
-    [SMTPat (h `HS.contains` x); SMTPat (modifies l h h');];
-    [SMTPat (h' `HS.contains` x); SMTPat (modifies l h h');];
-  ]]
-= modifies_liveness_insensitive_mreference loc_none l h h' x
+ : Lemma (requires (modifies l h h' /\
+                    address_liveness_insensitive_locs `loc_includes` l /\
+		    h `HS.contains` x))
+         (ensures  (h' `HS.contains` x))
+         [SMTPatOr [
+           [SMTPat (h `HS.contains` x); SMTPat (modifies l h h');];
+           [SMTPat (h' `HS.contains` x); SMTPat (modifies l h h');];
+         ]]
+  = modifies_liveness_insensitive_mreference loc_none l h h' x
 
 let modifies_liveness_insensitive_buffer_weak
   (l:loc)
@@ -1164,25 +1158,28 @@ let modifies_liveness_insensitive_region_mreference_weak
   (#t: Type)
   (#pre: Preorder.preorder t)
   (x: HS.mreference t pre)
-: Lemma
-  (requires (modifies l2 h h' /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h (HS.frameOf x)))
-  (ensures (HS.live_region h' (HS.frameOf x)))
-  [SMTPatOr [
-    [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h (HS.frameOf x))];
-    [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h' (HS.frameOf x))];
-  ]]
-= modifies_liveness_insensitive_region_mreference loc_none l2 h h' x
+  : Lemma (requires (modifies l2 h h' /\
+                     region_liveness_insensitive_locs `loc_includes` l2 /\
+		     HS.live_region h (HS.frameOf x)))
+          (ensures (HS.live_region h' (HS.frameOf x)))
+          [SMTPatOr [
+            [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h (HS.frameOf x))];
+            [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h' (HS.frameOf x))];
+          ]]
+  = modifies_liveness_insensitive_region_mreference loc_none l2 h h' x
 
 let modifies_liveness_insensitive_region_buffer_weak
   (l2:loc)
   (h h':HS.mem)
   (#a:Type0) (#rrel #rel:srel a)
   (x:mbuffer a rrel rel)
-  :Lemma (requires (modifies l2 h h' /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h (frameOf x)))
+  :Lemma (requires (modifies l2 h h' /\
+                    region_liveness_insensitive_locs `loc_includes` l2 /\
+		    HS.live_region h (frameOf x)))
          (ensures  (HS.live_region h' (frameOf x)))
          [SMTPatOr [
-             [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h (frameOf x))];
-             [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h' (frameOf x))];
+           [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h (frameOf x))];
+           [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h' (frameOf x))];
          ]]
   = modifies_liveness_insensitive_region_buffer loc_none l2 h h' x
 
@@ -1564,13 +1561,18 @@ val popped_modifies (h0 h1: HS.mem) : Lemma
   [SMTPat (HS.popped h0 h1)]
 
 val modifies_remove_new_locs (l_fresh l_aux l_goal:loc) (h1 h2 h3:HS.mem)
-  : Lemma (requires (fresh_loc l_fresh h1 h2 /\ modifies l_aux h1 h2 /\ l_goal `loc_includes` l_aux /\
+  : Lemma (requires (fresh_loc l_fresh h1 h2 /\
+                     modifies l_aux h1 h2 /\
+		     l_goal `loc_includes` l_aux /\
                      modifies (loc_union l_fresh l_goal) h2 h3))
           (ensures  (modifies l_goal h1 h3))
-	  [SMTPat (fresh_loc l_fresh h1 h2); SMTPat (modifies l_aux h1 h2); SMTPat (modifies l_goal h1 h3)]
+	  [SMTPat (fresh_loc l_fresh h1 h2);
+	   SMTPat (modifies l_aux h1 h2);
+	   SMTPat (modifies l_goal h1 h3)]
 
 let modifies_remove_fresh_frame (h1 h2 h3:HS.mem) (l:loc)
-  : Lemma (requires (HS.fresh_frame h1 h2 /\ modifies (loc_union (loc_all_regions_from false (HS.get_tip h2)) l) h2 h3))
+  : Lemma (requires (HS.fresh_frame h1 h2 /\
+                     modifies (loc_union (loc_all_regions_from false (HS.get_tip h2)) l) h2 h3))
           (ensures  (modifies l h1 h3))
 	  [SMTPat (modifies l h1 h3); SMTPat (HS.fresh_frame h1 h2)]
   = loc_regions_unused_in h1 (HS.mod_set (Set.singleton (HS.get_tip h2)));

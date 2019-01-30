@@ -628,9 +628,6 @@ let loc_includes_union_r = MG.loc_includes_union_r
 
 let loc_includes_union_l = MG.loc_includes_union_l
 
-// let loc_includes_union_l_struct s1 s2 =
-//   loc_includes_union_l s1 s2 s1; loc_includes_union_l s1 s2 s2
-
 let loc_includes_none = MG.loc_includes_none
 
 val loc_includes_buffer (#a:Type0) (#rrel1:srel a) (#rrel2:srel a) (#rel1:srel a) (#rel2:srel a)
