@@ -207,6 +207,11 @@ abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      [SMTPat (equal s1 s2)]
 let lemma_eq_intro #a s1 s2 = ()
 
+abstract val lemma_neq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
+     (requires (length s1 <> length s2))
+     (ensures (~ (equal s1 s2)))
+let lemma_neq_intro #a s1 s2 = ()
+
 abstract val lemma_eq_refl: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (s1 == s2))
      (ensures (equal s1 s2))
