@@ -373,10 +373,21 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                     | Tm_type _ -> true
                     | _ -> false
                 in
+                let is_squash t =
+                    let head, _ = U.head_and_args t in
+                    match (U.un_uinst head).n with
+                    | Tm_fvar fv ->
+                      Syntax.fv_eq_lid fv FStar.Parser.Const.squash_lid
+
+                    | Tm_refine({sort={n=Tm_fvar fv}}, _) ->
+                      Syntax.fv_eq_lid fv FStar.Parser.Const.unit_lid
+
+                    | _ -> false
+                in
                 //Do not thunk ...
                 lid.nsstr <> "Prims"  //things in prims
                 && not (quals |> List.contains Logic) //logic qualified terms
-                && not (Option.isSome (U.is_squash t_norm)) //ambient squashed properties
+                && not (is_squash t_norm) //ambient squashed properties
                 && not (is_type t_norm) // : Type terms, since ambient typing hypotheses for these are cheap
               in
               let thunked, vars =
@@ -854,6 +865,9 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     g, env
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
+    if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+    then (BU.print1 "@@@Encoding sigelt %s\n" (Print.sigelt_to_string se));
+
     let is_opaque_to_smt (t:S.term) =
         match (SS.compress t).n with
         | Tm_constant (Const_string(s, _)) -> s = "opaque_to_smt"
