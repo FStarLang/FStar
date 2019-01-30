@@ -1570,6 +1570,14 @@ val modifies_remove_new_locs (l_fresh l_aux l_goal:loc) (h1 h2 h3:HS.mem)
 	   SMTPat (modifies l_aux h1 h2);
 	   SMTPat (modifies l_goal h1 h3)]
 
+(*
+ * AR: this lemma is framing the modifies clause across a fresh frame
+ *     one way to do it would have been to reuse the lemma modifies_remove_new_locs,
+ *       treating the fresh frame as another new location
+ *     however, the way library is set up, loc_region in any form cannot be considered
+ *       a fresh loc
+ *     so, we have a special lemma for fresh_frame
+ *)
 let modifies_remove_fresh_frame (h1 h2 h3:HS.mem) (l:loc)
   : Lemma (requires (HS.fresh_frame h1 h2 /\
                      modifies (loc_union (loc_all_regions_from false (HS.get_tip h2)) l) h2 h3))
