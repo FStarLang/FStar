@@ -3335,7 +3335,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                 if Options.use_tactics()
                 then begin
                     Options.with_saved_options (fun () ->
-                        ignore <| Options.set_options Options.Set "--no_tactics";
+                        ignore <| Options.set_options "--no_tactics";
                         let vcs = env.solver.preprocess env vc in
                         vcs |> List.map (fun (env, goal, opts) ->
                         env, N.normalize [Env.Simplify; Env.Primops] env goal, opts)

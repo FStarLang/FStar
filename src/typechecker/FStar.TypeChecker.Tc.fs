@@ -1043,12 +1043,6 @@ let tc_inductive env ses quals lids =
   try tc_inductive' env ses quals lids |> (fun r -> pop (); r)
   with e -> pop (); raise e
 
-//when we process a reset-options pragma, we need to restart z3 etc.
-let z3_reset_options (en:env) :env =
-  let env = Env.set_proof_ns (Options.using_facts_from ()) en in
-  env.solver.refresh ();
-  env
-
 let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
     let comb f1 f2 =
         match f1, f2 with
@@ -1801,7 +1795,15 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   match se.sigel with
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
-  | Sig_pragma (ResetOptions _) -> z3_reset_options env
+
+  | Sig_pragma (PushOptions _)
+  | Sig_pragma PopOptions
+  | Sig_pragma (SetOptions _)
+  | Sig_pragma (ResetOptions _) ->
+    (* we keep --using_facts_from reflected in the environment, so update it here *)
+    let env = { env with proof_ns = Options.using_facts_from () } in
+    env
+
   | Sig_pragma _
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect ne ->
@@ -2146,7 +2148,7 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
       //restore command line options ad restart z3 (to reset things like nl.arith options)
       if not (Options.interactive ()) then begin  //we should not have this case actually since extracted interfaces are not supported in ide yet
         Options.restore_cmd_line_options true |> ignore;
-        z3_reset_options en0
+        en0
       end
       else en0
     in

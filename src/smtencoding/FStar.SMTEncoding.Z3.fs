@@ -225,6 +225,8 @@ let bg_z3_proc =
         let kill_handler () = "\nkilled\n" in
         BU.ask_process (z3proc ()) input kill_handler in
     let refresh () =
+        if Options.debug_any () then
+          Errors.diag Range.dummyRange "Restarting SMT solver...";
         BU.kill_process (z3proc ());
         the_z3proc := Some (new_z3proc_with_id ());
         query_logging.close_log() in
