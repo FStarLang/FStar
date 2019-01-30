@@ -112,7 +112,7 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
         || Option.isSome (BU.smap_try_find include_assumption_names a.assumption_name)
     in
     //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
-    //AR: reversing the list is also crucial for correctness because of RetainAssumption 
+    //AR: reversing the list is also crucial for correctness because of RetainAssumption
     //    specifically (RetainAssumption a) comes after (a) in the theory list
     //    as a result, it is crucial that we consider the (RetainAssumption a) before we encounter (a)
     let theory_rev = List.rev theory in  //List.rev is already the tail recursive version of rev
@@ -262,7 +262,8 @@ let detail_hint_replay settings z3result =
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
                       None
-                      (fun r -> res := Some r);
+                      (fun r -> res := Some r)
+                      false;
                Option.get (!res)
            in
            detail_errors true settings.query_env settings.query_all_labels ask_z3
@@ -305,7 +306,8 @@ let report_errors settings : unit =
                     settings.query_all_labels
                     (with_fuel_and_diagnostics initial_fuel label_assumptions)
                     None
-                    (fun r -> res := Some r);
+                    (fun r -> res := Some r)
+                    false;
             Option.get (!res)
             in
          detail_errors false settings.query_env settings.query_all_labels ask_z3
@@ -375,7 +377,6 @@ let record_hint settings z3result =
     end
 
 let process_result settings result : option<errors> =
-    if used_hint settings && not (Options.z3_refresh()) then Z3.refresh();
     let errs = query_errors settings result in
     query_info settings result;
     record_hint settings result;
@@ -480,7 +481,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
     in
 
     let check_one_config config (k:z3result -> unit) : unit =
-          if used_hint config || Options.z3_refresh() then Z3.refresh();
+          if Options.z3_refresh() then Z3.refresh();
           Z3.ask config.query_range
                   (filter_assertions config.query_env config.query_hint)
                   config.query_hash
@@ -488,6 +489,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                   (with_fuel_and_diagnostics config [])
                   (Some (Z3.mk_fresh_scope()))
                   k
+                  (used_hint config)
     in
 
     let check_all_configs configs =

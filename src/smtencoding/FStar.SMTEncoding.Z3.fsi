@@ -51,6 +51,7 @@ val ask: r:Range.range
        -> qry:list<decl>
        -> scope:option<scope_t>
        -> cb:cb
+       -> fresh:bool
        -> unit
 
 val refresh: unit -> unit
@@ -66,7 +67,7 @@ val rollback : msg:string -> option<int> -> unit
 type query_log = {
     get_module_name: unit -> string;
     set_module_name: string -> unit;
-    write_to_log:   string -> unit;
+    write_to_log:    bool -> string -> unit;
     close_log:       unit -> unit;
     log_file_name:   unit -> string
 }

@@ -142,6 +142,9 @@ let status_string_and_errors s =
 let tid () = BU.current_tid() |> BU.string_of_int
 let new_z3proc id =
     BU.start_process id (Options.z3_exe ()) (ini_params ()) (fun s -> s = "Done!")
+let new_z3proc_with_id =
+    let ctr = BU.mk_ref (-1) in
+    fun () -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int))
 
 type bgproc = {
     ask: string -> string;
@@ -152,7 +155,7 @@ type bgproc = {
 type query_log = {
     get_module_name: unit -> string;
     set_module_name: string -> unit;
-    write_to_log:   string -> unit;
+    write_to_log:    bool -> string -> unit;
     close_log:       unit -> unit;
     log_file_name:   unit -> string
 }
@@ -189,23 +192,31 @@ let query_logging =
         | None -> new_log_file()
         | Some fh -> fh in
     let append_to_log str = BU.append_to_file (get_log_file()) str in
-    let write_to_new_log str =
-      let dir_name = match !current_file_name with
-        | None ->
-          let dir_name = match !current_module_name with
-            | None -> failwith "current module not set"
-            | Some n -> BU.format1 "queries-%s" n in
-          BU.mkdir true dir_name;
-          current_file_name := Some dir_name;
-          dir_name
-        | Some n -> n in
+    let write_to_new_log newdir str =
       let qnum = !query_number in
       query_number := !query_number + 1;
       let file_name = BU.format1 "query-%s.smt2" (BU.string_of_int qnum) in
-      let file_name = BU.concat_dir_filename dir_name file_name in
+      let file_name =
+        if not newdir then file_name
+        else
+          let dir_name =
+            match !current_file_name with
+            | None ->
+              let dir_name =
+                match !current_module_name with
+                | None -> failwith "current module not set"
+                | Some n -> BU.format1 "queries-%s" n in
+              BU.mkdir true dir_name;
+              current_file_name := Some dir_name;
+              dir_name
+            | Some n -> n
+        in
+        BU.concat_dir_filename dir_name file_name
+      in
       write_file file_name str in
-    let write_to_log str =
-      if (Options.n_cores() > 1) then write_to_new_log str
+    let write_to_log fresh str =
+      if fresh || (Options.n_cores() > 1)
+      then write_to_new_log (Options.n_cores()>1) str
       else append_to_log str
       in
     let close_log () = match !log_file_opt with
@@ -222,12 +233,9 @@ let query_logging =
 
 let bg_z3_proc =
     let the_z3proc = BU.mk_ref None in
-    let new_proc =
-        let ctr = BU.mk_ref (-1) in
-        fun () -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) in
     let z3proc () =
       if !the_z3proc = None then
-        the_z3proc := Some (new_proc ());
+        the_z3proc := Some (new_z3proc_with_id ());
       must (!the_z3proc) in
     let x : list<unit> = [] in
     let ask input =
@@ -235,12 +243,12 @@ let bg_z3_proc =
         BU.ask_process (z3proc ()) input kill_handler in
     let refresh () =
         BU.kill_process (z3proc ());
-        the_z3proc := Some (new_proc ());
+        the_z3proc := Some (new_z3proc_with_id ());
         query_logging.close_log() in
     let restart () =
         query_logging.close_log();
         the_z3proc := None;
-        the_z3proc := Some (new_proc ()) in
+        the_z3proc := Some (new_z3proc_with_id ()) in
     BU.mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
                 restart = BU.with_monitor x restart})
@@ -377,7 +385,11 @@ let doZ3Exe (r:Range.range) (fresh:bool) (input:string) (label_messages:error_la
   in
   let stdout =
     if fresh then
-      BU.run_process (tid ()) (Options.z3_exe ()) (ini_params ()) (Some input)
+      let proc = new_z3proc_with_id () in
+      let kill_handler () = "\nkilled\n" in
+      let out = BU.ask_process proc input kill_handler in
+      BU.kill_process proc;
+      out
     else
       (!bg_z3_proc).ask input
   in
@@ -494,6 +506,7 @@ type scope_t = list<list<decl>>
 // reverify or use these declarations
 let fresh_scope : ref<scope_t> = BU.mk_ref [[]]
 let mk_fresh_scope () = !fresh_scope
+let flatten_fresh_scope () = List.flatten (List.rev !fresh_scope)
 
 // bg_scope: Is the flat sequence of declarations already given to Z3
 //           When refreshing the solver, the bg_scope is set to
@@ -531,9 +544,9 @@ let giveZ3 decls =
 let refresh () =
     if (Options.n_cores() < 2) then
         (!bg_z3_proc).refresh();
-        bg_scope := List.flatten (List.rev !fresh_scope)
+        bg_scope := flatten_fresh_scope ()
 
-let mk_input theory =
+let mk_input fresh theory =
     let options = !z3_options in
     let r, hash =
         if Options.record_hints()
@@ -568,7 +581,7 @@ let mk_input theory =
         else
             List.map (declToSmt options) theory |> String.concat "\n", None
     in
-    if Options.log_queries() then query_logging.write_to_log r ;
+    if Options.log_queries() then query_logging.write_to_log fresh r ;
     r, hash
 
 type cb = z3result -> unit
@@ -602,12 +615,19 @@ let ask_1_core
     (label_messages:error_labels)
     (qry:decls_t)
     (cb:cb)
-  = let theory = !bg_scope@[Push]@qry@[Pop] in
-    let theory, used_unsat_core = filter_theory theory in
-    let input, qhash = mk_input theory in
-    bg_scope := [] ; // Now consumed.
+    (fresh:bool)
+  = let theory =
+        if fresh
+        then flatten_fresh_scope()
+        else let theory = !bg_scope in
+             bg_scope := [];//now consumed
+             theory
+    in
+    let theory = theory @[Push]@qry@[Pop] in
+    let theory, _used_unsat_core = filter_theory theory in
+    let input, qhash = mk_input fresh theory in
     if not (cache_hit cache qhash cb) then
-        run_job ({job=z3_job r false label_messages input qhash; callback=cb})
+        run_job ({job=z3_job r fresh label_messages input qhash; callback=cb})
 
 let ask_n_cores
     (r:Range.range)
@@ -623,7 +643,7 @@ let ask_n_cores
                     (List.rev !fresh_scope)) in
     let theory = theory@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
-    let input, qhash = mk_input theory in
+    let input, qhash = mk_input false theory in
     if not (cache_hit cache qhash cb) then
         enqueue ({job=z3_job r true label_messages input qhash; callback=cb})
 
@@ -635,7 +655,8 @@ let ask
     (qry:decls_t)
     (scope:option<scope_t>)
     (cb:cb)
+    (fresh:bool)
   = if Options.n_cores() = 1 then
-        ask_1_core r filter cache label_messages qry cb
+        ask_1_core r filter cache label_messages qry cb fresh
     else
         ask_n_cores r filter cache label_messages qry scope cb
