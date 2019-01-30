@@ -114,7 +114,7 @@ type term' =
   | LblPos     of term * string
 and pat  = term
 and term = {tm:term'; freevars:Syntax.memo<fvs>; rng:Range.range}
-and fv = string * sort
+and fv = string * sort * bool //bool signals if this occurrence is a thunk that should be forced
 and fvs = list<fv>
 
 type caption = option<string>
@@ -156,10 +156,11 @@ type decls_t = list<decl>
 type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
 
-
-
-let fv_eq (x:fv) (y:fv) = fst x = fst y
-let fv_sort x = snd x
+let mk_fv (x, y) : fv = x, y, false
+let fv_name (x:fv) = let nm, _, _ = x in nm
+let fv_sort (x:fv) = let _, sort, _ = x in sort
+let fv_force (x:fv) = let _, _, force = x in force
+let fv_eq (x:fv) (y:fv) = fv_name x = fv_name y
 let freevar_eq x y = match x.tm, y.tm with
     | FreeV x, FreeV y -> fv_eq x y
     | _ -> false
@@ -237,7 +238,7 @@ let weightToSmt = function
 let rec hash_of_term' t = match t with
   | Integer i ->  i
   | BoundV i  -> "@"^string_of_int i
-  | FreeV x   -> fst x ^ ":" ^ strSort (snd x) //Question: Why is the sort part of the hash?
+  | FreeV x   -> fv_name x ^ ":" ^ strSort (fv_sort x) //Question: Why is the sort part of the hash?
   | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
   | Labeled(t, r1, r2) -> hash_of_term t ^ r1 ^ (Range.string_of_range r2)
   | LblPos(t, r) -> "(! " ^hash_of_term t^ " :lblpos " ^r^ ")"
@@ -420,7 +421,7 @@ let check_pattern_ok (t:term) : option<term> =
   match t.tm with
   | Integer n               -> BU.format1 "(Integer %s)" n
   | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
-  | FreeV  fv               -> BU.format1 "(FreeV %s)" (fst fv)
+  | FreeV  fv               -> BU.format1 "(FreeV %s)" (fv_name fv)
   | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
   | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
   | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
@@ -545,7 +546,7 @@ let fresh_token (tok_name, sort) id =
 
 let fresh_constructor rng (name, arg_sorts, sort, id) =
   let id = string_of_int id in
-  let bvars = arg_sorts |> List.mapi (fun i s -> mkFreeV("x_" ^ string_of_int i, s) norng) in
+  let bvars = arg_sorts |> List.mapi (fun i s -> mkFreeV(mk_fv ("x_" ^ string_of_int i, s)) norng) in
   let bvar_names = List.map fv_of_term bvars in
   let capp = mkApp(name, bvars) norng in
   let cid_app = mkApp(constr_id_of_sort sort, [capp]) norng in
@@ -562,7 +563,7 @@ let injective_constructor rng (name, fields, sort) =
     let n_bvars = List.length fields in
     let bvar_name i = "x_" ^ string_of_int i in
     let bvar_index i = n_bvars - (i + 1) in
-    let bvar i s = mkFreeV(bvar_name i, s) in
+    let bvar i s = mkFreeV <| mk_fv (bvar_name i, s) in
     let bvars = fields |> List.mapi (fun i (_, s, _) -> bvar i s norng) in
     let bvar_names = List.map fv_of_term bvars in
     let capp = mkApp(name, bvars) norng in
@@ -588,7 +589,7 @@ let constructor_to_decl rng (name, fields, sort, id, injective) =
     let cid = fresh_constructor rng (name, field_sorts, sort, id) in
     let disc =
         let disc_name = "is-"^name in
-        let xfv = ("x", sort) in
+        let xfv = mk_fv ("x", sort) in
         let xx = mkFreeV xfv norng in
         let disc_eq = mkEq(mkApp(constr_id_of_sort sort, [xx]) norng, mkInteger (string_of_int id) norng) norng in
         let proj_terms, ex_vars =
@@ -596,7 +597,7 @@ let constructor_to_decl rng (name, fields, sort, id, injective) =
          |> List.mapi (fun i (proj, s, projectible) ->
                 if projectible
                 then mkApp(proj, [xx]) norng, []
-                else let fi = ("f_" ^ BU.string_of_int i, s) in
+                else let fi = mk_fv ("f_" ^ BU.string_of_int i, s) in
                      mkFreeV fi norng, [fi])
          |> List.split in
         let ex_vars = List.flatten ex_vars in
@@ -618,7 +619,7 @@ let constructor_to_decl rng (name, fields, sort, id, injective) =
 (****************************************************************************)
 (* Standard SMTLib prelude for F* and some term constructors                *)
 (****************************************************************************)
-let name_binders_inner prefix_opt outer_names start sorts =
+let name_binders_inner prefix_opt (outer_names:list<fv>) start sorts =
     let names, binders, n = sorts |> List.fold_left (fun (names, binders, n) s ->
         let prefix = match s with
             | Term_sort -> "@x"
@@ -628,7 +629,7 @@ let name_binders_inner prefix_opt outer_names start sorts =
             | None -> prefix
             | Some p -> p ^ prefix in
         let nm = prefix ^ string_of_int n in
-        let names = (nm,s)::names in
+        let names = mk_fv (nm,s)::names in
         let b = BU.format2 "(%s %s)" nm (strSort s) in
         names, b::binders, n+1)
         (outer_names, [], start)  in
@@ -663,8 +664,8 @@ let termToSmt
         match t.tm with
         | Integer i     -> i
         | BoundV i ->
-          List.nth names i |> fst
-        | FreeV x -> fst x
+          List.nth names i |> fv_name
+        | FreeV x -> fv_name x
         | App(op, []) -> op_to_string op
         | App(op, tms) -> BU.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
         | Labeled(t, _, _) -> aux n names t
@@ -699,7 +700,7 @@ let termToSmt
           let names, binders, n =
             List.fold_left (fun (names0, binders, n0) e ->
               let nm = "@lb" ^ string_of_int n0 in
-              let names0 = (nm, Term_sort)::names0 in
+              let names0 = mk_fv (nm, Term_sort)::names0 in
               let b = BU.format2 "(%s %s)" nm (aux n names e) in
               names0, b::binders, n0+1)
             (names, [], n)

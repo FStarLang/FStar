@@ -56,9 +56,9 @@ let primitive_projector_by_pos env lid i =
         | _ -> fail ()
 let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" lid.str (string_of_int i)
 let mk_term_projector (lid:lident) (a:bv) : term =
-    mkFreeV(mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
+    mkFreeV <| mk_fv (mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
 let mk_term_projector_by_pos (lid:lident) (i:int) : term =
-    mkFreeV(mk_term_projector_name_by_pos lid i, Arrow(Term_sort, Term_sort))
+    mkFreeV <| mk_fv (mk_term_projector_name_by_pos lid i, Arrow(Term_sort, Term_sort))
 let mk_data_tester env l x = mk_tester (escape l.str) x
 (* ------------------------------------ *)
 (* New name generation *)
@@ -199,13 +199,13 @@ let add_bvar_binding bvb bvbs =
 let add_fvar_binding fvb fvbs =
   BU.psmap_add fvbs fvb.fvar_lid.str fvb
 
-let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
+let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV <| mk_fv (xsym, s)
 (* generate terms corresponding to a variable and record the mapping in the environment *)
 
 (* Bound term variables *)
 let gen_term_var (env:env_t) (x:bv) =
     let ysym = "@x"^(string_of_int env.depth) in
-    let y = mkFreeV(ysym, Term_sort) in
+    let y = mkFreeV <| mk_fv (ysym, Term_sort) in
     ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings; depth=env.depth + 1}
 let new_term_constant (env:env_t) (x:bv) =
     let ysym = varops.new_var x.ppname x.index in
@@ -293,8 +293,8 @@ let try_lookup_free_var env l =
           begin
           match t.tm with
           | App(_, [fuel]) ->
-            if (BU.starts_with (Term.fv_of_term fuel |> fst) "fuel")
-            then Some <| mk_ApplyTF(mkFreeV (fvb.smt_id, Term_sort)) fuel
+            if (BU.starts_with (Term.fv_of_term fuel |> fv_name) "fuel")
+            then Some <| mk_ApplyTF(mkFreeV <| mk_fv (fvb.smt_id, Term_sort)) fuel
             else Some t
           | _ -> Some t
           end
