@@ -5,7 +5,6 @@ include $(FSTAR_HOME)/ulib/gmake/fstar.mk
 
 # was: $(wildcard *.pos)
 POSTESTS=\
-  array.pos \
   disjoint.pos \
   point.pos \
   point-with-nesting.pos \
