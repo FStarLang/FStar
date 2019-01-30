@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module Bug606
-module T = FStar.Tactics
 
 ////////////////////////////////////////////////////////////////////////////////
 //minimalistic
@@ -75,7 +74,7 @@ let uint64_to_uint32 m =
 
 val uint64_to_uint32': m:UInt64.t{fits (UInt64.v m) n} -> Tot FStar.UInt32.t
 let uint64_to_uint32' m =
-  assert (uint_t n == x:int{size x n}) by (T.trefl());
-  assert (forall (p:uint_t n). p:(x:int{size x n}));
+  cut (uint_t n == x:int{size x n});
+  cut (forall (p:uint_t n). p:(x:int{size x n}));
   let m':uint_t n = UInt64.v m in // This fails, even if the above is provable
   UInt32.uint_to_t m'
