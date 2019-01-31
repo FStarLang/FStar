@@ -1635,7 +1635,11 @@ let (encode_free_var :
                                                  FStar_Parser_Const.unit_lid
                                            | uu____6099 -> false)
                                        in
-                                    (((lid.FStar_Ident.nsstr <> "Prims") &&
+                                    ((((FStar_Options.protect_top_level_axioms
+                                          ())
+                                         &&
+                                         (lid.FStar_Ident.nsstr <> "Prims"))
+                                        &&
                                         (let uu____6104 =
                                            FStar_All.pipe_right quals
                                              (FStar_List.contains
