@@ -488,7 +488,8 @@ let accumulated_option name value =
     mk_list (value :: prev_values)
 
 let reverse_accumulated_option name value =
-    mk_list ((lookup_opt name as_list') @ [value])
+    let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
+    mk_list (prev_values @ [value])
 
 let accumulate_string name post_processor value =
     set_option name (accumulated_option name (mk_string (post_processor value)))
