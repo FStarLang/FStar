@@ -1426,6 +1426,7 @@ let parse_settings ns : list<(list<string> * bool)> =
     in
     let parse_one_setting s =
         if s = "*" then ([], true)
+        else if s = "-*" then ([], false)
         else if FStar.Util.starts_with s "-"
         then let path = path_of_text (FStar.Util.substring_from s 1) in
              (path, false)
