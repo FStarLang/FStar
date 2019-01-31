@@ -1152,36 +1152,6 @@ let modifies_liveness_insensitive_region_weak
   ]]
 = modifies_liveness_insensitive_region loc_none l2 h h' x
 
-let modifies_liveness_insensitive_region_mreference_weak
-  (l2 : loc)
-  (h h' : HS.mem)
-  (#t: Type)
-  (#pre: Preorder.preorder t)
-  (x: HS.mreference t pre)
-  : Lemma (requires (modifies l2 h h' /\
-                     region_liveness_insensitive_locs `loc_includes` l2 /\
-		     HS.live_region h (HS.frameOf x)))
-          (ensures (HS.live_region h' (HS.frameOf x)))
-          [SMTPatOr [
-            [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h (HS.frameOf x))];
-            [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h' (HS.frameOf x))];
-          ]]
-  = modifies_liveness_insensitive_region_mreference loc_none l2 h h' x
-
-let modifies_liveness_insensitive_region_buffer_weak
-  (l2:loc)
-  (h h':HS.mem)
-  (#a:Type0) (#rrel #rel:srel a)
-  (x:mbuffer a rrel rel)
-  :Lemma (requires (modifies l2 h h' /\
-                    region_liveness_insensitive_locs `loc_includes` l2 /\
-		    HS.live_region h (frameOf x)))
-         (ensures  (HS.live_region h' (frameOf x)))
-         [SMTPatOr [
-           [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h (frameOf x))];
-           [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h' (frameOf x))];
-         ]]
-  = modifies_liveness_insensitive_region_buffer loc_none l2 h h' x
 
 /// Modifies clauses are transitive. This lemma is the most general
 /// one.
