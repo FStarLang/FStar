@@ -29,7 +29,7 @@ open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Encode
 open FStar.SMTEncoding.Util
-
+open FStar.SMTEncoding.QIReport
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
@@ -201,6 +201,7 @@ type query_settings = {
     query_hash:option<string>
 }
 
+let settings_to_info s = {query_info_name=s.query_name ; query_info_index=s.query_index ; query_info_range=s.query_range}
 
 //surround the query with fuel options and various diagnostics
 let with_fuel_and_diagnostics settings label_assumptions =
@@ -259,7 +260,7 @@ let detail_hint_replay settings z3result =
          | _failed ->
            let ask_z3 label_assumptions =
                let res = BU.mk_ref None in
-               Z3.ask settings.query_range
+               Z3.ask (settings_to_info settings)
                       (filter_assertions settings.query_env settings.query_hint)
                       settings.query_hash
                       settings.query_all_labels
@@ -303,7 +304,7 @@ let report_errors settings : unit =
          in
          let ask_z3 label_assumptions =
             let res = BU.mk_ref None in
-            Z3.ask  settings.query_range
+            Z3.ask  (settings_to_info settings)
                     (filter_facts_without_core settings.query_env)
                     settings.query_hash
                     settings.query_all_labels
@@ -477,7 +478,7 @@ let record_hint settings z3result =
                   unsat_core=core;
                   query_elapsed_time=0; //recording the elapsed_time prevents us from reaching a fixed point
                   hash=(match z3result.z3result_status with
-                        | UNSAT core -> z3result.z3result_query_hash
+                        | UNSAT _ -> z3result.z3result_query_hash
                         | _ -> None)
           }
       in
@@ -601,10 +602,9 @@ let ask_and_report_errors env all_labels prefix query suffix =
         @ half_max_fuel_max_ifuel
         @ max_fuel_max_ifuel
     in
-
     let check_one_config config (k:z3result -> unit) : unit =
           if Options.z3_refresh() then Z3.refresh();
-          Z3.ask config.query_range
+          Z3.ask (settings_to_info config)
                   (filter_assertions config.query_env config.query_hint)
                   config.query_hash
                   config.query_all_labels
@@ -613,7 +613,6 @@ let ask_and_report_errors env all_labels prefix query suffix =
                   k
                   (used_hint config)
     in
-
     let check_all_configs configs =
         let report errs = report_errors ({default_settings with query_errors=errs}) in
         fold_queries configs check_one_config process_result report

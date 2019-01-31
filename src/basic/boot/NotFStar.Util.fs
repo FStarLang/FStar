@@ -90,15 +90,17 @@ let quote_arg arg =
 let quote_args args =
   String.concat " " (List.map quote_arg args)
 
-let start_process (id:string) (prog:string) (args: list<string>) (cond:string -> bool) : proc =
+let start_process (id : string) (prog : string) (args : list<string>) (cond : string -> bool) (main : string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in
-    let driverOutput = new StringBuilder() in
+    let mainBuffer = new StringBuilder () in
+    let auxBuffer = new StringBuilder () in
+    let outputBuffer = new StringBuilder () in
     let killed = ref false in
     let proc = new Process() in
     incr ctr;
     let proc_wrapper = {m=signal;
-                        outbuf=new StringBuilder();
+                        outbuf=outputBuffer;
                         proc=proc;
                         killed=killed;
                         id=prog ^ ":" ^id^ "-" ^ (string_of_int !ctr)} in
@@ -110,70 +112,64 @@ let start_process (id:string) (prog:string) (args: list<string>) (cond:string ->
     startInfo.RedirectStandardError <- true;
     startInfo.RedirectStandardInput <- true;
     proc.EnableRaisingEvents <- true;
-    let handler _ (args:DataReceivedEventArgs) =
-        if !killed then ()
-        else
-            ignore <| driverOutput.Append(args.Data);
-            ignore <| driverOutput.Append("\n");
-            if null = args.Data
-                then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
-            if null = args.Data || cond args.Data
-            then
-                System.Threading.Monitor.Enter(signal);
-                ignore (proc_wrapper.outbuf.Clear());
-                ignore (proc_wrapper.outbuf.Append(driverOutput.ToString()));
-                ignore (driverOutput.Clear());
-                System.Threading.Monitor.Pulse(signal);
-                System.Threading.Monitor.Exit(signal);
+    let output_handler _ (args:DataReceivedEventArgs) =
+      let buffer : StringBuilder = if args.Data = null || main args.Data then mainBuffer else auxBuffer in
+      ignore <| buffer.Append (args.Data) ;
+      ignore <| buffer.Append ("\n") ;
+      if not !killed then
+        if null = args.Data then (Printf.printf "Unexpected output from %s\n%s\n\n" prog (buffer.ToString())) ;
+        if null = args.Data || cond args.Data then
+          System.Threading.Monitor.Enter(signal) ;
+          ignore <| outputBuffer.Clear () ;
+          ignore <| outputBuffer.Append (mainBuffer.ToString ()) ;
+          ignore <| mainBuffer.Clear () ;
+          System.Threading.Monitor.Pulse(signal) ;
+          System.Threading.Monitor.Exit(signal)
     in
-    proc.OutputDataReceived.AddHandler(DataReceivedEventHandler handler);
-    proc.ErrorDataReceived.AddHandler(DataReceivedEventHandler handler);
-    proc.Exited.AddHandler(
-            EventHandler(fun _ _ ->
-            if !killed then ()
-            else
-                System.Threading.Monitor.Enter(signal);
-                killed := true;
-                Printf.fprintf stdout "%s exited inadvertently\n%s\n" prog (driverOutput.ToString());
-                stdout.Flush();
-                System.Threading.Monitor.Exit(signal);
-                exit(1)));
+    let exit_handler _ _ =
+      if !killed then
+        System.Threading.Monitor.Enter(signal) ;
+        ignore <| outputBuffer.Clear () ;
+        ignore <| outputBuffer.Append (auxBuffer.ToString ()) ;
+        ignore <| auxBuffer.Clear () ;
+        System.Threading.Monitor.Exit(signal)
+      else
+        System.Threading.Monitor.Enter(signal);
+        killed := true;
+        Printf.fprintf stdout "%s exited inadvertently\n%s\n" prog ((mainBuffer.ToString ()) ^ "\n" ^ (auxBuffer.ToString ()));
+        stdout.Flush();
+        System.Threading.Monitor.Exit(signal);
+        exit(1)
+    in
+    proc.OutputDataReceived.AddHandler(DataReceivedEventHandler output_handler);
+    proc.ErrorDataReceived.AddHandler(DataReceivedEventHandler output_handler);
+    proc.Exited.AddHandler(EventHandler exit_handler);
     proc.StartInfo <- startInfo;
     proc.Start() |> ignore;
     proc.BeginOutputReadLine();
     proc.BeginErrorReadLine();
     all_procs := proc_wrapper::!all_procs;
-//        Printf.printf "Started process %s\n" (proc.id);
     proc_wrapper
+
 let tid () = System.Threading.Thread.CurrentThread.ManagedThreadId |> string_of_int
 
-let ask_process (p:proc) (input:string) (exn_handler: unit -> string): string =
-    System.Threading.Monitor.Enter(p.m);
-    //Printf.printf "Thread %s is asking process %s\n" (tid()) p.id;
-    //Printf.printf "Thread %s is writing to process %s ... responding?=%A\n" (tid()) p.id p.proc.Responding;
-    //Printf.fprintf stderr "Thread %s is writing to process %s:\n%s\n" (tid()) p.id input;
-//    if p.id = "z3.exe:bg"
-//    then begin
-//        Printf.printf "Thread BG break\n"
-//    end;
-    p.proc.StandardInput.WriteLine(input);
-//    Printf.printf "Thread %s is waiting for process to reply\n" (tid());
-//    flush(stdout);
-    ignore <| System.Threading.Monitor.Wait(p.m);
-//    Printf.printf "Thread %s is continuing with reply from process %s\n" (tid()) p.id;
-    let x = p.outbuf.ToString() in
-    System.Threading.Monitor.Exit(p.m);
+let ask_process (p:proc) (input:string) (exn_handler: unit -> string) : string =
+    System.Threading.Monitor.Enter(p.m) ;
+    p.proc.StandardInput.WriteLine(input) ;
+    ignore <| System.Threading.Monitor.Wait(p.m) ;
+    let x = p.outbuf.ToString () in
+    System.Threading.Monitor.Exit(p.m) ;
     x
 
-let kill_process (p:proc) =
-//    Printf.printf "Killing process %s\n" (p.id);
+let kill_process (p:proc) : string =
     p.killed := true;
     System.Threading.Monitor.Enter(p.m);
     p.proc.StandardInput.Close();
     System.Threading.Monitor.Exit(p.m);
-    p.proc.WaitForExit()
+    p.proc.WaitForExit();
+    p.outbuf.ToString ()
 
-let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then kill_process p)
+let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then ignore (kill_process p))
 
 let run_process (id: string) (prog: string) (args: list<string>) (stdin: option<string>) : string =
   let pinfo = new ProcessStartInfo(prog, quote_args args) in
@@ -455,6 +451,9 @@ let is_upper (c:char) = 'A' <= c && c <= 'Z'
 let contains (s1:string) (s2:string) = s1.IndexOf(s2) >= 0
 let substring_from (s:string) i = s.Substring(i)
 let substring (s:string) i j = s.Substring(i, j)
+let repeat (k : int) (s : string) : string =
+  let rec aux (n : int) (o : string) : string = if n > 0 then aux (n - 1) (o ^ s) else o in
+  aux k ""
 let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
 let replace_chars (s:string) (c:char) (by:string) = s.Replace(String.of_char c,by)
 let hashcode (s:string) = s.GetHashCode()
@@ -603,6 +602,17 @@ let choose_map f state s =
         | state, Some v -> (state, v :: acc) in
     let (state, rs) = List.fold fold (state, []) s in
     (state, List.rev rs)
+
+let collect_some l =
+  let rec aux i o =
+    match i with
+      | hd :: tl ->
+        match hd with
+          | Some x -> aux tl (x :: o)
+          | None -> o
+      | [] -> List.rev o
+  in
+    aux l []
 
 let for_all f l = List.forall f l
 let for_some f l = List.exists f l

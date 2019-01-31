@@ -92,12 +92,6 @@ type qop =
   | Forall
   | Exists
 
-(*
-    forall (x:Term). {:pattern HasType x Int}
-            HasType x int ==> P
-
-
-*)
 //de Bruijn representation of terms in locally nameless style
 type term' =
   | Integer    of string //unbounded mathematical integers
@@ -110,6 +104,7 @@ type term' =
                   * option<int>      //an optional weight; seldom used
                   * list<sort>       //sorts of each bound variable
                   * term             //body
+                  * Syntax.memo<string>   //qid
   | Let        of list<term> // bound terms
                 * term       // body
   | Labeled    of term * string * Range.range
@@ -205,6 +200,7 @@ type assumption = {
     assumption_name: string;
     assumption_fact_ids:list<fact_db_id>
 }
+
 type decl =
   | DefPrelude
   | DeclFun    of string * list<sort> * sort * caption
@@ -284,7 +280,7 @@ let rec freevars t = match t.tm with
   | BoundV _ -> []
   | FreeV fv -> [fv]
   | App(_, tms) -> List.collect freevars tms
-  | Quant(_, _, _, _, t)
+  | Quant(_, _, _, _, t, _)
   | Labeled(t, _, _)
   | LblPos(t, _) -> freevars t
   | Let (es, body) -> List.collect freevars (body::es)
@@ -310,7 +306,7 @@ let op_to_string = function
   | Not -> "not"
   | And -> "and"
   | Or  -> "or"
-  | Imp -> "implies"
+  | Imp -> "=>"
   | Iff -> "iff"
   | Eq  -> "="
   | LT  -> "<"
@@ -353,7 +349,7 @@ let rec hash_of_term' t = match t with
   | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
   | Labeled(t, r1, r2) -> hash_of_term t ^ r1 ^ (Range.string_of_range r2)
   | LblPos(t, r) -> "(! " ^hash_of_term t^ " :lblpos " ^r^ ")"
-  | Quant(qop, pats, wopt, sorts, body) ->
+  | Quant(qop, pats, wopt, sorts, body, _) ->
       "("
     ^ (qop_to_string qop)
     ^ " ("
@@ -368,6 +364,36 @@ let rec hash_of_term' t = match t with
   | Let (es, body) ->
     "(let (" ^ (List.map hash_of_term es |> String.concat " ") ^ ") " ^ hash_of_term body ^ ")"
 and hash_of_term tm = hash_of_term' tm.tm
+
+let rec assign_qids (d : decl) : unit =
+    let in_terms (nm : string) (t : term) : unit =
+        let set_qid (qid : Syntax.memo<string>) (n : int) : int =
+            match !qid with
+                | Some _ -> n
+                | None ->
+                    qid := Some (nm ^ "." ^ (string_of_int n)) ;
+                    n + 1
+        in                   
+        let rec aux (n : int) (tx : term) : int =
+            match tx.tm with
+                | App (o , tms) -> List.fold_left aux n tms
+                | Quant (q , _ , _ , _ , scp , qid) ->
+                    let nx : int = set_qid qid n in
+                    aux nx scp
+                | Let (tms , scp) ->
+                    let nx : int = List.fold_left aux n tms in
+                    aux nx scp
+                | Labeled (scp , _ , _)
+                | LblPos (scp, _) -> aux n scp
+                | _ -> n
+        in
+        aux 0 t |> ignore
+    in
+    match d with
+        | DefineFun (nm , _ , _ , tm , _) -> in_terms ("funqid_" ^ nm) tm
+        | Assume a -> in_terms a.assumption_name a.assumption_term
+        | Module (_ , ds) -> List.iter assign_qids ds
+        | _ -> ()
 
 let mkBoxFunctions s = (s, s ^ "_proj_0")
 let boxIntFun        = mkBoxFunctions "BoxInt"
@@ -543,7 +569,7 @@ let check_pattern_ok (t:term) : option<term> =
   | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
   | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
   | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
-  | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
+  | Quant (qop, l, _, _, t, _) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
   | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
 
 and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
@@ -551,7 +577,7 @@ and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> St
 and print_smt_term_list_list (l:list<list<term>>) :string =
     List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l
 
-let mkQuant r check_pats (qop, pats, wopt, vars, body) =
+let mkQuantQid r check_pats (qop, pats, wopt, vars, body, qid) =
     let all_pats_ok pats =
         if not check_pats then pats else
         match BU.find_map pats (fun x -> BU.find_map x check_pattern_ok) with
@@ -568,11 +594,15 @@ let mkQuant r check_pats (qop, pats, wopt, vars, body) =
     if List.length vars = 0 then body
     else match body.tm with
          | App(TrueOp, _) -> body
-         | _ -> mk (Quant(qop, all_pats_ok pats, wopt, vars, body)) r
+         | _ -> mk (Quant(qop, all_pats_ok pats, wopt, vars, body, qid)) r
+
+let mkQuant r check_pats (qop , pats , wopt , vars , body) =
+    mkQuantQid r check_pats (qop , pats , wopt , vars , body, BU.mk_ref None)
 
 let mkLet (es, body) r =
   if List.length es = 0 then body
   else mk (Let (es,body)) r
+
 
 (*****************************************************)
 (* abstracting free names; instantiating bound vars  *)
@@ -599,7 +629,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
         | App(op, tms) -> mkApp'(op, List.map (aux ix) tms) t.rng
         | Labeled(t, r1, r2) -> mk (Labeled(aux ix t, r1, r2)) t.rng
         | LblPos(t, r) -> mk (LblPos(aux ix t, r)) t.rng
-        | Quant(qop, pats, wopt, vars, body) ->
+        | Quant(qop, pats, wopt, vars, body, qid) ->
           let n = List.length vars in
           mkQuant t.rng false (qop, pats |> List.map (List.map (aux (ix + n))), wopt, vars, aux (ix + n) body)
         | Let (es, body) ->
@@ -609,7 +639,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
   in
   aux 0 t
 
-let inst tms t =
+let instQid b tms t =
   let tms = List.rev tms in //forall x y . t   ... y is an index 0 in t
   let n = List.length tms in //instantiate the first n BoundV's with tms, in order
   let rec aux shift t = match t.tm with
@@ -623,15 +653,18 @@ let inst tms t =
     | App(op, tms) -> mkApp'(op, List.map (aux shift) tms) t.rng
     | Labeled(t, r1, r2) -> mk (Labeled(aux shift t, r1, r2)) t.rng
     | LblPos(t, r) -> mk (LblPos(aux shift t, r)) t.rng
-    | Quant(qop, pats, wopt, vars, body) ->
+    | Quant(qop, pats, wopt, vars, body, qid) ->
       let m = List.length vars in
       let shift = shift + m in
-      mkQuant t.rng false (qop, pats |> List.map (List.map (aux shift)), wopt, vars, aux shift body)
+      let qid' = if b then qid else BU.mk_ref None in
+      mkQuantQid t.rng false (qop, pats |> List.map (List.map (aux shift)), wopt, vars, aux shift body, qid')
     | Let (es, body) ->
       let shift, es_rev = List.fold_left (fun (ix, es) e -> shift+1, aux shift e::es) (shift, []) es in
       mkLet (List.rev es_rev, aux shift body) t.rng
   in
   aux 0 t
+
+let inst tms t = instQid false tms t
 
 let subst (t:term) (fv:fv) (s:term) = inst [s] (abstr [fv] t)
 let mkQuant' r (qop, pats, wopt, vars, body) =
@@ -654,13 +687,13 @@ let mkLet' (bindings, body) r =
 let norng = Range.dummyRange
 let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, abstr vars tm, c)
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
-let fresh_token (tok_name, sort) id =
+let fresh_token rng (tok_name, sort) id =
     let a_name = "fresh_token_" ^tok_name in
     let a = {assumption_name=escape a_name;
              assumption_caption=Some "fresh token";
-             assumption_term=mkEq(mkInteger' id norng,
+             assumption_term=mkEq(mkInteger' id rng,
                                   mkApp(constr_id_of_sort sort,
-                                        [mkApp (tok_name,[]) norng]) norng) norng;
+                                        [mkApp (tok_name,[]) rng]) rng) rng;
              assumption_fact_ids=[]} in
     Assume a
 
@@ -765,14 +798,6 @@ let termToSmt
   : print_ranges:bool -> enclosing_name:string -> t:term -> string
   =
   fun print_ranges enclosing_name t ->
-      let next_qid =
-          let ctr = BU.mk_ref 0 in
-          fun depth ->
-            let n = !ctr in
-            BU.incr ctr;
-            if n = 0 then enclosing_name
-            else BU.format2 "%s.%s" enclosing_name (BU.string_of_int n)
-      in
       let remove_guard_free pats =
         pats |> List.map (fun ps ->
           ps |> List.map (fun tm ->
@@ -794,8 +819,11 @@ let termToSmt
         | App(op, tms) -> BU.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
         | Labeled(t, _, _) -> aux n names t
         | LblPos(t, s) -> BU.format2 "(! %s :lblpos %s)" (aux n names t) s
-        | Quant(qop, pats, wopt, sorts, body) ->
-          let qid = next_qid () in
+        | Quant(qop, pats, wopt, sorts, body, qid) ->
+          let qidstr = match !qid with
+            | None -> "no-qid"
+            | Some str -> str
+          in
           let names, binders, n = name_binders_inner None names n sorts in
           let binders = binders |> String.concat " " in
           let pats = remove_guard_free pats in
@@ -810,13 +838,15 @@ let termToSmt
                   format1 "%s" (aux n names p)) pats)))
               |> String.concat "\n"
           in
-          BU.format "(%s (%s)\n (! %s\n %s\n%s\n:qid %s))"
+          let res = BU.format "(%s (%s)\n (! %s\n %s\n%s\n:qid %s))"
                     [qop_to_string qop;
                      binders;
                      aux n names body;
                      weightToSmt wopt;
                      pats_str;
-                     qid]
+                     qidstr] in
+          if not (BU.is_some !qid) then print ("Missing QID:\n" ^ res ^ "\n\n") [] ;
+          res
 
         | Let (es, body) ->
           (* binders are reversed but according to the smt2 standard *)
@@ -852,9 +882,9 @@ let caption_to_string print_captions =
 
 
 let rec declToSmt' print_captions z3options decl =
+  assign_qids decl ;
   match decl with
-  | DefPrelude ->
-    mkPrelude z3options
+  | DefPrelude -> mkPrelude z3options
   | Module (s, decls) ->
     let res = List.map (declToSmt' print_captions z3options) decls |> String.concat "\n" in
     if Options.keep_query_captions()
@@ -878,7 +908,7 @@ let rec declToSmt' print_captions z3options decl =
       (strSort retsort)
   | DefineFun(f,arg_sorts,retsort,body,c) ->
     let names, binders = name_macro_binders arg_sorts in
-    let body = inst (List.map (fun x -> mkFreeV x norng) names) body in
+    let body = instQid true (List.map (fun x -> mkFreeV x norng) names) body in
     format5 "%s(define-fun %s (%s) %s\n %s)"
       (caption_to_string print_captions c)
       f

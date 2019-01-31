@@ -76,7 +76,11 @@ type proc =
      outc : out_channel;
      mutable killed : bool;
      stop_marker: (string -> bool) option;
-     id : string}
+     main_filter: string -> bool;
+     id : string;
+     aux_buffer : Buffer.t; }
+
+type read_result = EOF | SIGINT
 
 let all_procs : (proc list) ref = ref []
 
@@ -111,10 +115,11 @@ let spawn f =
 (* On the OCaml side it would make more sense to take stop_marker in
    ask_process, but the F# side isn't built that way *)
 let start_process'
-      (id: string) (prog: string) (args: string list)
-      (stop_marker: (string -> bool) option) : proc =
+      (id: string) (prog: string) (args: string list) (stop_marker: (string -> bool) option)
+      (main_filter: string -> bool): proc =
   let (stdout_r, stdout_w) = Unix.pipe () in
   let (stdin_r, stdin_w) = Unix.pipe () in
+  let aux_buffer = Buffer.create 16 in
   Unix.set_close_on_exec stdin_w;
   Unix.set_close_on_exec stdout_r;
   let pid = Unix.create_process prog (Array.of_list (prog :: args)) stdin_r stdout_w stdout_w in
@@ -124,21 +129,23 @@ let start_process'
                inc = Unix.in_channel_of_descr stdout_r;
                outc = Unix.out_channel_of_descr stdin_w;
                stop_marker = stop_marker;
+               main_filter = main_filter;
+               aux_buffer = aux_buffer;
                killed = false } in
   all_procs := proc :: !all_procs;
   proc
 
 let start_process
-      (id: string) (prog: string) (args: string list)
-      (stop_marker: string -> bool) : proc =
-  start_process' id prog args (Some stop_marker)
+      (id: string) (prog: string) (args: string list) (stop_marker: string -> bool)
+      (main_filter: string -> bool): proc =
+  start_process' id prog args (Some stop_marker) main_filter
 
 let rec waitpid_ignore_signals pid =
   try ignore (Unix.waitpid [] pid)
   with Unix.Unix_error (Unix.EINTR, _, _) ->
     waitpid_ignore_signals pid
 
-let kill_process (p: proc) =
+let kill_process_for_good (p: proc) =
   if not p.killed then begin
       (* Close the fds directly: close_in and close_out both call `flush`,
          potentially forcing us to wait until p starts reading again. They
@@ -157,11 +164,28 @@ let kill_process (p: proc) =
     end
 
 let kill_all () =
-  BatList.iter kill_process !all_procs
+  BatList.iter kill_process_for_good !all_procs
 
 let process_read_all_output (p: proc) =
   (* Pass cleanup:false because kill_process closes both fds already. *)
   BatIO.read_all (BatIO.input_channel ~autoclose:true ~cleanup:false p.inc)
+
+let read_and_signal (p : proc) (buf : Buffer.t) (stop : bool)
+        (filter : bool) (result : (read_result option) ref) (signal : unit -> unit) : unit =
+    let stop_marker : string -> bool = if stop
+      then BatOption.default (fun s -> false) p.stop_marker
+      else (fun s -> false)
+    in
+    let filter_main : string -> bool = if filter then p.main_filter else (fun s -> true) in
+    let rec loop () : unit =
+        let line : string = BatString.trim (input_line p.inc) in
+        let buffer : Buffer.t = if filter_main line then buf else p.aux_buffer in
+        if not (stop_marker line) then (Buffer.add_string buffer (line ^ "\n"); loop ()) else ()
+    in
+    (try loop () with
+      | SigInt -> result := Some SIGINT
+      | End_of_file ->  result := Some EOF) ;
+    signal ()
 
 (** Feed `stdin` to `p`, and call `reader_fn` in a separate thread to read the
     response.
@@ -216,7 +240,7 @@ let process_read_async p stdin reader_fn =
       Thread.join t) ()
 
 let run_process (id: string) (prog: string) (args: string list) (stdin: string option): string =
-  let p = start_process' id prog args None in
+  let p = start_process' id prog args None (fun s -> true) in
   (match stdin with
    | None -> ()
    | Some str -> output_string p.outc str);
@@ -224,34 +248,47 @@ let run_process (id: string) (prog: string) (args: string list) (stdin: string o
   close_out p.outc;
   process_read_all_output p
 
-type read_result = EOF | SIGINT
-
 let ask_process
       (p: proc) (stdin: string)
       (exn_handler: unit -> string): string =
   let result = ref None in
   let out = Buffer.create 16 in
-  let stop_marker = BatOption.default (fun s -> false) p.stop_marker in
-
-  let reader_fn signal_fn =
-    let rec loop p out =
-      let line = BatString.trim (input_line p.inc) in (* raises EOF *)
-      if not (stop_marker line) then
-        (Buffer.add_string out (line ^ "\n"); loop p out) in
-    (try loop p out
-     with | SigInt -> result := Some SIGINT
-          | End_of_file -> result := Some EOF);
-    signal_fn () in
-
   try
-    process_read_async p (Some stdin) reader_fn;
+    process_read_async p (Some stdin) (read_and_signal p out true true result) ;
     (match !result with
-     | Some EOF -> kill_process p; Buffer.add_string out (exn_handler ())
+     | Some EOF -> kill_process_for_good p; Buffer.add_string out (exn_handler ())
      | Some SIGINT -> raise SigInt
      | None -> ());
     Buffer.contents out
   with e -> (* Ensure that reader_fn gets an EOF and exits *)
-    kill_process p; raise e
+    (kill_process_for_good p;
+    raise e)
+
+let kill_process (p : proc) : string =
+  if not p.killed then begin
+      let result = ref None in
+      let discard = Buffer.create 16 in
+      Unix.close (Unix.descr_of_out_channel p.outc);
+      (* ARP : commenting this out - kill closes the channels, and I need them open to read the final QI output *)
+      (* (try Unix.kill p.pid Sys.sigkill
+       with Unix.Unix_error (Unix.ESRCH, _, _) -> ()); *)
+      (* Avoid zombie processes (Unix.close_process does the same thing. *)
+      waitpid_ignore_signals p.pid;
+      let out = (try
+          process_read_async p None (read_and_signal p discard false true result) ;
+          (match !result with
+          | None
+          | Some EOF -> ()
+          | Some SIGINT -> raise SigInt);
+          Buffer.contents p.aux_buffer
+        with e -> raise e ) in
+      (* Close the fds directly: close_in and close_out both call `flush`,
+         potentially forcing us to wait until p starts reading again *)
+      Unix.close (Unix.descr_of_in_channel p.inc);
+      p.killed <- true ;
+      out
+    end
+  else ""
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 let is_path_absolute path_str =
@@ -518,6 +555,9 @@ let is_upper c = 65 <= c && c <= 90
 let contains (s1:string) (s2:string) = BatString.exists s1 s2
 let substring_from s index = BatString.tail s (Z.to_int index)
 let substring s i j = BatString.sub s (Z.to_int i) (Z.to_int j)
+let repeat (k : Z.t) (s : string) : string =
+  let rec aux (n : int) (o : string) : string = if n > 0 then aux (n - 1) (o ^ s) else o in
+  aux (Z.to_int k) ""
 let replace_char (s:string) c1 c2 =
   let c1, c2 = BatUChar.chr c1, BatUChar.chr c2 in
   BatUTF8.map (fun x -> if x = c1 then c2 else x) s
@@ -662,6 +702,17 @@ let choose_map f state s =
     | state, Some v -> (state, v :: acc) in
   let (state, rs) = BatList.fold_left fold (state, []) s in
   (state, BatList.rev rs)
+
+let collect_some l =
+  let rec aux i o =
+    match i with
+      | hd :: tl ->
+        (match hd with
+          | Some x -> aux tl (x :: o)
+          | None -> o)
+      | [] -> BatList.rev o
+  in
+    aux l []
 
 let for_all f l = BatList.for_all f l
 let for_some f l = BatList.exists f l

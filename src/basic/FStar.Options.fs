@@ -230,6 +230,7 @@ let defaults =
       ("prn"                          , Bool false);
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
+      ("report_qi"                    , Bool false);
       ("reuse_hint_for"               , Unset);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
@@ -374,6 +375,7 @@ let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
+let get_report_qi               ()      = lookup_opt "report_qi"                as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
@@ -903,6 +905,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "record_hints",
         Const (Bool true),
         "Record a database of hints for efficient proof replay");
+
+       ( noshort,
+        "report_qi",
+        Const (mk_bool true),
+        "Generates a quantifier instantiation report every time Z3 is closed");
 
        ( noshort,
         "reuse_hint_for",
@@ -1510,6 +1517,7 @@ let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
+let report_qi                    () = get_report_qi                   ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()

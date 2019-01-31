@@ -82,7 +82,7 @@ type term' =
   | BoundV     of int
   | FreeV      of fv
   | App        of op  * list<term>
-  | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term
+  | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term * Syntax.memo<string>
   | Let        of list<term> * term
   | Labeled    of term * string * Range.range
   | LblPos     of term * string
@@ -248,13 +248,14 @@ val mkExists: Range.range -> (list<list<pat>> * fvs * term) -> term
 val mkLet: (list<term> * term) -> Range.range -> term
 val mkLet': (list<(fv * term)> * term) -> Range.range -> term
 
-val fresh_token: (string * sort) -> int -> decl
+val fresh_token: Range.range -> (string * sort) -> int -> decl
 val fresh_constructor : Range.range -> (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: Range.range -> constructor_t -> list<decl>
 val mkBvConstructor: int -> list<decl>
 val declToSmt: string -> decl -> string
 val declToSmt_no_caps: string -> decl -> string
+val mkPrelude : string -> string
 
 val mk_Term_app : term -> term -> Range.range -> term
 val mk_Term_uvar: int -> Range.range -> term
