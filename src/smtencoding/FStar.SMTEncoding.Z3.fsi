@@ -40,7 +40,8 @@ type z3result = {
       z3result_status      : z3status;
       z3result_time        : int;
       z3result_statistics  : z3statistics;
-      z3result_query_hash  : option<string>
+      z3result_query_hash  : option<string>;
+      z3result_log_file    : option<string>
 }
 type cb = z3result -> unit
 val giveZ3 : list<decl> -> unit
@@ -56,7 +57,6 @@ val ask: r:Range.range
 
 val refresh: unit -> unit
 val finish: unit -> unit
-val at_log_file : unit -> string
 val mk_fresh_scope: unit -> scope_t
 val init : unit -> unit
 val push : msg:string -> unit
@@ -67,8 +67,7 @@ val rollback : msg:string -> option<int> -> unit
 type query_log = {
     get_module_name: unit -> string;
     set_module_name: string -> unit;
-    write_to_log:    bool -> string -> unit;
-    close_log:       unit -> unit;
-    log_file_name:   unit -> string
+    write_to_log:    bool -> string -> string;
+    close_log:       unit -> unit
 }
 val query_logging : query_log

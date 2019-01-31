@@ -320,7 +320,12 @@ let query_info settings z3result =
         let tag = match z3result.z3result_status with
          | UNSAT _ -> "succeeded"
          | _ -> "failed {reason-unknown=" ^ status_string ^ "}"in
-        let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file() ^ ")" in
+        let at_log_file =
+            match z3result.z3result_log_file with
+            | None -> ""
+            | Some s -> "@"^s
+        in
+        let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file ^ ")" in
         let used_hint_tag = if used_hint settings then " (with hint)" else "" in
         let stats =
             if Options.print_z3_statistics() then

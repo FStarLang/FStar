@@ -155,81 +155,78 @@ type bgproc = {
 type query_log = {
     get_module_name: unit -> string;
     set_module_name: string -> unit;
-    write_to_log:    bool -> string -> unit;
-    close_log:       unit -> unit;
-    log_file_name:   unit -> string
+    write_to_log:    bool -> string -> string;
+    close_log:       unit -> unit
 }
 
 
 let query_logging =
     let query_number = BU.mk_ref 0 in
-    let log_file_opt : ref<option<file_handle>> = BU.mk_ref None in
+    let log_file_opt : ref<option<(file_handle * string)>> = BU.mk_ref None in
     let used_file_names : ref<list<(string * int)>> = BU.mk_ref [] in
     let current_module_name : ref<option<string>> = BU.mk_ref None in
     let current_file_name : ref<option<string>> = BU.mk_ref None in
     let set_module_name n = current_module_name := Some n in
-    let get_module_name () = match !current_module_name with
-        | None -> failwith "Module name not set"
-        | Some n -> n in
-    let new_log_file () =
+    let get_module_name () =
         match !current_module_name with
-        | None -> failwith "current module not set"
-        | Some n ->
-          let file_name =
-              match List.tryFind (fun (m, _) -> n=m) !used_file_names with
-              | None ->
-                used_file_names := (n, 0)::!used_file_names;
-                n
-              | Some (_, k) ->
-                used_file_names := (n, k+1)::!used_file_names;
-                BU.format2 "%s-%s" n (BU.string_of_int (k+1)) in
-          let file_name = BU.format1 "queries-%s.smt2" file_name in
-          current_file_name := Some file_name;
-          let fh = BU.open_file_for_writing file_name in
-          log_file_opt := Some fh;
-          fh in
-    let get_log_file () = match !log_file_opt with
-        | None -> new_log_file()
-        | Some fh -> fh in
-    let append_to_log str = BU.append_to_file (get_log_file()) str in
-    let write_to_new_log newdir str =
-      let qnum = !query_number in
-      query_number := !query_number + 1;
-      let file_name = BU.format1 "query-%s.smt2" (BU.string_of_int qnum) in
-      let file_name =
-        if not newdir then file_name
-        else
-          let dir_name =
-            match !current_file_name with
+        | None -> failwith "Module name not set"
+        | Some n -> n
+    in
+    let next_file_name () =
+        let n = get_module_name() in
+        let file_name =
+            match List.tryFind (fun (m, _) -> n=m) !used_file_names with
             | None ->
-              let dir_name =
-                match !current_module_name with
-                | None -> failwith "current module not set"
-                | Some n -> BU.format1 "queries-%s" n in
-              BU.mkdir true dir_name;
-              current_file_name := Some dir_name;
-              dir_name
-            | Some n -> n
+              used_file_names := (n, 0)::!used_file_names;
+              n
+            | Some (_, k) ->
+              used_file_names := (n, k+1)::!used_file_names;
+              BU.format2 "%s-%s" n (BU.string_of_int (k+1))
         in
-        BU.concat_dir_filename dir_name file_name
-      in
-      write_file file_name str in
+        BU.format1 "queries-%s.smt2" file_name
+    in
+    let new_log_file () =
+        let file_name = next_file_name() in
+        current_file_name := Some file_name;
+        let fh = BU.open_file_for_writing file_name in
+        log_file_opt := Some (fh, file_name);
+        fh, file_name
+    in
+    let get_log_file () =
+        match !log_file_opt with
+        | None -> new_log_file()
+        | Some fh -> fh
+    in
+    let append_to_log str =
+        let f, nm = get_log_file () in
+        BU.append_to_file f str;
+        nm
+    in
+    let write_to_new_log str =
+      let file_name = next_file_name() in
+      write_file file_name str;
+      file_name
+    in
     let write_to_log fresh str =
       if fresh || (Options.n_cores() > 1)
-      then write_to_new_log (Options.n_cores()>1) str
+      then write_to_new_log str
       else append_to_log str
-      in
-    let close_log () = match !log_file_opt with
+    in
+    let close_log () =
+        match !log_file_opt with
         | None -> ()
-        | Some fh -> BU.close_file fh; log_file_opt := None in
-    let log_file_name () = match !current_file_name with
+        | Some (fh, _) ->
+          BU.close_file fh; log_file_opt := None
+    in
+    let log_file_name () =
+        match !current_file_name with
         | None -> failwith "no log file"
-        | Some n -> n in
+        | Some n -> n
+    in
      {set_module_name=set_module_name;
       get_module_name=get_module_name;
       write_to_log=write_to_log;
-      close_log=close_log;
-      log_file_name=log_file_name}
+      close_log=close_log}
 
 let bg_z3_proc =
     let the_z3proc = BU.mk_ref None in
@@ -255,11 +252,6 @@ let bg_z3_proc =
 
 let set_bg_z3_proc bgp =
     bg_z3_proc := bgp
-
-let at_log_file () =
-  if Options.log_queries()
-  then "@" ^ (query_logging.log_file_name())
-  else ""
 
 type smt_output_section = list<string>
 type smt_output = {
@@ -417,7 +409,8 @@ type z3result = {
       z3result_status      : z3status;
       z3result_time        : int;
       z3result_statistics  : z3statistics;
-      z3result_query_hash  : option<string>
+      z3result_query_hash  : option<string>;
+      z3result_log_file    : option<string>
 }
 
 type z3job = job_t<z3result>
@@ -426,7 +419,7 @@ let job_queue : ref<list<z3job>> = BU.mk_ref []
 
 let pending_jobs = BU.mk_ref 0
 
-let z3_job (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
+let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
   let status, statistics =
     try doZ3Exe r fresh input label_messages
@@ -438,7 +431,8 @@ let z3_job (r:Range.range) fresh (label_messages:error_labels) input qhash () : 
   { z3result_status     = status;
     z3result_time       = elapsed_time;
     z3result_statistics = statistics;
-    z3result_query_hash = qhash }
+    z3result_query_hash = qhash;
+    z3result_log_file   = log_file }
 
 let running = BU.mk_ref false
 
@@ -581,12 +575,17 @@ let mk_input fresh theory =
         else
             List.map (declToSmt options) theory |> String.concat "\n", None
     in
-    if Options.log_queries() then query_logging.write_to_log fresh r ;
-    r, hash
+    let log_file_name =
+        if Options.log_queries()
+        then Some (query_logging.write_to_log fresh r)
+        else None
+    in
+    r, hash, log_file_name
 
 type cb = z3result -> unit
 
 let cache_hit
+    (log_file:option<string>)
     (cache:option<string>)
     (qhash:option<string>)
     (cb:cb) =
@@ -599,7 +598,8 @@ let cache_hit
               z3result_status = UNSAT None;
               z3result_time = 0;
               z3result_statistics = stats;
-              z3result_query_hash = qhash
+              z3result_query_hash = qhash;
+              z3result_log_file = log_file
             } in
             cb result;
             true
@@ -625,9 +625,9 @@ let ask_1_core
     in
     let theory = theory @[Push]@qry@[Pop] in
     let theory, _used_unsat_core = filter_theory theory in
-    let input, qhash = mk_input fresh theory in
-    if not (cache_hit cache qhash cb) then
-        run_job ({job=z3_job r fresh label_messages input qhash; callback=cb})
+    let input, qhash, log_file_name = mk_input fresh theory in
+    if not (cache_hit log_file_name cache qhash cb) then
+        run_job ({job=z3_job log_file_name r fresh label_messages input qhash; callback=cb})
 
 let ask_n_cores
     (r:Range.range)
@@ -643,9 +643,9 @@ let ask_n_cores
                     (List.rev !fresh_scope)) in
     let theory = theory@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
-    let input, qhash = mk_input false theory in
-    if not (cache_hit cache qhash cb) then
-        enqueue ({job=z3_job r true label_messages input qhash; callback=cb})
+    let input, qhash, log_file_name = mk_input false theory in
+    if not (cache_hit log_file_name cache qhash cb) then
+        enqueue ({job=z3_job log_file_name r true label_messages input qhash; callback=cb})
 
 let ask
     (r:Range.range)
