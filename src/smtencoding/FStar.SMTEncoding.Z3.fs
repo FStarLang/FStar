@@ -538,10 +538,39 @@ let giveZ3 decls =
 let refresh () =
     if (Options.n_cores() < 2) then
         (!bg_z3_proc).refresh();
-        bg_scope := flatten_fresh_scope ()
+    bg_scope := flatten_fresh_scope ()
+
+let context_profile (theory:decls_t) =
+    let modules, total_decls =
+        List.fold_left (fun (out, _total) d ->
+            match d with
+            | Module(name, decls) ->
+              let decls =
+                List.filter
+                    (function Assume _ -> true
+                             | _ -> false)
+                    decls in
+              let n = List.length decls in
+              (name, n)::out, n + _total
+            | _ -> out, _total)
+            ([], 0)
+            theory
+    in
+    let modules = List.sortWith (fun (_, n) (_, m) -> m - n) modules in
+    if modules <> []
+    then BU.print1 "Query Stats: context_profile with %s assertions\n"
+                  (BU.string_of_int total_decls);
+    List.iter (fun (m, n) ->
+        if n <> 0 then
+            BU.print2 "Query Stats: %s produced %s SMT decls\n"
+                        m
+                        (string_of_int n))
+               modules
+
 
 let mk_input fresh theory =
     let options = !z3_options in
+    if Options.query_stats() then context_profile theory;
     let r, hash =
         if Options.record_hints()
         || (Options.use_hints() && Options.use_hint_hashes()) then
