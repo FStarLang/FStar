@@ -384,6 +384,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
 
                     | _ -> false
                 in
+                Options.protect_top_level_axioms() &&
                 //Do not thunk ...
                 lid.nsstr <> "Prims"  //things in prims
                 && not (quals |> List.contains Logic) //logic qualified terms
