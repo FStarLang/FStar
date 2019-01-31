@@ -29,6 +29,7 @@ open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Encode
 open FStar.SMTEncoding.Util
+
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
@@ -112,7 +113,7 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
         || Option.isSome (BU.smap_try_find include_assumption_names a.assumption_name)
     in
     //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
-    //AR: reversing the list is also crucial for correctness because of RetainAssumption 
+    //AR: reversing the list is also crucial for correctness because of RetainAssumption
     //    specifically (RetainAssumption a) comes after (a) in the theory list
     //    as a result, it is crucial that we consider the (RetainAssumption a) before we encounter (a)
     let theory_rev = List.rev theory in  //List.rev is already the tail recursive version of rev
@@ -216,9 +217,9 @@ let with_fuel_and_diagnostics settings label_assumptions =
     @label_assumptions         //the sub-goals that are currently disabled
     @[  Term.SetOption ("rlimit", string_of_int rlimit); //the rlimit setting
         Term.CheckSat; //go Z3!
-        Term.GetReasonUnknown //explain why it failed
+        Term.GetReasonUnknown; //explain why it failed
+        Term.GetUnsatCore; //for proof profiling, recording hints etc
     ]
-    @(if Options.record_hints()        then [Term.GetUnsatCore]  else []) //unsat core is the recorded hint
     @(if Options.print_z3_statistics() then [Term.GetStatistics] else []) //stats
     @settings.query_suffix //recover error labels and a final "Done!" message
 
@@ -310,14 +311,126 @@ let report_errors settings : unit =
             in
          detail_errors false settings.query_env settings.query_all_labels ask_z3
 
+
 let query_info settings z3result =
+    let process_unsat_core (core:unsat_core) =
+        (* A generic accumulator of unique strings,
+           extracted in sorted order *)
+        let accumulator () =
+            let r : ref<list<string>> = BU.mk_ref [] in
+            let add, get =
+                let module_names = BU.mk_ref [] in
+                (fun m ->
+                    let ms = !module_names in
+                    if List.contains m ms then ()
+                    else module_names := m :: ms),
+                (fun () ->
+                    !module_names |> BU.sort_with String.compare)
+            in
+            add, get
+       in
+       (* Accumulator for module names *)
+       let add_module_name, get_module_names =
+           accumulator()
+       in
+       (* Accumulator for discarded names *)
+       let add_discarded_name, get_discarded_names =
+           accumulator()
+       in
+       (* SMT Axioms are named using an ad hoc naming convention
+          that includes the F* source name within it.
+
+          This function reversed the naming convention to extract
+          the source name of the F* entity from `s`, an axiom name
+          mentioned in an unsat core (but also in smt.qi.profile, etc.)
+
+          The basic structure of the name is
+
+            <lowercase_prefix><An F* lid, i.e., a dot-separated name beginning with upper case letter><some reserved suffix>
+
+          So, the code below strips off the <lowercase_prefix>
+          and any of the reserved suffixes.
+
+          What's left is an F* name, which can be decomposed as usual
+          into a module name + a top-level identifier
+       *)
+       let parse_axiom_name (s:string) =
+            let chars = String.list_of_string s in
+            let first_upper_index =
+                BU.try_find_index BU.is_upper chars
+            in
+            match first_upper_index with
+            | None ->
+              //Has no embedded F* name (discard it, and record it in the discarded set)
+              add_discarded_name s;
+              []
+            | Some first_upper_index ->
+                let name_and_suffix = BU.substring_from s first_upper_index in
+                let components = String.split ['.'] name_and_suffix in
+                let excluded_suffixes =
+                    [ "fuel_instrumented";
+                      "_pretyping";
+                      "_Tm_refine";
+                      "_Tm_abs";
+                      "@";
+                      "_interpretation_Tm_arrow";
+                      "MaxFuel_assumption";
+                      "MaxIFuel_assumption";
+                    ]
+                in
+                let exclude_suffix s =
+                    let s = BU.trim_string s in
+                    let sopt =
+                        BU.find_map
+                            excluded_suffixes
+                            (fun sfx ->
+                                if BU.contains s sfx
+                                then Some (List.hd (BU.split s sfx))
+                                else None)
+                    in
+                    match sopt with
+                    | None -> if s = "" then [] else [s]
+                    | Some s -> if s = "" then [] else [s]
+                in
+                let components =
+                    match components with
+                    | [] -> []
+                    | _ ->
+                      let module_name, last = BU.prefix components in
+                      let components = module_name @ exclude_suffix last in
+                      let _ =
+                          match components with
+                          | []
+                          | [_] -> () //no module name
+                          | _ ->
+                            add_module_name (String.concat "." module_name)
+                      in
+                      components
+                in
+                if components = []
+                then (add_discarded_name s; [])
+                else [ components |> String.concat "."]
+        in
+        match core with
+        | None ->
+           BU.print_string "no unsat core\n"
+        | Some core ->
+           let core = List.collect parse_axiom_name core in
+           BU.print1 "Query Stats: Modules relevant to this proof:\nQuery Stats:\t%s\n"
+                     (get_module_names() |> String.concat "\nQuery Stats:\t");
+           BU.print1 "Query Stats (Detail 1): Specifically:\nQuery Stats (Detail 1):\t%s\n"
+                     (String.concat "\nQuery Stats (Detail 1):\t" core);
+           BU.print1 "Query Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
+                     (get_discarded_names() |> String.concat ", ")
+    in
     if Options.hint_info()
     || Options.print_z3_statistics()
     then begin
         let status_string, errs = Z3.status_string_and_errors z3result.z3result_status in
-        let tag = match z3result.z3result_status with
-         | UNSAT _ -> "succeeded"
-         | _ -> "failed {reason-unknown=" ^ status_string ^ "}"in
+        let tag, core = match z3result.z3result_status with
+         | UNSAT core -> "succeeded", core
+         | _ -> "failed {reason-unknown=" ^ status_string ^ "}", None
+        in
         let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file() ^ ")" in
         let used_hint_tag = if used_hint settings then " (with hint)" else "" in
         let stats =
@@ -326,7 +439,7 @@ let query_info settings z3result =
                 let str = smap_fold z3result.z3result_statistics f "statistics={" in
                     (substring str 0 ((String.length str) - 1)) ^ "}"
             else "" in
-        BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
+        BU.print "Query Stats: %s\t (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s\n"
              [  range;
                 settings.query_name;
                 BU.string_of_int settings.query_index;
@@ -335,8 +448,10 @@ let query_info settings z3result =
                 BU.string_of_int z3result.z3result_time;
                 BU.string_of_int settings.query_fuel;
                 BU.string_of_int settings.query_ifuel;
-                BU.string_of_int settings.query_rlimit;
-                stats ];
+                BU.string_of_int settings.query_rlimit
+             ];
+        BU.print1 "Query Stats (Detail Z3): %s\n" stats;
+        process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
             let tag = if used_hint settings then "(Hint-replay failed): " else "" in
             FStar.Errors.log_issue range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
