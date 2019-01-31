@@ -1,4 +1,6 @@
 HINTS_ENABLED?=--use_hints --use_hint_hashes
+PROTECT_TOP_LEVEL_AXIOMS?=--protect_top_level_axioms true
+OTHERFLAGS+=$(PROTECT_TOP_LEVEL_AXIOMS)
 
 ifdef Z3
 OTHERFLAGS+=--smt $(Z3)

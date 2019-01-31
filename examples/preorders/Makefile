@@ -5,6 +5,8 @@ all: uall
 
 uall: $(patsubst %.fst,%.uver,$(wildcard *.fst))
 
+Protocol.uver: PROTECT_TOP_LEVEL_AXIOMS=--protect_top_level_axioms false
+
 # special casing this file since there is a weird interaction
 # between --verify_module and --use_hints
 MRefHeap.uver : MRefHeap.fst

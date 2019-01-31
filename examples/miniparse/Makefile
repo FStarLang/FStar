@@ -16,6 +16,7 @@ include ../Makefile.common
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
 
 # TODO: use separate compilation here
+$(CACHE_DIR)/MiniParse.Impl.Int.fst.checked: PROTECT_TOP_LEVEL_AXIOMS=--protect_top_level_axioms false
 
 ifdef KREMLIN_HOME
 miniparse: $(CACHE_DIR)
