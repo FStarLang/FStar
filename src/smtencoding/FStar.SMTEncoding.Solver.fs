@@ -220,7 +220,8 @@ let with_fuel_and_diagnostics settings label_assumptions =
         Term.GetReasonUnknown; //explain why it failed
         Term.GetUnsatCore; //for proof profiling, recording hints etc
     ]
-    @(if Options.print_z3_statistics() then [Term.GetStatistics] else []) //stats
+    @(if (Options.print_z3_statistics() ||
+          Options.query_stats ()) then [Term.GetStatistics] else []) //stats
     @settings.query_suffix //recover error labels and a final "Done!" message
 
 
@@ -416,15 +417,15 @@ let query_info settings z3result =
            BU.print_string "no unsat core\n"
         | Some core ->
            let core = List.collect parse_axiom_name core in
-           BU.print1 "Query Stats: Modules relevant to this proof:\nQuery Stats:\t%s\n"
-                     (get_module_names() |> String.concat "\nQuery Stats:\t");
-           BU.print1 "Query Stats (Detail 1): Specifically:\nQuery Stats (Detail 1):\t%s\n"
-                     (String.concat "\nQuery Stats (Detail 1):\t" core);
-           BU.print1 "Query Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
+           BU.print1 "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
+                     (get_module_names() |> String.concat "\nZ3 Proof Stats:\t");
+           BU.print1 "Z3 Proof Stats (Detail 1): Specifically:\nZ3 Proof Stats (Detail 1):\t%s\n"
+                     (String.concat "\nZ3 Proof Stats (Detail 1):\t" core);
+           BU.print1 "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
                      (get_discarded_names() |> String.concat ", ")
     in
     if Options.hint_info()
-    || Options.print_z3_statistics()
+    || Options.query_stats()
     then begin
         let status_string, errs = Z3.status_string_and_errors z3result.z3result_status in
         let tag, core = match z3result.z3result_status with
@@ -434,12 +435,12 @@ let query_info settings z3result =
         let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file() ^ ")" in
         let used_hint_tag = if used_hint settings then " (with hint)" else "" in
         let stats =
-            if Options.print_z3_statistics() then
+            if Options.query_stats() then
                 let f k v a = a ^ k ^ "=" ^ v ^ " " in
                 let str = smap_fold z3result.z3result_statistics f "statistics={" in
                     (substring str 0 ((String.length str) - 1)) ^ "}"
             else "" in
-        BU.print "Query Stats: %s\t (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s\n"
+        BU.print "%s\tQuery Stats: (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
              [  range;
                 settings.query_name;
                 BU.string_of_int settings.query_index;
@@ -448,10 +449,10 @@ let query_info settings z3result =
                 BU.string_of_int z3result.z3result_time;
                 BU.string_of_int settings.query_fuel;
                 BU.string_of_int settings.query_ifuel;
-                BU.string_of_int settings.query_rlimit
+                BU.string_of_int settings.query_rlimit;
+                stats
              ];
-        BU.print1 "Query Stats (Detail Z3): %s\n" stats;
-        process_unsat_core core;
+        if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
             let tag = if used_hint settings then "(Hint-replay failed): " else "" in
             FStar.Errors.log_issue range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
