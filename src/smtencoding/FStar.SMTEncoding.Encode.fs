@@ -679,7 +679,14 @@ let encode_top_level_let :
                                 (Print.term_to_string body);
                 (* Encode binders *)
                 let vars, _guards, env', binder_decls, _ = encode_binders None binders env' in
-                let app = maybe_curry_fvb (FStar.Syntax.Util.range_of_lbname lbn) fvb (List.map mkFreeV vars) in
+                let vars, app =
+                    if fvb.fvb_thunked && vars = []
+                    then let dummy_var = mk_fv ("@dummy", dummy_sort) in
+                         let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
+                         let app = Term.mkApp (fvb.smt_id, [dummy_tm]) (FStar.Syntax.Util.range_of_lbname lbn) in
+                         [dummy_var], app
+                    else vars, maybe_curry_fvb (FStar.Syntax.Util.range_of_lbname lbn) fvb (List.map mkFreeV vars)
+                in
                 let pat, app, (body, decls2) =
                   let is_logical =
                     match (SS.compress t_body).n with
