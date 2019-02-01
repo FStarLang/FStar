@@ -262,7 +262,7 @@ function build_fstar() {
             } &
 
             {
-                VALEFLAGS="--MIN_TEST" make -C hacl-star -j $threads vale.build -k ||
+                VALEFLAGS="--MIN-TEST" make -C hacl-star -j $threads vale.build -k ||
                     {
                         echo "Error - min-test (Vale)"
                         echo " - min-test (Vale)" >>$ORANGE_FILE
