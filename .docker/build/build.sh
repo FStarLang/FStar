@@ -235,8 +235,8 @@ function build_fstar() {
         else
             export_home FSTAR "$(pwd)"
 
-            fetch_vale &
             fetch_hacl &
+            fetch_vale &
             fetch_and_make_kremlin &
             fetch_mitls &
             fetch_and_make_qd &
