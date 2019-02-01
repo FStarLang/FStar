@@ -262,23 +262,11 @@ function build_fstar() {
             } &
 
             {
-                has_error="false"
-                cd hacl-star/vale
-                if [[ "$OS" == "Windows_NT" ]]; then
-                    ## This hack for determining the success of a vale run is needed
-                    ## because somehow scons is not returning the error code properly
-                    { env VALE_SCONS_EXIT_CODE_OUTPUT_FILE=vale_exit_code ./run_scons.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output ; } || has_error="true"
-
-                    { [[ -f vale_exit_code ]] && [[ $(cat vale_exit_code) -eq 0 ]] ; } || has_error="true"
-                else
-                    scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
-                fi
-                cd ../..
-
-                if [[ $has_error == "true" ]]; then
-                    echo "Error - min-test (Vale)"
-                    echo " - min-test (Vale)" >>$ORANGE_FILE
-                fi
+                VALEFLAGS="--MIN_TEST" make -C hacl-star -j $threads vale.build -k ||
+                    {
+                        echo "Error - min-test (Vale)"
+                        echo " - min-test (Vale)" >>$ORANGE_FILE
+                    }
             } &
 
             {
