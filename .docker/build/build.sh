@@ -27,17 +27,17 @@ function export_home() {
 }
 
 function fetch_vale() {
-    if [ ! -d vale ]; then
-        git clone https://github.com/project-everest/vale vale
+    if [[ ! -d vale ]]; then
+        mkdir vale
     fi
-
-    cd vale
-    git fetch origin
-    echo Switching to vale to fstar_ci
-    git clean -fdx .
-    git reset --hard origin/fstar_ci
-    nuget restore tools/Vale/src/packages.config -PackagesDirectory tools/FsLexYacc
-    cd ..
+    vale_version=$(<hacl-star/vale/.vale_version)
+    vale_version=${vale_version%$'\r'}  # remove Windows carriage return, if it exists
+    wget "https://github.com/project-everest/vale/releases/download/v${vale_version}/vale-release-${vale_version}.zip" -O vale/vale-release.zip
+    rm -rf "vale/vale-release-${vale_version}"
+    unzip -o vale/vale-release.zip -d vale
+    rm -rf "vale/bin"
+    mv "vale/vale-release-${vale_version}/bin" vale/
+    chmod +x vale/bin/*.exe
     export_home VALE "$(pwd)/vale"
 }
 
@@ -263,7 +263,7 @@ function build_fstar() {
 
             {
                 has_error="false"
-                cd vale
+                cd hacl-star/vale
                 if [[ "$OS" == "Windows_NT" ]]; then
                     ## This hack for determining the success of a vale run is needed
                     ## because somehow scons is not returning the error code properly
@@ -273,7 +273,7 @@ function build_fstar() {
                 else
                     scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
                 fi
-                cd ..
+                cd ../..
 
                 if [[ $has_error == "true" ]]; then
                     echo "Error - min-test (Vale)"
