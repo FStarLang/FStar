@@ -884,7 +884,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                        (settings.query_name) :: uu____3076  in
                      range :: uu____3072  in
                    FStar_Util.print
-                     "%s\tQuery Stats: (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
+                     "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
                      uu____3068);
                   (let uu____3127 = FStar_Options.print_z3_statistics ()  in
                    if uu____3127 then process_unsat_core core else ());
