@@ -491,4 +491,5 @@ let with_type (#t:Type) (e:t) = e
  *)
 abstract
 let ambient (#a:Type) (x:a) = True
+abstract
 let intro_ambient (#a:Type) (x:a) : squash (ambient x) = ()
