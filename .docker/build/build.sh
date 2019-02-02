@@ -235,9 +235,7 @@ function build_fstar() {
         else
             export_home FSTAR "$(pwd)"
 
-            fetch_hacl
-            # fetch_vale depends on fetch_hacl
-            fetch_vale &
+            fetch_hacl &
             fetch_and_make_kremlin &
             fetch_mitls &
             fetch_and_make_qd &
@@ -248,6 +246,8 @@ function build_fstar() {
                 fi
             } &
             wait
+            # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
+            fetch_vale
 
             # The commands above were executed in sub-shells and their EXPORTs are not
             # propagated to the current shell. Re-do.
