@@ -491,7 +491,8 @@ let is_tactic t =
 
 exception Let_rec_unencodeable
 
-let copy_env (en:env_t) = { en with cache = BU.smap_copy en.cache }  //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
+let copy_env (en:env_t) = { en with cache = BU.smap_copy en.cache;
+                                    global_cache = BU.smap_copy en.global_cache}  //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
 
 let encode_top_level_let :
     env_t -> (bool * list<letbinding>) -> list<qualifier> -> decls_t * env_t =
@@ -1362,7 +1363,8 @@ let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
                                    tcenv=tcenv; warn=true; depth=0;
                                    cache=BU.smap_create 100; nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true; encoding_quantifier=false;
-                                   current_module_name=Env.current_module tcenv |> Ident.string_of_lid}]
+                                   current_module_name=Env.current_module tcenv |> Ident.string_of_lid;
+                                   global_cache = BU.smap_create 100}]
 let get_env cmn tcenv = match !last_env with
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv; current_module_name=Ident.string_of_lid cmn}
@@ -1431,6 +1433,25 @@ let encode_top_level_facts (env:env_t) (se:sigelt) =
 //end: guarding top-level terms with fact database triggers
 //////////////////////////////////////////////////////////////////////////
 
+
+let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
+  decls |> List.collect (fun elt ->
+    if elt.key = None then [elt]
+    else match BU.smap_try_find env.global_cache (elt.key |> BU.must) with
+         | Some cache_elt ->
+           if cache_elt.sym_name = Some "" then []
+           else
+             let (names, terms) = List.fold_left (fun (names, terms) srt ->
+               fresh_fvar "x" srt |> (fun (n, t) -> names@[n], terms@[t])
+             ) ([], []) cache_elt.args_sorts in
+             let d = mkDefineFun (elt.sym_name |> BU.must, List.zip names cache_elt.args_sorts, Term_sort,
+                                  mkApp (cache_elt.sym_name |> BU.must, terms), None) in
+             [d] |> mk_decls_trivial
+         | None ->
+           BU.smap_add env.global_cache (elt.key |> BU.must) elt;
+           [elt]
+  ) 
+
 let encode_sig tcenv se =
    let caption decls =
     if Options.log_queries()
@@ -1441,7 +1462,7 @@ let encode_sig tcenv se =
    let env = get_env (Env.current_module tcenv) tcenv in
    let decls, env = encode_top_level_facts env se in
    set_env env;
-   Z3.giveZ3 (caption (decls |> decls_list_of))
+   Z3.giveZ3 (caption (decls |> recover_caching_and_update_env env |> decls_list_of))
 
 let encode_modul tcenv modul =
     if Options.lax() && Options.ml_ish() then () else
@@ -1505,10 +1526,11 @@ let encode_query use_env_msg tcenv q
         else []
     in
     let query_prelude =
-        (env_decls |> decls_list_of)
-        @label_prefix
-        @(qdecls |> decls_list_of)
-        @caption in
+        env_decls
+        @(label_prefix |> mk_decls_trivial)
+        @qdecls
+        @(caption |> mk_decls_trivial) |> recover_caching_and_update_env env |> decls_list_of in
+
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     query_prelude, labels, qry, suffix

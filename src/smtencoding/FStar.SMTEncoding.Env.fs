@@ -143,7 +143,8 @@ type env_t = {
     use_zfuel_name:bool;
     encode_non_total_function_typ:bool;
     current_module_name:string;
-    encoding_quantifier:bool
+    encoding_quantifier:bool;
+    global_cache:BU.smap<decls_elt>
 }
 let mk_cache_entry env tsym cvar_sorts (t_decls:list<decl>) =
     let names =

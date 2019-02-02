@@ -730,7 +730,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let ffv = (fsym, Fuel_sort) in
         let tkey = mkForall t0.pos ([], ffv::xfv::cvars, encoding) in
         let tkey_hash = Term.hash_of_term tkey in
-        begin match BU.smap_try_find env.cache tkey_hash with
+        begin match None with //BU.smap_try_find env.cache tkey_hash with
             | Some cache_entry ->
               mkApp(cache_entry.cache_symbol_name, cvars |> List.map mkFreeV),
               decls @ decls' @ (use_cache_entry cache_entry |> mk_decls_trivial)
