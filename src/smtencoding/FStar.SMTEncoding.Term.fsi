@@ -123,7 +123,22 @@ type decl =
   | SetOption  of string * string
   | GetStatistics
   | GetReasonUnknown
-type decls_t = list<decl>
+
+type decls_elt = {
+  sym_name:  option<string>;
+  key:       option<string>;
+  decls:     list<decl>;
+  a_names:   list<string>;
+  aux_decls: list<decls_elt> 
+}
+
+type decls_t = list<decls_elt>
+
+val mk_decls: string -> string -> list<decl> -> list<decls_elt> -> decls_t
+
+val mk_decls_trivial: list<decl> -> decls_t
+
+val decls_list_of: decls_t -> list<decl>
 
 type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
@@ -190,11 +205,10 @@ val mkLet: (list<term> * term) -> Range.range -> term
 val mkLet': (list<(fv * term)> * term) -> Range.range -> term
 
 val fresh_token: (string * sort) -> int -> decl
-val injective_constructor : Range.range -> (string * list<constructor_field> * sort) -> decls_t
 val fresh_constructor : Range.range -> (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
-val constructor_to_decl: Range.range -> constructor_t -> decls_t
-val mkBvConstructor: int -> decls_t
+val constructor_to_decl: Range.range -> constructor_t -> list<decl>
+val mkBvConstructor: int -> list<decl>
 val declToSmt: string -> decl -> string
 val declToSmt_no_caps: string -> decl -> string
 

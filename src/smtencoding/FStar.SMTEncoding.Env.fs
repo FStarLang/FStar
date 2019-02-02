@@ -145,7 +145,7 @@ type env_t = {
     current_module_name:string;
     encoding_quantifier:bool
 }
-let mk_cache_entry env tsym cvar_sorts t_decls =
+let mk_cache_entry env tsym cvar_sorts (t_decls:list<decl>) =
     let names =
         t_decls
         |> List.collect

@@ -409,12 +409,12 @@ and encode_arith_term env head args_e =
     let sz_key = FStar.Util.format1 "BitVector_%s" (string_of_int sz) in
     let sz_decls =
          match BU.smap_try_find env.cache sz_key with
-            | Some cache_entry -> use_cache_entry cache_entry
+            | Some cache_entry -> use_cache_entry cache_entry |> mk_decls_trivial
             | None ->
                 let t_decls = mkBvConstructor sz in
                 (* we never need to emit those t_decls again, so it is ok to store empty decls*)
                 BU.smap_add env.cache sz_key (mk_cache_entry env "" [] t_decls);
-                t_decls
+                mk_decls sz_key "" t_decls []
     in
     (* we need to treat the size argument for zero_extend specially*)
     let arg_tms, ext_sz =
@@ -502,7 +502,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
     let tkey_hash = hash_of_term key in
     match BU.smap_try_find env.cache tkey_hash with
     | Some cache_entry ->
-      tm, decls @ (use_cache_entry cache_entry)
+      tm, decls @ (use_cache_entry cache_entry |> mk_decls_trivial)
 
     | _ ->
       match tm.tm with
@@ -522,9 +522,9 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
         let ax = mkAssume(interp,
                                 Some "Interpretation of deeply embedded quantifier",
                                 varops.mk_unique "l_quant_interp") in
-        let decls = decls @ decls' @ [ax] in
-        BU.smap_add env.cache tkey_hash (mk_cache_entry env "" [] decls);
-        tm, decls
+        let decls_l = (decls @ decls' |> decls_list_of) @ [ax] in
+        BU.smap_add env.cache tkey_hash (mk_cache_entry env "" [] decls_l);
+        tm, decls@(mk_decls tkey_hash "" ((decls_list_of decls') @ [ax]) decls)
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
@@ -598,7 +598,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                     varops.mk_unique "@kick_partial_app")] //the '@' retains this for hints
                    | _ -> []
                else [] in
-             tok, aux_decls
+             tok, aux_decls |> mk_decls_trivial
 
       | Tm_type _ ->
         mk_Term_type, []
@@ -638,7 +638,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              begin match BU.smap_try_find env.cache tkey_hash with
                 | Some cache_entry ->
                   mkApp(cache_entry.cache_symbol_name, cvars |> List.map mkFreeV),
-                  decls @ decls' @ guard_decls @ (use_cache_entry cache_entry)
+                  decls @ decls' @ guard_decls @ (use_cache_entry cache_entry |> mk_decls_trivial)
 
                 | None ->
                   let tsym = varops.mk_unique ("Tm_arrow_" ^ (BU.digest_of_string tkey_hash)) in
@@ -672,10 +672,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                                     mkIff(f_has_t_z, t_interp)),
                                   Some a_name,
                                   module_name ^ "_" ^ a_name) in
-
-                  let t_decls = tdecl::decls@decls'@guard_decls@[k_assumption; pre_typing; t_interp] in
-                  BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
-                  t, t_decls
+                  
+                  let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
+                  BU.smap_add env.cache tkey_hash
+                              (mk_cache_entry env tsym cvar_sorts ((decls@decls'@guard_decls |> decls_list_of)@t_decls));
+                  t, decls@decls'@guard_decls@(mk_decls tkey_hash tsym t_decls (decls@decls'@guard_decls))
              end
 
         else let tsym = varops.fresh "Non_total_Tm_arrow" in
@@ -698,7 +699,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                              Some a_name,
                              module_name ^ "_" ^ a_name) in
 
-             t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
+             t, [tdecl; t_kinding; t_interp] |> mk_decls_trivial (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
         let x, f = match N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv t0 with
@@ -732,7 +733,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         begin match BU.smap_try_find env.cache tkey_hash with
             | Some cache_entry ->
               mkApp(cache_entry.cache_symbol_name, cvars |> List.map mkFreeV),
-              decls @ decls' @ (use_cache_entry cache_entry)  //AR: I think it is safe to add decls and decls' to returned decls because
+              decls @ decls' @ (use_cache_entry cache_entry |> mk_decls_trivial)
+                                                              //AR: I think it is safe to add decls and decls' to returned decls because
                                                               //if any of the decl in decls@decls' is in the cache, then it must be Term.RetainAssumption, whose encoding is ""
                                                               //on the other hand, not adding these results in some missing definitions in the smt encoding
 
@@ -774,16 +776,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 Util.mkAssume(mkForall t0.pos ([[x_has_t]], ffv::xfv::cvars, mkIff(x_has_t, encoding)),
                               Some "refinement_interpretation",
                               "refinement_interpretation_"^tsym) in
-
-              let t_decls = decls
-                            @decls'
-                            @[tdecl;
-                              t_kinding;
-                              // t_valid;
-                              t_interp;t_haseq] in
-
-              BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
-              t, t_decls
+              
+              let t_decls = [tdecl;
+                             t_kinding; //t_valid;
+                             t_interp; t_haseq] in
+              BU.smap_add env.cache tkey_hash
+                         (mk_cache_entry env tsym cvar_sorts ((decls@decls' |> decls_list_of)@t_decls));
+              t, decls@decls'@mk_decls tkey_hash tsym t_decls (decls@decls')
         end
 
       | Tm_uvar (uv, _) ->
@@ -797,7 +796,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                         (BU.string_of_int
                                             (Unionfind.uvar_id uv.ctx_uvar_head))))
         in
-        ttm, decls@[d]
+        ttm, decls@([d] |> mk_decls_trivial)
 
       | Tm_app _ ->
         let head, args_e = U.head_and_args t0 in
@@ -865,7 +864,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                                 Some "Partial app typing",
                                                 varops.mk_unique ("partial_app_typing_" ^
                                                     (BU.digest_of_string (Term.hash_of_term app_tm)))) in
-                    app_tm, decls@decls'@decls''@[e_typing]
+                    app_tm, decls@decls'@decls''@([e_typing] |> mk_decls_trivial)
             in
 
             let encode_full_app fv =
@@ -909,7 +908,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           let fallback () =
             let f = varops.fresh "Tm_abs" in
             let decl = Term.DeclFun(f, [], Term_sort, Some "Imprecise function encoding") in
-            mkFreeV(f, Term_sort), [decl]
+            mkFreeV(f, Term_sort), [decl] |> mk_decls_trivial
           in
 
           let is_impure (rc:S.residual_comp) =
@@ -993,7 +992,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 match BU.smap_try_find env.cache tkey_hash with
                 | Some cache_entry ->
                   mkApp(cache_entry.cache_symbol_name, List.map mkFreeV cvars),
-                  decls @ decls' @ decls'' @ use_cache_entry cache_entry
+                  decls @ decls' @ decls'' @ (use_cache_entry cache_entry |> mk_decls_trivial)
 
                 | None ->
                   match is_an_eta_expansion env vars body with
@@ -1022,9 +1021,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                       let a_name = "interpretation_" ^fsym in
                       Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
                     in
-                    let f_decls = decls@decls'@decls''@(fdecl::typing_f)@[interp_f] in
-                    BU.smap_add env.cache tkey_hash (mk_cache_entry env fsym cvar_sorts f_decls);
-                    f, f_decls
+                    let f_decls = (fdecl::typing_f)@[interp_f] in
+                    BU.smap_add env.cache tkey_hash
+                                (mk_cache_entry env fsym cvar_sorts ((decls@decls'@decls'' |> decls_list_of)@f_decls));
+                    f, decls@decls'@decls''@(mk_decls tkey_hash fsym f_decls (decls@decls'@decls''))
           end
 
       | Tm_let((_, {lbname=BU.Inr _}::_), _) ->
@@ -1196,7 +1196,7 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let decls = decls@decls'@decls''@decls''' in
     mkForall t.pos (pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
 
-and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * list<decl> =
+and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * decls_t =
     let env = {env with use_zfuel_name=true} in
     let encode_smt_pattern t =
         let head, args = U.head_and_args t in
