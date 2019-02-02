@@ -414,7 +414,7 @@ and encode_arith_term env head args_e =
                 let t_decls = mkBvConstructor sz in
                 (* we never need to emit those t_decls again, so it is ok to store empty decls*)
                 BU.smap_add env.cache sz_key (mk_cache_entry env "" [] t_decls);
-                mk_decls sz_key "" t_decls []
+                mk_decls "" [] sz_key t_decls []
     in
     (* we need to treat the size argument for zero_extend specially*)
     let arg_tms, ext_sz =
@@ -524,7 +524,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
                                 varops.mk_unique "l_quant_interp") in
         let decls_l = (decls @ decls' |> decls_list_of) @ [ax] in
         BU.smap_add env.cache tkey_hash (mk_cache_entry env "" [] decls_l);
-        tm, decls@(mk_decls tkey_hash "" ((decls_list_of decls') @ [ax]) decls)
+        tm, decls@(mk_decls "" [] tkey_hash ((decls_list_of decls') @ [ax]) decls)
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
@@ -676,7 +676,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
                   BU.smap_add env.cache tkey_hash
                               (mk_cache_entry env tsym cvar_sorts ((decls@decls'@guard_decls |> decls_list_of)@t_decls));
-                  t, decls@decls'@guard_decls@(mk_decls tkey_hash tsym t_decls (decls@decls'@guard_decls))
+                  t, decls@decls'@guard_decls@(mk_decls tsym cvar_sorts tkey_hash t_decls (decls@decls'@guard_decls))
              end
 
         else let tsym = varops.fresh "Non_total_Tm_arrow" in
@@ -782,7 +782,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                              t_interp; t_haseq] in
               BU.smap_add env.cache tkey_hash
                          (mk_cache_entry env tsym cvar_sorts ((decls@decls' |> decls_list_of)@t_decls));
-              t, decls@decls'@mk_decls tkey_hash tsym t_decls (decls@decls')
+              t, decls@decls'@mk_decls tsym cvar_sorts tkey_hash t_decls (decls@decls')
         end
 
       | Tm_uvar (uv, _) ->
@@ -1024,7 +1024,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     let f_decls = (fdecl::typing_f)@[interp_f] in
                     BU.smap_add env.cache tkey_hash
                                 (mk_cache_entry env fsym cvar_sorts ((decls@decls'@decls'' |> decls_list_of)@f_decls));
-                    f, decls@decls'@decls''@(mk_decls tkey_hash fsym f_decls (decls@decls'@decls''))
+                    f, decls@decls'@decls''@(mk_decls fsym cvar_sorts tkey_hash f_decls (decls@decls'@decls''))
           end
 
       | Tm_let((_, {lbname=BU.Inr _}::_), _) ->
