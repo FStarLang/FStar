@@ -623,7 +623,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let cvars = Term.free_variables t_interp |> List.filter (fun (x, _) -> x <> fst fsym) in
              let tkey = mkForall t.pos ([], fsym::cvars, t_interp) in
              let tkey_hash = hash_of_term tkey in
-             let tsym = varops.fresh ("Tm_arrow_" ^ (BU.digest_of_string tkey_hash)) in
+             let tsym = "Tm_arrow_" ^ (BU.digest_of_string tkey_hash) in
              let cvar_sorts = List.map snd cvars in
              let caption =
                  if Options.log_queries()
@@ -710,7 +710,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let tkey = mkForall t0.pos ([], ffv::xfv::cvars, encoding) in
         let tkey_hash = Term.hash_of_term tkey in
         let module_name = env.current_module_name in
-        let tsym = varops.mk_unique (module_name ^ "_Tm_refine_" ^ (BU.digest_of_string tkey_hash)) in
+        let tsym = "Tm_refine_" ^ (BU.digest_of_string tkey_hash) in
         let cvar_sorts = List.map snd cvars in
         let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
         let t = mkApp(tsym, List.map mkFreeV cvars) in
@@ -961,10 +961,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   t, decls
                 | None ->
                   let cvar_sorts = List.map snd cvars in
-                  let fsym =
-                    let module_name = env.current_module_name in
-                    let fsym = varops.mk_unique ("Tm_abs_" ^ (BU.digest_of_string tkey_hash)) in
-                    module_name ^ "_" ^ fsym in
+                  let fsym = "Tm_abs_" ^ (BU.digest_of_string tkey_hash) in
                   let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
                   let f = mkApp(fsym, List.map mkFreeV cvars) in //arity ok, since introduced at cvar_sorts (#1383)
                   let app = mk_Apply f vars in

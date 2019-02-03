@@ -1441,15 +1441,15 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
   decls |> List.collect (fun elt ->
     if elt.key = None then [elt]
     else match BU.smap_try_find env.global_cache (elt.key |> BU.must) with
-         | Some cache_elt ->
-           if cache_elt.sym_name = Some "" then []
-           else
-             let (names, terms) = List.fold_left (fun (names, terms) srt ->
-               fresh_fvar "x" srt |> (fun (n, t) -> names@[n], terms@[t])
-             ) ([], []) cache_elt.args_sorts in
-             let d = mkDefineFun (elt.sym_name |> BU.must, List.zip names cache_elt.args_sorts, Term_sort,
-                                  mkApp (cache_elt.sym_name |> BU.must, terms), None) in
-             [d; Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial
+         | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial
+           //if cache_elt.sym_name = Some "" then []
+           //else
+           //  let (names, terms) = List.fold_left (fun (names, terms) srt ->
+           //    fresh_fvar "x" srt |> (fun (n, t) -> names@[n], terms@[t])
+           //  ) ([], []) cache_elt.args_sorts in
+           //  let d = mkDefineFun (elt.sym_name |> BU.must, List.zip names cache_elt.args_sorts, Term_sort,
+           //                       mkApp (cache_elt.sym_name |> BU.must, terms), None) in
+           //  [d; Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial
          | None ->
            BU.smap_add env.global_cache (elt.key |> BU.must) elt;
            [elt]
