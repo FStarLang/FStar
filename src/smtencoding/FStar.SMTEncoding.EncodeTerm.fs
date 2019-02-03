@@ -409,7 +409,7 @@ and encode_arith_term env head args_e =
     let sz_key = FStar.Util.format1 "BitVector_%s" (string_of_int sz) in
     let sz_decls =
       let t_decls = mkBvConstructor sz in
-      mk_decls "" [] sz_key t_decls []
+      mk_decls "" sz_key t_decls []
     in
     (* we need to treat the size argument for zero_extend specially*)
     let arg_tms, ext_sz =
@@ -512,7 +512,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
       let ax = mkAssume(interp,
                               Some "Interpretation of deeply embedded quantifier",
                               varops.mk_unique "l_quant_interp") in
-      tm, decls@decls'@(mk_decls "" [] tkey_hash [ax] decls@decls')
+      tm, decls@decls'@(mk_decls "" tkey_hash [ax] decls@decls')
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
@@ -590,7 +590,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                else [], "" in
              tok, (if aux_decls = []
                    then ([] |> mk_decls_trivial)
-                   else mk_decls sym_name [] tkey_hash aux_decls [])
+                   else mk_decls sym_name tkey_hash aux_decls [])
 
       | Tm_type _ ->
         mk_Term_type, []
@@ -660,7 +660,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                module_name ^ "_" ^ a_name) in
                   
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
-             t, decls@decls'@guard_decls@(mk_decls tsym cvar_sorts tkey_hash t_decls (decls@decls'@guard_decls))
+             t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
         else let tsym = varops.fresh "Non_total_Tm_arrow" in
              let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
@@ -754,7 +754,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let t_decls = [tdecl;
                        t_kinding; //t_valid;
                        t_interp; t_haseq] in
-        t, decls@decls'@mk_decls tsym cvar_sorts tkey_hash t_decls (decls@decls')
+        t, decls@decls'@mk_decls tsym tkey_hash t_decls (decls@decls')
 
       | Tm_uvar (uv, _) ->
         let ttm = mk_Term_uvar (Unionfind.uvar_id uv.ctx_uvar_head) in
@@ -836,7 +836,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                                 Some "Partial app typing",
                                                 ("partial_app_typing_" ^
                                                  (BU.digest_of_string (Term.hash_of_term app_tm)))) in
-                    app_tm, decls@decls'@decls''@(mk_decls "" [] tkey_hash [e_typing] (decls@decls'@decls''))
+                    app_tm, decls@decls'@decls''@(mk_decls "" tkey_hash [e_typing] (decls@decls'@decls''))
             in
 
             let encode_full_app fv =
@@ -983,7 +983,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
                   in
                   let f_decls = (fdecl::typing_f)@[interp_f] in
-                  f, decls@decls'@decls''@(mk_decls fsym cvar_sorts tkey_hash f_decls (decls@decls'@decls''))
+                  f, decls@decls'@decls''@(mk_decls fsym tkey_hash f_decls (decls@decls'@decls''))
           end
 
       | Tm_let((_, {lbname=BU.Inr _}::_), _) ->

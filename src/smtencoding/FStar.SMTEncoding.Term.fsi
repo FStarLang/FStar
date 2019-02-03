@@ -126,16 +126,14 @@ type decl =
 
 type decls_elt = {
   sym_name:   option<string>;
-  args_sorts: list<sort>;
   key:        option<string>;
   decls:      list<decl>;
   a_names:    list<string>;
-  aux_decls:  list<decls_elt> 
 }
 
 type decls_t = list<decls_elt>
 
-val mk_decls: string -> list<sort> -> string -> list<decl> -> list<decls_elt> -> decls_t
+val mk_decls: string -> string -> list<decl> -> list<decls_elt> -> decls_t
 
 val mk_decls_trivial: list<decl> -> decls_t
 

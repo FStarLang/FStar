@@ -154,18 +154,15 @@ type decl =
 
 type decls_elt = {
   sym_name:   option<string>;
-  args_sorts: list<sort>;
   key:        option<string>;
   decls:      list<decl>;
   a_names:    list<string>;
-  aux_decls:  list<decls_elt> 
 }
 
 type decls_t = list<decls_elt>
 
-let mk_decls name sorts key decls aux_decls = [{
+let mk_decls name key decls aux_decls = [{
   sym_name    = Some name;
-  args_sorts  = sorts;
   key         = Some key;
   decls       = decls;
   a_names     =
@@ -173,18 +170,15 @@ let mk_decls name sorts key decls aux_decls = [{
     (List.collect (function
                    | Assume a -> [a.assumption_name]
                    | _ -> []) decls);
-  aux_decls   = aux_decls
 }]
 
 let mk_decls_trivial decls = [{
   sym_name = None;
-  args_sorts = [];
   key = None;
   decls = decls;
   a_names = List.collect (function
               | Assume a -> [a.assumption_name]
               | _ -> []) decls;
-  aux_decls = []
 }]
 
 let decls_list_of l = l |> List.collect (fun elt -> elt.decls) 
