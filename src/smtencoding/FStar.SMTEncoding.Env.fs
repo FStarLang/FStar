@@ -126,12 +126,7 @@ type fvar_binding = {
 }
 
 let binder_of_eithervar v = (v, None)
-type cache_entry = {
-    cache_symbol_name: string;
-    cache_symbol_arg_sorts: list<sort>;
-    cache_symbol_decls: list<decl>;
-    cache_symbol_assumption_names: list<string>
-}
+
 type env_t = {
     bvar_bindings: BU.psmap<BU.pimap<(bv * term)>>;
     fvar_bindings: BU.psmap<fvar_binding>;
@@ -145,22 +140,7 @@ type env_t = {
     encoding_quantifier:bool;
     global_cache:BU.smap<decls_elt>
 }
-let mk_cache_entry env tsym cvar_sorts (t_decls:list<decl>) =
-    let names =
-        t_decls
-        |> List.collect
-              (function
-               | Assume a -> [a.assumption_name]
-               | _ -> [])
-    in
-    {
-        cache_symbol_name=tsym;
-        cache_symbol_arg_sorts=cvar_sorts;
-        cache_symbol_decls=t_decls;
-        cache_symbol_assumption_names=names
-    }
-let use_cache_entry ce =
-    [Term.RetainAssumptions ce.cache_symbol_assumption_names]
+
 let print_env e =
     let bvars = BU.psmap_fold e.bvar_bindings (fun _k pi acc ->
         BU.pimap_fold pi (fun _i (x, _term) acc ->
