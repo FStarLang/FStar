@@ -138,7 +138,6 @@ type env_t = {
     depth:int; //length of local var/tvar bindings
     tcenv:Env.env;
     warn:bool;
-    cache:BU.smap<cache_entry>;
     nolabels:bool;
     use_zfuel_name:bool;
     encode_non_total_function_typ:bool;

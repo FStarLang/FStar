@@ -491,8 +491,7 @@ let is_tactic t =
 
 exception Let_rec_unencodeable
 
-let copy_env (en:env_t) = { en with cache = BU.smap_copy en.cache;
-                                    global_cache = BU.smap_copy en.global_cache}  //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
+let copy_env (en:env_t) = { en with global_cache = BU.smap_copy en.global_cache}  //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
 
 let encode_top_level_let :
     env_t -> (bool * list<letbinding>) -> list<qualifier> -> decls_t * env_t =
@@ -1361,7 +1360,7 @@ let last_env : ref<list<env_t>> = BU.mk_ref []
 let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
                                    fvar_bindings=BU.psmap_empty ();
                                    tcenv=tcenv; warn=true; depth=0;
-                                   cache=BU.smap_create 100; nolabels=false; use_zfuel_name=false;
+                                   nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true; encoding_quantifier=false;
                                    current_module_name=Env.current_module tcenv |> Ident.string_of_lid;
                                    global_cache = BU.smap_create 100}]
@@ -1446,7 +1445,7 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
              ) ([], []) cache_elt.args_sorts in
              let d = mkDefineFun (elt.sym_name |> BU.must, List.zip names cache_elt.args_sorts, Term_sort,
                                   mkApp (cache_elt.sym_name |> BU.must, terms), None) in
-             [d] |> mk_decls_trivial
+             [d; Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial
          | None ->
            BU.smap_add env.global_cache (elt.key |> BU.must) elt;
            [elt]
@@ -1483,7 +1482,7 @@ let encode_modul tcenv modul =
     else [Module(name, decls)] in
     set_env ({env with warn=true});
     if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
-    let decls = caption (decls |> decls_list_of) in
+    let decls = caption (decls |> recover_caching_and_update_env env |> decls_list_of) in
     Z3.giveZ3 decls
 
 open FStar.SMTEncoding.Z3
