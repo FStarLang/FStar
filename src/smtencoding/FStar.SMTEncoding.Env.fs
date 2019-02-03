@@ -129,7 +129,7 @@ let binder_of_eithervar v = (v, None)
 
 type env_t = {
     bvar_bindings: BU.psmap<BU.pimap<(bv * term)>>;
-    fvar_bindings: BU.psmap<fvar_binding>;
+    fvar_bindings: (BU.psmap<fvar_binding> * list<fvar_binding>);  //list of fvar bindings for the current module
     depth:int; //length of local var/tvar bindings
     tcenv:Env.env;
     warn:bool;
@@ -145,7 +145,7 @@ let print_env e =
     let bvars = BU.psmap_fold e.bvar_bindings (fun _k pi acc ->
         BU.pimap_fold pi (fun _i (x, _term) acc ->
             Print.bv_to_string x :: acc) acc) [] in
-    let allvars = BU.psmap_fold e.fvar_bindings (fun _k fvb acc ->
+    let allvars = BU.psmap_fold (e.fvar_bindings |> fst) (fun _k fvb acc ->
         fvb.fvar_lid :: acc) [] in
     let last_fvar =
       match List.rev allvars with
@@ -160,15 +160,15 @@ let lookup_bvar_binding env bv =
     | None -> None
 
 let lookup_fvar_binding env lid =
-    BU.psmap_try_find env.fvar_bindings lid.str
+    BU.psmap_try_find (env.fvar_bindings |> fst) lid.str
 
 let add_bvar_binding bvb bvbs =
   BU.psmap_modify bvbs (fst bvb).ppname.idText
     (fun pimap_opt ->
      BU.pimap_add (BU.dflt (BU.pimap_empty ()) pimap_opt) (fst bvb).index bvb)
 
-let add_fvar_binding fvb fvbs =
-  BU.psmap_add fvbs fvb.fvar_lid.str fvb
+let add_fvar_binding fvb (fvb_map, fvb_list) =
+  (BU.psmap_add fvb_map fvb.fvar_lid.str fvb, fvb::fvb_list)
 
 let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
 (* generate terms corresponding to a variable and record the mapping in the environment *)
@@ -276,7 +276,10 @@ let lookup_free_var_sym env a =
         end
 
 let tok_of_name env nm =
-  BU.psmap_find_map env.fvar_bindings (fun _ fvb ->
+  BU.psmap_find_map (env.fvar_bindings |> fst) (fun _ fvb ->
       if fvb.smt_id = nm then fvb.smt_token else None)
+
+let reset_current_module_fvbs env = { env with fvar_bindings = (env.fvar_bindings |> fst, []) }
+let get_current_module_fvbs env = env.fvar_bindings |> snd
 
 (* </Environment> *)

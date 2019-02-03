@@ -29,7 +29,7 @@ val snapshot: string -> (Env.solver_depth_t * unit)
 val rollback: string -> option<Env.solver_depth_t> -> unit
 val init: Env.env -> unit
 val encode_sig: Env.env -> S.sigelt -> unit
-val encode_modul: Env.env -> S.modul -> unit
+val encode_modul: Env.env -> S.modul -> decls_t * list<Env.fvar_binding>
 val encode_query: option<(unit -> string)>
                 -> Env.env
                 -> S.term

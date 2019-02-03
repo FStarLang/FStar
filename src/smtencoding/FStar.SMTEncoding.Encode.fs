@@ -1362,7 +1362,7 @@ let encode_labels labs =
 (* caching encodings of the environment and the top-level API to the encoding *)
 let last_env : ref<list<env_t>> = BU.mk_ref []
 let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
-                                   fvar_bindings=BU.psmap_empty ();
+                                   fvar_bindings=(BU.psmap_empty (), []);
                                    tcenv=tcenv; warn=true; depth=0;
                                    nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true; encoding_quantifier=false;
@@ -1468,26 +1468,28 @@ let encode_sig tcenv se =
    Z3.giveZ3 (caption (decls |> recover_caching_and_update_env env |> decls_list_of))
 
 let encode_modul tcenv modul =
-    if Options.lax() && Options.ml_ish() then () else
-    let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
-    if Env.debug tcenv Options.Medium
-    then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
-    let env = get_env modul.name tcenv in
-    let encode_signature (env:env_t) (ses:sigelts) =
-        ses |> List.fold_left (fun (g, env) se ->
-          let g', env = encode_top_level_facts env se in
-          g@g', env) ([], env)
-    in
-    let decls, env = encode_signature ({env with warn=false}) modul.exports in
-    let caption decls =
-    if Options.log_queries()
-    then let msg = "Externals for " ^ name in
-         [Module(name, Caption msg::decls@[Caption ("End " ^ msg)])]
-    else [Module(name, decls)] in
-    set_env ({env with warn=true});
-    if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
-    let decls = caption (decls |> recover_caching_and_update_env env |> decls_list_of) in
-    Z3.giveZ3 decls
+    if Options.lax() && Options.ml_ish() then [], []
+    else
+      let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
+      if Env.debug tcenv Options.Medium
+      then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
+      let env = get_env modul.name tcenv |> reset_current_module_fvbs in
+      let encode_signature (env:env_t) (ses:sigelts) =
+          ses |> List.fold_left (fun (g, env) se ->
+            let g', env = encode_top_level_facts env se in
+            g@g', env) ([], env)
+      in
+      let decls, env = encode_signature ({env with warn=false}) modul.exports in
+      let caption decls =
+      if Options.log_queries()
+      then let msg = "Externals for " ^ name in
+           [Module(name, Caption msg::decls@[Caption ("End " ^ msg)])]
+      else [Module(name, decls)] in
+      set_env ({env with warn=true});
+      if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
+      let z3_decls = caption (decls |> recover_caching_and_update_env env |> decls_list_of) in
+      Z3.giveZ3 z3_decls;
+      decls, env |> get_current_module_fvbs
 
 open FStar.SMTEncoding.Z3
 let encode_query use_env_msg tcenv q
