@@ -512,7 +512,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
       let ax = mkAssume(interp,
                               Some "Interpretation of deeply embedded quantifier",
                               varops.mk_unique "l_quant_interp") in
-      tm, decls@(mk_decls "" [] tkey_hash ((decls_list_of decls') @ [ax]) decls)
+      tm, decls@decls'@(mk_decls "" [] tkey_hash [ax] decls@decls')
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
@@ -573,7 +573,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         then encode_term (whnf env t) env
         else let _, arity = lookup_free_var_name env v.fv_name in
              let tok = lookup_free_var env v.fv_name in
-             let aux_decls =
+             let tkey_hash = Term.hash_of_term tok in
+             let aux_decls, sym_name =
                if arity > 0
                then //kick partial application axioms if arity > 0; see #613
                     //and if the head symbol is just a variable
@@ -581,12 +582,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                    match tok.tm with
                    | FreeV _
                    | App(_, []) ->
+                     let sym_name = "@kick_partial_app_" ^ (BU.digest_of_string tkey_hash) in  //the '@' retains this for hints
                      [Util.mkAssume(kick_partial_app tok,
                                     Some "kick_partial_app",
-                                    varops.mk_unique "@kick_partial_app")] //the '@' retains this for hints
-                   | _ -> []
-               else [] in
-             tok, aux_decls |> mk_decls_trivial
+                                    sym_name)], sym_name
+                   | _ -> [], ""
+               else [], "" in
+             tok, (if aux_decls = []
+                   then ([] |> mk_decls_trivial)
+                   else mk_decls sym_name [] tkey_hash aux_decls [])
 
       | Tm_type _ ->
         mk_Term_type, []
@@ -827,11 +831,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     let ty = U.arrow rest c |> SS.subst subst in
                     let has_type, decls'' = encode_term_pred None ty env app_tm in
                     let cvars = Term.free_variables has_type in
+                    let tkey_hash = Term.hash_of_term app_tm in
                     let e_typing = Util.mkAssume(mkForall t0.pos ([[has_type]], cvars, has_type),
                                                 Some "Partial app typing",
-                                                varops.mk_unique ("partial_app_typing_" ^
-                                                    (BU.digest_of_string (Term.hash_of_term app_tm)))) in
-                    app_tm, decls@decls'@decls''@([e_typing] |> mk_decls_trivial)
+                                                ("partial_app_typing_" ^
+                                                 (BU.digest_of_string (Term.hash_of_term app_tm)))) in
+                    app_tm, decls@decls'@decls''@(mk_decls "" [] tkey_hash [e_typing] (decls@decls'@decls''))
             in
 
             let encode_full_app fv =
