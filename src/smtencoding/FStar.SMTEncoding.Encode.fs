@@ -809,19 +809,21 @@ let encode_top_level_let :
             (List.zip3 gtoks typs bindings)
           in
           (* Function declarations must come first to be defined in all recursive definitions *)
-          let prefix_decls, rest =
+          let prefix_decls, elts, rest =
             let isDeclFun = function | DeclFun _ -> true | _ -> false in
             decls |> List.flatten |> (fun decls ->
               //decls is a list of decls_elt ... each of which contains a list<decl> in it
               //we need to go through each of those, accumulate DeclFuns and remove them from there
-              let prefix_decls, rest = List.fold_left (fun (prefix_decls, rest) elt ->
-                let elt_decl_funs, elt_rest = List.partition isDeclFun elt.decls in
-                prefix_decls @ elt_decl_funs, rest @ [{ elt with decls = elt_rest }]
-              ) ([], []) decls in
-              prefix_decls |> mk_decls_trivial, rest)
+              let prefix_decls, elts, rest = List.fold_left (fun (prefix_decls, elts, rest) elt ->
+                if elt.key |> BU.is_some && List.existsb isDeclFun elt.decls
+                then prefix_decls, elts@[elt], rest
+                else let elt_decl_funs, elt_rest = List.partition isDeclFun elt.decls in
+                     prefix_decls @ elt_decl_funs, elts, rest @ [{ elt with decls = elt_rest }]
+              ) ([], [], []) decls in
+              prefix_decls |> mk_decls_trivial, elts, rest)
           in
           let eqns = List.rev eqns in
-          prefix_decls@rest@eqns, env0
+          prefix_decls@elts@rest@eqns, env0
         in
 
         if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
@@ -1026,13 +1028,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           | _ -> true) in
          g' @ [ { elt with decls = elt_g' } ], inversions @ elt_inversions
        ) ([], []) g in
-       let decls, rest = List.fold_left (fun (decls, rest) elt ->
-         let elt_decls, elt_rest = elt.decls |> List.partition (function
-           | Term.DeclFun _ -> true
-           | _ -> false) in
-         decls @ elt_decls, rest @ [ { elt with decls = elt_rest }]
-       ) ([], []) g' in
-       (decls |> mk_decls_trivial) @ rest @ (inversions |> mk_decls_trivial), env
+       let decls, elts, rest = List.fold_left (fun (decls, elts, rest) elt ->
+         if elt.key |> BU.is_some && List.existsb (function | Term.DeclFun _ -> true | _ -> false) elt.decls
+         then decls, elts@[elt], rest
+         else let elt_decls, elt_rest = elt.decls |> List.partition (function
+              | Term.DeclFun _ -> true
+              | _ -> false) in
+              decls @ elt_decls, elts, rest @ [ { elt with decls = elt_rest }]
+       ) ([], [], []) g' in
+       (decls |> mk_decls_trivial) @ elts @ rest @ (inversions |> mk_decls_trivial), env
 
      | Sig_inductive_typ(t, _, tps, k, _, datas) ->
         let quals = se.sigquals in
