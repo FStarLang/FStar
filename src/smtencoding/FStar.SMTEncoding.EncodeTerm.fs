@@ -662,7 +662,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
              t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
-        else let tsym = varops.fresh "Non_total_Tm_arrow" in
+        else let tsym = varops.fresh (module_name ^ "_Non_total_Tm_arrow") in
              let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
              let t = mkApp(tsym, []) in
              let t_kinding =
