@@ -414,7 +414,13 @@ let tc_one_file
                          | [] -> ()
                          | _ -> failwith "Impossible: gamma contains leaked names"
                  in
-                 Tc.check_module tcenv fmod (is_some pre_fn)))
+                 let modul, env = Tc.check_module tcenv fmod (is_some pre_fn) in
+                 if (not (Options.lax())) then begin
+                   ignore (FStar.SMTEncoding.Encode.encode_modul env modul);
+                   FStar.SMTEncoding.Z3.refresh ()
+                 end;
+                 (modul, env)
+            ))
           in
           let extracted_defs, extract_time = with_env env (maybe_extract_mldefs tcmod) in
           let env, iface_extraction_time = with_env env (maybe_extract_ml_iface tcmod) in
@@ -472,8 +478,12 @@ let tc_one_file
                         tc_result.mii
                         (FStar.TypeChecker.Normalize.erase_universes tcenv)
             in
-            (),
-            FStar.TypeChecker.Tc.load_checked_module tcenv tcmod
+            let env = FStar.TypeChecker.Tc.load_checked_module tcenv tcmod in
+            if (not (Options.lax())) then begin
+              ignore (FStar.SMTEncoding.Encode.encode_modul env tcmod);
+              FStar.SMTEncoding.Z3.refresh ()
+            end;
+            (), env
         in
         (* If we have to extract this module, then do it first *)
         let mllib =
