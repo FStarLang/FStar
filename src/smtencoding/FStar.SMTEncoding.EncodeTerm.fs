@@ -512,7 +512,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
       let ax = mkAssume(interp,
                               Some "Interpretation of deeply embedded quantifier",
                               "l_quant_interp_" ^ (BU.digest_of_string tkey_hash)) in
-      tm, decls@decls'@(mk_decls "" tkey_hash [ax] decls@decls')
+      tm, decls@decls'@(mk_decls "" tkey_hash [ax] (decls@decls'))
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
