@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c4d41430d701fe704b69539d8d0ac543"
+      "6da7031f92353ea28d42c33cd3614f6b"
     ],
     [
       "CanonMonoid.__proj__Var__item___0",
@@ -18,10 +18,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_CanonMonoid.Var",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_CanonMonoid_Tm_refine_3aa12bf376c0a044f35aca70ccec3774"
+        "refinement_interpretation_Tm_refine_3aa12bf376c0a044f35aca70ccec3774"
       ],
       0,
-      "39bf86fb0f6469ded1bcb52b75f05bcb"
+      "c8e8f7bbe34f4c876da0fd911f2f2120"
     ],
     [
       "CanonMonoid.__proj__Mult__item___0",
@@ -31,10 +31,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_CanonMonoid.Mult",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_CanonMonoid_Tm_refine_1a92faa5d804af3a0048eaa96d6d9c4e"
+        "refinement_interpretation_Tm_refine_1a92faa5d804af3a0048eaa96d6d9c4e"
       ],
       0,
-      "0988f9cc9d58c23947d9d5d5bfd00496"
+      "215a1ad9b7ae6992475b23b8e1906c96"
     ],
     [
       "CanonMonoid.__proj__Mult__item___1",
@@ -44,10 +44,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_CanonMonoid.Mult",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_CanonMonoid_Tm_refine_1a92faa5d804af3a0048eaa96d6d9c4e"
+        "refinement_interpretation_Tm_refine_1a92faa5d804af3a0048eaa96d6d9c4e"
       ],
       0,
-      "e13ae7b47992ff241ac55b720b16f944"
+      "83b89f2fcc89241279957548316c77e2"
     ],
     [
       "CanonMonoid.exp_to_string",
@@ -63,7 +63,7 @@
         "subterm_ordering_CanonMonoid.Mult"
       ],
       0,
-      "87232c3d6f51330908a25680536e735f"
+      "82a63a39deae40c426a3931b0ae1d8d9"
     ],
     [
       "CanonMonoid.mdenote",
@@ -83,7 +83,7 @@
         "subterm_ordering_CanonMonoid.Mult"
       ],
       0,
-      "aed93d8c2b69a722fe233b769938a52b"
+      "f906f919ad94fb0483c394009cbac8d8"
     ],
     [
       "CanonMonoid.mldenote",
@@ -101,7 +101,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "35258b6412fe54445363a16b307bf821"
+      "2fbe451a3ffd489b1785e7ceeb6195e5"
     ],
     [
       "CanonMonoid.flatten",
@@ -117,7 +117,7 @@
         "subterm_ordering_CanonMonoid.Mult"
       ],
       0,
-      "65174f9092b132b77596d314172a8dee"
+      "84bcb930768dd514f781ba18f1582bf4"
     ],
     [
       "CanonMonoid.flatten_correct_aux",
@@ -152,7 +152,7 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_CanonMonoid.mldenote.fuel_instrumented",
         "token_correspondence_FStar.Algebra.Monoid.__proj__Monoid__item__mult",
@@ -160,7 +160,7 @@
         "unit_typing"
       ],
       0,
-      "ab6c8fb17c14ea7dbd3adcdc30caf26f"
+      "780e8c171a7f7356a25e804f0bf4b067"
     ],
     [
       "CanonMonoid.flatten_correct",
@@ -200,7 +200,7 @@
         "subterm_ordering_CanonMonoid.Mult", "typing_CanonMonoid.flatten"
       ],
       0,
-      "c1983bca6ca9f3dabad3b2b292bfbaaf"
+      "4bc202d9898751317f5caab7abf0aad8"
     ],
     [
       "CanonMonoid.monoid_reflect",
@@ -210,10 +210,10 @@
       [
         "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
         "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "5603fa9dd9adccd107116164cad61b19"
+      "6e2edbbde7c914a02d484fb3cfa8c095"
     ],
     [
       "CanonMonoid.dump",
@@ -227,10 +227,10 @@
         "equation_Prims.eqtype", "function_token_typing_Prims.bool",
         "lemma_FStar.Tactics.Result.result_split",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ad08fb4996e7278569b70b446b39b77c"
+      "9afdf51677cd7bb9417b44647db182ec"
     ],
     [
       "CanonMonoid.exp",
@@ -239,7 +239,7 @@
       1,
       [ "@query" ],
       0,
-      "ca89ace9fb896f7f2de87065c7dbe772"
+      "4d0c6d05f946863f464563865e69065b"
     ],
     [
       "CanonMonoid.__proj__Var__item___0",
@@ -249,10 +249,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_CanonMonoid.Var",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_CanonMonoid_Tm_refine_3aa12bf376c0a044f35aca70ccec3774"
+        "refinement_interpretation_Tm_refine_3aa12bf376c0a044f35aca70ccec3774"
       ],
       0,
-      "152cb5b35d8a032bdb19b9b9cd4b0cfe"
+      "5f07b779cce6cc673852b2c3c5d2c24c"
     ],
     [
       "CanonMonoid.__proj__Mult__item___0",
@@ -262,10 +262,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_CanonMonoid.Mult",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_CanonMonoid_Tm_refine_1a92faa5d804af3a0048eaa96d6d9c4e"
+        "refinement_interpretation_Tm_refine_1a92faa5d804af3a0048eaa96d6d9c4e"
       ],
       0,
-      "f7a636531717b1de15efd528c2f06580"
+      "fd6d6d9daf222ec9278b39930ac50aaa"
     ],
     [
       "CanonMonoid.__proj__Mult__item___1",
@@ -275,10 +275,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_CanonMonoid.Mult",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_CanonMonoid_Tm_refine_1a92faa5d804af3a0048eaa96d6d9c4e"
+        "refinement_interpretation_Tm_refine_1a92faa5d804af3a0048eaa96d6d9c4e"
       ],
       0,
-      "f5d4788c66409d76e5673c70344d62be"
+      "304039d51aef04e004d6fc7c8fd4a472"
     ],
     [
       "CanonMonoid.exp_to_string",
@@ -294,7 +294,7 @@
         "subterm_ordering_CanonMonoid.Mult"
       ],
       0,
-      "4c3347f2b254df12666a12d471e507e8"
+      "8c042b80c808da14920e7e5bfaa6f4bf"
     ],
     [
       "CanonMonoid.mdenote",
@@ -314,7 +314,7 @@
         "subterm_ordering_CanonMonoid.Mult"
       ],
       0,
-      "12d0b6459c0eec5d3e68788ba9b00b20"
+      "e84b8b33cad9d90ff10038539baed17d"
     ],
     [
       "CanonMonoid.mldenote",
@@ -332,7 +332,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a6150d043ce09eef93a9f453a8dd8300"
+      "cf0189714597f2ccae0efbd38b3da71a"
     ],
     [
       "CanonMonoid.flatten",
@@ -348,7 +348,7 @@
         "subterm_ordering_CanonMonoid.Mult"
       ],
       0,
-      "146b585480fee9fb292979afc0a8bb75"
+      "ae46c825c84ede5708cfc8960b234f9a"
     ],
     [
       "CanonMonoid.monoid_reflect",
@@ -358,10 +358,10 @@
       [
         "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
         "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "304938240ca09f3c4b14a145e77f8914"
+      "cf1dc0243bf6f55e2139a945dde45be5"
     ]
   ]
 ]
