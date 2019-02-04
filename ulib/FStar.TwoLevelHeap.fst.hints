@@ -7,13 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.TwoLevelHeap.as_ref",
-        "equation_FStar.TwoLevelHeap.ref_as_rref",
-        "equation_FStar.TwoLevelHeap.rid", "int_inversion", "unit_typing"
+        "@query", "equation_FStar.TwoLevelHeap.as_ref",
+        "equation_FStar.TwoLevelHeap.ref_as_rref"
       ],
       0,
-      "74f0630a7dd48507dc313a5fbdf25e34"
+      "125b0369d28f9799e98fb17a45c3f841"
     ]
   ]
 ]

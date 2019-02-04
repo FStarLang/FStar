@@ -7,13 +7,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
+        "@MaxIFuel_assumption", "@query",
         "function_token_typing_FStar.Bytes.bytes",
-        "haseqFStar.Tcp_Tm_refine_b3935975acf472aba368acaa7a0d2e54",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b2f0e086452ce39f779145f8d943aabe"
+      "f4be47b249403231cb2bbb8f41d95da4"
     ],
     [
       "FStar.Tcp.__proj__RecvError__item___0",
@@ -24,10 +23,10 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_FStar.Tcp.RecvError",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.Tcp_Tm_refine_0b16c523f4a6aeeba204a171d1e8f098"
+        "refinement_interpretation_Tm_refine_0b16c523f4a6aeeba204a171d1e8f098"
       ],
       0,
-      "a98dde23a85f63099f21904eef969860"
+      "3b2046c4516018b109af198a00d72600"
     ],
     [
       "FStar.Tcp.__proj__Received__item___0",
@@ -37,10 +36,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Tcp.Received",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.Tcp_Tm_refine_e0e9f2a62a06f869cff002e4825e3dc6"
+        "refinement_interpretation_Tm_refine_e0e9f2a62a06f869cff002e4825e3dc6"
       ],
       0,
-      "b4dfcc3f1817eff3ba1dbd4d7572ae23"
+      "c001f12e3b8b03c8004f0a4e814b3996"
     ]
   ]
 ]

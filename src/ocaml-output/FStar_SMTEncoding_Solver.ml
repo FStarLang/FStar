@@ -1358,8 +1358,6 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.pop = FStar_SMTEncoding_Encode.pop;
     FStar_TypeChecker_Env.snapshot = FStar_SMTEncoding_Encode.snapshot;
     FStar_TypeChecker_Env.rollback = FStar_SMTEncoding_Encode.rollback;
-    FStar_TypeChecker_Env.encode_modul =
-      FStar_SMTEncoding_Encode.encode_modul;
     FStar_TypeChecker_Env.encode_sig = FStar_SMTEncoding_Encode.encode_sig;
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
@@ -1383,19 +1381,17 @@ let (dummy : FStar_TypeChecker_Env.solver_t) =
             (Prims.parse_int "0")), ()));
     FStar_TypeChecker_Env.rollback =
       (fun uu____4090  -> fun uu____4091  -> ());
-    FStar_TypeChecker_Env.encode_modul =
-      (fun uu____4106  -> fun uu____4107  -> ());
     FStar_TypeChecker_Env.encode_sig =
-      (fun uu____4110  -> fun uu____4111  -> ());
+      (fun uu____4106  -> fun uu____4107  -> ());
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
          fun g  ->
-           let uu____4117 =
-             let uu____4124 = FStar_Options.peek ()  in (e, g, uu____4124)
+           let uu____4113 =
+             let uu____4120 = FStar_Options.peek ()  in (e, g, uu____4120)
               in
-           [uu____4117]);
+           [uu____4113]);
     FStar_TypeChecker_Env.solve =
-      (fun uu____4140  -> fun uu____4141  -> fun uu____4142  -> ());
-    FStar_TypeChecker_Env.finish = (fun uu____4149  -> ());
-    FStar_TypeChecker_Env.refresh = (fun uu____4151  -> ())
+      (fun uu____4136  -> fun uu____4137  -> fun uu____4138  -> ());
+    FStar_TypeChecker_Env.finish = (fun uu____4145  -> ());
+    FStar_TypeChecker_Env.refresh = (fun uu____4147  -> ())
   } 

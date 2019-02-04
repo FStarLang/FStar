@@ -7,42 +7,29 @@
       2,
       1,
       [
-        "@query", "equation_FStar.UInt128.n", "equation_FStar.UInt64.n",
+        "@query", "equation_FStar.UInt128.n",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d278d6ccb3a1c9fa7af3ef91a9054d0e"
+      "837ba6a1e1632b511f3ed6bf08ba6f99"
     ],
     [
       "FStar.Int.Cast.Full.uint64_to_uint128",
       2,
       2,
       1,
-      [
-        "@query", "equation_FStar.UInt128.n",
-        "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query" ],
       0,
-      "c71de7087a0fc3a457348595da66de31"
+      "69729a95b81d66b83933e91fa614d670"
     ],
     [
       "FStar.Int.Cast.Full.uint128_to_uint64",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "data_elim_FStar.UInt64.Mk", "equation_FStar.UInt.fits",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "equation_FStar.UInt64.n",
-        "equation_FStar.UInt64.t", "fuel_guarded_inversion_FStar.UInt64.t_",
-        "function_token_typing_FStar.UInt32.n", "primitive_Prims.op_AmpAmp",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
-      ],
+      [ "@query" ],
       0,
-      "dcd4b84c624208c0fa08ce344634136d"
+      "909a6e05792d9b77eb42602e8f5e0b50"
     ],
     [
       "FStar.Int.Cast.Full.uint64_to_uint128",
@@ -51,7 +38,7 @@
       1,
       [ "@query" ],
       0,
-      "9b187e0b5baa225c4d139db1ef35ca98"
+      "82ad8f5b5fbac1acc3e1e37a07b0316f"
     ],
     [
       "FStar.Int.Cast.Full.uint64_to_uint128",
@@ -63,7 +50,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f81695072b671a686a474544cc28593f"
+      "850ed6d1726b76ca5d7e73252bfa6e77"
     ],
     [
       "FStar.Int.Cast.Full.uint128_to_uint64",
@@ -72,7 +59,7 @@
       1,
       [ "@query" ],
       0,
-      "57235f7b56af7d5de3f709522ceb0fa6"
+      "38ea2edccdb943a019febc56299af44a"
     ]
   ]
 ]
