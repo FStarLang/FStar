@@ -208,7 +208,7 @@ let cps_and_elaborate_ed env ed =
   let mk_lid name : lident = U.dm4f_lid ed name in
 
   let dmff_env, bind_wp, bind_elab =
-    if is_unk (snd ed.spec.monad_bind)
+    if ed.spec_dm4f
     then
       let dmff_env, _, bind_wp, bind_elab =
                       elaborate_and_star dmff_env effect_binders [] ed.repr.monad_bind in
@@ -218,7 +218,7 @@ let cps_and_elaborate_ed env ed =
   in
 
   let dmff_env, return_wp, return_elab =
-     if is_unk (snd ed.spec.monad_ret)
+     if ed.spec_dm4f
      then
        let dmff_env, _, return_wp, return_elab =
                         elaborate_and_star dmff_env effect_binders [] ed.repr.monad_ret in
@@ -226,7 +226,7 @@ let cps_and_elaborate_ed env ed =
      else dmff_env, snd ed.spec.monad_ret, snd ed.repr.monad_ret
   in
   (* let return_wp = *)
-  (*   if is_unk (snd ed.spec.monad_ret) *)
+  (*   if ed.spec_dm4f *)
   (*   then U.abs [S.null_binder (S.tabbrev PC.range_lid)] return_wp None *)
   (*   else snd ed.spec.monad_ret *)
   (* in *)
@@ -408,8 +408,11 @@ let cps_and_elaborate_ed env ed =
     repr = {
       monad_m = apply_close repr;
       monad_ret = [], apply_close return_elab;
-      monad_bind = [gen Range.dummyRange], apply_close bind_elab;
-      // GG: FIXME, we shouldn't need this bogus univ
+      monad_bind =
+        if ed.spec_dm4f
+        then [], apply_close bind_elab
+        else [gen Range.dummyRange], apply_close bind_elab;
+        // GG: FIXME, we shouldn't need this bogus univ
     };
     spec = {
       monad_m = S.tun;
@@ -847,7 +850,7 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
         BU.format4 "The effect combinator is %s (m,n=%s,%s) (%s)"
           error (string_of_int m) (string_of_int n) (Print.tscheme_to_string ts)
       in
-      raise_error (Errors.Fatal_MismatchUniversePolymorphic, err_msg ()) (snd ts ).pos
+      raise_error (Errors.Fatal_MismatchUniversePolymorphic, err_msg ()) (snd ts).pos
     end ;
     ts in
   let close_action act =
