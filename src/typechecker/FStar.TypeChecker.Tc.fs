@@ -633,7 +633,8 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
             let expected_k = U.arrow [S.mk_binder a;
                                          S.null_binder wp_a]
                                          (S.mk_GTotal t) in
-            (* printfn "About to check repr=%s\nat type %s\n" (Print.term_to_string ed.repr.monad_m) (Print.term_to_string expected_k); *)
+             if Env.debug env (Options.Other "ED") then
+                BU.print2 "About to check repr=%s\nat type %s\n" (Print.term_to_string ed.repr.monad_m) (Print.term_to_string expected_k);
             tc_check_trivial_guard env ed.repr.monad_m expected_k in
 
         let mk_repr' t wp =
@@ -677,17 +678,19 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
                                          S.mk_binder wp_g;
                                          S.null_binder (U.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))])
                                         (S.mk_Total res) in
-//            printfn "About to check expected_k %s\n"
-//                     (Print.term_to_string expected_k);
+            if Env.debug env (Options.Other "ED") then
+              BU.print1 "About to check expected_k %s\n" (Print.term_to_string expected_k);
             let expected_k, _, _ =
                 tc_tot_or_gtot_term env expected_k in
-//            printfn "About to check bind=%s\n\n, at type %s\n"
-//                     (Print.term_to_string (snd ed.repr.monad_bind))
-//                     (Print.term_to_string expected_k);
+            if Env.debug env (Options.Other "ED") then
+              BU.print2 "About to check bind=%s\n\n, at type %s\n"
+                         (Print.term_to_string (snd ed.repr.monad_bind))
+                         (Print.term_to_string expected_k);
             let env = Env.set_range env (snd (ed.repr.monad_bind)).pos in
             let env = {env with lax=true} in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
             let br = check_and_gen' env ed.repr.monad_bind expected_k in
-//            let _ = printfn "After checking bind_repr is %s\nexpected_k is %s\n" (Print.tscheme_to_string br) (Print.term_to_string expected_k) in
+            if Env.debug env (Options.Other "ED") then
+              BU.print2 "After checking bind_repr is %s\nexpected_k is %s\n" (Print.tscheme_to_string br) (Print.term_to_string expected_k);
             br in
 
         let return_repr =
