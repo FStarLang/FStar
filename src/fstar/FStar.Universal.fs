@@ -33,7 +33,6 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
 open FStar.TypeChecker
 
-
 (* Module abbreviations for the universal type-checker  *)
 module DsEnv   = FStar.Syntax.DsEnv
 module TcEnv   = FStar.TypeChecker.Env
@@ -59,6 +58,7 @@ type uenv = FStar.Extraction.ML.UEnv.uenv
 type tc_result = {
   checked_module: Syntax.modul; //persisted
   mii:module_inclusion_info; //persisted
+  smt_decls:(FStar.SMTEncoding.Term.decls_t * list<FStar.SMTEncoding.Env.fvar_binding>); //persisted
 
   tc_time:int;
   extraction_time:int
@@ -407,7 +407,7 @@ let tc_one_file
       let fmod, env = parse env pre_fn fn in
       let mii = FStar.Syntax.DsEnv.inclusion_info env.env_tcenv.dsenv fmod.name in
       let check_mod () =
-          let (tcmod, env), tc_time =
+          let ((tcmod, smt_decls), env), tc_time =
             FStar.Util.record_time (fun () ->
                with_tcenv_of_env env (fun tcenv ->
                  let _ = match tcenv.gamma with
@@ -415,11 +415,14 @@ let tc_one_file
                          | _ -> failwith "Impossible: gamma contains leaked names"
                  in
                  let modul, env = Tc.check_module tcenv fmod (is_some pre_fn) in
-                 if (not (Options.lax())) then begin
-                   ignore (FStar.SMTEncoding.Encode.encode_modul env modul);
-                   FStar.SMTEncoding.Z3.refresh ()
-                 end;
-                 (modul, env)
+                 let smt_decls =
+                   if (not (Options.lax()))
+                   then let smt_decls = FStar.SMTEncoding.Encode.encode_modul env modul in
+                        FStar.SMTEncoding.Z3.refresh ();
+                        smt_decls
+                   else [], []
+                 in
+                 ((modul, smt_decls), env)
             ))
           in
           let extracted_defs, extract_time = with_env env (maybe_extract_mldefs tcmod) in
@@ -427,6 +430,7 @@ let tc_one_file
           {
             checked_module=tcmod;
             tc_time=tc_time;
+            smt_decls=smt_decls;
 
             extraction_time = extract_time + iface_extraction_time;
             mii = mii
@@ -467,6 +471,7 @@ let tc_one_file
 
       | Some tc_result ->
         let tcmod = tc_result.checked_module in
+        let smt_decls = tc_result.smt_decls in
         if Options.dump_module tcmod.name.str
         then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
 
@@ -480,7 +485,7 @@ let tc_one_file
             in
             let env = FStar.TypeChecker.Tc.load_checked_module tcenv tcmod in
             if (not (Options.lax())) then begin
-              ignore (FStar.SMTEncoding.Encode.encode_modul env tcmod);
+              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod.name smt_decls;
               FStar.SMTEncoding.Z3.refresh ()
             end;
             (), env
