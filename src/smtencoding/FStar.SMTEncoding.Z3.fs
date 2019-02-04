@@ -558,11 +558,11 @@ let context_profile (theory:decls_t) =
     in
     let modules = List.sortWith (fun (_, n) (_, m) -> m - n) modules in
     if modules <> []
-    then BU.print1 "Query Stats: context_profile with %s assertions\n"
+    then BU.print1 "Z3 Proof Stats: context_profile with %s assertions\n"
                   (BU.string_of_int total_decls);
     List.iter (fun (m, n) ->
         if n <> 0 then
-            BU.print2 "Query Stats: %s produced %s SMT decls\n"
+            BU.print2 "Z3 Proof Stats: %s produced %s SMT decls\n"
                         m
                         (string_of_int n))
                modules
@@ -570,7 +570,7 @@ let context_profile (theory:decls_t) =
 
 let mk_input fresh theory =
     let options = !z3_options in
-    if Options.query_stats() then context_profile theory;
+    if Options.print_z3_statistics() then context_profile theory;
     let r, hash =
         if Options.record_hints()
         || (Options.use_hints() && Options.use_hint_hashes()) then

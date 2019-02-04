@@ -876,7 +876,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "print_z3_statistics",
         Const (mk_bool true),
-        "Print Z3 statistics for each SMT query (deprecated; use --query_stats instead)");
+        "Print Z3 statistics for each SMT query (details such as relevant modules, facts, etc. for each proof)");
 
        ( noshort,
         "prn",
@@ -1486,7 +1486,6 @@ let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
-                                    || get_query_stats                ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()

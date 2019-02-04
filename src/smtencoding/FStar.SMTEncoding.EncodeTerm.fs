@@ -423,12 +423,11 @@ and encode_arith_term env head args_e =
     let sz_key = FStar.Util.format1 "BitVector_%s" (string_of_int sz) in
     let sz_decls =
          match BU.smap_try_find env.cache sz_key with
-            | Some cache_entry ->
-                []
+            | Some cache_entry -> use_cache_entry cache_entry
             | None ->
                 let t_decls = mkBvConstructor sz in
                 (* we never need to emit those t_decls again, so it is ok to store empty decls*)
-                BU.smap_add env.cache sz_key (mk_cache_entry env "" [] []);
+                BU.smap_add env.cache sz_key (mk_cache_entry env "" [] t_decls);
                 t_decls
     in
     (* we need to treat the size argument for zero_extend specially*)
@@ -516,8 +515,8 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
     let key = mkForall t.pos ([], vars, valid_tm) in
     let tkey_hash = hash_of_term key in
     match BU.smap_try_find env.cache tkey_hash with
-    | Some _ ->
-      tm, decls
+    | Some cache_entry ->
+      tm, decls @ (use_cache_entry cache_entry)
 
     | _ ->
       match tm.tm with
@@ -537,8 +536,9 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
         let ax = mkAssume(interp,
                                 Some "Interpretation of deeply embedded quantifier",
                                 varops.mk_unique "l_quant_interp") in
-        BU.smap_add env.cache tkey_hash (mk_cache_entry env "" [] [ax]);
-        tm, decls@decls'@[ax]
+        let decls = decls @ decls' @ [ax] in
+        BU.smap_add env.cache tkey_hash (mk_cache_entry env "" [] decls);
+        tm, decls
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
