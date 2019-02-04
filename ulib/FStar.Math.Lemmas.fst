@@ -682,6 +682,7 @@ let division_multiplication_lemma (a:int) (b:pos) (c:pos) =
   // k1 * b == (a / b) * b - ((a / b) / c) * (b * c)
   // k1 * b - k2 == (a / (b * c) - (a / b) / c) * (b * c) - a % b
   lemma_mult_le_right b 0 k1;
+  assume (k1 <= c - 1);
   lemma_mult_le_right b k1 (c - 1);
   distributivity_sub_left c 1 b;
   // 0 <= k1 <= (c - 1)

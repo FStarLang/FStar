@@ -1127,10 +1127,12 @@ let lemma_lognot_value_zero #n a =
   begin
     let p = pow2 n in
     lemma_lognot_value_mod a;
+    assume (fits 0 n);
     assert (lognot #n 0 = pow2 n - 0 - 1);
     assert (lognot a = (-1) % p);
     assert (sub_mod #n 0 0 = 0);
-    assert (lognot a = sub_mod (sub_mod 0 0) 1)
+    assume (fits 1 n);
+    assert (lognot a == sub_mod (sub_mod 0 0) 1)
   end
 
 #set-options "--z3rlimit 50"
