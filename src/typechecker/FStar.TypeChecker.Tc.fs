@@ -1804,6 +1804,10 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
     let env = { env with proof_ns = Options.using_facts_from () } in
     env
 
+  | Sig_pragma RestartSolver ->
+    env.solver.refresh ();
+    env
+
   | Sig_pragma _
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect ne ->

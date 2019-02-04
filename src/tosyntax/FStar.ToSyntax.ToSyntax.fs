@@ -82,6 +82,7 @@ let trans_pragma = function
   | AST.ResetOptions sopt -> S.ResetOptions sopt
   | AST.PushOptions sopt -> S.PushOptions sopt
   | AST.PopOptions -> S.PopOptions
+  | AST.RestartSolver -> S.RestartSolver
   | AST.LightOff -> S.LightOff
 
 let as_imp = function
