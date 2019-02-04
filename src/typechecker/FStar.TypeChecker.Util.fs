@@ -931,10 +931,10 @@ let universe_of_comp env u_res c =
     let is_total = Env.lookup_effect_quals env c_lid |> List.existsb (fun q -> q = S.TotalEffect) in
     if not is_total then S.U_zero  //if it is a non-total effect then u0
     else match Env.effect_repr env c u_res with
-         | None ->
-           raise_error (Errors.Fatal_EffectCannotBeReified,
-                        (BU.format1 "Effect %s is marked total but does not have a repr" (Print.lid_to_string c_lid)))
-                        c.pos
+         | None -> S.U_zero
+           (* raise_error (Errors.Fatal_EffectCannotBeReified, *)
+           (*              (BU.format1 "Effect %s is marked total but does not have a repr" (Print.lid_to_string c_lid))) *)
+           (*              c.pos *)
          | Some tm -> env.universe_of env tm
 
 
@@ -1664,7 +1664,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   // Debug
   if Env.debug env (Options.Other "ED") then begin
     d (text_of_lid lident);
-    BU.print2 "Registering top-level definition: %s\n%s\n" (text_of_lid lident) (Print.term_to_string def)
+    BU.print2 "Registering top-level definition: %s\n = %s\n" (text_of_lid lident) (Print.term_to_string def)
   end;
   // Allocate a new top-level name.
   let fv = S.lid_as_fv lident (U.incr_delta_qualifier def) None in

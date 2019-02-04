@@ -93,8 +93,9 @@ let gen_wps_for_free
     | Tm_arrow (bs, comp) ->
         // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
-          | Total (t, _) -> t
-          | _ -> failwith "wp_a contains non-Tot arrow"
+          | Total (t, _)
+          | GTotal (t, _) -> t
+          | _ -> failwith ("wp_a contains non-Tot arrow: " ^ Print.comp_to_string comp)
         in
         bs @ (collect_binders rest)
     | Tm_type _ ->

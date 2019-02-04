@@ -381,6 +381,7 @@ type eff_decl = {
     //representation of the effect as pure type
     repr        : term_monad;
     elaborated  : bool;
+    spec_dm4f   : bool;
     //operations on the representation
     //actions for the effect
     actions     : list<action>;

@@ -179,7 +179,20 @@ let cps_and_elaborate_ed env ed =
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
   let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
-  let wp_type = DMFF.star_type dmff_env repr in
+
+  let is_unk t =
+    match (SS.compress t).n with
+    | Tm_unknown -> true
+    | _ -> false
+  in
+
+  let ed, wp_type = 
+    if is_unk ed.spec.monad_m
+    then { ed with spec_dm4f = true }, DMFF.star_type dmff_env repr
+    else ed, ed.spec.monad_m
+  in
+
+  let wp_type = N.normalize [Env.UnfoldUntil delta_constant; Env.AllowUnboundUniverses] env wp_type in
   let _ = recheck_debug "*" env wp_type in
   let wp_a = N.normalize [ Env.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ]))) in
 
@@ -194,20 +207,24 @@ let cps_and_elaborate_ed env ed =
   let sigelts = BU.mk_ref [] in
   let mk_lid name : lident = U.dm4f_lid ed name in
 
-  let is_unk t =
-    match (SS.compress t).n with
-    | Tm_unknown -> true
-    | _ -> false
+  let dmff_env, bind_wp, bind_elab =
+    if is_unk (snd ed.spec.monad_bind)
+    then
+      let dmff_env, _, bind_wp, bind_elab =
+                      elaborate_and_star dmff_env effect_binders [] ed.repr.monad_bind in
+      let bind_wp = U.abs [S.null_binder (S.tabbrev PC.range_lid)] bind_wp None in
+      dmff_env, bind_wp, bind_elab
+    else dmff_env, snd ed.spec.monad_bind, snd ed.repr.monad_bind
   in
 
-  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env effect_binders [] ed.repr.monad_bind in
-  let bind_wp =
-    if is_unk (snd ed.spec.monad_bind)
-    then U.abs [S.null_binder (S.tabbrev PC.range_lid)] bind_wp None
-    else snd ed.spec.monad_bind
+  let dmff_env, return_wp, return_elab =
+     if is_unk (snd ed.spec.monad_ret)
+     then
+       let dmff_env, _, return_wp, return_elab =
+                        elaborate_and_star dmff_env effect_binders [] ed.repr.monad_ret in
+       dmff_env, return_wp, return_elab
+     else dmff_env, snd ed.spec.monad_ret, snd ed.repr.monad_ret
   in
-  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env effect_binders [] ed.repr.monad_ret in
-  let return_wp = if is_unk (snd ed.spec.monad_ret) then return_wp else snd ed.spec.monad_ret in
   (* let return_wp = *)
   (*   if is_unk (snd ed.spec.monad_ret) *)
   (*   then U.abs [S.null_binder (S.tabbrev PC.range_lid)] return_wp None *)
@@ -325,9 +342,13 @@ let cps_and_elaborate_ed env ed =
   let actions = List.rev actions in
 
   let repr =
-    let wp = S.gen_bv "wp_a" None wp_a in
-    let binders = [ S.mk_binder a; S.mk_binder wp ] in
-    U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
+    if not ed.spec_dm4f
+    then repr
+    else
+      let wp = S.gen_bv "wp_a" None wp_a in
+      let binders = [ S.mk_binder a; S.mk_binder wp ] in
+      let r = U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None in
+      r
   in
   let _ = recheck_debug "FC" env repr in
   let repr = register "repr" repr in
@@ -387,7 +408,8 @@ let cps_and_elaborate_ed env ed =
     repr = {
       monad_m = apply_close repr;
       monad_ret = [], apply_close return_elab;
-      monad_bind = [], apply_close bind_elab;
+      monad_bind = [gen Range.dummyRange], apply_close bind_elab;
+      // GG: FIXME, we shouldn't need this bogus univ
     };
     spec = {
       monad_m = S.tun;
@@ -599,13 +621,8 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     check_and_gen' env ed.trivial expected_k in
 
   let repr, bind_repr, return_repr, actions =
-      match (SS.compress ed.repr.monad_m).n with
-      | Tm_unknown -> //This is not a DM4F effect definition; so nothing to do
-        (ed.repr.monad_m,
-         ed.repr.monad_bind,
-         ed.repr.monad_ret,
-         ed.actions)
-      | _ ->
+      match (SS.compress ed.repr.monad_m).n, (SS.compress ed.spec.monad_m).n with
+      | _ when ed.spec_dm4f ->
         //This is a DM4F effect definition
         //Need to check that the repr, bind, return and actions have their expected types
         let repr =
@@ -788,6 +805,12 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
         in
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
+
+      | _, _ ->
+        (ed.repr.monad_m,
+         ed.repr.monad_bind,
+         ed.repr.monad_ret,
+         ed.actions)
   in
 
   //generalize and close
@@ -819,12 +842,12 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     let m = List.length (fst ts) in
     if n >= 0 && not (is_unknown (snd ts)) && m <> n
     then begin
-      let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
-      let err_msg =
+      let err_msg () =
+        let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
         BU.format4 "The effect combinator is %s (m,n=%s,%s) (%s)"
           error (string_of_int m) (string_of_int n) (Print.tscheme_to_string ts)
       in
-      raise_error (Errors.Fatal_MismatchUniversePolymorphic, err_msg) (snd ts ).pos
+      raise_error (Errors.Fatal_MismatchUniversePolymorphic, err_msg ()) (snd ts ).pos
     end ;
     ts in
   let close_action act =

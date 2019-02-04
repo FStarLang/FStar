@@ -1709,7 +1709,9 @@ and reify_lift cfg e msrc mtgt t : term =
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
-        | _ -> failwith "NIY : Reification of indexed effects"
+        | _ -> return_repr
+               //GG: FIXME: a stopgap until we do proper universes
+               //failwith "NIY : Reification of indexed effects"
     in
     S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
   else
