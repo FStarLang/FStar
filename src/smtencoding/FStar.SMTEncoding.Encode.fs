@@ -428,7 +428,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                       && Options.protect_top_level_axioms()
                       then decls2, env
                       else let intro_ambient =
-                               let t = Term.mkApp ("FStar.Pervasives.intro_ambient",
+                               let t = Term.mkApp ("FStar.Pervasives.ambient",
                                                    [mk_Term_unit;
                                                     mkFreeV <| (vname, Term_sort, true)])
                                                   Range.dummyRange

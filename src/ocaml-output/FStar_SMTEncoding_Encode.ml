@@ -1851,7 +1851,7 @@ let (encode_free_var :
                                                                     ::
                                                                     uu____6466
                                                                     in
-                                                                 ("FStar.Pervasives.intro_ambient",
+                                                                 ("FStar.Pervasives.ambient",
                                                                    uu____6463)
                                                                   in
                                                                FStar_SMTEncoding_Term.mkApp
