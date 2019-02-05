@@ -166,10 +166,14 @@ let mk_decls name key decls aux_decls = {
   key         = Some key;
   decls       = decls;
   a_names     =
-    (List.collect (fun elt -> elt.a_names) aux_decls) @
-    (List.collect (function
-                   | Assume a -> [a.assumption_name]
-                   | _ -> []) decls);
+    let sm = BU.smap_create 20 in
+    List.iter (fun elt -> 
+      List.iter (fun s -> BU.smap_add sm s "0") elt.a_names
+    ) aux_decls;
+    List.iter (fun d -> match d with
+                        | Assume a -> BU.smap_add sm (a.assumption_name) "0"
+                        | _ -> ()) decls;
+    BU.smap_keys sm
 }
 
 let mk_decls_trivial decls = [{
