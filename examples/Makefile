@@ -26,19 +26,19 @@ kv_parsing \
 lowparse \
 low-mitls-experiments \
 vale \
-seplogic \
 csl \
 hello \
 native_tactics \
 extraction \
 demos \
+refinement \
 indexed_effects \
 doublylinkedlist \
 regional \
 generic \
 calc
 
-#refinement \
+# seplogic \
 
 # low-level \  ... NS: removing from CI for this branch
 
