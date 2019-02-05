@@ -23,7 +23,7 @@ open FStar.Mul
 /// crash course on Unicode.
 
 /// When compiling with KreMLin, string literals are printed as series of bytes,
-/// where non-printable characters are hex-encoded. For instance, if after reading
+/// where non-alphanumeric characters are hex-encoded. For instance, if after reading
 /// the C standard, the user writes ``let x = "🤮"``, then KreMLin will generate
 /// ``const char *x = "\xf0\x9f\xa4\xae"``.
 
