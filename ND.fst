@@ -12,7 +12,7 @@ let return (a:Type u#a) (x:a) = fun () -> [x]
 let bind (a : Type u#aa) (b : Type u#bb)
     (l : repr a) (f : a -> repr b) = fun () -> List.flatten (List.map (fun x -> f x ()) (l ()))
 
-let choose (#a : Type) (x y : a) : repr a = fun () -> [x;y]
+(* let choose (#a : Type) (x y : a) : repr a = fun () -> [x;y] *)
 
 total
 reifiable
@@ -49,11 +49,15 @@ effect Nd (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
 effect NDTot (a:Type) = ND a (pure_null_wp a)
 
-(* let test () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x) = *)
-(*     let x = choose 0 1 in *)
-(*     let y = choose 2 3 in *)
-(*     let z = choose 4 5 in *)
-(*     x + y + z *)
+assume
+val choose : #a:Type0 -> x:a -> y:a -> ND a (fun p -> p x /\ p y)
+(* let choose #a x y = ND?.reflect (fun () -> [x;y]) *)
+
+let test () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x) =
+    let x = choose 0 1 in
+    let y = choose 2 3 in
+    let z = choose 4 5 in
+    x + y + z
 
 let test_reify_1 () = assert (reify (test1 ()) () ==  [5])
 let test_reify_2 () = assert (reify (test2 ()) () ==  [3])
