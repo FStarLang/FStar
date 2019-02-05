@@ -16,6 +16,8 @@ include gmake/z3.mk
 include gmake/fstar.mk
 include gmake/Makefile.tmpl
 
+FStar.UInt128.fst.checked: OTHERFLAGS+=--z3rlimit_factor 2
+
 # Default rule is verify-all, defined in gmake/Makefile.tmpl
 
 %.fst-in:
