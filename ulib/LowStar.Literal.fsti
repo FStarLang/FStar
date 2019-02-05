@@ -44,9 +44,16 @@ let is_ascii_string (s: string) =
 
 let ascii_string = s:string{is_ascii_string s}
 
-let ascii_chars_of_ascii_string (s: ascii_string): list ascii_char =
-  // TODO: missing facilities for reasoning about List.Tot.for_all
-  List.Tot.map (fun (x: Char.char) -> admit (); (x <: ascii_char)) (String.list_of_string s)
+let for_all_tail #a p (l: list a { Cons? l }): Lemma
+  (requires (List.Tot.for_all p l))
+  (ensures (List.Tot.for_all p (List.Tot.tl l)))
+=
+  ()
+
+let ascii_chars_of_ascii_string (s: ascii_string):
+  l:list ascii_char { List.Tot.length l = String.length s }
+=
+  List.Tot.list_ref (String.list_of_string s)
 
 let u8_of_ascii_char (c: ascii_char): x:UInt8.t{ UInt8.v x = Char.int_of_char c } =
   let x32 = Char.u32_of_char c in
@@ -57,14 +64,14 @@ let u8_of_ascii_char (c: ascii_char): x:UInt8.t{ UInt8.v x = Char.int_of_char c 
 /// This means that if a string literal only contains ASCII, then we can easily
 /// reflect its contents in terms of uint8's, without having to talk about the utf8
 /// encoding.
-/// TODO: lemma: S.index (uint8s_of_string s) i = String.index s i
+/// TODO: lemma: S.index (u8s_of_string s) i = String.index s i
 ///   (cannot be proven right now because we don't know much about String.index)
 ///   (is this even what we want? should we do everything in terms of list_of_string?)
 let u8s_of_ascii_string (s: ascii_string):
   ss:Seq.seq UInt8.t { Seq.length ss = List.Tot.length (String.list_of_string s) }
 =
   let cs = List.Tot.map u8_of_ascii_char (ascii_chars_of_ascii_string s) in
-  Seq.Base.init (List.Tot.length cs) (List.Tot.index cs)
+  Seq.seq_of_list cs
 
 /// Consequently, this function becomes in C a simple cast from ``const char *`` to
 /// ``char *``, since immutable buffers don't (yet) have the ``const`` attribute in
@@ -73,8 +80,10 @@ let u8s_of_ascii_string (s: ascii_string):
 /// This function checks at extraction-time that its argument is a literal.
 val buffer_of_literal: (s: ascii_string) ->
   ST.Stack (b: IB.ibuffer UInt8.t)
-    (requires (fun _ -> // TODO: find a way to meta-program the "is literal" check
-      String.length s > 0)) // needed for the implementation
+    (requires (fun _ ->
+      // TODO: find a way to meta-program the "is literal" check
+      String.length s > 0 /\ // needed because of the precondition on igcmalloc_of_list
+      String.length s < pow2 32))
     (ensures (fun h0 b h1 ->
       MB.frameOf b == HS.root /\ // is this really useful?
       MB.recallable b /\
@@ -120,9 +129,9 @@ let buf_len_of_literal (s: string):
 /// that we don't reflect the fact that these are zero-terminated like ``C.String``
 /// attempted to do.
 
-val const_string: Type0
-
 let zero_free s =
   List.Tot.for_all (fun c -> Char.int_of_char c <> 0) (String.list_of_string s)
+
+val const_string: Type0
 
 val const_string_of_literal: s:string { normalize (zero_free s) } -> const_string
