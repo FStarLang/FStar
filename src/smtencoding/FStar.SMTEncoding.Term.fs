@@ -161,7 +161,7 @@ type decls_elt = {
 
 type decls_t = list<decls_elt>
 
-let mk_decls name key decls aux_decls = [{
+let mk_decls name key decls aux_decls = {
   sym_name    = Some name;
   key         = Some key;
   decls       = decls;
@@ -170,7 +170,7 @@ let mk_decls name key decls aux_decls = [{
     (List.collect (function
                    | Assume a -> [a.assumption_name]
                    | _ -> []) decls);
-}]
+}
 
 let mk_decls_trivial decls = [{
   sym_name = None;

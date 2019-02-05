@@ -133,7 +133,7 @@ type decls_elt = {
 
 type decls_t = list<decls_elt>
 
-val mk_decls: string -> string -> list<decl> -> list<decls_elt> -> decls_t
+val mk_decls: string -> string -> list<decl> -> list<decls_elt> -> decls_elt
 
 val mk_decls_trivial: list<decl> -> decls_t
 
