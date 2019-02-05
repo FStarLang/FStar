@@ -384,7 +384,6 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
 
                     | _ -> false
                 in
-                Options.protect_top_level_axioms() &&
                 //Do not thunk ...
                 lid.nsstr <> "Prims"  //things in prims
                 && not (quals |> List.contains Logic) //logic qualified terms
@@ -401,9 +400,9 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
               let vname, vtok_opt, env = new_term_constant_and_tok_from_lid_maybe_thunked env lid arity thunked in
               let get_vtok () = Option.get vtok_opt in
               let vtok_tm =
-                    match formals, vtok_opt with
-                    | [], _ when not thunked -> mkFreeV <| mk_fv (vname, Term_sort)
-                    | _ when thunked -> mkApp(vname, [dummy_tm])
+                    match formals with
+                    | [] when not thunked -> mkFreeV <| mk_fv (vname, Term_sort)
+                    | [] when thunked -> mkApp(vname, [dummy_tm])
                     | _ -> mkApp(get_vtok(), []) //not thunked
               in
               let vtok_app = mk_Apply vtok_tm vars in
@@ -425,7 +424,18 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                       decls2@[tok_typing], push_free_var env lid arity vname (Some <| mkFreeV (mk_fv (vname, Term_sort)))
 
                     | _ when thunked ->
-                      decls2, env
+                      if false
+                      && Options.protect_top_level_axioms()
+                      then decls2, env
+                      else let intro_ambient =
+                               let t = Term.mkApp ("FStar.Pervasives.intro_ambient",
+                                                   [mk_Term_unit;
+                                                    mkFreeV <| (vname, Term_sort, true)])
+                                                  Range.dummyRange
+                               in
+                               Util.mkAssume (Term.mk_Valid t, Some "Ambient nullary symbol trigger", ("intro_ambient_"^vname))
+                           in
+                           decls2@[intro_ambient], env
 
                     | _ ->
                      (* Generate a token and a function symbol;
