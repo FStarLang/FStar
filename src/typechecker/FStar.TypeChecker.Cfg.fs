@@ -919,20 +919,26 @@ let primop_time_report () : string =
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ms) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int ms)) nm) ^ rest) pairs ""
 
-let plugins =
-  let plugins = BU.mk_ref [] in
+let mk_extendable_primop_list () =
+  let steps = BU.mk_ref [] in
   let register (p:primitive_step) =
-      plugins := p :: !plugins
+      steps := p :: !steps
   in
-  let retrieve () = !plugins
+  let retrieve () = !steps
   in
   register, retrieve
+
+let plugins = mk_extendable_primop_list ()
+let extra_steps = mk_extendable_primop_list ()
 
 let register_plugin p = fst plugins p
 let retrieve_plugins () =
     if Options.no_plugins ()
     then []
     else snd plugins ()
+
+let register_extra_step p = fst extra_steps p
+let retrieve_extra_steps () = snd extra_steps ()
 
 let add_nbe s = // ZP : Turns nbe flag on, to be used as the default norm strategy
     if Options.use_nbe ()
@@ -961,7 +967,10 @@ let config' psteps s e =
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
      steps = to_fsteps s |> add_nbe ;
      delta_level = d;
-     primitive_steps = add_steps built_in_primitive_steps (retrieve_plugins () @ psteps);
+     primitive_steps = add_steps built_in_primitive_steps
+                                    (retrieve_extra_steps ()
+                                     @ retrieve_plugins ()
+                                     @ psteps);
      strong = false;
      memoize_lazy = true;
      normalize_pure_lets =
