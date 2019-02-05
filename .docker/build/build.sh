@@ -49,7 +49,11 @@ function fetch_hacl() {
 
     cd hacl-star
     git fetch origin
-    local ref=$(if [ -f ../.hacl_version ]; then cat ../.hacl_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["hacl_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "" || $ref == "null" ]]; then
+        echo "Unable to find RepoVersions.hacl_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
 
     echo Switching to HACL $ref
     git reset --hard $ref
@@ -67,7 +71,11 @@ function fetch_kremlin() {
 
     cd kremlin
     git fetch origin
-    local ref=$(if [ -f ../.kremlin_version ]; then cat ../.kremlin_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["kremlin_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "null" ]]; then
+        echo "Unale to find RepoVersions.kremlin_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
 
     echo Switching to KreMLin $ref
     git reset --hard $ref
@@ -100,7 +108,11 @@ function fetch_qd() {
 
     cd qd
     git fetch origin
-    local ref=$(if [ -f ../.qd_version ]; then cat ../.qd_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["qd_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "" || $ref == "null" ]]; then
+        echo "Unable to find RepoVersions.qd_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
 
     echo Switching to QuackyDucky $ref
     git reset --hard $ref
@@ -131,7 +143,11 @@ function fetch_mitls() {
     fi
     cd mitls-fstar
     git fetch origin
-    local ref=$(if [ -f ../.mitls_version ]; then cat ../.mitls_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["mitls_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "" || $ref == "null" ]]; then
+        echo "Unable to find RepoVersions.mitls_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
 
     echo Switching to mitls-fstar $ref
     git reset --hard $ref
@@ -349,5 +365,6 @@ export OTHERFLAGS="--use_hints --query_stats"
 export MAKEFLAGS="$MAKEFLAGS -Otarget"
 
 cd FStar
+rootPath=$(pwd)
 build_fstar $target
 cd ..
