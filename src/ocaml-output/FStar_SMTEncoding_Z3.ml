@@ -10,8 +10,8 @@ let (parse_z3_version_lines :
     | x::uu____38 ->
         let trimmed = FStar_Util.trim_string x  in
         let parts = FStar_Util.split trimmed " "  in
-        let rec aux uu___126_62 =
-          match uu___126_62 with
+        let rec aux uu___125_62 =
+          match uu___125_62 with
           | hash::[] ->
               let n1 =
                 Prims.min (FStar_String.strlen _z3hash_expected)
@@ -53,7 +53,7 @@ let (z3hash_warning_message :
   fun uu____130  ->
     let run_proc_result =
       try
-        (fun uu___132_140  ->
+        (fun uu___131_140  ->
            match () with
            | () ->
                let uu____144 =
@@ -62,7 +62,7 @@ let (z3hash_warning_message :
                    FStar_Pervasives_Native.None
                   in
                FStar_Pervasives_Native.Some uu____144) ()
-      with | uu___131_155 -> FStar_Pervasives_Native.None  in
+      with | uu___130_155 -> FStar_Pervasives_Native.None  in
     match run_proc_result with
     | FStar_Pervasives_Native.None  ->
         FStar_Pervasives_Native.Some
@@ -162,8 +162,8 @@ let (uu___is_KILLED : z3status -> Prims.bool) =
   
 type z3statistics = Prims.string FStar_Util.smap
 let (status_tag : z3status -> Prims.string) =
-  fun uu___127_562  ->
-    match uu___127_562 with
+  fun uu___126_562  ->
+    match uu___126_562 with
     | SAT uu____564 -> "sat"
     | UNSAT uu____573 -> "unsat"
     | UNKNOWN uu____575 -> "unknown"
@@ -809,11 +809,11 @@ let (z3_job :
               let start = FStar_Util.now ()  in
               let uu____4552 =
                 try
-                  (fun uu___134_4562  ->
+                  (fun uu___133_4562  ->
                      match () with
                      | () -> doZ3Exe r fresh input label_messages) ()
                 with
-                | uu___133_4569 ->
+                | uu___132_4569 ->
                     if
                       let uu____4574 = FStar_Options.trace_error ()  in
                       Prims.op_Negation uu____4574
@@ -825,7 +825,7 @@ let (z3_job :
                                   in
                                uu____4582.refresh  in
                              uu____4577 ());
-                            FStar_Exn.raise uu___133_4569))
+                            FStar_Exn.raise uu___132_4569))
                     else Obj.magic (Obj.repr (failwith "unreachable"))
                  in
               match uu____4552 with
@@ -975,8 +975,8 @@ let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun decls  ->
     FStar_All.pipe_right decls
       (FStar_List.iter
-         (fun uu___128_5377  ->
-            match uu___128_5377 with
+         (fun uu___127_5377  ->
+            match uu___127_5377 with
             | FStar_SMTEncoding_Term.Push  -> failwith "Unexpected push/pop"
             | FStar_SMTEncoding_Term.Pop  -> failwith "Unexpected push/pop"
             | uu____5380 -> ()));
@@ -1022,8 +1022,8 @@ let (context_profile : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
                   | FStar_SMTEncoding_Term.Module (name,decls) ->
                       let decls1 =
                         FStar_List.filter
-                          (fun uu___129_5696  ->
-                             match uu___129_5696 with
+                          (fun uu___128_5696  ->
+                             match uu___128_5696 with
                              | FStar_SMTEncoding_Term.Assume uu____5698 ->
                                  true
                              | uu____5700 -> false) decls
@@ -1081,8 +1081,8 @@ let (mk_input :
            let uu____5970 =
              FStar_All.pipe_right theory
                (FStar_Util.prefix_until
-                  (fun uu___130_5998  ->
-                     match uu___130_5998 with
+                  (fun uu___129_5998  ->
+                     match uu___129_5998 with
                      | FStar_SMTEncoding_Term.CheckSat  -> true
                      | uu____6001 -> false))
               in

@@ -407,11 +407,9 @@ and encode_arith_term env head args_e =
     let (tm_sz, _) : arg = List.hd args_e in
     let sz = getInteger tm_sz.n in
     let sz_key = FStar.Util.format1 "BitVector_%s" (string_of_int sz) in
-    let sz_decls = match lookup_local_cache env sz_key with
-                   | Some elt -> use_cache_entry elt
-                   | None ->
-                     let t_decls = mkBvConstructor sz in
-                     add_to_local_cache env (mk_decls "" sz_key t_decls [])
+    let sz_decls =
+      let t_decls = mkBvConstructor sz in
+      mk_decls "" sz_key t_decls []
     in
     (* we need to treat the size argument for zero_extend specially*)
     let arg_tms, ext_sz =
@@ -497,27 +495,24 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
     let valid_tm = mk_Valid tm in
     let key = mkForall t.pos ([], vars, valid_tm) in
     let tkey_hash = hash_of_term key in
-    match lookup_local_cache env tkey_hash with
-    | Some elt -> tm, use_cache_entry elt
-    | None ->
-      match tm.tm with
-      | App(_, [{tm=FreeV _}; {tm=FreeV _}]) ->
-        FStar.Errors.log_issue t.pos
-                              (Errors.Warning_QuantifierWithoutPattern,
-                               "Not encoding deeply embedded, unguarded quantifier to SMT");
-        tm, decls
+    match tm.tm with
+    | App(_, [{tm=FreeV _}; {tm=FreeV _}]) ->
+      FStar.Errors.log_issue t.pos
+                            (Errors.Warning_QuantifierWithoutPattern,
+                             "Not encoding deeply embedded, unguarded quantifier to SMT");
+      tm, decls
 
-      | _ ->
-        let phi, decls' = encode_formula t env in
-        let interp =
-                match vars with
-                | [] -> mkIff(mk_Valid tm, phi)
-                | _ -> mkForall t.pos ([[valid_tm]], vars, mkIff(mk_Valid tm, phi))
-        in
-        let ax = mkAssume(interp,
-                                Some "Interpretation of deeply embedded quantifier",
-                                "l_quant_interp_" ^ (BU.digest_of_string tkey_hash)) in
-        tm, decls@decls'@ (add_to_local_cache env (mk_decls "" tkey_hash [ax] (decls@decls')))
+    | _ ->
+      let phi, decls' = encode_formula t env in
+      let interp =
+              match vars with
+              | [] -> mkIff(mk_Valid tm, phi)
+              | _ -> mkForall t.pos ([[valid_tm]], vars, mkIff(mk_Valid tm, phi))
+      in
+      let ax = mkAssume(interp,
+                              Some "Interpretation of deeply embedded quantifier",
+                              "l_quant_interp_" ^ (BU.digest_of_string tkey_hash)) in
+      tm, decls@decls'@(mk_decls "" tkey_hash [ax] (decls@decls'))
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
@@ -579,26 +574,23 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         else let _, arity = lookup_free_var_name env v.fv_name in
              let tok = lookup_free_var env v.fv_name in
              let tkey_hash = Term.hash_of_term tok in
-             (match lookup_local_cache env tkey_hash with
-              | Some elt -> tok, use_cache_entry elt
-              | None ->
-                let aux_decls, sym_name =
-                  if arity > 0
-                  then //kick partial application axioms if arity > 0; see #613
-                       //and if the head symbol is just a variable
-                       //rather than maybe a fuel-instrumented name (cf. #1433)
-                      match tok.tm with
-                      | FreeV _
-                      | App(_, []) ->
-                        let sym_name = "@kick_partial_app_" ^ (BU.digest_of_string tkey_hash) in  //the '@' retains this for hints
-                        [Util.mkAssume(kick_partial_app tok,
-                                       Some "kick_partial_app",
-                                       sym_name)], sym_name
-                      | _ -> [], ""
-                  else [], "" in
-                tok, (if aux_decls = []
-                      then ([] |> mk_decls_trivial)
-                      else (add_to_local_cache env (mk_decls sym_name tkey_hash aux_decls []))))
+             let aux_decls, sym_name =
+               if arity > 0
+               then //kick partial application axioms if arity > 0; see #613
+                    //and if the head symbol is just a variable
+                    //rather than maybe a fuel-instrumented name (cf. #1433)
+                   match tok.tm with
+                   | FreeV _
+                   | App(_, []) ->
+                     let sym_name = "@kick_partial_app_" ^ (BU.digest_of_string tkey_hash) in  //the '@' retains this for hints
+                     [Util.mkAssume(kick_partial_app tok,
+                                    Some "kick_partial_app",
+                                    sym_name)], sym_name
+                   | _ -> [], ""
+               else [], "" in
+             tok, (if aux_decls = []
+                   then ([] |> mk_decls_trivial)
+                   else mk_decls sym_name tkey_hash aux_decls [])
 
       | Tm_type _ ->
         mk_Term_type, []
@@ -635,45 +627,40 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let cvars = Term.free_variables t_interp |> List.filter (fun (x, _) -> x <> fst fsym) in
              let tkey = mkForall t.pos ([], fsym::cvars, t_interp) in
              let tkey_hash = hash_of_term tkey in
-             match lookup_local_cache env tkey_hash with
-             | Some elt ->
-               mkApp(elt.sym_name |> BU.must, cvars |> List.map mkFreeV),
-               decls @ decls' @ guard_decls @ (use_cache_entry elt)
-             | None ->
-               let tsym = "Tm_arrow_" ^ (BU.digest_of_string tkey_hash) in
-               let cvar_sorts = List.map snd cvars in
-               let caption =
-                   if Options.log_queries()
-                   then Some (BU.replace_char (N.term_to_string env.tcenv t0) '\n' ' ')
-                   else None in
+             let tsym = "Tm_arrow_" ^ (BU.digest_of_string tkey_hash) in
+             let cvar_sorts = List.map snd cvars in
+             let caption =
+                 if Options.log_queries()
+                 then Some (BU.replace_char (N.term_to_string env.tcenv t0) '\n' ' ')
+                 else None in
 
-               let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, caption) in
+             let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, caption) in
 
-               let t = mkApp(tsym, List.map mkFreeV cvars) in //arity ok
-               let t_has_kind = mk_HasType t mk_Term_type in
+             let t = mkApp(tsym, List.map mkFreeV cvars) in //arity ok
+             let t_has_kind = mk_HasType t mk_Term_type in
 
-               let k_assumption =
-               let a_name = "kinding_"^tsym in
-               Util.mkAssume (mkForall t0.pos ([[t_has_kind]], cvars, t_has_kind), Some a_name, a_name) in
+             let k_assumption =
+             let a_name = "kinding_"^tsym in
+             Util.mkAssume (mkForall t0.pos ([[t_has_kind]], cvars, t_has_kind), Some a_name, a_name) in
 
-               let f_has_t = mk_HasType f t in
-               let f_has_t_z = mk_HasTypeZ f t in
-               let pre_typing =
-               let a_name = "pre_typing_"^tsym in
-               Util.mkAssume(mkForall_fuel t0.pos ([[f_has_t]], fsym::cvars,
-                             mkImp(f_has_t, mk_tester "Tm_arrow" (mk_PreType f))),
-                             Some "pre-typing for functions",
-                             module_name ^ "_" ^ a_name) in
-               let t_interp =
-                   let a_name = "interpretation_"^tsym in
-                   Util.mkAssume(mkForall t0.pos ([[f_has_t_z]],
-                                                  fsym::cvars,
-                                                  mkIff(f_has_t_z, t_interp)),
-                                 Some a_name,
-                                 module_name ^ "_" ^ a_name) in
+             let f_has_t = mk_HasType f t in
+             let f_has_t_z = mk_HasTypeZ f t in
+             let pre_typing =
+             let a_name = "pre_typing_"^tsym in
+             Util.mkAssume(mkForall_fuel t0.pos ([[f_has_t]], fsym::cvars,
+                           mkImp(f_has_t, mk_tester "Tm_arrow" (mk_PreType f))),
+                           Some "pre-typing for functions",
+                           module_name ^ "_" ^ a_name) in
+             let t_interp =
+                 let a_name = "interpretation_"^tsym in
+                 Util.mkAssume(mkForall t0.pos ([[f_has_t_z]],
+                                                fsym::cvars,
+                                                mkIff(f_has_t_z, t_interp)),
+                               Some a_name,
+                               module_name ^ "_" ^ a_name) in
                   
-               let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
-               t, decls@decls'@guard_decls@(add_to_local_cache env (mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls)))
+             let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
+             t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
         else let tsym = varops.fresh (module_name ^ "_Non_total_Tm_arrow") in
              let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
@@ -726,55 +713,48 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let ffv = (fsym, Fuel_sort) in
         let tkey = mkForall t0.pos ([], ffv::xfv::cvars, encoding) in
         let tkey_hash = Term.hash_of_term tkey in
-        (match lookup_local_cache env tkey_hash with
-         | Some elt ->
-           mkApp (elt.sym_name |> BU.must, cvars |> List.map mkFreeV),
-           decls @ decls' @ (use_cache_entry elt)  //AR: I think it is safe to add decls and decls' to returned decls because
-                                                   //if any of the decl in decls@decls' is in the cache, then it must be Term.RetainAssumption, whose encoding is ""
-                                                   //on the other hand, not adding these results in some missing definitions in the smt encoding
-         | None ->
-           let module_name = env.current_module_name in
-           let tsym = "Tm_refine_" ^ (BU.digest_of_string tkey_hash) in
-           let cvar_sorts = List.map snd cvars in
-           let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
-           let t = mkApp(tsym, List.map mkFreeV cvars) in
+        let module_name = env.current_module_name in
+        let tsym = "Tm_refine_" ^ (BU.digest_of_string tkey_hash) in
+        let cvar_sorts = List.map snd cvars in
+        let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
+        let t = mkApp(tsym, List.map mkFreeV cvars) in
 
-           let x_has_base_t = mk_HasType xtm base_t in
-           let x_has_t = mk_HasTypeWithFuel (Some fterm) xtm t in
-           let t_has_kind = mk_HasType t mk_Term_type in
+        let x_has_base_t = mk_HasType xtm base_t in
+        let x_has_t = mk_HasTypeWithFuel (Some fterm) xtm t in
+        let t_has_kind = mk_HasType t mk_Term_type in
 
-           //add hasEq axiom for this refinement type
-           let t_haseq_base = mk_haseq base_t in
-           let t_haseq_ref = mk_haseq t in
+        //add hasEq axiom for this refinement type
+        let t_haseq_base = mk_haseq base_t in
+        let t_haseq_ref = mk_haseq t in
 
-           let t_haseq =
-           Util.mkAssume(mkForall t0.pos ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
-                           Some ("haseq for " ^ tsym),
-                           "haseq" ^ tsym) in
-           // let t_valid =
-           //   let xx = (x, Term_sort) in
-           //   let valid_t = mkApp ("Valid", [t]) in
-           //   Util.mkAssume(mkForall ([[valid_t]], cvars,
-           //       mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
-           //                 Some ("validity axiom for refinement"),
-           //                 "ref_valid_" ^ tsym)
-           // in
+        let t_haseq =
+        Util.mkAssume(mkForall t0.pos ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
+                        Some ("haseq for " ^ tsym),
+                        "haseq" ^ tsym) in
+        // let t_valid =
+        //   let xx = (x, Term_sort) in
+        //   let valid_t = mkApp ("Valid", [t]) in
+        //   Util.mkAssume(mkForall ([[valid_t]], cvars,
+        //       mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
+        //                 Some ("validity axiom for refinement"),
+        //                 "ref_valid_" ^ tsym)
+        // in
 
-           let t_kinding =
-           //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
-           Util.mkAssume(mkForall t0.pos ([[t_has_kind]], cvars, t_has_kind),
-                           Some "refinement kinding",
-                           "refinement_kinding_" ^tsym)
-           in 
-           let t_interp =
-             Util.mkAssume(mkForall t0.pos ([[x_has_t]], ffv::xfv::cvars, mkIff(x_has_t, encoding)),
-                           Some "refinement_interpretation",
-                           "refinement_interpretation_"^tsym) in
+        let t_kinding =
+        //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
+        Util.mkAssume(mkForall t0.pos ([[t_has_kind]], cvars, t_has_kind),
+                        Some "refinement kinding",
+                        "refinement_kinding_" ^tsym)
+        in
+        let t_interp =
+        Util.mkAssume(mkForall t0.pos ([[x_has_t]], ffv::xfv::cvars, mkIff(x_has_t, encoding)),
+                        Some "refinement_interpretation",
+                        "refinement_interpretation_"^tsym) in
               
-           let t_decls = [tdecl;
-                          t_kinding; //t_valid;
-                          t_interp; t_haseq] in
-           t, decls@decls'@(add_to_local_cache env (mk_decls tsym tkey_hash t_decls (decls@decls'))))
+        let t_decls = [tdecl;
+                       t_kinding; //t_valid;
+                       t_interp; t_haseq] in
+        t, decls@decls'@mk_decls tsym tkey_hash t_decls (decls@decls')
 
       | Tm_uvar (uv, _) ->
         let ttm = mk_Term_uvar (Unionfind.uvar_id uv.ctx_uvar_head) in
@@ -852,14 +832,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     let has_type, decls'' = encode_term_pred None ty env app_tm in
                     let cvars = Term.free_variables has_type in
                     let tkey_hash = Term.hash_of_term app_tm in
-                    (match lookup_local_cache env tkey_hash with
-                     | Some elt -> app_tm, decls@decls'@decls''@(use_cache_entry elt)
-                     | None ->
-                       let e_typing = Util.mkAssume(mkForall t0.pos ([[has_type]], cvars, has_type),
-                                                    Some "Partial app typing",
-                                                    ("partial_app_typing_" ^
-                                                    (BU.digest_of_string (Term.hash_of_term app_tm)))) in
-                       app_tm, decls@decls'@decls''@(add_to_local_cache env (mk_decls "" tkey_hash [e_typing] (decls@decls'@decls''))))
+                    let e_typing = Util.mkAssume(mkForall t0.pos ([[has_type]], cvars, has_type),
+                                                Some "Partial app typing",
+                                                ("partial_app_typing_" ^
+                                                 (BU.digest_of_string (Term.hash_of_term app_tm)))) in
+                    app_tm, decls@decls'@decls''@(mk_decls "" tkey_hash [e_typing] (decls@decls'@decls''))
             in
 
             let encode_full_app fv =
@@ -983,35 +960,30 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 in
                 let tkey = mkForall t0.pos ([], cvars, key_body) in
                 let tkey_hash = Term.hash_of_term tkey in
-                match lookup_local_cache env tkey_hash with
-                | Some elt ->
-                  mkApp(elt.sym_name |> BU.must, List.map mkFreeV cvars),
-                  decls @ decls' @ decls'' @ (use_cache_entry elt)
+                match is_an_eta_expansion env vars body with
+                | Some t ->
+                  let decls = decls@decls'@decls'' in
+                  t, decls
                 | None ->
-                  match is_an_eta_expansion env vars body with
-                  | Some t ->
-                    let decls = decls@decls'@decls'' in
-                    t, decls
-                  | None ->
-                    let cvar_sorts = List.map snd cvars in
-                    let fsym = "Tm_abs_" ^ (BU.digest_of_string tkey_hash) in
-                    let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
-                    let f = mkApp(fsym, List.map mkFreeV cvars) in //arity ok, since introduced at cvar_sorts (#1383)
-                    let app = mk_Apply f vars in
-                    let typing_f =
-                      match arrow_t_opt with
-                      | None -> [] //no typing axiom for this lambda, because we don't have enough info
-                      | Some t ->
-                       let f_has_t = mk_HasTypeWithFuel None f t in
-                       let a_name = "typing_"^fsym in
-                       [Util.mkAssume(mkForall t0.pos ([[f]], cvars, f_has_t), Some a_name, a_name)]
-                    in
-                    let interp_f =
-                      let a_name = "interpretation_" ^fsym in
-                      Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
-                    in
-                    let f_decls = (fdecl::typing_f)@[interp_f] in
-                    f, decls@decls'@decls''@(add_to_local_cache env (mk_decls fsym tkey_hash f_decls (decls@decls'@decls'')))
+                  let cvar_sorts = List.map snd cvars in
+                  let fsym = "Tm_abs_" ^ (BU.digest_of_string tkey_hash) in
+                  let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
+                  let f = mkApp(fsym, List.map mkFreeV cvars) in //arity ok, since introduced at cvar_sorts (#1383)
+                  let app = mk_Apply f vars in
+                  let typing_f =
+                    match arrow_t_opt with
+                    | None -> [] //no typing axiom for this lambda, because we don't have enough info
+                    | Some t ->
+                    let f_has_t = mk_HasTypeWithFuel None f t in
+                    let a_name = "typing_"^fsym in
+                    [Util.mkAssume(mkForall t0.pos ([[f]], cvars, f_has_t), Some a_name, a_name)]
+                  in
+                  let interp_f =
+                    let a_name = "interpretation_" ^fsym in
+                    Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
+                  in
+                  let f_decls = (fdecl::typing_f)@[interp_f] in
+                  f, decls@decls'@decls''@(mk_decls fsym tkey_hash f_decls (decls@decls'@decls''))
           end
 
       | Tm_let((_, {lbname=BU.Inr _}::_), _) ->

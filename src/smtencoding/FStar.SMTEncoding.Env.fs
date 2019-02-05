@@ -138,24 +138,8 @@ type env_t = {
     encode_non_total_function_typ:bool;
     current_module_name:string;
     encoding_quantifier:bool;
-    global_cache:BU.smap<decls_elt>;
-    local_cache:BU.smap<decls_elt>
+    global_cache:BU.smap<decls_elt>
 }
-
-let lookup_global_cache (env:env_t) (tkey_hash:string) :option<decls_elt> =
-  BU.smap_try_find env.global_cache tkey_hash
-
-let add_to_global_cache (env:env_t) (elt:decls_elt) :decls_t =
-  BU.smap_add env.global_cache (elt.key |> BU.must) elt; [elt]
-
-let lookup_local_cache (env:env_t) (tkey_hash:string) :option<decls_elt> =
-  BU.smap_try_find env.local_cache tkey_hash
-
-let add_to_local_cache (env:env_t) (elt:decls_elt) :decls_t =
-  BU.smap_add env.local_cache (elt.key |> BU.must) elt; [elt]
-
-let use_cache_entry (elt:decls_elt) :decls_t =
-  [ Term.RetainAssumptions elt.a_names ] |> mk_decls_trivial
 
 let print_env e =
     let bvars = BU.psmap_fold e.bvar_bindings (fun _k pi acc ->
@@ -295,9 +279,7 @@ let tok_of_name env nm =
   BU.psmap_find_map (env.fvar_bindings |> fst) (fun _ fvb ->
       if fvb.smt_id = nm then fvb.smt_token else None)
 
-let reset_current_module_fvbs env =
-  BU.smap_clear env.local_cache;
-  { env with fvar_bindings = (env.fvar_bindings |> fst, []) }
+let reset_current_module_fvbs env = { env with fvar_bindings = (env.fvar_bindings |> fst, []) }
 let get_current_module_fvbs env = env.fvar_bindings |> snd
 let add_fvar_binding_to_env fvb env =
   { env with fvar_bindings = add_fvar_binding fvb env.fvar_bindings }
