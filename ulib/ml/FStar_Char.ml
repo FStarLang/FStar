@@ -11,3 +11,4 @@ let uppercase x =
   with _ -> x
 let int_of_char x = Z.of_int x
 let char_of_int x = Z.to_int x
+let u32_of_char x = x

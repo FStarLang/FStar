@@ -557,7 +557,7 @@ let rec list_unref #a #p l =
     | [] -> []
     | x::xs -> x :: list_unref xs
 
-val list_ref: #a:eqtype -> #p:(a -> bool) ->
+val list_ref: #a:eqtype -> #p:(a -> Tot bool) ->
   l:list a { for_all p l } ->
   Tot (l':list (x:a{ p x }) {
     length l = length l' /\

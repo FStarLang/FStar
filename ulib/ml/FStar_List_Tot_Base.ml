@@ -48,3 +48,4 @@ let compare_of_bool =
   fun rel -> fun x -> fun y -> if (rel x y) then Z.one else (if x = y then Z.zero else (Z.neg Z.one))
 let sortWith f l = BatList.sort (fun x y -> Z.to_int (f x y)) l
 let list_unref l = l
+let list_ref _ l = l
