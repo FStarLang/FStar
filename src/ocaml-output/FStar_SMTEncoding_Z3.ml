@@ -1046,7 +1046,8 @@ let (context_profile : FStar_SMTEncoding_Term.decls_t -> unit) =
          then
            (let uu____5852 = FStar_Util.string_of_int total_decls  in
             FStar_Util.print1
-              "Query Stats: context_profile with %s assertions\n" uu____5852)
+              "Z3 Proof Stats: context_profile with %s assertions\n"
+              uu____5852)
          else ();
          FStar_List.iter
            (fun uu____5867  ->
@@ -1056,7 +1057,8 @@ let (context_profile : FStar_SMTEncoding_Term.decls_t -> unit) =
                   then
                     let uu____5883 = FStar_Util.string_of_int n1  in
                     FStar_Util.print2
-                      "Query Stats: %s produced %s SMT decls\n" m uu____5883
+                      "Z3 Proof Stats: %s produced %s SMT decls\n" m
+                      uu____5883
                   else ()) modules1)
   
 let (mk_input :
@@ -1065,7 +1067,7 @@ let (mk_input :
   =
   fun theory  ->
     let options = FStar_ST.op_Bang z3_options  in
-    (let uu____5930 = FStar_Options.query_stats ()  in
+    (let uu____5930 = FStar_Options.print_z3_statistics ()  in
      if uu____5930 then context_profile theory else ());
     (let uu____5935 =
        let uu____5944 =

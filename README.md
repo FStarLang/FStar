@@ -46,6 +46,12 @@ argument `--codegen OCaml` or `--codegen FSharp`. More details on
 
 [executing F\* code]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
 
+### Chatting about F* on Zulip
+
+Users can chat about F* or ask questions at: https://fstar.zulipchat.com
+
+Zulip (https://zulipchat.com) is an open source alternative to Slack.
+
 ### Community mailing list
 
 The [fstar-club mailing list] is dedicated to F* users. Here is where
@@ -61,16 +67,6 @@ years of F* experience, etc.
 
 [List archives]: https://lists.gforge.inria.fr/pipermail/fstar-club/
 [searchable]: https://mail-archive.com/fstar-club@lists.gforge.inria.fr/
-
-<!-- ### Public Slack channel on functionalprogramming -->
-
-<!-- Users can also ask questions on the public `#fstar` Slack channel -->
-<!-- on [`functionalprogramming`](https://functionalprogramming.slack.com/messages/C15JP868Z/). -->
-<!-- You can get an invite at: <https://fpchat-invite.herokuapp.com/>. -->
-<!-- Slack restricts archiving functionality to paying organizations, -->
-<!-- so we are looking for better alternatives. -->
-<!-- Archives were previously available at: -->
-<!-- https://functionalprogramming.slackarchive.io/fstar/ -->
 
 ### Reporting issues
 

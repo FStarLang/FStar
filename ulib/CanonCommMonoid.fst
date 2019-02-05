@@ -416,7 +416,7 @@ let canon_monoid_with
 
 let canon_monoid (#a:Type) (cm:cm a) : Tac unit =
   canon_monoid_with unit (fun _ -> ()) ()
-    sort sort_correct cm
+    (fun a -> sort a) sort_correct cm
 
 (***** Examples *)
 
@@ -473,7 +473,7 @@ let special_first_correct : permute_correct special_first =
 
 let canon_monoid_special (ts:list term) =
   canon_monoid_with bool (is_special ts) false
-    special_first
+    (fun a -> special_first a)
     special_first_correct
 
 (* let lem2 (a b c d : int) = *)
