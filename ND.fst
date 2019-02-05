@@ -46,7 +46,6 @@ let test3 () : ND int (fun p -> p 5 /\ p 3) = 4
 effect Nd (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
         ND a (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result))
 
-(* The primitive effect Tot is definitionally equal to an instance of PURE *)
 effect NDTot (a:Type) = ND a (pure_null_wp a)
 
 assume
@@ -62,3 +61,6 @@ let test () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x) =
 let test_reify_1 () = assert (reify (test1 ()) () ==  [5])
 let test_reify_2 () = assert (reify (test2 ()) () ==  [3])
 let test_reify_3 () = assert (reify (test1 ()) () =!= [4])
+
+[@expect_failure]
+let _ = assert False

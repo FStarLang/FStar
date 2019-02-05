@@ -1560,7 +1560,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
               (* We are in the case where [head] = [bind e (fun x -> return x)] *)
               (* which can be optimised to just keeping normalizing [e] with a reify on the stack *)
               norm cfg env stack lb.lbdef
-            else (
+            else begin
               (* TODO : optimize [bind (bind e1 e2) e3] into [bind e1 (bind e2 e3)] *)
               (* Rewriting binds in that direction would be better for exception-like monad *)
               (* since we wouldn't rematch on an already raised exception *)
@@ -1581,7 +1581,8 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                     S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv (close lb.lbtyp)
                                           ; cfg.tcenv.universe_of cfg.tcenv (close t)]))
                     None rng
-                | _ -> failwith "NIY : Reification of indexed effects"
+                | _ -> bind_repr
+                       //failwith "NIY : Reification of indexed effects"
               in
               let maybe_range_arg =
                 if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
@@ -1589,19 +1590,21 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                       as_arg (embed_simple EMB.e_range body.pos body.pos)]
                 else []
               in
+              let maybe_wphead = if ed.spec_dm4f then [as_arg S.tun] else [] in
+              let maybe_wpbody = if ed.spec_dm4f then [as_arg S.tun] else [] in
               let reified = S.mk (Tm_app(bind_inst, [
                   (* a, b *)
                   as_arg lb.lbtyp; as_arg t] @
-                  maybe_range_arg @ [
+                  maybe_range_arg @
                   (* wp_head, head--the term shouldn't depend on wp_head *)
-                  as_arg S.tun; as_arg head;
+                  maybe_wphead @ [as_arg head] @
                   (* wp_body, body--the term shouldn't depend on wp_body *)
-                  as_arg S.tun; as_arg body]))
+                  maybe_wpbody @ [as_arg body]))
                 None rng
               in
               log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string head0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
-            )
+            end
       end
     | Tm_app (head_app, args) ->
         (* ****************************************************************************)
