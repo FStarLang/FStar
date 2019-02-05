@@ -424,8 +424,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                       decls2@[tok_typing], push_free_var env lid arity vname (Some <| mkFreeV (mk_fv (vname, Term_sort)))
 
                     | _ when thunked ->
-                      if false
-                      && Options.protect_top_level_axioms()
+                      if Options.protect_top_level_axioms()
                       then decls2, env
                       else let intro_ambient =
                                let t = Term.mkApp ("FStar.Pervasives.ambient",
