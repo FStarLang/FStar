@@ -1436,7 +1436,7 @@ let encode_modul tcenv modul =
     if Options.log_queries()
     then let msg = "Externals for " ^ name in
          [Module(name, Caption msg::decls@[Caption ("End " ^ msg)])]
-    else decls in
+    else [Module(name, decls)] in
     set_env ({env with warn=true});
     if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
     let decls = caption decls in

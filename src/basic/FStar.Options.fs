@@ -196,6 +196,7 @@ let defaults =
       ("include"                      , List []);
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
+      ("profile"                      , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("keep_query_captions"          , Bool true);
@@ -321,6 +322,7 @@ let get_ide                     ()      = lookup_opt "ide"                      
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
+let get_profile                 ()      = lookup_opt "profile"                  as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
@@ -740,6 +742,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Parses and prettyprints in place the files included on the command line");
 
        ( noshort,
+        "profile",
+        Const (mk_bool true),
+        "Prints timing information for various operations in the compiler");
+
+       ( noshort,
         "initial_fuel",
         IntStr "non-negative integer",
         "Number of unrolling of recursive functions to try initially (default 2)");
@@ -862,7 +869,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "print_z3_statistics",
         Const (mk_bool true),
-        "Print Z3 statistics for each SMT query (deprecated; use --query_stats instead)");
+        "Print Z3 statistics for each SMT query (details such as relevant modules, facts, etc. for each proof)");
 
        ( noshort,
         "prn",
@@ -1431,6 +1438,14 @@ let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
 let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
+let profile (f:unit -> 'a) (msg:'a -> string) : 'a =
+    if get_profile()
+    then let a, time = Util.record_time f in
+         Util.print2 "Elapsed time %s ms: %s\n"
+                     (Util.string_of_int time)
+                     (msg a);
+         a
+    else f ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
@@ -1463,7 +1478,6 @@ let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
-                                    || get_query_stats                ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
