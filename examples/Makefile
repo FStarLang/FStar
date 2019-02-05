@@ -26,7 +26,6 @@ kv_parsing \
 lowparse \
 low-mitls-experiments \
 vale \
-csl \
 hello \
 native_tactics \
 extraction \
@@ -38,6 +37,7 @@ regional \
 generic \
 calc
 
+# csl \
 # seplogic \
 
 # low-level \  ... NS: removing from CI for this branch

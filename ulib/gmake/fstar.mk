@@ -1,7 +1,7 @@
 HINTS_ENABLED?=--use_hints --use_hint_hashes
 PROTECT_TOP_LEVEL_AXIOMS?=--protect_top_level_axioms true
 WARN_ERROR=
-OTHERFLAGS+=$(PROTECT_TOP_LEVEL_AXIOMS) $(WARN_ERROR) --z3cliopt 'timeout=180000'
+OTHERFLAGS+=$(PROTECT_TOP_LEVEL_AXIOMS) $(WARN_ERROR)
 
 ifdef Z3
 OTHERFLAGS+=--smt $(Z3)
