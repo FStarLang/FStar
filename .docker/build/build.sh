@@ -27,17 +27,17 @@ function export_home() {
 }
 
 function fetch_vale() {
-    if [ ! -d vale ]; then
-        git clone https://github.com/project-everest/vale vale
+    if [[ ! -d vale ]]; then
+        mkdir vale
     fi
-
-    cd vale
-    git fetch origin
-    echo Switching to vale to fstar_ci
-    git clean -fdx .
-    git reset --hard origin/fstar_ci
-    nuget restore tools/Vale/src/packages.config -PackagesDirectory tools/FsLexYacc
-    cd ..
+    vale_version=$(<hacl-star/vale/.vale_version)
+    vale_version=${vale_version%$'\r'}  # remove Windows carriage return, if it exists
+    wget "https://github.com/project-everest/vale/releases/download/v${vale_version}/vale-release-${vale_version}.zip" -O vale/vale-release.zip
+    rm -rf "vale/vale-release-${vale_version}"
+    unzip -o vale/vale-release.zip -d vale
+    rm -rf "vale/bin"
+    mv "vale/vale-release-${vale_version}/bin" vale/
+    chmod +x vale/bin/*.exe
     export_home VALE "$(pwd)/vale"
 }
 
@@ -49,7 +49,11 @@ function fetch_hacl() {
 
     cd hacl-star
     git fetch origin
-    local ref=$(if [ -f ../.hacl_version ]; then cat ../.hacl_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["hacl_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "" || $ref == "null" ]]; then
+        echo "Unable to find RepoVersions.hacl_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
 
     echo Switching to HACL $ref
     git reset --hard $ref
@@ -67,7 +71,11 @@ function fetch_kremlin() {
 
     cd kremlin
     git fetch origin
-    local ref=$(if [ -f ../.kremlin_version ]; then cat ../.kremlin_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["kremlin_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "null" ]]; then
+        echo "Unale to find RepoVersions.kremlin_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
 
     echo Switching to KreMLin $ref
     git reset --hard $ref
@@ -100,7 +108,11 @@ function fetch_qd() {
 
     cd qd
     git fetch origin
-    local ref=$(if [ -f ../.qd_version ]; then cat ../.qd_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["qd_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "" || $ref == "null" ]]; then
+        echo "Unable to find RepoVersions.qd_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
 
     echo Switching to QuackyDucky $ref
     git reset --hard $ref
@@ -131,7 +143,11 @@ function fetch_mitls() {
     fi
     cd mitls-fstar
     git fetch origin
-    local ref=$(if [ -f ../.mitls_version ]; then cat ../.mitls_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["mitls_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "" || $ref == "null" ]]; then
+        echo "Unable to find RepoVersions.mitls_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
 
     echo Switching to mitls-fstar $ref
     git reset --hard $ref
@@ -235,7 +251,6 @@ function build_fstar() {
         else
             export_home FSTAR "$(pwd)"
 
-            fetch_vale &
             fetch_hacl &
             fetch_and_make_kremlin &
             fetch_mitls &
@@ -247,6 +262,8 @@ function build_fstar() {
                 fi
             } &
             wait
+            # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
+            fetch_vale
 
             # The commands above were executed in sub-shells and their EXPORTs are not
             # propagated to the current shell. Re-do.
@@ -262,23 +279,11 @@ function build_fstar() {
             } &
 
             {
-                has_error="false"
-                cd vale
-                if [[ "$OS" == "Windows_NT" ]]; then
-                    ## This hack for determining the success of a vale run is needed
-                    ## because somehow scons is not returning the error code properly
-                    { env VALE_SCONS_EXIT_CODE_OUTPUT_FILE=vale_exit_code ./run_scons.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output ; } || has_error="true"
-
-                    { [[ -f vale_exit_code ]] && [[ $(cat vale_exit_code) -eq 0 ]] ; } || has_error="true"
-                else
-                    scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
-                fi
-                cd ..
-
-                if [[ $has_error == "true" ]]; then
-                    echo "Error - min-test (Vale)"
-                    echo " - min-test (Vale)" >>$ORANGE_FILE
-                fi
+                VALEFLAGS="--MIN-TEST" make -C hacl-star -j $threads vale.build -k ||
+                    {
+                        echo "Error - min-test (Vale)"
+                        echo " - min-test (Vale)" >>$ORANGE_FILE
+                    }
             } &
 
             {
@@ -360,5 +365,6 @@ export OTHERFLAGS="--use_hints --query_stats"
 export MAKEFLAGS="$MAKEFLAGS -Otarget"
 
 cd FStar
+rootPath=$(pwd)
 build_fstar $target
 cd ..
