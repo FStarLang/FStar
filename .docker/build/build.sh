@@ -27,17 +27,17 @@ function export_home() {
 }
 
 function fetch_vale() {
-    if [ ! -d vale ]; then
-        git clone https://github.com/project-everest/vale vale
+    if [[ ! -d vale ]]; then
+        mkdir vale
     fi
-
-    cd vale
-    git fetch origin
-    echo Switching to vale to fstar_ci
-    git clean -fdx .
-    git reset --hard origin/fstar_ci
-    nuget restore tools/Vale/src/packages.config -PackagesDirectory tools/FsLexYacc
-    cd ..
+    vale_version=$(<hacl-star/vale/.vale_version)
+    vale_version=${vale_version%$'\r'}  # remove Windows carriage return, if it exists
+    wget "https://github.com/project-everest/vale/releases/download/v${vale_version}/vale-release-${vale_version}.zip" -O vale/vale-release.zip
+    rm -rf "vale/vale-release-${vale_version}"
+    unzip -o vale/vale-release.zip -d vale
+    rm -rf "vale/bin"
+    mv "vale/vale-release-${vale_version}/bin" vale/
+    chmod +x vale/bin/*.exe
     export_home VALE "$(pwd)/vale"
 }
 
@@ -251,7 +251,6 @@ function build_fstar() {
         else
             export_home FSTAR "$(pwd)"
 
-            fetch_vale &
             fetch_hacl &
             fetch_and_make_kremlin &
             fetch_mitls &
@@ -263,6 +262,8 @@ function build_fstar() {
                 fi
             } &
             wait
+            # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
+            fetch_vale
 
             # The commands above were executed in sub-shells and their EXPORTs are not
             # propagated to the current shell. Re-do.
@@ -278,23 +279,11 @@ function build_fstar() {
             } &
 
             {
-                has_error="false"
-                cd vale
-                if [[ "$OS" == "Windows_NT" ]]; then
-                    ## This hack for determining the success of a vale run is needed
-                    ## because somehow scons is not returning the error code properly
-                    { env VALE_SCONS_EXIT_CODE_OUTPUT_FILE=vale_exit_code ./run_scons.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output ; } || has_error="true"
-
-                    { [[ -f vale_exit_code ]] && [[ $(cat vale_exit_code) -eq 0 ]] ; } || has_error="true"
-                else
-                    scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
-                fi
-                cd ..
-
-                if [[ $has_error == "true" ]]; then
-                    echo "Error - min-test (Vale)"
-                    echo " - min-test (Vale)" >>$ORANGE_FILE
-                fi
+                VALEFLAGS="--MIN-TEST" make -C hacl-star -j $threads vale.build -k ||
+                    {
+                        echo "Error - min-test (Vale)"
+                        echo " - min-test (Vale)" >>$ORANGE_FILE
+                    }
             } &
 
             {
