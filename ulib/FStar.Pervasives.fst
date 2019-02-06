@@ -19,6 +19,13 @@ module FStar.Pervasives
 open Prims
 include FStar.Pervasives.Native
 
+(* Sometimes it is convenient to explicit introduce nullary symbols
+ * into the ambient context, so that SMT can appeal to their definitions
+ * even when they are no mentioned explicitly in the program, e.g., when
+ * needed for triggers.
+ * Use `intro_ambient t` for that.
+ * See, e.g., LowStar.Monotonic.Buffer.fst and its usage there for loc_none
+ *)
 abstract
 let ambient (#a:Type) (x:a) = True
 abstract
@@ -486,11 +493,3 @@ irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
  *  `forall t e.{:pattern (with_type t e)} has_type (with_type t e) t`
  *)
 let with_type (#t:Type) (e:t) = e
-
-(* Sometimes it is convenient to explicit introduce nullary symbols
- * into the ambient context, so that SMT can appeal to their definitions
- * even when they are no mentioned explicitly in the program, e.g., when
- * needed for triggers.
- * Use `intro_ambient t` for that.
- * See, e.g., LowStar.Monotonic.Buffer.fst and its usage there for loc_none
- *)
