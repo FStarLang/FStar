@@ -1416,7 +1416,7 @@ let rec (specs_with_types :
                                                                     (FStar_Getopt.noshort,
                                                                     "print_z3_statistics",
                                                                     uu____6249,
-                                                                    "Print Z3 statistics for each SMT query (deprecated; use --query_stats instead)")
+                                                                    "Print Z3 statistics for each SMT query (details such as relevant modules, facts, etc. for each proof)")
                                                                      in
                                                                     let uu____6257
                                                                     =
@@ -3169,7 +3169,7 @@ let (print_real_names : unit -> Prims.bool) =
 let (print_universes : unit -> Prims.bool) =
   fun uu____11365  -> get_print_universes () 
 let (print_z3_statistics : unit -> Prims.bool) =
-  fun uu____11372  -> (get_print_z3_statistics ()) || (get_query_stats ()) 
+  fun uu____11372  -> get_print_z3_statistics () 
 let (query_stats : unit -> Prims.bool) =
   fun uu____11379  -> get_query_stats () 
 let (record_hints : unit -> Prims.bool) =
