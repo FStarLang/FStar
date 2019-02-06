@@ -16,7 +16,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "e8f4afad49511c3bbc64297b9cb77ab7"
+      "1bbce8fce35bc64632ecf6778a7239e3"
     ],
     [
       "Bug543.f",
@@ -26,11 +26,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Bug543.range",
         "equation_Bug543.u", "equation_Bug543.wider",
-        "equation_Bug543.within", "function_token_typing_Bug543.r",
-        "refinement_interpretation_Bug543_Tm_refine_56bc4d4e844454be89f5af10ad5108ed"
+        "equation_Bug543.within",
+        "refinement_interpretation_Bug543_Tm_refine_56bc4d4e844454be89f5af10ad5108ed",
+        "typing_Bug543.r"
       ],
       0,
-      "a71e2ef25efc202d1a350094cf9ec289"
+      "075d44e05f29d5974a3f8d9a018b7cfa"
     ],
     [
       "Bug543.g",
@@ -39,12 +40,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Bug543.range",
-        "equation_Bug543.u", "equation_Bug543.wider",
-        "function_token_typing_Bug543.r",
-        "refinement_interpretation_Bug543_Tm_refine_56bc4d4e844454be89f5af10ad5108ed"
+        "equation_Bug543.rint", "equation_Bug543.u", "equation_Bug543.wider",
+        "refinement_interpretation_Bug543_Tm_refine_56bc4d4e844454be89f5af10ad5108ed",
+        "refinement_interpretation_Bug543_Tm_refine_af072d5fa2b9485012c36e8074dc7c55",
+        "typing_Bug543.r"
       ],
       0,
-      "955269e87e80478626fd143d02e33e6e"
+      "eb1c257464e472d0b8232179e5f8ec91"
     ]
   ]
 ]

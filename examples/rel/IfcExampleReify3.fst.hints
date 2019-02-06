@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "079c0fe2eeffacbee4ffc8ebe6179195"
+      "2bbe93dadefa1236699f1fadc0254430"
     ],
     [
       "IfcExampleReify3.p1_x",
@@ -49,7 +49,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "63e3608f8cc47352e030d3714427ec86"
+      "1120dc9f9dfe813a90d610d295b022e9"
     ],
     [
       "IfcExampleReify3.ni_p1",
@@ -63,16 +63,13 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.DM4F.Heap.IntStoreFixed.sel",
-        "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "equation_FStar.DM4F.IntStoreFixed.read",
         "equation_FStar.DM4F.IntStoreFixed.write",
         "equation_FStar.Pervasives.Native.snd",
         "equation_IfcExampleReify3.is_x",
         "equation_IfcExampleReify3.low_equiv",
         "equation_IfcExampleReify3.p1", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
-        "int_typing",
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_16003139f70cbb4ad8f9922bc36cb268",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_be1f098a73b727536eabaf253dd83852",
@@ -88,12 +85,13 @@
         "projection_inverse_Rel.R_l", "projection_inverse_Rel.R_r",
         "refinement_interpretation_FStar.DM4F.Heap.IntStoreFixed_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r",
         "unit_typing"
       ],
       0,
-      "549520ab96e1d9d348331c271efaa961"
+      "2da18129553ad79e42f95e0c2213fb8c"
     ],
     [
       "IfcExampleReify3.is_x",
@@ -102,7 +100,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fbb98d359cdad1eafc3ceb9961890961"
+      "51b7f6d3d967d1c8cc813709de1b1eac"
     ]
   ]
 ]

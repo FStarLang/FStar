@@ -13,7 +13,7 @@
         "refinement_interpretation_Mem_eq_Tm_refine_bcd17831d1f1d1a9e47beb50c2eddaad"
       ],
       0,
-      "5149422b9654593b89648f06776d95c7"
+      "67427e6248450c254a35b7a7f9dede03"
     ],
     [
       "Mem_eq.g_upd_preserves_live",
@@ -23,16 +23,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.Monotonic.HyperStack.mem", "equation_FStar.UInt32.n",
+        "equation_FStar.Monotonic.HyperStack.mem",
         "equation_LowStar.Buffer.buffer", "equation_LowStar.Buffer.pointer",
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.Monotonic.Buffer.g_upd", "equation_Prims.nat",
-        "function_token_typing_FStar.UInt32.n", "int_typing",
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
         "lemma_FStar.Seq.Base.lemma_len_upd",
-        "lemma_LowStar.Monotonic.Buffer.address_liveness_insensitive_buffer",
+        "lemma_LowStar.Monotonic.Buffer.lemma_live_equal_mem_domains",
         "lemma_LowStar.Monotonic.Buffer.length_as_seq",
-        "lemma_LowStar.Monotonic.Buffer.modifies_inert_intro",
-        "lemma_LowStar.Monotonic.Buffer.modifies_inert_liveness_insensitive_buffer_weak",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_573cfed777dae20cc82e8fef9622857e",
@@ -40,11 +38,10 @@
         "refinement_interpretation_Mem_eq_Tm_refine_bcd17831d1f1d1a9e47beb50c2eddaad",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_LowStar.Buffer.trivial_preorder",
-        "typing_LowStar.Monotonic.Buffer.g_upd_seq",
-        "typing_LowStar.Monotonic.Buffer.loc_buffer"
+        "typing_LowStar.Monotonic.Buffer.g_upd_seq"
       ],
       0,
-      "6a3446ed3e0e7dd1c74b2e2017b75d32"
+      "ff16af04ceb45d84fa99462fbd03af62"
     ],
     [
       "Mem_eq.get_upd_eq",
@@ -57,7 +54,7 @@
         "refinement_interpretation_Mem_eq_Tm_refine_bcd17831d1f1d1a9e47beb50c2eddaad"
       ],
       0,
-      "ff68a06de7b21c932babd3e5a8977b0b"
+      "014d71348517ef451d09a00405a72ca1"
     ],
     [
       "Mem_eq.upd_upd_eq",
@@ -76,7 +73,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9032230aebb6af86431278c668fcf155"
+      "e157b417bb8c08822af746dfacf8bb2b"
     ],
     [
       "Mem_eq.upd_com",
@@ -91,7 +88,7 @@
         "refinement_interpretation_Mem_eq_Tm_refine_bcd17831d1f1d1a9e47beb50c2eddaad"
       ],
       0,
-      "b0054a02e5c51fff350626febf738af3"
+      "40ed5f97b28c7e21dfd5598daf3c7e0a"
     ],
     [
       "Mem_eq.get_upd_same",
@@ -105,7 +102,7 @@
         "refinement_interpretation_Mem_eq_Tm_refine_bcd17831d1f1d1a9e47beb50c2eddaad"
       ],
       0,
-      "86a2ff388ad228c6a64a9c0411808751"
+      "e331ec1855c474289b8f4b06680947d9"
     ],
     [
       "Mem_eq.get_upd_other",
@@ -119,7 +116,7 @@
         "refinement_interpretation_Mem_eq_Tm_refine_bcd17831d1f1d1a9e47beb50c2eddaad"
       ],
       0,
-      "4f4d6b2c0fd97ced44ea28c179bc31dc"
+      "49a1112322c20428517479cecd10c740"
     ]
   ]
 ]

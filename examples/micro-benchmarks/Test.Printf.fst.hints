@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "7997ee27871a55415559c2851de8dd5b"
+      "c875396a75e98d28e72540980402dd14"
     ],
     [
       "Test.Printf.something_to_string",
@@ -21,7 +21,7 @@
         "fuel_guarded_inversion_Test.Printf.something"
       ],
       0,
-      "fb0f2a4fb1866d35f2b753ee3a3969e0"
+      "77e2816ecb75ca1a6ddc9b3169696f87"
     ],
     [
       "Test.Printf.parse_something",
@@ -33,7 +33,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bd6744b8da0343ac4c94bf82b9b98527"
+      "48676a9306550bfabae59fb7c298d86b"
     ],
     [
       "Test.Printf.test_ext",
@@ -42,7 +42,7 @@
       1,
       [ "@query" ],
       0,
-      "5dbeee2aa2b1f6e6203db4bd7ae2c2b7"
+      "667a24255563c7b6068c883e19749019"
     ],
     [
       "Test.Printf.test_sprintf",
@@ -51,7 +51,7 @@
       1,
       [ "@query" ],
       0,
-      "ada4c5fbc51fef1ae96285e211d56138"
+      "1451a382e2004b9866f1c715423a9bf4"
     ],
     [
       "Test.Printf.something_to_string",
@@ -64,7 +64,7 @@
         "fuel_guarded_inversion_Test.Printf.something"
       ],
       0,
-      "9919aed9e9a27e4d3b21e293499f418b"
+      "1ea09031ea31471822de46390a5d574b"
     ],
     [
       "Test.Printf.parse_something",
@@ -76,7 +76,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "25aef39d681dedd39500e89f6c5d78fd"
+      "9033ceca5484d1fef4281bfc273ceaee"
     ],
     [
       "Test.Printf.my_sprintf",
@@ -117,7 +117,7 @@
         "typing_FStar.String.list_of_string", "unit_typing"
       ],
       0,
-      "735076a1e4fa5990b0a88f448ed70ea4"
+      "97903904e30edcc0be96e3d4fe0bed0d"
     ],
     [
       "Test.Printf.test_ext",
@@ -126,7 +126,7 @@
       1,
       [ "@query" ],
       0,
-      "4294b532db1eb66c44a0ca28441b12f6"
+      "a71091621e8ec5d2857da05fd5a946c1"
     ]
   ]
 ]

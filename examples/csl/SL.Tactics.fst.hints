@@ -22,7 +22,7 @@
         "typing_FStar.SL.Monotonic.Heap.sel"
       ],
       0,
-      "2d1932ffdb6e49e2f0cb612f4a6753cb"
+      "f66b06cf5c487495f633df7e144a135e"
     ],
     [
       "SL.Tactics.lemma_alloc_return",
@@ -39,7 +39,7 @@
         "typing_FStar.SL.Monotonic.Heap.get_next_addr"
       ],
       0,
-      "a0e69229059bc141223ee1da4f5318fc"
+      "b4cbb43be5118dc57207e61642172d15"
     ],
     [
       "SL.Tactics.lemma_bind",
@@ -53,7 +53,7 @@
         "typing_FStar.SL.Monotonic.Heap.get_next_addr"
       ],
       0,
-      "42cf364046f86fab99412fd1e01517c1"
+      "20d78c0bbcb758ebe7b047dd07d171f8"
     ],
     [
       "SL.Tactics.lemma_eq_implies_intro",
@@ -62,7 +62,7 @@
       1,
       [ "@query" ],
       0,
-      "08a8706e9d94b6e8be51dc4962846788"
+      "d3879d08ca8001bca163f4b4be7f4980"
     ],
     [
       "SL.Tactics.lemma_eq_implies_intro'",
@@ -71,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "80f229b68a2dda5e531e4a36cc67bcb6"
+      "b01b9feb95c2eaa329b37c2a2897641b"
     ],
     [
       "SL.Tactics.lemma_addr_not_eq_refl",
@@ -80,13 +80,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Reflection.Data.var", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "function_token_typing_FStar.Reflection.Data.var",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "380d37fcd7752dc07f797d422ee09159"
+      "6369eeed2e5c425072907334f8368dd9"
     ],
     [
       "SL.Tactics.lemma_impl_l_cong",
@@ -100,7 +102,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "8ae2df18cd08fd0be7552e4bf9d00288"
+      "a859ae01a767886ad384170a0f31ebd3"
     ],
     [
       "SL.Tactics.lemma_eq_l_cong",
@@ -113,7 +115,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "416b84306c73f0d4f15a1d87fe995531"
+      "7513abde215f6f563becf10ac20d32a4"
     ],
     [
       "SL.Tactics.lemma_eq_cong",
@@ -126,7 +128,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "fe2f09d1d5d34a82732c6e812c7e444d"
+      "674186766c6e6af2cbd4eb8df8b9cf04"
     ],
     [
       "SL.Tactics.repeat_step_select",
@@ -144,7 +146,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "18bc491620d5391390a52ba833583505"
+      "31e0f070fe73da9589d4e189bdabd153"
     ],
     [
       "SL.Tactics.lemma_read_write",
@@ -156,7 +158,7 @@
         "refinement_interpretation_SL.Tactics_Tm_refine_3bcf4b7474eb7f3eaa30f4c958188cd5"
       ],
       0,
-      "b8aca3d9974f2d60421cf2b626c4cd6b"
+      "6184ebb9711b3c3154a38e114addfb35"
     ],
     [
       "SL.Tactics.lemma_addr_not_eq_refl",
@@ -165,13 +167,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Reflection.Data.var", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "function_token_typing_FStar.Reflection.Data.var",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8d69de2eb533e21dfd6f63d6ba790833"
+      "2f4818f8e9d8fcb9f29ea68e258a8e73"
     ],
     [
       "SL.Tactics.repeat_step_select",
@@ -189,7 +193,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "d6b12ad65d49c6e4554274bb269156ab"
+      "8939333e58c703723d0684f674020ae0"
     ]
   ]
 ]

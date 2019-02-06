@@ -51,7 +51,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "7e0b5cbfe3bb3ce091f90427523ea3e1"
+      "a8daeccc3dd4ba7b1c58423730d64ee2"
     ],
     [
       "Test.flip",
@@ -88,8 +88,6 @@
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
         "function_token_typing_Prims.string",
-        "function_token_typing_Test.point_struct",
-        "function_token_typing_Test.point_struct_t",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.HyperStack.ST.lemma_equal_domains_trans",
@@ -121,9 +119,9 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_9560ef23f44dd048af58f1767cc19bc8",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Test_Tm_refine_732e7fdb38a888f33fcf60b13746d521",
-        "refinement_interpretation_Test_Tm_refine_967b1829f85df3a7817b8843865216ea",
-        "refinement_interpretation_Test_Tm_refine_eaf22880a9a2c293d631abe402075797",
+        "refinement_interpretation_Test_Tm_refine_0263edaa316f7bf82f87edbd37bc3ad2",
+        "refinement_interpretation_Test_Tm_refine_229f52dbf1011639c94baea0764b3463",
+        "refinement_interpretation_Test_Tm_refine_d1a94b0fefca394c0b36ebf53bb727e6",
         "refinement_interpretation_Test_Tm_refine_ebcf57cd61a79f04a0e64af1c7eb845d",
         "string_typing",
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
@@ -133,10 +131,11 @@
         "typing_FStar.List.Tot.Base.noRepeats",
         "typing_FStar.Pointer.Base.__proj__Mkstruct_typ__item__fields",
         "typing_FStar.Pointer.Base.loc_pointer",
-        "typing_FStar.Pointer.Base.loc_union"
+        "typing_FStar.Pointer.Base.loc_union", "typing_Test.point_struct",
+        "typing_Test.point_struct_t"
       ],
       0,
-      "749c52975d6ca2d3eaf2d586544f887b"
+      "b3936a6a9a3b1086681a1b8e91e8f9e8"
     ],
     [
       "Test.flip'",
@@ -173,8 +172,6 @@
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
         "function_token_typing_Prims.string",
-        "function_token_typing_Test.point_struct",
-        "function_token_typing_Test.point_struct_t",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.HyperStack.ST.lemma_equal_domains_trans",
@@ -206,9 +203,9 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_9560ef23f44dd048af58f1767cc19bc8",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Test_Tm_refine_732e7fdb38a888f33fcf60b13746d521",
-        "refinement_interpretation_Test_Tm_refine_967b1829f85df3a7817b8843865216ea",
-        "refinement_interpretation_Test_Tm_refine_eaf22880a9a2c293d631abe402075797",
+        "refinement_interpretation_Test_Tm_refine_0263edaa316f7bf82f87edbd37bc3ad2",
+        "refinement_interpretation_Test_Tm_refine_229f52dbf1011639c94baea0764b3463",
+        "refinement_interpretation_Test_Tm_refine_d1a94b0fefca394c0b36ebf53bb727e6",
         "refinement_interpretation_Test_Tm_refine_ebcf57cd61a79f04a0e64af1c7eb845d",
         "string_typing",
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
@@ -218,10 +215,11 @@
         "typing_FStar.List.Tot.Base.noRepeats",
         "typing_FStar.Pointer.Base.__proj__Mkstruct_typ__item__fields",
         "typing_FStar.Pointer.Base.loc_pointer",
-        "typing_FStar.Pointer.Base.loc_union"
+        "typing_FStar.Pointer.Base.loc_union", "typing_Test.point_struct",
+        "typing_Test.point_struct_t"
       ],
       0,
-      "a9ec4e5655e3e0ac7a3da2d063850130"
+      "0b9fa6ef4daa353130b9668e5f726bd2"
     ]
   ]
 ]
