@@ -276,7 +276,7 @@
         "typing_FStar.Pointer.Base.type_of_typ"
       ],
       0,
-      "09542000a46c3fe27e022e3ba43b7329"
+      "a37eddfc39df26830f368549961f080d"
     ],
     [
       "FStar.BufferNG.rcreate",
@@ -333,7 +333,7 @@
         "typing_FStar.Pointer.Base.type_of_typ", "typing_FStar.Set.empty"
       ],
       0,
-      "9c62c7b2b40e9f4fdb52dbc1f43e8b3b"
+      "91148c641bda19c3e4a6957bd76db18c"
     ],
     [
       "FStar.BufferNG.index",
@@ -529,7 +529,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "4bf52058c5d9cb96a455086eee804ab7"
+      "98d98a82fb6080ab7745e232677d4e51"
     ],
     [
       "FStar.BufferNG.lemma_sub_spec",
@@ -885,7 +885,7 @@
         "typing_FStar.UInt32.v", "unit_inversion", "unit_typing"
       ],
       0,
-      "5831596374723965fb20b77c43d6c5a4"
+      "df9dc344fe46e9e6190040bf3aea0f01"
     ],
     [
       "FStar.BufferNG.fill",
@@ -1223,7 +1223,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "09ad216778968ba14e96e356a4a7735c"
+      "73dc3abed040c480e42966394ff48f82"
     ],
     [
       "FStar.BufferNG.lemma_sub_spec",

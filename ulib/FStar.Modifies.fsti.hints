@@ -212,7 +212,7 @@
         "typing_FStar.Modifies.loc_none"
       ],
       0,
-      "ee20697ae83cf8b636eabf878a58737b"
+      "c5bcbfd56fd35cc6bc049928d45c72dd"
     ],
     [
       "FStar.Modifies.modifies_liveness_insensitive_buffer_weak",
@@ -228,7 +228,7 @@
         "typing_FStar.Modifies.loc_buffer", "typing_FStar.Modifies.loc_none"
       ],
       0,
-      "c76928d03f22e7e6370d1d7508e3d066"
+      "226294f2a76b1e6dd43b9e9d2bccba7b"
     ],
     [
       "FStar.Modifies.modifies_liveness_insensitive_region_weak",
@@ -244,7 +244,7 @@
         "typing_FStar.Modifies.loc_region_only"
       ],
       0,
-      "a0add248c0974798a9c74c45f8543a8c"
+      "d9f0b91718e59406db8290d938862644"
     ],
     [
       "FStar.Modifies.modifies_liveness_insensitive_region_mreference_weak",
@@ -265,7 +265,7 @@
         "typing_FStar.Monotonic.HyperStack.frameOf"
       ],
       0,
-      "0cfd24a7e09e7465f08eeae3b248f720"
+      "451b444e9e55193af91b2dc43c2941b5"
     ],
     [
       "FStar.Modifies.modifies_liveness_insensitive_region_buffer_weak",
@@ -283,7 +283,7 @@
         "typing_FStar.Modifies.loc_none"
       ],
       0,
-      "79a94cd3f49939635b3984272868264a"
+      "8f9e5bbc64f17526fa4132b80d792e4a"
     ],
     [
       "FStar.Modifies.modifies_loc_addresses_intro",
