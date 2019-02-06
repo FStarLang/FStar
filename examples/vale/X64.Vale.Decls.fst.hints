@@ -2240,7 +2240,7 @@
         "typing_X64.Vale.State_i.eval_maddr", "unit_typing"
       ],
       0,
-      "6bac2196ea5dd9227dc0ebc01285a531"
+      "6f16176341a9097ea23673e9a4ccb81c"
     ],
     [
       "X64.Vale.Decls.va_irreducible_lemma_And64",
@@ -2403,7 +2403,7 @@
         "typing_X64.Vale.State_i.eval_maddr", "unit_typing"
       ],
       0,
-      "919d66e66bf2f8cb3ab6e99fdad61dbc"
+      "9585af428b0c81aacedf26b42770c3ba"
     ],
     [
       "X64.Vale.Decls.va_irreducible_lemma_Shl64",
@@ -2570,7 +2570,7 @@
         "typing_X64.Vale.State_i.eval_maddr", "unit_typing"
       ],
       0,
-      "7c1ae142d24be4814a8a08d5465770f1"
+      "08ca24b8f1b25d7a2ac75e0d68e416e4"
     ],
     [
       "X64.Vale.Decls.va_irreducible_lemma_Shr64",
@@ -2737,7 +2737,7 @@
         "typing_X64.Vale.State_i.eval_maddr", "unit_typing"
       ],
       0,
-      "ef662f9e798d0c40574bff56d58996bd"
+      "c05fa31251f06dca0160a8b4f4a1694f"
     ]
   ]
 ]

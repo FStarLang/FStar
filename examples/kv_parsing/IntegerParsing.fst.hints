@@ -424,7 +424,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "956803ca3c2fda467eb11eeff33a4ee9"
+      "42dde98ba70ade04d5a0b4e991e8611d"
     ],
     [
       "IntegerParsing.parse_u8_st_nochk",
@@ -576,7 +576,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "3099eb17b791d7b5ffd41df268ccfb6a"
+      "c095906dcf42e031ec7868904bd41935"
     ],
     [
       "IntegerParsing.parse_u8_st",
@@ -687,7 +687,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "4452018e61f1a242982df1524aaaaded"
+      "f0d91291da2bb075ba9a9c6baff2c9dc"
     ],
     [
       "IntegerParsing.parse_u16_st_nochk",
@@ -840,7 +840,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "567420ad6cc83b3bb43d293fc71f5e5c"
+      "3040def7583af4a1418af27831f8adcc"
     ],
     [
       "IntegerParsing.parse_u16_st",
@@ -951,7 +951,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "2f98e5e1314258c6b34ef76f6f117d17"
+      "cad31a16b4b0971a47595c021b432781"
     ],
     [
       "IntegerParsing.parse_u32_st_nochk",
@@ -1102,7 +1102,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "ad57ab4d766b087a8e3eb9f7049a1b37"
+      "02e75839bf228845911eff9da1e92821"
     ],
     [
       "IntegerParsing.parse_u32_st",
@@ -1264,7 +1264,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "89a35edb8e2002f58a5e0f43606681bf"
+      "4005938c534b1a7718589557b53a24e2"
     ],
     [
       "IntegerParsing.parse_u16_array_nochk",
@@ -1426,7 +1426,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "ffed95d4fa17aa1f564baff3d0db9f9f"
+      "47c43f4517ea321610b9363e38bb3123"
     ],
     [
       "IntegerParsing.parse_u32_array_nochk",
@@ -1552,7 +1552,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "af20aed0e7fcc233803436a47ffdafc2"
+      "95d2e86073d0c40bd938381bfe71dc7e"
     ],
     [
       "IntegerParsing.validate_u16_array_st",
@@ -1712,7 +1712,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "318e103ea9229e8dee0a792d887f8f9b"
+      "a9361dce74009fd429bd6cf118434ec7"
     ],
     [
       "IntegerParsing.validate_u32_array_st",
@@ -1947,7 +1947,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "be45b8201aabaa65930cfffe46b43e9b"
+      "db1a5ac8272b207e9aca0a2bb2cef364"
     ],
     [
       "IntegerParsing.n_to_be_inv",
@@ -2112,7 +2112,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "79ad6571aaa9a218d83dd9b8abd11227"
+      "e6bb9dc360386a497a71376e660fcf24"
     ],
     [
       "IntegerParsing.ser_u32",
@@ -2198,7 +2198,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "8fb59354f971b2571fb908bf261a0e6c"
+      "e07200bec7597ab11bf3ca92c9437393"
     ],
     [
       "IntegerParsing.enc_u16_array_st",
@@ -3226,7 +3226,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "b9f8d92cd35e49b6749246ebe3e183f5"
+      "f2281d68af1192c584de3aeaa525dc1d"
     ],
     [
       "IntegerParsing.n_to_be_inv",
@@ -3355,7 +3355,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "d4737a89e70352f0fb4d7b74e8ca472e"
+      "97693a07f8987a8c748928d0e6463994"
     ],
     [
       "IntegerParsing.ser_u32",
@@ -3441,7 +3441,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "8c011790f993aff703892fad2d58c13b"
+      "f54140e3c8e3e5d1f927e195f743b9df"
     ],
     [
       "IntegerParsing.enc_u16_array_st",

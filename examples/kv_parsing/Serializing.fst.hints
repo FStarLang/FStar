@@ -541,7 +541,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "4e6c282a28509e1169bccfe084694ce6"
+      "ac6fe721896a15f72009e1bf55e4230b"
     ],
     [
       "Serializing.encode_many",
@@ -1115,7 +1115,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "d953b625795eb5bd5f4580222442c9a5"
+      "7ea6e8a55e433f103aa21e31b68cea48"
     ],
     [
       "Serializing.ser_copy",

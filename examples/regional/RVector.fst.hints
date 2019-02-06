@@ -116,7 +116,7 @@
         "typing_RVector.breg"
       ],
       0,
-      "2098c6524c3b473cdfe05a9c53182345"
+      "da49b72daacc0314469ca7e8ff964bcb"
     ],
     [
       "RVector.bcpy",
@@ -151,6 +151,7 @@
         "equation_LowStar.Regional.Instances.buffer_regional",
         "equation_Prims.l_True", "equation_Prims.logical",
         "equation_Prims.nat", "equation_RVector.breg",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "function_token_typing_FStar.Integers.uint_32",
         "function_token_typing_FStar.UInt32.t",
         "function_token_typing_LowStar.Buffer.trivial_preorder",
@@ -173,8 +174,8 @@
         "lemma_LowStar.Monotonic.Buffer.loc_includes_trans_backwards",
         "lemma_LowStar.Monotonic.Buffer.modifies_loc_includes",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Negation",
-        "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
         "proj_equation_LowStar.Regional.Rgl_r_inv",
         "proj_equation_LowStar.Regional.Rgl_r_repr",
         "proj_equation_LowStar.Regional.Rgl_region_of",
@@ -205,7 +206,7 @@
         "typing_LowStar.Regional.Instances.buffer_region_of"
       ],
       0,
-      "91b693478776610204c4e672f47c0c1c"
+      "cc7d3d15b80cd4341b489e8ba8d4ee73"
     ],
     [
       "RVector.insert_does_not_affect_the_other",
@@ -289,7 +290,7 @@
         "typing_LowStar.Vector.is_full", "typing_RVector.breg"
       ],
       0,
-      "c77b28ee5077b6caf064aa143d761c93"
+      "1da28854315a3c0f54bed326b3ed2998"
     ],
     [
       "RVector.free_does_not_affect_the_other",
@@ -370,7 +371,7 @@
         "typing_LowStar.Vector.is_full", "typing_RVector.breg"
       ],
       0,
-      "8d9c6719e276cd7e97c98908c303848f"
+      "48b58b8f32467b1a81b1159d13262d23"
     ],
     [
       "RVector.breg",

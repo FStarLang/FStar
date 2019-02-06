@@ -126,7 +126,7 @@
         "typing_Test.struct_t"
       ],
       0,
-      "654af175a8007e3f5bade7eed2dfb653"
+      "d1c15da47941e4bd750055cd9fdfc0cd"
     ],
     [
       "Test.caller",
@@ -287,7 +287,7 @@
         "typing_FStar.UInt32.v", "typing_Test.struct", "typing_Test.struct_t"
       ],
       0,
-      "b9a91af8de4539e88a00addf3464de94"
+      "9e772266211b8984fbda0986bd19d909"
     ]
   ]
 ]

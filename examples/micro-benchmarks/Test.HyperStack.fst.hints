@@ -198,7 +198,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "99703dd904264d24eec0f661d793224f"
+      "b0de08a303467b7bb38587c814845872"
     ],
     [
       "Test.HyperStack.test_do_nothing",
@@ -255,7 +255,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "3908b622092e1d1be438939471ce64ae"
+      "70fe5ebf6db618f0fdd41a4ee503f2b9"
     ],
     [
       "Test.HyperStack.test_do_something",
@@ -328,7 +328,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "07e56bd32930d53a422b839427554bf7"
+      "c0164f88b12d5ee21164be64b23ed9ca"
     ],
     [
       "Test.HyperStack.test_do_something_else",
@@ -417,7 +417,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "2d4eb3ed20c2b0e3b2af54410ad59b0f"
+      "b790b523559d4241fd1b4f45c97319cb"
     ],
     [
       "Test.HyperStack.test_allocate",
@@ -498,7 +498,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "5195b2b6addeb0cae12da9f97c744bdb"
+      "00a52a48a8302a30ae6b06a6131c71db"
     ],
     [
       "Test.HyperStack.test_nested_stl",
@@ -565,7 +565,7 @@
         "typing_FStar.Set.singleton"
       ],
       0,
-      "bf84844ce77dc00b80575d8c746d72ac"
+      "978077c9b246a85f93413051d46d7563"
     ],
     [
       "Test.HyperStack.test_stack",
@@ -668,7 +668,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "a0c62ef752f6f2eab6ebb3d9b1ebad26"
+      "d23d67fd5a455cfe6dc0b7f4ddd12bbf"
     ],
     [
       "Test.HyperStack.test_stack_with_long_lived",
@@ -768,7 +768,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "af2dbab382c21362f48e8f4202606131"
+      "1e736ecb9b66eb2c9c2efbd30bc291aa"
     ],
     [
       "Test.HyperStack.test_heap_code_with_stack_calls",
@@ -856,7 +856,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "0d1e68a482a0aee475c4bfc3df397491"
+      "e881e43f98e65fad7c5de357835d2e56"
     ],
     [
       "Test.HyperStack.test_heap_code_with_stack_calls_and_regions",
@@ -947,7 +947,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "e72c370245605e00d331b29fba1ebd60"
+      "15fb314aa6d09015c8b05e8886e58cfe"
     ],
     [
       "Test.HyperStack.test_lax_code_with_stack_calls_and_regions",
@@ -1051,7 +1051,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "56115a1507643a6e60aa16e4d9221453"
+      "2dc5131ee514504498bdeac89ce08d0c"
     ],
     [
       "Test.HyperStack.test_lax_code_with_stack_calls_and_regions_2",
@@ -1153,7 +1153,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "ea46924220acb6d966f2a575fad34d27"
+      "cd2d2bebec36dee2a28514ca02a23373"
     ],
     [
       "Test.HyperStack.test_to_be_stack_inlined",
@@ -1232,7 +1232,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "50df01224393af1f8c618510fc6ee66f"
+      "448caa35f85e7751bd76cb282086eabd"
     ],
     [
       "Test.HyperStack.test_stack_function_with_inline",
@@ -1311,7 +1311,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "c3c38534574a14c763e32aae33614cb3"
+      "1216baf1267f78a8161249f0d49b16c4"
     ],
     [
       "Test.HyperStack.test_st_function_with_inline",
@@ -1373,7 +1373,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "5f79a26a04bc6497c835b00a7b12f496"
+      "939e87b78bde58ab58a94834de8961c7"
     ],
     [
       "Test.HyperStack.test_to_be_inlined",
@@ -1449,7 +1449,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "bf799c884aa46635ef611a36bc1d59b0"
+      "922e352cf6f76b42ea66abb1832fe6b8"
     ],
     [
       "Test.HyperStack.test_st_function_with_inline_2",
@@ -1528,7 +1528,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "5141b8c92752c4c4fc29b61145008137"
+      "1b3d4ecf1edc5666603beffc085cf669"
     ],
     [
       "Test.HyperStack.with_frame",
@@ -1603,7 +1603,7 @@
         "typing_FStar.Set.singleton"
       ],
       0,
-      "d7ebfc053556bdb7d63401cfcbe3bb94"
+      "b102857fef5141552528c7535ce28a0d"
     ],
     [
       "Test.HyperStack.mm_tests",
@@ -1692,7 +1692,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "12e8e49b3d2a8efc458a3b5c48d5513d"
+      "06bf4066f456c6acda403d53f0e6c326"
     ],
     [
       "Test.HyperStack.mods_test2",
@@ -1766,7 +1766,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "a2caedbc5add88e32d6001127340fc95"
+      "a2b16894cdc046bf05bc12cce87c9485"
     ],
     [
       "Test.HyperStack.test_alloc",
@@ -1816,7 +1816,7 @@
         "typing_FStar.Monotonic.Seq.grows_p"
       ],
       0,
-      "4800347905af0a2289adcf712eac0ac6"
+      "63c4bf8a373243b8d9dd3c36fd80d9ab"
     ],
     [
       "Test.HyperStack.test0",
@@ -1946,7 +1946,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "08b5e6b6edebeb818c59699bed369af0"
+      "d1222fa81699c2e7066b5d5c4cb5ce9c"
     ],
     [
       "Test.HyperStack.with_frame",

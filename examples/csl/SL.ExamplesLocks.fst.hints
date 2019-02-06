@@ -311,7 +311,7 @@
         "typing_SL.Heap.emp"
       ],
       0,
-      "5d03beb01f279ea6e985afa1bd795edf"
+      "24b1e4e6453d65baa71f380a442cd21d"
     ],
     [
       "SL.ExamplesLocks.test06",
@@ -329,7 +329,7 @@
         "typing_SL.AutoTactic.memory_cm"
       ],
       0,
-      "e9d1b4bcac803310550ab4159c3e4b19"
+      "412ac8b3be8d753a454b8e350487f6c6"
     ],
     [
       "SL.ExamplesLocks.test06",
@@ -813,7 +813,7 @@
         "typing_SL.AutoTactic.memory_cm"
       ],
       0,
-      "b48fa434be017b307f6ca426d5413500"
+      "bc2df20c7dab360e973cc7e44fc29b72"
     ],
     [
       "SL.ExamplesLocks.test14",
@@ -911,7 +911,7 @@
         "typing_SL.AutoTactic.memory_cm"
       ],
       0,
-      "b9b665cd3a52f1e5c644a9e3f150a362"
+      "dfe6457b430251d46f1dc1e9577d8ec1"
     ],
     [
       "SL.ExamplesLocks.test15",
@@ -1036,7 +1036,7 @@
         "typing_SL.AutoTactic.memory_cm"
       ],
       0,
-      "0140c91088f6acb5b8084d4f87ea0f57"
+      "82f07402c36f611e88d6a3d733ab157e"
     ],
     [
       "SL.ExamplesLocks.test16",

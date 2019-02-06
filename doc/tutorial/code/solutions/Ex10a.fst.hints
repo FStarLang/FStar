@@ -89,7 +89,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "dec9fc77154d68a6c1be104f91991c6c"
+      "481bf12ec2eefdbef9eef56eb3bd4e22"
     ],
     [
       "Ex10a.safe_delete",
@@ -148,7 +148,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "9701ede84b5a7c17d049483778c0922c"
+      "d041fc79b8676ad2f84d703c0fb41b64"
     ],
     [
       "Ex10a.__proj__Readable__item___0",

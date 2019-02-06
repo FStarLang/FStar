@@ -38,7 +38,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
       0,
-      "b47c78d0885c668b615495525f48192a"
+      "11688df9007e4fa9755f25cdd1f68e69"
     ],
     [
       "Ex12a2.Cap.redeem_read",
@@ -92,7 +92,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
       0,
-      "f45154a4cf1176ec4da3c06f7ae55b7a"
+      "bce8fccf52d7b6fe1a10674e0378b4d4"
     ],
     [
       "Ex12a2.Cap.redeem_write",

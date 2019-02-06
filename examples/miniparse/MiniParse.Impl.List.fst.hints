@@ -947,7 +947,7 @@
         "typing_MiniParse.Spec.List.serialize_nlist"
       ],
       0,
-      "c3ce80249c20cbb2dc9699009b20d4ea"
+      "e3730220ec1a794942998ef95b10d201"
     ],
     [
       "MiniParse.Impl.List.parse_nlist_impl_inv",
@@ -1031,7 +1031,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "f57f263e3db1c43711b407668e6dcff6"
+      "bb181ce1b96d6b1e872ded4fe42f6bba"
     ],
     [
       "MiniParse.Impl.List.parse_nlist_impl_body",
@@ -1534,7 +1534,7 @@
         "typing_MiniParse.Spec.List.serialize_nlist"
       ],
       0,
-      "63c7f7a59790e949a9e148db7484c978"
+      "e67845a87a639069defee7d44c77dbd5"
     ],
     [
       "MiniParse.Impl.List.serialize_nlist_impl",
