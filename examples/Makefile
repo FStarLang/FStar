@@ -35,9 +35,8 @@ indexed_effects \
 doublylinkedlist \
 regional \
 generic \
-calc
-
-# csl \
+calc \
+csl
 # seplogic \
 
 # low-level \  ... NS: removing from CI for this branch

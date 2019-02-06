@@ -12,3 +12,6 @@ $(CACHE_DIR):
 include ../Makefile.common
 
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
+
+%.fst-in:
+	@echo $(OTHERFLAGS) $(HINTS_EMNABLED) $(addprefix --include , $(INCLUDE_PATHS))
