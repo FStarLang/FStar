@@ -197,7 +197,7 @@ let defaults =
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
       ("profile"                      , Bool false);
-      ("protect_top_level_axioms"     , Bool false);
+      ("protect_top_level_axioms"     , Bool true);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("keep_query_captions"          , Bool true);
@@ -751,7 +751,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "protect_top_level_axioms",
         BoolStr,
-        "Guard nullary top-level symbols in the SMT encoding from provide ambient ground facts (default 'false')");
+        "Guard nullary top-level symbols in the SMT encoding from provide ambient ground facts (default 'true')");
 
        ( noshort,
         "initial_fuel",
