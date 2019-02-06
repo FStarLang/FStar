@@ -262,7 +262,7 @@ type smt_output = {
   smt_labels:         option<smt_output_section>;
 }
 
-let smt_output_sections (r:Range.range) (lines:list<string>) : smt_output =
+let smt_output_sections (log_file:option<string>) (r:Range.range) (lines:list<string>) : smt_output =
     let rec until tag lines =
         match lines with
         | [] -> None
@@ -295,20 +295,28 @@ let smt_output_sections (r:Range.range) (lines:list<string>) : smt_output =
         match remaining with
         | [] -> ()
         | _ ->
+            let msg =
+                BU.format2 "%sUnexpected output from Z3: %s\n"
+                                        (match log_file with
+                                         | None -> ""
+                                         | Some f -> f ^ ": ")
+                                        (String.concat "\n" remaining)
+            in
             FStar.Errors.log_issue
                      r
-                     (Errors.Warning_UnexpectedZ3Output, (BU.format1 "Unexpected output from Z3: %s\n"
-                                    (String.concat "\n" remaining))) in
+                     (Errors.Warning_UnexpectedZ3Output,
+                      msg)
+    in
     {smt_result = BU.must result_opt;
      smt_reason_unknown = reason_unknown;
      smt_unsat_core = unsat_core;
      smt_statistics = statistics;
      smt_labels = labels}
 
-let doZ3Exe (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) : z3status * z3statistics =
+let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) : z3status * z3statistics =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
-    let smt_output = smt_output_sections r lines in
+    let smt_output = smt_output_sections log_file r lines in
     let unsat_core =
         match smt_output.smt_unsat_core with
         | None -> None
@@ -422,7 +430,7 @@ let pending_jobs = BU.mk_ref 0
 let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
   let status, statistics =
-    try doZ3Exe r fresh input label_messages
+    try doZ3Exe log_file r fresh input label_messages
     with e when not (Options.trace_error()) ->
          (!bg_z3_proc).refresh();
          raise e
@@ -655,7 +663,7 @@ let ask_1_core
     let theory = theory @[Push]@qry@[Pop] in
     let theory, _used_unsat_core = filter_theory theory in
     let input, qhash, log_file_name = mk_input fresh theory in
-    if not (cache_hit log_file_name cache qhash cb) then
+    if not (fresh && cache_hit log_file_name cache qhash cb) then
         run_job ({job=z3_job log_file_name r fresh label_messages input qhash; callback=cb})
 
 let ask_n_cores
@@ -672,7 +680,7 @@ let ask_n_cores
                     (List.rev !fresh_scope)) in
     let theory = theory@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
-    let input, qhash, log_file_name = mk_input false theory in
+    let input, qhash, log_file_name = mk_input true theory in
     if not (cache_hit log_file_name cache qhash cb) then
         enqueue ({job=z3_job log_file_name r true label_messages input qhash; callback=cb})
 
