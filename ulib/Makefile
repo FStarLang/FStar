@@ -1,8 +1,8 @@
 .PHONY: all
 
 FSTAR_HOME=..
-include gmake/z3.mk
-include gmake/fstar.mk
+# include gmake/z3.mk
+# include gmake/fstar.mk
 
 # Makefile.verify has been split off because it is the actual
 # Makefile that is distributed in the binary package. This
