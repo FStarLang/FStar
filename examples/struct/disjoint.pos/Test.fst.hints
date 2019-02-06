@@ -126,7 +126,7 @@
         "typing_Test.struct_t"
       ],
       0,
-      "890b4e422798feca392be2c5d3577bca"
+      "fe0aa612dca1696c008ae5a6c5e8c172"
     ],
     [
       "Test.more_struct",
@@ -180,7 +180,7 @@
         "typing_Test.struct_t"
       ],
       0,
-      "e11d45bc2faec36d1d55697aaaa89aeb"
+      "94c31828b0f23d49a0a920a1a0e84ea6"
     ],
     [
       "Test.caller",
@@ -343,7 +343,7 @@
         "typing_Test.struct", "typing_Test.struct_t"
       ],
       0,
-      "b508fa96cdc660dc60a94c1c1aede65c"
+      "e90e69872027d4df676465f2a07f32e2"
     ]
   ]
 ]

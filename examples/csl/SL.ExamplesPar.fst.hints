@@ -316,7 +316,7 @@
         "token_correspondence_SL.Effect.frame_wp"
       ],
       0,
-      "537873ba19f55f049827679a3cfb23ce"
+      "72c8a5d50712f5f81927467890d557cc"
     ],
     [
       "SL.ExamplesPar.set_to_2",
@@ -345,7 +345,7 @@
         "token_correspondence_SL.Effect.frame_wp", "unit_typing"
       ],
       0,
-      "2529d256b6424ff67603aeca678cbf17"
+      "0e5d68ee895c73a6694bbe273cd64aa6"
     ],
     [
       "SL.ExamplesPar.par_set",
@@ -365,7 +365,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "4865b8345dd73a66b3e8bbde314096bc"
+      "992a125589a1db7ae597588febf977af"
     ],
     [
       "SL.ExamplesPar.par_set",
@@ -383,7 +383,7 @@
         "typing_SL.AutoTactic.memory_cm"
       ],
       0,
-      "cf84c2bde31cf7a0dc3355cba70a5835"
+      "1b89911e995a0a18f703822dfc60a749"
     ],
     [
       "SL.ExamplesPar.par_set",

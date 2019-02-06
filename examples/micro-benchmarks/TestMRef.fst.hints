@@ -67,7 +67,7 @@
         "typing_TestMRef.y", "typing_TestMRef.z"
       ],
       0,
-      "6c0e6cae95cda8716393b6a9dedf9524"
+      "fa7f09248e2331d1511eb5caff55b692"
     ],
     [
       "TestMRef.test_frame_write_mref",
@@ -131,7 +131,7 @@
         "typing_TestMRef.y"
       ],
       0,
-      "d73712e2c26989f5c76e6e8ae9b65d62"
+      "45ab25f1136d92f8de5f2339b030c976"
     ],
     [
       "TestMRef.test_frame_alloc_mref",
@@ -183,7 +183,7 @@
         "typing_TestMRef.x"
       ],
       0,
-      "e1100577c33e81e6f9e4b4c581862f72"
+      "95537a434e36b23c9bc53b225bfca17a"
     ],
     [
       "TestMRef.test_write_mref",
