@@ -248,7 +248,7 @@
         "unit_typing"
       ],
       0,
-      "91c7f51e7e05476214f507a86d123516"
+      "2612a98ca0d7fc56500706bdc236b4c6"
     ],
     [
       "Ex12b.RPC.client_recv",
@@ -368,7 +368,7 @@
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
       0,
-      "bcc5ebaad0a43204000a67320a5c39b8"
+      "129e085ea1d40d08ad00413f2aee99a6"
     ],
     [
       "Ex12b.RPC.test",

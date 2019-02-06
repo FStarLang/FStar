@@ -719,7 +719,7 @@
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "852b0a8a2a820b9ba8cf3bfcd26f2d2f"
+      "1009016fe84686a5a8ac7040e2bcca1b"
     ],
     [
       "MiniParse.Spec.Combinators.seq_slice_append_r",
@@ -759,7 +759,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "MiniParse.Spec.Combinators_interpretation_Tm_arrow_23b9d98b390c442f64c83306fada9853",
+        "MiniParse.Spec.Combinators_interpretation_Tm_arrow_328bdb9c60fdaca8ef59fdce3d5f1d06",
         "MiniParse.Spec.Combinators_interpretation_Tm_arrow_c1a7fc6dd9da959e25008ba0c34c2f4e",
         "MiniParse.Spec.Combinators_interpretation_Tm_arrow_c4e1325f8ca8dfe3da78806d8decf278",
         "MiniParse.Spec.Combinators_interpretation_Tm_arrow_ce3c5e46aa08229e6b50ae91f4b2300d",
@@ -813,7 +813,6 @@
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Seq.Base.lemma_len_append",
         "lemma_FStar.Seq.Properties.slice_length",
-        "partial_app_typing_aa417c34624199050813b07881526d71",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -837,10 +836,11 @@
         "typing_FStar.Pervasives.Native.fst", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice", "typing_MiniParse.Spec.Base.bparse",
         "typing_MiniParse.Spec.Base.serialize",
-        "typing_MiniParse.Spec.Combinators_Tm_abs_0ebea63f1aba968c3f890d6bb9adb5fd"
+        "typing_MiniParse.Spec.Combinators_Tm_abs_0ebea63f1aba968c3f890d6bb9adb5fd",
+        "typing_MiniParse.Spec.Combinators_Tm_abs_67cc31e4cd95e9040eed6bf1482dd417"
       ],
       0,
-      "31ad67364dee4e3dabd2287540185205"
+      "62751ca5ea6997d0045bc75c8b2c8bb0"
     ],
     [
       "MiniParse.Spec.Combinators.serialize_nondep_then",
@@ -907,7 +907,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "f7cf57aa2d850f48bd71ba18c14a6561"
+      "eac7f26546347a9c40d8c2c1f30e73f1"
     ],
     [
       "MiniParse.Spec.Combinators.parse_synth'",
@@ -1688,7 +1688,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "63167f6aa16b18925384e97711f84018"
+      "c8e4b6abf2d270e3acf04016b542bbd5"
     ],
     [
       "MiniParse.Spec.Combinators.parse_synth'",

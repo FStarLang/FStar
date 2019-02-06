@@ -14,7 +14,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.id"
       ],
       0,
-      "fbf6b565ed31e03cbf5663045c6798a4"
+      "1935bbeb191e0dcff143e0791cdd11bf"
     ],
     [
       "ProgramOptimizations.__proj__Const__item___0",
@@ -225,7 +225,7 @@
         "typing_ProgramOptimizations.var"
       ],
       0,
-      "a2ec5652a29a6829db1c518996ecd7ec"
+      "42bb6b11fbe4ca90a709d5ed1e125012"
     ],
     [
       "ProgramOptimizations.__proj__Assign__item___0",
@@ -442,7 +442,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.id"
       ],
       0,
-      "899619e055dd176325b4eecd0f49efa4"
+      "6a8b7a4b07d9788f8cd2db58638766cb"
     ],
     [
       "ProgramOptimizations.__proj__GConst__item___0",
@@ -795,7 +795,7 @@
         "typing_tok_ProgramOptimizations.Skip@tok", "unit_typing"
       ],
       0,
-      "917c1b37111e322989da966b65bd497d"
+      "c5ace02cbea12d0997c5fa8e8eb8723b"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization2",
@@ -908,7 +908,7 @@
         "typing_tok_ProgramOptimizations.Skip@tok", "unit_typing"
       ],
       0,
-      "486f2f3bc6b9358d39ab84539cfc6bd1"
+      "90b9e2883b61bd94454404a65ada7692"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization3",
@@ -1021,7 +1021,7 @@
         "typing_tok_ProgramOptimizations.RTrue@tok", "unit_typing"
       ],
       0,
-      "b74e66145164f68225f124b1a486c374"
+      "bf938c7d5fcf509b242e32815a220ce1"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization4",
@@ -1137,7 +1137,7 @@
         "typing_tok_ProgramOptimizations.Skip@tok", "unit_typing"
       ],
       0,
-      "ee929a2434f17bedc2ebfbc94cc09a08"
+      "4af3ed8cb12452ad6e1e291aac18a7ae"
     ],
     [
       "ProgramOptimizations.lemma_r_cbl",
@@ -1192,7 +1192,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.id"
       ],
       0,
-      "dad0b6250552cfe82cc0f3b2f9bb1316"
+      "337540714b21ea4bf90f586eaf2ced78"
     ],
     [
       "ProgramOptimizations.__proj__Const__item___0",
@@ -1403,7 +1403,7 @@
         "typing_ProgramOptimizations.var"
       ],
       0,
-      "86c4418c920ac8fc0ae700abacc9aa5e"
+      "c2110ec3eab3e3da0d030592cfb48f39"
     ],
     [
       "ProgramOptimizations.__proj__Assign__item___0",
@@ -1620,7 +1620,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.id"
       ],
       0,
-      "d7f55fbc6c40089b9c715f8e5364985c"
+      "2afc3e1850cb3414950ee044a548f820"
     ],
     [
       "ProgramOptimizations.__proj__GConst__item___0",
