@@ -1,8 +1,4 @@
-module IOCurriedFr
-
-(* Really the same as IOTupledFr, just varying the shape of the WP.
- * Meant more as a test over the effect decl framework than as an
- * interesting example. *)
+module IOCurriedHist
 
 open FStar.List
 open FStar.WellFounded
@@ -16,8 +12,6 @@ type io a =
   | Write   : output -> io a -> io a
   | Return  : a -> io a
 
-let wpty a = (a -> list output -> Type0) -> Type0
-
 let return (a:Type u#a) (x:a) = Return x
 
 let rec bind (a : Type u#aa) (b : Type u#bb)
@@ -27,11 +21,14 @@ let rec bind (a : Type u#aa) (b : Type u#bb)
   | Write o k' -> Write o (bind _ _ k' k)
   | Return v -> k v
 
+(* flipping these arguments will break the gen_wps_for_free logic, FIXME *)
+let wpty a = list output -> (a * list output -> Type0) -> Type0
+
 let return_wp (a:Type) (x:a) : wpty a =
-  fun p -> p x []
+  fun h p -> p x h
 
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
-  fun p -> w (fun x l1 -> kw x (fun y l2 -> p y (l1 @ l2)))
+  fun h p -> w h (fun (x, h') -> kw x h' (fun (y, h'') -> p (y, h'')))
 
 total
 reifiable
@@ -48,32 +45,36 @@ new_effect {
      ; bind_wp   = bind_wp
 }
 
-#push-options "--lax"
-val read : unit -> IO int (fun p -> forall x. p x [])
+val read : unit -> IO int (fun h p -> forall x. p (x, h))
 let read () =
+    admit ();
     IO?.reflect (Read (fun i -> Return i))
 
-val write : i:int -> IO unit (fun p -> p () [i])
-let write i =
-    IO?.reflect (Write i (Return ()))
-#pop-options
+(* Keeping the log backwards, since otherwise the VCs are too contrived for z3.
+ * Likely something we should fix separately.. *)
 
-val test1 : unit -> IO int (fun p -> p 1 [2; 3])
-let test1 () =
+val write : i:int -> IO unit (fun h p -> p ((), i::h))
+let write i =
+    admit ();
+    IO?.reflect (Write i (Return ()))
+
+open FStar.Tactics
+
+let x = 1
+
+let test1 () : IO int (fun h p -> p (1, 3::2::h)) =
   write 2;
   write 3;
   1
 
-open FStar.Tactics
-
 (* GM: For some reason I need to compute() in order to prove this *)
-let test2 () : IO int (fun p -> p 1 [2; 3]) by (compute ()) =
+let test2 () : IO int (fun h p -> p (1, 3::2::h)) by (compute ()) =
   write 2;
   let x = read () in
   write 3;
   1
 
-let test3 () : IO int (fun p -> forall x. p 1 [2; x]) by (compute ()) =
+let test3 () : IO int (fun h p -> forall x. p (1, x::2::h)) by (compute ()) =
   write 2;
   let x = read () in
   let x = read () in
@@ -83,7 +84,7 @@ let test3 () : IO int (fun p -> forall x. p 1 [2; x]) by (compute ()) =
   1
 
 [@expect_failure]
-let test4 () : IO int (fun p -> forall x. p 1 [x; x]) by (compute ()) =
+let test4 () : IO int (fun h p -> forall x. p (1, x::x::h)) by (compute ()) =
   write 2;
   let x = read () in
   let x = read () in
@@ -92,11 +93,8 @@ let test4 () : IO int (fun p -> forall x. p 1 [x; x]) by (compute ()) =
   write x;
   1
 
-let test5 () : IO int (fun p -> forall x. p 1 [x; x]) by (compute ()) =
+let test5 () : IO int (fun h p -> forall x. p (1, x::x::h)) by (compute ()) =
   let x = read () in
   write x;
   write x;
   1
-
-let ref = normalize_term (reify (test5 ()))
-
