@@ -1,5 +1,5 @@
 [
-  "Ì0IŒ¯ ‘?¬X,’‰\u0015™=",
+  "½„”âvÌÒØ2}iû;ÉúÍ",
   [
     [
       "IOCurriedFr.__proj__Read__item___0",
@@ -68,7 +68,24 @@
         "subterm_ordering_IOCurriedFr.Write"
       ],
       0,
-      "beee5e500cd2f8463168e581ccf1bba3"
+      "d0add31b6ec48c8c7d70bbca5bf36888"
+    ],
+    [
+      "IOCurriedFr.interpretation",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_5852853a96c611566036e0c2a0607160_2",
+        "disc_equation_IOCurriedFr.Read", "disc_equation_IOCurriedFr.Return",
+        "disc_equation_IOCurriedFr.Write",
+        "fuel_guarded_inversion_IOCurriedFr.io",
+        "subterm_ordering_IOCurriedFr.Read",
+        "subterm_ordering_IOCurriedFr.Write"
+      ],
+      0,
+      "8d2472dee6d3b80b36e40ead565a0447"
     ],
     [
       "IOCurriedFr.test1",
@@ -89,14 +106,14 @@
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "function_token_typing_Prims.int", "int_typing",
         "interpretation_IOCurriedFr_Tm_abs_07e659d8cfe45c2b63e0bb1227b3d8b4",
-        "interpretation_IOCurriedFr_Tm_abs_0f4673d5fed227e06b2c5179845f964e",
         "interpretation_IOCurriedFr_Tm_abs_2834134d38b3d80d8b28ba55c2c604b6",
+        "interpretation_IOCurriedFr_Tm_abs_31c968ea516501c7988f646e13483c3c",
         "interpretation_IOCurriedFr_Tm_abs_52eb6216895e9362b2d34afbaaaa1ef0",
         "interpretation_IOCurriedFr_Tm_abs_b83f2d6a67ee8241d7ba3d0054672763",
         "interpretation_IOCurriedFr_Tm_abs_c68d4ebc6072080e61cd127d106e38af",
-        "interpretation_IOCurriedFr_Tm_abs_ef3b15e6292e218e8f153e27a1747a85",
+        "interpretation_IOCurriedFr_Tm_abs_f1d0a5408d3f2205ba809901c0e2306c",
         "interpretation_IOCurriedFr_Tm_abs_f8b5ed5ef820d3176f7487632c78168e",
-        "l_quant_interp__17456",
+        "l_quant_interp__17467",
         "lemma_FStar.List.Tot.Properties.append_l_nil",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
@@ -107,7 +124,7 @@
         "token_correspondence_IOCurriedFr.return_wp", "unit_typing"
       ],
       0,
-      "374db44c8d2c38596423727ee7075f64"
+      "b76d179322264b73b4b660de06d50b42"
     ],
     [
       "IOCurriedFr.test2",
@@ -116,7 +133,7 @@
       1,
       [ "@query" ],
       0,
-      "1244c66811445bf2309fd43ccccb1ea0"
+      "f7328f0ef9266c8f6847676e127e373b"
     ],
     [
       "IOCurriedFr.test3",
@@ -125,7 +142,7 @@
       1,
       [ "@query" ],
       0,
-      "a24aa32d690399813ae0af61bd88861c"
+      "45b3b9a6e2381da35a8f9c05c481e036"
     ],
     [
       "IOCurriedFr.test5",
@@ -134,7 +151,7 @@
       1,
       [ "@query" ],
       0,
-      "a6ac561f7f0e41f4d88811622b96b9bb"
+      "dcebbd84664d1751064f15937125164e"
     ],
     [
       "IOCurriedFr.__proj__Read__item___0",
@@ -147,7 +164,7 @@
         "refinement_interpretation_IOCurriedFr_Tm_refine_65ec46ad8007f56143b86922566b7ada"
       ],
       0,
-      "2c579ffc0c94ad626200ea8a5d17d11e"
+      "fe889b05fef897a3ec6eaf41714f75ff"
     ],
     [
       "IOCurriedFr.__proj__Write__item___0",
@@ -160,7 +177,7 @@
         "refinement_interpretation_IOCurriedFr_Tm_refine_79dc606340955dc1e568ca9bf6967f54"
       ],
       0,
-      "84849f3e93bda439e9c2aac9de8f9f18"
+      "3bd7cdb7c7f8bb87b2394ebff89efa4a"
     ],
     [
       "IOCurriedFr.__proj__Write__item___1",
@@ -173,7 +190,7 @@
         "refinement_interpretation_IOCurriedFr_Tm_refine_79dc606340955dc1e568ca9bf6967f54"
       ],
       0,
-      "29882ce0e376b1d217dc6f84ca818fc4"
+      "f63f15e31ed1eb000dc06fdc682c0174"
     ],
     [
       "IOCurriedFr.__proj__Return__item___0",
@@ -186,7 +203,7 @@
         "refinement_interpretation_IOCurriedFr_Tm_refine_2c0b453f70c0108bf317f3f47846e76c"
       ],
       0,
-      "9c227f9ac3c869aa9040129cdd1fd9f5"
+      "4236c4f099190a3148eb8f57077b1301"
     ],
     [
       "IOCurriedFr.bind",
@@ -203,7 +220,24 @@
         "subterm_ordering_IOCurriedFr.Write"
       ],
       0,
-      "9536b9278b8e66ca31949b39fc91b274"
+      "266fda912974d168f14465fd68b9680d"
+    ],
+    [
+      "IOCurriedFr.interpretation",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_5852853a96c611566036e0c2a0607160_2",
+        "disc_equation_IOCurriedFr.Read", "disc_equation_IOCurriedFr.Return",
+        "disc_equation_IOCurriedFr.Write",
+        "fuel_guarded_inversion_IOCurriedFr.io",
+        "subterm_ordering_IOCurriedFr.Read",
+        "subterm_ordering_IOCurriedFr.Write"
+      ],
+      0,
+      "3324cdfd7481e16358c9c36b5080b2c6"
     ],
     [
       "IOCurriedFr.test1",
@@ -224,14 +258,14 @@
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "function_token_typing_Prims.int", "int_typing",
         "interpretation_IOCurriedFr_Tm_abs_07e659d8cfe45c2b63e0bb1227b3d8b4",
-        "interpretation_IOCurriedFr_Tm_abs_0f4673d5fed227e06b2c5179845f964e",
         "interpretation_IOCurriedFr_Tm_abs_2834134d38b3d80d8b28ba55c2c604b6",
+        "interpretation_IOCurriedFr_Tm_abs_31c968ea516501c7988f646e13483c3c",
         "interpretation_IOCurriedFr_Tm_abs_b83f2d6a67ee8241d7ba3d0054672763",
         "interpretation_IOCurriedFr_Tm_abs_c495a5750f9e6555207b16ab3a95934b",
         "interpretation_IOCurriedFr_Tm_abs_c68d4ebc6072080e61cd127d106e38af",
-        "interpretation_IOCurriedFr_Tm_abs_ef3b15e6292e218e8f153e27a1747a85",
+        "interpretation_IOCurriedFr_Tm_abs_f1d0a5408d3f2205ba809901c0e2306c",
         "interpretation_IOCurriedFr_Tm_abs_f8b5ed5ef820d3176f7487632c78168e",
-        "l_quant_interp__17887",
+        "l_quant_interp__17909",
         "lemma_FStar.List.Tot.Properties.append_l_nil",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
@@ -242,7 +276,7 @@
         "token_correspondence_IOCurriedFr.return_wp", "unit_typing"
       ],
       0,
-      "a8e74f7d291754355ebd5718b8a560db"
+      "00d304c8340cfd85a3244b0446e7ba4b"
     ],
     [
       "IOCurriedFr.test2",
@@ -251,7 +285,7 @@
       1,
       [ "@query" ],
       0,
-      "188924f490109a78a3a46061f47f3f41"
+      "4c124d6fb34bfd7aafd6f8e8bc6c15a7"
     ],
     [
       "IOCurriedFr.test3",
@@ -260,7 +294,7 @@
       1,
       [ "@query" ],
       0,
-      "59578ec5290c8346227f6a99ecbc8ce5"
+      "57972090cde4305019c8a4c6e9ac5792"
     ],
     [
       "IOCurriedFr.test5",
@@ -269,7 +303,7 @@
       1,
       [ "@query" ],
       0,
-      "a7f8f0ea1cb53fa3183b898e690da58d"
+      "85fcf06fcc92b660f43cf2e237326d32"
     ]
   ]
 ]
