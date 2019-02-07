@@ -2332,7 +2332,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let eff_t = desugar_term env eff_typ in
 
     let mandatory_members =
-      let rr_members = ["repr" ; "return" ; "bind"; "wp_type"] in
+      let rr_members = ["repr" ; "return" ; "bind"; "wp_type"; "interp"] in
       (* the first 3 are optional but must not be counted as actions *)
       rr_members @ [
         "return_wp";
@@ -2398,7 +2398,14 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
                 | None -> mk Tm_unknown None Range.dummyRange
                 | Some t -> Subst.close binders t
         in
-        [], t in
+        [], t
+    in
+    let lookup_or_none s =
+        let l = Env.qualify env (mk_ident(s, d.drange)) in
+        match try_lookup_definition env l with
+        | None -> None
+        | Some t -> Some (Subst.close binders t)
+    in
     let mname       =qualify env0 eff_name in
     let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
     let se =
@@ -2431,6 +2438,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
            };
            elaborated  = false;
            spec_dm4f   = false;
+           interp      = lookup_or_none "interp";
            actions     = actions;
            eff_attrs   = List.map (desugar_term env) attrs;
          }));
@@ -2506,6 +2514,8 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
 
             elaborated  =ed.elaborated;
             spec_dm4f   =ed.spec_dm4f;
+
+            interp      = BU.map_opt ed.interp (fun t -> snd (sub ([], t)));
             repr = {
               monad_m = snd (sub ([], ed.repr.monad_m));
               monad_ret = sub ed.repr.monad_ret;
