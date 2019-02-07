@@ -13,37 +13,37 @@
         "unit_typing"
       ],
       0,
-      "c7500f9b28358a2bd22ecd132b9b90b8"
+      "5a1cb356e78c84064a729f40a042fdd4"
     ],
     [
-      "NormVsSMT.uu___8",
+      "NormVsSMT.uu___3",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query" ],
       0,
-      "adcac34bd48ce31a03115fde145fee11"
+      "ea6102732a33a9ba449253a015168d0c"
+    ],
+    [
+      "NormVsSMT.uu___4",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "607231e05eeefeb8819676ade96a5531"
+    ],
+    [
+      "NormVsSMT.uu___5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0b946f96400bb3bc20435738a758d945"
     ],
     [
       "NormVsSMT.uu___9",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6bd208b704172f7814d639c88a3b9436"
-    ],
-    [
-      "NormVsSMT.uu___10",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "279aadcb868a3e9264e4b12abf88e345"
-    ],
-    [
-      "NormVsSMT.uu___14",
       1,
       2,
       1,
@@ -52,46 +52,46 @@
         "refinement_interpretation_Tm_refine_417497e72c9ba78cde76740d8f1356ba"
       ],
       0,
-      "14deda3158214fe6d67e58f8b06a1ee3"
+      "7e822e41e6b99821406b7b58e137214f"
     ],
     [
-      "NormVsSMT.uu___15",
+      "NormVsSMT.uu___10",
       1,
       2,
       1,
       [ "@query", "equation_NormVsSMT.trigger", "int_typing" ],
       0,
-      "8174a9bd3748d10d4fdd603d87c65ebb"
+      "d5340c9700e69788acfebc705fc5931f"
     ],
     [
-      "NormVsSMT.uu___8",
+      "NormVsSMT.uu___3",
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query" ],
       0,
-      "479344e2d1f6eae47265951abbdb5065"
+      "a1412cf14dc9614519b7b0b9ce460abd"
+    ],
+    [
+      "NormVsSMT.uu___4",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0c47a21bca6299e999bd4523c2b5781d"
+    ],
+    [
+      "NormVsSMT.uu___5",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "91afc6b1d0aff9ffb51d6180c9552029"
     ],
     [
       "NormVsSMT.uu___9",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "60c1cceca622cea73abe6ca9316d7231"
-    ],
-    [
-      "NormVsSMT.uu___10",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3bf1ba11bc27beb7ff17a9c600caad83"
-    ],
-    [
-      "NormVsSMT.uu___14",
       2,
       2,
       1,
@@ -100,16 +100,16 @@
         "refinement_interpretation_Tm_refine_417497e72c9ba78cde76740d8f1356ba"
       ],
       0,
-      "7fbde2ce84db11ce42a1a90960342927"
+      "48157234ee7f35d1040bce0398c4e2bd"
     ],
     [
-      "NormVsSMT.uu___15",
+      "NormVsSMT.uu___10",
       2,
       2,
       1,
       [ "@query", "equation_NormVsSMT.trigger", "int_typing" ],
       0,
-      "90fc0e3b9e8d64322bd52250d6abb23b"
+      "6b593de4a91a1c58f7a27d56a3dcd0cc"
     ]
   ]
 ]

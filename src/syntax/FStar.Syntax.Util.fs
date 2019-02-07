@@ -1280,7 +1280,9 @@ let mk_auto_squash u p =
 
 let un_squash t =
     let head, args = head_and_args t in
-    match (un_uinst head).n, args with
+    let head = unascribe head in
+    let head = un_uinst head in
+    match (compress head).n, args with
     | Tm_fvar fv, [(p, _)]
         when fv_eq_lid fv PC.squash_lid ->
       Some p
