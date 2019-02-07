@@ -50,6 +50,11 @@ let choose #a x y =
     admit (); (* no interp yet, we can't show it meets the spec above *)
     ND?.reflect (fun () -> [x;y])
 
+val fail : #a:Type0 -> unit -> ND a (fun p -> True)
+let fail #a () =
+    admit (); (* no interp yet, we can't show it meets the spec above *)
+    ND?.reflect (fun () -> [])
+
 let test () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x) =
     let x = choose 0 1 in
     let y = choose 2 3 in
@@ -62,6 +67,44 @@ let test_bad () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 5 ==> p x) =
     let y = choose 2 3 in
     let z = choose 4 5 in
     x + y + z
+
+let rec pick #a (l : list a) : ND a (fun p -> forall x. List.memP x l ==> p x) =
+    match l with
+    | [] -> fail ()
+    | x::xs ->
+      // choose x (pick xs)
+      // ^ this is wrong! it will call `pick xs` before choosing and always
+      //   end up returning []
+      if choose true false
+      then x
+      else pick xs
+
+let guard (b:bool) : ND unit (fun p -> b ==> p ()) =
+  if b
+  then ()
+  else fail ()
+
+let ( * ) = op_Multiply
+
+let pyths () : ND (int & int & int) (fun p -> forall x y z. x*x + y*y == z*z ==> p (x,y,z)) =
+  let l = [1;2;3;4;5;6;7;8;9;10] in
+  let x = pick l in
+  let y = pick l in
+  let z = pick l in
+  (* funny, using == here gives a terrible error message: "Could not prove-postcondition" *)
+  guard (x*x + y*y = z*z);
+  (x,y,z)
+
+(* Check ND.ml for the triples:
+
+let (pyths_norm : unit -> (Prims.int * Prims.int * Prims.int) Prims.list) =
+  fun uu____1038  ->
+    [((Prims.parse_int "3"), (Prims.parse_int "4"), (Prims.parse_int "5"));
+    ((Prims.parse_int "4"), (Prims.parse_int "3"), (Prims.parse_int "5"));
+    ((Prims.parse_int "6"), (Prims.parse_int "8"), (Prims.parse_int "10"));
+    ((Prims.parse_int "8"), (Prims.parse_int "6"), (Prims.parse_int "10"))]
+*)
+let pyths_norm () = normalize_term (reify (pyths ()) ())
 
 let test_reify_1 () = assert (reify (test1 ()) () ==  [5])
 let test_reify_2 () = assert (reify (test2 ()) () ==  [3])
