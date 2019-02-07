@@ -56,6 +56,13 @@ let test () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x) =
     let z = choose 4 5 in
     x + y + z
 
+[@expect_failure]
+let test_bad () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 5 ==> p x) =
+    let x = choose 0 1 in
+    let y = choose 2 3 in
+    let z = choose 4 5 in
+    x + y + z
+
 let test_reify_1 () = assert (reify (test1 ()) () ==  [5])
 let test_reify_2 () = assert (reify (test2 ()) () ==  [3])
 let test_reify_3 () = assert (reify (test1 ()) () =!= [4])

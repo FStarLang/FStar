@@ -212,24 +212,29 @@ let cps_and_elaborate_ed env ed =
     then
       let dmff_env, _, bind_wp, bind_elab =
                       elaborate_and_star dmff_env effect_binders [] ed.repr.monad_bind in
-      let bind_wp = U.abs [S.null_binder (S.tabbrev PC.range_lid)] bind_wp None in
+      let bind_wp =
+        if is_unk (snd ed.spec.monad_bind)
+        then U.abs [S.null_binder (S.tabbrev PC.range_lid)] bind_wp None
+        else snd ed.spec.monad_bind
+      in
       dmff_env, bind_wp, bind_elab
     else dmff_env, snd ed.spec.monad_bind, snd ed.repr.monad_bind
   in
 
   let dmff_env, return_wp, return_elab =
-     if ed.spec_dm4f
-     then
-       let dmff_env, _, return_wp, return_elab =
-                        elaborate_and_star dmff_env effect_binders [] ed.repr.monad_ret in
-       dmff_env, return_wp, return_elab
-     else dmff_env, snd ed.spec.monad_ret, snd ed.repr.monad_ret
+    if ed.spec_dm4f && is_unk (snd ed.spec.monad_ret)
+    then
+      let dmff_env, _, return_wp, return_elab =
+                       elaborate_and_star dmff_env effect_binders [] ed.repr.monad_ret in
+      let return_wp =
+        if is_unk (snd ed.spec.monad_ret)
+        then return_wp
+        else snd ed.spec.monad_ret
+      in
+      dmff_env, return_wp, return_elab
+    else dmff_env, snd ed.spec.monad_ret, snd ed.repr.monad_ret
   in
-  (* let return_wp = *)
-  (*   if ed.spec_dm4f *)
-  (*   then U.abs [S.null_binder (S.tabbrev PC.range_lid)] return_wp None *)
-  (*   else snd ed.spec.monad_ret *)
-  (* in *)
+
   let rc_gtot = {
             residual_effect = PC.effect_GTot_lid;
             residual_typ = None;
