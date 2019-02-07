@@ -16,6 +16,7 @@ metatheory \
 verifythis \
 preorders \
 dm4free \
+dm4all \
 incl \
 struct \
 micro-benchmarks \
