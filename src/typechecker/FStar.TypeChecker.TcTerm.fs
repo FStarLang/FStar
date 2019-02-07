@@ -646,11 +646,16 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let expected_repr_typ, res_typ, wp, g0 =
           let u = Env.new_u_univ () in
           let repr = Env.inst_effect_fun_with [u] env ed ([], ed.repr.monad_m) in
-          let t = mk (Tm_app(repr, [as_arg S.tun; as_arg S.tun])) None top.pos in
+          let t =
+            if ed.spec_dm4f
+            then mk (Tm_app(repr, [as_arg S.tun; as_arg S.tun])) None top.pos
+            else mk (Tm_app(repr, [as_arg S.tun])) None top.pos
+          in
           let t, _, g = tc_tot_or_gtot_term (Env.clear_expected_typ env |> fst) t in
           match (SS.compress t).n with
           | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g
-          | _ -> failwith "Impossible"
+          | Tm_app(_, [(res, _)]) -> t, res, S.tun, g (* GG, FIXME: should call interp instead of having S.tun *)
+          | _ -> failwith "unexpected shape after typechecking reflect term"
         in
         let e, g =
           let e, c, g = tc_tot_or_gtot_term env_no_ex e in

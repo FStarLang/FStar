@@ -1252,7 +1252,9 @@ let effect_repr_aux only_reifiable env c u_c =
                 "like [TAC int] instead of [Tac int]." in
               raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) (get_range env) in
           let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr.monad_m) in
-          Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
+          if ed.spec_dm4f
+          then Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
+          else Some (S.mk (Tm_app(repr, [as_arg res_typ])) None (get_range env))
 
 let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
 
