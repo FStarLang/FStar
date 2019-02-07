@@ -2930,7 +2930,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
              if BU.physical_equality wpc1 wpc2
              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
              else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
-                  if qualifiers |> List.contains Reifiable
+                  if false && qualifiers |> List.contains Reifiable
                   then let c1_repr =
                            N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF] env
                                        (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
