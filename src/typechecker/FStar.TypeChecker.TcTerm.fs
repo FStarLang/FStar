@@ -655,7 +655,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           match (SS.compress t).n with
           | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g
           | Tm_app(_, [(res, _)]) ->
-            let interp = BU.must ed.interp in
+            let interp =
+                match ed.interp with
+                | Some t -> t
+                | None ->
+                    failwith (BU.format1 "error: effect %s has no interp function \
+                                                 in order to use reflection" (string_of_lid ed.mname))
+            in
             let wp = U.mk_app interp [as_arg t; as_arg e] in
             (* GG FIXME: This is a cannonball, but some normalization is required
              * to verify even the simplest ND actions. *)
