@@ -1,8 +1,6 @@
-module ND
+module NDDemonic
 
 module List = FStar.List.Tot
-
-let wpty = pure_wp
 
 let repr (a:Type) = unit -> list a
 
@@ -12,6 +10,10 @@ let bind (a : Type u#aa) (b : Type u#bb)
     (l : repr a) (f : a -> repr b) = fun () -> List.flatten (List.map (fun x -> f x ()) (l ()))
 
 (* let choose (#a : Type) (x y : a) : repr a = fun () -> [x;y] *)
+
+(* Demonic interpretation *)
+let interp (a:Type) (l : repr a) : pure_wp a =
+    fun p -> forall (x:a). List.memP x (l ()) ==> p x
 
 total
 reifiable
@@ -23,9 +25,11 @@ new_effect {
      ; return    = return
      ; bind      = bind
 
-     ; wp_type   = wpty
+     ; wp_type   = pure_wp
      ; return_wp = pure_return
      ; bind_wp   = pure_bind_wp
+
+     ; interp    = interp
 
      (* ; choose    = choose *)
 }
@@ -47,12 +51,10 @@ effect NDTot (a:Type) = ND a (pure_null_wp a)
 
 val choose : #a:Type0 -> x:a -> y:a -> ND a (fun p -> p x /\ p y)
 let choose #a x y =
-    admit (); (* no interp yet, we can't show it meets the spec above *)
     ND?.reflect (fun () -> [x;y])
 
 val fail : #a:Type0 -> unit -> ND a (fun p -> True)
 let fail #a () =
-    admit (); (* no interp yet, we can't show it meets the spec above *)
     ND?.reflect (fun () -> [])
 
 let test () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x) =
