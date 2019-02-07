@@ -32,6 +32,7 @@ open FStar.Extraction.ML.UEnv
 open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
 open FStar.TypeChecker
+open FStar.Parser.ParseIt
 
 (* Module abbreviations for the universal type-checker  *)
 module DsEnv   = FStar.Syntax.DsEnv
@@ -223,6 +224,35 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
   | Pars.Term _ ->
      failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
+type cache_t = int *  //cache version number
+               list<(string * string)> *  //digest of direct dependencies
+               string *  //digest of just this file
+               Parser.Dep.parsing_data * //parsing result
+               tc_result  //typechecking result
+    
+let load_value_from_cache (cache_file:string) :option<cache_t> * string =
+  match BU.load_value_from_file cache_file with
+  | None -> None, "Corrupt"
+  | Some cache_data ->
+    let (vnum, _, _, _, _) = cache_data in
+    if vnum <> cache_version_number
+    then None, "Stale, because inconsistent cache version"
+    else Some cache_data, ""
+
+let store_value_to_cache (cache_file:string) (data:cache_t) :unit =
+  BU.save_value_to_file cache_file data
+
+let load_parsing_data_from_cache file_name :option<Parser.Dep.parsing_data> =
+  let cache_file =
+    try
+     Parser.Dep.cache_file_name file_name
+    with _ -> ""
+  in
+  if cache_file = "" then None
+  else match load_value_from_cache cache_file with
+       | None, _ -> None
+       | Some (_, _, dig, pd, _), _ ->
+         if dig <> BU.digest_of_file file_name then None else Some pd
 
 (***********************************************************************)
 (* Loading and storing cache files                                     *)
@@ -234,12 +264,10 @@ let load_module_from_cache
     let some_cache_invalid = BU.mk_ref None in
     let invalidate_cache fn = some_cache_invalid := Some fn in
     let load env source_file cache_file =
-        match BU.load_value_from_file cache_file with
-        | None ->
-            Inl "Corrupt"
-        | Some (vnum, digest, tc_result) ->
-            if vnum <> cache_version_number then Inl "Stale, because inconsistent cache version"
-            else
+        match load_value_from_cache cache_file with
+        | None, msg ->
+            Inl msg
+        | Some (_, digest, _, _, tc_result), _ ->
             match FStar.Parser.Dep.hash_dependences
                     (TcEnv.dep_graph env)
                     source_file
@@ -304,7 +332,7 @@ let load_module_from_cache
                      (Dep.cache_file_name fn)
                      msg)
 
-let store_module_to_cache (env:uenv) fn (tc_result:tc_result) =
+let store_module_to_cache (env:uenv) fn (parsing_data:FStar.Parser.Dep.parsing_data) (tc_result:tc_result) =
     if Options.cache_checked_modules()
     && not (Options.cache_off())
     then begin
@@ -322,7 +350,11 @@ let store_module_to_cache (env:uenv) fn (tc_result:tc_result) =
               tc_result with
                 tc_time=0;
           } in
-          BU.save_value_to_file cache_file (cache_version_number, hashes, tc_result)
+          store_value_to_cache cache_file (cache_version_number,
+                                           hashes,
+                                           BU.digest_of_file fn,
+                                           parsing_data,
+                                           tc_result)
         | _ ->
           FStar.Errors.log_issue
             (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
@@ -380,6 +412,7 @@ let tc_one_file
         (delta:delta_env)
         (pre_fn:option<string>) //interface file name
         (fn:string) //file name
+        (parsing_data:FStar.Parser.Dep.parsing_data)
     : tc_result
     * option<FStar.Extraction.ML.Syntax.mllib>
     * uenv
@@ -466,7 +499,7 @@ let tc_one_file
             || Options.should_verify tc_result.checked_module.name.str) //we'll write out a .checked file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
-        then store_module_to_cache env fn tc_result;
+        then store_module_to_cache env fn parsing_data tc_result;
         tc_result, mllib, env, None
 
       | Some tc_result ->
@@ -528,11 +561,12 @@ let tc_one_file_for_ide
         (env:TcEnv.env_t)
         (pre_fn:option<string>) //interface file name
         (fn:string) //file name
+        (parsing_data:FStar.Parser.Dep.parsing_data)
     : tc_result
     * TcEnv.env_t
     =
     let env = env_of_tcenv env in
-    let tc_result, _, env, delta = tc_one_file env None pre_fn fn in
+    let tc_result, _, env, delta = tc_one_file env None pre_fn fn parsing_data in
     tc_result, (apply_delta_env env delta).env_tcenv
 
 (***********************************************************************)
@@ -545,28 +579,31 @@ let needs_interleaving intf impl =
   List.mem (FStar.Util.get_file_extension intf) ["fsti"; "fsi"] &&
   List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
 
-let tc_one_file_from_remaining (remaining:list<string>) (env:uenv) (delta_env:delta_env) =
+let tc_one_file_from_remaining (remaining:list<string>) (env:uenv) (delta_env:delta_env) (deps:FStar.Parser.Dep.deps) =
   let remaining, (nmods, mllib, env, delta_env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let m, mllib, env, delta_env = tc_one_file env delta_env (Some intf) impl in
+          let m, mllib, env, delta_env = tc_one_file env delta_env (Some intf) impl
+                                                     (impl |> FStar.Parser.Dep.parsing_data_of deps) in
           remaining, ([m], mllib, env, delta_env)
         | intf_or_impl :: remaining ->
-          let m, mllib, env, delta_env = tc_one_file env delta_env None intf_or_impl in
+          let m, mllib, env, delta_env = tc_one_file env delta_env None intf_or_impl
+                                                     (intf_or_impl |> FStar.Parser.Dep.parsing_data_of deps) in
           remaining, ([m], mllib, env, delta_env)
         | [] -> [], ([], None, env, delta_env)
   in
   remaining, nmods, mllib, env, delta_env
 
-let rec tc_fold_interleave (acc:list<tc_result> * list<FStar.Extraction.ML.Syntax.mllib> * uenv * delta_env)
+let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)
+                           (acc:list<tc_result> * list<FStar.Extraction.ML.Syntax.mllib> * uenv * delta_env)
                            (remaining:list<string>) =
   let as_list = function None -> [] | Some l -> [l] in
   match remaining with
     | [] -> acc
     | _  ->
       let mods, mllibs, env, delta_env = acc in
-      let remaining, nmods, mllib, env, delta_env = tc_one_file_from_remaining remaining env delta_env in
-      tc_fold_interleave (mods@nmods, mllibs@as_list mllib, env, delta_env) remaining
+      let remaining, nmods, mllib, env, delta_env = tc_one_file_from_remaining remaining env delta_env deps in
+      tc_fold_interleave deps (mods@nmods, mllibs@as_list mllib, env, delta_env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
@@ -580,7 +617,7 @@ let batch_mode_tc filenames dep_graph =
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
   let env = FStar.Extraction.ML.UEnv.mkContext (init_env dep_graph) in
-  let all_mods, mllibs, env, delta = tc_fold_interleave ([], [], env, None) filenames in
+  let all_mods, mllibs, env, delta = tc_fold_interleave dep_graph ([], [], env, None) filenames in
   emit mllibs;
   let solver_refresh env =
       snd <|

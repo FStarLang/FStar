@@ -32,13 +32,14 @@ module TcEnv   = FStar.TypeChecker.Env
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
 let tc_one_file (remaining:list<string>) (env:TcEnv.env) = //:((string option * string) * uenv * string list) =
+  let dummy_pd :FStar.Parser.Dep.parsing_data = [], [], true in
   let (intf, impl), env, remaining =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, env = tc_one_file_for_ide env (Some intf) impl in
+          let _, env = tc_one_file_for_ide env (Some intf) impl dummy_pd in
           (Some intf, impl), env, remaining
         | intf_or_impl :: remaining ->
-          let _, env = tc_one_file_for_ide env None intf_or_impl in
+          let _, env = tc_one_file_for_ide env None intf_or_impl dummy_pd in
           (None, intf_or_impl), env, remaining
         | [] -> failwith "Impossible"
   in
@@ -224,7 +225,7 @@ let deps_of_our_file filename =
    * and lax-check everything but the current module we're editing. This
    * function may, optionally, return an interface if the currently edited
    * module is an implementation and an interface was found. *)
-  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [ filename ] in
+  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [ filename ] (FStar.Universal.load_parsing_data_from_cache) in
   let deps, same_name = List.partition (fun x ->
     Parser.Dep.lowercase_module_name x <> Parser.Dep.lowercase_module_name filename
   ) deps in

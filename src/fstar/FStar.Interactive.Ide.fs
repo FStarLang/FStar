@@ -295,7 +295,7 @@ let string_of_repl_task = function
 
 (** Like ``tc_one_file``, but only return the new environment **)
 let tc_one (env:env_t) intf_opt modf =
-  let _, env = tc_one_file_for_ide env intf_opt modf in
+  let _, env = tc_one_file_for_ide env intf_opt modf (modf |> FStar.Parser.Dep.parsing_data_of (FStar.TypeChecker.Env.dep_graph env)) in
   env
 
 (** Load the file or files described by `task`.
@@ -341,7 +341,7 @@ let deps_and_repl_ld_tasks_of_our_file filename
   let has_our_mod_name f =
     (get_mod_name f = our_mod_name) in
 
-  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [filename] in
+  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [filename] (FStar.Universal.load_parsing_data_from_cache) in
   let same_name, real_deps =
     List.partition has_our_mod_name deps in
 
