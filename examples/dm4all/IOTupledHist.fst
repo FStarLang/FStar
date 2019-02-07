@@ -1,4 +1,4 @@
-module IOCurriedHist
+module IOTupledHist
 
 open FStar.List
 open FStar.WellFounded
@@ -25,7 +25,7 @@ let rec bind (a : Type u#aa) (b : Type u#bb)
 let wpty a = list output -> (a * list output -> Type0) -> Type0
 
 let return_wp (a:Type) (x:a) : wpty a =
-  fun h p -> p x h
+  fun h p -> p (x, h)
 
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
   fun h p -> w h (fun (x, h') -> kw x h' (fun (y, h'') -> p (y, h'')))
