@@ -1,0 +1,275 @@
+[
+  "Ì0IŒ¯ ‘?¬X,’‰\u0015™=",
+  [
+    [
+      "IOCurriedFr.__proj__Read__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOCurriedFr.Read",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOCurriedFr_Tm_refine_65ec46ad8007f56143b86922566b7ada"
+      ],
+      0,
+      "df647e4ea6c7d7faee20c35f14ae8353"
+    ],
+    [
+      "IOCurriedFr.__proj__Write__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOCurriedFr.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOCurriedFr_Tm_refine_79dc606340955dc1e568ca9bf6967f54"
+      ],
+      0,
+      "1d2d0cffc445ce66de950174a8897231"
+    ],
+    [
+      "IOCurriedFr.__proj__Write__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOCurriedFr.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOCurriedFr_Tm_refine_79dc606340955dc1e568ca9bf6967f54"
+      ],
+      0,
+      "b677ca64d9b87945ca2f5b32f68394bb"
+    ],
+    [
+      "IOCurriedFr.__proj__Return__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOCurriedFr.Return",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOCurriedFr_Tm_refine_2c0b453f70c0108bf317f3f47846e76c"
+      ],
+      0,
+      "a39f951ce9d78882276a58b93ccce75b"
+    ],
+    [
+      "IOCurriedFr.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_24359d1470d6f80818537a4150b4765c_4",
+        "disc_equation_IOCurriedFr.Read", "disc_equation_IOCurriedFr.Return",
+        "disc_equation_IOCurriedFr.Write",
+        "fuel_guarded_inversion_IOCurriedFr.io",
+        "subterm_ordering_IOCurriedFr.Read",
+        "subterm_ordering_IOCurriedFr.Write"
+      ],
+      0,
+      "beee5e500cd2f8463168e581ccf1bba3"
+    ],
+    [
+      "IOCurriedFr.test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
+        "@query", "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok",
+        "equation_FStar.List.Tot.Base.op_At", "equation_IOCurriedFr.bind_wp",
+        "equation_IOCurriedFr.output", "equation_IOCurriedFr.return_wp",
+        "equation_Prims.eqtype",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
+        "function_token_typing_Prims.int", "int_typing",
+        "interpretation_IOCurriedFr_Tm_abs_07e659d8cfe45c2b63e0bb1227b3d8b4",
+        "interpretation_IOCurriedFr_Tm_abs_0f4673d5fed227e06b2c5179845f964e",
+        "interpretation_IOCurriedFr_Tm_abs_2834134d38b3d80d8b28ba55c2c604b6",
+        "interpretation_IOCurriedFr_Tm_abs_52eb6216895e9362b2d34afbaaaa1ef0",
+        "interpretation_IOCurriedFr_Tm_abs_b83f2d6a67ee8241d7ba3d0054672763",
+        "interpretation_IOCurriedFr_Tm_abs_c68d4ebc6072080e61cd127d106e38af",
+        "interpretation_IOCurriedFr_Tm_abs_ef3b15e6292e218e8f153e27a1747a85",
+        "interpretation_IOCurriedFr_Tm_abs_f8b5ed5ef820d3176f7487632c78168e",
+        "l_quant_interp__17456",
+        "lemma_FStar.List.Tot.Properties.append_l_nil",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "token_correspondence_IOCurriedFr.bind_wp",
+        "token_correspondence_IOCurriedFr.return_wp", "unit_typing"
+      ],
+      0,
+      "374db44c8d2c38596423727ee7075f64"
+    ],
+    [
+      "IOCurriedFr.test2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1244c66811445bf2309fd43ccccb1ea0"
+    ],
+    [
+      "IOCurriedFr.test3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a24aa32d690399813ae0af61bd88861c"
+    ],
+    [
+      "IOCurriedFr.test5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a6ac561f7f0e41f4d88811622b96b9bb"
+    ],
+    [
+      "IOCurriedFr.__proj__Read__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOCurriedFr.Read",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOCurriedFr_Tm_refine_65ec46ad8007f56143b86922566b7ada"
+      ],
+      0,
+      "2c579ffc0c94ad626200ea8a5d17d11e"
+    ],
+    [
+      "IOCurriedFr.__proj__Write__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOCurriedFr.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOCurriedFr_Tm_refine_79dc606340955dc1e568ca9bf6967f54"
+      ],
+      0,
+      "84849f3e93bda439e9c2aac9de8f9f18"
+    ],
+    [
+      "IOCurriedFr.__proj__Write__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOCurriedFr.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOCurriedFr_Tm_refine_79dc606340955dc1e568ca9bf6967f54"
+      ],
+      0,
+      "29882ce0e376b1d217dc6f84ca818fc4"
+    ],
+    [
+      "IOCurriedFr.__proj__Return__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOCurriedFr.Return",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOCurriedFr_Tm_refine_2c0b453f70c0108bf317f3f47846e76c"
+      ],
+      0,
+      "9c227f9ac3c869aa9040129cdd1fd9f5"
+    ],
+    [
+      "IOCurriedFr.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_24359d1470d6f80818537a4150b4765c_4",
+        "disc_equation_IOCurriedFr.Read", "disc_equation_IOCurriedFr.Return",
+        "disc_equation_IOCurriedFr.Write",
+        "fuel_guarded_inversion_IOCurriedFr.io",
+        "subterm_ordering_IOCurriedFr.Read",
+        "subterm_ordering_IOCurriedFr.Write"
+      ],
+      0,
+      "9536b9278b8e66ca31949b39fc91b274"
+    ],
+    [
+      "IOCurriedFr.test1",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
+        "@query", "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok",
+        "equation_FStar.List.Tot.Base.op_At", "equation_IOCurriedFr.bind_wp",
+        "equation_IOCurriedFr.output", "equation_IOCurriedFr.return_wp",
+        "equation_Prims.eqtype",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
+        "function_token_typing_Prims.int", "int_typing",
+        "interpretation_IOCurriedFr_Tm_abs_07e659d8cfe45c2b63e0bb1227b3d8b4",
+        "interpretation_IOCurriedFr_Tm_abs_0f4673d5fed227e06b2c5179845f964e",
+        "interpretation_IOCurriedFr_Tm_abs_2834134d38b3d80d8b28ba55c2c604b6",
+        "interpretation_IOCurriedFr_Tm_abs_b83f2d6a67ee8241d7ba3d0054672763",
+        "interpretation_IOCurriedFr_Tm_abs_c495a5750f9e6555207b16ab3a95934b",
+        "interpretation_IOCurriedFr_Tm_abs_c68d4ebc6072080e61cd127d106e38af",
+        "interpretation_IOCurriedFr_Tm_abs_ef3b15e6292e218e8f153e27a1747a85",
+        "interpretation_IOCurriedFr_Tm_abs_f8b5ed5ef820d3176f7487632c78168e",
+        "l_quant_interp__17887",
+        "lemma_FStar.List.Tot.Properties.append_l_nil",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "token_correspondence_IOCurriedFr.bind_wp",
+        "token_correspondence_IOCurriedFr.return_wp", "unit_typing"
+      ],
+      0,
+      "a8e74f7d291754355ebd5718b8a560db"
+    ],
+    [
+      "IOCurriedFr.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "188924f490109a78a3a46061f47f3f41"
+    ],
+    [
+      "IOCurriedFr.test3",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "59578ec5290c8346227f6a99ecbc8ce5"
+    ],
+    [
+      "IOCurriedFr.test5",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a7f8f0ea1cb53fa3183b898e690da58d"
+    ]
+  ]
+]
