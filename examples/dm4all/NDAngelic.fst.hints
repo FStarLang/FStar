@@ -1,0 +1,265 @@
+[
+  "ì\u0011Ê\u0013µ\u0004OÑ&©5\u001aYÕçŸ",
+  [
+    [
+      "NDAngelic.test1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "28a3576956f1f2ee8d99dbcb7f8f13b1"
+    ],
+    [
+      "NDAngelic.test2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "dae8af4a25cca9d25752c1abf4e571a7"
+    ],
+    [
+      "NDAngelic.Nd",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "93a9a01871a22ea2bd0521ae500fb243"
+    ],
+    [
+      "NDAngelic.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "4811d15c6d6d26a2037a91e93771dbc1"
+    ],
+    [
+      "NDAngelic.pick",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "eq2-interp",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list", "l_or-interp",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "6078eaf3c49117852c7d8926dad02e5f"
+    ],
+    [
+      "NDAngelic.gguard",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "unit_inversion"
+      ],
+      0,
+      "cee1de70f33e446cb5b09a505bc5d732"
+    ],
+    [
+      "NDAngelic.pyths",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_NDAngelic_Tm_refine_9ac23566a65af532936627937df937cf"
+      ],
+      0,
+      "f11816aaec7432bcebf8ce5c02536cac"
+    ],
+    [
+      "NDAngelic.test_reify_1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_NDAngelic.return", "equation_NDAngelic.test1",
+        "token_correspondence_NDAngelic.return"
+      ],
+      0,
+      "59a1a20fe3404644aefa0d9cff3873ce"
+    ],
+    [
+      "NDAngelic.test_reify_2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_NDAngelic.return", "equation_NDAngelic.test2",
+        "token_correspondence_NDAngelic.return"
+      ],
+      0,
+      "e60e0b33df29ff552236a97ce3a307d0"
+    ],
+    [
+      "NDAngelic.test_reify_3",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_NDAngelic.return", "equation_NDAngelic.test1",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_hd",
+        "token_correspondence_NDAngelic.return"
+      ],
+      0,
+      "e9681bef3ec822cb433524e80d070199"
+    ],
+    [
+      "NDAngelic.test1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ee11959832ad014f1d7e5f962b894a9e"
+    ],
+    [
+      "NDAngelic.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "829a891608bfe17ea1a5550b6ce20672"
+    ],
+    [
+      "NDAngelic.Nd",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "169be5cf2b371876246e93c85ef15b9e"
+    ],
+    [
+      "NDAngelic.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "d859841316cacf452314f7b1f3e6cb80"
+    ],
+    [
+      "NDAngelic.pick",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "eq2-interp",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list", "l_or-interp",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "266d12e3978af986932b02e4337bfa9a"
+    ],
+    [
+      "NDAngelic.gguard",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "unit_inversion"
+      ],
+      0,
+      "741092f78e3899ec2f2782bed5e6ac78"
+    ],
+    [
+      "NDAngelic.pyths",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_NDAngelic_Tm_refine_9ac23566a65af532936627937df937cf"
+      ],
+      0,
+      "1da4265bc2f37cc50a2ce4b8db12d39e"
+    ],
+    [
+      "NDAngelic.test_reify_1",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_NDAngelic.return", "equation_NDAngelic.test1",
+        "token_correspondence_NDAngelic.return"
+      ],
+      0,
+      "dbfad342d5a22ac13936291b2b5a7f8e"
+    ],
+    [
+      "NDAngelic.test_reify_2",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_NDAngelic.return", "equation_NDAngelic.test2",
+        "token_correspondence_NDAngelic.return"
+      ],
+      0,
+      "9bd93b33d3e4cc8123d1d91da91e1908"
+    ],
+    [
+      "NDAngelic.test_reify_3",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_NDAngelic.return", "equation_NDAngelic.test1",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_hd",
+        "token_correspondence_NDAngelic.return"
+      ],
+      0,
+      "5abc48ae3ec7b4fc4acbcd0d897fd72b"
+    ]
+  ]
+]

@@ -1,6 +1,7 @@
 module IOTupledFr
 
 (* GM: What's Fr? Free? *)
+(* GM: Ah, context free, right? *)
 
 open FStar.List
 open FStar.WellFounded
@@ -14,7 +15,8 @@ type io a =
   | Write   : output -> io a -> io a
   | Return  : a -> io a
 
-let wpty a = (a * list output -> Type0) -> Type0
+let post a = a * list output -> Type0
+let wpty a = post a -> Type0
 
 let return (a:Type u#a) (x:a) = Return x
 
@@ -30,6 +32,12 @@ let return_wp (a:Type) (x:a) : wpty a =
 
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
   fun p -> w (fun (x, l1) -> kw x (fun (y, l2) -> p (y, l1 @ l2)))
+  
+let rec interpretation #a (m : io a) (p : post a) : Type0 =
+  match m with
+  | Write o m -> interpretation m (fun (x, l) -> p (x, o :: l))
+  | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) p)
+  | Return x -> p (x, [])
 
 total
 reifiable
@@ -44,16 +52,22 @@ new_effect {
      ; wp_type   = wpty
      ; return_wp = return_wp
      ; bind_wp   = bind_wp
+
+     ; interp    = interpretation
 }
 
 val read : unit -> IO int (fun p -> forall x. p (x, []))
 let read () =
-    admit ();
+    admit (); (* wat? the query looks trivial, but z3 can't prove it *)
+    // ; Encoding query formula: forall (_: Prims.unit).
+    // ;   (*could not prove post-condition*)
+    // ;   forall (a0: (_: (Prims.int * Prims.list Prims.int) -> Prims.Tot Type0)).
+    // ;     (forall (x: Prims.int). a0 (x, [])) ==> (forall (i: Prims.int). a0 (i, []) <: Prims.Tot Type0)
     IO?.reflect (Read (fun i -> Return i))
 
 val write : i:int -> IO unit (fun p -> p ((), [i]))
 let write i =
-    admit ();
+    admit (); (* wat? the query looks trivial, but z3 can't prove it *)
     IO?.reflect (Write i (Return ()))
 
 val test1 : unit -> IO int (fun p -> p (1, [2; 3]))
@@ -61,7 +75,7 @@ let test1 () =
   write 2;
   write 3;
   1
-
+  
 open FStar.Tactics
 
 (* GM: For some reason I need to compute() in order to prove this *)

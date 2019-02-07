@@ -1,0 +1,257 @@
+[
+  "\næœ\u0019\u001fµJõž\rÂâ'Ê\u001c8",
+  [
+    [
+      "NDDemonic.test1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0de95be1c4b6ffbfde212290c41826e6"
+    ],
+    [
+      "NDDemonic.test2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "03c5576846ca7c104c8fbd50141100db"
+    ],
+    [
+      "NDDemonic.Nd",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "93a9a01871a22ea2bd0521ae500fb243"
+    ],
+    [
+      "NDDemonic.choose",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7241bf89d2b4525af00754be365542bc"
+    ],
+    [
+      "NDDemonic.test",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "80dd8c9dea2d5f76f5508b9fd1485957"
+    ],
+    [
+      "NDDemonic.pick",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list", "l_or-interp",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "dcf0a61d7d038054a7cd92db34c74ea9"
+    ],
+    [
+      "NDDemonic.guard",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "projection_inverse_BoxBool_proj_0", "unit_inversion"
+      ],
+      0,
+      "b09b111c07524298078d4df81a96fde2"
+    ],
+    [
+      "NDDemonic.pyths",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1baceb9ff281afc3ce1992bd420f9b3b"
+    ],
+    [
+      "NDDemonic.test_reify_1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_NDDemonic.return", "equation_NDDemonic.test1",
+        "token_correspondence_NDDemonic.return"
+      ],
+      0,
+      "d0a9fea8f44b14fc33cbc6dedb5da605"
+    ],
+    [
+      "NDDemonic.test_reify_2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_NDDemonic.return", "equation_NDDemonic.test2",
+        "token_correspondence_NDDemonic.return"
+      ],
+      0,
+      "c3a94141d1a3352895fa5c2bf1dfddfd"
+    ],
+    [
+      "NDDemonic.test_reify_3",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_NDDemonic.return", "equation_NDDemonic.test1",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_hd",
+        "token_correspondence_NDDemonic.return"
+      ],
+      0,
+      "041601cb0f174fc9455b55d115c56266"
+    ],
+    [
+      "NDDemonic.test1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "71ffb11b940b37a023127e249af038f9"
+    ],
+    [
+      "NDDemonic.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b75bbdd1b679a70a45841fa8ed6ca1e7"
+    ],
+    [
+      "NDDemonic.Nd",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0ed1ae44b447d8e7e20677a7e2afb3b3"
+    ],
+    [
+      "NDDemonic.choose",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "85ebcd680fa6a68c2bdec0b80f292782"
+    ],
+    [
+      "NDDemonic.test",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "489c314111b67c38da0f64884b890330"
+    ],
+    [
+      "NDDemonic.pick",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list", "l_or-interp",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "17e8b985acc9e5d80c430d9174842cac"
+    ],
+    [
+      "NDDemonic.guard",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "projection_inverse_BoxBool_proj_0", "unit_inversion"
+      ],
+      0,
+      "4dffc09d4d1e1e8e0216af00c0147a0b"
+    ],
+    [
+      "NDDemonic.pyths",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0070351ab6f6729eb3e2cd49f6dac786"
+    ],
+    [
+      "NDDemonic.test_reify_1",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_NDDemonic.return", "equation_NDDemonic.test1",
+        "token_correspondence_NDDemonic.return"
+      ],
+      0,
+      "ed36cad1a97ab7b750217ee3c6f940f2"
+    ],
+    [
+      "NDDemonic.test_reify_2",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_NDDemonic.return", "equation_NDDemonic.test2",
+        "token_correspondence_NDDemonic.return"
+      ],
+      0,
+      "3701f796eca1a55a4e7cada1f9bfb779"
+    ],
+    [
+      "NDDemonic.test_reify_3",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_NDDemonic.return", "equation_NDDemonic.test1",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_hd",
+        "token_correspondence_NDDemonic.return"
+      ],
+      0,
+      "055683257261634889b50fac2b8383ac"
+    ]
+  ]
+]

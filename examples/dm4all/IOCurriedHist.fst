@@ -21,14 +21,21 @@ let rec bind (a : Type u#aa) (b : Type u#bb)
   | Write o k' -> Write o (bind _ _ k' k)
   | Return v -> k v
 
+let post a = a -> list output -> Type0
 (* flipping these arguments will break the gen_wps_for_free logic, FIXME *)
-let wpty a = list output -> (a -> list output -> Type0) -> Type0
+let wpty a = list output -> post a -> Type0
 
 let return_wp (a:Type) (x:a) : wpty a =
   fun h p -> p x h
 
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
   fun h p -> w h (fun x h' -> kw x h' (fun y h'' -> p y h''))
+  
+let rec interpretation #a (m : io a) (h : list output) (p : post a) : Type0 =
+  match m with
+  | Write o m -> interpretation m h (fun x h -> p x (o :: h))
+  | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) h p)
+  | Return x -> p x h
 
 total
 reifiable
@@ -43,11 +50,12 @@ new_effect {
      ; wp_type   = wpty
      ; return_wp = return_wp
      ; bind_wp   = bind_wp
+
+      ; interp = interpretation
 }
 
 val read : unit -> IO int (fun h p -> forall x. p x h)
 let read () =
-    admit ();
     IO?.reflect (Read (fun i -> Return i))
 
 (* Keeping the log backwards, since otherwise the VCs are too contrived for z3.
@@ -55,7 +63,6 @@ let read () =
 
 val write : i:int -> IO unit (fun h p -> p () (i::h))
 let write i =
-    admit ();
     IO?.reflect (Write i (Return ()))
 
 open FStar.Tactics

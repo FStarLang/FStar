@@ -16,7 +16,8 @@ type io a =
   | Write   : output -> io a -> io a
   | Return  : a -> io a
 
-let wpty a = (a -> list output -> Type0) -> Type0
+let post a = a -> list output -> Type0
+let wpty a = post a -> Type0
 
 let return (a:Type u#a) (x:a) = Return x
 
@@ -33,6 +34,12 @@ let return_wp (a:Type) (x:a) : wpty a =
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
   fun p -> w (fun x l1 -> kw x (fun y l2 -> p y (l1 @ l2)))
 
+let rec interpretation #a (m : io a) (p : post a) : Type0 =
+  match m with
+  | Write o m -> interpretation m (fun x l -> p x (o :: l))
+  | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) p)
+  | Return x -> p x []
+
 total
 reifiable
 reflectable
@@ -46,9 +53,10 @@ new_effect {
      ; wp_type   = wpty
      ; return_wp = return_wp
      ; bind_wp   = bind_wp
+
+     ; interp    = interpretation
 }
 
-#push-options "--lax"
 val read : unit -> IO int (fun p -> forall x. p x [])
 let read () =
     IO?.reflect (Read (fun i -> Return i))
@@ -56,7 +64,6 @@ let read () =
 val write : i:int -> IO unit (fun p -> p () [i])
 let write i =
     IO?.reflect (Write i (Return ()))
-#pop-options
 
 val test1 : unit -> IO int (fun p -> p 1 [2; 3])
 let test1 () =
