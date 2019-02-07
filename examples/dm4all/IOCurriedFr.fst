@@ -99,4 +99,3 @@ let test5 () : IO int (fun p -> forall x. p 1 [x; x]) by (compute ()) =
   1
 
 let ref = normalize_term (reify (test5 ()))
-
