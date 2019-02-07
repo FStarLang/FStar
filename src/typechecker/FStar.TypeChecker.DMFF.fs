@@ -473,8 +473,10 @@ let gen_wps_for_free
   let null_wp =
     let wp = S.gen_bv "wp" None wp_a in
     let wp_args, post = BU.prefix gamma in
-    let x = S.gen_bv "x" None S.tun in
-    let body = U.mk_forall_no_univ x (U.mk_app (S.bv_to_name <| fst post) [as_arg (S.bv_to_name x)]) in
+    let bs, _ = U.arrow_formals_comp (fst post).sort in
+    let bs = List.map S.freshen_binder bs in
+    let args = List.map (fun (bv, q) -> (S.bv_to_name bv, q)) bs in
+    let body = U.close_forall_no_univs bs (U.mk_app (S.bv_to_name <| fst post) args) in
     U.abs (binders @ S.binders_of_list [ a ] @ gamma) body ret_gtot_type in
 
   let null_wp = register env (mk_lid "null_wp") null_wp in
