@@ -656,8 +656,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g
           | Tm_app(_, [(res, _)]) ->
             (* GG very shady, what's going here? *)
-            let null = U.un_uinst (ed.null_wp |> snd) in
-            let null_inst = mk_Tm_uinst null [u] in
+            let null_t = U.un_uinst (ed.null_wp |> snd) in
+            let null_inst = mk_Tm_uinst null_t [u] in
             let wp = mk (Tm_app (null_inst, [as_arg res])) None top.pos in
             t, res, wp, g
             (* GG, FIXME: should call interp instead of using null *)
