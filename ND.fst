@@ -33,8 +33,6 @@ new_effect {
 let test1 () : ND int (fun p -> p 5 /\ p 3) = 5
 let test2 () : ND int (fun p -> p 5 /\ p 3) = 3
 
-#set-options "--debug_level High,Rel"
-
 // Whoa! This used to succeed since the effect is marked as reifiable,
 // and Rel compares the representation types on each side for the
 // subtyping. and both are just `unit -> list a`. I changed it to check
@@ -47,9 +45,10 @@ effect Nd (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 
 effect NDTot (a:Type) = ND a (pure_null_wp a)
 
-(* assume *)
 val choose : #a:Type0 -> x:a -> y:a -> ND a (fun p -> p x /\ p y)
-let choose #a x y = ND?.reflect (fun () -> [x;y]) <: ND a (fun p -> p x /\ p y)
+let choose #a x y =
+    admit (); (* no interp yet, we can't show it meets the spec above *)
+    ND?.reflect (fun () -> [x;y])
 
 let test () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x) =
     let x = choose 0 1 in

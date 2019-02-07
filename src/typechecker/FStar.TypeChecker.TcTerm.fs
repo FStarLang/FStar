@@ -654,7 +654,16 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let t, _, g = tc_tot_or_gtot_term (Env.clear_expected_typ env |> fst) t in
           match (SS.compress t).n with
           | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g
-          | Tm_app(_, [(res, _)]) -> t, res, S.tun, g (* GG, FIXME: should call interp instead of having S.tun *)
+          | Tm_app(_, [(res, _)]) ->
+            (* GG very shady, what's going here? *)
+            let null = U.un_uinst (ed.null_wp |> snd) in
+            let null_inst = mk_Tm_uinst null [u] in
+            let wp = mk (Tm_app (null_inst, [as_arg res])) None top.pos in
+            BU.print1 "GG us = %s\n" (Print.univ_names_to_string (ed.null_wp |> fst));
+            BU.print1 "GG null = %s\n" (Print.term_to_string (ed.null_wp |> snd));
+            BU.print1 "GG wp = %s\n" (Print.term_to_string wp);
+            t, res, wp, g
+            (* GG, FIXME: should call interp instead of using null *)
           | _ -> failwith "unexpected shape after typechecking reflect term"
         in
         let e, g =
