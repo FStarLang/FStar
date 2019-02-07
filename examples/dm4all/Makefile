@@ -1,6 +1,6 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: ND.uver
+all: $(patsubst %.fst, %.uver, $(wildcard *.fst))
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
