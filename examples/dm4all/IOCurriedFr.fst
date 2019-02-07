@@ -64,8 +64,6 @@ let test1 () =
   write 3;
   1
 
-#set-options "--debug IO --debug_level SMTQuery"
-
 open FStar.Tactics
 
 (* GM: For some reason I need to compute() in order to prove this *)
