@@ -878,7 +878,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_abs(bs, body, lopt) ->
           let bs, body, opening = SS.open_term' bs body in
           let fallback () =
-            let f = varops.fresh "Tm_abs" in
+            let f = varops.fresh (env.current_module_name ^ "_Tm_abs") in
             let decl = Term.DeclFun(f, [], Term_sort, Some "Imprecise function encoding") in
             mkFreeV(f, Term_sort), [decl] |> mk_decls_trivial
           in
