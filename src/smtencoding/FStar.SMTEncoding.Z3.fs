@@ -142,6 +142,9 @@ let status_string_and_errors s =
 let tid () = BU.current_tid() |> BU.string_of_int
 let new_z3proc id =
     BU.start_process id (Options.z3_exe ()) (ini_params ()) (fun s -> s = "Done!")
+let new_z3proc_with_id =
+    let ctr = BU.mk_ref (-1) in
+    fun () -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int))
 
 type bgproc = {
     ask: string -> string;
@@ -152,82 +155,84 @@ type bgproc = {
 type query_log = {
     get_module_name: unit -> string;
     set_module_name: string -> unit;
-    write_to_log:   string -> unit;
-    close_log:       unit -> unit;
-    log_file_name:   unit -> string
+    write_to_log:    bool -> string -> string;
+    close_log:       unit -> unit
 }
 
 
 let query_logging =
     let query_number = BU.mk_ref 0 in
-    let log_file_opt : ref<option<file_handle>> = BU.mk_ref None in
+    let log_file_opt : ref<option<(file_handle * string)>> = BU.mk_ref None in
     let used_file_names : ref<list<(string * int)>> = BU.mk_ref [] in
     let current_module_name : ref<option<string>> = BU.mk_ref None in
     let current_file_name : ref<option<string>> = BU.mk_ref None in
     let set_module_name n = current_module_name := Some n in
-    let get_module_name () = match !current_module_name with
-        | None -> failwith "Module name not set"
-        | Some n -> n in
-    let new_log_file () =
+    let get_module_name () =
         match !current_module_name with
-        | None -> failwith "current module not set"
-        | Some n ->
-          let file_name =
-              match List.tryFind (fun (m, _) -> n=m) !used_file_names with
-              | None ->
-                used_file_names := (n, 0)::!used_file_names;
-                n
-              | Some (_, k) ->
-                used_file_names := (n, k+1)::!used_file_names;
-                BU.format2 "%s-%s" n (BU.string_of_int (k+1)) in
-          let file_name = BU.format1 "queries-%s.smt2" file_name in
-          current_file_name := Some file_name;
-          let fh = BU.open_file_for_writing file_name in
-          log_file_opt := Some fh;
-          fh in
-    let get_log_file () = match !log_file_opt with
+        | None -> failwith "Module name not set"
+        | Some n -> n
+    in
+    let next_file_name () =
+        let n = get_module_name() in
+        let file_name =
+            match List.tryFind (fun (m, _) -> n=m) !used_file_names with
+            | None ->
+              used_file_names := (n, 0)::!used_file_names;
+              n
+            | Some (_, k) ->
+              used_file_names := (n, k+1)::!used_file_names;
+              BU.format2 "%s-%s" n (BU.string_of_int (k+1))
+        in
+        BU.format1 "queries-%s.smt2" file_name
+    in
+    let new_log_file () =
+        let file_name = next_file_name() in
+        current_file_name := Some file_name;
+        let fh = BU.open_file_for_writing file_name in
+        log_file_opt := Some (fh, file_name);
+        fh, file_name
+    in
+    let get_log_file () =
+        match !log_file_opt with
         | None -> new_log_file()
-        | Some fh -> fh in
-    let append_to_log str = BU.append_to_file (get_log_file()) str in
+        | Some fh -> fh
+    in
+    let append_to_log str =
+        let f, nm = get_log_file () in
+        BU.append_to_file f str;
+        nm
+    in
     let write_to_new_log str =
-      let dir_name = match !current_file_name with
-        | None ->
-          let dir_name = match !current_module_name with
-            | None -> failwith "current module not set"
-            | Some n -> BU.format1 "queries-%s" n in
-          BU.mkdir true dir_name;
-          current_file_name := Some dir_name;
-          dir_name
-        | Some n -> n in
-      let qnum = !query_number in
-      query_number := !query_number + 1;
-      let file_name = BU.format1 "query-%s.smt2" (BU.string_of_int qnum) in
-      let file_name = BU.concat_dir_filename dir_name file_name in
-      write_file file_name str in
-    let write_to_log str =
-      if (Options.n_cores() > 1) then write_to_new_log str
+      let file_name = next_file_name() in
+      write_file file_name str;
+      file_name
+    in
+    let write_to_log fresh str =
+      if fresh || (Options.n_cores() > 1)
+      then write_to_new_log str
       else append_to_log str
-      in
-    let close_log () = match !log_file_opt with
+    in
+    let close_log () =
+        match !log_file_opt with
         | None -> ()
-        | Some fh -> BU.close_file fh; log_file_opt := None in
-    let log_file_name () = match !current_file_name with
+        | Some (fh, _) ->
+          BU.close_file fh; log_file_opt := None
+    in
+    let log_file_name () =
+        match !current_file_name with
         | None -> failwith "no log file"
-        | Some n -> n in
+        | Some n -> n
+    in
      {set_module_name=set_module_name;
       get_module_name=get_module_name;
       write_to_log=write_to_log;
-      close_log=close_log;
-      log_file_name=log_file_name}
+      close_log=close_log}
 
 let bg_z3_proc =
     let the_z3proc = BU.mk_ref None in
-    let new_proc =
-        let ctr = BU.mk_ref (-1) in
-        fun () -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) in
     let z3proc () =
       if !the_z3proc = None then
-        the_z3proc := Some (new_proc ());
+        the_z3proc := Some (new_z3proc_with_id ());
       must (!the_z3proc) in
     let x : list<unit> = [] in
     let ask input =
@@ -235,23 +240,18 @@ let bg_z3_proc =
         BU.ask_process (z3proc ()) input kill_handler in
     let refresh () =
         BU.kill_process (z3proc ());
-        the_z3proc := Some (new_proc ());
+        the_z3proc := Some (new_z3proc_with_id ());
         query_logging.close_log() in
     let restart () =
         query_logging.close_log();
         the_z3proc := None;
-        the_z3proc := Some (new_proc ()) in
+        the_z3proc := Some (new_z3proc_with_id ()) in
     BU.mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
                 restart = BU.with_monitor x restart})
 
 let set_bg_z3_proc bgp =
     bg_z3_proc := bgp
-
-let at_log_file () =
-  if Options.log_queries()
-  then "@" ^ (query_logging.log_file_name())
-  else ""
 
 type smt_output_section = list<string>
 type smt_output = {
@@ -262,7 +262,7 @@ type smt_output = {
   smt_labels:         option<smt_output_section>;
 }
 
-let smt_output_sections (r:Range.range) (lines:list<string>) : smt_output =
+let smt_output_sections (log_file:option<string>) (r:Range.range) (lines:list<string>) : smt_output =
     let rec until tag lines =
         match lines with
         | [] -> None
@@ -295,20 +295,28 @@ let smt_output_sections (r:Range.range) (lines:list<string>) : smt_output =
         match remaining with
         | [] -> ()
         | _ ->
+            let msg =
+                BU.format2 "%sUnexpected output from Z3: %s\n"
+                                        (match log_file with
+                                         | None -> ""
+                                         | Some f -> f ^ ": ")
+                                        (String.concat "\n" remaining)
+            in
             FStar.Errors.log_issue
                      r
-                     (Errors.Warning_UnexpectedZ3Output, (BU.format1 "Unexpected output from Z3: %s\n"
-                                    (String.concat "\n" remaining))) in
+                     (Errors.Warning_UnexpectedZ3Output,
+                      msg)
+    in
     {smt_result = BU.must result_opt;
      smt_reason_unknown = reason_unknown;
      smt_unsat_core = unsat_core;
      smt_statistics = statistics;
      smt_labels = labels}
 
-let doZ3Exe (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) : z3status * z3statistics =
+let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) : z3status * z3statistics =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
-    let smt_output = smt_output_sections r lines in
+    let smt_output = smt_output_sections log_file r lines in
     let unsat_core =
         match smt_output.smt_unsat_core with
         | None -> None
@@ -377,7 +385,11 @@ let doZ3Exe (r:Range.range) (fresh:bool) (input:string) (label_messages:error_la
   in
   let stdout =
     if fresh then
-      BU.run_process (tid ()) (Options.z3_exe ()) (ini_params ()) (Some input)
+      let proc = new_z3proc_with_id () in
+      let kill_handler () = "\nkilled\n" in
+      let out = BU.ask_process proc input kill_handler in
+      BU.kill_process proc;
+      out
     else
       (!bg_z3_proc).ask input
   in
@@ -405,7 +417,8 @@ type z3result = {
       z3result_status      : z3status;
       z3result_time        : int;
       z3result_statistics  : z3statistics;
-      z3result_query_hash  : option<string>
+      z3result_query_hash  : option<string>;
+      z3result_log_file    : option<string>
 }
 
 type z3job = job_t<z3result>
@@ -414,10 +427,10 @@ let job_queue : ref<list<z3job>> = BU.mk_ref []
 
 let pending_jobs = BU.mk_ref 0
 
-let z3_job (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
+let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
   let status, statistics =
-    try doZ3Exe r fresh input label_messages
+    try doZ3Exe log_file r fresh input label_messages
     with e when not (Options.trace_error()) ->
          (!bg_z3_proc).refresh();
          raise e
@@ -426,7 +439,8 @@ let z3_job (r:Range.range) fresh (label_messages:error_labels) input qhash () : 
   { z3result_status     = status;
     z3result_time       = elapsed_time;
     z3result_statistics = statistics;
-    z3result_query_hash = qhash }
+    z3result_query_hash = qhash;
+    z3result_log_file   = log_file }
 
 let running = BU.mk_ref false
 
@@ -494,6 +508,7 @@ type scope_t = list<list<decl>>
 // reverify or use these declarations
 let fresh_scope : ref<scope_t> = BU.mk_ref [[]]
 let mk_fresh_scope () = !fresh_scope
+let flatten_fresh_scope () = List.flatten (List.rev !fresh_scope)
 
 // bg_scope: Is the flat sequence of declarations already given to Z3
 //           When refreshing the solver, the bg_scope is set to
@@ -531,7 +546,7 @@ let giveZ3 decls =
 let refresh () =
     if (Options.n_cores() < 2) then
         (!bg_z3_proc).refresh();
-    bg_scope := List.flatten (List.rev !fresh_scope)
+    bg_scope := flatten_fresh_scope ()
 
 let context_profile (theory:decls_t) =
     let modules, total_decls =
@@ -559,7 +574,9 @@ let context_profile (theory:decls_t) =
                         m
                         (string_of_int n))
                modules
-let mk_input theory =
+
+
+let mk_input fresh theory =
     let options = !z3_options in
     if Options.print_z3_statistics() then context_profile theory;
     let r, hash =
@@ -595,12 +612,17 @@ let mk_input theory =
         else
             List.map (declToSmt options) theory |> String.concat "\n", None
     in
-    if Options.log_queries() then query_logging.write_to_log r ;
-    r, hash
+    let log_file_name =
+        if Options.log_queries()
+        then Some (query_logging.write_to_log fresh r)
+        else None
+    in
+    r, hash, log_file_name
 
 type cb = z3result -> unit
 
 let cache_hit
+    (log_file:option<string>)
     (cache:option<string>)
     (qhash:option<string>)
     (cb:cb) =
@@ -613,7 +635,8 @@ let cache_hit
               z3result_status = UNSAT None;
               z3result_time = 0;
               z3result_statistics = stats;
-              z3result_query_hash = qhash
+              z3result_query_hash = qhash;
+              z3result_log_file = log_file
             } in
             cb result;
             true
@@ -629,12 +652,19 @@ let ask_1_core
     (label_messages:error_labels)
     (qry:decls_t)
     (cb:cb)
-  = let theory = !bg_scope@[Push]@qry@[Pop] in
-    let theory, used_unsat_core = filter_theory theory in
-    let input, qhash = mk_input theory in
-    bg_scope := [] ; // Now consumed.
-    if not (cache_hit cache qhash cb) then
-        run_job ({job=z3_job r false label_messages input qhash; callback=cb})
+    (fresh:bool)
+  = let theory =
+        if fresh
+        then flatten_fresh_scope()
+        else let theory = !bg_scope in
+             bg_scope := [];//now consumed
+             theory
+    in
+    let theory = theory @[Push]@qry@[Pop] in
+    let theory, _used_unsat_core = filter_theory theory in
+    let input, qhash, log_file_name = mk_input fresh theory in
+    if not (fresh && cache_hit log_file_name cache qhash cb) then
+        run_job ({job=z3_job log_file_name r fresh label_messages input qhash; callback=cb})
 
 let ask_n_cores
     (r:Range.range)
@@ -650,9 +680,9 @@ let ask_n_cores
                     (List.rev !fresh_scope)) in
     let theory = theory@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
-    let input, qhash = mk_input theory in
-    if not (cache_hit cache qhash cb) then
-        enqueue ({job=z3_job r true label_messages input qhash; callback=cb})
+    let input, qhash, log_file_name = mk_input true theory in
+    if not (cache_hit log_file_name cache qhash cb) then
+        enqueue ({job=z3_job log_file_name r true label_messages input qhash; callback=cb})
 
 let ask
     (r:Range.range)
@@ -662,7 +692,8 @@ let ask
     (qry:decls_t)
     (scope:option<scope_t>)
     (cb:cb)
+    (fresh:bool)
   = if Options.n_cores() = 1 then
-        ask_1_core r filter cache label_messages qry cb
+        ask_1_core r filter cache label_messages qry cb fresh
     else
         ask_n_cores r filter cache label_messages qry scope cb
