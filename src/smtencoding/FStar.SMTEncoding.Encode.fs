@@ -367,7 +367,8 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                 | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
               let dummy_var = mk_fv ("@dummy", dummy_sort) in
               let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
-              let should_thunk =
+              let should_thunk () =
+                //See note [Thunking Nullary Constants] in FStar.SMTEncoding.Term.fs
                 let is_type t =
                     match (SS.compress t).n with
                     | Tm_type _ -> true
@@ -392,7 +393,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
               in
               let thunked, vars =
                  match vars with
-                 | [] when should_thunk ->
+                 | [] when should_thunk () ->
                    true, [dummy_var]
                  | _ -> false, vars
               in

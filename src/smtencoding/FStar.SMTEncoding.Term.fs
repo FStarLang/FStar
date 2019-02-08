@@ -114,8 +114,77 @@ type term' =
   | LblPos     of term * string
 and pat  = term
 and term = {tm:term'; freevars:Syntax.memo<fvs>; rng:Range.range}
-and fv = string * sort * bool //bool signals if this occurrence is a thunk that should be forced
+and fv = string * sort * bool
+//The bool in the fc signals if this occurrence
+//is a thunk that should be forced.
+//See note [Thunking Nullary Constants] below]
 and fvs = list<fv>
+
+
+(** Note [Thunking Nullary Constants]
+
+### The problem: Top-level nullary constants lead to SMT context
+    pollution
+
+Given a top-level nullary constant, say,
+
+```let n : u32 = 0ul```
+
+F* would encode this to SMT as (roughly)
+
+```
+(declare-fun n () Term)
+(assert (HasType n u32))
+(assert (n = U32.uint_to_to 0))
+```
+
+i.e., ground facts about the `n`'s typing and definition would be
+introduced into the top-level SMT context.
+
+Now, for a subsequent proof that has nothing to do with `n`, these
+facts are still available in the context leading to clutter. E.g., in
+this case, the `HasType n u32` leads to Z3 deriving facts like about
+`0 <= n < pow2 32`, then potentially unfolding the `pow2 32` recursive
+functions ... etc. all for potentially no good reason.
+
+### The fix: Protect assumptions about nullary constants under a dummy
+    quantifier
+
+The change in this PR is to avoid introducing these ground facts into
+the SMT context by default. Instead, we now thunk these nullary
+constants, adding a dummy argument, like so:
+
+```
+(declare-fun n (Dummy_sort) Term)
+(assert (forall ((x Dummy_sort) (! (HasType (n x) u32) :pattern ((n x)))))
+(assert (forall ((x Dummy_sort) (! (= (n x) (U32.uint_to_t 0)) :pattern ((n x)))))
+```
+
+Now, instead of ground facts, we have quantified formulae that are
+triggered on occurrences of `n x`.
+
+Every occurrence of `n` in the rest of the proof is forced to `(n
+Dummy_value)`: so, only when such an occurrence is present, do facts
+about `n` become available, not polluting the context otherwise.
+
+For some proofs in large contexts, this leads to massive SMT
+performance gains: e.g., in miTLS with LowParse in context, some
+queries in HSL.Common are sped up by 20x; Negotiation.fst has an
+end-to-end speed up (full verification time) by 8-9x. etc. So, this
+can be a big win.
+
+#### An implementation detail
+
+Note, this thunking happens at a very low-level in the SMT
+encoding. Basically, the thunks are forced at the very last minute
+just before terms are printed to SMT. This is important since it
+ensures that things like sharing of SMT terms are not destroyed by
+discrepancies in thunking behavior (and earlier attempt did thunking
+at a higher level in the encoding, but this led to many regressions).
+
+The bool in the fv is used in termToSmt to force the thunk before
+printing.
+ **)
 
 type caption = option<string>
 type binders = list<(string * sort)>
