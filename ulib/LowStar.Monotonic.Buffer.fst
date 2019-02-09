@@ -144,6 +144,8 @@ let as_seq #_ #_ #_ h b =
 
 let length_as_seq #_ #_ #_ _ _ = ()
 
+let mbuffer_injectivity_in_first_preorder () = ()
+
 let mgsub #a #rrel #rel sub_rel b i len =
   match b with
   | Null -> Null
