@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "896a80fe31fe910ee1a313a066dac931"
+      "2a75c451680ab93c9f24dfe4165c3193"
     ],
     [
       "FStar.Pointer.Derived1.includes_gufield_gen",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "2eab5f4074ec5d6b222549db68775734"
+      "8c35a4161e9500bed67bd12ba4aab4e1"
     ],
     [
       "FStar.Pointer.Derived1.includes_gcell_gen",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "f5f6024e4b9a54bab77c09fa90eb85d3"
+      "da9ac596f2f316c891b451b6057ecc30"
     ],
     [
       "FStar.Pointer.Derived1.loc_includes_union_assoc_r2l",
@@ -40,7 +40,7 @@
         "typing_FStar.Pointer.Base.loc_union"
       ],
       0,
-      "ea66892bf180a448206da737cc29d0ca"
+      "6baa71aa1207881018921253fbcfa792"
     ],
     [
       "FStar.Pointer.Derived1.loc_includes_union_assoc_l2r",
@@ -54,7 +54,7 @@
         "typing_FStar.Pointer.Base.loc_union"
       ],
       0,
-      "cd46c994b3f75d2afb76b83142fc6fd8"
+      "ae3d0812e00eec2a800652814029def3"
     ],
     [
       "FStar.Pointer.Derived1.loc_includes_union_assoc_focalize_1",
@@ -70,7 +70,7 @@
         "typing_FStar.Pointer.Base.loc_union"
       ],
       0,
-      "d34effb56d7f9eb35c02a6ec4e711735"
+      "dd177a5b937543de9251c89555d1c5b2"
     ],
     [
       "FStar.Pointer.Derived1.loc_includes_union_assoc_focalize_2",
@@ -84,7 +84,7 @@
         "typing_FStar.Pointer.Base.loc_union"
       ],
       0,
-      "8855c841a34f2550b09d10908baa77bd"
+      "91b3c4ff2b0a546360fceabe03a27e22"
     ],
     [
       "FStar.Pointer.Derived1.loc_includes_region_union_r",
@@ -99,7 +99,7 @@
         "typing_FStar.Pointer.Base.loc_regions"
       ],
       0,
-      "f33f3a553022d47ec69bdc4026aa3a65"
+      "2e1cd3a675cebda5fc6513e6aa96196e"
     ],
     [
       "FStar.Pointer.Derived1.loc_includes_region_union_assoc",
@@ -116,7 +116,7 @@
         "typing_FStar.Pointer.Base.loc_union"
       ],
       0,
-      "05ff07a6485fd6b87d0c6ed5ef908732"
+      "0b9d9debba6b2d368a667b50e82222a3"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_none_l",
@@ -125,7 +125,7 @@
       1,
       [ "@query" ],
       0,
-      "8fc4b0afffa8fda10a56744aa8f34cd6"
+      "69541ba902c7b92b6e7f10b06cca73c1"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_union_l",
@@ -134,7 +134,7 @@
       1,
       [ "@query" ],
       0,
-      "26a336d3366268b6e5d632eb5f6497e8"
+      "81664fd03fd8f2991589873e0da27491"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gfield_r",
@@ -158,7 +158,7 @@
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-      "d24c24074687e4b63dbb0a3ecc75fae3"
+      "23a00e2e672615684184c9a431c4d5c6"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gfield_l",
@@ -167,7 +167,7 @@
       1,
       [ "@query" ],
       0,
-      "b910ff30ee8b731664c34ef6adda11c1"
+      "c9cb10b76e22fc212364d537fd6da122"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gufield_r",
@@ -192,7 +192,7 @@
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-      "28ac32384fcd5b0853f19cb026373755"
+      "f1736517a315e2a60fd7c1b7fc79dd3b"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gufield_l",
@@ -201,7 +201,7 @@
       1,
       [ "@query" ],
       0,
-      "ee32e699add3804f9aecb02d8a2d44bb"
+      "e2f852e44490160b0cc6499d5fe00bcb"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gcell_r",
@@ -217,7 +217,7 @@
         "lemma_FStar.Pointer.Derived1.includes_gcell_gen"
       ],
       0,
-      "bc92eb4b12b3ad8dbd80dec7b12c781d"
+      "5ee740c082f3ef745fba3f0f4b6ccecb"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gcell_l",
@@ -226,7 +226,7 @@
       1,
       [ "@query" ],
       0,
-      "abdbcaf7b78b7111bad7ae2fb7c42b9e"
+      "3d04310fbda58f29789ce467448db71b"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gsingleton_buffer_of_pointer_r",
@@ -239,7 +239,7 @@
         "lemma_FStar.Pointer.Base.loc_includes_refl"
       ],
       0,
-      "87738f51bfd067546518bbe05110cbc9"
+      "4b73d11fbd9a8e7eae70d93557ab8176"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gsingleton_buffer_of_pointer_l",
@@ -248,7 +248,7 @@
       1,
       [ "@query" ],
       0,
-      "4b1d0ae2254f1e51eaf9d0de547894ef"
+      "26bf2788dc243fc5a4675906b8756254"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gbuffer_of_array_pointer_r",
@@ -261,7 +261,7 @@
         "lemma_FStar.Pointer.Base.loc_includes_refl"
       ],
       0,
-      "e032065ff59e11cf94de4907567c2450"
+      "401aede4a56959cad308112644c6bf4b"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gbuffer_of_array_pointer_l",
@@ -274,7 +274,7 @@
         "lemma_FStar.Pointer.Base.loc_includes_refl"
       ],
       0,
-      "0f5e8b64996a6e6b17a5905fb2ece279"
+      "d65c9612b3926f4ff8694916593fbd25"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gpointer_of_buffer_cell_r",
@@ -287,7 +287,7 @@
         "lemma_FStar.Pointer.Base.loc_includes_refl"
       ],
       0,
-      "900308a163f464f327630d3dec19c3a5"
+      "1fd5b2300b167638b9feb5f7a9a5bd47"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gpointer_of_buffer_cell_l",
@@ -300,7 +300,7 @@
         "lemma_FStar.Pointer.Base.loc_includes_refl"
       ],
       0,
-      "5bb5664925fe419b0e62e922213e3c80"
+      "27137c68f6e5ff06dde9d11730b8a0f6"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gsub_buffer_r",
@@ -312,7 +312,7 @@
         "lemma_FStar.Pointer.Base.loc_includes_refl"
       ],
       0,
-      "6081d320723c084a410bf6ec84f5163f"
+      "7e7194eb9b477c5d0674e4ad3685a265"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gsub_buffer_l",
@@ -324,7 +324,7 @@
         "lemma_FStar.Pointer.Base.loc_includes_refl"
       ],
       0,
-      "f5a7aae015cf800572a55cf3ebf6bec1"
+      "a214fb290de06df7d6bb1e1e30cb3030"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_addresses_pointer",
@@ -341,7 +341,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "790b1ea67e4233d6110cb27110b2626b"
+      "6af0f2a1d807f8e81ebd7289636b7ebc"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_addresses_pointer",
@@ -355,7 +355,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6cb7321a2bf6a3a80c308f897c3f17c1"
+      "3d5131c3516bebe583c5672f3d1d8eb3"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_addresses_pointer",
@@ -364,7 +364,7 @@
       1,
       [ "@query", "lemma_FStar.Pointer.Base.loc_disjoint_pointer_addresses" ],
       0,
-      "aadc0280e21b7e443af09566ac2e987c"
+      "2c3160285233db3c3bdda5cc4ae5bc1d"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_union_r_elim",
@@ -376,7 +376,7 @@
         "lemma_FStar.Pointer.Base.loc_includes_union_l"
       ],
       0,
-      "134dc232d8f8f2f6e988fb5ecc23741b"
+      "f1c841f930fdf1b0bcd23d6c08244789"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_union_l_elim",
@@ -389,7 +389,7 @@
         "typing_FStar.Pointer.Base.loc_union"
       ],
       0,
-      "5800cb0d2a7955c065b828c7825908ac"
+      "dbeebe032c55edbc68837bb512fec7e4"
     ],
     [
       "FStar.Pointer.Derived1.modifies_trans_incl_l",
@@ -404,7 +404,7 @@
         "typing_FStar.Pointer.Base.loc_union"
       ],
       0,
-      "ec70ecf81b2b3608701be7ed26437b0b"
+      "ae48b461699b229734f2461d677eefae"
     ],
     [
       "FStar.Pointer.Derived1.modifies_trans_incl_r",
@@ -419,7 +419,7 @@
         "typing_FStar.Pointer.Base.loc_union"
       ],
       0,
-      "f66920667b235b14e24243fa1b250011"
+      "a4e9d48253635ad4987f4a51695786eb"
     ],
     [
       "FStar.Pointer.Derived1.modifies_fresh_frame_popped'",
@@ -432,7 +432,6 @@
         "equation_FStar.Monotonic.HyperStack.fresh_frame",
         "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.Monotonic.HyperStack.popped",
-        "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_FStar.Pointer.Base.loc_includes_refl",
         "lemma_FStar.Pointer.Base.loc_includes_region_region",
@@ -444,12 +443,13 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple4__4",
         "refinement_interpretation_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "typing_FStar.Monotonic.HyperHeap.mod_set",
+        "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_FStar.Pointer.Base.loc_regions",
         "typing_FStar.Pointer.Base.loc_union", "typing_FStar.Set.singleton"
       ],
       0,
-      "92ceecb4076433a1df3a1c5d0cbc7f17"
+      "fce64baa849d9c9472a220e597ced2bd"
     ],
     [
       "FStar.Pointer.Derived1.buffer_includes_gsub_r_gen",
@@ -458,7 +458,7 @@
       1,
       [ "@query" ],
       0,
-      "68f600ad36d64ddd01e847f41a71a7bb"
+      "68dca57a025c547005fc8dac1f0170c3"
     ],
     [
       "FStar.Pointer.Derived1.readable_gpointer_of_buffer_cell_gsub",
@@ -467,7 +467,7 @@
       1,
       [ "@query" ],
       0,
-      "f1f187da22f782fd426fce5f0af17c94"
+      "73031eb6a4fab22f0071bb21cb754f34"
     ],
     [
       "FStar.Pointer.Derived1.readable_gpointer_of_buffer_cell_gsub",
@@ -497,7 +497,7 @@
         "typing_FStar.UInt32.add", "typing_FStar.UInt32.v"
       ],
       0,
-      "4eb39290f3fe1d1c313495d29a60bd7a"
+      "09e6df4a13d835401842bddcb4db7452"
     ],
     [
       "FStar.Pointer.Derived1.buffer_contents_equal_aux",
@@ -522,7 +522,6 @@
         "equation_with_fuel_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pointer.Base.typ",
         "function_token_typing_FStar.Monotonic.Heap.heap",
-        "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_intro",
@@ -554,18 +553,18 @@
         "refinement_interpretation_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_f874e2190eee7a2db7ea0e274c3085a5",
-        "typing_FStar.Map.domain",
+        "typing_FStar.Map.domain", "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.live_region",
         "typing_FStar.Pointer.Base.buffer_as_seq",
         "typing_FStar.Pointer.Base.buffer_length",
         "typing_FStar.Pointer.Base.frameOf_buffer",
         "typing_FStar.Pointer.Base.type_of_typ",
-        "typing_FStar.Seq.Base.create", "typing_FStar.UInt32.uint_to_t",
-        "typing_FStar.UInt32.v"
+        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length",
+        "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v"
       ],
       0,
-      "e3babbe2982d116ac3cff44dfed4bfa3"
+      "0594d40171e10123e305324637ad6867"
     ],
     [
       "FStar.Pointer.Derived1.buffer_contents_equal",
@@ -577,7 +576,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "5132f88c0672908c0746e0163ed92d24"
+      "505ee5eb4c68d5d8e597bbad0b1e9150"
     ],
     [
       "FStar.Pointer.Derived1.buffer_contents_equal",
@@ -620,7 +619,7 @@
         "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v"
       ],
       0,
-      "14ddbb29f3bdadc293f5e171bc6775ca"
+      "5ef9b0fb1d5b287f69aa99b5516eefc9"
     ],
     [
       "FStar.Pointer.Derived1.buffer_readable_intro_empty",
@@ -641,7 +640,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "7ec8526a34bf40e0aa065343ad6f1d3d"
+      "3f5f1121ae89582d6188ffcfe70ff888"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gsub_buffer_gpointer_of_buffer_cell",
@@ -650,7 +649,7 @@
       1,
       [ "@query" ],
       0,
-      "2620951b6c3c0010305c75ba0b7a7e88"
+      "2fbbc20aa5235f7a6faabacfa09f3183"
     ],
     [
       "FStar.Pointer.Derived1.loc_disjoint_gsub_buffer_gpointer_of_buffer_cell",
@@ -687,7 +686,7 @@
         "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v"
       ],
       0,
-      "5623d74cfd4beebc922a109eedcbb071"
+      "52df22707aeb7de4dcf461654457c539"
     ],
     [
       "FStar.Pointer.Derived1.buffer_readable_gsub_intro",
@@ -696,7 +695,7 @@
       1,
       [ "@query" ],
       0,
-      "2b9695df2836b29a80ba2a41c1d62f9b"
+      "16e9db664a53c8ffadc005d79020d539"
     ],
     [
       "FStar.Pointer.Derived1.buffer_readable_gsub_intro",
@@ -730,7 +729,7 @@
         "typing_FStar.UInt32.add", "typing_FStar.UInt32.v"
       ],
       0,
-      "8417eb26fb2e9f3ab388d8ac6315330e"
+      "10a875a76ceb20e737621f151ded161b"
     ],
     [
       "FStar.Pointer.Derived1.buffer_readable_gsub_elim",
@@ -739,7 +738,7 @@
       1,
       [ "@query" ],
       0,
-      "f199d281f6a0cd59ca683673999a6140"
+      "bebb7726dc20a1486ab82782cc9ef0a1"
     ],
     [
       "FStar.Pointer.Derived1.buffer_readable_gsub_elim",
@@ -751,7 +750,7 @@
         "lemma_FStar.Pointer.Derived1.readable_gpointer_of_buffer_cell_gsub"
       ],
       0,
-      "1ea5326375b80271364d099367e7d1ae"
+      "11da8c2c6993eab5de9c953a5b6334b9"
     ],
     [
       "FStar.Pointer.Derived1.buffer_as_seq_gsub_buffer_append",
@@ -773,7 +772,7 @@
         "typing_FStar.Pointer.Base.buffer_length", "typing_FStar.UInt32.v"
       ],
       0,
-      "cc326fbbd27a5e8f6279d3795da35867"
+      "f3ac35e67111187e6c1b99874f09f2b0"
     ],
     [
       "FStar.Pointer.Derived1.buffer_as_seq_gsub_buffer_append",
@@ -829,7 +828,7 @@
         "typing_FStar.Pointer.Base.type_of_typ", "typing_FStar.UInt32.v"
       ],
       0,
-      "f484cef70fc165af20f4fab7436265c4"
+      "d74392db9cd77487922e8d6810a47639"
     ],
     [
       "FStar.Pointer.Derived1.buffer_as_seq_gsub_buffer_snoc",
@@ -855,7 +854,7 @@
         "typing_FStar.Pointer.Base.buffer_length", "typing_FStar.UInt32.v"
       ],
       0,
-      "6cb9da15eeb1c3ef1cca9272a243d059"
+      "26a2d02c0c0138506f5c6e1ab6b60ae1"
     ],
     [
       "FStar.Pointer.Derived1.buffer_as_seq_gsub_buffer_snoc",
@@ -899,7 +898,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.UInt32.v"
       ],
       0,
-      "5a46439d337a22ce2141ccc9bb454087"
+      "3d9b08793da02a852c58ff6e880d7004"
     ],
     [
       "FStar.Pointer.Derived1.buffer_as_seq_gsub_buffer_cons",
@@ -925,7 +924,7 @@
         "typing_FStar.Pointer.Base.buffer_length", "typing_FStar.UInt32.v"
       ],
       0,
-      "bf2715dec0dbf15362ca58031b3afb2f"
+      "4767b26c2151c1e84719da945af143cf"
     ],
     [
       "FStar.Pointer.Derived1.buffer_as_seq_gsub_buffer_cons",
@@ -982,7 +981,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.UInt32.v"
       ],
       0,
-      "442f78483d990ab1cad8311632c43fd0"
+      "91ef62e792981eda42681e16ace303a5"
     ],
     [
       "FStar.Pointer.Derived1.buffer_snoc",
@@ -1017,7 +1016,7 @@
         "typing_FStar.Pointer.Base.buffer_length", "typing_FStar.UInt32.v"
       ],
       0,
-      "54b5142d22d1eb58b4d70fcfc4ebc76d"
+      "690e975a186733a33e520735bcfe3a07"
     ],
     [
       "FStar.Pointer.Derived1.buffer_snoc",
@@ -1065,7 +1064,7 @@
         "typing_FStar.Pointer.Base.loc_pointer", "typing_FStar.UInt32.v"
       ],
       0,
-      "a6c4d32ec72e9f4569937e32dbb9a8f3"
+      "be786ffbffbe0d8b34a2ae492bdd2233"
     ],
     [
       "FStar.Pointer.Derived1.buffer_cons",
@@ -1100,7 +1099,7 @@
         "typing_FStar.Pointer.Base.buffer_length", "typing_FStar.UInt32.v"
       ],
       0,
-      "b4118de3b5f3928cd48abd41a31a16b2"
+      "2b9f7e17f8a6b26df7ceaa9b0d5660d7"
     ],
     [
       "FStar.Pointer.Derived1.buffer_cons",
@@ -1150,7 +1149,7 @@
         "typing_FStar.Pointer.Base.loc_pointer", "typing_FStar.UInt32.v"
       ],
       0,
-      "fcd6ac2102bfffb6fa04121eb30a2e5a"
+      "e87121e7b3949210d1c25d04bbcc9bdc"
     ],
     [
       "FStar.Pointer.Derived1.buffer_readable_gsub_merge",
@@ -1185,7 +1184,7 @@
         "typing_FStar.Pointer.Base.buffer_length", "typing_FStar.UInt32.v"
       ],
       0,
-      "f9e62ce4b8328b56d95420706653d547"
+      "38e70373c51e49f5aaf192777947885e"
     ],
     [
       "FStar.Pointer.Derived1.buffer_readable_gsub_merge",
@@ -1232,7 +1231,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "272793727cf678d9572b87d4ffcc3cdd"
+      "94b190d54f8dc010c29e6d7920a785b7"
     ],
     [
       "FStar.Pointer.Derived1.buffer_readable_modifies_gsub",
@@ -1267,7 +1266,7 @@
         "typing_FStar.Pointer.Base.buffer_length", "typing_FStar.UInt32.v"
       ],
       0,
-      "8051dd404139da5428dbd76ee72218b0"
+      "d60981a9a130825a88f7db62a155c10a"
     ],
     [
       "FStar.Pointer.Derived1.buffer_readable_modifies_gsub",
@@ -1321,7 +1320,7 @@
         "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v"
       ],
       0,
-      "a7b1f651579de14fd902cd14d9ef43e4"
+      "adf080ce62043ddad3d7ccdfdbdf0bbf"
     ]
   ]
 ]
