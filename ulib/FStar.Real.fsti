@@ -24,8 +24,8 @@ module FStar.Real
   in Z3's theory of real arithmetic.
 *)
 
-val real : eqtype
-
+type real : Type0
+val real_has_eq : squash (hasEq real)
 val of_int : int -> Tot real
 
 val ( +. ) : real -> real -> Tot real
