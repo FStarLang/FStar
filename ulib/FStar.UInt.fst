@@ -1127,11 +1127,19 @@ let lemma_lognot_value_zero #n a =
   begin
     let p = pow2 n in
     lemma_lognot_value_mod a;
-    assume (fits 0 n);
+
+    pow2_lt_compat n 0;  //for (fits 0 n)
+    assert (fits 0 n);
+
     assert (lognot #n 0 = pow2 n - 0 - 1);
     assert (lognot a = (-1) % p);
     assert (sub_mod #n 0 0 = 0);
-    assume (fits 1 n);
+
+    assert_norm (pow2 1 == 2);  //this step and
+    assert (1 <= (pow2 1 - 1));  //this one  and
+    pow2_le_compat n 1;         //this one are to prove (fits 1 n)
+    assert (fits 1 n);
+
     assert (lognot a == sub_mod (sub_mod 0 0) 1)
   end
 
