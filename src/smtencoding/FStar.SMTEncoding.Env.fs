@@ -28,6 +28,7 @@ open FStar.TypeChecker
 open FStar.SMTEncoding.Term
 open FStar.Ident
 open FStar.SMTEncoding.Util
+
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util
 module U = FStar.Syntax.Util
@@ -55,9 +56,9 @@ let primitive_projector_by_pos env lid i =
         | _ -> fail ()
 let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" lid.str (string_of_int i)
 let mk_term_projector (lid:lident) (a:bv) : term =
-    mkFreeV(mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
+    mkFreeV <| mk_fv (mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
 let mk_term_projector_by_pos (lid:lident) (i:int) : term =
-    mkFreeV(mk_term_projector_name_by_pos lid i, Arrow(Term_sort, Term_sort))
+    mkFreeV <| mk_fv (mk_term_projector_name_by_pos lid i, Arrow(Term_sort, Term_sort))
 let mk_data_tester env l x = mk_tester (escape l.str) x
 (* ------------------------------------ *)
 (* New name generation *)
@@ -122,8 +123,17 @@ type fvar_binding = {
     smt_arity: int;
     smt_id:    string;
     smt_token: option<term>;
-    smt_fuel_partial_app:option<term>
+    smt_fuel_partial_app:option<term>;
+    fvb_thunked: bool
 }
+let check_valid_fvb fvb =
+    if (Option.isSome fvb.smt_token
+     || Option.isSome fvb.smt_fuel_partial_app)
+    && fvb.fvb_thunked
+    then failwith (BU.format1 "Unexpected thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid))
+    else if fvb.fvb_thunked && fvb.smt_arity <> 0
+    then failwith (BU.format1 "Unexpected arity of thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid))
+
 
 let binder_of_eithervar v = (v, None)
 
@@ -170,13 +180,13 @@ let add_bvar_binding bvb bvbs =
 let add_fvar_binding fvb (fvb_map, fvb_list) =
   (BU.psmap_add fvb_map fvb.fvar_lid.str fvb, fvb::fvb_list)
 
-let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
+let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV <| mk_fv (xsym, s)
 (* generate terms corresponding to a variable and record the mapping in the environment *)
 
 (* Bound term variables *)
 let gen_term_var (env:env_t) (x:bv) =
     let ysym = "@x"^(string_of_int env.depth) in
-    let y = mkFreeV(ysym, Term_sort) in
+    let y = mkFreeV <| mk_fv (ysym, Term_sort) in
     ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings; depth=env.depth + 1}
 let new_term_constant (env:env_t) (x:bv) =
     let ysym = varops.new_var x.ppname x.index in
@@ -192,43 +202,68 @@ let lookup_term_var env a =
     match lookup_bvar_binding env a with
     | None ->
         (match lookup_bvar_binding env a with
-            | None -> failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
-                                          (Print.bv_to_string a)
-                                          (print_env env))
-            | Some (b,t) -> t)
+         | None -> failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
+                                        (Print.bv_to_string a)
+                                        (print_env env))
+         | Some (b,t) -> t)
     | Some (b,t) -> t
 
 (* Qualified term names *)
-let mk_fvb lid fname arity ftok fuel_partial_app = {
+let mk_fvb lid fname arity ftok fuel_partial_app thunked =
+    let fvb = {
         fvar_lid  = lid;
         smt_arity = arity;
         smt_id    = fname;
         smt_token = ftok;
-        smt_fuel_partial_app = fuel_partial_app
-}
-let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) arity =
+        smt_fuel_partial_app = fuel_partial_app;
+        fvb_thunked = thunked;
+        }
+    in
+    check_valid_fvb fvb;
+    fvb
+let new_term_constant_and_tok_from_lid_aux (env:env_t) (x:lident) arity thunked =
     let fname = varops.new_fvar x in
-    let ftok_name = fname^"@tok" in
-    let ftok = mkApp(ftok_name, []) in
-    let fvb = mk_fvb x fname arity (Some ftok) None in
+    let ftok_name, ftok =
+        if thunked then None, None
+        else let ftok_name = fname^"@tok" in
+             let ftok = mkApp(ftok_name, []) in
+             Some ftok_name, Some ftok
+    in
+    let fvb = mk_fvb x fname arity ftok None thunked in
 //    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
     fname, ftok_name, {env with fvar_bindings=add_fvar_binding fvb env.fvar_bindings}
+let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) arity =
+    let fname, ftok_name_opt, env = new_term_constant_and_tok_from_lid_aux env x arity false in
+    fname, Option.get ftok_name_opt, env
+let new_term_constant_and_tok_from_lid_maybe_thunked (env:env_t) (x:lident) arity th =
+    new_term_constant_and_tok_from_lid_aux env x arity th
 let lookup_lid env a =
     match lookup_fvar_binding env a with
     | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a))
-    | Some s -> s
-let push_free_var env (x:lident) arity fname ftok =
-    let fvb = mk_fvb x fname arity ftok None in
+    | Some s -> check_valid_fvb s; s
+let push_free_var_maybe_thunked env (x:lident) arity fname ftok thunked =
+    let fvb = mk_fvb x fname arity ftok None thunked in
     {env with fvar_bindings=add_fvar_binding fvb env.fvar_bindings}
+let push_free_var env (x:lident) arity fname ftok =
+    push_free_var_maybe_thunked env x arity fname ftok false
+let push_free_var_thunk env (x:lident) arity fname ftok =
+    push_free_var_maybe_thunked env x arity fname ftok (arity=0)
 let push_zfuel_name env (x:lident) f =
     let fvb = lookup_lid env x in
     let t3 = mkApp(f, [mkApp("ZFuel", [])]) in
-    let fvb = mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token (Some t3) in
+    let fvb = mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token (Some t3) false in
     {env with fvar_bindings=add_fvar_binding fvb env.fvar_bindings}
+let force_thunk fvb =
+    if not (fvb.fvb_thunked) || fvb.smt_arity <> 0
+    then failwith "Forcing a non-thunk in the SMT encoding";
+    mkFreeV <| (fvb.smt_id, Term_sort, true)
 let try_lookup_free_var env l =
     match lookup_fvar_binding env l with
     | None -> None
     | Some fvb ->
+      if fvb.fvb_thunked
+      then Some (force_thunk fvb)
+      else
       begin
       match fvb.smt_fuel_partial_app with
       | Some f when env.use_zfuel_name -> Some f
@@ -239,8 +274,8 @@ let try_lookup_free_var env l =
           begin
           match t.tm with
           | App(_, [fuel]) ->
-            if (BU.starts_with (Term.fv_of_term fuel |> fst) "fuel")
-            then Some <| mk_ApplyTF(mkFreeV (fvb.smt_id, Term_sort)) fuel
+            if (BU.starts_with (Term.fv_of_term fuel |> fv_name) "fuel")
+            then Some <| mk_ApplyTF(mkFreeV <| mk_fv (fvb.smt_id, Term_sort)) fuel
             else Some t
           | _ -> Some t
           end
@@ -249,34 +284,35 @@ let try_lookup_free_var env l =
       end
 let lookup_free_var env a =
     match try_lookup_free_var env a.v with
-        | Some t -> t
-        | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a.v))
-let lookup_free_var_name env a =
-    let fvb = lookup_lid env a.v in
-    fvb.smt_id, fvb.smt_arity
+    | Some t -> t
+    | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a.v))
+let lookup_free_var_name env a = lookup_lid env a.v
 let lookup_free_var_sym env a =
     let fvb = lookup_lid env a.v in
     match fvb.smt_fuel_partial_app with
     | Some({tm=App(g, zf)})
         when env.use_zfuel_name ->
-        g, zf, fvb.smt_arity + 1
+      BU.Inl g, zf, fvb.smt_arity + 1
     | _ ->
         begin
         match fvb.smt_token with
+        | None when fvb.fvb_thunked ->
+            BU.Inr (force_thunk fvb), [], fvb.smt_arity
         | None ->
-            Var fvb.smt_id, [], fvb.smt_arity
+            BU.Inl (Var fvb.smt_id), [], fvb.smt_arity
         | Some sym ->
             begin
             match sym.tm with
             | App(g, [fuel]) ->
-                g, [fuel], fvb.smt_arity + 1
+                BU.Inl g, [fuel], fvb.smt_arity + 1
             | _ ->
-                Var fvb.smt_id, [], fvb.smt_arity
+                BU.Inl (Var fvb.smt_id), [], fvb.smt_arity
             end
         end
 
 let tok_of_name env nm =
   BU.psmap_find_map (env.fvar_bindings |> fst) (fun _ fvb ->
+      check_valid_fvb fvb;
       if fvb.smt_id = nm then fvb.smt_token else None)
 
 let reset_current_module_fvbs env = { env with fvar_bindings = (env.fvar_bindings |> fst, []) }

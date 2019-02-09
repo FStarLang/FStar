@@ -64,7 +64,7 @@ let mkForall_fuel' r n (pats, vars, body) =
                 | _ -> add_fuel [guard] |> List.hd in
               mkImp(guard,body')
             | _ -> body in
-         let vars = (fsym, Fuel_sort)::vars in
+         let vars = mk_fv (fsym, Fuel_sort)::vars in
          mkForall r (pats, vars, body)
 
 let mkForall_fuel r = mkForall_fuel' r 1
@@ -106,8 +106,9 @@ let trivial_post t : Syntax.term =
              (Syntax.fvar Const.true_lid delta_constant None)
              None
 
-let mk_Apply e vars =
-    vars |> List.fold_left (fun out var -> match snd var with
+let mk_Apply e (vars:fvs) =
+    vars |> List.fold_left (fun out var ->
+            match fv_sort var with
             | Fuel_sort -> mk_ApplyTF out (mkFreeV var)
             | s -> assert (s=Term_sort); mk_ApplyTT out (mkFreeV var)) e
 let mk_Apply_args e args = args |> List.fold_left mk_ApplyTT e
@@ -118,18 +119,25 @@ let raise_arity_mismatch head arity n_args rng =
                                         (BU.string_of_int arity)
                                         (BU.string_of_int n_args))
                                 rng
-
-let maybe_curry_app rng (head:op) (arity:int) (args:list<term>) =
+ let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>) : term =
     let n_args = List.length args in
-    if n_args = arity
-    then Util.mkApp'(head, args)
-    else if n_args > arity
-    then let args, rest = BU.first_N arity args in
-         let head = Util.mkApp'(head, args) in
-         mk_Apply_args head rest
-    else raise_arity_mismatch (Term.op_to_string head) arity n_args rng
+    match head with
+    | BU.Inr head -> //must curry
+      mk_Apply_args head args
+
+    | BU.Inl head ->
+        if n_args = arity
+        then Util.mkApp'(head, args)
+        else if n_args > arity
+        then let args, rest = BU.first_N arity args in
+             let head = Util.mkApp'(head, args) in
+             mk_Apply_args head rest
+        else raise_arity_mismatch (Term.op_to_string head) arity n_args rng
+
 let maybe_curry_fvb rng fvb args =
-    maybe_curry_app rng (Var fvb.smt_id) fvb.smt_arity args
+    if fvb.fvb_thunked
+    then mk_Apply_args (force_thunk fvb) args
+    else maybe_curry_app rng (BU.Inl (Var fvb.smt_id)) fvb.smt_arity args
 
 let is_app = function
     | Var "ApplyTT"
@@ -243,7 +251,13 @@ let rec curried_arrow_formals_comp k =
   let k = Subst.compress k in
   match k.n with
   | Tm_arrow(bs, c)  -> Subst.open_comp bs c
-  | Tm_refine(bv, _) -> curried_arrow_formals_comp bv.sort
+  | Tm_refine(bv, _) ->
+    let args, res = curried_arrow_formals_comp bv.sort in
+    begin
+    match args with
+    | [] -> [], Syntax.mk_Total k
+    | _ -> args, res
+    end
   | _                -> [], Syntax.mk_Total k
 
 let is_arithmetic_primitive head args =
@@ -325,7 +339,7 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
             let x = fst b in
             let xxsym, xx, env' = gen_term_var env x in
             let guard_x_t, decls' = encode_term_pred fuel_opt (norm env x.sort) env xx in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
-            (xxsym, Term_sort),
+            mk_fv (xxsym, Term_sort),
             guard_x_t,
             env',
             decls',
@@ -571,11 +585,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_fvar v ->
         if head_redex env t
         then encode_term (whnf env t) env
-        else let _, arity = lookup_free_var_name env v.fv_name in
+        else let fvb = lookup_free_var_name env v.fv_name in
              let tok = lookup_free_var env v.fv_name in
              let tkey_hash = Term.hash_of_term tok in
              let aux_decls, sym_name =
-               if arity > 0
+             let aux_decls =
+               if fvb.smt_arity > 0
                then //kick partial application axioms if arity > 0; see #613
                     //and if the head symbol is just a variable
                     //rather than maybe a fuel-instrumented name (cf. #1433)
@@ -608,8 +623,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              && U.is_pure_or_ghost_comp res)
              || U.is_tot_or_gtot_comp res
         then let vars, guards, env', decls, _ = encode_binders None binders env in
-             let fsym = varops.fresh "f", Term_sort in
-             let f = mkFreeV fsym in
+             let fsym = mk_fv (varops.fresh "f", Term_sort) in
+             let f = mkFreeV  fsym in
              let app = mk_Apply f vars in
              let pre_opt, res_t = TcUtil.pure_or_ghost_pre_and_post ({env.tcenv with lax=true}) res in
              let res_pred, decls' = encode_term_pred None res_t env' app in
@@ -624,11 +639,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                 vars,
                                 mkImp(guards, res_pred)) in
 
-             let cvars = Term.free_variables t_interp |> List.filter (fun (x, _) -> x <> fst fsym) in
+             let cvars = Term.free_variables t_interp |> List.filter (fun x -> fv_name x <> fv_name fsym) in
              let tkey = mkForall t.pos ([], fsym::cvars, t_interp) in
              let tkey_hash = hash_of_term tkey in
              let tsym = "Tm_arrow_" ^ (BU.digest_of_string tkey_hash) in
-             let cvar_sorts = List.map snd cvars in
+             let cvar_sorts = List.map fv_sort cvars in
              let caption =
                  if Options.log_queries()
                  then Some (BU.replace_char (N.term_to_string env.tcenv t0) '\n' ' ')
@@ -670,7 +685,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 Util.mkAssume(mk_HasType t mk_Term_type,
                             Some "Typing for non-total arrows",
                             module_name ^ "_" ^a_name) in
-             let fsym = "f", Term_sort in
+             let fsym = mk_fv ("f", Term_sort) in
              let f = mkFreeV fsym in
              let f_has_t = mk_HasType f t in
              let t_interp =
@@ -707,15 +722,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         //in that case, cvars was turning out to be empty, resulting in non well-formed encoding (e.g. of hasEq, since free variables of base_t are not captured in cvars)
         //to get around that, computing cvars separately from the components of the encoding variable
         let cvars = BU.remove_dups fv_eq (Term.free_variables refinement @ Term.free_variables tm_has_type_with_fuel) in
-        let cvars = cvars |> List.filter (fun (y, _) -> y <> x && y <> fsym) in
+        let cvars = cvars |> List.filter (fun y -> fv_name y <> x && fv_name y <> fsym) in
 
-        let xfv = (x, Term_sort) in
-        let ffv = (fsym, Fuel_sort) in
+        let xfv = mk_fv (x, Term_sort) in
+        let ffv = mk_fv (fsym, Fuel_sort) in
         let tkey = mkForall t0.pos ([], ffv::xfv::cvars, encoding) in
         let tkey_hash = Term.hash_of_term tkey in
         let module_name = env.current_module_name in
         let tsym = "Tm_refine_" ^ (BU.digest_of_string tkey_hash) in
-        let cvar_sorts = List.map snd cvars in
+        let cvar_sorts = List.map fv_sort cvars in
         let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
         let t = mkApp(tsym, List.map mkFreeV cvars) in
 
@@ -880,7 +895,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           let fallback () =
             let f = varops.fresh (env.current_module_name ^ "_Tm_abs") in
             let decl = Term.DeclFun(f, [], Term_sort, Some "Imprecise function encoding") in
-            mkFreeV(f, Term_sort), [decl] |> mk_decls_trivial
+            mkFreeV <| mk_fv (f, Term_sort), [decl] |> mk_decls_trivial
           in
 
           let is_impure (rc:S.residual_comp) =
@@ -965,7 +980,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   let decls = decls@decls'@decls'' in
                   t, decls
                 | None ->
-                  let cvar_sorts = List.map snd cvars in
+                  let cvar_sorts = List.map fv_sort cvars in
                   let fsym = "Tm_abs_" ^ (BU.digest_of_string tkey_hash) in
                   let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
                   let f = mkApp(fsym, List.map mkFreeV cvars) in //arity ok, since introduced at cvar_sorts (#1383)
@@ -974,9 +989,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     match arrow_t_opt with
                     | None -> [] //no typing axiom for this lambda, because we don't have enough info
                     | Some t ->
-                    let f_has_t = mk_HasTypeWithFuel None f t in
-                    let a_name = "typing_"^fsym in
-                    [Util.mkAssume(mkForall t0.pos ([[f]], cvars, f_has_t), Some a_name, a_name)]
+                      let f_has_t = mk_HasTypeWithFuel None f t in
+                      let a_name = "typing_"^fsym in
+                      [Util.mkAssume(mkForall t0.pos ([[f]], cvars, f_has_t), Some a_name, a_name)]
                   in
                   let interp_f =
                     let a_name = "interpretation_" ^fsym in
@@ -1034,7 +1049,7 @@ and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t
       in
       List.fold_right encode_branch pats (default_case (* default; should be unreachable *), decls)
     in
-    mkLet' ([(scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
+    mkLet' ([mk_fv (scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
 and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
     if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
@@ -1042,7 +1057,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
 
     let env, vars = vars |> List.fold_left (fun (env, vars) v ->
             let xx, _, env = gen_term_var env v in
-            env, (v, (xx, Term_sort))::vars) (env, []) in
+            env, (v, mk_fv (xx, Term_sort))::vars) (env, []) in
 
     let rec mk_guard pat (scrutinee:term) : term =
         match pat.v with

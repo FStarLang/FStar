@@ -31,9 +31,8 @@ let (mkInteger' : Prims.int -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkInteger' 
 let (mkBoundV : Prims.int -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkBoundV 
-let (mkFreeV :
-  (Prims.string * FStar_SMTEncoding_Term.sort) -> FStar_SMTEncoding_Term.term)
-  = norng FStar_SMTEncoding_Term.mkFreeV 
+let (mkFreeV : FStar_SMTEncoding_Term.fv -> FStar_SMTEncoding_Term.term) =
+  norng FStar_SMTEncoding_Term.mkFreeV 
 let (mkApp' :
   (FStar_SMTEncoding_Term.op * FStar_SMTEncoding_Term.term Prims.list) ->
     FStar_SMTEncoding_Term.term)
@@ -167,23 +166,23 @@ let (mkCases :
   FStar_SMTEncoding_Term.term Prims.list -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkCases 
 let norng2 :
-  'Auu____578 'Auu____579 'Auu____580 .
-    ('Auu____578 -> 'Auu____579 -> FStar_Range.range -> 'Auu____580) ->
-      'Auu____578 -> 'Auu____579 -> 'Auu____580
+  'Auu____568 'Auu____569 'Auu____570 .
+    ('Auu____568 -> 'Auu____569 -> FStar_Range.range -> 'Auu____570) ->
+      'Auu____568 -> 'Auu____569 -> 'Auu____570
   = fun f  -> fun x  -> fun y  -> f x y FStar_Range.dummyRange 
 let norng3 :
-  'Auu____628 'Auu____629 'Auu____630 'Auu____631 .
-    ('Auu____628 ->
-       'Auu____629 -> 'Auu____630 -> FStar_Range.range -> 'Auu____631)
-      -> 'Auu____628 -> 'Auu____629 -> 'Auu____630 -> 'Auu____631
+  'Auu____618 'Auu____619 'Auu____620 'Auu____621 .
+    ('Auu____618 ->
+       'Auu____619 -> 'Auu____620 -> FStar_Range.range -> 'Auu____621)
+      -> 'Auu____618 -> 'Auu____619 -> 'Auu____620 -> 'Auu____621
   = fun f  -> fun x  -> fun y  -> fun z  -> f x y z FStar_Range.dummyRange 
 let norng4 :
-  'Auu____693 'Auu____694 'Auu____695 'Auu____696 'Auu____697 .
-    ('Auu____693 ->
-       'Auu____694 ->
-         'Auu____695 -> 'Auu____696 -> FStar_Range.range -> 'Auu____697)
+  'Auu____683 'Auu____684 'Auu____685 'Auu____686 'Auu____687 .
+    ('Auu____683 ->
+       'Auu____684 ->
+         'Auu____685 -> 'Auu____686 -> FStar_Range.range -> 'Auu____687)
       ->
-      'Auu____693 -> 'Auu____694 -> 'Auu____695 -> 'Auu____696 -> 'Auu____697
+      'Auu____683 -> 'Auu____684 -> 'Auu____685 -> 'Auu____686 -> 'Auu____687
   =
   fun f  ->
     fun x  -> fun y  -> fun z  -> fun w  -> f x y z w FStar_Range.dummyRange

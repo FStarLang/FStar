@@ -39,7 +39,13 @@ let length_eq #_ _ = ()
 let view_indexing #b vb i
   = let n = View?.n (get_view vb) in
     length_eq vb;
-    FStar.Math.Lemmas.distributivity_add_left (length vb) (-i) n
+    FStar.Math.Lemmas.distributivity_add_left (length vb) (-i) n;
+    let open FStar.Mul in
+    assert ((length vb + (-i)) * n = length vb * n + (-i) * n);
+    assert (length vb > i);
+    assert (length vb + (-i) > 0);
+    assert (n <= (length vb + (-i)) * n)
+
 
 let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
     : GTot (frags:
