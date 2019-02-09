@@ -87,8 +87,12 @@ type term' =
   | LblPos     of term * string
 and pat  = term
 and term = {tm:term'; freevars:Syntax.memo<fvs>; rng:Range.range}
-and fv = string * sort
+and fv = string * sort * bool
 and fvs = list<fv>
+val fv_name : fv -> string
+val fv_sort : fv -> sort
+val fv_force : fv -> bool
+val mk_fv : string * sort -> fv
 
 type caption = option<string>
 type binders = list<(string * sort)>
@@ -149,7 +153,7 @@ val mkInteger': int -> Range.range -> term
 val mkReal: string -> Range.range -> term
 val mkRealOfInt: term -> Range.range -> term
 val mkBoundV : int -> Range.range -> term
-val mkFreeV  : (string * sort) -> Range.range -> term
+val mkFreeV  : fv -> Range.range -> term
 val mkApp' : (op * list<term>) -> Range.range -> term
 val mkApp  : (string * list<term>) -> Range.range -> term
 val mkNot  : term -> Range.range -> term
@@ -249,3 +253,5 @@ val op_to_string: op -> string
 val print_smt_term: term -> string
 val print_smt_term_list: list<term> -> string
 val print_smt_term_list_list: list<list<term>> -> string
+
+val dummy_sort : sort

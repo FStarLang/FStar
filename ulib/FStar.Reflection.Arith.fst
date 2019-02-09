@@ -122,7 +122,7 @@ private let fail #a s = fun i -> Inl s
 
 let refined_list_t (#a:Type) (p:(a -> Type0)) = list (x:a{p x})
 
-val list_unref : #a:Type -> #p:(a -> Type0) -> refined_list_t p -> Tot (list a)
+val list_unref : #a:Type -> #p:(a -> Type0) -> refined_list_t p -> Tot (l:list a{forall x. List.memP x l ==> p x})
 let rec list_unref #a #p l =
     match l with
     | [] -> []
@@ -132,6 +132,7 @@ let collect_app_ref (t:term) : ((h:term{h == t \/ h << t}) * refined_list_t (fun
   collect_app_ref t
 
 val as_arith_expr : term -> tm expr
+#push-options "--initial_fuel 4 --max_fuel 4"
 let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
     let tl = list_unref tl in //need to be careful to instantiate list_unref at the right type to allow SMT to unfold its recursive definition properly
@@ -177,6 +178,7 @@ let rec as_arith_expr (t:term) =
         return (Lit i)
     | _ ->
         atom t
+#pop-options
 
 val is_arith_expr : term -> tm expr
 let is_arith_expr t =

@@ -19,6 +19,18 @@ module FStar.Pervasives
 open Prims
 include FStar.Pervasives.Native
 
+(* Sometimes it is convenient to explicit introduce nullary symbols
+ * into the ambient context, so that SMT can appeal to their definitions
+ * even when they are no mentioned explicitly in the program, e.g., when
+ * needed for triggers.
+ * Use `intro_ambient t` for that.
+ * See, e.g., LowStar.Monotonic.Buffer.fst and its usage there for loc_none
+ *)
+abstract
+let ambient (#a:Type) (x:a) = True
+abstract
+let intro_ambient (#a:Type) (x:a) : squash (ambient x) = ()
+
 let id (#a:Type) (x:a) = x
 
 new_effect DIV = PURE

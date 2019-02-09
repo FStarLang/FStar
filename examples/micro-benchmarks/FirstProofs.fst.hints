@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "41d5584ff3e8cbead2d0d8cd7a80e439"
+      "c414def03815e4bfaaec1a6af80c5f5b"
     ],
     [
       "FirstProofs.factorial_is_positive",
@@ -38,7 +38,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6468e9b4b83dc9a621b82429e42b1ecf"
+      "21c7ef78b04285f6a5b9eadf7e8d9e84"
     ],
     [
       "FirstProofs.factorial_is_increasing",
@@ -61,7 +61,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2b6aed92f127fa4fa71c4183ca0f9f04"
+      "be5b68cd37961be1cab076895d81b767"
     ],
     [
       "FirstProofs.factorial_is_doubling",
@@ -85,7 +85,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bbcad6892184200641c3877ebeef7614"
+      "bf86298f3e9786121f09911b533f8549"
     ],
     [
       "FirstProofs.fibonacci",
@@ -102,7 +102,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "75b533e1041a34562da6c0fe0ced2752"
+      "b42a5df254bb460740590ae898f4234b"
     ],
     [
       "FirstProofs.fibonacci_is_increasing",
@@ -125,7 +125,7 @@
         "typing_FirstProofs.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "d349163cba4a2a30353cb6219da8f21d"
+      "341d7da310a043803bd0394be20f131a"
     ],
     [
       "FirstProofs.factorial",
@@ -142,7 +142,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c8248d10a4f5fcdab5595c8790227b87"
+      "a4d32e6d12d1b9e83a30c44447f9a6ad"
     ],
     [
       "FirstProofs.fibonacci",
@@ -159,7 +159,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "58d2c42f5bb9d0538467d853d4e8e387"
+      "2f70eff68d771fdf24fe77ebfd3d2941"
     ]
   ]
 ]

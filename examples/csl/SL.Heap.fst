@@ -64,7 +64,9 @@ let emp =
   let domain = OS.empty in
   let contents = F.on_dom nat (fun _ -> None) in
   Some ({ domain = domain; contents = contents })
-  
+
+let _ = intro_ambient emp //emp appears in patterns; grant an ambient equality for it
+
 let ref a = nat
 
 let addr_of #a n = n

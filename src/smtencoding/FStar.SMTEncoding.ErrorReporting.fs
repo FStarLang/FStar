@@ -42,7 +42,7 @@ let fresh_label : string -> Range.range -> term -> label * term =
     let ctr = BU.mk_ref 0 in
     fun message range t ->
         let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
-        let lvar = l, Bool_sort in
+        let lvar = mk_fv (l, Bool_sort) in
         //printfn "Generated fresh label %s for %s at range %s" (fst lvar) message (string_of_both_ranges range);
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
@@ -68,8 +68,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
     let rec is_a_post_condition post_name_opt tm =
         match post_name_opt, tm.tm with
         | None, _ -> false
-        | Some nm, FreeV (nm', _) ->
-          nm=nm'
+        | Some nm, FreeV fv ->
+          nm=fv_name fv
         | _, App (Var "Valid", [tm])
         | _, App (Var "ApplyTT", tm::_) ->
           is_a_post_condition post_name_opt tm
@@ -127,8 +127,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
               begin match arg.tm with
                 | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) ->
                   let post_name = "^^post_condition_"^ (BU.string_of_int <| Syntax.Syntax.next_id ()) in
-                  let names = (post_name, post)
-                              ::List.map (fun s -> ("^^" ^ (string_of_int <| Syntax.Syntax.next_id()), s)) sorts in
+                  let names = mk_fv (post_name, post)
+                              ::List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Syntax.Syntax.next_id()), s)) sorts in
                   let instantiation = List.map mkFreeV names in
                   let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
 
@@ -183,8 +183,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           let sorts', post = BU.prefix sorts in
           let new_post_name = "^^post_condition_"^ (BU.string_of_int <| Syntax.Syntax.next_id ()) in
           //printfn "Got a named continuation with post-condition %s" new_post_name;
-          let names = List.map (fun s -> ("^^" ^ (string_of_int <| Syntax.Syntax.next_id()), s)) sorts'
-                             @ [(new_post_name, post)] in
+          let names = List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Syntax.Syntax.next_id()), s)) sorts'
+                             @ [mk_fv (new_post_name, post)] in
           let instantiation = List.map mkFreeV names in
           let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
 
@@ -334,7 +334,7 @@ let detail_errors hint_replay
         labs
         |> List.map (fun (l, _, _) ->
             let a = {
-                    assumption_name="@disable_label_"^fst l; //the "@" is important in the name; forces it to be retained when replaying a hint
+                    assumption_name="@disable_label_"^fv_name l; //the "@" is important in the name; forces it to be retained when replaying a hint
                     assumption_caption=Some "Disabling label";
                     assumption_term=mkEq(mkFreeV l, mkTrue);
                     assumption_fact_ids=[]
@@ -353,8 +353,8 @@ let detail_errors hint_replay
             sort_labels results
 
         | hd::tl ->
-              BU.print1 "%s, " (BU.string_of_int (List.length active));
-              let decls = elim <| (eliminated @ errors @ tl) in
+          BU.print1 "%s, " (BU.string_of_int (List.length active));
+          let decls = elim <| (eliminated @ errors @ tl) in
           let result = askZ3 decls in //hd is the only thing to prove
           match result.z3result_status with
           | Z3.UNSAT _ -> //hd is provable
