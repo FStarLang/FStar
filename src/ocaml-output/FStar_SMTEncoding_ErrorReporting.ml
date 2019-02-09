@@ -145,14 +145,15 @@ let (label_goals :
               match q1.FStar_SMTEncoding_Term.tm with
               | FStar_SMTEncoding_Term.BoundV uu____771 -> (labels, q1)
               | FStar_SMTEncoding_Term.Integer uu____775 -> (labels, q1)
-              | FStar_SMTEncoding_Term.LblPos uu____779 ->
+              | FStar_SMTEncoding_Term.Real uu____779 -> (labels, q1)
+              | FStar_SMTEncoding_Term.LblPos uu____783 ->
                   failwith "Impossible"
               | FStar_SMTEncoding_Term.Labeled
-                  (arg,"could not prove post-condition",uu____793) ->
+                  (arg,"could not prove post-condition",uu____797) ->
                   let fallback msg =
                     aux default_msg ropt post_name_opt labels arg  in
                   (try
-                     (fun uu___271_839  ->
+                     (fun uu___271_843  ->
                         match () with
                         | () ->
                             (match arg.FStar_SMTEncoding_Term.tm with
@@ -165,71 +166,71 @@ let (label_goals :
                                                              (FStar_SMTEncoding_Term.Imp
                                                               ,lhs::rhs::[]);
                                                            FStar_SMTEncoding_Term.freevars
-                                                             = uu____858;
+                                                             = uu____862;
                                                            FStar_SMTEncoding_Term.rng
                                                              = rng;_})
                                  ->
                                  let post_name =
-                                   let uu____894 =
-                                     let uu____896 =
+                                   let uu____898 =
+                                     let uu____900 =
                                        FStar_Syntax_Syntax.next_id ()  in
                                      FStar_All.pipe_left
-                                       FStar_Util.string_of_int uu____896
+                                       FStar_Util.string_of_int uu____900
                                       in
-                                   Prims.strcat "^^post_condition_" uu____894
+                                   Prims.strcat "^^post_condition_" uu____898
                                     in
                                  let names1 =
-                                   let uu____904 =
+                                   let uu____908 =
                                      FStar_SMTEncoding_Term.mk_fv
                                        (post_name, post)
                                       in
-                                   let uu____906 =
+                                   let uu____910 =
                                      FStar_List.map
                                        (fun s  ->
-                                          let uu____912 =
-                                            let uu____918 =
-                                              let uu____920 =
-                                                let uu____922 =
+                                          let uu____916 =
+                                            let uu____922 =
+                                              let uu____924 =
+                                                let uu____926 =
                                                   FStar_Syntax_Syntax.next_id
                                                     ()
                                                    in
                                                 FStar_All.pipe_left
                                                   FStar_Util.string_of_int
-                                                  uu____922
+                                                  uu____926
                                                  in
-                                              Prims.strcat "^^" uu____920  in
-                                            (uu____918, s)  in
+                                              Prims.strcat "^^" uu____924  in
+                                            (uu____922, s)  in
                                           FStar_SMTEncoding_Term.mk_fv
-                                            uu____912) sorts
+                                            uu____916) sorts
                                       in
-                                   uu____904 :: uu____906  in
+                                   uu____908 :: uu____910  in
                                  let instantiation =
                                    FStar_List.map
                                      FStar_SMTEncoding_Util.mkFreeV names1
                                     in
-                                 let uu____931 =
-                                   let uu____936 =
+                                 let uu____935 =
+                                   let uu____940 =
                                      FStar_SMTEncoding_Term.inst
                                        instantiation lhs
                                       in
-                                   let uu____937 =
+                                   let uu____941 =
                                      FStar_SMTEncoding_Term.inst
                                        instantiation rhs
                                       in
-                                   (uu____936, uu____937)  in
-                                 (match uu____931 with
+                                   (uu____940, uu____941)  in
+                                 (match uu____935 with
                                   | (lhs1,rhs1) ->
-                                      let uu____946 =
+                                      let uu____950 =
                                         match lhs1.FStar_SMTEncoding_Term.tm
                                         with
                                         | FStar_SMTEncoding_Term.App
                                             (FStar_SMTEncoding_Term.And
                                              ,clauses_lhs)
                                             ->
-                                            let uu____964 =
+                                            let uu____968 =
                                               FStar_Util.prefix clauses_lhs
                                                in
-                                            (match uu____964 with
+                                            (match uu____968 with
                                              | (req,ens) ->
                                                  (match ens.FStar_SMTEncoding_Term.tm
                                                   with
@@ -243,18 +244,18 @@ let (label_goals :
                                                            (FStar_SMTEncoding_Term.Imp
                                                             ,ensures_conjuncts::post1::[]);
                                                          FStar_SMTEncoding_Term.freevars
-                                                           = uu____994;
+                                                           = uu____998;
                                                          FStar_SMTEncoding_Term.rng
                                                            = rng_ens;_})
                                                       ->
-                                                      let uu____1028 =
+                                                      let uu____1032 =
                                                         is_a_post_condition
                                                           (FStar_Pervasives_Native.Some
                                                              post_name) post1
                                                          in
-                                                      if uu____1028
+                                                      if uu____1032
                                                       then
-                                                        let uu____1038 =
+                                                        let uu____1042 =
                                                           aux
                                                             "could not prove post-condition"
                                                             FStar_Pervasives_Native.None
@@ -263,7 +264,7 @@ let (label_goals :
                                                             labels
                                                             ensures_conjuncts
                                                            in
-                                                        (match uu____1038
+                                                        (match uu____1042
                                                          with
                                                          | (labels1,ensures_conjuncts1)
                                                              ->
@@ -274,16 +275,16 @@ let (label_goals :
                                                                    [[post1]]
                                                                | []::[] ->
                                                                    [[post1]]
-                                                               | uu____1082
+                                                               | uu____1086
                                                                    ->
                                                                    pats_ens
                                                                 in
                                                              let ens1 =
-                                                               let uu____1088
+                                                               let uu____1092
                                                                  =
-                                                                 let uu____1089
+                                                                 let uu____1093
                                                                    =
-                                                                   let uu____1109
+                                                                   let uu____1113
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk
                                                                     (FStar_SMTEncoding_Term.App
@@ -296,13 +297,13 @@ let (label_goals :
                                                                     pats_ens1,
                                                                     iopt_ens,
                                                                     sorts_ens,
-                                                                    uu____1109)
+                                                                    uu____1113)
                                                                     in
                                                                  FStar_SMTEncoding_Term.Quant
-                                                                   uu____1089
+                                                                   uu____1093
                                                                   in
                                                                FStar_SMTEncoding_Term.mk
-                                                                 uu____1088
+                                                                 uu____1092
                                                                  ens.FStar_SMTEncoding_Term.rng
                                                                 in
                                                              let lhs2 =
@@ -314,106 +315,106 @@ let (label_goals :
                                                                     [ens1])))
                                                                  lhs1.FStar_SMTEncoding_Term.rng
                                                                 in
-                                                             let uu____1124 =
+                                                             let uu____1128 =
                                                                FStar_SMTEncoding_Term.abstr
                                                                  names1 lhs2
                                                                 in
                                                              (labels1,
-                                                               uu____1124))
+                                                               uu____1128))
                                                       else
-                                                        (let uu____1129 =
-                                                           let uu____1130 =
-                                                             let uu____1132 =
-                                                               let uu____1134
+                                                        (let uu____1133 =
+                                                           let uu____1134 =
+                                                             let uu____1136 =
+                                                               let uu____1138
                                                                  =
-                                                                 let uu____1136
+                                                                 let uu____1140
                                                                    =
                                                                    FStar_SMTEncoding_Term.print_smt_term
                                                                     post1
                                                                     in
                                                                  Prims.strcat
                                                                    "  ... "
-                                                                   uu____1136
+                                                                   uu____1140
                                                                   in
                                                                Prims.strcat
                                                                  post_name
-                                                                 uu____1134
+                                                                 uu____1138
                                                                 in
                                                              Prims.strcat
                                                                "Ensures clause doesn't match post name:  "
-                                                               uu____1132
+                                                               uu____1136
                                                               in
                                                            Not_a_wp_implication
-                                                             uu____1130
+                                                             uu____1134
                                                             in
                                                          FStar_Exn.raise
-                                                           uu____1129)
-                                                  | uu____1146 ->
-                                                      let uu____1147 =
-                                                        let uu____1148 =
-                                                          let uu____1150 =
-                                                            let uu____1152 =
-                                                              let uu____1154
+                                                           uu____1133)
+                                                  | uu____1150 ->
+                                                      let uu____1151 =
+                                                        let uu____1152 =
+                                                          let uu____1154 =
+                                                            let uu____1156 =
+                                                              let uu____1158
                                                                 =
                                                                 FStar_SMTEncoding_Term.print_smt_term
                                                                   ens
                                                                  in
                                                               Prims.strcat
                                                                 "  ... "
-                                                                uu____1154
+                                                                uu____1158
                                                                in
                                                             Prims.strcat
                                                               post_name
-                                                              uu____1152
+                                                              uu____1156
                                                              in
                                                           Prims.strcat
                                                             "Ensures clause doesn't have the expected shape for post-condition "
-                                                            uu____1150
+                                                            uu____1154
                                                            in
                                                         Not_a_wp_implication
-                                                          uu____1148
+                                                          uu____1152
                                                          in
                                                       FStar_Exn.raise
-                                                        uu____1147))
-                                        | uu____1164 ->
-                                            let uu____1165 =
-                                              let uu____1166 =
-                                                let uu____1168 =
+                                                        uu____1151))
+                                        | uu____1168 ->
+                                            let uu____1169 =
+                                              let uu____1170 =
+                                                let uu____1172 =
                                                   FStar_SMTEncoding_Term.print_smt_term
                                                     lhs1
                                                    in
                                                 Prims.strcat
                                                   "LHS not a conjunct: "
-                                                  uu____1168
+                                                  uu____1172
                                                  in
-                                              Not_a_wp_implication uu____1166
+                                              Not_a_wp_implication uu____1170
                                                in
-                                            FStar_Exn.raise uu____1165
+                                            FStar_Exn.raise uu____1169
                                          in
-                                      (match uu____946 with
+                                      (match uu____950 with
                                        | (labels1,lhs2) ->
-                                           let uu____1189 =
-                                             let uu____1196 =
+                                           let uu____1193 =
+                                             let uu____1200 =
                                                aux default_msg
                                                  FStar_Pervasives_Native.None
                                                  (FStar_Pervasives_Native.Some
                                                     post_name) labels1 rhs1
                                                 in
-                                             match uu____1196 with
+                                             match uu____1200 with
                                              | (labels2,rhs2) ->
-                                                 let uu____1216 =
+                                                 let uu____1220 =
                                                    FStar_SMTEncoding_Term.abstr
                                                      names1 rhs2
                                                     in
-                                                 (labels2, uu____1216)
+                                                 (labels2, uu____1220)
                                               in
-                                           (match uu____1189 with
+                                           (match uu____1193 with
                                             | (labels2,rhs2) ->
                                                 let body =
                                                   FStar_SMTEncoding_Term.mkImp
                                                     (lhs2, rhs2) rng
                                                    in
-                                                let uu____1232 =
+                                                let uu____1236 =
                                                   FStar_SMTEncoding_Term.mk
                                                     (FStar_SMTEncoding_Term.Quant
                                                        (FStar_SMTEncoding_Term.Forall,
@@ -421,17 +422,17 @@ let (label_goals :
                                                          sorts), body))
                                                     q1.FStar_SMTEncoding_Term.rng
                                                    in
-                                                (labels2, uu____1232))))
-                             | uu____1244 ->
-                                 let uu____1245 =
-                                   let uu____1247 =
+                                                (labels2, uu____1236))))
+                             | uu____1248 ->
+                                 let uu____1249 =
+                                   let uu____1251 =
                                      FStar_SMTEncoding_Term.print_smt_term
                                        arg
                                       in
                                    Prims.strcat "arg not a quant: "
-                                     uu____1247
+                                     uu____1251
                                     in
-                                 fallback uu____1245)) ()
+                                 fallback uu____1249)) ()
                    with | Not_a_wp_implication msg -> fallback msg)
               | FStar_SMTEncoding_Term.Labeled (arg,reason,r1) ->
                   aux reason (FStar_Pervasives_Native.Some r1) post_name_opt
@@ -443,56 +444,56 @@ let (label_goals :
                             FStar_SMTEncoding_Term.tm =
                               FStar_SMTEncoding_Term.App
                               (FStar_SMTEncoding_Term.Imp ,lhs::rhs::[]);
-                            FStar_SMTEncoding_Term.freevars = uu____1269;
+                            FStar_SMTEncoding_Term.freevars = uu____1273;
                             FStar_SMTEncoding_Term.rng = rng;_})
                   when is_a_named_continuation lhs ->
-                  let uu____1299 = FStar_Util.prefix sorts  in
-                  (match uu____1299 with
+                  let uu____1303 = FStar_Util.prefix sorts  in
+                  (match uu____1303 with
                    | (sorts',post) ->
                        let new_post_name =
-                         let uu____1320 =
-                           let uu____1322 = FStar_Syntax_Syntax.next_id ()
+                         let uu____1324 =
+                           let uu____1326 = FStar_Syntax_Syntax.next_id ()
                               in
                            FStar_All.pipe_left FStar_Util.string_of_int
-                             uu____1322
+                             uu____1326
                             in
-                         Prims.strcat "^^post_condition_" uu____1320  in
+                         Prims.strcat "^^post_condition_" uu____1324  in
                        let names1 =
-                         let uu____1330 =
+                         let uu____1334 =
                            FStar_List.map
                              (fun s  ->
-                                let uu____1336 =
-                                  let uu____1342 =
-                                    let uu____1344 =
-                                      let uu____1346 =
+                                let uu____1340 =
+                                  let uu____1346 =
+                                    let uu____1348 =
+                                      let uu____1350 =
                                         FStar_Syntax_Syntax.next_id ()  in
                                       FStar_All.pipe_left
-                                        FStar_Util.string_of_int uu____1346
+                                        FStar_Util.string_of_int uu____1350
                                        in
-                                    Prims.strcat "^^" uu____1344  in
-                                  (uu____1342, s)  in
-                                FStar_SMTEncoding_Term.mk_fv uu____1336)
+                                    Prims.strcat "^^" uu____1348  in
+                                  (uu____1346, s)  in
+                                FStar_SMTEncoding_Term.mk_fv uu____1340)
                              sorts'
                             in
-                         let uu____1352 =
-                           let uu____1355 =
+                         let uu____1356 =
+                           let uu____1359 =
                              FStar_SMTEncoding_Term.mk_fv
                                (new_post_name, post)
                               in
-                           [uu____1355]  in
-                         FStar_List.append uu____1330 uu____1352  in
+                           [uu____1359]  in
+                         FStar_List.append uu____1334 uu____1356  in
                        let instantiation =
                          FStar_List.map FStar_SMTEncoding_Util.mkFreeV names1
                           in
-                       let uu____1360 =
-                         let uu____1365 =
+                       let uu____1364 =
+                         let uu____1369 =
                            FStar_SMTEncoding_Term.inst instantiation lhs  in
-                         let uu____1366 =
+                         let uu____1370 =
                            FStar_SMTEncoding_Term.inst instantiation rhs  in
-                         (uu____1365, uu____1366)  in
-                       (match uu____1360 with
+                         (uu____1369, uu____1370)  in
+                       (match uu____1364 with
                         | (lhs1,rhs1) ->
-                            let uu____1375 =
+                            let uu____1379 =
                               FStar_Util.fold_map
                                 (fun labels1  ->
                                    fun tm  ->
@@ -505,37 +506,37 @@ let (label_goals :
                                                 (FStar_SMTEncoding_Term.Var
                                                  "Prims.guard_free",p::[]);
                                               FStar_SMTEncoding_Term.freevars
-                                                = uu____1413;
+                                                = uu____1417;
                                               FStar_SMTEncoding_Term.rng =
-                                                uu____1414;_}::[])::[],iopt,sorts1,
+                                                uu____1418;_}::[])::[],iopt,sorts1,
                                           {
                                             FStar_SMTEncoding_Term.tm =
                                               FStar_SMTEncoding_Term.App
                                               (FStar_SMTEncoding_Term.Imp
                                                ,l0::r1::[]);
                                             FStar_SMTEncoding_Term.freevars =
-                                              uu____1419;
+                                              uu____1423;
                                             FStar_SMTEncoding_Term.rng =
-                                              uu____1420;_})
+                                              uu____1424;_})
                                          ->
-                                         let uu____1468 =
+                                         let uu____1472 =
                                            is_a_post_condition
                                              (FStar_Pervasives_Native.Some
                                                 new_post_name) r1
                                             in
-                                         if uu____1468
+                                         if uu____1472
                                          then
-                                           let uu____1478 =
+                                           let uu____1482 =
                                              aux default_msg
                                                FStar_Pervasives_Native.None
                                                post_name_opt labels1 l0
                                               in
-                                           (match uu____1478 with
+                                           (match uu____1482 with
                                             | (labels2,l) ->
-                                                let uu____1497 =
-                                                  let uu____1498 =
-                                                    let uu____1499 =
-                                                      let uu____1519 =
+                                                let uu____1501 =
+                                                  let uu____1502 =
+                                                    let uu____1503 =
+                                                      let uu____1523 =
                                                         FStar_SMTEncoding_Util.norng
                                                           FStar_SMTEncoding_Term.mk
                                                           (FStar_SMTEncoding_Term.App
@@ -546,43 +547,43 @@ let (label_goals :
                                                         [[p]],
                                                         (FStar_Pervasives_Native.Some
                                                            (Prims.parse_int "0")),
-                                                        sorts1, uu____1519)
+                                                        sorts1, uu____1523)
                                                        in
                                                     FStar_SMTEncoding_Term.Quant
-                                                      uu____1499
+                                                      uu____1503
                                                      in
                                                   FStar_SMTEncoding_Term.mk
-                                                    uu____1498
+                                                    uu____1502
                                                     q1.FStar_SMTEncoding_Term.rng
                                                    in
-                                                (labels2, uu____1497))
+                                                (labels2, uu____1501))
                                          else (labels1, tm)
-                                     | uu____1543 -> (labels1, tm)) labels
+                                     | uu____1547 -> (labels1, tm)) labels
                                 (conjuncts lhs1)
                                in
-                            (match uu____1375 with
+                            (match uu____1379 with
                              | (labels1,lhs_conjs) ->
-                                 let uu____1562 =
+                                 let uu____1566 =
                                    aux default_msg
                                      FStar_Pervasives_Native.None
                                      (FStar_Pervasives_Native.Some
                                         new_post_name) labels1 rhs1
                                     in
-                                 (match uu____1562 with
+                                 (match uu____1566 with
                                   | (labels2,rhs2) ->
                                       let body =
-                                        let uu____1583 =
-                                          let uu____1584 =
-                                            let uu____1589 =
+                                        let uu____1587 =
+                                          let uu____1588 =
+                                            let uu____1593 =
                                               FStar_SMTEncoding_Term.mk_and_l
                                                 lhs_conjs
                                                 lhs1.FStar_SMTEncoding_Term.rng
                                                in
-                                            (uu____1589, rhs2)  in
+                                            (uu____1593, rhs2)  in
                                           FStar_SMTEncoding_Term.mkImp
-                                            uu____1584 rng
+                                            uu____1588 rng
                                            in
-                                        FStar_All.pipe_right uu____1583
+                                        FStar_All.pipe_right uu____1587
                                           (FStar_SMTEncoding_Term.abstr
                                              names1)
                                          in
@@ -598,229 +599,229 @@ let (label_goals :
                                       (labels2, q2)))))
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Imp ,lhs::rhs::[]) ->
-                  let uu____1609 =
+                  let uu____1613 =
                     aux default_msg ropt post_name_opt labels rhs  in
-                  (match uu____1609 with
+                  (match uu____1613 with
                    | (labels1,rhs1) ->
-                       let uu____1628 =
+                       let uu____1632 =
                          FStar_SMTEncoding_Util.mkImp (lhs, rhs1)  in
-                       (labels1, uu____1628))
+                       (labels1, uu____1632))
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.And ,conjuncts1) ->
-                  let uu____1636 =
+                  let uu____1640 =
                     FStar_Util.fold_map (aux default_msg ropt post_name_opt)
                       labels conjuncts1
                      in
-                  (match uu____1636 with
+                  (match uu____1640 with
                    | (labels1,conjuncts2) ->
-                       let uu____1663 =
+                       let uu____1667 =
                          FStar_SMTEncoding_Term.mk_and_l conjuncts2
                            q1.FStar_SMTEncoding_Term.rng
                           in
-                       (labels1, uu____1663))
+                       (labels1, uu____1667))
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.ITE ,hd1::q11::q2::[]) ->
-                  let uu____1671 =
+                  let uu____1675 =
                     aux default_msg ropt post_name_opt labels q11  in
-                  (match uu____1671 with
+                  (match uu____1675 with
                    | (labels1,q12) ->
-                       let uu____1690 =
+                       let uu____1694 =
                          aux default_msg ropt post_name_opt labels1 q2  in
-                       (match uu____1690 with
+                       (match uu____1694 with
                         | (labels2,q21) ->
-                            let uu____1709 =
+                            let uu____1713 =
                               FStar_SMTEncoding_Term.mkITE (hd1, q12, q21)
                                 q1.FStar_SMTEncoding_Term.rng
                                in
-                            (labels2, uu____1709)))
+                            (labels2, uu____1713)))
               | FStar_SMTEncoding_Term.Quant
                   (FStar_SMTEncoding_Term.Exists
-                   ,uu____1712,uu____1713,uu____1714,uu____1715)
+                   ,uu____1716,uu____1717,uu____1718,uu____1719)
                   ->
-                  let uu____1734 =
+                  let uu____1738 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1734 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1738 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Iff ,uu____1749) ->
-                  let uu____1754 =
+                  (FStar_SMTEncoding_Term.Iff ,uu____1753) ->
+                  let uu____1758 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1754 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1758 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Or ,uu____1769) ->
-                  let uu____1774 =
+                  (FStar_SMTEncoding_Term.Or ,uu____1773) ->
+                  let uu____1778 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1774 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1778 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Var uu____1789,uu____1790) when
+                  (FStar_SMTEncoding_Term.Var uu____1793,uu____1794) when
                   is_a_post_condition post_name_opt q1 -> (labels, q1)
-              | FStar_SMTEncoding_Term.FreeV uu____1798 ->
-                  let uu____1807 =
+              | FStar_SMTEncoding_Term.FreeV uu____1802 ->
+                  let uu____1811 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1807 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1811 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.TrueOp ,uu____1822) ->
-                  let uu____1827 =
+                  (FStar_SMTEncoding_Term.TrueOp ,uu____1826) ->
+                  let uu____1831 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1827 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1831 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.FalseOp ,uu____1842) ->
-                  let uu____1847 =
+                  (FStar_SMTEncoding_Term.FalseOp ,uu____1846) ->
+                  let uu____1851 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1847 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1851 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Not ,uu____1862) ->
-                  let uu____1867 =
+                  (FStar_SMTEncoding_Term.Not ,uu____1866) ->
+                  let uu____1871 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1867 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1871 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Eq ,uu____1882) ->
-                  let uu____1887 =
+                  (FStar_SMTEncoding_Term.Eq ,uu____1886) ->
+                  let uu____1891 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1887 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1891 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.LT ,uu____1902) ->
-                  let uu____1907 =
+                  (FStar_SMTEncoding_Term.LT ,uu____1906) ->
+                  let uu____1911 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1907 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1911 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.LTE ,uu____1922) ->
-                  let uu____1927 =
+                  (FStar_SMTEncoding_Term.LTE ,uu____1926) ->
+                  let uu____1931 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1927 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1931 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.GT ,uu____1942) ->
-                  let uu____1947 =
+                  (FStar_SMTEncoding_Term.GT ,uu____1946) ->
+                  let uu____1951 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1947 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1951 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.GTE ,uu____1962) ->
-                  let uu____1967 =
+                  (FStar_SMTEncoding_Term.GTE ,uu____1966) ->
+                  let uu____1971 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1967 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1971 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvUlt ,uu____1982) ->
-                  let uu____1987 =
+                  (FStar_SMTEncoding_Term.BvUlt ,uu____1986) ->
+                  let uu____1991 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____1987 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1991 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Var uu____2002,uu____2003) ->
-                  let uu____2009 =
+                  (FStar_SMTEncoding_Term.Var uu____2006,uu____2007) ->
+                  let uu____2013 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1
                      in
-                  (match uu____2009 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____2013 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Add ,uu____2024) ->
+                  (FStar_SMTEncoding_Term.Add ,uu____2028) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Sub ,uu____2036) ->
+                  (FStar_SMTEncoding_Term.Sub ,uu____2040) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Div ,uu____2048) ->
+                  (FStar_SMTEncoding_Term.Div ,uu____2052) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Mul ,uu____2060) ->
+                  (FStar_SMTEncoding_Term.Mul ,uu____2064) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Minus ,uu____2072) ->
+                  (FStar_SMTEncoding_Term.Minus ,uu____2076) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Mod ,uu____2084) ->
+                  (FStar_SMTEncoding_Term.Mod ,uu____2088) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvAnd ,uu____2096) ->
+                  (FStar_SMTEncoding_Term.BvAnd ,uu____2100) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvXor ,uu____2108) ->
+                  (FStar_SMTEncoding_Term.BvXor ,uu____2112) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvOr ,uu____2120) ->
+                  (FStar_SMTEncoding_Term.BvOr ,uu____2124) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvAdd ,uu____2132) ->
+                  (FStar_SMTEncoding_Term.BvAdd ,uu____2136) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvSub ,uu____2144) ->
+                  (FStar_SMTEncoding_Term.BvSub ,uu____2148) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvShl ,uu____2156) ->
+                  (FStar_SMTEncoding_Term.BvShl ,uu____2160) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvShr ,uu____2168) ->
+                  (FStar_SMTEncoding_Term.BvShr ,uu____2172) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvUdiv ,uu____2180) ->
+                  (FStar_SMTEncoding_Term.BvUdiv ,uu____2184) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvMod ,uu____2192) ->
+                  (FStar_SMTEncoding_Term.BvMod ,uu____2196) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvMul ,uu____2204) ->
+                  (FStar_SMTEncoding_Term.BvMul ,uu____2208) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvUext uu____2216,uu____2217) ->
+                  (FStar_SMTEncoding_Term.BvUext uu____2220,uu____2221) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvToNat ,uu____2230) ->
+                  (FStar_SMTEncoding_Term.BvToNat ,uu____2234) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.NatToBv uu____2242,uu____2243) ->
+                  (FStar_SMTEncoding_Term.NatToBv uu____2246,uu____2247) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.ITE ,uu____2256) ->
+                  (FStar_SMTEncoding_Term.ITE ,uu____2260) ->
                   failwith "Impossible: arity mismatch"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Imp ,uu____2268) ->
+                  (FStar_SMTEncoding_Term.Imp ,uu____2272) ->
                   failwith "Impossible: arity mismatch"
               | FStar_SMTEncoding_Term.Quant
                   (FStar_SMTEncoding_Term.Forall ,pats,iopt,sorts,body) ->
-                  let uu____2302 =
+                  let uu____2306 =
                     aux default_msg ropt post_name_opt labels body  in
-                  (match uu____2302 with
+                  (match uu____2306 with
                    | (labels1,body1) ->
-                       let uu____2321 =
+                       let uu____2325 =
                          FStar_SMTEncoding_Term.mk
                            (FStar_SMTEncoding_Term.Quant
                               (FStar_SMTEncoding_Term.Forall, pats, iopt,
                                 sorts, body1)) q1.FStar_SMTEncoding_Term.rng
                           in
-                       (labels1, uu____2321))
+                       (labels1, uu____2325))
               | FStar_SMTEncoding_Term.Let (es,body) ->
-                  let uu____2339 =
+                  let uu____2343 =
                     aux default_msg ropt post_name_opt labels body  in
-                  (match uu____2339 with
+                  (match uu____2343 with
                    | (labels1,body1) ->
-                       let uu____2358 =
+                       let uu____2362 =
                          FStar_SMTEncoding_Term.mkLet (es, body1)
                            q1.FStar_SMTEncoding_Term.rng
                           in
-                       (labels1, uu____2358))
+                       (labels1, uu____2362))
                in
             aux "assertion failed" FStar_Pervasives_Native.None
               FStar_Pervasives_Native.None [] q
@@ -836,30 +837,30 @@ let (detail_errors :
     fun env  ->
       fun all_labels  ->
         fun askZ3  ->
-          let print_banner uu____2398 =
+          let print_banner uu____2402 =
             let msg =
-              let uu____2401 =
-                let uu____2403 = FStar_TypeChecker_Env.get_range env  in
-                FStar_Range.string_of_range uu____2403  in
-              let uu____2404 = FStar_Util.string_of_int (Prims.parse_int "5")
+              let uu____2405 =
+                let uu____2407 = FStar_TypeChecker_Env.get_range env  in
+                FStar_Range.string_of_range uu____2407  in
+              let uu____2408 = FStar_Util.string_of_int (Prims.parse_int "5")
                  in
-              let uu____2407 =
+              let uu____2411 =
                 FStar_Util.string_of_int (FStar_List.length all_labels)  in
               FStar_Util.format4
                 "Detailed %s report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
-                (if hint_replay then "hint replay" else "error") uu____2401
-                uu____2404 uu____2407
+                (if hint_replay then "hint replay" else "error") uu____2405
+                uu____2408 uu____2411
                in
             FStar_Util.print_error msg  in
-          let print_result uu____2433 =
-            match uu____2433 with
-            | ((uu____2446,msg,r),success) ->
+          let print_result uu____2437 =
+            match uu____2437 with
+            | ((uu____2450,msg,r),success) ->
                 if success
                 then
-                  let uu____2462 = FStar_Range.string_of_range r  in
+                  let uu____2466 = FStar_Range.string_of_range r  in
                   FStar_Util.print1
                     "OK: proof obligation at %s was proven in isolation\n"
-                    uu____2462
+                    uu____2466
                 else
                   if hint_replay
                   then
@@ -868,41 +869,41 @@ let (detail_errors :
                         (Prims.strcat
                            "Hint failed to replay this sub-proof: " msg))
                   else
-                    (let uu____2472 =
-                       let uu____2478 =
-                         let uu____2480 = FStar_Range.string_of_range r  in
+                    (let uu____2476 =
+                       let uu____2482 =
+                         let uu____2484 = FStar_Range.string_of_range r  in
                          FStar_Util.format2
                            "XX: proof obligation at %s failed\n\t%s\n"
-                           uu____2480 msg
+                           uu____2484 msg
                           in
-                       (FStar_Errors.Error_ProofObligationFailed, uu____2478)
+                       (FStar_Errors.Error_ProofObligationFailed, uu____2482)
                         in
-                     FStar_Errors.log_issue r uu____2472)
+                     FStar_Errors.log_issue r uu____2476)
              in
           let elim labs =
             FStar_All.pipe_right labs
               (FStar_List.map
-                 (fun uu____2533  ->
-                    match uu____2533 with
-                    | (l,uu____2542,uu____2543) ->
+                 (fun uu____2537  ->
+                    match uu____2537 with
+                    | (l,uu____2546,uu____2547) ->
                         let a =
-                          let uu____2547 =
-                            let uu____2548 =
-                              let uu____2553 =
+                          let uu____2551 =
+                            let uu____2552 =
+                              let uu____2557 =
                                 FStar_SMTEncoding_Util.mkFreeV l  in
-                              (uu____2553, FStar_SMTEncoding_Util.mkTrue)  in
-                            FStar_SMTEncoding_Util.mkEq uu____2548  in
-                          let uu____2554 =
-                            let uu____2556 = FStar_SMTEncoding_Term.fv_name l
+                              (uu____2557, FStar_SMTEncoding_Util.mkTrue)  in
+                            FStar_SMTEncoding_Util.mkEq uu____2552  in
+                          let uu____2558 =
+                            let uu____2560 = FStar_SMTEncoding_Term.fv_name l
                                in
-                            Prims.strcat "@disable_label_" uu____2556  in
+                            Prims.strcat "@disable_label_" uu____2560  in
                           {
                             FStar_SMTEncoding_Term.assumption_term =
-                              uu____2547;
+                              uu____2551;
                             FStar_SMTEncoding_Term.assumption_caption =
                               (FStar_Pervasives_Native.Some "Disabling label");
                             FStar_SMTEncoding_Term.assumption_name =
-                              uu____2554;
+                              uu____2558;
                             FStar_SMTEncoding_Term.assumption_fact_ids = []
                           }  in
                         FStar_SMTEncoding_Term.Assume a))
@@ -912,16 +913,16 @@ let (detail_errors :
             (match active with
              | [] ->
                  let results =
-                   let uu____2626 =
+                   let uu____2630 =
                      FStar_List.map (fun x  -> (x, true)) eliminated  in
-                   let uu____2643 =
+                   let uu____2647 =
                      FStar_List.map (fun x  -> (x, false)) errors  in
-                   FStar_List.append uu____2626 uu____2643  in
+                   FStar_List.append uu____2630 uu____2647  in
                  sort_labels results
              | hd1::tl1 ->
-                 ((let uu____2670 =
+                 ((let uu____2674 =
                      FStar_Util.string_of_int (FStar_List.length active)  in
-                   FStar_Util.print1 "%s, " uu____2670);
+                   FStar_Util.print1 "%s, " uu____2674);
                   (let decls =
                      FStar_All.pipe_left elim
                        (FStar_List.append eliminated
@@ -929,9 +930,9 @@ let (detail_errors :
                       in
                    let result = askZ3 decls  in
                    match result.FStar_SMTEncoding_Z3.z3result_status with
-                   | FStar_SMTEncoding_Z3.UNSAT uu____2698 ->
+                   | FStar_SMTEncoding_Z3.UNSAT uu____2702 ->
                        linear_check (hd1 :: eliminated) errors tl1
-                   | uu____2699 ->
+                   | uu____2703 ->
                        linear_check eliminated (hd1 :: errors) tl1)))
              in
           print_banner ();
@@ -940,9 +941,9 @@ let (detail_errors :
           (let res = linear_check [] [] all_labels  in
            FStar_Util.print_string "\n";
            FStar_All.pipe_right res (FStar_List.iter print_result);
-           (let uu____2748 =
+           (let uu____2752 =
               FStar_Util.for_all FStar_Pervasives_Native.snd res  in
-            if uu____2748
+            if uu____2752
             then
               FStar_Util.print_string
                 "Failed: the heuristic of trying each proof in isolation failed to identify a precise error\n"

@@ -172,12 +172,12 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
     let mk_real : env -> string -> term -> decls_t  = fun env nm tt ->
-        let lex_t = mkFreeV (text_of_lid Const.lex_t_lid, Term_sort) in
+        let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
         let typing_pred_y = mk_HasType y tt in
-        let aa = ("a", Sort "Real") in
+        let aa = mk_fv ("a", Sort "Real") in
         let a = mkFreeV aa in
-        let bb = ("b", Sort "Real") in
+        let bb = mk_fv ("b", Sort "Real") in
         let b = mkFreeV bb in
         let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [lex_t; lex_t;y;x]) in
         [Util.mkAssume(mkForall

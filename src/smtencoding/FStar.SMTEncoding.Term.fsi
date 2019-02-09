@@ -172,7 +172,6 @@ val mkSub:   ((term * term) -> Range.range -> term)
 val mkDiv:   ((term * term) -> Range.range -> term)
 val mkMul:   ((term * term) -> Range.range -> term)
 val mkMod:   ((term * term) -> Range.range -> term)
-val mkRealOfInt: term -> Range.range -> term
 val mkNatToBv : (int -> term -> Range.range -> term)
 val mkBvToNat : (term -> Range.range -> term)
 val mkBvAnd   : ((term * term) -> Range.range -> term)
