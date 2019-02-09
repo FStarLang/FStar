@@ -16,7 +16,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "90e6e7bf094a12da6df8393ed1fd5300"
+      "2d91aff05216b14659d55f6095fc339a"
     ],
     [
       "Tests.uu___7",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "a346fe9770e6f01b1bf82cc1ccec822e"
+      "62a5334403aedc263abaff78826648f4"
     ],
     [
       "Tests.uu___8",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "62d32cd82feb36945058c43f6451f867"
+      "e1e47dc44f15a201ea0d34ddc24bebc2"
     ],
     [
       "Tests.test1",
@@ -49,10 +49,9 @@
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Add.add_int",
         "equation_Add.mkadd", "equation_Add.plus", "equation_Add.zero",
-        "equation_Eq.uu___66", "equation_Num.add_num", "equation_Num.mknum",
+        "equation_Eq.uu___3", "equation_Num.add_num", "equation_Num.mknum",
         "equation_Num.num_int", "equation_Prims.eqtype",
         "equation_with_fuel_Tests.sum.fuel_instrumented",
-        "function_token_typing_Add.add_int",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "proj_equation_Add.Mkadditive_plus",
         "proj_equation_Add.Mkadditive_zero",
@@ -66,10 +65,11 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_Add.plus",
-        "token_correspondence_Prims.op_Addition", "typing_Tests.sum"
+        "token_correspondence_Prims.op_Addition", "typing_Num.add_num",
+        "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "0934ea881d6cf3b02b948621d6cd6a37"
+      "bc6c3b641b2f55891208431dc3e4e86c"
     ],
     [
       "Tests.test2",
@@ -92,7 +92,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "eaa54e060e5d02d992a7b9530ec59de7"
+      "eb579be486c4badd7c54492e2b89708b"
     ],
     [
       "Tests.sum",
@@ -109,7 +109,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "684505532365a783c529a8a053a516bf"
+      "ce6416159510dd366bc1a2b8e4492a61"
     ],
     [
       "Tests.uu___7",
@@ -118,7 +118,7 @@
       1,
       [ "@query" ],
       0,
-      "ddbaeda1688870d67d74a78d842b96c2"
+      "2886b1141adbd9f02adfef0405e7ef7c"
     ],
     [
       "Tests.uu___8",
@@ -127,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "9315439ac6dc4602bf442c2ca496a12e"
+      "048ac8ba4a97f59444e53248dbc775ce"
     ],
     [
       "Tests.test1",
@@ -142,10 +142,9 @@
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Add.add_int",
         "equation_Add.mkadd", "equation_Add.plus", "equation_Add.zero",
-        "equation_Eq.uu___66", "equation_Num.add_num", "equation_Num.mknum",
+        "equation_Eq.uu___3", "equation_Num.add_num", "equation_Num.mknum",
         "equation_Num.num_int", "equation_Prims.eqtype",
         "equation_with_fuel_Tests.sum.fuel_instrumented",
-        "function_token_typing_Add.add_int",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "proj_equation_Add.Mkadditive_plus",
         "proj_equation_Add.Mkadditive_zero",
@@ -159,10 +158,11 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_Add.plus",
-        "token_correspondence_Prims.op_Addition", "typing_Tests.sum"
+        "token_correspondence_Prims.op_Addition", "typing_Num.add_num",
+        "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "73855ed414438b220ccb8edbf637d664"
+      "792f05500c85814557f8ca979057e8d1"
     ],
     [
       "Tests.test2",
@@ -185,7 +185,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "db10d63a1e6e3a21c4dd42049b84ac64"
+      "108ee14efaa8f0ce786d72047df3120c"
     ]
   ]
 ]

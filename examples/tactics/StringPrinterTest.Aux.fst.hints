@@ -21,7 +21,7 @@
         "typing_FStar.UInt32.v", "well-founded-ordering-on-nat"
       ],
       0,
-      "c8a13ef6c788e8f3ff95a20ece92724b"
+      "fce094e71ae0f421b26b98d15ea438ae"
     ],
     [
       "StringPrinterTest.Aux.example_do_while",
@@ -44,7 +44,6 @@
         "data_elim_StringPrinter.Base.Right", "eq2-interp",
         "equality_tok_Prims.LexTop@tok", "equation_FStar.UInt.lt",
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.lt",
-        "equation_FStar.UInt32.n_minus_one",
         "equation_StringPrinter.Base.bind", "equation_StringPrinter.Base.m",
         "equation_StringPrinter.Base.print_char",
         "equation_StringPrinter.Base.ret",
@@ -56,7 +55,6 @@
         "equation_StringPrinter.Rec.tin_decr",
         "equation_with_fuel_StringPrinterTest.Aux.example.fuel_instrumented",
         "fuel_guarded_inversion_StringPrinter.Base.c_or",
-        "function_token_typing_FStar.UInt32.n_minus_one",
         "function_token_typing_FStar.UInt8.t",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_StringPrinterTest.Aux.example",
@@ -89,7 +87,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "603d9fbc077cb1003ad071a3a4ade0bc"
+      "cf080b2bddf72005e500418e19239baa"
     ],
     [
       "StringPrinterTest.Aux.print_cipher_suite_spec",
@@ -100,7 +98,7 @@
         "@query", "assumption_StringPrinterTest.Aux.cipher_suite__uu___haseq"
       ],
       0,
-      "2857599123f8a36c5443db41ecdb7aef"
+      "ddf4c3149aba53033b29b1aa47cb376d"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_spec",
@@ -119,7 +117,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c0156e694abb5f0a4b35feecda02a99c"
+      "d598e405b783b1ab2ff1a741a4ad3562"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_spec_do_while",
@@ -181,7 +179,7 @@
         "unit_typing"
       ],
       0,
-      "04778c2495a9dd4380ae4cc493b8b0fd"
+      "cdc7d1c2a2b22d9ac1b6508ffad40e35"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite",
@@ -215,7 +213,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "unit_typing"
       ],
       0,
-      "dcdcb4cad282a8f6afcf231928371bd8"
+      "961a596fd73d1c4390919e22c7240b3b"
     ],
     [
       "StringPrinterTest.Aux.example",
@@ -237,7 +235,7 @@
         "typing_FStar.UInt32.v", "well-founded-ordering-on-nat"
       ],
       0,
-      "ba95d3b1b38b7f3ec7d219e03083da28"
+      "2f295fadecd0c37ef9b13a555d413919"
     ],
     [
       "StringPrinterTest.Aux.example_do_while",
@@ -260,7 +258,6 @@
         "data_elim_StringPrinter.Base.Right", "eq2-interp",
         "equality_tok_Prims.LexTop@tok", "equation_FStar.UInt.lt",
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.lt",
-        "equation_FStar.UInt32.n_minus_one",
         "equation_StringPrinter.Base.bind", "equation_StringPrinter.Base.m",
         "equation_StringPrinter.Base.print_char",
         "equation_StringPrinter.Base.ret",
@@ -272,7 +269,6 @@
         "equation_StringPrinter.Rec.tin_decr",
         "equation_with_fuel_StringPrinterTest.Aux.example.fuel_instrumented",
         "fuel_guarded_inversion_StringPrinter.Base.c_or",
-        "function_token_typing_FStar.UInt32.n_minus_one",
         "function_token_typing_FStar.UInt8.t",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_StringPrinterTest.Aux.example",
@@ -305,7 +301,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "2f2a55a0843f35ef787b5b6fae1d0789"
+      "05c2a9114c3ed86aa5473adaaf7cb933"
     ],
     [
       "StringPrinterTest.Aux.print_cipher_suite_spec",
@@ -316,7 +312,7 @@
         "@query", "assumption_StringPrinterTest.Aux.cipher_suite__uu___haseq"
       ],
       0,
-      "9a02c8d6953582420baa2ab762fb4e17"
+      "a4ff9a1dcb8749d63b9593c31a5f9e21"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_spec",
@@ -335,7 +331,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c4173287ea571c4e6fe188745aaf3ba9"
+      "4caff67ecaeac911074549bdff21b469"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_spec_do_while",
@@ -397,7 +393,7 @@
         "unit_typing"
       ],
       0,
-      "e505f21cebbf14ba72e110c98431df0e"
+      "1ec8358b4174fc714e047049a261a2b6"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite",
@@ -415,7 +411,7 @@
         "typing_FStar.Buffer.buffer"
       ],
       0,
-      "44e861607e0eb1925d72d137e18eb18a"
+      "d36d37715b5956109daa4f14708bab7a"
     ]
   ]
 ]

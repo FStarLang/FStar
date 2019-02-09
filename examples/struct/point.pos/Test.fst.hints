@@ -50,7 +50,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "f1c8fbca8b109c04b33da562d8d820c0"
+      "6528bb4009d02e344f7d2bd086c895b9"
     ],
     [
       "Test.flip",
@@ -87,8 +87,6 @@
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
         "function_token_typing_Prims.string",
-        "function_token_typing_Test.point_struct",
-        "function_token_typing_Test.point_struct_t",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.HyperStack.ST.lemma_equal_domains_trans",
@@ -132,10 +130,11 @@
         "typing_FStar.List.Tot.Base.noRepeats",
         "typing_FStar.Pointer.Base.__proj__Mkstruct_typ__item__fields",
         "typing_FStar.Pointer.Base.loc_pointer",
-        "typing_FStar.Pointer.Base.loc_union"
+        "typing_FStar.Pointer.Base.loc_union", "typing_Test.point_struct",
+        "typing_Test.point_struct_t"
       ],
       0,
-      "0539281c1dbc150dba5e7869941e0799"
+      "f952978803feb865a8440e2677e6dd68"
     ],
     [
       "Test.flip'",
@@ -172,8 +171,6 @@
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
         "function_token_typing_Prims.string",
-        "function_token_typing_Test.point_struct",
-        "function_token_typing_Test.point_struct_t",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.HyperStack.ST.lemma_equal_domains_trans",
@@ -217,10 +214,11 @@
         "typing_FStar.List.Tot.Base.noRepeats",
         "typing_FStar.Pointer.Base.__proj__Mkstruct_typ__item__fields",
         "typing_FStar.Pointer.Base.loc_pointer",
-        "typing_FStar.Pointer.Base.loc_union"
+        "typing_FStar.Pointer.Base.loc_union", "typing_Test.point_struct",
+        "typing_Test.point_struct_t"
       ],
       0,
-      "7ea79faef3a5d74e9a248dac6a90b261"
+      "44add5b8f2d5755dfff9cd94ad1d0958"
     ]
   ]
 ]

@@ -11,13 +11,10 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "equation_FStar.Int16.n", "equation_FStar.Int8.n",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "equation_FStar.UInt.uint_t", "equation_Prims.nat",
-        "function_token_typing_FStar.Int16.n",
-        "function_token_typing_FStar.Int8.n",
-        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
         "lemma_FStar.Int.pow2_values", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
@@ -30,7 +27,7 @@
         "typing_FStar.UInt8.v"
       ],
       0,
-      "f84f03b20fc73fc9c6365f3a41e0ea05"
+      "270320d68e7e4afbb0b61ca0284352d4"
     ],
     [
       "MiniParse.Spec.Int.Aux.encode_u16",
@@ -39,7 +36,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c41aba5b15535d9a60c9289e3e1f49dc"
+      "72b3feb950a5821d50d404199df1653e"
     ],
     [
       "MiniParse.Spec.Int.Aux.encode_u16_decode_u16",
@@ -92,7 +89,7 @@
         "typing_MiniParse.Spec.Int.Aux.decode_u16", "typing_Prims.pow2"
       ],
       0,
-      "904fd6c5b608a1d93cf84551b3f80a5d"
+      "d4d048a06747da7b6cc0ec681dd8a41b"
     ],
     [
       "MiniParse.Spec.Int.Aux.decode_u16_encode_u16",
@@ -146,7 +143,7 @@
         "typing_MiniParse.Spec.Int.Aux.encode_u16", "typing_Prims.pow2"
       ],
       0,
-      "02ab4ac4d6e76849b6b4c1d4d82e07aa"
+      "a46cd2907b007b540a4681a5226af444"
     ],
     [
       "MiniParse.Spec.Int.Aux.decode_u16",
@@ -158,13 +155,10 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "equation_FStar.Int16.n", "equation_FStar.Int8.n",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "equation_FStar.UInt.uint_t", "equation_Prims.nat",
-        "function_token_typing_FStar.Int16.n",
-        "function_token_typing_FStar.Int8.n",
-        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
         "lemma_FStar.Int.pow2_values", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
@@ -177,7 +171,7 @@
         "typing_FStar.UInt8.v"
       ],
       0,
-      "aa8d60c8a22a79d55a6719807aa93f3d"
+      "36b6696da34e7d30a5c2f5eea1f5b1dc"
     ],
     [
       "MiniParse.Spec.Int.Aux.encode_u16",
@@ -189,13 +183,12 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "bool_inversion", "bool_typing", "equation_FStar.Int16.n",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "equation_Prims.nat",
-        "function_token_typing_FStar.Int16.n",
+        "bool_inversion", "bool_typing", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_Prims.nat",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "lemma_FStar.Int.pow2_values",
+        "int_inversion", "int_typing", "lemma_FStar.Int.pow2_values",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -205,7 +198,7 @@
         "typing_FStar.UInt16.v"
       ],
       0,
-      "b34444870c5955db9d235c0f5ff371ed"
+      "41a51cd6f74bcbbbb28114bf2d4ac1f2"
     ]
   ]
 ]

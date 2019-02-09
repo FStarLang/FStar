@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b76d4abb11e221ddd2f87273ed66cfca"
+      "a522d7a9cf0f0cd2d9578d0fe71f1032"
     ],
     [
       "IfcExampleReify3.p1_x",
@@ -48,7 +48,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "89929a573eb44cf7c329f04a8885add7"
+      "b8da730cb9b7a4f3af1d94dc74dc9c6e"
     ],
     [
       "IfcExampleReify3.ni_p1",
@@ -68,7 +68,6 @@
         "equation_IfcExampleReify3.is_x",
         "equation_IfcExampleReify3.low_equiv",
         "equation_IfcExampleReify3.p1", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "function_token_typing_Prims.__cache_version_number__", "int_typing",
         "interpretation_Tm_abs_1a6f6bd84d34a242817215300fb8cb6f",
         "interpretation_Tm_abs_232c1c56b0ee33f36e69f63bcc467adc",
@@ -85,12 +84,13 @@
         "projection_inverse_Rel.R_l", "projection_inverse_Rel.R_r",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
+        "typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r",
         "unit_typing"
       ],
       0,
-      "d4505cc2afe2973d38b67e13e9971487"
+      "6d22fec6aef7ab75dc06e8ac0ac2db3c"
     ],
     [
       "IfcExampleReify3.is_x",
@@ -99,7 +99,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f8e88896f1f5cd5f826163aeae854bc8"
+      "7f3494f29586e8458e2fa9dbc63e7c2a"
     ]
   ]
 ]

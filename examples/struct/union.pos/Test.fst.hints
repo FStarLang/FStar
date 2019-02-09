@@ -50,7 +50,7 @@
         "typing_tok_FStar.Pointer.Base.TUnit@tok"
       ],
       0,
-      "5e34800dfb4fd53e0c4827509bcc1fc3"
+      "6de7b6dc82ab1aea6ee172fb481643cf"
     ],
     [
       "Test.u",
@@ -81,7 +81,7 @@
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
-        "function_token_typing_Prims.string", "function_token_typing_Test.s",
+        "function_token_typing_Prims.string",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
@@ -100,11 +100,11 @@
         "token_correspondence_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "token_correspondence_FStar.Pervasives.Native.fst",
         "typing_FStar.List.Tot.Base.map", "typing_FStar.List.Tot.Base.mem",
-        "typing_FStar.List.Tot.Base.noRepeats",
+        "typing_FStar.List.Tot.Base.noRepeats", "typing_Test.s",
         "typing_tok_FStar.Pointer.Base.TUInt32@tok"
       ],
       0,
-      "4d2dfe32fb06e3a8c225127515c50847"
+      "ca02936c4d312c00a676e9ed3f02a9de"
     ],
     [
       "Test.f",
@@ -142,8 +142,7 @@
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
-        "function_token_typing_Prims.string", "function_token_typing_Test.s",
-        "function_token_typing_Test.t", "function_token_typing_Test.u",
+        "function_token_typing_Prims.string",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.HyperStack.ST.lemma_equal_domains_trans",
@@ -192,10 +191,11 @@
         "typing_FStar.Pointer.Base.__proj__Mkstruct_typ__item__fields",
         "typing_FStar.Pointer.Base.frameOf",
         "typing_FStar.Pointer.Base.loc_pointer",
-        "typing_FStar.Pointer.Base.loc_union"
+        "typing_FStar.Pointer.Base.loc_union", "typing_Test.s",
+        "typing_Test.t", "typing_Test.u"
       ],
       0,
-      "631e9270f20a46154c6fc0913d021486"
+      "6bb761e45df6c5db4ec0fe41ce485284"
     ]
   ]
 ]

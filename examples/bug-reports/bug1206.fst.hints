@@ -7,14 +7,13 @@
       1,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Reflection.Data.var", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "function_token_typing_FStar.Reflection.Data.var",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6cfd3f3426cedc6b11c01a1208cff59e"
+      "3bfa110625b33911e4b0f935464efc15"
     ],
     [
       "Bug1206.ser_id",
@@ -29,7 +28,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option"
       ],
       0,
-      "c124c4a4a11b6933a95d5bbf013fa0ea"
+      "37704278da7374260c683ed7d18f8b67"
     ]
   ]
 ]

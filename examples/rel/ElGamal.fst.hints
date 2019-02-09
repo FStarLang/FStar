@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "db30c07c41d844cfc8553c152f40b5e6"
+      "526bd18a5890e6bc6b4e8f278990c544"
     ],
     [
       "ElGamal.mod_plus_minus",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "93ffe5a2ee0c1d7812132614083fab48"
+      "70d9ad25c6194e9dcd4205ecf77abdde"
     ],
     [
       "ElGamal.mod_minus_plus",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "f1c695e10981f8d992551a02fe0ff58a"
+      "d46fc5d95eeac0e8c06a947349c8df15"
     ],
     [
       "ElGamal.bij'",
@@ -63,7 +63,7 @@
         "typing_FStar.DM4F.Heap.Random.upd"
       ],
       0,
-      "759ab52d7154e4232c7dc97e175daa68"
+      "67fc3c39dd37f1afbee0d8f559d9c216"
     ],
     [
       "ElGamal.elgamal_prop",
@@ -72,7 +72,7 @@
       1,
       [ "@query" ],
       0,
-      "e113844fd848ac739c39d583d663123f"
+      "77a7ddfd15ff16dcb1617c493863f243"
     ],
     [
       "ElGamal.elgamal_prop",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "50794c9fe862236aaa64b3aad4a0ace7"
+      "d78dcbd2b316c176578c5c3b0548805d"
     ],
     [
       "ElGamal.elgamal_equiv",
@@ -113,10 +113,7 @@
         "equation_FStar.DM4F.Random.sample", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_Prims.pos",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.DM4F.Heap.Random.id",
-        "function_token_typing_FStar.DM4F.Heap.Random.q",
-        "function_token_typing_FStar.DM4F.Heap.Random.tape", "int_inversion",
-        "int_typing",
+        "int_inversion", "int_typing",
         "interpretation_Tm_abs_72b382aaf4ac1300d599277d1bedc90b",
         "interpretation_Tm_abs_9db29db46153c4404783fe7ac1f4ce6e",
         "interpretation_Tm_abs_f0aa07af8f72e77920771a24d606db5e",
@@ -139,13 +136,16 @@
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__f",
         "typing_ElGamal.elgamal", "typing_ElGamal.elgamal_",
+        "typing_FStar.DM4F.Heap.Random.id",
         "typing_FStar.DM4F.Heap.Random.index",
+        "typing_FStar.DM4F.Heap.Random.q",
+        "typing_FStar.DM4F.Heap.Random.tape",
         "typing_FStar.DM4F.Heap.Random.to_id",
         "typing_FStar.DM4F.Random.sample",
         "typing_Tm_abs_72b382aaf4ac1300d599277d1bedc90b", "unit_typing"
       ],
       0,
-      "7a8f094a400768cd481a23a015c0e94e"
+      "9f87601061f51b5218304ccda9a3edf3"
     ],
     [
       "ElGamal.mul_pow",
@@ -154,7 +154,7 @@
       1,
       [ "@query" ],
       0,
-      "5bac467677ea92c7fd3d3f67ddda8820"
+      "e4647568384467ee22ea32b5312bcf94"
     ],
     [
       "ElGamal.mod_plus_minus",
@@ -167,7 +167,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "708f514b33e82b5df0eb74f4ac21e4c1"
+      "6ec6488d4a0dae13e9a7a340da304665"
     ],
     [
       "ElGamal.mod_minus_plus",
@@ -180,7 +180,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "2e4cec547f9c8af3a5f12bb66aa5d248"
+      "265d50ee607bb13eb48c370b8bf86c05"
     ],
     [
       "ElGamal.bij'",
@@ -209,7 +209,7 @@
         "typing_FStar.DM4F.Heap.Random.upd"
       ],
       0,
-      "ddb6b4d96b4314da17946fcab1b5c06b"
+      "db35492da35ee1aeeec75124f30603ea"
     ],
     [
       "ElGamal.elgamal_prop",
@@ -218,7 +218,7 @@
       1,
       [ "@query" ],
       0,
-      "2fa82b9243c2290708b93a3d41437773"
+      "8621f07fb7ee23a3207e4741b2d17a37"
     ]
   ]
 ]

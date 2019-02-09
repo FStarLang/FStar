@@ -48,7 +48,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "ee0bed7bf691f5766c1d83b44ae42f54"
+      "74ed9d75043358865bfdcbc3622fc035"
     ],
     [
       "Test.colored_object_struct",
@@ -102,7 +102,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "8697f7fb5dfdc2aa2725f34ae064638d"
+      "94f393ea0f7d652d3c4b5fb292404777"
     ],
     [
       "Test.write_struct_field",
@@ -134,7 +134,7 @@
         "token_correspondence_FStar.Pointer.Base.type_of_typ"
       ],
       0,
-      "cb09f32a78f8c3a6108c8d1a76d1c244"
+      "675b1d74e5e2ff4dab3048b0cd4494b5"
     ],
     [
       "Test.flip",
@@ -174,8 +174,6 @@
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
         "function_token_typing_Prims.string",
-        "function_token_typing_Test.point_struct",
-        "function_token_typing_Test.point_t",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.HyperStack.ST.lemma_equal_domains_trans",
@@ -223,10 +221,11 @@
         "typing_FStar.Pointer.Base.__proj__Mkstruct_typ__item__fields",
         "typing_FStar.Pointer.Base.loc_pointer",
         "typing_FStar.Pointer.Base.loc_union",
-        "typing_Test.colored_object_struct", "typing_Test.colored_object_t"
+        "typing_Test.colored_object_struct", "typing_Test.colored_object_t",
+        "typing_Test.point_struct", "typing_Test.point_t"
       ],
       0,
-      "5da067952276598cb5924f25c25be5fc"
+      "53eb39059e8424d90d459e0df6b80619"
     ],
     [
       "Test.flip'",
@@ -266,8 +265,6 @@
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
         "function_token_typing_Prims.string",
-        "function_token_typing_Test.point_struct",
-        "function_token_typing_Test.point_t",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.HyperStack.ST.lemma_equal_domains_trans",
@@ -315,10 +312,11 @@
         "typing_FStar.Pointer.Base.__proj__Mkstruct_typ__item__fields",
         "typing_FStar.Pointer.Base.loc_pointer",
         "typing_FStar.Pointer.Base.loc_union",
-        "typing_Test.colored_object_struct", "typing_Test.colored_object_t"
+        "typing_Test.colored_object_struct", "typing_Test.colored_object_t",
+        "typing_Test.point_struct", "typing_Test.point_t"
       ],
       0,
-      "748dbe711577012b606026964bf81ec2"
+      "a5e33380d8481eeadd5f82f81175058a"
     ]
   ]
 ]

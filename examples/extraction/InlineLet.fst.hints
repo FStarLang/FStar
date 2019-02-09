@@ -27,7 +27,6 @@
         "fuel_guarded_inversion_InlineLet.local_pkg",
         "function_token_typing_FStar.Heap.trivial_preorder",
         "function_token_typing_FStar.Monotonic.Heap.heap",
-        "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion",
         "interpretation_Tm_abs_fa0cb1fe1698a880aba4dd22bebacfbf",
@@ -49,6 +48,7 @@
         "true_interp", "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Map.domain", "typing_FStar.Map.sel",
         "typing_FStar.Map.upd", "typing_FStar.Monotonic.Heap.upd",
+        "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperStack.as_ref",
         "typing_FStar.Monotonic.HyperStack.frameOf",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
@@ -57,7 +57,7 @@
         "typing_FStar.Monotonic.HyperStack.is_mm"
       ],
       0,
-      "76f4dac714311f71bf0b6ffa46d6f866"
+      "3118b1c7315a38321688328bd77ca3b8"
     ]
   ]
 ]

@@ -19,8 +19,6 @@
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
         "function_token_typing_Test.FunctionalExtensionality.f",
-        "function_token_typing_Test.FunctionalExtensionality.g",
-        "function_token_typing_Test.FunctionalExtensionality.h",
         "int_inversion",
         "interpretation_Tm_abs_2f8d5aea36a0e923f753193796278d1c",
         "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
@@ -28,11 +26,13 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_Test.FunctionalExtensionality.g",
+        "typing_Test.FunctionalExtensionality.h",
         "typing_Tm_abs_2f8d5aea36a0e923f753193796278d1c",
         "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "3f7fbe2128d9a39c02d1c855b78f060d"
+      "00c70f13aee8334dac50bd28c5a5e786"
     ],
     [
       "Test.FunctionalExtensionality.shrinking_domains_ok",
@@ -54,7 +54,7 @@
         "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "b3f5e3c210c696eb5ee951998f56a350"
+      "18b0b87bd61d9586e9a536ff68c97144"
     ],
     [
       "Test.FunctionalExtensionality.test_1542",
@@ -63,7 +63,7 @@
       1,
       [ "@query" ],
       0,
-      "b309a365ec50a3993085b5acf8e272ae"
+      "ff75d30a79d4a418793dd70f4469208a"
     ],
     [
       "Test.FunctionalExtensionality.restricted_t_2_idem",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Tm_refine_b0ec1ad4c766f179179881d04d9cace4"
       ],
       0,
-      "3c4b1d312d606a45e638acfaa9525d7d"
+      "a8ad00205e5095c16a6c8e57fa089e70"
     ],
     [
       "Test.FunctionalExtensionality.on_2_interp",
@@ -105,7 +105,7 @@
         "typing_Tm_abs_ef729c669b59d7371835b1011608f7bc"
       ],
       0,
-      "e93c54caaa7288f068d6e95ef2e2dc12"
+      "f618e9f49c224980b200da128b3d0200"
     ],
     [
       "Test.FunctionalExtensionality.needs_explicit_coercion",
@@ -130,7 +130,7 @@
         "typing_Tm_abs_2f8d5aea36a0e923f753193796278d1c"
       ],
       0,
-      "b092563dcf039488c1ac4995b26cdd44"
+      "50097551538f31d9e881fc0decd65b2e"
     ],
     [
       "Test.FunctionalExtensionality.sub_currently_not_why",
@@ -156,7 +156,7 @@
         "typing_Tm_abs_2f8d5aea36a0e923f753193796278d1c"
       ],
       0,
-      "4f1968e462e9403d639473bf2a14bc85"
+      "f51a9d9d6a5594356a977df4643d33a1"
     ],
     [
       "Test.FunctionalExtensionality.on_dom_transitivity_of_equality",
@@ -176,8 +176,6 @@
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
         "function_token_typing_Test.FunctionalExtensionality.f",
-        "function_token_typing_Test.FunctionalExtensionality.g",
-        "function_token_typing_Test.FunctionalExtensionality.h",
         "int_inversion",
         "interpretation_Tm_abs_2f8d5aea36a0e923f753193796278d1c",
         "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
@@ -185,11 +183,13 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_Test.FunctionalExtensionality.g",
+        "typing_Test.FunctionalExtensionality.h",
         "typing_Tm_abs_2f8d5aea36a0e923f753193796278d1c",
         "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "2c9f6cae802b547265708fc0c59ed304"
+      "e67984b81ed6d92a2d0ee0158abd83ab"
     ],
     [
       "Test.FunctionalExtensionality.shrinking_domains_ok",
@@ -211,7 +211,7 @@
         "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "35a24a355852a220596054bbc7ea6a9d"
+      "79979c56154c8b7973482c756d96ceba"
     ],
     [
       "Test.FunctionalExtensionality.test_1542",
@@ -220,7 +220,7 @@
       1,
       [ "@query" ],
       0,
-      "88fb8644833fd3eeecc4f001f4f34f51"
+      "693fea4cd834076f77e4b13cb5139af0"
     ],
     [
       "Test.FunctionalExtensionality.needs_explicit_coercion",
@@ -245,7 +245,7 @@
         "typing_Tm_abs_2f8d5aea36a0e923f753193796278d1c"
       ],
       0,
-      "7ca469552b920c2aedbbda0891570f65"
+      "c2e3ee315f4e8d21f846635270cc1ff8"
     ],
     [
       "Test.FunctionalExtensionality.sub_currently_not_why",
@@ -271,7 +271,7 @@
         "typing_Tm_abs_2f8d5aea36a0e923f753193796278d1c"
       ],
       0,
-      "2e23426094e8dc612768c8bcb4745268"
+      "6fd34fedac8fd8ef035a81ee794bec40"
     ]
   ]
 ]
