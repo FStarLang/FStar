@@ -589,7 +589,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let tok = lookup_free_var env v.fv_name in
              let tkey_hash = Term.hash_of_term tok in
              let aux_decls, sym_name =
-             let aux_decls =
                if fvb.smt_arity > 0
                then //kick partial application axioms if arity > 0; see #613
                     //and if the head symbol is just a variable
