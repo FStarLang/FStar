@@ -1028,7 +1028,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
                  env fv t quals in
              let tname = lid.str in
-             let tsym = mkFreeV <| mk_fv (tname, Term_sort) in
+             let tsym = Option.get (try_lookup_free_var env lid) in
              decls
              @ primitive_type_axioms env.tcenv lid tname tsym,
              env
