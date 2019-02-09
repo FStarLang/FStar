@@ -110,7 +110,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                 (q:term) //the term being instrumented
      =  match q.tm with
         | BoundV _
-        | Integer _ ->
+        | Integer _
+        | Real _ ->
           labels, q
 
         | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only

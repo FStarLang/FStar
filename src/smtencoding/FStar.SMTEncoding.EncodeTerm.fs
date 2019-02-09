@@ -309,6 +309,7 @@ let rec encode_const c env =
     | Const_string(s, _) -> varops.string_const s, []
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
+    | Const_real r -> boxReal (mkReal r), []
     | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
 
 and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :

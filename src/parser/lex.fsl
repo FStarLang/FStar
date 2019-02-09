@@ -174,6 +174,7 @@ let float = floatp | floate
 let range = digit+ '.' '.' digit+
 let bigint =  integer 'I'
 let bignum =  integer 'N'
+let real   = float 'R'
 let ieee64 = float
 (* let ieee64d = (float | integer) ('d' | 'D')  *)
 let ieee32 = float ('f' | 'F')
@@ -282,6 +283,9 @@ rule token args = parse
  
  | range { let s = ulexeme lexbuf in RANGE(s) }
 
+ | real
+     { REAL (string_trim_both (ulexeme lexbuf) 0 1) }
+     
  | ieee64
      { IEEE64 (try float(ulexeme lexbuf) with _ -> fail lexbuf (Errors.Fatal_InvalidFloatingPointNumber, "Invalid floating point number") 0.0) }
 

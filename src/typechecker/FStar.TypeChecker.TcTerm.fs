@@ -967,6 +967,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
           | Unsigned, Int32 -> Const.uint32_lid
           | Unsigned, Int64 -> Const.uint64_lid)
       | Const_string _ -> t_string
+      | Const_real _ -> t_real
       | Const_float _ -> t_float
       | Const_char _ ->
         FStar.Syntax.DsEnv.try_lookup_lid env.dsenv FStar.Parser.Const.char_lid

@@ -29,6 +29,7 @@ let mkTrue   = mkTrue Range.dummyRange
 let mkFalse  = mkFalse Range.dummyRange
 let mkInteger  = norng mkInteger
 let mkInteger' = norng mkInteger'
+let mkReal     = norng mkReal
 let mkBoundV   = norng mkBoundV
 let mkFreeV    = norng mkFreeV
 let mkApp'     = norng mkApp'
