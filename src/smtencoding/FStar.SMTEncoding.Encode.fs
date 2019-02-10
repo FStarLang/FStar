@@ -1063,7 +1063,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  [Term.DeclFun(name, args |> List.map (fun (_, sort, _) -> sort), Term_sort, None)]
             else constructor_to_decl (Ident.range_of_lid t) c in
 
-        let inversion_axioms tapp vars =
+        let inversion_axioms tapp vars (formals:S.binders) =
             if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
             then []
             else
@@ -1080,7 +1080,47 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     let indices, decls' = encode_args indices env in
                     if List.length indices <> List.length vars
                     then failwith "Impossible";
-                    let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices |> mk_and_l in
+                    let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices in
+                    let retain_injectivity_for_argument (x:S.binder) =
+                        let t =
+                            N.normalize
+                                [Env.Beta;
+                                    Env.UnfoldUntil delta_constant;
+                                    Env.AllowUnboundUniverses;
+                                    Env.EraseUniverses;
+                                    ]
+                            env.tcenv
+                            (fst x).sort
+                        in
+                        let rec is_type_arrow (t:S.term) : bool =
+                            let t = U.unrefine t in
+                            match (SS.compress t).n with
+                            | Tm_arrow _ ->
+                              let _, c = U.arrow_formals_comp t in
+                              if Util.is_pure_or_ghost_comp c
+                              then let t = U.comp_result c in
+                                   is_type t || is_type_arrow t
+                              else true //effectful arrow; no injectivity
+                            | _ ->
+                              false
+                        and is_type (t:S.term) : bool =
+                            let t = U.unrefine t in
+                            match (SS.compress t).n with
+                            | Tm_type _ -> true
+                            | _ -> false
+                        in
+                        not (is_type_arrow t)
+                    in
+                    let eqs =
+                        List.map2
+                            (fun eq formal ->
+                                if retain_injectivity_for_argument formal
+                                then [eq]
+                                else [])
+                            eqs
+                            formals
+                    in
+                    let eqs = List.flatten eqs |> mk_and_l in
                     mkOr(out, mkAnd(mk_data_tester env l xx, eqs)), decls@decls') (mkFalse, []) in
                 let ffsym, ff = fresh_fvar "f" Fuel_sort in
                 let fuel_guarded_inversion =
@@ -1145,7 +1185,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             decls@karr@[Util.mkAssume(mkForall (Ident.range_of_lid t) ([[tapp]], vars, mkImp(guard, k)), None, ("kinding_"^ttok))] in
         let aux =
             kindingAx
-            @(inversion_axioms tapp vars)
+            @(inversion_axioms tapp vars formals)
             @[pretype_axiom (Ident.range_of_lid t) env tapp vars] in
 
         let g = decls
