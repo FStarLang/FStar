@@ -1097,7 +1097,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                             match (SS.compress t).n with
                             | Tm_arrow _ ->
                               let _, c = U.arrow_formals_comp t in
-                              if Util.is_pure_or_ghost_comp c
+                              if U.is_pure_or_ghost_comp c
                               then let t = U.comp_result c in
                                    is_type t || is_type_arrow t
                               else true //effectful arrow; no injectivity
@@ -1117,8 +1117,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 if retain_injectivity_for_argument formal
                                 then [eq]
                                 else [])
-                            eqs
-                            formals
+                            eqs formals
                     in
                     let eqs = List.flatten eqs |> mk_and_l in
                     mkOr(out, mkAnd(mk_data_tester env l xx, eqs)), decls@decls') (mkFalse, []) in
