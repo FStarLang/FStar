@@ -89,6 +89,9 @@ Guidelines for the changelog:
      we only found a couple of instances of this. So, for now, we are going with the
      hoisting workaround.
 
+   * The encoding of nullary constants changed. See the documentation
+     in https://github.com/FStarLang/FStar/pull/1645
+
 ## Calculational proofs
 
    * F\* now supports proofs in calculational style, i.e. where an

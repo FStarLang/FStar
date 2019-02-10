@@ -338,7 +338,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
             | _ -> [] in
           let lblnegs = lblnegs lines in
           lblnegs |> List.collect
-            (fun l -> match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
+            (fun l -> match label_messages |> List.tryFind (fun (m, _, _) -> fv_name m = l) with
                    | None -> []
                    | Some (lbl, msg, r) -> [(lbl, msg, r)])
     in

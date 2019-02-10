@@ -12,4 +12,4 @@ MRefHeap.uver : MRefHeap.fst
 
 # Targets to get F* arguments in interactive mode
 %.fst-in: 
-	@echo --use_hints
+	@echo $(OTHERFLAGS) $(HINTS_ENABLED)

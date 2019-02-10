@@ -18,7 +18,7 @@ module Bug1252
 open FStar.Tactics
 
 assume val p: int -> prop
-assume val p1 : p 1
+assume val p1 : squash (p 1) //NS: the squash allows p1 to be an ambient assumption in Z3
 
 type intp = x:int{p x}
 
