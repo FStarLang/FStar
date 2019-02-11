@@ -1054,7 +1054,53 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | _ -> false) in
        decls@rest@inversions, env
 
-     | Sig_inductive_typ(t, _, tps, k, _, datas) ->
+     | Sig_inductive_typ(t, universe_names, tps, k, _, datas) ->
+         let tcenv = env.tcenv in
+         let is_injective  =
+             let usubst, uvs = SS.univ_var_opening universe_names in
+             let env, tps, k =
+                Env.push_univ_vars tcenv uvs,
+                SS.subst_binders usubst tps,
+                SS.subst (SS.shift_subst (List.length tps) usubst) k
+             in
+             let tps, k = SS.open_term tps k in
+             let _, k = U.arrow_formals k in //don't care about indices here
+             let tps, env_tps, _, us = TcTerm.tc_binders env tps in
+             let u_k =
+                match (SS.compress k).n with
+                | Tm_type u -> u
+                | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.eqtype_lid -> U_zero
+                | _ -> failwith (BU.format1 "Impossible: Type of inductive is %s" (Print.term_to_string k))
+             in
+             //BU.print2 "Universe of tycon: %s : %s\n" (Ident.string_of_lid t) (Print.univ_to_string u_k);
+             let rec universe_leq u v =
+                 match u, v with
+                 | U_zero, _ -> true
+                 | U_succ u0, U_succ v0 -> universe_leq u0 v0
+                 | U_name u0, U_name v0 -> Ident.ident_equals u0 v0
+                 | U_name _,  U_succ v0 -> universe_leq u v0
+                 | U_max us,  _         -> us |> BU.for_all (fun u -> universe_leq u v)
+                 | _,         U_max vs  -> vs |> BU.for_some (universe_leq u)
+                 | _ -> false
+             in
+             let u_leq_u_k u =
+                universe_leq (N.normalize_universe env_tps u) u_k
+             in
+             let tp_ok (tp:S.binder) (u_tp:universe) =
+                let t_tp = (fst tp).sort in
+                if u_leq_u_k u_tp
+                then true
+                else let formals, _ = U.arrow_formals t_tp in
+                     let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
+                     //List.iter (fun u -> BU.print1 "Universe of formal: %s\n" (Print.univ_to_string u)) u_formals;
+                     BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals
+             in
+             List.forall2 tp_ok tps us
+        in
+        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+        then BU.print2 "%s injectivity for %s\n"
+                    (if is_injective then "YES" else "NO")
+                    (Ident.string_of_lid t);
         let quals = se.sigquals in
         let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
         let constructor_or_logic_type_decl (c:constructor_t) =
@@ -1062,8 +1108,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             then let name, args, _, _, _ = c in
                  [Term.DeclFun(name, args |> List.map (fun (_, sort, _) -> sort), Term_sort, None)]
             else constructor_to_decl (Ident.range_of_lid t) c in
-
-        let inversion_axioms tapp vars (formals:S.binders) =
+        let inversion_axioms tapp vars =
             if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
             then []
             else
@@ -1080,47 +1125,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     let indices, decls' = encode_args indices env in
                     if List.length indices <> List.length vars
                     then failwith "Impossible";
-                    let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices in
-                    let retain_injectivity_for_argument (x:S.binder) =
-                        let t =
-                            N.normalize
-                                [Env.Beta;
-                                    Env.UnfoldUntil delta_constant;
-                                    Env.AllowUnboundUniverses;
-                                    Env.EraseUniverses;
-                                    ]
-                            env.tcenv
-                            (fst x).sort
-                        in
-                        let rec is_type_arrow (t:S.term) : bool =
-                            let t = U.unrefine t in
-                            match (SS.compress t).n with
-                            | Tm_arrow _ ->
-                              let _, c = U.arrow_formals_comp t in
-                              if U.is_pure_or_ghost_comp c
-                              then let t = U.comp_result c in
-                                   is_type t || is_type_arrow t
-                              else true //effectful arrow; no injectivity
-                            | _ ->
-                              false
-                        and is_type (t:S.term) : bool =
-                            let t = U.unrefine t in
-                            match (SS.compress t).n with
-                            | Tm_type _ -> true
-                            | _ -> false
-                        in
-                        not (is_type_arrow t)
-                    in
                     let eqs =
-                        List.map2
-                            (fun eq formal ->
-                                if retain_injectivity_for_argument formal
-                                then [eq]
-                                else [])
-                            eqs formals
-                    in
-                    let eqs = List.flatten eqs |> mk_and_l in
-                    mkOr(out, mkAnd(mk_data_tester env l xx, eqs)), decls@decls') (mkFalse, []) in
+                        if is_injective
+                        then List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices
+                        else [] in
+                    mkOr(out, mkAnd(mk_data_tester env l xx, eqs |> mk_and_l)), decls@decls') (mkFalse, []) in
                 let ffsym, ff = fresh_fvar "f" Fuel_sort in
                 let fuel_guarded_inversion =
                     let xx_has_type_sfuel =
@@ -1184,7 +1193,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             decls@karr@[Util.mkAssume(mkForall (Ident.range_of_lid t) ([[tapp]], vars, mkImp(guard, k)), None, ("kinding_"^ttok))] in
         let aux =
             kindingAx
-            @(inversion_axioms tapp vars formals)
+            @(inversion_axioms tapp vars)
             @[pretype_axiom (Ident.range_of_lid t) env tapp vars] in
 
         let g = decls
