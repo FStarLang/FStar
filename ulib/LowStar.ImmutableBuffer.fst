@@ -126,3 +126,30 @@ let recall_contents (#a:Type0) (b:ibuffer a) (s:Seq.seq a)
   :HST.ST unit (requires (fun h0      -> (recallable b \/ live h0 b) /\ witnessed b (cpred s)))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ as_seq h0 b == s))
   = recall_p b (cpred s)
+
+
+(*
+ * Immutable buffers are distinct from (trivial) buffers
+ *
+ * The proof basically proves a contradiction assuming that the buffers are not distinct
+ * Using injectivity of the base preorders, we get that trivial preorder is same as immutable preorder
+ * After which it is easy to derive the contradiction, provided client has provided a witness for inhabitance
+ *)
+let inhabited_immutable_buffer_is_distinct_from_buffer (#a:Type0) (x:a) (ib:ibuffer a) (b:LowStar.Buffer.buffer a)
+  : Lemma (~ (eq3 ib b))
+  = let aux () : Lemma (requires (eq3 ib b)) (ensures False)
+      = //use injectivity to prove that all sequences of type a are equal
+        mbuffer_injectivity_in_first_preorder ();
+        assert (immutable_preorder a == LowStar.Buffer.trivial_preorder a);
+	assert (forall (s1 s2:Seq.seq a). (immutable_preorder a) s1 s2 == (LowStar.Buffer.trivial_preorder a) s1 s2);
+	assert (forall (s1 s2:Seq.seq a). (immutable_preorder a) s1 s2 == Seq.equal s1 s2);
+	assert (forall (s1 s2:Seq.seq a). (LowStar.Buffer.trivial_preorder a) s1 s2 == True);
+	assert (forall (s1 s2:Seq.seq a). Seq.equal s1 s2);
+
+        //now derive the contradiction
+	let s1 = Seq.create 0 x in
+	let s2 = Seq.create 1 x in
+        Seq.lemma_eq_elim s1 s2;
+        assert (s1 == s2); assert (Seq.length s1 == Seq.length s2)
+    in
+    (Classical.move_requires aux) ()
