@@ -152,7 +152,7 @@ let (label_goals :
                   let fallback msg =
                     aux default_msg ropt post_name_opt labels arg  in
                   (try
-                     (fun uu___12_839  ->
+                     (fun uu___33_839  ->
                         match () with
                         | () ->
                             (match arg.FStar_SMTEncoding_Term.tm with
