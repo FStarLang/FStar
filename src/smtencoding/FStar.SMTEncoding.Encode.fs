@@ -1056,7 +1056,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
      | Sig_inductive_typ(t, universe_names, tps, k, _, datas) ->
          let tcenv = env.tcenv in
-         let is_injective () =
+         let is_injective  =
              let usubst, uvs = SS.univ_var_opening universe_names in
              let env, tps, k =
                 Env.push_univ_vars tcenv uvs,
@@ -1097,10 +1097,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              in
              List.forall2 tp_ok tps us
         in
-        //if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-        //then BU.print2 "%s injectivity for %s\n"
-        //            (if is_injective then "YES" else "NO")
-        //            (Ident.string_of_lid t);
+        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+        then BU.print2 "%s injectivity for %s\n"
+                    (if is_injective then "YES" else "NO")
+                    (Ident.string_of_lid t);
         let quals = se.sigquals in
         let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
         let constructor_or_logic_type_decl (c:constructor_t) =
@@ -1116,19 +1116,19 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  let data_ax, decls = datas |> List.fold_left (fun (out, decls) l ->
                     let _, data_t = Env.lookup_datacon env.tcenv l in
                     let args, res = U.arrow_formals data_t in
-                    let params_and_indices = match (SS.compress res).n with
-                        | Tm_app(_, params_and_indices) -> params_and_indices
+                    let indices = match (SS.compress res).n with
+                        | Tm_app(_, indices) -> indices
                         | _ -> [] in
                     let env = args |> List.fold_left
                         (fun env (x, _) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
                         env in
-                    let params_and_indices, decls' = encode_args params_and_indices env in
-                    if List.length params_and_indices <> List.length vars
+                    let indices, decls' = encode_args indices env in
+                    if List.length indices <> List.length vars
                     then failwith "Impossible";
-                    let n_tps = List.length tps in
-                    let _params, indices = BU.first_N n_tps params_and_indices in
-                    let _, index_vars = BU.first_N n_tps vars in
-                    let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) index_vars indices in
+                    let eqs =
+                        if is_injective
+                        then List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices
+                        else [] in
                     mkOr(out, mkAnd(mk_data_tester env l xx, eqs |> mk_and_l)), decls@decls') (mkFalse, []) in
                 let ffsym, ff = fresh_fvar "f" Fuel_sort in
                 let fuel_guarded_inversion =
