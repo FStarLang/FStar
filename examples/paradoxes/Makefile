@@ -5,6 +5,10 @@ all: uall
 
 uall: propext propImpredicative ioWpInconsistent
 
+injectiveTypeFormers:
+	$(FSTAR) InjectiveTypeFormers.Explicit.fst
+	$(FSTAR) InjectiveTypeFormers.SMT.fst
+
 propext:
 	$(FSTAR) PropositionalExtensionalityInconsistent.fst
 
