@@ -17,19 +17,17 @@ module FStar.DependentMap
 
 module F = FStar.FunctionalExtensionality
 
-noeq abstract type t (key:eqtype) (value: (key -> Type)) =
-{
-  mappings: F.restricted_t key value
-}
+abstract
+type t (key:eqtype) (value: (key -> Type)) =
+  F.restricted_t key value
 
 abstract let create
   (#key: eqtype)
   (#value: (key -> Tot Type))
   (f: ((k: key) -> Tot (value k)))
 : Tot (t key value)
-= {
-  mappings = F.on_domain key f
-}
+= F.on_domain key f
+
 
 abstract let sel
   (#key: eqtype)
@@ -37,7 +35,7 @@ abstract let sel
   (m: t key value)
   (k: key)
 : Tot (value k)
-= m.mappings k
+= m k
 
 abstract let sel_create
   (#key: eqtype)
@@ -57,9 +55,8 @@ abstract let upd
   (k: key)
   (v: value k)
 : Tot (t key value)
-= {
-  mappings = F.on_domain key (fun k' -> if k' = k then v else m.mappings k')
-}
+= F.on_domain key (fun k' -> if k' = k then v else m k')
+
 
 abstract let sel_upd_same
   (#key: eqtype)
@@ -120,7 +117,7 @@ abstract let equal_elim
   (requires (equal m1 m2))
   (ensures (m1 == m2))
   [SMTPat (equal m1 m2)]
-= F.extensionality key value m1.mappings m2.mappings
+= F.extensionality key value m1 m2
 
 abstract let restrict
   (#key: eqtype)
@@ -128,7 +125,7 @@ abstract let restrict
   (p: (key -> Tot Type0))
   (m: t key value)
 : Tot (t (k: key {p k}) value)
-= { mappings = F.on_domain (k: key {p k}) m.mappings }
+= F.on_domain (k: key {p k}) m
 
 abstract let sel_restrict
   (#key: eqtype)
@@ -173,7 +170,7 @@ abstract let concat
   (m1: t key1 value1)
   (m2: t key2 value2)
 : Tot (t (either key1 key2) (concat_value value1 value2))
-= { mappings = F.on_domain (either key1 key2) (concat_mappings m1.mappings m2.mappings)  }
+= F.on_domain (either key1 key2) (concat_mappings m1 m2)
 
 abstract let sel_concat_l
   (#key1: eqtype)
@@ -217,7 +214,8 @@ abstract let rename
   (#key2: eqtype)
   (ren: key2 -> Tot key1)
 : Tot (t key2 (rename_value value1 ren))
-= { mappings = F.on_domain key2 (fun k2 -> m.mappings (ren k2)) }
+= let f = (fun (k2:key2) -> m (ren k2)) in
+  F.on_domain key2 f
 
 abstract let sel_rename
   (#key1: eqtype)
@@ -236,9 +234,7 @@ abstract let map
   (f: (k: key) -> value1 k -> Tot (value2 k))
   (m: t key value1)
 : Tot (t key value2)
-= {
-  mappings = F.on_domain key (fun k -> f k (sel m k))
-}
+= F.on_domain key (fun k -> f k (sel m k))
 
 abstract let sel_map
   (#key: eqtype)
