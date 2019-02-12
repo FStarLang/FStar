@@ -932,7 +932,11 @@ and mkPrelude z3options =
                 (declare-fun __uu__PartialApp () Term)\n\
                 (assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n\
                 (assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n\
-                (assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))"
+                (assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n\
+                (declare-fun _rmul (Real Real) Real)\n\
+                (declare-fun _rdiv (Real Real) Real)\n\
+                (assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n\
+                (assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (div x y)) :pattern ((_rdiv x y)))))"
    in
    let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);
