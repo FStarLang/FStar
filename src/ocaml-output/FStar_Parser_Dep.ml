@@ -79,8 +79,8 @@ let list_of_option :
   'Auu____261 .
     'Auu____261 FStar_Pervasives_Native.option -> 'Auu____261 Prims.list
   =
-  fun uu___116_270  ->
-    match uu___116_270 with
+  fun uu___117_270  ->
+    match uu___117_270 with
     | FStar_Pervasives_Native.Some x -> [x]
     | FStar_Pervasives_Native.None  -> []
   
@@ -159,8 +159,8 @@ let (uu___is_FriendImplementation : dependence -> Prims.bool) =
 let (__proj__FriendImplementation__item___0 : dependence -> module_name) =
   fun projectee  -> match projectee with | FriendImplementation _0 -> _0 
 let (dep_to_string : dependence -> Prims.string) =
-  fun uu___117_505  ->
-    match uu___117_505 with
+  fun uu___118_505  ->
+    match uu___118_505 with
     | UseInterface f -> Prims.strcat "UseInterface " f
     | PreferInterface f -> Prims.strcat "PreferInterface " f
     | UseImplementation f -> Prims.strcat "UseImplementation " f
@@ -261,8 +261,8 @@ let (empty_deps : deps) =
   let uu____846 = FStar_Util.smap_create (Prims.parse_int "0")  in
   mk_deps uu____845 uu____846 [] [] [] 
 let (module_name_of_dep : dependence -> module_name) =
-  fun uu___118_867  ->
-    match uu___118_867 with
+  fun uu___119_867  ->
+    match uu___119_867 with
     | UseInterface m -> m
     | PreferInterface m -> m
     | UseImplementation m -> m
@@ -882,8 +882,8 @@ let (collect_one :
       let auto_open = hard_coded_dependencies filename  in
       FStar_List.iter record_open_module_or_namespace auto_open;
       (let num_of_toplevelmods = FStar_Util.mk_ref (Prims.parse_int "0")  in
-       let rec collect_module uu___119_3462 =
-         match uu___119_3462 with
+       let rec collect_module uu___120_3462 =
+         match uu___120_3462 with
          | FStar_Parser_AST.Module (lid,decls) ->
              (check_module_declaration_against_filename lid filename;
               if
@@ -996,8 +996,8 @@ let (collect_one :
                  FStar_Errors.raise_error uu____3794 uu____3807
                else ()))
        
-       and collect_tycon uu___120_3810 =
-         match uu___120_3810 with
+       and collect_tycon uu___121_3810 =
+         match uu___121_3810 with
          | FStar_Parser_AST.TyconAbstract (uu____3811,binders,k) ->
              (collect_binders binders; FStar_Util.iter_opt k collect_term)
          | FStar_Parser_AST.TyconAbbrev (uu____3823,binders,k,t) ->
@@ -1020,8 +1020,8 @@ let (collect_one :
                    | (uu____3975,t,uu____3977,uu____3978) ->
                        FStar_Util.iter_opt t collect_term) identterms)
        
-       and collect_effect_decl uu___121_3989 =
-         match uu___121_3989 with
+       and collect_effect_decl uu___122_3989 =
+         match uu___122_3989 with
          | FStar_Parser_AST.DefineEffect (uu____3990,binders,t,decls) ->
              (collect_binders binders; collect_term t; collect_decls decls)
          | FStar_Parser_AST.RedefineEffect (uu____4004,binders,t) ->
@@ -1047,16 +1047,16 @@ let (collect_one :
               FStar_Parser_AST.aqual = uu____4034;_} -> collect_term t
           | uu____4037 -> ())
        
-       and collect_aqual uu___122_4038 =
-         match uu___122_4038 with
+       and collect_aqual uu___123_4038 =
+         match uu___123_4038 with
          | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta t) ->
              collect_term t
          | uu____4042 -> ()
        
        and collect_term t = collect_term' t.FStar_Parser_AST.tm
        
-       and collect_constant uu___123_4046 =
-         match uu___123_4046 with
+       and collect_constant uu___124_4046 =
+         match uu___124_4046 with
          | FStar_Const.Const_int
              (uu____4047,FStar_Pervasives_Native.Some (signedness,width)) ->
              let u =
@@ -1079,8 +1079,8 @@ let (collect_one :
              add_dep deps (dep_edge "fstar.float")
          | uu____4182 -> ()
        
-       and collect_term' uu___126_4183 =
-         match uu___126_4183 with
+       and collect_term' uu___127_4183 =
+         match uu___127_4183 with
          | FStar_Parser_AST.Wild  -> ()
          | FStar_Parser_AST.Const c -> collect_constant c
          | FStar_Parser_AST.Op (s,ts) ->
@@ -1158,8 +1158,8 @@ let (collect_one :
              (collect_binders binders; collect_term t)
          | FStar_Parser_AST.Sum (binders,t) ->
              (FStar_List.iter
-                (fun uu___124_4483  ->
-                   match uu___124_4483 with
+                (fun uu___125_4483  ->
+                   match uu___125_4483 with
                    | FStar_Util.Inl b -> collect_binder b
                    | FStar_Util.Inr t1 -> collect_term t1) binders;
               collect_term t)
@@ -1190,8 +1190,8 @@ let (collect_one :
               collect_term rel;
               collect_term init1;
               FStar_List.iter
-                (fun uu___125_4582  ->
-                   match uu___125_4582 with
+                (fun uu___126_4582  ->
+                   match uu___126_4582 with
                    | FStar_Parser_AST.CalcStep (rel1,just,next) ->
                        (collect_term rel1;
                         collect_term just;
@@ -1201,8 +1201,8 @@ let (collect_one :
        
        and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat
        
-       and collect_pattern' uu___127_4592 =
-         match uu___127_4592 with
+       and collect_pattern' uu___128_4592 =
+         match uu___128_4592 with
          | FStar_Parser_AST.PatVar (uu____4593,aqual) -> collect_aqual aqual
          | FStar_Parser_AST.PatTvar (uu____4599,aqual) -> collect_aqual aqual
          | FStar_Parser_AST.PatWild aqual -> collect_aqual aqual
@@ -1304,8 +1304,8 @@ let (topological_dependences_of :
                              uu____5314
                          else ());
                         deps_add_dep dep_graph1 filename
-                          (let uu___131_5327 = dep_node  in
-                           { edges = (uu___131_5327.edges); color = Gray });
+                          (let uu___132_5327 = dep_node  in
+                           { edges = (uu___132_5327.edges); color = Gray });
                         (let uu____5328 =
                            let uu____5339 =
                              dependences_of file_system_map dep_graph1
@@ -1317,9 +1317,9 @@ let (topological_dependences_of :
                          match uu____5328 with
                          | (all_friends1,all_files1) ->
                              (deps_add_dep dep_graph1 filename
-                                (let uu___132_5375 = dep_node  in
+                                (let uu___133_5375 = dep_node  in
                                  {
-                                   edges = (uu___132_5375.edges);
+                                   edges = (uu___133_5375.edges);
                                    color = Black
                                  });
                               (let uu____5377 = FStar_Options.debug_any ()
@@ -1330,8 +1330,8 @@ let (topological_dependences_of :
                               (let uu____5383 =
                                  let uu____5387 =
                                    FStar_List.collect
-                                     (fun uu___128_5394  ->
-                                        match uu___128_5394 with
+                                     (fun uu___129_5394  ->
+                                        match uu___129_5394 with
                                         | FriendImplementation m -> [m]
                                         | d -> []) dep_node.edges
                                     in
@@ -1378,7 +1378,7 @@ let (topological_dependences_of :
                               fun dep_node  ->
                                 fun uu____5573  ->
                                   let uu____5575 =
-                                    let uu___133_5576 = dep_node  in
+                                    let uu___134_5576 = dep_node  in
                                     let uu____5577 = widen_one dep_node.edges
                                        in
                                     { edges = uu____5577; color = White }  in
@@ -1553,7 +1553,7 @@ let (collect : Prims.string Prims.list -> (Prims.string Prims.list * deps)) =
          | Black  -> ()
          | White  ->
              (deps_add_dep dep_graph1 filename
-                (let uu___134_6270 = node  in
+                (let uu___135_6270 = node  in
                  { edges = direct_deps; color = Gray });
               (let uu____6272 =
                  dependences_of file_system_map dep_graph1
@@ -1561,7 +1561,7 @@ let (collect : Prims.string Prims.list -> (Prims.string Prims.list * deps)) =
                   in
                FStar_List.iter (fun k  -> aux (k :: cycle) k) uu____6272);
               deps_add_dep dep_graph1 filename
-                (let uu___135_6282 = node  in
+                (let uu___136_6282 = node  in
                  { edges = direct_deps; color = Black }))
           in
        FStar_List.iter (aux []) all_command_line_files  in
@@ -1662,8 +1662,8 @@ let (hash_dependences :
                  let uu____6580 = lowercase_module_name fn2  in
                  FStar_String.compare uu____6578 uu____6580) binary_deps
            in
-        let rec hash_deps out uu___129_6613 =
-          match uu___129_6613 with
+        let rec hash_deps out uu___130_6613 =
+          match uu___130_6613 with
           | [] ->
               FStar_Pervasives_Native.Some
                 (FStar_List.append (("source", source_hash) ::
@@ -1790,8 +1790,8 @@ let (print_full : deps -> unit) =
                in
             FStar_ST.op_Colon_Equals order uu____7023
          in
-      let rec aux uu___130_7134 =
-        match uu___130_7134 with
+      let rec aux uu___131_7134 =
+        match uu___131_7134 with
         | [] -> ()
         | lc_module_name::modules_to_extract ->
             let visit_file file_opt =
