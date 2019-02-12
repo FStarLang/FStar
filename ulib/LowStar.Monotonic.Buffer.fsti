@@ -233,6 +233,14 @@ let get (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (p:mbuffer a rrel rel) (i:nat)
   :Ghost a (requires (i < length p)) (ensures (fun _ -> True))
   = Seq.index (as_seq h p) i
 
+/// Injectivity in the first preorder
+
+val mbuffer_injectivity_in_first_preorder (_:unit)
+  : Lemma (forall (a:Type0) (rrel1 rrel2 rel1 rel2:srel a)
+             (b1:mbuffer a rrel1 rel1)
+	     (b2:mbuffer a rrel2 rel2).
+	     rrel1 =!= rrel2 ==> ~ (eq3 b1 b2))
+
 /// Before defining sub-buffer related API, we need to define the notion of "compatibility"
 ///
 ///
