@@ -389,14 +389,17 @@ let hard_coded_dependencies full_filename =
      Options.pervasives_native_basename ()]
   in
   (* The core libraries do not have any implicit dependencies *)
-  if List.mem filename corelibs then []
-  else let implicit_deps =
+  if List.mem filename corelibs
+  || BU.starts_with (module_name_of_file filename) "FStar.Pervasives"
+  then (printfn "Skipping implicit deps for %s (%s)" (module_name_of_file filename) filename; [])
+  else (printfn "RETAINING implicit deps for %s (%s)" (module_name_of_file filename) filename;
+        let implicit_deps =
            [ (Const.fstar_ns_lid, Open_namespace);
              (Const.prims_lid, Open_module);
              (Const.pervasives_lid, Open_module) ] in
        match (namespace_of_module (lowercase_module_name full_filename)) with
        | None -> implicit_deps
-       | Some ns -> implicit_deps @ [(ns, Open_namespace)]
+       | Some ns -> implicit_deps @ [(ns, Open_namespace)])
 
 let dep_subsumed_by d d' =
       match d, d' with
@@ -517,6 +520,7 @@ let collect_one
     | [] -> ()
     | _ ->
       let module_name = Ident.lid_of_ids lid.ns in
+      printfn "Adding dependence on mdodule %s" (Ident.string_of_lid module_name);
       add_dep_on_module module_name
   in
 
@@ -642,10 +646,27 @@ let collect_one
         ()
     | Const c ->
         collect_constant c
+
+    | Op({idText= "*"}, [lhs;rhs]) -> //this may be a tuple
+
+      (* See the comment in parse.mly to understand why this implicitly relies
+       * on the presence of a Paren node in the AST. *)
+      let rec flatten t = match t.tm with
+        // * is left-associative
+        | Op({idText = "*"}, [t1;t2]) ->
+          flatten t1 @ [ t2 ]
+        | _ -> [t]
+      in
+      let terms = flatten lhs in
+      let n = List.length terms + 1 in
+      record_lid (Const.mk_n_tuple_lid n "tuple" Range.dummyRange);
+      List.iter collect_term [lhs;rhs]
+
     | Op (s, ts) ->
         if Ident.text_of_id s = "@" then
           (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
           collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
+
         List.iter collect_term ts
     | Tvar _
     | AST.Uvar _ ->
@@ -707,6 +728,15 @@ let collect_one
           | Inl b -> collect_binder b
           | Inr t -> collect_term t)
           binders;
+        let n = List.length binders + 1 in
+        let dependent =
+          BU.for_some (function Inl _ -> true | _ -> false) binders
+        in
+        let _ =
+           if dependent
+           then (if n > 2 then record_lid (Const.mod_prefix_dtuple n "dtuple"))
+           else record_lid (Const.mk_n_tuple_lid n "tuple" Range.dummyRange)
+        in
         collect_term t
     | QForall (binders, ts, t)
     | QExists (binders, ts, t) ->
@@ -764,6 +794,8 @@ let collect_one
     | PatList ps
     | PatOr ps
     | PatTuple (ps, _) ->
+        let n = List.length ps in
+        record_lid (Const.mk_n_tuple_lid n "tuple" Range.dummyRange);
         collect_patterns ps
     | PatRecord lidpats ->
         List.iter (fun (_, p) -> collect_pattern p) lidpats
@@ -1362,7 +1394,7 @@ let print_full (deps:deps) : unit =
                 false
         in
         let all_checked_fst_dep_files = all_fst_files_dep |> List.map (fun f -> f |> cache_file |> fst) in
-        let _ = 
+        let _ =
           if is_implementation file_name then (
             if Options.cmi()
             && widened
