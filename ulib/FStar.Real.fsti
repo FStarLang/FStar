@@ -46,6 +46,8 @@ let two : real = 2.0R
 
 val sqrt_2 : r:real{r *. r = two}
 
+let n_over_n2 (n:real{n <> 0.0R /\ n*.n <> 0.0R}) = assert (n /. (n *. n) == 1.0R /. n)
+
 let test = assert (two >. one)
 let test1 = assert (one = 1.0R)
 
@@ -77,7 +79,7 @@ let test_div_lt = assert (8.0R /. 2.0R <. 5.0R)
 
 let test_sqrt_2_mul = assert (sqrt_2 *. sqrt_2 = 2.0R)
 //let test_sqrt_2_add = assert (sqrt_2 +. sqrt_2 >. 2.0R) // Fails
-//let test_sqrt_2_scale = assert (1.0R /. sqrt_2 = sqrt_2 /. 2.0R) // Fails (this is a shame)
+let test_sqrt_2_scale = assert (1.0R /. sqrt_2 = sqrt_2 /. 2.0R)
 
 // Common identities
 let add_id_l = assert (forall n. 0.0R +. n = n)
