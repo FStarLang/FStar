@@ -116,9 +116,9 @@ let (op_Negation : FStar_Ident.lident) = pconst "op_Negation"
 let (real_const : Prims.string -> FStar_Ident.lident) =
   fun s  -> p2l ["FStar"; "Real"; s] 
 let (real_op_LT : FStar_Ident.lident) = real_const "op_Less_Dot" 
-let (real_op_LTE : FStar_Ident.lident) = real_const "op_Less_Equal_Dot" 
+let (real_op_LTE : FStar_Ident.lident) = real_const "op_Less_Equals_Dot" 
 let (real_op_GT : FStar_Ident.lident) = real_const "op_Greater_Dot" 
-let (real_op_GTE : FStar_Ident.lident) = real_const "op_Greater_Equal_Dot" 
+let (real_op_GTE : FStar_Ident.lident) = real_const "op_Greater_Equals_Dot" 
 let (real_op_Subtraction : FStar_Ident.lident) =
   real_const "op_Subtraction_Dot" 
 let (real_op_Addition : FStar_Ident.lident) = real_const "op_Plus_Dot" 
