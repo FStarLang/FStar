@@ -153,9 +153,9 @@ let op_Negation        = pconst "op_Negation"
 
 let real_const  s        = p2l ["FStar";"Real";s]
 let real_op_LT           = real_const "op_Less_Dot"
-let real_op_LTE          = real_const "op_Less_Equal_Dot"
+let real_op_LTE          = real_const "op_Less_Equals_Dot"
 let real_op_GT           = real_const "op_Greater_Dot"
-let real_op_GTE          = real_const "op_Greater_Equal_Dot"
+let real_op_GTE          = real_const "op_Greater_Equals_Dot"
 let real_op_Subtraction  = real_const "op_Subtraction_Dot"
 let real_op_Addition     = real_const "op_Plus_Dot"
 let real_op_Multiply     = real_const "op_Star_Dot"
