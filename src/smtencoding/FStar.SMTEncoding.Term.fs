@@ -67,6 +67,7 @@ type op =
   | Add
   | Sub
   | Div
+  | RealDiv
   | Mul
   | Minus
   | Mod
@@ -282,6 +283,7 @@ let op_to_string = function
   | Add -> "+"
   | Sub -> "-"
   | Div -> "div"
+  | RealDiv -> "/"
   | Mul -> "*"
   | Minus -> "-"
   | Mod  -> "mod"
@@ -411,6 +413,7 @@ let mkGTE = mk_bin_op GTE
 let mkAdd = mk_bin_op Add
 let mkSub = mk_bin_op Sub
 let mkDiv = mk_bin_op Div
+let mkRealDiv = mk_bin_op RealDiv
 let mkMul = mk_bin_op Mul
 let mkMod = mk_bin_op Mod
 let mkRealOfInt t r = mkApp ("to_real", [t]) r
@@ -458,6 +461,7 @@ let check_pattern_ok (t:term) : option<term> =
                 | Add
                 | Sub
                 | Div
+                | RealDiv
                 | Mul
                 | Minus
                 | Mod -> true
@@ -936,7 +940,7 @@ and mkPrelude z3options =
                 (declare-fun _rmul (Real Real) Real)\n\
                 (declare-fun _rdiv (Real Real) Real)\n\
                 (assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n\
-                (assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (div x y)) :pattern ((_rdiv x y)))))"
+                (assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))"
    in
    let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);

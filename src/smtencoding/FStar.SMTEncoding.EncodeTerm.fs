@@ -420,7 +420,7 @@ and encode_arith_term env head args_e =
          (Const.real_op_Addition,    add Term.boxReal Term.unboxReal);
          (Const.real_op_Subtraction, sub Term.boxReal Term.unboxReal);
          (Const.real_op_Multiply,    mul Term.boxReal Term.unboxReal "_rmul");
-         (Const.real_op_Division,    div Term.boxReal Term.unboxReal "_rdiv");
+         (Const.real_op_Division,    mk_nl Term.boxReal Term.unboxReal "_rdiv" Util.mkRealDiv);
          (Const.real_op_LT,          mk_l Term.boxBool Util.mkLT  (binary Term.unboxReal));
          (Const.real_op_LTE,         mk_l Term.boxBool Util.mkLTE (binary Term.unboxReal));
          (Const.real_op_GT,          mk_l Term.boxBool Util.mkGT  (binary Term.unboxReal));

@@ -51,6 +51,7 @@ type op =
   | Add
   | Sub
   | Div
+  | RealDiv
   | Mul
   | Minus
   | Mod
@@ -170,6 +171,7 @@ val mkGTE:   ((term * term) -> Range.range -> term)
 val mkAdd:   ((term * term) -> Range.range -> term)
 val mkSub:   ((term * term) -> Range.range -> term)
 val mkDiv:   ((term * term) -> Range.range -> term)
+val mkRealDiv:   ((term * term) -> Range.range -> term)
 val mkMul:   ((term * term) -> Range.range -> term)
 val mkMod:   ((term * term) -> Range.range -> term)
 val mkNatToBv : (int -> term -> Range.range -> term)

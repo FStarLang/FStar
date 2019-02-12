@@ -48,6 +48,7 @@ let mkGTE = norng mkGTE
 let mkAdd = norng mkAdd
 let mkSub = norng mkSub
 let mkDiv = norng mkDiv
+let mkRealDiv = norng mkRealDiv
 let mkMul = norng mkMul
 let mkMod = norng mkMod
 let mkNatToBv sz = norng (mkNatToBv sz)
