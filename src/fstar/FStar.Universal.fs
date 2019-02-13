@@ -418,6 +418,12 @@ let tc_one_file
     * uenv
     * delta_env =
   Syntax.reset_gensym();
+  let post_smt_encoding (_:unit) :unit =
+    FStar.SMTEncoding.Z3.refresh ();
+    if not (Options.interactive ())
+    then Options.restore_cmd_line_options true |> ignore
+    else ()
+  in
   let maybe_extract_mldefs tcmod env =
       if Options.codegen() = None
       || not (Options.should_extract tcmod.name.str)
@@ -451,8 +457,7 @@ let tc_one_file
                  let smt_decls =
                    if (not (Options.lax()))
                    then let smt_decls = FStar.SMTEncoding.Encode.encode_modul env modul in
-                        FStar.SMTEncoding.Z3.refresh ();
-                        let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+                        post_smt_encoding ();
                         smt_decls
                    else [], []
                  in
@@ -520,8 +525,7 @@ let tc_one_file
             let env = FStar.TypeChecker.Tc.load_checked_module tcenv tcmod in
             if (not (Options.lax())) then begin
               FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod.name smt_decls;
-              FStar.SMTEncoding.Z3.refresh ();
-              if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else ()
+              post_smt_encoding ()
             end;
             (), env
         in
