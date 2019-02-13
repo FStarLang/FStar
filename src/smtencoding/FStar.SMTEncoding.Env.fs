@@ -91,7 +91,7 @@ let varops =
     let new_var pp rn = mk_unique <| pp.idText ^ "__" ^ (string_of_int rn) in
     let new_fvar lid = mk_unique lid.str in
     let next_id () = BU.incr ctr; !ctr in
-    let fresh mname pfx = BU.format3 "%s_%s_%s" mname pfx (string_of_int <| next_id()) in
+    let fresh mname pfx = BU.format3 "%s_%s_%s" pfx mname (string_of_int <| next_id()) in
     let reset_fresh () = ctr := initial_ctr in
     let string_const s = match BU.find_map !scopes (fun (_, strings) -> BU.smap_try_find strings s) with
         | Some f -> f
