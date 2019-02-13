@@ -30,7 +30,7 @@ module HST = FStar.HyperStack.ST
  *   -- functions that take explicit preorder as arguments (e.g. sub etc.)
  *   -- these include allocation functions also
  *)
-private let trivial_preorder (a:Type0) :srel a = fun _ _ -> True
+let trivial_preorder (a:Type0) :srel a = fun _ _ -> True
 
 type buffer (a:Type0) = mbuffer a (trivial_preorder a) (trivial_preorder a)
 
