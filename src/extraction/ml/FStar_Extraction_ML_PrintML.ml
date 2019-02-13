@@ -160,6 +160,7 @@ and build_constructor_pat ((path, sym), p) =
      Ppat_construct (path_to_ident(path', name), Some inner)
 
 let rec build_core_type ?(annots = []) (ty: mlty): core_type =
+  let ty = FStar_Extraction_ML_Util.resugar_mlty ty in
   let t =
   match ty with
   | MLTY_Var sym -> Typ.mk (Ptyp_var (mk_typ_name sym))
@@ -172,18 +173,7 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
      let c_tys = map build_core_type tys in
      let p = path_to_ident (path, sym) in
      let ty = Typ.mk (Ptyp_constr (p, c_tys)) in
-     (match path with
-      | ["FStar"; "Pervasives"; "Native"] ->
-        (* A special case for tuples, so they are displayed as
-         * ('a * 'b) instead of ('a,'b) FStar_Pervasives_Native.tuple2
-         * VD: Should other types named "tupleXX" where XX does not represent
-         * the arity of the tuple be added to FStar.Pervasives.Native,
-         * the condition below might need to be more specific. *)
-        if BatString.starts_with sym "tuple" then
-          Typ.mk (Ptyp_tuple (map build_core_type tys))
-        else
-          ty
-      | _ -> ty)
+     ty
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
   | MLTY_Top -> Typ.mk (Ptyp_constr (mk_lident "Obj.t", []))
   | MLTY_Erased -> Typ.mk (Ptyp_constr (mk_lident "unit", []))
