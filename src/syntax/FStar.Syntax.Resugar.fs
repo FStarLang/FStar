@@ -175,7 +175,7 @@ let string_to_op s =
 type expected_arity = option<int>
 let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
   let infix_prim_ops = [
-    (C.op_Addition    , "+" );
+    (C.op_Addition_lid    , "+" );
     (C.op_Subtraction , "-" );
     (C.op_Minus       , "-" );
     (C.op_Multiply    , "*" );

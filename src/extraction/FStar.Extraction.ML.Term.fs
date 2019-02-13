@@ -733,15 +733,15 @@ let mk_MLE_Let top_level (lbs:mlletbinding) (body:mlexpr) =
 
 let resugar_pat q p = match p with
     | MLP_CTor(d, pats) ->
-      begin match is_xtuple d with
-        | Some n -> MLP_Tuple(pats)
-        | _ ->
-          match q with
+      begin
+         if is_xtuple d
+         then MLP_Tuple(pats)
+         else match q with
               | Some (Record_ctor (ty, fns)) ->
-              let path = List.map text_of_id ty.ns in
-              let fs = record_fields fns pats in
-              MLP_Record(path, fs)
-            | _ -> p
+                  let path = List.map text_of_id ty.ns in
+                  let fs = record_fields fns pats in
+                  MLP_Record(path, fs)
+              | _ -> p
       end
     | _ -> p
 

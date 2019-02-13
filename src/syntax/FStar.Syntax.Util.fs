@@ -413,7 +413,7 @@ let primops =
    PC.op_GTE;
    PC.op_Subtraction;
    PC.op_Minus;
-   PC.op_Addition;
+   PC.op_Addition_lid;
    PC.op_Multiply;
    PC.op_Division;
    PC.op_Modulus;

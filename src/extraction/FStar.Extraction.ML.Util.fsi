@@ -40,8 +40,8 @@ val type_leq_c : unfold_ty:unfold_t -> e:option<mlexpr> -> t:mlty -> t':mlty -> 
 val type_leq : g:unfold_t -> t1:mlty -> t2:mlty -> bool
 val erase_effect_annotations: mlty -> mlty
 val is_type_abstraction : list<(BU.either<'a,'b> * 'c)> -> bool
-val is_xtuple : list<string> * string -> option<int>
-val is_xtuple_ty : list<string> * string -> option<int>
+val is_xtuple : list<string> * string -> bool
+val is_xtuple_ty : list<string> * string -> bool
 val resugar_exp : e:mlexpr -> mlexpr
 val resugar_mlty : t:mlty -> mlty
 val record_field_path : list<lident> -> list<string>

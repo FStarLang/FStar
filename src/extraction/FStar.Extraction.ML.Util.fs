@@ -271,16 +271,13 @@ let is_type_abstraction = function
     | _ -> false
 
 let is_xtuple (ns, n) =
-  if FStar.Parser.Const.is_tuple_datacon_string (BU.concat_l "." (ns@[n]))
-  (* Returns the integer k in "Mktuplek" *)
-  then Some (BU.int_of_char (BU.char_at n 7))
-  else None
+  FStar.Parser.Const.is_tuple_datacon_string (BU.concat_l "." (ns@[n]))
 
 let resugar_exp e = match e.expr with
     | MLE_CTor(mlp, args) ->
-        (match is_xtuple mlp with
-        | Some n -> with_ty e.mlty <| MLE_Tuple args
-        | _ -> e)
+        (if is_xtuple mlp
+         then with_ty e.mlty <| MLE_Tuple args
+         else e)
     | _ -> e
 
 let record_field_path = function
@@ -307,16 +304,13 @@ let record_fields fs vs = List.map2 (fun (f:lident) e -> f.ident.idText, e) fs v
 
 
 let is_xtuple_ty (ns, n) =
-  if FStar.Parser.Const.is_tuple_constructor_string (BU.concat_l "." (ns@[n]))
-  (* Returns the integer k in "tuplek" *)
-  then Some (BU.int_of_char (BU.char_at n 5))
-  else None
+   FStar.Parser.Const.is_tuple_constructor_string (BU.concat_l "." (ns@[n]))
 
 let resugar_mlty t = match t with
     | MLTY_Named (args, mlp) ->
-      begin match is_xtuple_ty mlp with
-        | Some n -> MLTY_Tuple args
-        | _ -> t
+      begin if is_xtuple_ty mlp
+            then MLTY_Tuple args
+            else t
       end
     | _ -> t
 

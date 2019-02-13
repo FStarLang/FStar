@@ -87,7 +87,7 @@ let prims =
         (Const.op_GTE,         (quant xy  (boxBool <| mkGTE(unboxInt x, unboxInt y))));
         (Const.op_Subtraction, (quant xy  (boxInt  <| mkSub(unboxInt x, unboxInt y))));
         (Const.op_Minus,       (quant qx  (boxInt  <| mkMinus(unboxInt x))));
-        (Const.op_Addition,    (quant xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
+        (Const.op_Addition_lid,    (quant xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
         (Const.op_Multiply,    (quant xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
         (Const.op_Division,    (quant xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
         (Const.op_Modulus,     (quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
@@ -406,7 +406,6 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                     | [] when thunked -> mkApp(vname, [dummy_tm])
                     | _ -> mkApp(get_vtok(), []) //not thunked
               in
-              let vtok_app = mk_Apply vtok_tm vars in
               let vapp = mkApp(vname, List.map mkFreeV vars) in //arity ok, see decl below, arity is |vars| (#1383)
               let decls2, env =
                 let vname_decl = Term.DeclFun(vname, vars |> List.map fv_sort, Term_sort, None) in
@@ -440,6 +439,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                     | _ ->
                      (* Generate a token and a function symbol;
                         equate the two, and use the function symbol for full applications *)
+                      let vtok_app = mk_Apply vtok_tm vars in
                       let vtok = get_vtok() in
                       let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
                       let name_tok_corr_formula pat =

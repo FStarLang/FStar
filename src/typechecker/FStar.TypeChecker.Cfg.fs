@@ -494,7 +494,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              0,
              unary_int_op (fun x -> Z.minus_big_int x),
              NBETerm.unary_int_op (fun x -> Z.minus_big_int x));
-         (PC.op_Addition,
+         (PC.op_Addition_lid,
              2,
              0,
              binary_int_op (fun x y -> Z.add_big_int x y),

@@ -110,7 +110,7 @@ let mk_Apply e (vars:fvs) =
     vars |> List.fold_left (fun out var ->
             match fv_sort var with
             | Fuel_sort -> mk_ApplyTF out (mkFreeV var)
-            | s -> assert (s=Term_sort); mk_ApplyTT out (mkFreeV var)) e
+            | s -> if (s <> Term_sort) then failwith "mk_Apply with non Term_sort"; mk_ApplyTT out (mkFreeV var)) e
 let mk_Apply_args e args = args |> List.fold_left mk_ApplyTT e
 let raise_arity_mismatch head arity n_args rng =
     Errors.raise_error (Errors.Fatal_SMTEncodingArityMismatch,
@@ -263,7 +263,7 @@ let rec curried_arrow_formals_comp k =
 let is_arithmetic_primitive head args =
     match head.n, args with
     | Tm_fvar fv, [_;_]->
-      S.fv_eq_lid fv Const.op_Addition
+      S.fv_eq_lid fv Const.op_Addition_lid
       || S.fv_eq_lid fv Const.op_Subtraction
       || S.fv_eq_lid fv Const.op_Multiply
       || S.fv_eq_lid fv Const.op_Division
@@ -402,7 +402,7 @@ and encode_arith_term env head args_e =
     let div     = mk_nl "_div" Util.mkDiv in
     let modulus = mk_nl "_mod" Util.mkMod in
     let ops =
-        [(Const.op_Addition, add);
+        [(Const.op_Addition_lid, add);
          (Const.op_Subtraction, sub);
          (Const.op_Multiply, mul);
          (Const.op_Division, div);

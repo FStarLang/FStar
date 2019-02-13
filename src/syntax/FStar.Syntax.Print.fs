@@ -64,7 +64,7 @@ let db_to_string bv = bv.ppname.idText ^ "@" ^ string_of_int bv.index
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
-    (C.op_Addition    , "+" );
+    (C.op_Addition_lid    , "+" );
     (C.op_Subtraction , "-" );
     (C.op_Multiply    , "*" );
     (C.op_Division    , "/" );

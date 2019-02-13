@@ -957,7 +957,7 @@ let is_interpreted =
         Const.op_GTE;
         Const.op_Subtraction;
         Const.op_Minus;
-        Const.op_Addition;
+        Const.op_Addition_lid;
         Const.op_Multiply;
         Const.op_Division;
         Const.op_Modulus;

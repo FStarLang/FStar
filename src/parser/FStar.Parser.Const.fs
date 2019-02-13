@@ -141,7 +141,7 @@ let op_GT              = pconst "op_GreaterThan"
 let op_GTE             = pconst "op_GreaterThanOrEqual"
 let op_Subtraction     = pconst "op_Subtraction"
 let op_Minus           = pconst "op_Minus"
-let op_Addition        = pconst "op_Addition"
+let op_Addition_lid        = pconst "op_Addition"
 let op_Multiply        = pconst "op_Multiply"
 let op_Division        = pconst "op_Division"
 let op_Modulus         = pconst "op_Modulus"
@@ -310,12 +310,18 @@ let mk_tuple_lid n r = mk_n_tuple_lid n "tuple" r
 
 let lid_tuple2   = mk_tuple_lid 2 dummyRange
 
-let is_tuple_constructor_string (s:string) :bool =
-  let prefix = "FStar.Pervasives.Native.Tuple" in
-  let n_prefix = (String.length prefix) in // + 1 in
-  U.starts_with s prefix &&
-  String.length s > n_prefix &&
-  U.starts_with (U.substring_from s n_prefix) "tuple"
+let is_tuple_name (s:string) (nm:string) : bool =
+    let prefix = "FStar.Pervasives.Native.Tuple" in
+    let n_prefix = String.length prefix in
+    U.starts_with s prefix &&
+    String.length s > n_prefix &&
+    (let sfx = U.substring_from s n_prefix in
+     match U.split sfx "." with
+     | [_; nm'] ->
+       U.starts_with nm' nm
+     | _ -> false)
+
+let is_tuple_constructor_string (s:string) : bool = is_tuple_name s "tuple"
 
 let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_id lid)
 
@@ -323,12 +329,7 @@ let mk_tuple_data_lid n r = mk_n_tuple_lid n "Mktuple" r
 
 let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 
-let is_tuple_datacon_string (s:string) :bool =
-  let prefix = "FStar.Pervasives.Native.Tuple" in
-  let n_prefix = String.length prefix in // + 1 in
-  U.starts_with s prefix &&
-  String.length s > n_prefix &&
-  U.starts_with (U.substring_from s n_prefix) "Mktuple"
+let is_tuple_datacon_string (s:string) : bool = is_tuple_name s "Mktuple"
 
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)

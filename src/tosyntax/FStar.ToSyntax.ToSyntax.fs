@@ -143,7 +143,7 @@ let op_as_term env arity rng op : option<S.term> =
     | "||" ->
       r C.op_Or delta_equational
     | "+" ->
-      r C.op_Addition delta_equational
+      r C.op_Addition_lid delta_equational
     | "-" when (arity=1) ->
       r C.op_Minus delta_equational
     | "-" ->

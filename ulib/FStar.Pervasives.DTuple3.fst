@@ -1,4 +1,4 @@
-module FStar.Pervasives.Native.DTuple3
+module FStar.Pervasives.DTuple3
 open Prims
 (* Concrete syntax (x:a & y:b x & c x y) *)
 unopteq type dtuple3 (a:Type)

@@ -391,15 +391,14 @@ let hard_coded_dependencies full_filename =
   (* The core libraries do not have any implicit dependencies *)
   if List.mem filename corelibs
   || BU.starts_with (module_name_of_file filename) "FStar.Pervasives"
-  then (printfn "Skipping implicit deps for %s (%s)" (module_name_of_file filename) filename; [])
-  else (printfn "RETAINING implicit deps for %s (%s)" (module_name_of_file filename) filename;
-        let implicit_deps =
+  then []
+  else let implicit_deps =
            [ (Const.fstar_ns_lid, Open_namespace);
              (Const.prims_lid, Open_module);
              (Const.pervasives_lid, Open_module) ] in
        match (namespace_of_module (lowercase_module_name full_filename)) with
        | None -> implicit_deps
-       | Some ns -> implicit_deps @ [(ns, Open_namespace)])
+       | Some ns -> implicit_deps @ [(ns, Open_namespace)]
 
 let dep_subsumed_by d d' =
       match d, d' with
@@ -520,7 +519,6 @@ let collect_one
     | [] -> ()
     | _ ->
       let module_name = Ident.lid_of_ids lid.ns in
-      printfn "Adding dependence on mdodule %s" (Ident.string_of_lid module_name);
       add_dep_on_module module_name
   in
 
@@ -677,8 +675,7 @@ let collect_one
     | Name lid ->
         record_lid lid
     | Construct (lid, termimps) ->
-        if List.length termimps = 1 then
-          record_lid lid;
+        record_lid lid;
         List.iter (fun (t, _) -> collect_term t) termimps
     | Abs (pats, t) ->
         collect_patterns pats;
