@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module LowStar.BufferView
+open FStar.Pervasives.DTuple4
 
 noeq
 type buffer_view (a:Type0) (rrel rel:B.srel a) (b:Type u#b) : Type0 =

@@ -903,7 +903,7 @@ let mul_wide_high (x y: U64.t) =
     (phl x y + pll_h x y) / pow2 32 +
     (plh x y + (phl x y + pll_h x y) % pow2 32) / pow2 32
 
-let mul_wide_impl_t' (x y: U64.t) : Pure (tuple4 U64.t U64.t U64.t U64.t)
+let mul_wide_impl_t' (x y: U64.t) : Pure (U64.t & U64.t & U64.t & U64.t)
   (requires True)
   (ensures (fun r -> let (u1, w3, x', t') = r in
     U64.v u1 == U64.v x % pow2 32 /\

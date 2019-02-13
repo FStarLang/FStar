@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module LowStar.BufferView
-
+open FStar.Pervasives.DTuple4
 (**
  * A "view" on a buffer allows treating a
  * `Buffer.buffer a` as a
