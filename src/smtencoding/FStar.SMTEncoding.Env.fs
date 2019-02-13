@@ -28,6 +28,7 @@ open FStar.TypeChecker
 open FStar.SMTEncoding.Term
 open FStar.Ident
 open FStar.SMTEncoding.Util
+open FStar.Syntax
 
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util
@@ -69,7 +70,8 @@ type varops_t = {
     rollback: option<int> -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
-    fresh:string -> string;
+    fresh:string -> string -> string;
+    reset_fresh:unit -> unit;
     string_const:string -> term;
     next_id: unit -> int;
     mk_unique:string -> string;
@@ -89,7 +91,8 @@ let varops =
     let new_var pp rn = mk_unique <| pp.idText ^ "__" ^ (string_of_int rn) in
     let new_fvar lid = mk_unique lid.str in
     let next_id () = BU.incr ctr; !ctr in
-    let fresh pfx = BU.format2 "%s_%s" pfx (string_of_int <| next_id()) in
+    let fresh mname pfx = BU.format3 "%s_%s_%s" mname pfx (string_of_int <| next_id()) in
+    let reset_fresh () = ctr := initial_ctr in
     let string_const s = match BU.find_map !scopes (fun (_, strings) -> BU.smap_try_find strings s) with
         | Some f -> f
         | None ->
@@ -109,6 +112,7 @@ let varops =
      new_var=new_var;
      new_fvar=new_fvar;
      fresh=fresh;
+     reset_fresh=reset_fresh;
      string_const=string_const;
      next_id=next_id;
      mk_unique=mk_unique}
@@ -180,7 +184,7 @@ let add_bvar_binding bvb bvbs =
 let add_fvar_binding fvb (fvb_map, fvb_list) =
   (BU.psmap_add fvb_map fvb.fvar_lid.str fvb, fvb::fvb_list)
 
-let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV <| mk_fv (xsym, s)
+let fresh_fvar mname x s = let xsym = varops.fresh mname x in xsym, mkFreeV <| mk_fv (xsym, s)
 (* generate terms corresponding to a variable and record the mapping in the environment *)
 
 (* Bound term variables *)

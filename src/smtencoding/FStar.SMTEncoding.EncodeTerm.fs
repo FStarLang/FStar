@@ -47,11 +47,11 @@ open FStar.SMTEncoding.Env
 (*---------------------------------------------------------------------------------*)
 (* <Utilities> *)
 
-let mkForall_fuel' r n (pats, vars, body) =
+let mkForall_fuel' mname r n (pats, vars, body) =
     let fallback () = mkForall r (pats, vars, body) in
     if (Options.unthrottle_inductives())
     then fallback ()
-    else let fsym, fterm = fresh_fvar "f" Fuel_sort in
+    else let fsym, fterm = fresh_fvar mname "f" Fuel_sort in
          let add_fuel tms =
             tms |> List.map (fun p -> match p.tm with
             | Term.App(Var "HasType", args) -> mkApp("HasTypeFuel", fterm::args)
@@ -67,7 +67,7 @@ let mkForall_fuel' r n (pats, vars, body) =
          let vars = mk_fv (fsym, Fuel_sort)::vars in
          mkForall r (pats, vars, body)
 
-let mkForall_fuel r = mkForall_fuel' r 1
+let mkForall_fuel mname r = mkForall_fuel' mname r 1
 
 let head_normal env t =
    let t = U.unmeta t in
@@ -622,7 +622,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              && U.is_pure_or_ghost_comp res)
              || U.is_tot_or_gtot_comp res
         then let vars, guards, env', decls, _ = encode_binders None binders env in
-             let fsym = mk_fv (varops.fresh "f", Term_sort) in
+             let fsym = mk_fv (varops.fresh module_name "f", Term_sort) in
              let f = mkFreeV  fsym in
              let app = mk_Apply f vars in
              let pre_opt, res_t = TcUtil.pure_or_ghost_pre_and_post ({env.tcenv with lax=true}) res in
@@ -661,7 +661,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let f_has_t_z = mk_HasTypeZ f t in
              let pre_typing =
              let a_name = "pre_typing_"^tsym in
-             Util.mkAssume(mkForall_fuel t0.pos ([[f_has_t]], fsym::cvars,
+             Util.mkAssume(mkForall_fuel module_name t0.pos ([[f_has_t]], fsym::cvars,
                            mkImp(f_has_t, mk_tester "Tm_arrow" (mk_PreType f))),
                            Some "pre-typing for functions",
                            module_name ^ "_" ^ a_name) in
@@ -676,25 +676,25 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
              t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
-        else let tsym = varops.fresh (module_name ^ "_Non_total_Tm_arrow") in
+        else let tsym = varops.fresh module_name "Non_total_Tm_arrow" in
              let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
              let t = mkApp(tsym, []) in
              let t_kinding =
                 let a_name = "non_total_function_typing_" ^tsym in
                 Util.mkAssume(mk_HasType t mk_Term_type,
                             Some "Typing for non-total arrows",
-                            module_name ^ "_" ^a_name) in
+                            a_name) in
              let fsym = mk_fv ("f", Term_sort) in
              let f = mkFreeV fsym in
              let f_has_t = mk_HasType f t in
              let t_interp =
                  let a_name = "pre_typing_" ^tsym in
-                 Util.mkAssume(mkForall_fuel t0.pos ([[f_has_t]],
-                                                     [fsym],
-                                                     mkImp(f_has_t,
-                                                           mk_tester "Tm_arrow" (mk_PreType f))),
-                             Some a_name,
-                             module_name ^ "_" ^ a_name) in
+                 Util.mkAssume(mkForall_fuel module_name t0.pos ([[f_has_t]],
+                                                                 [fsym],
+                                                                 mkImp(f_has_t,
+                                                                 mk_tester "Tm_arrow" (mk_PreType f))),
+                              Some a_name,
+                              a_name) in
 
              t, [tdecl; t_kinding; t_interp] |> mk_decls_trivial (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
@@ -709,7 +709,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let x, xtm, env' = gen_term_var env x in
         let refinement, decls' = encode_formula f env' in
 
-        let fsym, fterm = fresh_fvar "f" Fuel_sort in
+        let fsym, fterm = fresh_fvar env.current_module_name "f" Fuel_sort in
 
         let tm_has_type_with_fuel = mk_HasTypeWithFuel (Some fterm) xtm base_t in
 
@@ -892,7 +892,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_abs(bs, body, lopt) ->
           let bs, body, opening = SS.open_term' bs body in
           let fallback () =
-            let f = varops.fresh (env.current_module_name ^ "_Tm_abs") in
+            let f = varops.fresh env.current_module_name "Tm_abs" in
             let decl = Term.DeclFun(f, [], Term_sort, Some "Imprecise function encoding") in
             mkFreeV <| mk_fv (f, Term_sort), [decl] |> mk_decls_trivial
           in

@@ -54,9 +54,10 @@ type prims_t = {
 
 
 let prims =
-    let asym, a = fresh_fvar "a" Term_sort in
-    let xsym, x = fresh_fvar "x" Term_sort in
-    let ysym, y = fresh_fvar "y" Term_sort in
+    let module_name = "Prims" in
+    let asym, a = fresh_fvar module_name "a" Term_sort in
+    let xsym, x = fresh_fvar module_name "x" Term_sort in
+    let ysym, y = fresh_fvar module_name "y" Term_sort in
     let quant vars body : Range.range -> string -> term * int * list<decl> = fun rng x ->
         let xname_decl = Term.DeclFun(x, vars |> List.map fv_sort, Term_sort, None) in
         let xtok = x ^ "@tok" in
@@ -108,8 +109,8 @@ let prims =
      is=is}
 
 let pretype_axiom rng env tapp vars =
-    let xxsym, xx = fresh_fvar "x" Term_sort in
-    let ffsym, ff = fresh_fvar "f" Fuel_sort in
+    let xxsym, xx = fresh_fvar env.current_module_name "x" Term_sort in
+    let ffsym, ff = fresh_fvar env.current_module_name "f" Fuel_sort in
     let xx_has_type = mk_HasTypeFuel ff xx tapp in
     let tapp_hash = Term.hash_of_term tapp in
     let module_name = env.current_module_name in
@@ -125,10 +126,12 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
     let yy = mk_fv ("y", Term_sort) in
     let y = mkFreeV yy in
 
+    let mkForall_fuel env = mkForall_fuel (Ident.string_of_lid (Env.current_module env)) in
+
     let mk_unit : env -> string -> term -> list<decl> = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         [Util.mkAssume(mk_HasType mk_Term_unit tt, Some "unit typing", "unit_typing");
-         Util.mkAssume(mkForall_fuel (Env.get_range env)
+         Util.mkAssume(mkForall_fuel env (Env.get_range env)
                                      ([[typing_pred]], [xx], mkImp(typing_pred, mkEq(x, mk_Term_unit))),  Some "unit inversion", "unit_inversion");] in
     let mk_bool : env -> string -> term -> list<decl> = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
@@ -136,7 +139,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let b = mkFreeV bb in
         [Util.mkAssume(mkForall (Env.get_range env)
                                 ([[Term.boxBool b]], [bb], mk_HasType (Term.boxBool b) tt), Some "bool typing", "bool_typing");
-         Util.mkAssume(mkForall_fuel (Env.get_range env)
+         Util.mkAssume(mkForall_fuel env (Env.get_range env)
                                      ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxBoolFun) x)), Some "bool inversion", "bool_inversion")] in
     let mk_int : env -> string -> term -> list<decl>  = fun env nm tt ->
         let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
@@ -148,8 +151,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let b = mkFreeV bb in
         let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [lex_t; lex_t;y;x]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[Term.boxInt b]], [bb], mk_HasType (Term.boxInt b) tt), Some "int typing", "int_typing");
-         Util.mkAssume(mkForall_fuel (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxIntFun) x)), Some "int inversion", "int_inversion");
-         Util.mkAssume(mkForall_fuel (Env.get_range env) ([[typing_pred; typing_pred_y;precedes_y_x]],
+         Util.mkAssume(mkForall_fuel env (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxIntFun) x)), Some "int inversion", "int_inversion");
+         Util.mkAssume(mkForall_fuel env (Env.get_range env) ([[typing_pred; typing_pred_y;precedes_y_x]],
                                    [xx;yy],
                                    mkImp(mk_and_l [typing_pred;
                                                    typing_pred_y;
@@ -163,7 +166,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let bb = mk_fv ("b", String_sort) in
         let b = mkFreeV bb in
         [Util.mkAssume(mkForall (Env.get_range env) ([[Term.boxString b]], [bb], mk_HasType (Term.boxString b) tt), Some "string typing", "string_typing");
-         Util.mkAssume(mkForall_fuel (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxStringFun) x)),  Some "string inversion", "string_inversion")] in
+         Util.mkAssume(mkForall_fuel env (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxStringFun) x)),  Some "string inversion", "string_inversion")] in
     let mk_true_interp : env -> string -> term -> list<decl> = fun env nm true_tm ->
         let valid = mkApp("Valid", [true_tm]) in
         [Util.mkAssume(valid, Some "True interpretation", "true_interp")] in
@@ -730,7 +733,7 @@ let encode_top_level_let :
                               (env:env_t) =
           (* encoding recursive definitions using fuel to throttle unfoldings *)
           (* We create a new variable corresponding to the current fuel *)
-          let fuel = mk_fv (varops.fresh "fuel", Fuel_sort) in
+          let fuel = mk_fv (varops.fresh env.current_module_name "fuel", Fuel_sort) in
           let fuel_tm = mkFreeV fuel in
           let env0 = env in
           (* For each declaration, we push in the environment its fuel-guarded copy (using current fuel) *)
@@ -1090,7 +1093,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
             then []
             else
-                 let xxsym, xx = fresh_fvar "x" Term_sort in
+                 let xxsym, xx = fresh_fvar env.current_module_name "x" Term_sort in
                  let data_ax, decls = datas |> List.fold_left (fun (out, decls) l ->
                     let _, data_t = Env.lookup_datacon env.tcenv l in
                     let args, res = U.arrow_formals data_t in
@@ -1105,7 +1108,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     then failwith "Impossible";
                     let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices |> mk_and_l in
                     mkOr(out, mkAnd(mk_data_tester env l xx, eqs)), decls@decls') (mkFalse, []) in
-                let ffsym, ff = fresh_fvar "f" Fuel_sort in
+                let ffsym, ff = fresh_fvar env.current_module_name "f" Fuel_sort in
                 let fuel_guarded_inversion =
                     let xx_has_type_sfuel =
                         if List.length datas > 1
@@ -1185,7 +1188,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let arity = List.length formals in
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
         let ddtok_tm = mkApp(ddtok, []) in
-        let fuel_var, fuel_tm = fresh_fvar "f" Fuel_sort in
+        let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
         let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
         let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
         let fields = names |> List.mapi (fun n x ->
@@ -1284,7 +1287,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   let subterm_ordering =
                     let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
                     if lid_equals d Const.lextop_lid
-                    then let x = mk_fv (varops.fresh "x", Term_sort) in
+                    then let x = mk_fv (varops.fresh env.current_module_name "x", Term_sort) in
                          let xtm = mkFreeV x in
                          Util.mkAssume(mkForall (Ident.range_of_lid d)
                                                 ([[mk_Precedes lex_t lex_t xtm dapp]], [x], mkImp(mk_tester "LexCons" xtm, mk_Precedes lex_t lex_t xtm dapp)),
@@ -1522,7 +1525,8 @@ let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) :unit
 
 let encode_modul tcenv modul =
   if Options.lax() && Options.ml_ish() then [], []
-  else
+  else begin
+    varops.reset_fresh ();
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
     if Env.debug tcenv Options.Medium
     then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
@@ -1536,6 +1540,7 @@ let encode_modul tcenv modul =
     give_decls_to_z3_and_set_env env name decls;
     if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
     decls, env |> get_current_module_fvbs
+  end
 
 let encode_modul_from_cache tcenv name (decls, fvbs) =
   if Options.lax () && Options.ml_ish () then ()
