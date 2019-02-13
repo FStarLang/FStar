@@ -271,7 +271,7 @@ let (varops : varops_t) =
     let uu____2028 =
       let uu____2030 = next_id1 ()  in
       FStar_All.pipe_left Prims.string_of_int uu____2030  in
-    FStar_Util.format3 "%s_%s_%s" mname pfx uu____2028  in
+    FStar_Util.format3 "%s_%s_%s" pfx mname uu____2028  in
   let reset_fresh uu____2040 = FStar_ST.op_Colon_Equals ctr initial_ctr  in
   let string_const s =
     let uu____2092 =
