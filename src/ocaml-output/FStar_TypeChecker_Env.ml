@@ -5067,15 +5067,17 @@ let (lidents : env -> FStar_Ident.lident Prims.list) =
 let (should_enc_path : env -> Prims.string Prims.list -> Prims.bool) =
   fun env  ->
     fun path  ->
-      let rec list_prefix xs ys =
+      let rec str_i_prefix xs ys =
         match (xs, ys) with
         | ([],uu____23754) -> true
-        | (x::xs1,y::ys1) -> (x = y) && (list_prefix xs1 ys1)
+        | (x::xs1,y::ys1) ->
+            ((FStar_String.lowercase x) = (FStar_String.lowercase y)) &&
+              (str_i_prefix xs1 ys1)
         | (uu____23787,uu____23788) -> false  in
       let uu____23802 =
         FStar_List.tryFind
           (fun uu____23824  ->
-             match uu____23824 with | (p,uu____23835) -> list_prefix p path)
+             match uu____23824 with | (p,uu____23835) -> str_i_prefix p path)
           env.proof_ns
          in
       match uu____23802 with
