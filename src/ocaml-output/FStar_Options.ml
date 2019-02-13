@@ -285,7 +285,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("print", (Bool false));
   ("print_in_place", (Bool false));
   ("profile", (Bool false));
-  ("protect_top_level_axioms", (Bool false));
+  ("protect_top_level_axioms", (Bool true));
   ("initial_fuel", (Int (Prims.parse_int "2")));
   ("initial_ifuel", (Int (Prims.parse_int "1")));
   ("keep_query_captions", (Bool true));
