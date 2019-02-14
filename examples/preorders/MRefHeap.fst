@@ -25,8 +25,8 @@ let preorder_t (a:Type0) = r:preorder a
 let heap_cell_a (a:Type0) = a * preorder_t a
 let heap_cell = (a:Type0 & heap_cell_a a)
 abstract type heap = h:(nat * (nat -> Tot (option heap_cell)))
-		       {(forall (n:nat) . n < fst h ==> (exists v . snd h n == Some v)) /\
-			(forall (n:nat) . n >= fst h ==> snd h n == None)}
+		       {(forall (n:nat) . n < fst h ==> Some? (snd h n)) /\
+			(forall (n:nat) . n >= fst h ==> None? (snd h n))}
 
 (* References. *)
 
