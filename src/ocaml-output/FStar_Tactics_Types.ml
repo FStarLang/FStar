@@ -37,89 +37,89 @@ let (__proj__Mkgoal__item__label : goal -> Prims.string) =
   
 let (goal_env : goal -> FStar_TypeChecker_Env.env) =
   fun g  ->
-    let uu___32_102 = g.goal_main_env  in
+    let uu___11_102 = g.goal_main_env  in
     {
       FStar_TypeChecker_Env.solver =
-        (uu___32_102.FStar_TypeChecker_Env.solver);
-      FStar_TypeChecker_Env.range = (uu___32_102.FStar_TypeChecker_Env.range);
+        (uu___11_102.FStar_TypeChecker_Env.solver);
+      FStar_TypeChecker_Env.range = (uu___11_102.FStar_TypeChecker_Env.range);
       FStar_TypeChecker_Env.curmodule =
-        (uu___32_102.FStar_TypeChecker_Env.curmodule);
+        (uu___11_102.FStar_TypeChecker_Env.curmodule);
       FStar_TypeChecker_Env.gamma =
         ((g.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_gamma);
       FStar_TypeChecker_Env.gamma_sig =
-        (uu___32_102.FStar_TypeChecker_Env.gamma_sig);
+        (uu___11_102.FStar_TypeChecker_Env.gamma_sig);
       FStar_TypeChecker_Env.gamma_cache =
-        (uu___32_102.FStar_TypeChecker_Env.gamma_cache);
+        (uu___11_102.FStar_TypeChecker_Env.gamma_cache);
       FStar_TypeChecker_Env.modules =
-        (uu___32_102.FStar_TypeChecker_Env.modules);
+        (uu___11_102.FStar_TypeChecker_Env.modules);
       FStar_TypeChecker_Env.expected_typ =
-        (uu___32_102.FStar_TypeChecker_Env.expected_typ);
+        (uu___11_102.FStar_TypeChecker_Env.expected_typ);
       FStar_TypeChecker_Env.sigtab =
-        (uu___32_102.FStar_TypeChecker_Env.sigtab);
+        (uu___11_102.FStar_TypeChecker_Env.sigtab);
       FStar_TypeChecker_Env.attrtab =
-        (uu___32_102.FStar_TypeChecker_Env.attrtab);
+        (uu___11_102.FStar_TypeChecker_Env.attrtab);
       FStar_TypeChecker_Env.is_pattern =
-        (uu___32_102.FStar_TypeChecker_Env.is_pattern);
+        (uu___11_102.FStar_TypeChecker_Env.is_pattern);
       FStar_TypeChecker_Env.instantiate_imp =
-        (uu___32_102.FStar_TypeChecker_Env.instantiate_imp);
+        (uu___11_102.FStar_TypeChecker_Env.instantiate_imp);
       FStar_TypeChecker_Env.effects =
-        (uu___32_102.FStar_TypeChecker_Env.effects);
+        (uu___11_102.FStar_TypeChecker_Env.effects);
       FStar_TypeChecker_Env.generalize =
-        (uu___32_102.FStar_TypeChecker_Env.generalize);
+        (uu___11_102.FStar_TypeChecker_Env.generalize);
       FStar_TypeChecker_Env.letrecs =
-        (uu___32_102.FStar_TypeChecker_Env.letrecs);
+        (uu___11_102.FStar_TypeChecker_Env.letrecs);
       FStar_TypeChecker_Env.top_level =
-        (uu___32_102.FStar_TypeChecker_Env.top_level);
+        (uu___11_102.FStar_TypeChecker_Env.top_level);
       FStar_TypeChecker_Env.check_uvars =
-        (uu___32_102.FStar_TypeChecker_Env.check_uvars);
+        (uu___11_102.FStar_TypeChecker_Env.check_uvars);
       FStar_TypeChecker_Env.use_eq =
-        (uu___32_102.FStar_TypeChecker_Env.use_eq);
+        (uu___11_102.FStar_TypeChecker_Env.use_eq);
       FStar_TypeChecker_Env.is_iface =
-        (uu___32_102.FStar_TypeChecker_Env.is_iface);
-      FStar_TypeChecker_Env.admit = (uu___32_102.FStar_TypeChecker_Env.admit);
-      FStar_TypeChecker_Env.lax = (uu___32_102.FStar_TypeChecker_Env.lax);
+        (uu___11_102.FStar_TypeChecker_Env.is_iface);
+      FStar_TypeChecker_Env.admit = (uu___11_102.FStar_TypeChecker_Env.admit);
+      FStar_TypeChecker_Env.lax = (uu___11_102.FStar_TypeChecker_Env.lax);
       FStar_TypeChecker_Env.lax_universes =
-        (uu___32_102.FStar_TypeChecker_Env.lax_universes);
+        (uu___11_102.FStar_TypeChecker_Env.lax_universes);
       FStar_TypeChecker_Env.phase1 =
-        (uu___32_102.FStar_TypeChecker_Env.phase1);
+        (uu___11_102.FStar_TypeChecker_Env.phase1);
       FStar_TypeChecker_Env.failhard =
-        (uu___32_102.FStar_TypeChecker_Env.failhard);
+        (uu___11_102.FStar_TypeChecker_Env.failhard);
       FStar_TypeChecker_Env.nosynth =
-        (uu___32_102.FStar_TypeChecker_Env.nosynth);
+        (uu___11_102.FStar_TypeChecker_Env.nosynth);
       FStar_TypeChecker_Env.uvar_subtyping =
-        (uu___32_102.FStar_TypeChecker_Env.uvar_subtyping);
+        (uu___11_102.FStar_TypeChecker_Env.uvar_subtyping);
       FStar_TypeChecker_Env.tc_term =
-        (uu___32_102.FStar_TypeChecker_Env.tc_term);
+        (uu___11_102.FStar_TypeChecker_Env.tc_term);
       FStar_TypeChecker_Env.type_of =
-        (uu___32_102.FStar_TypeChecker_Env.type_of);
+        (uu___11_102.FStar_TypeChecker_Env.type_of);
       FStar_TypeChecker_Env.universe_of =
-        (uu___32_102.FStar_TypeChecker_Env.universe_of);
+        (uu___11_102.FStar_TypeChecker_Env.universe_of);
       FStar_TypeChecker_Env.check_type_of =
-        (uu___32_102.FStar_TypeChecker_Env.check_type_of);
+        (uu___11_102.FStar_TypeChecker_Env.check_type_of);
       FStar_TypeChecker_Env.use_bv_sorts =
-        (uu___32_102.FStar_TypeChecker_Env.use_bv_sorts);
+        (uu___11_102.FStar_TypeChecker_Env.use_bv_sorts);
       FStar_TypeChecker_Env.qtbl_name_and_index =
-        (uu___32_102.FStar_TypeChecker_Env.qtbl_name_and_index);
+        (uu___11_102.FStar_TypeChecker_Env.qtbl_name_and_index);
       FStar_TypeChecker_Env.normalized_eff_names =
-        (uu___32_102.FStar_TypeChecker_Env.normalized_eff_names);
+        (uu___11_102.FStar_TypeChecker_Env.normalized_eff_names);
       FStar_TypeChecker_Env.fv_delta_depths =
-        (uu___32_102.FStar_TypeChecker_Env.fv_delta_depths);
+        (uu___11_102.FStar_TypeChecker_Env.fv_delta_depths);
       FStar_TypeChecker_Env.proof_ns =
-        (uu___32_102.FStar_TypeChecker_Env.proof_ns);
+        (uu___11_102.FStar_TypeChecker_Env.proof_ns);
       FStar_TypeChecker_Env.synth_hook =
-        (uu___32_102.FStar_TypeChecker_Env.synth_hook);
+        (uu___11_102.FStar_TypeChecker_Env.synth_hook);
       FStar_TypeChecker_Env.splice =
-        (uu___32_102.FStar_TypeChecker_Env.splice);
+        (uu___11_102.FStar_TypeChecker_Env.splice);
       FStar_TypeChecker_Env.postprocess =
-        (uu___32_102.FStar_TypeChecker_Env.postprocess);
+        (uu___11_102.FStar_TypeChecker_Env.postprocess);
       FStar_TypeChecker_Env.is_native_tactic =
-        (uu___32_102.FStar_TypeChecker_Env.is_native_tactic);
+        (uu___11_102.FStar_TypeChecker_Env.is_native_tactic);
       FStar_TypeChecker_Env.identifier_info =
-        (uu___32_102.FStar_TypeChecker_Env.identifier_info);
+        (uu___11_102.FStar_TypeChecker_Env.identifier_info);
       FStar_TypeChecker_Env.tc_hooks =
-        (uu___32_102.FStar_TypeChecker_Env.tc_hooks);
-      FStar_TypeChecker_Env.dsenv = (uu___32_102.FStar_TypeChecker_Env.dsenv);
-      FStar_TypeChecker_Env.nbe = (uu___32_102.FStar_TypeChecker_Env.nbe)
+        (uu___11_102.FStar_TypeChecker_Env.tc_hooks);
+      FStar_TypeChecker_Env.dsenv = (uu___11_102.FStar_TypeChecker_Env.dsenv);
+      FStar_TypeChecker_Env.nbe = (uu___11_102.FStar_TypeChecker_Env.nbe)
     }
   
 let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
@@ -136,31 +136,31 @@ let (goal_with_type : goal -> FStar_Syntax_Syntax.term -> goal) =
     fun t  ->
       let c = g.goal_ctx_uvar  in
       let c' =
-        let uu___33_142 = c  in
+        let uu___12_142 = c  in
         {
           FStar_Syntax_Syntax.ctx_uvar_head =
-            (uu___33_142.FStar_Syntax_Syntax.ctx_uvar_head);
+            (uu___12_142.FStar_Syntax_Syntax.ctx_uvar_head);
           FStar_Syntax_Syntax.ctx_uvar_gamma =
-            (uu___33_142.FStar_Syntax_Syntax.ctx_uvar_gamma);
+            (uu___12_142.FStar_Syntax_Syntax.ctx_uvar_gamma);
           FStar_Syntax_Syntax.ctx_uvar_binders =
-            (uu___33_142.FStar_Syntax_Syntax.ctx_uvar_binders);
+            (uu___12_142.FStar_Syntax_Syntax.ctx_uvar_binders);
           FStar_Syntax_Syntax.ctx_uvar_typ = t;
           FStar_Syntax_Syntax.ctx_uvar_reason =
-            (uu___33_142.FStar_Syntax_Syntax.ctx_uvar_reason);
+            (uu___12_142.FStar_Syntax_Syntax.ctx_uvar_reason);
           FStar_Syntax_Syntax.ctx_uvar_should_check =
-            (uu___33_142.FStar_Syntax_Syntax.ctx_uvar_should_check);
+            (uu___12_142.FStar_Syntax_Syntax.ctx_uvar_should_check);
           FStar_Syntax_Syntax.ctx_uvar_range =
-            (uu___33_142.FStar_Syntax_Syntax.ctx_uvar_range);
+            (uu___12_142.FStar_Syntax_Syntax.ctx_uvar_range);
           FStar_Syntax_Syntax.ctx_uvar_meta =
-            (uu___33_142.FStar_Syntax_Syntax.ctx_uvar_meta)
+            (uu___12_142.FStar_Syntax_Syntax.ctx_uvar_meta)
         }  in
-      let uu___34_143 = g  in
+      let uu___13_143 = g  in
       {
-        goal_main_env = (uu___34_143.goal_main_env);
+        goal_main_env = (uu___13_143.goal_main_env);
         goal_ctx_uvar = c';
-        opts = (uu___34_143.opts);
-        is_guard = (uu___34_143.is_guard);
-        label = (uu___34_143.label)
+        opts = (uu___13_143.opts);
+        is_guard = (uu___13_143.is_guard);
+        label = (uu___13_143.label)
       }
   
 let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
@@ -168,32 +168,32 @@ let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
     fun env  ->
       let c = g.goal_ctx_uvar  in
       let c' =
-        let uu___35_157 = c  in
+        let uu___14_157 = c  in
         let uu____158 = FStar_TypeChecker_Env.all_binders env  in
         {
           FStar_Syntax_Syntax.ctx_uvar_head =
-            (uu___35_157.FStar_Syntax_Syntax.ctx_uvar_head);
+            (uu___14_157.FStar_Syntax_Syntax.ctx_uvar_head);
           FStar_Syntax_Syntax.ctx_uvar_gamma =
             (env.FStar_TypeChecker_Env.gamma);
           FStar_Syntax_Syntax.ctx_uvar_binders = uu____158;
           FStar_Syntax_Syntax.ctx_uvar_typ =
-            (uu___35_157.FStar_Syntax_Syntax.ctx_uvar_typ);
+            (uu___14_157.FStar_Syntax_Syntax.ctx_uvar_typ);
           FStar_Syntax_Syntax.ctx_uvar_reason =
-            (uu___35_157.FStar_Syntax_Syntax.ctx_uvar_reason);
+            (uu___14_157.FStar_Syntax_Syntax.ctx_uvar_reason);
           FStar_Syntax_Syntax.ctx_uvar_should_check =
-            (uu___35_157.FStar_Syntax_Syntax.ctx_uvar_should_check);
+            (uu___14_157.FStar_Syntax_Syntax.ctx_uvar_should_check);
           FStar_Syntax_Syntax.ctx_uvar_range =
-            (uu___35_157.FStar_Syntax_Syntax.ctx_uvar_range);
+            (uu___14_157.FStar_Syntax_Syntax.ctx_uvar_range);
           FStar_Syntax_Syntax.ctx_uvar_meta =
-            (uu___35_157.FStar_Syntax_Syntax.ctx_uvar_meta)
+            (uu___14_157.FStar_Syntax_Syntax.ctx_uvar_meta)
         }  in
-      let uu___36_167 = g  in
+      let uu___15_167 = g  in
       {
         goal_main_env = env;
         goal_ctx_uvar = c';
-        opts = (uu___36_167.opts);
-        is_guard = (uu___36_167.is_guard);
-        label = (uu___36_167.label)
+        opts = (uu___15_167.opts);
+        is_guard = (uu___15_167.is_guard);
+        label = (uu___15_167.label)
       }
   
 let (mk_goal :
@@ -219,7 +219,7 @@ let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
     fun goal  ->
       let g = goal.goal_ctx_uvar  in
       let ctx_uvar =
-        let uu___37_215 = g  in
+        let uu___16_215 = g  in
         let uu____216 =
           FStar_TypeChecker_Env.rename_gamma subst1
             g.FStar_Syntax_Syntax.ctx_uvar_gamma
@@ -229,27 +229,27 @@ let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
            in
         {
           FStar_Syntax_Syntax.ctx_uvar_head =
-            (uu___37_215.FStar_Syntax_Syntax.ctx_uvar_head);
+            (uu___16_215.FStar_Syntax_Syntax.ctx_uvar_head);
           FStar_Syntax_Syntax.ctx_uvar_gamma = uu____216;
           FStar_Syntax_Syntax.ctx_uvar_binders =
-            (uu___37_215.FStar_Syntax_Syntax.ctx_uvar_binders);
+            (uu___16_215.FStar_Syntax_Syntax.ctx_uvar_binders);
           FStar_Syntax_Syntax.ctx_uvar_typ = uu____219;
           FStar_Syntax_Syntax.ctx_uvar_reason =
-            (uu___37_215.FStar_Syntax_Syntax.ctx_uvar_reason);
+            (uu___16_215.FStar_Syntax_Syntax.ctx_uvar_reason);
           FStar_Syntax_Syntax.ctx_uvar_should_check =
-            (uu___37_215.FStar_Syntax_Syntax.ctx_uvar_should_check);
+            (uu___16_215.FStar_Syntax_Syntax.ctx_uvar_should_check);
           FStar_Syntax_Syntax.ctx_uvar_range =
-            (uu___37_215.FStar_Syntax_Syntax.ctx_uvar_range);
+            (uu___16_215.FStar_Syntax_Syntax.ctx_uvar_range);
           FStar_Syntax_Syntax.ctx_uvar_meta =
-            (uu___37_215.FStar_Syntax_Syntax.ctx_uvar_meta)
+            (uu___16_215.FStar_Syntax_Syntax.ctx_uvar_meta)
         }  in
-      let uu___38_222 = goal  in
+      let uu___17_222 = goal  in
       {
-        goal_main_env = (uu___38_222.goal_main_env);
+        goal_main_env = (uu___17_222.goal_main_env);
         goal_ctx_uvar = ctx_uvar;
-        opts = (uu___38_222.opts);
-        is_guard = (uu___38_222.is_guard);
-        label = (uu___38_222.label)
+        opts = (uu___17_222.opts);
+        is_guard = (uu___17_222.is_guard);
+        label = (uu___17_222.label)
       }
   
 type guard_policy =
@@ -387,61 +387,61 @@ let (subst_proof_state :
       if uu____852
       then ps
       else
-        (let uu___39_857 = ps  in
+        (let uu___18_857 = ps  in
          let uu____858 = subst_goal subst1 ps.main_goal  in
          let uu____859 = FStar_List.map (subst_goal subst1) ps.goals  in
          {
-           main_context = (uu___39_857.main_context);
+           main_context = (uu___18_857.main_context);
            main_goal = uu____858;
-           all_implicits = (uu___39_857.all_implicits);
+           all_implicits = (uu___18_857.all_implicits);
            goals = uu____859;
-           smt_goals = (uu___39_857.smt_goals);
-           depth = (uu___39_857.depth);
-           __dump = (uu___39_857.__dump);
-           psc = (uu___39_857.psc);
-           entry_range = (uu___39_857.entry_range);
-           guard_policy = (uu___39_857.guard_policy);
-           freshness = (uu___39_857.freshness);
-           tac_verb_dbg = (uu___39_857.tac_verb_dbg);
-           local_state = (uu___39_857.local_state)
+           smt_goals = (uu___18_857.smt_goals);
+           depth = (uu___18_857.depth);
+           __dump = (uu___18_857.__dump);
+           psc = (uu___18_857.psc);
+           entry_range = (uu___18_857.entry_range);
+           guard_policy = (uu___18_857.guard_policy);
+           freshness = (uu___18_857.freshness);
+           tac_verb_dbg = (uu___18_857.tac_verb_dbg);
+           local_state = (uu___18_857.local_state)
          })
   
 let (decr_depth : proofstate -> proofstate) =
   fun ps  ->
-    let uu___40_868 = ps  in
+    let uu___19_868 = ps  in
     {
-      main_context = (uu___40_868.main_context);
-      main_goal = (uu___40_868.main_goal);
-      all_implicits = (uu___40_868.all_implicits);
-      goals = (uu___40_868.goals);
-      smt_goals = (uu___40_868.smt_goals);
+      main_context = (uu___19_868.main_context);
+      main_goal = (uu___19_868.main_goal);
+      all_implicits = (uu___19_868.all_implicits);
+      goals = (uu___19_868.goals);
+      smt_goals = (uu___19_868.smt_goals);
       depth = (ps.depth - (Prims.parse_int "1"));
-      __dump = (uu___40_868.__dump);
-      psc = (uu___40_868.psc);
-      entry_range = (uu___40_868.entry_range);
-      guard_policy = (uu___40_868.guard_policy);
-      freshness = (uu___40_868.freshness);
-      tac_verb_dbg = (uu___40_868.tac_verb_dbg);
-      local_state = (uu___40_868.local_state)
+      __dump = (uu___19_868.__dump);
+      psc = (uu___19_868.psc);
+      entry_range = (uu___19_868.entry_range);
+      guard_policy = (uu___19_868.guard_policy);
+      freshness = (uu___19_868.freshness);
+      tac_verb_dbg = (uu___19_868.tac_verb_dbg);
+      local_state = (uu___19_868.local_state)
     }
   
 let (incr_depth : proofstate -> proofstate) =
   fun ps  ->
-    let uu___41_876 = ps  in
+    let uu___20_876 = ps  in
     {
-      main_context = (uu___41_876.main_context);
-      main_goal = (uu___41_876.main_goal);
-      all_implicits = (uu___41_876.all_implicits);
-      goals = (uu___41_876.goals);
-      smt_goals = (uu___41_876.smt_goals);
+      main_context = (uu___20_876.main_context);
+      main_goal = (uu___20_876.main_goal);
+      all_implicits = (uu___20_876.all_implicits);
+      goals = (uu___20_876.goals);
+      smt_goals = (uu___20_876.smt_goals);
       depth = (ps.depth + (Prims.parse_int "1"));
-      __dump = (uu___41_876.__dump);
-      psc = (uu___41_876.psc);
-      entry_range = (uu___41_876.entry_range);
-      guard_policy = (uu___41_876.guard_policy);
-      freshness = (uu___41_876.freshness);
-      tac_verb_dbg = (uu___41_876.tac_verb_dbg);
-      local_state = (uu___41_876.local_state)
+      __dump = (uu___20_876.__dump);
+      psc = (uu___20_876.psc);
+      entry_range = (uu___20_876.entry_range);
+      guard_policy = (uu___20_876.guard_policy);
+      freshness = (uu___20_876.freshness);
+      tac_verb_dbg = (uu___20_876.tac_verb_dbg);
+      local_state = (uu___20_876.local_state)
     }
   
 let (tracepoint : proofstate -> unit) =
@@ -462,44 +462,44 @@ let (tracepoint : proofstate -> unit) =
 let (set_ps_psc : FStar_TypeChecker_Cfg.psc -> proofstate -> proofstate) =
   fun psc  ->
     fun ps  ->
-      let uu___42_906 = ps  in
+      let uu___21_906 = ps  in
       {
-        main_context = (uu___42_906.main_context);
-        main_goal = (uu___42_906.main_goal);
-        all_implicits = (uu___42_906.all_implicits);
-        goals = (uu___42_906.goals);
-        smt_goals = (uu___42_906.smt_goals);
-        depth = (uu___42_906.depth);
-        __dump = (uu___42_906.__dump);
+        main_context = (uu___21_906.main_context);
+        main_goal = (uu___21_906.main_goal);
+        all_implicits = (uu___21_906.all_implicits);
+        goals = (uu___21_906.goals);
+        smt_goals = (uu___21_906.smt_goals);
+        depth = (uu___21_906.depth);
+        __dump = (uu___21_906.__dump);
         psc;
-        entry_range = (uu___42_906.entry_range);
-        guard_policy = (uu___42_906.guard_policy);
-        freshness = (uu___42_906.freshness);
-        tac_verb_dbg = (uu___42_906.tac_verb_dbg);
-        local_state = (uu___42_906.local_state)
+        entry_range = (uu___21_906.entry_range);
+        guard_policy = (uu___21_906.guard_policy);
+        freshness = (uu___21_906.freshness);
+        tac_verb_dbg = (uu___21_906.tac_verb_dbg);
+        local_state = (uu___21_906.local_state)
       }
   
 let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
   fun ps  ->
     fun r  ->
-      let uu___43_918 = ps  in
+      let uu___22_918 = ps  in
       let uu____919 =
         let uu____920 = FStar_Range.def_range r  in
         FStar_Range.set_def_range ps.entry_range uu____920  in
       {
-        main_context = (uu___43_918.main_context);
-        main_goal = (uu___43_918.main_goal);
-        all_implicits = (uu___43_918.all_implicits);
-        goals = (uu___43_918.goals);
-        smt_goals = (uu___43_918.smt_goals);
-        depth = (uu___43_918.depth);
-        __dump = (uu___43_918.__dump);
-        psc = (uu___43_918.psc);
+        main_context = (uu___22_918.main_context);
+        main_goal = (uu___22_918.main_goal);
+        all_implicits = (uu___22_918.all_implicits);
+        goals = (uu___22_918.goals);
+        smt_goals = (uu___22_918.smt_goals);
+        depth = (uu___22_918.depth);
+        __dump = (uu___22_918.__dump);
+        psc = (uu___22_918.psc);
         entry_range = uu____919;
-        guard_policy = (uu___43_918.guard_policy);
-        freshness = (uu___43_918.freshness);
-        tac_verb_dbg = (uu___43_918.tac_verb_dbg);
-        local_state = (uu___43_918.local_state)
+        guard_policy = (uu___22_918.guard_policy);
+        freshness = (uu___22_918.freshness);
+        tac_verb_dbg = (uu___22_918.tac_verb_dbg);
+        local_state = (uu___22_918.local_state)
       }
   
 let (goals_of : proofstate -> goal Prims.list) = fun ps  -> ps.goals 
@@ -509,12 +509,12 @@ let (get_label : goal -> Prims.string) = fun g  -> g.label
 let (set_label : Prims.string -> goal -> goal) =
   fun l  ->
     fun g  ->
-      let uu___44_968 = g  in
+      let uu___23_968 = g  in
       {
-        goal_main_env = (uu___44_968.goal_main_env);
-        goal_ctx_uvar = (uu___44_968.goal_ctx_uvar);
-        opts = (uu___44_968.opts);
-        is_guard = (uu___44_968.is_guard);
+        goal_main_env = (uu___23_968.goal_main_env);
+        goal_ctx_uvar = (uu___23_968.goal_ctx_uvar);
+        opts = (uu___23_968.opts);
+        is_guard = (uu___23_968.is_guard);
         label = l
       }
   
