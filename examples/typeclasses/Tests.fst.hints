@@ -16,16 +16,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0028ef12657f2f96c0c12471a90a7bb1"
-    ],
-    [
-      "Tests.uu___73",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "991202365075211110b09f86ab4164ac"
+      "2b02da1a3db28fcdc6cb1ea798bf4613"
     ],
     [
       "Tests.uu___74",
@@ -34,7 +25,16 @@
       1,
       [ "@query" ],
       0,
-      "345b9fb5055e3ca8f9e2a63e5d4b9bb2"
+      "0c0383acffe1fd8c97934f24d83cdb43"
+    ],
+    [
+      "Tests.uu___75",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "52a1d022135f01eb3310b0586023591c"
     ],
     [
       "Tests.test1",
@@ -69,7 +69,7 @@
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "0177f88c22b21a9c6c06f47aa741afef"
+      "590f2bee58e39810a38bf13ad685d3d8"
     ],
     [
       "Tests.test2",
@@ -92,7 +92,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "f531c5b9212f78e752d4b48ee0dbb639"
+      "83706d1ccef4c94e4191b69f897f31d3"
     ],
     [
       "Tests.sum",
@@ -109,16 +109,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5709d54575aa9160fa7b6d658816df4b"
-    ],
-    [
-      "Tests.uu___73",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "30d2c0cffbb6ae61520fde51675140e9"
+      "6d0e9ece6d0877b3c75f3bd115580031"
     ],
     [
       "Tests.uu___74",
@@ -127,7 +118,16 @@
       1,
       [ "@query" ],
       0,
-      "a3d34ed06fe8eb762fb71aff1d0a7a78"
+      "a47c80365e7c9ea84b914bdb63dfa9dd"
+    ],
+    [
+      "Tests.uu___75",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a0db6054574fa490335b3d2c556beada"
     ],
     [
       "Tests.test1",
@@ -162,7 +162,7 @@
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "fe04b125e258818430dc7e92a06ca5cd"
+      "44e315fdecd4a26830b0cde892576711"
     ],
     [
       "Tests.test2",
@@ -185,7 +185,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "ab60f00bcf5acd786fb8c2856042ad6c"
+      "3be80143c64a40523c524c65d5966f40"
     ]
   ]
 ]

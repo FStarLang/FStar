@@ -10,16 +10,16 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_FStar.Tactics.Result.Success",
-        "equation_Prims.eqtype",
-        "function_token_typing_FStar.Reflection.Types.term",
+        "equation_FStar.Reflection.Types.typ", "equation_Prims.eqtype",
         "function_token_typing_Prims.string",
         "lemma_FStar.Tactics.Result.result_split",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Reflection.Types.typ",
         "typing_FStar.Tactics.Result.uu___is_Failed",
         "typing_FStar.Tactics.Result.uu___is_Success"
       ],
       0,
-      "586274e18ffb229199a29ddf9850e39c"
+      "a315c53a1896dce53a85b800f6d66138"
     ]
   ]
 ]

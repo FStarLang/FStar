@@ -37,7 +37,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "8c91d5e2b10214f857ceff48ae99aaa9"
+      "e53dbb65843f888886ebbbbb532d706d"
     ],
     [
       "HyE.HCCA2.encrypt",
@@ -45,9 +45,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "data_elim_FStar.Pervasives.E", "data_elim_FStar.Pervasives.Err",
-        "data_elim_HyE.HCCA2.PKey",
+        "@MaxIFuel_assumption", "@query", "data_elim_FStar.Pervasives.E",
+        "data_elim_FStar.Pervasives.Err", "data_elim_HyE.HCCA2.PKey",
         "data_typing_intro_FStar.Pervasives.E@tok",
         "data_typing_intro_FStar.Pervasives.Err@tok",
         "data_typing_intro_FStar.Pervasives.V@tok",
@@ -55,29 +54,24 @@
         "equation_FStar.HyperStack.ST.is_eternal_region",
         "equation_FStar.Monotonic.HyperHeap.hmap",
         "equation_FStar.Monotonic.HyperStack.fresh_region",
-        "equation_FStar.Monotonic.HyperStack.is_tip",
         "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "equation_FStar.Monotonic.Seq.rid", "equation_FStar.Set.eqtype",
-        "equation_HyE.CCA2.cipher", "equation_HyE.HCCA2.c",
-        "equation_HyE.HCCA2.rid", "equation_HyE.RSA.cipher",
+        "equation_FStar.Monotonic.Seq.rid", "equation_HyE.HCCA2.c",
+        "equation_HyE.HCCA2.rid",
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "fuel_guarded_inversion_HyE.HCCA2.pkey",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
-        "function_token_typing_FStar.Monotonic.HyperHeap.rid",
-        "function_token_typing_FStar.Monotonic.HyperHeap.root",
-        "function_token_typing_HyE.HCCA2.c",
         "lemma_FStar.Map.lemma_ContainsDom",
         "proj_equation_HyE.HCCA2.PKey_region",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_08d14059b664746699a12b0c359d3b8d",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_HyE.HCCA2_Tm_refine_88cdf982f29494978cb456b377825f78",
-        "typing_FStar.Map.contains",
-        "typing_FStar.Monotonic.HyperStack.get_hmap",
-        "typing_FStar.Monotonic.HyperStack.get_tip"
+        "typing_FStar.Monotonic.Heap.heap",
+        "typing_FStar.Monotonic.HyperHeap.rid",
+        "typing_FStar.Monotonic.HyperHeap.root",
+        "typing_FStar.Monotonic.HyperStack.get_hmap", "typing_HyE.HCCA2.c"
       ],
       0,
-      "3804fe1f18bc56b541c4aae86c4b12e2"
+      "b0ec0f6fa4a6925d501893fa2fb86282"
     ],
     [
       "HyE.HCCA2.decrypt",
@@ -92,17 +86,15 @@
         "data_typing_intro_FStar.Pervasives.Err@tok",
         "data_typing_intro_FStar.Pervasives.V@tok",
         "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some", "equation_HyE.AE.msg",
-        "equation_HyE.HCCA2.p", "equation_HyE.PlainPKE.t",
-        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_HyE.PlainPKE.t",
         "fuel_guarded_inversion_FStar.Pervasives.result",
-        "function_token_typing_HyE.AE.key",
-        "function_token_typing_HyE.Plain.t",
         "kinding_FStar.Pervasives.Native.option@tok",
-        "lemma_FStar.Pervasives.invertOption"
+        "lemma_FStar.Pervasives.invertOption", "typing_HyE.HCCA2.p",
+        "typing_HyE.PlainPKE.t"
       ],
       0,
-      "8cd077492ffa28459533b6648f0d8602"
+      "d5e7f348989b94219c45faa028a63310"
     ]
   ]
 ]

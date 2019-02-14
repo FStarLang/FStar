@@ -9,7 +9,6 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.SL.Heap.ref",
         "equation_Lang.addr", "equation_Lang.t",
-        "function_token_typing_FStar.UInt64.t",
         "lemma_FStar.SL.Monotonic.Heap.equal_extensional",
         "lemma_FStar.SL.Monotonic.Heap.lemma_join_tot_restrict_minus",
         "lemma_FStar.SL.Monotonic.Heap.lemma_restrict_eq_points_to",
@@ -19,10 +18,10 @@
         "typing_FStar.SL.Monotonic.Heap.minus",
         "typing_FStar.SL.Monotonic.Heap.points_to",
         "typing_FStar.SL.Monotonic.Heap.restrict",
-        "typing_FStar.SL.Monotonic.Heap.sel"
+        "typing_FStar.SL.Monotonic.Heap.sel", "typing_FStar.UInt64.t"
       ],
       0,
-      "f66b06cf5c487495f633df7e144a135e"
+      "80ae2ef1ee3160370caba81da4559bdf"
     ],
     [
       "SL.Tactics.lemma_alloc_return",
@@ -39,7 +38,7 @@
         "typing_FStar.SL.Monotonic.Heap.get_next_addr"
       ],
       0,
-      "b4cbb43be5118dc57207e61642172d15"
+      "73c86c9ec81e0ecf3576cb8c21eb800e"
     ],
     [
       "SL.Tactics.lemma_bind",
@@ -53,7 +52,7 @@
         "typing_FStar.SL.Monotonic.Heap.get_next_addr"
       ],
       0,
-      "20d78c0bbcb758ebe7b047dd07d171f8"
+      "94dec5a4b5b31a453c3e348198b86d60"
     ],
     [
       "SL.Tactics.lemma_eq_implies_intro",
@@ -62,7 +61,7 @@
       1,
       [ "@query" ],
       0,
-      "d3879d08ca8001bca163f4b4be7f4980"
+      "ee877939d6d6407503c207662cbdda56"
     ],
     [
       "SL.Tactics.lemma_eq_implies_intro'",
@@ -71,7 +70,7 @@
       1,
       [ "@query" ],
       0,
-      "b01b9feb95c2eaa329b37c2a2897641b"
+      "7e4693f98ccf3b955a161229a978f302"
     ],
     [
       "SL.Tactics.lemma_addr_not_eq_refl",
@@ -88,7 +87,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "26635036b772c1301423a7f8030dfac0"
+      "cd263253249fccc53bc440ed6878e15d"
     ],
     [
       "SL.Tactics.lemma_impl_l_cong",
@@ -102,7 +101,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "a859ae01a767886ad384170a0f31ebd3"
+      "d157e842f8d47fdd68c0110637ce2314"
     ],
     [
       "SL.Tactics.lemma_eq_l_cong",
@@ -115,7 +114,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "7513abde215f6f563becf10ac20d32a4"
+      "214d5ca935c2b69466ce6b20997bca76"
     ],
     [
       "SL.Tactics.lemma_eq_cong",
@@ -128,7 +127,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "674186766c6e6af2cbd4eb8df8b9cf04"
+      "3ac8bb6bc4b24bf694e1f4bd945d1f38"
     ],
     [
       "SL.Tactics.repeat_step_select",
@@ -142,11 +141,11 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Reflection.Types.typ",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "lemma_FStar.Pervasives.invertOption"
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Reflection.Types.typ"
       ],
       0,
-      "31e0f070fe73da9589d4e189bdabd153"
+      "79963089c82b91a972d123e421a41bc2"
     ],
     [
       "SL.Tactics.lemma_read_write",
@@ -158,7 +157,7 @@
         "refinement_interpretation_SL.Tactics_Tm_refine_3bcf4b7474eb7f3eaa30f4c958188cd5"
       ],
       0,
-      "6184ebb9711b3c3154a38e114addfb35"
+      "44ab3d39222158886bfe4724bbba4a40"
     ],
     [
       "SL.Tactics.lemma_addr_not_eq_refl",
@@ -175,7 +174,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ea407a6ac6ba201626e961559ae77ea3"
+      "3d02da63c7b2e617881c5b829f1976e0"
     ],
     [
       "SL.Tactics.repeat_step_select",
@@ -189,11 +188,11 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Reflection.Types.typ",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "lemma_FStar.Pervasives.invertOption"
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Reflection.Types.typ"
       ],
       0,
-      "8939333e58c703723d0684f674020ae0"
+      "2c5235171a008b12bb1efbea97ef3201"
     ]
   ]
 ]

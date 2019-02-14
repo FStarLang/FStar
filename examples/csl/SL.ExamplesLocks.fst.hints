@@ -20,7 +20,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "5da5921521cddbd97a6b44d0ef9b91e6"
+      "81b0d8a789995ceac6bec053b9efe418"
     ],
     [
       "SL.ExamplesLocks.test_acq",
@@ -32,7 +32,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "9d29ca94443e2051362e0fa7c9dc59ed"
+      "b722bd005176b9f9cc65fdfcc23ec419"
     ],
     [
       "SL.ExamplesLocks.test_acq_rel",
@@ -45,7 +45,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_80c9652fe96a19b293f5cd63a93f6e93"
       ],
       0,
-      "3cc40a526dbfe14c037f6436f8bee5cb"
+      "bb051fa9b129aa99621cad776a16be1c"
     ],
     [
       "SL.ExamplesLocks.test_acq_rel",
@@ -64,7 +64,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "898979c2436b5cc82187eb8459077982"
+      "8b2806ec94ba4fce45913b9850bbb29d"
     ],
     [
       "SL.ExamplesLocks.test_acq_rel",
@@ -73,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "5dde5a9a5d392b4cd0e5b33d9c69e272"
+      "fe9f0997ae88b4636aca4f948e5fb4bd"
     ],
     [
       "SL.ExamplesLocks.test_acq_rel",
@@ -85,7 +85,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "7a6b5e879a8e278cfab634b3e443efd3"
+      "d82fdaa6fbe3ce333e7e6af7f0b1967e"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -98,7 +98,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_8002c79ae42ff92c4edc4d769192262d"
       ],
       0,
-      "b877627d3c40f893bf38342283fcb73d"
+      "8a8b46e1fe44667f5703b7755b413c2a"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -110,7 +110,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f9bb2d27ead3296129aba60d406cf4b3"
+      "626c7c2cecff7e9e7c4eecf83d76d9f3"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -122,7 +122,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8d14cc311f4a24c186b7839a7fd82e41"
+      "3df17a49c98695f9d782c6a86da48f98"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -134,7 +134,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f2b2117e02460a4e77693d7e732dca63"
+      "f0101f3cef08df89d671f408d2f95ff7"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -153,7 +153,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "0f662a5d7b8a28b1aafd95452d373eac"
+      "1b93497ec6486689c67ffd9346f37085"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -165,7 +165,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "79cd02ddcbe1ce72d632f0eb2392386a"
+      "f7b7fb1dcafb8c1ef168e1c372d92157"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -177,7 +177,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "de006a64f3ece7793cddcf6c30b7fda2"
+      "042a579bd3d88df1f8ef338bbd5741e4"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -186,7 +186,7 @@
       1,
       [ "@query" ],
       0,
-      "c1efefef55fecc94a6feb9d2f35ef96f"
+      "42acec52611fe299ad241008ee156e52"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -198,7 +198,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "cee5ee9513104bc9f1896e8f94e0374f"
+      "2d6c7e409cfb9d7e35678cfbf2977890"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -210,7 +210,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fcae79ee4937757c16a5b5948993400e"
+      "1f88214b555c487944490a0d620588af"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -222,7 +222,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4a004d1e014dfdc8a8e7351108680337"
+      "7aaa9b0993a90417b77fe6a439c46f1d"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -234,7 +234,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "68ff3332695ee965e49e1a30a85ea330"
+      "728ae0807d213cc33af384146b30c6bf"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -246,7 +246,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "bd288355b2fb94ef36cbcf17ad8c129e"
+      "291012340a61a770cd3b7e1cc2658432"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -258,7 +258,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "50b39ebd82096128ed0db0c141cb0090"
+      "0ff54abeadcfe9c59fababf01aa59b6c"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -270,7 +270,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "25c6bac5c372b8891ac033dbd7758d98"
+      "1d0725be909c16abd809641e6d334c1a"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -282,7 +282,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "93dcbeea612a1c457afe49765e709120"
+      "d0eb1233d88fbd2bebb36cd503058399"
     ],
     [
       "SL.ExamplesLocks.set_and_ret",
@@ -294,7 +294,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "19612f8ef1f4b861730334e6d723ab72"
+      "625e08ea349312918fddbeb832d53bef"
     ],
     [
       "SL.ExamplesLocks.test06",
@@ -311,7 +311,7 @@
         "typing_SL.Heap.emp"
       ],
       0,
-      "24b1e4e6453d65baa71f380a442cd21d"
+      "2631a6f2fb84289bab0db5c35c208691"
     ],
     [
       "SL.ExamplesLocks.test06",
@@ -320,16 +320,14 @@
       1,
       [
         "@query", "assumption_SL.Heap.Emp_defined_axiom",
-        "equation_SL.AutoTactic.memory_cm",
-        "function_token_typing_SL.Heap.memory",
-        "lemma_SL.Heap.lemma_sep_unit_",
+        "equation_SL.AutoTactic.memory_cm", "lemma_SL.Heap.lemma_sep_unit_",
         "proj_equation_FStar.Algebra.CommMonoid.CM_unit",
         "projection_inverse_FStar.Algebra.CommMonoid.CM_unit",
         "typing_FStar.Algebra.CommMonoid.__proj__CM__item__unit",
-        "typing_SL.AutoTactic.memory_cm"
+        "typing_SL.AutoTactic.memory_cm", "typing_SL.Heap.memory"
       ],
       0,
-      "412ac8b3be8d753a454b8e350487f6c6"
+      "68c01ac604f633aeb762cff8c94383fd"
     ],
     [
       "SL.ExamplesLocks.test06",
@@ -338,7 +336,7 @@
       1,
       [ "@query" ],
       0,
-      "3c074137379d007b63fbb558e5a6fd02"
+      "a9898fd9d1aa5eb8360afd4c60f97f27"
     ],
     [
       "SL.ExamplesLocks.test06",
@@ -350,7 +348,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_8359878918c830803afb203cd8a44f99"
       ],
       0,
-      "b94f1688729bdb50c0123348f6bcb418"
+      "50eecd0f36c7632bbbff417c52e37d00"
     ],
     [
       "SL.ExamplesLocks.test07",
@@ -363,7 +361,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_4b34bc22d8ccfb71814cfc1eec9117e7"
       ],
       0,
-      "be3e5a3afdfa601513a162a2b5fcaf18"
+      "3a24e0f9e8a2967c5c26c6c16e9fd891"
     ],
     [
       "SL.ExamplesLocks.test07",
@@ -375,7 +373,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "51216cf0daa6743d49eac6534a75aa49"
+      "a163acf92ce9cb51dea31b391c6ba9d5"
     ],
     [
       "SL.ExamplesLocks.test08",
@@ -402,7 +400,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "cf6692eab182192db0d3841b6399f3dc"
+      "22d346a0b7b6e70895227c038bbf8794"
     ],
     [
       "SL.ExamplesLocks.test08",
@@ -414,7 +412,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_8359878918c830803afb203cd8a44f99"
       ],
       0,
-      "60da42dfb5b5a08e14ecb94e3d60b971"
+      "ca043cac8f72e978905a7a84580d085c"
     ],
     [
       "SL.ExamplesLocks.test08",
@@ -432,7 +430,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "50e2b22e7d28d55599704bc6e2ca6bd6"
+      "97dd60237ea5dc2c5997317a9b575cf9"
     ],
     [
       "SL.ExamplesLocks.test09",
@@ -455,7 +453,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "fba1ae5b537a361544e3ebf6e61942e8"
+      "1ac5883593af2a2a6ff1cb82afb9ce0b"
     ],
     [
       "SL.ExamplesLocks.test09",
@@ -467,7 +465,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_8359878918c830803afb203cd8a44f99"
       ],
       0,
-      "bb5a26c48b10f8952046f3e7b9c1c51b"
+      "9b3877891a8e8ba2ac27058c62cf3572"
     ],
     [
       "SL.ExamplesLocks.test09",
@@ -485,7 +483,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "ef3593263dc6fb1312b979aae4c5c79f"
+      "ab6f1b2782ef7688cf85859f077cea13"
     ],
     [
       "SL.ExamplesLocks.test10",
@@ -501,7 +499,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "075aa47bc2af4f10d0e9abfc2742c22d"
+      "74cd5b62cfd0fe2173cf7f5d26db9453"
     ],
     [
       "SL.ExamplesLocks.test10",
@@ -510,7 +508,7 @@
       1,
       [ "@query" ],
       0,
-      "e91f1819e62455066106d018650e7dd7"
+      "96ba38e9f3704b62c7ae73e9ade3d6c5"
     ],
     [
       "SL.ExamplesLocks.test10",
@@ -522,7 +520,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "5fd236f07e7e2ce044a962e02c527540"
+      "024d24f0e161a9191c007f73ab58661d"
     ],
     [
       "SL.ExamplesLocks.test11",
@@ -535,7 +533,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_80c9652fe96a19b293f5cd63a93f6e93"
       ],
       0,
-      "4177a054116f38065b94b6b761cfe8ea"
+      "704e939fa5b229922cfa4caec8d88de6"
     ],
     [
       "SL.ExamplesLocks.test11",
@@ -544,7 +542,7 @@
       1,
       [ "@query" ],
       0,
-      "bfcd8306c8f313aaf6cd76fde9f85e7a"
+      "c37f93f71baa2a5f059271186a2cbf3e"
     ],
     [
       "SL.ExamplesLocks.test11",
@@ -553,7 +551,7 @@
       1,
       [ "@query" ],
       0,
-      "3c18ffa5e6f30343290be55ff6da02c9"
+      "dafa78e56c551c254dc9d31ed84616a8"
     ],
     [
       "SL.ExamplesLocks.test11",
@@ -565,7 +563,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "61e1d85beea8c4b8b96b04e7e2c26ebf"
+      "a3a6c07f887d2de8bfd57e1f923ae583"
     ],
     [
       "SL.ExamplesLocks.take_and_incr",
@@ -578,7 +576,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_80c9652fe96a19b293f5cd63a93f6e93"
       ],
       0,
-      "1031ff3d07007c51f15a8f2dccc00527"
+      "16e231d06cc3d6d07633fc79d918ed0f"
     ],
     [
       "SL.ExamplesLocks.take_and_incr",
@@ -608,7 +606,7 @@
         "typing_SL.Heap.op_Bar_Greater", "unit_typing"
       ],
       0,
-      "68aa42ec36ad0c9f01cee37fba1ae6a4"
+      "2371ffcd02b3ed46353cd15d1da0689d"
     ],
     [
       "SL.ExamplesLocks.take_and_incr",
@@ -627,7 +625,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "e314f1675d1f68b7c5ca17eb3fc7ba9c"
+      "4ef91236724e8ee4922e879f2e5b5db8"
     ],
     [
       "SL.ExamplesLocks.take_and_incr",
@@ -636,7 +634,7 @@
       1,
       [ "@query" ],
       0,
-      "ed30c1f3b82a1692254927f56b9847a2"
+      "20e3adf76f47bf5bde09e32cba555a05"
     ],
     [
       "SL.ExamplesLocks.take_and_incr",
@@ -645,7 +643,7 @@
       1,
       [ "@query" ],
       0,
-      "d334adef93d23f8653653ac5b5bf2110"
+      "43909c4d453c4a98232a51e0e836f74e"
     ],
     [
       "SL.ExamplesLocks.take_and_incr",
@@ -657,7 +655,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "99302695e68b8f731e7b19a17accce37"
+      "b5ac7f1851b00bfaea9bb9141e74be61"
     ],
     [
       "SL.ExamplesLocks.test12",
@@ -671,7 +669,7 @@
         "unit_inversion"
       ],
       0,
-      "1cad3b3a6599eed16f79c3b3151fec0e"
+      "e2aaacdceb79f03e92bed21577f23727"
     ],
     [
       "SL.ExamplesLocks.test12",
@@ -680,7 +678,7 @@
       1,
       [ "@query" ],
       0,
-      "6b84c3688be718e30fbbbefdef22b7c6"
+      "9ebe2e5fcc6b348c741c55d7f7bac9e9"
     ],
     [
       "SL.ExamplesLocks.test12",
@@ -692,7 +690,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "4a821e1c0f187d4177f9cfd7cddca6d9"
+      "69159d93b09ab6f828f6e1ebd61571cc"
     ],
     [
       "SL.ExamplesLocks.test13",
@@ -705,7 +703,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_80c9652fe96a19b293f5cd63a93f6e93"
       ],
       0,
-      "afe7b425d481e51ff82ccea1e379dbac"
+      "d36096d3ae6c07faf58bc443b5edbccd"
     ],
     [
       "SL.ExamplesLocks.test13",
@@ -724,7 +722,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "8c156f0c005f3966b9a2c1f267d8225b"
+      "69c21c895ee2d27e8036ff8e8d042ebe"
     ],
     [
       "SL.ExamplesLocks.test13",
@@ -733,7 +731,7 @@
       1,
       [ "@query" ],
       0,
-      "08f97930ab7b5b740afd9f263c2608ac"
+      "51c2751331a5691e5de2666ae151a18a"
     ],
     [
       "SL.ExamplesLocks.test13",
@@ -742,7 +740,7 @@
       1,
       [ "@query" ],
       0,
-      "5dd2f30b9066b1be77d4a0c52b40c2bb"
+      "0a164a7f9120dd037dacb7199089251b"
     ],
     [
       "SL.ExamplesLocks.test13",
@@ -754,7 +752,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "5888ffe89385a675ed21ef65b8587cf2"
+      "3816c7f229b2c4ca69d1f1555e623dce"
     ],
     [
       "SL.ExamplesLocks.test14",
@@ -767,7 +765,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_80c9652fe96a19b293f5cd63a93f6e93"
       ],
       0,
-      "0e9d33e4acb3a46d0b4ffe8070eb9477"
+      "3ecc2ccc53b8999319a919396b552dc5"
     ],
     [
       "SL.ExamplesLocks.test14",
@@ -786,7 +784,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "3951a3bdc21f556e6caf7157c195b105"
+      "8ca2e09f8c65dd3e3ffa5b7d80b011c9"
     ],
     [
       "SL.ExamplesLocks.test14",
@@ -795,7 +793,7 @@
       1,
       [ "@query" ],
       0,
-      "ff3da4c6a60391460cfa9c5ee32cedaa"
+      "142cde48377a6a9fac5cf51fa7630e58"
     ],
     [
       "SL.ExamplesLocks.test14",
@@ -804,16 +802,14 @@
       1,
       [
         "@query", "assumption_SL.Heap.Emp_defined_axiom",
-        "equation_SL.AutoTactic.memory_cm",
-        "function_token_typing_SL.Heap.memory",
-        "lemma_SL.Heap.lemma_sep_unit_",
+        "equation_SL.AutoTactic.memory_cm", "lemma_SL.Heap.lemma_sep_unit_",
         "proj_equation_FStar.Algebra.CommMonoid.CM_unit",
         "projection_inverse_FStar.Algebra.CommMonoid.CM_unit",
         "typing_FStar.Algebra.CommMonoid.__proj__CM__item__unit",
-        "typing_SL.AutoTactic.memory_cm"
+        "typing_SL.AutoTactic.memory_cm", "typing_SL.Heap.memory"
       ],
       0,
-      "bc2df20c7dab360e973cc7e44fc29b72"
+      "58cbbb9ed7f96400d7a264372bfbbfcc"
     ],
     [
       "SL.ExamplesLocks.test14",
@@ -822,7 +818,7 @@
       1,
       [ "@query" ],
       0,
-      "42e207c57537e93848728a38f4e705f6"
+      "2bc3a3187dc49f39ce3b4549cbaa59ba"
     ],
     [
       "SL.ExamplesLocks.test14",
@@ -831,7 +827,7 @@
       1,
       [ "@query" ],
       0,
-      "332a6ed1ffb867125bb789e67d4f1d60"
+      "17fe6aba4910efeaea5a8d257dcdf337"
     ],
     [
       "SL.ExamplesLocks.test14",
@@ -843,7 +839,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "4aedfb937594d43141c9e4439b254b09"
+      "029842e52246c841c5afe7979fd163f6"
     ],
     [
       "SL.ExamplesLocks.test15",
@@ -856,7 +852,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_80c9652fe96a19b293f5cd63a93f6e93"
       ],
       0,
-      "365bde0102114041be60e01ce2fa78ee"
+      "a768372237c7dd91ee76f693868d4299"
     ],
     [
       "SL.ExamplesLocks.test15",
@@ -875,7 +871,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "58ef54b498f4ab0e0aa3ca2f0af22906"
+      "8a63673b1f28ffafebf6723f6808871b"
     ],
     [
       "SL.ExamplesLocks.test15",
@@ -884,7 +880,7 @@
       1,
       [ "@query" ],
       0,
-      "0201dcc7f2057a667c10088b7ba5a7fe"
+      "a4b3882cc9203f77e5428af976efc2df"
     ],
     [
       "SL.ExamplesLocks.test15",
@@ -893,7 +889,7 @@
       1,
       [ "@query" ],
       0,
-      "331a6cd77b48b0b00247d6025635feb6"
+      "19d0a2505d1d84d29cc49ff896dbc00c"
     ],
     [
       "SL.ExamplesLocks.test15",
@@ -902,16 +898,14 @@
       1,
       [
         "@query", "assumption_SL.Heap.Emp_defined_axiom",
-        "equation_SL.AutoTactic.memory_cm",
-        "function_token_typing_SL.Heap.memory",
-        "lemma_SL.Heap.lemma_sep_unit_",
+        "equation_SL.AutoTactic.memory_cm", "lemma_SL.Heap.lemma_sep_unit_",
         "proj_equation_FStar.Algebra.CommMonoid.CM_unit",
         "projection_inverse_FStar.Algebra.CommMonoid.CM_unit",
         "typing_FStar.Algebra.CommMonoid.__proj__CM__item__unit",
-        "typing_SL.AutoTactic.memory_cm"
+        "typing_SL.AutoTactic.memory_cm", "typing_SL.Heap.memory"
       ],
       0,
-      "dfe6457b430251d46f1dc1e9577d8ec1"
+      "21b14f0ec4c26fb3834c892425f6fe97"
     ],
     [
       "SL.ExamplesLocks.test15",
@@ -920,7 +914,7 @@
       1,
       [ "@query" ],
       0,
-      "34bd4a4d22365b4ee5a11f90f9ca0bc2"
+      "0d640c396a1fb142a7ccaf150cac8a51"
     ],
     [
       "SL.ExamplesLocks.test15",
@@ -929,7 +923,7 @@
       1,
       [ "@query" ],
       0,
-      "ad0f94b659f6181e8b2e26e36ca1f43b"
+      "a8bd4bcc8f8b7de0258aa38410611e4b"
     ],
     [
       "SL.ExamplesLocks.test15",
@@ -941,7 +935,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "d0bffb8f472fbbcc5dfc814be055b046"
+      "3e78ec966cecef7789afac3f015e9c8e"
     ],
     [
       "SL.ExamplesLocks.test16",
@@ -954,7 +948,7 @@
         "refinement_interpretation_SL.ExamplesLocks_Tm_refine_80c9652fe96a19b293f5cd63a93f6e93"
       ],
       0,
-      "81e190e327e00c0c79f217ceeeceff6f"
+      "4102bb0279f53e92e6716b1622b774d4"
     ],
     [
       "SL.ExamplesLocks.test16",
@@ -963,7 +957,7 @@
       1,
       [ "@query" ],
       0,
-      "fde60c5321743ac83ab077c9930d39d6"
+      "9ff8c29bd2016713854d35a18b464e34"
     ],
     [
       "SL.ExamplesLocks.test16",
@@ -990,7 +984,7 @@
         "typing_SL.Heap.op_Bar_Greater", "unit_typing"
       ],
       0,
-      "ae56bee5f3f6c7d5303fd2a9c75cc072"
+      "74c08d930cc133707b9a3c9f15da9292"
     ],
     [
       "SL.ExamplesLocks.test16",
@@ -1009,7 +1003,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "e7ec6199e83fe4267abb3d75eaaed0cf"
+      "ccd3ab9f31234d33a944eb1218928890"
     ],
     [
       "SL.ExamplesLocks.test16",
@@ -1018,7 +1012,7 @@
       1,
       [ "@query" ],
       0,
-      "db534a765c16fce1ee27d40614efec4c"
+      "139498a8e38b5cd3678782f3df1d709f"
     ],
     [
       "SL.ExamplesLocks.test16",
@@ -1027,16 +1021,14 @@
       1,
       [
         "@query", "assumption_SL.Heap.Emp_defined_axiom",
-        "equation_SL.AutoTactic.memory_cm",
-        "function_token_typing_SL.Heap.memory",
-        "lemma_SL.Heap.lemma_sep_unit_",
+        "equation_SL.AutoTactic.memory_cm", "lemma_SL.Heap.lemma_sep_unit_",
         "proj_equation_FStar.Algebra.CommMonoid.CM_unit",
         "projection_inverse_FStar.Algebra.CommMonoid.CM_unit",
         "typing_FStar.Algebra.CommMonoid.__proj__CM__item__unit",
-        "typing_SL.AutoTactic.memory_cm"
+        "typing_SL.AutoTactic.memory_cm", "typing_SL.Heap.memory"
       ],
       0,
-      "82f07402c36f611e88d6a3d733ab157e"
+      "c2da0b9ac247b04e7c11f1b93fef81e8"
     ],
     [
       "SL.ExamplesLocks.test16",
@@ -1045,7 +1037,7 @@
       1,
       [ "@query" ],
       0,
-      "2ddcb92aec5e168e0458f2795d88940b"
+      "605a63f2e0e487e2aa2297f325cc875f"
     ],
     [
       "SL.ExamplesLocks.test16",
@@ -1054,7 +1046,7 @@
       1,
       [ "@query" ],
       0,
-      "b71a227569352308523433f073515603"
+      "b56f5dcd0fa2a049eeb582f5051ae971"
     ],
     [
       "SL.ExamplesLocks.test16",
@@ -1066,7 +1058,7 @@
         "lemma_SL.Heap.lemma_sep_unit_"
       ],
       0,
-      "8f8e39dc9532a5505071e1ef2b8683d9"
+      "104db873e6209cd13b61de49035932e0"
     ]
   ]
 ]

@@ -7,15 +7,14 @@
       2,
       1,
       [
-        "@query", "function_token_typing_TestSet.elt", "l_or-interp",
-        "lemma_FStar.TSet.lemma_equal_intro",
+        "@query", "l_or-interp", "lemma_FStar.TSet.lemma_equal_intro",
         "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
         "lemma_FStar.TSet.mem_union", "lemma_FStar.TSet.subset_mem",
         "typing_FStar.TSet.singleton", "typing_FStar.TSet.union",
-        "typing_TestSet.a", "typing_TestSet.b"
+        "typing_TestSet.a", "typing_TestSet.b", "typing_TestSet.elt"
       ],
       0,
-      "d0433244f3418430d85b19099c41396c"
+      "9b2a436ac13c237d7430bd5f25b4e71d"
     ],
     [
       "TestSet.should_succeed",
@@ -23,15 +22,14 @@
       2,
       1,
       [
-        "@query", "function_token_typing_TestSet.elt", "l_or-interp",
-        "lemma_FStar.TSet.lemma_equal_intro",
+        "@query", "l_or-interp", "lemma_FStar.TSet.lemma_equal_intro",
         "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
         "lemma_FStar.TSet.mem_union", "lemma_FStar.TSet.subset_mem",
         "typing_FStar.TSet.singleton", "typing_FStar.TSet.union",
-        "typing_TestSet.a", "typing_TestSet.b"
+        "typing_TestSet.a", "typing_TestSet.b", "typing_TestSet.elt"
       ],
       0,
-      "66113e2a762b27900d6882be86529528"
+      "e23c6538d7cd09bd85f40b4bbe6f9cfb"
     ]
   ]
 ]

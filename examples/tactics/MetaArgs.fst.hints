@@ -2,22 +2,13 @@
   ";{\u0018(ù»\r\n2àíºkI6\u000b",
   [
     [
-      "MetaArgs.uu___64",
+      "MetaArgs.uu___65",
       1,
       2,
       1,
       [ "@query", "equation_MetaArgs.test1" ],
       0,
-      "75ea43180e631d74216455664c71ff87"
-    ],
-    [
-      "MetaArgs.uu___65",
-      1,
-      2,
-      1,
-      [ "@query", "equation_MetaArgs.diag" ],
-      0,
-      "8cd2220e720dc0605d443d2404d98c41"
+      "026243fa11612c2f98f153492b563c57"
     ],
     [
       "MetaArgs.uu___66",
@@ -26,16 +17,25 @@
       1,
       [ "@query", "equation_MetaArgs.diag" ],
       0,
-      "3aead62780a861d28b57738f50b80d9e"
+      "e18a92552834b1c2820c84105e1f478b"
     ],
     [
-      "MetaArgs.uu___64",
+      "MetaArgs.uu___67",
+      1,
+      2,
+      1,
+      [ "@query", "equation_MetaArgs.diag" ],
+      0,
+      "7bde30836642b9dd9c65636584f5eb67"
+    ],
+    [
+      "MetaArgs.uu___65",
       2,
       2,
       1,
       [ "@query", "equation_MetaArgs.test1" ],
       0,
-      "732e23e343d797dce4c203111cc3b21b"
+      "dec5f3984f03633914726cb2b953310c"
     ],
     [
       "MetaArgs.same_as",
@@ -46,22 +46,13 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_FStar.Tactics.Result.Success",
-        "function_token_typing_FStar.Reflection.Types.term",
         "lemma_FStar.Tactics.Result.result_split",
         "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Reflection.Types.term",
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "19ea0bf830494e59ad0463a73184f638"
-    ],
-    [
-      "MetaArgs.uu___65",
-      2,
-      2,
-      1,
-      [ "@query", "equation_MetaArgs.diag" ],
-      0,
-      "637f87b91b86fe9a4f33249e0b03c2cd"
+      "ef83135a342afc32a58e73462efa0180"
     ],
     [
       "MetaArgs.uu___66",
@@ -70,7 +61,16 @@
       1,
       [ "@query", "equation_MetaArgs.diag" ],
       0,
-      "92742f5ccb680f9e7806ee2402ef65d6"
+      "3c39af497578528f40bd6a800d46a3be"
+    ],
+    [
+      "MetaArgs.uu___67",
+      2,
+      2,
+      1,
+      [ "@query", "equation_MetaArgs.diag" ],
+      0,
+      "16f3ab067b35149a0596e83b5c4c033c"
     ]
   ]
 ]

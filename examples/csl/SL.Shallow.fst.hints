@@ -7,12 +7,11 @@
       2,
       1,
       [
-        "@query", "function_token_typing_SL.Heap.heap",
-        "lemma_SL.Heap.lemma_heap_memory_defined",
-        "typing_FStar.Pervasives.Native.snd"
+        "@query", "lemma_SL.Heap.lemma_heap_memory_defined",
+        "typing_FStar.Pervasives.Native.snd", "typing_SL.Heap.heap"
       ],
       0,
-      "c57036e11dfdb09cacca265f7afab4b8"
+      "e54dcf2ed7d99f1ae88948e88e359f5c"
     ],
     [
       "SL.Shallow.st",
@@ -21,7 +20,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_heap_memory_defined" ],
       0,
-      "aebf5897bbae0f0cac2425b40c5891d1"
+      "2b29bbb860791450c60a51a3dc851a5a"
     ],
     [
       "SL.Shallow.return",
@@ -40,7 +39,7 @@
         "refinement_interpretation_SL.Shallow_Tm_refine_6ef8f58227c55f249c581c63af4e5059"
       ],
       0,
-      "5400b2a85ac1798c58a04fd8a1e53e64"
+      "fbdb348969b2954c9c24a810c84e3b32"
     ],
     [
       "SL.Shallow.frame_post",
@@ -49,7 +48,7 @@
       1,
       [ "@query" ],
       0,
-      "87d0736b5abc5bff5dccd7bfc5b70cbb"
+      "e0efdb7b416451d5a82cd9ded4871b14"
     ],
     [
       "SL.Shallow.frame",
@@ -78,7 +77,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
-      "ce141e6a64022020ce4fd5e28bd6d7ac"
+      "ce0fc44d9d57c05afbc204ada5086d51"
     ],
     [
       "SL.Shallow.frame",
@@ -107,7 +106,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
-      "64b9b5ce1d808ae8e0ead4ab130c0271"
+      "d75e55363afc22143cc0a361755593fd"
     ],
     [
       "SL.Shallow.bind_without_framing",
@@ -127,7 +126,7 @@
         "refinement_interpretation_SL.Shallow_Tm_refine_f202c3bece3ea98e3a75871dd48defda"
       ],
       0,
-      "f4fd445519dda07791d353451cb203b0"
+      "e7eb6523c8c6e96fc735e8a5a974fe17"
     ],
     [
       "SL.Shallow.bind_without_framing",
@@ -146,7 +145,7 @@
         "refinement_interpretation_SL.Shallow_Tm_refine_f202c3bece3ea98e3a75871dd48defda"
       ],
       0,
-      "bf1bbfd5980af2257b1c26bda25f98e4"
+      "26482fa52f56162cba22fe408b00472e"
     ],
     [
       "SL.Shallow.bind_with_framing",
@@ -166,7 +165,7 @@
         "refinement_interpretation_SL.Shallow_Tm_refine_f202c3bece3ea98e3a75871dd48defda"
       ],
       0,
-      "bd2f784dd5adac5d4f5a897ab9940bf8"
+      "83e7940225982e5eae99c836b1350418"
     ],
     [
       "SL.Shallow.bind_with_framing",
@@ -185,7 +184,7 @@
         "refinement_interpretation_SL.Shallow_Tm_refine_f202c3bece3ea98e3a75871dd48defda"
       ],
       0,
-      "380f1c1adc818e317950cd223c3284ef"
+      "fb7248480677382296563e361696077d"
     ],
     [
       "SL.Shallow.read_without_framing",
@@ -214,7 +213,7 @@
         "token_correspondence_SL.Shallow.read_wp", "unit_typing"
       ],
       0,
-      "d8f941487cf989cb9e75fbfa7ddf8222"
+      "b81343f72d64d4f205d7dd14bdc59329"
     ],
     [
       "SL.Shallow.read_with_framing",
@@ -228,7 +227,7 @@
         "token_correspondence_SL.Shallow.frame_read_wp"
       ],
       0,
-      "12eb3d6409b9ef2985357f772ff1a47a"
+      "a70b406957b28370297e4497c1a9e1cb"
     ],
     [
       "SL.Shallow.write_wp",
@@ -237,7 +236,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_points_to_defined" ],
       0,
-      "ad297f08413465047d465fc80d2ff175"
+      "92a49a7b69faf243f02a5521bf5de174"
     ],
     [
       "SL.Shallow.write_without_framing",
@@ -267,7 +266,7 @@
         "token_correspondence_SL.Shallow.write_wp", "unit_typing"
       ],
       0,
-      "991b650c26ed71088d0e2795f700b8b2"
+      "57df77e7ad4e4465c96da29e3db8ff16"
     ],
     [
       "SL.Shallow.write_with_framing",
@@ -283,7 +282,7 @@
         "token_correspondence_SL.Shallow.frame_write_wp", "unit_typing"
       ],
       0,
-      "c48856916611049054bc613a8353fdec"
+      "e56647526f4cfec4892ec71d0fc72885"
     ],
     [
       "SL.Shallow.result",
@@ -291,12 +290,11 @@
       2,
       1,
       [
-        "@query", "function_token_typing_SL.Heap.heap",
-        "lemma_SL.Heap.lemma_heap_memory_defined",
-        "typing_FStar.Pervasives.Native.snd"
+        "@query", "lemma_SL.Heap.lemma_heap_memory_defined",
+        "typing_FStar.Pervasives.Native.snd", "typing_SL.Heap.heap"
       ],
       0,
-      "ed5dcba4a508678a2d7fa0d5cf789747"
+      "93dfe4b84b9a0c5b78316b657575ee08"
     ],
     [
       "SL.Shallow.st",
@@ -305,7 +303,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_heap_memory_defined" ],
       0,
-      "6a098e37f3db146c5540ba275c4044c1"
+      "a2acab82bdc5729f3dd42fe2fcc38828"
     ],
     [
       "SL.Shallow.return",
@@ -324,7 +322,7 @@
         "refinement_interpretation_SL.Shallow_Tm_refine_6ef8f58227c55f249c581c63af4e5059"
       ],
       0,
-      "2ae98a550c443c0bce0669435f9f9c51"
+      "37ffc85e16d415dec7d9490d45cb95a2"
     ],
     [
       "SL.Shallow.frame_post",
@@ -333,7 +331,7 @@
       1,
       [ "@query" ],
       0,
-      "84ce12caa57a08f082230f9094b92123"
+      "6db1aff677ab89c91eb132ed0bfa1e05"
     ],
     [
       "SL.Shallow.frame",
@@ -342,7 +340,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_heap_memory_defined" ],
       0,
-      "55f3777bf909ec956eb3be4c5e1a2825"
+      "ec0a343973f07e7fb2c2c420202b0d83"
     ],
     [
       "SL.Shallow.frame",
@@ -369,7 +367,7 @@
         "token_correspondence_SL.Shallow.frame_post"
       ],
       0,
-      "b5d739287e8c531239fe24114447bfd4"
+      "1bba1640c06298cde4d1054280be99ed"
     ],
     [
       "SL.Shallow.bind_without_framing",
@@ -378,7 +376,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_heap_memory_defined" ],
       0,
-      "54626bd1c414a40136aedfff9ffeeded"
+      "7ecdb4a28d6e6075827d1494f44c9d91"
     ],
     [
       "SL.Shallow.bind_without_framing",
@@ -397,7 +395,7 @@
         "refinement_interpretation_SL.Shallow_Tm_refine_f202c3bece3ea98e3a75871dd48defda"
       ],
       0,
-      "d1eb60abff03949c97d0a8d1564932dc"
+      "a44958a047c73acefd653516e121664d"
     ],
     [
       "SL.Shallow.bind_with_framing",
@@ -406,7 +404,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_heap_memory_defined" ],
       0,
-      "d720ed467dac159a6460c8fcd0382e80"
+      "51c818ba5c0ac285010d317ccdc2902a"
     ],
     [
       "SL.Shallow.bind_with_framing",
@@ -425,7 +423,7 @@
         "refinement_interpretation_SL.Shallow_Tm_refine_f202c3bece3ea98e3a75871dd48defda"
       ],
       0,
-      "459538cf1a90e7c6be3f1b95f930482a"
+      "27a2adbd35672d1b0eecff9df5844f06"
     ],
     [
       "SL.Shallow.read_without_framing",
@@ -454,7 +452,7 @@
         "token_correspondence_SL.Shallow.read_wp", "unit_typing"
       ],
       0,
-      "5802bd6728b188b9ebd90667284236fa"
+      "10cb25d9c3c376407cba3752ed1aef30"
     ],
     [
       "SL.Shallow.read_with_framing",
@@ -468,7 +466,7 @@
         "token_correspondence_SL.Shallow.frame_read_wp"
       ],
       0,
-      "7de48b6affb6c71f27e0d30cda067867"
+      "38c0400cc39b2a328f9511e2f7a834b5"
     ],
     [
       "SL.Shallow.write_wp",
@@ -477,7 +475,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_points_to_defined" ],
       0,
-      "3f4e6c5b8515c937a841f611046ba88a"
+      "e8611fbfca26ee07fa0bb9fdda0991f7"
     ],
     [
       "SL.Shallow.write_without_framing",
@@ -507,7 +505,7 @@
         "token_correspondence_SL.Shallow.write_wp", "unit_typing"
       ],
       0,
-      "36d1541be480c817bb5742cd29e8b223"
+      "ef82d701c1317200d59a2b652ea1e890"
     ],
     [
       "SL.Shallow.write_with_framing",
@@ -523,7 +521,7 @@
         "token_correspondence_SL.Shallow.frame_write_wp", "unit_typing"
       ],
       0,
-      "a7255fce50984ef97c664a5e997255b1"
+      "d6513438c23537fe654e19804f09991f"
     ]
   ]
 ]

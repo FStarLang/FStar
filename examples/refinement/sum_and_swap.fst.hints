@@ -11,20 +11,18 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "equation_FStar.UInt32.n", "equation_HighComp.mint",
-        "equation_HighComp.monotonic", "equation_HighComp.state",
-        "equation_Prims.eqtype",
+        "equation_HighComp.monotonic", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_FStar.UInt32.t",
-        "function_token_typing_HighComp.state",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "int_typing",
         "interpretation_Sum_and_swap_Tm_abs_2368b0d4ad188f65187809c9431f2cbb",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "primitive_Prims.op_Addition",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.UInt32.t"
       ],
       0,
-      "94f1ddcf66a718aa65fb0bb7837c044f"
+      "895c020399edee554aa9254939f5d0d9"
     ],
     [
       "Sum_and_swap.wp_impl",
@@ -52,7 +50,7 @@
         "token_correspondence_HighComp.hwrite", "unit_typing"
       ],
       0,
-      "5e63a1da69ed827a46e82e7e6350b9db"
+      "83782f7eed9510d6166b60f048f092fa"
     ],
     [
       "Sum_and_swap.sum_post",
@@ -61,7 +59,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "9a7bf1075d8acf70ca22c124b6c98154"
+      "2643dccc4f393d5bbec352fa9351a1ea"
     ],
     [
       "Sum_and_swap.hswap_and_sum",
@@ -76,7 +74,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "954885919ca20aa931c2dcb37a008029"
+      "a4db6ab05e47c8dfeb00eb6dac299629"
     ],
     [
       "Sum_and_swap.lswap_and_sum",
@@ -104,7 +102,7 @@
         "token_correspondence_HighComp.hwrite", "unit_typing"
       ],
       0,
-      "8f9d91195c710a064cac5cf6cdf33ae8"
+      "29ece94515e9be6dffebf56709e2a2f7"
     ]
   ]
 ]

@@ -2,50 +2,6 @@
   "VCÞ¥eÜºUùb˜¶\u001a\u001cqâ",
   [
     [
-      "Raise.uu___64",
-      1,
-      2,
-      2,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_Raise.Wat@tok",
-        "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr",
-        "disc_equation_FStar.Tactics.Result.Success",
-        "equation_FStar.UInt32.n",
-        "fuel_guarded_inversion_FStar.Pervasives.either",
-        "function_token_typing_FStar.UInt32.n",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "0fc6b7a54d72245b880b18184eebb678"
-    ],
-    [
-      "Raise.uu___64",
-      2,
-      2,
-      2,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_Raise.Wat@tok",
-        "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr",
-        "disc_equation_FStar.Tactics.Result.Success",
-        "equation_FStar.UInt32.n",
-        "fuel_guarded_inversion_FStar.Pervasives.either",
-        "function_token_typing_FStar.UInt32.n",
-        "projection_inverse_BoxBool_proj_0", "true_interp"
-      ],
-      0,
-      "43bdb65b8ac8c15923b0d437244aeba6"
-    ],
-    [
       "Raise.uu___65",
       1,
       2,
@@ -65,10 +21,52 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "679fb729c29bd87cdb1477aeeb747e9b"
+      "cdb3854925082cbcaaefe0e0f0869f40"
     ],
     [
-      "Raise.uu___64",
+      "Raise.uu___65",
+      2,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_Raise.Wat@tok",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "function_token_typing_Prims.__cache_version_number__",
+        "projection_inverse_BoxBool_proj_0", "true_interp"
+      ],
+      0,
+      "f47dca03979185a39f722f2c4929f6e7"
+    ],
+    [
+      "Raise.uu___66",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_Raise.Wat@tok",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "function_token_typing_Prims.__cache_version_number__",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "11c210141cc1368390eeab4e05706a49"
+    ],
+    [
+      "Raise.uu___65",
       3,
       2,
       2,
@@ -81,16 +79,15 @@
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Tactics.Result.Success",
-        "equation_FStar.UInt32.n",
         "fuel_guarded_inversion_FStar.Pervasives.either",
-        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.__cache_version_number__",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d739c751e61d798b7151d79de7ecb107"
+      "148eea91f41e7e4d0e4a38a11f557b4e"
     ],
     [
-      "Raise.uu___64",
+      "Raise.uu___65",
       4,
       2,
       2,
@@ -103,13 +100,12 @@
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Tactics.Result.Success",
-        "equation_FStar.UInt32.n",
         "fuel_guarded_inversion_FStar.Pervasives.either",
-        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.__cache_version_number__",
         "projection_inverse_BoxBool_proj_0", "true_interp"
       ],
       0,
-      "7d8126015afeccc80037a395b6011b0c"
+      "b0562483ec226440b987ccf2c47c9c97"
     ]
   ]
 ]

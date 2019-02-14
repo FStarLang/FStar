@@ -16,7 +16,7 @@
         "typing_Effects.Def_Tm_abs_2814ab78f1ec085ea6966d552a2e5be0"
       ],
       0,
-      "d2e1820b4148093d85cd86a4f15e5346"
+      "5bcd44bbd1a7d6873e37f5145a84607e"
     ],
     [
       "Effects.Def.morphism_laws_via_eq",
@@ -33,7 +33,7 @@
         "typing_Effects.Def_Tm_abs_cdab0838a98b60fad4414a65cba3416e"
       ],
       0,
-      "14ae6d9a98d50917d9bf0b6877419814"
+      "99ad6dc4ba229714246b49e82644e7ab"
     ],
     [
       "Effects.Def.st_laws",
@@ -55,7 +55,6 @@
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Effects.Def.return_st",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_1ab3c254fc3fdd333385ddb75ba4f46d",
         "interpretation_Effects.Def_Tm_abs_8c9aafe4aac684eba6e501bb6160d50b",
         "interpretation_Effects.Def_Tm_abs_a077ae057068f89c39e76abbec52dbbd",
@@ -67,13 +66,14 @@
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "token_correspondence_Effects.Def.return_st",
         "typing_Effects.Def.bind_st", "typing_Effects.Def.return_st",
+        "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_1ab3c254fc3fdd333385ddb75ba4f46d",
         "typing_Effects.Def_Tm_abs_8c9aafe4aac684eba6e501bb6160d50b",
         "typing_Effects.Def_Tm_abs_a077ae057068f89c39e76abbec52dbbd",
         "typing_Effects.Def_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "28f30e5a65e98d18b67ed9f98e5c5fa7"
+      "ba783f7f20d9ec8e5528b2c3e9263125"
     ],
     [
       "Effects.Def.bind_ex",
@@ -94,7 +94,7 @@
         "unit_typing"
       ],
       0,
-      "fc463f69e269618a7a69485ccad0bbaa"
+      "ff80a872653c70bd7826a2413e83898a"
     ],
     [
       "Effects.Def.handle",
@@ -115,7 +115,7 @@
         "unit_typing"
       ],
       0,
-      "50d07a23cd224bef71a806325827b872"
+      "d9f7a52ca2415cca26bdf9d34232352f"
     ],
     [
       "Effects.Def.ex_laws",
@@ -161,7 +161,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "2f3bdec73476e2efda84d1721e7acad2"
+      "f8fda1ec3f597a67b38882cfe0133f7c"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -176,16 +176,16 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.stexn",
         "equation_FStar.FunctionalExtensionality.restricted_t",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_e822774a69ccfeb590e7552bf686252d",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
+        "typing_Effects.Def.s",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "e1dd7d33c117b30fbed42cd815f93316"
+      "0219319c6bafe5031a78c8dcf6fd2c3a"
     ],
     [
       "Effects.Def.stexn_laws",
@@ -211,7 +211,6 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Effects.Def.return_stexn",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_520b95df9cfeffc40bb799cf6f98c9fd",
         "interpretation_Effects.Def_Tm_abs_75c346f402a6bb60170590ef6799fdea",
         "interpretation_Effects.Def_Tm_abs_d96298f6c98d79bb980f5a405d849211",
@@ -224,6 +223,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_stexn", "typing_Effects.Def.return_stexn",
+        "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_520b95df9cfeffc40bb799cf6f98c9fd",
         "typing_Effects.Def_Tm_abs_75c346f402a6bb60170590ef6799fdea",
         "typing_Effects.Def_Tm_abs_d96298f6c98d79bb980f5a405d849211",
@@ -245,14 +245,14 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.exnst",
         "equation_FStar.FunctionalExtensionality.restricted_t",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_70d7adb0ad17ee20b2655a1dcadfb92e",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4"
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
+        "typing_Effects.Def.s"
       ],
       0,
-      "04b092de0f4b1209e1725fd0c044de86"
+      "98a2ce168258a016383b03218f749060"
     ],
     [
       "Effects.Def.exnst_laws",
@@ -279,7 +279,6 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Effects.Def.return_exnst",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_4bb1ebd30718177298bb3dd8b025e22b",
         "interpretation_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
         "interpretation_Effects.Def_Tm_abs_70d7adb0ad17ee20b2655a1dcadfb92e",
@@ -293,13 +292,14 @@
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "token_correspondence_Effects.Def.return_exnst",
         "typing_Effects.Def.bind_exnst", "typing_Effects.Def.return_exnst",
+        "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_4bb1ebd30718177298bb3dd8b025e22b",
         "typing_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
         "typing_Effects.Def_Tm_abs_70d7adb0ad17ee20b2655a1dcadfb92e",
         "typing_Effects.Def_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "c11de637894d41c00f32ae56494e8c28"
+      "f41a1271f31bd4865d5c67ecfaa17661"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -323,7 +323,6 @@
         "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_2ed90b67c232fcf76b22d38dbfb77780",
         "interpretation_Effects.Def_Tm_abs_520b95df9cfeffc40bb799cf6f98c9fd",
         "interpretation_Effects.Def_Tm_abs_6b90d38007fa15e5d0a9714d18910cbe",
@@ -341,7 +340,7 @@
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_st", "typing_Effects.Def.bind_stexn",
         "typing_Effects.Def.lift_st_stexn", "typing_Effects.Def.return_st",
-        "typing_Effects.Def.return_stexn",
+        "typing_Effects.Def.return_stexn", "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_2ed90b67c232fcf76b22d38dbfb77780",
         "typing_Effects.Def_Tm_abs_520b95df9cfeffc40bb799cf6f98c9fd",
         "typing_Effects.Def_Tm_abs_6b90d38007fa15e5d0a9714d18910cbe",
@@ -352,7 +351,7 @@
         "typing_Effects.Def_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "5d0a7a0c2c637b4b63b1677f105eaf6b"
+      "dbaee1374b600722e9c59508e464f936"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -377,7 +376,6 @@
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Effects.Def.s",
         "function_token_typing_Prims.unit",
         "interpretation_Effects.Def_Tm_abs_30b277eef6e008f31516fe56e7f14fa1",
         "interpretation_Effects.Def_Tm_abs_51624e76dd80b1ce058c5881c2b8c90b",
@@ -395,7 +393,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_Effects.Def.bind_ex", "typing_Effects.Def.bind_stexn",
         "typing_Effects.Def.lift_ex_stexn", "typing_Effects.Def.return_ex",
-        "typing_Effects.Def.return_stexn",
+        "typing_Effects.Def.return_stexn", "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_30b277eef6e008f31516fe56e7f14fa1",
         "typing_Effects.Def_Tm_abs_51624e76dd80b1ce058c5881c2b8c90b",
         "typing_Effects.Def_Tm_abs_520b95df9cfeffc40bb799cf6f98c9fd",
@@ -407,7 +405,7 @@
         "unit_typing"
       ],
       0,
-      "e4987860e5ceacb8492ef22e54e45980"
+      "bc577e7bad31ba4ef62edd5a7948d9da"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -432,7 +430,6 @@
         "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_09f69c438a3ad84a71c15a5b70915c3b",
         "interpretation_Effects.Def_Tm_abs_4170d7b4e12b70191643d29c795fa985",
         "interpretation_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
@@ -449,6 +446,7 @@
         "typing_Effects.Def.bind_exnst", "typing_Effects.Def.bind_st",
         "typing_Effects.Def.lift_st_exnst",
         "typing_Effects.Def.return_exnst", "typing_Effects.Def.return_st",
+        "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_09f69c438a3ad84a71c15a5b70915c3b",
         "typing_Effects.Def_Tm_abs_4170d7b4e12b70191643d29c795fa985",
         "typing_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
@@ -459,7 +457,7 @@
         "typing_Effects.Def_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "b43fc13687b5fc9b9ee109efeb5054e0"
+      "c722f41f4733ee77907c71c24a927f2d"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -480,7 +478,7 @@
         "unit_typing"
       ],
       0,
-      "511c0a79986b971954ea9c20c367a41c"
+      "6c2944eea9b3a76177509cd10ae4006e"
     ],
     [
       "Effects.Def.morphism_lift_ex_exnst",
@@ -509,7 +507,6 @@
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Effects.Def.s",
         "function_token_typing_Prims.unit",
         "interpretation_Effects.Def_Tm_abs_30b277eef6e008f31516fe56e7f14fa1",
         "interpretation_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
@@ -531,7 +528,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_Effects.Def.bind_ex", "typing_Effects.Def.bind_exnst",
         "typing_Effects.Def.lift_ex_exnst", "typing_Effects.Def.return_ex",
-        "typing_Effects.Def.return_exnst",
+        "typing_Effects.Def.return_exnst", "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_30b277eef6e008f31516fe56e7f14fa1",
         "typing_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
         "typing_Effects.Def_Tm_abs_70d7adb0ad17ee20b2655a1dcadfb92e",
@@ -543,7 +540,7 @@
         "unit_typing"
       ],
       0,
-      "c4a4e75b472ee742263d5d6371313afa"
+      "38fa48a32f0dbabf3e15695810e3a967"
     ],
     [
       "Effects.Def.st_laws",
@@ -565,7 +562,6 @@
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Effects.Def.return_st",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_1ab3c254fc3fdd333385ddb75ba4f46d",
         "interpretation_Effects.Def_Tm_abs_8c9aafe4aac684eba6e501bb6160d50b",
         "interpretation_Effects.Def_Tm_abs_a077ae057068f89c39e76abbec52dbbd",
@@ -577,13 +573,14 @@
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "token_correspondence_Effects.Def.return_st",
         "typing_Effects.Def.bind_st", "typing_Effects.Def.return_st",
+        "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_1ab3c254fc3fdd333385ddb75ba4f46d",
         "typing_Effects.Def_Tm_abs_8c9aafe4aac684eba6e501bb6160d50b",
         "typing_Effects.Def_Tm_abs_a077ae057068f89c39e76abbec52dbbd",
         "typing_Effects.Def_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "10e0db12c07f47a204104779df828a75"
+      "6dd2eb3a01730493a97b7a5c884b0935"
     ],
     [
       "Effects.Def.bind_ex",
@@ -604,7 +601,7 @@
         "unit_typing"
       ],
       0,
-      "7103e551025903ba0bef3e4c65bf4b2f"
+      "40044d794cbaa9c8d558430d1111209f"
     ],
     [
       "Effects.Def.handle",
@@ -625,7 +622,7 @@
         "unit_typing"
       ],
       0,
-      "0ea9cec54448f840c8c08d634c206455"
+      "86c6a2a1e9195592ccb3e861f2fa99f4"
     ],
     [
       "Effects.Def.ex_laws",
@@ -671,7 +668,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "4a9369c0aa49871f27e5df23b3ef6322"
+      "5fe380613f1c7ffc163d4dafb10b306b"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -686,16 +683,16 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.stexn",
         "equation_FStar.FunctionalExtensionality.restricted_t",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_e822774a69ccfeb590e7552bf686252d",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
+        "typing_Effects.Def.s",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "075c6f955257110ecdffe166fed122d8"
+      "efed05d0e55d8dcaa65b314f901bf085"
     ],
     [
       "Effects.Def.stexn_laws",
@@ -721,7 +718,6 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Effects.Def.return_stexn",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_520b95df9cfeffc40bb799cf6f98c9fd",
         "interpretation_Effects.Def_Tm_abs_75c346f402a6bb60170590ef6799fdea",
         "interpretation_Effects.Def_Tm_abs_d96298f6c98d79bb980f5a405d849211",
@@ -734,6 +730,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_stexn", "typing_Effects.Def.return_stexn",
+        "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_520b95df9cfeffc40bb799cf6f98c9fd",
         "typing_Effects.Def_Tm_abs_75c346f402a6bb60170590ef6799fdea",
         "typing_Effects.Def_Tm_abs_d96298f6c98d79bb980f5a405d849211",
@@ -755,14 +752,14 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Effects.Def.exnst",
         "equation_FStar.FunctionalExtensionality.restricted_t",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_70d7adb0ad17ee20b2655a1dcadfb92e",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4"
+        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
+        "typing_Effects.Def.s"
       ],
       0,
-      "f54a8817649a5b1675f34dc398e0b8f4"
+      "6f68037a0964ad0414fbfa8b56c7e96b"
     ],
     [
       "Effects.Def.exnst_laws",
@@ -789,7 +786,6 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Effects.Def.return_exnst",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_4bb1ebd30718177298bb3dd8b025e22b",
         "interpretation_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
         "interpretation_Effects.Def_Tm_abs_70d7adb0ad17ee20b2655a1dcadfb92e",
@@ -803,13 +799,14 @@
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "token_correspondence_Effects.Def.return_exnst",
         "typing_Effects.Def.bind_exnst", "typing_Effects.Def.return_exnst",
+        "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_4bb1ebd30718177298bb3dd8b025e22b",
         "typing_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
         "typing_Effects.Def_Tm_abs_70d7adb0ad17ee20b2655a1dcadfb92e",
         "typing_Effects.Def_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "eaa4264d7141980e4631571afe228fe3"
+      "1ae43a77118f916eed8d2c1f3ec95f5e"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -833,7 +830,6 @@
         "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_2ed90b67c232fcf76b22d38dbfb77780",
         "interpretation_Effects.Def_Tm_abs_520b95df9cfeffc40bb799cf6f98c9fd",
         "interpretation_Effects.Def_Tm_abs_6b90d38007fa15e5d0a9714d18910cbe",
@@ -851,7 +847,7 @@
         "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "typing_Effects.Def.bind_st", "typing_Effects.Def.bind_stexn",
         "typing_Effects.Def.lift_st_stexn", "typing_Effects.Def.return_st",
-        "typing_Effects.Def.return_stexn",
+        "typing_Effects.Def.return_stexn", "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_2ed90b67c232fcf76b22d38dbfb77780",
         "typing_Effects.Def_Tm_abs_520b95df9cfeffc40bb799cf6f98c9fd",
         "typing_Effects.Def_Tm_abs_6b90d38007fa15e5d0a9714d18910cbe",
@@ -862,7 +858,7 @@
         "typing_Effects.Def_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "d67e04ff4455c4210a1f414b66db96db"
+      "5e86a2990e8b8f31149fff74db7d19fe"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -887,7 +883,6 @@
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Effects.Def.s",
         "function_token_typing_Prims.unit",
         "interpretation_Effects.Def_Tm_abs_30b277eef6e008f31516fe56e7f14fa1",
         "interpretation_Effects.Def_Tm_abs_51624e76dd80b1ce058c5881c2b8c90b",
@@ -905,7 +900,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_Effects.Def.bind_ex", "typing_Effects.Def.bind_stexn",
         "typing_Effects.Def.lift_ex_stexn", "typing_Effects.Def.return_ex",
-        "typing_Effects.Def.return_stexn",
+        "typing_Effects.Def.return_stexn", "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_30b277eef6e008f31516fe56e7f14fa1",
         "typing_Effects.Def_Tm_abs_51624e76dd80b1ce058c5881c2b8c90b",
         "typing_Effects.Def_Tm_abs_520b95df9cfeffc40bb799cf6f98c9fd",
@@ -917,7 +912,7 @@
         "unit_typing"
       ],
       0,
-      "f9f204fccd753fcb52cea3170efcdfff"
+      "ad55dbccb0ea5ecece60156af5b11fa7"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -942,7 +937,6 @@
         "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Effects.Def.s",
         "interpretation_Effects.Def_Tm_abs_09f69c438a3ad84a71c15a5b70915c3b",
         "interpretation_Effects.Def_Tm_abs_4170d7b4e12b70191643d29c795fa985",
         "interpretation_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
@@ -959,6 +953,7 @@
         "typing_Effects.Def.bind_exnst", "typing_Effects.Def.bind_st",
         "typing_Effects.Def.lift_st_exnst",
         "typing_Effects.Def.return_exnst", "typing_Effects.Def.return_st",
+        "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_09f69c438a3ad84a71c15a5b70915c3b",
         "typing_Effects.Def_Tm_abs_4170d7b4e12b70191643d29c795fa985",
         "typing_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
@@ -969,7 +964,7 @@
         "typing_Effects.Def_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "662bc0097bb4d9d644d5b6fe9dc6c42a"
+      "eb8965b9f029cc0e7182c0f595b7ce26"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -990,7 +985,7 @@
         "unit_typing"
       ],
       0,
-      "395c9ec2c5a579bcd3a1dc0804e3cb75"
+      "be30eee015330d8953169f9cf7030130"
     ],
     [
       "Effects.Def.morphism_lift_ex_exnst",
@@ -1019,7 +1014,6 @@
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Effects.Def.s",
         "function_token_typing_Prims.unit",
         "interpretation_Effects.Def_Tm_abs_30b277eef6e008f31516fe56e7f14fa1",
         "interpretation_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
@@ -1041,7 +1035,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_Effects.Def.bind_ex", "typing_Effects.Def.bind_exnst",
         "typing_Effects.Def.lift_ex_exnst", "typing_Effects.Def.return_ex",
-        "typing_Effects.Def.return_exnst",
+        "typing_Effects.Def.return_exnst", "typing_Effects.Def.s",
         "typing_Effects.Def_Tm_abs_30b277eef6e008f31516fe56e7f14fa1",
         "typing_Effects.Def_Tm_abs_5c36f013e7354becfedf6e6e0ac0b429",
         "typing_Effects.Def_Tm_abs_70d7adb0ad17ee20b2655a1dcadfb92e",
@@ -1053,7 +1047,7 @@
         "unit_typing"
       ],
       0,
-      "0e8c62a2bf03a9d544b2477dcbc14bc2"
+      "2071f34116c7489a45e8df3fcd33ae4e"
     ]
   ]
 ]

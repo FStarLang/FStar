@@ -2,15 +2,6 @@
   "‚@ú†5^ã8í ™\n¯\u0018iá",
   [
     [
-      "Plugins.Test.uu___64",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "753cdd04bdb4bcf19ba5cc975b7b19db"
-    ],
-    [
       "Plugins.Test.uu___65",
       1,
       2,
@@ -23,19 +14,34 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "eb04d9cb0981f2f98970bcb5fa73ec79"
+      "ee669bea37c53ae63f9c2132d724031a"
     ],
     [
-      "Plugins.Test.uu___65",
+      "Plugins.Test.uu___66",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "equation_Prims.eqtype", "function_token_typing_Prims.bool",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "23af03bf6f911c94731c0cd51150796f"
+    ],
+    [
+      "Plugins.Test.uu___66",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "82bb219ca203b993f885191c8a6e2168"
+      "e8bd3f7bca3aebd887dfab1c3a1c2c43"
     ],
     [
-      "Plugins.Test.uu___66",
+      "Plugins.Test.uu___67",
       1,
       2,
       1,
@@ -46,16 +52,16 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "643522f417cd8bc6d2cb69c0b6d22d1f"
+      "c61e971b5321b3fbcbb4940f1acf2af1"
     ],
     [
-      "Plugins.Test.uu___66",
+      "Plugins.Test.uu___67",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "c1047600580cff729891cb77bb6a5187"
+      "38129afd3b578f21c42f062e14df6ea7"
     ]
   ]
 ]

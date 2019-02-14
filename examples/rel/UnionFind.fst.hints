@@ -37,7 +37,7 @@
         "typing_UnionFind.Forest.get", "unit_typing"
       ],
       0,
-      "0b96ae26709473e6b71edb4d8109a0c2"
+      "fddf2dcfcbad63546d69bd0680324cc7"
     ],
     [
       "UnionFind.lemma_find_height_independence",
@@ -64,7 +64,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_6ce797c4d7ee72530ef1bdb95b2425ba"
       ],
       0,
-      "ff7219271041f48bc39f23b6b159069b"
+      "26416fa6e21864533e4049e5e8b606da"
     ],
     [
       "UnionFind.lemma_find_height_independence",
@@ -92,8 +92,8 @@
         "equation_UnionFind.Forest.uf_forest",
         "equation_UnionFind.Functions.diff",
         "equation_with_fuel_UnionFind.Functions.find.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "function_token_typing_UnionFind.Forest.subtree_t",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -120,11 +120,12 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___3",
         "typing_FStar.Seq.Base.index", "typing_UnionFind.Forest.elt",
         "typing_UnionFind.Forest.get", "typing_UnionFind.Forest.id",
+        "typing_UnionFind.Forest.subtree_t",
         "typing_UnionFind.Functions.diff", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "54eca49190f78812e65ff59aa07b90b2"
+      "b1c653a2e67d931a43146d483ebe097d"
     ],
     [
       "UnionFind.lemma_find_opt_helper",
@@ -148,8 +149,8 @@
         "equation_UnionFind.Forest.subtree_t",
         "equation_UnionFind.Forest.uf_forest",
         "equation_with_fuel_UnionFind.Functions.find_opt.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "function_token_typing_UnionFind.Forest.subtree_t",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -176,10 +177,10 @@
         "token_correspondence_UnionFind.Functions.find_opt.fuel_instrumented",
         "typing_FStar.Ghost.erased", "typing_UnionFind.Forest.elt",
         "typing_UnionFind.Forest.get", "typing_UnionFind.Forest.id",
-        "unit_typing"
+        "typing_UnionFind.Forest.subtree_t", "unit_typing"
       ],
       0,
-      "dff05dfde37e2bf62404a34592cd6579"
+      "af3f59ac1f2276da9716224c06044469"
     ],
     [
       "UnionFind.lemma_find_find_opt_same_result",
@@ -205,7 +206,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_6e7073b5999cbd69d40014e5797b6f0e"
       ],
       0,
-      "536180eb0eddad749914603563f16503"
+      "9cb6544506e2de5c41135414566eff89"
     ],
     [
       "UnionFind.lemma_find_find_opt_same_result",
@@ -236,8 +237,8 @@
         "equation_UnionFind.Functions.diff",
         "equation_with_fuel_UnionFind.Functions.find.fuel_instrumented",
         "equation_with_fuel_UnionFind.Functions.find_opt.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "function_token_typing_UnionFind.Forest.subtree_t",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -267,11 +268,12 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___3",
         "typing_FStar.Seq.Base.index", "typing_UnionFind.Forest.elt",
         "typing_UnionFind.Forest.get", "typing_UnionFind.Forest.id",
+        "typing_UnionFind.Forest.subtree_t",
         "typing_UnionFind.Functions.diff", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "cca3ba15ec472245a04745b941d648eb"
+      "26e6f28351c479728887413c7b8f6bfb"
     ],
     [
       "UnionFind.lemma_find_opt_parent_same_as_find_root",
@@ -298,7 +300,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_c53c333df44226445a1c5b29bd989a32"
       ],
       0,
-      "7b0620e16215c53934d4a69bc61de38e"
+      "7cedc7b4d8ac33b6409b4420d61c6b4b"
     ],
     [
       "UnionFind.lemma_find_opt_parent_same_as_find_root",
@@ -331,8 +333,8 @@
         "equation_UnionFind.Functions.diff",
         "equation_with_fuel_UnionFind.Functions.find.fuel_instrumented",
         "equation_with_fuel_UnionFind.Functions.find_opt.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "function_token_typing_UnionFind.Forest.subtree_t",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -366,11 +368,12 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___3",
         "typing_FStar.Seq.Base.index", "typing_UnionFind.Forest.elt",
         "typing_UnionFind.Forest.get", "typing_UnionFind.Forest.id",
+        "typing_UnionFind.Forest.subtree_t",
         "typing_UnionFind.Functions.diff", "unit_inversion", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "da244d6f724757b454cafd8add8714ae"
+      "2f1cdcc7d0eb3f22f74985298c9342d2"
     ],
     [
       "UnionFind.lemma_find_find_opt_equivalence",
@@ -397,7 +400,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_7957a253bd5dbd2cf88871cf162ced58"
       ],
       0,
-      "951953cf9cc263792a3ecece5c7c6760"
+      "214c50b59d5c9a1bbadd6a51db2059db"
     ],
     [
       "UnionFind.lemma_find_find_opt_equivalence",
@@ -423,8 +426,8 @@
         "equation_UnionFind.Forest.uf_forest",
         "equation_UnionFind.Functions.diff",
         "equation_with_fuel_UnionFind.Functions.find.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "function_token_typing_UnionFind.Forest.subtree_t",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -450,11 +453,12 @@
         "typing_FStar.Ghost.erased", "typing_FStar.Ghost.reveal",
         "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___3",
         "typing_UnionFind.Forest.get", "typing_UnionFind.Forest.id",
+        "typing_UnionFind.Forest.subtree_t",
         "typing_UnionFind.Functions.diff", "unit_inversion", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f8606b0d972f417a2337787a7282c0ff"
+      "6c93d36feaf923670d1097b68ceff8d1"
     ],
     [
       "UnionFind.lemma_merge_helper",
@@ -488,8 +492,8 @@
         "equation_UnionFind.Functions.well_formed",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple3",
         "function_token_typing_FStar.OrdSet.union",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "function_token_typing_UnionFind.Forest.subtree_t",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -530,10 +534,11 @@
         "typing_FStar.Seq.Base.index", "typing_UnionFind.Forest.elt",
         "typing_UnionFind.Forest.get", "typing_UnionFind.Forest.id",
         "typing_UnionFind.Forest.set", "typing_UnionFind.Forest.set_n",
+        "typing_UnionFind.Forest.subtree_t",
         "typing_UnionFind.Functions.merge", "unit_inversion", "unit_typing"
       ],
       0,
-      "b17624e734a674542f9cf66d3ebaecf1"
+      "f17d7cec123f882bea70e6529e773e8c"
     ],
     [
       "UnionFind.lemma_merge_opt_helper",
@@ -567,8 +572,8 @@
         "equation_UnionFind.Functions.well_formed",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple3",
         "function_token_typing_FStar.OrdSet.union",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "function_token_typing_UnionFind.Forest.subtree_t",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion", "int_typing",
@@ -612,11 +617,11 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___3",
         "typing_FStar.Seq.Base.index", "typing_UnionFind.Forest.elt",
         "typing_UnionFind.Forest.get", "typing_UnionFind.Forest.id",
-        "typing_UnionFind.Forest.set_n",
+        "typing_UnionFind.Forest.set_n", "typing_UnionFind.Forest.subtree_t",
         "typing_UnionFind.Functions.merge_opt", "unit_typing"
       ],
       0,
-      "1e6b40e30fb775239948cf7623bc8856"
+      "417d045cbbc3f4816c3f962944214a8d"
     ],
     [
       "UnionFind.lemma_merge_height_independence",
@@ -636,8 +641,8 @@
         "equation_UnionFind.Forest.subtree_t",
         "equation_UnionFind.Forest.uf_forest",
         "equation_UnionFind.Functions.merge",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "function_token_typing_UnionFind.Forest.subtree_t",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -668,11 +673,11 @@
         "typing_FStar.Ghost.erased",
         "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___3",
         "typing_FStar.Seq.Base.index", "typing_UnionFind.Forest.elt",
-        "typing_UnionFind.Forest.id", "typing_UnionFind.Functions.merge",
-        "unit_typing"
+        "typing_UnionFind.Forest.id", "typing_UnionFind.Forest.subtree_t",
+        "typing_UnionFind.Functions.merge", "unit_typing"
       ],
       0,
-      "4c4568aacc1f0b185b16d88794ff0189"
+      "f7448bc4fd8ec29e1ac71e8d01afce00"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence_helper_diff",
@@ -701,7 +706,7 @@
         "unit_typing"
       ],
       0,
-      "5b772bfb4afcc1e7288ba425dcaf4ec3"
+      "fadd164d1c72331926a5a9af81858c18"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence_helper_diff",
@@ -727,8 +732,8 @@
         "equation_UnionFind.Forest.subtree_t",
         "equation_UnionFind.Functions.diff",
         "equation_with_fuel_UnionFind.Functions.find.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "function_token_typing_UnionFind.Forest.subtree_t",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -753,11 +758,12 @@
         "typing_FStar.Ghost.erased", "typing_FStar.Ghost.reveal",
         "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___3",
         "typing_UnionFind.Forest.get", "typing_UnionFind.Forest.id",
-        "typing_UnionFind.Functions.diff", "unit_typing",
+        "typing_UnionFind.Forest.subtree_t",
+        "typing_UnionFind.Functions.diff", "unit_inversion", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e0f9b0489db31b84cea2acb5b263dc6c"
+      "17d07368220f2458e1fed2723d2adba3"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence_helper_same",
@@ -786,7 +792,7 @@
         "unit_typing"
       ],
       0,
-      "8fbb03e6ce29aeca44f8513d02ba1f11"
+      "8911e035393e6933046374d7ab873385"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence_helper_same",
@@ -816,8 +822,8 @@
         "equation_UnionFind.Forest.uf_forest",
         "equation_UnionFind.Functions.diff",
         "equation_with_fuel_UnionFind.Functions.find.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "function_token_typing_UnionFind.Forest.subtree_t",
         "haseqFStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -825,6 +831,7 @@
         "interpretation_FStar.DM4F.ST_Tm_abs_ee76d736130c87929e2885ea5fbb1ced",
         "interpretation_UnionFind.Functions_Tm_abs_6fd1b78dff0ca37f7f327f8e0667175f",
         "lemma_FStar.DM4F.Heap.lemma_sel_tot_is_sel_if_contains_a_well_typed",
+        "lemma_FStar.DM4F.Heap.sel_same_addr_of",
         "primitive_Prims.op_Equality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
@@ -847,15 +854,17 @@
         "refinement_interpretation_UnionFind_Tm_refine_79b8679e2609c5f48750c6a1e885add2",
         "token_correspondence_UnionFind.Functions.find.fuel_instrumented",
         "typing_FStar.DM4F.Heap.ref", "typing_FStar.DM4F.Heap.sel",
-        "typing_FStar.Ghost.erased", "typing_FStar.Ghost.reveal",
+        "typing_FStar.DM4F.Heap.sel_tot", "typing_FStar.Ghost.erased",
+        "typing_FStar.Ghost.reveal",
         "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___3",
         "typing_FStar.Seq.Base.index", "typing_UnionFind.Forest.elt",
         "typing_UnionFind.Forest.get", "typing_UnionFind.Forest.id",
-        "typing_UnionFind.Functions.diff", "unit_typing",
+        "typing_UnionFind.Forest.subtree_t",
+        "typing_UnionFind.Functions.diff", "unit_inversion", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7c45ab6b1fa24f879ea656d24049dc7b"
+      "6fc989e4c671a69eb5739935d25ec67e"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence",
@@ -907,7 +916,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "dc78f4d12480ce3cc1d6a0e197e18b0d"
+      "318369d1ef4256529d234b2009bee294"
     ],
     [
       "UnionFind.lemma_find_helper",
@@ -925,7 +934,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_6ce797c4d7ee72530ef1bdb95b2425ba"
       ],
       0,
-      "0f6fe521e75b4b3fe85ac5d44259bdae"
+      "31561284a17915f7ef4c6bccf4bfa350"
     ],
     [
       "UnionFind.lemma_find_height_independence",
@@ -949,7 +958,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_6ce797c4d7ee72530ef1bdb95b2425ba"
       ],
       0,
-      "63e295d37fa96e32dc53e0c605d7777e"
+      "56b6be6198281226dba2cf74f39bb289"
     ],
     [
       "UnionFind.lemma_find_opt_helper",
@@ -973,7 +982,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_6ce797c4d7ee72530ef1bdb95b2425ba"
       ],
       0,
-      "4943748f86d22595a359cc86fd8ec730"
+      "cde3b93b8c1031a8da669a334cef6e3c"
     ],
     [
       "UnionFind.lemma_find_find_opt_same_result",
@@ -997,7 +1006,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_6ce797c4d7ee72530ef1bdb95b2425ba"
       ],
       0,
-      "d8b95c1c31df99341909d71f146b0404"
+      "93ff7a50098877d72ce357460735aa5d"
     ],
     [
       "UnionFind.lemma_find_opt_parent_same_as_find_root",
@@ -1022,7 +1031,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_6ce797c4d7ee72530ef1bdb95b2425ba"
       ],
       0,
-      "75aa585c98fd80603980d547f118912e"
+      "031e747f5a0ddc0a1e6911061fe47e57"
     ],
     [
       "UnionFind.lemma_find_find_opt_equivalence",
@@ -1047,7 +1056,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_6ce797c4d7ee72530ef1bdb95b2425ba"
       ],
       0,
-      "f9574f0d32a8de6373f2227d57c37f7c"
+      "d5d321787311bd53e7d14dc378ab4f07"
     ],
     [
       "UnionFind.lemma_merge_helper",
@@ -1074,7 +1083,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "3fdccda2888b501e7e0f09b0efe33be3"
+      "5e5c5ce8744f3e56b2a0d2f0bbbd9093"
     ],
     [
       "UnionFind.lemma_merge_opt_helper",
@@ -1103,7 +1112,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "1bd6ea6c51dd41bf5f70a230b484bb6a"
+      "e254d448f3ef29cab5d870b08d072f5e"
     ],
     [
       "UnionFind.lemma_merge_height_independence",
@@ -1123,7 +1132,7 @@
         "refinement_interpretation_UnionFind_Tm_refine_6ce797c4d7ee72530ef1bdb95b2425ba"
       ],
       0,
-      "246d3618170201f2ea112226a115f2b9"
+      "9310ba052585d30426a623e1de2495ec"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence_helper_diff",
@@ -1150,7 +1159,7 @@
         "unit_typing"
       ],
       0,
-      "d2953b3b9d655f40394bff747b6a4a34"
+      "3f1b2fa21428ddd3e854e7668543a20a"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence_helper_same",
@@ -1177,7 +1186,7 @@
         "unit_typing"
       ],
       0,
-      "47897fa4bb7ead9946eb0cb5cff6096f"
+      "e5305ce090297e561978a2229f039717"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence",
@@ -1200,7 +1209,7 @@
         "unit_typing"
       ],
       0,
-      "f4a51659cebfab9ff2ff3fb5fdd40880"
+      "297d854be91e277dba9da0f90efc9654"
     ]
   ]
 ]

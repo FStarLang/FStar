@@ -14,10 +14,8 @@
         "equation_FStar.TwoLevelHeap.rid",
         "equation_FStar.TwoLevelHeap.rref",
         "equation_FStar.TwoLevelHeap.sel", "equation_FStar.TwoLevelHeap.t",
-        "equation_Prims.eqtype",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
-        "function_token_typing_Prims.int", "int_inversion",
-        "lemma_FStar.Map.lemma_ContainsDom",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "int_inversion", "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_InDomConcat",
         "lemma_FStar.Map.lemma_InDomRestrict",
         "lemma_FStar.Map.lemma_InDomUpd1", "lemma_FStar.Map.lemma_InDomUpd2",
@@ -37,12 +35,13 @@
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.Map.concat",
         "typing_FStar.Map.contains", "typing_FStar.Map.domain",
         "typing_FStar.Map.restrict", "typing_FStar.Map.sel",
+        "typing_FStar.Monotonic.Heap.heap",
         "typing_FStar.Monotonic.Heap.upd", "typing_FStar.Set.complement",
         "typing_FStar.Set.empty", "typing_FStar.Set.singleton",
-        "typing_FStar.Set.union"
+        "typing_FStar.Set.union", "typing_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "b0752d950b7e0d92e5e679890922b5d9"
+      "38bee9a1fca5f74d939a64884038106e"
     ]
   ]
 ]
