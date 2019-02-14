@@ -214,7 +214,7 @@ let lemma_div_mod a p = ()
 val lemma_mod_lt: a:int -> p:pos -> Lemma (0 <= a % p /\ a % p < p)
 let lemma_mod_lt a p = ()
 
-private
+
 val lemma_div_lt_nat: a:nat -> n:nat -> m:nat{m <= n} ->
   Lemma (requires (a < pow2 n))
         (ensures  (a / pow2 m < pow2 (n-m)))
@@ -231,21 +231,21 @@ let lemma_div_lt a n m =
   if a >= 0 then lemma_div_lt_nat a n m
   else ()
 
-private
+
 val bounded_multiple_is_zero (x:int) (n:pos) : Lemma
   (requires -n < x * n /\ x * n < n)
   (ensures x == 0)
 let bounded_multiple_is_zero (x:int) (n:pos) = ()
 
-private
+
 val small_div (a:nat) (n:pos) : Lemma (requires a < n) (ensures a / n == 0)
 let small_div (a:nat) (n:pos) : Lemma (requires a < n) (ensures a / n == 0) = ()
 
-private
+
 val small_mod (a:nat) (n:pos) : Lemma (requires a < n) (ensures a % n == a)
 let small_mod (a:nat) (n:pos) : Lemma (requires a < n) (ensures a % n == a) = ()
 
-private
+
 val lt_multiple_is_equal (a:nat) (b:nat) (x:int) (n:pos) : Lemma
   (requires a < n /\ b < n /\ a == b + x * n)
   (ensures a == b /\ x == 0)
@@ -255,7 +255,7 @@ let lt_multiple_is_equal (a:nat) (b:nat) (x:int) (n:pos) =
 
 #reset-options "--z3rlimit 100 --initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 1 --z3seed 1"
 
-private let lemma_mod_plus_0 (a:int) (b:int) (p:pos) : Lemma
+ let lemma_mod_plus_0 (a:int) (b:int) (p:pos) : Lemma
   ((a + b * p) % p - a % p = p * (b + a / p - (a + b * p) / p))
   =
   let z: int = a + b * p in
@@ -264,7 +264,7 @@ private let lemma_mod_plus_0 (a:int) (b:int) (p:pos) : Lemma
 
 #reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
 
-private let lemma_mod_plus_1 (a:int) (b:int) (p:pos) : Lemma
+ let lemma_mod_plus_1 (a:int) (b:int) (p:pos) : Lemma
   ((a + b * p) % p = a + b * p - p * ((a + b * p) / p))
   = lemma_div_mod (a+b*p) p;
     lemma_mod_lt a p;
@@ -291,7 +291,7 @@ let lemma_mod_plus a b p =
   let y = a - p * (a / p) in
   lemma_eq_trans_2 w x y z
 
-private
+
 let add_div_mod_1 (a:int) (n:pos) : Lemma ((a + n) % n == a % n /\ (a + n) / n == a / n + 1) =
   lemma_div_mod a n;
   lemma_div_mod (a + n) n;
@@ -302,7 +302,7 @@ let add_div_mod_1 (a:int) (n:pos) : Lemma ((a + n) % n == a % n /\ (a + n) / n =
   lt_multiple_is_equal ((a + n) % n) (a % n) (a / n + 1 - (a + n) / n) n;
   ()
 
-private
+
 let sub_div_mod_1 (a:int) (n:pos) : Lemma ((a - n) % n == a % n /\ (a - n) / n == a / n - 1) =
   lemma_div_mod a n;
   lemma_div_mod (a - n) n;
@@ -314,7 +314,7 @@ let sub_div_mod_1 (a:int) (n:pos) : Lemma ((a - n) % n == a % n /\ (a - n) / n =
   ()
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3cliopt smt.arith.nl=true --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native --z3rlimit 30"
-private
+
 let rec lemma_div_mod_plus (a:int) (b:int) (n:pos) : Lemma
   (requires True)
   (ensures
@@ -336,23 +336,23 @@ let rec lemma_div_mod_plus (a:int) (b:int) (n:pos) : Lemma
   )
 #reset-options
 
-private
+
 val lemma_div_plus (a:int) (b:int) (n:pos) : Lemma ((a + b * n) / n = a / n + b)
 let lemma_div_plus (a:int) (b:int) (n:pos) = lemma_div_mod_plus a b n
 
-private
+
 val cancel_mul_div (a:int) (n:pos) : Lemma ((a * n) / n == a)
 let cancel_mul_div (a:int) (n:pos) =
   small_div 0 n;
   lemma_div_plus 0 a n
 
-private
+
 val cancel_mul_mod (a:int) (n:pos) : Lemma ((a * n) % n == 0)
 let cancel_mul_mod (a:int) (n:pos) =
   small_mod 0 n;
   lemma_mod_plus 0 a n
 
-private
+
 val mod_add_both (a:int) (b:int) (x:int) (n:pos) : Lemma
   (requires a % n == b % n)
   (ensures (a + x) % n == (b + x) % n)
@@ -373,14 +373,13 @@ let mod_add_both (a:int) (b:int) (x:int) (n:pos) =
   assert ((a + x) % n - (b + x) % n == 0);
   ()
 
-private
+
 val lemma_mod_add_distr (a:int) (b:int) (n:pos) : Lemma ((a + b % n) % n = (a + b) % n)
 let lemma_mod_add_distr (a:int) (b:int) (n:pos) =
   lemma_div_mod b n;
   // (a + b) % n == (a + (b % n) + (b / n) * n) % n
   lemma_mod_plus (a + (b % n)) (b / n) n
 
-private
 val lemma_mod_sub_distr (a:int) (b:int) (n:pos) : Lemma ((a - b % n) % n = (a - b) % n)
 let lemma_mod_sub_distr (a:int) (b:int) (n:pos) =
   lemma_div_mod b n;
@@ -397,7 +396,7 @@ let lemma_mod_sub_1 a b = ()
 //NS: not sure why this requires 4 unfoldings
 //    it fails initially, and then succeeds on a retry with less fuel; strange
 #reset-options "--z3rlimit 20 --initial_ifuel 0 --initial_fuel 0 --z3seed 1"
-private let lemma_mod_mul_distr_l_0 (a:nat) (b:nat) (p:pos) : Lemma
+let lemma_mod_mul_distr_l_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((((a % p) + (a / p) * p) * b) % p = ((a % p) * b + ((a / p) * b) * p) % p)
   = ()
 
@@ -551,14 +550,14 @@ val division_propriety: a:int -> b:pos ->
 let division_propriety a b = ()
 
 (* Internal lemmas for proving the definition of division *)
-private val division_definition_lemma_1: a:int -> b:pos -> m:int{a - b < m * b} ->
+val division_definition_lemma_1: a:int -> b:pos -> m:int{a - b < m * b} ->
     Lemma (m > a / b - 1)
 let division_definition_lemma_1 a b m =
   if a / b - 1 < 0 then () else begin
     division_propriety a b;
     multiplication_order_lemma m (a / b - 1) b
   end
-private val division_definition_lemma_2: a:int -> b:pos -> m:int{m * b <= a} ->
+val division_definition_lemma_2: a:int -> b:pos -> m:int{m * b <= a} ->
     Lemma (m < a / b + 1)
 let division_definition_lemma_2 a b m =
   division_propriety a b;
@@ -584,7 +583,7 @@ val division_addition_lemma: a:int -> b:pos -> n:int ->
     Lemma ( (a + n * b) / b = a / b + n )
 let division_addition_lemma a b n = division_definition (a + n * b) b (a / b + n)
 
-private let lemma_div_le_ (a:nat) (b:nat) (d:pos) : Lemma
+let lemma_div_le_ (a:nat) (b:nat) (d:pos) : Lemma
   (requires (a <= b /\ a / d > b / d))
   (ensures  (False))
   = lemma_div_mod a d;
@@ -636,7 +635,6 @@ let mod_mult_exact (a:int) (n:pos) (q:pos) =
   // a == (k * q) * n
   cancel_mul_mod (k * q) n
 
-private
 val mod_mul_div_exact (a:int) (b:pos) (n:pos) : Lemma
   (requires (pos_times_pos_is_pos b n; a % (b * n) == 0))
   (ensures (a / b) % n == 0)
@@ -809,8 +807,8 @@ let modulo_add p a b c =
   modulo_distributivity a b p;
   modulo_distributivity a c p
 
-private val lemma_mod_twice : a:int -> p:pos -> Lemma ((a % p) % p == a % p)
-private let lemma_mod_twice a p = lemma_mod_mod (a % p) a p
+val lemma_mod_twice : a:int -> p:pos -> Lemma ((a % p) % p == a % p)
+let lemma_mod_twice a p = lemma_mod_mod (a % p) a p
 
 val modulo_sub : p:pos -> a:int -> b:int -> c:int -> Lemma
   (requires ((a + b) % p = (a + c) % p))
@@ -854,3 +852,21 @@ let lemma_mod_plus_injective (n:pos) (a:int) (b:nat) (c:nat) =
   small_mod b n;
   small_mod c n;
   mod_add_both (a + b) (a + c) (-a) n
+
+// let test (n:pos) (i:nat) (b:nat{i < n * b}) =
+//   let bound = n * b in
+//   assert (i <= (n * b) - 1);
+//   assert (i / n <= b - 1);
+//   assert (n * (i / n) < bound);
+//   assert (n * (i / n) + n <= bound)
+
+// let test2 (n:pos) (i:nat{ n <= i }) =
+//   let j = i - n in
+//   lemma_mod_sub i n 1;
+//   assert (i % n == j % n)
+
+// let test3  (n:pos) (i:nat{i >= n}) =
+//   let j = i - n in
+//   assert (j / n == (i - n) / n);
+//   add_div_mod_1 j n;
+//   assert (j / n == (i / n) - 1)
