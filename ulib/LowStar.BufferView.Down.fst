@@ -163,6 +163,27 @@ let rec as_seq'_len (#a #b:_) (as:Seq.seq a) (v:view a b)
   = if Seq.length as = 0 then ()
     else as_seq'_len (Seq.tail as) v
 
+let rec as_seq'_injective #a #b (v:view a b) (as1 as2:Seq.seq a)
+  : Lemma
+      (requires as_seq' as1 v `Seq.equal` as_seq' as2 v)
+      (ensures  as1 `Seq.equal` as2)
+      (decreases (Seq.length as1))
+  = as_seq'_len as1 v;
+    as_seq'_len as2 v;
+    assert (Seq.length as1 == Seq.length as2);
+    if Seq.length as1 = 0 then ()
+    else let n = View?.n v in
+         as_seq'_len (Seq.tail as1) v;
+         as_seq'_len (Seq.tail as2) v;
+         Seq.lemma_append_inj
+               (View?.get v (Seq.head as1))
+               (as_seq' (Seq.tail as1) v)
+               (View?.get v (Seq.head as2))
+               (as_seq' (Seq.tail as2) v);
+         as_seq'_injective v (Seq.tail as1) (Seq.tail as2);
+         assert (as1 `Seq.equal` (Seq.head as1 `Seq.cons` Seq.tail as1));
+         assert (as2 `Seq.equal` (Seq.head as2 `Seq.cons` Seq.tail as2))
+
 let as_seq #b h vb =
   let (| a, _, _, BufferView buf v |) = vb in
   let as = B.as_seq h buf in
@@ -182,7 +203,9 @@ let sel'_tail #a #b v as i =
   let j = i - n in
   let a_i = i / n in
   assert (sel' v as i == Seq.index (View?.get v (Seq.index as a_i)) (i % n));
-  FStar.Math.Lemmas.lemma_mod_sub i n 1
+  FStar.Math.Lemmas.lemma_mod_sub i n 1;
+  FStar.Math.Lemmas.add_div_mod_1 j n;
+  assert (j / n == (i / n) - 1)
 
 val as_seq'_sel' (#a #b: _)
                  (v:view a b)
@@ -271,3 +294,59 @@ let put_sel #b h vb i =
     as_seq'_len as v;
     assert (View?.put v (View?.get v (Seq.index as (i / n))) ==
             View?.put v (Seq.slice (as_seq' as v) (n * (i /n)) (n * (i / n) + n)))
+
+let rec upd_seq' (#a #b: _) (v:view a b) (s:Seq.seq b{Seq.length s % View?.n v = 0}) (acc:Seq.seq a)
+  : GTot (Seq.lseq a (Seq.length acc + Seq.length s / View?.n v))
+         (decreases (Seq.length s)) =
+  let n = View?.n v in
+  if Seq.length s = 0 then acc
+  else let pfx, suffix = Seq.split s n in
+       Math.lemma_mod_sub (Seq.length s) n 1;
+       let as = upd_seq' v suffix acc in
+       Seq.cons (View?.put v pfx) as
+
+let upd_seq #b h vb s =
+  let (| a, _, _, BufferView b v |) = vb in
+  Math.cancel_mul_mod (B.length b) (View?.n v);
+  let as : Seq.seq a = upd_seq' v s Seq.empty in
+  B.g_upd_seq b as h
+
+let as_seq'_cons (#a #b:_) (v:view a b) (hd:a) (tl:Seq.seq a)
+  : Lemma (as_seq' (Seq.cons hd tl) v == View?.get v hd `Seq.append` as_seq' tl v)
+  = let s = Seq.cons hd tl in
+    assert (Seq.head s == hd);
+    assert (Seq.tail s `Seq.equal` tl)
+
+let rec upd_seq'_spec (#a #b: _) (v:view a b) (s:Seq.seq b{Seq.length s % View?.n v = 0}) (acc:Seq.seq a)
+  : Lemma
+      (ensures (
+        let as = upd_seq' v s acc in
+        as_seq' as v `Seq.equal` Seq.append s (as_seq' acc v)))
+      (decreases (Seq.length s))
+  = if Seq.length s = 0 then ()
+    else let n = View?.n v in
+         let pfx, suffix = Seq.split s n in
+         Math.lemma_mod_sub (Seq.length s) n 1;
+         upd_seq'_spec v suffix acc;
+         as_seq'_slice v (upd_seq' v s acc) 0;
+         let as' = upd_seq' v suffix acc in
+         assert (as_seq' as' v `Seq.equal` Seq.append suffix (as_seq' acc v));
+         let as = upd_seq' v s acc in
+         assert (as `Seq.equal` Seq.cons (View?.put v pfx) as');
+         as_seq'_cons v (View?.put v pfx) as'
+
+let upd_seq_spec (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (s:Seq.seq b{Seq.length s = length vb})
+  = let h' = upd_seq h vb s in
+    Math.cancel_mul_mod (B.length (as_buffer vb)) (View?.n (get_view vb));
+    let as = upd_seq' (get_view vb) s Seq.empty in
+    B.g_upd_seq_as_seq (as_buffer vb) as h;
+    lemma_g_upd_with_same_seq (as_buffer vb) h as;
+    assert (FStar.HyperStack.ST.equal_domains h h');
+    assert (modifies vb h h');
+    upd_seq'_spec (get_view vb) s Seq.empty;
+    assert (as_seq h' vb `Seq.equal` s);
+    assert (as_seq h vb == as_seq' (B.as_seq h (as_buffer vb)) (get_view vb));
+    assert (as_seq h' vb == s);
+    assert (as == B.as_seq h' (as_buffer vb));
+    let v= get_view vb in
+    FStar.Classical.forall_intro_2 (fun x y -> FStar.Classical.move_requires (as_seq'_injective v x) y)

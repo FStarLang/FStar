@@ -261,3 +261,14 @@ val put_sel (#b: _)
                                     (n * (i / n) + n)) ==
              Seq.index (B.as_seq h (as_buffer vb))
                                    (i / n))
+
+/// `upd_seq h vb s`: Updating the entire sequence in one go
+val upd_seq (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (s:Seq.seq b{Seq.length s = length vb})
+  : GTot HS.mem
+
+val upd_seq_spec (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (s:Seq.seq b{Seq.length s = length vb})
+  : Lemma (let h' = upd_seq h vb s in
+           as_seq h' vb == s /\
+           FStar.HyperStack.ST.equal_domains h h' /\
+           modifies vb h h' /\
+           (as_seq h vb == s ==> h==h'))
