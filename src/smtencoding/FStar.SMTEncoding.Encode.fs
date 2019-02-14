@@ -389,7 +389,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                 lid.nsstr <> "Prims"  //things in prims
                 && not (quals |> List.contains Logic) //logic qualified terms
                 && not (is_squash t_norm) //ambient squashed properties
-//                && not (is_type t_norm) // : Type terms, since ambient typing hypotheses for these are cheap
+                && not (is_type t_norm) // : Type terms, since ambient typing hypotheses for these are cheap
               in
               let thunked, vars =
                  match vars with
