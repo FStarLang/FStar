@@ -32,7 +32,6 @@ open FStar.Extraction.ML.UEnv
 open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
 open FStar.TypeChecker
-open FStar.Parser.ParseIt
 
 (* Module abbreviations for the universal type-checker  *)
 module DsEnv   = FStar.Syntax.DsEnv
@@ -59,7 +58,8 @@ type uenv = FStar.Extraction.ML.UEnv.uenv
 type tc_result = {
   checked_module: Syntax.modul; //persisted
   mii:module_inclusion_info; //persisted
-  smt_decls:(FStar.SMTEncoding.Term.decls_t * list<FStar.SMTEncoding.Env.fvar_binding>); //persisted
+  smt_decls:(FStar.SMTEncoding.Term.decls_t *  //list of smt decls and fvbs for the module
+             list<FStar.SMTEncoding.Env.fvar_binding>); //persisted
 
   tc_time:int;
   extraction_time:int
@@ -224,12 +224,18 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
   | Pars.Term _ ->
      failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
+(*
+ * Abbreviation for what we store in the checked files
+ *)
 type cache_t = int *  //cache version number
                list<(string * string)> *  //digest of direct dependencies
                string *  //digest of just this file
-               Parser.Dep.parsing_data * //parsing result
-               tc_result  //typechecking result
-    
+               Parser.Dep.parsing_data * //parsing data for this file
+               tc_result  //typechecking result, including the smt encoding
+
+(*
+ * cache_t object * reason for error, if any
+ *)
 let load_value_from_cache (cache_file:string) :option<cache_t> * string =
   match BU.load_value_from_file cache_file with
   | None -> None, "Corrupt"
@@ -242,14 +248,18 @@ let load_value_from_cache (cache_file:string) :option<cache_t> * string =
 let store_value_to_cache (cache_file:string) (data:cache_t) :unit =
   BU.save_value_to_file cache_file data
 
+(*
+ * Read parsing data from the checked file
+ * This function is passed as a callback to Parser.Dep
+ *)
 let load_parsing_data_from_cache file_name :option<Parser.Dep.parsing_data> =
   let cache_file =
     try
-     Parser.Dep.cache_file_name file_name
-    with _ -> ""
+     Parser.Dep.cache_file_name file_name |> Some
+    with _ -> None
   in
-  if cache_file = "" then None
-  else match load_value_from_cache cache_file with
+  if cache_file = None then None
+  else match cache_file |> must |> load_value_from_cache with
        | None, _ -> None
        | Some (_, _, dig, pd, _), _ ->
          if dig <> BU.digest_of_file file_name then None else Some pd
@@ -332,7 +342,8 @@ let load_module_from_cache
                      (Dep.cache_file_name fn)
                      msg)
 
-let store_module_to_cache (env:uenv) fn (parsing_data:FStar.Parser.Dep.parsing_data) (tc_result:tc_result) =
+let store_module_to_cache (env:uenv) fn (parsing_data:FStar.Parser.Dep.parsing_data)
+                          (tc_result:tc_result) =
     if Options.cache_checked_modules()
     && not (Options.cache_off())
     then begin
@@ -412,12 +423,17 @@ let tc_one_file
         (delta:delta_env)
         (pre_fn:option<string>) //interface file name
         (fn:string) //file name
-        (parsing_data:FStar.Parser.Dep.parsing_data)
+        (parsing_data:FStar.Parser.Dep.parsing_data)  //passed by the caller, ONLY for caching purposes at this point
     : tc_result
     * option<FStar.Extraction.ML.Syntax.mllib>
     * uenv
     * delta_env =
   Syntax.reset_gensym();
+
+  (*
+   * AR: smt encode_modul functions are now here instead of in Tc.fs
+   *     this is common smt postprocessing for fresh module and module read from cache
+   *)
   let post_smt_encoding (_:unit) :unit =
     FStar.SMTEncoding.Z3.refresh ();
     if not (Options.interactive ())
@@ -454,6 +470,7 @@ let tc_one_file
                          | _ -> failwith "Impossible: gamma contains leaked names"
                  in
                  let modul, env = Tc.check_module tcenv fmod (is_some pre_fn) in
+                 //AR: encode the module to to smt
                  let smt_decls =
                    if (not (Options.lax()))
                    then let smt_decls = FStar.SMTEncoding.Encode.encode_modul env modul in
@@ -523,6 +540,7 @@ let tc_one_file
                         (FStar.TypeChecker.Normalize.erase_universes tcenv)
             in
             let env = FStar.TypeChecker.Tc.load_checked_module tcenv tcmod in
+            //AR: encode smt module and do post processing
             if (not (Options.lax())) then begin
               FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod.name smt_decls;
               post_smt_encoding ()
@@ -567,7 +585,7 @@ let tc_one_file_for_ide
         (env:TcEnv.env_t)
         (pre_fn:option<string>) //interface file name
         (fn:string) //file name
-        (parsing_data:FStar.Parser.Dep.parsing_data)
+        (parsing_data:FStar.Parser.Dep.parsing_data)  //threaded along, ONLY for caching purposes at this point
     : tc_result
     * TcEnv.env_t
     =
@@ -585,7 +603,9 @@ let needs_interleaving intf impl =
   List.mem (FStar.Util.get_file_extension intf) ["fsti"; "fsi"] &&
   List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
 
-let tc_one_file_from_remaining (remaining:list<string>) (env:uenv) (delta_env:delta_env) (deps:FStar.Parser.Dep.deps) =
+let tc_one_file_from_remaining (remaining:list<string>) (env:uenv) (delta_env:delta_env)
+                               (deps:FStar.Parser.Dep.deps)  //used to query parsing data
+  =
   let remaining, (nmods, mllib, env, delta_env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
@@ -600,7 +620,7 @@ let tc_one_file_from_remaining (remaining:list<string>) (env:uenv) (delta_env:de
   in
   remaining, nmods, mllib, env, delta_env
 
-let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)
+let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing data
                            (acc:list<tc_result> * list<FStar.Extraction.ML.Syntax.mllib> * uenv * delta_env)
                            (remaining:list<string>) =
   let as_list = function None -> [] | Some l -> [l] in

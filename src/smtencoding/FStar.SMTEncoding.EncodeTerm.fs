@@ -528,6 +528,13 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
                               "l_quant_interp_" ^ (BU.digest_of_string tkey_hash)) in
       tm, decls@decls'@(mk_decls "" tkey_hash [ax] (decls@decls'))
 
+(*
+ * AR: no hashconsing in this function now
+ *     it returns a list of decls blocks that may be duplicate
+ *       for example, for two occurrences of x:int{x > 2}
+ *     deduplication of these happens in Encode.fs
+ *       just before giving the decls to Z3 (see Encode.fs.recover_caching_and_update_env)
+ *)
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
 

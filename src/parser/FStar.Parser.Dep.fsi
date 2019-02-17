@@ -28,8 +28,8 @@ val hard_coded_dependencies : string -> list<(lident * open_kind)>
 val is_interface: string -> bool
 val is_implementation: string -> bool
 type module_name = string
-type parsing_data
-val empty_parsing_data: parsing_data
+type parsing_data  //cached in the checked files
+val empty_parsing_data: parsing_data  //for legacy ide
 type deps
 val empty_deps : deps
 val cache_file_name: string -> string

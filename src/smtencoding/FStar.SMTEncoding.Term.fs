@@ -221,6 +221,9 @@ type decl =
   | GetStatistics
   | GetReasonUnknown
 
+(*
+ * See Term.fsi for an explanation of this type
+ *)
 type decls_elt = {
   sym_name:   option<string>;
   key:        option<string>;
@@ -234,7 +237,7 @@ let mk_decls name key decls aux_decls = [{
   sym_name    = Some name;
   key         = Some key;
   decls       = decls;
-  a_names     =
+  a_names     =  //AR: collect the names of aux_decls and decls to be retained in case of a cache hit
     let sm = BU.smap_create 20 in
     List.iter (fun elt -> 
       List.iter (fun s -> BU.smap_add sm s "0") elt.a_names

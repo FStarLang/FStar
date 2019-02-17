@@ -119,7 +119,7 @@ let go _ =
         (* --dep: Just compute and print the transitive dependency graph;
                   don't verify anything *)
         if Options.dep() <> None
-        then let _, deps = Parser.Dep.collect filenames (FStar.Universal.load_parsing_data_from_cache) in
+        then let _, deps = Parser.Dep.collect filenames FStar.Universal.load_parsing_data_from_cache in
              Parser.Dep.print deps
 
         (* Input validation: should this go to process_args? *)

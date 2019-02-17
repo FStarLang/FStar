@@ -28,7 +28,6 @@ open FStar.TypeChecker
 open FStar.SMTEncoding.Term
 open FStar.Ident
 open FStar.SMTEncoding.Util
-open FStar.Syntax
 
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util
@@ -70,7 +69,7 @@ type varops_t = {
     rollback: option<int> -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
-    fresh:string -> string -> string;
+    fresh:string -> string -> string;  (* module name -> prefix -> name *)
     reset_fresh:unit -> unit;
     string_const:string -> term;
     next_id: unit -> int;
@@ -91,7 +90,10 @@ let varops =
     let new_var pp rn = mk_unique <| pp.idText ^ "__" ^ (string_of_int rn) in
     let new_fvar lid = mk_unique lid.str in
     let next_id () = BU.incr ctr; !ctr in
+    //AR: adding module name after the prefix, else it interferes for name matching for fuel arguments
+    //    see try_lookup_free_var below
     let fresh mname pfx = BU.format3 "%s_%s_%s" pfx mname (string_of_int <| next_id()) in
+    //the fresh counter is reset after every module
     let reset_fresh () = ctr := initial_ctr in
     let string_const s = match BU.find_map !scopes (fun (_, strings) -> BU.smap_try_find strings s) with
         | Some f -> f
@@ -144,6 +146,7 @@ let binder_of_eithervar v = (v, None)
 type env_t = {
     bvar_bindings: BU.psmap<BU.pimap<(bv * term)>>;
     fvar_bindings: (BU.psmap<fvar_binding> * list<fvar_binding>);  //list of fvar bindings for the current module
+                                                                   //remember them so that we can store them in the checked file
     depth:int; //length of local var/tvar bindings
     tcenv:Env.env;
     warn:bool;
@@ -152,7 +155,7 @@ type env_t = {
     encode_non_total_function_typ:bool;
     current_module_name:string;
     encoding_quantifier:bool;
-    global_cache:BU.smap<decls_elt>
+    global_cache:BU.smap<decls_elt>  //cache for hashconsing -- see Encode.fs where it is used and updated
 }
 
 let print_env e =

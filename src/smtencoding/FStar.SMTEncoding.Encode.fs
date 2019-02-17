@@ -1483,20 +1483,17 @@ let encode_top_level_facts (env:env_t) (se:sigelt) =
 //////////////////////////////////////////////////////////////////////////
 
 
+(*
+ * AR: Recover hashconsing of decls -- both within a module and across modules
+ *     Using and updating env.global_cache
+ *)
 let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
   decls |> List.collect (fun elt ->
-    if elt.key = None then [elt]
+    if elt.key = None then [elt]  //not meant to be hashconsed, keep it
     else match BU.smap_try_find env.global_cache (elt.key |> BU.must) with
-         | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial
-           //if cache_elt.sym_name = Some "" then []
-           //else
-           //  let (names, terms) = List.fold_left (fun (names, terms) srt ->
-           //    fresh_fvar "x" srt |> (fun (n, t) -> names@[n], terms@[t])
-           //  ) ([], []) cache_elt.args_sorts in
-           //  let d = mkDefineFun (elt.sym_name |> BU.must, List.zip names cache_elt.args_sorts, Term_sort,
-           //                       mkApp (cache_elt.sym_name |> BU.must, terms), None) in
-           //  [d; Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial
-         | None ->
+         | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
+                                                                                             //AND drop elt
+         | None ->  //no hit, update cache and retain elt
            BU.smap_add env.global_cache (elt.key |> BU.must) elt;
            [elt]
   ) 
@@ -1520,6 +1517,7 @@ let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) :unit
          [Module(name, Caption msg::decls@[Caption ("End " ^ msg)])]
     else [Module(name, decls)] in
   set_env ({env with warn=true});
+  //recover caching and flatten before giving to Z3
   let z3_decls = caption (decls |> recover_caching_and_update_env env |> decls_list_of) in
   Z3.giveZ3 z3_decls
 
@@ -1598,7 +1596,7 @@ let encode_query use_env_msg tcenv q
         env_decls
         @(label_prefix |> mk_decls_trivial)
         @qdecls
-        @(caption |> mk_decls_trivial) |> recover_caching_and_update_env env |> decls_list_of in
+        @(caption |> mk_decls_trivial) |> recover_caching_and_update_env env |> decls_list_of in  //recover caching and flatten
 
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in

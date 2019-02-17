@@ -128,8 +128,8 @@ type dependence_graph = //maps file names to the modules it depends on
      | Deps of smap<dep_node> //(dependences * color)>
 
 (*
- * Parsing data for a file (also cached in the checked files)
- * It is exactly same as what collect_one function below returns
+ * AR: Parsing data for a file (also cached in the checked files)
+ *     It is exactly same as what collect_one function below returns
  *)
 type parsing_data = {            
   direct_deps              : list<dependence>;  //direct dependences of the file
@@ -427,7 +427,7 @@ let dep_subsumed_by d d' =
 
 (*
  * Get parsing data for a file
- * First see if the data in the checked file is good
+ * First see if the data in the checked file is good (using the provided callback)
  * If it is, return that
  *
  * Else parse the file, walk its AST, return a list of FStar lowercased module names
@@ -1014,8 +1014,13 @@ let topological_dependences_of
 
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
+(*
+ * get_parsing_data_from_cache is a callback passed by caller
+ *   to read the parsing data from checked files
+ *)
 (* In public interface *)
-let collect (all_cmd_line_files: list<file_name>) (get_parsing_data_from_cache:string -> option<parsing_data>)
+let collect (all_cmd_line_files: list<file_name>)
+            (get_parsing_data_from_cache:string -> option<parsing_data>)
     : list<file_name>
     * deps //topologically sorted transitive dependences of all_cmd_line_files
     =

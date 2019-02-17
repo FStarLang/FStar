@@ -128,19 +128,54 @@ type decl =
   | GetStatistics
   | GetReasonUnknown
 
+(*
+ * AR: decls_elt captures a block of "related" decls
+ *     For example, for a Tm_refine_<MD5> symbol,
+ *       decls_elt will have its DeclFun, typing axioms,
+ *       hasEq axiom, interpretation, etc.
+ *
+ *     This allows the encoding of a module to be "stateless"
+ *       in terms of hashconsing -- the encoding may contain
+ *       duplicate such blocks
+ *
+ *     Deduplication happens when giving the decls to Z3
+ *       at which point, if the key below -- which is the MD5 string --
+ *       matches, the whole block is dropped (see Encode.fs.recover_caching_and_update_env)
+ *
+ *     Alternative way would have been to do some smt name matching
+ *       but that would be sensitive to name strings and hence brittle
+ *
+ *     Before the declarations are given to Z3, the remaining decls_elt
+ *       left after deduplication are just "flattened" (using decls_list_of)
+ *
+ *     sym_name and key are options for cases when we don't care about hashconsing
+ *)
 type decls_elt = {
-  sym_name:   option<string>;
-  key:        option<string>;
-  decls:      list<decl>;
-  a_names:    list<string>;
+  sym_name:   option<string>;  //name of the main synbol, e.g. Tm_refine_<MD5>
+  key:        option<string>;  //the MD5 string
+  decls:      list<decl>;      //list of decls, e.g. typing axioms, hasEq, for a Tm_refine
+  a_names:    list<string>;    //assumption names that must be kept IF this entry has a cache hit
+                               //--used to not filter them when using_facts_from
 }
 
 type decls_t = list<decls_elt>
 
+(*
+ * AR: sym_name -> md5 -> auxiliary decls -> decls
+ *     the auxilkiary decls are those that are not directly related to
+ *       the symbol itself, but must be retained in case of cache hits
+ *       for example, decls for argument types in the case of a Tm_arrow
+ *)
 val mk_decls: string -> string -> list<decl> -> list<decls_elt> -> decls_t
 
+(*
+ * AR: for when we don't hashcons the decls
+ *)
 val mk_decls_trivial: list<decl> -> decls_t
 
+(*
+ * Flatten the decls_t
+ *)
 val decls_list_of: decls_t -> list<decl>
 
 type error_label = (fv * string * Range.range)
