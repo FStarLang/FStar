@@ -751,7 +751,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "protect_top_level_axioms",
         BoolStr,
-        "Guard nullary top-level symbols in the SMT encoding from provide ambient ground facts (default 'false')");
+        "Guard nullary top-level symbols in the SMT encoding from provide ambient ground facts (default 'true')");
 
        ( noshort,
         "initial_fuel",

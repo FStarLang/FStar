@@ -1,7 +1,7 @@
 open Prims
 let (has_cygpath : Prims.bool) =
   try
-    (fun uu___14_5  ->
+    (fun uu___13_5  ->
        match () with
        | () ->
            let t_out =
@@ -9,7 +9,7 @@ let (has_cygpath : Prims.bool) =
                FStar_Pervasives_Native.None
               in
            (FStar_Util.trim_string t_out) = "/usr/bin/cygpath") ()
-  with | uu___13_18 -> false 
+  with | uu___12_18 -> false 
 let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
   let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
   fun s  ->
@@ -105,8 +105,8 @@ let string_of_option :
       'Auu____459 FStar_Pervasives_Native.option -> Prims.string
   =
   fun f  ->
-    fun uu___12_476  ->
-      match uu___12_476 with
+    fun uu___11_476  ->
+      match uu___11_476 with
       | FStar_Pervasives_Native.None  -> "None"
       | FStar_Pervasives_Native.Some x ->
           let uu____484 = f x  in Prims.strcat "Some " uu____484
