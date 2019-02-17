@@ -28,12 +28,8 @@ val hard_coded_dependencies : string -> list<(lident * open_kind)>
 val is_interface: string -> bool
 val is_implementation: string -> bool
 type module_name = string
-type dependence =
-    | UseInterface of module_name
-    | PreferInterface of module_name
-    | UseImplementation of module_name
-    | FriendImplementation of module_name
-type parsing_data = list<dependence> * list<dependence> * bool
+type parsing_data
+val empty_parsing_data: parsing_data
 type deps
 val empty_deps : deps
 val cache_file_name: string -> string

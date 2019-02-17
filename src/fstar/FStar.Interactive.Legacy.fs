@@ -25,6 +25,7 @@ open FStar.Ident
 
 open FStar.Universal
 open FStar.TypeChecker.Env
+open FStar.Parser
 
 module DsEnv   = FStar.Syntax.DsEnv
 module TcEnv   = FStar.TypeChecker.Env
@@ -32,14 +33,13 @@ module TcEnv   = FStar.TypeChecker.Env
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
 let tc_one_file (remaining:list<string>) (env:TcEnv.env) = //:((string option * string) * uenv * string list) =
-  let dummy_pd :FStar.Parser.Dep.parsing_data = [], [], true in
   let (intf, impl), env, remaining =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, env = tc_one_file_for_ide env (Some intf) impl dummy_pd in
+          let _, env = tc_one_file_for_ide env (Some intf) impl Dep.empty_parsing_data in
           (Some intf, impl), env, remaining
         | intf_or_impl :: remaining ->
-          let _, env = tc_one_file_for_ide env None intf_or_impl dummy_pd in
+          let _, env = tc_one_file_for_ide env None intf_or_impl Dep.empty_parsing_data in
           (None, intf_or_impl), env, remaining
         | [] -> failwith "Impossible"
   in

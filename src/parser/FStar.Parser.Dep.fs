@@ -126,14 +126,31 @@ type dep_node = {
 }
 type dependence_graph = //maps file names to the modules it depends on
      | Deps of smap<dep_node> //(dependences * color)>
-type parsing_data = list<dependence> * list<dependence> * bool
+
+(*
+ * Parsing data for a file (also cached in the checked files)
+ * It is exactly same as what collect_one function below returns
+ *)
+type parsing_data = {            
+  direct_deps              : list<dependence>;  //direct dependences of the file
+  additional_roots         : list<dependence>;  //additional "roots" that should be scanned
+                                                //i.e. implementations of interfaces in the first list
+  has_inline_for_extraction: bool;              //if it is an interface that contains an `inline_for_extraction`
+}
+let empty_parsing_data = {
+  direct_deps = [];
+  additional_roots = [];
+  has_inline_for_extraction = false
+}
+
 type deps = {
     dep_graph:dependence_graph;                 //dependences of the entire project, not just those reachable from the command line
     file_system_map:files_for_module_name;      //an abstraction of the file system
     cmd_line_files:list<file_name>;             //all command-line files
     all_files:list<file_name>;                  //all files
     interfaces_with_inlining:list<module_name>; //interfaces that use `inline_for_extraction` require inlining
-    parse_results:smap<parsing_data>
+    parse_results:smap<parsing_data>            //map from filenames to parsing_data
+                                                //callers (Universal.fs) use this to get the parsing data for caching purposes
 }
 let deps_try_find (Deps m) k = BU.smap_try_find m k
 let deps_add_dep (Deps m) k v =
@@ -408,19 +425,22 @@ let dep_subsumed_by d d' =
       | PreferInterface l', FriendImplementation l -> l=l'
       | _ -> d = d'
 
-(** Parse a file, walk its AST, return a list of FStar lowercased module names
-    it depends on. *)
+(*
+ * Get parsing data for a file
+ * First see if the data in the checked file is good
+ * If it is, return that
+ *
+ * Else parse the file, walk its AST, return a list of FStar lowercased module names
+    it depends on
+ *)
 let collect_one
   (original_map: files_for_module_name)
   (filename: string)
-  (get_parsing_data_from_cache:string -> option<parsing_data>):
-   list<dependence> //direct dependences of filename
- * list<dependence> //additional "roots" that should be scanned
-                    //i.e. implementations of interfaces in the first list
- * bool             //interface that contains an `inline_for_extraction`
+  (get_parsing_data_from_cache:string -> option<parsing_data>)
+  : parsing_data
 =
-  let from_cache = get_parsing_data_from_cache filename in
-  if from_cache |> is_some then from_cache |> must
+  let data_from_cache = filename |> get_parsing_data_from_cache in
+  if data_from_cache |> is_some then data_from_cache |> must
   else
       let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
       let mo_roots : ref<(list<dependence>)> = BU.mk_ref [] in
@@ -801,7 +821,9 @@ let collect_one
       then add_dep mo_roots (UseImplementation mname);
       collect_module ast;
       (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
-      !deps, !mo_roots, !has_inline_for_extraction
+      { direct_deps = !deps;
+        additional_roots = !mo_roots;
+        has_inline_for_extraction = !has_inline_for_extraction }
 
 
 (* JP: it looks like the code was changed but the comments were never updated.
@@ -1031,10 +1053,14 @@ let collect (all_cmd_line_files: list<file_name>) (get_parsing_data_from_cache:s
         match BU.smap_try_find !collect_one_cache file_name with
         | Some cached -> cached
         | None ->
-          collect_one file_system_map file_name get_parsing_data_from_cache in
+          let r = collect_one file_system_map file_name get_parsing_data_from_cache in
+          r.direct_deps, r.additional_roots, r.has_inline_for_extraction in
       if needs_interface_inlining
       then add_interface_for_inlining file_name;
-      BU.smap_add parse_results file_name (deps, mo_roots, needs_interface_inlining);
+      BU.smap_add parse_results file_name ({
+        direct_deps = deps;
+        additional_roots = mo_roots;
+        has_inline_for_extraction = needs_interface_inlining });
       let deps =
           let module_name = lowercase_module_name file_name in
           if is_implementation file_name
