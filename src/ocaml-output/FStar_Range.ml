@@ -55,8 +55,8 @@ let (set_use_range : range -> rng -> range) =
     fun use_rng  ->
       if use_rng <> dummy_rng
       then
-        let uu___11_187 = r2  in
-        { def_range = (uu___11_187.def_range); use_range = use_rng }
+        let uu___21_187 = r2  in
+        { def_range = (uu___21_187.def_range); use_range = use_rng }
       else r2
   
 let (set_def_range : range -> rng -> range) =
@@ -64,8 +64,8 @@ let (set_def_range : range -> rng -> range) =
     fun def_rng  ->
       if def_rng <> dummy_rng
       then
-        let uu___12_202 = r2  in
-        { def_range = def_rng; use_range = (uu___12_202.use_range) }
+        let uu___22_202 = r2  in
+        { def_range = def_rng; use_range = (uu___22_202.use_range) }
       else r2
   
 let (mk_pos : Prims.int -> Prims.int -> pos) =
@@ -126,7 +126,7 @@ let (string_of_file_name : Prims.string -> Prims.string) =
     if uu____332
     then
       try
-        (fun uu___14_339  ->
+        (fun uu___24_339  ->
            match () with
            | () ->
                let uu____341 =
@@ -136,7 +136,7 @@ let (string_of_file_name : Prims.string -> Prims.string) =
                 | FStar_Pervasives_Native.None  -> f
                 | FStar_Pervasives_Native.Some absolute_path -> absolute_path))
           ()
-      with | uu___13_353 -> f
+      with | uu___23_353 -> f
     else f
   
 let (file_of_range : range -> Prims.string) =
@@ -144,16 +144,16 @@ let (file_of_range : range -> Prims.string) =
 let (set_file_of_range : range -> Prims.string -> range) =
   fun r  ->
     fun f  ->
-      let uu___15_379 = r  in
+      let uu___25_379 = r  in
       {
         def_range =
-          (let uu___16_382 = r.def_range  in
+          (let uu___26_382 = r.def_range  in
            {
              file_name = f;
-             start_pos = (uu___16_382.start_pos);
-             end_pos = (uu___16_382.end_pos)
+             start_pos = (uu___26_382.start_pos);
+             end_pos = (uu___26_382.end_pos)
            });
-        use_range = (uu___15_379.use_range)
+        use_range = (uu___25_379.use_range)
       }
   
 let (string_of_rng : rng -> Prims.string) =
@@ -206,8 +206,8 @@ let (range_before_pos : range -> pos -> Prims.bool) =
   
 let (end_of_line : pos -> pos) =
   fun p  ->
-    let uu___17_542 = p  in
-    { line = (uu___17_542.line); col = FStar_Util.max_int }
+    let uu___27_542 = p  in
+    { line = (uu___27_542.line); col = FStar_Util.max_int }
   
 let (extend_to_end_of_line : range -> range) =
   fun r  ->
