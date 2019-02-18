@@ -573,7 +573,7 @@ let rec list_refb #a #p l =
   | hd :: tl -> hd :: list_refb #a #p tl
   | [] -> []
 
-val list_ref: #a:eqtype -> #p:(a -> prop) -> l:list a {
+val list_ref: #a:eqtype -> #p:(a -> Tot prop) -> l:list a {
   forall x. {:pattern mem x l} mem x l ==> p x
 } -> Tot (l':list (x:a{ p x }) {
     length l = length l' /\
