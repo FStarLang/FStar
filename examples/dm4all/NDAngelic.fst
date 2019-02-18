@@ -51,9 +51,6 @@ effect NDTot (a:Type) = ND a (pure_null_wp a)
 
 val choose : #a:Type0 -> x:a -> y:a -> ND a (fun p -> p x \/ p y)
 let choose #a x y =
-    // the VC for this is valid, but F*/Z3 won't instantiate the existential, sigh.
-    // we could prove it via tactics, but that feels rather silly to do
-    admit ();
     ND?.reflect (fun () -> [x;y])
 
 val fail : #a:Type0 -> unit -> ND a (fun p -> False)
