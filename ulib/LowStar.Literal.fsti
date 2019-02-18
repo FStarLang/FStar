@@ -1,7 +1,6 @@
 module LowStar.Literal
 
 module B = LowStar.Buffer
-module MB = LowStar.Monotonic.Buffer
 module IB = LowStar.ImmutableBuffer
 module HS = FStar.HyperStack
 module ST = FStar.HyperStack.ST
@@ -53,7 +52,8 @@ let for_all_tail #a p (l: list a { Cons? l }): Lemma
 let ascii_chars_of_ascii_string (s: ascii_string):
   l:list ascii_char { List.Tot.length l = String.length s }
 =
-  List.Tot.list_ref (String.list_of_string s)
+  let l = String.list_of_string s in
+  List.Tot.list_refb (String.list_of_string s)
 
 let u8_of_ascii_char (c: ascii_char): x:UInt8.t{ UInt8.v x = Char.int_of_char c } =
   let x32 = Char.u32_of_char c in
@@ -73,6 +73,18 @@ let u8s_of_ascii_string (s: ascii_string):
   let cs = List.Tot.map u8_of_ascii_char (ascii_chars_of_ascii_string s) in
   Seq.seq_of_list cs
 
+unfold let buffer_of_literal_post (s: ascii_string) (h0: HS.mem) (b: IB.ibuffer UInt8.t) (h1: HS.mem) =
+  IB.frameOf b == HS.root /\ // is this really useful?
+  IB.recallable b /\ (
+  // An inlined version of alloc_post_mem_common, without the unused_in
+  // condition, which would contradict the Stack annotation
+  let s = u8s_of_ascii_string s in
+  IB.live h1 b /\
+  Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\
+  HS.get_tip h1 == HS.get_tip h0 /\
+  B.(modifies loc_none h0 h1) /\
+  B.as_seq h1 b == s)
+
 /// Consequently, this function becomes in C a simple cast from ``const char *`` to
 /// ``char *``, since immutable buffers don't (yet) have the ``const`` attribute in
 /// KreMLin. (This is unsavory, and should be fixed later.) This way, a string
@@ -82,12 +94,8 @@ val buffer_of_literal: (s: ascii_string) ->
   ST.Stack (b: IB.ibuffer UInt8.t)
     (requires (fun _ ->
       // TODO: find a way to meta-program the "is literal" check
-      String.length s > 0 /\ // needed because of the precondition on igcmalloc_of_list
       String.length s < pow2 32))
-    (ensures (fun h0 b h1 ->
-      MB.frameOf b == HS.root /\ // is this really useful?
-      MB.recallable b /\
-      MB.alloc_post_mem_common b h0 h1 (u8s_of_ascii_string s)))
+    (ensures buffer_of_literal_post s)
 
 /// .. note::
 ///
@@ -104,14 +112,11 @@ unfold
 let buf_len_of_literal (s: string):
   ST.Stack (IB.ibuffer UInt8.t & UInt32.t)
     (requires (fun _ ->
-      normalize (String.length s > 0) /\
       normalize (is_ascii_string s) /\
       normalize (List.Tot.length (String.list_of_string s) < pow2 32)))
     (ensures (fun h0 r h1 ->
       let b, l = r in
-      MB.frameOf b == HS.root /\
-      MB.recallable b /\
-      MB.alloc_post_mem_common b h0 h1 (u8s_of_ascii_string s) /\
+      buffer_of_literal_post s h0 b h1 /\
       UInt32.v l = IB.length b))
 =
   [@inline_let]
@@ -124,14 +129,11 @@ let buf_len_of_literal (s: string):
 /// The other way to leverage string literals in Low* is to see them as values
 /// (they are always live, because they live in the data segment). This enables
 /// a variety of use-cases, mostly for printing functions. For these, we
-/// currently do not enable any sort of advanced reasoning, except that they must
-/// not contain zeroes (since printing routines rely on the trailing zero). Note
-/// that we don't reflect the fact that these are zero-terminated like ``C.String``
-/// attempted to do.
-
-let zero_free s =
-  List.Tot.for_all (fun c -> Char.int_of_char c <> 0) (String.list_of_string s)
+/// currently do not enable any sort of advanced reasoning, and even allow them
+/// to contains the ASCII NUL character, with the understanding that this will
+/// change the output of the printing functions. Note unlike in ``C.String`` we
+/// we don't reflect the fact that these are zero-terminated.
 
 val const_string: Type0
 
-val const_string_of_literal: s:string { normalize (zero_free s) } -> const_string
+val const_string_of_literal: s:string -> const_string
