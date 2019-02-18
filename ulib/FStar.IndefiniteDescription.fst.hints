@@ -7,13 +7,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
-        "bool_inversion", "disc_equation_Prims.Left",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
         "disc_equation_Prims.Right", "equation_Prims.l_not",
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "45a227475d6f262542fc68a91b6d3a78"
+      "9065b7e8272f35bdf3818523daf60bf8"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -22,11 +21,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0acf6a67099dc19682cefaf6a7dad1c8"
+      "c9e37448ce551d47ed9c27f27d3415ee"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -35,11 +34,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "154335c8e1ecf3602777b78616f1102b"
+      "01b5ffc049d54b2c5ced7d023a56c78d"
     ]
   ]
 ]

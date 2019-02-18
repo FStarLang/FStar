@@ -104,7 +104,7 @@ let with_hints_db fname f =
     finalize_hints_db fname;
     result
 
-let filter_using_facts_from (e:env) (theory:decls_t) =
+let filter_using_facts_from (e:env) (theory:list<decl>) =
     let matches_fact_ids (include_assumption_names:BU.smap<bool>) (a:Term.assumption) =
       match a.assumption_fact_ids with
       | [] -> true //retaining `a` because it is not tagged with a fact id
@@ -139,7 +139,8 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
     in
     pruned_theory
 
-let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:decls_t) :(decls_t * bool * int * int) =  //(filtered theory, if core used, retained, pruned)
+let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:list<decl>)
+  :(list<decl> * bool * int * int) =  //(filtered theory, if core used, retained, pruned)
     match core with
     | None ->
       filter_using_facts_from e theory, false, 0, 0  //no stats if no core
@@ -161,7 +162,7 @@ let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:decls_
             ([Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], 0, 0) theory_rev in  //start with the unsat core caption at the end
         theory', true, n_retained, n_pruned
 
-let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
+let filter_assertions (e:env) (core:Z3.unsat_core) (theory:list<decl>) =
   let (theory, b, _, _) = filter_assertions_with_stats e core theory in theory, b
 
 let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
@@ -264,7 +265,8 @@ let detail_hint_replay settings z3result =
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
                       None
-                      (fun r -> res := Some r);
+                      (fun r -> res := Some r)
+                      false;
                Option.get (!res)
            in
            detail_errors true settings.query_env settings.query_all_labels ask_z3
@@ -307,7 +309,8 @@ let report_errors settings : unit =
                     settings.query_all_labels
                     (with_fuel_and_diagnostics initial_fuel label_assumptions)
                     None
-                    (fun r -> res := Some r);
+                    (fun r -> res := Some r)
+                    false;
             Option.get (!res)
             in
          detail_errors false settings.query_env settings.query_all_labels ask_z3
@@ -428,11 +431,16 @@ let query_info settings z3result =
     || Options.query_stats()
     then begin
         let status_string, errs = Z3.status_string_and_errors z3result.z3result_status in
+        let at_log_file =
+            match z3result.z3result_log_file with
+            | None -> ""
+            | Some s -> "@"^s
+        in
         let tag, core = match z3result.z3result_status with
          | UNSAT core -> "succeeded", core
          | _ -> "failed {reason-unknown=" ^ status_string ^ "}", None
         in
-        let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file() ^ ")" in
+        let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file ^ ")" in
         let used_hint_tag = if used_hint settings then " (with hint)" else "" in
         let stats =
             if Options.query_stats() then
@@ -491,7 +499,6 @@ let record_hint settings z3result =
     end
 
 let process_result settings result : option<errors> =
-    if used_hint settings && not (Options.z3_refresh()) then Z3.refresh();
     let errs = query_errors settings result in
     query_info settings result;
     record_hint settings result;
@@ -596,7 +603,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
     in
 
     let check_one_config config (k:z3result -> unit) : unit =
-          if used_hint config || Options.z3_refresh() then Z3.refresh();
+          if Options.z3_refresh() then Z3.refresh();
           Z3.ask config.query_range
                   (filter_assertions config.query_env config.query_hint)
                   config.query_hash
@@ -604,6 +611,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                   (with_fuel_and_diagnostics config [])
                   (Some (Z3.mk_fresh_scope()))
                   k
+                  (used_hint config)
     in
 
     let check_all_configs configs =
@@ -656,7 +664,6 @@ let solver = {
     snapshot=Encode.snapshot;
     rollback=Encode.rollback;
     encode_sig=Encode.encode_sig;
-    encode_modul=Encode.encode_modul;
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=solve;
     finish=Z3.finish;
@@ -669,7 +676,6 @@ let dummy = {
     snapshot=(fun _ -> (0, 0, 0), ());
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
-    encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());

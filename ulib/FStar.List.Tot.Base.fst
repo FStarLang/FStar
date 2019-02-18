@@ -126,7 +126,13 @@ let op_At x y = append x y
 (** [snoc (l, x)] adds [x] to the end of the list [l].
 
     Note: We use an uncurried [snoc (l, x)] instead of the curried
-    [snoc l x]. *)
+    [snoc l x]. This is intentional. If [snoc] takes a pair instead
+    of 2 arguments, it allows for a better pattern on
+    [lemma_unsnoc_snoc], which connects [snoc] and [unsnoc]. In
+    particular, if we had two arguments, then either the pattern would
+    either be too restrictive or would lead to over-triggering. More
+    context for this can be seen in the (collapsed and uncollapsed)
+    comments at https://github.com/FStarLang/FStar/pull/1560 *)
 val snoc: (list 'a * 'a) -> Tot (list 'a)
 let snoc (l, x) = append l [x]
 

@@ -185,7 +185,6 @@ and solver_t = {
     pop          :string -> unit;
     snapshot     :string -> (solver_depth_t * unit);
     rollback     :string -> option<solver_depth_t> -> unit;
-    encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
     solve        :option<(unit -> string)> -> env -> typ -> unit;
@@ -1463,14 +1462,13 @@ let lidents env : list<lident> =
   BU.smap_fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
 
 let should_enc_path env path =
-    // TODO: move
-    let rec list_prefix xs ys =
+    let rec str_i_prefix xs ys =
         match xs, ys with
         | [], _ -> true
-        | x::xs, y::ys -> x = y && list_prefix xs ys
+        | x::xs, y::ys -> String.lowercase x = String.lowercase y && str_i_prefix xs ys
         | _, _ -> false
     in
-    match FStar.List.tryFind (fun (p, _) -> list_prefix p path) env.proof_ns with
+    match FStar.List.tryFind (fun (p, _) -> str_i_prefix p path) env.proof_ns with
     | None -> false
     | Some (_, b) -> b
 
@@ -1672,7 +1670,6 @@ let dummy_solver = {
     snapshot=(fun _ -> (0, 0, 0), ());
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
-    encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());

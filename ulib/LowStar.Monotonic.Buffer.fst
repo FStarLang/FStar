@@ -144,6 +144,8 @@ let as_seq #_ #_ #_ h b =
 
 let length_as_seq #_ #_ #_ _ _ = ()
 
+let mbuffer_injectivity_in_first_preorder () = ()
+
 let mgsub #a #rrel #rel sub_rel b i len =
   match b with
   | Null -> Null
@@ -593,10 +595,13 @@ let cls : MG.cls ubuffer = MG.Cls #ubuffer
   (fun #r #a b h1 h2 f -> same_mreference_ubuffer_preserved b h1 h2 f)
 
 let loc = MG.loc cls
+let _ = intro_ambient loc
 
 let loc_none = MG.loc_none
+let _ = intro_ambient loc_none
 
 let loc_union = MG.loc_union
+let _ = intro_ambient loc_union
 
 let loc_union_idem = MG.loc_union_idem
 
@@ -665,7 +670,7 @@ let loc_includes_as_seq #_ #rrel1 #rrel2 #_ #_ h1 h2 larger smaller =
   end
 #pop-options
 
-let loc_includes_addresses_buffer #_ #_ #_ preserve_liveness r s p =
+let loc_includes_addresses_buffer #a #rrel #srel preserve_liveness r s p =
   MG.loc_includes_addresses_aloc #_ #cls preserve_liveness r s #(as_addr p) (ubuffer_of_buffer p)
 
 let loc_includes_region_buffer #_ #_ #_ preserve_liveness s b =

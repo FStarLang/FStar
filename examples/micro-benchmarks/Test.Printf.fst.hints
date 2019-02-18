@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "7997ee27871a55415559c2851de8dd5b"
+      "445f459b0ac596542c82204e24fe2d3d"
     ],
     [
       "Test.Printf.something_to_string",
@@ -21,7 +21,7 @@
         "fuel_guarded_inversion_Test.Printf.something"
       ],
       0,
-      "fb0f2a4fb1866d35f2b753ee3a3969e0"
+      "a33588f0ad369898c1290c255d08f686"
     ],
     [
       "Test.Printf.parse_something",
@@ -33,7 +33,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bd6744b8da0343ac4c94bf82b9b98527"
+      "8d7c606c1c786f51127a429daa183401"
     ],
     [
       "Test.Printf.test_ext",
@@ -42,7 +42,7 @@
       1,
       [ "@query" ],
       0,
-      "5dbeee2aa2b1f6e6203db4bd7ae2c2b7"
+      "64ddfd203c9f8e7d79b3dbea291b83e2"
     ],
     [
       "Test.Printf.test_sprintf",
@@ -51,7 +51,7 @@
       1,
       [ "@query" ],
       0,
-      "ada4c5fbc51fef1ae96285e211d56138"
+      "e889c6ae5281bed4346be6bacf800515"
     ],
     [
       "Test.Printf.something_to_string",
@@ -64,7 +64,7 @@
         "fuel_guarded_inversion_Test.Printf.something"
       ],
       0,
-      "9919aed9e9a27e4d3b21e293499f418b"
+      "896b8cacef5e9e0178223b373aff5deb"
     ],
     [
       "Test.Printf.parse_something",
@@ -76,7 +76,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "25aef39d681dedd39500e89f6c5d78fd"
+      "1828fb3d74e7013407c6a038e23563c3"
     ],
     [
       "Test.Printf.my_sprintf",
@@ -103,21 +103,21 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Test.Printf.parse_something",
-        "interpretation_FStar.Printf_Tm_abs_a32fe4802e125dbd09453ccc952c3af6",
+        "interpretation_Tm_abs_a32fe4802e125dbd09453ccc952c3af6",
         "kinding_FStar.Printf.dir@tok", "kinding_Prims.list@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Test.Printf_Tm_refine_c3ab046d66a0ca000894bd6a94ec3f87",
+        "refinement_interpretation_Tm_refine_c3ab046d66a0ca000894bd6a94ec3f87",
         "token_correspondence_FStar.Printf.parse_format.fuel_instrumented",
         "typing_FStar.Printf.parse_format",
         "typing_FStar.Printf.parse_format_string",
         "typing_FStar.String.list_of_string", "unit_typing"
       ],
       0,
-      "735076a1e4fa5990b0a88f448ed70ea4"
+      "04b733b64d2821c12c05cedb7f16ad8c"
     ],
     [
       "Test.Printf.test_ext",
@@ -126,7 +126,7 @@
       1,
       [ "@query" ],
       0,
-      "4294b532db1eb66c44a0ca28441b12f6"
+      "299b6c4e5969661c900ed5a98f4da4c6"
     ]
   ]
 ]
