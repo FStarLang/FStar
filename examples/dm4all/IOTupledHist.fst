@@ -57,7 +57,6 @@ new_effect {
 
 val read : unit -> IO int (fun h p -> forall x. p (x, h))
 let read () =
-    admit (); // same problem as IOTupledFr it seems
     IO?.reflect (Read (fun i -> Return i))
 
 (* Keeping the log backwards, since otherwise the VCs are too contrived for z3.
@@ -65,7 +64,6 @@ let read () =
 
 val write : i:int -> IO unit (fun h p -> p ((), i::h))
 let write i =
-    admit (); // same problem as IOTupledFr it seems
     IO?.reflect (Write i (Return ()))
 
 open FStar.Tactics

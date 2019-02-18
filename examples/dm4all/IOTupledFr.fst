@@ -58,16 +58,10 @@ new_effect {
 
 val read : unit -> IO int (fun p -> forall x. p (x, []))
 let read () =
-    admit (); (* wat? the query looks trivial, but z3 can't prove it *)
-    // ; Encoding query formula: forall (_: Prims.unit).
-    // ;   (*could not prove post-condition*)
-    // ;   forall (a0: (_: (Prims.int * Prims.list Prims.int) -> Prims.Tot Type0)).
-    // ;     (forall (x: Prims.int). a0 (x, [])) ==> (forall (i: Prims.int). a0 (i, []) <: Prims.Tot Type0)
     IO?.reflect (Read (fun i -> Return i))
 
 val write : i:int -> IO unit (fun p -> p ((), [i]))
 let write i =
-    admit (); (* wat? the query looks trivial, but z3 can't prove it *)
     IO?.reflect (Write i (Return ()))
 
 val test1 : unit -> IO int (fun p -> p (1, [2; 3]))
