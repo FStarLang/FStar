@@ -395,10 +395,13 @@ let rec tc_term env e =
                                                         (Print.term_to_string e)
                                                         (Print.tag_of_term (SS.compress e))
                                                         (string_of_int ms);
-        let e, _ , _ = r in
+        let e, c, g = r in
         BU.print3 "(%s) Result is: %s (%s)\n" (Range.string_of_range <| Env.get_range env)
                                               (Print.term_to_string e)
-                                              (Print.tag_of_term (SS.compress e))
+                                              (Print.tag_of_term (SS.compress e));
+        BU.print2 "(%s) At computation type: %s\n"
+                                              (Range.string_of_range <| Env.get_range env)
+                                              (Print.lcomp_to_string c)
     end;
     r
 
