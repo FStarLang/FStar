@@ -2,18 +2,18 @@ module NDDemonic
 
 module List = FStar.List.Tot
 
-let repr (a:Type) = unit -> list a
+let repr (a:Type) = list a
 
-let return (a:Type u#a) (x:a) = fun () -> [x]
+let return (a:Type u#a) (x:a) = [x]
 
 let bind (a : Type u#aa) (b : Type u#bb)
-    (l : repr a) (f : a -> repr b) = fun () -> List.flatten (List.map (fun x -> f x ()) (l ()))
+    (l : repr a) (f : a -> repr b) = List.flatten (List.map f l)
 
-(* let choose (#a : Type) (x y : a) : repr a = fun () -> [x;y] *)
+(* let choose (#a : Type) (x y : a) : repr a = [x;y] *)
 
 (* Demonic interpretation *)
 let interp (a:Type) (l : repr a) : pure_wp a =
-    fun p -> forall (x:a). List.memP x (l ()) ==> p x
+    fun p -> forall (x:a). List.memP x l ==> p x
 
 total
 reifiable
@@ -51,11 +51,11 @@ effect NDTot (a:Type) = ND a (pure_null_wp a)
 
 val choose : #a:Type0 -> x:a -> y:a -> ND a (fun p -> p x /\ p y)
 let choose #a x y =
-    ND?.reflect (fun () -> [x;y])
+    ND?.reflect [x;y]
 
 val fail : #a:Type0 -> unit -> ND a (fun p -> True)
 let fail #a () =
-    ND?.reflect (fun () -> [])
+    ND?.reflect []
 
 let test () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x) =
     let x = choose 0 1 in
@@ -106,11 +106,11 @@ let (pyths_norm : unit -> (Prims.int * Prims.int * Prims.int) Prims.list) =
     ((Prims.parse_int "6"), (Prims.parse_int "8"), (Prims.parse_int "10"));
     ((Prims.parse_int "8"), (Prims.parse_int "6"), (Prims.parse_int "10"))]
 *)
-let pyths_norm () = normalize_term (reify (pyths ()) ())
+let pyths_norm () = normalize_term (reify (pyths ()))
 
-let test_reify_1 () = assert (reify (test1 ()) () ==  [5])
-let test_reify_2 () = assert (reify (test2 ()) () ==  [3])
-let test_reify_3 () = assert (reify (test1 ()) () =!= [4])
+let test_reify_1 () = assert (reify (test1 ()) ==  [5])
+let test_reify_2 () = assert (reify (test2 ()) ==  [3])
+let test_reify_3 () = assert (reify (test1 ()) =!= [4])
 
 [@expect_failure]
 let _ = assert False
