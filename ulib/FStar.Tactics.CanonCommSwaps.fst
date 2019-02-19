@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module CanonCommSwaps
+module FStar.Tactics.CanonCommSwaps
 
 open FStar.List.Tot
 

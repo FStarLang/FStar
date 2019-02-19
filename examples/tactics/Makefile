@@ -24,14 +24,14 @@ else
 stringprintertest:
 endif
 
-CanonCommSemiring.cmxs CanonCommMonoid.cmxs:
-	$(FSTAR) --cache_checked_modules --codegen Plugin --extract 'CanonCommSemiring CanonCommMonoid CanonCommSwaps' CanonCommSemiring.fst
+FStar.Tactics.CanonCommSemiring.cmxs FStar.Tactics.CanonCommMonoid.cmxs:
+	$(FSTAR) --cache_checked_modules --codegen Plugin --extract 'FStar.Tactics.CanonCommSemiring FStar.Tactics.CanonCommMonoid FStar.Tactics.CanonCommSwaps' FStar.Tactics.CanonCommSemiring.fst
 	rm -f ./*.cmxs
-	cat CanonCommMonoid.ml.fixup >> CanonCommMonoid.ml
-	cat CanonCommSemiring.ml.fixup >> CanonCommSemiring.ml
-	env OCAMLPATH="../../bin/" ocamlfind ocamlopt -shared -I . -package fstar-tactics-lib -o ./CanonCommMonoid.cmxs ./CanonCommSwaps.ml ./CanonCommMonoid.ml
-	env OCAMLPATH="../../bin/" ocamlfind ocamlopt -shared -I . -package fstar-tactics-lib -o ./CanonCommSemiring.cmxs ./CanonCommSwaps.ml ./CanonCommMonoid.ml ./CanonCommSemiring.ml
+	cat FStar.Tactics.CanonCommMonoid.ml.fixup >> FStar.Tactics.CanonCommMonoid.ml
+	cat FStar.Tactics.CanonCommSemiring.ml.fixup >> FStar.Tactics.CanonCommSemiring.ml
+	env OCAMLPATH="../../bin/" ocamlfind ocamlopt -shared -I . -package fstar-tactics-lib -o ./FStar.Tactics.CanonCommMonoid.cmxs ./FStar.Tactics.CanonCommSwaps.ml ./FStar.Tactics.CanonCommMonoid.ml
+	env OCAMLPATH="../../bin/" ocamlfind ocamlopt -shared -I . -package fstar-tactics-lib -o ./FStar.Tactics.CanonCommSemiring.cmxs ./FStar.Tactics.CanonCommSwaps.ml ./FStar.Tactics.CanonCommMonoid.ml ./FStar.Tactics.CanonCommSemiring.ml
 
-canon-native: CanonCommSemiring.cmxs CanonCommMonoid.cmxs
-	$(FSTAR) --load CanonCommMonoid CanonCommMonoid.fst
-	$(FSTAR) --load CanonCommSemiring CanonCommSemiring.fst
+canon-native: FStar.Tactics.CanonCommSemiring.cmxs FStar.Tactics.CanonCommMonoid.cmxs
+	$(FSTAR) --load FStar.Tactics.CanonCommMonoid FStar.Tactics.CanonCommMonoid.fst
+	$(FSTAR) --load FStar.Tactics.CanonCommSemiring FStar.Tactics.CanonCommSemiring.fst
