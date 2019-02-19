@@ -137,3 +137,7 @@ let buf_len_of_literal (s: string):
 val const_string: Type0
 
 val const_string_of_literal: s:string -> const_string
+
+val print_string: const_string -> ST.Stack unit
+  (requires fun _ -> true)
+  (ensures fun h0 _ h1 -> B.(modifies loc_none h0 h1))
