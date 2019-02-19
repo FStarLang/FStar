@@ -3,7 +3,7 @@ open Refinement
 (* This client of Refinement demonstrates how
    abstract computation can be writted in the RST effect
    without any details of LowStar needed in VCs *)
-//#reset-options "--using_facts_from '* -FStar.HyperStack -LowStar'"
+#reset-options "--using_facts_from '* -FStar.HyperStack -LowStar'"
 
 (* Here's a simple swap *)
 let swap r
