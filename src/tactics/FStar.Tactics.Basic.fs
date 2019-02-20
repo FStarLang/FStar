@@ -456,8 +456,10 @@ let new_uvar (reason:string) (env:env) (typ:typ) : tac<(term * ctx_uvar)> =
 ////////////////////////////////////////////////////////////////////
 (* Some utilities on goals *)
 let is_true t =
+    let t = U.unascribe t in
     match U.un_squash t with
     | Some t' ->
+        let t' = U.unascribe t' in
         begin match (SS.compress t').n with
         | Tm_fvar fv -> S.fv_eq_lid fv PC.true_lid
         | _ -> false

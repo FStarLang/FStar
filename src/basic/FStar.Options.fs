@@ -197,6 +197,7 @@ let defaults =
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
       ("profile"                      , Bool false);
+      ("protect_top_level_axioms"     , Bool true);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("keep_query_captions"          , Bool true);
@@ -323,6 +324,7 @@ let get_include                 ()      = lookup_opt "include"                  
 let get_print                   ()      = lookup_opt "print"                    as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
 let get_profile                 ()      = lookup_opt "profile"                  as_bool
+let get_protect_top_level_axioms()      = lookup_opt "protect_top_level_axioms" as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
@@ -745,6 +747,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "profile",
         Const (mk_bool true),
         "Prints timing information for various operations in the compiler");
+
+       ( noshort,
+        "protect_top_level_axioms",
+        BoolStr,
+        "Guard nullary top-level symbols in the SMT encoding from provide ambient ground facts (default 'true')");
 
        ( noshort,
         "initial_fuel",
@@ -1270,7 +1277,9 @@ let should_verify m =
 
 let should_verify_file fn = should_verify (module_name_of_file_name fn)
 
-let dont_gen_projectors m = List.contains m (get___temp_no_proj())
+let module_name_eq m1 m2 = String.lowercase m1 = String.lowercase m2
+
+let dont_gen_projectors m = get___temp_no_proj() |> List.existsb (module_name_eq m)
 
 let should_print_message m =
     if should_verify m
@@ -1395,7 +1404,8 @@ let parse_settings ns : list<(list<string> * bool)> =
       let s = FStar.Util.trim_string s in
       if s = "" then []
       else with_cache (fun s ->
-             FStar.Util.split s " "
+             FStar.Util.splitlines s
+             |> List.concatMap (fun s -> FStar.Util.split s " ")
              |> List.map parse_one_setting) s)
              |> List.rev
 
@@ -1416,17 +1426,18 @@ let codegen                      () =
             | "Kremlin" -> Kremlin
             | "Plugin" -> Plugin
             | _ -> failwith "Impossible")
+
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
-let debug_module        modul       = (get_debug () |> List.contains modul)
-let debug_at_level      modul level = (get_debug () |> List.contains modul) && debug_level_geq level
+let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
+let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
-let dump_module                  s  = get_dump_module() |> List.contains s
+let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
 let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
@@ -1446,6 +1457,7 @@ let profile (f:unit -> 'a) (msg:'a -> string) : 'a =
                      (msg a);
          a
     else f ()
+let protect_top_level_axioms     () = get_protect_top_level_axioms()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
@@ -1463,8 +1475,7 @@ let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
 let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
-let no_extract                   s  = let s = String.lowercase s in
-    get_no_extract() |> FStar.Util.for_some (fun f -> String.lowercase f = s)
+let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
 let no_location_info             () = get_no_location_info            ()

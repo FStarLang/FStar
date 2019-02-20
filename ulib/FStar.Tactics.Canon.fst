@@ -121,7 +121,6 @@ val minus_is_plus : (#x : int) -> (#y : int) -> Lemma (x - y == x + (-y))
 private
 let minus_is_plus #x #y = ()
 
-// These two cannot be top-levels if we want to compile
 private
 let step (t : unit -> Tac unit) : Tac unit =
     apply_lemma (`trans);

@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ca51f9a146453d1767856baed55e5a9f"
+      "64292b70613d8734c391b6e4c242d069"
     ],
     [
       "Bug026.filter",
@@ -22,7 +22,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7f7b785d6315befb25f2132e96a5e6c2"
+      "8b53bbb30f0408b69a34d05053422c9c"
     ],
     [
       "Bug026.test_filter1",
@@ -31,14 +31,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "function_token_typing_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e5455c377b286356bc2b1701a60338ff"
+      "f4641564f19bd8db5dd93d35d59b023b"
     ],
     [
       "Bug026.test_filter1",
@@ -55,6 +57,7 @@
         "equation_Prims.nat",
         "equation_with_fuel_Bug026.filter.fuel_instrumented",
         "function_token_typing_Bug026.evenb",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.nat", "int_typing",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
         "projection_inverse_BoxBool_proj_0",
@@ -62,11 +65,11 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_Bug026.evenb"
       ],
       0,
-      "558d0620026f663eff68c8570bb7350e"
+      "04d80dd87b5a3ed9a557c759b8ad8e9a"
     ],
     [
       "Bug026.test_filter2",
@@ -75,14 +78,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
-        "equation_Prims.pos", "function_token_typing_Prims.int",
-        "function_token_typing_Prims.pos",
-        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "equation_Prims.pos",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "function_token_typing_Prims.pos",
+        "haseqTm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ec66f2024be393b552a105e52bce2456"
+      "5ebf7e1115d752b3fc29d3bd035c8099"
     ],
     [
       "Bug026.test_filter2",
@@ -99,6 +104,7 @@
         "equation_Prims.pos",
         "equation_with_fuel_Bug026.filter.fuel_instrumented",
         "function_token_typing_Bug026.evenb2",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.pos", "int_typing",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
         "projection_inverse_BoxBool_proj_0",
@@ -106,11 +112,11 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "token_correspondence_Bug026.evenb2"
       ],
       0,
-      "1f224d779782d59078482ca768a5e680"
+      "3e66538d91956783f37d414d30354979"
     ],
     [
       "Bug026.test_filter3",
@@ -119,14 +125,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
-        "equation_Prims.pos", "function_token_typing_Prims.int",
-        "function_token_typing_Prims.pos",
-        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "equation_Prims.pos",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "function_token_typing_Prims.pos",
+        "haseqTm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0d5f51da3d1ce5f14c3a3d850971a125"
+      "4d9e0c417843df5fcf1b39ff0a3c937b"
     ],
     [
       "Bug026.test_filter3",
@@ -136,7 +144,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug026.filter.fuel_instrumented", "@query",
-        "Bug026_interpretation_Tm_arrow_f9ca95eec22b220a003264ba49064de6",
+        "Bug026_interpretation_Tm_arrow_986c77c9cb89c1362179f0f4e2753225",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
@@ -146,6 +154,7 @@
         "equation_with_fuel_Bug026.filter.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Bug026.evenb3",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.pos", "int_typing",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
         "projection_inverse_BoxBool_proj_0",
@@ -153,11 +162,11 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "token_correspondence_Bug026.evenb3", "typing_Bug026.filter"
       ],
       0,
-      "9a523c6eca155e00c3fae2282ab6d428"
+      "d9f4a3505351797e2456ba8d407cb051"
     ]
   ]
 ]

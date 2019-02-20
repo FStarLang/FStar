@@ -6,12 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.prop",
-        "refinement_interpretation_FStar.PropositionalExtensionality_Tm_refine_ae22a4e2805a1b9863bea95b7702a299"
-      ],
+      [ "@query" ],
       0,
-      "255e51af28a4df18607db648a6bbc1fd"
+      "ac0c5ce9334de96bc916a5f856c2b996"
     ]
   ]
 ]

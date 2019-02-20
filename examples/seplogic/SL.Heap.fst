@@ -64,6 +64,8 @@ let emp =
   let domain = OS.empty in
   let contents = F.on_dom nat (fun _ -> None) in
   Some ({ domain = domain; contents = contents })
+
+let _ = intro_ambient emp
   
 let ref a = nat
 

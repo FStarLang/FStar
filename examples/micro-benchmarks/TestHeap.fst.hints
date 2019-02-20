@@ -9,13 +9,14 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.ref",
         "equation_Prims.eqtype", "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.x", "int_typing",
-        "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
+        "int_typing", "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_51b7a9dbd8da476b9c15c039c3994747",
+        "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h",
+        "typing_TestHeap.x"
       ],
       0,
-      "fb5ff1d17c70f738e931378cc61a7e41"
+      "2b86a4a856b6e10db71739c6cf8767f5"
     ],
     [
       "TestHeap.test1",
@@ -27,17 +28,18 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_TestHeap.DistinctXY", "equation_FStar.Heap.ref",
         "equation_FStar.Heap.trivial_preorder", "equation_Prims.eqtype",
-        "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.x",
-        "function_token_typing_TestHeap.y", "int_typing",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_typing",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd2",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_51b7a9dbd8da476b9c15c039c3994747",
         "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
+        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h",
+        "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "0437db9da652d933d8330c36afdf9d5a"
+      "204c8940757bce1826f3b2fbe6c107cf"
     ],
     [
       "TestHeap.test3",
@@ -47,15 +49,15 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.ref",
         "equation_Prims.eqtype", "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.x",
-        "function_token_typing_TestHeap.y", "int_typing",
-        "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "int_typing", "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_51b7a9dbd8da476b9c15c039c3994747",
         "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
+        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h",
+        "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "8778785c1c35252e9a0ad40a2f6dc0c2"
+      "bdfba7f9a16baeb80ab4818a2fe2dbff"
     ],
     [
       "TestHeap.test7",
@@ -67,17 +69,18 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_TestHeap.DistinctXY", "equation_FStar.Heap.ref",
         "equation_FStar.Heap.trivial_preorder", "equation_Prims.eqtype",
-        "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.x",
-        "function_token_typing_TestHeap.y", "int_typing",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_typing",
         "lemma_FStar.Monotonic.Heap.lemma_upd_contains",
         "lemma_FStar.Monotonic.Heap.lemma_upd_contains_different_addr",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_51b7a9dbd8da476b9c15c039c3994747",
         "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
+        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h",
+        "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "3bb756bf6aceacf258996fe676dba69b"
+      "48aebb0e4de514e7b58ebaaa39a99a89"
     ],
     [
       "TestHeap.test8",
@@ -87,15 +90,15 @@
       [
         "@MaxIFuel_assumption", "@query", "assumption_TestHeap.DistinctXY",
         "equation_FStar.Heap.ref", "equation_Prims.eqtype",
-        "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.x",
-        "function_token_typing_TestHeap.y", "int_typing",
+        "function_token_typing_Prims.int", "int_typing",
         "lemma_FStar.Monotonic.Heap.lemma_upd_contains_different_addr",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_51b7a9dbd8da476b9c15c039c3994747",
+        "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h",
+        "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "9698eceba3680d86183050fc2346b6b3"
+      "2ff59e818d3e727b1810ce351c51fc51"
     ],
     [
       "TestHeap.test0",
@@ -105,13 +108,14 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.ref",
         "equation_Prims.eqtype", "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.x", "int_typing",
-        "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
+        "int_typing", "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_51b7a9dbd8da476b9c15c039c3994747",
+        "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h",
+        "typing_TestHeap.x"
       ],
       0,
-      "82b8644f9f19561302ca0b998787142c"
+      "0c3c4d24272374a2e2f019063cdb76aa"
     ],
     [
       "TestHeap.test1",
@@ -123,17 +127,18 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_TestHeap.DistinctXY", "equation_FStar.Heap.ref",
         "equation_FStar.Heap.trivial_preorder", "equation_Prims.eqtype",
-        "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.x",
-        "function_token_typing_TestHeap.y", "int_typing",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_typing",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd2",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_51b7a9dbd8da476b9c15c039c3994747",
         "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
+        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h",
+        "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "63ad159ecdfb66c7cedb3e36d6807a70"
+      "414af3e57ea8f90736604f2da61b71f6"
     ],
     [
       "TestHeap.test3",
@@ -143,15 +148,15 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.ref",
         "equation_Prims.eqtype", "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.x",
-        "function_token_typing_TestHeap.y", "int_typing",
-        "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "int_typing", "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_51b7a9dbd8da476b9c15c039c3994747",
         "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
+        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h",
+        "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "cc1830a3e8dd3911004e45d7bd3acc1d"
+      "b36189c94ef607cbfd7f978a53287797"
     ],
     [
       "TestHeap.test7",
@@ -163,17 +168,18 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_TestHeap.DistinctXY", "equation_FStar.Heap.ref",
         "equation_FStar.Heap.trivial_preorder", "equation_Prims.eqtype",
-        "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.x",
-        "function_token_typing_TestHeap.y", "int_typing",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_typing",
         "lemma_FStar.Monotonic.Heap.lemma_upd_contains",
         "lemma_FStar.Monotonic.Heap.lemma_upd_contains_different_addr",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_51b7a9dbd8da476b9c15c039c3994747",
         "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
+        "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h",
+        "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "ff6111943bf7122c19a516a3368e900f"
+      "14260ee354bc99961c379539daf9a5df"
     ],
     [
       "TestHeap.test8",
@@ -183,15 +189,15 @@
       [
         "@MaxIFuel_assumption", "@query", "assumption_TestHeap.DistinctXY",
         "equation_FStar.Heap.ref", "equation_Prims.eqtype",
-        "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.x",
-        "function_token_typing_TestHeap.y", "int_typing",
+        "function_token_typing_Prims.int", "int_typing",
         "lemma_FStar.Monotonic.Heap.lemma_upd_contains_different_addr",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_51b7a9dbd8da476b9c15c039c3994747",
+        "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h",
+        "typing_TestHeap.x", "typing_TestHeap.y"
       ],
       0,
-      "1d366b78597777db57bcdfdafc98bbe5"
+      "56992dfbf1c5dc378ebd8a34570ed0fd"
     ]
   ]
 ]

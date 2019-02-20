@@ -31,11 +31,11 @@ open FStar.Const
 open FStar.SMTEncoding
 open FStar.SMTEncoding.Util
 open FStar.SMTEncoding.Env
-
-val mk_Apply : e:term -> vars:list<(string * sort)> -> term
-val maybe_curry_app : rng:Range.range -> head:op -> arity:int -> args:list<term> -> term
+module BU = FStar.Util
+val mk_Apply : e:term -> vars:fvs -> term
+val maybe_curry_app : rng:Range.range -> head:BU.either<op,term> -> arity:int -> args:list<term> -> term
 val maybe_curry_fvb : rng:Range.range -> head:fvar_binding -> args:list<term> -> term
-val mkForall_fuel : Range.range -> (list<(list<pat>)> * fvs * term -> term)
+val mkForall_fuel : string -> Range.range -> (list<(list<pat>)> * fvs * term -> term)  //first arg is the module name
 
 val head_normal : env_t -> Syntax.term -> bool
 

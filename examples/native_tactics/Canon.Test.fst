@@ -17,7 +17,6 @@ module Canon.Test
 module XX = FStar.Tactics.Canon // load it, to get the symbols for the lemmas
 open FStar.Tactics
 open FStar.Mul
-open FStar.Tactics.Canon
 open Canon
 
 assume val x : int
