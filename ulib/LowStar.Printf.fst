@@ -202,7 +202,7 @@ let rec parse_format
 
    | '%' :: c :: s' -> begin
      match c with
-     | '%' ->  parse_format s'
+     | '%' -> cons_frag '%' (parse_format s')
      | 'b' -> add_dir (Base Bool)   (parse_format s')
      | 'c' -> add_dir (Base Char)   (parse_format s')
      | 's' -> None //TODO: LowStar.Literal.Const
