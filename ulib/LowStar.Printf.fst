@@ -50,8 +50,7 @@ module LowStar.Printf
 ///      to primitive printers for each supported type
 ///
 /// Before diving into the technical details of how this module works,
-/// you might want to skip to the very end of this file to see a
-/// small piece of sample code and how it extracts.
+/// you might want to see a sample usage at the very end of this file.
 
 open FStar.Char
 open FStar.String
@@ -429,7 +428,9 @@ let intro_normal_f (#a:Type) (b: (a -> Type)) (f:(x:a -> b x))
 ///   Annotating it results in a needless additional proof obligation to
 ///   equate types after they are partially reduced, which is pointless.
 noextract inline_for_extraction
+val printf : s:normal format_string -> normal (interpret_format_string s)
 let printf = intro_normal_f #format_string interpret_format_string printf'
+
 
 /// `test`: A small test function
 /// Running `fstar --codegen OCaml LowStar.Printf.fst --extract LowStar.Printf`
