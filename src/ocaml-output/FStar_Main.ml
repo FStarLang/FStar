@@ -1,5 +1,5 @@
 open Prims
-let (uu___11 : unit) = FStar_Version.dummy () 
+let (uu___1 : unit) = FStar_Version.dummy () 
 let (process_args :
   unit -> (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list)) =
   fun uu____13  -> FStar_Options.parse_cmd_line () 
@@ -89,10 +89,10 @@ let (load_native_tactics : unit -> unit) =
       FStar_All.pipe_right uu____254 FStar_Extraction_ML_Util.flatten_mlpath
        in
     let ml_file m =
-      let uu____279 = ml_module_name m  in Prims.strcat uu____279 ".ml"  in
+      let uu____279 = ml_module_name m  in Prims.op_Hat uu____279 ".ml"  in
     let cmxs_file m =
       let cmxs =
-        let uu____291 = ml_module_name m  in Prims.strcat uu____291 ".cmxs"
+        let uu____291 = ml_module_name m  in Prims.op_Hat uu____291 ".cmxs"
          in
       let uu____294 = FStar_Options.find_file cmxs  in
       match uu____294 with
@@ -192,7 +192,7 @@ let go : 'Auu____420 . 'Auu____420 -> unit =
                           FStar_Util.string_of_int
                             (FStar_List.length filenames)
                            in
-                        Prims.strcat
+                        Prims.op_Hat
                           "Only one command line file is allowed if --use_extracted_interfaces is set, found "
                           uu____528
                          in
@@ -340,7 +340,7 @@ let (handle_error : Prims.exn -> unit) =
 let (main : unit -> unit) =
   fun uu____910  ->
     try
-      (fun uu___13_920  ->
+      (fun uu___3_920  ->
          match () with
          | () ->
              (setup_hooks ();
@@ -380,6 +380,6 @@ let (main : unit -> unit) =
                            FStar_All.exit (Prims.parse_int "0")))
                    else ()))) ()
     with
-    | uu___12_1010 ->
-        (handle_error uu___12_1010; FStar_All.exit (Prims.parse_int "1"))
+    | uu___2_1010 ->
+        (handle_error uu___2_1010; FStar_All.exit (Prims.parse_int "1"))
   

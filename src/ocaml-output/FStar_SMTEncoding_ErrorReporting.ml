@@ -123,8 +123,8 @@ let (label_goals :
               let msg1 =
                 if flag
                 then
-                  Prims.strcat "Failed to verify implicit argument: "
-                    (Prims.strcat msg_prefix (Prims.strcat " :: " msg))
+                  Prims.op_Hat "Failed to verify implicit argument: "
+                    (Prims.op_Hat msg_prefix (Prims.op_Hat " :: " msg))
                 else msg  in
               let rng1 =
                 match ropt with
@@ -152,7 +152,7 @@ let (label_goals :
                   let fallback msg =
                     aux default_msg ropt post_name_opt labels arg  in
                   (try
-                     (fun uu___12_839  ->
+                     (fun uu___23_839  ->
                         match () with
                         | () ->
                             (match arg.FStar_SMTEncoding_Term.tm with
@@ -176,7 +176,7 @@ let (label_goals :
                                      FStar_All.pipe_left
                                        FStar_Util.string_of_int uu____896
                                       in
-                                   Prims.strcat "^^post_condition_" uu____894
+                                   Prims.op_Hat "^^post_condition_" uu____894
                                     in
                                  let names1 =
                                    let uu____904 =
@@ -197,7 +197,7 @@ let (label_goals :
                                                   FStar_Util.string_of_int
                                                   uu____922
                                                  in
-                                              Prims.strcat "^^" uu____920  in
+                                              Prims.op_Hat "^^" uu____920  in
                                             (uu____918, s)  in
                                           FStar_SMTEncoding_Term.mk_fv
                                             uu____912) sorts
@@ -331,15 +331,15 @@ let (label_goals :
                                                                    FStar_SMTEncoding_Term.print_smt_term
                                                                     post1
                                                                     in
-                                                                 Prims.strcat
+                                                                 Prims.op_Hat
                                                                    "  ... "
                                                                    uu____1136
                                                                   in
-                                                               Prims.strcat
+                                                               Prims.op_Hat
                                                                  post_name
                                                                  uu____1134
                                                                 in
-                                                             Prims.strcat
+                                                             Prims.op_Hat
                                                                "Ensures clause doesn't match post name:  "
                                                                uu____1132
                                                               in
@@ -358,15 +358,15 @@ let (label_goals :
                                                                 FStar_SMTEncoding_Term.print_smt_term
                                                                   ens
                                                                  in
-                                                              Prims.strcat
+                                                              Prims.op_Hat
                                                                 "  ... "
                                                                 uu____1154
                                                                in
-                                                            Prims.strcat
+                                                            Prims.op_Hat
                                                               post_name
                                                               uu____1152
                                                              in
-                                                          Prims.strcat
+                                                          Prims.op_Hat
                                                             "Ensures clause doesn't have the expected shape for post-condition "
                                                             uu____1150
                                                            in
@@ -382,7 +382,7 @@ let (label_goals :
                                                   FStar_SMTEncoding_Term.print_smt_term
                                                     lhs1
                                                    in
-                                                Prims.strcat
+                                                Prims.op_Hat
                                                   "LHS not a conjunct: "
                                                   uu____1168
                                                  in
@@ -428,7 +428,7 @@ let (label_goals :
                                      FStar_SMTEncoding_Term.print_smt_term
                                        arg
                                       in
-                                   Prims.strcat "arg not a quant: "
+                                   Prims.op_Hat "arg not a quant: "
                                      uu____1247
                                     in
                                  fallback uu____1245)) ()
@@ -456,7 +456,7 @@ let (label_goals :
                            FStar_All.pipe_left FStar_Util.string_of_int
                              uu____1322
                             in
-                         Prims.strcat "^^post_condition_" uu____1320  in
+                         Prims.op_Hat "^^post_condition_" uu____1320  in
                        let names1 =
                          let uu____1330 =
                            FStar_List.map
@@ -469,7 +469,7 @@ let (label_goals :
                                       FStar_All.pipe_left
                                         FStar_Util.string_of_int uu____1346
                                        in
-                                    Prims.strcat "^^" uu____1344  in
+                                    Prims.op_Hat "^^" uu____1344  in
                                   (uu____1342, s)  in
                                 FStar_SMTEncoding_Term.mk_fv uu____1336)
                              sorts'
@@ -866,7 +866,7 @@ let (detail_errors :
                   then
                     FStar_Errors.log_issue r
                       (FStar_Errors.Warning_HintFailedToReplayProof,
-                        (Prims.strcat
+                        (Prims.op_Hat
                            "Hint failed to replay this sub-proof: " msg))
                   else
                     (let uu____2476 =
@@ -896,7 +896,7 @@ let (detail_errors :
                           let uu____2558 =
                             let uu____2560 = FStar_SMTEncoding_Term.fv_name l
                                in
-                            Prims.strcat "@disable_label_" uu____2560  in
+                            Prims.op_Hat "@disable_label_" uu____2560  in
                           {
                             FStar_SMTEncoding_Term.assumption_term =
                               uu____2551;

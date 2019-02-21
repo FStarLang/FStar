@@ -103,7 +103,7 @@ let (should_fail :
   fun x1  ->
     fun y1  ->
       try
-        (fun uu___12_286  ->
+        (fun uu___2_286  ->
            match () with
            | () ->
                let g =

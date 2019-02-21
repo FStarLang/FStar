@@ -154,13 +154,13 @@ let (pred_nat :
       let uu____481 =
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_bvar
-             (let uu___13_486 = FStar_Tests_Util.x  in
+             (let uu___3_486 = FStar_Tests_Util.x  in
               {
                 FStar_Syntax_Syntax.ppname =
-                  (uu___13_486.FStar_Syntax_Syntax.ppname);
+                  (uu___3_486.FStar_Syntax_Syntax.ppname);
                 FStar_Syntax_Syntax.index = (Prims.parse_int "0");
                 FStar_Syntax_Syntax.sort =
-                  (uu___13_486.FStar_Syntax_Syntax.sort)
+                  (uu___3_486.FStar_Syntax_Syntax.sort)
               })) FStar_Pervasives_Native.None FStar_Range.dummyRange
          in
       (uu____415, FStar_Pervasives_Native.None, uu____481)  in
@@ -1516,9 +1516,8 @@ let run_tests :
     FStar_Options.__set_unit_tests ();
     (let l =
        FStar_List.map
-         (fun uu___12_4112  ->
-            match uu___12_4112 with | (no,test,res) -> run1 no test res)
-         tests
+         (fun uu___2_4112  ->
+            match uu___2_4112 with | (no,test,res) -> run1 no test res) tests
         in
      FStar_Options.__clear_unit_tests (); l)
   
