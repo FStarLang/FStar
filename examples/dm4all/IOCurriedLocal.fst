@@ -36,7 +36,7 @@ let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty
 
 let rec interpretation #a (m : io a) (h : list output) (p : post a) : Type0 =
   match m with
-  | Write o m -> interpretation m h (fun x l -> p x (l @ [o]))
+  | Write o m -> interpretation m (h @ [o]) (fun x l -> p x (o :: l))
   | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) h p)
   | Return x -> p x []
 
@@ -82,6 +82,8 @@ let test2 () : IO int (fun h p -> p 1 [2;3]) by (compute ()) =
   let x = read () in
   write 3;
   1
+
+(* Commented out because ERROR: unexpeced unification variable remains*)
 
 (*
 [@expect_failure]
