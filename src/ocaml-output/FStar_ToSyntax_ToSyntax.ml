@@ -2180,8 +2180,7 @@ and (desugar_name :
       fun env  ->
         fun resolve  ->
           fun l  ->
-(*          print_string ("Desugaring name " ^ FStar_Ident.string_of_lid l ^ " ... resolve=" ^ (if resolve then "true" else "false") ^ "\n");
-*)            let uu____7700 =
+            let uu____7700 =
               let uu____7707 =
                 (if resolve
                  then FStar_Syntax_DsEnv.try_lookup_lid_with_attributes
@@ -2192,8 +2191,6 @@ and (desugar_name :
               FStar_Syntax_DsEnv.fail_or env uu____7707 l  in
             match uu____7700 with
             | (tm,attrs) ->
-(*                print_string ("Resolved to " ^ FStar_Syntax_Print.term_to_string tm ^ "\nWith attrs" ^ (FStar_String.concat ", " (List.map FStar_Syntax_Print.term_to_string attrs)) ^ "\n");
-  *)          
                 let warn_if_deprecated attrs1 =
                   FStar_List.iter
                     (fun a  ->
