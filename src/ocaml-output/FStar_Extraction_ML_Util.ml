@@ -55,9 +55,9 @@ let (mlconst_of_const :
   =
   fun p  ->
     fun c  ->
-      try (fun uu___37_132  -> match () with | () -> mlconst_of_const' c) ()
+      try (fun uu___9_132  -> match () with | () -> mlconst_of_const' c) ()
       with
-      | uu___36_135 ->
+      | uu___8_135 ->
           let uu____136 =
             let uu____138 = FStar_Range.string_of_range p  in
             let uu____140 = FStar_Syntax_Print.const_to_string c  in
@@ -213,8 +213,8 @@ let (udelta_unfold :
       FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option)
   =
   fun g  ->
-    fun uu___29_444  ->
-      match uu___29_444 with
+    fun uu___1_444  ->
+      match uu___1_444 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____453 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1  in
           (match uu____453 with
@@ -256,8 +256,8 @@ let (eff_leq :
       | uu____498 -> false
   
 let (eff_to_string : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
-  fun uu___30_510  ->
-    match uu___30_510 with
+  fun uu___2_510  ->
+    match uu___2_510 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -515,8 +515,8 @@ let rec (erase_effect_annotations :
   
 let is_type_abstraction :
   'a 'b 'c . (('a,'b) FStar_Util.either * 'c) Prims.list -> Prims.bool =
-  fun uu___31_1243  ->
-    match uu___31_1243 with
+  fun uu___3_1243  ->
+    match uu___3_1243 with
     | (FStar_Util.Inl uu____1255,uu____1256)::uu____1257 -> true
     | uu____1281 -> false
   
@@ -556,8 +556,8 @@ let (resugar_exp :
   
 let (record_field_path :
   FStar_Ident.lident Prims.list -> Prims.string Prims.list) =
-  fun uu___32_1386  ->
-    match uu___32_1386 with
+  fun uu___4_1386  ->
+    match uu___4_1386 with
     | f::uu____1393 ->
         let uu____1396 = FStar_Util.prefix f.FStar_Ident.ns  in
         (match uu____1396 with
@@ -895,8 +895,8 @@ let (interpret_plugin_as_term_fun :
                 (FStar_Extraction_ML_Syntax.with_ty
                    FStar_Extraction_ML_Syntax.MLTY_Top) uu____2232
                in
-            let emb_prefix uu___33_2263 =
-              match uu___33_2263 with
+            let emb_prefix uu___5_2263 =
+              match uu___5_2263 with
               | Syntax_term  -> fstar_syn_emb_prefix
               | Refl_emb  -> fstar_refl_emb_prefix
               | NBE_t  -> fstar_tc_nbe_prefix
@@ -1050,14 +1050,14 @@ let (interpret_plugin_as_term_fun :
                  in
               let nbe_cs =
                 FStar_List.map
-                  (fun uu___34_3133  ->
-                     match uu___34_3133 with
+                  (fun uu___6_3133  ->
+                     match uu___6_3133 with
                      | (x,Syntax_term ) -> (x, NBE_t)
                      | (x,Refl_emb ) -> (x, NBERefl_emb)
                      | uu____3208 -> failwith "Impossible") term_cs
                  in
-              fun uu___35_3234  ->
-                match uu___35_3234 with
+              fun uu___7_3234  ->
+                match uu___7_3234 with
                 | Syntax_term  -> term_cs
                 | Refl_emb  -> term_cs
                 | uu____3249 -> nbe_cs
@@ -1695,7 +1695,7 @@ let (interpret_plugin_as_term_fun :
                                 aux loc uu____5569 bs4
                              in
                           (try
-                             (fun uu___39_5594  ->
+                             (fun uu___11_5594  ->
                                 match () with
                                 | () ->
                                     let uu____5607 = aux Syntax_term [] bs2
