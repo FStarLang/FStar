@@ -132,3 +132,22 @@ let test8 (b:bool)
    else write x);
   write (x - 1);
   1
+
+let rec n_writes (n:nat) (i:int) = 
+  if n = 0 
+  then []
+  else i :: n_writes (n - 1) i
+
+let rec test9 (n:nat) (i:int)
+  : Io unit (requires (fun _     -> True)) 
+            (ensures  (fun h x l -> l = n_writes n i)) by (compute ()) = 
+  if n = 0
+  then ()
+  else (write i; test9 (n - 1) i)
+
+let test10 (h0:h_trace) 
+  : Io unit (requires (fun h -> h = h0))
+            (ensures  (fun h _ l -> h = h0 /\ length l > 1)) =
+  write 24;
+  let x = read () in
+  write 42
