@@ -78,17 +78,17 @@
 {"kind": "response", "query-id": "80", "response": [], "status": "success"}
 {"kind": "response", "query-id": "91", "response": [{"level": "error", "message": "Syntax error: Parsing.Parse_error", "ranges": [{"beg": [12, 0], "end": [12, 0], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "98", "response": [], "status": "success"}
-{"kind": "response", "query-id": "101", "response": [{"level": "error", "message": "Subtyping check failed; expected type nat; got type int", "ranges": [{"beg": [11, 15], "end": [11, 17], "fname": "<input>"}, {"beg": [406, 17], "end": [406, 23], "fname": "prims.fst"}]}], "status": "failure"}
+{"kind": "response", "query-id": "101", "response": [{"level": "error", "message": "Subtyping check failed; expected type nat; got type int", "ranges": [{"beg": [11, 15], "end": [11, 17], "fname": "<input>"}, {"beg": [420, 17], "end": [420, 23], "fname": "prims.fst"}]}], "status": "failure"}
 {"kind": "response", "query-id": "107", "response": [], "status": "success"}
 {"kind": "response", "query-id": "108", "response": [], "status": "success"}
 {"kind": "response", "query-id": "112", "response": null, "status": "success"}
 {"kind": "response", "query-id": "114", "response": [], "status": "success"}
-{"kind": "response", "query-id": "116", "response": [{"level": "error", "message": "Subtyping check failed; expected type nat; got type int", "ranges": [{"beg": [11, 15], "end": [11, 17], "fname": "<input>"}, {"beg": [406, 17], "end": [406, 23], "fname": "prims.fst"}]}], "status": "failure"}
+{"kind": "response", "query-id": "116", "response": [{"level": "error", "message": "Subtyping check failed; expected type nat; got type int", "ranges": [{"beg": [11, 15], "end": [11, 17], "fname": "<input>"}, {"beg": [420, 17], "end": [420, 23], "fname": "prims.fst"}]}], "status": "failure"}
 {"kind": "response", "query-id": "118", "response": [], "status": "success"}
 {"kind": "response", "query-id": "119", "response": [], "status": "success"}
 {"kind": "response", "query-id": "122", "response": null, "status": "success"}
 {"kind": "response", "query-id": "124", "response": [], "status": "success"}
-{"kind": "response", "query-id": "126", "response": [{"level": "error", "message": "Subtyping check failed; expected type nat; got type int", "ranges": [{"beg": [11, 15], "end": [11, 17], "fname": "<input>"}, {"beg": [406, 17], "end": [406, 23], "fname": "prims.fst"}]}], "status": "failure"}
+{"kind": "response", "query-id": "126", "response": [{"level": "error", "message": "Subtyping check failed; expected type nat; got type int", "ranges": [{"beg": [11, 15], "end": [11, 17], "fname": "<input>"}, {"beg": [420, 17], "end": [420, 23], "fname": "prims.fst"}]}], "status": "failure"}
 {"kind": "response", "query-id": "128", "response": [], "status": "success"}
 {"kind": "response", "query-id": "130", "response": [], "status": "success"}
 {"kind": "response", "query-id": "133", "response": [], "status": "success"}
@@ -106,7 +106,7 @@
 {"kind": "response", "query-id": "191", "response": null, "status": "success"}
 {"kind": "response", "query-id": "192", "response": null, "status": "success"}
 {"kind": "response", "query-id": "194", "response": [], "status": "success"}
-{"kind": "response", "query-id": "198", "response": [{"level": "error", "message": "Subtyping check failed; expected type nat; got type int", "ranges": [{"beg": [11, 15], "end": [11, 17], "fname": "<input>"}, {"beg": [406, 17], "end": [406, 23], "fname": "prims.fst"}]}], "status": "failure"}
+{"kind": "response", "query-id": "198", "response": [{"level": "error", "message": "Subtyping check failed; expected type nat; got type int", "ranges": [{"beg": [11, 15], "end": [11, 17], "fname": "<input>"}, {"beg": [420, 17], "end": [420, 23], "fname": "prims.fst"}]}], "status": "failure"}
 {"kind": "response", "query-id": "200", "response": [], "status": "success"}
 {"kind": "response", "query-id": "204", "response": [], "status": "success"}
 {"kind": "response", "query-id": "205", "response": [{"level": "error", "message": "assertion failed", "ranges": [{"beg": [13, 8], "end": [13, 14], "fname": "<input>"}, {"beg": [13, 15], "end": [13, 23], "fname": "<input>"}]}], "status": "failure"}
