@@ -15,7 +15,7 @@ module HST = FStar.HyperStack.ST
 type u8 = U8.t
 type u32 = U32.t
 
-let freezable_preorder : P.preorder (Seq.seq u8) =
+abstract let freezable_preorder : P.preorder (Seq.seq u8) =
   fun s1 s2 ->
   Seq.length s1 == Seq.length s2 /\
   (let len = Seq.length s1 in
@@ -65,8 +65,7 @@ let fpred (i j:u32) (snap:G.erased (Seq.seq u8)) : spred u8 =
     let i = U32.v i in
     let j = U32.v j in
     let snap = G.reveal snap in
-    (i > 0 /\ i <= j /\ j <= w /\ w <= len /\ Seq.length snap == j - i) /\
-     (forall (k:nat). (k < j - i) ==> Seq.index s (k + i) == Seq.index snap k))
+    (i > 0 /\ i <= j /\ j <= w /\ w <= len /\ Seq.length snap == j - i /\ Seq.equal (Seq.slice s i j) snap))
 
 let witness_slice (b:fbuffer) (i j:u32) (snap:G.erased (Seq.seq u8))
   : HST.Stack unit (requires (fun h0      -> fpred i j snap (as_seq h0 b)))
