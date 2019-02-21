@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.Reflection.Derived
-
+open FStar.String
 open FStar.Reflection.Types
 open FStar.Reflection.Basic
 open FStar.Reflection.Data
