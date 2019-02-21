@@ -95,6 +95,7 @@ assume val print_i64 : Int64.t -> StTrivial unit
 assume val print_bool : bool -> StTrivial unit
 assume val print_lmbuffer_bool (l:_) (#r:_) (#s:_) (b:lmbuffer bool r s l) : StBuf unit b
 assume val print_lmbuffer_char (l:_) (#r:_) (#s:_) (b:lmbuffer char r s l) : StBuf unit b
+assume val print_lmbuffer_string (l:_) (#r:_) (#s:_) (b:lmbuffer string r s l) : StBuf unit b
 assume val print_lmbuffer_u8 (l:_) (#r:_) (#s:_) (b:lmbuffer UInt8.t r s l) : StBuf unit b
 assume val print_lmbuffer_u16 (l:_) (#r:_) (#s:_) (b:lmbuffer UInt16.t r s l) : StBuf unit b
 assume val print_lmbuffer_u32 (l:_) (#r:_) (#s:_) (b:lmbuffer UInt32.t r s l) : StBuf unit b
@@ -114,6 +115,7 @@ noextract
 type base_typ =
   | Bool
   | Char
+  | String
   | U8
   | U16
   | U32
@@ -136,6 +138,7 @@ let base_typ_as_type (b:base_typ) : Type0 =
   match b with
   | Bool   -> bool
   | Char   -> char
+  | String -> string
   | U8     -> FStar.UInt8.t
   | U16    -> FStar.UInt16.t
   | U32    -> FStar.UInt32.t
@@ -204,7 +207,7 @@ let rec parse_format
      | '%' -> cons_frag '%' (parse_format s')
      | 'b' -> add_dir (Base Bool)   (parse_format s')
      | 'c' -> add_dir (Base Char)   (parse_format s')
-     | 's' -> None //TODO: LowStar.Literal.Const
+     | 's' -> add_dir (Base String) (parse_format s')
      | 'y' -> add_dir (Base I8)     (parse_format s')
      | 'i' -> add_dir (Base I16)    (parse_format s')
      | 'l' -> add_dir (Base I32)    (parse_format s')
@@ -332,6 +335,7 @@ let rec print_frags (acc:list frag_t)
          (match t with
            | Bool -> print_bool value
            | Char -> print_char value
+           | String -> print_string value
            | U8 ->   print_u8 value
            | U16 ->  print_u16 value
            | U32 ->  print_u32 value
@@ -344,6 +348,7 @@ let rec print_frags (acc:list frag_t)
          (match t with
            | Bool ->  print_lmbuffer_bool l value
            | Char -> print_lmbuffer_char l value
+           | String -> print_lmbuffer_string l value
            | U8 ->   print_lmbuffer_u8 l value
            | U16 ->  print_lmbuffer_u16 l value
            | U32 ->  print_lmbuffer_u32 l value
@@ -441,14 +446,17 @@ let printf = intro_normal_f #format_string interpret_format_string printf'
 ///            print_string " Low* ";
 ///            print_u64 m;
 ///            print_string " Printf ";
-///            print_lmbuffer_bool l () () x
+///            print_lmbuffer_bool l () () x;
+///            print_string " ";
+///            print_string "bye"
 ///   ```
 let test (m:UInt64.t) (l:UInt32.t) (#r:_) (#s:_) (x:LB.mbuffer bool r s{LB.len x = l})
   : Stack unit
     (requires (fun h0 -> LB.live h0 x))
     (ensures (fun h0 _ h1 -> h0 == h1))
-  = printf "Hello %b Low* %uL Printf %xb"
+  = printf "Hello %b Low* %uL Printf %xb %s"
               true  //%b boolean
               m     //%uL u64
               l x   //%xb (buffer bool)
+              "bye"
               done //dummy universe coercion
