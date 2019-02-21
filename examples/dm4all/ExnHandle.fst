@@ -95,12 +95,10 @@ let handle (#a:Type)
            (#wp2:a -> wp_type b) 
            (c2:(x:a -> EXN b (wp2 x))) 
          : EXN b (handle_wp wp1 h_wp wp2) =
-  admit ();
-  (* I can have any two of these three assumes but not all three at the same time (getting an assertion failed then) *)
-  assume (forall p . wp1 p ==> p (reify (c1 ())));
-  assume (forall p x . wp2 x p ==> p (reify (c2 x)));
-  assume (forall p e . h_wp e p ==> p (reify (h_c e)));
-  admit ();
+  (* These properties of EXN comps are not currently derivable *)
+  assume ((forall p . wp1 p ==> p (reify (c1 ()))) /\
+          (forall p x . wp2 x p ==> p (reify (c2 x))) /\ 
+          (forall p e . h_wp e p ==> p (reify (h_c e))));
   lemma_handle wp1 (reify (c1 ())) (h_wp) (fun e -> reify (h_c e)) wp2 (fun x -> reify (c2 x));
   EXN?.reflect (handle_rep (reify (c1 ()) <: either a exn) 
                            (fun e -> reify (h_c e)) 
