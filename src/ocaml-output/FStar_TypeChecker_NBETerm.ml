@@ -359,14 +359,14 @@ let (mkAccuMatch :
         -> t)
   = fun s  -> fun cases  -> fun bs  -> Accu ((Match (s, cases, bs)), []) 
 let (equal_if : Prims.bool -> FStar_Syntax_Util.eq_result) =
-  fun uu___1_2118  ->
-    if uu___1_2118
+  fun uu___38_2118  ->
+    if uu___38_2118
     then FStar_Syntax_Util.Equal
     else FStar_Syntax_Util.Unknown
   
 let (equal_iff : Prims.bool -> FStar_Syntax_Util.eq_result) =
-  fun uu___2_2129  ->
-    if uu___2_2129
+  fun uu___39_2129  ->
+    if uu___39_2129
     then FStar_Syntax_Util.Equal
     else FStar_Syntax_Util.NotEqual
   
@@ -1730,13 +1730,13 @@ let (string_index : args -> t FStar_Pervasives_Native.option) =
         (match uu____7651 with
          | (FStar_Pervasives_Native.Some s,FStar_Pervasives_Native.Some i) ->
              (try
-                (fun uu___4_7689  ->
+                (fun uu___41_7689  ->
                    match () with
                    | () ->
                        let r = FStar_String.index s i  in
                        let uu____7694 = embed e_char bogus_cbs r  in
                        FStar_Pervasives_Native.Some uu____7694) ()
-              with | uu___3_7697 -> FStar_Pervasives_Native.None)
+              with | uu___40_7697 -> FStar_Pervasives_Native.None)
          | uu____7700 -> FStar_Pervasives_Native.None)
     | uu____7710 -> FStar_Pervasives_Native.None
   
@@ -1750,13 +1750,13 @@ let (string_index_of : args -> t FStar_Pervasives_Native.option) =
         (match uu____7743 with
          | (FStar_Pervasives_Native.Some s,FStar_Pervasives_Native.Some c) ->
              (try
-                (fun uu___6_7787  ->
+                (fun uu___43_7787  ->
                    match () with
                    | () ->
                        let r = FStar_String.index_of s c  in
                        let uu____7791 = embed e_int bogus_cbs r  in
                        FStar_Pervasives_Native.Some uu____7791) ()
-              with | uu___5_7793 -> FStar_Pervasives_Native.None)
+              with | uu___42_7793 -> FStar_Pervasives_Native.None)
          | uu____7796 -> FStar_Pervasives_Native.None)
     | uu____7807 -> FStar_Pervasives_Native.None
   
@@ -1775,13 +1775,13 @@ let (string_substring' : args -> t FStar_Pervasives_Native.option) =
              let n11 = FStar_BigInt.to_int_fs n1  in
              let n21 = FStar_BigInt.to_int_fs n2  in
              (try
-                (fun uu___8_7903  ->
+                (fun uu___45_7903  ->
                    match () with
                    | () ->
                        let r = FStar_String.substring s1 n11 n21  in
                        let uu____7908 = embed e_string bogus_cbs r  in
                        FStar_Pervasives_Native.Some uu____7908) ()
-              with | uu___7_7911 -> FStar_Pervasives_Native.None)
+              with | uu___44_7911 -> FStar_Pervasives_Native.None)
          | uu____7914 -> FStar_Pervasives_Native.None)
     | uu____7928 -> FStar_Pervasives_Native.None
   
