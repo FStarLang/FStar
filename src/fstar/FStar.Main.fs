@@ -91,10 +91,7 @@ let load_native_tactics () =
     Tactics.Load.load_tactics cmxs_files
 
 let init_warn_error() =
-  Errors.init_warn_error_flags;
-  let s = Options.warn_error() in
-  if s <> "" then
-    FStar.Parser.ParseIt.parse_warn_error s
+  Options.initialize_parse_warn_error FStar.Parser.ParseIt.parse_warn_error
 
 (* Need to keep names of input files for a second pass when prettyprinting *)
 (* This reference is set once in `go` and read in `main` if the print or *)
@@ -105,6 +102,7 @@ let fstar_files: ref<option<list<string>>> = Util.mk_ref None
 (* Main function                                                            *)
 (****************************************************************************)
 let go _ =
+  init_warn_error();
   let res, filenames = process_args () in
   match res with
     | Help ->
@@ -114,7 +112,6 @@ let go _ =
     | Success ->
         fstar_files := Some filenames;
         load_native_tactics ();
-        init_warn_error();
 
         (* --dep: Just compute and print the transitive dependency graph;
                   don't verify anything *)

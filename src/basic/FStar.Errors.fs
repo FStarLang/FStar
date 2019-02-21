@@ -6,6 +6,7 @@ open FStar.Exn
 open FStar.All
 open FStar.Util
 open FStar.Range
+open FStar.Options
 
 type raw_error =
   | Error_DependencyAnalysisFailed
@@ -330,15 +331,9 @@ type raw_error =
   | Warning_EffectfulArgumentToErasedFunction
   | Fatal_EmptySurfaceLet
 
-type flag =
-  | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
-  | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
-                    //the compiler can progress after reporting them
-  | CError          //CError: these are reported as errors using log_issue
-                    //        but they can be turned into warnings or silenced
-  | CWarning        //CWarning: reported using log_issue as warnings by default;
-                    //          then can be silenced or escalated to errors
-  | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
+
+
+type flag = error_flag
 
 // This list should be considered STABLE
 // Which means, if you need to add an error, APPEND it, to keep old error numbers the same
@@ -810,15 +805,8 @@ let message_prefix =
 
 let findIndex l v = l |> List.index (function (e, _) when e=v -> true | _ -> false)
 let errno_of_error e = findIndex default_flags e
-let flags: ref<list<flag>> = mk_ref []
 
-let init_warn_error_flags =
-  let rec aux r l =
-    match l with
-    | [] -> r
-    | (e, f)::tl -> aux (r@[f]) tl
-  in
-  flags := aux [] default_flags
+let init_warn_error_flags = List.map snd default_flags
 
 let diag r msg =
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg None)
@@ -831,7 +819,7 @@ let lookup flags errno =
 
 let log_issue r (e, msg) =
   let errno = errno_of_error (e) in
-  match lookup !flags errno with
+  match lookup (Options.error_flags()) errno with
   | CAlwaysError
   | CError ->
      add_one (mk_issue EError (Some r) msg (Some errno))
@@ -883,7 +871,8 @@ let raise_error (e, msg) r =
 let raise_err (e, msg) =
   raise (Err (e, msg))
 
-let update_flags l =
+let update_flags (l:list<(error_flag * string)>) : list<error_flag> =
+  let flags = init_warn_error_flags in
   let compare (_, (a, _)) (_, (b, _)) =
     if a > b then 1
     else if a < b then -1
@@ -898,7 +887,7 @@ let update_flags l =
     | _ -> f
   in
   let rec set_flag i l=
-    let d = List.nth !flags i in
+    let d = List.nth flags i in
     match l with
     | [] -> d
     | (f, (l, h))::tl ->
@@ -926,7 +915,7 @@ let update_flags l =
   in
   let range = compute_range [] l in
   let sorted = List.sortWith compare range in
-  flags := aux [] 0 !flags sorted
+  aux [] 0 init_warn_error_flags sorted
 
 let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
     let newh = mk_default_handler false in

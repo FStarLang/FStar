@@ -150,14 +150,17 @@ let parse fn =
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =
-  let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
-  let lexer() = let tok = FStar_Parser_LexFStar.token lexbuf in
-    (tok, lexbuf.start_p, lexbuf.cur_p)
-  in
   let user_flags =
-    try
-      MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.warn_error_list lexer
-    with e ->
-      failwith (FStar_Util.format1 "Malformed warn-error list: %s" s)
+    if s = ""
+    then []
+    else
+      let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
+      let lexer() = let tok = FStar_Parser_LexFStar.token lexbuf in
+        (tok, lexbuf.start_p, lexbuf.cur_p)
+      in
+      try
+        MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.warn_error_list lexer
+      with e ->
+        failwith (FStar_Util.format1 "Malformed warn-error list: %s" s)
   in
-  FStar_Errors.update_flags user_flags 
+  FStar_Errors.update_flags user_flags
