@@ -139,6 +139,9 @@ let string_uppercase_lid = s2l "uppercase"
 let string_index_lid = s2l "index"
 let string_index_of_lid = s2l "index_of"
 let string_sub_lid = s2l "sub"
+//deprecated
+let prims_strcat_lid = pconst "strcat"
+let prims_op_Hat_lid = pconst "op_Hat"
 
 let let_in_typ      = p2l ["Prims"; "Let"]
 let string_of_int_lid = p2l ["Prims"; "string_of_int"]
