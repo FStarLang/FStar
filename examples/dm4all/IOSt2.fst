@@ -3,6 +3,8 @@ module IOSt2
 open FStar.List
 open FStar.WellFounded
 
+(* Similar to IOSt, but with uncurried postconditions *)
+
 type input = int
 type output = int
 

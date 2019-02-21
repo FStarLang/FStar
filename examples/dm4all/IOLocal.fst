@@ -3,6 +3,11 @@ module IOLocal
 open FStar.List
 open FStar.WellFounded
 
+(* Reasoning about IO where the specs are over a list
+ * of outputs corresponding to the history (the previously
+ * outputted values) and postconditions over the "local" output,
+ * (the output emitted by the program in question). *)
+
 type input = int
 type output = int
 
@@ -68,9 +73,24 @@ val write : o:int -> IO unit (fun h p -> p () [o])
 let write i =
     IO?.reflect (Write i (Return ()))
 
+val need_a_1 : unit -> IO int (fun h p -> List.memP 1 h /\ p 42 [])
+let need_a_1 () = 42
+
 open FStar.Tactics
 
-let x = 1
+(* GM: This stupid length precondition only there to help z3. If we flip
+ * the ordering on the history list, then this works like a charm but test9
+ * below starts displaying the same bad behaviour. *)
+let test_hist_1 () : IO unit (fun h p -> List.length h <= 5 /\ p () [1]) by (compute (); explode (); dump "") =
+  write 1;
+  let _ = need_a_1 () in
+  ()
+
+[@expect_failure]
+let test_hist_2 () : IO unit (fun h p -> List.length h <= 5 /\ p () [1]) =
+  let _ = need_a_1 () in
+  write 1;
+  ()
 
 let test1 () : IO int (fun h p -> p 1 [2;3]) =
   write 2;

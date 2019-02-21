@@ -3,6 +3,10 @@ module IOFr
 open FStar.List
 open FStar.WellFounded
 
+(* Reasoning about IO, but ignoring inputs. Postconditions are
+ * predicates over the output of the program and its return value.
+ * Inputs are treated as a demonic non-deterministic choice. *)
+
 type input = int
 type output = int
 

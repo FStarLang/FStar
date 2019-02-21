@@ -3,6 +3,10 @@ module IOForget
 open FStar.List
 open FStar.WellFounded
 
+(* Reasoning about IO without the IO: we only care about the
+ * final values, and treat input as a demonic non-determistic
+ * choice. *)
+
 type input = int
 type output = int
 

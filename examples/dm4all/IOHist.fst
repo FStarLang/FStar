@@ -3,6 +3,11 @@ module IOHist
 open FStar.List
 open FStar.WellFounded
 
+(* Reasoning about IO, with access to the history of output previous to
+ * running the program. Postconditions are over the (accumulated) output
+ * of the program and its return value. Preconditions are over the
+ * history. Inputs are treated as a demonic non-deterministic choice. *)
+
 type input = int
 type output = int
 
