@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Parser.AST
+open FStar.String
 open FStar.ST
 open FStar.Exn
 open FStar.All

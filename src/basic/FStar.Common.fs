@@ -18,6 +18,7 @@
 #light "off"
 
 module FStar.Common
+open FStar.String
 open FStar.ST
 open FStar.All
 module BU = FStar.Util

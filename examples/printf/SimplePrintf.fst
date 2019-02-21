@@ -43,7 +43,6 @@ let rec dir_type (ds:list dir) : Tot Type0 =
   | Lit c :: ds' -> dir_type ds'
   | Arg a :: ds' -> arg_type a -> Tot (dir_type ds')
 
-let (^) x y = Prims.strcat x y
 
 let rec string_of_dirs ds (k:string -> Tot string)
   : dir_type ds

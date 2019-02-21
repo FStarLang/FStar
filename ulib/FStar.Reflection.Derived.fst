@@ -254,7 +254,7 @@ let mk_stringlit (s : string) : term =
     pack_ln (Tv_Const (C_String s))
 
 let mk_strcat (t1 t2 : term) : term =
-    mk_e_app (pack_ln (Tv_FVar (pack_fv ["Prims"; "strcat"]))) [t1; t2]
+    mk_e_app (pack_ln (Tv_FVar (pack_fv ["FStar"; "String"; "strcat"]))) [t1; t2]
 
 let mk_cons (h t : term) : term =
    mk_e_app (pack_ln (Tv_FVar (pack_fv cons_qn))) [h; t]

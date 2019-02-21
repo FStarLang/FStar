@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.String
 open FStar.ST
 open FStar.Exn
 open FStar.All
