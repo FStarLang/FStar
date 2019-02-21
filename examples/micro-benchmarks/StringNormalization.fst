@@ -77,3 +77,6 @@ let _ = assert (index_of "Hello" 'x' == (-1))
 let _ =
   assert_norm (length "Hello World" == 11); (* awkward *)
   assert (sub "Hello World" 3 4 == "lo W")
+
+let _ =
+  assert (norm [nbe; primops] ("abc" ^ "def") == "abcdef")
