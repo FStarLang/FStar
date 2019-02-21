@@ -1,7 +1,4 @@
-module IOTupledFr
-
-(* GM: What's Fr? Free? *)
-(* GM: Ah, context free, right? *)
+module IOFr2
 
 open FStar.List
 open FStar.WellFounded

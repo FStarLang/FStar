@@ -1,4 +1,4 @@
-module IOCurriedReadWrite
+module IORW
 
 open FStar.List
 open FStar.WellFounded

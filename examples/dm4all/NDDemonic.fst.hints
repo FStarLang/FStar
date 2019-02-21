@@ -1,5 +1,5 @@
 [
-  "\næœ\u0019\u001fµJõž\rÂâ'Ê\u001c8",
+  "\u0003R\u0017í!GmÄÿ:´6TºXê",
   [
     [
       "NDDemonic.test1",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "edd58856bdf66f18ef65e776eafd4b6a"
+      "c257cc6f624f51c8f7b9dae28335cfb5"
     ],
     [
       "NDDemonic.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "ad3731d8893409f01ab539a7f05f15fc"
+      "32f8c34aab04941dbe552bc2c51fa896"
     ],
     [
       "NDDemonic.Nd",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "693d8023a0af06b91b87e236a7bd4173"
+      "1bfb3ecf802914051668535e9ac5203b"
     ],
     [
       "NDDemonic.choose",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "e593b5a00fd51e048da3dae1cf8bdc40"
+      "cf713bbb43d3a67dc08eeeb583cc821e"
     ],
     [
       "NDDemonic.test",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "4f68030ea642c1c6c3e1e2991541b9b1"
+      "c2d9de6ab254db9b8ea9c30a3380876a"
     ],
     [
       "NDDemonic.pick",
@@ -66,7 +66,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e78d617753805d7588ca6c29590c341e"
+      "4e2216de6d61b17ece0394f233d1fe69"
     ],
     [
       "NDDemonic.guard",
@@ -78,7 +78,7 @@
         "projection_inverse_BoxBool_proj_0", "unit_inversion"
       ],
       0,
-      "fde7f5c5a3b7dcce961b68059728799c"
+      "6b5b5b66770d59eacf0bee87b6545b19"
     ],
     [
       "NDDemonic.pyths",
@@ -87,31 +87,25 @@
       1,
       [ "@query" ],
       0,
-      "c3a27866d5996b0deeb2e4f2a0e4769e"
+      "c6ad9ea8482b83d454369929d9537953"
     ],
     [
       "NDDemonic.test_reify_1",
       1,
       2,
       1,
-      [
-        "@query", "equation_NDDemonic.return", "equation_NDDemonic.test1",
-        "token_correspondence_NDDemonic.return"
-      ],
+      [ "@query", "equation_NDDemonic.return", "equation_NDDemonic.test1" ],
       0,
-      "83e94e1c5c8674bb3bf1e40c0e2f38c0"
+      "7024bf3c786531f74d251979ef6f8e0d"
     ],
     [
       "NDDemonic.test_reify_2",
       1,
       2,
       1,
-      [
-        "@query", "equation_NDDemonic.return", "equation_NDDemonic.test2",
-        "token_correspondence_NDDemonic.return"
-      ],
+      [ "@query", "equation_NDDemonic.return", "equation_NDDemonic.test2" ],
       0,
-      "eecd9dcdf68b5fd4a0b17ac824a4903f"
+      "76d3cfb0c6b7524f2f5eeb0728f538b5"
     ],
     [
       "NDDemonic.test_reify_3",
@@ -121,11 +115,10 @@
       [
         "@query", "equation_NDDemonic.return", "equation_NDDemonic.test1",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_hd",
-        "token_correspondence_NDDemonic.return"
+        "projection_inverse_Prims.Cons_hd"
       ],
       0,
-      "352d7300347e6e043870697e39bdb46f"
+      "123aa0079e16200e55a0a9d39c864117"
     ],
     [
       "NDDemonic.test1",
@@ -134,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "212eed11982af700525d92a752265fb7"
+      "1a919506de344b3e0fe2daac6595c82e"
     ],
     [
       "NDDemonic.test2",
@@ -143,7 +136,7 @@
       1,
       [ "@query" ],
       0,
-      "34046c7f6f46683aabd2777dc6404af2"
+      "142f2069164226195ef1e91ef460ae89"
     ],
     [
       "NDDemonic.Nd",
@@ -152,7 +145,7 @@
       1,
       [ "@query" ],
       0,
-      "12c892921d7b08db737dbafdbb7d3329"
+      "4466e8bd1eb0bfe9f4192a0b77e0e7d9"
     ],
     [
       "NDDemonic.choose",
@@ -161,7 +154,7 @@
       1,
       [ "@query" ],
       0,
-      "455af43550be0e91766b865ef86c2438"
+      "f9d7bf719a7983ff6bd4ed0791149e2d"
     ],
     [
       "NDDemonic.test",
@@ -170,7 +163,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "32497f6c215dcef217af157ed208fa4b"
+      "f57be124df2ee124406af7fbfdd4d28c"
     ],
     [
       "NDDemonic.pick",
@@ -192,7 +185,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5dee3002143d21249c892d777630f427"
+      "dcd44ef4efd1c1d5a16cd3b983b195cb"
     ],
     [
       "NDDemonic.guard",
@@ -204,7 +197,7 @@
         "projection_inverse_BoxBool_proj_0", "unit_inversion"
       ],
       0,
-      "3e631c7aad503f1ee36bc9626a982c31"
+      "3732b0bcde50af15bbb650f1af92c26e"
     ],
     [
       "NDDemonic.pyths",
@@ -213,31 +206,25 @@
       1,
       [ "@query" ],
       0,
-      "34afb65fffe2b8bcd585ae0f87a7b07c"
+      "76ef06c20e69990aa806472fffac8810"
     ],
     [
       "NDDemonic.test_reify_1",
       2,
       2,
       1,
-      [
-        "@query", "equation_NDDemonic.return", "equation_NDDemonic.test1",
-        "token_correspondence_NDDemonic.return"
-      ],
+      [ "@query", "equation_NDDemonic.return", "equation_NDDemonic.test1" ],
       0,
-      "45f1c6deb5769f2d945445e808e7f8a4"
+      "4ef8dfc7d10e5b6b67052fe1bf7ea301"
     ],
     [
       "NDDemonic.test_reify_2",
       2,
       2,
       1,
-      [
-        "@query", "equation_NDDemonic.return", "equation_NDDemonic.test2",
-        "token_correspondence_NDDemonic.return"
-      ],
+      [ "@query", "equation_NDDemonic.return", "equation_NDDemonic.test2" ],
       0,
-      "27755c27ed56b882c53996e9b470f3a0"
+      "90b7e14f00003d1597aa608c0e61144a"
     ],
     [
       "NDDemonic.test_reify_3",
@@ -247,11 +234,10 @@
       [
         "@query", "equation_NDDemonic.return", "equation_NDDemonic.test1",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_hd",
-        "token_correspondence_NDDemonic.return"
+        "projection_inverse_Prims.Cons_hd"
       ],
       0,
-      "f1d9c9b51d98a09cebe28572c92cfd8b"
+      "f5176ff05157cea096de5c733ddc0ff2"
     ]
   ]
 ]

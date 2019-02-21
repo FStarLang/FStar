@@ -1,0 +1,135 @@
+[
+  "úx¢tÜVT\u0016\u0015ùdƒ\u001a\b\\û",
+  [
+    [
+      "Exn.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr", "equation_Exn.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "baf140475f18b7c7c77dbefe1e8de89e"
+    ],
+    [
+      "Exn.test1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0c9d61acd1650b4cb5f363c7191fd1e9"
+    ],
+    [
+      "Exn.test2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "eb25d52a6079dfbc98254edf1de755b9"
+    ],
+    [
+      "Exn.Ex",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fcfbbb45176fb3885e20077ce900ee54"
+    ],
+    [
+      "Exn.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "61302e9992d63dacac40840b6f704f53"
+    ],
+    [
+      "Exn.test'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "d8aba18394c7283b493000f269589e70"
+    ],
+    [
+      "Exn.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr", "equation_Exn.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "736b3034b994af7d85aa046c96e041f4"
+    ],
+    [
+      "Exn.test1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e61762e4d75cc76456707ab3033bda0f"
+    ],
+    [
+      "Exn.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b154a73293ea355a2f29afd1f8739154"
+    ],
+    [
+      "Exn.Ex",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "528775183c3546a6e4d4b1f2f4308ff2"
+    ],
+    [
+      "Exn.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "0702a233d29290f4cf2c7627fe714fb3"
+    ],
+    [
+      "Exn.test'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "eaf951ceaad13853df76b87cac216396"
+    ]
+  ]
+]

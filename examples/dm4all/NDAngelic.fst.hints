@@ -1,5 +1,5 @@
 [
-  "ì\u0011Ê\u0013µ\u0004OÑ&©5\u001aYÕçŸ",
+  "¹'Ó\u0007¤ùÛ×¨\f\u0000Û¡Ž¸=",
   [
     [
       "NDAngelic.test1",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8770c6f97bff3a5a2143c438deaaeeee"
+      "cc572721fac2d333a615dccb602fc575"
     ],
     [
       "NDAngelic.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "da16553099e033316bf8f76978e5be45"
+      "99db59c15090c9ac9769311d6f997e82"
     ],
     [
       "NDAngelic.Nd",
@@ -26,7 +26,16 @@
       1,
       [ "@query" ],
       0,
-      "57ca97486fb48bb38af9d031622b37ec"
+      "3ce80445ad829e9d4a05d0f4983b368f"
+    ],
+    [
+      "NDAngelic.choose",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e8f8f1dd2a3c1cdfdf32417d2c57f4bf"
     ],
     [
       "NDAngelic.test",
@@ -38,7 +47,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "7d578b4848eaefc9e84748a26fc650dc"
+      "51e91e3cb1d101b0b981d3b1b29afcd4"
     ],
     [
       "NDAngelic.pick",
@@ -61,7 +70,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "af80b252af192c61fe88260f6622f368"
+      "2b18231bf0f51727e3881d2200d8d519"
     ],
     [
       "NDAngelic.gguard",
@@ -72,7 +81,7 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion", "unit_inversion"
       ],
       0,
-      "4e1c9df3a7ce357767cea682d1d573f4"
+      "5c57582ff6010b68b7541552718bee38"
     ],
     [
       "NDAngelic.pyths",
@@ -91,31 +100,25 @@
         "refinement_interpretation_NDAngelic_Tm_refine_9ac23566a65af532936627937df937cf"
       ],
       0,
-      "a225444ec318dc1c0b207ab573ff36c2"
+      "8ca71b99106cd04af9109709e07939ce"
     ],
     [
       "NDAngelic.test_reify_1",
       1,
       2,
       1,
-      [
-        "@query", "equation_NDAngelic.return", "equation_NDAngelic.test1",
-        "token_correspondence_NDAngelic.return"
-      ],
+      [ "@query", "equation_NDAngelic.return", "equation_NDAngelic.test1" ],
       0,
-      "86803c20cee326f4085cb1791f0785a5"
+      "69065625e6abfdb88783526191b7ad85"
     ],
     [
       "NDAngelic.test_reify_2",
       1,
       2,
       1,
-      [
-        "@query", "equation_NDAngelic.return", "equation_NDAngelic.test2",
-        "token_correspondence_NDAngelic.return"
-      ],
+      [ "@query", "equation_NDAngelic.return", "equation_NDAngelic.test2" ],
       0,
-      "63d25d30b505f79c390968af23881321"
+      "d0fcbff387acf545dea702e5bc1dfcd7"
     ],
     [
       "NDAngelic.test_reify_3",
@@ -125,11 +128,10 @@
       [
         "@query", "equation_NDAngelic.return", "equation_NDAngelic.test1",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_hd",
-        "token_correspondence_NDAngelic.return"
+        "projection_inverse_Prims.Cons_hd"
       ],
       0,
-      "28f122d8c85fd84d6df867ff162ca80f"
+      "8a011ffc0b15c4da64f33a48eae58a8c"
     ],
     [
       "NDAngelic.test1",
@@ -138,7 +140,7 @@
       1,
       [ "@query" ],
       0,
-      "851f6035a341946e4575d0dcc2126c3c"
+      "c7179b5dd04cf5d97c1abd1ba159a837"
     ],
     [
       "NDAngelic.test2",
@@ -147,7 +149,7 @@
       1,
       [ "@query" ],
       0,
-      "f97e8d78b30dc17d5a684bbfe45c4aa4"
+      "9134be32fe830a2b986a0555a07b73c9"
     ],
     [
       "NDAngelic.Nd",
@@ -156,7 +158,16 @@
       1,
       [ "@query" ],
       0,
-      "fce61c5e188487c73388d9d504c0a471"
+      "68c5ebdb448a9ec4db205b3c4e10228f"
+    ],
+    [
+      "NDAngelic.choose",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4d864c146d2196ae1db338335c39a1c4"
     ],
     [
       "NDAngelic.test",
@@ -168,7 +179,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1db31a626bffd77d50a559538b375241"
+      "833a0134718a55bf320ba8ca95c5f6b9"
     ],
     [
       "NDAngelic.pick",
@@ -191,7 +202,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "703dfaa9aec2ea91433faf5a71ba7af5"
+      "699dba0f662be753ea23564eea82ed53"
     ],
     [
       "NDAngelic.gguard",
@@ -202,7 +213,7 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion", "unit_inversion"
       ],
       0,
-      "16617c3f42ef3d2ecbcb2ab0b04af310"
+      "09695a905c67e2c6e58b036e9dd607eb"
     ],
     [
       "NDAngelic.pyths",
@@ -221,31 +232,25 @@
         "refinement_interpretation_NDAngelic_Tm_refine_9ac23566a65af532936627937df937cf"
       ],
       0,
-      "59948f4a4d4dbb9fcc5126f4c9d8ba1a"
+      "74e15d96ec44045804ed774a20470f42"
     ],
     [
       "NDAngelic.test_reify_1",
       2,
       2,
       1,
-      [
-        "@query", "equation_NDAngelic.return", "equation_NDAngelic.test1",
-        "token_correspondence_NDAngelic.return"
-      ],
+      [ "@query", "equation_NDAngelic.return", "equation_NDAngelic.test1" ],
       0,
-      "29987e1cc7902486a796e34cd45cfa34"
+      "66141fdd005f0f4715d6f1fda26e68a8"
     ],
     [
       "NDAngelic.test_reify_2",
       2,
       2,
       1,
-      [
-        "@query", "equation_NDAngelic.return", "equation_NDAngelic.test2",
-        "token_correspondence_NDAngelic.return"
-      ],
+      [ "@query", "equation_NDAngelic.return", "equation_NDAngelic.test2" ],
       0,
-      "f454ab4f3e98162532ff78eb574b10b5"
+      "d966e4e837082b61585e5f14f292a46a"
     ],
     [
       "NDAngelic.test_reify_3",
@@ -255,11 +260,10 @@
       [
         "@query", "equation_NDAngelic.return", "equation_NDAngelic.test1",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_hd",
-        "token_correspondence_NDAngelic.return"
+        "projection_inverse_Prims.Cons_hd"
       ],
       0,
-      "72cfa6f1a41c80a94509ddcb454ca29e"
+      "e660b5b79150636eb93e7414fd122339"
     ]
   ]
 ]

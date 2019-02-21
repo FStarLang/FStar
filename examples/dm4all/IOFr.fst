@@ -1,8 +1,4 @@
-module IOCurriedFr
-
-(* Really the same as IOTupledFr, just varying the shape of the WP.
- * Meant more as a test over the effect decl framework than as an
- * interesting example. *)
+module IOFr
 
 open FStar.List
 open FStar.WellFounded

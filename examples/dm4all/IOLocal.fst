@@ -1,4 +1,4 @@
-module IOCurriedLocal
+module IOLocal
 
 open FStar.List
 open FStar.WellFounded
@@ -83,20 +83,15 @@ let test2 () : IO int (fun h p -> p 1 [2;3]) by (compute ()) =
   write 3;
   1
 
-
-(*
-
-(* Commented out because ERROR: unexpeced unification variable remains*)
-
 [@expect_failure]
-let test4 () : IO int (fun h p -> forall x. p 1 [x,x]) =
+let test4 () : IO int (fun h p -> forall x. p 1 [x;x]) =
   write 2;
   let x = read () in
   let x = read () in
   let x = read () in
   let x = read () in
   write x;
-  1*)
+  1
 
 let test5 () : IO int (fun h p -> forall x. p 1 [x;x]) by (compute ()) =
   let x = read () in

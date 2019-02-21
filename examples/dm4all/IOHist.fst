@@ -1,4 +1,4 @@
-module IOCurriedHist
+module IOHist
 
 open FStar.List
 open FStar.WellFounded
@@ -33,7 +33,7 @@ let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty
   
 let rec interpretation #a (m : io a) (h : list output) (p : post a) : Type0 =
   match m with
-  | Write o m -> interpretation m h (fun x h -> p x (o :: h))
+  | Write o m -> interpretation m (o :: h) p
   | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) h p)
   | Return x -> p x h
 
@@ -51,7 +51,7 @@ new_effect {
      ; return_wp = return_wp
      ; bind_wp   = bind_wp
 
-      ; interp = interpretation
+     ; interp = interpretation
 }
 
 val read : unit -> IO int (fun h p -> forall x. p x h)
