@@ -54,7 +54,7 @@ new_effect {
      ; return_wp = return_wp
      ; bind_wp   = bind_wp
 
-      ; interp = interpretation
+     ; interp = interpretation
 }
 
 val read : unit -> IO int (fun h p -> forall x. p x [])
@@ -83,11 +83,13 @@ let test2 () : IO int (fun h p -> p 1 [2;3]) by (compute ()) =
   write 3;
   1
 
-(* Commented out because ERROR: unexpeced unification variable remains*)
 
 (*
+
+(* Commented out because ERROR: unexpeced unification variable remains*)
+
 [@expect_failure]
-let test4 () : IO int (fun h p -> forall x. p 1 [x,x]) by (compute ()) =
+let test4 () : IO int (fun h p -> forall x. p 1 [x,x]) =
   write 2;
   let x = read () in
   let x = read () in
@@ -100,4 +102,33 @@ let test5 () : IO int (fun h p -> forall x. p 1 [x;x]) by (compute ()) =
   let x = read () in
   write x;
   write x;
+  1
+
+effect Io (a:Type) (pre':h_trace -> Type0) (post':h_trace -> a -> l_trace -> Type0) =
+        IO a (fun h p -> pre' h /\ (forall r l . post' h r l ==> p r l))
+
+let test6 () : Io int (fun _ -> True) (fun h x l -> x = 1 /\ (exists y . l = [y;y])) by (compute ()) =
+  let x = read () in
+  write x;
+  write x;
+  1
+
+let test7 (b:bool) 
+  : Io int (fun _ -> True) 
+           (fun h x l -> x = 1 /\ (exists y . l = [y;y] \/ l = [y+1;y])) by (compute ()) =
+  let x = read () in
+  (if b 
+   then write (x + 1)
+   else write x);
+  write x;
+  1
+
+let test8 (b:bool) 
+  : Io int (fun _ -> True) 
+           (fun h x l -> x = 1 /\ (exists y z . z < y /\ l = [y;z])) by (compute ()) =
+  let x = read () in
+  (if b 
+   then write (x + 1)
+   else write x);
+  write (x - 1);
   1
