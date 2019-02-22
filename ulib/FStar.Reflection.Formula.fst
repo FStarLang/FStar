@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.Reflection.Formula
-open FStar.String
+
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 open FStar.Reflection.Basic

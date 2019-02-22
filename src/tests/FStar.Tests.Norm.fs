@@ -224,7 +224,7 @@ let tests =
   ; (401, (tc_nbe "7 + 3"), (tc_nbe "10"))
   ; (402, (tc_nbe "true && false"), (tc_nbe "false"))
   ; (403, (tc_nbe "3 = 5"), (tc_nbe "false"))
-  // ; (404, (tc_nbe "\"abc\" `FStar.String.strcat` \"def\""), (tc_nbe "\"abcdef\"")) 
+  ; (404, (tc_nbe "\"abc\" ^ \"def\""), (tc_nbe "\"abcdef\"")) 
 
   // Test for refinements 
   // ; (501, (tc_nbe "fun (x1:int{x1>(3+1)}) -> x1 + (1 + 0)"), (tc_nbe "fun (x1:int{x1>4}) -> x1 + 1")) // ZP : Fails because the two functions are not syntactically equal

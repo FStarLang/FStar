@@ -1,6 +1,5 @@
 ﻿#light "off"
 module FStar.Ident
-open FStar.String
 open Prims
 open FStar.ST
 open FStar.All

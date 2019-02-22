@@ -1,6 +1,6 @@
 #light "off"
 module FStar.Reflection.Data
-open FStar.String
+
 open FStar.Syntax.Syntax
 module Ident = FStar.Ident
 module Range = FStar.Range

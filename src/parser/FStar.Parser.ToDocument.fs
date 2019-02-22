@@ -18,7 +18,6 @@
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
-open FStar.String
 open FStar.ST
 open FStar.All
 
