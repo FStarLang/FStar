@@ -174,7 +174,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                                                    mkLT (Term.unboxInt y, Term.unboxInt x)],
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
-    let mk_real : env -> string -> term -> list<decls>  = fun env nm tt ->
+    let mk_real : env -> string -> term -> list<decl>  = fun env nm tt ->
         let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
         let typing_pred_y = mk_HasType y tt in
@@ -191,6 +191,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                           Some "real typing",
                           "real_typing");
          Util.mkAssume(mkForall_fuel
+                         env
                          (Env.get_range env)
                          ([[typing_pred]],
                           [xx],
@@ -199,6 +200,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                           Some "real inversion",
                           "real_inversion");
          Util.mkAssume(mkForall_fuel
+                         env
                          (Env.get_range env)
                            ([[typing_pred; typing_pred_y;precedes_y_x]],
                             [xx;yy],
@@ -1546,7 +1548,7 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
          | None ->  //no hit, update cache and retain elt
            BU.smap_add env.global_cache (elt.key |> BU.must) elt;
            [elt]
-  ) 
+  )
 
 let encode_sig tcenv se =
    let caption decls =
