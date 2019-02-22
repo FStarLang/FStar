@@ -59,6 +59,7 @@ let handle_rep (#a:Type)
   | Inl x -> c2 x
   | Inr e -> h_c e
 
+unfold
 let handle_wp (#a:Type) 
               (#b:Type) 
               (wp1:wp_type a) 
@@ -111,3 +112,46 @@ let handle (#a:Type)
   EXN?.reflect (handle_rep (reify (c1 ()) <: either a exn) 
                            (fun e -> reify (h_c e)) 
                            (fun x -> reify (c2 x)))
+
+unfold
+let wp_return (#a:Type) (x:a) : wp_type a = fun p -> p (Inl x)
+
+unfold
+let wp_bind (#a:Type) (#b:Type) (wp : wp_type a) (f : a -> wp_type b) =
+  fun p -> wp (fun r -> match r with
+                        | Inl x -> f x p
+                        | Inr e -> p (Inr e))
+
+unfold
+let wp_raise (#a:Type) (e:exn) : wp_type a = fun p -> p (Inr e)
+
+let test1 (#a:Type) 
+          (#b:Type) 
+          (#wp1:wp_type a) 
+          (c1:unit -> EXN a wp1)
+          (#wp2:a -> wp_type b) 
+          (c2:(x:a -> EXN b (wp2 x))) 
+        : EXN b (wp_bind wp1 wp2) =
+  handle #a #b #wp1 c1 #(fun e -> wp_raise e) (fun e -> raise e) #wp2 c2
+
+  (* If FStar.Tactics has been opened, then `raise e` above gives an effect mismatch between TAC and something inferred FIXME *)
+
+let test2 (#a:Type) 
+          (#b:Type) 
+          (v:a)
+          (#h_wp:exn -> wp_type b) 
+          (h_c:(e:exn -> EXN b (h_wp e)))
+          (#wp2:a -> wp_type b) 
+          (c2:(x:a -> EXN b (wp2 x))) 
+        : EXN b (wp2 v) = 
+  handle #a #b #(wp_return v) (fun _ -> v) #h_wp h_c #wp2 c2
+
+let test3 (#a:Type) 
+          (#b:Type) 
+          (e:exn)
+          (#h_wp:exn -> wp_type b) 
+          (h_c:(e:exn -> EXN b (h_wp e)))
+          (#wp2:a -> wp_type b) 
+          (c2:(x:a -> EXN b (wp2 x)))
+        : EXN b (h_wp e) =
+  handle #a #b #(wp_raise e) (fun _ -> raise e) #h_wp h_c #wp2 c2
