@@ -2878,8 +2878,8 @@ let findIndex :
     fun v1  ->
       FStar_All.pipe_right l
         (FStar_List.index
-           (fun uu___14_6462  ->
-              match uu___14_6462 with
+           (fun uu___4_6462  ->
+              match uu___4_6462 with
               | (e,uu____6469) when e = v1 -> true
               | uu____6471 -> false))
   
@@ -2966,8 +2966,8 @@ let (add_errors :
                   log_issue r uu____6632) errs)
   
 let (issue_of_exn : Prims.exn -> issue FStar_Pervasives_Native.option) =
-  fun uu___15_6648  ->
-    match uu___15_6648 with
+  fun uu___5_6648  ->
+    match uu___5_6648 with
     | Error (e,msg,r) ->
         let errno = errno_of_error e  in
         let uu____6658 =
@@ -3004,8 +3004,8 @@ let (err_exn : Prims.exn -> unit) =
        | FStar_Pervasives_Native.None  -> FStar_Exn.raise exn)
   
 let (handleable : Prims.exn -> Prims.bool) =
-  fun uu___16_6698  ->
-    match uu___16_6698 with
+  fun uu___6_6698  ->
+    match uu___6_6698 with
     | Error uu____6700 -> true
     | FStar_Util.NYI uu____6709 -> true
     | Stop  -> true
@@ -3131,11 +3131,11 @@ let catch_errors :
     FStar_ST.op_Colon_Equals current_handler newh;
     (let r =
        try
-         (fun uu___18_7483  ->
+         (fun uu___8_7483  ->
             match () with
             | () -> let r = f ()  in FStar_Pervasives_Native.Some r) ()
        with
-       | uu___17_7489 -> (err_exn uu___17_7489; FStar_Pervasives_Native.None)
+       | uu___7_7489 -> (err_exn uu___7_7489; FStar_Pervasives_Native.None)
         in
      let errs = newh.eh_report ()  in
      FStar_ST.op_Colon_Equals current_handler old; (errs, r))
