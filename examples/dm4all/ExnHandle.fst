@@ -134,8 +134,6 @@ let test1 (#a:Type)
         : EXN b (wp_bind wp1 wp2) =
   handle #a #b #wp1 c1 #(fun e -> wp_raise e) (fun e -> raise e) #wp2 c2
 
-  (* If FStar.Tactics has been opened, then `raise e` above gives an effect mismatch between TAC and something inferred FIXME *)
-
 let test2 (#a:Type) 
           (#b:Type) 
           (v:a)
