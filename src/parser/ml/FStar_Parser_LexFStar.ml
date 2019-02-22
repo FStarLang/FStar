@@ -403,6 +403,7 @@ let regexp char8 = any_integer 'z'
 
 let regexp floatp     = digit+ '.' digit*
 let regexp floate     = digit+ ('.' digit* )? ["eE"] ["+-"]? digit+
+let regexp real     = floatp 'R'
 let regexp ieee64     = floatp | floate
 let regexp xieee64    = xinteger 'L' 'F'
 let regexp range      = digit+ '.' '.' digit+
@@ -482,6 +483,7 @@ let rec token = lexer
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
  | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
  | range -> RANGE (L.lexeme lexbuf)
+ | real -> REAL(trim_right lexbuf 1)
  | (ieee64 | xieee64) -> IEEE64 (float_of_string (L.lexeme lexbuf))
  
  | (integer | xinteger | ieee64 | xieee64) ident_char+ ->

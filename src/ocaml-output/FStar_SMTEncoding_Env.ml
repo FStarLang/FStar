@@ -23,8 +23,8 @@ let vargs :
   =
   fun args  ->
     FStar_List.filter
-      (fun uu___12_140  ->
-         match uu___12_140 with
+      (fun uu___33_140  ->
+         match uu___33_140 with
          | (FStar_Util.Inl uu____150,uu____151) -> false
          | uu____157 -> true) args
   
@@ -621,21 +621,21 @@ let (gen_term_var :
            in
         FStar_All.pipe_left FStar_SMTEncoding_Util.mkFreeV uu____3969  in
       let uu____3971 =
-        let uu___13_3972 = env  in
+        let uu___34_3972 = env  in
         let uu____3973 = add_bvar_binding (x, y) env.bvar_bindings  in
         {
           bvar_bindings = uu____3973;
-          fvar_bindings = (uu___13_3972.fvar_bindings);
+          fvar_bindings = (uu___34_3972.fvar_bindings);
           depth = (env.depth + (Prims.parse_int "1"));
-          tcenv = (uu___13_3972.tcenv);
-          warn = (uu___13_3972.warn);
-          nolabels = (uu___13_3972.nolabels);
-          use_zfuel_name = (uu___13_3972.use_zfuel_name);
+          tcenv = (uu___34_3972.tcenv);
+          warn = (uu___34_3972.warn);
+          nolabels = (uu___34_3972.nolabels);
+          use_zfuel_name = (uu___34_3972.use_zfuel_name);
           encode_non_total_function_typ =
-            (uu___13_3972.encode_non_total_function_typ);
-          current_module_name = (uu___13_3972.current_module_name);
-          encoding_quantifier = (uu___13_3972.encoding_quantifier);
-          global_cache = (uu___13_3972.global_cache)
+            (uu___34_3972.encode_non_total_function_typ);
+          current_module_name = (uu___34_3972.current_module_name);
+          encoding_quantifier = (uu___34_3972.encoding_quantifier);
+          global_cache = (uu___34_3972.global_cache)
         }  in
       (ysym, y, uu____3971)
   
@@ -652,21 +652,21 @@ let (new_term_constant :
          in
       let y = FStar_SMTEncoding_Util.mkApp (ysym, [])  in
       let uu____4008 =
-        let uu___14_4009 = env  in
+        let uu___35_4009 = env  in
         let uu____4010 = add_bvar_binding (x, y) env.bvar_bindings  in
         {
           bvar_bindings = uu____4010;
-          fvar_bindings = (uu___14_4009.fvar_bindings);
-          depth = (uu___14_4009.depth);
-          tcenv = (uu___14_4009.tcenv);
-          warn = (uu___14_4009.warn);
-          nolabels = (uu___14_4009.nolabels);
-          use_zfuel_name = (uu___14_4009.use_zfuel_name);
+          fvar_bindings = (uu___35_4009.fvar_bindings);
+          depth = (uu___35_4009.depth);
+          tcenv = (uu___35_4009.tcenv);
+          warn = (uu___35_4009.warn);
+          nolabels = (uu___35_4009.nolabels);
+          use_zfuel_name = (uu___35_4009.use_zfuel_name);
           encode_non_total_function_typ =
-            (uu___14_4009.encode_non_total_function_typ);
-          current_module_name = (uu___14_4009.current_module_name);
-          encoding_quantifier = (uu___14_4009.encoding_quantifier);
-          global_cache = (uu___14_4009.global_cache)
+            (uu___35_4009.encode_non_total_function_typ);
+          current_module_name = (uu___35_4009.current_module_name);
+          encoding_quantifier = (uu___35_4009.encoding_quantifier);
+          global_cache = (uu___35_4009.global_cache)
         }  in
       (ysym, y, uu____4008)
   
@@ -681,21 +681,21 @@ let (new_term_constant_from_string :
         let ysym = varops.mk_unique str  in
         let y = FStar_SMTEncoding_Util.mkApp (ysym, [])  in
         let uu____4051 =
-          let uu___15_4052 = env  in
+          let uu___36_4052 = env  in
           let uu____4053 = add_bvar_binding (x, y) env.bvar_bindings  in
           {
             bvar_bindings = uu____4053;
-            fvar_bindings = (uu___15_4052.fvar_bindings);
-            depth = (uu___15_4052.depth);
-            tcenv = (uu___15_4052.tcenv);
-            warn = (uu___15_4052.warn);
-            nolabels = (uu___15_4052.nolabels);
-            use_zfuel_name = (uu___15_4052.use_zfuel_name);
+            fvar_bindings = (uu___36_4052.fvar_bindings);
+            depth = (uu___36_4052.depth);
+            tcenv = (uu___36_4052.tcenv);
+            warn = (uu___36_4052.warn);
+            nolabels = (uu___36_4052.nolabels);
+            use_zfuel_name = (uu___36_4052.use_zfuel_name);
             encode_non_total_function_typ =
-              (uu___15_4052.encode_non_total_function_typ);
-            current_module_name = (uu___15_4052.current_module_name);
-            encoding_quantifier = (uu___15_4052.encoding_quantifier);
-            global_cache = (uu___15_4052.global_cache)
+              (uu___36_4052.encode_non_total_function_typ);
+            current_module_name = (uu___36_4052.current_module_name);
+            encoding_quantifier = (uu___36_4052.encoding_quantifier);
+            global_cache = (uu___36_4052.global_cache)
           }  in
         (ysym, y, uu____4051)
   
@@ -704,21 +704,21 @@ let (push_term_var :
   fun env  ->
     fun x  ->
       fun t  ->
-        let uu___16_4079 = env  in
+        let uu___37_4079 = env  in
         let uu____4080 = add_bvar_binding (x, t) env.bvar_bindings  in
         {
           bvar_bindings = uu____4080;
-          fvar_bindings = (uu___16_4079.fvar_bindings);
-          depth = (uu___16_4079.depth);
-          tcenv = (uu___16_4079.tcenv);
-          warn = (uu___16_4079.warn);
-          nolabels = (uu___16_4079.nolabels);
-          use_zfuel_name = (uu___16_4079.use_zfuel_name);
+          fvar_bindings = (uu___37_4079.fvar_bindings);
+          depth = (uu___37_4079.depth);
+          tcenv = (uu___37_4079.tcenv);
+          warn = (uu___37_4079.warn);
+          nolabels = (uu___37_4079.nolabels);
+          use_zfuel_name = (uu___37_4079.use_zfuel_name);
           encode_non_total_function_typ =
-            (uu___16_4079.encode_non_total_function_typ);
-          current_module_name = (uu___16_4079.current_module_name);
-          encoding_quantifier = (uu___16_4079.encoding_quantifier);
-          global_cache = (uu___16_4079.global_cache)
+            (uu___37_4079.encode_non_total_function_typ);
+          current_module_name = (uu___37_4079.current_module_name);
+          encoding_quantifier = (uu___37_4079.encoding_quantifier);
+          global_cache = (uu___37_4079.global_cache)
         }
   
 let (lookup_term_var :
@@ -796,21 +796,21 @@ let (new_term_constant_and_tok_from_lid_aux :
                   thunked
                  in
               let uu____4289 =
-                let uu___17_4290 = env  in
+                let uu___38_4290 = env  in
                 let uu____4291 = add_fvar_binding fvb env.fvar_bindings  in
                 {
-                  bvar_bindings = (uu___17_4290.bvar_bindings);
+                  bvar_bindings = (uu___38_4290.bvar_bindings);
                   fvar_bindings = uu____4291;
-                  depth = (uu___17_4290.depth);
-                  tcenv = (uu___17_4290.tcenv);
-                  warn = (uu___17_4290.warn);
-                  nolabels = (uu___17_4290.nolabels);
-                  use_zfuel_name = (uu___17_4290.use_zfuel_name);
+                  depth = (uu___38_4290.depth);
+                  tcenv = (uu___38_4290.tcenv);
+                  warn = (uu___38_4290.warn);
+                  nolabels = (uu___38_4290.nolabels);
+                  use_zfuel_name = (uu___38_4290.use_zfuel_name);
                   encode_non_total_function_typ =
-                    (uu___17_4290.encode_non_total_function_typ);
-                  current_module_name = (uu___17_4290.current_module_name);
-                  encoding_quantifier = (uu___17_4290.encoding_quantifier);
-                  global_cache = (uu___17_4290.global_cache)
+                    (uu___38_4290.encode_non_total_function_typ);
+                  current_module_name = (uu___38_4290.current_module_name);
+                  encoding_quantifier = (uu___38_4290.encoding_quantifier);
+                  global_cache = (uu___38_4290.global_cache)
                 }  in
               (fname, ftok_name, uu____4289)
   
@@ -871,21 +871,21 @@ let (push_free_var_maybe_thunked :
                 mk_fvb x fname arity ftok FStar_Pervasives_Native.None
                   thunked
                  in
-              let uu___18_4464 = env  in
+              let uu___39_4464 = env  in
               let uu____4465 = add_fvar_binding fvb env.fvar_bindings  in
               {
-                bvar_bindings = (uu___18_4464.bvar_bindings);
+                bvar_bindings = (uu___39_4464.bvar_bindings);
                 fvar_bindings = uu____4465;
-                depth = (uu___18_4464.depth);
-                tcenv = (uu___18_4464.tcenv);
-                warn = (uu___18_4464.warn);
-                nolabels = (uu___18_4464.nolabels);
-                use_zfuel_name = (uu___18_4464.use_zfuel_name);
+                depth = (uu___39_4464.depth);
+                tcenv = (uu___39_4464.tcenv);
+                warn = (uu___39_4464.warn);
+                nolabels = (uu___39_4464.nolabels);
+                use_zfuel_name = (uu___39_4464.use_zfuel_name);
                 encode_non_total_function_typ =
-                  (uu___18_4464.encode_non_total_function_typ);
-                current_module_name = (uu___18_4464.current_module_name);
-                encoding_quantifier = (uu___18_4464.encoding_quantifier);
-                global_cache = (uu___18_4464.global_cache)
+                  (uu___39_4464.encode_non_total_function_typ);
+                current_module_name = (uu___39_4464.current_module_name);
+                encoding_quantifier = (uu___39_4464.encoding_quantifier);
+                global_cache = (uu___39_4464.global_cache)
               }
   
 let (push_free_var :
@@ -934,21 +934,21 @@ let (push_zfuel_name : env_t -> FStar_Ident.lident -> Prims.string -> env_t)
           mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token
             (FStar_Pervasives_Native.Some t3) false
            in
-        let uu___19_4586 = env  in
+        let uu___40_4586 = env  in
         let uu____4587 = add_fvar_binding fvb1 env.fvar_bindings  in
         {
-          bvar_bindings = (uu___19_4586.bvar_bindings);
+          bvar_bindings = (uu___40_4586.bvar_bindings);
           fvar_bindings = uu____4587;
-          depth = (uu___19_4586.depth);
-          tcenv = (uu___19_4586.tcenv);
-          warn = (uu___19_4586.warn);
-          nolabels = (uu___19_4586.nolabels);
-          use_zfuel_name = (uu___19_4586.use_zfuel_name);
+          depth = (uu___40_4586.depth);
+          tcenv = (uu___40_4586.tcenv);
+          warn = (uu___40_4586.warn);
+          nolabels = (uu___40_4586.nolabels);
+          use_zfuel_name = (uu___40_4586.use_zfuel_name);
           encode_non_total_function_typ =
-            (uu___19_4586.encode_non_total_function_typ);
-          current_module_name = (uu___19_4586.current_module_name);
-          encoding_quantifier = (uu___19_4586.encoding_quantifier);
-          global_cache = (uu___19_4586.global_cache)
+            (uu___40_4586.encode_non_total_function_typ);
+          current_module_name = (uu___40_4586.current_module_name);
+          encoding_quantifier = (uu___40_4586.encoding_quantifier);
+          global_cache = (uu___40_4586.global_cache)
         }
   
 let (force_thunk : fvar_binding -> FStar_SMTEncoding_Term.term) =
@@ -1093,25 +1093,25 @@ let (tok_of_name :
   
 let (reset_current_module_fvbs : env_t -> env_t) =
   fun env  ->
-    let uu___20_4904 = env  in
+    let uu___41_4904 = env  in
     let uu____4905 =
       let uu____4914 =
         FStar_All.pipe_right env.fvar_bindings FStar_Pervasives_Native.fst
          in
       (uu____4914, [])  in
     {
-      bvar_bindings = (uu___20_4904.bvar_bindings);
+      bvar_bindings = (uu___41_4904.bvar_bindings);
       fvar_bindings = uu____4905;
-      depth = (uu___20_4904.depth);
-      tcenv = (uu___20_4904.tcenv);
-      warn = (uu___20_4904.warn);
-      nolabels = (uu___20_4904.nolabels);
-      use_zfuel_name = (uu___20_4904.use_zfuel_name);
+      depth = (uu___41_4904.depth);
+      tcenv = (uu___41_4904.tcenv);
+      warn = (uu___41_4904.warn);
+      nolabels = (uu___41_4904.nolabels);
+      use_zfuel_name = (uu___41_4904.use_zfuel_name);
       encode_non_total_function_typ =
-        (uu___20_4904.encode_non_total_function_typ);
-      current_module_name = (uu___20_4904.current_module_name);
-      encoding_quantifier = (uu___20_4904.encoding_quantifier);
-      global_cache = (uu___20_4904.global_cache)
+        (uu___41_4904.encode_non_total_function_typ);
+      current_module_name = (uu___41_4904.current_module_name);
+      encoding_quantifier = (uu___41_4904.encoding_quantifier);
+      global_cache = (uu___41_4904.global_cache)
     }
   
 let (get_current_module_fvbs : env_t -> fvar_binding Prims.list) =
@@ -1121,20 +1121,20 @@ let (get_current_module_fvbs : env_t -> fvar_binding Prims.list) =
 let (add_fvar_binding_to_env : fvar_binding -> env_t -> env_t) =
   fun fvb  ->
     fun env  ->
-      let uu___21_4968 = env  in
+      let uu___42_4968 = env  in
       let uu____4969 = add_fvar_binding fvb env.fvar_bindings  in
       {
-        bvar_bindings = (uu___21_4968.bvar_bindings);
+        bvar_bindings = (uu___42_4968.bvar_bindings);
         fvar_bindings = uu____4969;
-        depth = (uu___21_4968.depth);
-        tcenv = (uu___21_4968.tcenv);
-        warn = (uu___21_4968.warn);
-        nolabels = (uu___21_4968.nolabels);
-        use_zfuel_name = (uu___21_4968.use_zfuel_name);
+        depth = (uu___42_4968.depth);
+        tcenv = (uu___42_4968.tcenv);
+        warn = (uu___42_4968.warn);
+        nolabels = (uu___42_4968.nolabels);
+        use_zfuel_name = (uu___42_4968.use_zfuel_name);
         encode_non_total_function_typ =
-          (uu___21_4968.encode_non_total_function_typ);
-        current_module_name = (uu___21_4968.current_module_name);
-        encoding_quantifier = (uu___21_4968.encoding_quantifier);
-        global_cache = (uu___21_4968.global_cache)
+          (uu___42_4968.encode_non_total_function_typ);
+        current_module_name = (uu___42_4968.current_module_name);
+        encoding_quantifier = (uu___42_4968.encoding_quantifier);
+        global_cache = (uu___42_4968.global_cache)
       }
   

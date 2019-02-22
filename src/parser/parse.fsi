@@ -39,6 +39,7 @@ type token =
   | REIFIABLE
   | REFLECTABLE
   | REC
+  | REAL of (string)
   | RBRACK
   | RBRACE
   | RARROW
@@ -192,6 +193,7 @@ type tokenId =
     | TOKEN_REIFIABLE
     | TOKEN_REFLECTABLE
     | TOKEN_REC
+    | TOKEN_REAL
     | TOKEN_RBRACK
     | TOKEN_RBRACE
     | TOKEN_RARROW

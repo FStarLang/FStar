@@ -699,6 +699,7 @@ let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid
 let t_string    = tconst PC.string_lid
 let t_exn       = tconst PC.exn_lid
+let t_real      = tconst PC.real_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid

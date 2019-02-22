@@ -564,6 +564,7 @@ val t_bool          : term
 val t_int           : term
 val t_string        : term
 val t_exn           : term
+val t_real          : term
 val t_float         : term
 val t_char          : term
 val t_range         : term

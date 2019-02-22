@@ -75,6 +75,8 @@ let sread_lid = p2l ["FStar"; "ST"; "op_Bang"]
 
 let max_lid = p2l ["max"]
 
+let real_lid  = p2l ["FStar"; "Real"; "real"]
+
 let float_lid  = p2l ["FStar"; "Float"; "float"]
 
 let char_lid  = p2l ["FStar"; "Char"; "char"]
@@ -163,6 +165,17 @@ let op_Modulus         = pconst "op_Modulus"
 let op_And             = pconst "op_AmpAmp"
 let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
+
+let real_const  s        = p2l ["FStar";"Real";s]
+let real_op_LT           = real_const "op_Less_Dot"
+let real_op_LTE          = real_const "op_Less_Equals_Dot"
+let real_op_GT           = real_const "op_Greater_Dot"
+let real_op_GTE          = real_const "op_Greater_Equals_Dot"
+let real_op_Subtraction  = real_const "op_Subtraction_Dot"
+let real_op_Addition     = real_const "op_Plus_Dot"
+let real_op_Multiply     = real_const "op_Star_Dot"
+let real_op_Division     = real_const "op_Slash_Dot"
+let real_of_int          = real_const "of_int"
 
 
 let bvconst s = p2l ["FStar"; "BV"; s]
@@ -300,6 +313,7 @@ let const_to_string x = match x with
   | Const_effect -> "Effect"
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
+  | Const_real r -> r^"R"
   | Const_float x ->      U.string_of_float x
   | Const_string(s, _) -> U.format1 "\"%s\"" s
   | Const_bytearray _  ->  "<bytearray>"

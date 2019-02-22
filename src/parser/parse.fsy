@@ -144,6 +144,7 @@ let logic_qualifier_deprecation_warning =
 %token RARROW
 %token RBRACE
 %token RBRACK
+%token <string> REAL
 %token REC
 %token REFLECTABLE
 %token REIFIABLE
@@ -2822,6 +2823,9 @@ constant:
 | FALSE
     {let _1 = () in
           ( Const_bool false )}
+| REAL
+    {let r = $1 in
+           ( Const_real r )}
 | IEEE64
     {let f = $1 in
              ( Const_float f )}
