@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "3a0ac50f93ff4204c4b4ef4dceb3d21b"
+      "1bb16cc97064d7f915c5e6c8461bf647"
     ],
     [
       "FStar.Pointer.Derived2.copy_buffer_contents_postcond",
@@ -16,12 +16,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Pointer.Derived2.copy_buffer_contents_precond",
-        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem"
+        "@query",
+        "equation_FStar.Pointer.Derived2.copy_buffer_contents_precond"
       ],
       0,
-      "e528c764db5ae50dfc47216a9f35095b"
+      "b5eb0f3248549a08b950b578c2f983ad"
     ]
   ]
 ]

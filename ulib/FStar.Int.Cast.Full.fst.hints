@@ -7,42 +7,29 @@
       2,
       1,
       [
-        "@query", "equation_FStar.UInt128.n", "equation_FStar.UInt64.n",
+        "@query", "equation_FStar.UInt128.n",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "85a8099118391c8c2ee3659725308f58"
+      "87c10ce9909c800ae1c87d01cd335c2f"
     ],
     [
       "FStar.Int.Cast.Full.uint64_to_uint128",
       2,
       2,
       1,
-      [
-        "@query", "equation_FStar.UInt128.n",
-        "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query" ],
       0,
-      "8447da5fb907b73eb443713c6f6798ab"
+      "eadd782ee80eae95a0ba68230bdca206"
     ],
     [
       "FStar.Int.Cast.Full.uint128_to_uint64",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "data_elim_FStar.UInt64.Mk", "equation_FStar.UInt.fits",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "equation_FStar.UInt64.n",
-        "equation_FStar.UInt64.t", "fuel_guarded_inversion_FStar.UInt64.t_",
-        "function_token_typing_FStar.UInt32.n", "primitive_Prims.op_AmpAmp",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
-      ],
+      [ "@query" ],
       0,
-      "6e6a769c740b6d4b38441065e1825c01"
+      "63b860a8d794f6c9f8674da6a73c5f0e"
     ],
     [
       "FStar.Int.Cast.Full.uint64_to_uint128",
@@ -51,7 +38,7 @@
       1,
       [ "@query" ],
       0,
-      "76baabb8f5cdc3a64d03dec0a1aa9c51"
+      "12cf413f291875e6aa643683e9d5e77a"
     ],
     [
       "FStar.Int.Cast.Full.uint64_to_uint128",
@@ -63,7 +50,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "69f50bb292e87db25afc9765d5cf16d5"
+      "94b356ab68b84396b50ba941a5f9a19a"
     ],
     [
       "FStar.Int.Cast.Full.uint128_to_uint64",
@@ -72,7 +59,7 @@
       1,
       [ "@query" ],
       0,
-      "4b4e1fa98a701a2ce482936ef8c1e76d"
+      "2712baf96a9d29f8b2960b72b191bab9"
     ]
   ]
 ]

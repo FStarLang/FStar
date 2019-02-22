@@ -304,7 +304,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 let detail_errors hint_replay
                   env
                  (all_labels:labels)
-                 (askZ3:decls_t -> Z3.z3result)
+                 (askZ3:list<decl> -> Z3.z3result)
     : unit =
 
     let print_banner () =

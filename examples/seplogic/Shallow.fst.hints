@@ -12,10 +12,10 @@
         "lemma_SepLogic.Heap.lemma_fresh_or_old_refl",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Shallow_Tm_refine_05cfe18b0b860e90eeb56625b596df8e"
+        "refinement_interpretation_Tm_refine_05cfe18b0b860e90eeb56625b596df8e"
       ],
       0,
-      "68c96ca70441d53f50658eb53e90d8a5"
+      "b5459db5aa92e48594cae636b3128d34"
     ],
     [
       "Shallow.return_with_binding",
@@ -28,10 +28,10 @@
         "lemma_SepLogic.Heap.lemma_fresh_or_old_refl",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Shallow_Tm_refine_3f37abd0c5d90ec869c8ef5652af0c04"
+        "refinement_interpretation_Tm_refine_3f37abd0c5d90ec869c8ef5652af0c04"
       ],
       0,
-      "45d66b707fa27a9139002d7cbfdd93eb"
+      "f3db37e1ce1295dc9fe78268b24658f9"
     ],
     [
       "Shallow.frame_post",
@@ -40,7 +40,7 @@
       1,
       [ "@query", "lemma_SepLogic.Heap.lemma_sep_defined_disjoint_heaps" ],
       0,
-      "fcaa69023e85cdb4451a6e803acad2e1"
+      "3b76635afc12e910c07ee3322f78e8d8"
     ],
     [
       "Shallow.frame",
@@ -54,7 +54,7 @@
         "equation_Shallow.frame_post", "equation_Shallow.frame_wp",
         "equation_Shallow.frame_wp0", "equation_Shallow.frame_wp1",
         "equation_Shallow.memory", "equation_Shallow.result",
-        "interpretation_Shallow_Tm_abs_b7cf381c1c5ab4c6bf68045be03bc941",
+        "interpretation_Tm_abs_b7cf381c1c5ab4c6bf68045be03bc941",
         "l_and-interp",
         "lemma_SepLogic.Heap.lemma_sep_defined_disjoint_heaps",
         "lemma_SepLogic.Heap.lemma_split_heap_disjoint",
@@ -63,13 +63,13 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_SepLogic.Heap_Tm_refine_e062640e7ea6051103880a953ab6d633",
-        "refinement_interpretation_Shallow_Tm_refine_6a7522140d769ee530476dbfc2fc5efa",
-        "refinement_interpretation_Shallow_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
+        "refinement_interpretation_Tm_refine_6a7522140d769ee530476dbfc2fc5efa",
+        "refinement_interpretation_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
+        "refinement_interpretation_Tm_refine_e062640e7ea6051103880a953ab6d633",
         "token_correspondence_Shallow.frame_post"
       ],
       0,
-      "860cc61dd06c029f25865c0720565069"
+      "992c57574781ee3d68bb73121886e0ea"
     ],
     [
       "Shallow.bind_without_framing",
@@ -80,17 +80,17 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Pervasives.Native.snd", "equation_Shallow.result",
         "function_token_typing_SepLogic.Heap.heap",
-        "interpretation_Shallow_Tm_abs_1c9e994b8e3d63999f63e8c67ba9978d",
+        "interpretation_Tm_abs_1c9e994b8e3d63999f63e8c67ba9978d",
         "lemma_SepLogic.Heap.lemma_fresh_or_old_trans",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Shallow_Tm_refine_10550ff047393a130f697885403c8bba",
-        "refinement_interpretation_Shallow_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
+        "refinement_interpretation_Tm_refine_78445f6fcaf8a4317f0ad4e5c454834c",
+        "refinement_interpretation_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "277f2ca45bfdadd791d6b0c44ae011df"
+      "783cd69466bb4a6ac7c88945747b3c58"
     ],
     [
       "Shallow.bind_with_framing",
@@ -103,19 +103,19 @@
         "equation_Shallow.frame_wp0", "equation_Shallow.frame_wp1",
         "equation_Shallow.memory", "equation_Shallow.result",
         "function_token_typing_SepLogic.Heap.heap",
-        "interpretation_Shallow_Tm_abs_455a0db12516e2c554bd507475b4e029",
+        "interpretation_Tm_abs_455a0db12516e2c554bd507475b4e029",
         "lemma_SepLogic.Heap.lemma_fresh_or_old_trans",
         "lemma_SepLogic.Heap.lemma_split_heap_join",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_SepLogic.Heap_Tm_refine_e062640e7ea6051103880a953ab6d633",
-        "refinement_interpretation_Shallow_Tm_refine_852ef89e32169be05a489a024a93a782",
-        "refinement_interpretation_Shallow_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
+        "refinement_interpretation_Tm_refine_a3eed8060cd1b0dec0ce41a638597e7b",
+        "refinement_interpretation_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
+        "refinement_interpretation_Tm_refine_e062640e7ea6051103880a953ab6d633",
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "4e361df0828b85329172e14bf62fef6f"
+      "4c881d313e629ccabe9375213f75b05b"
     ],
     [
       "Shallow.read_without_framing",
@@ -131,10 +131,10 @@
         "lemma_SepLogic.Heap.lemma_points_to_sel",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Shallow_Tm_refine_94f4b929f73c633a2a1e325f4de54949"
+        "refinement_interpretation_Tm_refine_94f4b929f73c633a2a1e325f4de54949"
       ],
       0,
-      "60c2d2a364cae9f9574484811b61d162"
+      "0cff21b253afbe934b7c02454e84037c"
     ],
     [
       "Shallow.read_with_framing",
@@ -143,11 +143,11 @@
       0,
       [
         "@query", "equation_Shallow.frame_read_wp",
-        "interpretation_Shallow_Tm_abs_6714eacb010869ef7b4a14468dcabc6f",
+        "interpretation_Tm_abs_6714eacb010869ef7b4a14468dcabc6f",
         "token_correspondence_Shallow.frame_read_wp"
       ],
       0,
-      "60d6e6c52a696d31acba9ca73be01f23"
+      "977333741a4398e0aa9d23b40c6adb3b"
     ],
     [
       "Shallow.write_wp",
@@ -159,7 +159,7 @@
         "lemma_SepLogic.Heap.lemma_points_to_mcontains"
       ],
       0,
-      "6a2f485905ed37cc76bdd23d1841512b"
+      "aa206b1153974c63f117f84d1276f733"
     ],
     [
       "Shallow.write_without_framing",
@@ -172,17 +172,18 @@
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.l_Exists",
         "equation_Prims.squash", "equation_Shallow.write_wp",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "interpretation_Shallow_Tm_abs_f417041720b11d0453c0fff4e01a4a6f",
+        "interpretation_Tm_abs_29a1fb8baa5462cab0012cde1b8c0490",
+        "l_quant_interp_c02b5b9580a6350fa3b684eff107e6e1",
         "lemma_SepLogic.Heap.lemma_hcontains_mcontains",
         "lemma_SepLogic.Heap.lemma_points_to_mcontains",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Shallow_Tm_refine_4a56112541b70791fbbf581c1bbcad72",
+        "refinement_interpretation_Tm_refine_4a56112541b70791fbbf581c1bbcad72",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "token_correspondence_Shallow.write_wp", "unit_typing"
       ],
       0,
-      "a2db5e8ae6941794e6ee774897a860ae"
+      "02058ef5f05ee443b0b0d5dada23267a"
     ],
     [
       "Shallow.write_with_framing",
@@ -193,11 +194,11 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Shallow.frame_write_wp",
-        "interpretation_Shallow_Tm_abs_37805220d5a44838159f1fcb87023954",
+        "interpretation_Tm_abs_37805220d5a44838159f1fcb87023954",
         "token_correspondence_Shallow.frame_write_wp", "unit_typing"
       ],
       0,
-      "1990061479531c6884e83ec575626cc1"
+      "5e545979db968eec7ef043fb8d9e6852"
     ],
     [
       "Shallow.alloc_without_framing",
@@ -207,13 +208,13 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Pervasives.Native.snd", "equation_Shallow.alloc_wp",
-        "interpretation_Shallow_Tm_abs_e35f1b4b53372577f776061253d84885",
+        "interpretation_Tm_abs_e35f1b4b53372577f776061253d84885",
         "l_and-interp", "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Shallow_Tm_refine_be806974d1e1eb7b729f1c9589e85568",
+        "refinement_interpretation_Tm_refine_be806974d1e1eb7b729f1c9589e85568",
         "token_correspondence_Shallow.alloc_wp"
       ],
       0,
-      "a1a8c3e5eb53af9f63a76b0b3a1eb61f"
+      "1c051e7223412ac5503d09d222624064"
     ],
     [
       "Shallow.alloc_with_framing",
@@ -222,11 +223,11 @@
       0,
       [
         "@query", "equation_Shallow.frame_alloc_wp",
-        "interpretation_Shallow_Tm_abs_a93d5ade457dd6d2dae6695896255854",
+        "interpretation_Tm_abs_a93d5ade457dd6d2dae6695896255854",
         "token_correspondence_Shallow.frame_alloc_wp"
       ],
       0,
-      "49507d4504a06ab03771ac973da9fdfa"
+      "898f508f849feeadf5363363d3032cdd"
     ],
     [
       "Shallow.dealloc_wp",
@@ -238,7 +239,7 @@
         "lemma_SepLogic.Heap.lemma_points_to_mcontains"
       ],
       0,
-      "fce919e25cbd7984c87beab4f35d0ba1"
+      "3e75470063395e9b2eaf80f5eca3f125"
     ],
     [
       "Shallow.dealloc_without_framing",
@@ -251,17 +252,18 @@
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.l_Exists",
         "equation_Prims.squash", "equation_Shallow.dealloc_wp",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "interpretation_Shallow_Tm_abs_8709d22cc2e4cb5b44225e0352393870",
+        "interpretation_Tm_abs_9e4f73efbd7d7d0e50e9a7de49fcbc62",
+        "l_quant_interp_371ea625d9509c7a4cba7d68f2391512",
         "lemma_SepLogic.Heap.lemma_hcontains_mcontains",
         "lemma_SepLogic.Heap.lemma_points_to_mcontains",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Shallow_Tm_refine_14741a8716adc8b0553def2dfbeeee30",
+        "refinement_interpretation_Tm_refine_14741a8716adc8b0553def2dfbeeee30",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "token_correspondence_Shallow.dealloc_wp", "unit_typing"
       ],
       0,
-      "98ead0b5d37e318a5a38bf05fbaabc19"
+      "d47866fcfa8c839c49a1c46d4d361297"
     ],
     [
       "Shallow.dealloc_with_framing",
@@ -272,11 +274,11 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Shallow.frame_dealloc_wp",
-        "interpretation_Shallow_Tm_abs_442b82872faadbfe4aae8b8a766ffa85",
+        "interpretation_Tm_abs_442b82872faadbfe4aae8b8a766ffa85",
         "token_correspondence_Shallow.frame_dealloc_wp", "unit_typing"
       ],
       0,
-      "a29e6defd4ee7cf8ca0a22d3d3ddc130"
+      "7fe3655c5107886adbfc87e62d8f1169"
     ],
     [
       "Shallow.return_without_binding",
@@ -289,10 +291,10 @@
         "lemma_SepLogic.Heap.lemma_fresh_or_old_refl",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Shallow_Tm_refine_05cfe18b0b860e90eeb56625b596df8e"
+        "refinement_interpretation_Tm_refine_05cfe18b0b860e90eeb56625b596df8e"
       ],
       0,
-      "e4c0b8e5bcb2f8c126595769d2e48352"
+      "d701e5f74e94db10f611220a350e2521"
     ],
     [
       "Shallow.return_with_binding",
@@ -305,10 +307,10 @@
         "lemma_SepLogic.Heap.lemma_fresh_or_old_refl",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Shallow_Tm_refine_3f37abd0c5d90ec869c8ef5652af0c04"
+        "refinement_interpretation_Tm_refine_3f37abd0c5d90ec869c8ef5652af0c04"
       ],
       0,
-      "fe8b7c345ec2bbd0dc2adb84e6506e3d"
+      "bacb926d584ba4a1761783701cbe2238"
     ],
     [
       "Shallow.frame_post",
@@ -317,7 +319,7 @@
       1,
       [ "@query", "lemma_SepLogic.Heap.lemma_sep_defined_disjoint_heaps" ],
       0,
-      "0b542643085370c93cac54c7bbce7958"
+      "85913d4ca555f7b260dbacf24bd39801"
     ],
     [
       "Shallow.frame",
@@ -331,7 +333,7 @@
         "equation_Shallow.frame_post", "equation_Shallow.frame_wp",
         "equation_Shallow.frame_wp0", "equation_Shallow.frame_wp1",
         "equation_Shallow.memory", "equation_Shallow.result",
-        "interpretation_Shallow_Tm_abs_b7cf381c1c5ab4c6bf68045be03bc941",
+        "interpretation_Tm_abs_b7cf381c1c5ab4c6bf68045be03bc941",
         "l_and-interp",
         "lemma_SepLogic.Heap.lemma_sep_defined_disjoint_heaps",
         "lemma_SepLogic.Heap.lemma_split_heap_disjoint",
@@ -340,13 +342,13 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_SepLogic.Heap_Tm_refine_e062640e7ea6051103880a953ab6d633",
-        "refinement_interpretation_Shallow_Tm_refine_6a7522140d769ee530476dbfc2fc5efa",
-        "refinement_interpretation_Shallow_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
+        "refinement_interpretation_Tm_refine_6a7522140d769ee530476dbfc2fc5efa",
+        "refinement_interpretation_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
+        "refinement_interpretation_Tm_refine_e062640e7ea6051103880a953ab6d633",
         "token_correspondence_Shallow.frame_post"
       ],
       0,
-      "e09b42653d6b4fa7d2033aaf725039e8"
+      "f757a2a85bc56b32e4aeb1da39fbc46e"
     ],
     [
       "Shallow.bind_without_framing",
@@ -357,17 +359,17 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Pervasives.Native.snd", "equation_Shallow.result",
         "function_token_typing_SepLogic.Heap.heap",
-        "interpretation_Shallow_Tm_abs_1c9e994b8e3d63999f63e8c67ba9978d",
+        "interpretation_Tm_abs_1c9e994b8e3d63999f63e8c67ba9978d",
         "lemma_SepLogic.Heap.lemma_fresh_or_old_trans",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Shallow_Tm_refine_10550ff047393a130f697885403c8bba",
-        "refinement_interpretation_Shallow_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
+        "refinement_interpretation_Tm_refine_78445f6fcaf8a4317f0ad4e5c454834c",
+        "refinement_interpretation_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "c1fc330aebe88b3bf90c13dadac83521"
+      "79175cde7ea1dbc475141279976ad5e7"
     ],
     [
       "Shallow.bind_with_framing",
@@ -380,19 +382,19 @@
         "equation_Shallow.frame_wp0", "equation_Shallow.frame_wp1",
         "equation_Shallow.memory", "equation_Shallow.result",
         "function_token_typing_SepLogic.Heap.heap",
-        "interpretation_Shallow_Tm_abs_455a0db12516e2c554bd507475b4e029",
+        "interpretation_Tm_abs_455a0db12516e2c554bd507475b4e029",
         "lemma_SepLogic.Heap.lemma_fresh_or_old_trans",
         "lemma_SepLogic.Heap.lemma_split_heap_join",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_SepLogic.Heap_Tm_refine_e062640e7ea6051103880a953ab6d633",
-        "refinement_interpretation_Shallow_Tm_refine_852ef89e32169be05a489a024a93a782",
-        "refinement_interpretation_Shallow_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
+        "refinement_interpretation_Tm_refine_a3eed8060cd1b0dec0ce41a638597e7b",
+        "refinement_interpretation_Tm_refine_d720fb7a674dbd1f925b1e8ff012c361",
+        "refinement_interpretation_Tm_refine_e062640e7ea6051103880a953ab6d633",
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "68628c77b5919186651104b47e7d42f5"
+      "f7124f59e8a9c2e76b8e986bcfb2f409"
     ],
     [
       "Shallow.read_without_framing",
@@ -408,10 +410,10 @@
         "lemma_SepLogic.Heap.lemma_points_to_sel",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Shallow_Tm_refine_94f4b929f73c633a2a1e325f4de54949"
+        "refinement_interpretation_Tm_refine_94f4b929f73c633a2a1e325f4de54949"
       ],
       0,
-      "55acfd58726f14f66eb34b14bddde0e4"
+      "1df38e2b2d9306457b6933e161e74deb"
     ],
     [
       "Shallow.read_with_framing",
@@ -420,11 +422,11 @@
       0,
       [
         "@query", "equation_Shallow.frame_read_wp",
-        "interpretation_Shallow_Tm_abs_6714eacb010869ef7b4a14468dcabc6f",
+        "interpretation_Tm_abs_6714eacb010869ef7b4a14468dcabc6f",
         "token_correspondence_Shallow.frame_read_wp"
       ],
       0,
-      "84a61d3742e85ff2d84f9fbe887598e4"
+      "149af665581bd44444b3c042f3d03f7b"
     ],
     [
       "Shallow.write_wp",
@@ -436,7 +438,7 @@
         "lemma_SepLogic.Heap.lemma_points_to_mcontains"
       ],
       0,
-      "38691d0444e951f09370c2ee4ca41655"
+      "ad0efd67b7c85bcdda6e400822d2f248"
     ],
     [
       "Shallow.write_without_framing",
@@ -449,17 +451,18 @@
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.l_Exists",
         "equation_Prims.squash", "equation_Shallow.write_wp",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "interpretation_Shallow_Tm_abs_f417041720b11d0453c0fff4e01a4a6f",
+        "interpretation_Tm_abs_29a1fb8baa5462cab0012cde1b8c0490",
+        "l_quant_interp_c02b5b9580a6350fa3b684eff107e6e1",
         "lemma_SepLogic.Heap.lemma_hcontains_mcontains",
         "lemma_SepLogic.Heap.lemma_points_to_mcontains",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Shallow_Tm_refine_4a56112541b70791fbbf581c1bbcad72",
+        "refinement_interpretation_Tm_refine_4a56112541b70791fbbf581c1bbcad72",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "token_correspondence_Shallow.write_wp", "unit_typing"
       ],
       0,
-      "51eb32c943e96d9afe213abf53dafd05"
+      "9c66138a807a9f9b1d29792209af680b"
     ],
     [
       "Shallow.write_with_framing",
@@ -470,11 +473,11 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Shallow.frame_write_wp",
-        "interpretation_Shallow_Tm_abs_37805220d5a44838159f1fcb87023954",
+        "interpretation_Tm_abs_37805220d5a44838159f1fcb87023954",
         "token_correspondence_Shallow.frame_write_wp", "unit_typing"
       ],
       0,
-      "abf39d7b49ff7d0945d950bc418d12fd"
+      "a2c00d467c7a517e6d1ffacb9a617156"
     ],
     [
       "Shallow.alloc_without_framing",
@@ -484,13 +487,13 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Pervasives.Native.snd", "equation_Shallow.alloc_wp",
-        "interpretation_Shallow_Tm_abs_e35f1b4b53372577f776061253d84885",
+        "interpretation_Tm_abs_e35f1b4b53372577f776061253d84885",
         "l_and-interp", "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Shallow_Tm_refine_be806974d1e1eb7b729f1c9589e85568",
+        "refinement_interpretation_Tm_refine_be806974d1e1eb7b729f1c9589e85568",
         "token_correspondence_Shallow.alloc_wp"
       ],
       0,
-      "f7fdba12fb6de99cc7759015a2904e99"
+      "db2064e43d3355a81328a5018d56da32"
     ],
     [
       "Shallow.alloc_with_framing",
@@ -499,11 +502,11 @@
       0,
       [
         "@query", "equation_Shallow.frame_alloc_wp",
-        "interpretation_Shallow_Tm_abs_a93d5ade457dd6d2dae6695896255854",
+        "interpretation_Tm_abs_a93d5ade457dd6d2dae6695896255854",
         "token_correspondence_Shallow.frame_alloc_wp"
       ],
       0,
-      "4e96e6dff6a272dd45d4551a433ab520"
+      "256fb865393909636f1b1a9c17c0591e"
     ],
     [
       "Shallow.dealloc_wp",
@@ -515,7 +518,7 @@
         "lemma_SepLogic.Heap.lemma_points_to_mcontains"
       ],
       0,
-      "d77672c415095809ee3a0a6cd7e5049b"
+      "0fbb44cf8762b5f97e36bf1fb6143e5e"
     ],
     [
       "Shallow.dealloc_without_framing",
@@ -528,17 +531,18 @@
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.l_Exists",
         "equation_Prims.squash", "equation_Shallow.dealloc_wp",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "interpretation_Shallow_Tm_abs_8709d22cc2e4cb5b44225e0352393870",
+        "interpretation_Tm_abs_9e4f73efbd7d7d0e50e9a7de49fcbc62",
+        "l_quant_interp_371ea625d9509c7a4cba7d68f2391512",
         "lemma_SepLogic.Heap.lemma_hcontains_mcontains",
         "lemma_SepLogic.Heap.lemma_points_to_mcontains",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Shallow_Tm_refine_14741a8716adc8b0553def2dfbeeee30",
+        "refinement_interpretation_Tm_refine_14741a8716adc8b0553def2dfbeeee30",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "token_correspondence_Shallow.dealloc_wp", "unit_typing"
       ],
       0,
-      "8e789f57d91371df2e481bd9f7c5f88c"
+      "98c201c8da00c21a1d1e547d8207a984"
     ],
     [
       "Shallow.dealloc_with_framing",
@@ -549,11 +553,11 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Shallow.frame_dealloc_wp",
-        "interpretation_Shallow_Tm_abs_442b82872faadbfe4aae8b8a766ffa85",
+        "interpretation_Tm_abs_442b82872faadbfe4aae8b8a766ffa85",
         "token_correspondence_Shallow.frame_dealloc_wp", "unit_typing"
       ],
       0,
-      "6be62db406f11c80112436e1c4f0205b"
+      "f896b952698b1a7c62326c07aad0da47"
     ]
   ]
 ]

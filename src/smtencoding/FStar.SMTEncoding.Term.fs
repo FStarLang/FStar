@@ -222,7 +222,44 @@ type decl =
   | SetOption  of string * string
   | GetStatistics
   | GetReasonUnknown
-type decls_t = list<decl>
+
+(*
+ * See Term.fsi for an explanation of this type
+ *)
+type decls_elt = {
+  sym_name:   option<string>;
+  key:        option<string>;
+  decls:      list<decl>;
+  a_names:    list<string>;
+}
+
+type decls_t = list<decls_elt>
+
+let mk_decls name key decls aux_decls = [{
+  sym_name    = Some name;
+  key         = Some key;
+  decls       = decls;
+  a_names     =  //AR: collect the names of aux_decls and decls to be retained in case of a cache hit
+    let sm = BU.smap_create 20 in
+    List.iter (fun elt -> 
+      List.iter (fun s -> BU.smap_add sm s "0") elt.a_names
+    ) aux_decls;
+    List.iter (fun d -> match d with
+                        | Assume a -> BU.smap_add sm (a.assumption_name) "0"
+                        | _ -> ()) decls;
+    BU.smap_keys sm
+}]
+
+let mk_decls_trivial decls = [{
+  sym_name = None;
+  key = None;
+  decls = decls;
+  a_names = List.collect (function
+              | Assume a -> [a.assumption_name]
+              | _ -> []) decls;
+}]
+
+let decls_list_of l = l |> List.collect (fun elt -> elt.decls) 
 
 type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
@@ -642,7 +679,9 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
   } in
   Assume a
 
-let injective_constructor rng (name, fields, sort) =
+let injective_constructor
+  (rng:Range.range)
+  ((name, fields, sort):(string * list<constructor_field> * sort)) :list<decl> =
     let n_bvars = List.length fields in
     let bvar_name i = "x_" ^ string_of_int i in
     let bvar_index i = n_bvars - (i + 1) in
@@ -951,7 +990,8 @@ and mkPrelude z3options =
                                  (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
                                  (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true);
                                  ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true); ("LexCons_2", Term_sort, true)], Term_sort, 11, true)] in
-   let bcons = constrs |> List.collect (constructor_to_decl norng) |> List.map (declToSmt z3options) |> String.concat "\n" in
+   let bcons = constrs |> List.collect (constructor_to_decl norng)
+                       |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
                                    (is-LexCons t))\n\
                        (declare-fun Prims.lex_t () Term)\n\

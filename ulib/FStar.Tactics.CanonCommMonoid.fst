@@ -13,14 +13,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module CanonCommMonoid
+module FStar.Tactics.CanonCommMonoid
 
 open FStar.Algebra.CommMonoid
 open FStar.List
 open FStar.Tactics
 open FStar.Reflection
 open FStar.Classical
-open CanonCommSwaps
+open FStar.Tactics.CanonCommSwaps
 
 (* An expression canonizer for commutative monoids.
    Inspired by:
@@ -373,14 +373,16 @@ let canon_monoid_aux
           // would like to do only this norm [primops] but ...
           // for now having to do all this mess
           norm [delta_only [// term_to_string tp;
-                            "CanonCommMonoid.canon";
-                            "CanonCommMonoid.xsdenote";
-                            "CanonCommMonoid.flatten";
-                            "CanonCommMonoid.select";
-                            "CanonCommMonoid.select_extra";
-                            "CanonCommMonoid.quote_list";
-                            "CanonCommMonoid.quote_vm";
-                            "CanonCommMonoid.quote_exp";
+                            "FStar.Tactics.CanonCommMonoid.canon";
+                            "FStar.Tactics.CanonCommMonoid.xsdenote";
+                            "FStar.Tactics.CanonCommMonoid.flatten";
+                            "FStar.Tactics.CanonCommMonoid.select";
+                            "FStar.Tactics.CanonCommMonoid.select_extra";
+                            "FStar.Tactics.CanonCommMonoid.quote_list";
+                            "FStar.Tactics.CanonCommMonoid.quote_vm";
+                            "FStar.Tactics.CanonCommMonoid.quote_exp";
+                            "FStar.Tactics.CanonCommMonoid.const_compare";
+                            "FStar.Tactics.CanonCommMonoid.special_compare";
                             "FStar.List.Tot.Base.assoc";
                             "FStar.Pervasives.Native.fst";
                             "FStar.Pervasives.Native.snd";
@@ -397,8 +399,6 @@ let canon_monoid_aux
                             "FStar.List.Tot.Base.partition";
                             "FStar.List.Tot.Base.bool_of_compare";
                             "FStar.List.Tot.Base.compare_of_bool";
-                            "CanonCommMonoid.const_compare";
-                            "CanonCommMonoid.special_compare";
              ]; primops] // TODO: restrict primops to "less than" only
                          // - would need this even if unfold_def did it's job?
           // ; dump "done"

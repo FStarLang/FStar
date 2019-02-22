@@ -8,10 +8,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "70583d47d9d9330f91fd268e348016cc"
+      "5979f11e95048e155919758d0856026d"
     ],
     [
       "FStar.Classical.or_elim",
@@ -22,11 +22,11 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
       0,
-      "227e5f51bc058cc9c905bbf2601a9195"
+      "ac56f6d562f49d048323d495f8faaa80"
     ]
   ]
 ]

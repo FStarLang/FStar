@@ -2156,10 +2156,9 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
 
     //pop BUT ignore the old env
     pop_context env ("Ending modul " ^ modul.name.str) |> ignore;
-    env.solver.encode_modul env modul;
-    env.solver.refresh();
-    //interactive mode manages it itself
-    let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+
+    //moved the code for encoding the module to smt to Universal
+   
     modul, env
 
 let load_checked_module (en:env) (m:modul) :env =

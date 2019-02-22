@@ -69,7 +69,8 @@ type varops_t = {
     rollback: option<int> -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
-    fresh:string -> string;
+    fresh:string -> string -> string;  (* module name -> prefix -> name *)
+    reset_fresh:unit -> unit;
     string_const:string -> term;
     next_id: unit -> int;
     mk_unique:string -> string;
@@ -89,7 +90,11 @@ let varops =
     let new_var pp rn = mk_unique <| pp.idText ^ "__" ^ (string_of_int rn) in
     let new_fvar lid = mk_unique lid.str in
     let next_id () = BU.incr ctr; !ctr in
-    let fresh pfx = BU.format2 "%s_%s" pfx (string_of_int <| next_id()) in
+    //AR: adding module name after the prefix, else it interferes for name matching for fuel arguments
+    //    see try_lookup_free_var below
+    let fresh mname pfx = BU.format3 "%s_%s_%s" pfx mname (string_of_int <| next_id()) in
+    //the fresh counter is reset after every module
+    let reset_fresh () = ctr := initial_ctr in
     let string_const s = match BU.find_map !scopes (fun (_, strings) -> BU.smap_try_find strings s) with
         | Some f -> f
         | None ->
@@ -109,6 +114,7 @@ let varops =
      new_var=new_var;
      new_fvar=new_fvar;
      fresh=fresh;
+     reset_fresh=reset_fresh;
      string_const=string_const;
      next_id=next_id;
      mk_unique=mk_unique}
@@ -136,46 +142,27 @@ let check_valid_fvb fvb =
 
 
 let binder_of_eithervar v = (v, None)
-type cache_entry = {
-    cache_symbol_name: string;
-    cache_symbol_arg_sorts: list<sort>;
-    cache_symbol_decls: list<decl>;
-    cache_symbol_assumption_names: list<string>
-}
+
 type env_t = {
     bvar_bindings: BU.psmap<BU.pimap<(bv * term)>>;
-    fvar_bindings: BU.psmap<fvar_binding>;
+    fvar_bindings: (BU.psmap<fvar_binding> * list<fvar_binding>);  //list of fvar bindings for the current module
+                                                                   //remember them so that we can store them in the checked file
     depth:int; //length of local var/tvar bindings
     tcenv:Env.env;
     warn:bool;
-    cache:BU.smap<cache_entry>;
     nolabels:bool;
     use_zfuel_name:bool;
     encode_non_total_function_typ:bool;
     current_module_name:string;
-    encoding_quantifier:bool
+    encoding_quantifier:bool;
+    global_cache:BU.smap<decls_elt>  //cache for hashconsing -- see Encode.fs where it is used and updated
 }
-let mk_cache_entry env tsym cvar_sorts t_decls =
-    let names =
-        t_decls
-        |> List.collect
-              (function
-               | Assume a -> [a.assumption_name]
-               | _ -> [])
-    in
-    {
-        cache_symbol_name=tsym;
-        cache_symbol_arg_sorts=cvar_sorts;
-        cache_symbol_decls=t_decls;
-        cache_symbol_assumption_names=names
-    }
-let use_cache_entry ce =
-    [Term.RetainAssumptions ce.cache_symbol_assumption_names]
+
 let print_env e =
     let bvars = BU.psmap_fold e.bvar_bindings (fun _k pi acc ->
         BU.pimap_fold pi (fun _i (x, _term) acc ->
             Print.bv_to_string x :: acc) acc) [] in
-    let allvars = BU.psmap_fold e.fvar_bindings (fun _k fvb acc ->
+    let allvars = BU.psmap_fold (e.fvar_bindings |> fst) (fun _k fvb acc ->
         fvb.fvar_lid :: acc) [] in
     let last_fvar =
       match List.rev allvars with
@@ -190,16 +177,17 @@ let lookup_bvar_binding env bv =
     | None -> None
 
 let lookup_fvar_binding env lid =
-    BU.psmap_try_find env.fvar_bindings lid.str
+    BU.psmap_try_find (env.fvar_bindings |> fst) lid.str
+
 let add_bvar_binding bvb bvbs =
   BU.psmap_modify bvbs (fst bvb).ppname.idText
     (fun pimap_opt ->
      BU.pimap_add (BU.dflt (BU.pimap_empty ()) pimap_opt) (fst bvb).index bvb)
 
-let add_fvar_binding fvb fvbs =
-  BU.psmap_add fvbs fvb.fvar_lid.str fvb
+let add_fvar_binding fvb (fvb_map, fvb_list) =
+  (BU.psmap_add fvb_map fvb.fvar_lid.str fvb, fvb::fvb_list)
 
-let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV <| mk_fv (xsym, s)
+let fresh_fvar mname x s = let xsym = varops.fresh mname x in xsym, mkFreeV <| mk_fv (xsym, s)
 (* generate terms corresponding to a variable and record the mapping in the environment *)
 
 (* Bound term variables *)
@@ -330,8 +318,13 @@ let lookup_free_var_sym env a =
         end
 
 let tok_of_name env nm =
-  BU.psmap_find_map env.fvar_bindings (fun _ fvb ->
+  BU.psmap_find_map (env.fvar_bindings |> fst) (fun _ fvb ->
       check_valid_fvb fvb;
       if fvb.smt_id = nm then fvb.smt_token else None)
+
+let reset_current_module_fvbs env = { env with fvar_bindings = (env.fvar_bindings |> fst, []) }
+let get_current_module_fvbs env = env.fvar_bindings |> snd
+let add_fvar_binding_to_env fvb env =
+  { env with fvar_bindings = add_fvar_binding fvb env.fvar_bindings }
 
 (* </Environment> *)

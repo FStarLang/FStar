@@ -9,18 +9,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Tactics.Effect_interpretation_Tm_arrow_64e9fbfe7638fce4dffc18967df04099",
-        "bool_inversion", "disc_equation_FStar.Tactics.Result.Failed",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_FStar.Tactics.Result.Success",
         "equation_FStar.Tactics.Effect.__tac",
         "lemma_FStar.Tactics.Result.result_split",
         "typing_FStar.Range.prims_to_fstar_range",
-        "typing_FStar.Tactics.Result.uu___is_Failed",
-        "typing_FStar.Tactics.Result.uu___is_Success",
         "typing_FStar.Tactics.Types.incr_depth",
         "typing_FStar.Tactics.Types.set_proofstate_range"
       ],
       0,
-      "d904ce371016f682e14e20ffbe4351ea"
+      "388c8d6da7cdf8b2c4896eb4d8bae784"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -36,7 +35,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "af5010f6a4f1683b2f27ffb62df00785"
+      "f261abc2cf043b382141f02921098425"
     ],
     [
       "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____raise_elab",
@@ -45,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "89e36986230d064ecccd2159d3618dd9"
+      "9f64edd833d65d52492e54f4d45ce593"
     ],
     [
       "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____get_elab",
@@ -54,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "8c46c6350ba0e43637ba3a1ce980990e"
+      "81967e30563c36c9aee5a7fddeb0095c"
     ],
     [
       "FStar.Tactics.Effect.TAC",
@@ -63,7 +62,7 @@
       1,
       [ "@query" ],
       0,
-      "ace5fb98565d661549b3400db031b6ed"
+      "d1ef18f4c01089d65152c1001603684a"
     ],
     [
       "FStar.Tactics.Effect.TAC",
@@ -72,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "27d3d2c12bf38cf24dae1f4c82bb8802"
+      "6e0461412d26327c2cc3434d45243d8c"
     ],
     [
       "FStar.Tactics.Effect.assert_by_tactic",
@@ -81,10 +80,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "33b5774d90dd949462ff0346e3d6a9c2"
+      "873ec7df051553d27666a2acb6adc82c"
     ],
     [
       "FStar.Tactics.Effect.__bind",
@@ -104,7 +103,7 @@
         "typing_FStar.Tactics.Types.set_proofstate_range"
       ],
       0,
-      "fdb5564d11a0d6b9a5f4cc590b119b39"
+      "011430ae00a58ac04b9d8cdb512a31e2"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -120,7 +119,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "eeaf1bf564ac97770f55f7c3a448eb39"
+      "5415ac8a2d104f3c7356261d12ffa494"
     ],
     [
       "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____raise_elab",
@@ -129,7 +128,7 @@
       1,
       [ "@query" ],
       0,
-      "19d975ada073b9f7fac39943913e966e"
+      "50de461e201f8f0abe1eef78d1c2ace0"
     ],
     [
       "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____get_elab",
@@ -138,7 +137,7 @@
       1,
       [ "@query" ],
       0,
-      "daca8bc104e5a4a22282a5e92493867e"
+      "e2188db48464d8d6339333baa268125d"
     ],
     [
       "FStar.Tactics.Effect.TAC",
@@ -147,7 +146,7 @@
       1,
       [ "@query" ],
       0,
-      "3a95033a78dd56dce8d2d7957208d1f0"
+      "4fcbe660d482b448d75c50e92c9fcfdc"
     ],
     [
       "FStar.Tactics.Effect.TAC",
@@ -156,7 +155,7 @@
       1,
       [ "@query" ],
       0,
-      "880bde5ff6dd5e8c38b8adfb1fe3782e"
+      "8102e09ec9d147d41b62ea3aafaf5e86"
     ],
     [
       "FStar.Tactics.Effect.assert_by_tactic",
@@ -165,10 +164,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "253562aa44922afe837d5853181f4a80"
+      "00a311c0908a1a985fec6d15b30fa7b5"
     ]
   ]
 ]

@@ -255,7 +255,7 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 // //--------------------------------------------------------------------------------
 
 // // open FStar.Tactics
-// // open CanonCommSemiring
+// // open FStar.Tactics.CanonCommSemiring
 // // open FStar.Algebra.CommMonoid
 
 // // [@expect_failure]

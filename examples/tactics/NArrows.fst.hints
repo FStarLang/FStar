@@ -2,7 +2,7 @@
   "U\b\u000ba\u001fA(¼Œ8’2nF=\u007f",
   [
     [
-      "NArrows.uu___64",
+      "NArrows.uu___1",
       1,
       2,
       1,
@@ -14,10 +14,10 @@
         "projection_inverse_BoxInt_proj_0", "typing_NArrows.xxx"
       ],
       0,
-      "49922b931bf1b2d63ec9091e94a76e3a"
+      "568561ce7ec574f15a44a99b403c5885"
     ],
     [
-      "NArrows.uu___64",
+      "NArrows.uu___1",
       2,
       2,
       1,
@@ -29,7 +29,7 @@
         "projection_inverse_BoxInt_proj_0", "typing_NArrows.xxx"
       ],
       0,
-      "7ec500cacb6e9b752df731af6a7d07c4"
+      "3570403d8c2faddc64a44f388d0726d0"
     ]
   ]
 ]
