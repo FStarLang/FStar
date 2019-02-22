@@ -3,8 +3,8 @@ type norm_cb =
   (FStar_Ident.lid,FStar_Syntax_Syntax.term) FStar_Util.either ->
     FStar_Syntax_Syntax.term
 let (id_norm_cb : norm_cb) =
-  fun uu___1_13  ->
-    match uu___1_13 with
+  fun uu___11_13  ->
+    match uu___11_13 with
     | FStar_Util.Inr x -> x
     | FStar_Util.Inl l ->
         let uu____20 =
@@ -158,13 +158,13 @@ let type_of : 'a . 'a embedding -> FStar_Syntax_Syntax.typ = fun e  -> e.typ
 let set_type : 'a . FStar_Syntax_Syntax.typ -> 'a embedding -> 'a embedding =
   fun ty  ->
     fun e  ->
-      let uu___3_1522 = e  in
+      let uu___13_1522 = e  in
       {
-        em = (uu___3_1522.em);
-        un = (uu___3_1522.un);
+        em = (uu___13_1522.em);
+        un = (uu___13_1522.un);
         typ = ty;
-        print = (uu___3_1522.print);
-        emb_typ = (uu___3_1522.emb_typ)
+        print = (uu___13_1522.print);
+        emb_typ = (uu___13_1522.emb_typ)
       }
   
 let lazy_embed :
@@ -341,11 +341,11 @@ let (e_any : FStar_Syntax_Syntax.term embedding) =
   
 let (e_unit : unit embedding) =
   let em u rng _topt _norm =
-    let uu___4_2321 = FStar_Syntax_Util.exp_unit  in
+    let uu___14_2321 = FStar_Syntax_Util.exp_unit  in
     {
-      FStar_Syntax_Syntax.n = (uu___4_2321.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___14_2321.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___4_2321.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___14_2321.FStar_Syntax_Syntax.vars)
     }  in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unascribe t0  in
@@ -381,11 +381,11 @@ let (e_bool : Prims.bool embedding) =
       if b
       then FStar_Syntax_Util.exp_true_bool
       else FStar_Syntax_Util.exp_false_bool  in
-    let uu___5_2463 = t  in
+    let uu___15_2463 = t  in
     {
-      FStar_Syntax_Syntax.n = (uu___5_2463.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___15_2463.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___5_2463.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___15_2463.FStar_Syntax_Syntax.vars)
     }  in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unmeta_safe t0  in
@@ -418,11 +418,11 @@ let (e_bool : Prims.bool embedding) =
 let (e_char : FStar_Char.char embedding) =
   let em c rng _topt _norm =
     let t = FStar_Syntax_Util.exp_char c  in
-    let uu___6_2605 = t  in
+    let uu___16_2605 = t  in
     {
-      FStar_Syntax_Syntax.n = (uu___6_2605.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___16_2605.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___6_2605.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___16_2605.FStar_Syntax_Syntax.vars)
     }  in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unmeta_safe t0  in
@@ -549,8 +549,8 @@ let e_option :
            in
         (uu____3041, [ea.emb_typ])  in
       FStar_Syntax_Syntax.ET_app uu____3033  in
-    let printer uu___2_3055 =
-      match uu___2_3055 with
+    let printer uu___12_3055 =
+      match uu___12_3055 with
       | FStar_Pervasives_Native.None  -> "None"
       | FStar_Pervasives_Native.Some x ->
           let uu____3061 =

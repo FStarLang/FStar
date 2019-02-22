@@ -582,16 +582,19 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                                    FStar_Errors.raise_err uu____608))
                                else ())))) ()
                with
-               | uu___20_624 ->
+               | uu___20_625 ->
                    (report ();
-                    FStar_Errors.raise_err
-                      (FStar_Errors.Fatal_TcOneFragmentFailed,
-                        (Prims.op_Hat "tc_one_fragment failed: " s))))) ()
+                    (let uu____627 =
+                       let uu____633 =
+                         FStar_String.op_Hat "tc_one_fragment failed: " s  in
+                       (FStar_Errors.Fatal_TcOneFragmentFailed, uu____633)
+                        in
+                     FStar_Errors.raise_err uu____627)))) ()
      with
-     | uu___18_629 ->
+     | uu___18_638 ->
          if
-           let uu____630 = FStar_Options.trace_error ()  in
-           Prims.op_Negation uu____630
-         then Obj.magic (Obj.repr (FStar_Exn.raise uu___18_629))
+           let uu____639 = FStar_Options.trace_error ()  in
+           Prims.op_Negation uu____639
+         then Obj.magic (Obj.repr (FStar_Exn.raise uu___18_638))
          else Obj.magic (Obj.repr (failwith "unreachable")))
   
