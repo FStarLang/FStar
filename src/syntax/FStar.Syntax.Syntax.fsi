@@ -528,8 +528,6 @@ val as_implicit:    bool -> aqual
 val is_top_level:   list<letbinding> -> bool
 
 (* gensym *)
-val next_id:        (unit -> int)
-val reset_gensym:   (unit -> unit)
 val freshen_bv:     bv -> bv
 val freshen_binder:  binder -> binder
 val gen_bv:         string -> option<Range.range> -> typ -> bv
