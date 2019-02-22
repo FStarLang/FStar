@@ -104,7 +104,6 @@ let handle (#a:Type)
            (#wp2:a -> wp_type b) 
            (c2:(x:a -> EXN b (wp2 x))) 
          : EXN b (handle_wp wp1 h_wp wp2) =
-  (* These properties of EXN comps are not currently derivable *)
   reify_related (fun _ -> wp1) c1;
   reify_related wp2 c2;
   reify_related h_wp h_c;
