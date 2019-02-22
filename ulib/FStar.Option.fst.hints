@@ -12,10 +12,10 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_None"
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "09a60cb0eb16fd16b28130d4556155b4"
+      "52b991fe91b210a5cc0fa8b09b259162"
     ],
     [
       "FStar.Option.isSome",
@@ -31,7 +31,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "bfda13b6e002c66541100cc9ebd2d902"
+      "0225db5d0ec4f2e2472c1144c8f84ca0"
     ],
     [
       "FStar.Option.map",
@@ -42,13 +42,12 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "fuel_guarded_inversion_FStar.Pervasives.result",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "016157233e96ed5d3eb41a4646765761"
+      "124b74eb84e4f492587fc17b33ad0377"
     ],
     [
       "FStar.Option.mapTot",
@@ -64,7 +63,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "a312398c910ff25603c61a6ebd96db6c"
+      "bfa51e98ff41d06de05fad34a335c68f"
     ],
     [
       "FStar.Option.get",
@@ -77,10 +76,10 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_None"
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "399fa4ace0c92da0aec66c1ab9f92fda"
+      "3523b8c9c025bcd7a4990d1f10f208e9"
     ],
     [
       "FStar.Option.isNone",
@@ -96,7 +95,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "bbecf5221f42bb53cff26bc4d7889eb5"
+      "8033dad72d8f5b4c10edba8a3c99c920"
     ],
     [
       "FStar.Option.isSome",
@@ -112,7 +111,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "e0a4dbae2d588e7ed6c07c91202cf2ee"
+      "39f1d3f97acefee8ae3b610ad2d9759e"
     ],
     [
       "FStar.Option.mapTot",
@@ -128,7 +127,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "6c38b4c13c2c5b747e516d0e8fa9952a"
+      "8e43ad873796635f8c5dc30ae0889b76"
     ]
   ]
 ]

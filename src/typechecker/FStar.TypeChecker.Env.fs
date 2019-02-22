@@ -185,7 +185,6 @@ and solver_t = {
     pop          :string -> unit;
     snapshot     :string -> (solver_depth_t * unit);
     rollback     :string -> option<solver_depth_t> -> unit;
-    encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
     solve        :option<(unit -> string)> -> env -> typ -> unit;
@@ -1671,7 +1670,6 @@ let dummy_solver = {
     snapshot=(fun _ -> (0, 0, 0), ());
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
-    encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());

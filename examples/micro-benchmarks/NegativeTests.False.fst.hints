@@ -8,10 +8,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+        "refinement_interpretation_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "c931db3cbfdaeb0d2f16bcd19d8920f8"
+      "ec75da9983c086a84b9996f92dcfc64d"
     ],
     [
       "NegativeTests.False.f",
@@ -22,11 +22,11 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "equation_Prims.l_True", "equation_Prims.squash",
         "function_token_typing_Prims.unit",
-        "haseqPrims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "haseqTm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6fff0e7aaad61fe8541a907e68321ab9"
+      "8968f7cf4f1f7602bc36d2991a1bd1da"
     ],
     [
       "NegativeTests.False.f",
@@ -35,7 +35,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-      "63865cf95ba22f4619574133eadfe2a5"
+      "58d62a60b0e98aa6eb1f0d043171c925"
     ],
     [
       "NegativeTests.False.foo",
@@ -43,11 +43,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
-        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "4e0a30449fcc01ff383160fe33dfbdbf"
+      "c8baafe6a66f2297e4c04842a4fa57e1"
     ],
     [
       "NegativeTests.False.f",
@@ -58,11 +58,11 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "equation_Prims.l_True", "equation_Prims.squash",
         "function_token_typing_Prims.unit",
-        "haseqPrims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "haseqTm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "83cd21b6fa0d5b9356460101a53adcf4"
+      "33b54a27f997ffea37e86e2f37d878d1"
     ]
   ]
 ]

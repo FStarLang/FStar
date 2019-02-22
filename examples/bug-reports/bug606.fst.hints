@@ -15,7 +15,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "783aa91e1fd4d30b6d091ae85101d8d5"
+      "446aaa30456a69a5b9d7519599916cbb"
     ],
     [
       "Bug606.g",
@@ -31,7 +31,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1267d1cb7597a158b5b2e5beb29cc3a7"
+      "11ffd8fb334c94fbda886a93f985ec32"
     ],
     [
       "Bug606.f_eq_g",
@@ -58,7 +58,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "70962de9755874a0584822c8e3c5f7ae"
+      "57375b0d717585d8f3be2479ab048385"
     ],
     [
       "Bug606.h",
@@ -74,7 +74,7 @@
         "lemma_Bug606.f_eq_g"
       ],
       0,
-      "fda109cbdca4123bae2ff33017d2febe"
+      "cf1c7fd0710f6511416427766da1e212"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -83,7 +83,7 @@
       1,
       [ "@query" ],
       0,
-      "e809407fc1ce37cf7e933e3e137db9ad"
+      "1a9e305bd33becfded98a5a39b968630"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -92,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "6c8cbea14cb6a9e850092c4b6e9309bd"
+      "88bb8be7082b1d447ea3ea8a7e14c82b"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -104,16 +104,16 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
         "equation_Bug606.n", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "primitive_Prims.op_AmpAmp",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug606_Tm_refine_4fab9a73e3cb700edd994d69d8e841b3",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_Tm_refine_4fab9a73e3cb700edd994d69d8e841b3",
+        "refinement_interpretation_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "typing_FStar.UInt64.v"
       ],
       0,
-      "8988db81bdc8b071800534c643e1fe59"
+      "cd8be88efba320999b79e2421d207807"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "85a06bf170181bc27069e79c07f9521e"
+      "78b3a39ce4d9f6ef36915c9a87b7e1db"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -131,7 +131,7 @@
       1,
       [ "@query" ],
       0,
-      "0ecdd5860c9d4fa5a9727941d7504d92"
+      "ba57b1e19c9c9b34c4fff251b1f8c4cc"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -143,16 +143,16 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
         "equation_Bug606.n", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "primitive_Prims.op_AmpAmp",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug606_Tm_refine_4fab9a73e3cb700edd994d69d8e841b3",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_Tm_refine_4fab9a73e3cb700edd994d69d8e841b3",
+        "refinement_interpretation_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "typing_FStar.UInt64.v"
       ],
       0,
-      "6b5120aabf2015e15a529e89340f847b"
+      "508ad15daecf3b0aebd131ecc706ed16"
     ]
   ]
 ]

@@ -1193,7 +1193,7 @@ let lemma_dll_links_contained (#t:Type) (h0:heap) (d:dll t) (i:nat) :
     (if i = length nl - 1 then () else extract_nodelist_contained h0 nl (i + 1));
     lemma_unsnoc_is_last nl
 
-#set-options "--initial_ifuel 2"
+#reset-options "--initial_ifuel 2 --max_ifuel 2 --max_fuel 2 --initial_fuel 2 --z3rlimit 20"
 
 let lemma_dll_links_disjoint (#t:Type) (h0:heap) (d:dll t) (i:nat) :
   Lemma

@@ -104,7 +104,7 @@ let with_hints_db fname f =
     finalize_hints_db fname;
     result
 
-let filter_using_facts_from (e:env) (theory:decls_t) =
+let filter_using_facts_from (e:env) (theory:list<decl>) =
     let matches_fact_ids (include_assumption_names:BU.smap<bool>) (a:Term.assumption) =
       match a.assumption_fact_ids with
       | [] -> true //retaining `a` because it is not tagged with a fact id
@@ -139,7 +139,8 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
     in
     pruned_theory
 
-let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:decls_t) :(decls_t * bool * int * int) =  //(filtered theory, if core used, retained, pruned)
+let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:list<decl>)
+  :(list<decl> * bool * int * int) =  //(filtered theory, if core used, retained, pruned)
     match core with
     | None ->
       filter_using_facts_from e theory, false, 0, 0  //no stats if no core
@@ -161,7 +162,7 @@ let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:decls_
             ([Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], 0, 0) theory_rev in  //start with the unsat core caption at the end
         theory', true, n_retained, n_pruned
 
-let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
+let filter_assertions (e:env) (core:Z3.unsat_core) (theory:list<decl>) =
   let (theory, b, _, _) = filter_assertions_with_stats e core theory in theory, b
 
 let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
@@ -663,7 +664,6 @@ let solver = {
     snapshot=Encode.snapshot;
     rollback=Encode.rollback;
     encode_sig=Encode.encode_sig;
-    encode_modul=Encode.encode_modul;
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=solve;
     finish=Z3.finish;
@@ -676,7 +676,6 @@ let dummy = {
     snapshot=(fun _ -> (0, 0, 0), ());
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
-    encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());

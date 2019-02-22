@@ -19,7 +19,7 @@ module Imp
 
 open FStar.Mul
 open FStar.Tactics
-open CanonCommSemiring
+open FStar.Tactics.CanonCommSemiring
 open FStar.Algebra.CommMonoid
 
 type rval = int

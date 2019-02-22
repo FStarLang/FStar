@@ -10,10 +10,10 @@
         "@MaxIFuel_assumption", "@query",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Bug077_Tm_refine_89761103e61acc2f14aca90db784842d"
+        "refinement_interpretation_Tm_refine_89761103e61acc2f14aca90db784842d"
       ],
       0,
-      "9f540ac083b9d2e930da5493d311af78"
+      "e657886f4bbba6c745857e3e0f2de3e2"
     ],
     [
       "Bug077.ok4",
@@ -28,10 +28,10 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
+        "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "16a733f6f812a7c7c9e597d0991e129f"
+      "baa81c302e635f861b0525c562e6a96b"
     ],
     [
       "Bug077.ok5",
@@ -40,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "eb05e1b79e8e0fa9c0f64ae7788bbb50"
+      "4ec1a9255ddce3f38431cdc5ccb82e58"
     ],
     [
       "Bug077.ok5",
@@ -57,10 +57,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
+        "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "476f82bacc2a58e9f3fc384d5d659c9b"
+      "b5d47bef1040fbc06ad0407aeaa3219b"
     ],
     [
       "Bug077.bug",
@@ -75,10 +75,10 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
+        "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "69779cab6598996fd601c69108e9d565"
+      "e332b6277653f488e559bf79e9dae8d3"
     ]
   ]
 ]

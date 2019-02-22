@@ -93,27 +93,27 @@ let (__set_unit_tests : unit -> unit) =
 let (__clear_unit_tests : unit -> unit) =
   fun uu____438  -> FStar_ST.op_Colon_Equals __unit_tests__ false 
 let (as_bool : option_val -> Prims.bool) =
-  fun uu___81_467  ->
-    match uu___81_467 with
+  fun uu___21_467  ->
+    match uu___21_467 with
     | Bool b -> b
     | uu____471 -> failwith "Impos: expected Bool"
   
 let (as_int : option_val -> Prims.int) =
-  fun uu___82_480  ->
-    match uu___82_480 with
+  fun uu___22_480  ->
+    match uu___22_480 with
     | Int b -> b
     | uu____484 -> failwith "Impos: expected Int"
   
 let (as_string : option_val -> Prims.string) =
-  fun uu___83_493  ->
-    match uu___83_493 with
+  fun uu___23_493  ->
+    match uu___23_493 with
     | String b -> b
     | Path b -> FStar_Common.try_convert_file_name_to_mixed b
     | uu____499 -> failwith "Impos: expected String"
   
 let (as_list' : option_val -> option_val Prims.list) =
-  fun uu___84_509  ->
-    match uu___84_509 with
+  fun uu___24_509  ->
+    match uu___24_509 with
     | List ts -> ts
     | uu____515 -> failwith "Impos: expected List"
   
@@ -132,15 +132,15 @@ let as_option :
       option_val -> 'Auu____558 FStar_Pervasives_Native.option
   =
   fun as_t  ->
-    fun uu___85_573  ->
-      match uu___85_573 with
+    fun uu___25_573  ->
+      match uu___25_573 with
       | Unset  -> FStar_Pervasives_Native.None
       | v1 ->
           let uu____577 = as_t v1  in FStar_Pervasives_Native.Some uu____577
   
 let (as_comma_string_list : option_val -> Prims.string Prims.list) =
-  fun uu___86_586  ->
-    match uu___86_586 with
+  fun uu___26_586  ->
+    match uu___26_586 with
     | List ls ->
         let uu____593 =
           FStar_List.map
@@ -285,7 +285,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("print", (Bool false));
   ("print_in_place", (Bool false));
   ("profile", (Bool false));
-  ("protect_top_level_axioms", (Bool false));
+  ("protect_top_level_axioms", (Bool true));
   ("initial_fuel", (Int (Prims.parse_int "2")));
   ("initial_ifuel", (Int (Prims.parse_int "1")));
   ("keep_query_captions", (Bool true));
@@ -604,8 +604,8 @@ let (get_use_extracted_interfaces : unit -> Prims.bool) =
 let (get_use_nbe : unit -> Prims.bool) =
   fun uu____3439  -> lookup_opt "use_nbe" as_bool 
 let (dlevel : Prims.string -> debug_level_t) =
-  fun uu___87_3448  ->
-    match uu___87_3448 with
+  fun uu___27_3448  ->
+    match uu___27_3448 with
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
@@ -847,7 +847,7 @@ let rec (parse_opt_val :
     fun typ  ->
       fun str_val  ->
         try
-          (fun uu___92_4580  ->
+          (fun uu___32_4580  ->
              match () with
              | () ->
                  (match typ with
@@ -2446,7 +2446,7 @@ let rec (specs_with_types :
                                                                     (FStar_Getopt.noshort,
                                                                     "protect_top_level_axioms",
                                                                     BoolStr,
-                                                                    "Guard nullary top-level symbols in the SMT encoding from provide ambient ground facts (default 'false')")
+                                                                    "Guard nullary top-level symbols in the SMT encoding from provide ambient ground facts (default 'true')")
                                                                     ::
                                                                     uu____5658
                                                                      in
@@ -2583,8 +2583,8 @@ let rec (specs_with_types :
        in
     (FStar_Getopt.noshort, "abort_on",
       (PostProcessed
-         ((fun uu___88_9155  ->
-             match uu___88_9155 with
+         ((fun uu___28_9155  ->
+             match uu___28_9155 with
              | Int x -> (FStar_ST.op_Colon_Equals abort_counter x; Int x)
              | x -> failwith "?"), (IntStr "non-negative integer"))),
       "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)")
@@ -2603,8 +2603,8 @@ and (specs : unit -> FStar_Getopt.opt Prims.list) =
              mk_spec uu____9240) uu____9187
 
 let (settable : Prims.string -> Prims.bool) =
-  fun uu___89_9269  ->
-    match uu___89_9269 with
+  fun uu___29_9269  ->
+    match uu___29_9269 with
     | "abort_on" -> true
     | "admit_smt_queries" -> true
     | "admit_except" -> true
@@ -2722,7 +2722,7 @@ let (set_options : options -> Prims.string -> FStar_Getopt.parse_cmdline_res)
         | Reset  -> resettable_specs
         | Restore  -> all_specs  in
       try
-        (fun uu___94_9686  ->
+        (fun uu___34_9686  ->
            match () with
            | () ->
                if s = ""
@@ -2858,7 +2858,7 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
     | FStar_Pervasives_Native.None  ->
         let result =
           try
-            (fun uu___96_10167  ->
+            (fun uu___36_10167  ->
                match () with
                | () ->
                    let uu____10171 = FStar_Util.is_path_absolute filename  in
@@ -2880,7 +2880,7 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
                            if FStar_Util.file_exists path
                            then FStar_Pervasives_Native.Some path
                            else FStar_Pervasives_Native.None))) ()
-          with | uu___95_10219 -> FStar_Pervasives_Native.None  in
+          with | uu___35_10219 -> FStar_Pervasives_Native.None  in
         (match result with
          | FStar_Pervasives_Native.None  -> result
          | FStar_Pervasives_Native.Some f ->
@@ -3049,8 +3049,8 @@ let (codegen : unit -> codegen_t FStar_Pervasives_Native.option) =
   fun uu____10894  ->
     let uu____10895 = get_codegen ()  in
     FStar_Util.map_opt uu____10895
-      (fun uu___90_10901  ->
-         match uu___90_10901 with
+      (fun uu___30_10901  ->
+         match uu___30_10901 with
          | "OCaml" -> OCaml
          | "FSharp" -> FSharp
          | "Kremlin" -> Kremlin
@@ -3316,11 +3316,11 @@ let with_saved_options : 'a . (unit -> 'a) -> 'a =
       (push ();
        (let r =
           try
-            (fun uu___98_11900  ->
+            (fun uu___38_11900  ->
                match () with
                | () -> let uu____11905 = f ()  in FStar_Util.Inr uu____11905)
               ()
-          with | uu___97_11907 -> FStar_Util.Inl uu___97_11907  in
+          with | uu___37_11907 -> FStar_Util.Inl uu___37_11907  in
         pop ();
         (match r with
          | FStar_Util.Inr v1 -> v1

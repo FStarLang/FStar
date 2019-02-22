@@ -16,25 +16,25 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0028ef12657f2f96c0c12471a90a7bb1"
+      "e65b74424bc3e195e84b66791158b3bf"
     ],
     [
-      "Tests.uu___73",
+      "Tests.uu___7",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "991202365075211110b09f86ab4164ac"
+      "60d4888d21afd1dd894a49487878cd52"
     ],
     [
-      "Tests.uu___74",
+      "Tests.uu___8",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "345b9fb5055e3ca8f9e2a63e5d4b9bb2"
+      "950841b658c801031603222eccef10da"
     ],
     [
       "Tests.test1",
@@ -49,7 +49,7 @@
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Add.add_int",
         "equation_Add.mkadd", "equation_Add.plus", "equation_Add.zero",
-        "equation_Eq.uu___66", "equation_Num.add_num", "equation_Num.mknum",
+        "equation_Eq.uu___3", "equation_Num.add_num", "equation_Num.mknum",
         "equation_Num.num_int", "equation_Prims.eqtype",
         "equation_with_fuel_Tests.sum.fuel_instrumented",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
@@ -63,13 +63,13 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_Add.plus",
         "token_correspondence_Prims.op_Addition", "typing_Num.add_num",
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "0177f88c22b21a9c6c06f47aa741afef"
+      "599cadebe9c47f74012dfb99e003dbd9"
     ],
     [
       "Tests.test2",
@@ -92,7 +92,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "f531c5b9212f78e752d4b48ee0dbb639"
+      "f198dbeb5a3bf7086123e71b554a7dd1"
     ],
     [
       "Tests.sum",
@@ -109,25 +109,25 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5709d54575aa9160fa7b6d658816df4b"
+      "b34be6685955f4b0d9b4a2c29cdd337f"
     ],
     [
-      "Tests.uu___73",
+      "Tests.uu___7",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "30d2c0cffbb6ae61520fde51675140e9"
+      "e145565be71545a8b17fba1a05817b81"
     ],
     [
-      "Tests.uu___74",
+      "Tests.uu___8",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "a3d34ed06fe8eb762fb71aff1d0a7a78"
+      "53f3200784a1c2bfc555572188f32c10"
     ],
     [
       "Tests.test1",
@@ -142,7 +142,7 @@
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Add.add_int",
         "equation_Add.mkadd", "equation_Add.plus", "equation_Add.zero",
-        "equation_Eq.uu___66", "equation_Num.add_num", "equation_Num.mknum",
+        "equation_Eq.uu___3", "equation_Num.add_num", "equation_Num.mknum",
         "equation_Num.num_int", "equation_Prims.eqtype",
         "equation_with_fuel_Tests.sum.fuel_instrumented",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
@@ -156,13 +156,13 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_Add.plus",
         "token_correspondence_Prims.op_Addition", "typing_Num.add_num",
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "fe04b125e258818430dc7e92a06ca5cd"
+      "f6ee20cc2f2dad2764f155d46099cd18"
     ],
     [
       "Tests.test2",
@@ -185,7 +185,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "ab60f00bcf5acd786fb8c2856042ad6c"
+      "5887d9ab1047816f3d0e080c6d9acac8"
     ]
   ]
 ]
