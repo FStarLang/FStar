@@ -1141,7 +1141,7 @@ let (emit : FStar_Extraction_ML_Syntax.mllib Prims.list -> unit) =
           (match programs with
            | (name,uu____2346)::[] ->
                let uu____2349 =
-                 FStar_Options.prepend_output_dir (Prims.strcat name ext)  in
+                 FStar_Options.prepend_output_dir (Prims.op_Hat name ext)  in
                FStar_Util.save_value_to_file uu____2349 bin
            | uu____2351 ->
                let uu____2354 = FStar_Options.prepend_output_dir "out.krml"

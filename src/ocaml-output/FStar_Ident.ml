@@ -43,7 +43,7 @@ let (_gen : FStar_Range.range -> ident) =
          let uu____257 =
            let uu____259 = FStar_ST.op_Bang x  in
            Prims.string_of_int uu____259  in
-         Prims.strcat reserved_prefix uu____257  in
+         Prims.op_Hat reserved_prefix uu____257  in
        (uu____255, r)  in
      mk_ident uu____249)
   
@@ -77,7 +77,7 @@ let (lid_of_ns_and_id : ident Prims.list -> ident -> lident) =
         str =
           (if nsstr = ""
            then id1.idText
-           else Prims.strcat nsstr (Prims.strcat "." id1.idText))
+           else Prims.op_Hat nsstr (Prims.op_Hat "." id1.idText))
       }
   
 let (lid_of_ids : ident Prims.list -> lident) =

@@ -563,7 +563,8 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                  | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
                         Some (Term_name (refl_const, se.sigattrs))
-                 | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
+                 | _ ->
+                   Some (Term_name(fvar lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
                  end
             else None
             | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))

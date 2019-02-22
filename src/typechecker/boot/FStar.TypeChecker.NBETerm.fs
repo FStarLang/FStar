@@ -721,6 +721,12 @@ let string_of_int (i:Z.t) : t =
 let string_of_bool (b:bool) : t =
     embed e_string bogus_cbs (if b then "true" else "false")
 
+let string_lowercase (s:string) : t =
+    embed e_string bogus_cbs (String.lowercase s)
+
+let string_uppercase (s:string) : t =
+    embed e_string bogus_cbs (String.lowercase s)
+
 let decidable_eq (neg:bool) (args:args) : option<t> =
   let tru = embed e_bool bogus_cbs true in
   let fal = embed e_bool bogus_cbs false in
@@ -782,6 +788,39 @@ let string_split' args : option<t> =
                 Some (embed (e_list e_string) bogus_cbs r)
             | _ -> None
             end
+        | _ -> None
+        end
+    | _ -> None
+
+
+let string_index args : option<t> =
+    match args with
+    | [a1; a2] ->
+        begin match arg_as_string a1, arg_as_int a2 with
+        | Some s, Some i ->
+          begin
+          try
+            let r = String.index s i in
+            Some (embed e_char bogus_cbs r)
+          with
+          | _ -> None
+          end
+        | _ -> None
+        end
+    | _ -> None
+
+let string_index_of args : option<t> =
+    match args with
+    | [a1; a2] ->
+        begin match arg_as_string a1, arg_as_char a2 with
+        | Some s, Some c ->
+          begin
+          try
+            let r = String.index_of s c in
+            Some (embed e_int bogus_cbs r)
+          with
+          | _ -> None
+          end
         | _ -> None
         end
     | _ -> None

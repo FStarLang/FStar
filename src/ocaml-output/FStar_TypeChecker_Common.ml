@@ -135,8 +135,8 @@ let (uu___is_CProb : prob -> Prims.bool) =
 let (__proj__CProb__item___0 : prob -> FStar_Syntax_Syntax.comp problem) =
   fun projectee  -> match projectee with | CProb _0 -> _0 
 let (as_tprob : prob -> FStar_Syntax_Syntax.typ problem) =
-  fun uu___30_576  ->
-    match uu___30_576 with
+  fun uu___42_576  ->
+    match uu___42_576 with
     | TProb p -> p
     | uu____582 -> failwith "Expected a TProb"
   
@@ -208,8 +208,8 @@ let rec (decr_delta_depth :
   FStar_Syntax_Syntax.delta_depth ->
     FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option)
   =
-  fun uu___31_777  ->
-    match uu___31_777 with
+  fun uu___43_777  ->
+    match uu___43_777 with
     | FStar_Syntax_Syntax.Delta_constant_at_level _0_1 when
         _0_1 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Delta_equational_at_level _0_2 when
@@ -278,8 +278,8 @@ let (find_nearest_preceding_col_info :
   =
   fun col  ->
     fun col_infos  ->
-      let rec aux out uu___32_1182 =
-        match uu___32_1182 with
+      let rec aux out uu___44_1182 =
+        match uu___44_1182 with
         | [] -> out
         | (c,i)::rest ->
             if c > col
@@ -333,10 +333,10 @@ let (id_info__insert :
           let uu____1351 = FStar_Range.use_range range  in
           FStar_Range.set_def_range range uu____1351  in
         let info1 =
-          let uu___35_1353 = info  in
+          let uu___47_1353 = info  in
           let uu____1354 = ty_map info.identifier_ty  in
           {
-            identifier = (uu___35_1353.identifier);
+            identifier = (uu___47_1353.identifier);
             identifier_ty = uu____1354;
             identifier_range = use_range1
           }  in
@@ -370,10 +370,10 @@ let (id_info_insert :
           let info =
             { identifier = id1; identifier_ty = ty; identifier_range = range
             }  in
-          let uu___36_1544 = table  in
+          let uu___48_1544 = table  in
           {
-            id_info_enabled = (uu___36_1544.id_info_enabled);
-            id_info_db = (uu___36_1544.id_info_db);
+            id_info_enabled = (uu___48_1544.id_info_enabled);
+            id_info_db = (uu___48_1544.id_info_db);
             id_info_buffer = (info :: (table.id_info_buffer))
           }
   
@@ -406,12 +406,12 @@ let (id_info_insert_fv :
 let (id_info_toggle : id_info_table -> Prims.bool -> id_info_table) =
   fun table  ->
     fun enabled  ->
-      let uu___37_1598 = table  in
+      let uu___49_1598 = table  in
       let uu____1599 = enabled && (FStar_Options.ide ())  in
       {
         id_info_enabled = uu____1599;
-        id_info_db = (uu___37_1598.id_info_db);
-        id_info_buffer = (uu___37_1598.id_info_buffer)
+        id_info_db = (uu___49_1598.id_info_db);
+        id_info_buffer = (uu___49_1598.id_info_buffer)
       }
   
 let (id_info_promote :
@@ -420,13 +420,13 @@ let (id_info_promote :
   =
   fun table  ->
     fun ty_map  ->
-      let uu___38_1617 = table  in
+      let uu___50_1617 = table  in
       let uu____1618 =
         FStar_List.fold_left (id_info__insert ty_map) table.id_info_db
           table.id_info_buffer
          in
       {
-        id_info_enabled = (uu___38_1617.id_info_enabled);
+        id_info_enabled = (uu___50_1617.id_info_enabled);
         id_info_db = uu____1618;
         id_info_buffer = []
       }
@@ -472,17 +472,17 @@ let (check_uvar_ctx_invariant :
               let uu____1724 =
                 FStar_All.pipe_right gamma
                   (FStar_List.map
-                     (fun uu___33_1737  ->
-                        match uu___33_1737 with
+                     (fun uu___45_1737  ->
+                        match uu___45_1737 with
                         | FStar_Syntax_Syntax.Binding_var x ->
                             let uu____1740 =
                               FStar_Syntax_Print.bv_to_string x  in
-                            Prims.strcat "Binding_var " uu____1740
+                            Prims.op_Hat "Binding_var " uu____1740
                         | FStar_Syntax_Syntax.Binding_univ u ->
-                            Prims.strcat "Binding_univ " u.FStar_Ident.idText
+                            Prims.op_Hat "Binding_univ " u.FStar_Ident.idText
                         | FStar_Syntax_Syntax.Binding_lid (l,uu____1746) ->
                             let uu____1763 = FStar_Ident.string_of_lid l  in
-                            Prims.strcat "Binding_lid " uu____1763))
+                            Prims.op_Hat "Binding_lid " uu____1763))
                  in
               FStar_All.pipe_right uu____1724 (FStar_String.concat "::\n")
                in
@@ -505,8 +505,8 @@ let (check_uvar_ctx_invariant :
               (let uu____1796 =
                  let uu____1821 =
                    FStar_Util.prefix_until
-                     (fun uu___34_1836  ->
-                        match uu___34_1836 with
+                     (fun uu___46_1836  ->
+                        match uu___46_1836 with
                         | FStar_Syntax_Syntax.Binding_var uu____1838 -> true
                         | uu____1840 -> false) g
                     in

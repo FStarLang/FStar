@@ -33,3 +33,7 @@ let get s i = String.get s i
 
 let rec list_of_string (s:string) = [for c in s -> c]
 let string_of_list (l:list<char>) = List.fold_right (fun c a -> (string c) ^ a) l ""
+
+let index_of s i = FStar.BigInt.of_int (String.index s i)
+let index s i = get s (FStar.BigInt.to_int i)
+let (^) s1 s2 = strcat s1 s2

@@ -146,7 +146,7 @@ let (ptsym_of_symbol :
         FStar_Char.lowercase uu____549  in
       let uu____552 = FStar_String.get s (Prims.parse_int "0")  in
       uu____547 <> uu____552  in
-    if uu____545 then Prims.strcat "l__" s else s
+    if uu____545 then Prims.op_Hat "l__" s else s
   
 let (ptsym :
   FStar_Extraction_ML_Syntax.mlsymbol ->
@@ -182,7 +182,7 @@ let (ptctor :
                 FStar_Char.uppercase uu____647  in
               let uu____650 = FStar_String.get s (Prims.parse_int "0")  in
               uu____645 <> uu____650  in
-            if uu____643 then Prims.strcat "U__" s else s  in
+            if uu____643 then Prims.op_Hat "U__" s else s  in
           FStar_String.concat "." (FStar_List.append p [s1])
   
 let (infix_prim_ops :
@@ -321,7 +321,7 @@ let (maybe_paren :
             else FStar_Format.parens doc1
   
 let (escape_byte_hex : FStar_BaseTypes.byte -> Prims.string) =
-  fun x  -> Prims.strcat "\\x" (FStar_Util.hex_string_of_byte x) 
+  fun x  -> Prims.op_Hat "\\x" (FStar_Util.hex_string_of_byte x) 
 let (escape_char_hex : FStar_BaseTypes.char -> Prims.string) =
   fun x  -> escape_byte_hex (FStar_Util.byte_of_char x) 
 let (escape_or :
@@ -374,43 +374,43 @@ let (string_of_mlconstant :
     | FStar_Extraction_ML_Syntax.MLC_Char c ->
         let nc = FStar_Char.int_of_char c  in
         let uu____1757 = FStar_Util.string_of_int nc  in
-        Prims.strcat uu____1757
+        Prims.op_Hat uu____1757
           (if
              ((nc >= (Prims.parse_int "32")) &&
                 (nc <= (Prims.parse_int "127")))
                && (nc <> (Prims.parse_int "34"))
            then
-             Prims.strcat " (*"
-               (Prims.strcat (FStar_Util.string_of_char c) "*)")
+             Prims.op_Hat " (*"
+               (Prims.op_Hat (FStar_Util.string_of_char c) "*)")
            else "")
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s,FStar_Pervasives_Native.Some
          (FStar_Const.Signed ,FStar_Const.Int32 ))
-        -> Prims.strcat s "l"
+        -> Prims.op_Hat s "l"
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s,FStar_Pervasives_Native.Some
          (FStar_Const.Signed ,FStar_Const.Int64 ))
-        -> Prims.strcat s "L"
+        -> Prims.op_Hat s "L"
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s,FStar_Pervasives_Native.Some (uu____1821,FStar_Const.Int8 )) -> s
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s,FStar_Pervasives_Native.Some (uu____1835,FStar_Const.Int16 )) -> s
     | FStar_Extraction_ML_Syntax.MLC_Int (s,FStar_Pervasives_Native.None ) ->
-        Prims.strcat "(Prims.parse_int \"" (Prims.strcat s "\")")
+        Prims.op_Hat "(Prims.parse_int \"" (Prims.op_Hat s "\")")
     | FStar_Extraction_ML_Syntax.MLC_Float d -> FStar_Util.string_of_float d
     | FStar_Extraction_ML_Syntax.MLC_Bytes bytes ->
         let uu____1867 =
           let uu____1869 =
             FStar_Compiler_Bytes.f_encode escape_byte_hex bytes  in
-          Prims.strcat uu____1869 "\""  in
-        Prims.strcat "\"" uu____1867
+          Prims.op_Hat uu____1869 "\""  in
+        Prims.op_Hat "\"" uu____1867
     | FStar_Extraction_ML_Syntax.MLC_String chars ->
         let uu____1875 =
           let uu____1877 =
             FStar_String.collect (escape_or FStar_Util.string_of_char) chars
              in
-          Prims.strcat uu____1877 "\""  in
-        Prims.strcat "\"" uu____1875
+          Prims.op_Hat uu____1877 "\""  in
+        Prims.op_Hat "\"" uu____1875
     | uu____1881 ->
         failwith "TODO: extract integer constants properly into OCaml"
   
@@ -1202,7 +1202,7 @@ and (doc_of_loc : FStar_Extraction_ML_Syntax.mlloc -> FStar_Format.doc) =
            FStar_Format.reduce1
              [FStar_Format.text "#";
              FStar_Format.num lineno;
-             FStar_Format.text (Prims.strcat "\"" (Prims.strcat file1 "\""))])
+             FStar_Format.text (Prims.op_Hat "\"" (Prims.op_Hat file1 "\""))])
 
 let (doc_of_mltydecl :
   FStar_Extraction_ML_Syntax.mlsymbol ->
@@ -1508,7 +1508,7 @@ let rec (doc_of_mllib_r :
                         (["FStar"], "Pervasives")
                        in
                     [FStar_Format.hardline;
-                    FStar_Format.text (Prims.strcat "open " pervasives1)]
+                    FStar_Format.text (Prims.op_Hat "open " pervasives1)]
                  in
               let head1 =
                 let uu____4149 =

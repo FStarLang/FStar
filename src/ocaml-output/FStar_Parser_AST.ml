@@ -1078,7 +1078,7 @@ let (mk_uminus :
                 ->
                 Const
                   (FStar_Const.Const_int
-                     ((Prims.strcat "-" s),
+                     ((Prims.op_Hat "-" s),
                        (FStar_Pervasives_Native.Some
                           (FStar_Const.Signed, width))))
             | uu____5382 ->
@@ -1618,8 +1618,8 @@ let (compile_op :
           | c ->
               FStar_Errors.raise_error
                 (FStar_Errors.Fatal_UnexpectedOperatorSymbol,
-                  (Prims.strcat "Unexpected operator symbol: '"
-                     (Prims.strcat (FStar_Util.string_of_char c) "'"))) r
+                  (Prims.op_Hat "Unexpected operator symbol: '"
+                     (Prims.op_Hat (FStar_Util.string_of_char c) "'"))) r
            in
         match s with
         | ".[]<-" -> "op_String_Assignment"
@@ -1636,7 +1636,7 @@ let (compile_op :
                 let uu____7370 = FStar_String.list_of_string s  in
                 FStar_List.map name_of_char uu____7370  in
               FStar_String.concat "_" uu____7366  in
-            Prims.strcat "op_" uu____7364
+            Prims.op_Hat "op_" uu____7364
   
 let (compile_op' : Prims.string -> FStar_Range.range -> Prims.string) =
   fun s  -> fun r  -> compile_op (~- (Prims.parse_int "1")) s r 
@@ -1651,10 +1651,10 @@ let (string_of_fsdoc :
             FStar_List.map
               (fun uu____7463  ->
                  match uu____7463 with
-                 | (k,v1) -> Prims.strcat k (Prims.strcat "->" v1)) keywords
+                 | (k,v1) -> Prims.op_Hat k (Prims.op_Hat "->" v1)) keywords
              in
           FStar_String.concat "," uu____7449  in
-        Prims.strcat comment uu____7447
+        Prims.op_Hat comment uu____7447
   
 let (string_of_let_qualifier : let_qualifier -> Prims.string) =
   fun uu___27_7485  ->
@@ -2077,10 +2077,10 @@ let (id_of_tycon : tycon -> Prims.string) =
 let (decl_to_string : decl -> Prims.string) =
   fun d  ->
     match d.d with
-    | TopLevelModule l -> Prims.strcat "module " l.FStar_Ident.str
-    | Open l -> Prims.strcat "open " l.FStar_Ident.str
-    | Friend l -> Prims.strcat "friend " l.FStar_Ident.str
-    | Include l -> Prims.strcat "include " l.FStar_Ident.str
+    | TopLevelModule l -> Prims.op_Hat "module " l.FStar_Ident.str
+    | Open l -> Prims.op_Hat "open " l.FStar_Ident.str
+    | Friend l -> Prims.op_Hat "friend " l.FStar_Ident.str
+    | Include l -> Prims.op_Hat "include " l.FStar_Ident.str
     | ModuleAbbrev (i,l) ->
         FStar_Util.format2 "module %s = %s" i.FStar_Ident.idText
           l.FStar_Ident.str
@@ -2092,9 +2092,9 @@ let (decl_to_string : decl -> Prims.string) =
               (FStar_List.map (fun l  -> l.FStar_Ident.str))
              in
           FStar_All.pipe_right uu____9024 (FStar_String.concat ", ")  in
-        Prims.strcat "let " uu____9022
+        Prims.op_Hat "let " uu____9022
     | Main uu____9045 -> "main ..."
-    | Assume (i,uu____9048) -> Prims.strcat "assume " i.FStar_Ident.idText
+    | Assume (i,uu____9048) -> Prims.op_Hat "assume " i.FStar_Ident.idText
     | Tycon (uu____9050,uu____9051,tys) ->
         let uu____9073 =
           let uu____9075 =
@@ -2104,14 +2104,14 @@ let (decl_to_string : decl -> Prims.string) =
                     match uu____9100 with | (x,uu____9109) -> id_of_tycon x))
              in
           FStar_All.pipe_right uu____9075 (FStar_String.concat ", ")  in
-        Prims.strcat "type " uu____9073
-    | Val (i,uu____9121) -> Prims.strcat "val " i.FStar_Ident.idText
+        Prims.op_Hat "type " uu____9073
+    | Val (i,uu____9121) -> Prims.op_Hat "val " i.FStar_Ident.idText
     | Exception (i,uu____9124) ->
-        Prims.strcat "exception " i.FStar_Ident.idText
+        Prims.op_Hat "exception " i.FStar_Ident.idText
     | NewEffect (DefineEffect (i,uu____9131,uu____9132,uu____9133)) ->
-        Prims.strcat "new_effect " i.FStar_Ident.idText
+        Prims.op_Hat "new_effect " i.FStar_Ident.idText
     | NewEffect (RedefineEffect (i,uu____9144,uu____9145)) ->
-        Prims.strcat "new_effect " i.FStar_Ident.idText
+        Prims.op_Hat "new_effect " i.FStar_Ident.idText
     | Splice (ids,t) ->
         let uu____9157 =
           let uu____9159 =
@@ -2121,10 +2121,10 @@ let (decl_to_string : decl -> Prims.string) =
           let uu____9173 =
             let uu____9175 =
               let uu____9177 = term_to_string t  in
-              Prims.strcat uu____9177 ")"  in
-            Prims.strcat "] (" uu____9175  in
-          Prims.strcat uu____9159 uu____9173  in
-        Prims.strcat "splice[" uu____9157
+              Prims.op_Hat uu____9177 ")"  in
+            Prims.op_Hat "] (" uu____9175  in
+          Prims.op_Hat uu____9159 uu____9173  in
+        Prims.op_Hat "splice[" uu____9157
     | SubEffect uu____9182 -> "sub_effect"
     | Pragma uu____9184 -> "pragma"
     | Fsdoc uu____9186 -> "fsdoc"

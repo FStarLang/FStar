@@ -1163,7 +1163,7 @@ let (gen_wps_for_free :
                                        let uu____3511 =
                                          let uu____3513 =
                                            FStar_Util.string_of_int i  in
-                                         Prims.strcat "a" uu____3513  in
+                                         Prims.op_Hat "a" uu____3513  in
                                        FStar_Syntax_Syntax.gen_bv uu____3511
                                          FStar_Pervasives_Native.None
                                          bv.FStar_Syntax_Syntax.sort)
@@ -1202,7 +1202,7 @@ let (gen_wps_for_free :
                                        let uu____3596 =
                                          let uu____3598 =
                                            FStar_Util.string_of_int i  in
-                                         Prims.strcat "a" uu____3598  in
+                                         Prims.op_Hat "a" uu____3598  in
                                        FStar_Syntax_Syntax.gen_bv uu____3596
                                          FStar_Pervasives_Native.None
                                          bv.FStar_Syntax_Syntax.sort)
@@ -2229,7 +2229,7 @@ let rec (check :
               let uu____6897 =
                 let uu____6903 =
                   let uu____6905 = FStar_Syntax_Print.term_to_string t  in
-                  Prims.strcat
+                  Prims.op_Hat
                     "let-bound monadic body has a non-monadic continuation or a branch of a match is monadic and the others aren't : "
                     uu____6905
                    in
@@ -2400,7 +2400,7 @@ and (infer :
                          let xw =
                            let uu____7559 = star_type' env2 c  in
                            FStar_Syntax_Syntax.gen_bv
-                             (Prims.strcat
+                             (Prims.op_Hat
                                 (bv.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
                                 "__w") FStar_Pervasives_Native.None
                              uu____7559
@@ -2524,7 +2524,7 @@ and (infer :
                                   in
                                if uu____7762
                                then
-                                 let flags1 =
+                                 let flags =
                                    FStar_List.filter
                                      (fun uu___102_7780  ->
                                         match uu___102_7780 with
@@ -2539,7 +2539,7 @@ and (infer :
                                       in
                                    FStar_Syntax_Util.mk_residual_comp
                                      FStar_Parser_Const.effect_Tot_lid
-                                     uu____7786 flags1
+                                     uu____7786 flags
                                     in
                                  FStar_Pervasives_Native.Some uu____7785
                                else
@@ -3644,7 +3644,7 @@ and (trans_F_ :
                                  let w' =
                                    let uu____13062 = star_type' env h  in
                                    FStar_Syntax_Syntax.gen_bv
-                                     (Prims.strcat
+                                     (Prims.op_Hat
                                         (bv.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
                                         "__w'") FStar_Pervasives_Native.None
                                      uu____13062
@@ -3670,7 +3670,7 @@ and (trans_F_ :
                                  (let x =
                                     let uu____13125 = star_type' env h  in
                                     FStar_Syntax_Syntax.gen_bv
-                                      (Prims.strcat
+                                      (Prims.op_Hat
                                          (bv.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
                                          "__x") FStar_Pervasives_Native.None
                                       uu____13125

@@ -224,6 +224,10 @@ val string_compare' : string -> string -> t
 val string_concat' : args -> option<t>
 val string_substring' : args -> option<t>
 val string_split' : args -> option<t>
+val string_lowercase : string -> t
+val string_uppercase : string -> t
+val string_index : args -> option<t>
+val string_index_of : args -> option<t>
 
 val list_of_string' : (string -> t)
 
