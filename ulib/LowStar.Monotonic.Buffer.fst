@@ -229,8 +229,15 @@ let ubuffer_preserved'
 = forall (t':Type0) (rrel rel:srel t') (b':mbuffer t' rrel rel) .
   ((frameOf b' == r /\ as_addr b' == a) ==> (
     (live h b' ==> live h' b') /\ (
-    (live h b' /\ live h' b' /\ ubuffer_of_buffer' b' == b) ==>
-    Seq.equal (as_seq h' b') (as_seq h b'))))
+    ((live h b' /\ live h' b' /\ Buffer? b') ==> (
+    let ({ b_max_length = bmax; b_offset = boff; b_length = blen }) = Ghost.reveal b in
+    let Buffer max _ idx len _ = b' in (
+      U32.v max == bmax /\
+      U32.v idx <= boff /\
+      boff + blen <= U32.v idx + U32.v len
+    ) ==>
+    Seq.equal (Seq.slice (as_seq h b') (boff - U32.v idx) (boff - U32.v idx + blen)) (Seq.slice (as_seq h' b') (boff - U32.v idx) (boff - U32.v idx + blen))
+  )))))
 
 val ubuffer_preserved (#r: HS.rid) (#a: nat) (b: ubuffer r a) (h h' : HS.mem) : GTot Type0
 
@@ -254,8 +261,22 @@ let ubuffer_preserved_intro
     (rrel:srel t') -> (rel:srel t') ->
     (b':mbuffer t' rrel rel) ->
     Lemma
-    (requires (frameOf b' == r /\ as_addr b' == a /\ ubuffer_of_buffer' b' == b /\ live h b' /\ live h' b'))
-    (ensures (as_seq h' b' == as_seq h b'))
+    (requires (
+      frameOf b' == r /\ as_addr b' == a /\
+      live h b' /\ live h' b' /\
+      Buffer? b' /\ (
+      let ({ b_max_length = bmax; b_offset = boff; b_length = blen }) = Ghost.reveal b in
+      let Buffer max _ idx len _ = b' in (
+        U32.v max == bmax /\
+        U32.v idx <= boff /\
+        boff + blen <= U32.v idx + U32.v len
+    ))))
+    (ensures (
+      Buffer? b' /\ (
+      let ({ b_max_length = bmax; b_offset = boff; b_length = blen }) = Ghost.reveal b in
+      let Buffer max _ idx len _ = b' in
+      as_seq h' b' == as_seq h b'
+    )))
   ))
 : Lemma
   (ubuffer_preserved b h h')
@@ -263,10 +284,17 @@ let ubuffer_preserved_intro
     (t':Type0) (rrel rel:srel t')
     (b':mbuffer t' rrel rel)
   : Lemma
-    ((frameOf b' == r /\ as_addr b' == a) ==> (
+  ((frameOf b' == r /\ as_addr b' == a) ==> (
     (live h b' ==> live h' b') /\ (
-    (live h b' /\ live h' b' /\ ubuffer_of_buffer' b' == b) ==>
-    Seq.equal (as_seq h' b') (as_seq h b'))))
+    ((live h b' /\ live h' b' /\ Buffer? b') ==> (
+    let ({ b_max_length = bmax; b_offset = boff; b_length = blen }) = Ghost.reveal b in
+    let Buffer max _ idx len _ = b' in (
+      U32.v max == bmax /\
+      U32.v idx <= boff /\
+      boff + blen <= U32.v idx + U32.v len
+    ) ==>
+    Seq.equal (Seq.slice (as_seq h b') (boff - U32.v idx) (boff - U32.v idx + blen)) (Seq.slice (as_seq h' b') (boff - U32.v idx) (boff - U32.v idx + blen))
+  )))))
   = Classical.move_requires (f0 t' rrel rel) b';
     Classical.move_requires (f t' rrel rel) b'
   in
@@ -358,7 +386,7 @@ let ubuffer_preserved_elim #_ #_ #_ _ _ _ = ()
 
 val ubuffer_preserved_from_to_elim (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (from to: U32.t) (h h' : HS.mem)
   :Lemma (requires (ubuffer_preserved #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from to) h h' /\ live h b))
-         (ensures (live h' b))
+         (ensures (live h' b /\ ((U32.v from <= U32.v to /\ U32.v to <= length b) ==> Seq.slice (as_seq h b) (U32.v from) (U32.v to) == Seq.slice (as_seq h' b) (U32.v from) (U32.v to))))
 
 let ubuffer_preserved_from_to_elim #_ #_ #_ _ _ _ _ _ = ()
 
