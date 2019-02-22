@@ -4341,8 +4341,8 @@ let effect_repr_aux :
                              FStar_Util.format1
                                "Not enough arguments for effect %s. " name
                               in
-                           Prims.strcat uu____22307
-                             (Prims.strcat
+                           Prims.op_Hat uu____22307
+                             (Prims.op_Hat
                                 "This usually happens when you use a partially applied DM4F effect, "
                                 "like [TAC int] instead of [Tac int].")
                             in
@@ -5025,12 +5025,12 @@ let (print_gamma : FStar_Syntax_Syntax.gamma -> Prims.string) =
               match uu___68_23421 with
               | FStar_Syntax_Syntax.Binding_var x ->
                   let uu____23424 = FStar_Syntax_Print.bv_to_string x  in
-                  Prims.strcat "Binding_var " uu____23424
+                  Prims.op_Hat "Binding_var " uu____23424
               | FStar_Syntax_Syntax.Binding_univ u ->
-                  Prims.strcat "Binding_univ " u.FStar_Ident.idText
+                  Prims.op_Hat "Binding_univ " u.FStar_Ident.idText
               | FStar_Syntax_Syntax.Binding_lid (l,uu____23430) ->
                   let uu____23447 = FStar_Ident.string_of_lid l  in
-                  Prims.strcat "Binding_lid " uu____23447))
+                  Prims.op_Hat "Binding_lid " uu____23447))
        in
     FStar_All.pipe_right uu____23408 (FStar_String.concat "::\n")
   
@@ -5042,7 +5042,7 @@ let (string_of_delta_level : delta_level -> Prims.string) =
     | Eager_unfolding_only  -> "Eager_unfolding_only"
     | Unfold d ->
         let uu____23467 = FStar_Syntax_Print.delta_depth_to_string d  in
-        Prims.strcat "Unfold " uu____23467
+        Prims.op_Hat "Unfold " uu____23467
   
 let (lidents : env -> FStar_Ident.lident Prims.list) =
   fun env  ->
@@ -5216,7 +5216,7 @@ let (string_of_proof_ns : env -> Prims.string) =
           then "*"
           else
             (let uu____23838 = FStar_Ident.text_of_path p  in
-             Prims.strcat (if b then "+" else "-") uu____23838)
+             Prims.op_Hat (if b then "+" else "-") uu____23838)
        in
     let uu____23846 =
       let uu____23850 = FStar_List.map aux env.proof_ns  in

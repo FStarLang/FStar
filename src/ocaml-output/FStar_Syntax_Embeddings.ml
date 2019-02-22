@@ -260,7 +260,7 @@ let lazy_unembed :
                         | FStar_Pervasives_Native.None  -> "None"
                         | FStar_Pervasives_Native.Some x2 ->
                             let uu____1904 = pa x2  in
-                            Prims.strcat "Some " uu____1904
+                            Prims.op_Hat "Some " uu____1904
                          in
                       FStar_Util.print3
                         "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
@@ -295,7 +295,7 @@ let lazy_unembed :
                       | FStar_Pervasives_Native.None  -> "None"
                       | FStar_Pervasives_Native.Some a ->
                           let uu____1987 = pa a  in
-                          Prims.strcat "Some " uu____1987
+                          Prims.op_Hat "Some " uu____1987
                        in
                     FStar_Util.print3
                       "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
@@ -527,7 +527,7 @@ let (e_string : Prims.string embedding) =
          FStar_Pervasives_Native.None)
      in
   mk_emb_full em un FStar_Syntax_Syntax.t_string
-    (fun x  -> Prims.strcat "\"" (Prims.strcat x "\"")) emb_t_string
+    (fun x  -> Prims.op_Hat "\"" (Prims.op_Hat x "\"")) emb_t_string
   
 let e_option :
   'a . 'a embedding -> 'a FStar_Pervasives_Native.option embedding =
@@ -554,8 +554,8 @@ let e_option :
       | FStar_Pervasives_Native.None  -> "None"
       | FStar_Pervasives_Native.Some x ->
           let uu____3061 =
-            let uu____3063 = ea.print x  in Prims.strcat uu____3063 ")"  in
-          Prims.strcat "(Some " uu____3061
+            let uu____3063 = ea.print x  in Prims.op_Hat uu____3063 ")"  in
+          Prims.op_Hat "(Some " uu____3061
        in
     let em o rng topt norm1 =
       lazy_embed printer emb_t_option_a rng t_option_a o
@@ -1113,8 +1113,8 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
         let uu____6036 =
           let uu____6038 = FStar_List.map ea.print l  in
           FStar_All.pipe_right uu____6038 (FStar_String.concat "; ")  in
-        Prims.strcat uu____6036 "]"  in
-      Prims.strcat "[" uu____6034  in
+        Prims.op_Hat uu____6036 "]"  in
+      Prims.op_Hat "[" uu____6034  in
     let rec em l rng shadow_l norm1 =
       lazy_embed printer emb_t_list_a rng t_list_a l
         (fun uu____6124  ->

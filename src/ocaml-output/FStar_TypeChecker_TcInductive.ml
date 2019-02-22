@@ -984,7 +984,7 @@ let (debug_log : FStar_TypeChecker_Env.env_t -> Prims.string -> unit) =
       if uu____2240
       then
         FStar_Util.print_string
-          (Prims.strcat "Positivity::" (Prims.strcat s "\n"))
+          (Prims.op_Hat "Positivity::" (Prims.op_Hat s "\n"))
       else ()
   
 let (ty_occurs_in :
@@ -1054,7 +1054,7 @@ let rec (ty_strictly_positive_in_type :
         fun env  ->
           (let uu____2730 =
              let uu____2732 = FStar_Syntax_Print.term_to_string btype  in
-             Prims.strcat "Checking strict positivity in type: " uu____2732
+             Prims.op_Hat "Checking strict positivity in type: " uu____2732
               in
            debug_log env uu____2730);
           (let btype1 =
@@ -1069,7 +1069,7 @@ let rec (ty_strictly_positive_in_type :
               in
            (let uu____2737 =
               let uu____2739 = FStar_Syntax_Print.term_to_string btype1  in
-              Prims.strcat
+              Prims.op_Hat
                 "Checking strict positivity in type, after normalization: "
                 uu____2739
                in
@@ -1209,9 +1209,9 @@ let rec (ty_strictly_positive_in_type :
                           let uu____3227 =
                             let uu____3229 =
                               FStar_Syntax_Print.term_to_string btype1  in
-                            Prims.strcat " and term: " uu____3229  in
-                          Prims.strcat uu____3225 uu____3227  in
-                        Prims.strcat
+                            Prims.op_Hat " and term: " uu____3229  in
+                          Prims.op_Hat uu____3225 uu____3227  in
+                        Prims.op_Hat
                           "Checking strict positivity, unexpected tag: "
                           uu____3223
                          in
@@ -1236,9 +1236,9 @@ and (ty_nested_positive_in_inductive :
                    let uu____3256 =
                      let uu____3258 = FStar_Syntax_Print.args_to_string args
                         in
-                     Prims.strcat " applied to arguments: " uu____3258  in
-                   Prims.strcat ilid.FStar_Ident.str uu____3256  in
-                 Prims.strcat "Checking nested positivity in the inductive "
+                     Prims.op_Hat " applied to arguments: " uu____3258  in
+                   Prims.op_Hat ilid.FStar_Ident.str uu____3256  in
+                 Prims.op_Hat "Checking nested positivity in the inductive "
                    uu____3254
                   in
                debug_log env uu____3252);
@@ -1291,10 +1291,10 @@ and (ty_nested_positive_in_inductive :
                             let uu____3339 =
                               let uu____3341 =
                                 FStar_Util.string_of_int num_ibs  in
-                              Prims.strcat uu____3341
+                              Prims.op_Hat uu____3341
                                 ", also adding to the memo table"
                                in
-                            Prims.strcat
+                            Prims.op_Hat
                               "Checking nested positivity, number of type parameters is "
                               uu____3339
                              in
@@ -1334,10 +1334,10 @@ and (ty_nested_positive_in_dlid :
               fun unfolded  ->
                 fun env  ->
                   debug_log env
-                    (Prims.strcat
+                    (Prims.op_Hat
                        "Checking nested positivity in data constructor "
-                       (Prims.strcat dlid.FStar_Ident.str
-                          (Prims.strcat " of the inductive "
+                       (Prims.op_Hat dlid.FStar_Ident.str
+                          (Prims.op_Hat " of the inductive "
                              ilid.FStar_Ident.str)));
                   (let uu____3555 =
                      FStar_TypeChecker_Env.lookup_datacon env dlid  in
@@ -1367,7 +1367,7 @@ and (ty_nested_positive_in_dlid :
                          (let uu____3582 =
                             let uu____3584 =
                               FStar_Syntax_Print.term_to_string dt1  in
-                            Prims.strcat
+                            Prims.op_Hat
                               "Checking nested positivity in the data constructor type: "
                               uu____3584
                              in
@@ -1443,13 +1443,13 @@ and (ty_nested_positive_in_dlid :
                                                    FStar_Syntax_Print.comp_to_string
                                                      c2
                                                     in
-                                                 Prims.strcat ", and c: "
+                                                 Prims.op_Hat ", and c: "
                                                    uu____3833
                                                   in
-                                               Prims.strcat uu____3828
+                                               Prims.op_Hat uu____3828
                                                  uu____3831
                                                 in
-                                             Prims.strcat
+                                             Prims.op_Hat
                                                "Checking nested positivity in the unfolded data constructor binders as: "
                                                uu____3826
                                               in
@@ -1501,7 +1501,7 @@ and (ty_nested_positive_in_type :
                   ((let uu____3980 =
                       let uu____3982 =
                         FStar_Syntax_Print.binders_to_string "; " sbs  in
-                      Prims.strcat
+                      Prims.op_Hat
                         "Checking nested positivity in an Tm_arrow node, with binders as: "
                         uu____3982
                        in
@@ -1562,7 +1562,7 @@ let (ty_positive_in_datacon :
                    (let uu____4166 =
                       let uu____4168 = FStar_Syntax_Print.term_to_string dt
                          in
-                      Prims.strcat "Checking data constructor type: "
+                      Prims.op_Hat "Checking data constructor type: "
                         uu____4168
                        in
                     debug_log env uu____4166);
@@ -1592,8 +1592,8 @@ let (ty_positive_in_datacon :
                                 FStar_Util.string_of_int
                                   (FStar_List.length dbs3)
                                  in
-                              Prims.strcat uu____4270 " binders"  in
-                            Prims.strcat
+                              Prims.op_Hat uu____4270 " binders"  in
+                            Prims.op_Hat
                               "Data constructor type is an arrow type, so checking strict positivity in "
                               uu____4268
                              in
@@ -1702,7 +1702,7 @@ let (get_haseq_axiom_lid : FStar_Ident.lid -> FStar_Ident.lid) =
       let uu____4684 =
         let uu____4687 =
           FStar_Ident.id_of_text
-            (Prims.strcat (lid.FStar_Ident.ident).FStar_Ident.idText
+            (Prims.op_Hat (lid.FStar_Ident.ident).FStar_Ident.idText
                haseq_suffix)
            in
         [uu____4687]  in

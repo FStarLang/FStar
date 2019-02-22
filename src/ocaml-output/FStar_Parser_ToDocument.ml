@@ -620,7 +620,7 @@ let (token_to_string :
   (FStar_BaseTypes.char,Prims.string) FStar_Util.either -> Prims.string) =
   fun uu___28_1701  ->
     match uu___28_1701 with
-    | FStar_Util.Inl c -> Prims.strcat (FStar_Util.string_of_char c) ".*"
+    | FStar_Util.Inl c -> Prims.op_Hat (FStar_Util.string_of_char c) ".*"
     | FStar_Util.Inr s -> s
   
 let (matches_token :
@@ -705,7 +705,7 @@ let (assign_levels :
       match uu____2118 with
       | FStar_Pervasives_Native.Some (assoc_levels,uu____2170) ->
           assoc_levels
-      | uu____2208 -> failwith (Prims.strcat "Unrecognized operator " s)
+      | uu____2208 -> failwith (Prims.op_Hat "Unrecognized operator " s)
   
 let max_level :
   'Auu____2241 . ('Auu____2241 * token Prims.list) Prims.list -> Prims.int =
@@ -4472,7 +4472,7 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
         FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "0")
           uu____10871 uu____10872 FStar_Pprint.rbrace
     | FStar_Parser_AST.Labeled (e1,s,b) ->
-        let uu____10883 = str (Prims.strcat "(*" (Prims.strcat s "*)"))  in
+        let uu____10883 = str (Prims.op_Hat "(*" (Prims.op_Hat s "*)"))  in
         let uu____10886 = p_term false false e1  in
         FStar_Pprint.op_Hat_Slash_Hat uu____10883 uu____10886
     | FStar_Parser_AST.Op (op,args) when
@@ -4485,12 +4485,12 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
               let uu____10905 =
                 let uu____10907 =
                   FStar_Util.string_of_int (FStar_List.length args)  in
-                Prims.strcat uu____10907
+                Prims.op_Hat uu____10907
                   " arguments couldn't be handled by the pretty printer"
                  in
-              Prims.strcat " with " uu____10905  in
-            Prims.strcat uu____10901 uu____10903  in
-          Prims.strcat "Operation " uu____10899  in
+              Prims.op_Hat " with " uu____10905  in
+            Prims.op_Hat uu____10901 uu____10903  in
+          Prims.op_Hat "Operation " uu____10899  in
         failwith uu____10897
     | FStar_Parser_AST.Uvar id1 ->
         failwith "Unexpected universe variable out of universe context"

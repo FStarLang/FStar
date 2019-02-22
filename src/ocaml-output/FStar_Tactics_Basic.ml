@@ -157,7 +157,7 @@ let (goal_to_string :
           let maybe_label =
             match g.FStar_Tactics_Types.label with
             | "" -> ""
-            | l -> Prims.strcat " (" (Prims.strcat l ")")  in
+            | l -> Prims.op_Hat " (" (Prims.op_Hat l ")")  in
           let actual_goal =
             if ps.FStar_Tactics_Types.tac_verb_dbg
             then goal_to_string_verbose g
@@ -428,7 +428,7 @@ let fail : 'a . Prims.string -> 'a tac =
               (FStar_Options.Other "TacFail")
              in
           if uu____1150
-          then dump_proofstate ps (Prims.strcat "TACTIC FAILING: " msg)
+          then dump_proofstate ps (Prims.op_Hat "TACTIC FAILING: " msg)
           else ());
          FStar_Tactics_Result.Failed
            ((FStar_Tactics_Types.TacticFailure msg), ps))
@@ -568,7 +568,7 @@ let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
                (FStar_Tactics_Types.TacticFailure msg,q) ->
                FStar_Tactics_Result.Failed
                  ((FStar_Tactics_Types.TacticFailure
-                     (Prims.strcat pref (Prims.strcat ": " msg))), q)
+                     (Prims.op_Hat pref (Prims.op_Hat ": " msg))), q)
            | FStar_Tactics_Result.Failed (e,q) ->
                FStar_Tactics_Result.Failed (e, q))
   

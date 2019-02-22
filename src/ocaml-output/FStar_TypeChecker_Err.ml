@@ -78,9 +78,9 @@ let (add_errors :
                              let uu____308 =
                                let uu____310 =
                                  FStar_Range.string_of_use_range r  in
-                               Prims.strcat uu____310 ")"  in
-                             Prims.strcat " (Also see: " uu____308  in
-                           Prims.strcat msg uu____306  in
+                               Prims.op_Hat uu____310 ")"  in
+                             Prims.op_Hat " (Also see: " uu____308  in
+                           Prims.op_Hat msg uu____306  in
                          let uu____314 = FStar_TypeChecker_Env.get_range env
                             in
                          (e, uu____304, uu____314)

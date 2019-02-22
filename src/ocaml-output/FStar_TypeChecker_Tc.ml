@@ -3049,9 +3049,9 @@ let (cps_and_elaborate :
                                            let p' =
                                              apply_last1
                                                (fun s  ->
-                                                  Prims.strcat "__"
-                                                    (Prims.strcat s
-                                                       (Prims.strcat
+                                                  Prims.op_Hat "__"
+                                                    (Prims.op_Hat s
+                                                       (Prims.op_Hat
                                                           "_eff_override_"
                                                           name))) p
                                               in
@@ -3354,7 +3354,7 @@ let (cps_and_elaborate :
                                                                     (let action_elab3
                                                                     =
                                                                     register
-                                                                    (Prims.strcat
+                                                                    (Prims.op_Hat
                                                                     name
                                                                     "_elab")
                                                                     action_elab2
@@ -3362,7 +3362,7 @@ let (cps_and_elaborate :
                                                                     let action_typ_with_wp3
                                                                     =
                                                                     register
-                                                                    (Prims.strcat
+                                                                    (Prims.op_Hat
                                                                     name
                                                                     "_complete_type")
                                                                     action_typ_with_wp2
@@ -4264,8 +4264,8 @@ let (tc_inductive' :
                            | (lid,r) ->
                                FStar_Errors.log_issue r
                                  (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                   (Prims.strcat "Inductive type "
-                                      (Prims.strcat lid.FStar_Ident.str
+                                   (Prims.op_Hat "Inductive type "
+                                      (Prims.op_Hat lid.FStar_Ident.str
                                          " does not satisfy the positivity condition")))
                          else ()) tcs;
                     FStar_List.iter
@@ -4293,8 +4293,8 @@ let (tc_inductive' :
                                FStar_Errors.log_issue
                                  d.FStar_Syntax_Syntax.sigrng
                                  (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                   (Prims.strcat "Exception "
-                                      (Prims.strcat data_lid.FStar_Ident.str
+                                   (Prims.op_Hat "Exception "
+                                      (Prims.op_Hat data_lid.FStar_Ident.str
                                          " does not satisfy the positivity condition")))
                              else ()) datas));
                 (let skip_prims_type uu____7425 =
@@ -5524,7 +5524,7 @@ let (tc_decl' :
                                   (uu___149_10471.FStar_Syntax_Syntax.sigattrs)
                               }  in
                             ([se1], [], env0))))))
-       | FStar_Syntax_Syntax.Sig_effect_abbrev (lid,uvs,tps,c,flags1) ->
+       | FStar_Syntax_Syntax.Sig_effect_abbrev (lid,uvs,tps,c,flags) ->
            let uu____10485 =
              if (FStar_List.length uvs) = (Prims.parse_int "0")
              then (env, uvs, tps, c)
@@ -5680,7 +5680,7 @@ let (tc_decl' :
                                                 FStar_Syntax_Syntax.sigel =
                                                   (FStar_Syntax_Syntax.Sig_effect_abbrev
                                                      (lid, uvs2, tps5, c5,
-                                                       flags1));
+                                                       flags));
                                                 FStar_Syntax_Syntax.sigrng =
                                                   (uu___150_10900.FStar_Syntax_Syntax.sigrng);
                                                 FStar_Syntax_Syntax.sigquals
@@ -7431,8 +7431,8 @@ let (tc_decls :
                                   let uu____14077 =
                                     FStar_Syntax_Print.sigelt_to_string se1
                                      in
-                                  Prims.strcat uu____14077 "\n"  in
-                                Prims.strcat s uu____14075) "" ses'1
+                                  Prims.op_Hat uu____14077 "\n"  in
+                                Prims.op_Hat s uu____14075) "" ses'1
                           in
                        FStar_Util.print1 "Checked: %s\n" uu____14066
                      else ());
@@ -7707,7 +7707,7 @@ let (check_exports :
                           lb.FStar_Syntax_Syntax.lbtyp))
               else ()
           | FStar_Syntax_Syntax.Sig_effect_abbrev
-              (l,univs1,binders,comp,flags1) ->
+              (l,univs1,binders,comp,flags) ->
               let uu____14829 =
                 let uu____14831 =
                   FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
@@ -8332,7 +8332,7 @@ let rec (tc_modul :
     fun m  ->
       fun iface_exists  ->
         let msg =
-          Prims.strcat "Internals for "
+          Prims.op_Hat "Internals for "
             (m.FStar_Syntax_Syntax.name).FStar_Ident.str
            in
         let env01 = push_context env0 msg  in
@@ -8389,8 +8389,8 @@ and (finish_partial_modul :
                       let uu____16315 =
                         let uu____16317 =
                           FStar_Syntax_Print.modul_to_string m  in
-                        Prims.strcat uu____16317 "\n"  in
-                      Prims.strcat "\nfrom: " uu____16315
+                        Prims.op_Hat uu____16317 "\n"  in
+                      Prims.op_Hat "\nfrom: " uu____16315
                     else ""  in
                   let uu____16324 =
                     let uu____16326 =
@@ -8402,8 +8402,8 @@ and (finish_partial_modul :
                       let uu____16330 =
                         let uu____16332 =
                           FStar_Syntax_Print.modul_to_string modul_iface  in
-                        Prims.strcat uu____16332 "\n"  in
-                      Prims.strcat "\nto: " uu____16330
+                        Prims.op_Hat uu____16332 "\n"  in
+                      Prims.op_Hat "\nto: " uu____16330
                     else ""  in
                   FStar_Util.print4
                     "Extracting and type checking module %s interface%s%s%s\n"
@@ -8413,7 +8413,7 @@ and (finish_partial_modul :
                (let en0 =
                   let en0 =
                     pop_context en
-                      (Prims.strcat "Ending modul "
+                      (Prims.op_Hat "Ending modul "
                          (m.FStar_Syntax_Syntax.name).FStar_Ident.str)
                      in
                   let en01 =
@@ -8657,7 +8657,7 @@ and (finish_partial_modul :
                 if uu____16476 then check_exports env modul exports else ());
                (let uu____16489 =
                   pop_context env
-                    (Prims.strcat "Ending modul "
+                    (Prims.op_Hat "Ending modul "
                        (modul.FStar_Syntax_Syntax.name).FStar_Ident.str)
                    in
                 FStar_All.pipe_right uu____16489 (fun a4  -> ()));
@@ -8677,7 +8677,7 @@ let (load_checked_module :
         let uu____16504 =
           let uu____16506 =
             FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name  in
-          Prims.strcat "Internals for " uu____16506  in
+          Prims.op_Hat "Internals for " uu____16506  in
         push_context env uu____16504  in
       let env2 =
         FStar_List.fold_left

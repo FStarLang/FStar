@@ -57,14 +57,14 @@ let (string_of_fsdoco :
       (fun x  ->
          let uu____278 =
            let uu____280 = FStar_Parser_AST.string_of_fsdoc x  in
-           Prims.strcat uu____280 "*)"  in
-         Prims.strcat "(*" uu____278) "" d
+           Prims.op_Hat uu____280 "*)"  in
+         Prims.op_Hat "(*" uu____278) "" d
   
 let (string_of_termo :
   FStar_Parser_AST.term FStar_Pervasives_Native.option -> Prims.string) =
   fun t  -> string_of_optiont FStar_Parser_AST.term_to_string "" t 
 let (code_wrap : Prims.string -> Prims.string) =
-  fun s  -> Prims.strcat "```fsharp\n" (Prims.strcat s "\n```\n") 
+  fun s  -> Prims.op_Hat "```fsharp\n" (Prims.op_Hat s "\n```\n") 
 let (string_of_tycon : FStar_Parser_AST.tycon -> Prims.string) =
   fun tycon  ->
     match tycon with
@@ -85,15 +85,15 @@ let (string_of_tycon : FStar_Parser_AST.tycon -> Prims.string) =
                               let uu____499 =
                                 let uu____501 =
                                   FStar_Parser_AST.term_to_string t  in
-                                Prims.strcat ":" uu____501  in
-                              Prims.strcat id2.FStar_Ident.idText uu____499
+                                Prims.op_Hat ":" uu____501  in
+                              Prims.op_Hat id2.FStar_Ident.idText uu____499
                                in
-                            Prims.strcat uu____495 uu____497))
+                            Prims.op_Hat uu____495 uu____497))
                  in
               FStar_All.pipe_right uu____381 (FStar_String.concat "; ")  in
-            Prims.strcat uu____379 " }"  in
-          Prims.strcat " = { " uu____377  in
-        Prims.strcat id1.FStar_Ident.idText uu____375
+            Prims.op_Hat uu____379 " }"  in
+          Prims.op_Hat " = { " uu____377  in
+        Prims.op_Hat id1.FStar_Ident.idText uu____375
     | FStar_Parser_AST.TyconVariant (id1,_bb,_ko,vars) ->
         let uu____553 =
           let uu____555 =
@@ -110,26 +110,26 @@ let (string_of_tycon : FStar_Parser_AST.tycon -> Prims.string) =
                                 string_of_optiont
                                   FStar_Parser_AST.term_to_string "" trmo
                                  in
-                              Prims.strcat ":" uu____700  in
-                            Prims.strcat id2.FStar_Ident.idText uu____698  in
-                          Prims.strcat uu____694 uu____696))
+                              Prims.op_Hat ":" uu____700  in
+                            Prims.op_Hat id2.FStar_Ident.idText uu____698  in
+                          Prims.op_Hat uu____694 uu____696))
                in
             FStar_All.pipe_right uu____557 (FStar_String.concat " | ")  in
-          Prims.strcat " = " uu____555  in
-        Prims.strcat id1.FStar_Ident.idText uu____553
+          Prims.op_Hat " = " uu____555  in
+        Prims.op_Hat id1.FStar_Ident.idText uu____553
   
 let (string_of_decl' : FStar_Parser_AST.decl' -> Prims.string) =
   fun d  ->
     match d with
     | FStar_Parser_AST.TopLevelModule l ->
-        Prims.strcat "module " l.FStar_Ident.str
-    | FStar_Parser_AST.Open l -> Prims.strcat "open " l.FStar_Ident.str
-    | FStar_Parser_AST.Include l -> Prims.strcat "include " l.FStar_Ident.str
-    | FStar_Parser_AST.Friend l -> Prims.strcat "friend " l.FStar_Ident.str
+        Prims.op_Hat "module " l.FStar_Ident.str
+    | FStar_Parser_AST.Open l -> Prims.op_Hat "open " l.FStar_Ident.str
+    | FStar_Parser_AST.Include l -> Prims.op_Hat "include " l.FStar_Ident.str
+    | FStar_Parser_AST.Friend l -> Prims.op_Hat "friend " l.FStar_Ident.str
     | FStar_Parser_AST.ModuleAbbrev (i,l) ->
-        Prims.strcat "module "
-          (Prims.strcat i.FStar_Ident.idText
-             (Prims.strcat " = " l.FStar_Ident.str))
+        Prims.op_Hat "module "
+          (Prims.op_Hat i.FStar_Ident.idText
+             (Prims.op_Hat " = " l.FStar_Ident.str))
     | FStar_Parser_AST.TopLevelLet (uu____731,pats) ->
         let termty =
           FStar_List.map
@@ -144,17 +144,17 @@ let (string_of_decl' : FStar_Parser_AST.decl' -> Prims.string) =
           FStar_List.map
             (fun uu____802  ->
                match uu____802 with
-               | (p,t) -> Prims.strcat p (Prims.strcat ":" t)) termty
+               | (p,t) -> Prims.op_Hat p (Prims.op_Hat ":" t)) termty
            in
-        Prims.strcat "let " (FStar_String.concat ", " termty')
+        Prims.op_Hat "let " (FStar_String.concat ", " termty')
     | FStar_Parser_AST.Main uu____819 -> "main ..."
     | FStar_Parser_AST.Assume (i,t) ->
         let uu____823 =
           let uu____825 =
             let uu____827 = FStar_Parser_AST.term_to_string t  in
-            Prims.strcat ":" uu____827  in
-          Prims.strcat i.FStar_Ident.idText uu____825  in
-        Prims.strcat "assume " uu____823
+            Prims.op_Hat ":" uu____827  in
+          Prims.op_Hat i.FStar_Ident.idText uu____825  in
+        Prims.op_Hat "assume " uu____823
     | FStar_Parser_AST.Tycon (uu____831,tc,tys) ->
         let s = if tc then "class" else "type"  in
         let uu____862 =
@@ -167,31 +167,31 @@ let (string_of_decl' : FStar_Parser_AST.decl' -> Prims.string) =
                         let uu____970 = string_of_tycon t  in
                         let uu____972 =
                           let uu____974 = string_of_fsdoco d1  in
-                          Prims.strcat " " uu____974  in
-                        Prims.strcat uu____970 uu____972))
+                          Prims.op_Hat " " uu____974  in
+                        Prims.op_Hat uu____970 uu____972))
              in
           FStar_All.pipe_right uu____864 (FStar_String.concat " and ")  in
-        Prims.strcat s uu____862
+        Prims.op_Hat s uu____862
     | FStar_Parser_AST.Val (i,t) ->
         let uu____984 =
           let uu____986 =
             let uu____988 = FStar_Parser_AST.term_to_string t  in
-            Prims.strcat ":" uu____988  in
-          Prims.strcat i.FStar_Ident.idText uu____986  in
-        Prims.strcat "val " uu____984
+            Prims.op_Hat ":" uu____988  in
+          Prims.op_Hat i.FStar_Ident.idText uu____986  in
+        Prims.op_Hat "val " uu____984
     | FStar_Parser_AST.Exception (i,uu____993) ->
-        Prims.strcat "exception " i.FStar_Ident.idText
+        Prims.op_Hat "exception " i.FStar_Ident.idText
     | FStar_Parser_AST.NewEffect (FStar_Parser_AST.DefineEffect
         (i,uu____1000,uu____1001,uu____1002)) ->
-        Prims.strcat "new_effect " i.FStar_Ident.idText
+        Prims.op_Hat "new_effect " i.FStar_Ident.idText
     | FStar_Parser_AST.NewEffect (FStar_Parser_AST.RedefineEffect
         (i,uu____1013,uu____1014)) ->
-        Prims.strcat "new_effect " i.FStar_Ident.idText
+        Prims.op_Hat "new_effect " i.FStar_Ident.idText
     | FStar_Parser_AST.SubEffect uu____1020 -> "sub_effect"
     | FStar_Parser_AST.Pragma uu____1022 -> "pragma"
     | FStar_Parser_AST.Splice (ids,t) ->
         let uu____1030 = FStar_Parser_AST.term_to_string t  in
-        Prims.strcat "splice " uu____1030
+        Prims.op_Hat "splice " uu____1030
     | FStar_Parser_AST.Fsdoc (comm,uu____1034) -> comm
   
 let (decl_documented : FStar_Parser_AST.decl -> Prims.bool) =
@@ -247,7 +247,7 @@ let (document_decl : (Prims.string -> unit) -> FStar_Parser_AST.decl -> unit)
               w uu____1352);
              (match fsdoc with
               | FStar_Pervasives_Native.Some (doc1,_kw) ->
-                  w (Prims.strcat "\n" doc1)
+                  w (Prims.op_Hat "\n" doc1)
               | uu____1378 -> ());
              w "")
       else ()
@@ -297,7 +297,7 @@ let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lident) =
          | FStar_Pervasives_Native.Some (top_decl,other_decls) ->
              let on1 =
                FStar_Options.prepend_output_dir
-                 (Prims.strcat name.FStar_Ident.str ".md")
+                 (Prims.op_Hat name.FStar_Ident.str ".md")
                 in
              let fd = FStar_Util.open_file_for_writing on1  in
              let w = FStar_Util.append_to_file fd  in

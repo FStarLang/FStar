@@ -173,7 +173,7 @@ let (erasableTypeNoDelta : FStar_Extraction_ML_Syntax.mlty -> Prims.bool) =
 let (unknownType : FStar_Extraction_ML_Syntax.mlty) =
   FStar_Extraction_ML_Syntax.MLTY_Top 
 let (prependTick : Prims.string -> Prims.string) =
-  fun x  -> if FStar_Util.starts_with x "'" then x else Prims.strcat "'A" x 
+  fun x  -> if FStar_Util.starts_with x "'" then x else Prims.op_Hat "'A" x 
 let (removeTick : Prims.string -> Prims.string) =
   fun x  ->
     if FStar_Util.starts_with x "'"
@@ -209,13 +209,13 @@ let rec (lookup_ty_local :
           if FStar_Syntax_Syntax.bv_eq b b'
           then
             failwith
-              (Prims.strcat "Type/Expr clash: "
+              (Prims.op_Hat "Type/Expr clash: "
                  (b.FStar_Syntax_Syntax.ppname).FStar_Ident.idText)
           else lookup_ty_local tl1 b
       | uu____650::tl1 -> lookup_ty_local tl1 b
       | [] ->
           failwith
-            (Prims.strcat "extraction: unbound type var "
+            (Prims.op_Hat "extraction: unbound type var "
                (b.FStar_Syntax_Syntax.ppname).FStar_Ident.idText)
   
 let tyscheme_of_td :
@@ -449,7 +449,7 @@ let (find_uniq : binding Prims.list -> Prims.string -> Prims.string) =
           if i = (Prims.parse_int "0")
           then ""
           else FStar_Util.string_of_int i  in
-        let target_mlident = Prims.strcat mlident1 suffix  in
+        let target_mlident = Prims.op_Hat mlident1 suffix  in
         let has_collision =
           FStar_List.existsb
             (fun uu___32_1227  ->

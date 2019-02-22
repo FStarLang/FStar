@@ -483,7 +483,7 @@ let (fresh : Prims.string -> Prims.string) =
     (let uu____1769 =
        let uu____1771 = FStar_ST.op_Bang c  in
        FStar_Util.string_of_int uu____1771  in
-     Prims.strcat x uu____1769)
+     Prims.op_Hat x uu____1769)
   
 let (normalize_abs : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t0  ->

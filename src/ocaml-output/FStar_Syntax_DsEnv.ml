@@ -2459,7 +2459,7 @@ let (push_top_level_rec_binding :
           (let uu____9388 = FStar_Ident.range_of_lid l  in
            FStar_Errors.raise_error
              (FStar_Errors.Fatal_DuplicateTopLevelNames,
-               (Prims.strcat "Duplicate top-level names " l.FStar_Ident.str))
+               (Prims.op_Hat "Duplicate top-level names " l.FStar_Ident.str))
              uu____9388)
   
 let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
@@ -2675,10 +2675,10 @@ let (push_namespace : env -> FStar_Ident.lident -> env) =
                       | (m,uu____10126) ->
                           let uu____10127 =
                             let uu____10129 = FStar_Ident.text_of_lid m  in
-                            Prims.strcat uu____10129 "."  in
+                            Prims.op_Hat uu____10129 "."  in
                           let uu____10132 =
                             let uu____10134 = FStar_Ident.text_of_lid ns  in
-                            Prims.strcat uu____10134 "."  in
+                            Prims.op_Hat uu____10134 "."  in
                           FStar_Util.starts_with uu____10127 uu____10132))
                in
             if uu____10101
@@ -3510,9 +3510,9 @@ let (enter_monad_scope : env -> FStar_Ident.ident -> env) =
       | FStar_Pervasives_Native.Some mname' ->
           FStar_Errors.raise_error
             (FStar_Errors.Fatal_MonadAlreadyDefined,
-              (Prims.strcat "Trying to define monad "
-                 (Prims.strcat mname.FStar_Ident.idText
-                    (Prims.strcat ", but already in monad scope "
+              (Prims.op_Hat "Trying to define monad "
+                 (Prims.op_Hat mname.FStar_Ident.idText
+                    (Prims.op_Hat ", but already in monad scope "
                        mname'.FStar_Ident.idText))))
             mname.FStar_Ident.idRange
       | FStar_Pervasives_Native.None  ->
@@ -3613,8 +3613,8 @@ let fail_or2 :
       | FStar_Pervasives_Native.None  ->
           FStar_Errors.raise_error
             (FStar_Errors.Fatal_IdentifierNotFound,
-              (Prims.strcat "Identifier not found ["
-                 (Prims.strcat id1.FStar_Ident.idText "]")))
+              (Prims.op_Hat "Identifier not found ["
+                 (Prims.op_Hat id1.FStar_Ident.idText "]")))
             id1.FStar_Ident.idRange
       | FStar_Pervasives_Native.Some r -> r
   

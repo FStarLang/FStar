@@ -253,7 +253,7 @@ let (copy_uvar :
           let env1 = FStar_TypeChecker_Env.push_binders env bs  in
           let uu____566 = FStar_TypeChecker_Env.all_binders env1  in
           new_uvar
-            (Prims.strcat "copy:" u.FStar_Syntax_Syntax.ctx_uvar_reason) wl
+            (Prims.op_Hat "copy:" u.FStar_Syntax_Syntax.ctx_uvar_reason) wl
             u.FStar_Syntax_Syntax.ctx_uvar_range
             env1.FStar_TypeChecker_Env.gamma uu____566 t
             u.FStar_Syntax_Syntax.ctx_uvar_should_check
@@ -735,9 +735,9 @@ let (def_check_prob : Prims.string -> FStar_TypeChecker_Common.prob -> unit)
            let uu____1627 =
              let uu____1629 =
                let uu____1631 = FStar_Util.string_of_int (p_pid prob)  in
-               Prims.strcat uu____1631 (Prims.strcat "." m)  in
-             Prims.strcat "." uu____1629  in
-           Prims.strcat msg uu____1627  in
+               Prims.op_Hat uu____1631 (Prims.op_Hat "." m)  in
+             Prims.op_Hat "." uu____1629  in
+           Prims.op_Hat msg uu____1627  in
          (let uu____1636 = msgf "scope"  in
           let uu____1639 = p_scope prob  in
           def_scope_wf uu____1636 (p_loc prob) uu____1639);
@@ -928,7 +928,7 @@ let mk_problem :
                      in
                   let uu____2158 =
                     new_uvar
-                      (Prims.strcat "mk_problem: logical guard for " reason)
+                      (Prims.op_Hat "mk_problem: logical guard for " reason)
                       wl FStar_Range.dummyRange gamma bs
                       FStar_Syntax_Util.ktype0
                       FStar_Syntax_Syntax.Allow_untyped
@@ -974,12 +974,12 @@ let (mk_t_problem :
             fun rhs  ->
               fun elt  ->
                 fun reason  ->
-                  def_check_prob (Prims.strcat reason ".mk_t.arg") orig;
+                  def_check_prob (Prims.op_Hat reason ".mk_t.arg") orig;
                   (let uu____2258 =
                      mk_problem wl scope orig lhs rel rhs elt reason  in
                    match uu____2258 with
                    | (p,wl1) ->
-                       (def_check_prob (Prims.strcat reason ".mk_t")
+                       (def_check_prob (Prims.op_Hat reason ".mk_t")
                           (FStar_TypeChecker_Common.TProb p);
                         ((FStar_TypeChecker_Common.TProb p), wl1)))
   
@@ -1002,12 +1002,12 @@ let (mk_c_problem :
             fun rhs  ->
               fun elt  ->
                 fun reason  ->
-                  def_check_prob (Prims.strcat reason ".mk_c.arg") orig;
+                  def_check_prob (Prims.op_Hat reason ".mk_c.arg") orig;
                   (let uu____2346 =
                      mk_problem wl scope orig lhs rel rhs elt reason  in
                    match uu____2346 with
                    | (p,wl1) ->
-                       (def_check_prob (Prims.strcat reason ".mk_c")
+                       (def_check_prob (Prims.op_Hat reason ".mk_c")
                           (FStar_TypeChecker_Common.CProb p);
                         ((FStar_TypeChecker_Common.CProb p), wl1)))
   
@@ -1051,7 +1051,7 @@ let new_problem :
                     let uu____2481 = FStar_TypeChecker_Env.all_binders env
                        in
                     new_uvar
-                      (Prims.strcat "new_problem: logical guard for " reason)
+                      (Prims.op_Hat "new_problem: logical guard for " reason)
                       (let uu___105_2492 = wl  in
                        {
                          attempting = (uu___105_2492.attempting);
@@ -1731,7 +1731,7 @@ let (destruct_flex_t :
                            in
                         FStar_Syntax_Util.arrow dom_binders uu____4677  in
                       new_uvar
-                        (Prims.strcat uv.FStar_Syntax_Syntax.ctx_uvar_reason
+                        (Prims.op_Hat uv.FStar_Syntax_Syntax.ctx_uvar_reason
                            "; force delayed") wl t.FStar_Syntax_Syntax.pos
                         new_gamma uu____4615 uu____4674
                         uv.FStar_Syntax_Syntax.ctx_uvar_should_check
@@ -1859,7 +1859,7 @@ let (solve_prob' :
                    in
                 (let uu____5241 =
                    let uu____5243 = FStar_Util.string_of_int (p_pid prob)  in
-                   Prims.strcat "solve_prob'.sol." uu____5243  in
+                   Prims.op_Hat "solve_prob'.sol." uu____5243  in
                  let uu____5246 =
                    let uu____5249 = p_scope prob  in
                    FStar_All.pipe_left
@@ -2110,7 +2110,7 @@ let (restrict_ctx :
                in
             let uu____6095 =
               new_uvar
-                (Prims.strcat "restrict:"
+                (Prims.op_Hat "restrict:"
                    src.FStar_Syntax_Syntax.ctx_uvar_reason) wl
                 src.FStar_Syntax_Syntax.ctx_uvar_range g pfx
                 src.FStar_Syntax_Syntax.ctx_uvar_typ
@@ -2282,13 +2282,13 @@ let (string_of_match_result : match_result -> Prims.string) =
                 FStar_Common.string_of_option
                   FStar_Syntax_Print.delta_depth_to_string d2
                  in
-              Prims.strcat uu____7012 ")"  in
-            Prims.strcat ") (" uu____7010  in
-          Prims.strcat uu____7006 uu____7008  in
-        Prims.strcat "MisMatch (" uu____7004
+              Prims.op_Hat uu____7012 ")"  in
+            Prims.op_Hat ") (" uu____7010  in
+          Prims.op_Hat uu____7006 uu____7008  in
+        Prims.op_Hat "MisMatch (" uu____7004
     | HeadMatch u ->
         let uu____7019 = FStar_Util.string_of_bool u  in
-        Prims.strcat "HeadMatch " uu____7019
+        Prims.op_Hat "HeadMatch " uu____7019
     | FullMatch  -> "FullMatch"
   
 let (head_match : match_result -> match_result) =
@@ -2767,8 +2767,8 @@ let (head_matches_delta :
                            let uu____8478 =
                              let uu____8480 =
                                FStar_Syntax_Print.term_to_string t21  in
-                             Prims.strcat "; " uu____8480  in
-                           Prims.strcat uu____8476 uu____8478))
+                             Prims.op_Hat "; " uu____8480  in
+                           Prims.op_Hat uu____8476 uu____8478))
                 in
              FStar_Util.print4 "head_matches_delta (%s, %s) = %s (%s)\n"
                uu____8404 uu____8406 uu____8408 uu____8416
@@ -4692,7 +4692,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                                     uu____13998))))
                                                       | uu____13999 ->
                                                           giveup env
-                                                            (Prims.strcat
+                                                            (Prims.op_Hat
                                                                "failed to solve sub-problems: "
                                                                msg) p)))))))
                            | uu____14015 when flip ->
@@ -4948,7 +4948,7 @@ and (imitate_arrow :
                                   let uu____14797 =
                                     let uu____14799 = FStar_Option.get msg
                                        in
-                                    Prims.strcat "occurs-check failed: "
+                                    Prims.op_Hat "occurs-check failed: "
                                       uu____14799
                                      in
                                   giveup_or_defer env orig wl uu____14797
@@ -5204,7 +5204,7 @@ and (solve_t_flex_rigid_eq :
                               let uu____15598 =
                                 let uu____15606 =
                                   let uu____15608 = FStar_Option.get msg  in
-                                  Prims.strcat
+                                  Prims.op_Hat
                                     "quasi-pattern, occurs-check failed: "
                                     uu____15608
                                    in
@@ -5435,7 +5435,7 @@ and (solve_t_flex_rigid_eq :
                                then
                                  let uu____16340 =
                                    let uu____16342 = FStar_Option.get msg  in
-                                   Prims.strcat "occurs-check failed: "
+                                   Prims.op_Hat "occurs-check failed: "
                                      uu____16342
                                     in
                                  giveup_or_defer env orig wl uu____16340
@@ -5578,11 +5578,11 @@ and (solve_t_flex_flex :
                                               uu____16588
                                              in
                                           new_uvar
-                                            (Prims.strcat "flex-flex quasi:"
-                                               (Prims.strcat "\tlhs="
-                                                  (Prims.strcat
+                                            (Prims.op_Hat "flex-flex quasi:"
+                                               (Prims.op_Hat "\tlhs="
+                                                  (Prims.op_Hat
                                                      u_lhs.FStar_Syntax_Syntax.ctx_uvar_reason
-                                                     (Prims.strcat "\trhs="
+                                                     (Prims.op_Hat "\trhs="
                                                         u_rhs.FStar_Syntax_Syntax.ctx_uvar_reason))))
                                             wl range gamma_w ctx_w
                                             uu____16585
@@ -6876,15 +6876,15 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                   let uu____20276 =
                     let uu____20278 = FStar_Syntax_Print.term_to_string t1
                        in
-                    Prims.strcat "::" uu____20278  in
-                  Prims.strcat uu____20274 uu____20276  in
+                    Prims.op_Hat "::" uu____20278  in
+                  Prims.op_Hat uu____20274 uu____20276  in
                 let uu____20281 =
                   let uu____20283 = FStar_Syntax_Print.tag_of_term t2  in
                   let uu____20285 =
                     let uu____20287 = FStar_Syntax_Print.term_to_string t2
                        in
-                    Prims.strcat "::" uu____20287  in
-                  Prims.strcat uu____20283 uu____20285  in
+                    Prims.op_Hat "::" uu____20287  in
+                  Prims.op_Hat uu____20283 uu____20285  in
                 FStar_Util.print4 "Attempting %s (%s vs %s); rel = (%s)\n"
                   uu____20270 uu____20272 uu____20281
                   (rel_to_string problem.FStar_TypeChecker_Common.relation)
@@ -10398,7 +10398,7 @@ let (new_t_problem :
                   new_problem wl env lhs rel rhs elt loc reason  in
                 match uu____27760 with
                 | (p,wl1) ->
-                    (def_check_prob (Prims.strcat "new_t_problem." reason)
+                    (def_check_prob (Prims.op_Hat "new_t_problem." reason)
                        (FStar_TypeChecker_Common.TProb p);
                      ((FStar_TypeChecker_Common.TProb p), wl1))
   

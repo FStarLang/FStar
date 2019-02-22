@@ -207,11 +207,11 @@ let (pickBranch :
                match uu___34_1035 with
                | FStar_Util.Inr b ->
                    let uu____1049 = FStar_Util.string_of_bool b  in
-                   Prims.strcat "Inr " uu____1049
+                   Prims.op_Hat "Inr " uu____1049
                | FStar_Util.Inl bs ->
                    let uu____1058 =
                      FStar_Util.string_of_int (FStar_List.length bs)  in
-                   Prims.strcat "Inl " uu____1058
+                   Prims.op_Hat "Inl " uu____1058
                 in
              debug cfg
                (fun uu____1066  ->
@@ -309,7 +309,7 @@ let (un_univ : FStar_TypeChecker_NBETerm.t -> FStar_Syntax_Syntax.universe) =
     | t ->
         let uu____1638 =
           let uu____1640 = FStar_TypeChecker_NBETerm.t_to_string t  in
-          Prims.strcat "Not a universe: " uu____1640  in
+          Prims.op_Hat "Not a universe: " uu____1640  in
         failwith uu____1638
   
 let (is_constr_fv : FStar_Syntax_Syntax.fv -> Prims.bool) =
@@ -511,47 +511,47 @@ let rec (iapp :
         | FStar_TypeChecker_NBETerm.Quote uu____3020 ->
             let uu____3025 =
               let uu____3027 = FStar_TypeChecker_NBETerm.t_to_string f  in
-              Prims.strcat "NBE ill-typed application: " uu____3027  in
+              Prims.op_Hat "NBE ill-typed application: " uu____3027  in
             failwith uu____3025
         | FStar_TypeChecker_NBETerm.Reflect uu____3030 ->
             let uu____3031 =
               let uu____3033 = FStar_TypeChecker_NBETerm.t_to_string f  in
-              Prims.strcat "NBE ill-typed application: " uu____3033  in
+              Prims.op_Hat "NBE ill-typed application: " uu____3033  in
             failwith uu____3031
         | FStar_TypeChecker_NBETerm.Lazy uu____3036 ->
             let uu____3051 =
               let uu____3053 = FStar_TypeChecker_NBETerm.t_to_string f  in
-              Prims.strcat "NBE ill-typed application: " uu____3053  in
+              Prims.op_Hat "NBE ill-typed application: " uu____3053  in
             failwith uu____3051
         | FStar_TypeChecker_NBETerm.Constant uu____3056 ->
             let uu____3057 =
               let uu____3059 = FStar_TypeChecker_NBETerm.t_to_string f  in
-              Prims.strcat "NBE ill-typed application: " uu____3059  in
+              Prims.op_Hat "NBE ill-typed application: " uu____3059  in
             failwith uu____3057
         | FStar_TypeChecker_NBETerm.Univ uu____3062 ->
             let uu____3063 =
               let uu____3065 = FStar_TypeChecker_NBETerm.t_to_string f  in
-              Prims.strcat "NBE ill-typed application: " uu____3065  in
+              Prims.op_Hat "NBE ill-typed application: " uu____3065  in
             failwith uu____3063
         | FStar_TypeChecker_NBETerm.Type_t uu____3068 ->
             let uu____3069 =
               let uu____3071 = FStar_TypeChecker_NBETerm.t_to_string f  in
-              Prims.strcat "NBE ill-typed application: " uu____3071  in
+              Prims.op_Hat "NBE ill-typed application: " uu____3071  in
             failwith uu____3069
         | FStar_TypeChecker_NBETerm.Unknown  ->
             let uu____3074 =
               let uu____3076 = FStar_TypeChecker_NBETerm.t_to_string f  in
-              Prims.strcat "NBE ill-typed application: " uu____3076  in
+              Prims.op_Hat "NBE ill-typed application: " uu____3076  in
             failwith uu____3074
         | FStar_TypeChecker_NBETerm.Refinement uu____3079 ->
             let uu____3094 =
               let uu____3096 = FStar_TypeChecker_NBETerm.t_to_string f  in
-              Prims.strcat "NBE ill-typed application: " uu____3096  in
+              Prims.op_Hat "NBE ill-typed application: " uu____3096  in
             failwith uu____3094
         | FStar_TypeChecker_NBETerm.Arrow uu____3099 ->
             let uu____3120 =
               let uu____3122 = FStar_TypeChecker_NBETerm.t_to_string f  in
-              Prims.strcat "NBE ill-typed application: " uu____3122  in
+              Prims.op_Hat "NBE ill-typed application: " uu____3122  in
             failwith uu____3120
 
 and (translate_fv :
@@ -912,8 +912,8 @@ and (translate_constant :
         let uu____3966 =
           let uu____3968 =
             let uu____3970 = FStar_Syntax_Print.const_to_string c  in
-            Prims.strcat uu____3970 ": Not yet implemented"  in
-          Prims.strcat "Tm_constant " uu____3968  in
+            Prims.op_Hat uu____3970 ": Not yet implemented"  in
+          Prims.op_Hat "Tm_constant " uu____3968  in
         failwith uu____3966
 
 and (translate :
@@ -1371,7 +1371,7 @@ and (translate :
                                             FStar_TypeChecker_NBETerm.t_to_string
                                               x
                                              in
-                                          Prims.strcat
+                                          Prims.op_Hat
                                             (if FStar_Util.is_some q
                                              then "#"
                                              else "") uu____5630))
@@ -1545,7 +1545,7 @@ and (translate_comp_typ :
             FStar_Syntax_Syntax.effect_name = effect_name;
             FStar_Syntax_Syntax.result_typ = result_typ;
             FStar_Syntax_Syntax.effect_args = effect_args;
-            FStar_Syntax_Syntax.flags = flags1;_} ->
+            FStar_Syntax_Syntax.flags = flags;_} ->
             let uu____6111 = FStar_List.map (translate_univ bs) comp_univs
                in
             let uu____6112 = translate cfg bs result_typ  in
@@ -1556,8 +1556,7 @@ and (translate_comp_typ :
                      translate cfg bs (FStar_Pervasives_Native.fst x)  in
                    (uu____6141, (FStar_Pervasives_Native.snd x))) effect_args
                in
-            let uu____6148 = FStar_List.map (translate_flag cfg bs) flags1
-               in
+            let uu____6148 = FStar_List.map (translate_flag cfg bs) flags  in
             {
               FStar_TypeChecker_NBETerm.comp_univs = uu____6111;
               FStar_TypeChecker_NBETerm.effect_name = effect_name;

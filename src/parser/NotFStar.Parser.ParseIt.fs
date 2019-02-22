@@ -171,13 +171,15 @@ let parse fn =
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =
-  let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromString s in
-  let lexer lexbuf = LexFStar.token (Lexhelp.mkLexargs ((fun () -> "."), "","")) lexbuf in
   let user_flags =
-    try
-      Parse.warn_error_list lexer lexbuf
-    with e ->
-      FStar.Errors.log_issue Range.dummyRange (Warning_MalformedWarnErrorList, "Malformed warn-error list, ignored");
-      []
-  in
-  FStar.Errors.update_flags user_flags
+    if s = "" then []
+    else
+      let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromString s in
+      let lexer lexbuf = LexFStar.token (Lexhelp.mkLexargs ((fun () -> "."), "","")) lexbuf in
+        try
+          Parse.warn_error_list lexer lexbuf
+        with e ->
+          FStar.Errors.log_issue Range.dummyRange (Warning_MalformedWarnErrorList, "Malformed warn-error list, ignored");
+          []
+   in
+   FStar.Errors.update_flags user_flags

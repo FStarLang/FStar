@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2019 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,42 +15,97 @@
 *)
 module FStar.String
 
+(* String is a primitive type in F*.
+
+   Most of the functions in this interface have a special status in
+   that they are:
+
+   1. All the total functions in this module are handled by F*'s
+      normalizers and can be reduced during typechecking
+
+   2. All the total functions, plus two functions in the ML effect,
+      have native OCaml implementations in FStar_String.ml
+
+   These functions are, however, not suitable for use in Low* code,
+   since many of them incur implicit allocations that must be garbage
+   collected.
+
+   For strings in Low*, see LowStar.String, LowStar.Literal etc.
+*)
+
 type char = FStar.Char.char
 
+/// `list_of_string` and `string_of_list`: A pair of coercions to
+/// expose and pack a string as a list of characters
 val list_of_string : string -> Tot (list char)
 val string_of_list : list char -> Tot string
 
-(* Not much in here; we should extend and refine this interface *)
+/// A pair
+val string_of_list_of_string (s:string)
+  : Lemma (string_of_list (list_of_string s) == s)
+val list_of_string_of_list (l:list char)
+  : Lemma (list_of_string (string_of_list l) == l)
+
+/// `strlen s` counts the number of utf8 values in a string
+/// It is not the byte length of a string
 let strlen s = List.length (list_of_string s)
-unfold let length s = strlen s
 
-(**
- When applied to a literal s of less than n characters, this predicate
- reduces to True before going to the SMT solver.
- Otherwise, the left disjunct reduces partially but the right disjunct
- remains as is, allowing to keep `strlen s <= n` in the context.
-*)
-unfold let maxlen s n = b2t (normalize_term (strlen s <= n)) \/ strlen s <= n
+/// `length`, an alias for `strlen`
+unfold
+let length s = strlen s
 
+/// `maxlen`: When applied to a literal s of less than n characters,
+/// `maxlen s n` reduces to `True` before going to the SMT solver.
+/// Otherwise, the left disjunct reduces partially but the right
+/// disjunct remains as is, allowing to keep `strlen s <= n` in the
+/// context.
+unfold
+let maxlen s n = b2t (normalize_term (strlen s <= n)) \/ strlen s <= n
+
+/// `make l c`: builds a string of length `l` with each character set
+/// to `c`
 val make: l:nat -> char -> Tot (s:string {length s = l})
+
+/// `string_of_char`: A convenient abbreviation for `make 1 c`
+let string_of_char (c:char) : Tot string = make 1 c
+
+/// `split cs s`: splits the string by delimiters in `cs`
 val split:   list char -> string -> Tot (list string)
-val strcat:  s0:string -> s1:string -> Tot (s:string{length s = length s0 + length s1})
-unfold let (^) s0 s1 = strcat s0 s1
+
+/// `concat s l` concatentates the strings in `l` delimited by `s`
 val concat:  string -> list string -> Tot string
+
+/// `compare s0 s1`: lexicographic ordering on strings
 val compare: string -> string -> Tot int
 
+/// `lowercase`: transform each character to its lowercase variant
 val lowercase:  string -> Tot string
+
+/// `uppercase`: transform each character to its uppercase variant
 val uppercase:  string -> Tot string
 
+/// `index s n`: returns the nth character in `s`
 val index: s:string -> n:nat {n < length s} -> Tot char
-//index_of: returns -1 if the char is not found, for compatibility with C
+
+/// `index_of s c`:
+///    The first index of `c` in `s`
+///    returns -1 if the char is not found, for compatibility with C
 val index_of: string -> char -> Tot int
-val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot char
 
-(* may fail with index out of bounds *)
-(* Second argument is a length, not an index. *)
-val substring: string -> int -> int -> string
-val get: string -> int -> char
-val collect: (char -> string) -> string -> string
+/// `sub s i len`
+///     Second argument is a length, not an index.
+///     Returns a substring of length `len` beginning at `i`
+val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot string
 
-let string_of_char (c:char) : Tot string = make 1 c
+/// `collect f s`: maps `f` over each character of `s`
+///  from left to right, appending and flattening the result
+val collect: (char -> FStar.All.ML string) -> string -> FStar.All.ML string
+
+/// `substring s i len`
+///     A partial variant of `sub s i len` without bounds checks.
+///     May fail with index out of bounds
+val substring: string -> int -> int -> FStar.All.ML string
+
+/// `get s i`: Similar to `index` except it may fail
+///  if `i` is out of bounds
+val get: string -> int -> FStar.All.ML char

@@ -477,12 +477,12 @@ let (check_uvar_ctx_invariant :
                         | FStar_Syntax_Syntax.Binding_var x ->
                             let uu____1740 =
                               FStar_Syntax_Print.bv_to_string x  in
-                            Prims.strcat "Binding_var " uu____1740
+                            Prims.op_Hat "Binding_var " uu____1740
                         | FStar_Syntax_Syntax.Binding_univ u ->
-                            Prims.strcat "Binding_univ " u.FStar_Ident.idText
+                            Prims.op_Hat "Binding_univ " u.FStar_Ident.idText
                         | FStar_Syntax_Syntax.Binding_lid (l,uu____1746) ->
                             let uu____1763 = FStar_Ident.string_of_lid l  in
-                            Prims.strcat "Binding_lid " uu____1763))
+                            Prims.op_Hat "Binding_lid " uu____1763))
                  in
               FStar_All.pipe_right uu____1724 (FStar_String.concat "::\n")
                in

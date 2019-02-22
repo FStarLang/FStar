@@ -27,7 +27,7 @@ let (fail_exp :
                             let uu____97 =
                               let uu____99 =
                                 FStar_Syntax_Print.lid_to_string lid  in
-                              Prims.strcat "Not yet implemented:" uu____99
+                              Prims.op_Hat "Not yet implemented:" uu____99
                                in
                             (uu____97, FStar_Range.dummyRange)  in
                           FStar_Const.Const_string uu____91  in
@@ -311,8 +311,8 @@ let (print_ifamily : inductive_family -> unit) =
                 let uu____757 =
                   let uu____759 = FStar_Syntax_Print.term_to_string d.dtyp
                      in
-                  Prims.strcat " : " uu____759  in
-                Prims.strcat uu____755 uu____757))
+                  Prims.op_Hat " : " uu____759  in
+                Prims.op_Hat uu____755 uu____757))
          in
       FStar_All.pipe_right uu____741 (FStar_String.concat "\n\t\t")  in
     FStar_Util.print4 "\n\t%s %s : %s { %s }\n" uu____732 uu____734 uu____737
@@ -1365,7 +1365,7 @@ let (extract_bundle :
                                   fun uu____3966  ->
                                     let uu____3974 =
                                       FStar_Util.string_of_int i  in
-                                    Prims.strcat "'dummyV" uu____3974))
+                                    Prims.op_Hat "'dummyV" uu____3974))
                            in
                         FStar_List.append vars uu____3940  in
                       let tbody =
@@ -1680,7 +1680,7 @@ let rec (extract_sig :
                      (match ml_let.FStar_Extraction_ML_Syntax.expr with
                       | FStar_Extraction_ML_Syntax.MLE_Let
                           ((flavor,bindings),uu____5136) ->
-                          let flags1 = FStar_List.choose flag_of_qual quals
+                          let flags = FStar_List.choose flag_of_qual quals
                              in
                           let flags' = extract_metadata attrs1  in
                           let uu____5153 =
@@ -1768,7 +1768,7 @@ let rec (extract_sig :
                                                   [FStar_Extraction_ML_Syntax.StackInline]
                                               | uu____5309 -> []  in
                                             let meta =
-                                              FStar_List.append flags1
+                                              FStar_List.append flags
                                                 (FStar_List.append flags'
                                                    flags'')
                                                in

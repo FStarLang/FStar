@@ -16,7 +16,7 @@ let (enclose : doc -> doc -> doc -> doc) =
     fun uu____71  ->
       fun uu____72  ->
         match (uu____70, uu____71, uu____72) with
-        | (Doc l,Doc r,Doc x) -> Doc (Prims.strcat l (Prims.strcat x r))
+        | (Doc l,Doc r,Doc x) -> Doc (Prims.op_Hat l (Prims.op_Hat x r))
   
 let (brackets : doc -> doc) =
   fun uu____84  ->
@@ -34,7 +34,7 @@ let (cat : doc -> doc -> doc) =
   fun uu____118  ->
     fun uu____119  ->
       match (uu____118, uu____119) with
-      | (Doc d1,Doc d2) -> Doc (Prims.strcat d1 d2)
+      | (Doc d1,Doc d2) -> Doc (Prims.op_Hat d1 d2)
   
 let (reduce : doc Prims.list -> doc) =
   fun docs  -> FStar_List.fold_left cat empty docs 

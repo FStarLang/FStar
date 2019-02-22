@@ -355,7 +355,7 @@ let (norm_universe :
                    else
                      (let uu____1681 =
                         let uu____1683 = FStar_Util.string_of_int x  in
-                        Prims.strcat "Universe variable not found: u@"
+                        FStar_String.op_Hat "Universe variable not found: u@"
                           uu____1683
                          in
                       failwith uu____1681))
@@ -1143,7 +1143,7 @@ and (close_comp :
                                  inline_closure_env cfg env [] a  in
                                (uu____5042, q)))
                     in
-                 let flags1 =
+                 let flags =
                    FStar_All.pipe_right c1.FStar_Syntax_Syntax.flags
                      (FStar_List.map
                         (fun uu___38_5059  ->
@@ -1166,7 +1166,7 @@ and (close_comp :
                        (uu___74_5068.FStar_Syntax_Syntax.effect_name);
                      FStar_Syntax_Syntax.result_typ = rt;
                      FStar_Syntax_Syntax.effect_args = args;
-                     FStar_Syntax_Syntax.flags = flags1
+                     FStar_Syntax_Syntax.flags = flags
                    }  in
                  FStar_Syntax_Syntax.mk_Comp uu____5067)
 
@@ -1174,8 +1174,8 @@ and (filter_out_lcomp_cflags :
   FStar_Syntax_Syntax.cflag Prims.list ->
     FStar_Syntax_Syntax.cflag Prims.list)
   =
-  fun flags1  ->
-    FStar_All.pipe_right flags1
+  fun flags  ->
+    FStar_All.pipe_right flags
       (FStar_List.filter
          (fun uu___39_5079  ->
             match uu___39_5079 with
@@ -1193,7 +1193,7 @@ and (close_lcomp_opt :
       fun lopt  ->
         match lopt with
         | FStar_Pervasives_Native.Some rc ->
-            let flags1 =
+            let flags =
               FStar_All.pipe_right rc.FStar_Syntax_Syntax.residual_flags
                 (FStar_List.filter
                    (fun uu___40_5104  ->
@@ -1211,7 +1211,7 @@ and (close_lcomp_opt :
                 FStar_Syntax_Syntax.residual_effect =
                   (uu___75_5113.FStar_Syntax_Syntax.residual_effect);
                 FStar_Syntax_Syntax.residual_typ = uu____5114;
-                FStar_Syntax_Syntax.residual_flags = flags1
+                FStar_Syntax_Syntax.residual_flags = flags
               }  in
             FStar_Pervasives_Native.Some rc1
         | uu____5123 -> lopt
@@ -1682,8 +1682,8 @@ let (rejig_norm_request :
       | uu____6359 ->
           let uu____6360 =
             let uu____6362 = FStar_Syntax_Print.term_to_string hd1  in
-            Prims.strcat "Impossible! invalid rejig_norm_request for: %s"
-              uu____6362
+            FStar_String.op_Hat
+              "Impossible! invalid rejig_norm_request for: %s" uu____6362
              in
           failwith uu____6360
   
@@ -5292,7 +5292,7 @@ and (norm_comp :
                 in
              let effect_args = norm_args ct.FStar_Syntax_Syntax.effect_args
                 in
-             let flags1 =
+             let flags =
                FStar_All.pipe_right ct.FStar_Syntax_Syntax.flags
                  (FStar_List.map
                     (fun uu___48_16209  ->
@@ -5319,7 +5319,7 @@ and (norm_comp :
                          (uu___106_16224.FStar_Syntax_Syntax.effect_name);
                        FStar_Syntax_Syntax.result_typ = result_typ;
                        FStar_Syntax_Syntax.effect_args = effect_args;
-                       FStar_Syntax_Syntax.flags = flags1
+                       FStar_Syntax_Syntax.flags = flags
                      }));
                FStar_Syntax_Syntax.pos =
                  (uu___105_16221.FStar_Syntax_Syntax.pos);
@@ -5387,7 +5387,7 @@ and (norm_lcomp_opt :
       fun lopt  ->
         match lopt with
         | FStar_Pervasives_Native.Some rc ->
-            let flags1 =
+            let flags =
               filter_out_lcomp_cflags rc.FStar_Syntax_Syntax.residual_flags
                in
             let uu____16406 =
@@ -7658,7 +7658,7 @@ let (ghost_to_pure :
                  in
               match uu____26267 with
               | FStar_Pervasives_Native.Some pure_eff ->
-                  let flags1 =
+                  let flags =
                     let uu____26274 =
                       FStar_Ident.lid_equals pure_eff
                         FStar_Parser_Const.effect_Tot_lid
@@ -7676,7 +7676,7 @@ let (ghost_to_pure :
                       (uu___123_26281.FStar_Syntax_Syntax.result_typ);
                     FStar_Syntax_Syntax.effect_args =
                       (uu___123_26281.FStar_Syntax_Syntax.effect_args);
-                    FStar_Syntax_Syntax.flags = flags1
+                    FStar_Syntax_Syntax.flags = flags
                   }
               | FStar_Pervasives_Native.None  ->
                   let ct1 =
@@ -8359,14 +8359,14 @@ and (elim_delayed_subst_cflags :
   FStar_Syntax_Syntax.cflag Prims.list ->
     FStar_Syntax_Syntax.cflag Prims.list)
   =
-  fun flags1  ->
+  fun flags  ->
     FStar_List.map
       (fun uu___51_27835  ->
          match uu___51_27835 with
          | FStar_Syntax_Syntax.DECREASES t ->
              let uu____27839 = elim_delayed_subst_term t  in
              FStar_Syntax_Syntax.DECREASES uu____27839
-         | f -> f) flags1
+         | f -> f) flags
 
 and (elim_delayed_subst_comp :
   FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp) =
@@ -9042,7 +9042,7 @@ let rec (elim_uvars :
               (uu___153_30131.FStar_Syntax_Syntax.sigattrs)
           }
       | FStar_Syntax_Syntax.Sig_effect_abbrev
-          (lid,univ_names,binders,comp,flags1) ->
+          (lid,univ_names,binders,comp,flags) ->
           let uu____30141 = elim_uvars_aux_c env univ_names binders comp  in
           (match uu____30141 with
            | (univ_names1,binders1,comp1) ->
@@ -9050,7 +9050,7 @@ let rec (elim_uvars :
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_effect_abbrev
-                      (lid, univ_names1, binders1, comp1, flags1));
+                      (lid, univ_names1, binders1, comp1, flags));
                  FStar_Syntax_Syntax.sigrng =
                    (uu___154_30181.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =

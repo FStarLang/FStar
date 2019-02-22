@@ -2068,7 +2068,7 @@ let (new_univ_name :
     let uu____9789 =
       let uu____9795 =
         let uu____9797 = FStar_Util.string_of_int id1  in
-        Prims.strcat FStar_Ident.reserved_prefix uu____9797  in
+        Prims.op_Hat FStar_Ident.reserved_prefix uu____9797  in
       (uu____9795, (range_of_ropt ropt))  in
     FStar_Ident.mk_ident uu____9789
   

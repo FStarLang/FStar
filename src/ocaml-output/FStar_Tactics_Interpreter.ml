@@ -26,7 +26,7 @@ let mktot1' :
                      in
                   let uu____117 =
                     FStar_Ident.lid_of_str
-                      (Prims.strcat "FStar.Tactics.Types." nm)
+                      (Prims.op_Hat "FStar.Tactics.Types." nm)
                      in
                   {
                     FStar_TypeChecker_Cfg.name = uu____117;
@@ -76,7 +76,7 @@ let mktot2' :
                          in
                       let uu____257 =
                         FStar_Ident.lid_of_str
-                          (Prims.strcat "FStar.Tactics.Types." nm)
+                          (Prims.op_Hat "FStar.Tactics.Types." nm)
                          in
                       {
                         FStar_TypeChecker_Cfg.name = uu____257;
@@ -2245,7 +2245,7 @@ let (run_tactic_on_typ :
                                                   FStar_Syntax_Print.term_to_string
                                                     t
                                                    in
-                                                Prims.strcat
+                                                Prims.op_Hat
                                                   "uncaught exception: "
                                                   uu____2837
                                             | e2 -> FStar_Exn.raise e2  in
@@ -2797,7 +2797,7 @@ let (preprocess :
                               then
                                 let uu____5200 = FStar_Util.string_of_int n1
                                    in
-                                Prims.strcat "Could not prove goal #"
+                                Prims.op_Hat "Could not prove goal #"
                                   uu____5200
                               else
                                 (let uu____5205 =
@@ -2807,10 +2807,10 @@ let (preprocess :
                                      let uu____5211 =
                                        let uu____5213 =
                                          FStar_Tactics_Types.get_label g  in
-                                       Prims.strcat uu____5213 ")"  in
-                                     Prims.strcat " (" uu____5211  in
-                                   Prims.strcat uu____5207 uu____5209  in
-                                 Prims.strcat "Could not prove goal #"
+                                       Prims.op_Hat uu____5213 ")"  in
+                                     Prims.op_Hat " (" uu____5211  in
+                                   Prims.op_Hat uu____5207 uu____5209  in
+                                 Prims.op_Hat "Could not prove goal #"
                                    uu____5205)
                                in
                             let gt' =

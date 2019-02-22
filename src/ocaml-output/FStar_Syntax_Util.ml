@@ -26,8 +26,8 @@ let (mk_discriminator : FStar_Ident.lident -> FStar_Ident.lident) =
       let uu____112 =
         let uu____115 =
           FStar_Ident.mk_ident
-            ((Prims.strcat FStar_Ident.reserved_prefix
-                (Prims.strcat "is_"
+            ((Prims.op_Hat FStar_Ident.reserved_prefix
+                (Prims.op_Hat "is_"
                    (lid.FStar_Ident.ident).FStar_Ident.idText)),
               ((lid.FStar_Ident.ident).FStar_Ident.idRange))
            in
@@ -111,7 +111,7 @@ let (name_binders :
                     let b1 =
                       let uu____560 =
                         let uu____562 = FStar_Util.string_of_int i  in
-                        Prims.strcat "_" uu____562  in
+                        Prims.op_Hat "_" uu____562  in
                       FStar_Ident.id_of_text uu____560  in
                     let b2 =
                       {
@@ -1580,8 +1580,8 @@ let (mk_field_projector_name_from_string :
   Prims.string -> Prims.string -> Prims.string) =
   fun constr  ->
     fun field  ->
-      Prims.strcat field_projector_prefix
-        (Prims.strcat constr (Prims.strcat field_projector_sep field))
+      Prims.op_Hat field_projector_prefix
+        (Prims.op_Hat constr (Prims.op_Hat field_projector_sep field))
   
 let (mk_field_projector_name_from_ident :
   FStar_Ident.lident -> FStar_Ident.ident -> FStar_Ident.lident) =
@@ -1614,7 +1614,7 @@ let (mk_field_projector_name :
             let uu____6133 =
               let uu____6139 =
                 let uu____6141 = FStar_Util.string_of_int i  in
-                Prims.strcat "_" uu____6141  in
+                Prims.op_Hat "_" uu____6141  in
               let uu____6144 = FStar_Syntax_Syntax.range_of_bv x  in
               (uu____6139, uu____6144)  in
             FStar_Ident.mk_ident uu____6133
@@ -2647,8 +2647,8 @@ let (lcomp_of_comp : FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.lcomp) =
             (c.FStar_Syntax_Syntax.flags))
        in
     match uu____9968 with
-    | (eff_name,flags1) ->
-        FStar_Syntax_Syntax.mk_lcomp eff_name (comp_result c0) flags1
+    | (eff_name,flags) ->
+        FStar_Syntax_Syntax.mk_lcomp eff_name (comp_result c0) flags
           (fun uu____10013  -> c0)
   
 let (mk_residual_comp :
@@ -3665,7 +3665,7 @@ let (dm4f_lid :
       let p' =
         apply_last
           (fun s  ->
-             Prims.strcat "_dm4f_" (Prims.strcat s (Prims.strcat "_" name)))
+             Prims.op_Hat "_dm4f_" (Prims.op_Hat s (Prims.op_Hat "_" name)))
           p
          in
       FStar_Ident.lid_of_path p' FStar_Range.dummyRange
@@ -4203,7 +4203,7 @@ let (process_pragma :
         | FStar_Getopt.Error s1 ->
             FStar_Errors.raise_error
               (FStar_Errors.Fatal_FailToProcessPragma,
-                (Prims.strcat "Failed to process pragma: " s1)) r
+                (Prims.op_Hat "Failed to process pragma: " s1)) r
          in
       match p with
       | FStar_Syntax_Syntax.LightOff  ->

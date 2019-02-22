@@ -251,8 +251,8 @@ let (varops : varops_t) =
               let uu____1738 =
                 let uu____1740 = FStar_ST.op_Bang ctr  in
                 Prims.string_of_int uu____1740  in
-              Prims.strcat "__" uu____1738  in
-            Prims.strcat y1 uu____1736))
+              Prims.op_Hat "__" uu____1738  in
+            Prims.op_Hat y1 uu____1736))
        in
     let top_scope =
       let uu____1790 =
@@ -262,8 +262,8 @@ let (varops : varops_t) =
     FStar_Util.smap_add top_scope y2 true; y2  in
   let new_var pp rn =
     FStar_All.pipe_left mk_unique
-      (Prims.strcat pp.FStar_Ident.idText
-         (Prims.strcat "__" (Prims.string_of_int rn)))
+      (Prims.op_Hat pp.FStar_Ident.idText
+         (Prims.op_Hat "__" (Prims.string_of_int rn)))
      in
   let new_fvar lid = mk_unique lid.FStar_Ident.str  in
   let next_id1 uu____1934 = FStar_Util.incr ctr; FStar_ST.op_Bang ctr  in
@@ -527,7 +527,7 @@ let (print_env : env_t -> Prims.string) =
       | [] -> ""
       | l::uu____3658 ->
           let uu____3661 = FStar_Syntax_Print.lid_to_string l  in
-          Prims.strcat "...," uu____3661
+          Prims.op_Hat "...," uu____3661
        in
     FStar_String.concat ", " (last_fvar :: bvars)
   
@@ -613,7 +613,7 @@ let (gen_term_var :
   =
   fun env  ->
     fun x  ->
-      let ysym = Prims.strcat "@x" (Prims.string_of_int env.depth)  in
+      let ysym = Prims.op_Hat "@x" (Prims.string_of_int env.depth)  in
       let y =
         let uu____3969 =
           FStar_SMTEncoding_Term.mk_fv
@@ -784,7 +784,7 @@ let (new_term_constant_and_tok_from_lid_aux :
             if thunked
             then (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None)
             else
-              (let ftok_name = Prims.strcat fname "@tok"  in
+              (let ftok_name = Prims.op_Hat fname "@tok"  in
                let ftok = FStar_SMTEncoding_Util.mkApp (ftok_name, [])  in
                ((FStar_Pervasives_Native.Some ftok_name),
                  (FStar_Pervasives_Native.Some ftok)))

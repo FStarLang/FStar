@@ -414,7 +414,7 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
     | e1 ->
         let s =
           let uu____1154 = FStar_Util.message_of_exn e1  in
-          Prims.strcat "uncaught exception: " uu____1154  in
+          Prims.op_Hat "uncaught exception: " uu____1154  in
         let uu____1157 =
           let uu____1162 =
             let uu____1163 =
