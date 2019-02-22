@@ -67,7 +67,7 @@ type op =
   | Add
   | Sub
   | Div
-  | RealDiv
+  | RealDiv //Note: whereas the other arithmetic operators are overloaded between Int and Real in Z3; Div and RealDiv are not
   | Mul
   | Minus
   | Mod

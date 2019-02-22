@@ -483,7 +483,7 @@ let rec token = lexer
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
  | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
  | range -> RANGE (L.lexeme lexbuf)
- | real -> REAL(string_trim_both (L.lexeme lexbuf) 0 1)
+ | real -> REAL(trim_right lexbuf 1)
  | (ieee64 | xieee64) -> IEEE64 (float_of_string (L.lexeme lexbuf))
  
  | (integer | xinteger | ieee64 | xieee64) ident_char+ ->
