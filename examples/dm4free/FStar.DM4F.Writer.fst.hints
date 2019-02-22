@@ -1,0 +1,144 @@
+[
+  "DÆ∫Æ&†Ñ€çk\f∆yâVè",
+  [
+    [
+      "FStar.DM4F.Writer._dm4f_WRITER_h___proj__WRITER_h__item__write_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "51d245c7fe630483fa033457e0e62b34"
+    ],
+    [
+      "FStar.DM4F.Writer.WRITER_h",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2d763978f9bc49a2d0738e02357fb55a"
+    ],
+    [
+      "FStar.DM4F.Writer._dm4f_WRITER_int___proj__WRITER_int__item__write_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9e61d95911f4cdcc031b625bc0e8c333"
+    ],
+    [
+      "FStar.DM4F.Writer.WRITER_int",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7f91dd5778812fdc8ed6d1fc85c53d2e"
+    ],
+    [
+      "FStar.DM4F.Writer.test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "int_typing",
+        "lemma_FStar.List.Tot.Properties.append_l_nil",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "86889df99a41e21234843cb0ee110709"
+    ],
+    [
+      "FStar.DM4F.Writer.test2",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok",
+        "equation_FStar.List.Tot.Base.op_At", "equation_Prims.eqtype",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
+        "function_token_typing_Prims.int", "int_typing",
+        "lemma_FStar.List.Tot.Properties.append_l_nil",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "typing_FStar.List.Tot.Base.append"
+      ],
+      0,
+      "2183a5aa7f1930e069a9447e10d6d770"
+    ],
+    [
+      "FStar.DM4F.Writer.test3",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok",
+        "equation_FStar.List.Tot.Base.op_At", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
+        "function_token_typing_Prims.int",
+        "lemma_FStar.List.Tot.Properties.append_l_nil",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.List.Tot.Base.append"
+      ],
+      0,
+      "880eaa75c1e0347e464d9add1cb9a164"
+    ],
+    [
+      "FStar.DM4F.Writer._dm4f_WRITER_h___proj__WRITER_h__item__write_elab",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "07e2b8197fea1a01ed596e384df6e26b"
+    ],
+    [
+      "FStar.DM4F.Writer.WRITER_h",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ff9407c502118da682dc7c6d3335cdd9"
+    ],
+    [
+      "FStar.DM4F.Writer._dm4f_WRITER_int___proj__WRITER_int__item__write_elab",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "67f90d01759ffe5d0db3a5e794d96876"
+    ],
+    [
+      "FStar.DM4F.Writer.WRITER_int",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7fbf3eeb086fd98f21cd62c92bd8fc25"
+    ]
+  ]
+]

@@ -21,6 +21,8 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.IntStoreExcFixed.uver \
 	FStar.DM4F.Heap.Random.uver \
 	FStar.DM4F.Random.uver \
+	FStar.DM4F.Reader.uver \
+	FStar.DM4F.Writer.uver \
 	FStar.DM4F.Id.uver
 
 old:
