@@ -852,21 +852,3 @@ let lemma_mod_plus_injective (n:pos) (a:int) (b:nat) (c:nat) =
   small_mod b n;
   small_mod c n;
   mod_add_both (a + b) (a + c) (-a) n
-
-// let test (n:pos) (i:nat) (b:nat{i < n * b}) =
-//   let bound = n * b in
-//   assert (i <= (n * b) - 1);
-//   assert (i / n <= b - 1);
-//   assert (n * (i / n) < bound);
-//   assert (n * (i / n) + n <= bound)
-
-// let test2 (n:pos) (i:nat{ n <= i }) =
-//   let j = i - n in
-//   lemma_mod_sub i n 1;
-//   assert (i % n == j % n)
-
-// let test3  (n:pos) (i:nat{i >= n}) =
-//   let j = i - n in
-//   assert (j / n == (i - n) / n);
-//   add_div_mod_1 j n;
-//   assert (j / n == (i / n) - 1)
