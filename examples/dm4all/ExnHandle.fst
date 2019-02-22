@@ -13,8 +13,10 @@ let bind (a : Type) (b : Type) (c : repr a) (f : a -> repr b) =
 
 let wp_type (a:Type) = (either a exn -> Type0) -> Type0
 
+unfold
 let return_wp (a:Type) (x:a) : wp_type a = fun p -> p (Inl x)
 
+unfold
 let bind_wp (_ : range) (a : Type) (b : Type) (wp : wp_type a) (f : a -> wp_type b) =
   fun p -> wp (fun r -> match r with
                         | Inl x -> f x p
@@ -84,7 +86,13 @@ let lemma_handle (#a:Type)
   match c1 with
   | Inl x -> ()
   | Inr e -> ()
-  
+
+let related #a (r : repr a) (wp : wp_type a) =
+  EXN?.stronger _ wp (interp _ r)
+
+(* We should get this from the framework FIXME *)
+assume val reify_related (#a #b:Type) (wp:_) (c : (x:a -> EXN b (wp x))) :
+                         Lemma (forall (x:a). related (reify (c x)) (wp x))
 
 let handle (#a:Type) 
            (#b:Type) 
@@ -96,9 +104,9 @@ let handle (#a:Type)
            (c2:(x:a -> EXN b (wp2 x))) 
          : EXN b (handle_wp wp1 h_wp wp2) =
   (* These properties of EXN comps are not currently derivable *)
-  assume ((forall p . wp1 p ==> p (reify (c1 ()))) /\
-          (forall p x . wp2 x p ==> p (reify (c2 x))) /\ 
-          (forall p e . h_wp e p ==> p (reify (h_c e))));
+  reify_related (fun _ -> wp1) c1;
+  reify_related wp2 c2;
+  reify_related h_wp h_c;
   lemma_handle wp1 (reify (c1 ())) (h_wp) (fun e -> reify (h_c e)) wp2 (fun x -> reify (c2 x));
   EXN?.reflect (handle_rep (reify (c1 ()) <: either a exn) 
                            (fun e -> reify (h_c e)) 
