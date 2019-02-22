@@ -1781,6 +1781,13 @@ let g_upd (#a:Type0) (#rrel #rel:srel a)
   : GTot HS.mem
   = g_upd_seq b (Seq.upd (as_seq h b) i v) h
 
+val g_upd_modifies_strong (#a:Type0) (#rrel #rel:srel a)
+                   (b:mbuffer a rrel rel)
+                   (i:nat{i < length b})
+                   (v:a)
+                   (h:HS.mem{live h b})
+  : Lemma (modifies (loc_buffer_from_to b (U32.uint_to_t i) (U32.uint_to_t (i + 1))) h (g_upd b i v h))
+
 /// ``upd b i v`` writes ``v`` to the memory, at offset ``i`` of
 /// buffer ``b``. KreMLin compiles it as ``b[i] = v``.
 

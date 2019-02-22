@@ -581,10 +581,25 @@ val modifies_1 (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h
 
 let modifies_1 = modifies_1'
 
+let modifies_1_from_to (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (from to: U32.t) (h1 h2:HS.mem)
+  : GTot Type0
+  = if ubuffer_of_buffer_from_to_none_cond b from to
+    then modifies_0 h1 h2
+    else
+      modifies_0_preserves_regions h1 h2 /\
+      modifies_1_preserves_mreferences b h1 h2 /\
+      modifies_1_preserves_livenesses b h1 h2 /\
+      modifies_0_preserves_not_unused_in h1 h2 /\
+      modifies_1_from_to_preserves_ubuffers b from to h1 h2
+
 val modifies_1_live_region (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem) (r:HS.rid)
   :Lemma (requires (modifies_1 b h1 h2 /\ HS.live_region h1 r)) (ensures (HS.live_region h2 r))
 
 let modifies_1_live_region #_ #_ #_ _ _ _ _ = ()
+
+let modifies_1_from_to_live_region (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (from to: U32.t) (h1 h2:HS.mem) (r:HS.rid)
+  :Lemma (requires (modifies_1_from_to b from to h1 h2 /\ HS.live_region h1 r)) (ensures (HS.live_region h2 r))
+= ()
 
 val modifies_1_liveness
   (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem)
@@ -593,12 +608,25 @@ val modifies_1_liveness
 
 let modifies_1_liveness #_ #_ #_ _ _ _ #_ #_ _ = ()
 
+let modifies_1_from_to_liveness
+  (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (from to: U32.t) (h1 h2:HS.mem)
+  (#a':Type0) (#pre:Preorder.preorder a') (r':HS.mreference a' pre)
+  :Lemma (requires (modifies_1_from_to b from to h1 h2 /\ h1 `HS.contains` r')) (ensures (h2 `HS.contains` r'))
+= ()
+
 val modifies_1_unused_in (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem) (r:HS.rid) (n:nat)
   :Lemma (requires (modifies_1 b h1 h2 /\
                     HS.live_region h1 r /\ HS.live_region h2 r /\
                     n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)))
          (ensures (n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)))
 let modifies_1_unused_in #_ #_ #_ _ _ _ _ _ = ()
+
+let modifies_1_from_to_unused_in (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (from to: U32.t) (h1 h2:HS.mem) (r:HS.rid) (n:nat)
+  :Lemma (requires (modifies_1_from_to b from to h1 h2 /\
+                    HS.live_region h1 r /\ HS.live_region h2 r /\
+                    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)))
+         (ensures (n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)))
+= ()
 
 val modifies_1_mreference
   (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem)
@@ -607,11 +635,24 @@ val modifies_1_mreference
           (ensures (h2 `HS.contains` r' /\ h1 `HS.sel` r' == h2 `HS.sel` r'))
 let modifies_1_mreference #_ #_ #_ _ _ _ #_ #_ _ = ()
 
+let modifies_1_from_to_mreference
+  (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (from to: U32.t) (h1 h2:HS.mem)
+  (#a':Type0) (#pre:Preorder.preorder a') (r': HS.mreference a' pre)
+  : Lemma (requires (modifies_1_from_to b from to h1 h2 /\ (frameOf b <> HS.frameOf r' \/ as_addr b <> HS.as_addr r') /\ h1 `HS.contains` r'))
+          (ensures (h2 `HS.contains` r' /\ h1 `HS.sel` r' == h2 `HS.sel` r'))
+= ()
+
 val modifies_1_ubuffer (#a:Type0) (#rrel:srel a) (#rel:srel a)
   (b:mbuffer a rrel rel) (h1 h2:HS.mem) (b':ubuffer (frameOf b) (as_addr b))
   : Lemma (requires (modifies_1 b h1 h2 /\ ubuffer_disjoint #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) b'))
           (ensures  (ubuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2))
 let modifies_1_ubuffer #_ #_ #_ _ _ _ _ = ()
+
+let modifies_1_from_to_ubuffer (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (b:mbuffer a rrel rel) (from to: U32.t) (h1 h2:HS.mem) (b':ubuffer (frameOf b) (as_addr b))
+  : Lemma (requires (modifies_1_from_to b from to h1 h2 /\ ubuffer_disjoint #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from to) b'))
+          (ensures  (ubuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2))
+= ()
 
 val modifies_1_null (#a:Type0) (#rrel:srel a) (#rel:srel a)
   (b:mbuffer a rrel rel) (h1 h2:HS.mem)
@@ -946,6 +987,40 @@ let modifies_1_modifies #t #_ #_ b h1 h2 =
           (fun a_ pre_ r_ -> modifies_1_mreference b h1 h2 r_)
     )
 
+val modifies_1_from_to_modifies
+  (#a:Type0)(#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (from to: U32.t) (h1 h2:HS.mem)
+  :Lemma (requires (modifies_1_from_to b from to h1 h2))
+         (ensures  (modifies (loc_buffer_from_to b from to) h1 h2))
+let modifies_1_from_to_modifies #t #_ #_ b from to h1 h2 =
+  if ubuffer_of_buffer_from_to_none_cond b from to
+  then begin
+    modifies_0_modifies h1 h2
+  end else
+   MG.modifies_intro (loc_buffer_from_to b from to) h1 h2
+    (fun r -> modifies_1_from_to_live_region b from to h1 h2 r)
+    (fun t pre p ->
+      loc_disjoint_sym (loc_mreference p) (loc_buffer_from_to b from to);
+      MG.loc_disjoint_aloc_addresses_elim #_ #cls #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from to) true (HS.frameOf p) (Set.singleton (HS.as_addr p));
+      modifies_1_from_to_mreference b from to h1 h2 p
+    )
+    (fun t pre p ->
+      modifies_1_from_to_liveness b from to h1 h2 p
+    )
+    (fun r n ->
+      modifies_1_from_to_unused_in b from to h1 h2 r n
+    )
+    (fun r' a' b' ->
+      loc_disjoint_sym (MG.loc_of_aloc b') (loc_buffer_from_to b from to);
+      MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b) #(as_addr b)  #r' #a' (ubuffer_of_buffer_from_to b from to)  b';
+      if frameOf b = r' && as_addr b = a'
+      then
+        modifies_1_from_to_ubuffer #t b from to h1 h2 b'
+      else
+        same_mreference_ubuffer_preserved #r' #a' b' h1 h2
+          (fun a_ pre_ r_ -> modifies_1_from_to_mreference b from to h1 h2 r_)
+    )
+
 val modifies_addr_of_modifies
   (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (h1 h2:HS.mem)
@@ -1095,6 +1170,14 @@ let g_upd_seq_as_seq #_ #_ #_ b s h =
     Seq.lemma_equal_instances_implies_equal_types ();
     modifies_1_modifies b h h'
   end
+
+let g_upd_modifies_strong #_ #_ #_ b i v h =
+  let h' = g_upd b i v h in
+    // prove modifies_1_from_to_preserves_ubuffers
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();
+    Seq.lemma_equal_instances_implies_equal_types ();
+    modifies_1_from_to_modifies b (U32.uint_to_t i) (U32.uint_to_t (i + 1)) h h'
 #pop-options
 
 let upd' #_ #_ #_ b i v =
