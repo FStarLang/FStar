@@ -89,8 +89,8 @@ let string_of_list :
         let uu____422 =
           let uu____424 = FStar_List.map f l  in
           FStar_String.concat ", " uu____424  in
-        Prims.strcat uu____422 "]"  in
-      Prims.strcat "[" uu____420
+        Prims.op_Hat uu____422 "]"  in
+      Prims.op_Hat "[" uu____420
   
 let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
   =
@@ -109,7 +109,7 @@ let string_of_option :
       match uu___12_476 with
       | FStar_Pervasives_Native.None  -> "None"
       | FStar_Pervasives_Native.Some x ->
-          let uu____484 = f x  in Prims.strcat "Some " uu____484
+          let uu____484 = f x  in Prims.op_Hat "Some " uu____484
   
 type 'a thunk = (unit -> 'a,'a) FStar_Util.either FStar_ST.ref
 let mk_thunk : 'a . (unit -> 'a) -> 'a thunk =

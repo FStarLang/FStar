@@ -417,7 +417,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             | Some s1, Some n1, Some n2 ->
                 let n1 = Z.to_int_fs n1 in
                 let n2 = Z.to_int_fs n2 in
-                (* Might raise an OOB exception *)
+                (* Might raise an OOB exception, but not if the precondition is proven *)
                 begin
                 try let r = String.substring s1 n1 n2 in
                     Some (embed_simple EMB.e_string psc.psc_range r)
@@ -432,6 +432,40 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     in
     let string_of_bool rng (b:bool) : term =
         embed_simple EMB.e_string rng (if b then "true" else "false")
+    in
+    let lowercase rng (s:string) : term =
+        embed_simple EMB.e_string rng (String.lowercase s)
+    in
+    let uppercase rng (s:string) : term =
+        embed_simple EMB.e_string rng (String.uppercase s)
+    in
+    let string_index psc _norm_cb args : option<term> =
+        match args with
+        | [a1; a2] ->
+            begin match arg_as_string a1, arg_as_int a2 with
+            | Some s, Some i ->
+              begin
+              try let r = String.index s i in
+                  Some (embed_simple EMB.e_char psc.psc_range r)
+              with | _ -> None
+              end
+            | _  -> None
+            end
+        | _ -> None
+    in
+    let string_index_of psc _norm_cb args : option<term> =
+        match args with
+        | [a1; a2] ->
+            begin match arg_as_string a1, arg_as_char a2 with
+            | Some s, Some c ->
+              begin
+              try let r = String.index_of s c in
+                  Some (embed_simple EMB.e_int psc.psc_range r)
+              with | _ -> None
+              end
+            | _ -> None
+            end
+        | _ -> None
     in
     let mk_range (psc:psc) _norm_cb args : option<term> =
       match args with
@@ -554,17 +588,28 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              0,
              binary_bool_op (fun x y -> x || y),
              NBETerm.binary_bool_op (fun x y -> x || y));
-         (PC.strcat_lid,
-             2,
+         (PC.string_of_int_lid,
+             1,
              0,
-             binary_string_op (fun x y -> x ^ y),
-             NBETerm.binary_string_op (fun x y -> x ^ y));
-         (PC.strcat_lid',
-             2,
+             unary_op arg_as_int string_of_int,
+             NBETerm.unary_op NBETerm.arg_as_int NBETerm.string_of_int);
+         (PC.string_of_bool_lid,
+             1,
              0,
-             binary_string_op (fun x y -> x ^ y),
-             NBETerm.binary_string_op (fun x y -> x ^ y));
-         (PC.str_make_lid,
+             unary_op arg_as_bool string_of_bool,
+             NBETerm.unary_op NBETerm.arg_as_bool NBETerm.string_of_bool);
+(* Operations from FStar.String *)
+         (PC.string_list_of_string_lid,
+             1,
+             0,
+             unary_op arg_as_string list_of_string',
+             NBETerm.unary_op NBETerm.arg_as_string NBETerm.list_of_string');
+         (PC.string_string_of_list_lid,
+             1,
+             0,
+             unary_op (arg_as_list EMB.e_char) string_of_list',
+             NBETerm.unary_op (NBETerm.arg_as_list NBETerm.e_char) NBETerm.string_of_list');
+         (PC.string_make_lid,
              2,
              0,
              mixed_binary_op
@@ -577,21 +622,57 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                    NBETerm.arg_as_char
                    (NBETerm.embed NBETerm.e_string bogus_cbs)
                    (fun (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
-         (PC.string_of_int_lid,
-             1,
+         (PC.string_split_lid,
+             2,
              0,
-             unary_op arg_as_int string_of_int,
-             NBETerm.unary_op NBETerm.arg_as_int NBETerm.string_of_int);
-         (PC.string_of_bool_lid,
-             1,
+             string_split',
+             NBETerm.string_split');
+         (PC.prims_strcat_lid,
+             2,
              0,
-             unary_op arg_as_bool string_of_bool,
-             NBETerm.unary_op NBETerm.arg_as_bool NBETerm.string_of_bool);
-         (PC.string_compare,
+             binary_string_op (fun x y -> x ^ y),
+             NBETerm.binary_string_op (fun x y -> x ^ y));
+         (PC.prims_op_Hat_lid,
+             2,
+             0,
+             binary_string_op (fun x y -> x ^ y),
+             NBETerm.binary_string_op (fun x y -> x ^ y));
+         (PC.string_concat_lid,
+             2,
+             0,
+             string_concat',
+             NBETerm.string_concat');
+         (PC.string_compare_lid,
              2,
              0,
              binary_op arg_as_string string_compare',
              NBETerm.binary_op NBETerm.arg_as_string NBETerm.string_compare');
+         (PC.string_lowercase_lid,
+             1,
+             0,
+             unary_op arg_as_string lowercase,
+             NBETerm.unary_op NBETerm.arg_as_string NBETerm.string_lowercase);
+         (PC.string_uppercase_lid,
+             1,
+             0,
+             unary_op arg_as_string uppercase,
+             NBETerm.unary_op NBETerm.arg_as_string NBETerm.string_uppercase);
+         (PC.string_index_lid,
+             2,
+             0,
+             string_index,
+             NBETerm.string_index);
+         (PC.string_index_of_lid,
+             2,
+             0,
+             string_index_of,
+             NBETerm.string_index_of);
+         (PC.string_sub_lid,
+             3,
+             0,
+             string_substring',
+             NBETerm.string_substring');
+(* END FStar.String functions *)
          (PC.op_Eq,
              3,
              0,
@@ -602,31 +683,6 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              0,
              decidable_eq true,
              NBETerm.decidable_eq true);
-         (PC.p2l ["FStar"; "String"; "list_of_string"],
-             1,
-             0,
-             unary_op arg_as_string list_of_string',
-             NBETerm.unary_op NBETerm.arg_as_string NBETerm.list_of_string');
-         (PC.p2l ["FStar"; "String"; "string_of_list"],
-             1,
-             0,
-             unary_op (arg_as_list EMB.e_char) string_of_list',
-             NBETerm.unary_op (NBETerm.arg_as_list NBETerm.e_char) NBETerm.string_of_list');
-         (PC.p2l ["FStar"; "String"; "split"],
-             2,
-             0,
-             string_split',
-             NBETerm.string_split');
-         (PC.p2l ["FStar"; "String"; "substring"],
-             3,
-             0,
-             string_substring',
-             NBETerm.string_substring');
-         (PC.p2l ["FStar"; "String"; "concat"],
-             2,
-             0,
-             string_concat',
-             NBETerm.string_concat');
          (PC.p2l ["Prims"; "mk_range"],
              5,
              0,

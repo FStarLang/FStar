@@ -2221,386 +2221,362 @@ let (uu___is_Fatal_EmptySurfaceLet : raw_error -> Prims.bool) =
     | Fatal_EmptySurfaceLet  -> true
     | uu____3529 -> false
   
-type flag =
-  | CFatal 
-  | CAlwaysError 
-  | CError 
-  | CWarning 
-  | CSilent 
-let (uu___is_CFatal : flag -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | CFatal  -> true | uu____3540 -> false
-  
-let (uu___is_CAlwaysError : flag -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | CAlwaysError  -> true | uu____3551 -> false
-  
-let (uu___is_CError : flag -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | CError  -> true | uu____3562 -> false
-  
-let (uu___is_CWarning : flag -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | CWarning  -> true | uu____3573 -> false
-  
-let (uu___is_CSilent : flag -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | CSilent  -> true | uu____3584 -> false
-  
-let (default_flags : (raw_error * flag) Prims.list) =
-  [(Error_DependencyAnalysisFailed, CAlwaysError);
-  (Error_IDETooManyPops, CAlwaysError);
-  (Error_IDEUnrecognized, CAlwaysError);
-  (Error_InductiveTypeNotSatisfyPositivityCondition, CAlwaysError);
-  (Error_InvalidUniverseVar, CAlwaysError);
-  (Error_MissingFileName, CAlwaysError);
-  (Error_ModuleFileNameMismatch, CAlwaysError);
-  (Error_OpPlusInUniverse, CAlwaysError);
-  (Error_OutOfRange, CAlwaysError);
-  (Error_ProofObligationFailed, CError);
-  (Error_TooManyFiles, CAlwaysError);
-  (Error_TypeCheckerFailToProve, CAlwaysError);
-  (Error_TypeError, CAlwaysError);
-  (Error_UncontrainedUnificationVar, CAlwaysError);
-  (Error_UnexpectedGTotComputation, CAlwaysError);
-  (Error_UnexpectedInstance, CAlwaysError);
-  (Error_UnknownFatal_AssertionFailure, CError);
-  (Error_Z3InvocationError, CAlwaysError);
-  (Error_IDEAssertionFailure, CAlwaysError);
-  (Error_Z3SolverError, CError);
-  (Fatal_AbstractTypeDeclarationInInterface, CFatal);
-  (Fatal_ActionMustHaveFunctionType, CFatal);
-  (Fatal_AlreadyDefinedTopLevelDeclaration, CFatal);
-  (Fatal_ArgumentLengthMismatch, CFatal);
-  (Fatal_AssertionFailure, CFatal);
-  (Fatal_AssignToImmutableValues, CFatal);
-  (Fatal_AssumeValInInterface, CFatal);
-  (Fatal_BadlyInstantiatedSynthByTactic, CFatal);
-  (Fatal_BadSignatureShape, CFatal);
-  (Fatal_BinderAndArgsLengthMismatch, CFatal);
-  (Fatal_BothValAndLetInInterface, CFatal);
-  (Fatal_CardinalityConstraintViolated, CFatal);
-  (Fatal_ComputationNotTotal, CFatal);
-  (Fatal_ComputationTypeNotAllowed, CFatal);
-  (Fatal_ComputedTypeNotMatchAnnotation, CFatal);
-  (Fatal_ConstructorArgLengthMismatch, CFatal);
-  (Fatal_ConstructorFailedCheck, CFatal);
-  (Fatal_ConstructorNotFound, CFatal);
-  (Fatal_ConstsructorBuildWrongType, CFatal);
-  (Fatal_CycleInRecTypeAbbreviation, CFatal);
-  (Fatal_DataContructorNotFound, CFatal);
-  (Fatal_DefaultQualifierNotAllowedOnEffects, CFatal);
-  (Fatal_DefinitionNotFound, CFatal);
-  (Fatal_DisjuctivePatternVarsMismatch, CFatal);
-  (Fatal_DivergentComputationCannotBeIncludedInTotal, CFatal);
-  (Fatal_DuplicateInImplementation, CFatal);
-  (Fatal_DuplicateModuleOrInterface, CFatal);
-  (Fatal_DuplicateTopLevelNames, CFatal);
-  (Fatal_DuplicateTypeAnnotationAndValDecl, CFatal);
-  (Fatal_EffectCannotBeReified, CFatal);
-  (Fatal_EffectConstructorNotFullyApplied, CFatal);
-  (Fatal_EffectfulAndPureComputationMismatch, CFatal);
-  (Fatal_EffectNotFound, CFatal);
-  (Fatal_EffectsCannotBeComposed, CFatal);
-  (Fatal_ErrorInSolveDeferredConstraints, CFatal);
-  (Fatal_ErrorsReported, CFatal);
-  (Fatal_EscapedBoundVar, CFatal);
-  (Fatal_ExpectedArrowAnnotatedType, CFatal);
-  (Fatal_ExpectedGhostExpression, CFatal);
-  (Fatal_ExpectedPureExpression, CFatal);
-  (Fatal_ExpectNormalizedEffect, CFatal);
-  (Fatal_ExpectTermGotFunction, CFatal);
-  (Fatal_ExpectTrivialPreCondition, CFatal);
-  (Fatal_FailToExtractNativeTactic, CFatal);
-  (Fatal_FailToCompileNativeTactic, CFatal);
-  (Fatal_FailToProcessPragma, CFatal);
-  (Fatal_FailToResolveImplicitArgument, CFatal);
-  (Fatal_FailToSolveUniverseInEquality, CFatal);
-  (Fatal_FieldsNotBelongToSameRecordType, CFatal);
-  (Fatal_ForbiddenReferenceToCurrentModule, CFatal);
-  (Fatal_FreeVariables, CFatal);
-  (Fatal_FunctionTypeExpected, CFatal);
-  (Fatal_IdentifierNotFound, CFatal);
-  (Fatal_IllAppliedConstant, CFatal);
-  (Fatal_IllegalCharInByteArray, CFatal);
-  (Fatal_IllegalCharInOperatorName, CFatal);
-  (Fatal_IllTyped, CFatal);
-  (Fatal_ImpossibleAbbrevLidBundle, CFatal);
-  (Fatal_ImpossibleAbbrevRenameBundle, CFatal);
-  (Fatal_ImpossibleInductiveWithAbbrev, CFatal);
-  (Fatal_ImpossiblePrePostAbs, CFatal);
-  (Fatal_ImpossiblePrePostArrow, CFatal);
-  (Fatal_ImpossibleToGenerateDMEffect, CFatal);
-  (Fatal_ImpossibleTypeAbbrevBundle, CFatal);
-  (Fatal_ImpossibleTypeAbbrevSigeltBundle, CFatal);
-  (Fatal_IncludeModuleNotPrepared, CFatal);
-  (Fatal_IncoherentInlineUniverse, CFatal);
-  (Fatal_IncompatibleKinds, CFatal);
-  (Fatal_IncompatibleNumberOfTypes, CFatal);
-  (Fatal_IncompatibleSetOfUniverse, CFatal);
-  (Fatal_IncompatibleUniverse, CFatal);
-  (Fatal_InconsistentImplicitArgumentAnnotation, CFatal);
-  (Fatal_InconsistentImplicitQualifier, CFatal);
-  (Fatal_InconsistentQualifierAnnotation, CFatal);
-  (Fatal_InferredTypeCauseVarEscape, CFatal);
-  (Fatal_InlineRenamedAsUnfold, CFatal);
-  (Fatal_InsufficientPatternArguments, CFatal);
-  (Fatal_InterfaceAlreadyProcessed, CFatal);
-  (Fatal_InterfaceNotImplementedByModule, CFatal);
-  (Fatal_InterfaceWithTypeImplementation, CFatal);
-  (Fatal_InvalidFloatingPointNumber, CFatal);
-  (Fatal_InvalidFSDocKeyword, CFatal);
-  (Fatal_InvalidIdentifier, CFatal);
-  (Fatal_InvalidLemmaArgument, CFatal);
-  (Fatal_InvalidNumericLiteral, CFatal);
-  (Fatal_InvalidRedefinitionOfLexT, CFatal);
-  (Fatal_InvalidUnicodeInStringLiteral, CFatal);
-  (Fatal_InvalidUTF8Encoding, CFatal);
-  (Fatal_InvalidWarnErrorSetting, CFatal);
-  (Fatal_LetBoundMonadicMismatch, CFatal);
-  (Fatal_LetMutableForVariablesOnly, CFatal);
-  (Fatal_LetOpenModuleOnly, CFatal);
-  (Fatal_LetRecArgumentMismatch, CFatal);
-  (Fatal_MalformedActionDeclaration, CFatal);
-  (Fatal_MismatchedPatternType, CFatal);
-  (Fatal_MismatchUniversePolymorphic, CFatal);
-  (Fatal_MissingDataConstructor, CFatal);
-  (Fatal_MissingExposeInterfacesOption, CFatal);
-  (Fatal_MissingFieldInRecord, CFatal);
-  (Fatal_MissingImplementation, CFatal);
-  (Fatal_MissingImplicitArguments, CFatal);
-  (Fatal_MissingInterface, CFatal);
-  (Fatal_MissingNameInBinder, CFatal);
-  (Fatal_MissingPrimsModule, CFatal);
-  (Fatal_MissingQuantifierBinder, CFatal);
-  (Fatal_ModuleExpected, CFatal);
-  (Fatal_ModuleFileNotFound, CFatal);
-  (Fatal_ModuleFirstStatement, CFatal);
-  (Fatal_ModuleNotFound, CFatal);
-  (Fatal_ModuleOrFileNotFound, CFatal);
-  (Fatal_MonadAlreadyDefined, CFatal);
-  (Fatal_MoreThanOneDeclaration, CFatal);
-  (Fatal_MultipleLetBinding, CFatal);
-  (Fatal_NameNotFound, CFatal);
-  (Fatal_NameSpaceNotFound, CFatal);
-  (Fatal_NegativeUniverseConstFatal_NotSupported, CFatal);
-  (Fatal_NoFileProvided, CFatal);
-  (Fatal_NonInductiveInMutuallyDefinedType, CFatal);
-  (Fatal_NonLinearPatternNotPermitted, CFatal);
-  (Fatal_NonLinearPatternVars, CFatal);
-  (Fatal_NonSingletonTopLevel, CFatal);
-  (Fatal_NonSingletonTopLevelModule, CFatal);
-  (Fatal_NonTopRecFunctionNotFullyEncoded, CFatal);
-  (Fatal_NonTrivialPreConditionInPrims, CFatal);
-  (Fatal_NonVariableInductiveTypeParameter, CFatal);
-  (Fatal_NotApplicationOrFv, CFatal);
-  (Fatal_NotEnoughArgsToEffect, CFatal);
-  (Fatal_NotEnoughArgumentsForEffect, CFatal);
-  (Fatal_NotFunctionType, CFatal);
-  (Fatal_NotSupported, CFatal);
-  (Fatal_NotTopLevelModule, CFatal);
-  (Fatal_NotValidFStarFile, CFatal);
-  (Fatal_NotValidIncludeDirectory, CFatal);
-  (Fatal_OneModulePerFile, CFatal);
-  (Fatal_OpenGoalsInSynthesis, CFatal);
-  (Fatal_OptionsNotCompatible, CFatal);
-  (Fatal_OutOfOrder, CFatal);
-  (Fatal_ParseErrors, CFatal);
-  (Fatal_ParseItError, CFatal);
-  (Fatal_PolyTypeExpected, CFatal);
-  (Fatal_PossibleInfiniteTyp, CFatal);
-  (Fatal_PreModuleMismatch, CFatal);
-  (Fatal_QulifierListNotPermitted, CFatal);
-  (Fatal_RecursiveFunctionLiteral, CFatal);
-  (Fatal_ReflectOnlySupportedOnEffects, CFatal);
-  (Fatal_ReservedPrefix, CFatal);
-  (Fatal_SMTOutputParseError, CFatal);
-  (Fatal_SMTSolverError, CFatal);
-  (Fatal_SyntaxError, CFatal);
-  (Fatal_SynthByTacticError, CFatal);
-  (Fatal_TacticGotStuck, CFatal);
-  (Fatal_TcOneFragmentFailed, CFatal);
-  (Fatal_TermOutsideOfDefLanguage, CFatal);
-  (Fatal_ToManyArgumentToFunction, CFatal);
-  (Fatal_TooManyOrTooFewFileMatch, CFatal);
-  (Fatal_TooManyPatternArguments, CFatal);
-  (Fatal_TooManyUniverse, CFatal);
-  (Fatal_TypeMismatch, CFatal);
-  (Fatal_TypeWithinPatternsAllowedOnVariablesOnly, CFatal);
-  (Fatal_UnableToReadFile, CFatal);
-  (Fatal_UnepxectedOrUnboundOperator, CFatal);
-  (Fatal_UnexpectedBinder, CFatal);
-  (Fatal_UnexpectedBindShape, CFatal);
-  (Fatal_UnexpectedChar, CFatal);
-  (Fatal_UnexpectedComputationTypeForLetRec, CFatal);
-  (Fatal_UnexpectedConstructorType, CFatal);
-  (Fatal_UnexpectedDataConstructor, CFatal);
-  (Fatal_UnexpectedEffect, CFatal);
-  (Fatal_UnexpectedEmptyRecord, CFatal);
-  (Fatal_UnexpectedExpressionType, CFatal);
-  (Fatal_UnexpectedFunctionParameterType, CFatal);
-  (Fatal_UnexpectedGeneralizedUniverse, CFatal);
-  (Fatal_UnexpectedGTotForLetRec, CFatal);
-  (Fatal_UnexpectedGuard, CFatal);
-  (Fatal_UnexpectedIdentifier, CFatal);
-  (Fatal_UnexpectedImplicitArgument, CFatal);
-  (Fatal_UnexpectedImplictArgument, CFatal);
-  (Fatal_UnexpectedInductivetype, CFatal);
-  (Fatal_UnexpectedLetBinding, CFatal);
-  (Fatal_UnexpectedModuleDeclaration, CFatal);
-  (Fatal_UnexpectedNumberOfUniverse, CFatal);
-  (Fatal_UnexpectedNumericLiteral, CFatal);
-  (Fatal_UnexpectedOperatorSymbol, CFatal);
-  (Fatal_UnexpectedPattern, CFatal);
-  (Fatal_UnexpectedPosition, CFatal);
-  (Fatal_UnExpectedPreCondition, CFatal);
-  (Fatal_UnexpectedReturnShape, CFatal);
-  (Fatal_UnexpectedSignatureForMonad, CFatal);
-  (Fatal_UnexpectedTerm, CFatal);
-  (Fatal_UnexpectedTermInUniverse, CFatal);
-  (Fatal_UnexpectedTermType, CFatal);
-  (Fatal_UnexpectedTermVQuote, CFatal);
-  (Fatal_UnexpectedUniversePolymorphicReturn, CFatal);
-  (Fatal_UnexpectedUniverseVariable, CFatal);
-  (Fatal_UnfoldableDeprecated, CFatal);
-  (Fatal_UnificationNotWellFormed, CFatal);
-  (Fatal_Uninstantiated, CFatal);
-  (Error_UninstantiatedUnificationVarInTactic, CError);
-  (Fatal_UninstantiatedVarInTactic, CFatal);
-  (Fatal_UniverseMightContainSumOfTwoUnivVars, CFatal);
-  (Fatal_UniversePolymorphicInnerLetBound, CFatal);
-  (Fatal_UnknownAttribute, CFatal);
-  (Fatal_UnknownToolForDep, CFatal);
-  (Fatal_UnrecognizedExtension, CFatal);
-  (Fatal_UnresolvedPatternVar, CFatal);
-  (Fatal_UnsupportedConstant, CFatal);
-  (Fatal_UnsupportedDisjuctivePatterns, CFatal);
-  (Fatal_UnsupportedQualifier, CFatal);
-  (Fatal_UserTacticFailure, CFatal);
-  (Fatal_ValueRestriction, CFatal);
-  (Fatal_VariableNotFound, CFatal);
-  (Fatal_WrongBodyTypeForReturnWP, CFatal);
-  (Fatal_WrongDataAppHeadFormat, CFatal);
-  (Fatal_WrongDefinitionOrder, CFatal);
-  (Fatal_WrongResultTypeAfterConstrutor, CFatal);
-  (Fatal_WrongTerm, CFatal);
-  (Fatal_WhenClauseNotSupported, CFatal);
-  (Unused01, CFatal);
-  (Warning_CallNotImplementedAsWarning, CWarning);
-  (Warning_AddImplicitAssumeNewQualifier, CWarning);
-  (Warning_AdmitWithoutDefinition, CWarning);
-  (Warning_CachedFile, CWarning);
-  (Warning_DefinitionNotTranslated, CWarning);
-  (Warning_DependencyFound, CWarning);
-  (Warning_DeprecatedEqualityOnBinder, CWarning);
-  (Warning_DeprecatedOpaqueQualifier, CWarning);
-  (Warning_DocOverwrite, CWarning);
-  (Warning_FileNotWritten, CWarning);
-  (Warning_Filtered, CWarning);
-  (Warning_FunctionLiteralPrecisionLoss, CWarning);
-  (Warning_FunctionNotExtacted, CWarning);
-  (Warning_HintFailedToReplayProof, CWarning);
-  (Warning_HitReplayFailed, CWarning);
-  (Warning_IDEIgnoreCodeGen, CWarning);
-  (Warning_IllFormedGoal, CWarning);
-  (Warning_InaccessibleArgument, CWarning);
-  (Warning_IncoherentImplicitQualifier, CWarning);
-  (Warning_IrrelevantQualifierOnArgumentToReflect, CWarning);
-  (Warning_IrrelevantQualifierOnArgumentToReify, CWarning);
-  (Warning_MalformedWarnErrorList, CWarning);
-  (Warning_MetaAlienNotATmUnknown, CWarning);
-  (Warning_MultipleAscriptions, CWarning);
-  (Warning_NondependentUserDefinedDataType, CWarning);
-  (Warning_NonListLiteralSMTPattern, CWarning);
-  (Warning_NormalizationFailure, CWarning);
-  (Warning_NotDependentArrow, CWarning);
-  (Warning_NotEmbedded, CWarning);
-  (Warning_PatternMissingBoundVar, CWarning);
-  (Warning_RecursiveDependency, CWarning);
-  (Warning_RedundantExplicitCurrying, CWarning);
-  (Warning_SMTPatTDeprecated, CWarning);
-  (Warning_SMTPatternMissingBoundVar, CWarning);
-  (Warning_TopLevelEffect, CWarning);
-  (Warning_UnboundModuleReference, CWarning);
-  (Warning_UnexpectedFile, CWarning);
-  (Warning_UnexpectedFsTypApp, CWarning);
-  (Warning_UnexpectedZ3Output, CError);
-  (Warning_UnprotectedTerm, CWarning);
-  (Warning_UnrecognizedAttribute, CWarning);
-  (Warning_UpperBoundCandidateAlreadyVisited, CWarning);
-  (Warning_UseDefaultEffect, CWarning);
-  (Warning_WrongErrorLocation, CWarning);
-  (Warning_Z3InvocationWarning, CWarning);
-  (Warning_MissingInterfaceOrImplementation, CWarning);
-  (Warning_ConstructorBuildsUnexpectedType, CWarning);
-  (Warning_ModuleOrFileNotFoundWarning, CWarning);
-  (Error_NoLetMutable, CAlwaysError);
-  (Error_BadImplicit, CAlwaysError);
-  (Warning_DeprecatedDefinition, CWarning);
-  (Fatal_SMTEncodingArityMismatch, CFatal);
-  (Warning_Defensive, CWarning);
-  (Warning_CantInspect, CWarning);
-  (Warning_NilGivenExplicitArgs, CWarning);
-  (Warning_ConsAppliedExplicitArgs, CWarning);
-  (Warning_UnembedBinderKnot, CWarning);
-  (Fatal_TacticProofRelevantGoal, CFatal);
-  (Warning_TacAdmit, CWarning);
-  (Fatal_IncoherentPatterns, CFatal);
-  (Error_NoSMTButNeeded, CAlwaysError);
-  (Fatal_UnexpectedAntiquotation, CFatal);
-  (Fatal_SplicedUndef, CFatal);
-  (Fatal_SpliceUnembedFail, CFatal);
-  (Warning_ExtractionUnexpectedEffect, CWarning);
-  (Error_DidNotFail, CAlwaysError);
-  (Warning_UnappliedFail, CWarning);
-  (Warning_QuantifierWithoutPattern, CSilent);
-  (Error_EmptyFailErrs, CAlwaysError);
-  (Warning_logicqualifier, CWarning);
-  (Fatal_CyclicDependence, CFatal);
-  (Error_InductiveAnnotNotAType, CError);
-  (Fatal_FriendInterface, CFatal);
-  (Error_CannotRedefineConst, CError);
-  (Error_BadClassDecl, CError);
-  (Error_BadInductiveParam, CFatal);
-  (Error_FieldShadow, CFatal);
-  (Error_UnexpectedDM4FType, CFatal);
-  (Fatal_EffectAbbreviationResultTypeMismatch, CFatal);
-  (Error_AlreadyCachedAssertionFailure, CFatal);
-  (Error_MustEraseMissing, CWarning);
-  (Warning_EffectfulArgumentToErasedFunction, CWarning);
-  (Fatal_EmptySurfaceLet, CFatal)] 
+type flag = FStar_Options.error_flag
+let (default_flags : (raw_error * FStar_Options.error_flag) Prims.list) =
+  [(Error_DependencyAnalysisFailed, FStar_Options.CAlwaysError);
+  (Error_IDETooManyPops, FStar_Options.CAlwaysError);
+  (Error_IDEUnrecognized, FStar_Options.CAlwaysError);
+  (Error_InductiveTypeNotSatisfyPositivityCondition,
+    FStar_Options.CAlwaysError);
+  (Error_InvalidUniverseVar, FStar_Options.CAlwaysError);
+  (Error_MissingFileName, FStar_Options.CAlwaysError);
+  (Error_ModuleFileNameMismatch, FStar_Options.CAlwaysError);
+  (Error_OpPlusInUniverse, FStar_Options.CAlwaysError);
+  (Error_OutOfRange, FStar_Options.CAlwaysError);
+  (Error_ProofObligationFailed, FStar_Options.CError);
+  (Error_TooManyFiles, FStar_Options.CAlwaysError);
+  (Error_TypeCheckerFailToProve, FStar_Options.CAlwaysError);
+  (Error_TypeError, FStar_Options.CAlwaysError);
+  (Error_UncontrainedUnificationVar, FStar_Options.CAlwaysError);
+  (Error_UnexpectedGTotComputation, FStar_Options.CAlwaysError);
+  (Error_UnexpectedInstance, FStar_Options.CAlwaysError);
+  (Error_UnknownFatal_AssertionFailure, FStar_Options.CError);
+  (Error_Z3InvocationError, FStar_Options.CAlwaysError);
+  (Error_IDEAssertionFailure, FStar_Options.CAlwaysError);
+  (Error_Z3SolverError, FStar_Options.CError);
+  (Fatal_AbstractTypeDeclarationInInterface, FStar_Options.CFatal);
+  (Fatal_ActionMustHaveFunctionType, FStar_Options.CFatal);
+  (Fatal_AlreadyDefinedTopLevelDeclaration, FStar_Options.CFatal);
+  (Fatal_ArgumentLengthMismatch, FStar_Options.CFatal);
+  (Fatal_AssertionFailure, FStar_Options.CFatal);
+  (Fatal_AssignToImmutableValues, FStar_Options.CFatal);
+  (Fatal_AssumeValInInterface, FStar_Options.CFatal);
+  (Fatal_BadlyInstantiatedSynthByTactic, FStar_Options.CFatal);
+  (Fatal_BadSignatureShape, FStar_Options.CFatal);
+  (Fatal_BinderAndArgsLengthMismatch, FStar_Options.CFatal);
+  (Fatal_BothValAndLetInInterface, FStar_Options.CFatal);
+  (Fatal_CardinalityConstraintViolated, FStar_Options.CFatal);
+  (Fatal_ComputationNotTotal, FStar_Options.CFatal);
+  (Fatal_ComputationTypeNotAllowed, FStar_Options.CFatal);
+  (Fatal_ComputedTypeNotMatchAnnotation, FStar_Options.CFatal);
+  (Fatal_ConstructorArgLengthMismatch, FStar_Options.CFatal);
+  (Fatal_ConstructorFailedCheck, FStar_Options.CFatal);
+  (Fatal_ConstructorNotFound, FStar_Options.CFatal);
+  (Fatal_ConstsructorBuildWrongType, FStar_Options.CFatal);
+  (Fatal_CycleInRecTypeAbbreviation, FStar_Options.CFatal);
+  (Fatal_DataContructorNotFound, FStar_Options.CFatal);
+  (Fatal_DefaultQualifierNotAllowedOnEffects, FStar_Options.CFatal);
+  (Fatal_DefinitionNotFound, FStar_Options.CFatal);
+  (Fatal_DisjuctivePatternVarsMismatch, FStar_Options.CFatal);
+  (Fatal_DivergentComputationCannotBeIncludedInTotal, FStar_Options.CFatal);
+  (Fatal_DuplicateInImplementation, FStar_Options.CFatal);
+  (Fatal_DuplicateModuleOrInterface, FStar_Options.CFatal);
+  (Fatal_DuplicateTopLevelNames, FStar_Options.CFatal);
+  (Fatal_DuplicateTypeAnnotationAndValDecl, FStar_Options.CFatal);
+  (Fatal_EffectCannotBeReified, FStar_Options.CFatal);
+  (Fatal_EffectConstructorNotFullyApplied, FStar_Options.CFatal);
+  (Fatal_EffectfulAndPureComputationMismatch, FStar_Options.CFatal);
+  (Fatal_EffectNotFound, FStar_Options.CFatal);
+  (Fatal_EffectsCannotBeComposed, FStar_Options.CFatal);
+  (Fatal_ErrorInSolveDeferredConstraints, FStar_Options.CFatal);
+  (Fatal_ErrorsReported, FStar_Options.CFatal);
+  (Fatal_EscapedBoundVar, FStar_Options.CFatal);
+  (Fatal_ExpectedArrowAnnotatedType, FStar_Options.CFatal);
+  (Fatal_ExpectedGhostExpression, FStar_Options.CFatal);
+  (Fatal_ExpectedPureExpression, FStar_Options.CFatal);
+  (Fatal_ExpectNormalizedEffect, FStar_Options.CFatal);
+  (Fatal_ExpectTermGotFunction, FStar_Options.CFatal);
+  (Fatal_ExpectTrivialPreCondition, FStar_Options.CFatal);
+  (Fatal_FailToExtractNativeTactic, FStar_Options.CFatal);
+  (Fatal_FailToCompileNativeTactic, FStar_Options.CFatal);
+  (Fatal_FailToProcessPragma, FStar_Options.CFatal);
+  (Fatal_FailToResolveImplicitArgument, FStar_Options.CFatal);
+  (Fatal_FailToSolveUniverseInEquality, FStar_Options.CFatal);
+  (Fatal_FieldsNotBelongToSameRecordType, FStar_Options.CFatal);
+  (Fatal_ForbiddenReferenceToCurrentModule, FStar_Options.CFatal);
+  (Fatal_FreeVariables, FStar_Options.CFatal);
+  (Fatal_FunctionTypeExpected, FStar_Options.CFatal);
+  (Fatal_IdentifierNotFound, FStar_Options.CFatal);
+  (Fatal_IllAppliedConstant, FStar_Options.CFatal);
+  (Fatal_IllegalCharInByteArray, FStar_Options.CFatal);
+  (Fatal_IllegalCharInOperatorName, FStar_Options.CFatal);
+  (Fatal_IllTyped, FStar_Options.CFatal);
+  (Fatal_ImpossibleAbbrevLidBundle, FStar_Options.CFatal);
+  (Fatal_ImpossibleAbbrevRenameBundle, FStar_Options.CFatal);
+  (Fatal_ImpossibleInductiveWithAbbrev, FStar_Options.CFatal);
+  (Fatal_ImpossiblePrePostAbs, FStar_Options.CFatal);
+  (Fatal_ImpossiblePrePostArrow, FStar_Options.CFatal);
+  (Fatal_ImpossibleToGenerateDMEffect, FStar_Options.CFatal);
+  (Fatal_ImpossibleTypeAbbrevBundle, FStar_Options.CFatal);
+  (Fatal_ImpossibleTypeAbbrevSigeltBundle, FStar_Options.CFatal);
+  (Fatal_IncludeModuleNotPrepared, FStar_Options.CFatal);
+  (Fatal_IncoherentInlineUniverse, FStar_Options.CFatal);
+  (Fatal_IncompatibleKinds, FStar_Options.CFatal);
+  (Fatal_IncompatibleNumberOfTypes, FStar_Options.CFatal);
+  (Fatal_IncompatibleSetOfUniverse, FStar_Options.CFatal);
+  (Fatal_IncompatibleUniverse, FStar_Options.CFatal);
+  (Fatal_InconsistentImplicitArgumentAnnotation, FStar_Options.CFatal);
+  (Fatal_InconsistentImplicitQualifier, FStar_Options.CFatal);
+  (Fatal_InconsistentQualifierAnnotation, FStar_Options.CFatal);
+  (Fatal_InferredTypeCauseVarEscape, FStar_Options.CFatal);
+  (Fatal_InlineRenamedAsUnfold, FStar_Options.CFatal);
+  (Fatal_InsufficientPatternArguments, FStar_Options.CFatal);
+  (Fatal_InterfaceAlreadyProcessed, FStar_Options.CFatal);
+  (Fatal_InterfaceNotImplementedByModule, FStar_Options.CFatal);
+  (Fatal_InterfaceWithTypeImplementation, FStar_Options.CFatal);
+  (Fatal_InvalidFloatingPointNumber, FStar_Options.CFatal);
+  (Fatal_InvalidFSDocKeyword, FStar_Options.CFatal);
+  (Fatal_InvalidIdentifier, FStar_Options.CFatal);
+  (Fatal_InvalidLemmaArgument, FStar_Options.CFatal);
+  (Fatal_InvalidNumericLiteral, FStar_Options.CFatal);
+  (Fatal_InvalidRedefinitionOfLexT, FStar_Options.CFatal);
+  (Fatal_InvalidUnicodeInStringLiteral, FStar_Options.CFatal);
+  (Fatal_InvalidUTF8Encoding, FStar_Options.CFatal);
+  (Fatal_InvalidWarnErrorSetting, FStar_Options.CFatal);
+  (Fatal_LetBoundMonadicMismatch, FStar_Options.CFatal);
+  (Fatal_LetMutableForVariablesOnly, FStar_Options.CFatal);
+  (Fatal_LetOpenModuleOnly, FStar_Options.CFatal);
+  (Fatal_LetRecArgumentMismatch, FStar_Options.CFatal);
+  (Fatal_MalformedActionDeclaration, FStar_Options.CFatal);
+  (Fatal_MismatchedPatternType, FStar_Options.CFatal);
+  (Fatal_MismatchUniversePolymorphic, FStar_Options.CFatal);
+  (Fatal_MissingDataConstructor, FStar_Options.CFatal);
+  (Fatal_MissingExposeInterfacesOption, FStar_Options.CFatal);
+  (Fatal_MissingFieldInRecord, FStar_Options.CFatal);
+  (Fatal_MissingImplementation, FStar_Options.CFatal);
+  (Fatal_MissingImplicitArguments, FStar_Options.CFatal);
+  (Fatal_MissingInterface, FStar_Options.CFatal);
+  (Fatal_MissingNameInBinder, FStar_Options.CFatal);
+  (Fatal_MissingPrimsModule, FStar_Options.CFatal);
+  (Fatal_MissingQuantifierBinder, FStar_Options.CFatal);
+  (Fatal_ModuleExpected, FStar_Options.CFatal);
+  (Fatal_ModuleFileNotFound, FStar_Options.CFatal);
+  (Fatal_ModuleFirstStatement, FStar_Options.CFatal);
+  (Fatal_ModuleNotFound, FStar_Options.CFatal);
+  (Fatal_ModuleOrFileNotFound, FStar_Options.CFatal);
+  (Fatal_MonadAlreadyDefined, FStar_Options.CFatal);
+  (Fatal_MoreThanOneDeclaration, FStar_Options.CFatal);
+  (Fatal_MultipleLetBinding, FStar_Options.CFatal);
+  (Fatal_NameNotFound, FStar_Options.CFatal);
+  (Fatal_NameSpaceNotFound, FStar_Options.CFatal);
+  (Fatal_NegativeUniverseConstFatal_NotSupported, FStar_Options.CFatal);
+  (Fatal_NoFileProvided, FStar_Options.CFatal);
+  (Fatal_NonInductiveInMutuallyDefinedType, FStar_Options.CFatal);
+  (Fatal_NonLinearPatternNotPermitted, FStar_Options.CFatal);
+  (Fatal_NonLinearPatternVars, FStar_Options.CFatal);
+  (Fatal_NonSingletonTopLevel, FStar_Options.CFatal);
+  (Fatal_NonSingletonTopLevelModule, FStar_Options.CFatal);
+  (Fatal_NonTopRecFunctionNotFullyEncoded, FStar_Options.CFatal);
+  (Fatal_NonTrivialPreConditionInPrims, FStar_Options.CFatal);
+  (Fatal_NonVariableInductiveTypeParameter, FStar_Options.CFatal);
+  (Fatal_NotApplicationOrFv, FStar_Options.CFatal);
+  (Fatal_NotEnoughArgsToEffect, FStar_Options.CFatal);
+  (Fatal_NotEnoughArgumentsForEffect, FStar_Options.CFatal);
+  (Fatal_NotFunctionType, FStar_Options.CFatal);
+  (Fatal_NotSupported, FStar_Options.CFatal);
+  (Fatal_NotTopLevelModule, FStar_Options.CFatal);
+  (Fatal_NotValidFStarFile, FStar_Options.CFatal);
+  (Fatal_NotValidIncludeDirectory, FStar_Options.CFatal);
+  (Fatal_OneModulePerFile, FStar_Options.CFatal);
+  (Fatal_OpenGoalsInSynthesis, FStar_Options.CFatal);
+  (Fatal_OptionsNotCompatible, FStar_Options.CFatal);
+  (Fatal_OutOfOrder, FStar_Options.CFatal);
+  (Fatal_ParseErrors, FStar_Options.CFatal);
+  (Fatal_ParseItError, FStar_Options.CFatal);
+  (Fatal_PolyTypeExpected, FStar_Options.CFatal);
+  (Fatal_PossibleInfiniteTyp, FStar_Options.CFatal);
+  (Fatal_PreModuleMismatch, FStar_Options.CFatal);
+  (Fatal_QulifierListNotPermitted, FStar_Options.CFatal);
+  (Fatal_RecursiveFunctionLiteral, FStar_Options.CFatal);
+  (Fatal_ReflectOnlySupportedOnEffects, FStar_Options.CFatal);
+  (Fatal_ReservedPrefix, FStar_Options.CFatal);
+  (Fatal_SMTOutputParseError, FStar_Options.CFatal);
+  (Fatal_SMTSolverError, FStar_Options.CFatal);
+  (Fatal_SyntaxError, FStar_Options.CFatal);
+  (Fatal_SynthByTacticError, FStar_Options.CFatal);
+  (Fatal_TacticGotStuck, FStar_Options.CFatal);
+  (Fatal_TcOneFragmentFailed, FStar_Options.CFatal);
+  (Fatal_TermOutsideOfDefLanguage, FStar_Options.CFatal);
+  (Fatal_ToManyArgumentToFunction, FStar_Options.CFatal);
+  (Fatal_TooManyOrTooFewFileMatch, FStar_Options.CFatal);
+  (Fatal_TooManyPatternArguments, FStar_Options.CFatal);
+  (Fatal_TooManyUniverse, FStar_Options.CFatal);
+  (Fatal_TypeMismatch, FStar_Options.CFatal);
+  (Fatal_TypeWithinPatternsAllowedOnVariablesOnly, FStar_Options.CFatal);
+  (Fatal_UnableToReadFile, FStar_Options.CFatal);
+  (Fatal_UnepxectedOrUnboundOperator, FStar_Options.CFatal);
+  (Fatal_UnexpectedBinder, FStar_Options.CFatal);
+  (Fatal_UnexpectedBindShape, FStar_Options.CFatal);
+  (Fatal_UnexpectedChar, FStar_Options.CFatal);
+  (Fatal_UnexpectedComputationTypeForLetRec, FStar_Options.CFatal);
+  (Fatal_UnexpectedConstructorType, FStar_Options.CFatal);
+  (Fatal_UnexpectedDataConstructor, FStar_Options.CFatal);
+  (Fatal_UnexpectedEffect, FStar_Options.CFatal);
+  (Fatal_UnexpectedEmptyRecord, FStar_Options.CFatal);
+  (Fatal_UnexpectedExpressionType, FStar_Options.CFatal);
+  (Fatal_UnexpectedFunctionParameterType, FStar_Options.CFatal);
+  (Fatal_UnexpectedGeneralizedUniverse, FStar_Options.CFatal);
+  (Fatal_UnexpectedGTotForLetRec, FStar_Options.CFatal);
+  (Fatal_UnexpectedGuard, FStar_Options.CFatal);
+  (Fatal_UnexpectedIdentifier, FStar_Options.CFatal);
+  (Fatal_UnexpectedImplicitArgument, FStar_Options.CFatal);
+  (Fatal_UnexpectedImplictArgument, FStar_Options.CFatal);
+  (Fatal_UnexpectedInductivetype, FStar_Options.CFatal);
+  (Fatal_UnexpectedLetBinding, FStar_Options.CFatal);
+  (Fatal_UnexpectedModuleDeclaration, FStar_Options.CFatal);
+  (Fatal_UnexpectedNumberOfUniverse, FStar_Options.CFatal);
+  (Fatal_UnexpectedNumericLiteral, FStar_Options.CFatal);
+  (Fatal_UnexpectedOperatorSymbol, FStar_Options.CFatal);
+  (Fatal_UnexpectedPattern, FStar_Options.CFatal);
+  (Fatal_UnexpectedPosition, FStar_Options.CFatal);
+  (Fatal_UnExpectedPreCondition, FStar_Options.CFatal);
+  (Fatal_UnexpectedReturnShape, FStar_Options.CFatal);
+  (Fatal_UnexpectedSignatureForMonad, FStar_Options.CFatal);
+  (Fatal_UnexpectedTerm, FStar_Options.CFatal);
+  (Fatal_UnexpectedTermInUniverse, FStar_Options.CFatal);
+  (Fatal_UnexpectedTermType, FStar_Options.CFatal);
+  (Fatal_UnexpectedTermVQuote, FStar_Options.CFatal);
+  (Fatal_UnexpectedUniversePolymorphicReturn, FStar_Options.CFatal);
+  (Fatal_UnexpectedUniverseVariable, FStar_Options.CFatal);
+  (Fatal_UnfoldableDeprecated, FStar_Options.CFatal);
+  (Fatal_UnificationNotWellFormed, FStar_Options.CFatal);
+  (Fatal_Uninstantiated, FStar_Options.CFatal);
+  (Error_UninstantiatedUnificationVarInTactic, FStar_Options.CError);
+  (Fatal_UninstantiatedVarInTactic, FStar_Options.CFatal);
+  (Fatal_UniverseMightContainSumOfTwoUnivVars, FStar_Options.CFatal);
+  (Fatal_UniversePolymorphicInnerLetBound, FStar_Options.CFatal);
+  (Fatal_UnknownAttribute, FStar_Options.CFatal);
+  (Fatal_UnknownToolForDep, FStar_Options.CFatal);
+  (Fatal_UnrecognizedExtension, FStar_Options.CFatal);
+  (Fatal_UnresolvedPatternVar, FStar_Options.CFatal);
+  (Fatal_UnsupportedConstant, FStar_Options.CFatal);
+  (Fatal_UnsupportedDisjuctivePatterns, FStar_Options.CFatal);
+  (Fatal_UnsupportedQualifier, FStar_Options.CFatal);
+  (Fatal_UserTacticFailure, FStar_Options.CFatal);
+  (Fatal_ValueRestriction, FStar_Options.CFatal);
+  (Fatal_VariableNotFound, FStar_Options.CFatal);
+  (Fatal_WrongBodyTypeForReturnWP, FStar_Options.CFatal);
+  (Fatal_WrongDataAppHeadFormat, FStar_Options.CFatal);
+  (Fatal_WrongDefinitionOrder, FStar_Options.CFatal);
+  (Fatal_WrongResultTypeAfterConstrutor, FStar_Options.CFatal);
+  (Fatal_WrongTerm, FStar_Options.CFatal);
+  (Fatal_WhenClauseNotSupported, FStar_Options.CFatal);
+  (Unused01, FStar_Options.CFatal);
+  (Warning_CallNotImplementedAsWarning, FStar_Options.CWarning);
+  (Warning_AddImplicitAssumeNewQualifier, FStar_Options.CWarning);
+  (Warning_AdmitWithoutDefinition, FStar_Options.CWarning);
+  (Warning_CachedFile, FStar_Options.CWarning);
+  (Warning_DefinitionNotTranslated, FStar_Options.CWarning);
+  (Warning_DependencyFound, FStar_Options.CWarning);
+  (Warning_DeprecatedEqualityOnBinder, FStar_Options.CWarning);
+  (Warning_DeprecatedOpaqueQualifier, FStar_Options.CWarning);
+  (Warning_DocOverwrite, FStar_Options.CWarning);
+  (Warning_FileNotWritten, FStar_Options.CWarning);
+  (Warning_Filtered, FStar_Options.CWarning);
+  (Warning_FunctionLiteralPrecisionLoss, FStar_Options.CWarning);
+  (Warning_FunctionNotExtacted, FStar_Options.CWarning);
+  (Warning_HintFailedToReplayProof, FStar_Options.CWarning);
+  (Warning_HitReplayFailed, FStar_Options.CWarning);
+  (Warning_IDEIgnoreCodeGen, FStar_Options.CWarning);
+  (Warning_IllFormedGoal, FStar_Options.CWarning);
+  (Warning_InaccessibleArgument, FStar_Options.CWarning);
+  (Warning_IncoherentImplicitQualifier, FStar_Options.CWarning);
+  (Warning_IrrelevantQualifierOnArgumentToReflect, FStar_Options.CWarning);
+  (Warning_IrrelevantQualifierOnArgumentToReify, FStar_Options.CWarning);
+  (Warning_MalformedWarnErrorList, FStar_Options.CWarning);
+  (Warning_MetaAlienNotATmUnknown, FStar_Options.CWarning);
+  (Warning_MultipleAscriptions, FStar_Options.CWarning);
+  (Warning_NondependentUserDefinedDataType, FStar_Options.CWarning);
+  (Warning_NonListLiteralSMTPattern, FStar_Options.CWarning);
+  (Warning_NormalizationFailure, FStar_Options.CWarning);
+  (Warning_NotDependentArrow, FStar_Options.CWarning);
+  (Warning_NotEmbedded, FStar_Options.CWarning);
+  (Warning_PatternMissingBoundVar, FStar_Options.CWarning);
+  (Warning_RecursiveDependency, FStar_Options.CWarning);
+  (Warning_RedundantExplicitCurrying, FStar_Options.CWarning);
+  (Warning_SMTPatTDeprecated, FStar_Options.CWarning);
+  (Warning_SMTPatternMissingBoundVar, FStar_Options.CWarning);
+  (Warning_TopLevelEffect, FStar_Options.CWarning);
+  (Warning_UnboundModuleReference, FStar_Options.CWarning);
+  (Warning_UnexpectedFile, FStar_Options.CWarning);
+  (Warning_UnexpectedFsTypApp, FStar_Options.CWarning);
+  (Warning_UnexpectedZ3Output, FStar_Options.CError);
+  (Warning_UnprotectedTerm, FStar_Options.CWarning);
+  (Warning_UnrecognizedAttribute, FStar_Options.CWarning);
+  (Warning_UpperBoundCandidateAlreadyVisited, FStar_Options.CWarning);
+  (Warning_UseDefaultEffect, FStar_Options.CWarning);
+  (Warning_WrongErrorLocation, FStar_Options.CWarning);
+  (Warning_Z3InvocationWarning, FStar_Options.CWarning);
+  (Warning_MissingInterfaceOrImplementation, FStar_Options.CWarning);
+  (Warning_ConstructorBuildsUnexpectedType, FStar_Options.CWarning);
+  (Warning_ModuleOrFileNotFoundWarning, FStar_Options.CWarning);
+  (Error_NoLetMutable, FStar_Options.CAlwaysError);
+  (Error_BadImplicit, FStar_Options.CAlwaysError);
+  (Warning_DeprecatedDefinition, FStar_Options.CWarning);
+  (Fatal_SMTEncodingArityMismatch, FStar_Options.CFatal);
+  (Warning_Defensive, FStar_Options.CWarning);
+  (Warning_CantInspect, FStar_Options.CWarning);
+  (Warning_NilGivenExplicitArgs, FStar_Options.CWarning);
+  (Warning_ConsAppliedExplicitArgs, FStar_Options.CWarning);
+  (Warning_UnembedBinderKnot, FStar_Options.CWarning);
+  (Fatal_TacticProofRelevantGoal, FStar_Options.CFatal);
+  (Warning_TacAdmit, FStar_Options.CWarning);
+  (Fatal_IncoherentPatterns, FStar_Options.CFatal);
+  (Error_NoSMTButNeeded, FStar_Options.CAlwaysError);
+  (Fatal_UnexpectedAntiquotation, FStar_Options.CFatal);
+  (Fatal_SplicedUndef, FStar_Options.CFatal);
+  (Fatal_SpliceUnembedFail, FStar_Options.CFatal);
+  (Warning_ExtractionUnexpectedEffect, FStar_Options.CWarning);
+  (Error_DidNotFail, FStar_Options.CAlwaysError);
+  (Warning_UnappliedFail, FStar_Options.CWarning);
+  (Warning_QuantifierWithoutPattern, FStar_Options.CSilent);
+  (Error_EmptyFailErrs, FStar_Options.CAlwaysError);
+  (Warning_logicqualifier, FStar_Options.CWarning);
+  (Fatal_CyclicDependence, FStar_Options.CFatal);
+  (Error_InductiveAnnotNotAType, FStar_Options.CError);
+  (Fatal_FriendInterface, FStar_Options.CFatal);
+  (Error_CannotRedefineConst, FStar_Options.CError);
+  (Error_BadClassDecl, FStar_Options.CError);
+  (Error_BadInductiveParam, FStar_Options.CFatal);
+  (Error_FieldShadow, FStar_Options.CFatal);
+  (Error_UnexpectedDM4FType, FStar_Options.CFatal);
+  (Fatal_EffectAbbreviationResultTypeMismatch, FStar_Options.CFatal);
+  (Error_AlreadyCachedAssertionFailure, FStar_Options.CFatal);
+  (Error_MustEraseMissing, FStar_Options.CWarning);
+  (Warning_EffectfulArgumentToErasedFunction, FStar_Options.CWarning);
+  (Fatal_EmptySurfaceLet, FStar_Options.CFatal)] 
 exception Err of (raw_error * Prims.string) 
 let (uu___is_Err : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Err uu____4898 -> true | uu____4905 -> false
+    match projectee with | Err uu____4843 -> true | uu____4850 -> false
   
 let (__proj__Err__item__uu___ : Prims.exn -> (raw_error * Prims.string)) =
-  fun projectee  -> match projectee with | Err uu____4924 -> uu____4924 
+  fun projectee  -> match projectee with | Err uu____4869 -> uu____4869 
 exception Error of (raw_error * Prims.string * FStar_Range.range) 
 let (uu___is_Error : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error uu____4949 -> true | uu____4958 -> false
+    match projectee with | Error uu____4894 -> true | uu____4903 -> false
   
 let (__proj__Error__item__uu___ :
   Prims.exn -> (raw_error * Prims.string * FStar_Range.range)) =
-  fun projectee  -> match projectee with | Error uu____4981 -> uu____4981 
+  fun projectee  -> match projectee with | Error uu____4926 -> uu____4926 
 exception Warning of (raw_error * Prims.string * FStar_Range.range) 
 let (uu___is_Warning : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Warning uu____5008 -> true | uu____5017 -> false
+    match projectee with | Warning uu____4953 -> true | uu____4962 -> false
   
 let (__proj__Warning__item__uu___ :
   Prims.exn -> (raw_error * Prims.string * FStar_Range.range)) =
-  fun projectee  -> match projectee with | Warning uu____5040 -> uu____5040 
+  fun projectee  -> match projectee with | Warning uu____4985 -> uu____4985 
 exception Stop 
 let (uu___is_Stop : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Stop  -> true | uu____5057 -> false
+    match projectee with | Stop  -> true | uu____5002 -> false
   
 exception Empty_frag 
 let (uu___is_Empty_frag : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Empty_frag  -> true | uu____5068 -> false
+    match projectee with | Empty_frag  -> true | uu____5013 -> false
   
 type issue_level =
   | ENotImplemented 
@@ -2609,19 +2585,19 @@ type issue_level =
   | EError 
 let (uu___is_ENotImplemented : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | ENotImplemented  -> true | uu____5079 -> false
+    match projectee with | ENotImplemented  -> true | uu____5024 -> false
   
 let (uu___is_EInfo : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EInfo  -> true | uu____5090 -> false
+    match projectee with | EInfo  -> true | uu____5035 -> false
   
 let (uu___is_EWarning : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EWarning  -> true | uu____5101 -> false
+    match projectee with | EWarning  -> true | uu____5046 -> false
   
 let (uu___is_EError : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EError  -> true | uu____5112 -> false
+    match projectee with | EError  -> true | uu____5057 -> false
   
 type issue =
   {
@@ -2694,36 +2670,36 @@ let (format_issue : issue -> Prims.string) =
       | EWarning  -> "Warning"
       | EError  -> "Error"
       | ENotImplemented  -> "Feature not yet implemented: "  in
-    let uu____5407 =
+    let uu____5352 =
       match issue.issue_range with
       | FStar_Pervasives_Native.None  -> ("", "")
       | FStar_Pervasives_Native.Some r when r = FStar_Range.dummyRange ->
           ("", "")
       | FStar_Pervasives_Native.Some r ->
-          let uu____5430 =
-            let uu____5432 = FStar_Range.string_of_use_range r  in
-            FStar_Util.format1 "%s: " uu____5432  in
-          let uu____5435 =
-            let uu____5437 =
-              let uu____5439 = FStar_Range.use_range r  in
-              let uu____5440 = FStar_Range.def_range r  in
-              uu____5439 = uu____5440  in
-            if uu____5437
+          let uu____5375 =
+            let uu____5377 = FStar_Range.string_of_use_range r  in
+            FStar_Util.format1 "%s: " uu____5377  in
+          let uu____5380 =
+            let uu____5382 =
+              let uu____5384 = FStar_Range.use_range r  in
+              let uu____5385 = FStar_Range.def_range r  in
+              uu____5384 = uu____5385  in
+            if uu____5382
             then ""
             else
-              (let uu____5446 = FStar_Range.string_of_range r  in
-               FStar_Util.format1 " (see also %s)" uu____5446)
+              (let uu____5391 = FStar_Range.string_of_range r  in
+               FStar_Util.format1 " (see also %s)" uu____5391)
              in
-          (uu____5430, uu____5435)
+          (uu____5375, uu____5380)
        in
-    match uu____5407 with
+    match uu____5352 with
     | (range_str,see_also_str) ->
         let issue_number =
           match issue.issue_number with
           | FStar_Pervasives_Native.None  -> ""
           | FStar_Pervasives_Native.Some n1 ->
-              let uu____5466 = FStar_Util.string_of_int n1  in
-              FStar_Util.format1 " %s" uu____5466
+              let uu____5411 = FStar_Util.string_of_int n1  in
+              FStar_Util.format1 " %s" uu____5411
            in
         FStar_Util.format5 "%s(%s%s) %s%s\n" range_str level_header
           issue_number issue.issue_message see_also_str
@@ -2736,7 +2712,7 @@ let (print_issue : issue -> unit) =
       | EWarning  -> FStar_Util.print_warning
       | EError  -> FStar_Util.print_error
       | ENotImplemented  -> FStar_Util.print_error  in
-    let uu____5486 = format_issue issue  in printer uu____5486
+    let uu____5431 = format_issue issue  in printer uu____5431
   
 let (compare_issues : issue -> issue -> Prims.int) =
   fun i1  ->
@@ -2745,8 +2721,8 @@ let (compare_issues : issue -> issue -> Prims.int) =
       | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.None ) ->
           (Prims.parse_int "0")
       | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.Some
-         uu____5510) -> ~- (Prims.parse_int "1")
-      | (FStar_Pervasives_Native.Some uu____5516,FStar_Pervasives_Native.None
+         uu____5455) -> ~- (Prims.parse_int "1")
+      | (FStar_Pervasives_Native.Some uu____5461,FStar_Pervasives_Native.None
          ) -> (Prims.parse_int "1")
       | (FStar_Pervasives_Native.Some r1,FStar_Pervasives_Native.Some r2) ->
           FStar_Range.compare_use_range r1 r2
@@ -2757,19 +2733,19 @@ let (mk_default_handler : Prims.bool -> error_handler) =
     let add_one e =
       match e.issue_level with
       | EError  ->
-          let uu____5549 =
-            let uu____5552 = FStar_ST.op_Bang errs  in e :: uu____5552  in
-          FStar_ST.op_Colon_Equals errs uu____5549
-      | uu____5645 -> print_issue e  in
-    let count_errors uu____5651 =
-      let uu____5652 = FStar_ST.op_Bang errs  in FStar_List.length uu____5652
+          let uu____5494 =
+            let uu____5497 = FStar_ST.op_Bang errs  in e :: uu____5497  in
+          FStar_ST.op_Colon_Equals errs uu____5494
+      | uu____5590 -> print_issue e  in
+    let count_errors uu____5596 =
+      let uu____5597 = FStar_ST.op_Bang errs  in FStar_List.length uu____5597
        in
-    let report uu____5707 =
+    let report uu____5652 =
       let sorted1 =
-        let uu____5711 = FStar_ST.op_Bang errs  in
-        FStar_List.sortWith compare_issues uu____5711  in
+        let uu____5656 = FStar_ST.op_Bang errs  in
+        FStar_List.sortWith compare_issues uu____5656  in
       if print7 then FStar_List.iter print_issue sorted1 else (); sorted1  in
-    let clear1 uu____5768 = FStar_ST.op_Colon_Equals errs []  in
+    let clear1 uu____5713 = FStar_ST.op_Colon_Equals errs []  in
     {
       eh_add_one = add_one;
       eh_count_errors = count_errors;
@@ -2797,11 +2773,11 @@ let (mk_issue :
           }
   
 let (get_err_count : unit -> Prims.int) =
-  fun uu____5873  ->
-    let uu____5874 =
-      let uu____5880 = FStar_ST.op_Bang current_handler  in
-      uu____5880.eh_count_errors  in
-    uu____5874 ()
+  fun uu____5818  ->
+    let uu____5819 =
+      let uu____5825 = FStar_ST.op_Bang current_handler  in
+      uu____5825.eh_count_errors  in
+    uu____5819 ()
   
 let (wrapped_eh_add_one : error_handler -> issue -> unit) =
   fun h  ->
@@ -2809,45 +2785,45 @@ let (wrapped_eh_add_one : error_handler -> issue -> unit) =
       h.eh_add_one issue;
       if issue.issue_level <> EInfo
       then
-        ((let uu____5914 =
-            let uu____5916 = FStar_ST.op_Bang FStar_Options.abort_counter  in
-            uu____5916 - (Prims.parse_int "1")  in
-          FStar_ST.op_Colon_Equals FStar_Options.abort_counter uu____5914);
-         (let uu____5961 =
-            let uu____5963 = FStar_ST.op_Bang FStar_Options.abort_counter  in
-            uu____5963 = (Prims.parse_int "0")  in
-          if uu____5961 then failwith "Aborting due to --abort_on" else ()))
+        ((let uu____5859 =
+            let uu____5861 = FStar_ST.op_Bang FStar_Options.abort_counter  in
+            uu____5861 - (Prims.parse_int "1")  in
+          FStar_ST.op_Colon_Equals FStar_Options.abort_counter uu____5859);
+         (let uu____5906 =
+            let uu____5908 = FStar_ST.op_Bang FStar_Options.abort_counter  in
+            uu____5908 = (Prims.parse_int "0")  in
+          if uu____5906 then failwith "Aborting due to --abort_on" else ()))
       else ()
   
 let (add_one : issue -> unit) =
   fun issue  ->
     FStar_Util.atomically
-      (fun uu____6002  ->
-         let uu____6003 = FStar_ST.op_Bang current_handler  in
-         wrapped_eh_add_one uu____6003 issue)
+      (fun uu____5947  ->
+         let uu____5948 = FStar_ST.op_Bang current_handler  in
+         wrapped_eh_add_one uu____5948 issue)
   
 let (add_many : issue Prims.list -> unit) =
   fun issues  ->
     FStar_Util.atomically
-      (fun uu____6035  ->
-         let uu____6036 =
-           let uu____6041 = FStar_ST.op_Bang current_handler  in
-           wrapped_eh_add_one uu____6041  in
-         FStar_List.iter uu____6036 issues)
+      (fun uu____5980  ->
+         let uu____5981 =
+           let uu____5986 = FStar_ST.op_Bang current_handler  in
+           wrapped_eh_add_one uu____5986  in
+         FStar_List.iter uu____5981 issues)
   
 let (report_all : unit -> issue Prims.list) =
-  fun uu____6068  ->
-    let uu____6069 =
-      let uu____6076 = FStar_ST.op_Bang current_handler  in
-      uu____6076.eh_report  in
-    uu____6069 ()
+  fun uu____6013  ->
+    let uu____6014 =
+      let uu____6021 = FStar_ST.op_Bang current_handler  in
+      uu____6021.eh_report  in
+    uu____6014 ()
   
 let (clear : unit -> unit) =
-  fun uu____6101  ->
-    let uu____6102 =
-      let uu____6107 = FStar_ST.op_Bang current_handler  in
-      uu____6107.eh_clear  in
-    uu____6102 ()
+  fun uu____6046  ->
+    let uu____6047 =
+      let uu____6052 = FStar_ST.op_Bang current_handler  in
+      uu____6052.eh_clear  in
+    uu____6047 ()
   
 let (set_handler : error_handler -> unit) =
   fun handler  ->
@@ -2883,42 +2859,39 @@ let (message_prefix : error_message_prefix) =
   let pfx = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
   let set_prefix s =
     FStar_ST.op_Colon_Equals pfx (FStar_Pervasives_Native.Some s)  in
-  let clear_prefix uu____6352 =
+  let clear_prefix uu____6297 =
     FStar_ST.op_Colon_Equals pfx FStar_Pervasives_Native.None  in
   let append_prefix s =
-    let uu____6410 = FStar_ST.op_Bang pfx  in
-    match uu____6410 with
+    let uu____6355 = FStar_ST.op_Bang pfx  in
+    match uu____6355 with
     | FStar_Pervasives_Native.None  -> s
-    | FStar_Pervasives_Native.Some p -> Prims.strcat p (Prims.strcat ": " s)
+    | FStar_Pervasives_Native.Some p ->
+        let uu____6411 = FStar_String.op_Hat ": " s  in
+        FStar_String.op_Hat p uu____6411
      in
   { set_prefix; append_prefix; clear_prefix } 
 let findIndex :
-  'Auu____6476 'Auu____6477 .
-    ('Auu____6476 * 'Auu____6477) Prims.list -> 'Auu____6476 -> Prims.int
+  'Auu____6423 'Auu____6424 .
+    ('Auu____6423 * 'Auu____6424) Prims.list -> 'Auu____6423 -> Prims.int
   =
   fun l  ->
     fun v1  ->
       FStar_All.pipe_right l
         (FStar_List.index
-           (fun uu___24_6515  ->
-              match uu___24_6515 with
-              | (e,uu____6522) when e = v1 -> true
-              | uu____6524 -> false))
+           (fun uu___24_6462  ->
+              match uu___24_6462 with
+              | (e,uu____6469) when e = v1 -> true
+              | uu____6471 -> false))
   
 let (errno_of_error : raw_error -> Prims.int) =
   fun e  -> findIndex default_flags e 
-let (flags : flag Prims.list FStar_ST.ref) = FStar_Util.mk_ref [] 
-let (init_warn_error_flags : unit) =
-  let rec aux r l =
-    match l with | [] -> r | (e,f)::tl1 -> aux (FStar_List.append r [f]) tl1
-     in
-  let uu____6604 = aux [] default_flags  in
-  FStar_ST.op_Colon_Equals flags uu____6604 
+let (init_warn_error_flags : FStar_Options.error_flag Prims.list) =
+  FStar_List.map FStar_Pervasives_Native.snd default_flags 
 let (diag : FStar_Range.range -> Prims.string -> unit) =
   fun r  ->
     fun msg  ->
-      let uu____6643 = FStar_Options.debug_any ()  in
-      if uu____6643
+      let uu____6504 = FStar_Options.debug_any ()  in
+      if uu____6504
       then
         add_one
           (mk_issue EInfo (FStar_Pervasives_Native.Some r) msg
@@ -2926,138 +2899,147 @@ let (diag : FStar_Range.range -> Prims.string -> unit) =
       else ()
   
 let (defensive_errno : Prims.int) = errno_of_error Warning_Defensive 
-let (lookup : flag Prims.list -> Prims.int -> flag) =
-  fun flags1  ->
+let (lookup :
+  FStar_Options.error_flag Prims.list ->
+    Prims.int -> FStar_Options.error_flag)
+  =
+  fun flags  ->
     fun errno  ->
-      let uu____6668 =
+      let uu____6529 =
         (errno = defensive_errno) && (FStar_Options.defensive_fail ())  in
-      if uu____6668 then CAlwaysError else FStar_List.nth flags1 errno
+      if uu____6529
+      then FStar_Options.CAlwaysError
+      else FStar_List.nth flags errno
   
 let (log_issue : FStar_Range.range -> (raw_error * Prims.string) -> unit) =
   fun r  ->
-    fun uu____6689  ->
-      match uu____6689 with
+    fun uu____6550  ->
+      match uu____6550 with
       | (e,msg) ->
           let errno = errno_of_error e  in
-          let uu____6701 =
-            let uu____6702 = FStar_ST.op_Bang flags  in
-            lookup uu____6702 errno  in
-          (match uu____6701 with
-           | CAlwaysError  ->
+          let uu____6562 =
+            let uu____6563 = FStar_Options.error_flags ()  in
+            lookup uu____6563 errno  in
+          (match uu____6562 with
+           | FStar_Options.CAlwaysError  ->
                add_one
                  (mk_issue EError (FStar_Pervasives_Native.Some r) msg
                     (FStar_Pervasives_Native.Some errno))
-           | CError  ->
+           | FStar_Options.CError  ->
                add_one
                  (mk_issue EError (FStar_Pervasives_Native.Some r) msg
                     (FStar_Pervasives_Native.Some errno))
-           | CWarning  ->
+           | FStar_Options.CWarning  ->
                add_one
                  (mk_issue EWarning (FStar_Pervasives_Native.Some r) msg
                     (FStar_Pervasives_Native.Some errno))
-           | CSilent  -> ()
-           | CFatal  ->
+           | FStar_Options.CSilent  -> ()
+           | FStar_Options.CFatal  ->
                let i =
                  mk_issue EError (FStar_Pervasives_Native.Some r) msg
                    (FStar_Pervasives_Native.Some errno)
                   in
-               let uu____6733 = FStar_Options.ide ()  in
-               if uu____6733
+               let uu____6571 = FStar_Options.ide ()  in
+               if uu____6571
                then add_one i
                else
-                 (let uu____6738 =
-                    let uu____6740 = format_issue i  in
-                    Prims.strcat
+                 (let uu____6576 =
+                    let uu____6578 = format_issue i  in
+                    FStar_String.op_Hat
                       "don't use log_issue to report fatal error, should use raise_error: "
-                      uu____6740
+                      uu____6578
                      in
-                  failwith uu____6738))
+                  failwith uu____6576))
   
 let (add_errors :
   (raw_error * Prims.string * FStar_Range.range) Prims.list -> unit) =
   fun errs  ->
     FStar_Util.atomically
-      (fun uu____6768  ->
+      (fun uu____6606  ->
          FStar_List.iter
-           (fun uu____6781  ->
-              match uu____6781 with
+           (fun uu____6619  ->
+              match uu____6619 with
               | (e,msg,r) ->
-                  let uu____6794 =
-                    let uu____6800 = message_prefix.append_prefix msg  in
-                    (e, uu____6800)  in
-                  log_issue r uu____6794) errs)
+                  let uu____6632 =
+                    let uu____6638 = message_prefix.append_prefix msg  in
+                    (e, uu____6638)  in
+                  log_issue r uu____6632) errs)
   
 let (issue_of_exn : Prims.exn -> issue FStar_Pervasives_Native.option) =
-  fun uu___25_6810  ->
-    match uu___25_6810 with
+  fun uu___25_6648  ->
+    match uu___25_6648 with
     | Error (e,msg,r) ->
         let errno = errno_of_error e  in
-        let uu____6820 =
-          let uu____6821 = message_prefix.append_prefix msg  in
-          mk_issue EError (FStar_Pervasives_Native.Some r) uu____6821
+        let uu____6658 =
+          let uu____6659 = message_prefix.append_prefix msg  in
+          mk_issue EError (FStar_Pervasives_Native.Some r) uu____6659
             (FStar_Pervasives_Native.Some errno)
            in
-        FStar_Pervasives_Native.Some uu____6820
+        FStar_Pervasives_Native.Some uu____6658
     | FStar_Util.NYI msg ->
-        let uu____6826 =
-          let uu____6827 = message_prefix.append_prefix msg  in
-          mk_issue ENotImplemented FStar_Pervasives_Native.None uu____6827
+        let uu____6664 =
+          let uu____6665 = message_prefix.append_prefix msg  in
+          mk_issue ENotImplemented FStar_Pervasives_Native.None uu____6665
             FStar_Pervasives_Native.None
            in
-        FStar_Pervasives_Native.Some uu____6826
+        FStar_Pervasives_Native.Some uu____6664
     | Err (e,msg) ->
         let errno = errno_of_error e  in
-        let uu____6836 =
-          let uu____6837 = message_prefix.append_prefix msg  in
-          mk_issue EError FStar_Pervasives_Native.None uu____6837
+        let uu____6674 =
+          let uu____6675 = message_prefix.append_prefix msg  in
+          mk_issue EError FStar_Pervasives_Native.None uu____6675
             (FStar_Pervasives_Native.Some errno)
            in
-        FStar_Pervasives_Native.Some uu____6836
-    | uu____6840 -> FStar_Pervasives_Native.None
+        FStar_Pervasives_Native.Some uu____6674
+    | uu____6678 -> FStar_Pervasives_Native.None
   
 let (err_exn : Prims.exn -> unit) =
   fun exn  ->
     if exn = Stop
     then ()
     else
-      (let uu____6850 = issue_of_exn exn  in
-       match uu____6850 with
+      (let uu____6688 = issue_of_exn exn  in
+       match uu____6688 with
        | FStar_Pervasives_Native.Some issue -> add_one issue
        | FStar_Pervasives_Native.None  -> FStar_Exn.raise exn)
   
 let (handleable : Prims.exn -> Prims.bool) =
-  fun uu___26_6860  ->
-    match uu___26_6860 with
-    | Error uu____6862 -> true
-    | FStar_Util.NYI uu____6871 -> true
+  fun uu___26_6698  ->
+    match uu___26_6698 with
+    | Error uu____6700 -> true
+    | FStar_Util.NYI uu____6709 -> true
     | Stop  -> true
-    | Err uu____6875 -> true
-    | uu____6882 -> false
+    | Err uu____6713 -> true
+    | uu____6720 -> false
   
 let (stop_if_err : unit -> unit) =
-  fun uu____6889  ->
-    let uu____6890 =
-      let uu____6892 = get_err_count ()  in
-      uu____6892 > (Prims.parse_int "0")  in
-    if uu____6890 then FStar_Exn.raise Stop else ()
+  fun uu____6727  ->
+    let uu____6728 =
+      let uu____6730 = get_err_count ()  in
+      uu____6730 > (Prims.parse_int "0")  in
+    if uu____6728 then FStar_Exn.raise Stop else ()
   
 let raise_error :
-  'Auu____6905 .
-    (raw_error * Prims.string) -> FStar_Range.range -> 'Auu____6905
+  'Auu____6743 .
+    (raw_error * Prims.string) -> FStar_Range.range -> 'Auu____6743
   =
-  fun uu____6919  ->
+  fun uu____6757  ->
     fun r  ->
-      match uu____6919 with | (e,msg) -> FStar_Exn.raise (Error (e, msg, r))
+      match uu____6757 with | (e,msg) -> FStar_Exn.raise (Error (e, msg, r))
   
-let raise_err : 'Auu____6936 . (raw_error * Prims.string) -> 'Auu____6936 =
-  fun uu____6946  ->
-    match uu____6946 with | (e,msg) -> FStar_Exn.raise (Err (e, msg))
+let raise_err : 'Auu____6774 . (raw_error * Prims.string) -> 'Auu____6774 =
+  fun uu____6784  ->
+    match uu____6784 with | (e,msg) -> FStar_Exn.raise (Err (e, msg))
   
-let (update_flags : (flag * Prims.string) Prims.list -> unit) =
+let (update_flags :
+  (FStar_Options.error_flag * Prims.string) Prims.list ->
+    FStar_Options.error_flag Prims.list)
+  =
   fun l  ->
-    let compare1 uu____7007 uu____7008 =
-      match (uu____7007, uu____7008) with
-      | ((uu____7050,(a,uu____7052)),(uu____7053,(b,uu____7055))) ->
+    let flags = init_warn_error_flags  in
+    let compare1 uu____6852 uu____6853 =
+      match (uu____6852, uu____6853) with
+      | ((uu____6895,(a,uu____6897)),(uu____6898,(b,uu____6900))) ->
           if a > b
           then (Prims.parse_int "1")
           else
@@ -3065,26 +3047,24 @@ let (update_flags : (flag * Prims.string) Prims.list -> unit) =
        in
     let set_one_flag f d =
       match (f, d) with
-      | (CWarning ,CAlwaysError ) ->
+      | (FStar_Options.CWarning ,FStar_Options.CAlwaysError ) ->
           raise_err
             (Fatal_InvalidWarnErrorSetting,
               "cannot turn an error into warning")
-      | (CError ,CAlwaysError ) ->
+      | (FStar_Options.CError ,FStar_Options.CAlwaysError ) ->
           raise_err
             (Fatal_InvalidWarnErrorSetting,
               "cannot turn an error into warning")
-      | (CSilent ,CAlwaysError ) ->
+      | (FStar_Options.CSilent ,FStar_Options.CAlwaysError ) ->
           raise_err
             (Fatal_InvalidWarnErrorSetting, "cannot silence an error")
-      | (uu____7124,CFatal ) ->
+      | (uu____6969,FStar_Options.CFatal ) ->
           raise_err
             (Fatal_InvalidWarnErrorSetting,
               "cannot reset the error level of a fatal error")
-      | uu____7127 -> f  in
+      | uu____6972 -> f  in
     let rec set_flag i l1 =
-      let d =
-        let uu____7170 = FStar_ST.op_Bang flags  in
-        FStar_List.nth uu____7170 i  in
+      let d = FStar_List.nth flags i  in
       match l1 with
       | [] -> d
       | (f,(l2,h))::tl1 ->
@@ -3096,54 +3076,51 @@ let (update_flags : (flag * Prims.string) Prims.list -> unit) =
       match l1 with
       | [] -> f
       | hd1::tl1 ->
-          let uu____7311 =
-            let uu____7314 =
-              let uu____7317 = set_flag i sorted1  in [uu____7317]  in
-            FStar_List.append f uu____7314  in
-          aux uu____7311 (i + (Prims.parse_int "1")) tl1 sorted1
+          let uu____7130 =
+            let uu____7133 =
+              let uu____7136 = set_flag i sorted1  in [uu____7136]  in
+            FStar_List.append f uu____7133  in
+          aux uu____7130 (i + (Prims.parse_int "1")) tl1 sorted1
        in
     let rec compute_range result l1 =
       match l1 with
       | [] -> result
       | (f,s)::tl1 ->
           let r = FStar_Util.split s ".."  in
-          let uu____7419 =
+          let uu____7238 =
             match r with
             | r1::r2::[] ->
-                let uu____7439 = FStar_Util.int_of_string r1  in
-                let uu____7441 = FStar_Util.int_of_string r2  in
-                (uu____7439, uu____7441)
-            | uu____7445 ->
-                let uu____7449 =
-                  let uu____7455 =
+                let uu____7258 = FStar_Util.int_of_string r1  in
+                let uu____7260 = FStar_Util.int_of_string r2  in
+                (uu____7258, uu____7260)
+            | uu____7264 ->
+                let uu____7268 =
+                  let uu____7274 =
                     FStar_Util.format1 "Malformed warn-error range %s" s  in
-                  (Fatal_InvalidWarnErrorSetting, uu____7455)  in
-                raise_err uu____7449
+                  (Fatal_InvalidWarnErrorSetting, uu____7274)  in
+                raise_err uu____7268
              in
-          (match uu____7419 with
+          (match uu____7238 with
            | (l2,h) ->
                (if
                   (l2 < (Prims.parse_int "0")) ||
                     (h >= (FStar_List.length default_flags))
                 then
-                  (let uu____7490 =
-                     let uu____7496 =
-                       let uu____7498 = FStar_Util.string_of_int l2  in
-                       let uu____7500 = FStar_Util.string_of_int h  in
+                  (let uu____7309 =
+                     let uu____7315 =
+                       let uu____7317 = FStar_Util.string_of_int l2  in
+                       let uu____7319 = FStar_Util.string_of_int h  in
                        FStar_Util.format2 "No error for warn_error %s..%s"
-                         uu____7498 uu____7500
+                         uu____7317 uu____7319
                         in
-                     (Fatal_InvalidWarnErrorSetting, uu____7496)  in
-                   raise_err uu____7490)
+                     (Fatal_InvalidWarnErrorSetting, uu____7315)  in
+                   raise_err uu____7309)
                 else ();
                 compute_range (FStar_List.append result [(f, (l2, h))]) tl1))
        in
     let range = compute_range [] l  in
     let sorted1 = FStar_List.sortWith compare1 range  in
-    let uu____7590 =
-      let uu____7593 = FStar_ST.op_Bang flags  in
-      aux [] (Prims.parse_int "0") uu____7593 sorted1  in
-    FStar_ST.op_Colon_Equals flags uu____7590
+    aux [] (Prims.parse_int "0") init_warn_error_flags sorted1
   
 let catch_errors :
   'a . (unit -> 'a) -> (issue Prims.list * 'a FStar_Pervasives_Native.option)
@@ -3154,11 +3131,11 @@ let catch_errors :
     FStar_ST.op_Colon_Equals current_handler newh;
     (let r =
        try
-         (fun uu___28_7716  ->
+         (fun uu___28_7483  ->
             match () with
             | () -> let r = f ()  in FStar_Pervasives_Native.Some r) ()
        with
-       | uu___27_7722 -> (err_exn uu___27_7722; FStar_Pervasives_Native.None)
+       | uu___27_7489 -> (err_exn uu___27_7489; FStar_Pervasives_Native.None)
         in
      let errs = newh.eh_report ()  in
      FStar_ST.op_Colon_Equals current_handler old; (errs, r))

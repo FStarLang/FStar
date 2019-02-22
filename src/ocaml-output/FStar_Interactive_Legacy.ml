@@ -349,7 +349,7 @@ let rec (read_chunk : unit -> input_chunks) =
                | uu____1511 ->
                    (FStar_Errors.log_issue FStar_Range.dummyRange
                       (FStar_Errors.Warning_WrongErrorLocation,
-                        (Prims.strcat
+                        (Prims.op_Hat
                            "Error locations may be wrong, unrecognized string after #push: "
                            lc_lax));
                     (false, (Prims.parse_int "1"), (Prims.parse_int "0")))
@@ -376,7 +376,7 @@ let rec (read_chunk : unit -> input_chunks) =
               | uu____1649 ->
                   (FStar_Errors.log_issue FStar_Range.dummyRange
                      (FStar_Errors.Error_IDEUnrecognized,
-                       (Prims.strcat "Unrecognized \"#info\" request: " l));
+                       (Prims.op_Hat "Unrecognized \"#info\" request: " l));
                    FStar_All.exit (Prims.parse_int "1")))
            else
              if FStar_Util.starts_with l "#completions "
@@ -388,7 +388,7 @@ let rec (read_chunk : unit -> input_chunks) =
                 | uu____1672 ->
                     (FStar_Errors.log_issue FStar_Range.dummyRange
                        (FStar_Errors.Error_IDEUnrecognized,
-                         (Prims.strcat
+                         (Prims.op_Hat
                             "Unrecognized \"#completions\" request: " l));
                      FStar_All.exit (Prims.parse_int "1")))
              else
@@ -808,7 +808,7 @@ let rec (go :
                         if prefix1 = ""
                         then (matched, stripped_ns, match_len)
                         else
-                          ((Prims.strcat prefix1 (Prims.strcat "." matched)),
+                          ((Prims.op_Hat prefix1 (Prims.op_Hat "." matched)),
                             stripped_ns,
                             (((FStar_String.length prefix1) + match_len) +
                                (Prims.parse_int "1")))

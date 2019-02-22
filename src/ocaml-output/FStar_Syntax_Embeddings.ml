@@ -3,8 +3,8 @@ type norm_cb =
   (FStar_Ident.lid,FStar_Syntax_Syntax.term) FStar_Util.either ->
     FStar_Syntax_Syntax.term
 let (id_norm_cb : norm_cb) =
-  fun uu___13_13  ->
-    match uu___13_13 with
+  fun uu___39_13  ->
+    match uu___39_13 with
     | FStar_Util.Inr x -> x
     | FStar_Util.Inl l ->
         let uu____20 =
@@ -158,13 +158,13 @@ let type_of : 'a . 'a embedding -> FStar_Syntax_Syntax.typ = fun e  -> e.typ
 let set_type : 'a . FStar_Syntax_Syntax.typ -> 'a embedding -> 'a embedding =
   fun ty  ->
     fun e  ->
-      let uu___15_1522 = e  in
+      let uu___41_1522 = e  in
       {
-        em = (uu___15_1522.em);
-        un = (uu___15_1522.un);
+        em = (uu___41_1522.em);
+        un = (uu___41_1522.un);
         typ = ty;
-        print = (uu___15_1522.print);
-        emb_typ = (uu___15_1522.emb_typ)
+        print = (uu___41_1522.print);
+        emb_typ = (uu___41_1522.emb_typ)
       }
   
 let lazy_embed :
@@ -260,7 +260,7 @@ let lazy_unembed :
                         | FStar_Pervasives_Native.None  -> "None"
                         | FStar_Pervasives_Native.Some x2 ->
                             let uu____1904 = pa x2  in
-                            Prims.strcat "Some " uu____1904
+                            Prims.op_Hat "Some " uu____1904
                          in
                       FStar_Util.print3
                         "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
@@ -295,7 +295,7 @@ let lazy_unembed :
                       | FStar_Pervasives_Native.None  -> "None"
                       | FStar_Pervasives_Native.Some a ->
                           let uu____1987 = pa a  in
-                          Prims.strcat "Some " uu____1987
+                          Prims.op_Hat "Some " uu____1987
                        in
                     FStar_Util.print3
                       "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
@@ -341,11 +341,11 @@ let (e_any : FStar_Syntax_Syntax.term embedding) =
   
 let (e_unit : unit embedding) =
   let em u rng _topt _norm =
-    let uu___16_2321 = FStar_Syntax_Util.exp_unit  in
+    let uu___42_2321 = FStar_Syntax_Util.exp_unit  in
     {
-      FStar_Syntax_Syntax.n = (uu___16_2321.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___42_2321.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___16_2321.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___42_2321.FStar_Syntax_Syntax.vars)
     }  in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unascribe t0  in
@@ -381,11 +381,11 @@ let (e_bool : Prims.bool embedding) =
       if b
       then FStar_Syntax_Util.exp_true_bool
       else FStar_Syntax_Util.exp_false_bool  in
-    let uu___17_2463 = t  in
+    let uu___43_2463 = t  in
     {
-      FStar_Syntax_Syntax.n = (uu___17_2463.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___43_2463.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___17_2463.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___43_2463.FStar_Syntax_Syntax.vars)
     }  in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unmeta_safe t0  in
@@ -418,11 +418,11 @@ let (e_bool : Prims.bool embedding) =
 let (e_char : FStar_Char.char embedding) =
   let em c rng _topt _norm =
     let t = FStar_Syntax_Util.exp_char c  in
-    let uu___18_2605 = t  in
+    let uu___44_2605 = t  in
     {
-      FStar_Syntax_Syntax.n = (uu___18_2605.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___44_2605.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___18_2605.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___44_2605.FStar_Syntax_Syntax.vars)
     }  in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unmeta_safe t0  in
@@ -527,7 +527,7 @@ let (e_string : Prims.string embedding) =
          FStar_Pervasives_Native.None)
      in
   mk_emb_full em un FStar_Syntax_Syntax.t_string
-    (fun x  -> Prims.strcat "\"" (Prims.strcat x "\"")) emb_t_string
+    (fun x  -> Prims.op_Hat "\"" (Prims.op_Hat x "\"")) emb_t_string
   
 let e_option :
   'a . 'a embedding -> 'a FStar_Pervasives_Native.option embedding =
@@ -549,13 +549,13 @@ let e_option :
            in
         (uu____3041, [ea.emb_typ])  in
       FStar_Syntax_Syntax.ET_app uu____3033  in
-    let printer uu___14_3055 =
-      match uu___14_3055 with
+    let printer uu___40_3055 =
+      match uu___40_3055 with
       | FStar_Pervasives_Native.None  -> "None"
       | FStar_Pervasives_Native.Some x ->
           let uu____3061 =
-            let uu____3063 = ea.print x  in Prims.strcat uu____3063 ")"  in
-          Prims.strcat "(Some " uu____3061
+            let uu____3063 = ea.print x  in Prims.op_Hat uu____3063 ")"  in
+          Prims.op_Hat "(Some " uu____3061
        in
     let em o rng topt norm1 =
       lazy_embed printer emb_t_option_a rng t_option_a o
@@ -1113,8 +1113,8 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
         let uu____6036 =
           let uu____6038 = FStar_List.map ea.print l  in
           FStar_All.pipe_right uu____6038 (FStar_String.concat "; ")  in
-        Prims.strcat uu____6036 "]"  in
-      Prims.strcat "[" uu____6034  in
+        Prims.op_Hat uu____6036 "]"  in
+      Prims.op_Hat "[" uu____6034  in
     let rec em l rng shadow_l norm1 =
       lazy_embed printer emb_t_list_a rng t_list_a l
         (fun uu____6124  ->

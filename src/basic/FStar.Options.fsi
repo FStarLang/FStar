@@ -40,12 +40,26 @@ type option_val =
   | Unset
 
 type options =
-    | Set
-    | Reset
-    | Restore
+  | Set
+  | Reset
+  | Restore
+
+
+type error_flag =
+  | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
+  | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
+                    //the compiler can progress after reporting them
+  | CError          //CError: these are reported as errors using log_issue
+                    //        but they can be turned into warnings or silenced
+  | CWarning        //CWarning: reported using log_issue as warnings by default;
+                    //          then can be silenced or escalated to errors
+  | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
+
 
 val defaults                    : list<(string * option_val)>
 
+val initialize_parse_warn_error : (string -> list<error_flag>) -> unit
+val error_flags                 : (unit -> list<error_flag>)
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
 val restore_cmd_line_options    : bool    -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
