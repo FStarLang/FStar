@@ -30,6 +30,7 @@ val strlen:  string -> Tot<nat>
 val length:  string -> Tot<nat>
 val lowercase: string -> Tot<string>
 val uppercase: string -> Tot<string>
+val escaped: string -> Tot<string>
 
 (* may fail with index out of bounds *)
 val substring: string -> start:int -> len:int -> string

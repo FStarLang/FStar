@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module LowStar.Monotonic.Buffer
 
 module P = FStar.Preorder
@@ -128,6 +143,8 @@ let as_seq #_ #_ #_ h b =
     Seq.slice (HS.sel h content) (U32.v idx) (U32.v idx + U32.v len)
 
 let length_as_seq #_ #_ #_ _ _ = ()
+
+let mbuffer_injectivity_in_first_preorder () = ()
 
 let mgsub #a #rrel #rel sub_rel b i len =
   match b with
@@ -578,10 +595,13 @@ let cls : MG.cls ubuffer = MG.Cls #ubuffer
   (fun #r #a b h1 h2 f -> same_mreference_ubuffer_preserved b h1 h2 f)
 
 let loc = MG.loc cls
+let _ = intro_ambient loc
 
 let loc_none = MG.loc_none
+let _ = intro_ambient loc_none
 
 let loc_union = MG.loc_union
+let _ = intro_ambient loc_union
 
 let loc_union_idem = MG.loc_union_idem
 
@@ -650,7 +670,7 @@ let loc_includes_as_seq #_ #rrel1 #rrel2 #_ #_ h1 h2 larger smaller =
   end
 #pop-options
 
-let loc_includes_addresses_buffer #_ #_ #_ preserve_liveness r s p =
+let loc_includes_addresses_buffer #a #rrel #srel preserve_liveness r s p =
   MG.loc_includes_addresses_aloc #_ #cls preserve_liveness r s #(as_addr p) (ubuffer_of_buffer p)
 
 let loc_includes_region_buffer #_ #_ #_ preserve_liveness s b =
@@ -752,11 +772,7 @@ let modifies_only_live_regions = MG.modifies_only_live_regions
 
 let no_upd_fresh_region = MG.no_upd_fresh_region
 
-let fresh_frame_modifies = MG.fresh_frame_modifies #_ cls
-
 let new_region_modifies = MG.new_region_modifies #_ cls
-
-let popped_modifies = MG.popped_modifies #_ cls
 
 let modifies_fresh_frame_popped = MG.modifies_fresh_frame_popped
 
@@ -853,6 +869,8 @@ let loc_not_unused_in = MG.loc_not_unused_in _
 
 let loc_unused_in = MG.loc_unused_in _
 
+let loc_regions_unused_in = MG.loc_regions_unused_in cls
+
 let loc_unused_in_not_unused_in_disjoint =
   MG.loc_unused_in_not_unused_in_disjoint cls
 
@@ -881,36 +899,17 @@ let mreference_live_loc_not_unused_in =
 let mreference_unused_in_loc_unused_in =
   MG.mreference_unused_in_loc_unused_in cls
 
-(* Duplicate the modifies clause to cope with cases that must not be used with transitivity *)
-
-let modifies_inert = modifies
-
-let modifies_inert_intro s h1 h2 = ()
-
-let modifies_inert_live_region = modifies_live_region
-
-let modifies_inert_mreference_elim = modifies_mreference_elim
-
-let modifies_inert_buffer_elim = modifies_buffer_elim
-
-let modifies_inert_liveness_insensitive_mreference_weak = modifies_liveness_insensitive_mreference_weak
-
-let modifies_inert_liveness_insensitive_buffer_weak = modifies_liveness_insensitive_buffer_weak
-
-let modifies_inert_liveness_insensitive_region_weak = modifies_liveness_insensitive_region_weak
-
-let modifies_inert_liveness_insensitive_region_mreference_weak = modifies_liveness_insensitive_region_mreference_weak
-
-let modifies_inert_liveness_insensitive_region_buffer_weak = modifies_liveness_insensitive_region_buffer_weak
-
-let fresh_frame_modifies_inert = fresh_frame_modifies
-
-let popped_modifies_inert = popped_modifies
-
-let modifies_inert_loc_unused_in l h1 h2 l' =
+let modifies_loc_unused_in l h1 h2 l' =
   modifies_loc_includes address_liveness_insensitive_locs h1 h2 l;
   modifies_address_liveness_insensitive_unused_in h1 h2;
   loc_includes_trans (loc_unused_in h1) (loc_unused_in h2) l'
+
+let fresh_frame_modifies h0 h1 = MG.fresh_frame_modifies #_ cls h0 h1
+
+let popped_modifies = MG.popped_modifies #_ cls
+
+let modifies_remove_new_locs l_fresh l_aux l_goal h1 h2 h3 =
+  modifies_only_not_unused_in l_goal h1 h3
 
 let disjoint_neq #_ #_ #_ #_ #_ #_ b1 b2 =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2 then

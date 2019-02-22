@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module LowStar.BufferView
 
 noeq
@@ -24,12 +39,18 @@ let length_eq #_ _ = ()
 let view_indexing #b vb i
   = let n = View?.n (get_view vb) in
     length_eq vb;
-    FStar.Math.Lemmas.distributivity_add_left (length vb) (-i) n
+    FStar.Math.Lemmas.distributivity_add_left (length vb) (-i) n;
+    let open FStar.Mul in
+    assert ((length vb + (-i)) * n = length vb * n + (-i) * n);
+    assert (length vb > i);
+    assert (length vb + (-i) > 0);
+    assert (n <= (length vb + (-i)) * n)
+
 
 let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
     : GTot (frags:
                (let src_t = Mkdtuple4?._1 vb in
-	        Seq.seq src_t *
+                Seq.seq src_t *
                 Seq.lseq src_t (View?.n (get_view vb)) *
                 Seq.seq src_t){
                let prefix, as, suffix = frags in
@@ -147,6 +168,14 @@ let upd_modifies #b h vb i x
     let v = get_view vb in
     let prefix, _, suffix = split_at_i vb i h in
     let s1 = prefix `Seq.append` (View?.put v x `Seq.append` suffix) in
+    B.g_upd_seq_as_seq (as_buffer vb) s1 h
+
+let upd_equal_domains #b h vb i x
+  = let open FStar.Mul in
+    let v = get_view vb in
+    let prefix, _, suffix = split_at_i vb i h in
+    let s1 = prefix `Seq.append` (View?.put v x `Seq.append` suffix) in
+    upd_modifies h vb i x;
     B.g_upd_seq_as_seq (as_buffer vb) s1 h
 
 let rec as_seq' (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i <= length vb})

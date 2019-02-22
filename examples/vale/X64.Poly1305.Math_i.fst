@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module X64.Poly1305.Math_i
 
 open FStar.Tactics
@@ -102,7 +117,7 @@ let lemma_poly_multiply (n:int) (p:pos) (r:int) (h:int) (r0:int) (r1:nat) (h0:in
   (*             y + (h0*r1 + h1*r0 + h2*(5*x))* n + *)
   (*             (h0*r0 + h1*(5*x)) + ((h2*n + h1)*x)*p)) = *)
   (*    assert_by_tactic ((h2*n+h1)*((p+5)*x) == (h2*n+h1)*5*x + ((h2*n+h1)*x)*p) canon; *)
-  (*   calc ( *)
+  (*   tcalc ( *)
   (*     (h2*n + h1)*((p+5)*x) + (y + (h1*r0 + h0*r1)*n + h0*r0) *)
   (*     &= (h2*n + h1)*5*x + ((h2*n + h1)*x)*p + (y + (h1*r0 + h0*r1)*n + h0*r0) &| using z3 *)
   (*     &= (h2*n + h1)*5*x + (y + (h1*r0 + h0*r1)*n + h0*r0) + ((h2*n + h1)*x)*p &| *)
@@ -112,7 +127,7 @@ let lemma_poly_multiply (n:int) (p:pos) (r:int) (h:int) (r0:int) (r1:nat) (h0:in
   (*     &= y + (h0*r1 + h1*r0 + h2*(5*x))*n + (h0*r0 + h1*(5*x)) + ((h2*n + h1)*x)*p &|| canon *)
   (*     ) *)
   (* in *)
-  (*   calc( *)
+  (*   tcalc( *)
   (*     h*r *)
   (*     &= (h2*(n*n) + h1*n + h0)*(r1*n + r0) &| using z3 *)
   (*     &= (h2*n+h1)*((n*n)*r1)+(h2*r0)*(n*n)+(h1*r0+h0*r1)*n+h0*r0 &|| canon *)
@@ -124,7 +139,7 @@ let lemma_poly_multiply (n:int) (p:pos) (r:int) (h:int) (r0:int) (r1:nat) (h0:in
   (*        (h0*r0 + h1*(5*(r1/4))) + ((h2*n + h1)*(r1/4))*p  &| using (helper_lemma (r1/4) *)
   (*                                                                      ((h2*r0)*(n*n)); z3) *)
   (*    ); *)
-  (*     calc( *)
+  (*     tcalc( *)
   (*       r1 + (r1/4) *)
   (*       &= 5*(r1/4) &| using (comm_plus #r1 #(r1/4); *)
   (*                             division_addition_lemma r1 4 r1; *)
@@ -146,7 +161,7 @@ let lemma_poly_multiply (n:int) (p:pos) (r:int) (h:int) (r0:int) (r1:nat) (h0:in
 let lemma_poly_reduce (n:int) (p:pos) (h:nat) (h2:nat) (h10:int) (c:int) (hh:int) =
   lemma_div_mod h (n*n);
   assert (h == (n*n)*h2 + h10);
-  calc(
+  tcalc(
     h
       &= (n*n)*h2 + h10 &| using (lemma_div_mod h (n*n))
       &= (n*n)*((h2 / 4) * 4 + h2 % 4) + h10 &| using z3
@@ -241,7 +256,7 @@ let lemma_mod_breakdown (a:nat) (b:pos) (c:pos) :
 
 
 #reset-options "--smtencoding.elim_box true --z3rlimit 8 --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native"
-// using calc it was not even proving the first equation, look into this later
+// using tcalc it was not even proving the first equation, look into this later
 let lemma_mod_hi (x0:nat64) (x1:nat64) (z:nat64) =
   let n = 0x10000000000000000 in
   assert(lowerUpper128 x0 x1 % lowerUpper128 0 z = (x1 * n + x0) % (z * n));
@@ -266,7 +281,7 @@ let lemma_reduce128  (h:int) (h2:nat64) (h1:nat64) (h0:nat64) (g:int) (g2:nat64)
       begin
         assert(h < 0x3fffffffffffffffffffffffffffffffb);
         assert(h >= 0);
-        calc(
+        tcalc(
              mod2_128(modp(h))
           &= mod2_128(h) &| using (assert (modp(h) == h % 0x3fffffffffffffffffffffffffffffffb)));
           assert_norm (mod2_128(h) == lowerUpper128 h0 h1) // TODO: assert_norm for Calc
@@ -276,7 +291,7 @@ let lemma_reduce128  (h:int) (h2:nat64) (h1:nat64) (h0:nat64) (g:int) (g2:nat64)
        assert (0 <= h);
        assert (h - 0x3fffffffffffffffffffffffffffffffb <
                  0x3fffffffffffffffffffffffffffffffb);
-       calc(
+       tcalc(
             mod2_128(modp(h))
          &= mod2_128(h - 0x3fffffffffffffffffffffffffffffffb) &|
                           using (assert (modp(h) == h % 0x3fffffffffffffffffffffffffffffffb);

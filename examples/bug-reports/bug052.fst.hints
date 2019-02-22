@@ -1,5 +1,5 @@
 [
-  "\u0000Ó(`Á(„%Ðb£ýÐ\u0017\u0017\u0000",
+  "hû$\u0011n…\u0005ûÌfËƒò¢f\u0014",
   [
     [
       "Bug052.trivial_a",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "8e7d9ffa546ac6eb5a286a4c2c7a6b38"
+      "8810991ff41d6451c25e09e44b45915f"
     ],
     [
       "Bug052.use_fact_and_lemma",
@@ -16,13 +16,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "dc9959ad71bb3dd264f7d809aa5909f2"
+      "e5fbdae9cb120ba1508e6ef1ac513d33"
     ],
     [
       "Bug052.test",
@@ -35,7 +34,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ab15befdc3200c523b5cfa741ebba55e"
+      "15dcf277db3d1ec84424abdd3b260e29"
     ]
   ]
 ]

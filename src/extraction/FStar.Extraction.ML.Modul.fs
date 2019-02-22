@@ -534,7 +534,7 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
            env, iface
       else g, empty_iface
 
-let extract_iface (g:env_t) modul =
+let extract_iface' (g:env_t) modul =
     if Options.interactive() then g, empty_iface else
     let _ = Options.restore_cmd_line_options true in
     let decls = modul.declarations in
@@ -548,6 +548,13 @@ let extract_iface (g:env_t) modul =
     in
     ignore <| Options.restore_cmd_line_options true;
     res
+
+let extract_iface (g:env_t) modul =
+    if Options.debug_any()
+    then FStar.Util.measure_execution_time
+             (BU.format1 "Extracted interface of %s" modul.name.str)
+             (fun () -> extract_iface' g modul)
+    else extract_iface' g modul
 
 let extend_with_iface (g:env_t) (iface:iface) =
      { g with
@@ -838,13 +845,23 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with env_tcenv=FStar.TypeChecker.Env.set_current_module g.env_tcenv m.name;
                   currentModule = name} in
-  let g, sigs = BU.fold_map extract_sig g m.declarations in
+  let g, sigs =
+    BU.fold_map
+        (fun g se ->
+            if Options.debug_module m.name.str
+            then let nm = FStar.Syntax.Util.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", " in
+                 BU.print1 "+++About to extract {%s}\n" nm;
+                 FStar.Util.measure_execution_time
+                       (BU.format1 "---Extracted {%s}" nm)
+                       (fun () -> extract_sig g se)
+            else extract_sig g se)
+        g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
   let is_kremlin = Options.codegen () = Some Options.Kremlin in
   if m.name.str <> "Prims"
   && (is_kremlin || not m.is_interface)
   then begin
-    BU.print1 "Extracted module %s\n" (string_of_lid m.name);
+    if not (Options.silent()) then (BU.print1 "Extracted module %s\n" (string_of_lid m.name));
     g, Some (MLLib ([name, Some ([], mlm), (MLLib [])]))
   end
   else g, None

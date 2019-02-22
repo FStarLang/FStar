@@ -1,5 +1,5 @@
 [
-  "¢\"µËÑÄIf\u001c\u0017ß\u0003ÓÔU\u0005",
+  "\u001aF–À¬-Ÿÿxl¨†¹\t\fl",
   [
     [
       "TransparentMap.sel_upd1",
@@ -10,21 +10,20 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_Prims.eqtype", "equation_TransparentMap.sel",
         "equation_TransparentMap.upd",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
+        "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "interpretation_Tm_abs_de8bee169fb0726b90c0a5f5baf23552",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "primitive_Prims.op_Equality",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "typing_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "typing_Tm_abs_de8bee169fb0726b90c0a5f5baf23552"
       ],
       0,
-      "56facbb65eef5d892296cba22336efeb"
+      "4905e45a2db5aa519b856091bec31d51"
     ],
     [
       "TransparentMap.sel_upd2",
@@ -35,21 +34,20 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
-        "equation_FStar.FunctionalExtensionality.arrow",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_Prims.eqtype", "equation_TransparentMap.sel",
         "equation_TransparentMap.upd",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
+        "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "interpretation_Tm_abs_de8bee169fb0726b90c0a5f5baf23552",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "typing_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "typing_Tm_abs_de8bee169fb0726b90c0a5f5baf23552"
       ],
       0,
-      "8eb6212ddbfeef8f624f4490e3c09fc3"
+      "d986a6dccaa12fe650aebb22f7685aa9"
     ],
     [
       "TransparentMap.lemma_equal_intro",
@@ -61,7 +59,7 @@
         "equation_TransparentMap.equal", "equation_TransparentMap.sel"
       ],
       0,
-      "90b6cd4ef4e9403e6e9d5b16d018a90d"
+      "c0e26721bad7bb52ed59081297edd151"
     ],
     [
       "TransparentMap.lemma_equal_elim",
@@ -75,12 +73,12 @@
         "equation_Prims.eqtype", "equation_TransparentMap.equal",
         "equation_TransparentMap.map",
         "lemma_FStar.FunctionalExtensionality.extensionality",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
+        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "a6c0af85d44cf93f3f2c5d63aef94dd4"
+      "be6991d35ed9ded73c3a50a52c414036"
     ],
     [
       "TransparentMap.lemma_equal_refl",
@@ -89,7 +87,7 @@
       0,
       [ "@query", "lemma_TransparentMap.lemma_equal_intro" ],
       0,
-      "2ed4293b23b8446bceff327bc9317888"
+      "3bde03b74fb1dc86b9b24dab5c535c6b"
     ]
   ]
 ]

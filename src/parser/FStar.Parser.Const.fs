@@ -118,7 +118,7 @@ let some_lid        = psnconst  "Some"
 let none_lid        = psnconst  "None"
 let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
-let assert_norm_lid = p2l ["FStar"; "Pervasives"; "Native"; "assert_norm"]
+let assert_norm_lid = p2l ["FStar"; "Pervasives"; "assert_norm"]
 (* list_append_lid is needed to desugar @ in the compiler *)
 let list_append_lid = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)
@@ -233,26 +233,26 @@ let labeled_lid    = pconst "labeled"
 let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
-let with_type_lid  = psnconst "with_type"
+let with_type_lid  = psconst "with_type"
 
 (* Constants for marking terms with normalization hints *)
-let normalize      = psnconst "normalize"
-let normalize_term = psnconst "normalize_term"
-let norm           = psnconst "norm"
+let normalize      = psconst "normalize"
+let normalize_term = psconst "normalize_term"
+let norm           = psconst "norm"
 
 (* lids for normalizer steps *)
-let steps_simpl         = psnconst "simplify"
-let steps_weak          = psnconst "weak"
-let steps_hnf           = psnconst "hnf"
-let steps_primops       = psnconst "primops"
-let steps_zeta          = psnconst "zeta"
-let steps_iota          = psnconst "iota"
-let steps_delta         = psnconst "delta"
-let steps_reify         = psnconst "reify_"
-let steps_unfoldonly    = psnconst "delta_only"
-let steps_unfoldfully   = psnconst "delta_fully"
-let steps_unfoldattr    = psnconst "delta_attr"
-let steps_nbe           = psnconst "nbe"
+let steps_simpl         = psconst "simplify"
+let steps_weak          = psconst "weak"
+let steps_hnf           = psconst "hnf"
+let steps_primops       = psconst "primops"
+let steps_zeta          = psconst "zeta"
+let steps_iota          = psconst "iota"
+let steps_delta         = psconst "delta"
+let steps_reify         = psconst "reify_"
+let steps_unfoldonly    = psconst "delta_only"
+let steps_unfoldfully   = psconst "delta_fully"
+let steps_unfoldattr    = psconst "delta_attr"
+let steps_nbe           = psconst "nbe"
 
 (* attributes *)
 let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]
@@ -377,3 +377,9 @@ let binders_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binders"]) FSta
 let bv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "bv"]) FStar.Range.dummyRange
 let fv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "fv"]) FStar.Range.dummyRange
 let norm_step_lid = lid_of_path (["FStar"; "Syntax"; "Embeddings"; "norm_step"]) FStar.Range.dummyRange
+
+(* Calculational proofs, from FStar.Calc *)
+let calc_lid i : lid = lid_of_path ["FStar"; "Calc"; i] FStar.Range.dummyRange
+let calc_init_lid   = calc_lid "calc_init"
+let calc_step_lid   = calc_lid "calc_step"
+let calc_finish_lid = calc_lid "calc_finish"

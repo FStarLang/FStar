@@ -1,21 +1,17 @@
 [
-  "ÛNu''q\n¶sí=5º`\u0006²",
+  "‚@ú†5^ã8í ™\n¯\u0018iá",
   [
     [
-      "Plugins.Test.uu___64",
+      "Plugins.Test.uu___1",
       1,
       2,
       1,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int",
-        "function_token_typing_Prims.bool", "function_token_typing_Prims.int"
-      ],
+      [ "@query" ],
       0,
-      "7eeaa9b7df077df74f10b9d5de493713"
+      "846b64e3c5a28d30b47d4f5a951c2c6f"
     ],
     [
-      "Plugins.Test.uu___65",
+      "Plugins.Test.uu___2",
       1,
       2,
       1,
@@ -24,22 +20,22 @@
         "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "equation_Prims.eqtype", "function_token_typing_Prims.bool",
         "function_token_typing_Prims.int",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "385390cf2589874fad1652dbea1b7455"
+      "64f80687427bcfd05f3923ccc194af7e"
     ],
     [
-      "Plugins.Test.uu___65",
+      "Plugins.Test.uu___2",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "e34b8ae222905ac8bf8d066520d871dc"
+      "ca45d89b6403e875edc9640c0b45e23f"
     ],
     [
-      "Plugins.Test.uu___66",
+      "Plugins.Test.uu___3",
       1,
       2,
       1,
@@ -47,19 +43,19 @@
         "@MaxIFuel_assumption", "@query",
         "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
         "function_token_typing_Prims.int",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6bc81d11bbb60c9f75c370109f67b869"
+      "7f1e7b3b5585d30541744a95f3340fac"
     ],
     [
-      "Plugins.Test.uu___66",
+      "Plugins.Test.uu___3",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "9a77f87a230ba47cb9ce58de075e76ef"
+      "38129afd3b578f21c42f062e14df6ea7"
     ]
   ]
 ]

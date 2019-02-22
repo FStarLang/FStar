@@ -317,9 +317,10 @@ type raw_error =
   | Error_FieldShadow 
   | Error_UnexpectedDM4FType 
   | Fatal_EffectAbbreviationResultTypeMismatch 
-  | Error_UncheckedFile 
+  | Error_AlreadyCachedAssertionFailure 
   | Error_MustEraseMissing 
   | Warning_EffectfulArgumentToErasedFunction 
+  | Fatal_EmptySurfaceLet 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
@@ -2195,9 +2196,11 @@ let (uu___is_Fatal_EffectAbbreviationResultTypeMismatch :
     | Fatal_EffectAbbreviationResultTypeMismatch  -> true
     | uu____3485 -> false
   
-let (uu___is_Error_UncheckedFile : raw_error -> Prims.bool) =
+let (uu___is_Error_AlreadyCachedAssertionFailure : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_UncheckedFile  -> true | uu____3496 -> false
+    match projectee with
+    | Error_AlreadyCachedAssertionFailure  -> true
+    | uu____3496 -> false
   
 let (uu___is_Error_MustEraseMissing : raw_error -> Prims.bool) =
   fun projectee  ->
@@ -2212,6 +2215,12 @@ let (uu___is_Warning_EffectfulArgumentToErasedFunction :
     | Warning_EffectfulArgumentToErasedFunction  -> true
     | uu____3518 -> false
   
+let (uu___is_Fatal_EmptySurfaceLet : raw_error -> Prims.bool) =
+  fun projectee  ->
+    match projectee with
+    | Fatal_EmptySurfaceLet  -> true
+    | uu____3529 -> false
+  
 type flag =
   | CFatal 
   | CAlwaysError 
@@ -2220,23 +2229,23 @@ type flag =
   | CSilent 
 let (uu___is_CFatal : flag -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CFatal  -> true | uu____3529 -> false
+    match projectee with | CFatal  -> true | uu____3540 -> false
   
 let (uu___is_CAlwaysError : flag -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CAlwaysError  -> true | uu____3540 -> false
+    match projectee with | CAlwaysError  -> true | uu____3551 -> false
   
 let (uu___is_CError : flag -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CError  -> true | uu____3551 -> false
+    match projectee with | CError  -> true | uu____3562 -> false
   
 let (uu___is_CWarning : flag -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CWarning  -> true | uu____3562 -> false
+    match projectee with | CWarning  -> true | uu____3573 -> false
   
 let (uu___is_CSilent : flag -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CSilent  -> true | uu____3573 -> false
+    match projectee with | CSilent  -> true | uu____3584 -> false
   
 let (default_flags : (raw_error * flag) Prims.list) =
   [(Error_DependencyAnalysisFailed, CAlwaysError);
@@ -2248,17 +2257,17 @@ let (default_flags : (raw_error * flag) Prims.list) =
   (Error_ModuleFileNameMismatch, CAlwaysError);
   (Error_OpPlusInUniverse, CAlwaysError);
   (Error_OutOfRange, CAlwaysError);
-  (Error_ProofObligationFailed, CAlwaysError);
+  (Error_ProofObligationFailed, CError);
   (Error_TooManyFiles, CAlwaysError);
   (Error_TypeCheckerFailToProve, CAlwaysError);
   (Error_TypeError, CAlwaysError);
   (Error_UncontrainedUnificationVar, CAlwaysError);
   (Error_UnexpectedGTotComputation, CAlwaysError);
   (Error_UnexpectedInstance, CAlwaysError);
-  (Error_UnknownFatal_AssertionFailure, CAlwaysError);
+  (Error_UnknownFatal_AssertionFailure, CError);
   (Error_Z3InvocationError, CAlwaysError);
   (Error_IDEAssertionFailure, CAlwaysError);
-  (Error_Z3SolverError, CAlwaysError);
+  (Error_Z3SolverError, CError);
   (Fatal_AbstractTypeDeclarationInInterface, CFatal);
   (Fatal_ActionMustHaveFunctionType, CFatal);
   (Fatal_AlreadyDefinedTopLevelDeclaration, CFatal);
@@ -2556,41 +2565,42 @@ let (default_flags : (raw_error * flag) Prims.list) =
   (Error_FieldShadow, CFatal);
   (Error_UnexpectedDM4FType, CFatal);
   (Fatal_EffectAbbreviationResultTypeMismatch, CFatal);
-  (Error_UncheckedFile, CFatal);
+  (Error_AlreadyCachedAssertionFailure, CFatal);
   (Error_MustEraseMissing, CWarning);
-  (Warning_EffectfulArgumentToErasedFunction, CWarning)] 
+  (Warning_EffectfulArgumentToErasedFunction, CWarning);
+  (Fatal_EmptySurfaceLet, CFatal)] 
 exception Err of (raw_error * Prims.string) 
 let (uu___is_Err : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Err uu____4883 -> true | uu____4890 -> false
+    match projectee with | Err uu____4898 -> true | uu____4905 -> false
   
 let (__proj__Err__item__uu___ : Prims.exn -> (raw_error * Prims.string)) =
-  fun projectee  -> match projectee with | Err uu____4909 -> uu____4909 
+  fun projectee  -> match projectee with | Err uu____4924 -> uu____4924 
 exception Error of (raw_error * Prims.string * FStar_Range.range) 
 let (uu___is_Error : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error uu____4934 -> true | uu____4943 -> false
+    match projectee with | Error uu____4949 -> true | uu____4958 -> false
   
 let (__proj__Error__item__uu___ :
   Prims.exn -> (raw_error * Prims.string * FStar_Range.range)) =
-  fun projectee  -> match projectee with | Error uu____4966 -> uu____4966 
+  fun projectee  -> match projectee with | Error uu____4981 -> uu____4981 
 exception Warning of (raw_error * Prims.string * FStar_Range.range) 
 let (uu___is_Warning : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Warning uu____4993 -> true | uu____5002 -> false
+    match projectee with | Warning uu____5008 -> true | uu____5017 -> false
   
 let (__proj__Warning__item__uu___ :
   Prims.exn -> (raw_error * Prims.string * FStar_Range.range)) =
-  fun projectee  -> match projectee with | Warning uu____5025 -> uu____5025 
+  fun projectee  -> match projectee with | Warning uu____5040 -> uu____5040 
 exception Stop 
 let (uu___is_Stop : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Stop  -> true | uu____5042 -> false
+    match projectee with | Stop  -> true | uu____5057 -> false
   
 exception Empty_frag 
 let (uu___is_Empty_frag : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Empty_frag  -> true | uu____5053 -> false
+    match projectee with | Empty_frag  -> true | uu____5068 -> false
   
 type issue_level =
   | ENotImplemented 
@@ -2599,19 +2609,19 @@ type issue_level =
   | EError 
 let (uu___is_ENotImplemented : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | ENotImplemented  -> true | uu____5064 -> false
+    match projectee with | ENotImplemented  -> true | uu____5079 -> false
   
 let (uu___is_EInfo : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EInfo  -> true | uu____5075 -> false
+    match projectee with | EInfo  -> true | uu____5090 -> false
   
 let (uu___is_EWarning : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EWarning  -> true | uu____5086 -> false
+    match projectee with | EWarning  -> true | uu____5101 -> false
   
 let (uu___is_EError : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EError  -> true | uu____5097 -> false
+    match projectee with | EError  -> true | uu____5112 -> false
   
 type issue =
   {
@@ -2684,36 +2694,36 @@ let (format_issue : issue -> Prims.string) =
       | EWarning  -> "Warning"
       | EError  -> "Error"
       | ENotImplemented  -> "Feature not yet implemented: "  in
-    let uu____5392 =
+    let uu____5407 =
       match issue.issue_range with
       | FStar_Pervasives_Native.None  -> ("", "")
       | FStar_Pervasives_Native.Some r when r = FStar_Range.dummyRange ->
           ("", "")
       | FStar_Pervasives_Native.Some r ->
-          let uu____5415 =
-            let uu____5417 = FStar_Range.string_of_use_range r  in
-            FStar_Util.format1 "%s: " uu____5417  in
-          let uu____5420 =
-            let uu____5422 =
-              let uu____5424 = FStar_Range.use_range r  in
-              let uu____5425 = FStar_Range.def_range r  in
-              uu____5424 = uu____5425  in
-            if uu____5422
+          let uu____5430 =
+            let uu____5432 = FStar_Range.string_of_use_range r  in
+            FStar_Util.format1 "%s: " uu____5432  in
+          let uu____5435 =
+            let uu____5437 =
+              let uu____5439 = FStar_Range.use_range r  in
+              let uu____5440 = FStar_Range.def_range r  in
+              uu____5439 = uu____5440  in
+            if uu____5437
             then ""
             else
-              (let uu____5431 = FStar_Range.string_of_range r  in
-               FStar_Util.format1 " (see also %s)" uu____5431)
+              (let uu____5446 = FStar_Range.string_of_range r  in
+               FStar_Util.format1 " (see also %s)" uu____5446)
              in
-          (uu____5415, uu____5420)
+          (uu____5430, uu____5435)
        in
-    match uu____5392 with
+    match uu____5407 with
     | (range_str,see_also_str) ->
         let issue_number =
           match issue.issue_number with
           | FStar_Pervasives_Native.None  -> ""
           | FStar_Pervasives_Native.Some n1 ->
-              let uu____5451 = FStar_Util.string_of_int n1  in
-              FStar_Util.format1 " %s" uu____5451
+              let uu____5466 = FStar_Util.string_of_int n1  in
+              FStar_Util.format1 " %s" uu____5466
            in
         FStar_Util.format5 "%s(%s%s) %s%s\n" range_str level_header
           issue_number issue.issue_message see_also_str
@@ -2726,7 +2736,7 @@ let (print_issue : issue -> unit) =
       | EWarning  -> FStar_Util.print_warning
       | EError  -> FStar_Util.print_error
       | ENotImplemented  -> FStar_Util.print_error  in
-    let uu____5471 = format_issue issue  in printer uu____5471
+    let uu____5486 = format_issue issue  in printer uu____5486
   
 let (compare_issues : issue -> issue -> Prims.int) =
   fun i1  ->
@@ -2735,8 +2745,8 @@ let (compare_issues : issue -> issue -> Prims.int) =
       | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.None ) ->
           (Prims.parse_int "0")
       | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.Some
-         uu____5495) -> ~- (Prims.parse_int "1")
-      | (FStar_Pervasives_Native.Some uu____5501,FStar_Pervasives_Native.None
+         uu____5510) -> ~- (Prims.parse_int "1")
+      | (FStar_Pervasives_Native.Some uu____5516,FStar_Pervasives_Native.None
          ) -> (Prims.parse_int "1")
       | (FStar_Pervasives_Native.Some r1,FStar_Pervasives_Native.Some r2) ->
           FStar_Range.compare_use_range r1 r2
@@ -2747,19 +2757,19 @@ let (mk_default_handler : Prims.bool -> error_handler) =
     let add_one e =
       match e.issue_level with
       | EError  ->
-          let uu____5534 =
-            let uu____5537 = FStar_ST.op_Bang errs  in e :: uu____5537  in
-          FStar_ST.op_Colon_Equals errs uu____5534
-      | uu____5630 -> print_issue e  in
-    let count_errors uu____5636 =
-      let uu____5637 = FStar_ST.op_Bang errs  in FStar_List.length uu____5637
+          let uu____5549 =
+            let uu____5552 = FStar_ST.op_Bang errs  in e :: uu____5552  in
+          FStar_ST.op_Colon_Equals errs uu____5549
+      | uu____5645 -> print_issue e  in
+    let count_errors uu____5651 =
+      let uu____5652 = FStar_ST.op_Bang errs  in FStar_List.length uu____5652
        in
-    let report uu____5692 =
+    let report uu____5707 =
       let sorted1 =
-        let uu____5696 = FStar_ST.op_Bang errs  in
-        FStar_List.sortWith compare_issues uu____5696  in
+        let uu____5711 = FStar_ST.op_Bang errs  in
+        FStar_List.sortWith compare_issues uu____5711  in
       if print7 then FStar_List.iter print_issue sorted1 else (); sorted1  in
-    let clear1 uu____5753 = FStar_ST.op_Colon_Equals errs []  in
+    let clear1 uu____5768 = FStar_ST.op_Colon_Equals errs []  in
     {
       eh_add_one = add_one;
       eh_count_errors = count_errors;
@@ -2787,11 +2797,11 @@ let (mk_issue :
           }
   
 let (get_err_count : unit -> Prims.int) =
-  fun uu____5858  ->
-    let uu____5859 =
-      let uu____5865 = FStar_ST.op_Bang current_handler  in
-      uu____5865.eh_count_errors  in
-    uu____5859 ()
+  fun uu____5873  ->
+    let uu____5874 =
+      let uu____5880 = FStar_ST.op_Bang current_handler  in
+      uu____5880.eh_count_errors  in
+    uu____5874 ()
   
 let (wrapped_eh_add_one : error_handler -> issue -> unit) =
   fun h  ->
@@ -2799,45 +2809,45 @@ let (wrapped_eh_add_one : error_handler -> issue -> unit) =
       h.eh_add_one issue;
       if issue.issue_level <> EInfo
       then
-        ((let uu____5899 =
-            let uu____5901 = FStar_ST.op_Bang FStar_Options.abort_counter  in
-            uu____5901 - (Prims.parse_int "1")  in
-          FStar_ST.op_Colon_Equals FStar_Options.abort_counter uu____5899);
-         (let uu____5946 =
-            let uu____5948 = FStar_ST.op_Bang FStar_Options.abort_counter  in
-            uu____5948 = (Prims.parse_int "0")  in
-          if uu____5946 then failwith "Aborting due to --abort_on" else ()))
+        ((let uu____5914 =
+            let uu____5916 = FStar_ST.op_Bang FStar_Options.abort_counter  in
+            uu____5916 - (Prims.parse_int "1")  in
+          FStar_ST.op_Colon_Equals FStar_Options.abort_counter uu____5914);
+         (let uu____5961 =
+            let uu____5963 = FStar_ST.op_Bang FStar_Options.abort_counter  in
+            uu____5963 = (Prims.parse_int "0")  in
+          if uu____5961 then failwith "Aborting due to --abort_on" else ()))
       else ()
   
 let (add_one : issue -> unit) =
   fun issue  ->
     FStar_Util.atomically
-      (fun uu____5987  ->
-         let uu____5988 = FStar_ST.op_Bang current_handler  in
-         wrapped_eh_add_one uu____5988 issue)
+      (fun uu____6002  ->
+         let uu____6003 = FStar_ST.op_Bang current_handler  in
+         wrapped_eh_add_one uu____6003 issue)
   
 let (add_many : issue Prims.list -> unit) =
   fun issues  ->
     FStar_Util.atomically
-      (fun uu____6020  ->
-         let uu____6021 =
-           let uu____6026 = FStar_ST.op_Bang current_handler  in
-           wrapped_eh_add_one uu____6026  in
-         FStar_List.iter uu____6021 issues)
+      (fun uu____6035  ->
+         let uu____6036 =
+           let uu____6041 = FStar_ST.op_Bang current_handler  in
+           wrapped_eh_add_one uu____6041  in
+         FStar_List.iter uu____6036 issues)
   
 let (report_all : unit -> issue Prims.list) =
-  fun uu____6053  ->
-    let uu____6054 =
-      let uu____6061 = FStar_ST.op_Bang current_handler  in
-      uu____6061.eh_report  in
-    uu____6054 ()
+  fun uu____6068  ->
+    let uu____6069 =
+      let uu____6076 = FStar_ST.op_Bang current_handler  in
+      uu____6076.eh_report  in
+    uu____6069 ()
   
 let (clear : unit -> unit) =
-  fun uu____6086  ->
-    let uu____6087 =
-      let uu____6092 = FStar_ST.op_Bang current_handler  in
-      uu____6092.eh_clear  in
-    uu____6087 ()
+  fun uu____6101  ->
+    let uu____6102 =
+      let uu____6107 = FStar_ST.op_Bang current_handler  in
+      uu____6107.eh_clear  in
+    uu____6102 ()
   
 let (set_handler : error_handler -> unit) =
   fun handler  ->
@@ -2873,27 +2883,27 @@ let (message_prefix : error_message_prefix) =
   let pfx = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
   let set_prefix s =
     FStar_ST.op_Colon_Equals pfx (FStar_Pervasives_Native.Some s)  in
-  let clear_prefix uu____6337 =
+  let clear_prefix uu____6352 =
     FStar_ST.op_Colon_Equals pfx FStar_Pervasives_Native.None  in
   let append_prefix s =
-    let uu____6395 = FStar_ST.op_Bang pfx  in
-    match uu____6395 with
+    let uu____6410 = FStar_ST.op_Bang pfx  in
+    match uu____6410 with
     | FStar_Pervasives_Native.None  -> s
     | FStar_Pervasives_Native.Some p -> Prims.strcat p (Prims.strcat ": " s)
      in
   { set_prefix; append_prefix; clear_prefix } 
 let findIndex :
-  'Auu____6461 'Auu____6462 .
-    ('Auu____6461 * 'Auu____6462) Prims.list -> 'Auu____6461 -> Prims.int
+  'Auu____6476 'Auu____6477 .
+    ('Auu____6476 * 'Auu____6477) Prims.list -> 'Auu____6476 -> Prims.int
   =
   fun l  ->
     fun v1  ->
       FStar_All.pipe_right l
         (FStar_List.index
-           (fun uu___83_6500  ->
-              match uu___83_6500 with
-              | (e,uu____6507) when e = v1 -> true
-              | uu____6509 -> false))
+           (fun uu___24_6515  ->
+              match uu___24_6515 with
+              | (e,uu____6522) when e = v1 -> true
+              | uu____6524 -> false))
   
 let (errno_of_error : raw_error -> Prims.int) =
   fun e  -> findIndex default_flags e 
@@ -2902,13 +2912,13 @@ let (init_warn_error_flags : unit) =
   let rec aux r l =
     match l with | [] -> r | (e,f)::tl1 -> aux (FStar_List.append r [f]) tl1
      in
-  let uu____6589 = aux [] default_flags  in
-  FStar_ST.op_Colon_Equals flags uu____6589 
+  let uu____6604 = aux [] default_flags  in
+  FStar_ST.op_Colon_Equals flags uu____6604 
 let (diag : FStar_Range.range -> Prims.string -> unit) =
   fun r  ->
     fun msg  ->
-      let uu____6628 = FStar_Options.debug_any ()  in
-      if uu____6628
+      let uu____6643 = FStar_Options.debug_any ()  in
+      if uu____6643
       then
         add_one
           (mk_issue EInfo (FStar_Pervasives_Native.Some r) msg
@@ -2919,20 +2929,20 @@ let (defensive_errno : Prims.int) = errno_of_error Warning_Defensive
 let (lookup : flag Prims.list -> Prims.int -> flag) =
   fun flags1  ->
     fun errno  ->
-      let uu____6653 =
+      let uu____6668 =
         (errno = defensive_errno) && (FStar_Options.defensive_fail ())  in
-      if uu____6653 then CAlwaysError else FStar_List.nth flags1 errno
+      if uu____6668 then CAlwaysError else FStar_List.nth flags1 errno
   
 let (log_issue : FStar_Range.range -> (raw_error * Prims.string) -> unit) =
   fun r  ->
-    fun uu____6674  ->
-      match uu____6674 with
+    fun uu____6689  ->
+      match uu____6689 with
       | (e,msg) ->
           let errno = errno_of_error e  in
-          let uu____6686 =
-            let uu____6687 = FStar_ST.op_Bang flags  in
-            lookup uu____6687 errno  in
-          (match uu____6686 with
+          let uu____6701 =
+            let uu____6702 = FStar_ST.op_Bang flags  in
+            lookup uu____6702 errno  in
+          (match uu____6701 with
            | CAlwaysError  ->
                add_one
                  (mk_issue EError (FStar_Pervasives_Native.Some r) msg
@@ -2951,103 +2961,103 @@ let (log_issue : FStar_Range.range -> (raw_error * Prims.string) -> unit) =
                  mk_issue EError (FStar_Pervasives_Native.Some r) msg
                    (FStar_Pervasives_Native.Some errno)
                   in
-               let uu____6718 = FStar_Options.ide ()  in
-               if uu____6718
+               let uu____6733 = FStar_Options.ide ()  in
+               if uu____6733
                then add_one i
                else
-                 (let uu____6723 =
-                    let uu____6725 = format_issue i  in
+                 (let uu____6738 =
+                    let uu____6740 = format_issue i  in
                     Prims.strcat
                       "don't use log_issue to report fatal error, should use raise_error: "
-                      uu____6725
+                      uu____6740
                      in
-                  failwith uu____6723))
+                  failwith uu____6738))
   
 let (add_errors :
   (raw_error * Prims.string * FStar_Range.range) Prims.list -> unit) =
   fun errs  ->
     FStar_Util.atomically
-      (fun uu____6753  ->
+      (fun uu____6768  ->
          FStar_List.iter
-           (fun uu____6766  ->
-              match uu____6766 with
+           (fun uu____6781  ->
+              match uu____6781 with
               | (e,msg,r) ->
-                  let uu____6779 =
-                    let uu____6785 = message_prefix.append_prefix msg  in
-                    (e, uu____6785)  in
-                  log_issue r uu____6779) errs)
+                  let uu____6794 =
+                    let uu____6800 = message_prefix.append_prefix msg  in
+                    (e, uu____6800)  in
+                  log_issue r uu____6794) errs)
   
 let (issue_of_exn : Prims.exn -> issue FStar_Pervasives_Native.option) =
-  fun uu___84_6795  ->
-    match uu___84_6795 with
+  fun uu___25_6810  ->
+    match uu___25_6810 with
     | Error (e,msg,r) ->
         let errno = errno_of_error e  in
-        let uu____6805 =
-          let uu____6806 = message_prefix.append_prefix msg  in
-          mk_issue EError (FStar_Pervasives_Native.Some r) uu____6806
+        let uu____6820 =
+          let uu____6821 = message_prefix.append_prefix msg  in
+          mk_issue EError (FStar_Pervasives_Native.Some r) uu____6821
             (FStar_Pervasives_Native.Some errno)
            in
-        FStar_Pervasives_Native.Some uu____6805
+        FStar_Pervasives_Native.Some uu____6820
     | FStar_Util.NYI msg ->
-        let uu____6811 =
-          let uu____6812 = message_prefix.append_prefix msg  in
-          mk_issue ENotImplemented FStar_Pervasives_Native.None uu____6812
+        let uu____6826 =
+          let uu____6827 = message_prefix.append_prefix msg  in
+          mk_issue ENotImplemented FStar_Pervasives_Native.None uu____6827
             FStar_Pervasives_Native.None
            in
-        FStar_Pervasives_Native.Some uu____6811
+        FStar_Pervasives_Native.Some uu____6826
     | Err (e,msg) ->
         let errno = errno_of_error e  in
-        let uu____6821 =
-          let uu____6822 = message_prefix.append_prefix msg  in
-          mk_issue EError FStar_Pervasives_Native.None uu____6822
+        let uu____6836 =
+          let uu____6837 = message_prefix.append_prefix msg  in
+          mk_issue EError FStar_Pervasives_Native.None uu____6837
             (FStar_Pervasives_Native.Some errno)
            in
-        FStar_Pervasives_Native.Some uu____6821
-    | uu____6825 -> FStar_Pervasives_Native.None
+        FStar_Pervasives_Native.Some uu____6836
+    | uu____6840 -> FStar_Pervasives_Native.None
   
 let (err_exn : Prims.exn -> unit) =
   fun exn  ->
     if exn = Stop
     then ()
     else
-      (let uu____6835 = issue_of_exn exn  in
-       match uu____6835 with
+      (let uu____6850 = issue_of_exn exn  in
+       match uu____6850 with
        | FStar_Pervasives_Native.Some issue -> add_one issue
        | FStar_Pervasives_Native.None  -> FStar_Exn.raise exn)
   
 let (handleable : Prims.exn -> Prims.bool) =
-  fun uu___85_6845  ->
-    match uu___85_6845 with
-    | Error uu____6847 -> true
-    | FStar_Util.NYI uu____6856 -> true
+  fun uu___26_6860  ->
+    match uu___26_6860 with
+    | Error uu____6862 -> true
+    | FStar_Util.NYI uu____6871 -> true
     | Stop  -> true
-    | Err uu____6860 -> true
-    | uu____6867 -> false
+    | Err uu____6875 -> true
+    | uu____6882 -> false
   
 let (stop_if_err : unit -> unit) =
-  fun uu____6874  ->
-    let uu____6875 =
-      let uu____6877 = get_err_count ()  in
-      uu____6877 > (Prims.parse_int "0")  in
-    if uu____6875 then FStar_Exn.raise Stop else ()
+  fun uu____6889  ->
+    let uu____6890 =
+      let uu____6892 = get_err_count ()  in
+      uu____6892 > (Prims.parse_int "0")  in
+    if uu____6890 then FStar_Exn.raise Stop else ()
   
 let raise_error :
-  'Auu____6890 .
-    (raw_error * Prims.string) -> FStar_Range.range -> 'Auu____6890
+  'Auu____6905 .
+    (raw_error * Prims.string) -> FStar_Range.range -> 'Auu____6905
   =
-  fun uu____6904  ->
+  fun uu____6919  ->
     fun r  ->
-      match uu____6904 with | (e,msg) -> FStar_Exn.raise (Error (e, msg, r))
+      match uu____6919 with | (e,msg) -> FStar_Exn.raise (Error (e, msg, r))
   
-let raise_err : 'Auu____6921 . (raw_error * Prims.string) -> 'Auu____6921 =
-  fun uu____6931  ->
-    match uu____6931 with | (e,msg) -> FStar_Exn.raise (Err (e, msg))
+let raise_err : 'Auu____6936 . (raw_error * Prims.string) -> 'Auu____6936 =
+  fun uu____6946  ->
+    match uu____6946 with | (e,msg) -> FStar_Exn.raise (Err (e, msg))
   
 let (update_flags : (flag * Prims.string) Prims.list -> unit) =
   fun l  ->
-    let compare1 uu____6992 uu____6993 =
-      match (uu____6992, uu____6993) with
-      | ((uu____7035,(a,uu____7037)),(uu____7038,(b,uu____7040))) ->
+    let compare1 uu____7007 uu____7008 =
+      match (uu____7007, uu____7008) with
+      | ((uu____7050,(a,uu____7052)),(uu____7053,(b,uu____7055))) ->
           if a > b
           then (Prims.parse_int "1")
           else
@@ -3066,15 +3076,15 @@ let (update_flags : (flag * Prims.string) Prims.list -> unit) =
       | (CSilent ,CAlwaysError ) ->
           raise_err
             (Fatal_InvalidWarnErrorSetting, "cannot silence an error")
-      | (uu____7109,CFatal ) ->
+      | (uu____7124,CFatal ) ->
           raise_err
             (Fatal_InvalidWarnErrorSetting,
               "cannot reset the error level of a fatal error")
-      | uu____7112 -> f  in
+      | uu____7127 -> f  in
     let rec set_flag i l1 =
       let d =
-        let uu____7155 = FStar_ST.op_Bang flags  in
-        FStar_List.nth uu____7155 i  in
+        let uu____7170 = FStar_ST.op_Bang flags  in
+        FStar_List.nth uu____7170 i  in
       match l1 with
       | [] -> d
       | (f,(l2,h))::tl1 ->
@@ -3086,54 +3096,54 @@ let (update_flags : (flag * Prims.string) Prims.list -> unit) =
       match l1 with
       | [] -> f
       | hd1::tl1 ->
-          let uu____7296 =
-            let uu____7299 =
-              let uu____7302 = set_flag i sorted1  in [uu____7302]  in
-            FStar_List.append f uu____7299  in
-          aux uu____7296 (i + (Prims.parse_int "1")) tl1 sorted1
+          let uu____7311 =
+            let uu____7314 =
+              let uu____7317 = set_flag i sorted1  in [uu____7317]  in
+            FStar_List.append f uu____7314  in
+          aux uu____7311 (i + (Prims.parse_int "1")) tl1 sorted1
        in
     let rec compute_range result l1 =
       match l1 with
       | [] -> result
       | (f,s)::tl1 ->
           let r = FStar_Util.split s ".."  in
-          let uu____7404 =
+          let uu____7419 =
             match r with
             | r1::r2::[] ->
-                let uu____7424 = FStar_Util.int_of_string r1  in
-                let uu____7426 = FStar_Util.int_of_string r2  in
-                (uu____7424, uu____7426)
-            | uu____7430 ->
-                let uu____7434 =
-                  let uu____7440 =
+                let uu____7439 = FStar_Util.int_of_string r1  in
+                let uu____7441 = FStar_Util.int_of_string r2  in
+                (uu____7439, uu____7441)
+            | uu____7445 ->
+                let uu____7449 =
+                  let uu____7455 =
                     FStar_Util.format1 "Malformed warn-error range %s" s  in
-                  (Fatal_InvalidWarnErrorSetting, uu____7440)  in
-                raise_err uu____7434
+                  (Fatal_InvalidWarnErrorSetting, uu____7455)  in
+                raise_err uu____7449
              in
-          (match uu____7404 with
+          (match uu____7419 with
            | (l2,h) ->
                (if
                   (l2 < (Prims.parse_int "0")) ||
                     (h >= (FStar_List.length default_flags))
                 then
-                  (let uu____7475 =
-                     let uu____7481 =
-                       let uu____7483 = FStar_Util.string_of_int l2  in
-                       let uu____7485 = FStar_Util.string_of_int h  in
+                  (let uu____7490 =
+                     let uu____7496 =
+                       let uu____7498 = FStar_Util.string_of_int l2  in
+                       let uu____7500 = FStar_Util.string_of_int h  in
                        FStar_Util.format2 "No error for warn_error %s..%s"
-                         uu____7483 uu____7485
+                         uu____7498 uu____7500
                         in
-                     (Fatal_InvalidWarnErrorSetting, uu____7481)  in
-                   raise_err uu____7475)
+                     (Fatal_InvalidWarnErrorSetting, uu____7496)  in
+                   raise_err uu____7490)
                 else ();
                 compute_range (FStar_List.append result [(f, (l2, h))]) tl1))
        in
     let range = compute_range [] l  in
     let sorted1 = FStar_List.sortWith compare1 range  in
-    let uu____7575 =
-      let uu____7578 = FStar_ST.op_Bang flags  in
-      aux [] (Prims.parse_int "0") uu____7578 sorted1  in
-    FStar_ST.op_Colon_Equals flags uu____7575
+    let uu____7590 =
+      let uu____7593 = FStar_ST.op_Bang flags  in
+      aux [] (Prims.parse_int "0") uu____7593 sorted1  in
+    FStar_ST.op_Colon_Equals flags uu____7590
   
 let catch_errors :
   'a . (unit -> 'a) -> (issue Prims.list * 'a FStar_Pervasives_Native.option)
@@ -3144,11 +3154,11 @@ let catch_errors :
     FStar_ST.op_Colon_Equals current_handler newh;
     (let r =
        try
-         (fun uu___87_7701  ->
+         (fun uu___28_7716  ->
             match () with
             | () -> let r = f ()  in FStar_Pervasives_Native.Some r) ()
        with
-       | uu___86_7707 -> (err_exn uu___86_7707; FStar_Pervasives_Native.None)
+       | uu___27_7722 -> (err_exn uu___27_7722; FStar_Pervasives_Native.None)
         in
      let errs = newh.eh_report ()  in
      FStar_ST.op_Colon_Equals current_handler old; (errs, r))

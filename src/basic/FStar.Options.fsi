@@ -138,7 +138,9 @@ val hint_info                   : unit    -> bool
 val hint_file                   : unit    -> option<string>
 val ide                         : unit    -> bool
 val include_path                : unit    -> list<string>
-val indent                      : unit    -> bool
+val print                       : unit    -> bool
+val print_in_place              : unit    -> bool
+val profile                     :  (unit -> 'a) -> ('a -> string) -> 'a
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
 val interactive                 : unit    -> bool
@@ -180,6 +182,7 @@ val record_hints                : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
+val should_be_already_cached    : string  -> bool
 val should_print_message        : string  -> bool
 val should_extract              : string  -> bool
 val should_verify               : string  -> bool
@@ -198,6 +201,7 @@ val tactic_trace                : unit    -> bool
 val tactic_trace_d              : unit    -> int
 val tactics_nbe                 : unit    -> bool
 val tcnorm                      : unit    -> bool
+val protect_top_level_axioms    : unit    -> bool
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
 val ugly                        : unit    -> bool

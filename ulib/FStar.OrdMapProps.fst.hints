@@ -1,5 +1,5 @@
 [
-  "\u0017^Ø∑hÍ]¨\u0006XD\"|á‹ö",
+  "\u0018Ï\"ç¿H`≤Ø¿&4f∑\u000f†",
   [
     [
       "FStar.OrdMapProps.fold",
@@ -7,7 +7,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_273c0cb114efbc10b99731f088b17ae0_2",
         "binder_x_64708a90e4c1cd5b69c070f58f27b7f6_5",
         "binder_x_f538212e06d702a48faf191d4189dbc7_7",
@@ -16,8 +17,9 @@
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
-        "equation_Prims.nat", "int_inversion",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.OrdMap.choose_m", "lemma_FStar.OrdMap.contains_upd1",
         "lemma_FStar.OrdMap.eq_lemma", "lemma_FStar.OrdMap.size_empty",
         "lemma_FStar.OrdMap.size_remove", "primitive_Prims.op_Addition",
@@ -30,8 +32,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.OrdMap.choose", "typing_FStar.OrdMap.empty",
         "typing_FStar.OrdMap.remove", "typing_FStar.OrdMap.size",
         "typing_FStar.OrdMap.update",
@@ -39,7 +41,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8c6da83f9ca048f94b78c9f03296c6c4"
+      "45c3d2ecea57f90b5a10131442fbdf1d"
     ],
     [
       "FStar.OrdMapProps.fold",
@@ -47,7 +49,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_273c0cb114efbc10b99731f088b17ae0_2",
         "binder_x_64708a90e4c1cd5b69c070f58f27b7f6_5",
         "binder_x_f538212e06d702a48faf191d4189dbc7_7",
@@ -56,8 +59,9 @@
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
-        "equation_Prims.nat", "int_inversion",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.OrdMap.choose_m", "lemma_FStar.OrdMap.contains_upd1",
         "lemma_FStar.OrdMap.eq_lemma", "lemma_FStar.OrdMap.size_empty",
         "lemma_FStar.OrdMap.size_remove", "primitive_Prims.op_Addition",
@@ -70,8 +74,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.OrdMap.choose", "typing_FStar.OrdMap.empty",
         "typing_FStar.OrdMap.remove", "typing_FStar.OrdMap.size",
         "typing_FStar.OrdMap.update",
@@ -79,7 +83,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a13818bb2866298aba128d567b3f57f1"
+      "088bddfa7ef62a372818cb2d720e3a1f"
     ]
   ]
 ]

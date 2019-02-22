@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module LowStar.Buffer
 
 include LowStar.Monotonic.Buffer
@@ -15,7 +30,7 @@ module HST = FStar.HyperStack.ST
  *   -- functions that take explicit preorder as arguments (e.g. sub etc.)
  *   -- these include allocation functions also
  *)
-private let trivial_preorder (a:Type0) :srel a = fun _ _ -> True
+let trivial_preorder (a:Type0) :srel a = fun _ _ -> True
 
 type buffer (a:Type0) = mbuffer a (trivial_preorder a) (trivial_preorder a)
 
@@ -62,6 +77,7 @@ let assign_list_t #a (l: list a) = (b: buffer a) -> HST.Stack unit
 
 let rec assign_list #a (l: list a): assign_list_t l
 = fun b ->
+  Seq.lemma_seq_of_list_induction l;
   match l with
   | [] ->
       let h = HST.get () in

@@ -45,7 +45,7 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
 		FStar.Format FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
 		FStar.Interactive.Ide FStar.Interactive.Legacy		\
-		FStar.Universal FStar.Indent FStar.Main
+		FStar.Universal FStar.Prettyprint FStar.Main
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES
@@ -62,7 +62,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # ensures that if this rule is successful then %.checked.lax is more
 # recent than its dependences.
 %.checked.lax:
-	$(FSTAR_C) $<
+	$(FSTAR_C) $< --already_cached "* -$(basename $(notdir $<))"
 	touch $@
 
 # And then, in a separate invocation, from each .checked.lax we

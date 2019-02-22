@@ -1,5 +1,5 @@
 [
-  "`±¨ÑJÊ\\£D\u0000‚\u0019­wP-",
+  "\u001a,ú…iÄ´5ƒw\b+bVäÚ",
   [
     [
       "Goals.intro_sq",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "680b1c6fa0de7ee45ebbc57dd534a746"
+      "17d19ab984085a852b664089f2f4b862"
     ],
     [
       "Goals.elim",
@@ -17,10 +17,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Goals_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
+        "refinement_interpretation_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "6daefb29d8145b0f5e02bfdab8f6ebb6"
+      "d4a652d56cdf582a9a06b78930be568c"
     ],
     [
       "Goals.intro_sq",
@@ -29,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "cea0e3f2b8b8dd92de7df77378b94f73"
+      "fdab4ecd520314fa6f6f4cca696cf67a"
     ],
     [
       "Goals.elim",
@@ -38,10 +38,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Goals_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
+        "refinement_interpretation_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "9bf695eaa15958b54b16ed3214611ffc"
+      "e84f5313ea0cebe60cf93769c7affa83"
     ]
   ]
 ]

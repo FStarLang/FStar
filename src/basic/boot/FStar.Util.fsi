@@ -198,6 +198,7 @@ val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val copy_file: string -> string -> unit
 val flush_file: file_handle -> unit
+val delete_file: string -> unit
 val file_get_contents: string -> string
 val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
 val concat_dir_filename: string -> string -> string

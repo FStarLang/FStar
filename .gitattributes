@@ -10,6 +10,7 @@ src/ocaml-output/FStar_*.ml linguist-vendored
 *.ml* eol=lf
 Makefile eol=lf
 *.sh eol=lf
+*.md eol=lf
 configure eol=lf
 *.mdk eol=lf
 kremlin_ref eol=lf

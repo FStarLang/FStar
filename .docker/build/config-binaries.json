@@ -1,0 +1,25 @@
+{
+    "ProjectName" : "FStar-binaries",
+
+    "BaseContainerIsEverestImage" : true,
+    "BaseContainerImageName" : "fstar",
+    "BaseContainerImageTagOrCommitId": "latest",
+    "BranchName" : "master",
+    "GithubCommitUrl" : "https://github.com/FStarLang/FStar/commit",
+    "OnDemandBuildDefinition" : "FStar\\FStar-{agentOS}",
+
+    "DockerFile": ".docker/build/{agentOS}/Dockerfile-binaries",
+    "DependencyFiles" : [
+        ".docker/build/build_helper.sh",
+        ".docker/build/build.sh"
+    ],
+
+    "DockerCacheEnabled" : true,
+    "CIBuildTarget" : "fstar-binary-build",
+    "NightlyBuildTarget" : "fstar-binary-build",
+    "HasLogsToExtract" : true,
+
+    "NotificationEnabled" : true,
+    "NotificationChannel" : "#fstar-build",
+    "PublicBranches" : [ "master" ]
+}

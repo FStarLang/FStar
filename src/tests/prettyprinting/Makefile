@@ -2,18 +2,26 @@ FSTAR_HOME = ../../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 EXCLUDED_FILES=
 
-all: $(addsuffix .test, $(filter-out $(EXCLUDED_FILES), $(wildcard *.fst)))
+BASES=$(filter-out $(EXCLUDED_FILES), $(wildcard *.base.fst))
+TESTS=$(patsubst %.base.fst, %.print.fst-test, $(BASES))
+TESTS_IN_PLACE=$(patsubst %.base.fst, %.print_in_place.fst-test, $(BASES))
 
-all_text: $(addsuffix .test_text, $(wildcard *.fst))
+.SECONDARY:
 
-%.fst.test: %.fst
-	$(FSTAR) --indent $^ > $@
-	diff --strip-trailing-cr $^ $@
+all: $(TESTS) $(TESTS_IN_PLACE)
 
-# Eliminate empty lines before diffing
-%.fst.test_text: %.fst
-	$(FSTAR) --indent $^ | sed '/^$$/d' > $@
-	sed '/^$$/d' $^ | diff $@ -
+%.print_in_place.fst: %.base.fst
+	cp $< $@
+	$(FSTAR) --print_in_place $@
+
+%.print_in_place.fst-test: %.base.fst %.print_in_place.fst
+	diff --strip-trailing-cr $^
+
+%.print.fst: %.base.fst
+	$(FSTAR) --print $< > $@
+
+%.print.fst-test: %.base.fst %.print.fst
+	diff --strip-trailing-cr $^
 
 clean:
-	rm -f *.test *.test_text
+	rm -f *.test.fst

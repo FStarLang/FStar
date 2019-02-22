@@ -324,9 +324,10 @@ type raw_error =
   | Error_FieldShadow
   | Error_UnexpectedDM4FType
   | Fatal_EffectAbbreviationResultTypeMismatch
-  | Error_UncheckedFile
+  | Error_AlreadyCachedAssertionFailure
   | Error_MustEraseMissing
   | Warning_EffectfulArgumentToErasedFunction
+  | Fatal_EmptySurfaceLet
 
 type flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
@@ -342,7 +343,7 @@ type flag =
 // Which means, if you need to add an error, APPEND it, to keep old error numbers the same
 // If an error is deprecated, do not remove it! Change its name (if needed)
 let default_flags =
- [(Error_DependencyAnalysisFailed                    , CAlwaysError);
+ [(Error_DependencyAnalysisFailed                    , CAlwaysError); //0
   (Error_IDETooManyPops                              , CAlwaysError);
   (Error_IDEUnrecognized                             , CAlwaysError);
   (Error_InductiveTypeNotSatisfyPositivityCondition  , CAlwaysError);
@@ -351,17 +352,17 @@ let default_flags =
   (Error_ModuleFileNameMismatch                      , CAlwaysError);
   (Error_OpPlusInUniverse                            , CAlwaysError);
   (Error_OutOfRange                                  , CAlwaysError);
-  (Error_ProofObligationFailed                       , CAlwaysError);
+  (Error_ProofObligationFailed                       , CError);//9
   (Error_TooManyFiles                                , CAlwaysError);
   (Error_TypeCheckerFailToProve                      , CAlwaysError);
   (Error_TypeError                                   , CAlwaysError);
   (Error_UncontrainedUnificationVar                  , CAlwaysError);
   (Error_UnexpectedGTotComputation                   , CAlwaysError);
   (Error_UnexpectedInstance                          , CAlwaysError);
-  (Error_UnknownFatal_AssertionFailure               , CAlwaysError);
+  (Error_UnknownFatal_AssertionFailure               , CError); //16
   (Error_Z3InvocationError                           , CAlwaysError);
   (Error_IDEAssertionFailure                         , CAlwaysError);
-  (Error_Z3SolverError                               , CAlwaysError);
+  (Error_Z3SolverError                               , CError); //19
   (Fatal_AbstractTypeDeclarationInInterface          , CFatal);
   (Fatal_ActionMustHaveFunctionType                  , CFatal);
   (Fatal_AlreadyDefinedTopLevelDeclaration           , CFatal);
@@ -659,9 +660,10 @@ let default_flags =
   (Error_FieldShadow                                 , CFatal);
   (Error_UnexpectedDM4FType                          , CFatal);
   (Fatal_EffectAbbreviationResultTypeMismatch        , CFatal);
-  (Error_UncheckedFile                               , CFatal);
+  (Error_AlreadyCachedAssertionFailure               , CFatal);
   (Error_MustEraseMissing                            , CWarning);
   (Warning_EffectfulArgumentToErasedFunction         , CWarning);
+  (Fatal_EmptySurfaceLet                             , CFatal);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]

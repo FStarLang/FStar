@@ -11,20 +11,18 @@
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "equation_FStar.FunctionalExtensionality.arrow_g",
         "equation_FStar.FunctionalExtensionality.feq_g",
-        "equation_FStar.FunctionalExtensionality.on_dom_g",
         "equation_FStar.GSet.empty", "equation_FStar.GSet.mem",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "interpretation_FStar.GSet_Tm_abs_8456cf98f74f60831bbf08bf7e022e54",
+        "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "interpretation_Tm_abs_e79b4f1d7b56f21bc091671cfbafcf01",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "typing_FStar.GSet.empty", "typing_FStar.GSet.mem",
-        "typing_FStar.GSet_Tm_abs_8456cf98f74f60831bbf08bf7e022e54"
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.GSet.empty",
+        "typing_FStar.GSet.mem",
+        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "typing_Tm_abs_e79b4f1d7b56f21bc091671cfbafcf01"
       ],
       0,
-      "4b789c40aa9c37a2cc7f3162d4ccc925"
+      "ff044f6a6d1dba885966a48f9c1faf0a"
     ],
     [
       "FStar.GSet.mem_singleton",
@@ -36,24 +34,21 @@
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "eq2-interp", "equation_FStar.FunctionalExtensionality.arrow_g",
-        "equation_FStar.FunctionalExtensionality.feq_g",
-        "equation_FStar.FunctionalExtensionality.on_dom_g",
+        "eq2-interp", "equation_FStar.FunctionalExtensionality.feq_g",
         "equation_FStar.GSet.mem", "equation_FStar.GSet.singleton",
         "equation_Prims.eq2", "equation_Prims.logical",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "interpretation_FStar.GSet_Tm_abs_e82734b811beb689195b0f6b3733b78b",
+        "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "interpretation_Tm_abs_b96afc80d7e2f5519b5c0dd92f699e5d",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "refinement_interpretation_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "typing_FStar.GSet.mem", "typing_FStar.GSet.singleton",
-        "typing_FStar.GSet_Tm_abs_e82734b811beb689195b0f6b3733b78b",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
-        "typing_Prims.eq2"
+        "typing_Prims.eq2", "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "typing_Tm_abs_b96afc80d7e2f5519b5c0dd92f699e5d"
       ],
       0,
-      "01b0614d8d761757391acf1933306c27"
+      "c4bea1c1e824e832b2e5722644d2ba38"
     ],
     [
       "FStar.GSet.mem_union",
@@ -67,15 +62,15 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "equation_FStar.FunctionalExtensionality.feq_g",
         "equation_FStar.GSet.mem", "equation_FStar.GSet.union",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "interpretation_FStar.GSet_Tm_abs_23cc01a6b666f2ace1902b669dac8514",
+        "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "interpretation_Tm_abs_c579f11d61da8cc77574fc4da9ed02e3",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "typing_FStar.GSet.mem",
-        "typing_FStar.GSet_Tm_abs_23cc01a6b666f2ace1902b669dac8514"
+        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "typing_Tm_abs_c579f11d61da8cc77574fc4da9ed02e3"
       ],
       0,
-      "c3f6faf83caef863e81be37e9420f586"
+      "e192b0fbeb802ac4db245003033f0c55"
     ],
     [
       "FStar.GSet.mem_intersect",
@@ -89,15 +84,15 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "equation_FStar.FunctionalExtensionality.feq_g",
         "equation_FStar.GSet.intersect", "equation_FStar.GSet.mem",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "interpretation_FStar.GSet_Tm_abs_f08de2f5ca0f9a16885d64f3b63262bf",
+        "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "interpretation_Tm_abs_989443518ed1e90f0c02f8135ad11dc4",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "typing_FStar.GSet.mem",
-        "typing_FStar.GSet_Tm_abs_f08de2f5ca0f9a16885d64f3b63262bf"
+        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "typing_Tm_abs_989443518ed1e90f0c02f8135ad11dc4"
       ],
       0,
-      "02ac7f3a8befd9bca890d4a647b67766"
+      "a0e5c2a4f3858ba0ffc98ddab2747a79"
     ],
     [
       "FStar.GSet.mem_complement",
@@ -111,15 +106,15 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "equation_FStar.FunctionalExtensionality.feq_g",
         "equation_FStar.GSet.complement", "equation_FStar.GSet.mem",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "interpretation_FStar.GSet_Tm_abs_646eec380c4b703a82e093534123df6f",
+        "interpretation_Tm_abs_3b0ecac819a88dcb80dcfc62fa21bb3d",
+        "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "typing_FStar.GSet.mem",
-        "typing_FStar.GSet_Tm_abs_646eec380c4b703a82e093534123df6f"
+        "typing_Tm_abs_3b0ecac819a88dcb80dcfc62fa21bb3d",
+        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "ddf59e4365cf0dc93513ec7518525413"
+      "7410e9d6bb660cd609e3104b0d5aafac"
     ],
     [
       "FStar.GSet.mem_subset",
@@ -128,7 +123,7 @@
       0,
       [ "@query", "equation_FStar.GSet.subset" ],
       0,
-      "97846a3b8fa0130e2e2e1c6d40f429ba"
+      "e0273628cb5782788065a17c2441ba10"
     ],
     [
       "FStar.GSet.subset_mem",
@@ -137,7 +132,7 @@
       0,
       [ "@query", "equation_FStar.GSet.subset" ],
       0,
-      "33adf752d82c935d42235eab510f4b07"
+      "c4622d6ee04ffe5be6a05572ea4f73b0"
     ],
     [
       "FStar.GSet.comprehend_mem",
@@ -149,17 +144,15 @@
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "equation_FStar.FunctionalExtensionality.arrow_g",
         "equation_FStar.FunctionalExtensionality.feq_g",
-        "equation_FStar.FunctionalExtensionality.on_dom_g",
         "equation_FStar.GSet.comprehend", "equation_FStar.GSet.mem",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "typing_FStar.GSet.comprehend", "typing_FStar.GSet.mem"
+        "typing_FStar.GSet.comprehend", "typing_FStar.GSet.mem",
+        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "6be4a6df5cf05122416153d912ae6751"
+      "a5410201b9e5ff9f75e89d4af7f93a89"
     ],
     [
       "FStar.GSet.mem_of_set",
@@ -171,21 +164,19 @@
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "equation_FStar.FunctionalExtensionality.arrow_g",
         "equation_FStar.FunctionalExtensionality.feq_g",
-        "equation_FStar.FunctionalExtensionality.on_dom_g",
         "equation_FStar.GSet.mem", "equation_FStar.GSet.of_set",
         "equation_Prims.eqtype",
-        "interpretation_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "interpretation_FStar.GSet_Tm_abs_016dcf8e8dc135bde75d3a5e8dd853e7",
+        "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "interpretation_Tm_abs_f0b948f763ec7b1ef794d3970b8aea30",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "typing_FStar.GSet_Tm_abs_016dcf8e8dc135bde75d3a5e8dd853e7",
-        "typing_FStar.Set.mem"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Set.mem",
+        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "typing_Tm_abs_f0b948f763ec7b1ef794d3970b8aea30"
       ],
       0,
-      "8154c510f757b61a6e8204232a98a9a1"
+      "c81ff96c4564e510ea939b99acf8a2ad"
     ],
     [
       "FStar.GSet.lemma_equal_intro",
@@ -197,7 +188,7 @@
         "equation_FStar.GSet.equal", "equation_FStar.GSet.mem"
       ],
       0,
-      "abb8c70d045b43829f00ff1b2153e137"
+      "c081fc0e7bbd99863ee5d71b115ccb8e"
     ],
     [
       "FStar.GSet.lemma_equal_elim",
@@ -210,11 +201,11 @@
         "equation_FStar.FunctionalExtensionality.restricted_g_t",
         "equation_FStar.GSet.equal", "equation_FStar.GSet.set",
         "lemma_FStar.FunctionalExtensionality.extensionality_g",
-        "refinement_interpretation_FStar.FunctionalExtensionality_Tm_refine_bebf896b50c4e4eed735c7206253bfbb",
-        "typing_FStar.FunctionalExtensionality_Tm_abs_33c425e9d5a70900b1deadec7d52bee0"
+        "refinement_interpretation_Tm_refine_bebf896b50c4e4eed735c7206253bfbb",
+        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
       ],
       0,
-      "19bf7f20eff3ff6c29b4b2ef664f4f0c"
+      "8f3ddce2853c23349964d84266a6d2f2"
     ],
     [
       "FStar.GSet.lemma_equal_refl",
@@ -223,7 +214,7 @@
       0,
       [ "@query", "lemma_FStar.GSet.lemma_equal_intro" ],
       0,
-      "05df4c3906d9a478bcb8d4a821991988"
+      "1f9af794cca1ca0b2b6ac9cb566ffec1"
     ],
     [
       "FStar.GSet.disjoint_not_in_both",
@@ -239,7 +230,7 @@
         "typing_FStar.GSet.mem"
       ],
       0,
-      "5597b9489350d9b7ba7ce058a1346ad4"
+      "01f937a629af8cb3484e8882ccdecba7"
     ],
     [
       "FStar.GSet.as_set'",
@@ -253,7 +244,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f904ce3a22ffd96f2fc2cf6f452ecaa3"
+      "80092a2df23a712435d61bd2700fbb0e"
     ],
     [
       "FStar.GSet.lemma_disjoint_subset",
@@ -261,17 +252,17 @@
       2,
       1,
       [
-        "@query", "equation_FStar.GSet.disjoint",
-        "equation_FStar.GSet.empty", "equation_FStar.GSet.mem",
-        "interpretation_FStar.GSet_Tm_abs_8456cf98f74f60831bbf08bf7e022e54",
-        "lemma_FStar.GSet.lemma_equal_elim",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.GSet.disjoint", "equation_FStar.GSet.empty",
+        "equation_FStar.GSet.mem", "lemma_FStar.GSet.lemma_equal_elim",
         "lemma_FStar.GSet.lemma_equal_intro", "lemma_FStar.GSet.mem_empty",
         "lemma_FStar.GSet.mem_intersect", "lemma_FStar.GSet.subset_mem",
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.GSet.empty", "typing_FStar.GSet.intersect"
+        "typing_FStar.GSet.empty", "typing_FStar.GSet.intersect",
+        "typing_FStar.GSet.mem"
       ],
       0,
-      "ed4918e69819d92e87eed4c691c21e19"
+      "5a9d347d823666b73e7db08b4331ad8d"
     ]
   ]
 ]

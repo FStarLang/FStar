@@ -4,6 +4,8 @@ EXTRACT?=
 include $(FSTAR_HOME)/examples/Makefile.include
 include .depend
 
+OTHERFLAGS+=--cache_dir .cache
+
 %.fst.checked:
 	$(FSTAR) $< --cache_checked_modules
 
@@ -14,9 +16,10 @@ include .depend
 	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen OCaml --extract_module $(basename $(notdir $(subst .checked,,$<))) --cmi
 
 .depend:
-	$(FSTAR) --dep full $(ROOTS) B.fst $(addprefix --extract ,$(ROOTS)) --cmi > .depend
+	mkdir -p .cache
+	$(FSTAR) --dep full $(ROOTS) $(addprefix --extract ,$(ROOTS)) --cmi > .depend
 
 depend: .depend
 
 clean:
-	rm -f .depend *.ml *.checked *~
+	rm -rf .depend *.ml *.checked *~ .cache

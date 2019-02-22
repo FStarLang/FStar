@@ -2123,8 +2123,11 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
 
     //set up the environment to verify the interface
     let en0 =
-      //pop to get the env before this module type checking
+      //pop to get the env before this module type checking...
       let en0 = pop_context en ("Ending modul " ^ m.name.str) in
+      //.. but restore the dsenv, since typechecking `m` might have elaborated
+      // some %splices that we need to properly resolve further modules
+      let en0 = { en0 with dsenv = en.dsenv } in
       //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from latest env
       let en0 = { en0 with qtbl_name_and_index = en.qtbl_name_and_index |> fst, None } in
       //restore command line options ad restart z3 (to reset things like nl.arith options)
@@ -2153,10 +2156,9 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
 
     //pop BUT ignore the old env
     pop_context env ("Ending modul " ^ modul.name.str) |> ignore;
-    env.solver.encode_modul env modul;
-    env.solver.refresh();
-    //interactive mode manages it itself
-    let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+
+    //moved the code for encoding the module to smt to Universal
+   
     modul, env
 
 let load_checked_module (en:env) (m:modul) :env =

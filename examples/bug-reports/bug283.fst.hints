@@ -1,5 +1,5 @@
 [
-  "Ò\u0003eäâ\u00029áp!_ùty‘w",
+  "'\u0001èò˚ôGxú˚Ñ\u0015\u0010$°\n",
   [
     [
       "Bug283.XOR_Laws",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Bug283.HasEq_block" ],
       0,
-      "54b5e42a7ea3d7280f5343a3327a6875"
+      "682283981bd073fb4f2c1a75d58ebbec"
     ],
     [
       "Bug283.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Bug283.HasEq_block" ],
       0,
-      "721c03d6454c1132a052736c1e025ed8"
+      "dd5fdf33369ed7eaedb5d7cc6f8e5ec1"
     ],
     [
       "Bug283.test2",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Bug283.XOR_Laws", "typing_Bug283.xor" ],
       0,
-      "93b05fd1a6e4f4683af8b783a4e0d742"
+      "8cf758259b8095fd5df6c177cc21292d"
     ]
   ]
 ]

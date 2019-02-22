@@ -43,6 +43,7 @@ module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
+module FC = FStar.Const
 
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
@@ -463,8 +464,20 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
-let whnf env t     = SS.compress (N.normalize [Env.Beta; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
-let sn env t       = SS.compress (N.normalize [Env.Beta] env t) |> U.unlazy_emb
+let whnf' env t    = SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
+let sn env t       = SS.compress (N.normalize [Env.Beta; Env.Reify] env t) |> U.unlazy_emb
+
+let should_strongly_reduce t =
+    let h, _ = U.head_and_args t in
+    match (SS.compress h).n with
+    | Tm_constant FStar.Const.Const_reify -> true
+    | _ -> false
+
+let whnf env t =
+    if should_strongly_reduce t
+    then SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] env t) |> U.unlazy_emb
+    else whnf' env t
+
 let norm_arg env t = sn env (fst t), snd t
 let sn_binders env (binders:binders) =
     binders |> List.map (fun (x, imp) -> {x with sort=sn env x.sort}, imp)
@@ -899,7 +912,12 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch(None, None)
     | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
-    | Tm_constant c, Tm_constant d -> if FStar.Const.eq_const c d then FullMatch else MisMatch(None, None)
+
+    | Tm_constant FC.Const_reify, Tm_constant FC.Const_reify -> FullMatch
+    | Tm_constant FC.Const_reify, _
+    | _, Tm_constant FC.Const_reify -> HeadMatch true
+    | Tm_constant c, Tm_constant d -> if FC.eq_const c d then FullMatch else MisMatch(None, None)
+
     | Tm_uvar (uv, _), Tm_uvar (uv', _) -> if UF.equiv uv.ctx_uvar_head uv'.ctx_uvar_head then FullMatch else MisMatch(None, None)
 
     | Tm_refine(x, _), Tm_refine(y, _) -> head_matches env x.sort y.sort |> head_match
@@ -915,7 +933,8 @@ let rec head_matches env t1 t2 : match_result =
     | _, Tm_app(head, _) -> head_matches env t1 head |> head_match
 
     | Tm_let _, Tm_let _
-    | Tm_match _, Tm_match _ -> HeadMatch true
+    | Tm_match _, Tm_match _
+    | Tm_abs _, Tm_abs _ -> HeadMatch true
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
@@ -1394,11 +1413,11 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
         if BU.physical_equality tp.lhs tp.rhs then solve env (solve_prob hd None [] probs) else
         if rank=Rigid_rigid
         || (tp.relation = EQ && rank <> Flex_flex)
-        then solve_t' env tp probs
+        then solve_t env tp probs
         else if probs.defer_ok
         then solve env (defer "deferring flex_rigid or flex_flex subtyping" hd probs)
         else if rank=Flex_flex
-        then solve_t' env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
+        then solve_t env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
         else solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
       end
 
@@ -3066,10 +3085,19 @@ let new_t_prob wl env t1 rel t2 =
 
 let solve_and_commit env probs err =
   let tx = UF.new_transaction () in
-  let sol = solve env probs in
+
+  if Env.debug env <| Options.Other "RelBench" then
+    BU.print1 "solving problems %s {\n"
+      (FStar.Common.string_of_list (fun p -> string_of_int (p_pid p)) probs.attempting);
+  let (sol, ms) = BU.record_time (fun () -> solve env probs) in
+  if Env.debug env <| Options.Other "RelBench" then
+    BU.print1 "} solved in %s ms\n" (string_of_int ms);
+
   match sol with
     | Success (deferred, implicits) ->
-      UF.commit tx;
+      let ((), ms) = BU.record_time (fun () -> UF.commit tx) in
+      if Env.debug env <| Options.Other "RelBench" then
+        BU.print1 "committed in %s ms\n" (string_of_int ms);
       Some (deferred, implicits)
     | Failed (d,s) ->
       if Env.debug env <| Options.Other "ExplainRel"
@@ -3132,12 +3160,17 @@ let subtype_fail env e t1 t2 =
 
 let sub_comp env c1 c2 =
   let rel = if env.use_eq then EQ else SUB in
-  if debug env <| Options.Other "Rel"
-  then BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
+  if debug env <| Options.Other "Rel" then
+    BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
   let prob, wl = new_problem (empty_worklist env) env c1 rel c2 None (Env.get_range env) "sub_comp" in
   let prob = CProb prob in
   def_check_prob "sub_comp" prob;
-  with_guard env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None)
+  let (r, ms) = BU.record_time
+                  (fun () -> with_guard env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None))
+  in
+  if Env.debug env <| Options.Other "RelBench" then
+    BU.print4 "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB") (string_of_int ms);
+  r
 
 let solve_universe_inequalities' tx env (variables, ineqs) =
    //variables: ?u1, ..., ?un are the universes of the inductive types we're trying to compute

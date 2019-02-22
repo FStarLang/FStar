@@ -1,4 +1,6 @@
 HINTS_ENABLED?=--use_hints --use_hint_hashes
+WARN_ERROR=
+OTHERFLAGS+=$(WARN_ERROR) --z3cliopt 'timeout=600000'
 
 ifdef Z3
 OTHERFLAGS+=--smt $(Z3)

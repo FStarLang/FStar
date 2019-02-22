@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Math.Lemmas
 
 open FStar.Mul
@@ -120,12 +135,14 @@ let mul_binds_tighter a b c = ()
 
 (* Lemma: multiplication keeps symetric bounds :
     b > 0 && d > 0 && -b < a < b && -d < c < d ==> - b * d < a * c < b * d *)
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0 --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr wrapped"
 val mul_ineq1: a:int -> b:nat -> c:int -> d:nat -> Lemma
-    (requires (a < b /\ a > -b /\ c < d /\ c > -d))
-    (ensures  (a * c < b * d /\ a * c > - (b * d)))
+    (requires (-b < a /\ a < b /\
+               -d < c /\ c < d))
+    (ensures  (-(b * d) < a * c /\ a * c < b * d))
 let mul_ineq1 a b c d = ()
 
+#reset-options "--initial_fuel 0 --max_fuel 0"
 val nat_times_nat_is_nat: a:nat -> b:nat -> Lemma (a * b >= 0)
 let nat_times_nat_is_nat a b = ()
 
