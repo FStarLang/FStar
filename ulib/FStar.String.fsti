@@ -27,8 +27,8 @@ module FStar.String
       have native OCaml implementations in FStar_String.ml
 
    These functions are, however, not suitable for use in Low* code,
-   since many of them (e.g., strcat) incur implicit allocations that
-   must be garbage collected.
+   since many of them incur implicit allocations that must be garbage
+   collected.
 
    For strings in Low*, see LowStar.String, LowStar.Literal etc.
 *)
@@ -71,13 +71,6 @@ let string_of_char (c:char) : Tot string = make 1 c
 
 /// `split cs s`: splits the string by delimiters in `cs`
 val split:   list char -> string -> Tot (list string)
-
-/// `strcat s0 s1`: string concatenation
-val strcat:  s0:string -> s1:string -> Tot (s:string{length s = length s0 + length s1})
-
-/// `s0 ^ s1` abbreviates `strcat s0 s1`
-unfold inline_for_extraction
-let (^) s0 s1 = strcat s0 s1
 
 /// `concat s l` concatentates the strings in `l` delimited by `s`
 val concat:  string -> list string -> Tot string

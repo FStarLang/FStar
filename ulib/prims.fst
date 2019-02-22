@@ -323,13 +323,8 @@ type array : Type -> Type0
 irreducible
 let deprecated (s:string) : unit = ()
 
-[@(deprecated "FStar.String.strcat")]
 assume val strcat : string -> string -> Tot string
-
-#push-options "--warn_error -288"
-[@(deprecated "FStar.String.(^)")]
 let (^) s1 s2 = strcat s1 s2
-#pop-options
 
 type list (a:Type) =
   | Nil  : list a
