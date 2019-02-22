@@ -200,9 +200,9 @@ let (gs : gensym_t) =
               let uu____577 =
                 let uu____579 = FStar_ST.op_Bang ctr  in
                 FStar_Util.string_of_int uu____579  in
-              FStar_String.op_Hat "_" uu____577  in
-            FStar_String.op_Hat uu____528 uu____575  in
-          FStar_String.op_Hat "_" uu____526));
+              Prims.op_Hat "_" uu____577  in
+            Prims.op_Hat uu____528 uu____575  in
+          Prims.op_Hat "_" uu____526));
     reset =
       (fun uu____628  ->
          FStar_ST.op_Colon_Equals ctr (Prims.parse_int "0");
@@ -832,7 +832,7 @@ let (apply_obj_repr : mlexpr -> mlty -> mlexpr) =
 let (avoid_keyword : Prims.string -> Prims.string) =
   fun s  ->
     let uu____3849 = is_reserved s  in
-    if uu____3849 then FStar_String.op_Hat s "_" else s
+    if uu____3849 then Prims.op_Hat s "_" else s
   
 let (bv_as_mlident : FStar_Syntax_Syntax.bv -> mlident) =
   fun x  ->
@@ -849,8 +849,8 @@ let (bv_as_mlident : FStar_Syntax_Syntax.bv -> mlident) =
         let uu____3870 =
           let uu____3872 =
             FStar_Util.string_of_int x.FStar_Syntax_Syntax.index  in
-          FStar_String.op_Hat "_" uu____3872  in
-        FStar_String.op_Hat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
+          Prims.op_Hat "_" uu____3872  in
+        Prims.op_Hat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
           uu____3870
          in
       FStar_All.pipe_left avoid_keyword uu____3868
