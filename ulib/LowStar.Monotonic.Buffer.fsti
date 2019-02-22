@@ -1027,6 +1027,11 @@ val modifies_buffer_elim (#a:Type0) (#rrel #rel:srel a)
              [ SMTPat (modifies p h h'); SMTPat (live h' b) ]
          ]]
 
+val modifies_buffer_from_to_elim (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (from to: U32.t) (p:loc) (h h':HS.mem)
+  :Lemma (requires (loc_disjoint (loc_buffer_from_to b from to) p /\ live h b /\ modifies p h h' /\ U32.v from <= U32.v to /\ U32.v to <= length b))
+         (ensures  (live h' b))
+
 /// If the memory state does not change, then any memory location is
 /// modified (and, in particular, the empty set, ``loc_none``.)
 

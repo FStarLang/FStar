@@ -227,8 +227,10 @@ let ubuffer_preserved'
   (h h' : HS.mem)
 : GTot Type0
 = forall (t':Type0) (rrel rel:srel t') (b':mbuffer t' rrel rel) .
-  (frameOf b' == r /\ as_addr b' == a /\ ubuffer_of_buffer' b' == b /\ live h b') ==>
-  (live h' b' /\ Seq.equal (as_seq h' b') (as_seq h b'))
+  ((frameOf b' == r /\ as_addr b' == a) ==> (
+    (live h b' ==> live h' b') /\ (
+    (live h b' /\ live h' b' /\ ubuffer_of_buffer' b' == b) ==>
+    Seq.equal (as_seq h' b') (as_seq h b'))))
 
 val ubuffer_preserved (#r: HS.rid) (#a: nat) (b: ubuffer r a) (h h' : HS.mem) : GTot Type0
 
@@ -239,13 +241,21 @@ let ubuffer_preserved_intro
   (#a:nat)
   (b:ubuffer r a)
   (h h' :HS.mem)
+  (f0: (
+    (t':Type0) ->
+    (rrel:srel t') -> (rel:srel t') ->
+    (b':mbuffer t' rrel rel) ->
+    Lemma
+    (requires (frameOf b' == r /\ as_addr b' == a /\ live h b'))
+    (ensures (live h' b'))
+  ))
   (f: (
     (t':Type0) ->
     (rrel:srel t') -> (rel:srel t') ->
     (b':mbuffer t' rrel rel) ->
     Lemma
-    (requires (frameOf b' == r /\ as_addr b' == a /\ ubuffer_of_buffer' b' == b /\ live h b'))
-    (ensures (live h' b' /\ as_seq h' b' == as_seq h b'))
+    (requires (frameOf b' == r /\ as_addr b' == a /\ ubuffer_of_buffer' b' == b /\ live h b' /\ live h' b'))
+    (ensures (as_seq h' b' == as_seq h b'))
   ))
 : Lemma
   (ubuffer_preserved b h h')
@@ -253,12 +263,12 @@ let ubuffer_preserved_intro
     (t':Type0) (rrel rel:srel t')
     (b':mbuffer t' rrel rel)
   : Lemma
-    ((
-      frameOf b' == r /\ as_addr b' == a /\ ubuffer_of_buffer' b' == b /\ live h b'
-    ) ==> (
-      live h' b' /\ as_seq h' b' == as_seq h b'
-    ))
-  = Classical.move_requires (f t' rrel rel) b'
+    ((frameOf b' == r /\ as_addr b' == a) ==> (
+    (live h b' ==> live h' b') /\ (
+    (live h b' /\ live h' b' /\ ubuffer_of_buffer' b' == b) ==>
+    Seq.equal (as_seq h' b') (as_seq h b'))))
+  = Classical.move_requires (f0 t' rrel rel) b';
+    Classical.move_requires (f t' rrel rel) b'
   in
   Classical.forall_intro_4 g'
 
@@ -290,7 +300,14 @@ val same_mreference_ubuffer_preserved
   (ubuffer_preserved b h1 h2)
 
 let same_mreference_ubuffer_preserved #r #a b h1 h2 f =
-  ubuffer_preserved_intro b h1 h2 (fun t' _ _ b' ->
+  ubuffer_preserved_intro b h1 h2
+  (fun t' _ _ b' -> 
+    if Null? b'
+    then ()
+    else
+      f _ _ (Buffer?.content b')
+  )
+  (fun t' _ _ b' ->
     if Null? b'
     then ()
     else
@@ -312,11 +329,38 @@ val ubuffer_of_buffer (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel 
 
 let ubuffer_of_buffer #_ #_ #_ b = ubuffer_of_buffer' b
 
+let ubuffer_of_buffer_from_to_none_cond
+  #a #rrel #rel (b: mbuffer a rrel rel) from to
+: GTot bool
+= g_is_null b || U32.v to < U32.v from || U32.v from > length b
+
+let ubuffer_of_buffer_from_to
+  #a #rrel #rel (b: mbuffer a rrel rel) from to
+: GTot (ubuffer (frameOf b) (as_addr b))
+= if  ubuffer_of_buffer_from_to_none_cond b from to
+  then
+      Ghost.hide ({
+        b_max_length = 0;
+        b_offset = 0;
+        b_length = 0;
+        b_is_mm = false;
+      })
+  else
+    let to' = if U32.v to > length b then length b else U32.v to in
+    let b1 = ubuffer_of_buffer b in
+    Ghost.hide ({ Ghost.reveal b1 with b_offset = (Ghost.reveal b1).b_offset + U32.v from; b_length = to' - U32.v from })
+
 val ubuffer_preserved_elim (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h h':HS.mem)
   :Lemma (requires (ubuffer_preserved #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) h h' /\ live h b))
          (ensures (live h' b /\ as_seq h b == as_seq h' b))
 
 let ubuffer_preserved_elim #_ #_ #_ _ _ _ = ()
+
+val ubuffer_preserved_from_to_elim (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (from to: U32.t) (h h' : HS.mem)
+  :Lemma (requires (ubuffer_preserved #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from to) h h' /\ live h b))
+         (ensures (live h' b))
+
+let ubuffer_preserved_from_to_elim #_ #_ #_ _ _ _ _ _ = ()
 
 let unused_in_ubuffer_preserved (#a:Type0) (#rrel:srel a) (#rel:srel a)
   (b:mbuffer a rrel rel) (h h':HS.mem)
@@ -488,6 +532,11 @@ let modifies_1_preserves_ubuffers (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbu
   = forall (b':ubuffer (frameOf b) (as_addr b)).
       (ubuffer_disjoint #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) b') ==> ubuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2
 
+let modifies_1_from_to_preserves_ubuffers (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (from to: U32.t) (h1 h2:HS.mem)
+  : GTot Type0
+  = forall (b':ubuffer (frameOf b) (as_addr b)).
+      (ubuffer_disjoint #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from to) b') ==> ubuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2
+
 let modifies_1_preserves_livenesses (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem)
   : GTot Type0
   = forall (a':Type) (pre:Preorder.preorder a') (r':HS.mreference  a' pre). h1 `HS.contains` r' ==> h2 `HS.contains` r'
@@ -612,23 +661,6 @@ let loc_union_assoc = MG.loc_union_assoc
 let loc_union_loc_none_l = MG.loc_union_loc_none_l
 
 let loc_union_loc_none_r = MG.loc_union_loc_none_r
-
-let ubuffer_of_buffer_from_to_none_cond
-  #a #rrel #rel (b: mbuffer a rrel rel) from to
-: GTot bool
-= g_is_null b || U32.v to < U32.v from || U32.v from > length b
-
-let ubuffer_of_buffer_from_to
-  #a #rrel #rel (b: mbuffer a rrel rel) from to
-: Ghost (ubuffer (frameOf b) (as_addr b))
-  (requires (
-    not (ubuffer_of_buffer_from_to_none_cond b from to)
-  ))
-  (ensures (fun _ -> True))
-= 
-    let to' = if U32.v to > length b then length b else U32.v to in
-    let b1 = ubuffer_of_buffer b in
-    Ghost.hide ({ Ghost.reveal b1 with b_offset = (Ghost.reveal b1).b_offset + U32.v from; b_length = to' - U32.v from })
 
 let loc_buffer_from_to #a #rrel #rel b from to =
   if ubuffer_of_buffer_from_to_none_cond b from to
@@ -764,6 +796,14 @@ let modifies_buffer_elim #_ #_ #_ b p h h' =
   else begin
     MG.modifies_aloc_elim #_ #cls #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) p h h' ;
     ubuffer_preserved_elim b h h'
+  end
+
+let modifies_buffer_from_to_elim #_ #_ #_ b from to p h h' =
+  if g_is_null b
+  then ()
+  else begin
+    MG.modifies_aloc_elim #_ #cls #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from to) p h h' ;
+    ubuffer_preserved_from_to_elim b from to h h'
   end
 
 let modifies_refl = MG.modifies_refl
