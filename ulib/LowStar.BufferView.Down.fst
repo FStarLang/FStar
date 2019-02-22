@@ -216,6 +216,14 @@ val as_seq'_sel' (#a #b: _)
        as_seq'_len as v;
        sel' v as i == Seq.index (as_seq' as v) i))
      (decreases (Seq.length as))
+
+//flaky
+#reset-options
+#set-options "--smtencoding.elim_box true"
+#set-options "--smtencoding.l_arith_repr native"
+#set-options "--smtencoding.nl_arith_repr wrapped"
+#set-options "--z3rlimit_factor 10" //just being conservative
+#set-options "--initial_fuel 1 --max_fuel 1 --max_ifuel 0"
 let rec as_seq'_sel' #a #b v as i =
   as_seq'_len as v;
   let n : pos = View?.n v in
@@ -240,6 +248,12 @@ let rec as_seq'_sel' #a #b v as i =
                    Seq.index (as_seq' as' v) j);
            sel'_tail v as i
          end
+#reset-options
+#set-options "--smtencoding.elim_box true"
+#set-options "--smtencoding.l_arith_repr native"
+#set-options "--smtencoding.nl_arith_repr wrapped"
+#set-options "--z3rlimit_factor 4" //just being conservative
+#set-options "--initial_fuel 1 --max_fuel 1 --max_ifuel 0"
 
 let as_seq_sel #b h vb i =
   indexing vb i;
