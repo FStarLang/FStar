@@ -445,7 +445,18 @@ val loc_union_loc_none_r
 
 /// ``loc_buffer b`` is the set of memory locations associated to a buffer ``b``.
 
+val loc_buffer_from_to (#a:Type0) (#rrel #rel:srel a) (b: mbuffer a rrel rel) (from to: U32.t) : GTot loc
+
 val loc_buffer (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot loc
+
+val loc_buffer_eq (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : Lemma
+  (loc_buffer b == loc_buffer_from_to b 0ul (len b))
+
+val loc_buffer_mgsub_eq (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a)
+  (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t)
+  :Lemma
+         (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
+	 (ensures (loc_buffer (mgsub sub_rel b i len) == loc_buffer_from_to b i (i `U32.add` len)))
 
 val loc_buffer_null (a:Type0) (rrel rel:srel a)
   :Lemma (loc_buffer (mnull #a #rrel #rel) == loc_none)
@@ -617,6 +628,21 @@ val loc_includes_gsub_buffer_l (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel 
 		    compatible_sub b i1 len1 sub_rel1 /\ compatible_sub b i2 len2 sub_rel2))
          (ensures  (loc_includes (loc_buffer (mgsub sub_rel1 b i1 len1)) (loc_buffer (mgsub sub_rel2 b i2 len2))))
          [SMTPat (mgsub sub_rel1 b i1 len1); SMTPat (mgsub sub_rel2 b i2 len2)]
+
+val loc_includes_loc_buffer_loc_buffer_from_to
+  (#a: _) (#rrel #rel: _)
+  (b: mbuffer a rrel rel)
+  (from to: U32.t)
+: Lemma
+  (loc_includes (loc_buffer b) (loc_buffer_from_to b from to))
+
+val loc_includes_loc_buffer_from_to
+  (#a: _) (#rrel #rel: _)
+  (b: mbuffer a rrel rel)
+  (from1 to1 from2 to2: U32.t)
+: Lemma
+  (requires (U32.v from1 <= U32.v from2 /\ U32.v to2 <= U32.v to1))
+  (ensures (loc_includes (loc_buffer_from_to b from1 to1) (loc_buffer_from_to b from2 to2)))
 
 /// If the contents of a buffer are equal in two given heaps, then so
 /// are the contents of any of its sub-buffers.
@@ -862,6 +888,13 @@ val loc_disjoint_gsub_buffer (#a:Type0) (#rrel:srel a) (#rel:srel a)
          (ensures  (loc_disjoint (loc_buffer (mgsub sub_rel1 b i1 len1)) (loc_buffer (mgsub sub_rel2 b i2 len2))))
          [SMTPat (mgsub sub_rel1 b i1 len1); SMTPat (mgsub sub_rel2 b i2 len2)]
 
+val loc_disjoint_loc_buffer_from_to
+  (#a: _) (#rrel #rel: _)
+  (b: mbuffer a rrel rel)
+  (from1 to1 from2 to2: U32.t)
+: Lemma
+  (requires (U32.v to1 <= U32.v from2 \/ U32.v to2 <= U32.v from1))
+  (ensures (loc_disjoint (loc_buffer_from_to b from1 to1) (loc_buffer_from_to b from2 to2)))
 
 /// If two sets of addresses correspond to different regions or are
 /// disjoint, then their corresponding sets of memory locations are

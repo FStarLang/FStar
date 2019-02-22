@@ -613,9 +613,36 @@ let loc_union_loc_none_l = MG.loc_union_loc_none_l
 
 let loc_union_loc_none_r = MG.loc_union_loc_none_r
 
+let ubuffer_of_buffer_from_to_none_cond
+  #a #rrel #rel (b: mbuffer a rrel rel) from to
+: GTot bool
+= g_is_null b || U32.v to < U32.v from || U32.v from > length b
+
+let ubuffer_of_buffer_from_to
+  #a #rrel #rel (b: mbuffer a rrel rel) from to
+: Ghost (ubuffer (frameOf b) (as_addr b))
+  (requires (
+    not (ubuffer_of_buffer_from_to_none_cond b from to)
+  ))
+  (ensures (fun _ -> True))
+= 
+    let to' = if U32.v to > length b then length b else U32.v to in
+    let b1 = ubuffer_of_buffer b in
+    Ghost.hide ({ Ghost.reveal b1 with b_offset = (Ghost.reveal b1).b_offset + U32.v from; b_length = to' - U32.v from })
+
+let loc_buffer_from_to #a #rrel #rel b from to =
+  if ubuffer_of_buffer_from_to_none_cond b from to
+  then MG.loc_none
+  else
+    MG.loc_of_aloc #_ #_ #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from to)
+
 let loc_buffer #_ #_ #_ b =
   if g_is_null b then MG.loc_none
   else MG.loc_of_aloc #_ #_ #(frameOf b) #(as_addr b) (ubuffer_of_buffer b)
+
+let loc_buffer_eq #_ #_ #_ _ = ()
+
+let loc_buffer_mgsub_eq #_ #_ #_ _ _ _ _ = ()
 
 let loc_buffer_null _ _ _ = ()
 
@@ -653,6 +680,16 @@ let loc_includes_gsub_buffer_l #_ #_ #rel b i1 len1 sub_rel1 i2 len2 sub_rel2 =
   let b1 = mgsub sub_rel1 b i1 len1 in
   let b2 = mgsub sub_rel2 b i2 len2 in
   loc_includes_buffer b1 b2
+
+let loc_includes_loc_buffer_loc_buffer_from_to #_ #_ #_ b from to =
+  if ubuffer_of_buffer_from_to_none_cond b from to
+  then ()
+  else MG.loc_includes_aloc #_ #cls #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) (ubuffer_of_buffer_from_to b from to)
+
+let loc_includes_loc_buffer_from_to #_ #_ #_ b from1 to1 from2 to2 =
+  if ubuffer_of_buffer_from_to_none_cond b from1 to1 || ubuffer_of_buffer_from_to_none_cond b from2 to2
+  then ()
+  else MG.loc_includes_aloc #_ #cls #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from1 to1) (ubuffer_of_buffer_from_to b from2 to2)
 
 #push-options "--z3rlimit 20"
 let loc_includes_as_seq #_ #rrel1 #rrel2 #_ #_ h1 h2 larger smaller =
@@ -704,6 +741,11 @@ let loc_disjoint_buffer #_ #_ #_ #_ #_ #_ b1 b2 =
 
 let loc_disjoint_gsub_buffer #_ #_ #_ b i1 len1 sub_rel1 i2 len2 sub_rel2 =
   loc_disjoint_buffer (mgsub sub_rel1 b i1 len1) (mgsub sub_rel2 b i2 len2)
+
+let loc_disjoint_loc_buffer_from_to #_ #_ #_ b from1 to1 from2 to2 =
+  if ubuffer_of_buffer_from_to_none_cond b from1 to1 || ubuffer_of_buffer_from_to_none_cond b from2 to2
+  then ()
+  else MG.loc_disjoint_aloc_intro #_ #cls #(frameOf b) #(as_addr b) #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from1 to1) (ubuffer_of_buffer_from_to b from2 to2)
 
 let loc_disjoint_addresses = MG.loc_disjoint_addresses_intro #_ #cls
 
