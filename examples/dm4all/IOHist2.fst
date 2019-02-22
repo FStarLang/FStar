@@ -1,9 +1,9 @@
-module IOSt2
+module IOHist2
 
 open FStar.List
 open FStar.WellFounded
 
-(* Similar to IOSt, but with uncurried postconditions *)
+(* Similar to IOHist, but with uncurried postconditions *)
 
 type input = int
 type output = int
