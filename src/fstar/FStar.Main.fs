@@ -90,8 +90,6 @@ let load_native_tactics () =
     List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
     Tactics.Load.load_tactics cmxs_files
 
-let init_warn_error() =
-  Options.initialize_parse_warn_error FStar.Parser.ParseIt.parse_warn_error
 
 (* Need to keep names of input files for a second pass when prettyprinting *)
 (* This reference is set once in `go` and read in `main` if the print or *)
@@ -102,7 +100,6 @@ let fstar_files: ref<option<list<string>>> = Util.mk_ref None
 (* Main function                                                            *)
 (****************************************************************************)
 let go _ =
-  init_warn_error();
   let res, filenames = process_args () in
   match res with
     | Help ->
@@ -197,6 +194,7 @@ let lazy_chooser k i = match k with
 
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
+    Options.initialize_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder

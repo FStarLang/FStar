@@ -290,8 +290,9 @@ let parse_warn_error_set_get =
     in
     let get () =
         match !r with
-        | None -> failwith "FStar.Options is not yet initialized"
         | Some f -> f
+        | None ->
+          failwith "FStar.Options is improperly initialized"
     in
     set, get
 
