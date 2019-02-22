@@ -28,9 +28,11 @@ let rec bind (a : Type u#aa) (b : Type u#bb)
   | Write o k' -> Write o (bind _ _ k' k)
   | Return v -> k v
 
+unfold
 let return_wp (a:Type) (x:a) : wpty a =
   fun p -> p x []
 
+unfold
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
   fun p -> w (fun x l1 -> kw x (fun y l2 -> p y (l1 @ l2)))
 
@@ -73,14 +75,13 @@ let test1 () =
 
 open FStar.Tactics
 
-(* GM: For some reason I need to compute() in order to prove this *)
-let test2 () : IO int (fun p -> p 1 [2; 3]) by (compute ()) =
+let test2 () : IO int (fun p -> p 1 [2; 3]) =
   write 2;
   let x = read () in
   write 3;
   1
 
-let test3 () : IO int (fun p -> forall x. p 1 [2; x]) by (compute ()) =
+let test3 () : IO int (fun p -> forall x. p 1 [2; x]) =
   write 2;
   let x = read () in
   let x = read () in
@@ -90,7 +91,7 @@ let test3 () : IO int (fun p -> forall x. p 1 [2; x]) by (compute ()) =
   1
 
 [@expect_failure]
-let test4 () : IO int (fun p -> forall x. p 1 [x; x]) by (compute ()) =
+let test4 () : IO int (fun p -> forall x. p 1 [x; x]) =
   write 2;
   let x = read () in
   let x = read () in
@@ -99,7 +100,7 @@ let test4 () : IO int (fun p -> forall x. p 1 [x; x]) by (compute ()) =
   write x;
   1
 
-let test5 () : IO int (fun p -> forall x. p 1 [x; x]) by (compute ()) =
+let test5 () : IO int (fun p -> forall x. p 1 [x; x]) =
   let x = read () in
   write x;
   write x;

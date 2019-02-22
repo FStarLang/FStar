@@ -36,9 +36,11 @@ let post a = a -> l_trace -> Type0
 (* flipping these arguments will break the gen_wps_for_free logic, FIXME *)
 let wpty a = h_trace -> post a -> Type0
 
+unfold
 let return_wp (a:Type) (x:a) : wpty a =
   fun h p -> p x []
 
+unfold
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
   fun h p -> w h (fun x l -> kw x (h @ l) (fun y l' -> p y (l @ l')))
 
@@ -76,14 +78,12 @@ val write : o:int -> IO unit (fun h p -> p () [Wr o])
 let write i =
     IO?.reflect (Write i (Return ()))
 
-open FStar.Tactics
-
 let test1 () : IO int (fun h p -> p 1 [Wr 2; Wr 3]) =
   write 2;
   write 3;
   1
 
-let test2 () : IO int (fun h p -> forall i . p 1 [Wr 2; Rd i; Wr 3]) by (compute ()) =
+let test2 () : IO int (fun h p -> forall i . p 1 [Wr 2; Rd i; Wr 3]) =
   write 2;
   let x = read () in
   write 3;
@@ -94,7 +94,7 @@ effect Io (a:Type) (pre':h_trace -> Type0) (post':h_trace -> a -> l_trace -> Typ
 
 let test3 (i:int) 
   : Io int (requires (fun h     -> exists h' h'' . h = h' @ (Rd i :: h''))) 
-           (ensures  (fun h x l -> exists x . l = [Wr i; Rd x; Wr x])) by (compute ()) =
+           (ensures  (fun h x l -> exists x . l = [Wr i; Rd x; Wr x])) =
   write i;
   let x = read () in
   write x;
@@ -107,7 +107,7 @@ let rec n_w_events (n:nat) (i:int) =
 
 let rec test4 (n:nat) (i:int)
   : Io unit (requires (fun _     -> True)) 
-            (ensures  (fun h x l -> l = n_w_events n i)) by (compute ()) = 
+            (ensures  (fun h x l -> l = n_w_events n i)) = 
   if n = 0
   then ()
   else (write i; test4 (n - 1) i)

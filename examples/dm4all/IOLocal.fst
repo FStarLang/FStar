@@ -33,9 +33,11 @@ let post a = a -> l_trace -> Type0
 (* flipping these arguments will break the gen_wps_for_free logic, FIXME *)
 let wpty a = h_trace -> post a -> Type0
 
+unfold
 let return_wp (a:Type) (x:a) : wpty a =
   fun h p -> p x []
 
+unfold
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
   fun h p -> w h (fun x l -> kw x (h @ l) (fun y l' -> p y (l @ l')))
 
@@ -81,7 +83,7 @@ open FStar.Tactics
 (* GM: This stupid length precondition only there to help z3. If we flip
  * the ordering on the history list, then this works like a charm but test9
  * below starts displaying the same bad behaviour. *)
-let test_hist_1 () : IO unit (fun h p -> List.length h <= 5 /\ p () [1]) by (compute (); explode (); dump "") =
+let test_hist_1 () : IO unit (fun h p -> List.length h <= 5 /\ p () [1]) =
   write 1;
   let _ = need_a_1 () in
   ()
@@ -97,7 +99,7 @@ let test1 () : IO int (fun h p -> p 1 [2;3]) =
   write 3;
   1
 
-let test2 () : IO int (fun h p -> p 1 [2;3]) by (compute ()) =
+let test2 () : IO int (fun h p -> p 1 [2;3]) =
   write 2;
   let x = read () in
   write 3;
@@ -113,7 +115,7 @@ let test4 () : IO int (fun h p -> forall x. p 1 [x;x]) =
   write x;
   1
 
-let test5 () : IO int (fun h p -> forall x. p 1 [x;x]) by (compute ()) =
+let test5 () : IO int (fun h p -> forall x. p 1 [x;x]) =
   let x = read () in
   write x;
   write x;
@@ -122,7 +124,7 @@ let test5 () : IO int (fun h p -> forall x. p 1 [x;x]) by (compute ()) =
 effect Io (a:Type) (pre':h_trace -> Type0) (post':h_trace -> a -> l_trace -> Type0) =
         IO a (fun h p -> pre' h /\ (forall r l . post' h r l ==> p r l))
 
-let test6 () : Io int (fun _ -> True) (fun h x l -> x = 1 /\ (exists y . l = [y;y])) by (compute ()) =
+let test6 () : Io int (fun _ -> True) (fun h x l -> x = 1 /\ (exists y . l = [y;y])) =
   let x = read () in
   write x;
   write x;
@@ -130,7 +132,7 @@ let test6 () : Io int (fun _ -> True) (fun h x l -> x = 1 /\ (exists y . l = [y;
 
 let test7 (b:bool) 
   : Io int (fun _ -> True) 
-           (fun h x l -> x = 1 /\ (exists y . l = [y;y] \/ l = [y+1;y])) by (compute ()) =
+           (fun h x l -> x = 1 /\ (exists y . l = [y;y] \/ l = [y+1;y])) =
   let x = read () in
   (if b 
    then write (x + 1)
@@ -140,7 +142,7 @@ let test7 (b:bool)
 
 let test8 (b:bool) 
   : Io int (fun _ -> True) 
-           (fun h x l -> x = 1 /\ (exists y z . z < y /\ l = [y;z])) by (compute ()) =
+           (fun h x l -> x = 1 /\ (exists y z . z < y /\ l = [y;z])) =
   let x = read () in
   (if b 
    then write (x + 1)
@@ -155,7 +157,7 @@ let rec n_writes (n:nat) (i:int) =
 
 let rec test9 (n:nat) (i:int)
   : Io unit (requires (fun _     -> True)) 
-            (ensures  (fun h x l -> l = n_writes n i)) by (compute ()) = 
+            (ensures  (fun h x l -> l = n_writes n i)) = 
   if n = 0
   then ()
   else (write i; test9 (n - 1) i)

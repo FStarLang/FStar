@@ -30,9 +30,11 @@ let post a = a -> list output -> Type0
 (* flipping these arguments will break the gen_wps_for_free logic, FIXME *)
 let wpty a = list output -> post a -> Type0
 
+unfold
 let return_wp (a:Type) (x:a) : wpty a =
   fun h p -> p x h
 
+unfold
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
   fun h p -> w h (fun x h' -> kw x h' (fun y h'' -> p y h''))
   
@@ -72,21 +74,18 @@ let write i =
 
 open FStar.Tactics
 
-let x = 1
-
 let test1 () : IO int (fun h p -> p 1 (3::2::h)) =
   write 2;
   write 3;
   1
 
-(* GM: For some reason I need to compute() in order to prove this *)
-let test2 () : IO int (fun h p -> p 1 (3::2::h)) by (compute ()) =
+let test2 () : IO int (fun h p -> p 1 (3::2::h)) =
   write 2;
   let x = read () in
   write 3;
   1
 
-let test3 () : IO int (fun h p -> forall x. p 1 (x::2::h)) by (compute ()) =
+let test3 () : IO int (fun h p -> forall x. p 1 (x::2::h)) =
   write 2;
   let x = read () in
   let x = read () in
@@ -96,7 +95,7 @@ let test3 () : IO int (fun h p -> forall x. p 1 (x::2::h)) by (compute ()) =
   1
 
 [@expect_failure]
-let test4 () : IO int (fun h p -> forall x. p 1 (x::x::h)) by (compute ()) =
+let test4 () : IO int (fun h p -> forall x. p 1 (x::x::h)) =
   write 2;
   let x = read () in
   let x = read () in
@@ -105,7 +104,7 @@ let test4 () : IO int (fun h p -> forall x. p 1 (x::x::h)) by (compute ()) =
   write x;
   1
 
-let test5 () : IO int (fun h p -> forall x. p 1 (x::x::h)) by (compute ()) =
+let test5 () : IO int (fun h p -> forall x. p 1 (x::x::h)) =
   let x = read () in
   write x;
   write x;
