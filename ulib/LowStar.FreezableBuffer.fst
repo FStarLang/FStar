@@ -26,6 +26,19 @@ abstract let freezable_preorder : P.preorder (Seq.seq u8) =
       (w2 <= len /\ w1 <= w2 /\
        (forall (i:nat).{:pattern Seq.index s2 i} (i >= 1 /\ i < w1) ==> Seq.index s1 i == Seq.index s2 i)))))) 
 
+abstract let freezable_preorder_equiv (s1 s2: Seq.seq u8) : Lemma
+  (freezable_preorder s1 s2 <==> (
+  Seq.length s1 == Seq.length s2 /\
+  (let len = Seq.length s1 in
+   (len > 0 ==>
+    (let w1 = U8.v (Seq.index s1 0) in
+     let w2 = U8.v (Seq.index s2 0) in
+     ((w1 >= 1 /\ w1 <= len) ==>
+      (w2 <= len /\ w1 <= w2 /\
+       (forall (i:nat).{:pattern Seq.index s2 i} (i >= 1 /\ i < w1) ==> Seq.index s1 i == Seq.index s2 i)))))) 
+  ))
+= ()
+
 let fbuffer = b:mbuffer u8 freezable_preorder freezable_preorder
 
 let lfbuffer (len:nat) = b:fbuffer{length b == len}
