@@ -324,6 +324,7 @@ irreducible
 let deprecated (s:string) : unit = ()
 
 assume val strcat : string -> string -> Tot string
+inline_for_extraction
 let (^) s1 s2 = strcat s1 s2
 
 type list (a:Type) =
