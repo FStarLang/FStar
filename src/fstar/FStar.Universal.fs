@@ -428,7 +428,7 @@ let tc_one_file
     * option<FStar.Extraction.ML.Syntax.mllib>
     * uenv
     * delta_env =
-  Syntax.reset_gensym();
+  Ident.reset_gensym();
 
   (*
    * AR: smt encode_modul functions are now here instead of in Tc.fs

@@ -80,8 +80,14 @@ let prims =
     let xy = List.map mk_fv [(xsym, Term_sort); (ysym, Term_sort)] in
     let qx = List.map mk_fv [(xsym, Term_sort)] in
     let prims = [
+        //equality
         (Const.op_Eq,          (quant axy (boxBool <| mkEq(x,y))));
         (Const.op_notEq,       (quant axy (boxBool <| mkNot(mkEq(x,y)))));
+        //boolean ops
+        (Const.op_And,         (quant xy  (boxBool <| mkAnd(unboxBool x, unboxBool y))));
+        (Const.op_Or,          (quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y))));
+        (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
+        //integer ops
         (Const.op_LT,          (quant xy  (boxBool <| mkLT(unboxInt x, unboxInt y))));
         (Const.op_LTE,         (quant xy  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
         (Const.op_GT,          (quant xy  (boxBool <| mkGT(unboxInt x, unboxInt y))));
@@ -92,9 +98,16 @@ let prims =
         (Const.op_Multiply,    (quant xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
         (Const.op_Division,    (quant xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
         (Const.op_Modulus,     (quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
-        (Const.op_And,         (quant xy  (boxBool <| mkAnd(unboxBool x, unboxBool y))));
-        (Const.op_Or,          (quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y))));
-        (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
+        //real ops
+        (Const.real_op_LT,          (quant xy  (boxBool <| mkLT(unboxReal x, unboxReal y))));
+        (Const.real_op_LTE,         (quant xy  (boxBool <| mkLTE(unboxReal x, unboxReal y))));
+        (Const.real_op_GT,          (quant xy  (boxBool <| mkGT(unboxReal x, unboxReal y))));
+        (Const.real_op_GTE,         (quant xy  (boxBool <| mkGTE(unboxReal x, unboxReal y))));
+        (Const.real_op_Subtraction, (quant xy  (boxReal <| mkSub(unboxReal x, unboxReal y))));
+        (Const.real_op_Addition,    (quant xy  (boxReal <| mkAdd(unboxReal x, unboxReal y))));
+        (Const.real_op_Multiply,    (quant xy  (boxReal <| mkMul(unboxReal x, unboxReal y))));
+        (Const.real_op_Division,    (quant xy  (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
+        (Const.real_of_int,         (quant qx  (boxReal <| mkRealOfInt (unboxInt x) Range.dummyRange)))
         ]
     in
     let mk : lident -> string -> term * int * list<decl> =
@@ -161,6 +174,44 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                                                    mkLT (Term.unboxInt y, Term.unboxInt x)],
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
+    let mk_real : env -> string -> term -> list<decl>  = fun env nm tt ->
+        let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
+        let typing_pred = mk_HasType x tt in
+        let typing_pred_y = mk_HasType y tt in
+        let aa = mk_fv ("a", Sort "Real") in
+        let a = mkFreeV aa in
+        let bb = mk_fv ("b", Sort "Real") in
+        let b = mkFreeV bb in
+        let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [lex_t; lex_t;y;x]) in
+        [Util.mkAssume(mkForall
+                         (Env.get_range env)
+                         ([[Term.boxReal b]],
+                          [bb],
+                          mk_HasType (Term.boxReal b) tt),
+                          Some "real typing",
+                          "real_typing");
+         Util.mkAssume(mkForall_fuel
+                         env
+                         (Env.get_range env)
+                         ([[typing_pred]],
+                          [xx],
+                          mkImp(typing_pred,
+                                mk_tester (fst boxRealFun) x)),
+                          Some "real inversion",
+                          "real_inversion");
+         Util.mkAssume(mkForall_fuel
+                         env
+                         (Env.get_range env)
+                           ([[typing_pred; typing_pred_y;precedes_y_x]],
+                            [xx;yy],
+                            mkImp(mk_and_l [typing_pred;
+                                            typing_pred_y;
+                                            mkGT (Term.unboxReal x, mkReal "0.0");
+                                            mkGTE (Term.unboxReal y,mkReal "0.0");
+                                            mkLT (Term.unboxReal y, Term.unboxReal x)],
+                                   precedes_y_x)),
+                            Some "well-founded ordering on real", "well-founded-ordering-on-real")]
+    in
     let mk_str : env -> string -> term -> list<decl>  = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         let bb = mk_fv ("b", String_sort) in
@@ -290,6 +341,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
    let prims =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
+                 (Const.real_lid,   mk_real);
                  (Const.string_lid, mk_str);
                  (Const.true_lid,   mk_true_interp);
                  (Const.false_lid,  mk_false_interp);
@@ -995,7 +1047,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
                  env fv t quals in
              let tname = lid.str in
-             let tsym = mkFreeV <| mk_fv (tname, Term_sort) in
+             let tsym = Option.get (try_lookup_free_var env lid) in
              decls
              @ (primitive_type_axioms env.tcenv lid tname tsym |> mk_decls_trivial),
              env
@@ -1496,7 +1548,7 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
          | None ->  //no hit, update cache and retain elt
            BU.smap_add env.global_cache (elt.key |> BU.must) elt;
            [elt]
-  ) 
+  )
 
 let encode_sig tcenv se =
    let caption decls =
