@@ -15,6 +15,7 @@ open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 
+val level_of_type: env -> term -> typ -> universe //the term argument is for error reporting only
 val tc_constant: env -> FStar.Range.range -> sconst -> typ
 val tc_binders: env -> binders -> binders * env * guard_t * universes
 val tc_term: env -> term -> term * lcomp * guard_t

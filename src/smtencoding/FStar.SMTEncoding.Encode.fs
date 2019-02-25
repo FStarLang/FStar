@@ -1145,10 +1145,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              let _, k = U.arrow_formals k in //don't care about indices here
              let tps, env_tps, _, us = TcTerm.tc_binders env tps in
              let u_k =
-                match (SS.compress k).n with
-                | Tm_type u -> u
-                | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.eqtype_lid -> U_zero
-                | _ -> failwith (BU.format1 "Impossible: Type of inductive is %s" (Print.term_to_string k))
+               TcTerm.level_of_type
+                 env_tps
+                 (S.mk_Tm_app
+                   (S.fvar t (Delta_constant_at_level 0) None)
+                   (snd (U.args_of_binders tps))
+                   None
+                   (Ident.range_of_lid t))
+                 k
              in
              //BU.print2 "Universe of tycon: %s : %s\n" (Ident.string_of_lid t) (Print.univ_to_string u_k);
              let rec universe_leq u v =
@@ -1159,6 +1163,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  | U_name _,  U_succ v0 -> universe_leq u v0
                  | U_max us,  _         -> us |> BU.for_all (fun u -> universe_leq u v)
                  | _,         U_max vs  -> vs |> BU.for_some (universe_leq u)
+                 | U_unknown, _
+                 | _, U_unknown
+                 | U_unif _, _
+                 | _, U_unif _ -> failwith (BU.format1 "Impossible: Unresolved or unknown universe in inductive type %s"
+                                                      (Ident.string_of_lid t))
                  | _ -> false
              in
              let u_leq_u_k u =
