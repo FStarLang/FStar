@@ -1,4 +1,4 @@
-module ExnHandle
+module ExnHandleTwoPostCond
 
 module List = FStar.List.Tot
 
@@ -11,18 +11,19 @@ let bind (a : Type) (b : Type) (c : repr a) (f : a -> repr b) =
   | Inl x -> f x
   | Inr e -> Inr e
 
-let wp_type (a:Type) = (either a exn -> Type0) -> Type0
+let wp_type (a:Type) = (a -> Type0) -> (exn -> Type0) -> Type0
 
 unfold
-let return_wp (a:Type) (x:a) : wp_type a = fun p -> p (Inl x)
+let return_wp (a:Type) (x:a) : wp_type a = fun p q -> p x
 
 unfold
 let bind_wp (_ : range) (a : Type) (b : Type) (wp : wp_type a) (f : a -> wp_type b) =
-  fun p -> wp (fun r -> match r with
-                        | Inl x -> f x p
-                        | Inr e -> p (Inr e))
-
-let interp (a:Type) (c : repr a) : wp_type a = fun p -> p c
+  fun p q -> wp (fun x -> f x p q) (fun e -> q e)
+  
+let interp (a:Type) (c : repr a) : wp_type a = fun p q -> 
+  match c with
+  | Inl x -> p x
+  | Inr e -> q e
 
 total
 reifiable
@@ -41,15 +42,12 @@ new_effect {
      ; interp    = interp
 }
 
-effect Exn (a:Type) (pre:Type0) (post:either a exn -> Type0) =
-  EXN a (fun p -> pre /\
-          (forall (r:either a exn). post r ==> p r))
-
-val raise : #a:Type0 -> e:exn -> EXN a (fun p -> p (Inr e))
+val raise : #a:Type0 -> e:exn -> EXN a (fun p q -> q e)
 let raise #a e = EXN?.reflect (Inr e)
 
-(* The algebra extension operation (h_c)_* is inlined for better readability *)
+(* The algebra extension operation is inlined for better readability *)
 
+unfold
 let rep_try_catch (#a:Type) 
                   (#b:Type)
                   (c1:repr a)
@@ -60,16 +58,14 @@ let rep_try_catch (#a:Type)
   | Inr e -> h_c e
 
 unfold
-let wp_return (#a:Type) (x:a) : wp_type a = fun p -> p (Inl x)
+let wp_return (#a:Type) (x:a) : wp_type a = fun p q -> p x
 
 unfold
 let wp_bind (#a:Type) (#b:Type) (wp : wp_type a) (f : a -> wp_type b) =
-  fun p -> wp (fun r -> match r with
-                        | Inl x -> f x p
-                        | Inr e -> p (Inr e))
-
+  fun p q -> wp (fun x -> f x p q) (fun e -> q e)
+  
 unfold
-let wp_raise (#a:Type) (e:exn) : wp_type a = fun p -> p (Inr e)
+let wp_raise (#a:Type) (e:exn) : wp_type a = fun p q -> q e
 
 unfold
 let wp_try_catch (#a:Type) 
@@ -77,9 +73,7 @@ let wp_try_catch (#a:Type)
                  (wp1:wp_type a) 
                  (h_wp:exn -> wp_type b) 
                  (wp2:a -> wp_type b) : wp_type b = 
-  fun p -> wp1 (fun r -> match r with
-                         | Inl x -> wp2 x p
-                         | Inr e -> h_wp e p)
+  fun p q -> wp1 (fun x -> wp2 x p q) (fun e -> h_wp e p q)
 
 let related #a (r : repr a) (wp : wp_type a) =
   EXN?.stronger _ wp (interp _ r)
@@ -97,9 +91,15 @@ let lemma_try_catch (#a:Type)
                     (wp2:a -> wp_type b) 
                     (c2:(x:a -> either b exn))
   : Lemma (requires ((related c1 wp1) /\
-                     (forall x . related (c2 x) (wp2 x)) /\ 
+                     (forall x . related (c2 x) (wp2 x)) /\
                      (forall e . related (h_c e) (h_wp e))))
-          (ensures  (related (rep_try_catch c1 h_c c2) (wp_try_catch wp1 h_wp wp2))) =
+          (ensures  (forall p q . wp_try_catch wp1 h_wp wp2 p q 
+                                  ==>
+                                  (match (rep_try_catch c1 h_c c2) with 
+                                   | Inl x -> p x
+                                   | Inr e -> q e))) =
+          (*(ensures  (forall p q . related (rep_try_catch c1 h_c c2) (wp_try_catch wp1 h_wp wp2))) =*)
+          (* Logically equivalent to the uncommented ensures, but F*/Z3 below doesn't like it in try_catch below. *)
   match c1 with
   | Inl x -> ()
   | Inr e -> ()
@@ -116,7 +116,7 @@ let try_catch (#a:Type)
   reify_related (fun _ -> wp1) c1;
   reify_related wp2 c2;
   reify_related h_wp h_c;
-  lemma_try_catch wp1 (reify (c1 ())) h_wp (fun e -> reify (h_c e)) wp2 (fun x -> reify (c2 x));
+  lemma_try_catch #a #b wp1 (reify (c1 ())) h_wp (fun e -> reify (h_c e)) wp2 (fun x -> reify (c2 x));
   EXN?.reflect (rep_try_catch (reify (c1 ())) (fun e -> reify (h_c e)) (fun x -> reify (c2 x)))
 
 let test1 (#a:Type) 
@@ -151,19 +151,16 @@ let test3 (#a:Type)
 assume val div_exn : exn
 
 let div_wp (i j:int) = 
-  fun p -> forall x . (match x with
-                       | Inl x -> j <> 0 /\ x = i / j
-                       | Inr e -> j = 0) 
-                      ==> 
-                       p x
-
+  fun p q -> (forall x . j <> 0 /\ x = i / j ==> p x) /\
+             (forall e . j = 0 ==> q e)
+  
 let div (i j:int) 
   : EXN int (div_wp i j) =
   if j = 0 then raise div_exn else i / j
 
 let try_div (i j:int)
-  : EXN int (fun p -> forall x . Inl? x ==> p x) =
-  try_catch #_ #_ 
+  : EXN int (fun p q -> forall x . p x) =
+  try_catch #int #int 
             #(div_wp i j) (fun _ -> div i j) 
             #(fun _ -> wp_return 0) (fun _ -> 0) 
             #(wp_return) (fun x -> x)
