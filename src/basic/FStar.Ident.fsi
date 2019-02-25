@@ -17,6 +17,8 @@ type lid = lident
 
 val mk_ident            : (string * Range.range) -> ident
 val reserved_prefix     : string
+val reset_gensym        : unit -> unit
+val next_id             : unit -> int
 val gen                 : Range.range -> ident
 val id_of_text          : string -> ident
 

@@ -24,8 +24,15 @@ let mk_ident (text,range) = {idText=text; idRange=range}
 let reserved_prefix = "uu___"
 let _gen =
     let x = Util.mk_ref 0 in
-    fun r -> x := !x + 1; mk_ident (reserved_prefix ^ string_of_int !x, r)
-let gen r = _gen r // need this indirection for F#, ugh
+    let next_id () = let v = !x in x := v + 1; v in
+    let reset () = x := 0 in
+    next_id, reset
+
+let next_id () = fst _gen ()
+let reset_gensym () = snd _gen ()
+let gen r =
+    let i = next_id() in
+    mk_ident (reserved_prefix ^ string_of_int i, r)
 
 let range_of_id (id:ident) = id.idRange
 let id_of_text str = mk_ident(str, dummyRange)

@@ -343,14 +343,6 @@ type __internal_ocaml_attributes =
 
 (* Some supported attributes encoded using functions. *)
 
-(*
- * to be used in attributes
- * s is the altertive function that should be printed in the warning
- * it can be omitted if the use case has no such function
- *)
-irreducible
-let deprecated (s:string) : unit = ()
-
 irreducible
 let inline_let : unit = ()
 

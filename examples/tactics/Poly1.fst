@@ -15,7 +15,7 @@
 *)
 module Poly1
 
-open CanonCommSemiring
+open FStar.Tactics.CanonCommSemiring
 open FStar.Tactics
 open FStar.Mul
 

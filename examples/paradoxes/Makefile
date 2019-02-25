@@ -3,7 +3,11 @@ include ../Makefile.include
 
 all: uall
 
-uall: propext propImpredicative ioWpInconsistent
+uall: propext propImpredicative ioWpInconsistent injectiveTypeFormers
+
+injectiveTypeFormers:
+	$(FSTAR) InjectiveTypeFormers.Explicit.fst
+	$(FSTAR) InjectiveTypeFormers.SMT.fst
 
 propext:
 	$(FSTAR) PropositionalExtensionalityInconsistent.fst

@@ -279,18 +279,11 @@ function build_fstar() {
             } &
 
             {
-                VALEFLAGS="--MIN-TEST" make -C hacl-star -j $threads vale.build -k ||
-                    {
-                        echo "Error - min-test (Vale)"
-                        echo " - min-test (Vale)" >>$ORANGE_FILE
-                    }
-            } &
-
-            {
-                OTHERFLAGS='--warn_error -276 --use_hint_hashes' make -C hacl-star -j $threads $HACL_HOME/code/hash/Hacl.Hash.MD.fst.checked ||
+                OTHERFLAGS='--warn_error -276 --use_hint_hashes' \
+                NOOPENSSLCHECK=1 make -C hacl-star -j $threads min-test ||
                     {
                         echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
-                        echo " - Hacl.Hash.MD.fst.checked (HACL*)" >>$ORANGE_FILE
+                        echo " - min-test (HACL*)" >>$ORANGE_FILE
                     }
             } &
 

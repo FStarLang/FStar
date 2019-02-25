@@ -11,7 +11,7 @@
         "lemma_FStar.FunctionalExtensionality.idempotence_on_domain"
       ],
       0,
-      "87226ad591d9e3f66eef944f538f0092"
+      "3f599381c7df7f54418873ca67b12975"
     ],
     [
       "FStar.FunctionalExtensionality.on_dom_g",
@@ -23,7 +23,7 @@
         "lemma_FStar.FunctionalExtensionality.idempotence_on_domain_g"
       ],
       0,
-      "e9d1f15b94b595e2d41d49f5a56b3503"
+      "5d3028e3fbf440dbe44035247e12d4e8"
     ]
   ]
 ]

@@ -268,6 +268,14 @@ let is_arithmetic_primitive head args =
       || S.fv_eq_lid fv Const.op_Multiply
       || S.fv_eq_lid fv Const.op_Division
       || S.fv_eq_lid fv Const.op_Modulus
+      || S.fv_eq_lid fv Const.real_op_LT
+      || S.fv_eq_lid fv Const.real_op_LTE
+      || S.fv_eq_lid fv Const.real_op_GT
+      || S.fv_eq_lid fv Const.real_op_GTE
+      || S.fv_eq_lid fv Const.real_op_Addition
+      || S.fv_eq_lid fv Const.real_op_Subtraction
+      || S.fv_eq_lid fv Const.real_op_Multiply
+      || S.fv_eq_lid fv Const.real_op_Division
 
     | Tm_fvar fv, [_] ->
       S.fv_eq_lid fv Const.op_Minus
@@ -323,6 +331,7 @@ let rec encode_const c env =
     | Const_string(s, _) -> varops.string_const s, []
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
+    | Const_real r -> boxReal (mkReal r), []
     | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
 
 and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
@@ -369,45 +378,53 @@ and encode_arith_term env head args_e =
         | Tm_fvar fv -> fv
         | _ -> failwith "Impossible"
     in
-    let unary arg_tms =
-        Term.unboxInt (List.hd arg_tms)
+    let unary unbox arg_tms =
+        unbox (List.hd arg_tms)
     in
-    let binary arg_tms =
-        Term.unboxInt (List.hd arg_tms),
-        Term.unboxInt (List.hd (List.tl arg_tms))
+    let binary unbox arg_tms =
+        unbox (List.hd arg_tms),
+        unbox (List.hd (List.tl arg_tms))
     in
     let mk_default () =
         let fname, fuel_args, arity = lookup_free_var_sym env head_fv.fv_name in
         let args = fuel_args@arg_tms in
         maybe_curry_app head.pos fname arity args
     in
-    let mk_l : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
-      fun op mk_args ts ->
+    let mk_l : (term -> term) -> ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+      fun box op mk_args ts ->
           if Options.smtencoding_l_arith_native () then
-             op (mk_args ts) |> Term.boxInt
+             op (mk_args ts) |> box
           else mk_default ()
     in
-    let mk_nl nm op ts =
+    let mk_nl box unbox nm op ts =
       if Options.smtencoding_nl_arith_wrapped () then
-          let t1, t2 = binary ts in
-          Util.mkApp(nm, [t1;t2]) |> Term.boxInt
+          let t1, t2 = binary unbox ts in
+          Util.mkApp(nm, [t1;t2]) |> box
       else if Options.smtencoding_nl_arith_native () then
-          op (binary ts) |> Term.boxInt
+          op (binary unbox ts) |> box
       else mk_default ()
     in
-    let add     = mk_l Util.mkAdd binary in
-    let sub     = mk_l Util.mkSub binary in
-    let minus   = mk_l Util.mkMinus unary in
-    let mul     = mk_nl "_mul" Util.mkMul in
-    let div     = mk_nl "_div" Util.mkDiv in
-    let modulus = mk_nl "_mod" Util.mkMod in
+    let add box unbox = mk_l box Util.mkAdd (binary unbox)  in
+    let sub box unbox = mk_l box Util.mkSub (binary unbox) in
+    let minus box unbox = mk_l box Util.mkMinus (unary unbox) in
+    let mul box unbox nm = mk_nl box unbox nm Util.mkMul in
+    let div box unbox nm = mk_nl box unbox nm Util.mkDiv in
+    let modulus box unbox = mk_nl box unbox "_mod" Util.mkMod in
     let ops =
-        [(Const.op_Addition, add);
-         (Const.op_Subtraction, sub);
-         (Const.op_Multiply, mul);
-         (Const.op_Division, div);
-         (Const.op_Modulus, modulus);
-         (Const.op_Minus, minus)]
+        [(Const.op_Addition,    add Term.boxInt Term.unboxInt);
+         (Const.op_Subtraction, sub Term.boxInt Term.unboxInt);
+         (Const.op_Multiply,    mul Term.boxInt Term.unboxInt "_mul");
+         (Const.op_Division,    div Term.boxInt Term.unboxInt "_div");
+         (Const.op_Modulus,     modulus Term.boxInt Term.unboxInt);
+         (Const.op_Minus,       minus Term.boxInt Term.unboxInt);
+         (Const.real_op_Addition,    add Term.boxReal Term.unboxReal);
+         (Const.real_op_Subtraction, sub Term.boxReal Term.unboxReal);
+         (Const.real_op_Multiply,    mul Term.boxReal Term.unboxReal "_rmul");
+         (Const.real_op_Division,    mk_nl Term.boxReal Term.unboxReal "_rdiv" Util.mkRealDiv);
+         (Const.real_op_LT,          mk_l Term.boxBool Util.mkLT  (binary Term.unboxReal));
+         (Const.real_op_LTE,         mk_l Term.boxBool Util.mkLTE (binary Term.unboxReal));
+         (Const.real_op_GT,          mk_l Term.boxBool Util.mkGT  (binary Term.unboxReal));
+         (Const.real_op_GTE,         mk_l Term.boxBool Util.mkGTE (binary Term.unboxReal))]
     in
     let _, op =
         List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>

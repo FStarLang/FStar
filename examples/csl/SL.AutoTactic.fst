@@ -20,7 +20,7 @@ open FStar.Tactics
 module T = FStar.Tactics
 
 open FStar.Tactics.PatternMatching
-open CanonCommMonoid
+open FStar.Tactics.CanonCommMonoid
 open FStar.Reflection
 open FStar.List
 

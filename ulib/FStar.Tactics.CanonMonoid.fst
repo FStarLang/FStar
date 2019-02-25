@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module CanonMonoid
+module FStar.Tactics.CanonMonoid
 
 open FStar.Algebra.Monoid
 open FStar.List

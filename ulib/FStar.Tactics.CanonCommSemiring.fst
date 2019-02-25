@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module CanonCommSemiring
+module FStar.Tactics.CanonCommSemiring
 
 (*
 Commutative semiring (a ring with commutative multiplication and without an additive inverse)
@@ -35,7 +35,7 @@ open FStar.Tactics
 open FStar.Reflection
 open FStar.Classical
 open FStar.Algebra.CommMonoid
-module CCM = CanonCommMonoid
+module CCM = FStar.Tactics.CanonCommMonoid
 
 (* Only dump when debugging is on *)
 let ddump m = if debugging () then dump m
@@ -283,17 +283,17 @@ let canon_norm () : Tac unit =
       "FStar.Algebra.CommMonoid.int_plus_cm";
       "FStar.Algebra.CommMonoid.int_multiply_cm";
       "FStar.Algebra.CommMonoid.__proj__CM__item__mult";
-      "CanonCommSemiring.__proj__CR__item__cm_add";
-      "CanonCommSemiring.__proj__CR__item__cm_mult";
-      "CanonCommMonoid.canon";
-      "CanonCommMonoid.xsdenote";
-      "CanonCommMonoid.flatten";
-      "CanonCommMonoid.select";
-      "CanonCommMonoid.select_extra";
-      "CanonCommMonoid.const_last";
-      "CanonCommMonoid.const_compare";
-      "CanonCommMonoid.special_compare";
-      "CanonCommMonoid.sortWith_correct";
+      "FStar.Tactics.CanonCommSemiring.__proj__CR__item__cm_add";
+      "FStar.Tactics.CanonCommSemiring.__proj__CR__item__cm_mult";
+      "FStar.Tactics.CanonCommMonoid.canon";
+      "FStar.Tactics.CanonCommMonoid.xsdenote";
+      "FStar.Tactics.CanonCommMonoid.flatten";
+      "FStar.Tactics.CanonCommMonoid.select";
+      "FStar.Tactics.CanonCommMonoid.select_extra";
+      "FStar.Tactics.CanonCommMonoid.const_last";
+      "FStar.Tactics.CanonCommMonoid.const_compare";
+      "FStar.Tactics.CanonCommMonoid.special_compare";
+      "FStar.Tactics.CanonCommMonoid.sortWith_correct";
       "FStar.List.Tot.Base.assoc";
       "FStar.Pervasives.Native.fst";
       "FStar.Pervasives.Native.snd";

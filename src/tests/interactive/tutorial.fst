@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module Tutorial
+open FStar.String
 open FStar.ST
 open FStar.All
 //safe-read-write

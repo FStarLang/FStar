@@ -69,6 +69,8 @@
     <Compile Include="mul-fake.fs" />
     <Compile Include="fs/char.fsi" />
     <Compile Include="fs/char.fs" />
+    <Compile Include="boot/FStar.BigInt.fsi" />
+    <Compile Include="boot/NotFStar.BigInt.fs" />
     <Compile Include="boot/FStar.String.fsi" />
     <Compile Include="boot/FStar.String.fs" />
     <Compile Include="boot/FStar.List.fsi" />
@@ -79,8 +81,6 @@
     <Compile Include="boot/NotFStar.Compiler.Bytes.fs" />
     <Compile Include="boot/FStar.Dyn.fsi" />
     <Compile Include="boot/NotFStar.Dyn.fs" />
-    <Compile Include="boot/FStar.BigInt.fsi" />
-    <Compile Include="boot/NotFStar.BigInt.fs" />
     <Compile Include="profiling.fs" />
     <Compile Include="FStar.Platform.fsi" />
     <Compile Include="NotFStar.Platform.fs" />

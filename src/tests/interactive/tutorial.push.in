@@ -1,4 +1,4 @@
-{"query-id":"1","query":"push","args":{"kind":"full","code":"module Tutorial\nopen FStar.All\n//safe-read-write\n","line":1,"column":0}}
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module Tutorial\nopen FStar.String open FStar.All\n//safe-read-write\n","line":1,"column":0}}
 {"query-id":"2","query":"push","args":{"kind":"full","code":"\ntype filename = string\n","line":4,"column":0}}
 {"query-id":"3","query":"push","args":{"kind":"full","code":"\n(* canWrite is a function specifying whether or not a file f can be written *)\nlet canWrite (f:filename) =\n  match f with\n    | \"demo/tempfile\" -> true\n    | _ -> false\n","line":6,"column":0}}
 {"query-id":"4","query":"push","args":{"kind":"full","code":"\n(* canRead is also a function ... *)\nlet canRead (f:filename) =\n  canWrite f               (* writeable files are also readable *)\n  || f=\"demo/README\"       (* and so is this file *)\n","line":12,"column":0}}
