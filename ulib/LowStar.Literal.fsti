@@ -114,6 +114,7 @@ let buf_len_of_literal (s: string):
     (ensures (fun h0 r h1 ->
       let b, l = r in
       buffer_of_literal_post s h0 b h1 /\
+      UInt32.v l = normalize_term (List.Tot.length (String.list_of_string s)) /\
       UInt32.v l = IB.length b))
 =
   [@inline_let]
