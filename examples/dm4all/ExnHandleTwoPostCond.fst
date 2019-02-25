@@ -148,7 +148,7 @@ let test3 (#a:Type)
         : EXN b (h_wp e) =
   try_catch #_ #_ #(wp_raise e) (fun _ -> raise e) #h_wp h_c #wp2 c2
 
-assume val div_exn : exn
+assume val div_by_zero_exn : exn
 
 let div_wp (i j:int) = 
   fun p q -> (forall x . j <> 0 /\ x = i / j ==> p x) /\
@@ -156,11 +156,11 @@ let div_wp (i j:int) =
   
 let div (i j:int) 
   : EXN int (div_wp i j) =
-  if j = 0 then raise div_exn else i / j
+  if j = 0 then raise div_by_zero_exn else i / j
 
 let try_div (i j:int)
   : EXN int (fun p q -> forall x . p x) =
-  try_catch #int #int 
+  try_catch #_ #_ 
             #(div_wp i j) (fun _ -> div i j) 
             #(fun _ -> wp_return 0) (fun _ -> 0) 
             #(wp_return) (fun x -> x)
