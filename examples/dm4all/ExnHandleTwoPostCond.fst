@@ -29,7 +29,7 @@ total
 reifiable
 reflectable
 new_effect {
-  EXN : a:Type -> Effect
+  EXC : a:Type -> Effect
   with
        repr      = repr
      ; return    = return
@@ -42,8 +42,8 @@ new_effect {
      ; interp    = interp
 }
 
-val raise : #a:Type0 -> e:exn -> EXN a (fun p q -> q e)
-let raise #a e = EXN?.reflect (Inr e)
+val raise : #a:Type0 -> e:exn -> EXC a (fun p q -> q e)
+let raise #a e = EXC?.reflect (Inr e)
 
 (* The algebra extension operation is inlined for better readability *)
 
@@ -76,10 +76,10 @@ let wp_try_catch (#a:Type)
   fun p q -> wp1 (fun x -> wp2 x p q) (fun e -> h_wp e p q)
 
 let related #a (r : repr a) (wp : wp_type a) =
-  EXN?.stronger _ wp (interp _ r)
+  EXC?.stronger _ wp (interp _ r)
 
 (* We should get this from the framework FIXME *)
-assume val reify_related (#a #b:Type) (wp:_) (c : (x:a -> EXN b (wp x))) :
+assume val reify_related (#a #b:Type) (wp:_) (c : (x:a -> EXC b (wp x))) :
                          Lemma (forall (x:a). related (reify (c x)) (wp x))
 
 let lemma_try_catch (#a:Type) 
@@ -107,45 +107,45 @@ let lemma_try_catch (#a:Type)
 let try_catch (#a:Type) 
               (#b:Type) 
               (#wp1:wp_type a) 
-              (c1:unit -> EXN a wp1)
+              (c1:unit -> EXC a wp1)
               (#h_wp:exn -> wp_type b) 
-              (h_c:(e:exn -> EXN b (h_wp e)))
+              (h_c:(e:exn -> EXC b (h_wp e)))
               (#wp2:a -> wp_type b) 
-              (c2:(x:a -> EXN b (wp2 x))) 
-            : EXN b (wp_try_catch wp1 h_wp wp2) =
+              (c2:(x:a -> EXC b (wp2 x))) 
+            : EXC b (wp_try_catch wp1 h_wp wp2) =
   reify_related (fun _ -> wp1) c1;
   reify_related wp2 c2;
   reify_related h_wp h_c;
   lemma_try_catch #a #b wp1 (reify (c1 ())) h_wp (fun e -> reify (h_c e)) wp2 (fun x -> reify (c2 x));
-  EXN?.reflect (rep_try_catch (reify (c1 ())) (fun e -> reify (h_c e)) (fun x -> reify (c2 x)))
+  EXC?.reflect (rep_try_catch (reify (c1 ())) (fun e -> reify (h_c e)) (fun x -> reify (c2 x)))
 
 let test1 (#a:Type) 
           (#b:Type) 
           (#wp1:wp_type a) 
-          (c1:unit -> EXN a wp1)
+          (c1:unit -> EXC a wp1)
           (#wp2:a -> wp_type b) 
-          (c2:(x:a -> EXN b (wp2 x))) 
-        : EXN b (wp_bind wp1 wp2) =
+          (c2:(x:a -> EXC b (wp2 x))) 
+        : EXC b (wp_bind wp1 wp2) =
   try_catch #_ #_ #wp1 c1 #(fun e -> wp_raise e) (fun e -> raise e) #wp2 c2
 
 let test2 (#a:Type) 
           (#b:Type) 
           (v:a)
           (#h_wp:exn -> wp_type b) 
-          (h_c:(e:exn -> EXN b (h_wp e)))
+          (h_c:(e:exn -> EXC b (h_wp e)))
           (#wp2:a -> wp_type b) 
-          (c2:(x:a -> EXN b (wp2 x))) 
-        : EXN b (wp2 v) = 
+          (c2:(x:a -> EXC b (wp2 x))) 
+        : EXC b (wp2 v) = 
   try_catch #_ #_ #(wp_return v) (fun _ -> v) #h_wp h_c #wp2 c2
 
 let test3 (#a:Type) 
           (#b:Type) 
           (e:exn)
           (#h_wp:exn -> wp_type b) 
-          (h_c:(e:exn -> EXN b (h_wp e)))
+          (h_c:(e:exn -> EXC b (h_wp e)))
           (#wp2:a -> wp_type b) 
-          (c2:(x:a -> EXN b (wp2 x)))
-        : EXN b (h_wp e) =
+          (c2:(x:a -> EXC b (wp2 x)))
+        : EXC b (h_wp e) =
   try_catch #_ #_ #(wp_raise e) (fun _ -> raise e) #h_wp h_c #wp2 c2
 
 assume val div_by_zero_exn : exn
@@ -155,11 +155,11 @@ let div_wp (i j:int) =
              (forall e . j = 0 ==> q e)
   
 let div (i j:int) 
-  : EXN int (div_wp i j) =
+  : EXC int (div_wp i j) =
   if j = 0 then raise div_by_zero_exn else i / j
 
 let try_div (i j:int)
-  : EXN int (fun p q -> forall x . p x) =
+  : EXC int (fun p q -> forall x . p x) =
   try_catch #_ #_ 
             #(div_wp i j) (fun _ -> div i j) 
             #(fun _ -> wp_return 0) (fun _ -> 0) 
