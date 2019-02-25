@@ -19,7 +19,7 @@ module FStar.SMTEncoding.Term
 open FStar.ST
 open FStar.All
 open Prims
-    open FStar
+open FStar
 open FStar.Syntax.Syntax
 open FStar.Syntax
 open FStar.Util
@@ -51,6 +51,7 @@ type op =
   | Add
   | Sub
   | Div
+  | RealDiv
   | Mul
   | Minus
   | Mod
@@ -77,6 +78,7 @@ type qop =
 
 type term' =
   | Integer    of string
+  | Real       of string
   | BoundV     of int
   | FreeV      of fv
   | App        of op  * list<term>
@@ -127,7 +129,56 @@ type decl =
   | SetOption  of string * string
   | GetStatistics
   | GetReasonUnknown
-type decls_t = list<decl>
+
+(*
+ * AR: decls_elt captures a block of "related" decls
+ *     For example, for a Tm_refine_<MD5> symbol,
+ *       decls_elt will have its DeclFun, typing axioms,
+ *       hasEq axiom, interpretation, etc.
+ *
+ *     This allows the encoding of a module to be "stateless"
+ *       in terms of hashconsing -- the encoding may contain
+ *       duplicate such blocks
+ *
+ *     Deduplication happens when giving the decls to Z3
+ *       at which point, if the key below -- which is the MD5 string --
+ *       matches, the whole block is dropped (see Encode.fs.recover_caching_and_update_env)
+ *
+ *     Alternative way would have been to do some smt name matching
+ *       but that would be sensitive to name strings and hence brittle
+ *
+ *     Before the declarations are given to Z3, the remaining decls_elt
+ *       left after deduplication are just "flattened" (using decls_list_of)
+ *
+ *     sym_name and key are options for cases when we don't care about hashconsing
+ *)
+type decls_elt = {
+  sym_name:   option<string>;  //name of the main synbol, e.g. Tm_refine_<MD5>
+  key:        option<string>;  //the MD5 string
+  decls:      list<decl>;      //list of decls, e.g. typing axioms, hasEq, for a Tm_refine
+  a_names:    list<string>;    //assumption names that must be kept IF this entry has a cache hit
+                               //--used to not filter them when using_facts_from
+}
+
+type decls_t = list<decls_elt>
+
+(*
+ * AR: sym_name -> md5 -> auxiliary decls -> decls
+ *     the auxilkiary decls are those that are not directly related to
+ *       the symbol itself, but must be retained in case of cache hits
+ *       for example, decls for argument types in the case of a Tm_arrow
+ *)
+val mk_decls: string -> string -> list<decl> -> list<decls_elt> -> decls_t
+
+(*
+ * AR: for when we don't hashcons the decls
+ *)
+val mk_decls_trivial: list<decl> -> decls_t
+
+(*
+ * Flatten the decls_t
+ *)
+val decls_list_of: decls_t -> list<decl>
 
 type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
@@ -141,6 +192,7 @@ val hash_of_term: term -> string
 val boxIntFun : string * string
 val boxBoolFun : string * string
 val boxStringFun : string * string
+val boxRealFun: string * string
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val free_variables: term -> fvs
@@ -148,6 +200,8 @@ val mkTrue :  (Range.range -> term)
 val mkFalse : (Range.range -> term)
 val mkInteger : string -> Range.range -> term
 val mkInteger': int -> Range.range -> term
+val mkReal: string -> Range.range -> term
+val mkRealOfInt: term -> Range.range -> term
 val mkBoundV : int -> Range.range -> term
 val mkFreeV  : fv -> Range.range -> term
 val mkApp' : (op * list<term>) -> Range.range -> term
@@ -166,6 +220,7 @@ val mkGTE:   ((term * term) -> Range.range -> term)
 val mkAdd:   ((term * term) -> Range.range -> term)
 val mkSub:   ((term * term) -> Range.range -> term)
 val mkDiv:   ((term * term) -> Range.range -> term)
+val mkRealDiv:   ((term * term) -> Range.range -> term)
 val mkMul:   ((term * term) -> Range.range -> term)
 val mkMod:   ((term * term) -> Range.range -> term)
 val mkNatToBv : (int -> term -> Range.range -> term)
@@ -194,11 +249,10 @@ val mkLet: (list<term> * term) -> Range.range -> term
 val mkLet': (list<(fv * term)> * term) -> Range.range -> term
 
 val fresh_token: (string * sort) -> int -> decl
-val injective_constructor : Range.range -> (string * list<constructor_field> * sort) -> decls_t
 val fresh_constructor : Range.range -> (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
-val constructor_to_decl: Range.range -> constructor_t -> decls_t
-val mkBvConstructor: int -> decls_t
+val constructor_to_decl: Range.range -> constructor_t -> list<decl>
+val mkBvConstructor: int -> list<decl>
 val declToSmt: string -> decl -> string
 val declToSmt_no_caps: string -> decl -> string
 
@@ -213,6 +267,8 @@ val boxBool:     term -> term
 val unboxBool:   term -> term
 val boxString:   term -> term
 val unboxString: term -> term
+val boxReal:      term -> term
+val unboxReal:    term -> term
 val boxBitVec:   int -> term -> term
 val unboxBitVec: int -> term -> term
 

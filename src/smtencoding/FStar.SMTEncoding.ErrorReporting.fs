@@ -110,7 +110,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                 (q:term) //the term being instrumented
      =  match q.tm with
         | BoundV _
-        | Integer _ ->
+        | Integer _
+        | Real _ ->
           labels, q
 
         | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only
@@ -125,9 +126,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           begin try
               begin match arg.tm with
                 | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) ->
-                  let post_name = "^^post_condition_"^ (BU.string_of_int <| Syntax.Syntax.next_id ()) in
+                  let post_name = "^^post_condition_"^ (BU.string_of_int <| Ident.next_id ()) in
                   let names = mk_fv (post_name, post)
-                              ::List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Syntax.Syntax.next_id()), s)) sorts in
+                              ::List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Ident.next_id()), s)) sorts in
                   let instantiation = List.map mkFreeV names in
                   let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
 
@@ -180,9 +181,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Quant(Forall, [], None, sorts, {tm=App(Imp, [lhs;rhs]); rng=rng})
             when is_a_named_continuation lhs ->
           let sorts', post = BU.prefix sorts in
-          let new_post_name = "^^post_condition_"^ (BU.string_of_int <| Syntax.Syntax.next_id ()) in
+          let new_post_name = "^^post_condition_"^ (BU.string_of_int <| Ident.next_id ()) in
           //printfn "Got a named continuation with post-condition %s" new_post_name;
-          let names = List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Syntax.Syntax.next_id()), s)) sorts'
+          let names = List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Ident.next_id()), s)) sorts'
                              @ [mk_fv (new_post_name, post)] in
           let instantiation = List.map mkFreeV names in
           let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
@@ -254,6 +255,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           let lab, q = fresh_label default_msg ropt q.rng q in
           lab::labels, q
 
+        | App(RealDiv, _)
         | App(Add, _)
         | App(Sub, _)
         | App(Div, _)
@@ -303,7 +305,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 let detail_errors hint_replay
                   env
                  (all_labels:labels)
-                 (askZ3:decls_t -> Z3.z3result)
+                 (askZ3:list<decl> -> Z3.z3result)
     : unit =
 
     let print_banner () =

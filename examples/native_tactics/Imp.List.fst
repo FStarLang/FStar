@@ -222,7 +222,7 @@ let x_times_42 x : prog = [
 // //--------------------------------------------------------------------------------
 
 // // open FStar.Tactics
-// // open CanonCommSemiring
+// // open FStar.Tactics.CanonCommSemiring
 // // open FStar.Algebra.CommMonoid
 
 // // [@expect_failure]

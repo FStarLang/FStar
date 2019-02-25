@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.String
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -56,10 +57,19 @@ let mk_int    : int -> option_val = Int
 let mk_list   : list<option_val> -> option_val = List
 
 type options =
-    | Set
-    | Reset
-    | Restore
+  | Set
+  | Reset
+  | Restore
 
+type error_flag =
+  | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
+  | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
+                    //the compiler can progress after reporting them
+  | CError          //CError: these are reported as errors using log_issue
+                    //        but they can be turned into warnings or silenced
+  | CWarning        //CWarning: reported using log_issue as warnings by default;
+                    //          then can be silenced or escalated to errors
+  | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
 
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
@@ -91,7 +101,7 @@ let as_comma_string_list = function
   | _ -> failwith "Impos: expected String (comma list)"
 
 type optionstate = Util.smap<option_val>
-
+let copy_optionstate m = Util.smap_copy m
 
 (* The option state is a stack of stacks. Why? First, we need to
  * support #push-options and #pop-options, which provide the user with
@@ -121,14 +131,15 @@ type optionstate = Util.smap<option_val>
  *)
 let fstar_options : ref<list<list<optionstate>>> = Util.mk_ref []
 
-let peek () = List.hd (List.hd !fstar_options)
+let internal_peek () = List.hd (List.hd !fstar_options)
+let peek () = internal_peek()
 let pop  () = // already signal-atomic
     match !fstar_options with
     | []
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
 let push () = // already signal-atomic
-    fstar_options := List.map Util.smap_copy (List.hd !fstar_options) :: !fstar_options
+    fstar_options := List.map copy_optionstate (List.hd !fstar_options) :: !fstar_options
 
 let internal_pop () =
     let curstack = List.hd !fstar_options in
@@ -139,7 +150,7 @@ let internal_pop () =
 
 let internal_push () =
     let curstack = List.hd !fstar_options in
-    let stack' = Util.smap_copy (List.hd curstack) :: curstack in
+    let stack' = copy_optionstate (List.hd curstack) :: curstack in
     fstar_options := stack' :: List.tl !fstar_options
 
 let set o =
@@ -197,7 +208,7 @@ let defaults =
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
       ("profile"                      , Bool false);
-      ("protect_top_level_axioms"     , Bool false);
+      ("protect_top_level_axioms"     , Bool true);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("keep_query_captions"          , Bool true);
@@ -269,6 +280,24 @@ let defaults =
       ("warn_error"                   , String "");
       ("use_extracted_interfaces"     , Bool false);
       ("use_nbe"                      , Bool false)]
+
+let parse_warn_error_set_get =
+    let r = Util.mk_ref None in
+    let set (f:(string -> list<error_flag>)) =
+        match !r with
+        | None -> r := Some f
+        | _ -> failwith "Multiple initialization of FStar.Options"
+    in
+    let get () =
+        match !r with
+        | Some f -> f
+        | None ->
+          failwith "FStar.Options is improperly initialized"
+    in
+    set, get
+
+let initialize_parse_warn_error f = fst (parse_warn_error_set_get) f
+let parse_warn_error s = snd (parse_warn_error_set_get) () s
 
 let init () =
    let o = peek () in
@@ -751,7 +780,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "protect_top_level_axioms",
         BoolStr,
-        "Guard nullary top-level symbols in the SMT encoding from provide ambient ground facts (default 'false')");
+        "Guard nullary top-level symbols in the SMT encoding from provide ambient ground facts (default 'true')");
 
        ( noshort,
         "initial_fuel",
@@ -1612,3 +1641,14 @@ let should_be_already_cached m =
   | None -> false
   | Some already_cached_setting ->
     module_matches_namespace_filter m already_cached_setting
+
+let error_flags =
+    let cache : Util.smap<list<error_flag>> = Util.smap_create 10 in
+    fun () ->
+        let we = warn_error() in
+        match Util.smap_try_find cache we with
+        | None ->
+          let r = parse_warn_error we in
+          Util.smap_add cache we r;
+          r
+        | Some r -> r

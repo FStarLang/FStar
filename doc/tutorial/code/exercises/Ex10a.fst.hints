@@ -9,10 +9,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Readable",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
+        "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "2648f76e7619cc7ab1d85b01eab8e66a"
+      "caf90a88e5f3de4b08c820836c3ed7f9"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -22,10 +22,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Writable",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
+        "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "4f2aa0c76c29339ab5541f4131ba6004"
+      "3f93f712fd4aae8df512f2745223e5a2"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "c9825d3d2c60eba9acf76b3923293e07"
+      "e9dd56bbc982ff7a9a88a822c10e0368"
     ],
     [
       "Ex10a.safe_delete",
@@ -54,12 +54,12 @@
         "equation_FStar.Monotonic.Heap.modifies_t",
         "equation_FStar.ST.modifies_none", "equation_Prims.eqtype",
         "function_token_typing_Prims.unit",
-        "refinement_interpretation_Ex10a_Tm_refine_c0bbd352d24513b8adaab74dd888e42a",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_c0bbd352d24513b8adaab74dd888e42a",
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "f5aa0aed9194995bd14f5c52c0e33ec0"
+      "6072d123dfe9f289961bac9f835bd1bf"
     ],
     [
       "Ex10a.test_acls",
@@ -83,7 +83,7 @@
         "equation_Ex10a.db",
         "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.result",
-        "interpretation_Ex10a_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e",
+        "interpretation_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e",
         "kinding_Ex10a.entry@tok", "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -91,10 +91,10 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "typing_Ex10a_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e", "unit_typing"
+        "typing_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e", "unit_typing"
       ],
       0,
-      "8e85b2cc00f76d3422580cddf619d964"
+      "9fd174133a265862f4c3fb363b71914d"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -104,10 +104,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Readable",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
+        "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "265a6071ff40e1ccd4d5843a3e385817"
+      "b02440a8f76645a9e2c4d8b2685c9d1d"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -117,10 +117,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Writable",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
+        "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "7c56a2122c7a219957b730230e0adb36"
+      "c6252d14729c2d8ca421ecd9f4bcb22c"
     ],
     [
       "Ex10a.canRead",
@@ -133,7 +133,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "296aebf1f09e1e3e08c31906c62118d2"
+      "93f4f6d1abccccd5695ff85be8283f8c"
     ],
     [
       "Ex10a.revoke",
@@ -146,7 +146,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "0129ed6bc180e6b726dc2aebcc3e2d18"
+      "8397fd91d5a79aa8d5135eaad45c232d"
     ]
   ]
 ]

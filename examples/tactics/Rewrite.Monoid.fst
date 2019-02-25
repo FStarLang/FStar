@@ -18,7 +18,7 @@ open FStar.Algebra.Monoid
 open FStar.List
 open FStar.Tactics
 open FStar.Reflection
-open CanonMonoid
+open FStar.Tactics.CanonMonoid
 
 
 let is_reifiable (m_mult:term) (m_unit:term) (me:term) : Tac bool =

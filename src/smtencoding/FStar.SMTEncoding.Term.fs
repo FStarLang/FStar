@@ -67,6 +67,7 @@ type op =
   | Add
   | Sub
   | Div
+  | RealDiv //Note: whereas the other arithmetic operators are overloaded between Int and Real in Z3; Div and RealDiv are not
   | Mul
   | Minus
   | Mod
@@ -100,6 +101,7 @@ type qop =
 //de Bruijn representation of terms in locally nameless style
 type term' =
   | Integer    of string //unbounded mathematical integers
+  | Real       of string //real numbers
   | BoundV     of int
   | FreeV      of fv
   | App        of op  * list<term> //ops are always fully applied; we're in a first-order theory
@@ -220,7 +222,44 @@ type decl =
   | SetOption  of string * string
   | GetStatistics
   | GetReasonUnknown
-type decls_t = list<decl>
+
+(*
+ * See Term.fsi for an explanation of this type
+ *)
+type decls_elt = {
+  sym_name:   option<string>;
+  key:        option<string>;
+  decls:      list<decl>;
+  a_names:    list<string>;
+}
+
+type decls_t = list<decls_elt>
+
+let mk_decls name key decls aux_decls = [{
+  sym_name    = Some name;
+  key         = Some key;
+  decls       = decls;
+  a_names     =  //AR: collect the names of aux_decls and decls to be retained in case of a cache hit
+    let sm = BU.smap_create 20 in
+    List.iter (fun elt -> 
+      List.iter (fun s -> BU.smap_add sm s "0") elt.a_names
+    ) aux_decls;
+    List.iter (fun d -> match d with
+                        | Assume a -> BU.smap_add sm (a.assumption_name) "0"
+                        | _ -> ()) decls;
+    BU.smap_keys sm
+}]
+
+let mk_decls_trivial decls = [{
+  sym_name = None;
+  key = None;
+  decls = decls;
+  a_names = List.collect (function
+              | Assume a -> [a.assumption_name]
+              | _ -> []) decls;
+}]
+
+let decls_list_of l = l |> List.collect (fun elt -> elt.decls) 
 
 type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
@@ -241,6 +280,7 @@ let fv_of_term = function
     | _ -> failwith "impossible"
 let rec freevars t = match t.tm with
   | Integer _
+  | Real _
   | BoundV _ -> []
   | FreeV fv -> [fv]
   | App(_, tms) -> List.collect freevars tms
@@ -280,6 +320,7 @@ let op_to_string = function
   | Add -> "+"
   | Sub -> "-"
   | Div -> "div"
+  | RealDiv -> "/"
   | Mul -> "*"
   | Minus -> "-"
   | Mod  -> "mod"
@@ -306,6 +347,7 @@ let weightToSmt = function
 
 let rec hash_of_term' t = match t with
   | Integer i ->  i
+  | Real r -> r
   | BoundV i  -> "@"^string_of_int i
   | FreeV x   -> fv_name x ^ ":" ^ strSort (fv_sort x) //Question: Why is the sort part of the hash?
   | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
@@ -332,6 +374,7 @@ let boxIntFun        = mkBoxFunctions "BoxInt"
 let boxBoolFun       = mkBoxFunctions "BoxBool"
 let boxStringFun     = mkBoxFunctions "BoxString"
 let boxBitVecFun sz  = mkBoxFunctions ("BoxBitVec" ^ (string_of_int sz))
+let boxRealFun       = mkBoxFunctions "BoxReal"
 
 // Assume the Box/Unbox functions to be injective
 let isInjective s =
@@ -345,6 +388,7 @@ let mkTrue  r       = mk (App(TrueOp, [])) r
 let mkFalse r       = mk (App(FalseOp, [])) r
 let mkInteger i  r  = mk (Integer (ensure_decimal i)) r
 let mkInteger' i r  = mkInteger (string_of_int i) r
+let mkReal i r      = mk (Real i) r
 let mkBoundV i r    = mk (BoundV i) r
 let mkFreeV x r     = mk (FreeV x) r
 let mkApp' f r      = mk (App f) r
@@ -406,8 +450,10 @@ let mkGTE = mk_bin_op GTE
 let mkAdd = mk_bin_op Add
 let mkSub = mk_bin_op Sub
 let mkDiv = mk_bin_op Div
+let mkRealDiv = mk_bin_op RealDiv
 let mkMul = mk_bin_op Mul
 let mkMod = mk_bin_op Mod
+let mkRealOfInt t r = mkApp ("to_real", [t]) r
 let mkITE (t1, t2, t3) r =
   match t1.tm with
   | App(TrueOp, _) -> t2
@@ -428,6 +474,7 @@ let check_pattern_ok (t:term) : option<term> =
     let rec aux t =
         match t.tm with
         | Integer _
+        | Real _
         | BoundV _
         | FreeV _ -> None
         | Let(tms, tm) ->
@@ -451,6 +498,7 @@ let check_pattern_ok (t:term) : option<term> =
                 | Add
                 | Sub
                 | Div
+                | RealDiv
                 | Mul
                 | Minus
                 | Mod -> true
@@ -489,6 +537,7 @@ let check_pattern_ok (t:term) : option<term> =
  let rec print_smt_term (t:term) :string =
   match t.tm with
   | Integer n               -> BU.format1 "(Integer %s)" n
+  | Real r                  -> BU.format1 "(Real %s)" r
   | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
   | FreeV  fv               -> BU.format1 "(FreeV %s)" (fv_name fv)
   | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
@@ -540,6 +589,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
     | _ ->
       begin match t.tm with
         | Integer _
+        | Real _
         | BoundV _ -> t
         | FreeV x ->
           begin match index_of x with
@@ -564,6 +614,7 @@ let inst tms t =
   let n = List.length tms in //instantiate the first n BoundV's with tms, in order
   let rec aux shift t = match t.tm with
     | Integer _
+    | Real _
     | FreeV _ -> t
     | BoundV i ->
       if 0 <= i - shift && i - shift < n
@@ -628,7 +679,9 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
   } in
   Assume a
 
-let injective_constructor rng (name, fields, sort) =
+let injective_constructor
+  (rng:Range.range)
+  ((name, fields, sort):(string * list<constructor_field> * sort)) :list<decl> =
     let n_bvars = List.length fields in
     let bvar_name i = "x_" ^ string_of_int i in
     let bvar_index i = n_bvars - (i + 1) in
@@ -731,7 +784,8 @@ let termToSmt
       let rec aux' depth n (names:list<fv>) t =
         let aux = aux (depth + 1) in
         match t.tm with
-        | Integer i     -> i
+        | Integer i -> i
+        | Real r -> r
         | BoundV i ->
           List.nth names i |> fv_name
         | FreeV x when fv_force x -> "(" ^ fv_name x ^ " Dummy_value)" //force a thunked name
@@ -921,7 +975,11 @@ and mkPrelude z3options =
                 (declare-fun __uu__PartialApp () Term)\n\
                 (assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n\
                 (assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n\
-                (assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))"
+                (assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n\
+                (declare-fun _rmul (Real Real) Real)\n\
+                (declare-fun _rdiv (Real Real) Real)\n\
+                (assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n\
+                (assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))"
    in
    let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);
@@ -930,8 +988,10 @@ and mkPrelude z3options =
                                  (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
                                  (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
                                  (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
+                                 (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true);
                                  ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true); ("LexCons_2", Term_sort, true)], Term_sort, 11, true)] in
-   let bcons = constrs |> List.collect (constructor_to_decl norng) |> List.map (declToSmt z3options) |> String.concat "\n" in
+   let bcons = constrs |> List.collect (constructor_to_decl norng)
+                       |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
                                    (is-LexCons t))\n\
                        (declare-fun Prims.lex_t () Term)\n\
@@ -983,6 +1043,8 @@ let boxBool t     = maybe_elim_box (fst boxBoolFun) (snd boxBoolFun) t
 let unboxBool t   = maybe_elim_box (snd boxBoolFun) (fst boxBoolFun) t
 let boxString t   = maybe_elim_box (fst boxStringFun) (snd boxStringFun) t
 let unboxString t = maybe_elim_box (snd boxStringFun) (fst boxStringFun) t
+let boxReal t     = maybe_elim_box (fst boxRealFun) (snd boxRealFun) t
+let unboxReal t   = maybe_elim_box (snd boxRealFun) (fst boxRealFun) t
 let boxBitVec (sz:int) t =
     elim_box true (fst (boxBitVecFun sz)) (snd (boxBitVecFun sz)) t
 let unboxBitVec (sz:int) t =
@@ -992,12 +1054,14 @@ let boxTerm sort t = match sort with
   | Bool_sort -> boxBool t
   | String_sort -> boxString t
   | BitVec_sort sz -> boxBitVec sz t
+  | Sort "Real" -> boxReal t
   | _ -> raise Impos
 let unboxTerm sort t = match sort with
   | Int_sort -> unboxInt t
   | Bool_sort -> unboxBool t
   | String_sort -> unboxString t
   | BitVec_sort sz -> unboxBitVec sz t
+  | Sort "Real" -> unboxReal t
   | _ -> raise Impos
 
 let getBoxedInteger (t:term) =

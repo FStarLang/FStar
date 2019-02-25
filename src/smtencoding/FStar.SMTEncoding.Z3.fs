@@ -548,7 +548,7 @@ let refresh () =
         (!bg_z3_proc).refresh();
     bg_scope := flatten_fresh_scope ()
 
-let context_profile (theory:decls_t) =
+let context_profile (theory:list<decl>) =
     let modules, total_decls =
         List.fold_left (fun (out, _total) d ->
             match d with
@@ -647,10 +647,10 @@ let cache_hit
 
 let ask_1_core
     (r:Range.range)
-    (filter_theory:decls_t -> decls_t * bool)
+    (filter_theory:list<decl> -> list<decl> * bool)
     (cache:option<string>)
     (label_messages:error_labels)
-    (qry:decls_t)
+    (qry:list<decl>)
     (cb:cb)
     (fresh:bool)
   = let theory =
@@ -668,10 +668,10 @@ let ask_1_core
 
 let ask_n_cores
     (r:Range.range)
-    (filter_theory:decls_t -> decls_t * bool)
+    (filter_theory:list<decl> -> list<decl> * bool)
     (cache:option<string>)
     (label_messages:error_labels)
-    (qry:decls_t)
+    (qry:list<decl>)
     (scope:option<scope_t>)
     (cb:cb)
   = let theory = List.flatten (match scope with
@@ -686,10 +686,10 @@ let ask_n_cores
 
 let ask
     (r:Range.range)
-    (filter:decls_t -> decls_t * bool)
+    (filter:list<decl> -> list<decl> * bool)
     (cache:option<string>)
     (label_messages:error_labels)
-    (qry:decls_t)
+    (qry:list<decl>)
     (scope:option<scope_t>)
     (cb:cb)
     (fresh:bool)

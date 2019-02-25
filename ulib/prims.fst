@@ -314,8 +314,17 @@ type exn : Type0
 assume new
 type array : Type -> Type0
 
-assume
-val strcat : string -> string -> Tot string
+
+(*
+ * to be used in attributes
+ * s is the altertive function that should be printed in the warning
+ * it can be omitted if the use case has no such function
+ *)
+irreducible
+let deprecated (s:string) : unit = ()
+
+assume val strcat : string -> string -> Tot string
+inline_for_extraction unfold let (^) s1 s2 = strcat s1 s2
 
 type list (a:Type) =
   | Nil  : list a
@@ -439,4 +448,4 @@ let labeled (r:range) (msg:string) (b:Type) :Type = b
    Incrementing this forces all .checked files to be invalidated *)
 private
 abstract
-let __cache_version_number__ = 7
+let __cache_version_number__ = 8

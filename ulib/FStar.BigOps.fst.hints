@@ -13,10 +13,10 @@
         "data_typing_intro_Prims.Nil@tok", "equation_FStar.BigOps.map_op_",
         "equation_with_fuel_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
         "projection_inverse_Prims.Nil_a",
-        "typing_FStar.BigOps_Tm_abs_18f611049baa5958dd71971dc9839fee"
+        "typing_Tm_abs_18f611049baa5958dd71971dc9839fee"
       ],
       0,
-      "cfdb1e4070c38edc828b583801e00721"
+      "e788131f155be2f33e89763bbf3f35dd"
     ],
     [
       "FStar.BigOps.map_op'_cons",
@@ -30,14 +30,14 @@
         "@query", "constructor_distinct_Prims.Cons",
         "data_typing_intro_Prims.Cons@tok", "equation_FStar.BigOps.map_op_",
         "equation_with_fuel_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
-        "interpretation_FStar.BigOps_Tm_abs_18f611049baa5958dd71971dc9839fee",
+        "interpretation_Tm_abs_18f611049baa5958dd71971dc9839fee",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "typing_FStar.BigOps_Tm_abs_18f611049baa5958dd71971dc9839fee"
+        "typing_Tm_abs_18f611049baa5958dd71971dc9839fee"
       ],
       0,
-      "a8a98f5f925fcfc4bb41c2536ba17bec"
+      "03857e0dd573896dab77ed8702c73483"
     ],
     [
       "FStar.BigOps.big_and'_nil",
@@ -46,7 +46,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "d81a396bd55f80280b2e69446483bfe0"
+      "11101f84eb5d3127700799293c46ef0f"
     ],
     [
       "FStar.BigOps.big_and'_cons",
@@ -55,7 +55,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "7e8304ffb514d2812751da5896f18b64"
+      "484d5605d0622c981ca91535f42daf48"
     ],
     [
       "FStar.BigOps.big_and'_cons",
@@ -64,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "c62b45b21f70a221b921892f3c1a6dbd"
+      "58f8fe6b548d04eeb7a1647c405b528e"
     ],
     [
       "FStar.BigOps.big_and'_prop",
@@ -79,12 +79,13 @@
         "equality_tok_Prims.T@tok", "equation_FStar.BigOps.big_and_",
         "equation_Prims.l_True", "equation_Prims.l_and",
         "equation_Prims.squash", "equation_Prims.subtype_of",
-        "fuel_guarded_inversion_Prims.list", "l_quant_interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "fuel_guarded_inversion_Prims.list",
+        "l_quant_interp_0235708612358a0dd8d2d21a7f9984d9",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "6eb031aaeaef24943858612d9ae20529"
+      "3449996a90707216acb3edf72430980d"
     ],
     [
       "FStar.BigOps.big_and'_forall",
@@ -107,7 +108,7 @@
         "subterm_ordering_Prims.Cons", "true_interp"
       ],
       0,
-      "cb39a79afaee6d9af72da0632e269e78"
+      "e4e84c33d4fbd7deae91962032feb4da"
     ],
     [
       "FStar.BigOps.big_and",
@@ -125,13 +126,13 @@
         "equation_with_fuel_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.l_True",
-        "function_token_typing_Prims.logical", "l_quant_interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "typing_FStar.BigOps_Tm_abs_18f611049baa5958dd71971dc9839fee",
-        "unit_typing"
+        "function_token_typing_Prims.logical",
+        "l_quant_interp_0235708612358a0dd8d2d21a7f9984d9",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_18f611049baa5958dd71971dc9839fee", "unit_typing"
       ],
       0,
-      "cbf1263c06c830423a24a7c6b841e138"
+      "151d72f24ca4aaac8c6e94a7ceb01f88"
     ],
     [
       "FStar.BigOps.big_or'_nil",
@@ -140,7 +141,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "770ddef0a02824ecf3eb6c665eb3e8f1"
+      "53895fee3d18be7ec9137fce7c7144bf"
     ],
     [
       "FStar.BigOps.big_or'_cons",
@@ -149,7 +150,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "77fabda07f9b00fa85c5c616a3800f62"
+      "fa649ce02373e4800c1b618c52c8eec1"
     ],
     [
       "FStar.BigOps.big_or'_cons",
@@ -158,7 +159,7 @@
       1,
       [ "@query" ],
       0,
-      "a9b34a1b329472869fae1857eca571a2"
+      "01bd3ea09bbe0b6280d11e0c095b049c"
     ],
     [
       "FStar.BigOps.big_or'_prop",
@@ -172,12 +173,13 @@
         "equation_FStar.BigOps.big_or_", "equation_Prims.l_False",
         "equation_Prims.l_or", "equation_Prims.squash",
         "equation_Prims.subtype_of", "false_interp",
-        "fuel_guarded_inversion_Prims.list", "l_quant_interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "fuel_guarded_inversion_Prims.list",
+        "l_quant_interp_0235708612358a0dd8d2d21a7f9984d9",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
       0,
-      "edc4a9a2e9496670ef161ba77b1350af"
+      "371339c1025cfa42491dce8255435117"
     ],
     [
       "FStar.BigOps.big_or'_exists",
@@ -200,7 +202,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fd0c7c3c5a03e4464b1b9f38da4bec5e"
+      "a50294b972013150f3b5cf70c5650643"
     ],
     [
       "FStar.BigOps.big_or",
@@ -218,13 +220,13 @@
         "equation_with_fuel_FStar.List.Tot.Base.fold_right_gtot.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.l_False",
-        "function_token_typing_Prims.logical", "l_quant_interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "typing_FStar.BigOps_Tm_abs_18f611049baa5958dd71971dc9839fee",
-        "unit_typing"
+        "function_token_typing_Prims.logical",
+        "l_quant_interp_0235708612358a0dd8d2d21a7f9984d9",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_18f611049baa5958dd71971dc9839fee", "unit_typing"
       ],
       0,
-      "cfd4c290d76a61d549622a8436b12af0"
+      "f23cf8249ace2c5f92cd968ba0dcac9a"
     ],
     [
       "FStar.BigOps.pairwise_op'",
@@ -238,7 +240,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3bed8b71303589f2e4ec2c49eebfca4a"
+      "285da74c5b3a00bcd66f4552711d69b5"
     ],
     [
       "FStar.BigOps.pairwise_and'_nil",
@@ -247,7 +249,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "144d290deb7a7360786d6903dc37639d"
+      "8c8882e9467230dbdd2af5dcec3eaf35"
     ],
     [
       "FStar.BigOps.pairwise_and'_cons",
@@ -256,7 +258,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "e5bdad14e2d9d7c7406b91b234922b91"
+      "5867faa5b19b389ad3708861c643bb2a"
     ],
     [
       "FStar.BigOps.pairwise_and'_prop",
@@ -272,12 +274,12 @@
         "equation_FStar.BigOps.pairwise_and_", "equation_Prims.l_True",
         "equation_Prims.l_and", "equation_Prims.squash",
         "equation_Prims.subtype_of", "fuel_guarded_inversion_Prims.list",
-        "l_quant_interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "l_quant_interp_0235708612358a0dd8d2d21a7f9984d9",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "d79c6ecdb3f0102398ab733385e5f15f"
+      "0f2363a45c0a04297e1767a50c2b1318"
     ],
     [
       "FStar.BigOps.pairwise_and'_forall",
@@ -301,7 +303,7 @@
         "subterm_ordering_Prims.Cons", "true_interp"
       ],
       0,
-      "97e65a9e16df00500960e4cb2aa4749c"
+      "e6b3a4a6c50d3da7ebc1ad91cf05bff4"
     ],
     [
       "FStar.BigOps.pairwise_and'_forall_no_repeats",
@@ -328,7 +330,7 @@
         "subterm_ordering_Prims.Cons", "true_interp"
       ],
       0,
-      "68bae3f7979f31ca63607cc7071dde71"
+      "53177b802712a71d5938139541d043cc"
     ],
     [
       "FStar.BigOps.pairwise_and",
@@ -343,12 +345,12 @@
         "equality_tok_Prims.T@tok", "equation_Prims.l_True",
         "equation_Prims.l_and", "equation_Prims.squash",
         "equation_Prims.subtype_of", "fuel_guarded_inversion_Prims.list",
-        "l_quant_interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "l_quant_interp_0235708612358a0dd8d2d21a7f9984d9",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "7aad6ab785c99b511e2b537efca989d1"
+      "8a0041ed2e82e2ae85027f813424dbb4"
     ],
     [
       "FStar.BigOps.pairwise_or'_nil",
@@ -357,7 +359,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "40b3dde01aad283511ed9aa88077e073"
+      "39adf9db1c4b1bf644bb9cf5a19fee98"
     ],
     [
       "FStar.BigOps.pairwise_or'_cons",
@@ -384,7 +386,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "0392b2d91180a342804e8747d88c6abd"
+      "0e9b382f7c4c54ecb2f2a2ca2d0a509c"
     ],
     [
       "FStar.BigOps.pairwise_or'_prop",
@@ -399,12 +401,13 @@
         "equation_FStar.BigOps.pairwise_or_", "equation_Prims.l_False",
         "equation_Prims.l_or", "equation_Prims.squash",
         "equation_Prims.subtype_of", "false_interp",
-        "fuel_guarded_inversion_Prims.list", "l_quant_interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "fuel_guarded_inversion_Prims.list",
+        "l_quant_interp_0235708612358a0dd8d2d21a7f9984d9",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
       0,
-      "5bb41d2c5468e2bce4f0bca10a322213"
+      "86c87980b4706c2b6195efe0b6e56579"
     ],
     [
       "FStar.BigOps.pairwise_or'_exists",
@@ -429,7 +432,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d11f6267c58e84cf4db6f0b582629d5f"
+      "33a9db586c1a7a194ddc2cd729b48649"
     ],
     [
       "FStar.BigOps.pairwise_or'_exists_no_repeats",
@@ -456,7 +459,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1a28c37628162e4d66cfab902be1f07e"
+      "2c35904910d0d8ed4506e43d7f46d6f9"
     ],
     [
       "FStar.BigOps.pairwise_or",
@@ -469,12 +472,13 @@
         "@query", "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Prims.l_False", "equation_Prims.l_or",
         "equation_Prims.squash", "equation_Prims.subtype_of", "false_interp",
-        "fuel_guarded_inversion_Prims.list", "l_quant_interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "fuel_guarded_inversion_Prims.list",
+        "l_quant_interp_0235708612358a0dd8d2d21a7f9984d9",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
       0,
-      "b1347d2e7eb0967e58091319d411acd2"
+      "a3088a4b2ca4f1e542b0f5929193a794"
     ]
   ]
 ]

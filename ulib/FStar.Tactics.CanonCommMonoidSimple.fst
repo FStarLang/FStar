@@ -13,18 +13,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module CanonCommMonoidSimple
+module FStar.Tactics.CanonCommMonoidSimple
 
 open FStar.Algebra.CommMonoid
 open FStar.List
 open FStar.Tactics
 open FStar.Reflection
 open FStar.Classical
-
-open CanonCommSwaps
+open FStar.Tactics.CanonCommSwaps
 
 (* A simple expression canonizer for commutative monoids.
-   For a canonizer with more features see CanonCommMonoid.fst.
+   For a canonizer with more features see FStar.Tactics.CanonCommMonoid.fst.
 
    Inspired by:
    - http://adam.chlipala.net/cpdt/html/Cpdt.Reflection.html
@@ -116,7 +115,7 @@ let permute_correct (p:permute) =
 // permutation has to be expressible as swaps of adjacent list elements
 
 // In the general case, an arbitrary permutation can be done via swaps.
-// (see CanonCommSwaps for a proof)
+// (see FStar.Tactics.CanonCommSwaps for a proof)
 
 let swap (n:nat) :Type = x:nat{x < n-1}
 
