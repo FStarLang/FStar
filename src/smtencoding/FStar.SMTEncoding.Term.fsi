@@ -19,7 +19,7 @@ module FStar.SMTEncoding.Term
 open FStar.ST
 open FStar.All
 open Prims
-    open FStar
+open FStar
 open FStar.Syntax.Syntax
 open FStar.Syntax
 open FStar.Util
@@ -51,6 +51,7 @@ type op =
   | Add
   | Sub
   | Div
+  | RealDiv
   | Mul
   | Minus
   | Mod
@@ -77,6 +78,7 @@ type qop =
 
 type term' =
   | Integer    of string
+  | Real       of string
   | BoundV     of int
   | FreeV      of fv
   | App        of op  * list<term>
@@ -190,6 +192,7 @@ val hash_of_term: term -> string
 val boxIntFun : string * string
 val boxBoolFun : string * string
 val boxStringFun : string * string
+val boxRealFun: string * string
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val free_variables: term -> fvs
@@ -197,6 +200,8 @@ val mkTrue :  (Range.range -> term)
 val mkFalse : (Range.range -> term)
 val mkInteger : string -> Range.range -> term
 val mkInteger': int -> Range.range -> term
+val mkReal: string -> Range.range -> term
+val mkRealOfInt: term -> Range.range -> term
 val mkBoundV : int -> Range.range -> term
 val mkFreeV  : fv -> Range.range -> term
 val mkApp' : (op * list<term>) -> Range.range -> term
@@ -215,6 +220,7 @@ val mkGTE:   ((term * term) -> Range.range -> term)
 val mkAdd:   ((term * term) -> Range.range -> term)
 val mkSub:   ((term * term) -> Range.range -> term)
 val mkDiv:   ((term * term) -> Range.range -> term)
+val mkRealDiv:   ((term * term) -> Range.range -> term)
 val mkMul:   ((term * term) -> Range.range -> term)
 val mkMod:   ((term * term) -> Range.range -> term)
 val mkNatToBv : (int -> term -> Range.range -> term)
@@ -261,6 +267,8 @@ val boxBool:     term -> term
 val unboxBool:   term -> term
 val boxString:   term -> term
 val unboxString: term -> term
+val boxReal:      term -> term
+val unboxReal:    term -> term
 val boxBitVec:   int -> term -> term
 val unboxBitVec: int -> term -> term
 
