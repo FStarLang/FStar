@@ -1,4 +1,4 @@
-module LowStar.Endianness.Spec
+module FStar.Endianness
 
 /// A library of lemmas for reasoning about sequences of machine integers and
 /// their (little|big)-endian representation as a sequence of bytes.
@@ -16,6 +16,12 @@ module LowStar.Endianness.Spec
 /// .. note::
 ///
 ///    This module supersedes the poorly-named ``FStar.Kremlin.Endianness``.
+
+module U8 = FStar.UInt8
+module U32 = FStar.UInt32
+module U64 = FStar.UInt64
+module Math = FStar.Math.Lemmas
+module S = FStar.Seq
 
 type bytes = S.seq U8.t
 

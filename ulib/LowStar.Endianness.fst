@@ -11,11 +11,13 @@ module LowStar.Endianness
 module B = LowStar.Buffer
 
 open FStar.HyperStack.ST
-open LowStar.Endianness.Spec
+open FStar.Endianness.Spec
 open LowStar.BufferOps
 
 /// Byte-swapping operations
 /// ------------------------
+///
+/// TODO these are totally unspecified
 
 assume val htole16: UInt16.t -> Tot UInt16.t
 assume val le16toh: UInt16.t -> Tot UInt16.t
