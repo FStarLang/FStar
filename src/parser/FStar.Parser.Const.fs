@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Parser.Const
+open FStar.String
 open FStar.ST
 open FStar.All
 open FStar.Util
@@ -74,6 +75,8 @@ let sread_lid = p2l ["FStar"; "ST"; "op_Bang"]
 
 let max_lid = p2l ["max"]
 
+let real_lid  = p2l ["FStar"; "Real"; "real"]
+
 let float_lid  = p2l ["FStar"; "Float"; "float"]
 
 let char_lid  = p2l ["FStar"; "Char"; "char"]
@@ -123,9 +126,23 @@ let assert_norm_lid = p2l ["FStar"; "Pervasives"; "assert_norm"]
 let list_append_lid = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)
 let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
-let strcat_lid      = p2l ["Prims"; "strcat"]
-let strcat_lid'     = p2l ["FStar"; "String"; "strcat"]
-let str_make_lid    = p2l ["FStar"; "String"; "make"]
+
+/// Constants from FStar.String
+let s2l n = p2l ["FStar"; "String"; n]
+let string_list_of_string_lid = s2l "list_of_string"
+let string_string_of_list_lid = s2l "string_of_list"
+let string_make_lid = s2l "make"
+let string_split_lid = s2l "split"
+let string_concat_lid = s2l "concat"
+let string_compare_lid = s2l "compare"
+let string_lowercase_lid = s2l "lowercase"
+let string_uppercase_lid = s2l "uppercase"
+let string_index_lid = s2l "index"
+let string_index_of_lid = s2l "index_of"
+let string_sub_lid = s2l "sub"
+let prims_strcat_lid = pconst "strcat"
+let prims_op_Hat_lid = pconst "op_Hat"
+
 let let_in_typ      = p2l ["Prims"; "Let"]
 let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
@@ -148,6 +165,17 @@ let op_Modulus         = pconst "op_Modulus"
 let op_And             = pconst "op_AmpAmp"
 let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
+
+let real_const  s        = p2l ["FStar";"Real";s]
+let real_op_LT           = real_const "op_Less_Dot"
+let real_op_LTE          = real_const "op_Less_Equals_Dot"
+let real_op_GT           = real_const "op_Greater_Dot"
+let real_op_GTE          = real_const "op_Greater_Equals_Dot"
+let real_op_Subtraction  = real_const "op_Subtraction_Dot"
+let real_op_Addition     = real_const "op_Plus_Dot"
+let real_op_Multiply     = real_const "op_Star_Dot"
+let real_op_Division     = real_const "op_Slash_Dot"
+let real_of_int          = real_const "of_int"
 
 
 let bvconst s = p2l ["FStar"; "BV"; s]
@@ -255,7 +283,7 @@ let steps_unfoldattr    = psconst "delta_attr"
 let steps_nbe           = psconst "nbe"
 
 (* attributes *)
-let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]
+let deprecated_attr = pconst "deprecated"
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
 let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
 let tcnorm_attr    =  p2l ["FStar"; "Pervasives"; "tcnorm"]
@@ -285,6 +313,7 @@ let const_to_string x = match x with
   | Const_effect -> "Effect"
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
+  | Const_real r -> r^"R"
   | Const_float x ->      U.string_of_float x
   | Const_string(s, _) -> U.format1 "\"%s\"" s
   | Const_bytearray _  ->  "<bytearray>"

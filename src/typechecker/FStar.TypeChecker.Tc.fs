@@ -66,7 +66,7 @@ let set_hint_correlator env se =
       let lids = U.lids_of_sigelt se in
       let lid = match lids with
             | [] -> Ident.lid_add_suffix (Env.current_module env)
-                                         (S.next_id () |> BU.string_of_int)
+                                         (Ident.next_id () |> BU.string_of_int)
             | l::_ -> l in
       {env with qtbl_name_and_index=tbl, Some (lid, get_n lid)}
 
@@ -2158,7 +2158,7 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     pop_context env ("Ending modul " ^ modul.name.str) |> ignore;
 
     //moved the code for encoding the module to smt to Universal
-   
+
     modul, env
 
 let load_checked_module (en:env) (m:modul) :env =

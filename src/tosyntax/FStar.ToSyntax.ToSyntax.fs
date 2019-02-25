@@ -120,6 +120,42 @@ let rec is_comp_type env t =
 
 let unit_ty = mk_term (Name C.unit_lid) Range.dummyRange Type_level
 
+type env_t = Env.env
+type lenv_t = list<bv>
+
+let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : option<S.term> =
+    let tm_attrs_opt =
+        if resolve
+        then Env.try_lookup_lid_with_attributes env l
+        else Env.try_lookup_lid_with_attributes_no_resolve env l
+    in
+    match tm_attrs_opt with
+    | None -> None
+    | Some (tm, attrs) ->
+        let warn_if_deprecated (attrs:list<attribute>) :unit =
+          List.iter (fun a -> match a.n with
+            | Tm_app ({ n = Tm_fvar fv }, args) when lid_equals fv.fv_name.v C.deprecated_attr ->
+              let msg = (Print.term_to_string tm) ^ " is deprecated" in
+              let msg =
+                if List.length args > 0 then
+                  (match (fst (List.hd args)).n with
+                   | Tm_constant (Const_string (s, _)) when not (trim_string s = "") -> msg ^ ", use "  ^ s ^ " instead"
+                   | _ -> msg)
+                else msg
+              in
+              log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
+            | Tm_fvar fv when lid_equals fv.fv_name.v C.deprecated_attr ->
+              let msg = (Print.term_to_string tm) ^ " is deprecated" in
+              log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
+            | _ -> ()) attrs
+        in
+        warn_if_deprecated attrs;
+        let tm = setpos tm in
+        Some tm
+
+let desugar_name mk setpos env resolve l =
+    fail_or env (desugar_name' setpos env resolve) l
+
 let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
 
 let op_as_term env arity rng op : option<S.term> =
@@ -158,8 +194,6 @@ let op_as_term env arity rng op : option<S.term> =
       if Options.ml_ish ()
       then r C.list_append_lid     (Delta_equational_at_level 2)
       else r C.list_tot_append_lid (Delta_equational_at_level 2)
-    | "^" ->
-      r C.strcat_lid delta_equational
     | "|>" ->
       r C.pipe_right_lid delta_equational
     | "<|" ->
@@ -182,7 +216,8 @@ let op_as_term env arity rng op : option<S.term> =
       r C.iff_lid (Delta_constant_at_level 2)
     | _ -> None
   in
-  match Env.try_lookup_lid env (compile_op_lid arity op.idText op.idRange) with
+  match desugar_name' (fun t -> {t with pos=op.idRange})
+        env true (compile_op_lid arity op.idText op.idRange) with
   | Some t -> Some t
   | _ -> fallback()
 
@@ -371,9 +406,6 @@ type bnd =
 let binder_of_bnd = function
   | LocalBinder (a, aq) -> a, aq
   | _ -> failwith "Impossible"
-
-type env_t = Env.env
-type lenv_t = list<bv>
 
 (* TODO : shouldn't this be Tot by default ? *)
 let mk_lb (attrs, n, t, e, pos) = {
@@ -851,29 +883,6 @@ and desugar_machine_integer env repr (signedness, width) range =
       raise_error (Errors.Fatal_UnexpectedNumericLiteral, (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm)) range in
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
-
-and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
-    let tm, attrs = fail_or env ((if resolve then Env.try_lookup_lid_with_attributes else Env.try_lookup_lid_with_attributes_no_resolve) env) l in
-    let warn_if_deprecated (attrs:list<attribute>) :unit =
-      List.iter (fun a -> match a.n with
-        | Tm_app ({ n = Tm_fvar fv }, args) when lid_equals fv.fv_name.v C.deprecated_attr ->
-          let msg = (Print.term_to_string tm) ^ " is deprecated" in
-          let msg =
-            if List.length args > 0 then
-              (match (fst (List.hd args)).n with
-               | Tm_constant (Const_string (s, _)) when not (trim_string s = "") -> msg ^ ", use "  ^ s ^ " instead"
-               | _ -> msg)
-            else msg
-          in
-          log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
-        | Tm_fvar fv when lid_equals fv.fv_name.v C.deprecated_attr ->
-          let msg = (Print.term_to_string tm) ^ " is deprecated" in
-          log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
-        | _ -> ()) attrs
-    in
-    warn_if_deprecated attrs;
-    let tm = setpos tm in
-    tm
 
 and desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflag> =
     let desugar_attribute t =
@@ -2832,11 +2841,12 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         then Assumption::quals
         else quals in
     let lid = qualify env id in
+    let attrs = List.map (desugar_term env) d.attrs in
     let se = { sigel = Sig_declare_typ(lid, [], t);
                sigquals = List.map (trans_qual None) quals;
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = [] } in
+               sigattrs = attrs } in
     let env = push_sigelt env se in
     let env = push_doc env lid d.doc in
     env, [se]

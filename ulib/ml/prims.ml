@@ -139,6 +139,7 @@ type nonrec exn = exn
 type 'a array' = 'a array[@@deriving yojson,show]
 type 'a array = 'a array'[@@deriving yojson,show]
 let strcat x y = x ^ y
+let op_Hat x y = x ^ y
 
 type 'a list' = 'a list[@@deriving yojson,show]
 type 'a list = 'a list'[@@deriving yojson,show]
