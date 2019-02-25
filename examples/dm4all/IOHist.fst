@@ -72,7 +72,21 @@ val write : i:int -> IO unit (fun h p -> p () (i::h))
 let write i =
     IO?.reflect (Write i (Return ()))
 
+val need_a_1 : unit -> IO int (fun h p -> List.memP 1 h /\ p 42 h)
+let need_a_1 () = 42
+
 open FStar.Tactics
+
+let test_hist_1 () : IO unit (fun h p -> p () (1::h)) =
+  write 1;
+  let _ = need_a_1 () in
+  ()
+
+[@expect_failure]
+let test_hist_2 () : IO unit (fun h p -> p () (1::h)) =
+  let _ = need_a_1 () in
+  write 1;
+  ()
 
 let test1 () : IO int (fun h p -> p 1 (3::2::h)) =
   write 2;

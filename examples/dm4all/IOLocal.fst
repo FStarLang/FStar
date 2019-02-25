@@ -82,7 +82,10 @@ open FStar.Tactics
 
 (* GM: This stupid length precondition only there to help z3. If we flip
  * the ordering on the history list, then this works like a charm but test9
- * below starts displaying the same bad behaviour. *)
+ * below starts displaying the same bad behaviour.
+ *
+ * This works without this condition in IOHist.fst. I believe since there
+ * the order is flipped. *)
 let test_hist_1 () : IO unit (fun h p -> List.length h <= 5 /\ p () [1]) =
   write 1;
   let _ = need_a_1 () in
