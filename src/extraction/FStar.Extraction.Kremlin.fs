@@ -849,7 +849,7 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name ([ "LowStar"; "Literal" ], "buffer_of_literal") }, [ { expr = e } ]) ->
       begin match e with
       | MLE_Const (MLC_String s) ->
-          ECast (EString s, TBuf UInt8)
+          ECast (EString s, TBuf (TInt UInt8))
       | _ ->
           failwith "Cannot extract buffer_of_literal applied to a non-literal"
       end
