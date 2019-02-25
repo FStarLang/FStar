@@ -12,7 +12,7 @@ let bind (a : Type u#aa) (b : Type u#bb)
 (* let choose (#a : Type) (x y : a) : repr a = [x;y] *)
 
 (* Demonic interpretation *)
-let interp (a:Type) (l : repr a) : pure_wp a =
+let interp (#a:Type) (l : repr a) : pure_wp a =
     fun p -> forall (x:a). List.memP x l ==> p x
 
 total

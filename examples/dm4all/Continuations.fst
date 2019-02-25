@@ -9,7 +9,7 @@ let bind (a : Type) (b : Type)
     fun k -> l (fun x -> f x k)
 
 (* interpretation as pure wp *)
-let interp (a:Type) (l : repr a) : pure_wp a = fun p -> l p
+let interp (#a:Type) (l : repr a) : pure_wp a = fun p -> l p
 
 total
 reifiable
@@ -44,8 +44,6 @@ effect Cont (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
         CONT a (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result))
 
 effect ContTot (a:Type) = CONT a (pure_null_wp a)
-
-#set-options "--debug Continuations --debug_level SMTQuery"
 
 let __em (#a:Type) : repr (c_or a (a -> Type)) =
   fun (d : c_or a (a -> Type) -> Type) ->

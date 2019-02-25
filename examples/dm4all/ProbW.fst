@@ -22,15 +22,15 @@ let rec compute_probs #a acc_t acc_f (l : repr a) (p : pure_post a) : Tot (nat &
 
 (* NOT a morphism! So this entire file is pretty useless.
  * Also note the bad example test'_3 *)
-let interp (a:Type) (l : repr a) : pure_wp a =
+let interp (#a:Type) (l : repr a) : pure_wp a =
   fun post -> 
     let (t, f) = compute_probs 0 0 l post in
     t >= f
 
 let l : repr int = [(10, 1); (20, 2)]
 let f : int -> repr int = fun x -> [(x, 4); (2 * x , 8)]
-let wp1 = interp _ (bind _ _ l f)
-let wp2 = pure_bind_wp range_0 _ _ (interp _ l) (fun x -> interp _ (f x))
+let wp1 = interp (bind _ _ l f)
+let wp2 = pure_bind_wp range_0 _ _ (interp l) (fun x -> interp (f x))
 
 
 open FStar.Tactics
@@ -77,8 +77,6 @@ effect PROBTot (a:Type) = PROB a (pure_null_wp a)
 val choose : #a:Type0 -> x:a -> y:a -> PROB a (fun p -> p x /\ p y)
 let choose #a x y =
     PROB?.reflect ([(x, 1); (y, 1)] <: list (a & nat))
-
-#set-options "--debug ProbW --debug_level SMTQuery"
 
 open FStar.Tactics
 

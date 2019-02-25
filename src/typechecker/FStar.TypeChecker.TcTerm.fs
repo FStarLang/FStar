@@ -665,7 +665,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                     failwith (BU.format1 "error: effect %s has no interp function \
                                                  in order to use reflection" (string_of_lid ed.mname))
             in
-            let wp = U.mk_app interp [as_arg res; as_arg e] in
+            let wp = U.mk_app interp [iarg res; as_arg e] in
             (* GG FIXME: This is a cannonball, but some normalization is required
              * to verify even the simplest ND actions. *)
             let wp = N.normalize [Env.UnfoldTac; Env.UnfoldUntil delta_constant;

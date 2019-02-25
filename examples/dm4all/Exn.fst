@@ -11,7 +11,7 @@ let bind (a : Type) (b : Type) (l : repr a) (f : a -> repr b) =
   | Inl x -> f x
   | Inr e -> Inr e
 
-let interp (a:Type) (l : repr a) : pure_wp a =
+let interp (#a:Type) (l : repr a) : pure_wp a =
     fun p -> match l with | Inl x -> p x | _ -> False
 
 total

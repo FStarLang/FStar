@@ -592,9 +592,10 @@ let is_type (t:term) = match t.n with
     | _ -> false
 let null_id  = mk_ident("_", dummyRange)
 let null_bv k = {ppname=null_id; index=0; sort=k}
-let mk_binder (a:bv) : binder = a, None
-let null_binder t : binder = null_bv t, None
 let imp_tag = Implicit false
+let mk_binder (a:bv) : binder = a, None
+let mk_implicit_binder (a:bv) : binder = a, Some imp_tag
+let null_binder t : binder = null_bv t, None
 let iarg t : arg = t, Some imp_tag
 let as_arg t : arg = t, None
 let is_null_bv (b:bv) = b.ppname.idText = null_id.idText

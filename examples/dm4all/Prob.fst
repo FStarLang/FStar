@@ -12,7 +12,7 @@ let bind (a : Type) (b : Type)
 
 assume val prop2bool : p:Type0 -> b:bool{b2t b == p}
 
-let interp (a:Type) (l : repr a) : pure_wp a =
+let interp (#a:Type) (l : repr a) : pure_wp a =
     fun p -> forall k. List.memP k l ==>
             (let (x, w) = k in
              w > 0 ==>
@@ -26,7 +26,7 @@ let rec compute_probs #a acc_t acc_f (l : repr a) (p : pure_post a) : Tot (int &
     then compute_probs (acc_t + w) acc_f ps p
     else compute_probs acc_f (acc_f + w) ps p
 
-let interp' (a:Type) (l : repr a) : pure_wp a =
+let interp' (#a:Type) (l : repr a) : pure_wp a =
   fun post -> 
     let (t, f) = compute_probs 0 0 l post in
     t >= f

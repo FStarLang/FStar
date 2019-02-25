@@ -519,19 +519,20 @@ val list_of_freenames:    freenames -> list<bv>
 val binders_of_freenames: freenames -> binders
 val binders_of_list:      list<bv> -> binders
 
-val null_bv:        term -> bv
-val mk_binder:      bv -> binder
-val null_binder:    term -> binder
-val as_arg:         term -> arg
-val imp_tag:        arg_qualifier
-val iarg:           term -> arg
-val is_null_bv:     bv -> bool
-val is_null_binder: binder -> bool
-val argpos:         arg -> Range.range
-val pat_bvs:        pat -> list<bv>
-val is_implicit:    aqual -> bool
-val as_implicit:    bool -> aqual
-val is_top_level:   list<letbinding> -> bool
+val null_bv                 : term -> bv
+val mk_binder               : bv -> binder
+val mk_implicit_binder      : bv -> binder
+val null_binder             : term -> binder
+val as_arg                  : term -> arg
+val imp_tag                 : arg_qualifier
+val iarg                    : term -> arg
+val is_null_bv              : bv -> bool
+val is_null_binder          : binder -> bool
+val argpos                  : arg -> Range.range
+val pat_bvs                 : pat -> list<bv>
+val is_implicit             : aqual -> bool
+val as_implicit             : bool -> aqual
+val is_top_level            : list<letbinding> -> bool
 
 (* gensym *)
 val freshen_bv:     bv -> bv

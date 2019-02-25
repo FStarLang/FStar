@@ -22,7 +22,7 @@ let bind_wp (_ : range) (a : Type) (b : Type) (wp : wp_type a) (f : a -> wp_type
                         | Inl x -> f x p
                         | Inr e -> p (Inr e))
 
-let interp (a:Type) (c : repr a) : wp_type a = fun p -> p c
+let interp (#a:Type) (c : repr a) : wp_type a = fun p -> p c
 
 total
 reifiable
@@ -78,7 +78,7 @@ let wp_try_catch (#a:Type)
                          | Inr e -> h_wp e p)
 
 let related #a (r : repr a) (wp : wp_type a) =
-  EXC?.stronger _ wp (interp _ r)
+  EXN?.stronger _ wp (interp r)
 
 (* We should get this from the framework FIXME *)
 assume val reify_related (#a #b:Type) (wp:_) (c : (x:a -> EXC b (wp x))) :
