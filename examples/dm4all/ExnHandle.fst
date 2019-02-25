@@ -95,7 +95,7 @@ let related #a (r : repr a) (wp : wp_type a) =
 assume val reify_related (#a #b:Type) (wp:_) (c : (x:a -> EXN b (wp x))) :
                          Lemma (forall (x:a). related (reify (c x)) (wp x))
 
-let handle (#a:Type) 
+let catch (#a:Type) 
            (#b:Type) 
            (#wp1:wp_type a) 
            (c1:unit -> EXN a wp1)
@@ -131,7 +131,7 @@ let test1 (#a:Type)
           (#wp2:a -> wp_type b) 
           (c2:(x:a -> EXN b (wp2 x))) 
         : EXN b (wp_bind wp1 wp2) =
-  handle #a #b #wp1 c1 #(fun e -> wp_raise e) (fun e -> raise e) #wp2 c2
+  catch #a #b #wp1 c1 #(fun e -> wp_raise e) (fun e -> raise e) #wp2 c2
 
 let test2 (#a:Type) 
           (#b:Type) 
@@ -141,7 +141,7 @@ let test2 (#a:Type)
           (#wp2:a -> wp_type b) 
           (c2:(x:a -> EXN b (wp2 x))) 
         : EXN b (wp2 v) = 
-  handle #a #b #(wp_return v) (fun _ -> v) #h_wp h_c #wp2 c2
+  catch #a #b #(wp_return v) (fun _ -> v) #h_wp h_c #wp2 c2
 
 let test3 (#a:Type) 
           (#b:Type) 
@@ -151,4 +151,21 @@ let test3 (#a:Type)
           (#wp2:a -> wp_type b) 
           (c2:(x:a -> EXN b (wp2 x)))
         : EXN b (h_wp e) =
-  handle #a #b #(wp_raise e) (fun _ -> raise e) #h_wp h_c #wp2 c2
+  catch #a #b #(wp_raise e) (fun _ -> raise e) #h_wp h_c #wp2 c2
+
+assume val div_exn : exn
+
+let div_wp (i j:int) = 
+  fun p -> forall x . (match x with
+                       | Inl x -> j <> 0 /\ x = i / j
+                       | Inr e -> j = 0) 
+                      ==> 
+                       p x
+
+let div (i j:int) 
+  : EXN int (div_wp i j) =
+  if j = 0 then raise div_exn else i / j
+
+let try_div (i j:int)
+  : EXN int (fun p -> forall x . Inl? x ==> p x) =
+  catch #int #int #(div_wp i j) (fun _ -> div i j) #(fun _ p -> p (Inl 0)) (fun _ -> 0) #(wp_return) (fun x -> x)
