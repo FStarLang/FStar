@@ -123,3 +123,7 @@ let test5 () : IO int (fun h p -> forall x. p 1 (x::x::h)) =
   write x;
   write x;
   1
+
+[@expect_failure]
+let mustHaveOccurred (i:int) : IO unit (fun h p -> mem i h) =
+  ()
