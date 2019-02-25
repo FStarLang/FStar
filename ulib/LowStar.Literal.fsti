@@ -7,10 +7,9 @@ module ST = FStar.HyperStack.ST
 
 open FStar.Mul
 
-/// This module enables clients to make use of string literals in Low* using two
-/// different approaches: either as shorthand syntax for immutable, always-live
-/// uint8 buffers, or as actual strings that can be used elsewhere, e.g.
-/// LowStar.Printf.
+/// This module enables clients to make use of string literals in Low* as
+/// shorthand syntax for immutable, always-live uint8 buffers. See
+/// LowStar.printf for writing and printing string literals.
 
 /// .. note::
 ///
@@ -92,9 +91,7 @@ unfold let buffer_of_literal_post (s: ascii_string) (h0: HS.mem) (b: IB.ibuffer 
 /// This function checks at extraction-time that its argument is a literal.
 val buffer_of_literal: (s: ascii_string) ->
   ST.Stack (b: IB.ibuffer UInt8.t)
-    (requires (fun _ ->
-      // TODO: find a way to meta-program the "is literal" check
-      String.length s < pow2 32))
+    (requires (fun _ -> String.length s < pow2 32))
     (ensures buffer_of_literal_post s)
 
 /// .. note::
@@ -122,22 +119,3 @@ let buf_len_of_literal (s: string):
   [@inline_let]
   let l = normalize_term (UInt32.uint_to_t (List.Tot.length (String.list_of_string s))) in
   buffer_of_literal s, l
-
-/// String literals as values
-/// -------------------------
-///
-/// The other way to leverage string literals in Low* is to see them as values
-/// (they are always live, because they live in the data segment). This enables
-/// a variety of use-cases, mostly for printing functions. For these, we
-/// currently do not enable any sort of advanced reasoning, and even allow them
-/// to contains the ASCII NUL character, with the understanding that this will
-/// change the output of the printing functions. Note unlike in ``C.String`` we
-/// we don't reflect the fact that these are zero-terminated.
-
-val const_string: Type0
-
-val const_string_of_literal: s:string -> const_string
-
-val print_string: const_string -> ST.Stack unit
-  (requires fun _ -> true)
-  (ensures fun h0 _ h1 -> B.(modifies loc_none h0 h1))
