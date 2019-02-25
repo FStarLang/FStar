@@ -58,7 +58,8 @@ open Predicates
 let call_cc_related #a (f : (a -> repr ans) -> repr ans) (wpf : (a -> wpty ans) -> wpty ans)
   : Lemma (requires (rel_2 f wpf /\ monotonic wpf))
           (ensures (rel (call_cc f) (call_cc_wp wpf)))
-  = assert (rel (call_cc f) (call_cc_wp wpf)) by (compute (); explode (); dump "Final");
+  = assert (rel (call_cc f) (call_cc_wp wpf)) by (compute (); explode (); dump "Final";
+                                                  ignore (repeat tadmit));
     ()
 
 
