@@ -132,6 +132,7 @@ assume private val store32_le (fb:fbuffer0) (w:u32)
 
 /// Since store32_le is assumed, following test makes sure that it is still consistent with the preorder
 
+[@"uninterpreted_by_smt"]
 private let test_store32_le (fb:fbuffer0) (w:u32)
   : Stack unit (requires (fun h0      ->
                           live h0 fb /\
