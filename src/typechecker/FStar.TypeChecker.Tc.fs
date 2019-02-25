@@ -585,6 +585,19 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
       Some <| check_and_gen' env ([], interp) expected_k
   in
 
+  let mrelation =
+    match ed.mrelation with
+    | None -> None
+    | Some mrelation ->
+      let a, wp_a = fresh_effect_signature () in
+      let repr_a = U.mk_app ed.repr.monad_m [S.as_arg (S.bv_to_name a)] in
+      let expected_k = U.arrow [S.mk_implicit_binder a;
+                                   S.null_binder repr_a;
+                                   S.null_binder wp_a]
+                                (S.mk_Total U.ktype0) in
+      Some <| check_and_gen' env ([], mrelation) expected_k
+  in
+
   let if_then_else =
     let p = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
     let expected_k = U.arrow [S.mk_binder a; S.mk_binder p;
@@ -901,6 +914,7 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     ; null_wp     = close 0 null_wp
     ; trivial     = close 0 trivial_wp
     ; interp      = BU.map_opt ed.interp (fun t -> snd (close 0 ([], t)))
+    ; mrelation   = BU.map_opt ed.mrelation (fun t -> snd (close 0 ([], t)))
     ; repr = {
         monad_m    = snd (close 0 ([], repr))
       ; monad_ret  = close 0 return_repr

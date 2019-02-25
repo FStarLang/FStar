@@ -399,6 +399,7 @@ type eff_decl = {
     elaborated  : bool;
     spec_dm4f   : bool;
     interp      : option<term>; (* monad morphism from repr -> spec *)
+    mrelation   : option<term>; (* monadic relation of repr and spec *)
     //operations on the representation
     //actions for the effect
     actions     : list<action>;
