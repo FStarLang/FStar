@@ -35,7 +35,7 @@ module HST = FStar.HyperStack.ST
  * 
  * It maintains the current frozen-upto index (a u32) in the first 4 bytes of the buffer
  *
- * Clients can call `freeze` to explicitly freeze upto the input index
+ * Clients can call `freeze` to freeze upto an input index
  *   after which the buffer cannot be mutated until that index
  *
  * We call this value `w` in the code below
@@ -184,9 +184,7 @@ private let update_w_post_alloc (fb:fbuffer0)
 	                  live h1 fb /\
 			  modifies (loc_buffer fb) h0 h1 /\
 			  get_w (as_seq h1 fb) == 4 /\
-			  witnessed fb (w_pred 4) /\
-			  (forall (i:nat).{:pattern (Seq.index (as_seq h1 fb) i)}
-			     (i >= 4 /\ i < length fb) ==> Seq.index (as_seq h1 fb) i == Seq.index (as_seq h0 fb) i)))
+			  witnessed fb (w_pred 4)))
   = store32_le fb 4ul;
     witness_p fb (w_pred 4)
 
@@ -278,7 +276,7 @@ let freeze (fb:fbuffer) (i:u32)
 			  get_w (as_seq h1 fb) == U32.v i /\
 			  witnessed fb (w_pred (U32.v i)) /\
 			  (forall (k:nat).{:pattern (Seq.index (as_seq h1 fb) k)}
-			            (k >= 4 /\ k < length fb) ==> Seq.index (as_seq h1 fb) k == Seq.index (as_seq h0 fb) k)))
+			     (k >= 4 /\ k < length fb) ==> Seq.index (as_seq h1 fb) k == Seq.index (as_seq h0 fb) k)))
   = recall_p fb (w_pred 4);
     store32_le fb i;
     witness_p fb (w_pred (U32.v i))
