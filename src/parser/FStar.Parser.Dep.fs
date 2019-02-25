@@ -1320,7 +1320,6 @@ let print_full (deps:deps) : unit =
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
     let cache_file f = f |> cache_file_name_internal |> (fun (f, b) -> norm_path f, b) in
-    let transitive_krml = smap_create 41 in
     let set_of_unchecked_files = keys |> List.fold_left
         (fun set_of_unchecked_files file_name ->
           let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
@@ -1363,21 +1362,6 @@ let print_full (deps:deps) : unit =
                       cache_file_name
                       norm_f
                       files;
-
-          // for building an executable from a given module:
-          // foo.exe: dep1.krml dep2.krml etc.
-          let already_there =
-            match smap_try_find transitive_krml (norm_path (output_file ".krml" file_name)) with
-            | Some (_, already_there, _) -> already_there
-            | None -> []
-          in
-          smap_add transitive_krml
-            (norm_path (output_file ".krml" file_name))
-            (norm_path (output_file ".exe" file_name),
-              List.unique (already_there @ List.map
-                (fun x -> norm_path (output_file ".krml" x))
-                (deps_of deps file_name)),
-              false);
 
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
@@ -1478,32 +1462,6 @@ let print_full (deps:deps) : unit =
                        BU.smap_add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
     in
-    // compute transitive closure for dependency graphs that contain multiple
-    // entry points
-    let rec make_transitive f =
-      let exe, deps, seen = must (smap_try_find transitive_krml f) in
-      if seen then
-        exe, deps
-      else begin
-        (* JP: avoid loops for nodes that point to themselves via their
-         * interface. *)
-        smap_add transitive_krml f (exe, deps, true);
-        let deps = List.unique (List.flatten (List.map (fun dep ->
-          let _, deps = make_transitive dep in
-          dep :: deps
-        ) deps)) in
-        smap_add transitive_krml f (exe, deps, true);
-        exe, deps
-      end
-    in
-    List.iter (fun f ->
-      let exe, deps = make_transitive f in
-      let deps = String.concat " " (List.unique (f :: deps)) in
-      let wasm = BU.substring exe 0 (String.length exe - 4) ^ ".wasm" in
-      Util.print2 "%s: %s\n\n" exe deps;
-      Util.print2 "%s: %s\n\n" wasm deps
-    ) (smap_keys transitive_krml);
-
     Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"            (all_fst_files           |> List.map norm_path |> String.concat " \\\n\t");
     Util.print1 "ALL_UNCHECKED_FST_FILES=\\\n\t%s\n\n"  (all_unchecked_fst_files |> List.map norm_path |> String.concat " \\\n\t");
     Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"             (all_ml_files            |> List.map norm_path |> String.concat " \\\n\t");
