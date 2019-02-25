@@ -103,7 +103,8 @@ let pyths () : ND (int & int & int) (fun p -> exists x y z. x >= 1 /\ x <= 10 /\
   let x = pick l in
   let y = pick l in
   let z = pick l in
-  gguard (x*x + y*y = z*z);
+  // Not needed! We're doing angelic ND
+  (* gguard (x*x + y*y = z*z); *)
   (x,y,z)
 #pop-options
 
