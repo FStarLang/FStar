@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4239ff3cdbf53c3df9395e93c1760a4c"
+      "89e96fa80e1118d515b2d61ebc2417d3"
     ],
     [
       "Ex04h.nth",
@@ -47,7 +47,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b802691ea3940e366f8d2a249b361e7f"
+      "1c89866ab83b8b20d21ae73e74c78085"
     ],
     [
       "Ex04h.length",
@@ -66,7 +66,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "601b41a00b86b1a2893693f101ed09cc"
+      "3d7a27a3f571dd6d01a55415a40dc73b"
     ],
     [
       "Ex04h.nth",
@@ -95,7 +95,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "831f1563357a69f35ea80e77c022d6d1"
+      "f28bc4140b1caebd7ac3448e7ef59f1a"
     ]
   ]
 ]
