@@ -13,7 +13,8 @@ let bind (a : Type) (b : Type)
 let wpty a = (a -> pure_wp ans) -> pure_wp ans
 
 let rel (#a : Type) (l : repr a) (w : wpty a) : Type =
-  forall (k : a -> ans) (p : ans -> Type). w (fun x q -> q (k x)) p == p (l k)
+  forall (k : a -> ans) (p : ans -> Type). (w (fun x q -> q (k x)) p ==> p (l k)) /\
+                                    (p (l k) ==> w (fun x q -> q (k x)) p)
 
 let return_wp (a:Type) (x:a) : wpty a =
   fun p -> p x
@@ -52,12 +53,14 @@ let rel_2 (#a:Type) (f : (a -> repr ans) -> repr ans) (wpf : (a -> wpty ans) -> 
   forall g wpg. rel_1 g wpg ==> rel (f g) (wpf wpg)
 
 open FStar.Tactics
+open Predicates
 
-let call_cc_related #a (f : (a -> repr ans) -> repr ans) (wpf : (a -> wpty ans) -> wpty ans) :
-    Lemma (requires (rel_2 f wpf))
+let call_cc_related #a (f : (a -> repr ans) -> repr ans) (wpf : (a -> wpty ans) -> wpty ans)
+  : Lemma (requires (rel_2 f wpf /\ monotonic wpf))
           (ensures (rel (call_cc f) (call_cc_wp wpf)))
-          by (compute (); dump "Final")
-          = admit ()
+  = assert (rel (call_cc f) (call_cc_wp wpf)) by (compute (); explode (); dump "Final");
+    ()
+
 
 assume val callcc : #a:Type -> (#wpf:((a -> wpty ans) -> wpty ans)) ->
                     (f : (#wpg:(a -> wpty ans) -> (x:a -> CONT ans (wpg x)) -> CONT ans (wpf wpg))) ->
