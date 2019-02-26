@@ -125,5 +125,8 @@ let test5 () : IO int (fun h p -> forall x. p 1 (x::x::h)) =
   1
 
 [@expect_failure]
-let mustHaveOccurred (i:int) : IO unit (fun h p -> mem i h) =
+let mustHaveOccurred_wrong (i:int) : IO unit (fun h p -> mem i h) =
+  ()
+
+let mustHaveOccurred (i:int) : IO unit (fun h p -> mem i h /\ p () h) =
   ()
