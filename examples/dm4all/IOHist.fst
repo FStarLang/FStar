@@ -130,3 +130,8 @@ let mustHaveOccurred_wrong (i:int) : IO unit (fun h p -> mem i h) =
 
 let mustHaveOccurred (i:int) : IO unit (fun h p -> mem i h /\ p () h) =
   ()
+
+let print_increasing (i:int) : IO unit (fun h p -> p () ((i+1) :: i :: h)) = 
+  write i;
+  mustHaveOccurred i;
+  write (i+1)
