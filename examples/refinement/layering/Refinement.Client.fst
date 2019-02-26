@@ -3,7 +3,7 @@ open Refinement
 (* This client of Refinement demonstrates how
    abstract computation can be writted in the RST effect
    without any details of LowStar needed in VCs *)
-#reset-options "--using_facts_from '* -FStar.HyperStack -LowStar'"
+#reset-options "--using_facts_from '* -FStar.HyperStack -FStar.Monotonic -LowStar'"
 
 (* Here's a simple swap *)
 let swap r
@@ -222,7 +222,7 @@ let l_swap (p1 p2:B.pointer nat)
     p1 *= v2;
     p2 *= v1
 
-//#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit_factor 10 --z3cliopt 'smt.qi.eager_threshold=100'"
+#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit_factor 6 --z3cliopt 'smt.qi.eager_threshold=100'"
 let n_lswap (p1 p2:B.pointer nat)
   : Stack unit
     (requires (fun h ->
