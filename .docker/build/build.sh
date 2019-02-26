@@ -8,25 +8,36 @@ threads=$3
 branchname=$4
 
 function export_home() {
+    local home_path=""
     if command -v cygpath >/dev/null 2>&1; then
-        export $1_HOME=$(cygpath -m "$2")
+        home_path=$(cygpath -m "$2")
     else
-        export $1_HOME="$2"
+        home_path="$2"
+    fi
+
+    export $1_HOME=$home_path
+
+    # Update .bashrc file
+    token=$1_HOME=
+    if grep -q "$token" ~/.bashrc; then
+        sed -i -E "s/$token.*/$token$home_path/" ~/.bashrc
+    else
+        echo "export $1_HOME=$home_path" >> ~/.bashrc
     fi
 }
 
 function fetch_vale() {
-    if [ ! -d vale ]; then
-        git clone https://github.com/project-everest/vale vale
+    if [[ ! -d vale ]]; then
+        mkdir vale
     fi
-
-    cd vale
-    git fetch origin
-    echo Switching to vale to fstar_ci
-    git clean -fdx .
-    git reset --hard origin/fstar_ci
-    nuget restore tools/Vale/src/packages.config -PackagesDirectory tools/FsLexYacc
-    cd ..
+    vale_version=$(<hacl-star/vale/.vale_version)
+    vale_version=${vale_version%$'\r'}  # remove Windows carriage return, if it exists
+    wget "https://github.com/project-everest/vale/releases/download/v${vale_version}/vale-release-${vale_version}.zip" -O vale/vale-release.zip
+    rm -rf "vale/vale-release-${vale_version}"
+    unzip -o vale/vale-release.zip -d vale
+    rm -rf "vale/bin"
+    mv "vale/vale-release-${vale_version}/bin" vale/
+    chmod +x vale/bin/*.exe
     export_home VALE "$(pwd)/vale"
 }
 
@@ -38,7 +49,12 @@ function fetch_hacl() {
 
     cd hacl-star
     git fetch origin
-    local ref=$(if [ -f ../.hacl_version ]; then cat ../.hacl_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["hacl_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "" || $ref == "null" ]]; then
+        echo "Unable to find RepoVersions.hacl_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
+
     echo Switching to HACL $ref
     git reset --hard $ref
     git clean -fdx
@@ -55,7 +71,12 @@ function fetch_kremlin() {
 
     cd kremlin
     git fetch origin
-    local ref=$(if [ -f ../.kremlin_version ]; then cat ../.kremlin_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["kremlin_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "null" ]]; then
+        echo "Unale to find RepoVersions.kremlin_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
+
     echo Switching to KreMLin $ref
     git reset --hard $ref
     cd ..
@@ -79,6 +100,42 @@ function fetch_and_make_kremlin() {
     export PATH="$(pwd)/kremlin:$PATH"
 }
 
+# By default, QuackyDucky master works against F* stable. Can also be overridden.
+function fetch_qd() {
+    if [ ! -d qd ]; then
+        git clone https://github.com/project-everest/quackyducky qd
+    fi
+
+    cd qd
+    git fetch origin
+    local ref=$(jq -c -r '.RepoVersions["qd_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "" || $ref == "null" ]]; then
+        echo "Unable to find RepoVersions.qd_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
+
+    echo Switching to QuackyDucky $ref
+    git reset --hard $ref
+    cd ..
+    export_home QD "$(pwd)/qd"
+}
+
+function fetch_and_make_qd() {
+    fetch_qd
+
+    # Default build target is minimal, unless specified otherwise
+    local localTarget
+    if [[ $1 == "" ]]; then
+        localTarget="quackyducky"
+    else
+        localTarget="$1"
+    fi
+
+    make -C qd -j $threads $localTarget ||
+        (cd qd && git clean -fdx && make -j $threads $localTarget)
+}
+
+
 # By default, mitls-fstar master works against F* stable. Can also be overridden.
 function fetch_mitls() {
     if [ ! -d mitls-fstar ]; then
@@ -86,7 +143,12 @@ function fetch_mitls() {
     fi
     cd mitls-fstar
     git fetch origin
-    local ref=$(if [ -f ../.mitls_version ]; then cat ../.mitls_version | tr -d '\r\n'; else echo origin/master; fi)
+    local ref=$(jq -c -r '.RepoVersions["mitls_version"]' "$rootPath/.docker/build/config.json" )
+    if [[ $ref == "" || $ref == "null" ]]; then
+        echo "Unable to find RepoVersions.mitls_version on $rootPath/.docker/build/config.json"
+        return -1
+    fi
+
     echo Switching to mitls-fstar $ref
     git reset --hard $ref
     git clean -fdx
@@ -145,7 +207,6 @@ function refresh_hints() {
 
 function build_fstar() {
     local localTarget=$1
-    local timeout=960
 
     result_file="../result.txt"
     echo Failure >$result_file
@@ -190,10 +251,10 @@ function build_fstar() {
         else
             export_home FSTAR "$(pwd)"
 
-            fetch_vale &
             fetch_hacl &
             fetch_and_make_kremlin &
             fetch_mitls &
+            fetch_and_make_qd &
             {
                 if [ ! -d hacl-star-old ]; then
                     git clone https://github.com/mitls/hacl-star hacl-star-old
@@ -201,11 +262,14 @@ function build_fstar() {
                 fi
             } &
             wait
+            # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
+            fetch_vale
 
             # The commands above were executed in sub-shells and their EXPORTs are not
             # propagated to the current shell. Re-do.
             export_home HACL "$(pwd)/hacl-star"
             export_home KREMLIN "$(pwd)/kremlin"
+            export_home QD "$(pwd)/qd"
 
             # Once F* is built, run its main regression suite, along with more relevant
             # tests.
@@ -215,35 +279,16 @@ function build_fstar() {
             } &
 
             {
-                has_error="false"
-                cd vale
-                if [[ "$OS" == "Windows_NT" ]]; then
-                    ## This hack for determining the success of a vale run is needed
-                    ## because somehow scons is not returning the error code properly
-                    { timeout $timeout env VALE_SCONS_EXIT_CODE_OUTPUT_FILE=vale_exit_code ./run_scons.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output ; } || has_error="true"
-
-                    { [[ -f vale_exit_code ]] && [[ $(cat vale_exit_code) -eq 0 ]] ; } || has_error="true"
-                else
-                    timeout $timeout scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
-                fi
-                cd ..
-
-                if [[ $has_error == "true" ]]; then
-                    echo "Error - min-test (Vale)"
-                    echo " - min-test (Vale)" >>$ORANGE_FILE
-                fi
-            } &
-
-            {
-                OTHERFLAGS='--warn_error -276 --use_hint_hashes' timeout $timeout make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
+                OTHERFLAGS='--warn_error -276 --use_hint_hashes' \
+                NOOPENSSLCHECK=1 make -C hacl-star -j $threads min-test ||
                     {
-                        echo "Error - Hacl.Impl.SHA2_256.fst-verify (HACL*)"
-                        echo " - Hacl.Impl.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
+                        echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
+                        echo " - min-test (HACL*)" >>$ORANGE_FILE
                     }
             } &
 
             {
-                OTHERFLAGS='--use_hint_hashes' timeout $timeout make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
+                OTHERFLAGS='--use_hint_hashes' make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
                     {
                         echo "Error - Crypto.AEAD.Encrypt.fst-ver (HACL*)"
                         echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >>$ORANGE_FILE
@@ -252,35 +297,32 @@ function build_fstar() {
 
             # We now run all (hardcoded) tests in mitls-fstar@master
             {
-                OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
+                # First regenerate dependencies and parsers (maybe not
+                # really needed for now, since any test of this set
+                # already does this; but it will become necessary if
+                # we later decide to perform these tests in parallel,
+                # to avoid races.)
+                make -C mitls-fstar/src/tls refresh-depend
+
+                OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
                     {
                         echo "Error - StreamAE.fst-ver (mitls)"
                         echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
                     }
 
-                OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+                OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
                     {
                         echo "Error - Pkg.fst-ver (mitls verify)"
                         echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
                     }
 
-                OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout $timeout make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+                OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
                     {
                         echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
                         echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
                     }
             } &
 
-            # JP: doesn't work because it leads to uint128 being verified in the wrong Z3
-            # context (?) meaning that some proof obligations fail
-            # { cd kremlin/test && timeout 480 ../krml -warn-error @4 -static-header FStar -no-prefix \
-            #     Test128 Test128.fst -verify -verbose -fnouint128 -tmpdir .output/Test128.out || \
-            #   echo "test/Test128.test (KreMLin)" >> $ORANGE_FILE; } &
-
-            # { cd kremlin/test && timeout 480 ../krml -warn-error @4 -add-include '"kremstr.h"' \
-            #     main-Server.c -tmpdir .output/Server.out -no-prefix Server -verify \
-            #     Server.fst -verbose || \
-            #   echo "test/Server.test (KreMLin)" >> $ORANGE_FILE; } &
             wait
 
             # Make it an orange if there's a git diff. Note: FStar_Version.ml is in the
@@ -312,9 +354,10 @@ function build_fstar() {
 
 # Some environment variables we want
 export OCAMLRUNPARAM=b
-export OTHERFLAGS="--print_z3_statistics --use_hints --query_stats"
+export OTHERFLAGS="--use_hints --query_stats"
 export MAKEFLAGS="$MAKEFLAGS -Otarget"
 
 cd FStar
+rootPath=$(pwd)
 build_fstar $target
 cd ..

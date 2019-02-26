@@ -1,5 +1,5 @@
 [
-  "`è!M\f?4ò1wª[\u0006y\u007f¤",
+  "ìòe\u0013À¶ð\u0000ÚX8½©Gæ\u001d",
   [
     [
       "Unit1.RecursiveTypeFunctions.pre_t",
@@ -7,13 +7,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a9a333727b6f3d4d56e8c676c210e667"
+      "6048a4307a45a63baa7a85c7e77ccc7a"
     ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__T__item___0",
@@ -24,10 +27,10 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Unit1.RecursiveTypeFunctions.T",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_dcce9542b98cdc0b1ce1526881708dd3"
+        "refinement_interpretation_Tm_refine_dcce9542b98cdc0b1ce1526881708dd3"
       ],
       0,
-      "9f19fb3c1f706cd9994aa8044aadc873"
+      "026551c05c4d794a6f84ff5a22d22d3c"
     ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__TofS__item___0",
@@ -38,10 +41,10 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Unit1.RecursiveTypeFunctions.TofS",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_e6a5d49e9de9d9d32d37d5b69a69eb80"
+        "refinement_interpretation_Tm_refine_e6a5d49e9de9d9d32d37d5b69a69eb80"
       ],
       0,
-      "1144b50b42a2c06ab3d645154eea6ae2"
+      "acfbe83ab16848bac9980ef0d14b1ea0"
     ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__S__item___0",
@@ -52,10 +55,10 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Unit1.RecursiveTypeFunctions.S",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_463ab24589f7b97a63a32a93a8999adc"
+        "refinement_interpretation_Tm_refine_463ab24589f7b97a63a32a93a8999adc"
       ],
       0,
-      "bf78f5d9de30b593176be518bb40306a"
+      "7a408f4517f6349f43d8ac83a4ae14f4"
     ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__SofT__item___0",
@@ -66,10 +69,10 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_6c51bbe51c5c443619d248c8823721da"
+        "refinement_interpretation_Tm_refine_6c51bbe51c5c443619d248c8823721da"
       ],
       0,
-      "5da4b3381e56a0fb3a048bf76ba1d0d5"
+      "250e5b716c5e303d1f6e2ddc8cf48ae1"
     ],
     [
       "Unit1.RecursiveTypeFunctions.good_t",
@@ -85,7 +88,7 @@
         "subterm_ordering_Unit1.RecursiveTypeFunctions.TofS"
       ],
       0,
-      "877191dc18527047faa67d7ecb4f4d35"
+      "c6e9294532a9aeda043f154b6c4e3858"
     ],
     [
       "Unit1.RecursiveTypeFunctions.good_t",
@@ -101,7 +104,7 @@
         "subterm_ordering_Unit1.RecursiveTypeFunctions.SofT"
       ],
       0,
-      "580a798765c797438573d1fd937b496a"
+      "1009b3e6c4b07eac87c1b7f2f433525b"
     ],
     [
       "Unit1.RecursiveTypeFunctions.extract_nat_t",
@@ -126,11 +129,11 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.T__0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.TofS__0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_7538d5cfc8ae2f1d54df096c5c1addde",
+        "refinement_interpretation_Tm_refine_7538d5cfc8ae2f1d54df096c5c1addde",
         "subterm_ordering_Unit1.RecursiveTypeFunctions.TofS"
       ],
       0,
-      "771ea0e7f617815b04f937d185168a28"
+      "d606d0640d39aab09c55031657f241ab"
     ],
     [
       "Unit1.RecursiveTypeFunctions.extract_nat_t",
@@ -156,11 +159,11 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.S__0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.SofT__0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_5d9358545336a9f6995749c0b6c89ac7",
+        "refinement_interpretation_Tm_refine_5d9358545336a9f6995749c0b6c89ac7",
         "subterm_ordering_Unit1.RecursiveTypeFunctions.SofT"
       ],
       0,
-      "d4dee2b302303e53c935bcd15176d703"
+      "08f486c0676f869c01e140403c2849d2"
     ],
     [
       "Unit1.RecursiveTypeFunctions.pointwise_eq",
@@ -180,7 +183,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "184f3a93fd5c108e7fd1a1719c9dd108"
+      "312d0de62472b79f5e50999dfde5e680"
     ],
     [
       "Unit1.RecursiveTypeFunctions.pointwise_eq_length",
@@ -188,33 +191,13 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_correspondence_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_irrelevance_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "equation_with_fuel_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
-        "false_interp", "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Prims.int",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "l_and-interp", "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "subterm_ordering_Prims.Cons"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9c5a179d641427c5c5ceedd3e032a52b"
+      "101145276e5d878e8d636d15bc520edd"
     ],
     [
       "Unit1.RecursiveTypeFunctions.pointwise_eq_length",
@@ -227,28 +210,31 @@
         "@fuel_correspondence_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.eqtype", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "l_and-interp", "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "l_and-interp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a7bb41364340197e24bf6a4d1cfc76e5"
+      "64f127c3a575b9c2c28f70ced43165d4"
     ],
     [
       "Unit1.RecursiveTypeFunctions.pre_t",
@@ -256,13 +242,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "044ffeda98b25f0ff3f367a84a337764"
+      "9f62212ff46d2e3ab4156533ca43aeef"
     ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__T__item___0",
@@ -273,10 +262,10 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Unit1.RecursiveTypeFunctions.T",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_dcce9542b98cdc0b1ce1526881708dd3"
+        "refinement_interpretation_Tm_refine_dcce9542b98cdc0b1ce1526881708dd3"
       ],
       0,
-      "90e240d021f31af0be8cf96a7a5b4052"
+      "81d796b0bddc340316d397b93f224c2b"
     ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__TofS__item___0",
@@ -287,10 +276,10 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Unit1.RecursiveTypeFunctions.TofS",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_e6a5d49e9de9d9d32d37d5b69a69eb80"
+        "refinement_interpretation_Tm_refine_e6a5d49e9de9d9d32d37d5b69a69eb80"
       ],
       0,
-      "9d09028d395598e182b7492a872c282e"
+      "98a0332dff9f94bda053692e02ad42f2"
     ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__S__item___0",
@@ -301,10 +290,10 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Unit1.RecursiveTypeFunctions.S",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_463ab24589f7b97a63a32a93a8999adc"
+        "refinement_interpretation_Tm_refine_463ab24589f7b97a63a32a93a8999adc"
       ],
       0,
-      "8a470653baade08b44d203d8572dc56e"
+      "f5eb9dc92fb78f3add0dde63bab190b2"
     ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__SofT__item___0",
@@ -315,10 +304,10 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_6c51bbe51c5c443619d248c8823721da"
+        "refinement_interpretation_Tm_refine_6c51bbe51c5c443619d248c8823721da"
       ],
       0,
-      "72578fdf98a275cb905414ec7781170a"
+      "7db8234a29beb008d77aa28db627eabe"
     ],
     [
       "Unit1.RecursiveTypeFunctions.good_t",
@@ -334,7 +323,7 @@
         "subterm_ordering_Unit1.RecursiveTypeFunctions.TofS"
       ],
       0,
-      "1fd93f3e682af9bbe3b8e1a4a53e4cea"
+      "c1a353d284b295557846762cfc65aff0"
     ],
     [
       "Unit1.RecursiveTypeFunctions.good_t",
@@ -350,7 +339,7 @@
         "subterm_ordering_Unit1.RecursiveTypeFunctions.SofT"
       ],
       0,
-      "dc85d6b27c2bd7447c37aff0c24344b4"
+      "04a4befcc2c04c6bce21a8b8aa440b68"
     ],
     [
       "Unit1.RecursiveTypeFunctions.extract_nat_t",
@@ -375,11 +364,11 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.T__0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.TofS__0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_7538d5cfc8ae2f1d54df096c5c1addde",
+        "refinement_interpretation_Tm_refine_7538d5cfc8ae2f1d54df096c5c1addde",
         "subterm_ordering_Unit1.RecursiveTypeFunctions.TofS"
       ],
       0,
-      "b4d65ab17d9287590a2712cf119e7db3"
+      "2959c2ec493dee005f6b36f048693cf4"
     ],
     [
       "Unit1.RecursiveTypeFunctions.extract_nat_t",
@@ -405,11 +394,11 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.S__0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.SofT__0",
-        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_5d9358545336a9f6995749c0b6c89ac7",
+        "refinement_interpretation_Tm_refine_5d9358545336a9f6995749c0b6c89ac7",
         "subterm_ordering_Unit1.RecursiveTypeFunctions.SofT"
       ],
       0,
-      "bdd563557e1b295a921b4efe64c903c4"
+      "649b0da6f45b09330ec32c87b4e255df"
     ],
     [
       "Unit1.RecursiveTypeFunctions.pointwise_eq",
@@ -429,7 +418,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "37df650c2dc3888c24595a5f16526f68"
+      "633e8a5bfee37a1a13955b883c6f46aa"
     ],
     [
       "Unit1.RecursiveTypeFunctions.pointwise_eq_length",
@@ -439,11 +428,11 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e2dc355e38e88b745a3259b8b3f48f9a"
+      "cdf41c28a615efa478ab496f4510fb8b"
     ]
   ]
 ]

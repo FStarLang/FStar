@@ -25,112 +25,43 @@ open FStar.All
 open FStar.Seq
 open FStar.Ref
 
-abstract type array (t:Type) = ref (seq t)
+let array a = ref (seq a)
 
-      (* #a:Type -> heap -> ref a ->  GTot a *)
-abstract val sel: #a:Type -> heap -> array a -> GTot (seq a)
-let sel #a h s = Heap.sel h s
+let as_ref #_ arr = arr
 
-abstract val contains: #a:Type -> heap -> array a -> GTot (bool)
-let contains #a h s =
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains h s)
-
-abstract let unused_in (#a:Type) (arr:array a) (h:heap) :GTot bool
- = FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in arr h)
-
-abstract val heap_upd: #a:Type -> heap -> array a -> seq a -> GTot heap
-let heap_upd #a h r v = Heap.upd h r v
-
-abstract let addr_of (#a:Type) (arr:array a) :GTot nat = addr_of arr
-
-let only (#a:Type) (arr:array a) :GTot (Set.set nat) = Set.singleton (addr_of arr)
-
-abstract val op_At_Bar: #a:Type -> s1:array a -> s2:array a -> ST (array a)
-  (requires (fun h -> contains h s1 /\ contains h s2))
-  (ensures  (fun h0 s h1 -> contains h0 s1 /\ contains h0 s2 /\ contains h1 s
-    /\ sel h1 s == Seq.append (sel h0 s1) (sel h0 s2)
-    /\ modifies Set.empty h0 h1))
 let op_At_Bar #a s1 s2 =
   let s1' = !s1 in
   let s2' = !s2 in
   ST.alloc (Seq.append s1' s2')
 
-abstract val of_seq: #a:Type -> s:seq a -> ST (array a)
-  (requires (fun h -> True))
-  (ensures  (fun h0 x h1 -> (x `unused_in` h0
-                             /\ contains h1 x
-                             /\ modifies Set.empty h0 h1
-                             /\ sel h1 x==s)))
-let of_seq #a s =
-  ST.alloc s
+let of_seq #a s = ST.alloc s
 
-abstract val to_seq: #a:Type -> s:array a -> ST (seq a)
-  (requires (fun h -> contains h s))
-  (ensures  (fun h0 x h1 -> (sel h0 s==x /\ h0==h1)))
-let to_seq #a s =
-  !s
+let to_seq #a s = !s
 
-abstract val create : #a:Type -> n:nat -> init:a -> ST (array a)
-  (requires (fun h -> True))
-  (ensures  (fun h0 x h1 -> (x `unused_in` h0
-                             /\ contains h1 x
-                             /\ modifies Set.empty h0 h1
-                             /\ sel h1 x==Seq.create n init)))
-  (* (ensures  (fun h0 x h1 -> (~ (contains h0 x) *)
-  (*                            /\ contains h1 x *)
-  (*                            /\ modifies Set.empty h0 h1 *)
-  (*                            /\ sel h1 x==Seq.create n init))) *)
-let create #a n init =
-  ST.alloc (Seq.create n init)
+let create #a n init = ST.alloc (Seq.create n init)
 
-abstract val index : #a:Type -> x:array a -> n:nat -> ST a
-  (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
-  (ensures  (fun h0 v h1 -> (n < Seq.length (sel h0 x)
-                             /\ h0==h1
-                             /\ v==Seq.index (sel h0 x) n)))
 let index #a x n =
   let s = to_seq x in
   Seq.index s n
 
-abstract val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
-  (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
-  (ensures  (fun h0 u h1 -> (n < Seq.length (sel h0 x)
-                            /\ contains h1 x
-			    /\ modifies (Set.singleton (addr_of x)) h0 h1
-			    /\ sel h1 x == Seq.upd (sel h0 x) n v)))
 let upd #a x n v =
   let s = !x in
   let s' = Seq.upd s n v in
   x:= s'
 
-abstract val length: #a:Type -> x:array a -> ST nat
-  (requires (fun h -> contains h x))
-  (ensures  (fun h0 y h1 -> y=length (sel h0 x) /\ h0==h1))
-let length #a x =
-  let s = !x in Seq.length s
+let length #a x = let s = !x in Seq.length s
 
-abstract val op: #a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
-  (requires (fun h -> contains h x))
-  (ensures  (fun h0 u h1 -> modifies (Set.singleton (addr_of x)) h0 h1 /\ sel h1 x==f (sel h0 x)))
 let op #a f x =
   let s = !x in
   let s' = f s in
   x := s'
 
-val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
-                 -> ST unit (requires (fun h -> contains h x /\ j < Seq.length (sel h x)))
-                            (ensures (fun h0 _u h1 ->
-                                      (j < Seq.length (sel h0 x))
-                                      /\ contains h1 x
-				      /\ modifies (Set.singleton (addr_of x)) h0 h1
-				      /\ sel h1 x == Seq.swap (sel h0 x) i j))
 let swap #a x i j =
   let tmpi = index x i in
   let tmpj = index x j in
   upd x j tmpi;
   upd x i tmpj
 
-(* Helper functions for stateful array manipulation *)
 val copy_aux:
   #a:Type -> s:array a -> cpy:array a -> ctr:nat ->
      ST unit
@@ -147,21 +78,12 @@ let rec copy_aux #a s cpy ctr =
   | _ -> upd cpy ctr (index s ctr);
 	 copy_aux s cpy (ctr+1)
 
-val copy:
-  #a:Type -> s:array a ->
-  ST (array a)
-     (requires (fun h -> contains h s
-			 /\ Seq.length (sel h s) > 0))
-     (ensures (fun h0 r h1 -> (modifies Set.empty h0 h1)
-				     /\ r `unused_in` h0
-				     /\ (contains h1 r)
-				     /\ (Seq.equal (sel h1 r) (sel h0 s))))
 let copy #a s =
   let cpy = create (length s) (index s 0) in
   copy_aux s cpy 0;
   cpy
 
-val blit_aux:
+private val blit_aux:
   #a:Type -> s:array a -> s_idx:nat -> t:array a -> t_idx:nat -> len:nat -> ctr:nat ->
   ST unit
      (requires (fun h ->
@@ -216,24 +138,11 @@ private val blit:
 let rec blit #a s s_idx t t_idx len =
   blit_aux s s_idx t t_idx len 0
 
-val sub :
-  #a:Type -> s:array a -> idx:nat -> len:nat ->
-  ST (array a)
-    (requires (fun h ->
-      (contains h s)
-      /\ (Seq.length (sel h s) > 0)
-      /\ (idx + len <= Seq.length (sel h s))))
-    (ensures (fun h0 t h1 ->
-      (contains h1 t)
-      /\ (contains h0 s)
-      /\ t `unused_in` h0
-      /\ (modifies Set.empty h0 h1)
-      /\ (Seq.length (sel h0 s) > 0)
-      /\ (idx + len <= Seq.length (sel h0 s))
-      /\ (Seq.equal (Seq.slice (sel h0 s) idx (idx+len)) (sel h1 t))))
-
 #set-options "--z3rlimit 120"
 let sub #a s idx len =
+  let h0 = ST.get () in
   let t = create len (index s 0) in
   blit s idx t 0 len;
+  let h1 = ST.get () in
+  assert (Seq.equal (Seq.slice (sel h0 s) idx (idx + len)) (sel h1 t));
   t

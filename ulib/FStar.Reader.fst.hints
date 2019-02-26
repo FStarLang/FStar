@@ -1,5 +1,5 @@
 [
-  "MRoïﬁ¯ZS+yˆ\u000e◊nA¶",
+  "°`™ïa3*öBÖD\u001d√;èˇ",
   [
     [
       "FStar.Reader.f",
@@ -8,11 +8,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_int", "unit_typing"
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
       ],
       0,
-      "660d7c0adecc35e2d1924e16a00282e2"
+      "c6186dd6eee1f9f47aceca3f7ae5b149"
     ],
     [
       "FStar.Reader.g",
@@ -22,15 +21,22 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Heap.trivial_rel", "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
-        "refinement_interpretation_FStar.Reader_Tm_refine_86fcbd96051e23cf91d838a51a3c3445",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_rel", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_Prims.eqtype",
+        "equation_Prims.l_True",
+        "function_token_typing_FStar.Heap.trivial_preorder",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_inversion",
+        "interpretation_Tm_abs_fa0cb1fe1698a880aba4dd22bebacfbf",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_86fcbd96051e23cf91d838a51a3c3445",
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "true_interp", "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "b8698c8aee15bcc30c54027b6ada0ce6"
+      "29ccb781c841c7384416527224a10a42"
     ]
   ]
 ]

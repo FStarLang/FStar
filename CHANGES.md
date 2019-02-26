@@ -52,6 +52,61 @@ Guidelines for the changelog:
      the multiplication on integers, the `&` symbol can be used for
      tuples while reserving `*` for multiplication.
 
+## Extraction
+
+   * Cross-module inlining: Declarations in interfaces marked with the
+     `inline_for_extraction` qualifier have their definitions inlined
+     in client code. Currently guarded by the --cmi flag, this will
+     soon be the default behavior. Also see:
+     https://github.com/FStarLang/FStar/wiki/Cross-module-Inlining
+     and https://github.com/FStarLang/FStar/tree/master/examples/extraction/cmi.
+
+## SMT Encoding
+
+   * A soundness bug was fixed in the encoding of recursive functions
+     to SMT. The flaw resulted from omitting typing guards in the
+     axioms corresponding to the equational behavior of pure and ghost
+     recursive functions. The fix makes reasoning about recursive
+     functions with SMT slightly more demanding: if the typing of an
+     application of a recursive functions requires some non-trivial
+     proof, the SMT solver may require some assistance with that proof
+     before it can unfold the definition of the recursive
+     function. For an example of the kind of additional proof that may
+     be needed, see these commits:
+     https://github.com/FStarLang/FStar/commit/936ce47f2479af52f3c3001bd87bed810dbf6e1f
+     and https://github.com/project-everest/hacl-star/commit/2220ab81bbae735495a42ced6485665d9facdb0b.
+     We need to call lemmas
+     to prove that the recursive function that appears in the
+     inductive hypothesis is well-typed
+     (e.g. calling `wp_monotone` lemma for well-typedness of `wp_compute` in the second commit) .
+     In some cases, it may also be possible to use the normalizer to
+     do the unfolding:
+     https://github.com/project-everest/hacl-star/commit/6e9175e607e591faa5b6a0d6052fc4a336f7bf41#diff-127ee9d47350eff0fa0d79847257d493R290.
+     Another kind of change required hoisting some type declarations:
+     https://github.com/FStarLang/FStar/commit/819ad64065f1e70aec3665f5df6b58a7d43cdce1
+     to get around imprecision in the SMT encoding. This can be handled in F*
+     with an additional SMT axiom on type constructors like `list`, but
+     we only found a couple of instances of this. So, for now, we are going with the
+     hoisting workaround.
+
+   * The encoding of nullary constants changed. See the documentation
+     in https://github.com/FStarLang/FStar/pull/1645
+
+## Calculational proofs
+
+   * F\* now supports proofs in calculational style, i.e. where an
+     equality between two expressions is expressed via a sequence of
+     equalities each of which is proven individually. In fact, these
+     proofs can be done for any relation, provided that steps compose
+     properly (e.g., `a < b == c` implies `a < c`, but `a <= b == c`
+     does not imply `a < c`). For some examples, see `examples/calc/`.
+
+## Miscellaneous
+
+   * Development builds of F\* no longer report the date of the build
+     in `fstar --version`. This is to prevent needlessly rebuilding
+     F\* even when the code does not change.
+
 # Version 0.9.6.0
 
 ## Command line options
@@ -73,6 +128,14 @@ Guidelines for the changelog:
    leak. See
    https://github.com/FStarLang/FStar/wiki/Revised-checking-of-a-module's-interface
    for more information.
+
+   `--keep_query_captions true|false` (default `true`) when set to `true`,
+   and when `--log_queries` is enabled, causes .smt2 files to be logged with
+   comments; otherwise comments are not printed. Note, the comments
+   can be quite verbose.
+
+   `--already_cached "(* | [+|-]namespace)*"`, insists that .checked files be
+   present or absent for modules that match the namespace pattern provided.
 
 ## Type inference
 
@@ -223,7 +286,7 @@ Date:   Mon Apr 30 16:57:21 2018 -0700
   3. The head symbol of `e1` is not marked `irreducible` and it is not an `assume val`
   4. `e1` is not a `let rec`
 
-  This is breaking change. Consider the following example (adapted
+  This is a breaking change. Consider the following example (adapted
   from `ulib/FStar.Algebra.Monoid.fst`):
 
   ```

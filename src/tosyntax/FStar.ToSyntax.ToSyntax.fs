@@ -120,6 +120,42 @@ let rec is_comp_type env t =
 
 let unit_ty = mk_term (Name C.unit_lid) Range.dummyRange Type_level
 
+type env_t = Env.env
+type lenv_t = list<bv>
+
+let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : option<S.term> =
+    let tm_attrs_opt =
+        if resolve
+        then Env.try_lookup_lid_with_attributes env l
+        else Env.try_lookup_lid_with_attributes_no_resolve env l
+    in
+    match tm_attrs_opt with
+    | None -> None
+    | Some (tm, attrs) ->
+        let warn_if_deprecated (attrs:list<attribute>) :unit =
+          List.iter (fun a -> match a.n with
+            | Tm_app ({ n = Tm_fvar fv }, args) when lid_equals fv.fv_name.v C.deprecated_attr ->
+              let msg = (Print.term_to_string tm) ^ " is deprecated" in
+              let msg =
+                if List.length args > 0 then
+                  (match (fst (List.hd args)).n with
+                   | Tm_constant (Const_string (s, _)) when not (trim_string s = "") -> msg ^ ", use "  ^ s ^ " instead"
+                   | _ -> msg)
+                else msg
+              in
+              log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
+            | Tm_fvar fv when lid_equals fv.fv_name.v C.deprecated_attr ->
+              let msg = (Print.term_to_string tm) ^ " is deprecated" in
+              log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
+            | _ -> ()) attrs
+        in
+        warn_if_deprecated attrs;
+        let tm = setpos tm in
+        Some tm
+
+let desugar_name mk setpos env resolve l =
+    fail_or env (desugar_name' setpos env resolve) l
+
 let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
 
 let op_as_term env arity rng op : option<S.term> =
@@ -158,8 +194,6 @@ let op_as_term env arity rng op : option<S.term> =
       if Options.ml_ish ()
       then r C.list_append_lid     (Delta_equational_at_level 2)
       else r C.list_tot_append_lid (Delta_equational_at_level 2)
-    | "^" ->
-      r C.strcat_lid delta_equational
     | "|>" ->
       r C.pipe_right_lid delta_equational
     | "<|" ->
@@ -182,7 +216,8 @@ let op_as_term env arity rng op : option<S.term> =
       r C.iff_lid (Delta_constant_at_level 2)
     | _ -> None
   in
-  match Env.try_lookup_lid env (compile_op_lid arity op.idText op.idRange) with
+  match desugar_name' (fun t -> {t with pos=op.idRange})
+        env true (compile_op_lid arity op.idText op.idRange) with
   | Some t -> Some t
   | _ -> fallback()
 
@@ -257,6 +292,14 @@ and free_type_vars env t = match (unparen t).tm with
   | Attributes cattributes ->
       (* attributes should be closed but better safe than sorry *)
       List.collect (free_type_vars env) cattributes
+
+  | CalcProof (rel, init, steps) ->
+    free_type_vars env rel
+    @ free_type_vars env init
+    @ List.collect (fun (CalcStep (rel, just, next)) ->
+                            free_type_vars env rel
+                            @ free_type_vars env just
+                            @ free_type_vars env next) steps
 
   | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
   | Let _
@@ -363,9 +406,6 @@ type bnd =
 let binder_of_bnd = function
   | LocalBinder (a, aq) -> a, aq
   | _ -> failwith "Impossible"
-
-type env_t = Env.env
-type lenv_t = list<bv>
 
 (* TODO : shouldn't this be Tot by default ? *)
 let mk_lb (attrs, n, t, e, pos) = {
@@ -843,29 +883,6 @@ and desugar_machine_integer env repr (signedness, width) range =
       raise_error (Errors.Fatal_UnexpectedNumericLiteral, (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm)) range in
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
-
-and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
-    let tm, attrs = fail_or env ((if resolve then Env.try_lookup_lid_with_attributes else Env.try_lookup_lid_with_attributes_no_resolve) env) l in
-    let warn_if_deprecated (attrs:list<attribute>) :unit =
-      List.iter (fun a -> match a.n with
-        | Tm_app ({ n = Tm_fvar fv }, args) when lid_equals fv.fv_name.v C.deprecated_attr ->
-          let msg = (Print.term_to_string tm) ^ " is deprecated" in
-          let msg =
-            if List.length args > 0 then
-              (match (fst (List.hd args)).n with
-               | Tm_constant (Const_string (s, _)) when not (trim_string s = "") -> msg ^ ", use "  ^ s ^ " instead"
-               | _ -> msg)
-            else msg
-          in
-          log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
-        | Tm_fvar fv when lid_equals fv.fv_name.v C.deprecated_attr ->
-          let msg = (Print.term_to_string tm) ^ " is deprecated" in
-          log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
-        | _ -> ()) attrs
-    in
-    warn_if_deprecated attrs;
-    let tm = setpos tm in
-    tm
 
 and desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflag> =
     let desugar_attribute t =
@@ -1489,6 +1506,39 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                } in
       mk <| Tm_quoted (desugar_term env e, qi), noaqs
 
+    | CalcProof (rel, init_expr, steps) ->
+      (* We elaborate it into surface syntax and recursively desugar it *)
+
+      (* Annoying: (<) is not a preorder since it has type
+       * `int -> int -> Tot bool`, and it's not subtyped to
+       * `int -> int -> Tot Type0`, so we eta-expand and annotate
+       * to make it kick in. *)
+      let eta_and_annot rel =
+        let x = Ident.gen rel.range in
+        let y = Ident.gen rel.range in
+        let xt = mk_term (Tvar x) rel.range Expr in
+        let yt = mk_term (Tvar y) rel.range Expr in
+        let pats = [mk_pattern (PatVar (x, None)) rel.range; mk_pattern (PatVar (y, None)) rel.range] in
+        mk_term (Abs (pats,
+            mk_term (Ascribed (
+                mkApp rel [(xt, Nothing); (yt, Nothing)] rel.range,
+                mk_term (Name (Ident.lid_of_str "Type0")) rel.range Expr,
+                None)) rel.range Expr)) rel.range Expr
+      in
+      let rel = eta_and_annot rel in
+
+      let wild r = mk_term Wild r Expr in
+      let init   = mk_term (Var C.calc_init_lid) init_expr.range Expr in
+      let step r = mk_term (Var C.calc_step_lid) r Expr in
+      let finish = mkApp (mk_term (Var C.calc_finish_lid) top.range Expr) [(rel, Nothing)] top.range in
+
+      let e = mkApp init [(init_expr, Nothing)] init_expr.range in
+      let e = List.fold_left (fun e (CalcStep (rel, just, next_expr)) ->
+                                  mkApp (step rel.range)
+                                        [(eta_and_annot rel, Nothing); (next_expr, Nothing); (thunk e, Nothing); (thunk just, Nothing)] just.range) e steps in
+      let e = mkApp finish [(thunk e, Nothing)] init_expr.range in
+      desugar_term_maybe_top top_level env e
+
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
 
     | _ ->
@@ -1549,11 +1599,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
         in
         (* The postcondition for Lemma is thunked, to allow to assume the precondition
          * (c.f. #57), so add the thunking here *)
-        let thunk_ens_ (ens : AST.term) : AST.term =
-            let wildpat = mk_pattern (PatWild None) ens.range in
-            mk_term (Abs ([wildpat], ens)) ens.range Expr
-        in
-        let thunk_ens (e, i) = (thunk_ens_ e, i) in
+        let thunk_ens (e, i) = (thunk e, i) in
         let fail_lemma () =
              let expected_one_of = ["Lemma post";
                                     "Lemma (ensures post)";
@@ -2191,12 +2237,19 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
       let data_ops = docs_tps_sigelts |> List.collect (fun (_, tps, se) -> mk_data_projector_names quals env se) in
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
-        | Sig_inductive_typ(tname, _, tps, k, _, constrs) when (List.length constrs > 1)->
+        | Sig_inductive_typ(tname, _, tps, k, _, constrs) ->
           let quals = se.sigquals in
           let quals = if List.contains S.Abstract quals && not (List.contains S.Private quals)
                       then S.Private::quals
                       else quals in
-          mk_data_discriminators quals env constrs
+          mk_data_discriminators quals env
+            (constrs |> List.filter (fun data_lid ->  //AR: create data discriminators only for non-record data constructors
+                                     let data_quals =
+                                       let data_se = sigelts |> List.find (fun se -> match se.sigel with
+                                                                                     | Sig_datacon (name, _, _, _, _, _) -> lid_equals name data_lid
+                                                                                     | _ -> false) |> must in
+                                       data_se.sigquals in
+                                     not (data_quals |> List.existsb (function | RecordConstructor _ -> true | _ -> false))))
         | _ -> []) in
       let ops = discs@data_ops in
       let env = List.fold_left push_sigelt env ops in
@@ -2446,11 +2499,12 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     if List.length args <> List.length ed.binders
     then raise_error (Errors.Fatal_ArgumentLengthMismatch, "Unexpected number of arguments to effect constructor") defn.range;
     let ed_binders, _, ed_binders_opening = Subst.open_term' ed.binders S.t_unit in
-    let sub (us, x) =
-        let x = Subst.subst (Subst.shift_subst (List.length us) ed_binders_opening) x in
+    let sub' shift_n (us, x) =
+        let x = Subst.subst (Subst.shift_subst (shift_n + List.length us) ed_binders_opening) x in
         let s = U.subst_of_list ed_binders args in
         Subst.close_tscheme binders (us, (Subst.subst s x))
     in
+    let sub = sub' 0 in
     let mname=qualify env0 eff_name in
     let ed = {
             mname       =mname;
@@ -2473,6 +2527,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             bind_repr   =sub ed.bind_repr;
             return_repr =sub ed.return_repr;
             actions     = List.map (fun action ->
+                let nparam = List.length action.action_params in
                 {
                     // Since we called enter_monad_env before, this is going to generate
                     // a name of the form FStar.ST.uu___proj__STATE__item__get
@@ -2480,8 +2535,10 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                     action_unqualified_name = action.action_unqualified_name;
                     action_univs = action.action_univs ;
                     action_params = action.action_params ;
-                    action_defn =snd (sub ([], action.action_defn)) ;
-                    action_typ =snd (sub ([], action.action_typ))
+                    (* These need to be shifted further since they have the action's parameters also in scope *)
+                    action_defn =snd (sub' nparam ([], action.action_defn)) ;
+                    action_typ =snd (sub' nparam ([], action.action_typ))
+                        // GM: ^ Although isn't this one always Tm_unknown at this point?
                 })
                 ed.actions;
             eff_attrs   = ed.eff_attrs;
@@ -2784,11 +2841,12 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         then Assumption::quals
         else quals in
     let lid = qualify env id in
+    let attrs = List.map (desugar_term env) d.attrs in
     let se = { sigel = Sig_declare_typ(lid, [], t);
                sigquals = List.map (trans_qual None) quals;
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = [] } in
+               sigattrs = attrs } in
     let env = push_sigelt env se in
     let env = push_doc env lid d.doc in
     env, [se]

@@ -1,5 +1,5 @@
 [
-  "­·\u0013Ë²‡\u0015Ô\u0015q-(\u0000àO\"",
+  "×‡á›P\u001cã\u0007¬ÇÜ÷Y Ë×",
   [
     [
       "Bug284.foo",
@@ -8,10 +8,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Bug284_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+        "refinement_interpretation_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "b687f3b5871ec178c317fedc4a34f1cf"
+      "fe21c087a845c4ee51761befee70f8bd"
     ]
   ]
 ]

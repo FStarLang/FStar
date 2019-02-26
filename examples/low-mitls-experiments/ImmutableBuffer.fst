@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module ImmutableBuffer
 
 module B = LowStar.Buffer
@@ -90,6 +105,20 @@ let test_ub () :HST.St unit =
   let j = UB.uindex b 1ul in  //1ul remains initialized and has the same value as before
   assert (Seq.index (UB.as_seq h0 b) 1 == Seq.index (Seq.slice (UB.as_seq h0 b) 0 2) 1);
   assert (j == 2)
+
+
+(***** Tests for bigops in the buffer library *****)
+#push-options "--max_fuel 0 --max_ifuel 0"
+let test_bigops (b1:UB.ubuffer int) (b2:IB.ibuffer int) (b3:B.buffer int) (h h0 h1:HS.mem) : unit =
+  let open LowStar.Buffer in
+  let l1, l2, l3 = loc_buffer b1, loc_buffer b2, loc_buffer b3 in
+  assume (live h b1 /\ live h b2 /\ live h b3);
+  assume (loc_disjoint l1 l2 /\ loc_disjoint l2 l3 /\ loc_disjoint l3 l1);
+  assume (modifies (loc_union l1 (loc_union l2 l3)) h0 h1);
+  assert (all_disjoint [l1; l2; l3]);
+  assert (all_live h [buf b1; buf b2; buf b3]);
+  assert (modifies (loc_union_l [l1; l2; l3]) h0 h1)
+#pop-options
 
 // (*
 //  * An example of a two elements buffer

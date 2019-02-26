@@ -70,9 +70,10 @@ let mlconst_of_const' (sctt : sconst) =
   | Const_set_range_of ->
     failwith "Unhandled constant: range_of/set_range_of"
 
+  | Const_real _
   | Const_reify
   | Const_reflect _ ->
-    failwith "Unhandled constant: reify/reflect"
+    failwith "Unhandled constant: real/reify/reflect"
 
 let mlconst_of_const (p:Range.range) (c:sconst) =
     try mlconst_of_const' c

@@ -1,0 +1,35 @@
+[
+  "U\b\u000ba\u001fA(¼Œ8’2nF=\u007f",
+  [
+    [
+      "NArrows.uu___300",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_NArrows.n_arrow_arr",
+        "equation_NArrows.n_arrow_int", "equation_NArrows.n_arrows",
+        "equation_NArrows.n_arrows_t", "equation_NArrows.xxx",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0", "typing_NArrows.xxx"
+      ],
+      0,
+      "e1eca025212d7e7c2e8e5ff7bf07ce03"
+    ],
+    [
+      "NArrows.uu___300",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_NArrows.n_arrow_arr",
+        "equation_NArrows.n_arrow_int", "equation_NArrows.n_arrows",
+        "equation_NArrows.n_arrows_t", "equation_NArrows.xxx",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0", "typing_NArrows.xxx"
+      ],
+      0,
+      "a49995551f535a175f3a43f86c447903"
+    ]
+  ]
+]

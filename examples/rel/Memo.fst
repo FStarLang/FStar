@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Memo
 
 open FStar.Classical
@@ -175,10 +190,12 @@ let to_memo_pack (f : dom -> Tot codom) : Tot (memo_pack f) =
   MemoPack [] (memo_extr f)
 
 
+type t (p:dom -> Type0) = x:dom{p x} -> Memo codom
+
 (* Specification-less memoization of a memoized function and its extrinsic proof *)
 
 (*  *)
-let memo_extr_p (p:dom -> Type0) (f : (x:dom{p x} -> Memo codom)) (x:dom{p x}) : Memo codom
+let memo_extr_p (p:dom -> Type0) (f : t p) (x:dom{p x}) : Memo codom
 = match MEMO?.get x with
   | Some y -> y
   | None ->
@@ -186,7 +203,7 @@ let memo_extr_p (p:dom -> Type0) (f : (x:dom{p x} -> Memo codom)) (x:dom{p x}) :
     MEMO?.put x y ;
     y
 
-let memo_extr_p_lemma (p:dom -> Type0) (f: (x:dom{p x} -> Memo codom)) (g:dom -> Tot codom) (h0:heap) (x:dom)
+let memo_extr_p_lemma (p:dom -> Type0) (f: t p) (g:dom -> Tot codom) (h0:heap) (x:dom)
   : Lemma (requires (valid_memo h0 g /\ f `computes` g))
     (ensures (p x ==> (let (y, h1) = reify (memo_extr_p p f x) h0 in y == g x /\ valid_memo h1 g)))
 = match reify (MEMO?.get x) h0 with

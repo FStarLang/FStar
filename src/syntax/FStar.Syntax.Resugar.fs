@@ -152,8 +152,12 @@ let string_to_op s =
   match s with
   | "op_String_Assignment" -> Some (".[]<-", None)
   | "op_Array_Assignment" -> Some (".()<-", None)
+  | "op_Brack_Lens_Assignment" -> Some (".[||]<-", None)
+  | "op_Lens_Assignment" -> Some (".(||)<-", None)
   | "op_String_Access" -> Some (".[]", None)
   | "op_Array_Access" -> Some (".()", None)
+  | "op_Brack_Lens_Access" -> Some (".[||]", None)
+  | "op_Lens_Access" -> Some (".(||)", None)
   | _ ->
     if BU.starts_with s "op_" then
       let s = BU.split (BU.substring_from s (String.length "op_"))  "_" in
@@ -180,7 +184,6 @@ let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
     (C.read_lid       , "!" );
     (C.list_append_lid, "@" );
     (C.list_tot_append_lid,"@");
-    (C.strcat_lid     , "^" );
     (C.pipe_right_lid , "|>");
     (C.pipe_left_lid  , "<|");
     (C.op_Eq          , "=" );
@@ -708,9 +711,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           mk (A.Name t)
       | Meta_monadic (name, t)
       | Meta_monadic_lift (name, _, t) ->
-        mk (A.Ascribed(resugar_term' env e,
-                       mk (A.Construct(name,[resugar_term' env t, A.Nothing])),
-                       None))
+        resugar_term' env e
       end
 
     | Tm_unknown -> mk A.Wild
@@ -752,7 +753,7 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
 
   | Comp c ->
     let result = (resugar_term' env c.result_typ, A.Nothing) in
-    if (Options.print_effect_args()) then
+    if (Options.print_effect_args()) || lid_equals c.effect_name C.effect_Lemma_lid then
       let universe = List.map (fun u -> resugar_universe u) c.comp_univs in
       let args =
        if (lid_equals c.effect_name C.effect_Lemma_lid) then (
@@ -1051,7 +1052,7 @@ let resugar_eff_decl' env for_free r q ed =
   let eff_binders = eff_binders |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
   let eff_typ = resugar_term' env eff_typ in
   let ret_wp = resugar_tscheme'' env "ret_wp" ed.ret_wp in
-  let bind_wp = resugar_tscheme'' env "bind_wp" ed.ret_wp in
+  let bind_wp = resugar_tscheme'' env "bind_wp" ed.bind_wp in
   let if_then_else = resugar_tscheme'' env "if_then_else" ed.if_then_else in
   let ite_wp = resugar_tscheme'' env "ite_wp" ed.ite_wp in
   let stronger = resugar_tscheme'' env "stronger" ed.stronger in

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module StringPrinterTest.Aux
 include StringPrinter.RecC
 
@@ -18,6 +33,7 @@ let rec example (x: U32.t) : Tot (m unit) (decreases (U32.v x)) =
 let example_do_while : (x: U32.t) -> Tot (y: m unit { y () == example x () } ) =
   T.synth_by_tactic (fun () -> mk_do_while example )
 
+#push-options "--admit_smt_queries true"
 inline_for_extraction
 let example_sz (x: U32.t) : Tot (m_sz (example x)) =
   coerce_sz
@@ -26,7 +42,9 @@ let example_sz (x: U32.t) : Tot (m_sz (example x)) =
     (T.synth_by_tactic u#1 (fun () -> mk_sz (example_do_while x)))
     (example x)
     ()
+#pop-options
 
+#push-options "--admit_smt_queries true"
 inline_for_extraction
 let example_st (x: U32.t) : Tot (m_st (example x)) =
   coerce_st
@@ -35,10 +53,12 @@ let example_st (x: U32.t) : Tot (m_st (example x)) =
     (T.synth_by_tactic (fun () -> mk_st (example_do_while x)))
     (example x)
     ()
+#pop-options
 
 module U8 = FStar.UInt8
 module HS = FStar.HyperStack
 
+#push-options "--admit_smt_queries true"
 inline_for_extraction
 let example_test
   (x: U32.t)
@@ -58,6 +78,7 @@ let example_test
   match res with
   | None -> None
   | Some (_, b) -> Some b
+#pop-options
 
 type cipher_suite =
   | TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
@@ -116,6 +137,7 @@ let print_list_cipher_suite_spec_do_while :
   (l: list cipher_suite) -> Tot (y: m unit { y () == print_list_cipher_suite_spec l () } )
 = T.synth_by_tactic (fun () -> mk_do_while print_list_cipher_suite_spec )
 
+#push-options "--admit_smt_queries true"
 inline_for_extraction
 let print_list_cipher_suite_sz (l: list cipher_suite) : Tot (m_sz (print_list_cipher_suite_spec l)) =
   coerce_sz
@@ -124,7 +146,9 @@ let print_list_cipher_suite_sz (l: list cipher_suite) : Tot (m_sz (print_list_ci
     (T.synth_by_tactic u#1 (fun () -> mk_sz (print_list_cipher_suite_spec_do_while l)))
     (print_list_cipher_suite_spec l)
     ()
+#pop-options
 
+#push-options "--admit_smt_queries true"
 inline_for_extraction
 let print_list_cipher_suite_st (l: list cipher_suite) : Tot (m_st (print_list_cipher_suite_spec l)) =
   coerce_st
@@ -133,6 +157,7 @@ let print_list_cipher_suite_st (l: list cipher_suite) : Tot (m_st (print_list_ci
     (T.synth_by_tactic (fun () -> mk_st (print_list_cipher_suite_spec_do_while l)))
     (print_list_cipher_suite_spec l)
     ()
+#pop-options
 
 inline_for_extraction
 let print_list_cipher_suite

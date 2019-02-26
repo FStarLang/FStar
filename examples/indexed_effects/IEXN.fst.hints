@@ -1,5 +1,5 @@
 [
-  "O&pîw4ô\u0005\u0018\u0014vs\r\f˜¤",
+  "Ÿ†À²èe*28I ˜Yœ,q",
   [
     [
       "IEXN.__proj__V__item__v",
@@ -9,10 +9,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_IEXN.V",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_IEXN_Tm_refine_7238506d51a0bcd660adb39c15951fa1"
+        "refinement_interpretation_Tm_refine_7238506d51a0bcd660adb39c15951fa1"
       ],
       0,
-      "e03406ba0c8f7cb8eb160d565c93603d"
+      "bf8131a44a59840fa19e3a228c27a12e"
     ],
     [
       "IEXN.__proj__E__item__e",
@@ -22,10 +22,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_IEXN.E",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_IEXN_Tm_refine_c4a45b085cc780dedd2505084f3c2549"
+        "refinement_interpretation_Tm_refine_c4a45b085cc780dedd2505084f3c2549"
       ],
       0,
-      "7a4866a46664856de2a250ca78985b66"
+      "02d9b5dc5f4ac95a2450c474e873a551"
     ],
     [
       "IEXN.iex_bind_wp",
@@ -37,7 +37,7 @@
         "disc_equation_IEXN.V", "fuel_guarded_inversion_IEXN.result"
       ],
       0,
-      "d6fe554c3f772ea36807e593cfa64224"
+      "ab0c3039317f98898bb14402260342ab"
     ],
     [
       "IEXN.f",
@@ -46,7 +46,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-      "943b5aefa9b02707740e34d4043c47ed"
+      "59f5175f6217796f112a095b6335eaa7"
     ],
     [
       "IEXN.g",
@@ -57,15 +57,14 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a", "bool_inversion",
         "equation_FStar.GSet.subset", "equation_IEXN.exns",
-        "function_token_typing_IEXN.exception1",
-        "function_token_typing_IEXN.exception2",
         "function_token_typing_Prims.exn", "lemma_FStar.GSet.mem_singleton",
         "lemma_FStar.GSet.mem_subset", "lemma_FStar.GSet.mem_union",
         "primitive_Prims.op_BarBar", "typing_FStar.GSet.mem",
-        "typing_FStar.GSet.singleton"
+        "typing_FStar.GSet.singleton", "typing_IEXN.exception1",
+        "typing_IEXN.exception2"
       ],
       0,
-      "9b5682ca24a92aee15a07bf1a56e9575"
+      "a9a7081154722e26fe825400764d5ab1"
     ],
     [
       "IEXN.h",
@@ -78,18 +77,17 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
         "data_typing_intro_IEXN.E@tok", "data_typing_intro_IEXN.V@tok",
         "equation_FStar.GSet.subset", "equation_IEXN.exns",
-        "equation_Prims.eqtype", "function_token_typing_IEXN.exception1",
-        "function_token_typing_IEXN.exception2",
-        "function_token_typing_Prims.exn",
+        "equation_Prims.eqtype", "function_token_typing_Prims.exn",
         "function_token_typing_Prims.unit", "lemma_FStar.GSet.mem_singleton",
         "lemma_FStar.GSet.mem_subset", "lemma_FStar.GSet.mem_union",
         "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.GSet.mem", "typing_FStar.GSet.singleton",
-        "unit_inversion", "unit_typing"
+        "typing_IEXN.exception1", "typing_IEXN.exception2", "unit_inversion",
+        "unit_typing"
       ],
       0,
-      "24e840ca9c0de3a39635a753e7b7750c"
+      "8702281d1c37a50f723f26db576340e8"
     ],
     [
       "IEXN.__proj__V__item__v",
@@ -99,10 +97,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_IEXN.V",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_IEXN_Tm_refine_7238506d51a0bcd660adb39c15951fa1"
+        "refinement_interpretation_Tm_refine_7238506d51a0bcd660adb39c15951fa1"
       ],
       0,
-      "e7633f7f2a24d8cb3f4d3be9a11e8a4b"
+      "35339ac1eac05d6afca40b56063348b2"
     ],
     [
       "IEXN.__proj__E__item__e",
@@ -112,10 +110,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_IEXN.E",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_IEXN_Tm_refine_c4a45b085cc780dedd2505084f3c2549"
+        "refinement_interpretation_Tm_refine_c4a45b085cc780dedd2505084f3c2549"
       ],
       0,
-      "b613afa4bcf7eadff64dc4083d11359a"
+      "af400f445293f1b1e9ac90f994e4adc7"
     ],
     [
       "IEXN.iex_bind_wp",
@@ -127,7 +125,7 @@
         "disc_equation_IEXN.V", "fuel_guarded_inversion_IEXN.result"
       ],
       0,
-      "b124a3f8464e38057c17667594f4e2b7"
+      "58e56650716ad4d4911141b23a5265cd"
     ]
   ]
 ]

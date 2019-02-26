@@ -786,6 +786,7 @@ let copy_file input_name output_name =
   close fd_in;
   close fd_out
 let flush_file (fh:file_handle) = flush fh
+let delete_file (fn:string) = Sys.remove fn
 let file_get_contents f =
   let ic = open_in_bin f in
   let l = in_channel_length ic in

@@ -126,7 +126,13 @@ let op_At x y = append x y
 (** [snoc (l, x)] adds [x] to the end of the list [l].
 
     Note: We use an uncurried [snoc (l, x)] instead of the curried
-    [snoc l x]. *)
+    [snoc l x]. This is intentional. If [snoc] takes a pair instead
+    of 2 arguments, it allows for a better pattern on
+    [lemma_unsnoc_snoc], which connects [snoc] and [unsnoc]. In
+    particular, if we had two arguments, then either the pattern would
+    either be too restrictive or would lead to over-triggering. More
+    context for this can be seen in the (collapsed and uncollapsed)
+    comments at https://github.com/FStarLang/FStar/pull/1560 *)
 val snoc: (list 'a * 'a) -> Tot (list 'a)
 let snoc (l, x) = append l [x]
 
@@ -189,6 +195,19 @@ val fold_right: ('a -> 'b -> Tot 'b) -> list 'a -> 'b -> Tot 'b
 let rec fold_right f l x = match l with
   | [] -> x
   | hd::tl -> f hd (fold_right f tl x)
+
+(** [fold_right_gtot] is just like [fold_right], except `f` is
+    a ghost function **)
+let rec fold_right_gtot (#a:Type) (#b:Type) (l:list a) (f:a -> b -> GTot b) (x:b)
+  : GTot b
+  = match l with
+    | [] -> x
+    | hd::tl -> f hd (fold_right_gtot tl f x)
+
+(* We define map in terms of fold, to share simple lemmas *)
+let map_gtot #a #b (f:a -> GTot b) (x:list a)
+  : GTot (list b)
+  = fold_right_gtot x (fun x tl -> f x :: tl) []
 
 (** [fold_left2 f x [y1; y2; ...; yn] [z1; z2; ...; zn]] computes (f
 (... (f x y1 z1) y2 z2) ... yn zn). Requires, at type-checking time,
@@ -389,6 +408,15 @@ let rec noRepeats #a la =
   match la with
   | [] -> true
   | h :: tl -> not(mem h tl) && noRepeats tl
+
+
+(** [no_repeats_p l] valid if, and only if, no element of [l]
+appears in [l] more than once. *)
+val no_repeats_p : #a:Type -> list a -> Tot prop
+let rec no_repeats_p #a la =
+  match la with
+  | [] -> True
+  | h :: tl -> ~(memP h tl) /\ no_repeats_p tl
 
 (** List of tuples **)
 

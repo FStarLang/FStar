@@ -46,6 +46,7 @@ let logic_qualifier_deprecation_warning =
 %token <string> UINT32
 %token <string> UINT64
 %token <float> IEEE64
+%token <string> REAL
 %token <char> CHAR
 %token <bool> LET
 %token <FStar_Parser_AST.fsdoc> FSDOC
@@ -59,7 +60,7 @@ let logic_qualifier_deprecation_warning =
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
-%token FRIEND OPEN REC THEN TRUE TRY TYPE CLASS INSTANCE EFFECT VAL
+%token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -98,7 +99,8 @@ let logic_qualifier_deprecation_warning =
 %right    OPINFIX1
 %left     OPINFIX2 MINUS QUOTE
 %left     OPINFIX3
-%left     BACKTICK BACKTICK_AT BACKTICK_HASH
+%left     BACKTICK
+%left     BACKTICK_AT BACKTICK_HASH
 %right    OPINFIX4
 
 %start inputFragment
@@ -627,7 +629,8 @@ noSeqTerm:
       }
   | ASSUME e=atomicTerm
       { let a = set_lid_range assume_lid (rhs parseState 1) in
-        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
+        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
+      }
 
   | ASSERT e=atomicTerm tactic_opt=option(BY tactic=thunk2(typ) {tactic})
       {
@@ -644,18 +647,32 @@ noSeqTerm:
      {
          let a = set_lid_range synth_lid (rhs parseState 1) in
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
-
      }
 
    | SYNTH tactic=atomicTerm
      {
          let a = set_lid_range synth_lid (rhs parseState 1) in
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+     }
 
+   | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=nonempty_list(calcStep) RBRACE
+     {
+         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
+     }
+
+calcStep:
+   | rel=binop LBRACE justif=option(term) RBRACE next=noSeqTerm SEMICOLON
+     {
+         let justif =
+             match justif with
+             | Some t -> t
+             | None -> mk_term (Const Const_unit) (rhs2 parseState 2 4) Expr
+         in
+         CalcStep (rel, justif, next)
      }
 
 typ:
-  | t=simpleTerm  { t }
+  | t=simpleTerm { t }
 
   | q=quantifier bs=binders DOT trigger=trigger e=noSeqTerm
       {
@@ -817,9 +834,9 @@ tmNoEqWith(X):
       }
   | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmNoEqWith(X) BACKTICK id=qlident BACKTICK e2=tmNoEqWith(X)
-      { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
-  | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
+  | e1=tmNoEqWith(X) BACKTICK op=tmNoEqWith(X) BACKTICK e2=tmNoEqWith(X)
+      { mkApp op [ e1, Infix; e2, Nothing ] (rhs2 parseState 1 5) }
+ | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | LBRACE e=recordExp RBRACE { e }
   | BACKTICK_PERC e=atomicTerm
@@ -827,6 +844,20 @@ tmNoEqWith(X):
   | op=TILDE e=atomicTerm
       { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
   | e=X { e }
+
+binop:
+  | o=OPINFIX0a { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX0b { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX0c { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=EQUALS    { let i = mk_ident ("=", rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX0d { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX1  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX2  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX3  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | o=OPINFIX4  { let i = mk_ident (o, rhs parseState 1) in mk_term (Op (i, [])) (rhs parseState 2) Expr }
+  | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }
+  | t=atomicTerm { t }
+
 
 tmEqNoRefinement:
   | e=tmEqWith(appTerm) { e }
@@ -999,6 +1030,7 @@ constant:
   | bs=BYTEARRAY { Const_bytearray (bs,lhs(parseState)) }
   | TRUE { Const_bool true }
   | FALSE { Const_bool false }
+  | r=REAL { Const_real r }
   | f=IEEE64 { Const_float f }
   | n=UINT8 { Const_int (n, Some (Unsigned, Int8)) }
   | n=INT8
@@ -1131,7 +1163,7 @@ range:
 %inline dotOperator:
   | DOT_LPAREN e=term RPAREN { mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 }
   | DOT_LBRACK e=term RBRACK { mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 }
-  | DOT_LBRACK_BAR e=term RBRACE { mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 }
+  | DOT_LBRACK_BAR e=term BAR_RBRACK { mk_ident (".[||]", rhs parseState 1), e, rhs2 parseState 1 3 }
   | DOT_LENS_PAREN_LEFT e=term LENS_PAREN_RIGHT { mk_ident (".(||)", rhs parseState 1), e, rhs2 parseState 1 3 }
 
 some(X):

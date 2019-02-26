@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Tactics.Effect
 
 open FStar.Tactics.Types
@@ -6,13 +21,17 @@ open FStar.Tactics.Result
 (* This module is extracted, don't add any `assume val`s or extraction
  * will break. (`synth_by_tactic` is fine) *)
 
+private
 let __tac (a:Type) = proofstate -> M (__result a)
 
 (* monadic return *)
+private
 val __ret : a:Type -> x:a -> __tac a
+private
 let __ret a x = fun (s:proofstate) -> Success x s
 
 (* monadic bind *)
+private
 let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __tac b =
     fun ps ->
         let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range r1) in
@@ -28,10 +47,13 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
         | Failed e ps' -> Failed e ps'
 
 (* Actions *)
+private
 let __get () : __tac proofstate = fun s0 -> Success s0 s0
 
+private
 let __raise (a:Type0) (e:exn) : __tac a = fun (ps:proofstate) -> Failed #a e ps
 
+private
 let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 
 (*
@@ -43,14 +65,17 @@ let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
  *
  * So, override `bind_wp` for the effect with an efficient one.
  *)
+private
 unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
     wp ps (fun m' -> match m' with
                      | Success a q -> f a q post
                      | Failed e q -> post (Failed e q))
 
+private
 unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
     fun ps post -> forall k. (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
 
+private
 unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) =
     g_compact b (g_bind a b wp f)
 

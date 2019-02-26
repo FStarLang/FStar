@@ -1,5 +1,5 @@
 [
-  "\bŸß\u000f\"÷¡z·œè¡s?\fb",
+  "?š\u0005ÁÊzË§0pópÐ§œý",
   [
     [
       "Bug734.arg_type",
@@ -12,7 +12,7 @@
         "fuel_guarded_inversion_Bug734.dir"
       ],
       0,
-      "a055f5526ed6ec621facfc977d3b8a4a"
+      "72df6719d5b3e4a8651a38639befd07a"
     ],
     [
       "Bug734.def_value",
@@ -20,15 +20,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_typing",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_typing",
         "disc_equation_Bug734.Bool", "disc_equation_Bug734.Fun",
         "disc_equation_Bug734.Int", "equation_Bug734.arg_type",
-        "fuel_guarded_inversion_Bug734.dir", "int_typing",
+        "fuel_guarded_inversion_Bug734.dir",
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
         "projection_inverse_BoxBool_proj_0",
-        "typing_Bug734_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
+        "typing_Tm_abs_fbc917fea8bd0ead0e80e947ccbfabdc"
       ],
       0,
-      "177433ec5035ba6c249f149082e9cccc"
+      "a2c7f0d1abb7e4515d62f4f41f064026"
     ]
   ]
 ]

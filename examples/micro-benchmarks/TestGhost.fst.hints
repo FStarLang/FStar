@@ -1,5 +1,5 @@
 [
-  "‰Ö\u0001šìãPÿGTðì“ƒ×\u0014",
+  "©\u007f©Àp?eH<\u0004º†ZSX",
   [
     [
       "TestGhost.h",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b38ef5705d7d5dd815475d3fa4c15cec"
+      "45ef5caab83129b45baca54e7e6a52ea"
     ],
     [
       "TestGhost.i",
@@ -18,10 +18,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "function_token_typing_Prims.int", "lemma_FStar.Ghost.hide_reveal",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e6db3089bd28499e73bbfd7b9db476a9"
+      "9968fd4f5235c42c320241c51e0b2e20"
     ],
     [
       "TestGhost.h",
@@ -30,7 +30,7 @@
       1,
       [ "@query" ],
       0,
-      "a7938e1e5c775b1f9d1064a381e701f8"
+      "a547378ad23300892977de8569027eb2"
     ],
     [
       "TestGhost.i",
@@ -40,10 +40,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "function_token_typing_Prims.int", "lemma_FStar.Ghost.hide_reveal",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b6108124155e697732d59f295a7ed12b"
+      "4dcf7eac756df05ee8b59725ddc3f52f"
     ]
   ]
 ]

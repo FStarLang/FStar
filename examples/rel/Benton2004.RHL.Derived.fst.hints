@@ -1,5 +1,5 @@
 [
-  "≤í≠»˘\"˚Wv1∑€ç.Ç!",
+  "$ë\u0006Àj®»·ÉøÂ∑.ˇuâ",
   [
     [
       "Benton2004.RHL.Derived.r_ass",
@@ -12,12 +12,11 @@
         "equation_Benton2004.RHL.exp_to_gexp",
         "equation_Benton2004.RHL.gexp", "equation_Benton2004.RHL.gsubst",
         "equation_Benton2004.assign", "lemma_Benton2004.RHL.included_alt",
-        "lemma_Benton2004.RHL.r_sub",
-        "typing_Benton2004.RHL_Tm_abs_6a2334cc10426cc47a444030753c0ffa",
-        "typing_Benton2004.assign"
+        "lemma_Benton2004.RHL.r_sub", "typing_Benton2004.assign",
+        "typing_Tm_abs_be9bc03bbcbe71638c4d9a98e14d2958"
       ],
       0,
-      "82914b5a58de6c8c14d327df4f9fca53"
+      "d375ef415d935e87a29cd6ed051fbf00"
     ],
     [
       "Benton2004.RHL.Derived.r_dassl",
@@ -29,13 +28,12 @@
         "equation_Benton2004.RHL.exp_to_gexp",
         "equation_Benton2004.RHL.gexp", "equation_Benton2004.RHL.gsubst",
         "equation_Benton2004.assign", "equation_Benton2004.skip",
-        "function_token_typing_Benton2004.skip",
         "lemma_Benton2004.RHL.included_alt", "lemma_Benton2004.RHL.r_sub",
-        "typing_Benton2004.RHL_Tm_abs_6a2334cc10426cc47a444030753c0ffa",
-        "typing_Benton2004.assign"
+        "typing_Benton2004.assign", "typing_Benton2004.skip",
+        "typing_Tm_abs_be9bc03bbcbe71638c4d9a98e14d2958"
       ],
       0,
-      "106aa1a84cbc611011228f5bff9a84ba"
+      "7fa67b789731d129261e48e50c405b77"
     ],
     [
       "Benton2004.RHL.Derived.flip_flip",
@@ -43,15 +41,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "equation_Benton2004.RHL.flip", "equation_Benton2004.RHL.gexp",
-        "interpretation_Benton2004.RHL_Tm_abs_085b713dac5ad065958258689b60b707",
+        "@query", "equation_Benton2004.RHL.flip",
+        "interpretation_Tm_abs_825e66287e60624a3d8a9405d4639eac",
         "token_correspondence_Benton2004.RHL.flip"
       ],
       0,
-      "29c62e2a815d381bdba51e4be77105e6"
+      "999588dfd7726341c4949f8b91281c98"
     ],
     [
       "Benton2004.RHL.Derived.r_dassr",
@@ -67,20 +62,18 @@
         "equality_tok_Benton2004.RHL.Right@tok",
         "equation_Benton2004.RHL.exp_to_gexp",
         "equation_Benton2004.RHL.flip", "equation_Benton2004.RHL.gexp",
-        "equation_Benton2004.RHL.gsubst", "equation_Benton2004.skip",
-        "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
-        "function_token_typing_Benton2004.skip",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
-        "interpretation_Benton2004.RHL_Tm_abs_085b713dac5ad065958258689b60b707",
-        "interpretation_Benton2004.RHL_Tm_abs_6a2334cc10426cc47a444030753c0ffa",
-        "interpretation_Benton2004.RHL_Tm_abs_df3f86677b2c050d8dc43f3255fbca74",
+        "equation_Benton2004.RHL.gsubst",
+        "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_78dc658e59036ce24028200e7c14ebbb",
+        "interpretation_Tm_abs_825e66287e60624a3d8a9405d4639eac",
+        "interpretation_Tm_abs_be9bc03bbcbe71638c4d9a98e14d2958",
         "lemma_Benton2004.RHL.exec_equiv_flip",
         "lemma_Benton2004.RHL.included_alt", "typing_Benton2004.RHL.flip",
-        "typing_Benton2004.RHL_Tm_abs_6a2334cc10426cc47a444030753c0ffa",
-        "typing_Benton2004.assign"
+        "typing_Benton2004.assign", "typing_Benton2004.skip",
+        "typing_Tm_abs_be9bc03bbcbe71638c4d9a98e14d2958"
       ],
       0,
-      "ca0ecfa5703774442bec351949f03a7c"
+      "dd14e110ca09e218cb7be6e88a663cab"
     ],
     [
       "Benton2004.RHL.Derived.d_su1'_flip",
@@ -89,11 +82,11 @@
       1,
       [
         "@query", "equation_Benton2004.skip",
-        "function_token_typing_Benton2004.skip",
-        "lemma_Benton2004.RHL.exec_equiv_flip", "typing_Benton2004.seq"
+        "lemma_Benton2004.RHL.exec_equiv_flip", "typing_Benton2004.seq",
+        "typing_Benton2004.skip"
       ],
       0,
-      "b1f2a5d524a4e830630452517e0c699b"
+      "1f99171ff6e897a4651c5dac41035242"
     ]
   ]
 ]

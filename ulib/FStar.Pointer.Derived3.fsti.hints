@@ -1,5 +1,5 @@
 [
-  "\t<áwæ{Ë\u007f©ÜÖóXE¾\u000e",
+  "Ò\u007fÌ\u0019µßž\u0006Ùü\u001b>lXwx",
   [
     [
       "FStar.Pointer.Derived3.fill_buffer_postcond",
@@ -7,16 +7,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "@query", "b2t_def",
         "equation_FStar.Pointer.Derived3.fill_buffer_precond",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size",
-        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e176bfab76eb68de2d31d7eed326c759"
+      "0cebbd33389a9694f51160bf39fdd574"
     ]
   ]
 ]

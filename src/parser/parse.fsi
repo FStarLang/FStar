@@ -39,6 +39,7 @@ type token =
   | REIFIABLE
   | REFLECTABLE
   | REC
+  | REAL of (string)
   | RBRACK
   | RBRACE
   | RARROW
@@ -137,6 +138,7 @@ type token =
   | COLON
   | CLASS
   | CHAR of (char)
+  | CALC
   | BYTEARRAY of (bytes)
   | BY
   | BEGIN
@@ -191,6 +193,7 @@ type tokenId =
     | TOKEN_REIFIABLE
     | TOKEN_REFLECTABLE
     | TOKEN_REC
+    | TOKEN_REAL
     | TOKEN_RBRACK
     | TOKEN_RBRACE
     | TOKEN_RARROW
@@ -289,6 +292,7 @@ type tokenId =
     | TOKEN_COLON
     | TOKEN_CLASS
     | TOKEN_CHAR
+    | TOKEN_CALC
     | TOKEN_BYTEARRAY
     | TOKEN_BY
     | TOKEN_BEGIN
@@ -323,6 +327,7 @@ type nonTerminalId =
     | NONTERM_option_fsTypeArgs_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
+    | NONTERM_option_term_
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
@@ -342,6 +347,7 @@ type nonTerminalId =
     | NONTERM_nonempty_list_atomicPattern_
     | NONTERM_nonempty_list_atomicTerm_
     | NONTERM_nonempty_list_atomicUniverse_
+    | NONTERM_nonempty_list_calcStep_
     | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
@@ -413,6 +419,7 @@ type nonTerminalId =
     | NONTERM_kind
     | NONTERM_term
     | NONTERM_noSeqTerm
+    | NONTERM_calcStep
     | NONTERM_typ
     | NONTERM_trigger
     | NONTERM_disjunctivePats
@@ -433,6 +440,7 @@ type nonTerminalId =
     | NONTERM_tmEqWith_tmRefinement_
     | NONTERM_tmNoEqWith_appTerm_
     | NONTERM_tmNoEqWith_tmRefinement_
+    | NONTERM_binop
     | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq
     | NONTERM_tmNoEq

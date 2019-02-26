@@ -327,8 +327,8 @@ let do_unify env t1 t2 : tac<bool> =
     bind (__do_unify env t1 t2) (fun r ->
     if Env.debug env (Options.Other "1346") then
         Options.pop ();
-    bind compress_implicits (fun _ ->
-    ret r)))
+    (* bind compress_implicits (fun _ -> *)
+    ret r))
 
 let remove_solved_goals : tac<unit> =
     bind get (fun ps ->
@@ -456,8 +456,10 @@ let new_uvar (reason:string) (env:env) (typ:typ) : tac<(term * ctx_uvar)> =
 ////////////////////////////////////////////////////////////////////
 (* Some utilities on goals *)
 let is_true t =
+    let t = U.unascribe t in
     match U.un_squash t with
     | Some t' ->
+        let t' = U.unascribe t' in
         begin match (SS.compress t').n with
         | Tm_fvar fv -> S.fv_eq_lid fv PC.true_lid
         | _ -> false
@@ -894,7 +896,14 @@ let t_apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
     // Focus helps keep the goal order
     let typ = bnorm e typ in
     bind (try_match_by_application e typ (goal_type goal)) (fun uvs ->
-    let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, q)]) uvs tm in
+    (* use normal implicit application for meta-args: meta application does
+     * make sense and the typechecker complains. *)
+    let fix_qual q =
+      match q with
+      | Some (Meta _) -> Some (Implicit false)
+      | _ -> q
+    in
+    let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, fix_qual q)]) uvs tm in
 
     let uvset = List.fold_right (fun (_, _, uv) s -> BU.set_union s (SF.uvars uv.ctx_uvar_typ)) uvs (SF.new_uv_set ()) in
     let free_in_some_goal uv =
@@ -934,6 +943,11 @@ let lemma_or_sq (c : comp) : option<(term * term)> =
     else
         None
 
+let rec fold_left (f : ('a -> 'b -> tac<'b>)) (e : 'b) (xs : list<'a>) : tac<'b> =
+    match xs with
+    | [] -> ret e
+    | x::xs -> bind (f x e) (fun e' -> fold_left f e' xs)
+
 let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
@@ -947,22 +961,21 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     match lemma_or_sq comp with
     | None -> fail "not a lemma or squashed function"
     | Some (pre, post) ->
-    let uvs, implicits, subst =
-       List.fold_left (fun (uvs, guard, subst) (b, aq) ->
+    bind (
+       fold_left (fun (b, aq) (uvs, imps, subst) ->
                let b_t = SS.subst subst b.sort in
                if is_unit_t b_t
                then
                    // Simplification: if the argument is simply unit, then don't ask for it
-                   (U.exp_unit, aq)::uvs, guard, S.NT(b, U.exp_unit)::subst
+                   ret <| ((U.exp_unit, aq)::uvs, imps, S.NT(b, U.exp_unit)::subst)
                else
-                   let u, _, g_u = TcUtil.new_implicit_var "apply_lemma" (goal_type goal).pos (goal_env goal) b_t in
-                   (u, aq)::uvs,
-                   Env.conj_guard guard g_u,
-                   S.NT(b, u)::subst
+                   bind (new_uvar "apply_lemma" (goal_env goal) b_t) (fun (t, u) ->
+                   ret <| ((t, aq)::uvs, (t, u)::imps, S.NT(b, t)::subst))
                )
-       ([], guard, [])
-       bs
-    in
+       ([], [], [])
+       bs)
+    (fun (uvs, implicits, subst) ->
+    let implicits = List.rev implicits in
     let uvs = List.rev uvs in
     let pre  = SS.subst subst pre in
     let post = SS.subst subst post in
@@ -973,7 +986,6 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                             (tts (goal_env goal) (U.mk_squash U_zero post))
                             (tts (goal_env goal) (goal_type goal))
     else
-        bind (add_implicits implicits.implicits) (fun _ ->
         // We solve with (), we don't care about the witness if applying a lemma
         bind (solve' goal U.exp_unit) (fun _ ->
         let is_free_uvar uv t =
@@ -988,9 +1000,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             | _ -> false
             end
         in
-        bind (implicits.implicits |> mapM (fun imp ->
-            let term = imp.imp_tm in
-            let ctx_uvar = imp.imp_uvar in
+        bind (implicits |> mapM (fun imp ->
+            let t1 = BU.now () in
+            let (term, ctx_uvar) = imp in
             let hd, _ = U.head_and_args term in
             match (SS.compress hd).n with
             | Tm_uvar (ctx_uvar, _) ->
@@ -1029,8 +1041,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         bind (if not (istrivial (goal_env goal) (U.mk_squash U_zero pre)) //lemma preconditions are in U_zero
               then add_irrelevant_goal "apply_lemma precondition" (goal_env goal) pre goal.opts goal.label
               else ret ()) (fun _ ->
-        add_goals sub_goals)))))
-    ))))))
+        add_goals sub_goals))))
+    )))))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with

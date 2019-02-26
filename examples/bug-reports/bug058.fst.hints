@@ -1,5 +1,5 @@
 [
-  "Ž*w\u0003Ï§~X\u001d•¨Í_a\u000be",
+  "&\u0018x9Âá’ìl©\u0005ÈÏ´\u000ef",
   [
     [
       "Bug058.fibonacci",
@@ -9,18 +9,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equality_tok_Prims.LexTop@tok",
-        "equation_Prims.nat",
-        "haseqBug058_Tm_refine_402366a12062163eb79afd36b7d562c3",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug058_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8a8900b05d6bd4db783cab5501d8da48"
+      "2262cddfc42c67fc21f7fa8391455560"
     ]
   ]
 ]

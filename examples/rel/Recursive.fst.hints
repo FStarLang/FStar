@@ -1,5 +1,5 @@
 [
-  "\u0000Î‰\u007f)w„ÿ© ŒlvôìF",
+  "àÎ4π“]9cÚ™{lò\fßÅ",
   [
     [
       "Recursive.fac",
@@ -7,16 +7,18 @@
       1,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f2ce5b8a795be56444618e7f6eb3c935"
+      "9eb9e4cbadc35ca55c797631745b5a2e"
     ],
     [
       "Recursive.fac_mon",
@@ -31,7 +33,8 @@
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_1", "equation_Prims.nat",
         "equation_with_fuel_Recursive.fac.fuel_instrumented",
-        "int_inversion", "primitive_Prims.op_Equality",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -39,11 +42,12 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_b6f35ce75f1749b3ce52a367ddcd9fb3",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_Recursive.fac", "well-founded-ordering-on-nat"
       ],
       0,
-      "90f484f2c37ddda44f47047bd59590b8"
+      "f414f2db44654bdcc41dd305da82ec94"
     ],
     [
       "Recursive.fac_sum",
@@ -55,11 +59,11 @@
         "@fuel_correspondence_Recursive.fac.fuel_instrumented", "@query",
         "equation_Prims.nat", "primitive_Prims.op_Addition",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_Recursive.fac"
       ],
       0,
-      "26b24a3f366acc791c21f537c4b0799a"
+      "3119beb827eeb55941c4d30d0dee9f7f"
     ],
     [
       "Recursive.fac_sum_mon",
@@ -72,7 +76,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "62f8c43999150c1f3e6b814dae69a762"
+      "9faf02fa0751690d3689131d2026bb44"
     ],
     [
       "Recursive.fac",
@@ -80,16 +84,18 @@
       1,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3155b98596d77f612c3256b73260c11d"
+      "0b1476d2c44a300407270b8ff392a799"
     ],
     [
       "Recursive.fac_sum",
@@ -101,11 +107,11 @@
         "@fuel_correspondence_Recursive.fac.fuel_instrumented", "@query",
         "equation_Prims.nat", "primitive_Prims.op_Addition",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_Recursive.fac"
       ],
       0,
-      "e342305e265edad83a5f45053c35c182"
+      "3d832cf0385946fabf56f53d5fd27c9f"
     ]
   ]
 ]

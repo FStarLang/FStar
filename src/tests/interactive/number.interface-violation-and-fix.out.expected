@@ -1,7 +1,7 @@
 {"kind": "protocol-info", "rest": "[...]"}
 {"kind": "response", "query-id": "1", "response": null, "status": "success"}
 {"kind": "response", "query-id": "2", "response": [], "status": "success"}
-{"kind": "response", "query-id": "3", "response": [{"level": "error", "message": "Subtyping check failed; expected type a: int{a > 0}; got type int", "ranges": [{"beg": [3, 8], "end": [3, 10], "fname": "<input>"}, {"beg": [3, 14], "end": [3, 19], "fname": "number.fsti"}]}], "status": "failure"}
+{"kind": "response", "query-id": "3", "response": [{"level": "error", "message": "Subtyping check failed; expected type a: int{a > 0}; got type int", "ranges": [{"beg": [3, 8], "end": [3, 10], "fname": "<input>"}, {"beg": [18, 14], "end": [18, 19], "fname": "number.fsti"}]}], "status": "failure"}
 {"kind": "response", "query-id": "4", "response": null, "status": "success"}
 {"kind": "response", "query-id": "5", "response": null, "status": "success"}
 {"kind": "response", "query-id": "6", "response": [], "status": "success"}

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module LowComp
 
 open HighComp
@@ -158,6 +173,7 @@ let l_eq #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
          (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) =
   lwp_eq (as_lwp c1) (as_lwp c2)
 
+
 assume val on_wp (#a:Type) (#wp : hwp_mon a) (c : comp_wp a wp) (lc : lcomp_wp a wp c) : lcomp_wp a wp c
 
 (* unused for now *)
@@ -185,10 +201,25 @@ instance l_eq_equiv #a : equiv (l_eq' #a) = { refl'  = (fun x -> ());
                                               symm'  = (fun x y p -> ());
                                               trans' = (fun x y z p1 p2 -> ()); }
 
+
+// GM, Oct 23 2018: This looks very shady to me now. `l_eq` completely ignores `lc1` and `lc2`.
+
 assume val l_eq_axiom : (#a:Type) -> (#wp1:hwp_mon a) -> (#c1:comp_wp a wp1) -> (lc1: lcomp_wp a wp1 c1) ->
                         (#wp2:hwp_mon a) -> (#c2:comp_wp a wp2) -> (lc2 : lcomp_wp a wp2 c2) ->
                         Lemma (requires (l_eq lc1 lc2))
                               (ensures (on_wp c1 lc1 === on_wp c2 lc2))
+
+// Guido
+   let gh1 : comp_wp int (fun _ _ -> False) = return_elab 1
+   let gh2 : comp_wp int (fun _ _ -> False) = return_elab 2
+
+   let gl1 : lcomp_wp int (fun _ _ -> False) gh1 = fun ls -> 1
+   let gl2 : lcomp_wp int (fun _ _ -> False) gh2 = fun ls -> 2
+
+   // GM, Oct 23 2018: Is this OK? I don't think so, but also not sure it implies a contradiction.
+   let test () : Lemma (gl1 == gl2) =
+     l_eq_axiom #int #(fun _ _ -> False) #gh1 gl1 #(fun _ _ -> False) #gh2 gl2
+// /Guido
 
 // Lifting of high programs to low programs
 let morph (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c =
@@ -561,7 +592,11 @@ let morph_for' (inv : state -> int -> Type0) (f : (i:int) -> comp_p unit (fun h0
                (wp : hwp_mon unit) (c : comp_wp unit wp) :
   Lemma (requires (c === for_elab' inv f lo hi))
         (ensures (for_inv' inv f lo hi c;
+<<<<<<< HEAD:examples/refinement/fib-state/LowComp.fst
                   on_wp c (morph wp c) == on_wp c (lfor' inv f (fun i -> morph _ (f i)) lo hi))) =
+=======
+                  morph wp c == lfor' inv f (fun i -> morph _ (f i)) lo hi)) =
+>>>>>>> origin/master:examples/refinement/LowComp.fst
   let p = for_inv' inv f lo hi c in
   assert (l_eq #unit
                #wp #(cast wp (for_elab' inv f lo hi)) (morph wp (cast wp (for_elab' inv f lo hi)))

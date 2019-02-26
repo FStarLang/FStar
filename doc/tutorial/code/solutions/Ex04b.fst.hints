@@ -1,5 +1,5 @@
 [
-  "“¶\u001dMlc¨È‹ë’ ÐÔ\u0005[",
+  "Œ™Î2\u0015cÛç@½ËYšuÌ\u0001",
   [
     [
       "Ex04b.length",
@@ -8,15 +8,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ea69520e04b3aac308ee07032a20d0a6"
+      "49f22c6fca12c6641a215985395885f7"
     ],
     [
       "Ex04b.append",
@@ -31,7 +33,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "53f04401e574a1b48ab15b8cca93d08c"
+      "7e6063744d131ec1a8144f9f4e667c99"
     ],
     [
       "Ex04b.append_len",
@@ -64,7 +66,7 @@
         "typing_Ex04b.append", "typing_Ex04b.length"
       ],
       0,
-      "71ec3ee5742ecde79c187c79acebfe4d"
+      "9a2db3df5fce1462543ce4177b20f479"
     ],
     [
       "Ex04b.length",
@@ -73,15 +75,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7022e462671882714cf6f808395a8f47"
+      "52835bf009610bb1ea41545cd3aa958c"
     ],
     [
       "Ex04b.append",
@@ -95,7 +99,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e6d3abecdaa5b440dff50a18fa1b499d"
+      "2781fd35e29d73c12b6321193b4f80a5"
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "©ÿË+#ï¢à·¼\u0016YÛH1,",
+  "¼\u000eƒŸØ„–Á{up&D½\u001f^",
   [
     [
       "Ex06e.sorted",
@@ -8,17 +8,19 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.eqtype", "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "proj_equation_Prims.Cons_tl",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "93e074b583e8c7df9621924b43f976ea"
+      "4b6390bff1c98aa12f6421ddaaf5b023"
     ],
     [
       "Ex06e.mem",
@@ -37,7 +39,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "97e7af8b6bf46003da3161ba0b921f45"
+      "62e04f817aa31d9e1ea6b2ba7fafbabd"
     ],
     [
       "Ex06e.sorted",
@@ -46,17 +48,19 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.eqtype", "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "proj_equation_Prims.Cons_tl",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "56cb2b4aaf75da7407fcd43916f4e618"
+      "1d78fb489cfd690d8603eced28582f5e"
     ],
     [
       "Ex06e.mem",
@@ -75,7 +79,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "70682e12b3e05ef1758ad6161bb9d2c7"
+      "74771a30e214c12bfa90f5abc6f8bf81"
     ]
   ]
 ]

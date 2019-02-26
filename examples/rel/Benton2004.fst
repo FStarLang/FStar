@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Benton2004
 
 include Benton2004.Aux
@@ -328,6 +343,7 @@ let exec_equiv_sym
   [SMTPat (exec_equiv p p' f f')]
 = ()
 
+#push-options "--z3rlimit 5 --max_fuel 0 --max_ifuel 0"
 let eval_equiv_trans
   (#t: Type0)
   (p: sttype)
@@ -335,8 +351,20 @@ let eval_equiv_trans
   (f1 f2 f3 : exp t)
 : Lemma
   (requires (is_per e /\ interpolable p /\ eval_equiv p e f1 f2 /\ eval_equiv p e f2 f3))
-  (ensures (eval_equiv p e f1 f3))
-= Classical.forall_intro_2 (fun x -> Classical.move_requires (interpolable_elim p x))
+  (ensures eval_equiv p e f1 f3)
+= let lem (s1 s3:heap)
+    : Lemma (requires holds p s1 s3)
+            (ensures (holds e (fst (reify_exp f1 s1)) (fst (reify_exp f3 s3))))
+    = let w = interpolable_elim p s1 s3 in
+      Classical.exists_elim
+        (holds e (fst (reify_exp f1 s1)) (fst (reify_exp f3 s3)))
+        w
+        (fun (s2:heap{holds p s1 s2 /\ holds p s2 s3}) ->
+          assert (holds e (fst (reify_exp f1 s1)) (fst (reify_exp f2 s2)));
+          assert (holds e (fst (reify_exp f2 s2)) (fst (reify_exp f3 s3))))
+  in
+  Classical.forall_intro_2 (fun x -> Classical.move_requires (lem x))
+#pop-options
 
 let exec_equiv_reified_trans
   (p p': sttype)

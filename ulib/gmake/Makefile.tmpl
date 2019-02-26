@@ -75,7 +75,7 @@ $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa:
 basic_clean:
 	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend
 
-.depend:
+.depend: $(FSTAR_FILES)
 	$(MY_FSTAR) --dep full $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend
 
 depend: .depend

@@ -1,5 +1,5 @@
 [
-  "”„S<lÝÜ¬”ÑÕ•Ý_Ç\u0001",
+  "GÎ©s.­(Ó\u0007Wc\"s\f«8",
   [
     [
       "Canon.Test.lem1",
@@ -7,11 +7,12 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "eee0ae8ee5ee5e2501beebd079aedbf0"
+      "52654d81276596305a11f1e18f2c3b71"
     ],
     [
       "Canon.Test.lem8",
@@ -20,7 +21,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "241ea25b88a652f7fb7354ae04b19bae"
+      "9489e4c445df7ab02e9b67474a60fc57"
     ]
   ]
 ]
