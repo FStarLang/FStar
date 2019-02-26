@@ -135,3 +135,16 @@ let print_increasing (i:int) : IO unit (fun h p -> p () ((i+1) :: i :: h)) =
   write i;
   mustHaveOccurred i;
   write (i+1)
+
+let rec print_nums_aux (m i : nat) : IO unit (fun h p -> (forall (i':nat). i' < i ==> mem i' h) /\ (forall x. p () x))
+                                           (decreases (m-i)) =
+  if i >= m then ()
+  else begin
+    if i > 0 then
+      mustHaveOccurred (i-1);
+    write i;
+    print_nums_aux m (i+1)
+  end
+
+let print_nums (m : nat) : IO unit (fun h p -> forall x. p () x) =
+  print_nums_aux m 0
