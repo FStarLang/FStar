@@ -39,11 +39,11 @@ let return_wp (a:Type) (x:a) : wpty a =
 
 unfold
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
-  fun h p -> w h (fun x l -> kw x (h @ l) (fun y l' -> p y (l @ l')))
+  fun h p -> w h (fun x l -> kw x (l @ h) (fun y l' -> p y (l' @ l)))
 
 let rec interpretation #a (m : io a) (h : list output) (p : post a) : Type0 =
   match m with
-  | Write o m -> interpretation m (h @ [o]) (fun x l -> p x (o :: l))
+  | Write o m -> interpretation m (h @ [o]) (fun x l -> p x (l @ [o]))
   | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) h p)
   | Return x -> p x []
 
@@ -97,12 +97,12 @@ let test_hist_2 () : IO unit (fun h p -> List.length h <= 5 /\ p () [1]) =
   write 1;
   ()
 
-let test1 () : IO int (fun h p -> p 1 [2;3]) =
+let test1 () : IO int (fun h p -> p 1 [3;2]) =
   write 2;
   write 3;
   1
 
-let test2 () : IO int (fun h p -> p 1 [2;3]) =
+let test2 () : IO int (fun h p -> p 1 [3;2]) =
   write 2;
   let x = read () in
   write 3;
@@ -135,7 +135,7 @@ let test6 () : Io int (fun _ -> True) (fun h x l -> x = 1 /\ (exists y . l = [y;
 
 let test7 (b:bool) 
   : Io int (fun _ -> True) 
-           (fun h x l -> x = 1 /\ (exists y . l = [y;y] \/ l = [y+1;y])) =
+           (fun h x l -> x = 1 /\ (exists y . l = [y;y] \/ l = [y;y+1])) =
   let x = read () in
   (if b 
    then write (x + 1)
@@ -145,7 +145,7 @@ let test7 (b:bool)
 
 let test8 (b:bool) 
   : Io int (fun _ -> True) 
-           (fun h x l -> x = 1 /\ (exists y z . z < y /\ l = [y;z])) =
+           (fun h x l -> x = 1 /\ (exists y z . z < y /\ l = [z;y])) =
   let x = read () in
   (if b 
    then write (x + 1)
@@ -156,7 +156,7 @@ let test8 (b:bool)
 let rec n_writes (n:nat) (i:int) = 
   if n = 0 
   then []
-  else i :: n_writes (n - 1) i
+  else n_writes (n - 1) i @ [i]
 
 let rec test9 (n:nat) (i:int)
   : Io unit (requires (fun _     -> True)) 
@@ -171,3 +171,12 @@ let test10 (h0:h_trace)
   write 24;
   let x = read () in
   write 42
+
+let mustHaveOccurred (i:int) : IO unit (fun h p -> mem i h /\ p () []) =
+  ()
+
+let print_increasing (i:int) : IO unit (fun h p -> p () [i+1;i]) = 
+  write i;
+  mustHaveOccurred i; 
+  write (i+1)
+
