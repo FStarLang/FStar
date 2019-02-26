@@ -7,8 +7,8 @@ module Refinement
 *)
 open FStar.HyperStack.ST
 module B = LowStar.Buffer
-module HS=FStar.HyperStack
-
+module HS = FStar.HyperStack
+module HST = FStar.HyperStack.ST
 /// pre_roots:
 ///   A pair of pointers that will store our abstract state in the hyperstack
 ///   and the initial HS.mem in which our abstract computation begins
@@ -30,8 +30,25 @@ let inv (r:roots) (h:HS.mem) =
   B.live h r.p1 /\
   B.live h r.p2
 
+
+/// `pre_h_extension`:
+///    Relating a memory to the roots
+///    Intuitively, a `h` is a successor memory of the initial one
+let pre_h_extension (r:pre_roots) (h:HS.mem) =
+  //h1 == put r h0 (get r h1) //equivalent
+  inv r h /\
+  HST.equal_domains r.h h /\
+  B.modifies (B.loc_union (B.loc_buffer r.p1)
+                          (B.loc_buffer r.p2))
+             r.h
+             h
+
+/// `h_extension`: Abstracting pre_h_extension from clients
+abstract
+let h_extension (r:roots) (h:HS.mem) = pre_h_extension r h
+
 /// `imem r`: A memory satisfying the invariant
-let imem (r:roots) = h:HS.mem{inv r h}
+let imem (r:roots) = h:HS.mem{h_extension r h}
 
 /// `get`: viewing an memory as an abstract state (a pair)
 abstract
@@ -63,22 +80,6 @@ let put_put (r:roots) (h:imem r) (p:(nat * nat))
   : Lemma (put r (put r h p) p == put r h p)
   = admit()
 
-module HST = FStar.HyperStack.ST
-
-/// `pre_h_extension`:
-///    Relating a memory to the roots
-///    Intuitively, a `h` is a successor memory of the initial one
-let pre_h_extension (r:pre_roots) (h:HS.mem) =
-  //h1 == put r h0 (get r h1) //equivalent
-  HST.equal_domains r.h h /\
-  B.modifies (B.loc_union (B.loc_buffer r.p1)
-                          (B.loc_buffer r.p2))
-             r.h
-             h
-
-/// `h_extension`: Abstracting pre_h_extension from clients
-abstract
-let h_extension (r:roots) (h:imem r) = pre_h_extension r h
 
 /// `mk_roots`: To get going, we can build a `roots`
 abstract
@@ -86,11 +87,10 @@ let mk_roots (p1 p2:B.pointer nat)
              (h:HS.mem)
   : Pure roots
      (requires
-          B.disjoint p1 p2 /\
-          B.live h p1 /\
-          B.live h p2)
+       B.disjoint p1 p2 /\
+       B.live h p1 /\
+       B.live h p2)
      (ensures fun r ->
-       inv r h /\
        h_extension r h)
   = {p1 = p1; p2 = p2; h = h}
 
@@ -106,11 +106,13 @@ let invert_mk_roots
       (h:HS.mem{B.disjoint p1 p2 /\
                 B.live h p1 /\
                 B.live h p2})
-   : Lemma (let p = pre_roots_of_roots (mk_roots p1 p2 h) in
-            p.p1 == p1 /\
-            p.p2 == p2 /\
-            p.h == h)
-            [SMTPat (pre_roots_of_roots (mk_roots p1 p2 h))]
+   : Lemma
+      (ensures (
+        let p = pre_roots_of_roots (mk_roots p1 p2 h) in
+        p.p1 == p1 /\
+        p.p2 == p2 /\
+        p.h == h))
+      [SMTPat (pre_roots_of_roots (mk_roots p1 p2 h))]
    = ()
 
 /// `elim`: Eliminate the main abstract invariant back to HyperStack notions
@@ -134,12 +136,10 @@ effect RST (a:Type) (r:roots) (pre: (nat * nat) -> prop) (post: (nat * nat) -> a
        STATE a
             (fun (k:a -> HS.mem -> Type)
                (h0:HS.mem) ->
-               inv r h0 /\                       //require the invariant
-               h_extension r h0 /\               //expect the initial memory to be a successor of r
+               h_extension r h0 /\               //expect the initial memory to be in the invariat
                pre (get r h0) /\
                (forall x h1.
-                 inv r h1 /\                     //ensure the invariant
-                 h_extension r h1 /\             //final memory is also a successor of r
+                 h_extension r h1 /\             //final memory is also in the invariant
                  post (get r h0)                //and the user-provided post on pairs
                       x
                       (get r h1) ==>
