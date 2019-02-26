@@ -15,6 +15,9 @@ let bind (a : Type u#aa) (b : Type u#bb)
 let interp (#a:Type) (l : repr a) : pure_wp a =
     fun p -> forall (x:a). List.memP x l ==> p x
 
+let rel (#a:Type) (l : repr a) (w : pure_wp a) =
+    forall p. w p ==> interp l p
+
 total
 reifiable
 reflectable
@@ -30,6 +33,7 @@ new_effect {
      ; bind_wp   = pure_bind_wp
 
      ; interp    = interp
+     ; mrelation = rel
 
      (* ; choose    = choose *)
 }
@@ -43,6 +47,10 @@ let test2 () : ND int (fun p -> p 5 /\ p 3) = 3
 // the WPs via stronger-than instead of always unfolding.
 [@expect_failure]
 let test3 () : ND int (fun p -> p 5 /\ p 3) = 4
+
+assume val test_f : unit -> ND int (fun p -> p 5 /\ p 3)
+
+let l : (l:list int{forall p. p 5 /\ p 3 ==> interp l p}) = reify (test_f ())
 
 effect Nd (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
         ND a (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result))
