@@ -87,10 +87,15 @@ let init_once () : unit =
   let env = TcEnv.set_current_module env test_lid in
   tcenv_ref := Some env
 
-let rec init () =
+let _ =
+  FStar.Main.setup_hooks();
+  init_once()
+
+let init () =
     match !tcenv_ref with
-        | Some f -> f
-        | _ -> init_once(); init()
+    | Some f -> f
+    | _ ->
+      failwith "Should have already been initialized by the top-level effect"
 
 let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
 

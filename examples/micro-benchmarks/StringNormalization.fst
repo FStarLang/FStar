@@ -17,26 +17,66 @@ module StringNormalization
 
 (* Testing string support in the normalizer *)
 
-open FStar.String
 open FStar.Char
+open FStar.String
 
-let _ = assert_norm("a" ^ "b" == "ab")
+let _ = assert (string_of_int 123 == "123")
 
-let _ = assert_norm(string_of_int 123 == "123")
+let _ = assert (string_of_bool true == "true")
 
-let _ = assert_norm(string_of_bool true == "true")
+let _ = assert (string_of_bool false == "false")
 
-let _ = assert_norm(string_of_bool false == "false")
+let _ = assert (List.Tot.map int_of_char (list_of_string "") == [])
 
-let _ = assert_norm("a" ^ string_of_int 123 ^ "b" ^ string_of_bool true == "a123btrue")
+let _ = assert (list_of_string "a8X" == ['a'; '8'; 'X'])
 
-let _ = assert_norm (List.Tot.map int_of_char (list_of_string "") == [])
+let _ = assert (List.Tot.map int_of_char (list_of_string "a8X") == [97; 56; 88])
 
-let _ = assert_norm (list_of_string "a8X" == ['a'; '8'; 'X'])
+let _ = assert (string_of_list ['a'; '8'; 'X'] == "a8X")
 
-// int_of_char doesn't reduce, so this fails
-//let _ = assert_norm (List.Tot.map int_of_char (list_of_string "a8X") == [97; 56; 88])
+let _ = assert (concat "." ["FStar";"Mul";"op_Star"] == "FStar.Mul.op_Star")
 
-let _ = assert_norm (string_of_list ['a'; '8'; 'X'] == "a8X")
+let _ = assert_norm (strlen "Hello" == 5)
 
-let _ = assert_norm (concat "." ["FStar";"Mul";"op_Star"] == "FStar.Mul.op_Star")
+let _ = assert_norm (length "Hello" == 5)
+
+let _ = assert (make 5 'f' = "fffff")
+
+let _ = assert_norm (string_of_char 'a' == "a")
+
+let _ = assert (split ['a'; 'b'] "ccaddbee" == ["cc"; "dd"; "ee"])
+
+let _ = assert (split [','; ';'] "cc,dd;ee;" == ["cc"; "dd"; "ee"; ""])
+let _ = assert (split [','; ';'] ",cc,dd;ee;" == ["cc"; "dd"; "ee"; ""])
+let _ = assert (split [','; ';'] ",cc,dd;ee;;" == ["cc"; "dd"; "ee"; ""; ""])
+
+let _ = assert ("a" `strcat` "b" == "ab")
+let _ = assert ("a" `strcat` string_of_int 123 `strcat` "b" `strcat` string_of_bool true == "a123btrue")
+
+let _ = assert ("a" ^ "b" == "ab")
+let _ = assert ("a" ^ string_of_int 123 ^ "b" ^ string_of_bool true == "a123btrue")
+
+let _ = assert (concat "," ["a"; "b"; "c"] == "a,b,c")
+let _ = assert (concat "," [] == "")
+
+let _ = assert (compare "AAA" "AAB" == (-1))
+let _ = assert (compare "AAA" "AA" == 1)
+let _ = assert (compare "AAA" "AAA" == 0)
+let _ = assert (compare "AAA" "BAA" == (-1))
+
+let _ = assert (lowercase "Hello World" == "hello world")
+let _ = assert (uppercase "Hello World" == "HELLO WORLD")
+
+let _ =
+  assert_norm (length "Hello" == 5); (* awkward *)
+  assert (index "Hello" 4 == 'o')
+
+let _ = assert (index_of "Hello" 'o' == 4)
+let _ = assert (index_of "Hello" 'x' == (-1))
+
+let _ =
+  assert_norm (length "Hello World" == 11); (* awkward *)
+  assert (sub "Hello World" 3 4 == "lo W")
+
+let _ =
+  assert (norm [nbe; primops] ("abc" ^ "def") == "abcdef")

@@ -1,0 +1,78 @@
+[
+  "¿eoôP—ÿ\u0001ÆRE/\u0018\u0011¿Ã",
+  [
+    [
+      "InjectiveTypeFormers.Explicit.coerce",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
+      ],
+      0,
+      "51ba74cb24272086f0ddbffbb05fd295"
+    ],
+    [
+      "InjectiveTypeFormers.Explicit.lemma_of_squash",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "3d1d0c8333a2bd4e687975fae166c3a7"
+    ],
+    [
+      "InjectiveTypeFormers.Explicit.false_of_pq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_InjectiveTypeFormers.Explicit.p",
+        "equation_InjectiveTypeFormers.Explicit.pa",
+        "equation_InjectiveTypeFormers.Explicit.q",
+        "fuel_guarded_inversion_Prims.c_False",
+        "function_token_typing_InjectiveTypeFormers.Explicit.p",
+        "refinement_interpretation_Tm_refine_0a9dd668d96098fcd9f12df1b6843b10"
+      ],
+      0,
+      "b8ab1c5982720481ffbe47a875c2618d"
+    ],
+    [
+      "InjectiveTypeFormers.Explicit.not_pq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "022e2f298cdec1aead6cce8d934118a4"
+    ],
+    [
+      "InjectiveTypeFormers.Explicit.pq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_InjectiveTypeFormers.Explicit.not_pq",
+        "equation_InjectiveTypeFormers.Explicit.p",
+        "equation_InjectiveTypeFormers.Explicit.pa",
+        "equation_InjectiveTypeFormers.Explicit.q", "equation_Prims.l_False",
+        "equation_Prims.l_imp", "equation_Prims.l_not",
+        "equation_Prims.squash",
+        "function_token_typing_InjectiveTypeFormers.Explicit.p",
+        "l_not-interp",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_InjectiveTypeFormers.Explicit.not_pq", "unit_inversion",
+        "unit_typing"
+      ],
+      0,
+      "4650b81c24a4f8c03479fa8772fc759e"
+    ]
+  ]
+]
