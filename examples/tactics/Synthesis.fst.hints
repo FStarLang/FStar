@@ -2,16 +2,16 @@
   "÷Á¼x\u0010î\u0002›ƒ™º°p«\f\u0011",
   [
     [
-      "Synthesis.uu___1",
+      "Synthesis.uu___295",
       1,
       2,
       1,
       [ "@query", "equation_Synthesis.a" ],
       0,
-      "0685ffc4c5d233d01c3d3f5693a4e7e3"
+      "98ee18efbf4cd1a8abbbf522ea7e7a76"
     ],
     [
-      "Synthesis.uu___2",
+      "Synthesis.uu___302",
       1,
       2,
       1,
@@ -20,37 +20,37 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a5521d064a0b2daaa290c4a034172409"
+      "7cb6b3c2d46c1d88b1c3a6d86b2b4e11"
     ],
     [
-      "Synthesis.uu___3",
+      "Synthesis.uu___312",
       1,
       2,
       1,
       [ "@query", "equation_Synthesis.fn8" ],
       0,
-      "36f0adfd0f1f2d2415b48573d25ba3cb"
+      "6891897bb84997332d4d23af8c2454ea"
     ],
     [
-      "Synthesis.uu___4",
+      "Synthesis.uu___320",
       1,
       2,
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "622ec03cfe60ad8841f82365eefb8be2"
+      "8559c5e4041e58ad47dac18b4c562309"
     ],
     [
-      "Synthesis.uu___5",
+      "Synthesis.uu___321",
       1,
       2,
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "7c3a1d5944df54ffc06d7e364da66b83"
+      "979abce4d913d0edd7fdb4a3b8ec6b28"
     ],
     [
-      "Synthesis.uu___6",
+      "Synthesis.uu___322",
       1,
       2,
       1,
@@ -59,23 +59,22 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c9e86d6aa09a3d248d7441b780c2049a"
+      "02f1c66dee1e1ad92663deec966c7e4f"
     ],
     [
-      "Synthesis.uu___7",
+      "Synthesis.uu___335",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Synthesis.f2",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "@query", "equation_Synthesis.f2",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "54a9c10e5a2b82fad63c21cf0463a89d"
+      "2ad104606ce3e4adec0421d5931d3317"
     ],
     [
       "Synthesis.f3",
@@ -93,28 +92,28 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9eb6031e46d2203f8adcc8dd9741dc98"
+      "c6a09c708d92f3405a1c08e76a812514"
     ],
     [
-      "Synthesis.uu___8",
+      "Synthesis.uu___348",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "8fb1d1f9bc783fd290dca9d9281ce968"
+      "34bbe44964c825216e6c39c66c60e14f"
     ],
     [
-      "Synthesis.uu___1",
+      "Synthesis.uu___295",
       2,
       2,
       1,
       [ "@query", "equation_Synthesis.a" ],
       0,
-      "562be78e217a059d598e3f1c6f5dc175"
+      "96bfe8c541cf4f696508bdb974ff1931"
     ],
     [
-      "Synthesis.uu___2",
+      "Synthesis.uu___302",
       2,
       2,
       1,
@@ -123,37 +122,37 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "62728d5c9ded9f0b6f4b93c28bb51f41"
+      "87ef420ee33bd62dbc9e9da3938895fb"
     ],
     [
-      "Synthesis.uu___3",
+      "Synthesis.uu___312",
       2,
       2,
       1,
       [ "@query", "equation_Synthesis.fn8" ],
       0,
-      "d280c77613541786f78468acc48f8731"
+      "48d6ad9d37640ea77c43afa30d36b4d3"
     ],
     [
-      "Synthesis.uu___4",
+      "Synthesis.uu___320",
       2,
       2,
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "cfca501512b01aa6bc986019816baf33"
+      "b1a7e5ce399b3296e716f409cc47231a"
     ],
     [
-      "Synthesis.uu___5",
+      "Synthesis.uu___321",
       2,
       2,
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "a66880449404d47044386f2b7dc451af"
+      "a4953f01df04d260656331b2d33d9452"
     ],
     [
-      "Synthesis.uu___6",
+      "Synthesis.uu___322",
       2,
       2,
       1,
@@ -162,23 +161,22 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d3c064f53ee39ce02574f37e5246d76c"
+      "0dd4a6f01473048284465c4c154c5af7"
     ],
     [
-      "Synthesis.uu___7",
+      "Synthesis.uu___335",
       2,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Synthesis.f2",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "@query", "equation_Synthesis.f2",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9cf3d47ab9943cdf3adb78dbc39e8b01"
+      "c5f50a3c079aaff0899250ba6e708b66"
     ],
     [
       "Synthesis.f3",
@@ -193,16 +191,16 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e5df77d17f8d5684f7e27bd1a26d8551"
+      "198537f346bdf41bc42afcd3bba6c216"
     ],
     [
-      "Synthesis.uu___8",
+      "Synthesis.uu___348",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "e9ba5391446e8c42e8d0fb43a450ffbf"
+      "96cd0ae2ed3378364229d8d43d612c94"
     ]
   ]
 ]
