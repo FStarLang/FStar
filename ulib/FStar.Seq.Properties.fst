@@ -25,32 +25,6 @@ let lseq (a: Type) (l: nat) : Type =
 
 let indexable (#a:Type) (s:Seq.seq a) (j:int) = 0 <= j /\ j < Seq.length s
 
-val lemma_append_inj_l: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a{length s1 = length t1 /\ equal (append s1 s2) (append t1 t2)} -> i:nat{i < length s1}
-  -> Lemma (index s1 i == index t1 i)
-let lemma_append_inj_l #a s1 s2 t1 t2 i =
-  assert (index s1 i == (index (append s1 s2) i));
-  assert (index t1 i == (index (append t1 t2) i))
-
-val lemma_append_inj_r: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a{length s1 = length t1 /\ length s2 = length t2 /\ equal (append s1 s2) (append t1 t2)} -> i:nat{i < length s2}
-  -> Lemma (ensures  (index s2 i == index t2 i))
-let lemma_append_inj_r #a s1 s2 t1 t2 i =
-  assert (index s2 i == (index (append s1 s2) (i + length s1)));
-  assert (index t2 i == (index (append t1 t2) (i + length t1)))
-
-val lemma_append_len_disj: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a {(length s1 = length t1 \/ length s2 = length t2) /\ (equal (append s1 s2) (append t1 t2))}
-  -> Lemma (ensures (length s1 = length t1 /\ length s2 = length t2))
-let lemma_append_len_disj #a s1 s2 t1 t2 =
-  cut (length (append s1 s2) == length s1 + length s2);
-  cut (length (append t1 t2) == length t1 + length t2)
-
-val lemma_append_inj: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a {length s1 = length t1 \/ length s2 = length t2}
-  -> Lemma (requires (equal (append s1 s2) (append t1 t2)))
-           (ensures (equal s1 t1 /\ equal s2 t2))
-let lemma_append_inj #a s1 s2 t1 t2 =
-  lemma_append_len_disj s1 s2 t1 t2;
-  FStar.Classical.forall_intro #(i:nat{i < length s1}) #(fun i -> index s1 i == index t1 i) (lemma_append_inj_l s1 s2 t1 t2);
-  FStar.Classical.forall_intro #(i:nat{i < length s2}) #(fun i -> index s2 i == index t2 i) (lemma_append_inj_r s1 s2 t1 t2)
-
 val head: #a:Type -> s:seq a{length s > 0} -> Tot a
 let head #a s = index s 0
 
@@ -70,15 +44,6 @@ let last #a s = index s (length s - 1)
 
 val cons: #a:Type -> a -> seq a -> Tot (seq a)
 let cons #a x s = append (create 1 x) s
-
-val lemma_cons_inj: #a:Type -> v1:a -> v2:a -> s1:seq a -> s2:seq a
-  -> Lemma (requires (equal (cons v1 s1) (cons v2 s2)))
-          (ensures (v1 == v2 /\ equal s1 s2))
-let lemma_cons_inj #a v1 v2 s1 s2 =
-  let t1 = create 1 v1 in
-  let t2 = create 1 v2 in
-  lemma_append_inj t1 s1 t2 s2;
-  assert(index t1 0 == index t2 0)
 
 val split: #a:Type -> s:seq a -> i:nat{(0 <= i /\ i <= length s)} -> Tot (seq a * seq a)
 let split #a s i = slice s 0 i, slice s i (length s)
@@ -527,15 +492,6 @@ let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
 val lemma_tail_snoc: #a:Type -> s:Seq.seq a{Seq.length s > 0} -> x:a
                      -> Lemma (ensures (tail (snoc s x) == snoc (tail s) x))
 let lemma_tail_snoc #a s x = lemma_slice_first_in_append s (Seq.create 1 x) 1
-
-val lemma_snoc_inj: #a:Type -> s1:seq a -> s2:seq a -> v1:a -> v2:a
-  -> Lemma (requires (equal (snoc s1 v1) (snoc s2 v2)))
-          (ensures (v1 == v2 /\ equal s1 s2))
-let lemma_snoc_inj #a s1 s2 v1 v2 =
-  let t1 = create 1 v1 in
-  let t2 = create 1 v2 in
-  lemma_append_inj s1 t1 s2 t2;
-  assert(head t1  == head t2)
 
 #set-options "--initial_fuel 2 --max_fuel 2"
 val lemma_mem_snoc : #a:eqtype -> s:Seq.seq a -> x:a ->
@@ -1186,9 +1142,10 @@ let eq_append_elim
       equal (append s1 s2) t)
     (ensures
       length t == length s1 + length s2 /\
-      (forall (i:nat).{:pattern index t i}
-         (i < length s1 ==> index t i == index s1 i) /\
-	 (i >= length s1 /\ i < length t) ==> index t i == index s2 (i - length s1)))
+      (forall (i:nat).{:pattern index s1 i}
+         (i < length s1 ==> index t i == index s1 i)) /\
+      (forall (i:nat).{:pattern index s2 i}
+	 (i < length s2) ==> index t (i + length s1) == index s2 i))
     [SMTPat (equal (append s1 s2) t)]
   = ()  
 
@@ -1222,3 +1179,33 @@ let test5 (s1 s2:Seq.seq int) (a n1 n2:nat) =
   assume (length s1 <= length s2 /\ a + n1 <= length s1 /\ n2 <= n1 /\ a <= n2);
   assume (equal (slice s1 a n1) (slice s2 a n1));
   assert (equal (slice s1 a n2) (slice s2 a n2))
+
+val lemma_append_inj_l: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a{length s1 = length t1 /\ equal (append s1 s2) (append t1 t2)} -> i:nat{i < length s1}
+  -> Lemma (index s1 i == index t1 i)
+let lemma_append_inj_l #a s1 s2 t1 t2 i = ()
+
+val lemma_append_inj_r: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a{length s1 = length t1 /\ length s2 = length t2 /\ equal (append s1 s2) (append t1 t2)} -> i:nat{i < length s2}
+  -> Lemma (ensures  (index s2 i == index t2 i))
+let lemma_append_inj_r #a s1 s2 t1 t2 i = ()
+
+val lemma_append_len_disj: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a {(length s1 = length t1 \/ length s2 = length t2) /\ (equal (append s1 s2) (append t1 t2))}
+  -> Lemma (ensures (length s1 = length t1 /\ length s2 = length t2))
+let lemma_append_len_disj #a s1 s2 t1 t2 = ()
+
+val lemma_append_inj: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a {length s1 = length t1 \/ length s2 = length t2}
+  -> Lemma (requires (equal (append s1 s2) (append t1 t2)))
+           (ensures (equal s1 t1 /\ equal s2 t2))
+let lemma_append_inj #a s1 s2 t1 t2 = ()
+
+val lemma_cons_inj: #a:Type -> v1:a -> v2:a -> s1:seq a -> s2:seq a
+  -> Lemma (requires (equal (cons v1 s1) (cons v2 s2)))
+          (ensures (v1 == v2 /\ equal s1 s2))
+let lemma_cons_inj #a v1 v2 s1 s2 =
+  assert (index (create 1 v1) 0 == v1)
+
+val lemma_snoc_inj: #a:Type -> s1:seq a -> s2:seq a -> v1:a -> v2:a
+  -> Lemma (requires (equal (snoc s1 v1) (snoc s2 v2)))
+          (ensures (v1 == v2 /\ equal s1 s2))
+let lemma_snoc_inj #a s1 s2 v1 v2 =
+  assert (index (create 1 v1) 0 == v1)
+
