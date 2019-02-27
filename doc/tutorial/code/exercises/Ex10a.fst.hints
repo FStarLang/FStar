@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "bde985f7506c458f72a5c85f9c93b7ef"
+      "6d55beaa36fc46ec03e78f78ee9c9782"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "297a662056515d28b19eeda53554c231"
+      "cbbc568c2fc12838eab06958c13ed8ef"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "7659b690c0153f395b855ae118f87a7b"
+      "087321bffa049154c83bdae9ed3d5de1"
     ],
     [
       "Ex10a.safe_delete",
@@ -59,7 +59,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "a30ca1895e851984b78a75f94f8e9791"
+      "6292dbea1d7193a65f66375b3de8a3ac"
     ],
     [
       "Ex10a.test_acls",
@@ -94,7 +94,7 @@
         "typing_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e", "unit_typing"
       ],
       0,
-      "fcf6360696c3441321268652d7955ac9"
+      "267ea0f00df5e3a60907571b5b0f1088"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "bc8b1ae2cf150ff44bc456288a247cf8"
+      "4f5e6c5c7afbf5f179a52b0621380ac5"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "5cf4acc6d094dce187f9493bfabad3a0"
+      "d5be2fff9c2c3633ce5b2a09e6aa9824"
     ],
     [
       "Ex10a.canRead",
@@ -133,7 +133,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "b54037d372ce05d685ebcaeb6705beba"
+      "e0540ea5cfda8d37c0b072de78ca3792"
     ],
     [
       "Ex10a.revoke",
@@ -146,7 +146,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "98a1855dc82925da52ae249e364ef1b5"
+      "46df7f59a0ffab703d5982191e6667d4"
     ]
   ]
 ]
