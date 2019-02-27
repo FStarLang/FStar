@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "caf90a88e5f3de4b08c820836c3ed7f9"
+      "bde985f7506c458f72a5c85f9c93b7ef"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "3f93f712fd4aae8df512f2745223e5a2"
+      "297a662056515d28b19eeda53554c231"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "e9dd56bbc982ff7a9a88a822c10e0368"
+      "7659b690c0153f395b855ae118f87a7b"
     ],
     [
       "Ex10a.safe_delete",
@@ -59,7 +59,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "6072d123dfe9f289961bac9f835bd1bf"
+      "a30ca1895e851984b78a75f94f8e9791"
     ],
     [
       "Ex10a.test_acls",
@@ -94,7 +94,7 @@
         "typing_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e", "unit_typing"
       ],
       0,
-      "9fd174133a265862f4c3fb363b71914d"
+      "fcf6360696c3441321268652d7955ac9"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "b02440a8f76645a9e2c4d8b2685c9d1d"
+      "bc8b1ae2cf150ff44bc456288a247cf8"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "c6252d14729c2d8ca421ecd9f4bcb22c"
+      "5cf4acc6d094dce187f9493bfabad3a0"
     ],
     [
       "Ex10a.canRead",
@@ -133,7 +133,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "93f4f6d1abccccd5695ff85be8283f8c"
+      "b54037d372ce05d685ebcaeb6705beba"
     ],
     [
       "Ex10a.revoke",
@@ -146,7 +146,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "8397fd91d5a79aa8d5135eaad45c232d"
+      "98a1855dc82925da52ae249e364ef1b5"
     ]
   ]
 ]
