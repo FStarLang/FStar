@@ -1342,6 +1342,29 @@ let modifies_upd #al #c #t #pre r v h =
     (fun r n -> ())
     (fun r a b -> c.same_mreference_aloc_preserved #r #a b h h' (fun a' pre' r' -> ()))
 
+#push-options "--z3rlimit 16"
+
+let modifies_strengthen #al #c l #r0 #a0 al0 al1 h h' alocs =
+  assert (modifies_preserves_regions (loc_union l (loc_of_aloc al0)) h h');
+  assert (modifies_preserves_mreferences (loc_union l (loc_of_aloc al0)) h h');
+  modifies_preserves_alocs_intro (loc_union l (loc_of_aloc al0)) h h' () (fun r a b ->
+    if r = r0 && a = a0
+    then begin
+      assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_union l (loc_of_aloc al0)))) (GSet.singleton (ALoc r0 a0 (Some b))));
+      assert (loc_aux_disjoint #_ #c (Ghost.reveal (Loc?.aux (loc_of_aloc al0))) (GSet.singleton (ALoc r0 a0 (Some b))));
+      assert (loc_aux_disjoint #_ #c (GSet.singleton (ALoc r0 a0 (Some al0))) (GSet.singleton (ALoc r0 a0 (Some b))));
+      assert (GSet.mem (ALoc r0 a0 (Some al0)) (GSet.singleton (ALoc #_ #c r0 a0 (Some al0))));
+      assert (GSet.mem (ALoc r0 a0 (Some b)) (GSet.singleton (ALoc #_ #c r0 a0 (Some b))));
+      assert (aloc_disjoint #_ #c (ALoc r0 a0 (Some al0)) (ALoc r0 a0 (Some b)));
+      assert (c.aloc_disjoint al0 b);
+      c.aloc_disjoint_sym al0 b;
+      alocs b
+    end 
+    else ()
+  );
+  assert (modifies (loc_union l (loc_of_aloc al0)) h h')
+
+#pop-options
 
 let does_not_contain_addr' (h: HS.mem) (ra: HS.rid * nat) : GTot Type0 =
   HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` (fst ra))
