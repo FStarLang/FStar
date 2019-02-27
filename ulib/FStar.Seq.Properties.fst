@@ -1104,7 +1104,7 @@ let sort_lseq (#a:eqtype) #n (f:tot_ord a) (s:lseq a n)
 
 let eq_slice_elim
   (#a:Type)
-  (s:seq a) (i:nat) (j:nat{i <= j /\ j < length s})
+  (s:seq a) (i:nat) (j:nat{i <= j /\ j <= length s})
   (t:seq a)
   : Lemma
     (requires
@@ -1160,8 +1160,9 @@ let test (s1 s2:Seq.seq int) (n:nat) =
 
 let test2 (s1 s2:Seq.seq int) (n1 n2:nat) =
   assume (length s1 == length s2 /\ n1 <= length s1 /\ n2 <= n1);
-  assume (equal (slice s1 0 n1) (slice s2 0 n1));
-  assert (equal (slice s1 0 n2) (slice s2 0 n2))
+  assume (length s1 >= 1 /\ n1 >= 1 /\ n2 >= 1);
+  assume (equal (slice s1 1 n1) (slice s2 1 n1));
+  assert (equal (slice s1 1 n2) (slice s2 1 n2))
 
 let test3 (s1 s2:Seq.seq int) (i1 j1 i2 j2:nat) (k:nat) =
   assume (i1 <= j1 /\ j1 < length s1);
