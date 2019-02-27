@@ -1144,3 +1144,81 @@ let sort_lseq (#a:eqtype) #n (f:tot_ord a) (s:lseq a n)
   perm_len s s';
   sorted_feq f (L.bool_of_compare (L.compare_of_bool f)) s';
   s'
+
+
+let eq_slice_elim
+  (#a:Type)
+  (s:seq a) (i:nat) (j:nat{i <= j /\ j < length s})
+  (t:seq a)
+  : Lemma
+    (requires
+      equal (slice s i j) t)
+    (ensures
+      (length t == j - i /\
+       (forall (k:nat).{:pattern index s k}
+          (i <= k /\ k < j) ==>
+	  (index s k == index t (k - i)))))
+    [SMTPat (equal (slice s i j) t)]
+  = ()
+
+let eq_create_elim
+  (#a:Type)
+  (n:nat) (x:a)
+  (s:seq a)
+  : Lemma
+    (requires
+      equal (create n x) s)
+    (ensures
+      (n == 0 ==> s == empty) /\
+      (n > 0 ==>
+       (length s == n /\
+        (forall (i:nat).{:pattern index s i}
+	   i < n ==> index s i == x))))
+    [SMTPat (equal (create n x) s)]
+  = if n = 0 then lemma_empty s else ()
+
+let eq_append_elim
+  (#a:Type)
+  (s1 s2:seq a)
+  (t:seq a)
+  : Lemma
+    (requires
+      equal (append s1 s2) t)
+    (ensures
+      length t == length s1 + length s2 /\
+      (forall (i:nat).{:pattern index t i}
+         (i < length s1 ==> index t i == index s1 i) /\
+	 (i >= length s1 /\ i < length t) ==> index t i == index s2 (i - length s1)))
+    [SMTPat (equal (append s1 s2) t)]
+  = ()  
+
+
+(*** Temporary tests, remove before merge ***)
+
+let test (s1 s2:Seq.seq int) (n:nat) =
+  assume (length s1 == length s2);
+  assume (0 < n /\ n <= length s1);
+  assume (equal (slice s1 0 n) (slice s2 0 n));
+  assert (index s1 0 == index s2 0)
+
+let test2 (s1 s2:Seq.seq int) (n1 n2:nat) =
+  assume (length s1 == length s2 /\ n1 <= length s1 /\ n2 <= n1);
+  assume (equal (slice s1 0 n1) (slice s2 0 n1));
+  assert (equal (slice s1 0 n2) (slice s2 0 n2))
+
+let test3 (s1 s2:Seq.seq int) (i1 j1 i2 j2:nat) (k:nat) =
+  assume (i1 <= j1 /\ j1 < length s1);
+  assume (i2 <= j2 /\ j2 < length s2);
+  assume (k <= j1 - i1);
+  assume (equal (slice s1 i1 j1) (slice s2 i2 j2));
+  assert (equal (slice s1 i1 (i1 + k)) (slice s2 i2 (i2 + k)))
+
+let test4 (s1 s2 s3:Seq.seq int) (n:nat) =
+  assume (n <= length s1 /\ n > length s2 /\ length s3 >= n - length s2);
+  assume (equal (slice s1 0 n) (append s2 (slice s3 0 (n - length s2))));
+  assert (forall (i:nat). i < n ==> index s1 i == index (append s2 s3) i)
+
+let test5 (s1 s2:Seq.seq int) (a n1 n2:nat) =
+  assume (length s1 <= length s2 /\ a + n1 <= length s1 /\ n2 <= n1 /\ a <= n2);
+  assume (equal (slice s1 a n1) (slice s2 a n1));
+  assert (equal (slice s1 a n2) (slice s2 a n2))
