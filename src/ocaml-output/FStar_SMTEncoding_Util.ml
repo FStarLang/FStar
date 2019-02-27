@@ -3,23 +3,23 @@ let (mkAssume :
   (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.caption *
     Prims.string) -> FStar_SMTEncoding_Term.decl)
   =
-  fun uu____12  ->
-    match uu____12 with
+  fun uu____67031  ->
+    match uu____67031 with
     | (tm,cap,nm) ->
-        let uu____25 =
-          let uu____26 = FStar_SMTEncoding_Term.escape nm  in
+        let uu____67044 =
+          let uu____67045 = FStar_SMTEncoding_Term.escape nm  in
           {
             FStar_SMTEncoding_Term.assumption_term = tm;
             FStar_SMTEncoding_Term.assumption_caption = cap;
-            FStar_SMTEncoding_Term.assumption_name = uu____26;
+            FStar_SMTEncoding_Term.assumption_name = uu____67045;
             FStar_SMTEncoding_Term.assumption_fact_ids = []
           }  in
-        FStar_SMTEncoding_Term.Assume uu____25
+        FStar_SMTEncoding_Term.Assume uu____67044
   
 let norng :
-  'Auu____37 'Auu____38 .
-    ('Auu____37 -> FStar_Range.range -> 'Auu____38) ->
-      'Auu____37 -> 'Auu____38
+  'Auu____67056 'Auu____67057 .
+    ('Auu____67056 -> FStar_Range.range -> 'Auu____67057) ->
+      'Auu____67056 -> 'Auu____67057
   = fun f  -> fun x  -> f x FStar_Range.dummyRange 
 let (mkTrue : FStar_SMTEncoding_Term.term) =
   FStar_SMTEncoding_Term.mkTrue FStar_Range.dummyRange 
@@ -172,23 +172,24 @@ let (mkCases :
   FStar_SMTEncoding_Term.term Prims.list -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkCases 
 let norng2 :
-  'Auu____588 'Auu____589 'Auu____590 .
-    ('Auu____588 -> 'Auu____589 -> FStar_Range.range -> 'Auu____590) ->
-      'Auu____588 -> 'Auu____589 -> 'Auu____590
+  'Auu____67607 'Auu____67608 'Auu____67609 .
+    ('Auu____67607 -> 'Auu____67608 -> FStar_Range.range -> 'Auu____67609) ->
+      'Auu____67607 -> 'Auu____67608 -> 'Auu____67609
   = fun f  -> fun x  -> fun y  -> f x y FStar_Range.dummyRange 
 let norng3 :
-  'Auu____638 'Auu____639 'Auu____640 'Auu____641 .
-    ('Auu____638 ->
-       'Auu____639 -> 'Auu____640 -> FStar_Range.range -> 'Auu____641)
-      -> 'Auu____638 -> 'Auu____639 -> 'Auu____640 -> 'Auu____641
+  'Auu____67657 'Auu____67658 'Auu____67659 'Auu____67660 .
+    ('Auu____67657 ->
+       'Auu____67658 -> 'Auu____67659 -> FStar_Range.range -> 'Auu____67660)
+      -> 'Auu____67657 -> 'Auu____67658 -> 'Auu____67659 -> 'Auu____67660
   = fun f  -> fun x  -> fun y  -> fun z  -> f x y z FStar_Range.dummyRange 
 let norng4 :
-  'Auu____703 'Auu____704 'Auu____705 'Auu____706 'Auu____707 .
-    ('Auu____703 ->
-       'Auu____704 ->
-         'Auu____705 -> 'Auu____706 -> FStar_Range.range -> 'Auu____707)
+  'Auu____67722 'Auu____67723 'Auu____67724 'Auu____67725 'Auu____67726 .
+    ('Auu____67722 ->
+       'Auu____67723 ->
+         'Auu____67724 -> 'Auu____67725 -> FStar_Range.range -> 'Auu____67726)
       ->
-      'Auu____703 -> 'Auu____704 -> 'Auu____705 -> 'Auu____706 -> 'Auu____707
+      'Auu____67722 ->
+        'Auu____67723 -> 'Auu____67724 -> 'Auu____67725 -> 'Auu____67726
   =
   fun f  ->
     fun x  -> fun y  -> fun z  -> fun w  -> f x y z w FStar_Range.dummyRange

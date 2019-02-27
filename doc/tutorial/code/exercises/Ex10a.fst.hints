@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "e3c9cb0d233ed5d260fc1aaeeb78571c"
+      "d1a45bac1837dd1d2bb32e8a5114724e"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "e5f579453fed5e226033a46e172ccf15"
+      "6d0c69b31843185d07e587467f9f89b4"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "7a64b8f05bb2c6d4dd1d77a1a5728c2f"
+      "5881baf4010e19cca7753cf7cf1f5e51"
     ],
     [
       "Ex10a.safe_delete",
@@ -59,7 +59,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "aee2ef20b95ecfa1d966e6da61db51cf"
+      "d5850c2bdca5545a68625825c6b74ad9"
     ],
     [
       "Ex10a.test_acls",
@@ -94,7 +94,7 @@
         "typing_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e", "unit_typing"
       ],
       0,
-      "c4c125ac3568d9a192790d819310c12b"
+      "ea0a42e95c258e4f8ae4aeade834c717"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "91ccd9aa94e7e4bf9edad359956a792e"
+      "7b15461de347c2cec221ca22535a4e46"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "c34ddd3b6fbff2f55a9a0d2f57055e7d"
+      "b7338183455fd56da3ce3bda369cc315"
     ],
     [
       "Ex10a.canRead",
@@ -133,7 +133,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "0552a343f7c77a26382db51eaafed78f"
+      "978c927816863d969da6a6491dcbace7"
     ],
     [
       "Ex10a.revoke",
@@ -146,7 +146,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "8b3beab2f2489b43c113e62554cf349b"
+      "18209a6d20f254577c0548a8707cfd18"
     ]
   ]
 ]

@@ -325,1901 +325,1921 @@ let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_DependencyAnalysisFailed  -> true
-    | uu____9 -> false
+    | uu____36203 -> false
   
 let (uu___is_Error_IDETooManyPops : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_IDETooManyPops  -> true | uu____20 -> false
+    match projectee with
+    | Error_IDETooManyPops  -> true
+    | uu____36214 -> false
   
 let (uu___is_Error_IDEUnrecognized : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_IDEUnrecognized  -> true | uu____31 -> false
+    match projectee with
+    | Error_IDEUnrecognized  -> true
+    | uu____36225 -> false
   
 let (uu___is_Error_InductiveTypeNotSatisfyPositivityCondition :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_InductiveTypeNotSatisfyPositivityCondition  -> true
-    | uu____42 -> false
+    | uu____36236 -> false
   
 let (uu___is_Error_InvalidUniverseVar : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_InvalidUniverseVar  -> true
-    | uu____53 -> false
+    | uu____36247 -> false
   
 let (uu___is_Error_MissingFileName : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_MissingFileName  -> true | uu____64 -> false
+    match projectee with
+    | Error_MissingFileName  -> true
+    | uu____36258 -> false
   
 let (uu___is_Error_ModuleFileNameMismatch : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_ModuleFileNameMismatch  -> true
-    | uu____75 -> false
+    | uu____36269 -> false
   
 let (uu___is_Error_OpPlusInUniverse : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_OpPlusInUniverse  -> true
-    | uu____86 -> false
+    | uu____36280 -> false
   
 let (uu___is_Error_OutOfRange : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_OutOfRange  -> true | uu____97 -> false
+    match projectee with | Error_OutOfRange  -> true | uu____36291 -> false
   
 let (uu___is_Error_ProofObligationFailed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_ProofObligationFailed  -> true
-    | uu____108 -> false
+    | uu____36302 -> false
   
 let (uu___is_Error_TooManyFiles : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_TooManyFiles  -> true | uu____119 -> false
+    match projectee with | Error_TooManyFiles  -> true | uu____36313 -> false
   
 let (uu___is_Error_TypeCheckerFailToProve : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_TypeCheckerFailToProve  -> true
-    | uu____130 -> false
+    | uu____36324 -> false
   
 let (uu___is_Error_TypeError : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_TypeError  -> true | uu____141 -> false
+    match projectee with | Error_TypeError  -> true | uu____36335 -> false
   
 let (uu___is_Error_UncontrainedUnificationVar : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_UncontrainedUnificationVar  -> true
-    | uu____152 -> false
+    | uu____36346 -> false
   
 let (uu___is_Error_UnexpectedGTotComputation : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_UnexpectedGTotComputation  -> true
-    | uu____163 -> false
+    | uu____36357 -> false
   
 let (uu___is_Error_UnexpectedInstance : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_UnexpectedInstance  -> true
-    | uu____174 -> false
+    | uu____36368 -> false
   
 let (uu___is_Error_UnknownFatal_AssertionFailure : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_UnknownFatal_AssertionFailure  -> true
-    | uu____185 -> false
+    | uu____36379 -> false
   
 let (uu___is_Error_Z3InvocationError : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_Z3InvocationError  -> true
-    | uu____196 -> false
+    | uu____36390 -> false
   
 let (uu___is_Error_IDEAssertionFailure : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_IDEAssertionFailure  -> true
-    | uu____207 -> false
+    | uu____36401 -> false
   
 let (uu___is_Error_Z3SolverError : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_Z3SolverError  -> true | uu____218 -> false
+    match projectee with
+    | Error_Z3SolverError  -> true
+    | uu____36412 -> false
   
 let (uu___is_Fatal_AbstractTypeDeclarationInInterface :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_AbstractTypeDeclarationInInterface  -> true
-    | uu____229 -> false
+    | uu____36423 -> false
   
 let (uu___is_Fatal_ActionMustHaveFunctionType : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ActionMustHaveFunctionType  -> true
-    | uu____240 -> false
+    | uu____36434 -> false
   
 let (uu___is_Fatal_AlreadyDefinedTopLevelDeclaration :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_AlreadyDefinedTopLevelDeclaration  -> true
-    | uu____251 -> false
+    | uu____36445 -> false
   
 let (uu___is_Fatal_ArgumentLengthMismatch : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ArgumentLengthMismatch  -> true
-    | uu____262 -> false
+    | uu____36456 -> false
   
 let (uu___is_Fatal_AssertionFailure : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_AssertionFailure  -> true
-    | uu____273 -> false
+    | uu____36467 -> false
   
 let (uu___is_Fatal_AssignToImmutableValues : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_AssignToImmutableValues  -> true
-    | uu____284 -> false
+    | uu____36478 -> false
   
 let (uu___is_Fatal_AssumeValInInterface : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_AssumeValInInterface  -> true
-    | uu____295 -> false
+    | uu____36489 -> false
   
 let (uu___is_Fatal_BadlyInstantiatedSynthByTactic : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Fatal_BadlyInstantiatedSynthByTactic  -> true
-    | uu____306 -> false
+    | uu____36500 -> false
   
 let (uu___is_Fatal_BadSignatureShape : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_BadSignatureShape  -> true
-    | uu____317 -> false
+    | uu____36511 -> false
   
 let (uu___is_Fatal_BinderAndArgsLengthMismatch : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_BinderAndArgsLengthMismatch  -> true
-    | uu____328 -> false
+    | uu____36522 -> false
   
 let (uu___is_Fatal_BothValAndLetInInterface : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_BothValAndLetInInterface  -> true
-    | uu____339 -> false
+    | uu____36533 -> false
   
 let (uu___is_Fatal_CardinalityConstraintViolated : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_CardinalityConstraintViolated  -> true
-    | uu____350 -> false
+    | uu____36544 -> false
   
 let (uu___is_Fatal_ComputationNotTotal : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ComputationNotTotal  -> true
-    | uu____361 -> false
+    | uu____36555 -> false
   
 let (uu___is_Fatal_ComputationTypeNotAllowed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ComputationTypeNotAllowed  -> true
-    | uu____372 -> false
+    | uu____36566 -> false
   
 let (uu___is_Fatal_ComputedTypeNotMatchAnnotation : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Fatal_ComputedTypeNotMatchAnnotation  -> true
-    | uu____383 -> false
+    | uu____36577 -> false
   
 let (uu___is_Fatal_ConstructorArgLengthMismatch : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ConstructorArgLengthMismatch  -> true
-    | uu____394 -> false
+    | uu____36588 -> false
   
 let (uu___is_Fatal_ConstructorFailedCheck : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ConstructorFailedCheck  -> true
-    | uu____405 -> false
+    | uu____36599 -> false
   
 let (uu___is_Fatal_ConstructorNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ConstructorNotFound  -> true
-    | uu____416 -> false
+    | uu____36610 -> false
   
 let (uu___is_Fatal_ConstsructorBuildWrongType : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ConstsructorBuildWrongType  -> true
-    | uu____427 -> false
+    | uu____36621 -> false
   
 let (uu___is_Fatal_CycleInRecTypeAbbreviation : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_CycleInRecTypeAbbreviation  -> true
-    | uu____438 -> false
+    | uu____36632 -> false
   
 let (uu___is_Fatal_DataContructorNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_DataContructorNotFound  -> true
-    | uu____449 -> false
+    | uu____36643 -> false
   
 let (uu___is_Fatal_DefaultQualifierNotAllowedOnEffects :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_DefaultQualifierNotAllowedOnEffects  -> true
-    | uu____460 -> false
+    | uu____36654 -> false
   
 let (uu___is_Fatal_DefinitionNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_DefinitionNotFound  -> true
-    | uu____471 -> false
+    | uu____36665 -> false
   
 let (uu___is_Fatal_DisjuctivePatternVarsMismatch : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_DisjuctivePatternVarsMismatch  -> true
-    | uu____482 -> false
+    | uu____36676 -> false
   
 let (uu___is_Fatal_DivergentComputationCannotBeIncludedInTotal :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_DivergentComputationCannotBeIncludedInTotal  -> true
-    | uu____493 -> false
+    | uu____36687 -> false
   
 let (uu___is_Fatal_DuplicateInImplementation : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_DuplicateInImplementation  -> true
-    | uu____504 -> false
+    | uu____36698 -> false
   
 let (uu___is_Fatal_DuplicateModuleOrInterface : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_DuplicateModuleOrInterface  -> true
-    | uu____515 -> false
+    | uu____36709 -> false
   
 let (uu___is_Fatal_DuplicateTopLevelNames : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_DuplicateTopLevelNames  -> true
-    | uu____526 -> false
+    | uu____36720 -> false
   
 let (uu___is_Fatal_DuplicateTypeAnnotationAndValDecl :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_DuplicateTypeAnnotationAndValDecl  -> true
-    | uu____537 -> false
+    | uu____36731 -> false
   
 let (uu___is_Fatal_EffectCannotBeReified : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_EffectCannotBeReified  -> true
-    | uu____548 -> false
+    | uu____36742 -> false
   
 let (uu___is_Fatal_EffectConstructorNotFullyApplied :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_EffectConstructorNotFullyApplied  -> true
-    | uu____559 -> false
+    | uu____36753 -> false
   
 let (uu___is_Fatal_EffectfulAndPureComputationMismatch :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_EffectfulAndPureComputationMismatch  -> true
-    | uu____570 -> false
+    | uu____36764 -> false
   
 let (uu___is_Fatal_EffectNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_EffectNotFound  -> true | uu____581 -> false
+    match projectee with
+    | Fatal_EffectNotFound  -> true
+    | uu____36775 -> false
   
 let (uu___is_Fatal_EffectsCannotBeComposed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_EffectsCannotBeComposed  -> true
-    | uu____592 -> false
+    | uu____36786 -> false
   
 let (uu___is_Fatal_ErrorInSolveDeferredConstraints : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Fatal_ErrorInSolveDeferredConstraints  -> true
-    | uu____603 -> false
+    | uu____36797 -> false
   
 let (uu___is_Fatal_ErrorsReported : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_ErrorsReported  -> true | uu____614 -> false
+    match projectee with
+    | Fatal_ErrorsReported  -> true
+    | uu____36808 -> false
   
 let (uu___is_Fatal_EscapedBoundVar : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_EscapedBoundVar  -> true
-    | uu____625 -> false
+    | uu____36819 -> false
   
 let (uu___is_Fatal_ExpectedArrowAnnotatedType : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectedArrowAnnotatedType  -> true
-    | uu____636 -> false
+    | uu____36830 -> false
   
 let (uu___is_Fatal_ExpectedGhostExpression : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectedGhostExpression  -> true
-    | uu____647 -> false
+    | uu____36841 -> false
   
 let (uu___is_Fatal_ExpectedPureExpression : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectedPureExpression  -> true
-    | uu____658 -> false
+    | uu____36852 -> false
   
 let (uu___is_Fatal_ExpectNormalizedEffect : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectNormalizedEffect  -> true
-    | uu____669 -> false
+    | uu____36863 -> false
   
 let (uu___is_Fatal_ExpectTermGotFunction : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectTermGotFunction  -> true
-    | uu____680 -> false
+    | uu____36874 -> false
   
 let (uu___is_Fatal_ExpectTrivialPreCondition : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ExpectTrivialPreCondition  -> true
-    | uu____691 -> false
+    | uu____36885 -> false
   
 let (uu___is_Fatal_FailToCompileNativeTactic : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_FailToCompileNativeTactic  -> true
-    | uu____702 -> false
+    | uu____36896 -> false
   
 let (uu___is_Fatal_FailToExtractNativeTactic : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_FailToExtractNativeTactic  -> true
-    | uu____713 -> false
+    | uu____36907 -> false
   
 let (uu___is_Fatal_FailToProcessPragma : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_FailToProcessPragma  -> true
-    | uu____724 -> false
+    | uu____36918 -> false
   
 let (uu___is_Fatal_FailToResolveImplicitArgument : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_FailToResolveImplicitArgument  -> true
-    | uu____735 -> false
+    | uu____36929 -> false
   
 let (uu___is_Fatal_FailToSolveUniverseInEquality : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_FailToSolveUniverseInEquality  -> true
-    | uu____746 -> false
+    | uu____36940 -> false
   
 let (uu___is_Fatal_FieldsNotBelongToSameRecordType : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Fatal_FieldsNotBelongToSameRecordType  -> true
-    | uu____757 -> false
+    | uu____36951 -> false
   
 let (uu___is_Fatal_ForbiddenReferenceToCurrentModule :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ForbiddenReferenceToCurrentModule  -> true
-    | uu____768 -> false
+    | uu____36962 -> false
   
 let (uu___is_Fatal_FreeVariables : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_FreeVariables  -> true | uu____779 -> false
+    match projectee with
+    | Fatal_FreeVariables  -> true
+    | uu____36973 -> false
   
 let (uu___is_Fatal_FunctionTypeExpected : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_FunctionTypeExpected  -> true
-    | uu____790 -> false
+    | uu____36984 -> false
   
 let (uu___is_Fatal_IdentifierNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IdentifierNotFound  -> true
-    | uu____801 -> false
+    | uu____36995 -> false
   
 let (uu___is_Fatal_IllAppliedConstant : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IllAppliedConstant  -> true
-    | uu____812 -> false
+    | uu____37006 -> false
   
 let (uu___is_Fatal_IllegalCharInByteArray : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IllegalCharInByteArray  -> true
-    | uu____823 -> false
+    | uu____37017 -> false
   
 let (uu___is_Fatal_IllegalCharInOperatorName : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IllegalCharInOperatorName  -> true
-    | uu____834 -> false
+    | uu____37028 -> false
   
 let (uu___is_Fatal_IllTyped : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_IllTyped  -> true | uu____845 -> false
+    match projectee with | Fatal_IllTyped  -> true | uu____37039 -> false
   
 let (uu___is_Fatal_ImpossibleAbbrevLidBundle : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleAbbrevLidBundle  -> true
-    | uu____856 -> false
+    | uu____37050 -> false
   
 let (uu___is_Fatal_ImpossibleAbbrevRenameBundle : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleAbbrevRenameBundle  -> true
-    | uu____867 -> false
+    | uu____37061 -> false
   
 let (uu___is_Fatal_ImpossibleInductiveWithAbbrev : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleInductiveWithAbbrev  -> true
-    | uu____878 -> false
+    | uu____37072 -> false
   
 let (uu___is_Fatal_ImpossiblePrePostAbs : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossiblePrePostAbs  -> true
-    | uu____889 -> false
+    | uu____37083 -> false
   
 let (uu___is_Fatal_ImpossiblePrePostArrow : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossiblePrePostArrow  -> true
-    | uu____900 -> false
+    | uu____37094 -> false
   
 let (uu___is_Fatal_ImpossibleToGenerateDMEffect : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleToGenerateDMEffect  -> true
-    | uu____911 -> false
+    | uu____37105 -> false
   
 let (uu___is_Fatal_ImpossibleTypeAbbrevBundle : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleTypeAbbrevBundle  -> true
-    | uu____922 -> false
+    | uu____37116 -> false
   
 let (uu___is_Fatal_ImpossibleTypeAbbrevSigeltBundle :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ImpossibleTypeAbbrevSigeltBundle  -> true
-    | uu____933 -> false
+    | uu____37127 -> false
   
 let (uu___is_Fatal_IncludeModuleNotPrepared : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IncludeModuleNotPrepared  -> true
-    | uu____944 -> false
+    | uu____37138 -> false
   
 let (uu___is_Fatal_IncoherentInlineUniverse : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IncoherentInlineUniverse  -> true
-    | uu____955 -> false
+    | uu____37149 -> false
   
 let (uu___is_Fatal_IncompatibleKinds : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IncompatibleKinds  -> true
-    | uu____966 -> false
+    | uu____37160 -> false
   
 let (uu___is_Fatal_IncompatibleNumberOfTypes : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IncompatibleNumberOfTypes  -> true
-    | uu____977 -> false
+    | uu____37171 -> false
   
 let (uu___is_Fatal_IncompatibleSetOfUniverse : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IncompatibleSetOfUniverse  -> true
-    | uu____988 -> false
+    | uu____37182 -> false
   
 let (uu___is_Fatal_IncompatibleUniverse : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IncompatibleUniverse  -> true
-    | uu____999 -> false
+    | uu____37193 -> false
   
 let (uu___is_Fatal_InconsistentImplicitArgumentAnnotation :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InconsistentImplicitArgumentAnnotation  -> true
-    | uu____1010 -> false
+    | uu____37204 -> false
   
 let (uu___is_Fatal_InconsistentImplicitQualifier : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InconsistentImplicitQualifier  -> true
-    | uu____1021 -> false
+    | uu____37215 -> false
   
 let (uu___is_Fatal_InconsistentQualifierAnnotation : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Fatal_InconsistentQualifierAnnotation  -> true
-    | uu____1032 -> false
+    | uu____37226 -> false
   
 let (uu___is_Fatal_InferredTypeCauseVarEscape : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InferredTypeCauseVarEscape  -> true
-    | uu____1043 -> false
+    | uu____37237 -> false
   
 let (uu___is_Fatal_InlineRenamedAsUnfold : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InlineRenamedAsUnfold  -> true
-    | uu____1054 -> false
+    | uu____37248 -> false
   
 let (uu___is_Fatal_InsufficientPatternArguments : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InsufficientPatternArguments  -> true
-    | uu____1065 -> false
+    | uu____37259 -> false
   
 let (uu___is_Fatal_InterfaceAlreadyProcessed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InterfaceAlreadyProcessed  -> true
-    | uu____1076 -> false
+    | uu____37270 -> false
   
 let (uu___is_Fatal_InterfaceNotImplementedByModule : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Fatal_InterfaceNotImplementedByModule  -> true
-    | uu____1087 -> false
+    | uu____37281 -> false
   
 let (uu___is_Fatal_InterfaceWithTypeImplementation : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Fatal_InterfaceWithTypeImplementation  -> true
-    | uu____1098 -> false
+    | uu____37292 -> false
   
 let (uu___is_Fatal_InvalidFloatingPointNumber : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidFloatingPointNumber  -> true
-    | uu____1109 -> false
+    | uu____37303 -> false
   
 let (uu___is_Fatal_InvalidFSDocKeyword : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidFSDocKeyword  -> true
-    | uu____1120 -> false
+    | uu____37314 -> false
   
 let (uu___is_Fatal_InvalidIdentifier : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidIdentifier  -> true
-    | uu____1131 -> false
+    | uu____37325 -> false
   
 let (uu___is_Fatal_InvalidLemmaArgument : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidLemmaArgument  -> true
-    | uu____1142 -> false
+    | uu____37336 -> false
   
 let (uu___is_Fatal_InvalidNumericLiteral : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidNumericLiteral  -> true
-    | uu____1153 -> false
+    | uu____37347 -> false
   
 let (uu___is_Fatal_InvalidRedefinitionOfLexT : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidRedefinitionOfLexT  -> true
-    | uu____1164 -> false
+    | uu____37358 -> false
   
 let (uu___is_Fatal_InvalidUnicodeInStringLiteral : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidUnicodeInStringLiteral  -> true
-    | uu____1175 -> false
+    | uu____37369 -> false
   
 let (uu___is_Fatal_InvalidUTF8Encoding : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidUTF8Encoding  -> true
-    | uu____1186 -> false
+    | uu____37380 -> false
   
 let (uu___is_Fatal_InvalidWarnErrorSetting : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_InvalidWarnErrorSetting  -> true
-    | uu____1197 -> false
+    | uu____37391 -> false
   
 let (uu___is_Fatal_LetBoundMonadicMismatch : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_LetBoundMonadicMismatch  -> true
-    | uu____1208 -> false
+    | uu____37402 -> false
   
 let (uu___is_Fatal_LetMutableForVariablesOnly : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_LetMutableForVariablesOnly  -> true
-    | uu____1219 -> false
+    | uu____37413 -> false
   
 let (uu___is_Fatal_LetOpenModuleOnly : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_LetOpenModuleOnly  -> true
-    | uu____1230 -> false
+    | uu____37424 -> false
   
 let (uu___is_Fatal_LetRecArgumentMismatch : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_LetRecArgumentMismatch  -> true
-    | uu____1241 -> false
+    | uu____37435 -> false
   
 let (uu___is_Fatal_MalformedActionDeclaration : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MalformedActionDeclaration  -> true
-    | uu____1252 -> false
+    | uu____37446 -> false
   
 let (uu___is_Fatal_MismatchedPatternType : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MismatchedPatternType  -> true
-    | uu____1263 -> false
+    | uu____37457 -> false
   
 let (uu___is_Fatal_MismatchUniversePolymorphic : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MismatchUniversePolymorphic  -> true
-    | uu____1274 -> false
+    | uu____37468 -> false
   
 let (uu___is_Fatal_MissingDataConstructor : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MissingDataConstructor  -> true
-    | uu____1285 -> false
+    | uu____37479 -> false
   
 let (uu___is_Fatal_MissingExposeInterfacesOption : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MissingExposeInterfacesOption  -> true
-    | uu____1296 -> false
+    | uu____37490 -> false
   
 let (uu___is_Fatal_MissingFieldInRecord : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MissingFieldInRecord  -> true
-    | uu____1307 -> false
+    | uu____37501 -> false
   
 let (uu___is_Fatal_MissingImplementation : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MissingImplementation  -> true
-    | uu____1318 -> false
+    | uu____37512 -> false
   
 let (uu___is_Fatal_MissingImplicitArguments : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MissingImplicitArguments  -> true
-    | uu____1329 -> false
+    | uu____37523 -> false
   
 let (uu___is_Fatal_MissingInterface : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MissingInterface  -> true
-    | uu____1340 -> false
+    | uu____37534 -> false
   
 let (uu___is_Fatal_MissingNameInBinder : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MissingNameInBinder  -> true
-    | uu____1351 -> false
+    | uu____37545 -> false
   
 let (uu___is_Fatal_MissingPrimsModule : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MissingPrimsModule  -> true
-    | uu____1362 -> false
+    | uu____37556 -> false
   
 let (uu___is_Fatal_MissingQuantifierBinder : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MissingQuantifierBinder  -> true
-    | uu____1373 -> false
+    | uu____37567 -> false
   
 let (uu___is_Fatal_ModuleExpected : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ModuleExpected  -> true
-    | uu____1384 -> false
+    | uu____37578 -> false
   
 let (uu___is_Fatal_ModuleFileNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ModuleFileNotFound  -> true
-    | uu____1395 -> false
+    | uu____37589 -> false
   
 let (uu___is_Fatal_ModuleFirstStatement : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ModuleFirstStatement  -> true
-    | uu____1406 -> false
+    | uu____37600 -> false
   
 let (uu___is_Fatal_ModuleNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ModuleNotFound  -> true
-    | uu____1417 -> false
+    | uu____37611 -> false
   
 let (uu___is_Fatal_ModuleOrFileNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ModuleOrFileNotFound  -> true
-    | uu____1428 -> false
+    | uu____37622 -> false
   
 let (uu___is_Fatal_MonadAlreadyDefined : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MonadAlreadyDefined  -> true
-    | uu____1439 -> false
+    | uu____37633 -> false
   
 let (uu___is_Fatal_MoreThanOneDeclaration : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MoreThanOneDeclaration  -> true
-    | uu____1450 -> false
+    | uu____37644 -> false
   
 let (uu___is_Fatal_MultipleLetBinding : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_MultipleLetBinding  -> true
-    | uu____1461 -> false
+    | uu____37655 -> false
   
 let (uu___is_Fatal_NameNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_NameNotFound  -> true | uu____1472 -> false
+    match projectee with | Fatal_NameNotFound  -> true | uu____37666 -> false
   
 let (uu___is_Fatal_NameSpaceNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NameSpaceNotFound  -> true
-    | uu____1483 -> false
+    | uu____37677 -> false
   
 let (uu___is_Fatal_NegativeUniverseConstFatal_NotSupported :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NegativeUniverseConstFatal_NotSupported  -> true
-    | uu____1494 -> false
+    | uu____37688 -> false
   
 let (uu___is_Fatal_NoFileProvided : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NoFileProvided  -> true
-    | uu____1505 -> false
+    | uu____37699 -> false
   
 let (uu___is_Fatal_NonInductiveInMutuallyDefinedType :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NonInductiveInMutuallyDefinedType  -> true
-    | uu____1516 -> false
+    | uu____37710 -> false
   
 let (uu___is_Fatal_NonLinearPatternNotPermitted : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NonLinearPatternNotPermitted  -> true
-    | uu____1527 -> false
+    | uu____37721 -> false
   
 let (uu___is_Fatal_NonLinearPatternVars : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NonLinearPatternVars  -> true
-    | uu____1538 -> false
+    | uu____37732 -> false
   
 let (uu___is_Fatal_NonSingletonTopLevel : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NonSingletonTopLevel  -> true
-    | uu____1549 -> false
+    | uu____37743 -> false
   
 let (uu___is_Fatal_NonSingletonTopLevelModule : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NonSingletonTopLevelModule  -> true
-    | uu____1560 -> false
+    | uu____37754 -> false
   
 let (uu___is_Fatal_NonTopRecFunctionNotFullyEncoded :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NonTopRecFunctionNotFullyEncoded  -> true
-    | uu____1571 -> false
+    | uu____37765 -> false
   
 let (uu___is_Fatal_NonTrivialPreConditionInPrims : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NonTrivialPreConditionInPrims  -> true
-    | uu____1582 -> false
+    | uu____37776 -> false
   
 let (uu___is_Fatal_NonVariableInductiveTypeParameter :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NonVariableInductiveTypeParameter  -> true
-    | uu____1593 -> false
+    | uu____37787 -> false
   
 let (uu___is_Fatal_NotApplicationOrFv : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NotApplicationOrFv  -> true
-    | uu____1604 -> false
+    | uu____37798 -> false
   
 let (uu___is_Fatal_NotEnoughArgsToEffect : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NotEnoughArgsToEffect  -> true
-    | uu____1615 -> false
+    | uu____37809 -> false
   
 let (uu___is_Fatal_NotEnoughArgumentsForEffect : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NotEnoughArgumentsForEffect  -> true
-    | uu____1626 -> false
+    | uu____37820 -> false
   
 let (uu___is_Fatal_NotFunctionType : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NotFunctionType  -> true
-    | uu____1637 -> false
+    | uu____37831 -> false
   
 let (uu___is_Fatal_NotSupported : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_NotSupported  -> true | uu____1648 -> false
+    match projectee with | Fatal_NotSupported  -> true | uu____37842 -> false
   
 let (uu___is_Fatal_NotTopLevelModule : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NotTopLevelModule  -> true
-    | uu____1659 -> false
+    | uu____37853 -> false
   
 let (uu___is_Fatal_NotValidFStarFile : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NotValidFStarFile  -> true
-    | uu____1670 -> false
+    | uu____37864 -> false
   
 let (uu___is_Fatal_NotValidIncludeDirectory : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_NotValidIncludeDirectory  -> true
-    | uu____1681 -> false
+    | uu____37875 -> false
   
 let (uu___is_Fatal_OneModulePerFile : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_OneModulePerFile  -> true
-    | uu____1692 -> false
+    | uu____37886 -> false
   
 let (uu___is_Fatal_OpenGoalsInSynthesis : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_OpenGoalsInSynthesis  -> true
-    | uu____1703 -> false
+    | uu____37897 -> false
   
 let (uu___is_Fatal_OptionsNotCompatible : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_OptionsNotCompatible  -> true
-    | uu____1714 -> false
+    | uu____37908 -> false
   
 let (uu___is_Fatal_OutOfOrder : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_OutOfOrder  -> true | uu____1725 -> false
+    match projectee with | Fatal_OutOfOrder  -> true | uu____37919 -> false
   
 let (uu___is_Fatal_ParseErrors : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_ParseErrors  -> true | uu____1736 -> false
+    match projectee with | Fatal_ParseErrors  -> true | uu____37930 -> false
   
 let (uu___is_Fatal_ParseItError : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_ParseItError  -> true | uu____1747 -> false
+    match projectee with | Fatal_ParseItError  -> true | uu____37941 -> false
   
 let (uu___is_Fatal_PolyTypeExpected : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_PolyTypeExpected  -> true
-    | uu____1758 -> false
+    | uu____37952 -> false
   
 let (uu___is_Fatal_PossibleInfiniteTyp : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_PossibleInfiniteTyp  -> true
-    | uu____1769 -> false
+    | uu____37963 -> false
   
 let (uu___is_Fatal_PreModuleMismatch : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_PreModuleMismatch  -> true
-    | uu____1780 -> false
+    | uu____37974 -> false
   
 let (uu___is_Fatal_QulifierListNotPermitted : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_QulifierListNotPermitted  -> true
-    | uu____1791 -> false
+    | uu____37985 -> false
   
 let (uu___is_Fatal_RecursiveFunctionLiteral : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_RecursiveFunctionLiteral  -> true
-    | uu____1802 -> false
+    | uu____37996 -> false
   
 let (uu___is_Fatal_ReflectOnlySupportedOnEffects : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ReflectOnlySupportedOnEffects  -> true
-    | uu____1813 -> false
+    | uu____38007 -> false
   
 let (uu___is_Fatal_ReservedPrefix : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ReservedPrefix  -> true
-    | uu____1824 -> false
+    | uu____38018 -> false
   
 let (uu___is_Fatal_SMTOutputParseError : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_SMTOutputParseError  -> true
-    | uu____1835 -> false
+    | uu____38029 -> false
   
 let (uu___is_Fatal_SMTSolverError : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_SMTSolverError  -> true
-    | uu____1846 -> false
+    | uu____38040 -> false
   
 let (uu___is_Fatal_SyntaxError : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_SyntaxError  -> true | uu____1857 -> false
+    match projectee with | Fatal_SyntaxError  -> true | uu____38051 -> false
   
 let (uu___is_Fatal_SynthByTacticError : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_SynthByTacticError  -> true
-    | uu____1868 -> false
+    | uu____38062 -> false
   
 let (uu___is_Fatal_TacticGotStuck : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_TacticGotStuck  -> true
-    | uu____1879 -> false
+    | uu____38073 -> false
   
 let (uu___is_Fatal_TcOneFragmentFailed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_TcOneFragmentFailed  -> true
-    | uu____1890 -> false
+    | uu____38084 -> false
   
 let (uu___is_Fatal_TermOutsideOfDefLanguage : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_TermOutsideOfDefLanguage  -> true
-    | uu____1901 -> false
+    | uu____38095 -> false
   
 let (uu___is_Fatal_ToManyArgumentToFunction : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ToManyArgumentToFunction  -> true
-    | uu____1912 -> false
+    | uu____38106 -> false
   
 let (uu___is_Fatal_TooManyOrTooFewFileMatch : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_TooManyOrTooFewFileMatch  -> true
-    | uu____1923 -> false
+    | uu____38117 -> false
   
 let (uu___is_Fatal_TooManyPatternArguments : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_TooManyPatternArguments  -> true
-    | uu____1934 -> false
+    | uu____38128 -> false
   
 let (uu___is_Fatal_TooManyUniverse : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_TooManyUniverse  -> true
-    | uu____1945 -> false
+    | uu____38139 -> false
   
 let (uu___is_Fatal_TypeMismatch : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_TypeMismatch  -> true | uu____1956 -> false
+    match projectee with | Fatal_TypeMismatch  -> true | uu____38150 -> false
   
 let (uu___is_Fatal_TypeWithinPatternsAllowedOnVariablesOnly :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_TypeWithinPatternsAllowedOnVariablesOnly  -> true
-    | uu____1967 -> false
+    | uu____38161 -> false
   
 let (uu___is_Fatal_UnableToReadFile : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnableToReadFile  -> true
-    | uu____1978 -> false
+    | uu____38172 -> false
   
 let (uu___is_Fatal_UnepxectedOrUnboundOperator : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnepxectedOrUnboundOperator  -> true
-    | uu____1989 -> false
+    | uu____38183 -> false
   
 let (uu___is_Fatal_UnexpectedBinder : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedBinder  -> true
-    | uu____2000 -> false
+    | uu____38194 -> false
   
 let (uu___is_Fatal_UnexpectedBindShape : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedBindShape  -> true
-    | uu____2011 -> false
+    | uu____38205 -> false
   
 let (uu___is_Fatal_UnexpectedChar : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedChar  -> true
-    | uu____2022 -> false
+    | uu____38216 -> false
   
 let (uu___is_Fatal_UnexpectedComputationTypeForLetRec :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedComputationTypeForLetRec  -> true
-    | uu____2033 -> false
+    | uu____38227 -> false
   
 let (uu___is_Fatal_UnexpectedConstructorType : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedConstructorType  -> true
-    | uu____2044 -> false
+    | uu____38238 -> false
   
 let (uu___is_Fatal_UnexpectedDataConstructor : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedDataConstructor  -> true
-    | uu____2055 -> false
+    | uu____38249 -> false
   
 let (uu___is_Fatal_UnexpectedEffect : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedEffect  -> true
-    | uu____2066 -> false
+    | uu____38260 -> false
   
 let (uu___is_Fatal_UnexpectedEmptyRecord : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedEmptyRecord  -> true
-    | uu____2077 -> false
+    | uu____38271 -> false
   
 let (uu___is_Fatal_UnexpectedExpressionType : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedExpressionType  -> true
-    | uu____2088 -> false
+    | uu____38282 -> false
   
 let (uu___is_Fatal_UnexpectedFunctionParameterType : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedFunctionParameterType  -> true
-    | uu____2099 -> false
+    | uu____38293 -> false
   
 let (uu___is_Fatal_UnexpectedGeneralizedUniverse : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedGeneralizedUniverse  -> true
-    | uu____2110 -> false
+    | uu____38304 -> false
   
 let (uu___is_Fatal_UnexpectedGTotForLetRec : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedGTotForLetRec  -> true
-    | uu____2121 -> false
+    | uu____38315 -> false
   
 let (uu___is_Fatal_UnexpectedGuard : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedGuard  -> true
-    | uu____2132 -> false
+    | uu____38326 -> false
   
 let (uu___is_Fatal_UnexpectedIdentifier : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedIdentifier  -> true
-    | uu____2143 -> false
+    | uu____38337 -> false
   
 let (uu___is_Fatal_UnexpectedImplicitArgument : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedImplicitArgument  -> true
-    | uu____2154 -> false
+    | uu____38348 -> false
   
 let (uu___is_Fatal_UnexpectedImplictArgument : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedImplictArgument  -> true
-    | uu____2165 -> false
+    | uu____38359 -> false
   
 let (uu___is_Fatal_UnexpectedInductivetype : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedInductivetype  -> true
-    | uu____2176 -> false
+    | uu____38370 -> false
   
 let (uu___is_Fatal_UnexpectedLetBinding : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedLetBinding  -> true
-    | uu____2187 -> false
+    | uu____38381 -> false
   
 let (uu___is_Fatal_UnexpectedModuleDeclaration : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedModuleDeclaration  -> true
-    | uu____2198 -> false
+    | uu____38392 -> false
   
 let (uu___is_Fatal_UnexpectedNumberOfUniverse : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedNumberOfUniverse  -> true
-    | uu____2209 -> false
+    | uu____38403 -> false
   
 let (uu___is_Fatal_UnexpectedNumericLiteral : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedNumericLiteral  -> true
-    | uu____2220 -> false
+    | uu____38414 -> false
   
 let (uu___is_Fatal_UnexpectedOperatorSymbol : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedOperatorSymbol  -> true
-    | uu____2231 -> false
+    | uu____38425 -> false
   
 let (uu___is_Fatal_UnexpectedPattern : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedPattern  -> true
-    | uu____2242 -> false
+    | uu____38436 -> false
   
 let (uu___is_Fatal_UnexpectedPosition : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedPosition  -> true
-    | uu____2253 -> false
+    | uu____38447 -> false
   
 let (uu___is_Fatal_UnExpectedPreCondition : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnExpectedPreCondition  -> true
-    | uu____2264 -> false
+    | uu____38458 -> false
   
 let (uu___is_Fatal_UnexpectedReturnShape : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedReturnShape  -> true
-    | uu____2275 -> false
+    | uu____38469 -> false
   
 let (uu___is_Fatal_UnexpectedSignatureForMonad : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedSignatureForMonad  -> true
-    | uu____2286 -> false
+    | uu____38480 -> false
   
 let (uu___is_Fatal_UnexpectedTerm : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedTerm  -> true
-    | uu____2297 -> false
+    | uu____38491 -> false
   
 let (uu___is_Fatal_UnexpectedTermInUniverse : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedTermInUniverse  -> true
-    | uu____2308 -> false
+    | uu____38502 -> false
   
 let (uu___is_Fatal_UnexpectedTermType : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedTermType  -> true
-    | uu____2319 -> false
+    | uu____38513 -> false
   
 let (uu___is_Fatal_UnexpectedTermVQuote : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedTermVQuote  -> true
-    | uu____2330 -> false
+    | uu____38524 -> false
   
 let (uu___is_Fatal_UnexpectedUniversePolymorphicReturn :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedUniversePolymorphicReturn  -> true
-    | uu____2341 -> false
+    | uu____38535 -> false
   
 let (uu___is_Fatal_UnexpectedUniverseVariable : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedUniverseVariable  -> true
-    | uu____2352 -> false
+    | uu____38546 -> false
   
 let (uu___is_Fatal_UnfoldableDeprecated : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnfoldableDeprecated  -> true
-    | uu____2363 -> false
+    | uu____38557 -> false
   
 let (uu___is_Fatal_UnificationNotWellFormed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnificationNotWellFormed  -> true
-    | uu____2374 -> false
+    | uu____38568 -> false
   
 let (uu___is_Fatal_Uninstantiated : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_Uninstantiated  -> true
-    | uu____2385 -> false
+    | uu____38579 -> false
   
 let (uu___is_Error_UninstantiatedUnificationVarInTactic :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_UninstantiatedUnificationVarInTactic  -> true
-    | uu____2396 -> false
+    | uu____38590 -> false
   
 let (uu___is_Fatal_UninstantiatedVarInTactic : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UninstantiatedVarInTactic  -> true
-    | uu____2407 -> false
+    | uu____38601 -> false
   
 let (uu___is_Fatal_UniverseMightContainSumOfTwoUnivVars :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UniverseMightContainSumOfTwoUnivVars  -> true
-    | uu____2418 -> false
+    | uu____38612 -> false
   
 let (uu___is_Fatal_UniversePolymorphicInnerLetBound :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UniversePolymorphicInnerLetBound  -> true
-    | uu____2429 -> false
+    | uu____38623 -> false
   
 let (uu___is_Fatal_UnknownAttribute : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnknownAttribute  -> true
-    | uu____2440 -> false
+    | uu____38634 -> false
   
 let (uu___is_Fatal_UnknownToolForDep : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnknownToolForDep  -> true
-    | uu____2451 -> false
+    | uu____38645 -> false
   
 let (uu___is_Fatal_UnrecognizedExtension : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnrecognizedExtension  -> true
-    | uu____2462 -> false
+    | uu____38656 -> false
   
 let (uu___is_Fatal_UnresolvedPatternVar : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnresolvedPatternVar  -> true
-    | uu____2473 -> false
+    | uu____38667 -> false
   
 let (uu___is_Fatal_UnsupportedConstant : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnsupportedConstant  -> true
-    | uu____2484 -> false
+    | uu____38678 -> false
   
 let (uu___is_Fatal_UnsupportedDisjuctivePatterns : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnsupportedDisjuctivePatterns  -> true
-    | uu____2495 -> false
+    | uu____38689 -> false
   
 let (uu___is_Fatal_UnsupportedQualifier : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnsupportedQualifier  -> true
-    | uu____2506 -> false
+    | uu____38700 -> false
   
 let (uu___is_Fatal_UserTacticFailure : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UserTacticFailure  -> true
-    | uu____2517 -> false
+    | uu____38711 -> false
   
 let (uu___is_Fatal_ValueRestriction : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_ValueRestriction  -> true
-    | uu____2528 -> false
+    | uu____38722 -> false
   
 let (uu___is_Fatal_VariableNotFound : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_VariableNotFound  -> true
-    | uu____2539 -> false
+    | uu____38733 -> false
   
 let (uu___is_Fatal_WrongBodyTypeForReturnWP : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_WrongBodyTypeForReturnWP  -> true
-    | uu____2550 -> false
+    | uu____38744 -> false
   
 let (uu___is_Fatal_WrongDataAppHeadFormat : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_WrongDataAppHeadFormat  -> true
-    | uu____2561 -> false
+    | uu____38755 -> false
   
 let (uu___is_Fatal_WrongDefinitionOrder : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_WrongDefinitionOrder  -> true
-    | uu____2572 -> false
+    | uu____38766 -> false
   
 let (uu___is_Fatal_WrongResultTypeAfterConstrutor : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Fatal_WrongResultTypeAfterConstrutor  -> true
-    | uu____2583 -> false
+    | uu____38777 -> false
   
 let (uu___is_Fatal_WrongTerm : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_WrongTerm  -> true | uu____2594 -> false
+    match projectee with | Fatal_WrongTerm  -> true | uu____38788 -> false
   
 let (uu___is_Fatal_WhenClauseNotSupported : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_WhenClauseNotSupported  -> true
-    | uu____2605 -> false
+    | uu____38799 -> false
   
 let (uu___is_Unused01 : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Unused01  -> true | uu____2616 -> false
+    match projectee with | Unused01  -> true | uu____38810 -> false
   
 let (uu___is_Warning_AddImplicitAssumeNewQualifier : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Warning_AddImplicitAssumeNewQualifier  -> true
-    | uu____2627 -> false
+    | uu____38821 -> false
   
 let (uu___is_Warning_AdmitWithoutDefinition : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_AdmitWithoutDefinition  -> true
-    | uu____2638 -> false
+    | uu____38832 -> false
   
 let (uu___is_Warning_CachedFile : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Warning_CachedFile  -> true | uu____2649 -> false
+    match projectee with | Warning_CachedFile  -> true | uu____38843 -> false
   
 let (uu___is_Warning_DefinitionNotTranslated : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_DefinitionNotTranslated  -> true
-    | uu____2660 -> false
+    | uu____38854 -> false
   
 let (uu___is_Warning_DependencyFound : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_DependencyFound  -> true
-    | uu____2671 -> false
+    | uu____38865 -> false
   
 let (uu___is_Warning_DeprecatedEqualityOnBinder : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_DeprecatedEqualityOnBinder  -> true
-    | uu____2682 -> false
+    | uu____38876 -> false
   
 let (uu___is_Warning_DeprecatedOpaqueQualifier : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_DeprecatedOpaqueQualifier  -> true
-    | uu____2693 -> false
+    | uu____38887 -> false
   
 let (uu___is_Warning_DocOverwrite : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_DocOverwrite  -> true
-    | uu____2704 -> false
+    | uu____38898 -> false
   
 let (uu___is_Warning_FileNotWritten : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_FileNotWritten  -> true
-    | uu____2715 -> false
+    | uu____38909 -> false
   
 let (uu___is_Warning_Filtered : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Warning_Filtered  -> true | uu____2726 -> false
+    match projectee with | Warning_Filtered  -> true | uu____38920 -> false
   
 let (uu___is_Warning_FunctionLiteralPrecisionLoss : raw_error -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
     | Warning_FunctionLiteralPrecisionLoss  -> true
-    | uu____2737 -> false
+    | uu____38931 -> false
   
 let (uu___is_Warning_FunctionNotExtacted : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_FunctionNotExtacted  -> true
-    | uu____2748 -> false
+    | uu____38942 -> false
   
 let (uu___is_Warning_HintFailedToReplayProof : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_HintFailedToReplayProof  -> true
-    | uu____2759 -> false
+    | uu____38953 -> false
   
 let (uu___is_Warning_HitReplayFailed : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_HitReplayFailed  -> true
-    | uu____2770 -> false
+    | uu____38964 -> false
   
 let (uu___is_Warning_IDEIgnoreCodeGen : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_IDEIgnoreCodeGen  -> true
-    | uu____2781 -> false
+    | uu____38975 -> false
   
 let (uu___is_Warning_IllFormedGoal : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_IllFormedGoal  -> true
-    | uu____2792 -> false
+    | uu____38986 -> false
   
 let (uu___is_Warning_InaccessibleArgument : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_InaccessibleArgument  -> true
-    | uu____2803 -> false
+    | uu____38997 -> false
   
 let (uu___is_Warning_IncoherentImplicitQualifier : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_IncoherentImplicitQualifier  -> true
-    | uu____2814 -> false
+    | uu____39008 -> false
   
 let (uu___is_Warning_IrrelevantQualifierOnArgumentToReflect :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_IrrelevantQualifierOnArgumentToReflect  -> true
-    | uu____2825 -> false
+    | uu____39019 -> false
   
 let (uu___is_Warning_IrrelevantQualifierOnArgumentToReify :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_IrrelevantQualifierOnArgumentToReify  -> true
-    | uu____2836 -> false
+    | uu____39030 -> false
   
 let (uu___is_Warning_MalformedWarnErrorList : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_MalformedWarnErrorList  -> true
-    | uu____2847 -> false
+    | uu____39041 -> false
   
 let (uu___is_Warning_MetaAlienNotATmUnknown : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_MetaAlienNotATmUnknown  -> true
-    | uu____2858 -> false
+    | uu____39052 -> false
   
 let (uu___is_Warning_MultipleAscriptions : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_MultipleAscriptions  -> true
-    | uu____2869 -> false
+    | uu____39063 -> false
   
 let (uu___is_Warning_NondependentUserDefinedDataType :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_NondependentUserDefinedDataType  -> true
-    | uu____2880 -> false
+    | uu____39074 -> false
   
 let (uu___is_Warning_NonListLiteralSMTPattern : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_NonListLiteralSMTPattern  -> true
-    | uu____2891 -> false
+    | uu____39085 -> false
   
 let (uu___is_Warning_NormalizationFailure : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_NormalizationFailure  -> true
-    | uu____2902 -> false
+    | uu____39096 -> false
   
 let (uu___is_Warning_NotDependentArrow : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_NotDependentArrow  -> true
-    | uu____2913 -> false
+    | uu____39107 -> false
   
 let (uu___is_Warning_NotEmbedded : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Warning_NotEmbedded  -> true | uu____2924 -> false
+    match projectee with
+    | Warning_NotEmbedded  -> true
+    | uu____39118 -> false
   
 let (uu___is_Warning_PatternMissingBoundVar : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_PatternMissingBoundVar  -> true
-    | uu____2935 -> false
+    | uu____39129 -> false
   
 let (uu___is_Warning_RecursiveDependency : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_RecursiveDependency  -> true
-    | uu____2946 -> false
+    | uu____39140 -> false
   
 let (uu___is_Warning_RedundantExplicitCurrying : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_RedundantExplicitCurrying  -> true
-    | uu____2957 -> false
+    | uu____39151 -> false
   
 let (uu___is_Warning_SMTPatTDeprecated : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_SMTPatTDeprecated  -> true
-    | uu____2968 -> false
+    | uu____39162 -> false
   
 let (uu___is_Warning_SMTPatternMissingBoundVar : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_SMTPatternMissingBoundVar  -> true
-    | uu____2979 -> false
+    | uu____39173 -> false
   
 let (uu___is_Warning_TopLevelEffect : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_TopLevelEffect  -> true
-    | uu____2990 -> false
+    | uu____39184 -> false
   
 let (uu___is_Warning_UnboundModuleReference : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_UnboundModuleReference  -> true
-    | uu____3001 -> false
+    | uu____39195 -> false
   
 let (uu___is_Warning_UnexpectedFile : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_UnexpectedFile  -> true
-    | uu____3012 -> false
+    | uu____39206 -> false
   
 let (uu___is_Warning_UnexpectedFsTypApp : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_UnexpectedFsTypApp  -> true
-    | uu____3023 -> false
+    | uu____39217 -> false
   
 let (uu___is_Warning_UnexpectedZ3Output : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_UnexpectedZ3Output  -> true
-    | uu____3034 -> false
+    | uu____39228 -> false
   
 let (uu___is_Warning_UnprotectedTerm : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_UnprotectedTerm  -> true
-    | uu____3045 -> false
+    | uu____39239 -> false
   
 let (uu___is_Warning_UnrecognizedAttribute : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_UnrecognizedAttribute  -> true
-    | uu____3056 -> false
+    | uu____39250 -> false
   
 let (uu___is_Warning_UpperBoundCandidateAlreadyVisited :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_UpperBoundCandidateAlreadyVisited  -> true
-    | uu____3067 -> false
+    | uu____39261 -> false
   
 let (uu___is_Warning_UseDefaultEffect : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_UseDefaultEffect  -> true
-    | uu____3078 -> false
+    | uu____39272 -> false
   
 let (uu___is_Warning_WrongErrorLocation : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_WrongErrorLocation  -> true
-    | uu____3089 -> false
+    | uu____39283 -> false
   
 let (uu___is_Warning_Z3InvocationWarning : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_Z3InvocationWarning  -> true
-    | uu____3100 -> false
+    | uu____39294 -> false
   
 let (uu___is_Warning_CallNotImplementedAsWarning : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_CallNotImplementedAsWarning  -> true
-    | uu____3111 -> false
+    | uu____39305 -> false
   
 let (uu___is_Warning_MissingInterfaceOrImplementation :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_MissingInterfaceOrImplementation  -> true
-    | uu____3122 -> false
+    | uu____39316 -> false
   
 let (uu___is_Warning_ConstructorBuildsUnexpectedType :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_ConstructorBuildsUnexpectedType  -> true
-    | uu____3133 -> false
+    | uu____39327 -> false
   
 let (uu___is_Warning_ModuleOrFileNotFoundWarning : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_ModuleOrFileNotFoundWarning  -> true
-    | uu____3144 -> false
+    | uu____39338 -> false
   
 let (uu___is_Error_NoLetMutable : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_NoLetMutable  -> true | uu____3155 -> false
+    match projectee with | Error_NoLetMutable  -> true | uu____39349 -> false
   
 let (uu___is_Error_BadImplicit : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_BadImplicit  -> true | uu____3166 -> false
+    match projectee with | Error_BadImplicit  -> true | uu____39360 -> false
   
 let (uu___is_Warning_DeprecatedDefinition : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_DeprecatedDefinition  -> true
-    | uu____3177 -> false
+    | uu____39371 -> false
   
 let (uu___is_Fatal_SMTEncodingArityMismatch : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_SMTEncodingArityMismatch  -> true
-    | uu____3188 -> false
+    | uu____39382 -> false
   
 let (uu___is_Warning_Defensive : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Warning_Defensive  -> true | uu____3199 -> false
+    match projectee with | Warning_Defensive  -> true | uu____39393 -> false
   
 let (uu___is_Warning_CantInspect : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Warning_CantInspect  -> true | uu____3210 -> false
+    match projectee with
+    | Warning_CantInspect  -> true
+    | uu____39404 -> false
   
 let (uu___is_Warning_NilGivenExplicitArgs : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_NilGivenExplicitArgs  -> true
-    | uu____3221 -> false
+    | uu____39415 -> false
   
 let (uu___is_Warning_ConsAppliedExplicitArgs : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_ConsAppliedExplicitArgs  -> true
-    | uu____3232 -> false
+    | uu____39426 -> false
   
 let (uu___is_Warning_UnembedBinderKnot : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_UnembedBinderKnot  -> true
-    | uu____3243 -> false
+    | uu____39437 -> false
   
 let (uu___is_Fatal_TacticProofRelevantGoal : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_TacticProofRelevantGoal  -> true
-    | uu____3254 -> false
+    | uu____39448 -> false
   
 let (uu___is_Warning_TacAdmit : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Warning_TacAdmit  -> true | uu____3265 -> false
+    match projectee with | Warning_TacAdmit  -> true | uu____39459 -> false
   
 let (uu___is_Fatal_IncoherentPatterns : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_IncoherentPatterns  -> true
-    | uu____3276 -> false
+    | uu____39470 -> false
   
 let (uu___is_Error_NoSMTButNeeded : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_NoSMTButNeeded  -> true
-    | uu____3287 -> false
+    | uu____39481 -> false
   
 let (uu___is_Fatal_UnexpectedAntiquotation : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_UnexpectedAntiquotation  -> true
-    | uu____3298 -> false
+    | uu____39492 -> false
   
 let (uu___is_Fatal_SplicedUndef : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Fatal_SplicedUndef  -> true | uu____3309 -> false
+    match projectee with | Fatal_SplicedUndef  -> true | uu____39503 -> false
   
 let (uu___is_Fatal_SpliceUnembedFail : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_SpliceUnembedFail  -> true
-    | uu____3320 -> false
+    | uu____39514 -> false
   
 let (uu___is_Warning_ExtractionUnexpectedEffect : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_ExtractionUnexpectedEffect  -> true
-    | uu____3331 -> false
+    | uu____39525 -> false
   
 let (uu___is_Error_DidNotFail : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_DidNotFail  -> true | uu____3342 -> false
+    match projectee with | Error_DidNotFail  -> true | uu____39536 -> false
   
 let (uu___is_Warning_UnappliedFail : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_UnappliedFail  -> true
-    | uu____3353 -> false
+    | uu____39547 -> false
   
 let (uu___is_Warning_QuantifierWithoutPattern : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_QuantifierWithoutPattern  -> true
-    | uu____3364 -> false
+    | uu____39558 -> false
   
 let (uu___is_Error_EmptyFailErrs : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_EmptyFailErrs  -> true | uu____3375 -> false
+    match projectee with
+    | Error_EmptyFailErrs  -> true
+    | uu____39569 -> false
   
 let (uu___is_Warning_logicqualifier : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_logicqualifier  -> true
-    | uu____3386 -> false
+    | uu____39580 -> false
   
 let (uu___is_Fatal_CyclicDependence : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_CyclicDependence  -> true
-    | uu____3397 -> false
+    | uu____39591 -> false
   
 let (uu___is_Error_InductiveAnnotNotAType : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_InductiveAnnotNotAType  -> true
-    | uu____3408 -> false
+    | uu____39602 -> false
   
 let (uu___is_Fatal_FriendInterface : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_FriendInterface  -> true
-    | uu____3419 -> false
+    | uu____39613 -> false
   
 let (uu___is_Error_CannotRedefineConst : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_CannotRedefineConst  -> true
-    | uu____3430 -> false
+    | uu____39624 -> false
   
 let (uu___is_Error_BadClassDecl : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_BadClassDecl  -> true | uu____3441 -> false
+    match projectee with | Error_BadClassDecl  -> true | uu____39635 -> false
   
 let (uu___is_Error_BadInductiveParam : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_BadInductiveParam  -> true
-    | uu____3452 -> false
+    | uu____39646 -> false
   
 let (uu___is_Error_FieldShadow : raw_error -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error_FieldShadow  -> true | uu____3463 -> false
+    match projectee with | Error_FieldShadow  -> true | uu____39657 -> false
   
 let (uu___is_Error_UnexpectedDM4FType : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_UnexpectedDM4FType  -> true
-    | uu____3474 -> false
+    | uu____39668 -> false
   
 let (uu___is_Fatal_EffectAbbreviationResultTypeMismatch :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_EffectAbbreviationResultTypeMismatch  -> true
-    | uu____3485 -> false
+    | uu____39679 -> false
   
 let (uu___is_Error_AlreadyCachedAssertionFailure : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_AlreadyCachedAssertionFailure  -> true
-    | uu____3496 -> false
+    | uu____39690 -> false
   
 let (uu___is_Error_MustEraseMissing : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Error_MustEraseMissing  -> true
-    | uu____3507 -> false
+    | uu____39701 -> false
   
 let (uu___is_Warning_EffectfulArgumentToErasedFunction :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Warning_EffectfulArgumentToErasedFunction  -> true
-    | uu____3518 -> false
+    | uu____39712 -> false
   
 let (uu___is_Fatal_EmptySurfaceLet : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Fatal_EmptySurfaceLet  -> true
-    | uu____3529 -> false
+    | uu____39723 -> false
   
 type flag = FStar_Options.error_flag
 let (default_flags : (raw_error * FStar_Options.error_flag) Prims.list) =
@@ -2548,35 +2568,35 @@ let (default_flags : (raw_error * FStar_Options.error_flag) Prims.list) =
 exception Err of (raw_error * Prims.string) 
 let (uu___is_Err : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Err uu____4843 -> true | uu____4850 -> false
+    match projectee with | Err uu____41037 -> true | uu____41044 -> false
   
 let (__proj__Err__item__uu___ : Prims.exn -> (raw_error * Prims.string)) =
-  fun projectee  -> match projectee with | Err uu____4869 -> uu____4869 
+  fun projectee  -> match projectee with | Err uu____41063 -> uu____41063 
 exception Error of (raw_error * Prims.string * FStar_Range.range) 
 let (uu___is_Error : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Error uu____4894 -> true | uu____4903 -> false
+    match projectee with | Error uu____41088 -> true | uu____41097 -> false
   
 let (__proj__Error__item__uu___ :
   Prims.exn -> (raw_error * Prims.string * FStar_Range.range)) =
-  fun projectee  -> match projectee with | Error uu____4926 -> uu____4926 
+  fun projectee  -> match projectee with | Error uu____41120 -> uu____41120 
 exception Warning of (raw_error * Prims.string * FStar_Range.range) 
 let (uu___is_Warning : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Warning uu____4953 -> true | uu____4962 -> false
+    match projectee with | Warning uu____41147 -> true | uu____41156 -> false
   
 let (__proj__Warning__item__uu___ :
   Prims.exn -> (raw_error * Prims.string * FStar_Range.range)) =
-  fun projectee  -> match projectee with | Warning uu____4985 -> uu____4985 
+  fun projectee  -> match projectee with | Warning uu____41179 -> uu____41179 
 exception Stop 
 let (uu___is_Stop : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Stop  -> true | uu____5002 -> false
+    match projectee with | Stop  -> true | uu____41196 -> false
   
 exception Empty_frag 
 let (uu___is_Empty_frag : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Empty_frag  -> true | uu____5013 -> false
+    match projectee with | Empty_frag  -> true | uu____41207 -> false
   
 type issue_level =
   | ENotImplemented 
@@ -2585,19 +2605,19 @@ type issue_level =
   | EError 
 let (uu___is_ENotImplemented : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | ENotImplemented  -> true | uu____5024 -> false
+    match projectee with | ENotImplemented  -> true | uu____41218 -> false
   
 let (uu___is_EInfo : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EInfo  -> true | uu____5035 -> false
+    match projectee with | EInfo  -> true | uu____41229 -> false
   
 let (uu___is_EWarning : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EWarning  -> true | uu____5046 -> false
+    match projectee with | EWarning  -> true | uu____41240 -> false
   
 let (uu___is_EError : issue_level -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EError  -> true | uu____5057 -> false
+    match projectee with | EError  -> true | uu____41251 -> false
   
 type issue =
   {
@@ -2670,36 +2690,36 @@ let (format_issue : issue -> Prims.string) =
       | EWarning  -> "Warning"
       | EError  -> "Error"
       | ENotImplemented  -> "Feature not yet implemented: "  in
-    let uu____5352 =
+    let uu____41546 =
       match issue.issue_range with
       | FStar_Pervasives_Native.None  -> ("", "")
       | FStar_Pervasives_Native.Some r when r = FStar_Range.dummyRange ->
           ("", "")
       | FStar_Pervasives_Native.Some r ->
-          let uu____5375 =
-            let uu____5377 = FStar_Range.string_of_use_range r  in
-            FStar_Util.format1 "%s: " uu____5377  in
-          let uu____5380 =
-            let uu____5382 =
-              let uu____5384 = FStar_Range.use_range r  in
-              let uu____5385 = FStar_Range.def_range r  in
-              uu____5384 = uu____5385  in
-            if uu____5382
+          let uu____41569 =
+            let uu____41571 = FStar_Range.string_of_use_range r  in
+            FStar_Util.format1 "%s: " uu____41571  in
+          let uu____41574 =
+            let uu____41576 =
+              let uu____41578 = FStar_Range.use_range r  in
+              let uu____41579 = FStar_Range.def_range r  in
+              uu____41578 = uu____41579  in
+            if uu____41576
             then ""
             else
-              (let uu____5391 = FStar_Range.string_of_range r  in
-               FStar_Util.format1 " (see also %s)" uu____5391)
+              (let uu____41585 = FStar_Range.string_of_range r  in
+               FStar_Util.format1 " (see also %s)" uu____41585)
              in
-          (uu____5375, uu____5380)
+          (uu____41569, uu____41574)
        in
-    match uu____5352 with
+    match uu____41546 with
     | (range_str,see_also_str) ->
         let issue_number =
           match issue.issue_number with
           | FStar_Pervasives_Native.None  -> ""
           | FStar_Pervasives_Native.Some n1 ->
-              let uu____5411 = FStar_Util.string_of_int n1  in
-              FStar_Util.format1 " %s" uu____5411
+              let uu____41605 = FStar_Util.string_of_int n1  in
+              FStar_Util.format1 " %s" uu____41605
            in
         FStar_Util.format5 "%s(%s%s) %s%s\n" range_str level_header
           issue_number issue.issue_message see_also_str
@@ -2712,7 +2732,7 @@ let (print_issue : issue -> unit) =
       | EWarning  -> FStar_Util.print_warning
       | EError  -> FStar_Util.print_error
       | ENotImplemented  -> FStar_Util.print_error  in
-    let uu____5431 = format_issue issue  in printer uu____5431
+    let uu____41625 = format_issue issue  in printer uu____41625
   
 let (compare_issues : issue -> issue -> Prims.int) =
   fun i1  ->
@@ -2721,9 +2741,9 @@ let (compare_issues : issue -> issue -> Prims.int) =
       | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.None ) ->
           (Prims.parse_int "0")
       | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.Some
-         uu____5455) -> ~- (Prims.parse_int "1")
-      | (FStar_Pervasives_Native.Some uu____5461,FStar_Pervasives_Native.None
-         ) -> (Prims.parse_int "1")
+         uu____41649) -> ~- (Prims.parse_int "1")
+      | (FStar_Pervasives_Native.Some
+         uu____41655,FStar_Pervasives_Native.None ) -> (Prims.parse_int "1")
       | (FStar_Pervasives_Native.Some r1,FStar_Pervasives_Native.Some r2) ->
           FStar_Range.compare_use_range r1 r2
   
@@ -2733,19 +2753,19 @@ let (mk_default_handler : Prims.bool -> error_handler) =
     let add_one e =
       match e.issue_level with
       | EError  ->
-          let uu____5494 =
-            let uu____5497 = FStar_ST.op_Bang errs  in e :: uu____5497  in
-          FStar_ST.op_Colon_Equals errs uu____5494
-      | uu____5590 -> print_issue e  in
-    let count_errors uu____5596 =
-      let uu____5597 = FStar_ST.op_Bang errs  in FStar_List.length uu____5597
-       in
-    let report uu____5652 =
+          let uu____41688 =
+            let uu____41691 = FStar_ST.op_Bang errs  in e :: uu____41691  in
+          FStar_ST.op_Colon_Equals errs uu____41688
+      | uu____41784 -> print_issue e  in
+    let count_errors uu____41790 =
+      let uu____41791 = FStar_ST.op_Bang errs  in
+      FStar_List.length uu____41791  in
+    let report uu____41846 =
       let sorted1 =
-        let uu____5656 = FStar_ST.op_Bang errs  in
-        FStar_List.sortWith compare_issues uu____5656  in
+        let uu____41850 = FStar_ST.op_Bang errs  in
+        FStar_List.sortWith compare_issues uu____41850  in
       if print7 then FStar_List.iter print_issue sorted1 else (); sorted1  in
-    let clear1 uu____5713 = FStar_ST.op_Colon_Equals errs []  in
+    let clear1 uu____41907 = FStar_ST.op_Colon_Equals errs []  in
     {
       eh_add_one = add_one;
       eh_count_errors = count_errors;
@@ -2773,11 +2793,11 @@ let (mk_issue :
           }
   
 let (get_err_count : unit -> Prims.int) =
-  fun uu____5818  ->
-    let uu____5819 =
-      let uu____5825 = FStar_ST.op_Bang current_handler  in
-      uu____5825.eh_count_errors  in
-    uu____5819 ()
+  fun uu____42012  ->
+    let uu____42013 =
+      let uu____42019 = FStar_ST.op_Bang current_handler  in
+      uu____42019.eh_count_errors  in
+    uu____42013 ()
   
 let (wrapped_eh_add_one : error_handler -> issue -> unit) =
   fun h  ->
@@ -2785,45 +2805,47 @@ let (wrapped_eh_add_one : error_handler -> issue -> unit) =
       h.eh_add_one issue;
       if issue.issue_level <> EInfo
       then
-        ((let uu____5859 =
-            let uu____5861 = FStar_ST.op_Bang FStar_Options.abort_counter  in
-            uu____5861 - (Prims.parse_int "1")  in
-          FStar_ST.op_Colon_Equals FStar_Options.abort_counter uu____5859);
-         (let uu____5906 =
-            let uu____5908 = FStar_ST.op_Bang FStar_Options.abort_counter  in
-            uu____5908 = (Prims.parse_int "0")  in
-          if uu____5906 then failwith "Aborting due to --abort_on" else ()))
+        ((let uu____42053 =
+            let uu____42055 = FStar_ST.op_Bang FStar_Options.abort_counter
+               in
+            uu____42055 - (Prims.parse_int "1")  in
+          FStar_ST.op_Colon_Equals FStar_Options.abort_counter uu____42053);
+         (let uu____42100 =
+            let uu____42102 = FStar_ST.op_Bang FStar_Options.abort_counter
+               in
+            uu____42102 = (Prims.parse_int "0")  in
+          if uu____42100 then failwith "Aborting due to --abort_on" else ()))
       else ()
   
 let (add_one : issue -> unit) =
   fun issue  ->
     FStar_Util.atomically
-      (fun uu____5947  ->
-         let uu____5948 = FStar_ST.op_Bang current_handler  in
-         wrapped_eh_add_one uu____5948 issue)
+      (fun uu____42141  ->
+         let uu____42142 = FStar_ST.op_Bang current_handler  in
+         wrapped_eh_add_one uu____42142 issue)
   
 let (add_many : issue Prims.list -> unit) =
   fun issues  ->
     FStar_Util.atomically
-      (fun uu____5980  ->
-         let uu____5981 =
-           let uu____5986 = FStar_ST.op_Bang current_handler  in
-           wrapped_eh_add_one uu____5986  in
-         FStar_List.iter uu____5981 issues)
+      (fun uu____42174  ->
+         let uu____42175 =
+           let uu____42180 = FStar_ST.op_Bang current_handler  in
+           wrapped_eh_add_one uu____42180  in
+         FStar_List.iter uu____42175 issues)
   
 let (report_all : unit -> issue Prims.list) =
-  fun uu____6013  ->
-    let uu____6014 =
-      let uu____6021 = FStar_ST.op_Bang current_handler  in
-      uu____6021.eh_report  in
-    uu____6014 ()
+  fun uu____42207  ->
+    let uu____42208 =
+      let uu____42215 = FStar_ST.op_Bang current_handler  in
+      uu____42215.eh_report  in
+    uu____42208 ()
   
 let (clear : unit -> unit) =
-  fun uu____6046  ->
-    let uu____6047 =
-      let uu____6052 = FStar_ST.op_Bang current_handler  in
-      uu____6052.eh_clear  in
-    uu____6047 ()
+  fun uu____42240  ->
+    let uu____42241 =
+      let uu____42246 = FStar_ST.op_Bang current_handler  in
+      uu____42246.eh_clear  in
+    uu____42241 ()
   
 let (set_handler : error_handler -> unit) =
   fun handler  ->
@@ -2859,29 +2881,29 @@ let (message_prefix : error_message_prefix) =
   let pfx = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
   let set_prefix s =
     FStar_ST.op_Colon_Equals pfx (FStar_Pervasives_Native.Some s)  in
-  let clear_prefix uu____6297 =
+  let clear_prefix uu____42491 =
     FStar_ST.op_Colon_Equals pfx FStar_Pervasives_Native.None  in
   let append_prefix s =
-    let uu____6355 = FStar_ST.op_Bang pfx  in
-    match uu____6355 with
+    let uu____42549 = FStar_ST.op_Bang pfx  in
+    match uu____42549 with
     | FStar_Pervasives_Native.None  -> s
     | FStar_Pervasives_Native.Some p ->
-        let uu____6411 = FStar_String.op_Hat ": " s  in
-        FStar_String.op_Hat p uu____6411
+        let uu____42605 = FStar_String.op_Hat ": " s  in
+        FStar_String.op_Hat p uu____42605
      in
   { set_prefix; append_prefix; clear_prefix } 
 let findIndex :
-  'Auu____6423 'Auu____6424 .
-    ('Auu____6423 * 'Auu____6424) Prims.list -> 'Auu____6423 -> Prims.int
+  'Auu____42617 'Auu____42618 .
+    ('Auu____42617 * 'Auu____42618) Prims.list -> 'Auu____42617 -> Prims.int
   =
   fun l  ->
     fun v1  ->
       FStar_All.pipe_right l
         (FStar_List.index
-           (fun uu___14_6462  ->
-              match uu___14_6462 with
-              | (e,uu____6469) when e = v1 -> true
-              | uu____6471 -> false))
+           (fun uu___289_42656  ->
+              match uu___289_42656 with
+              | (e,uu____42663) when e = v1 -> true
+              | uu____42665 -> false))
   
 let (errno_of_error : raw_error -> Prims.int) =
   fun e  -> findIndex default_flags e 
@@ -2890,8 +2912,8 @@ let (init_warn_error_flags : FStar_Options.error_flag Prims.list) =
 let (diag : FStar_Range.range -> Prims.string -> unit) =
   fun r  ->
     fun msg  ->
-      let uu____6504 = FStar_Options.debug_any ()  in
-      if uu____6504
+      let uu____42698 = FStar_Options.debug_any ()  in
+      if uu____42698
       then
         add_one
           (mk_issue EInfo (FStar_Pervasives_Native.Some r) msg
@@ -2905,22 +2927,22 @@ let (lookup :
   =
   fun flags  ->
     fun errno  ->
-      let uu____6529 =
+      let uu____42723 =
         (errno = defensive_errno) && (FStar_Options.defensive_fail ())  in
-      if uu____6529
+      if uu____42723
       then FStar_Options.CAlwaysError
       else FStar_List.nth flags errno
   
 let (log_issue : FStar_Range.range -> (raw_error * Prims.string) -> unit) =
   fun r  ->
-    fun uu____6550  ->
-      match uu____6550 with
+    fun uu____42744  ->
+      match uu____42744 with
       | (e,msg) ->
           let errno = errno_of_error e  in
-          let uu____6562 =
-            let uu____6563 = FStar_Options.error_flags ()  in
-            lookup uu____6563 errno  in
-          (match uu____6562 with
+          let uu____42756 =
+            let uu____42757 = FStar_Options.error_flags ()  in
+            lookup uu____42757 errno  in
+          (match uu____42756 with
            | FStar_Options.CAlwaysError  ->
                add_one
                  (mk_issue EError (FStar_Pervasives_Native.Some r) msg
@@ -2939,97 +2961,97 @@ let (log_issue : FStar_Range.range -> (raw_error * Prims.string) -> unit) =
                  mk_issue EError (FStar_Pervasives_Native.Some r) msg
                    (FStar_Pervasives_Native.Some errno)
                   in
-               let uu____6571 = FStar_Options.ide ()  in
-               if uu____6571
+               let uu____42765 = FStar_Options.ide ()  in
+               if uu____42765
                then add_one i
                else
-                 (let uu____6576 =
-                    let uu____6578 = format_issue i  in
+                 (let uu____42770 =
+                    let uu____42772 = format_issue i  in
                     FStar_String.op_Hat
                       "don't use log_issue to report fatal error, should use raise_error: "
-                      uu____6578
+                      uu____42772
                      in
-                  failwith uu____6576))
+                  failwith uu____42770))
   
 let (add_errors :
   (raw_error * Prims.string * FStar_Range.range) Prims.list -> unit) =
   fun errs  ->
     FStar_Util.atomically
-      (fun uu____6606  ->
+      (fun uu____42800  ->
          FStar_List.iter
-           (fun uu____6619  ->
-              match uu____6619 with
+           (fun uu____42813  ->
+              match uu____42813 with
               | (e,msg,r) ->
-                  let uu____6632 =
-                    let uu____6638 = message_prefix.append_prefix msg  in
-                    (e, uu____6638)  in
-                  log_issue r uu____6632) errs)
+                  let uu____42826 =
+                    let uu____42832 = message_prefix.append_prefix msg  in
+                    (e, uu____42832)  in
+                  log_issue r uu____42826) errs)
   
 let (issue_of_exn : Prims.exn -> issue FStar_Pervasives_Native.option) =
-  fun uu___15_6648  ->
-    match uu___15_6648 with
+  fun uu___290_42842  ->
+    match uu___290_42842 with
     | Error (e,msg,r) ->
         let errno = errno_of_error e  in
-        let uu____6658 =
-          let uu____6659 = message_prefix.append_prefix msg  in
-          mk_issue EError (FStar_Pervasives_Native.Some r) uu____6659
+        let uu____42852 =
+          let uu____42853 = message_prefix.append_prefix msg  in
+          mk_issue EError (FStar_Pervasives_Native.Some r) uu____42853
             (FStar_Pervasives_Native.Some errno)
            in
-        FStar_Pervasives_Native.Some uu____6658
+        FStar_Pervasives_Native.Some uu____42852
     | FStar_Util.NYI msg ->
-        let uu____6664 =
-          let uu____6665 = message_prefix.append_prefix msg  in
-          mk_issue ENotImplemented FStar_Pervasives_Native.None uu____6665
+        let uu____42858 =
+          let uu____42859 = message_prefix.append_prefix msg  in
+          mk_issue ENotImplemented FStar_Pervasives_Native.None uu____42859
             FStar_Pervasives_Native.None
            in
-        FStar_Pervasives_Native.Some uu____6664
+        FStar_Pervasives_Native.Some uu____42858
     | Err (e,msg) ->
         let errno = errno_of_error e  in
-        let uu____6674 =
-          let uu____6675 = message_prefix.append_prefix msg  in
-          mk_issue EError FStar_Pervasives_Native.None uu____6675
+        let uu____42868 =
+          let uu____42869 = message_prefix.append_prefix msg  in
+          mk_issue EError FStar_Pervasives_Native.None uu____42869
             (FStar_Pervasives_Native.Some errno)
            in
-        FStar_Pervasives_Native.Some uu____6674
-    | uu____6678 -> FStar_Pervasives_Native.None
+        FStar_Pervasives_Native.Some uu____42868
+    | uu____42872 -> FStar_Pervasives_Native.None
   
 let (err_exn : Prims.exn -> unit) =
   fun exn  ->
     if exn = Stop
     then ()
     else
-      (let uu____6688 = issue_of_exn exn  in
-       match uu____6688 with
+      (let uu____42882 = issue_of_exn exn  in
+       match uu____42882 with
        | FStar_Pervasives_Native.Some issue -> add_one issue
        | FStar_Pervasives_Native.None  -> FStar_Exn.raise exn)
   
 let (handleable : Prims.exn -> Prims.bool) =
-  fun uu___16_6698  ->
-    match uu___16_6698 with
-    | Error uu____6700 -> true
-    | FStar_Util.NYI uu____6709 -> true
+  fun uu___291_42892  ->
+    match uu___291_42892 with
+    | Error uu____42894 -> true
+    | FStar_Util.NYI uu____42903 -> true
     | Stop  -> true
-    | Err uu____6713 -> true
-    | uu____6720 -> false
+    | Err uu____42907 -> true
+    | uu____42914 -> false
   
 let (stop_if_err : unit -> unit) =
-  fun uu____6727  ->
-    let uu____6728 =
-      let uu____6730 = get_err_count ()  in
-      uu____6730 > (Prims.parse_int "0")  in
-    if uu____6728 then FStar_Exn.raise Stop else ()
+  fun uu____42921  ->
+    let uu____42922 =
+      let uu____42924 = get_err_count ()  in
+      uu____42924 > (Prims.parse_int "0")  in
+    if uu____42922 then FStar_Exn.raise Stop else ()
   
 let raise_error :
-  'Auu____6743 .
-    (raw_error * Prims.string) -> FStar_Range.range -> 'Auu____6743
+  'Auu____42937 .
+    (raw_error * Prims.string) -> FStar_Range.range -> 'Auu____42937
   =
-  fun uu____6757  ->
+  fun uu____42951  ->
     fun r  ->
-      match uu____6757 with | (e,msg) -> FStar_Exn.raise (Error (e, msg, r))
+      match uu____42951 with | (e,msg) -> FStar_Exn.raise (Error (e, msg, r))
   
-let raise_err : 'Auu____6774 . (raw_error * Prims.string) -> 'Auu____6774 =
-  fun uu____6784  ->
-    match uu____6784 with | (e,msg) -> FStar_Exn.raise (Err (e, msg))
+let raise_err : 'Auu____42968 . (raw_error * Prims.string) -> 'Auu____42968 =
+  fun uu____42978  ->
+    match uu____42978 with | (e,msg) -> FStar_Exn.raise (Err (e, msg))
   
 let (update_flags :
   (FStar_Options.error_flag * Prims.string) Prims.list ->
@@ -3037,9 +3059,9 @@ let (update_flags :
   =
   fun l  ->
     let flags = init_warn_error_flags  in
-    let compare1 uu____6852 uu____6853 =
-      match (uu____6852, uu____6853) with
-      | ((uu____6895,(a,uu____6897)),(uu____6898,(b,uu____6900))) ->
+    let compare1 uu____43046 uu____43047 =
+      match (uu____43046, uu____43047) with
+      | ((uu____43089,(a,uu____43091)),(uu____43092,(b,uu____43094))) ->
           if a > b
           then (Prims.parse_int "1")
           else
@@ -3058,11 +3080,11 @@ let (update_flags :
       | (FStar_Options.CSilent ,FStar_Options.CAlwaysError ) ->
           raise_err
             (Fatal_InvalidWarnErrorSetting, "cannot silence an error")
-      | (uu____6969,FStar_Options.CFatal ) ->
+      | (uu____43163,FStar_Options.CFatal ) ->
           raise_err
             (Fatal_InvalidWarnErrorSetting,
               "cannot reset the error level of a fatal error")
-      | uu____6972 -> f  in
+      | uu____43166 -> f  in
     let rec set_flag i l1 =
       let d = FStar_List.nth flags i  in
       match l1 with
@@ -3076,45 +3098,45 @@ let (update_flags :
       match l1 with
       | [] -> f
       | hd1::tl1 ->
-          let uu____7130 =
-            let uu____7133 =
-              let uu____7136 = set_flag i sorted1  in [uu____7136]  in
-            FStar_List.append f uu____7133  in
-          aux uu____7130 (i + (Prims.parse_int "1")) tl1 sorted1
+          let uu____43324 =
+            let uu____43327 =
+              let uu____43330 = set_flag i sorted1  in [uu____43330]  in
+            FStar_List.append f uu____43327  in
+          aux uu____43324 (i + (Prims.parse_int "1")) tl1 sorted1
        in
     let rec compute_range result l1 =
       match l1 with
       | [] -> result
       | (f,s)::tl1 ->
           let r = FStar_Util.split s ".."  in
-          let uu____7238 =
+          let uu____43432 =
             match r with
             | r1::r2::[] ->
-                let uu____7258 = FStar_Util.int_of_string r1  in
-                let uu____7260 = FStar_Util.int_of_string r2  in
-                (uu____7258, uu____7260)
-            | uu____7264 ->
-                let uu____7268 =
-                  let uu____7274 =
+                let uu____43452 = FStar_Util.int_of_string r1  in
+                let uu____43454 = FStar_Util.int_of_string r2  in
+                (uu____43452, uu____43454)
+            | uu____43458 ->
+                let uu____43462 =
+                  let uu____43468 =
                     FStar_Util.format1 "Malformed warn-error range %s" s  in
-                  (Fatal_InvalidWarnErrorSetting, uu____7274)  in
-                raise_err uu____7268
+                  (Fatal_InvalidWarnErrorSetting, uu____43468)  in
+                raise_err uu____43462
              in
-          (match uu____7238 with
+          (match uu____43432 with
            | (l2,h) ->
                (if
                   (l2 < (Prims.parse_int "0")) ||
                     (h >= (FStar_List.length default_flags))
                 then
-                  (let uu____7309 =
-                     let uu____7315 =
-                       let uu____7317 = FStar_Util.string_of_int l2  in
-                       let uu____7319 = FStar_Util.string_of_int h  in
+                  (let uu____43503 =
+                     let uu____43509 =
+                       let uu____43511 = FStar_Util.string_of_int l2  in
+                       let uu____43513 = FStar_Util.string_of_int h  in
                        FStar_Util.format2 "No error for warn_error %s..%s"
-                         uu____7317 uu____7319
+                         uu____43511 uu____43513
                         in
-                     (Fatal_InvalidWarnErrorSetting, uu____7315)  in
-                   raise_err uu____7309)
+                     (Fatal_InvalidWarnErrorSetting, uu____43509)  in
+                   raise_err uu____43503)
                 else ();
                 compute_range (FStar_List.append result [(f, (l2, h))]) tl1))
        in
@@ -3131,11 +3153,12 @@ let catch_errors :
     FStar_ST.op_Colon_Equals current_handler newh;
     (let r =
        try
-         (fun uu___18_7483  ->
+         (fun uu___568_43677  ->
             match () with
             | () -> let r = f ()  in FStar_Pervasives_Native.Some r) ()
        with
-       | uu___17_7489 -> (err_exn uu___17_7489; FStar_Pervasives_Native.None)
+       | uu___567_43683 ->
+           (err_exn uu___567_43683; FStar_Pervasives_Native.None)
         in
      let errs = newh.eh_report ()  in
      FStar_ST.op_Colon_Equals current_handler old; (errs, r))

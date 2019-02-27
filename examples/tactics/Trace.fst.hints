@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "3007e388e5da0151627e6dfe84946a3c"
+      "8aab52100441ed2f5a44f99acbbe5810"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "2684ecb9e3ca1dc96c4f7629d6c9290d"
+      "7013d6806af9f37c64859d52fc459a52"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0244465e6c60525ce095333d6d15a6b9"
+      "49be456b576226ad6b3b149155ff6b83"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "92b766346fdf078323a5bb72756dee1c"
+      "06346da7b80964ae40afc889b310af0c"
     ],
     [
       "Trace.fall",
@@ -63,7 +63,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "cc3cc55cf38ce12e4c4c4907f1b5fa1b"
+      "4bf794b23819c1cf4ec022b4cae8f238"
     ],
     [
       "Trace.uu___393",
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "90ea77e90892eb02d8c34495e241ed74"
+      "6b4b8abca85aab563c61a93447c0e9cd"
     ],
     [
       "Trace.fact_aux",
@@ -102,7 +102,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "50938252e70c5b8d32420bce205ce3d3"
+      "4e9b9c604fd700c04ade67804d430c3b"
     ],
     [
       "Trace.uu___403",
@@ -127,7 +127,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f03492162445fadf216782f3699852df"
+      "173fda8f1ce18566058e1ceea15ef22c"
     ],
     [
       "Trace.uu___407",
@@ -153,7 +153,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "452d33c3ec18e012b825525a14c606b2"
+      "6541c6fedc634f5e6d536d48a5babeef"
     ],
     [
       "Trace.mynat",
@@ -162,7 +162,7 @@
       1,
       [ "@query" ],
       0,
-      "02753cc27a54a5f260dc8afc33721406"
+      "e3471b0ef70aa867b43d9f697468aac4"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -175,7 +175,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "22990aec02cef3df38e15265573082b5"
+      "18ddb7aefdbc5e24e5d332d378546eeb"
     ],
     [
       "Trace.tick_last",
@@ -189,7 +189,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3e08bba619cdc2682afe18fa4f923793"
+      "a07f0836611d6f454f98abfe76bcb053"
     ],
     [
       "Trace.term_is_fv",
@@ -206,7 +206,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "e41d8701c0ccda59887975238db28439"
+      "62183dfbe36f7fc7aa5c45a1fb824e55"
     ],
     [
       "Trace.cutlast",
@@ -220,7 +220,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3b99758e31acfe8d39194dc7fd33780c"
+      "cc6846914e7edacc288ee91f7a1da3f3"
     ],
     [
       "Trace.fall",
@@ -234,7 +234,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "6b5a06ee6f7012ed50277e614ca93132"
+      "e4780e16aa1dc7c57da71c43b04bfd5f"
     ],
     [
       "Trace.uu___393",
@@ -253,7 +253,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "af3d865cac589b2a0af0da042e5689e3"
+      "ec7eb76631d48a918f4347244fb083ca"
     ],
     [
       "Trace.fact_aux",
@@ -273,7 +273,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9cbb919285bf312d699c8f27e1e3aeb9"
+      "183e64a0f2f7c12d4a3fd440c89dd30c"
     ],
     [
       "Trace.uu___403",
@@ -298,7 +298,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2a61ecd87f0ca946b2f1bd190955f6b9"
+      "ac143d2fd9b8c75317da4d8f082bff1a"
     ],
     [
       "Trace.uu___407",
@@ -324,7 +324,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "652364154bbc90230db8caae59c71239"
+      "0b5fc293ecace32b429608334f3142cf"
     ]
   ]
 ]
