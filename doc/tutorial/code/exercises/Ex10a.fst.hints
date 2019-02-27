@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "d1a45bac1837dd1d2bb32e8a5114724e"
+      "bde985f7506c458f72a5c85f9c93b7ef"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "6d0c69b31843185d07e587467f9f89b4"
+      "297a662056515d28b19eeda53554c231"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "5881baf4010e19cca7753cf7cf1f5e51"
+      "7659b690c0153f395b855ae118f87a7b"
     ],
     [
       "Ex10a.safe_delete",
@@ -59,7 +59,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "d5850c2bdca5545a68625825c6b74ad9"
+      "a30ca1895e851984b78a75f94f8e9791"
     ],
     [
       "Ex10a.test_acls",
@@ -94,7 +94,7 @@
         "typing_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e", "unit_typing"
       ],
       0,
-      "ea0a42e95c258e4f8ae4aeade834c717"
+      "fcf6360696c3441321268652d7955ac9"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "7b15461de347c2cec221ca22535a4e46"
+      "bc8b1ae2cf150ff44bc456288a247cf8"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "b7338183455fd56da3ce3bda369cc315"
+      "5cf4acc6d094dce187f9493bfabad3a0"
     ],
     [
       "Ex10a.canRead",
@@ -133,7 +133,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "978c927816863d969da6a6491dcbace7"
+      "b54037d372ce05d685ebcaeb6705beba"
     ],
     [
       "Ex10a.revoke",
@@ -146,7 +146,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "18209a6d20f254577c0548a8707cfd18"
+      "98a1855dc82925da52ae249e364ef1b5"
     ]
   ]
 ]

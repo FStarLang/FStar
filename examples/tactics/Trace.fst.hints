@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8aab52100441ed2f5a44f99acbbe5810"
+      "b194e7be52043e00b7a63334c747241d"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "7013d6806af9f37c64859d52fc459a52"
+      "b6fe9414e885e337281aad0797829669"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "49be456b576226ad6b3b149155ff6b83"
+      "b4aa07daee2533df6625eb0b65952906"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "06346da7b80964ae40afc889b310af0c"
+      "e8a64c767f3d6ee6d5cd7d01b8250195"
     ],
     [
       "Trace.fall",
@@ -63,7 +63,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "4bf794b23819c1cf4ec022b4cae8f238"
+      "10a64aae064fb7f75c8701792be2f5d6"
     ],
     [
       "Trace.uu___393",
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "6b4b8abca85aab563c61a93447c0e9cd"
+      "d756b73caee62033328a522cc73ac54a"
     ],
     [
       "Trace.fact_aux",
@@ -102,7 +102,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4e9b9c604fd700c04ade67804d430c3b"
+      "6a8311d3a5c5ced08e7476276aff6825"
     ],
     [
       "Trace.uu___403",
@@ -127,7 +127,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "173fda8f1ce18566058e1ceea15ef22c"
+      "198482f0500acd484f9a13c658ba2018"
     ],
     [
       "Trace.uu___407",
@@ -153,7 +153,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "6541c6fedc634f5e6d536d48a5babeef"
+      "46faa3a27059940ca33890cbf7f1b380"
     ],
     [
       "Trace.mynat",
@@ -162,7 +162,7 @@
       1,
       [ "@query" ],
       0,
-      "e3471b0ef70aa867b43d9f697468aac4"
+      "8360976dc09bd8a9ac56a63b48f72192"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -175,7 +175,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "18ddb7aefdbc5e24e5d332d378546eeb"
+      "e481cf61612cdbe802bcb562776aab52"
     ],
     [
       "Trace.tick_last",
@@ -189,7 +189,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a07f0836611d6f454f98abfe76bcb053"
+      "95ac4cfeed61645c093cdccdc83e1601"
     ],
     [
       "Trace.term_is_fv",
@@ -206,7 +206,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "62183dfbe36f7fc7aa5c45a1fb824e55"
+      "c018ea01542d9d6efc439d44ea10d997"
     ],
     [
       "Trace.cutlast",
@@ -220,7 +220,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cc6846914e7edacc288ee91f7a1da3f3"
+      "6bf1fe9a6c58ef10ff88a8cb594d7040"
     ],
     [
       "Trace.fall",
@@ -234,7 +234,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "e4780e16aa1dc7c57da71c43b04bfd5f"
+      "6c06d18e91516d03f6258a2eb01c4849"
     ],
     [
       "Trace.uu___393",
@@ -253,7 +253,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "ec7eb76631d48a918f4347244fb083ca"
+      "bb91478482903237597a7890498aee75"
     ],
     [
       "Trace.fact_aux",
@@ -273,7 +273,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "183e64a0f2f7c12d4a3fd440c89dd30c"
+      "da8a321b6c51761eea5c93b9301d3490"
     ],
     [
       "Trace.uu___403",
@@ -298,7 +298,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ac143d2fd9b8c75317da4d8f082bff1a"
+      "db63894ec3d7baa3276bb6285a91d6e5"
     ],
     [
       "Trace.uu___407",
@@ -324,7 +324,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "0b5fc293ecace32b429608334f3142cf"
+      "cf60a1c4cd71e8a21fe247709e792ab8"
     ]
   ]
 ]

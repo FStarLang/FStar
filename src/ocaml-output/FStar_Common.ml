@@ -1,7 +1,7 @@
 open Prims
 let (has_cygpath : Prims.bool) =
   try
-    (fun uu___291_34055  ->
+    (fun uu___291_33991  ->
        match () with
        | () ->
            let t_out =
@@ -9,23 +9,23 @@ let (has_cygpath : Prims.bool) =
                FStar_Pervasives_Native.None
               in
            (FStar_Util.trim_string t_out) = "/usr/bin/cygpath") ()
-  with | uu___290_34068 -> false 
+  with | uu___290_34004 -> false 
 let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
   let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
   fun s  ->
     if has_cygpath && (FStar_Util.starts_with s "/")
     then
-      let uu____34089 = FStar_Util.smap_try_find cache s  in
-      match uu____34089 with
+      let uu____34025 = FStar_Util.smap_try_find cache s  in
+      match uu____34025 with
       | FStar_Pervasives_Native.Some s1 -> s1
       | FStar_Pervasives_Native.None  ->
           let label = "try_convert_file_name_to_mixed"  in
           let out =
-            let uu____34104 =
+            let uu____34040 =
               FStar_Util.run_process label "cygpath" ["-m"; s]
                 FStar_Pervasives_Native.None
                in
-            FStar_All.pipe_right uu____34104 FStar_Util.trim_string  in
+            FStar_All.pipe_right uu____34040 FStar_Util.trim_string  in
           (FStar_Util.smap_add cache s out; out)
     else s
   
@@ -37,10 +37,10 @@ let snapshot :
     fun stackref  ->
       fun arg  ->
         FStar_Util.atomically
-          (fun uu____34196  ->
+          (fun uu____34132  ->
              let len =
-               let uu____34198 = FStar_ST.op_Bang stackref  in
-               FStar_List.length uu____34198  in
+               let uu____34134 = FStar_ST.op_Bang stackref  in
+               FStar_List.length uu____34134  in
              let arg' = push arg  in (len, arg'))
   
 let rollback :
@@ -59,22 +59,22 @@ let rollback :
             if n1 = (Prims.parse_int "1")
             then pop ()
             else
-              ((let uu____34339 = pop ()  in ());
+              ((let uu____34275 = pop ()  in ());
                aux (n1 - (Prims.parse_int "1")))
            in
         let curdepth =
-          let uu____34342 = FStar_ST.op_Bang stackref  in
-          FStar_List.length uu____34342  in
+          let uu____34278 = FStar_ST.op_Bang stackref  in
+          FStar_List.length uu____34278  in
         let n1 =
           match depth with
           | FStar_Pervasives_Native.Some d -> curdepth - d
           | FStar_Pervasives_Native.None  -> (Prims.parse_int "1")  in
-        FStar_Util.atomically (fun uu____34405  -> aux n1)
+        FStar_Util.atomically (fun uu____34341  -> aux n1)
   
-let raise_failed_assertion : 'Auu____34411 . Prims.string -> 'Auu____34411 =
+let raise_failed_assertion : 'Auu____34347 . Prims.string -> 'Auu____34347 =
   fun msg  ->
-    let uu____34419 = FStar_Util.format1 "Assertion failed: %s" msg  in
-    failwith uu____34419
+    let uu____34355 = FStar_Util.format1 "Assertion failed: %s" msg  in
+    failwith uu____34355
   
 let (runtime_assert : Prims.bool -> Prims.string -> unit) =
   fun b  ->
@@ -85,12 +85,12 @@ let string_of_list :
   'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
   fun f  ->
     fun l  ->
-      let uu____34470 =
-        let uu____34472 =
-          let uu____34474 = FStar_List.map f l  in
-          FStar_String.concat ", " uu____34474  in
-        Prims.op_Hat uu____34472 "]"  in
-      Prims.op_Hat "[" uu____34470
+      let uu____34406 =
+        let uu____34408 =
+          let uu____34410 = FStar_List.map f l  in
+          FStar_String.concat ", " uu____34410  in
+        Prims.op_Hat uu____34408 "]"  in
+      Prims.op_Hat "[" uu____34406
   
 let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
   =
@@ -100,24 +100,24 @@ let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
     | FStar_Pervasives_Native.Some x -> [x]
   
 let string_of_option :
-  'Auu____34509 .
-    ('Auu____34509 -> Prims.string) ->
-      'Auu____34509 FStar_Pervasives_Native.option -> Prims.string
+  'Auu____34445 .
+    ('Auu____34445 -> Prims.string) ->
+      'Auu____34445 FStar_Pervasives_Native.option -> Prims.string
   =
   fun f  ->
-    fun uu___289_34526  ->
-      match uu___289_34526 with
+    fun uu___289_34462  ->
+      match uu___289_34462 with
       | FStar_Pervasives_Native.None  -> "None"
       | FStar_Pervasives_Native.Some x ->
-          let uu____34534 = f x  in Prims.op_Hat "Some " uu____34534
+          let uu____34470 = f x  in Prims.op_Hat "Some " uu____34470
   
 type 'a thunk = (unit -> 'a,'a) FStar_Util.either FStar_ST.ref
 let mk_thunk : 'a . (unit -> 'a) -> 'a thunk =
   fun f  -> FStar_Util.mk_ref (FStar_Util.Inl f) 
 let force_thunk : 'a . 'a thunk -> 'a =
   fun t  ->
-    let uu____34673 = FStar_ST.op_Bang t  in
-    match uu____34673 with
+    let uu____34609 = FStar_ST.op_Bang t  in
+    match uu____34609 with
     | FStar_Util.Inr a -> a
     | FStar_Util.Inl f ->
         let a = f ()  in (FStar_ST.op_Colon_Equals t (FStar_Util.Inr a); a)
@@ -128,9 +128,9 @@ let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
       let rec aux i =
         if i < n1
         then
-          let uu____34885 = f i  in
-          let uu____34886 = aux (i + (Prims.parse_int "1"))  in uu____34885
-            :: uu____34886
+          let uu____34821 = f i  in
+          let uu____34822 = aux (i + (Prims.parse_int "1"))  in uu____34821
+            :: uu____34822
         else []  in
       aux (Prims.parse_int "0")
   
