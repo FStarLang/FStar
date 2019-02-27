@@ -4,11 +4,11 @@ type order =
   | Eq 
   | Gt 
 let (uu___is_Lt : order -> Prims.bool) =
-  fun projectee  -> match projectee with | Lt  -> true | uu____14045 -> false 
+  fun projectee  -> match projectee with | Lt  -> true | uu____14050 -> false 
 let (uu___is_Eq : order -> Prims.bool) =
-  fun projectee  -> match projectee with | Eq  -> true | uu____14056 -> false 
+  fun projectee  -> match projectee with | Eq  -> true | uu____14061 -> false 
 let (uu___is_Gt : order -> Prims.bool) =
-  fun projectee  -> match projectee with | Gt  -> true | uu____14067 -> false 
+  fun projectee  -> match projectee with | Gt  -> true | uu____14072 -> false 
 let (ge : order -> Prims.bool) = fun o  -> o <> Lt 
 let (le : order -> Prims.bool) = fun o  -> o <> Gt 
 let (ne : order -> Prims.bool) = fun o  -> o <> Eq 
@@ -19,9 +19,9 @@ let (lex : order -> (unit -> order) -> order) =
   fun o1  ->
     fun o2  ->
       match (o1, o2) with
-      | (Lt ,uu____14136) -> Lt
-      | (Eq ,uu____14143) -> o2 ()
-      | (Gt ,uu____14150) -> Gt
+      | (Lt ,uu____14141) -> Lt
+      | (Eq ,uu____14148) -> o2 ()
+      | (Gt ,uu____14155) -> Gt
   
 let (order_from_int : Prims.int -> order) =
   fun i  ->
@@ -38,11 +38,11 @@ let rec compare_list :
       fun l2  ->
         match (l1, l2) with
         | ([],[]) -> Eq
-        | ([],uu____14241) -> Lt
-        | (uu____14248,[]) -> Gt
+        | ([],uu____14246) -> Lt
+        | (uu____14253,[]) -> Gt
         | (x::xs,y::ys) ->
-            let uu____14267 = f x y  in
-            lex uu____14267 (fun uu____14269  -> compare_list f xs ys)
+            let uu____14272 = f x y  in
+            lex uu____14272 (fun uu____14274  -> compare_list f xs ys)
   
 let compare_option :
   'a .
@@ -56,9 +56,9 @@ let compare_option :
         match (x, y) with
         | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.None ) -> Eq
         | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.Some
-           uu____14321) -> Lt
+           uu____14326) -> Lt
         | (FStar_Pervasives_Native.Some
-           uu____14326,FStar_Pervasives_Native.None ) -> Gt
+           uu____14331,FStar_Pervasives_Native.None ) -> Gt
         | (FStar_Pervasives_Native.Some x1,FStar_Pervasives_Native.Some y1)
             -> f x1 y1
   
