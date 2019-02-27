@@ -958,7 +958,7 @@ and tc_value env (e:term) : term
   | Tm_fvar fv ->
     let (us, t), range = Env.lookup_lid env fv.fv_name.v in
     if Env.debug env <| Options.Other "Range"
-    then BU.print5 "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s"
+    then BU.print5 "Lookup fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s\n"
             (Print.lid_to_string (lid_of_fv fv))
             (Range.string_of_range e.pos)
             (Range.string_of_range range)
