@@ -421,7 +421,7 @@ let loc_union_idem_1
   (s1 s2: loc)
 : Lemma
   (loc_union s1 (loc_union s1 s2) == loc_union s1 s2)
-  [SMTPat (loc_union s1 (loc_union s1 s2) == loc_union s1 s2)]
+  [SMTPat (loc_union s1 (loc_union s1 s2))]
 = loc_union_assoc s1 s1 s2
 
 let loc_union_idem_2

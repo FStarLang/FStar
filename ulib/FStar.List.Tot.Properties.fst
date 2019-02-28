@@ -1007,7 +1007,8 @@ let precedes_append_cons_prod_r
 : Lemma
   (requires (l == append l1 ((x, y) :: l2)))
   (ensures (x << l /\ y << l))
-  [SMTPatOr [ [ SMTPat (x << l); SMTPat (l == append l1 ((x, y) :: l2))] ; [SMTPat (y << l); SMTPat (l == append l1 ((x, y) :: l2))] ] ]
+  [SMTPatOr [ [ SMTPat (x << l); SMTPat (append l1 ((x, y) :: l2))];
+              [ SMTPat (y << l); SMTPat (append l1 ((x, y) :: l2))] ] ]
 = precedes_append_cons_r l1 (x, y) l2
 
 let rec memP_precedes

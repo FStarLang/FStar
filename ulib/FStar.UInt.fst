@@ -622,7 +622,7 @@ let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
 private val to_vec_mod_pow2: #n:nat -> a:uint_t n -> m:pos -> i:nat{n - m <= i /\ i < n} ->
   Lemma (requires (a % pow2 m == 0))
         (ensures  (index (to_vec a) i == false))
-        [SMTPat (index (to_vec #n a) i); SMTPat (a % pow2 m == 0)]
+        [SMTPat (index (to_vec #n a) i); SMTPat (a % pow2 m = 0)]
 let rec to_vec_mod_pow2 #n a m i =
   if i = n - 1 then
     begin
@@ -676,7 +676,7 @@ val logor_disjoint: #n:pos -> a:uint_t n -> b:uint_t n -> m:pos{m < n} ->
   Lemma (requires (a % pow2 m == 0 /\ b < pow2 m))
         (ensures  (logor #n a b == a + b))
 let logor_disjoint #n a b m =
-  assert (a % pow2 m == 0); // To trigger pattern above
+  assert (a % pow2 m = 0); // To trigger pattern above
   assert (forall (i:nat{n - m <= i /\ i < n}).{:pattern (index (to_vec a) i)}
     index (to_vec a) i == false);
   assert (b < pow2 m); // To trigger pattern above
