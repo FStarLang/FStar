@@ -123,41 +123,41 @@ let test_bigops (b1:UB.ubuffer int) (b2:IB.ibuffer int) (b3:B.buffer int) (h h0 
 
 (***** Tests for freezable buffers *****)
 
-module FB = LowStar.FreezableBuffer
+module PF = LowStar.PrefixFreezableBuffer
 
 #push-options "--max_fuel 0 --max_ifuel 0"
 
-assume val havoc_fb (b:FB.fbuffer)
+assume val havoc_pf (b:PF.buffer)
   : HST.ST unit (requires (fun _ -> True))
                 (ensures  (fun h0 _ h1 ->
-		           FB.get_w (FB.as_seq h0 b) == FB.get_w (FB.as_seq h1 b)))
+		           PF.frozen_until (PF.as_seq h0 b) == PF.frozen_until (PF.as_seq h1 b)))
 
-let test_fb () : HST.St unit =
-  let open LowStar.FreezableBuffer in
-  let fb = fgcmalloc HS.root 5ul in
+let test_pf () : HST.St unit =
+  let open LowStar.PrefixFreezableBuffer in
+  let b = gcmalloc HS.root 5ul in
 
-  fupd fb 4ul 1uy;
-  fupd fb 5ul 2uy;
-  fupd fb 6ul 3uy;
-  fupd fb 7ul 4uy;
-  fupd fb 8ul 5uy;
+  upd b 4ul 1uy;
+  upd b 5ul 2uy;
+  upd b 6ul 3uy;
+  upd b 7ul 4uy;
+  upd b 8ul 5uy;
 
-  freeze fb 5ul;
+  freeze b 5ul;
 
-  fupd fb 5ul 2uy;
-  fupd fb 6ul 3uy;
-  fupd fb 7ul 4uy;
-  fupd fb 8ul 5uy;
+  upd b 5ul 2uy;
+  upd b 6ul 3uy;
+  upd b 7ul 4uy;
+  upd b 8ul 5uy;
 
 
   let snap = Ghost.hide (Seq.create 1 1uy) in
-  witness_slice fb 4ul 5ul snap;
-  havoc_fb fb;
+  witness_slice b 4ul 5ul snap;
+  havoc_pf b;
 
-  recall_slice fb 4ul 5ul snap;
+  recall_slice b 4ul 5ul snap;
 
   let h = HST.get () in
-  assert (Seq.equal (Seq.slice (as_seq h fb) 4 5) (Ghost.reveal snap));
+  assert (Seq.equal (Seq.slice (as_seq h b) 4 5) (Ghost.reveal snap));
 
   ()
 
