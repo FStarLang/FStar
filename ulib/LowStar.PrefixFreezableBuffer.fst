@@ -76,7 +76,7 @@ val store32_le
       modifies (loc_buffer b) h0 h1 /\
       le_to_n (Seq.slice (as_seq h1 b) 0 4) == U32.v i /\
       (forall (k:nat).{:pattern (Seq.index (as_seq h1 b) k)}
-         (k >= 4 /\ k < length b) ==> Seq.index (as_seq h1 b) k == Seq.index (as_seq h0 b) k))
+         (4 <= k /\ k < length b) ==> Seq.index (as_seq h1 b) k == Seq.index (as_seq h0 b) k))
 
 
 /// Loading first 4 bytes of the buffer as a u32
