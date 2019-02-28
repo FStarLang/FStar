@@ -24,6 +24,9 @@ let bind_wp (_ : range) (a : Type) (b : Type) (wp : wp_type a) (f : a -> wp_type
 
 let interp (#a:Type) (c : repr a) : wp_type a = fun p -> p c
 
+let rel (#a:Type) (c : repr a) (wp : wp_type a) =
+  forall p. wp p ==> interp c p
+
 total
 reifiable
 reflectable
@@ -39,6 +42,7 @@ new_effect {
      ; bind_wp   = bind_wp
 
      ; interp    = interp
+     ; mrelation = rel
 }
 
 val raise : #a:Type0 -> e:exn -> EXC a (fun p -> p (Inr e))
@@ -77,12 +81,20 @@ let wp_try_catch (#a:Type)
                          | Inl x -> wp2 x p
                          | Inr e -> h_wp e p)
 
-let related #a (r : repr a) (wp : wp_type a) =
-  EXN?.stronger _ wp (interp r)
+#set-options "--print_implicits"
 
-(* We should get this from the framework FIXME *)
-assume val reify_related (#a #b:Type) (wp:_) (c : (x:a -> EXC b (wp x))) :
-                         Lemma (forall (x:a). related (reify (c x)) (wp x))
+let extract_ref #a #phi (x:a{phi x}) : Lemma (phi x) = ()
+
+val reify_related (#a #b:Type) (wp:_) (c : (x:a -> EXC b (wp x))) :
+    Lemma (forall x. rel (reify (c x)) (wp x))
+let reify_related #a #b wp c =
+  let sublem x : Lemma (rel (reify (c x)) (wp x)) =
+    let rc : (v:repr b{rel v (wp x)}) = reify (c x) in
+    (* very awkward *)
+    extract_ref #_ #(fun v -> rel v (wp x)) rc;
+    ()
+  in
+  FStar.Classical.forall_intro sublem
 
 let lemma_try_catch (#a:Type) 
                     (#b:Type) 
@@ -92,10 +104,10 @@ let lemma_try_catch (#a:Type)
                     (h_c:(e:exn -> either b exn))
                     (wp2:a -> wp_type b) 
                     (c2:(x:a -> either b exn))
-  : Lemma (requires ((related c1 wp1) /\
-                     (forall x . related (c2 x) (wp2 x)) /\ 
-                     (forall e . related (h_c e) (h_wp e))))
-          (ensures  (related (rep_try_catch c1 h_c c2) (wp_try_catch wp1 h_wp wp2))) =
+  : Lemma (requires ((rel c1 wp1) /\
+                     (forall x . rel (c2 x) (wp2 x)) /\
+                     (forall e . rel (h_c e) (h_wp e))))
+          (ensures  (rel (rep_try_catch c1 h_c c2) (wp_try_catch wp1 h_wp wp2))) =
   match c1 with
   | Inl x -> ()
   | Inr e -> ()
