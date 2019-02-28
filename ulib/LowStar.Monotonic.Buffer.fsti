@@ -1387,6 +1387,27 @@ val modifies_upd
   (ensures (modifies (loc_mreference r) h (HS.upd h r v)))
   [SMTPat (HS.upd h r v)]
 
+/// Introduction lemma for modifying loc_buffer_from_to
+
+val modifies_loc_buffer_from_to_intro
+  (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  (from to: U32.t)
+  (l: loc) (h h' : HS.mem)
+: Lemma
+  (requires (
+    let s = as_seq h b in
+    let s' = as_seq h' b in
+    not (g_is_null b) /\
+    live h b /\
+    modifies (loc_union l (loc_addresses true (frameOf b) (Set.singleton (as_addr b)))) h h' /\
+    U32.v from <= U32.v to /\
+    U32.v to <= length b /\
+    Seq.slice s 0 (U32.v from) `Seq.equal` Seq.slice s' 0 (U32.v from) /\
+    Seq.slice s (U32.v to) (length b) `Seq.equal` Seq.slice s' (U32.v to) (length b)
+  ))
+  (ensures (modifies (loc_union l (loc_buffer_from_to b from to)) h h'))
+  
+
 ///  A memory ``h`` does not contain address ``a`` in region ``r``, denoted
 ///  ``does_not_contain_addr h (r, a)``, only if, either region ``r`` is
 ///  not live, or address ``a`` is unused in region ``r``.

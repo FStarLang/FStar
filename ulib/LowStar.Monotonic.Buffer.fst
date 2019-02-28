@@ -275,7 +275,10 @@ let ubuffer_preserved_intro
       Buffer? b' /\ (
       let ({ b_max_length = bmax; b_offset = boff; b_length = blen }) = Ghost.reveal b in
       let Buffer max _ idx len _ = b' in
-      as_seq h' b' == as_seq h b'
+        U32.v max == bmax /\
+        U32.v idx <= boff /\
+        boff + blen <= U32.v idx + U32.v len /\
+      Seq.equal (Seq.slice (as_seq h b') (boff - U32.v idx) (boff - U32.v idx + blen)) (Seq.slice (as_seq h' b') (boff - U32.v idx) (boff - U32.v idx + blen))
     )))
   ))
 : Lemma
@@ -1035,6 +1038,24 @@ let modifies_addr_of_modifies #t #_ #_ b h1 h2 =
     (fun r n ->
       modifies_addr_of_unused_in b h1 h2 r n
     )
+
+let modifies_loc_buffer_from_to_intro #a #rrel #rel b from to l h h' =
+  MG.modifies_strengthen l #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from to) h h' (fun f x ->
+    ubuffer_preserved_intro #(frameOf b) #(as_addr b) x h h'
+      (fun t' rrel' rel' b' -> f _ _ (Buffer?.content b'))
+      (fun t' rrel' rel' b' ->
+        // prove that the types, rrels, rels are equal
+        Heap.lemma_distinct_addrs_distinct_preorders ();
+        Heap.lemma_distinct_addrs_distinct_mm ();
+        Seq.lemma_equal_instances_implies_equal_types ();
+        let from_ = Buffer?.idx b `U32.add` from in
+        let to_ = Buffer?.idx b `U32.add` from in
+        let ({ b_max_length = _; b_offset = xoff; b_length = xlen }) = Ghost.reveal x in
+        let i' = Buffer?.idx b' in
+        admit ()
+      )
+  )
+  
 
 let does_not_contain_addr = MG.does_not_contain_addr
 
