@@ -37,44 +37,54 @@ module ST = FStar.HyperStack.ST
 
 #set-options "--max_fuel 0 --max_ifuel 0"
 
+(****** Functions that will come from LowStar.Endianness ******)
+
 /// Read a sequence of bytes as a nat in the little-endian order
 ///
-/// Going forward it will come from LowStar.Endianness
 
 assume val le_to_n (s:Seq.seq u8) : Tot nat
-assume val le_to_n_zeros (s:Seq.seq u8)
+assume val le_to_n_zeros (s:Seq.seq u8)  //if everything in a sequence is 0, then le_to_n of first 4 bytes is 0
   : Lemma
     (requires
       Seq.length s >= 4 /\
       (forall (i:nat). i < Seq.length s ==> Seq.index s i == 0uy))
     (ensures le_to_n (Seq.slice s 0 4) == 0)
 
-let frozen_until s = le_to_n (Seq.slice s 0 4)
 
-let prefix_freezable_preorder = pre
-
-let prefix_freezable_preorder_elim _ _ = ()
-
-
-/// A store32_le function that stores a u32 in a bytes buffer in le format
+/// Storing a u32 in the first 4 bytes of the input buffer
 ///
-/// Going forward it will come from LowStar.Endianness
+/// Precondition requires the callers to prove that it is consistent with the preorder
 
-assume private val store32_le
-  (b:mbuffer u8 prefix_freezable_preorder prefix_freezable_preorder)
+assume
+val store32_le
+  (#rrel #rel:srel u8)
+  (b:mbuffer u8 rrel rel)
   (i:u32)
   : Stack
     unit
     (requires fun h ->
       live h b /\
       4 <= length b /\
-      frozen_until (as_seq h b) <= U32.v i /\ U32.v i <= length b)
+      (forall (s:Seq.seq u8).
+         (Seq.length s == length b /\
+	  (forall (i:nat). 4 <= i /\ i < length b ==> Seq.index s i == Seq.index (as_seq h b) i) /\
+	  le_to_n (Seq.slice s 0 4) == U32.v i) ==>
+	 (rel (as_seq h b) s)))
     (ensures  fun h0 _ h1 ->
       live h1 b /\
-       modifies (loc_buffer b) h0 h1 /\
-       frozen_until (as_seq h1 b) == U32.v i /\
-       (forall (k:nat).{:pattern (Seq.index (as_seq h1 b) k)}
-          (k >= 4 /\ k < length b) ==> Seq.index (as_seq h1 b) k == Seq.index (as_seq h0 b) k))
+      modifies (loc_buffer b) h0 h1 /\
+      le_to_n (Seq.slice (as_seq h1 b) 0 4) == U32.v i /\
+      (forall (k:nat).{:pattern (Seq.index (as_seq h1 b) k)}
+         (k >= 4 /\ k < length b) ==> Seq.index (as_seq h1 b) k == Seq.index (as_seq h0 b) k))
+
+(****** End LowStar.Endianness functions ******)
+
+
+let frozen_until s = le_to_n (Seq.slice s 0 4)
+
+let prefix_freezable_preorder = pre
+
+let prefix_freezable_preorder_elim _ _ = ()
 
 private let update_frozen_until_alloc
   (b:mbuffer u8 prefix_freezable_preorder prefix_freezable_preorder)
