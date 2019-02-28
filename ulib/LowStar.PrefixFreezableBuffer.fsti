@@ -50,7 +50,9 @@ type u32 = U32.t
 
 /// This is the frozen until index in the sequence representation of a PrefixFreezableBuffer
 
-val frozen_until (s:Seq.seq u8{Seq.length s >= 4}) : Tot nat
+val le_to_n (s:Seq.seq u8) : Tot nat
+
+let frozen_until (s:Seq.seq u8{Seq.length s >= 4}) = le_to_n (Seq.slice s 0 4)
 
 
 /// Preorder for PrefixFreezableBuffers

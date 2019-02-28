@@ -41,13 +41,13 @@ module ST = FStar.HyperStack.ST
 
 /// Read a sequence of bytes as a nat in the little-endian order
 
-assume val le_to_n (s:Seq.seq u8) : Tot nat
+assume val le_to_n_endianness (s:Seq.seq u8) : Tot nat
 assume val le_to_n_zeros (s:Seq.seq u8)  //if everything in a sequence is 0, then le_to_n of first 4 bytes is 0
   : Lemma
     (requires
       Seq.length s >= 4 /\
       (forall (i:nat). i < Seq.length s ==> Seq.index s i == 0uy))
-    (ensures le_to_n (Seq.slice s 0 4) == 0)
+    (ensures le_to_n_endianness (Seq.slice s 0 4) == 0)
 
 
 /// Storing a u32 in the first 4 bytes of the input buffer
@@ -69,12 +69,12 @@ val store32_le
       (forall (s:Seq.seq u8).
          (Seq.length s == length b /\
 	  (forall (i:nat). 4 <= i /\ i < length b ==> Seq.index s i == Seq.index (as_seq h b) i) /\
-	  le_to_n (Seq.slice s 0 4) == U32.v i) ==>
+	  le_to_n_endianness (Seq.slice s 0 4) == U32.v i) ==>
 	 (rel (as_seq h b) s)))
     (ensures  fun h0 _ h1 ->
       live h1 b /\
       modifies (loc_buffer b) h0 h1 /\
-      le_to_n (Seq.slice (as_seq h1 b) 0 4) == U32.v i /\
+      le_to_n_endianness (Seq.slice (as_seq h1 b) 0 4) == U32.v i /\
       (forall (k:nat).{:pattern (Seq.index (as_seq h1 b) k)}
          (4 <= k /\ k < length b) ==> Seq.index (as_seq h1 b) k == Seq.index (as_seq h0 b) k))
 
@@ -92,12 +92,11 @@ val load32_le
       4 <= length b)
     (ensures  fun h0 r h1 ->
       h0 == h1 /\
-      U32.v r == le_to_n (Seq.slice (as_seq h1 b) 0 4))
+      U32.v r == le_to_n_endianness (Seq.slice (as_seq h1 b) 0 4))
 
 (****** End LowStar.Endianness functions ******)
 
-
-let frozen_until s = le_to_n (Seq.slice s 0 4)
+let le_to_n s = le_to_n_endianness s
 
 let prefix_freezable_preorder = pre
 
