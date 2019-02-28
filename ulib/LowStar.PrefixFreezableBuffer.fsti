@@ -196,6 +196,17 @@ val freeze (b:buffer) (i:u32)
          (Seq.index (as_seq h1 b) k == Seq.index (as_seq h0 b) k)))
 
 
+/// API for querying the current frozen until index
+
+val frozen_until_st (b:buffer)
+  : Stack
+    u32
+    (requires fun h -> live h b)
+    (ensures  fun h0 r h1 ->
+      h0 == h1 /\
+      U32.v r == frozen_until (as_seq h1 b))
+
+
 /// Clients can witness contents of some [i, j) within the range [4, frozen_until)
 
 val witness_slice (b:buffer) (i j:u32) (snap:G.erased (Seq.seq u8))

@@ -40,7 +40,6 @@ module ST = FStar.HyperStack.ST
 (****** Functions that will come from LowStar.Endianness ******)
 
 /// Read a sequence of bytes as a nat in the little-endian order
-///
 
 assume val le_to_n (s:Seq.seq u8) : Tot nat
 assume val le_to_n_zeros (s:Seq.seq u8)  //if everything in a sequence is 0, then le_to_n of first 4 bytes is 0
@@ -54,6 +53,8 @@ assume val le_to_n_zeros (s:Seq.seq u8)  //if everything in a sequence is 0, the
 /// Storing a u32 in the first 4 bytes of the input buffer
 ///
 /// Precondition requires the callers to prove that it is consistent with the preorder
+///
+/// The following load and store will be more general in LowStar.Endianness in terms of indices
 
 assume
 val store32_le
@@ -76,6 +77,22 @@ val store32_le
       le_to_n (Seq.slice (as_seq h1 b) 0 4) == U32.v i /\
       (forall (k:nat).{:pattern (Seq.index (as_seq h1 b) k)}
          (k >= 4 /\ k < length b) ==> Seq.index (as_seq h1 b) k == Seq.index (as_seq h0 b) k))
+
+
+/// Loading first 4 bytes of the buffer as a u32
+
+assume
+val load32_le
+  (#rrel #rel:srel u8)
+  (b:mbuffer u8 rrel rel)
+  : Stack
+    u32
+    (requires fun h ->
+      live h b /\
+      4 <= length b)
+    (ensures  fun h0 r h1 ->
+      h0 == h1 /\
+      U32.v r == le_to_n (Seq.slice (as_seq h1 b) 0 4))
 
 (****** End LowStar.Endianness functions ******)
 
@@ -143,6 +160,8 @@ let freeze b i =
   recall_p b (frozen_until_at_least 4);
   store32_le b i;
   witness_p b (frozen_until_at_least (U32.v i))
+
+let frozen_until_st b = load32_le b
 
 let witness_slice b i j snap =
   witness_p b (slice_is i j snap)
