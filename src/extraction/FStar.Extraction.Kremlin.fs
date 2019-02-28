@@ -848,6 +848,14 @@ and translate_expr env e: expr =
           failwith "Cannot extract string_of_literal applied to a non-literal"
       end
 
+  | MLE_App ({ expr = MLE_Name ([ "LowStar"; "Literal" ], "buffer_of_literal") }, [ { expr = e } ]) ->
+      begin match e with
+      | MLE_Const (MLC_String s) ->
+          ECast (EString s, TBuf (TInt UInt8))
+      | _ ->
+          failwith "Cannot extract buffer_of_literal applied to a non-literal"
+      end
+
   | MLE_App ({ expr = MLE_Name ([ "FStar"; "Int"; "Cast" ], c) }, [ arg ]) ->
       let is_known_type =
         starts_with c "uint8" || starts_with c "uint16" ||
