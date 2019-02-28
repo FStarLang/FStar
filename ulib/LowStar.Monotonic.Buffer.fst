@@ -275,7 +275,10 @@ let ubuffer_preserved_intro
       Buffer? b' /\ (
       let ({ b_max_length = bmax; b_offset = boff; b_length = blen }) = Ghost.reveal b in
       let Buffer max _ idx len _ = b' in
-      as_seq h' b' == as_seq h b'
+        U32.v max == bmax /\
+        U32.v idx <= boff /\
+        boff + blen <= U32.v idx + U32.v len /\
+      Seq.equal (Seq.slice (as_seq h b') (boff - U32.v idx) (boff - U32.v idx + blen)) (Seq.slice (as_seq h' b') (boff - U32.v idx) (boff - U32.v idx + blen))
     )))
   ))
 : Lemma
@@ -1035,6 +1038,88 @@ let modifies_addr_of_modifies #t #_ #_ b h1 h2 =
     (fun r n ->
       modifies_addr_of_unused_in b h1 h2 r n
     )
+
+val modifies_loc_buffer_from_to_intro'
+  (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  (from to: U32.t)
+  (l: loc) (h h' : HS.mem)
+: Lemma
+  (requires (
+    let s = as_seq h b in
+    let s' = as_seq h' b in
+    not (g_is_null b) /\
+    live h b /\
+    modifies (loc_union l (loc_buffer b)) h h' /\
+    U32.v from <= U32.v to /\
+    U32.v to <= length b /\
+    Seq.slice s 0 (U32.v from) `Seq.equal` Seq.slice s' 0 (U32.v from) /\
+    Seq.slice s (U32.v to) (length b) `Seq.equal` Seq.slice s' (U32.v to) (length b)
+  ))
+  (ensures (modifies (loc_union l (loc_buffer_from_to b from to)) h h'))
+
+#push-options "--z3rlimit 16"
+
+let modifies_loc_buffer_from_to_intro' #a #rrel #rel b from to l h h' =
+  let r0 = frameOf b in
+  let a0 = as_addr b in
+  let bb : ubuffer r0 a0 = ubuffer_of_buffer b in
+  modifies_loc_includes (loc_union l (loc_addresses true r0 (Set.singleton a0))) h h' (loc_union l (loc_buffer b));
+  MG.modifies_strengthen l #r0 #a0 (ubuffer_of_buffer_from_to b from to) h h' (fun f (x: ubuffer r0 a0) ->
+    ubuffer_preserved_intro x h h'
+      (fun t' rrel' rel' b' -> f _ _ (Buffer?.content b'))
+      (fun t' rrel' rel' b' ->
+        // prove that the types, rrels, rels are equal
+        Heap.lemma_distinct_addrs_distinct_preorders ();
+        Heap.lemma_distinct_addrs_distinct_mm ();
+        Seq.lemma_equal_instances_implies_equal_types ();
+        let boff = U32.v (Buffer?.idx b) in
+        let from_ = boff + U32.v from in
+        let to_ = boff + U32.v to in
+        let ({ b_max_length = ml; b_offset = xoff; b_length = xlen; b_is_mm = is_mm }) = Ghost.reveal x in
+        let ({ b_max_length = _; b_offset = b'off; b_length = b'len }) = Ghost.reveal (ubuffer_of_buffer b') in
+        let bh = as_seq h b in
+        let bh' = as_seq h' b in
+        let xh = Seq.slice (as_seq h b') (xoff - b'off) (xoff - b'off + xlen) in
+        let xh' = Seq.slice (as_seq h' b') (xoff - b'off) (xoff - b'off + xlen) in
+        let prf (i: nat) : Lemma
+          (requires (i < xlen))
+          (ensures (i < xlen /\ Seq.index xh i == Seq.index xh' i))
+        = let xi = xoff + i in
+          let bi : ubuffer r0 a0 = 
+            Ghost.hide ({ b_max_length = ml; b_offset = xi; b_length = 1; b_is_mm = is_mm; })
+          in
+          assert (Seq.index xh i == Seq.index (Seq.slice (as_seq h b') (xi - b'off) (xi - b'off + 1)) 0);
+          assert (Seq.index xh' i == Seq.index (Seq.slice (as_seq h' b') (xi - b'off) (xi - b'off + 1)) 0);
+          let li = MG.loc_of_aloc bi in
+          MG.loc_includes_aloc #_ #cls x bi;
+          loc_disjoint_includes l (MG.loc_of_aloc x) l li;
+          if xi < boff || boff + length b <= xi
+          then begin
+            MG.loc_disjoint_aloc_intro #_ #cls bb bi;
+            assert (loc_disjoint (loc_union l (loc_buffer b)) li);
+            MG.modifies_aloc_elim bi (loc_union l (loc_buffer b)) h h'
+          end else
+          if xi < from_
+          then begin
+            assert (Seq.index xh i == Seq.index (Seq.slice bh 0 (U32.v from)) (xi - boff));
+            assert (Seq.index xh' i == Seq.index (Seq.slice bh' 0 (U32.v from)) (xi - boff))
+          end else begin
+            assert (to_ <= xi);
+            assert (Seq.index xh i == Seq.index (Seq.slice bh (U32.v to) (length b)) (xi - to_));
+            assert (Seq.index xh' i == Seq.index (Seq.slice bh' (U32.v to) (length b)) (xi - to_))
+          end
+        in
+        Classical.forall_intro (Classical.move_requires prf);
+        assert (xh `Seq.equal` xh')
+      )
+  )
+
+#pop-options
+
+let modifies_loc_buffer_from_to_intro #a #rrel #rel b from to l h h' =
+  if g_is_null b
+  then ()
+  else modifies_loc_buffer_from_to_intro' b from to l h h'
 
 let does_not_contain_addr = MG.does_not_contain_addr
 

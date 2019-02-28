@@ -907,7 +907,7 @@ val modifies_strengthen
     )) ->
     (x: al r0 a0) ->
     Lemma
-    (requires (c.aloc_disjoint x al0))
+    (requires (c.aloc_disjoint x al0 /\ loc_disjoint (loc_of_aloc x) l))
     (ensures (c.aloc_preserved x h h'))
   ))
 : Lemma
