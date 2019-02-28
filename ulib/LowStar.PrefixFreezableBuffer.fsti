@@ -185,7 +185,7 @@ val freeze (b:buffer) (i:u32)
     unit
     (requires fun h ->
       live h b /\
-      U32.v i < length b /\
+      U32.v i <= length b /\
       U32.v i >= frozen_until (as_seq h b))
     (ensures  fun h0 _ h1 ->
       (not (g_is_null b)) /\
