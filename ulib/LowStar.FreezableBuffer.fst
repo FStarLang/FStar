@@ -203,7 +203,7 @@ let fgcmalloc (r:HS.rid) (len:u32)
     assume (le_to_n (Seq.slice (as_seq h fb) 0 4) == 0);  //since le_to_n is an assume val
 
     assert (fresh_loc (loc_buffer fb) h0 h);  //TODO: necessary for firing modifies_remove_new_locs lemma?
-    update_w_post_alloc fb;
+    update_w_post_alloc fb
     fb
 
 

@@ -23,7 +23,6 @@ include LowStar.Monotonic.Buffer
 module P = FStar.Preorder
 module G = FStar.Ghost
 
-module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module Seq = FStar.Seq
 
@@ -43,31 +42,18 @@ module ST = FStar.HyperStack.ST
  *
  *)
 
-type u8 = U8.t
+type u8 = UInt8.t
 type u32 = U32.t
 
 #set-options "--max_fuel 0 --max_ifuel 0"
 
-/// View a byte sequence as a little-endian natural number
-///
-/// TODO: will come from LowStar.Endianness going forward
 
-val le_to_n (s:Seq.seq u8) : Tot nat
-
-
-/// Read the first 4 bytes in the sequence as a u32
-///
 /// This is the frozen until index in the sequence representation of a PrefixFreezableBuffer
 
-unfold let frozen_until (s:Seq.seq u8{Seq.length s >= 4}) = le_to_n (Seq.slice s 0 4)
+val frozen_until (s:Seq.seq u8{Seq.length s >= 4}) : Tot nat
 
 
 /// Preorder for PrefixFreezableBuffers
-
-val prefix_freezable_preorder : srel u8
-
-
-/// Clients can call the following lemma to reveal the preorder
 
 private unfold let pre (s1 s2:Seq.seq u8) =
   Seq.length s1 == Seq.length s2 /\  //lengths are same
@@ -79,7 +65,11 @@ private unfold let pre (s1 s2:Seq.seq u8) =
     (frozen_until1 <= frozen_until2 /\ frozen_until2 <= len /\  //frozen until index increases monotonically, but remains <= len
      (forall (i:nat).{:pattern Seq.index s2 i}
         (4 <= i /\ i < frozen_until1) ==> Seq.index s2 i == Seq.index s1 i))))  //and the contents until frozen_until1 remain same
-  
+
+
+val prefix_freezable_preorder : srel u8
+
+/// Clients can call the following lemma to reveal the preorder
 
 val prefix_freezable_preorder_elim (s1 s2:Seq.seq u8)
   : Lemma (prefix_freezable_preorder s1 s2 <==> pre s1 s2)
@@ -150,9 +140,10 @@ val gcmalloc (r:HS.rid) (len:u32)
        (ensures  alloc_post_mem_common)
 
 val malloc (r:HS.rid) (len:u32)
-  : ST (b:lbuffer len{frameOf b == r /\ freeable b})
-       (requires fun _ -> malloc_pre r len)
-       (ensures  alloc_post_mem_common)
+  : ST
+    (b:lbuffer len{frameOf b == r /\ freeable b})
+    (requires fun _ -> malloc_pre r len)
+    (ensures  alloc_post_mem_common)
 
 unfold let alloca_pre (len:U32.t) =  //precondition for stack allocated prefix freezable buffers
   UInt.size (U32.v len + 4) 32 /\ alloca_pre len
@@ -170,16 +161,17 @@ val alloca (len:u32)
 /// Input index must be geq than the current frozen until index
 
 val upd (b:buffer) (i:u32) (v:u8)
-  : Stack unit
-          (requires fun h ->
-            live h b /\ U32.v i < length b /\
-            U32.v i >= frozen_until (as_seq h b))
-	  (ensures  fun h0 _ h1 ->
-	    (not (g_is_null b)) /\
-	    modifies (loc_buffer b) h0 h1 /\
-	    live h1 b /\
-	    frozen_until (as_seq h0 b) == frozen_until (as_seq h1 b) /\
-            as_seq h1 b == Seq.upd (as_seq h0 b) (U32.v i) v)
+  : Stack
+    unit
+    (requires fun h ->
+      live h b /\ U32.v i < length b /\
+      U32.v i >= frozen_until (as_seq h b))
+    (ensures  fun h0 _ h1 ->
+      (not (g_is_null b)) /\
+      modifies (loc_buffer b) h0 h1 /\
+      live h1 b /\
+      frozen_until (as_seq h0 b) == frozen_until (as_seq h1 b) /\
+      as_seq h1 b == Seq.upd (as_seq h0 b) (U32.v i) v)
 
 
 /// API to freeze the buffer up-to the input index
@@ -187,71 +179,77 @@ val upd (b:buffer) (i:u32) (v:u8)
 /// Also provides a witnessed frozen_until_at_least predicate
 
 val freeze (b:buffer) (i:u32)
-  : Stack unit
-          (requires fun h ->
-            live h b /\
-	    U32.v i < length b /\
-	    U32.v i >= frozen_until (as_seq h b))
-	  (ensures  fun h0 _ h1 ->
-            (not (g_is_null b)) /\
-	    modifies (loc_buffer b) h0 h1 /\
-            live h1 b /\
-            frozen_until (as_seq h1 b) == U32.v i /\
-            b `witnessed` frozen_until_at_least (U32.v i) /\
-            (forall (k:nat).{:pattern (Seq.index (as_seq h1 b) k)}  //contents from [4, len) remain same
-	       (4 <= k /\ k < length b) ==>
-	       (Seq.index (as_seq h1 b) k == Seq.index (as_seq h0 b) k)))
+  : Stack
+    unit
+    (requires fun h ->
+      live h b /\
+      U32.v i < length b /\
+      U32.v i >= frozen_until (as_seq h b))
+    (ensures  fun h0 _ h1 ->
+      (not (g_is_null b)) /\
+      modifies (loc_buffer b) h0 h1 /\
+      live h1 b /\
+      frozen_until (as_seq h1 b) == U32.v i /\
+      b `witnessed` frozen_until_at_least (U32.v i) /\
+      (forall (k:nat).{:pattern (Seq.index (as_seq h1 b) k)}  //contents from [4, len) remain same
+         (4 <= k /\ k < length b) ==>
+         (Seq.index (as_seq h1 b) k == Seq.index (as_seq h0 b) k)))
 
 
 /// Clients can witness contents of some [i, j) within the range [4, frozen_until)
 
 val witness_slice (b:buffer) (i j:u32) (snap:G.erased (Seq.seq u8))
-  : Stack unit
-          (requires fun h -> slice_is i j snap (as_seq h b))
-          (ensures  fun h0 _ h1 ->
-	    h0 == h1 /\
-	    b `witnessed` slice_is i j snap)
+  : Stack
+    unit
+    (requires fun h -> slice_is i j snap (as_seq h b))
+    (ensures  fun h0 _ h1 ->
+      h0 == h1 /\
+      b `witnessed` slice_is i j snap)
 
 
 /// Clients can recall contents of some previously witnessed slice
 
 val recall_slice (b:buffer) (i j:u32) (snap:G.erased (Seq.seq u8))
-  : Stack unit
-          (requires fun h ->
-	    (recallable b \/ live h b) /\
-	    b `witnessed` slice_is i j snap)
-          (ensures  fun h0 _ h1 ->
-	    h0 == h1 /\
-	    slice_is i j snap (as_seq h1 b))
+  : Stack
+    unit
+    (requires fun h ->
+      (recallable b \/ live h b) /\
+      b `witnessed` slice_is i j snap)
+    (ensures  fun h0 _ h1 ->
+      h0 == h1 /\
+      slice_is i j snap (as_seq h1 b))
 
 
 /// Clients can also witness the value of the frozen until index
 
 val witness_frozen_until (b:buffer) (n:nat)
-  : Stack unit 
-          (requires fun h -> frozen_until_at_least n (as_seq h b))
-          (ensures  fun h0 _ h1 ->
-	    h0 == h1 /\
-	    b `witnessed` frozen_until_at_least n)
+  : Stack
+    unit 
+    (requires fun h -> frozen_until_at_least n (as_seq h b))
+    (ensures  fun h0 _ h1 ->
+      h0 == h1 /\
+      b `witnessed` frozen_until_at_least n)
   
 
 /// And then recall the previously witnessed value of the frozen until index
 
 val recall_frozen_until (b:buffer) (n:nat)
-  : Stack unit
-          (requires fun h ->
-	    (recallable b \/ live h b) /\
-	    b `witnessed` frozen_until_at_least n)
-          (ensures  fun h0 _ h1 ->
-	    h0 == h1 /\
-	    frozen_until_at_least n (as_seq h1 b))
+  : Stack
+    unit
+    (requires fun h ->
+      (recallable b \/ live h b) /\
+      b `witnessed` frozen_until_at_least n)
+    (ensures  fun h0 _ h1 ->
+      h0 == h1 /\
+      frozen_until_at_least n (as_seq h1 b))
 
 
 /// By-default, clients can recall that 4 <= frozen until index <= length b
 
 val recall_frozen_until_default (b:buffer)
-  : Stack unit
-          (requires fun h -> recallable b \/ live h b)
-          (ensures  fun h0 _ h1 ->
-	    h0 == h1 /\
-	    frozen_until_at_least 4 (as_seq h1 b))
+  : Stack
+    unit
+    (requires fun h -> recallable b \/ live h b)
+    (ensures  fun h0 _ h1 ->
+      h0 == h1 /\
+      frozen_until_at_least 4 (as_seq h1 b))
