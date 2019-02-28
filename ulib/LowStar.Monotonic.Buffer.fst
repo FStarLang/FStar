@@ -1048,11 +1048,23 @@ let modifies_loc_buffer_from_to_intro #a #rrel #rel b from to l h h' =
         Heap.lemma_distinct_addrs_distinct_preorders ();
         Heap.lemma_distinct_addrs_distinct_mm ();
         Seq.lemma_equal_instances_implies_equal_types ();
-        let from_ = Buffer?.idx b `U32.add` from in
-        let to_ = Buffer?.idx b `U32.add` from in
+        let boff = U32.v (Buffer?.idx b) in
+        let from_ = boff + U32.v from in
+        let to_ = boff + U32.v to in
         let ({ b_max_length = _; b_offset = xoff; b_length = xlen }) = Ghost.reveal x in
-        let i' = Buffer?.idx b' in
-        admit ()
+        let ({ b_max_length = _; b_offset = b'off; b_length = b'len }) = Ghost.reveal (ubuffer_of_buffer b') in
+        let bh = as_seq h b in
+        let bh' = as_seq h' b in
+        let xh = Seq.slice (as_seq h b') (xoff - b'off) (xoff - b'off + xlen) in
+        let xh' = Seq.slice (as_seq h' b') (xoff - b'off) (xoff - b'off + xlen) in
+        if xoff + xlen <= from_
+        then begin
+          assert (xh `Seq.equal` Seq.slice (Seq.slice bh 0 (U32.v from)) (xoff - boff) (xoff - boff + xlen));
+          assert (xh' `Seq.equal` Seq.slice (Seq.slice bh' 0 (U32.v from)) (xoff - boff) (xoff - boff + xlen))
+        end else begin
+          assert (xh `Seq.equal` Seq.slice (Seq.slice bh (U32.v to) (length b)) (xoff - to_) (xoff - to_ + xlen));
+          assert (xh' `Seq.equal` Seq.slice (Seq.slice bh' (U32.v to) (length b)) (xoff - to_) (xoff - to_ + xlen))
+        end
       )
   )
   
