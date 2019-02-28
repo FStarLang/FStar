@@ -1397,7 +1397,6 @@ val modifies_loc_buffer_from_to_intro
   (requires (
     let s = as_seq h b in
     let s' = as_seq h' b in
-    not (g_is_null b) /\
     live h b /\
     modifies (loc_union l (loc_buffer b)) h h' /\
     U32.v from <= U32.v to /\

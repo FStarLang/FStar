@@ -1039,9 +1039,27 @@ let modifies_addr_of_modifies #t #_ #_ b h1 h2 =
       modifies_addr_of_unused_in b h1 h2 r n
     )
 
+val modifies_loc_buffer_from_to_intro'
+  (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  (from to: U32.t)
+  (l: loc) (h h' : HS.mem)
+: Lemma
+  (requires (
+    let s = as_seq h b in
+    let s' = as_seq h' b in
+    not (g_is_null b) /\
+    live h b /\
+    modifies (loc_union l (loc_buffer b)) h h' /\
+    U32.v from <= U32.v to /\
+    U32.v to <= length b /\
+    Seq.slice s 0 (U32.v from) `Seq.equal` Seq.slice s' 0 (U32.v from) /\
+    Seq.slice s (U32.v to) (length b) `Seq.equal` Seq.slice s' (U32.v to) (length b)
+  ))
+  (ensures (modifies (loc_union l (loc_buffer_from_to b from to)) h h'))
+
 #push-options "--z3rlimit 16"
 
-let modifies_loc_buffer_from_to_intro #a #rrel #rel b from to l h h' =
+let modifies_loc_buffer_from_to_intro' #a #rrel #rel b from to l h h' =
   let r0 = frameOf b in
   let a0 = as_addr b in
   let bb : ubuffer r0 a0 = ubuffer_of_buffer b in
@@ -1097,6 +1115,11 @@ let modifies_loc_buffer_from_to_intro #a #rrel #rel b from to l h h' =
   )
 
 #pop-options
+
+let modifies_loc_buffer_from_to_intro #a #rrel #rel b from to l h h' =
+  if g_is_null b
+  then ()
+  else modifies_loc_buffer_from_to_intro' b from to l h h'
 
 let does_not_contain_addr = MG.does_not_contain_addr
 
