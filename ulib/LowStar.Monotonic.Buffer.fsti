@@ -1399,7 +1399,7 @@ val modifies_loc_buffer_from_to_intro
     let s' = as_seq h' b in
     not (g_is_null b) /\
     live h b /\
-    modifies (loc_union l (loc_addresses true (frameOf b) (Set.singleton (as_addr b)))) h h' /\
+    modifies (loc_union l (loc_buffer b)) h h' /\
     U32.v from <= U32.v to /\
     U32.v to <= length b /\
     Seq.slice s 0 (U32.v from) `Seq.equal` Seq.slice s' 0 (U32.v from) /\
