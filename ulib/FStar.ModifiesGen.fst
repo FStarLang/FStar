@@ -1344,9 +1344,38 @@ let modifies_upd #al #c #t #pre r v h =
 
 #push-options "--z3rlimit 16"
 
-let modifies_strengthen #al #c l #r0 #a0 al0 al1 h h' alocs =
+let addrs_of_loc_loc_union_loc_of_aloc_eq_loc_union_loc_addresses_singleton
+  (#al: aloc_t) (#c: cls al) (l: loc c) (#r0: HS.rid) (#a0: nat) (al0: al r0 a0) (r: HS.rid)
+: Lemma
+  (addrs_of_loc (loc_union l (loc_of_aloc al0)) r == addrs_of_loc (loc_union l (loc_addresses true r0 (Set.singleton a0))) r)
+= assert (addrs_of_loc (loc_union l (loc_of_aloc al0)) r `GSet.equal` addrs_of_loc (loc_union l (loc_addresses true r0 (Set.singleton a0))) r)
+
+#pop-options
+
+val modifies_strengthen'
+  (#al: aloc_t) (#c: cls al) (l: loc c) (#r0: HS.rid) (#a0: nat) (al0: al r0 a0) (h h' : HS.mem)
+  (alocs: (
+    (f: ((t: Type) -> (pre: Preorder.preorder t) -> (m: HS.mreference t pre) -> Lemma
+      (requires (HS.frameOf m == r0 /\ HS.as_addr m == a0 /\ HS.contains h m))
+      (ensures (HS.contains h' m))
+    )) ->
+    (x: al r0 a0) ->
+    Lemma
+    (requires (c.aloc_disjoint x al0))
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (requires (modifies (loc_union l (loc_addresses true r0 (Set.singleton a0))) h h' /\ loc_disjoint l (loc_addresses false r0 (Set.singleton a0))))
+  (ensures (modifies (loc_union l (loc_of_aloc al0)) h h'))
+
+#push-options "--z3rlimit 64"
+
+let modifies_strengthen' #al #c l #r0 #a0 al0 h h' alocs =
+  Classical.forall_intro (addrs_of_loc_loc_union_loc_of_aloc_eq_loc_union_loc_addresses_singleton l al0);
   assert (modifies_preserves_regions (loc_union l (loc_of_aloc al0)) h h');
   assert (modifies_preserves_mreferences (loc_union l (loc_of_aloc al0)) h h');
+  assert (modifies_preserves_not_unused_in (loc_union l (loc_of_aloc al0)) h h');
+  assert (modifies_preserves_livenesses (loc_union l (loc_of_aloc al0)) h h');
   modifies_preserves_alocs_intro (loc_union l (loc_of_aloc al0)) h h' () (fun r a b ->
     if r = r0 && a = a0
     then begin
@@ -1358,13 +1387,77 @@ let modifies_strengthen #al #c l #r0 #a0 al0 al1 h h' alocs =
       assert (aloc_disjoint #_ #c (ALoc r0 a0 (Some al0)) (ALoc r0 a0 (Some b)));
       assert (c.aloc_disjoint al0 b);
       c.aloc_disjoint_sym al0 b;
-      alocs b
+      alocs (fun t pre m -> ()) b
     end 
     else ()
   );
   assert (modifies (loc_union l (loc_of_aloc al0)) h h')
 
 #pop-options
+
+let addrs_of_loc_liveness_not_preserved_loc_includes #al (#c: cls al) (l: loc c) (r0: HS.rid) (a0: nat) : Lemma
+  (requires (a0 `GSet.mem` addrs_of_loc_liveness_not_preserved l r0))
+  (ensures (l `loc_includes` loc_addresses false r0 (Set.singleton a0)))
+= ()
+
+let loc_without_addr #al (#c: cls al) (l: loc c) (r0: HS.rid) (a0: nat) : Ghost (loc c)
+  (requires (not (a0 `GSet.mem` addrs_of_loc_liveness_not_preserved l r0)))
+  (ensures (fun _ -> True))
+= let Loc regions region_liveness_tags non_live_addrs live_addrs aux = l in
+  let live_addrs' (x: addrs_dom regions) : GTot (live_addrs_codom regions region_liveness_tags non_live_addrs x) =
+      if x = r0
+      then
+        GSet.intersect (live_addrs x) (GSet.complement (GSet.singleton a0))
+      else
+        live_addrs x
+  in
+  let aux' = Ghost.hide (Ghost.reveal aux `GSet.intersect` (aloc_domain c regions (fun x -> if x = r0 then GSet.complement (GSet.singleton a0) else GSet.complement GSet.empty))) in
+  Loc
+    regions
+    region_liveness_tags
+    non_live_addrs
+    (mk_live_addrs live_addrs')
+    aux'
+
+let loc_without_addr_includes #al (#c: cls al) (l: loc c) (r0: HS.rid) (a0: nat) : Lemma
+  (requires (not (a0 `GSet.mem` addrs_of_loc_liveness_not_preserved l r0)))
+  (ensures (l `loc_includes` loc_without_addr l r0 a0))
+= ()
+
+let loc_without_addr_union_addr #al (#c: cls al) (l: loc c) (r0: HS.rid) (a0: nat) : Lemma
+  (requires (not (a0 `GSet.mem` addrs_of_loc_liveness_not_preserved l r0)))
+  (ensures (l `loc_union` loc_addresses true r0 (Set.singleton a0) == loc_without_addr l r0 a0 `loc_union` loc_addresses true r0 (Set.singleton a0)))
+= assert ((l `loc_union` loc_addresses true r0 (Set.singleton a0)) `loc_equal` (loc_without_addr l r0 a0 `loc_union` loc_addresses true r0 (Set.singleton a0)))
+
+let loc_without_addr_disjoint_addr #al (#c: cls al) (l: loc c) (r0: HS.rid) (a0: nat) : Lemma
+  (requires (not (a0 `GSet.mem` addrs_of_loc_liveness_not_preserved l r0)))
+  (ensures (loc_without_addr l r0 a0 `loc_disjoint` loc_addresses false r0 (Set.singleton a0)))
+= assert (loc_without_addr l r0 a0 `loc_disjoint_aux` loc_addresses false r0 (Set.singleton a0))
+
+let modifies_strengthen #al #c l #r0 #a0 al0 h h' alocs =
+  if a0 `GSet.mem` addrs_of_loc_liveness_not_preserved l r0
+  then begin
+    addrs_of_loc_liveness_not_preserved_loc_includes l r0 a0;
+    loc_includes_addresses_addresses c false true r0 (Set.singleton a0) (Set.singleton a0);
+    loc_includes_trans l (loc_addresses false r0 (Set.singleton a0)) (loc_addresses true r0 (Set.singleton a0));
+    loc_includes_refl l;
+    loc_includes_union_r l l (loc_addresses true r0 (Set.singleton a0));
+    loc_includes_union_l l (loc_of_aloc al0) l;
+    loc_includes_trans (loc_union l (loc_of_aloc al0)) l (loc_union l (loc_addresses true r0 (Set.singleton a0)));
+    modifies_loc_includes (loc_union l (loc_of_aloc al0)) h h' (loc_union l (loc_addresses true r0 (Set.singleton a0)))
+  end else begin
+    let l' = loc_without_addr l r0 a0 in
+    loc_without_addr_includes l r0 a0;
+    loc_without_addr_union_addr l r0 a0;
+    loc_without_addr_disjoint_addr l r0 a0;
+    modifies_strengthen' l' al0 h h' alocs;
+    loc_includes_union_l l (loc_of_aloc al0) l';
+    loc_includes_refl #_ #c (loc_of_aloc al0);
+    loc_includes_union_l l (loc_of_aloc al0) (loc_of_aloc al0);
+    loc_includes_union_r (loc_union l (loc_of_aloc al0)) l' (loc_of_aloc al0);
+    modifies_loc_includes (loc_union l (loc_of_aloc al0)) h h' (loc_union l' (loc_of_aloc al0))
+  end
+
 
 let does_not_contain_addr' (h: HS.mem) (ra: HS.rid * nat) : GTot Type0 =
   HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` (fst ra))
