@@ -202,7 +202,7 @@ function refresh_hints() {
     export GIT_MERGE_AUTOEDIT=no
     git merge $commit -Xtheirs
     # Push.
-    git push $remote BuildHints
+    git push $remote BuildHints-$CI_BRANCH
 }
 
 function build_fstar() {
