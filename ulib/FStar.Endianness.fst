@@ -267,6 +267,12 @@ let tail_cons (#a: Type) (hd: a) (tl: S.seq a): Lemma
 =
   ()
 
+let be_of_seq_uint32_base s1 s2 = ()
+
+let le_of_seq_uint32_base s1 s2 = ()
+
+let be_of_seq_uint64_base s1 s2 = ()
+
 let rec be_of_seq_uint32_append s1 s2 =
   Classical.forall_intro_2 (tail_cons #U32.t); // TODO: this is a local pattern, remove once tail_cons lands in FStar.Seq.Properties
   if S.length s1 = 0 then begin
@@ -279,16 +285,6 @@ let rec be_of_seq_uint32_append s1 s2 =
       (S.append (be_of_uint32 (S.head s1)) (be_of_seq_uint32 (S.append (S.tail s1) s2))));
     be_of_seq_uint32_append (S.tail s1) s2
   end
-
-let be_of_seq_uint32_base (s1: S.seq U32.t) (s2: S.seq U8.t): Lemma
-  (requires (
-    S.length s1 = 1 /\
-    S.length s2 = 4 /\
-    be_to_n s2 = U32.v (S.index s1 0)))
-  (ensures (S.equal s2 (be_of_seq_uint32 s1)))
-  [ SMTPat (be_to_n s2 = U32.v (S.index s1 0)) ]
-=
-  ()
 
 let rec le_of_seq_uint32_append s1 s2 =
   Classical.forall_intro_2 (tail_cons #U32.t); // TODO: this is a local pattern, remove once tail_cons lands in FStar.Seq.Properties
@@ -303,16 +299,6 @@ let rec le_of_seq_uint32_append s1 s2 =
     le_of_seq_uint32_append (S.tail s1) s2
   end
 
-let le_of_seq_uint32_base (s1: S.seq U32.t) (s2: S.seq U8.t): Lemma
-  (requires (
-    S.length s1 = 1 /\
-    S.length s2 = 4 /\
-    le_to_n s2 = U32.v (S.index s1 0)))
-  (ensures (S.equal s2 (le_of_seq_uint32 s1)))
-  [ SMTPat (le_to_n s2 = U32.v (S.index s1 0)) ]
-=
-  ()
-
 let rec be_of_seq_uint64_append s1 s2 =
   Classical.forall_intro_2 (tail_cons #U64.t); // TODO: this is a local pattern, remove once tail_cons lands in FStar.Seq.Properties
   if S.length s1 = 0 then begin
@@ -325,16 +311,6 @@ let rec be_of_seq_uint64_append s1 s2 =
       (S.append (be_of_uint64 (S.head s1)) (be_of_seq_uint64 (S.append (S.tail s1) s2))));
     be_of_seq_uint64_append (S.tail s1) s2
   end
-
-let be_of_seq_uint64_base (s1: S.seq U64.t) (s2: S.seq U8.t): Lemma
-  (requires (
-    S.length s1 = 1 /\
-    S.length s2 = 8 /\
-    be_to_n s2 = U64.v (S.index s1 0)))
-  (ensures (S.equal s2 (be_of_seq_uint64 s1)))
-  [ SMTPat (be_to_n s2 = U64.v (S.index s1 0)) ]
-=
-  ()
 
 let rec seq_uint32_of_be_be_of_seq_uint32 n s =
   if n = 0

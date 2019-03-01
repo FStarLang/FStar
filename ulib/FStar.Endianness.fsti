@@ -244,6 +244,31 @@ val offset_uint64_le (b: bytes) (n: nat) (i: nat):
 /// ----------------------------------------
 ///
 /// TODO: this is fairly incomplete
+/// TODO: the *_base cases seem ad-hoc and derivable trivially from offset above; why have them?
+
+val be_of_seq_uint32_base (s1: S.seq U32.t) (s2: S.seq U8.t): Lemma
+  (requires (
+    S.length s1 = 1 /\
+    S.length s2 = 4 /\
+    be_to_n s2 = U32.v (S.index s1 0)))
+  (ensures (S.equal s2 (be_of_seq_uint32 s1)))
+  [ SMTPat (be_to_n s2 = U32.v (S.index s1 0)) ]
+
+val le_of_seq_uint32_base (s1: S.seq U32.t) (s2: S.seq U8.t): Lemma
+  (requires (
+    S.length s1 = 1 /\
+    S.length s2 = 4 /\
+    le_to_n s2 = U32.v (S.index s1 0)))
+  (ensures (S.equal s2 (le_of_seq_uint32 s1)))
+  [ SMTPat (le_to_n s2 = U32.v (S.index s1 0)) ]
+
+val be_of_seq_uint64_base (s1: S.seq U64.t) (s2: S.seq U8.t): Lemma
+  (requires (
+    S.length s1 = 1 /\
+    S.length s2 = 8 /\
+    be_to_n s2 = U64.v (S.index s1 0)))
+  (ensures (S.equal s2 (be_of_seq_uint64 s1)))
+  [ SMTPat (be_to_n s2 = U64.v (S.index s1 0)) ]
 
 val be_of_seq_uint32_append (s1 s2: S.seq U32.t): Lemma
   (ensures (
