@@ -6,6 +6,7 @@ open FStar.HyperStack.ST
 module B = LowStar.Buffer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
+module T = FStar.Tactics.Typeclasses
 
 let inv_t r = HS.mem -> r -> prop
 

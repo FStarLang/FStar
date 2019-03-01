@@ -19,6 +19,50 @@ let swap (r:rlens l)
     let v1 = read_snd r in
     set_fst r v1;
     set_snd r v0
+module B = LowStar.Buffer
+open FStar.HyperStack.ST
+open LowStar.BufferOps
+#reset-options
+module HS = FStar.HyperStack
+assume val l_swap (snap:HS.mem) (p1 p2:B.pointer nat)
+  : Stack unit
+    (requires fun (h:HS.mem) ->
+      B.disjoint p1 p2 /\
+      B.live snap p1 /\
+      B.live snap p2 /\
+      inv h (mk_roots p1 p2 snap))
+    (ensures (fun h0 (_:unit) h1 ->
+      let r = mk_roots p1 p2 snap in
+       inv h1 r /\
+       (let (v0, v1) = l_get l r h0 in
+        let (v0', v1') = l_get l r h1 in
+        v0 == v1' /\
+        v1 == v0')))
+  // = let v1 = !* p1 in
+  //   let v2 = !* p2 in
+  //   p1 *= v2;
+  //   p2 *= v1
+#reset-options "--log_queries --query_stats --print_z3_statistics"
+
+val n_swap (snap:HS.mem) (p1 p2:B.pointer nat)
+  : Stack unit
+    (requires fun h ->
+      B.disjoint p1 p2 /\
+      B.live snap p1 /\
+      B.live snap p2 /\
+      inv h (mk_roots p1 p2 snap))
+    (ensures (fun h0 (_:unit) h1 ->
+      let r = mk_roots p1 p2 snap in
+       inv h1 r /\
+       (let (v0, v1) = l_get l r h0 in
+        let (v0', v1') = l_get l r h1 in
+        v0 == v0' /\
+        v1 == v1')))
+let n_swap snap p1 p2
+  = l_swap snap p1 p2;
+    l_swap snap p1 p2
+
+
 
 (* Iterating many (100) times works pretty easily *)
 let n_swap (r:rlens l)
@@ -28,6 +72,7 @@ let n_swap (r:rlens l)
       v0 == v0' /\
       v1 == v1'))
   = swap r;
+    id ();
     swap r;
 
     swap r;
