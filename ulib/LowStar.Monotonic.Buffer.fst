@@ -1392,7 +1392,7 @@ let mgcmalloc_of_list #a #rrel r init =
   let b = Buffer len content 0ul len () in
   b
 
-#push-options "--z3rlimit 10 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#push-options "--z3rlimit 16 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
   if len = 0ul then ()
@@ -1407,6 +1407,18 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
     let s_sub_src = Seq.slice s1 (U32.v idx_src) (U32.v idx_src + U32.v len) in
     let s2' = Seq.replace_subseq s2 (U32.v idx_dst) (U32.v idx_dst + U32.v len) s_sub_src in
     let s_full2' = Seq.replace_subseq s_full2 (U32.v idx2) (U32.v idx2 + U32.v length2) s2' in
+    (* TODO: remove once patterns on loc_buffer_from_to are introduced *)
+    let _ : squash (loc_disjoint (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len))) =
+      (* prove that disjoint src dst implies disjointness on loc_buffer_from_to *)
+      let prf () : Lemma
+        (requires (disjoint src dst))
+        (ensures (loc_disjoint (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len))))
+      = loc_includes_loc_buffer_loc_buffer_from_to src idx_src (idx_src `U32.add` len);
+        loc_includes_loc_buffer_loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len);
+        loc_disjoint_includes (loc_buffer src) (loc_buffer dst) (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len))
+      in
+      Classical.move_requires prf ()
+    in
     assert (Seq.equal (Seq.slice s2' (U32.v idx_dst) (U32.v idx_dst + U32.v len)) s_sub_src);
     assert (Seq.equal (Seq.slice s2' 0 (U32.v idx_dst)) (Seq.slice s2 0 (U32.v idx_dst)));
     assert (Seq.equal (Seq.slice s2' (U32.v idx_dst + U32.v len) (length dst))
