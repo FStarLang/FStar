@@ -20,35 +20,35 @@ let (__proj__Mkprims_t__item__is :
   fun projectee  -> match projectee with | { mk = mk1; is;_} -> is 
 let (prims : prims_t) =
   let module_name = "Prims"  in
-  let uu____72774 =
+  let uu____72848 =
     FStar_SMTEncoding_Env.fresh_fvar module_name "a"
       FStar_SMTEncoding_Term.Term_sort
      in
-  match uu____72774 with
+  match uu____72848 with
   | (asym,a) ->
-      let uu____72785 =
+      let uu____72859 =
         FStar_SMTEncoding_Env.fresh_fvar module_name "x"
           FStar_SMTEncoding_Term.Term_sort
          in
-      (match uu____72785 with
+      (match uu____72859 with
        | (xsym,x) ->
-           let uu____72796 =
+           let uu____72870 =
              FStar_SMTEncoding_Env.fresh_fvar module_name "y"
                FStar_SMTEncoding_Term.Term_sort
               in
-           (match uu____72796 with
+           (match uu____72870 with
             | (ysym,y) ->
                 let quant vars body rng x1 =
                   let xname_decl =
-                    let uu____72874 =
-                      let uu____72886 =
+                    let uu____72948 =
+                      let uu____72960 =
                         FStar_All.pipe_right vars
                           (FStar_List.map FStar_SMTEncoding_Term.fv_sort)
                          in
-                      (x1, uu____72886, FStar_SMTEncoding_Term.Term_sort,
+                      (x1, uu____72960, FStar_SMTEncoding_Term.Term_sort,
                         FStar_Pervasives_Native.None)
                        in
-                    FStar_SMTEncoding_Term.DeclFun uu____72874  in
+                    FStar_SMTEncoding_Term.DeclFun uu____72948  in
                   let xtok = Prims.op_Hat x1 "@tok"  in
                   let xtok_decl =
                     FStar_SMTEncoding_Term.DeclFun
@@ -56,56 +56,56 @@ let (prims : prims_t) =
                         FStar_Pervasives_Native.None)
                      in
                   let xapp =
-                    let uu____72906 =
-                      let uu____72914 =
+                    let uu____72980 =
+                      let uu____72988 =
                         FStar_List.map FStar_SMTEncoding_Util.mkFreeV vars
                          in
-                      (x1, uu____72914)  in
-                    FStar_SMTEncoding_Util.mkApp uu____72906  in
+                      (x1, uu____72988)  in
+                    FStar_SMTEncoding_Util.mkApp uu____72980  in
                   let xtok1 = FStar_SMTEncoding_Util.mkApp (xtok, [])  in
                   let xtok_app =
                     FStar_SMTEncoding_EncodeTerm.mk_Apply xtok1 vars  in
-                  let uu____72933 =
-                    let uu____72936 =
-                      let uu____72939 =
-                        let uu____72942 =
-                          let uu____72943 =
-                            let uu____72951 =
-                              let uu____72952 =
-                                let uu____72963 =
+                  let uu____73007 =
+                    let uu____73010 =
+                      let uu____73013 =
+                        let uu____73016 =
+                          let uu____73017 =
+                            let uu____73025 =
+                              let uu____73026 =
+                                let uu____73037 =
                                   FStar_SMTEncoding_Util.mkEq (xapp, body)
                                    in
-                                ([[xapp]], vars, uu____72963)  in
-                              FStar_SMTEncoding_Term.mkForall rng uu____72952
+                                ([[xapp]], vars, uu____73037)  in
+                              FStar_SMTEncoding_Term.mkForall rng uu____73026
                                in
-                            (uu____72951, FStar_Pervasives_Native.None,
+                            (uu____73025, FStar_Pervasives_Native.None,
                               (Prims.op_Hat "primitive_" x1))
                              in
-                          FStar_SMTEncoding_Util.mkAssume uu____72943  in
-                        let uu____72975 =
-                          let uu____72978 =
-                            let uu____72979 =
-                              let uu____72987 =
-                                let uu____72988 =
-                                  let uu____72999 =
+                          FStar_SMTEncoding_Util.mkAssume uu____73017  in
+                        let uu____73049 =
+                          let uu____73052 =
+                            let uu____73053 =
+                              let uu____73061 =
+                                let uu____73062 =
+                                  let uu____73073 =
                                     FStar_SMTEncoding_Util.mkEq
                                       (xtok_app, xapp)
                                      in
-                                  ([[xtok_app]], vars, uu____72999)  in
+                                  ([[xtok_app]], vars, uu____73073)  in
                                 FStar_SMTEncoding_Term.mkForall rng
-                                  uu____72988
+                                  uu____73062
                                  in
-                              (uu____72987,
+                              (uu____73061,
                                 (FStar_Pervasives_Native.Some
                                    "Name-token correspondence"),
                                 (Prims.op_Hat "token_correspondence_" x1))
                                in
-                            FStar_SMTEncoding_Util.mkAssume uu____72979  in
-                          [uu____72978]  in
-                        uu____72942 :: uu____72975  in
-                      xtok_decl :: uu____72939  in
-                    xname_decl :: uu____72936  in
-                  (xtok1, (FStar_List.length vars), uu____72933)  in
+                            FStar_SMTEncoding_Util.mkAssume uu____73053  in
+                          [uu____73052]  in
+                        uu____73016 :: uu____73049  in
+                      xtok_decl :: uu____73013  in
+                    xname_decl :: uu____73010  in
+                  (xtok1, (FStar_List.length vars), uu____73007)  in
                 let axy =
                   FStar_List.map FStar_SMTEncoding_Term.mk_fv
                     [(asym, FStar_SMTEncoding_Term.Term_sort);
@@ -122,670 +122,670 @@ let (prims : prims_t) =
                     [(xsym, FStar_SMTEncoding_Term.Term_sort)]
                    in
                 let prims1 =
-                  let uu____73169 =
-                    let uu____73190 =
-                      let uu____73209 =
-                        let uu____73210 = FStar_SMTEncoding_Util.mkEq (x, y)
+                  let uu____73243 =
+                    let uu____73264 =
+                      let uu____73283 =
+                        let uu____73284 = FStar_SMTEncoding_Util.mkEq (x, y)
                            in
                         FStar_All.pipe_left FStar_SMTEncoding_Term.boxBool
-                          uu____73210
+                          uu____73284
                          in
-                      quant axy uu____73209  in
-                    (FStar_Parser_Const.op_Eq, uu____73190)  in
-                  let uu____73227 =
-                    let uu____73250 =
-                      let uu____73271 =
-                        let uu____73290 =
-                          let uu____73291 =
-                            let uu____73292 =
+                      quant axy uu____73283  in
+                    (FStar_Parser_Const.op_Eq, uu____73264)  in
+                  let uu____73301 =
+                    let uu____73324 =
+                      let uu____73345 =
+                        let uu____73364 =
+                          let uu____73365 =
+                            let uu____73366 =
                               FStar_SMTEncoding_Util.mkEq (x, y)  in
-                            FStar_SMTEncoding_Util.mkNot uu____73292  in
+                            FStar_SMTEncoding_Util.mkNot uu____73366  in
                           FStar_All.pipe_left FStar_SMTEncoding_Term.boxBool
-                            uu____73291
+                            uu____73365
                            in
-                        quant axy uu____73290  in
-                      (FStar_Parser_Const.op_notEq, uu____73271)  in
-                    let uu____73309 =
-                      let uu____73332 =
-                        let uu____73353 =
-                          let uu____73372 =
-                            let uu____73373 =
-                              let uu____73374 =
-                                let uu____73379 =
+                        quant axy uu____73364  in
+                      (FStar_Parser_Const.op_notEq, uu____73345)  in
+                    let uu____73383 =
+                      let uu____73406 =
+                        let uu____73427 =
+                          let uu____73446 =
+                            let uu____73447 =
+                              let uu____73448 =
+                                let uu____73453 =
                                   FStar_SMTEncoding_Term.unboxBool x  in
-                                let uu____73380 =
+                                let uu____73454 =
                                   FStar_SMTEncoding_Term.unboxBool y  in
-                                (uu____73379, uu____73380)  in
-                              FStar_SMTEncoding_Util.mkAnd uu____73374  in
+                                (uu____73453, uu____73454)  in
+                              FStar_SMTEncoding_Util.mkAnd uu____73448  in
                             FStar_All.pipe_left
-                              FStar_SMTEncoding_Term.boxBool uu____73373
+                              FStar_SMTEncoding_Term.boxBool uu____73447
                              in
-                          quant xy uu____73372  in
-                        (FStar_Parser_Const.op_And, uu____73353)  in
-                      let uu____73397 =
-                        let uu____73420 =
-                          let uu____73441 =
-                            let uu____73460 =
-                              let uu____73461 =
-                                let uu____73462 =
-                                  let uu____73467 =
+                          quant xy uu____73446  in
+                        (FStar_Parser_Const.op_And, uu____73427)  in
+                      let uu____73471 =
+                        let uu____73494 =
+                          let uu____73515 =
+                            let uu____73534 =
+                              let uu____73535 =
+                                let uu____73536 =
+                                  let uu____73541 =
                                     FStar_SMTEncoding_Term.unboxBool x  in
-                                  let uu____73468 =
+                                  let uu____73542 =
                                     FStar_SMTEncoding_Term.unboxBool y  in
-                                  (uu____73467, uu____73468)  in
-                                FStar_SMTEncoding_Util.mkOr uu____73462  in
+                                  (uu____73541, uu____73542)  in
+                                FStar_SMTEncoding_Util.mkOr uu____73536  in
                               FStar_All.pipe_left
-                                FStar_SMTEncoding_Term.boxBool uu____73461
+                                FStar_SMTEncoding_Term.boxBool uu____73535
                                in
-                            quant xy uu____73460  in
-                          (FStar_Parser_Const.op_Or, uu____73441)  in
-                        let uu____73485 =
-                          let uu____73508 =
-                            let uu____73529 =
-                              let uu____73548 =
-                                let uu____73549 =
-                                  let uu____73550 =
+                            quant xy uu____73534  in
+                          (FStar_Parser_Const.op_Or, uu____73515)  in
+                        let uu____73559 =
+                          let uu____73582 =
+                            let uu____73603 =
+                              let uu____73622 =
+                                let uu____73623 =
+                                  let uu____73624 =
                                     FStar_SMTEncoding_Term.unboxBool x  in
-                                  FStar_SMTEncoding_Util.mkNot uu____73550
+                                  FStar_SMTEncoding_Util.mkNot uu____73624
                                    in
                                 FStar_All.pipe_left
-                                  FStar_SMTEncoding_Term.boxBool uu____73549
+                                  FStar_SMTEncoding_Term.boxBool uu____73623
                                  in
-                              quant qx uu____73548  in
-                            (FStar_Parser_Const.op_Negation, uu____73529)  in
-                          let uu____73567 =
-                            let uu____73590 =
-                              let uu____73611 =
-                                let uu____73630 =
-                                  let uu____73631 =
-                                    let uu____73632 =
-                                      let uu____73637 =
+                              quant qx uu____73622  in
+                            (FStar_Parser_Const.op_Negation, uu____73603)  in
+                          let uu____73641 =
+                            let uu____73664 =
+                              let uu____73685 =
+                                let uu____73704 =
+                                  let uu____73705 =
+                                    let uu____73706 =
+                                      let uu____73711 =
                                         FStar_SMTEncoding_Term.unboxInt x  in
-                                      let uu____73638 =
+                                      let uu____73712 =
                                         FStar_SMTEncoding_Term.unboxInt y  in
-                                      (uu____73637, uu____73638)  in
-                                    FStar_SMTEncoding_Util.mkLT uu____73632
+                                      (uu____73711, uu____73712)  in
+                                    FStar_SMTEncoding_Util.mkLT uu____73706
                                      in
                                   FStar_All.pipe_left
                                     FStar_SMTEncoding_Term.boxBool
-                                    uu____73631
+                                    uu____73705
                                    in
-                                quant xy uu____73630  in
-                              (FStar_Parser_Const.op_LT, uu____73611)  in
-                            let uu____73655 =
-                              let uu____73678 =
-                                let uu____73699 =
-                                  let uu____73718 =
-                                    let uu____73719 =
-                                      let uu____73720 =
-                                        let uu____73725 =
+                                quant xy uu____73704  in
+                              (FStar_Parser_Const.op_LT, uu____73685)  in
+                            let uu____73729 =
+                              let uu____73752 =
+                                let uu____73773 =
+                                  let uu____73792 =
+                                    let uu____73793 =
+                                      let uu____73794 =
+                                        let uu____73799 =
                                           FStar_SMTEncoding_Term.unboxInt x
                                            in
-                                        let uu____73726 =
+                                        let uu____73800 =
                                           FStar_SMTEncoding_Term.unboxInt y
                                            in
-                                        (uu____73725, uu____73726)  in
+                                        (uu____73799, uu____73800)  in
                                       FStar_SMTEncoding_Util.mkLTE
-                                        uu____73720
+                                        uu____73794
                                        in
                                     FStar_All.pipe_left
                                       FStar_SMTEncoding_Term.boxBool
-                                      uu____73719
+                                      uu____73793
                                      in
-                                  quant xy uu____73718  in
-                                (FStar_Parser_Const.op_LTE, uu____73699)  in
-                              let uu____73743 =
-                                let uu____73766 =
-                                  let uu____73787 =
-                                    let uu____73806 =
-                                      let uu____73807 =
-                                        let uu____73808 =
-                                          let uu____73813 =
+                                  quant xy uu____73792  in
+                                (FStar_Parser_Const.op_LTE, uu____73773)  in
+                              let uu____73817 =
+                                let uu____73840 =
+                                  let uu____73861 =
+                                    let uu____73880 =
+                                      let uu____73881 =
+                                        let uu____73882 =
+                                          let uu____73887 =
                                             FStar_SMTEncoding_Term.unboxInt x
                                              in
-                                          let uu____73814 =
+                                          let uu____73888 =
                                             FStar_SMTEncoding_Term.unboxInt y
                                              in
-                                          (uu____73813, uu____73814)  in
+                                          (uu____73887, uu____73888)  in
                                         FStar_SMTEncoding_Util.mkGT
-                                          uu____73808
+                                          uu____73882
                                          in
                                       FStar_All.pipe_left
                                         FStar_SMTEncoding_Term.boxBool
-                                        uu____73807
+                                        uu____73881
                                        in
-                                    quant xy uu____73806  in
-                                  (FStar_Parser_Const.op_GT, uu____73787)  in
-                                let uu____73831 =
-                                  let uu____73854 =
-                                    let uu____73875 =
-                                      let uu____73894 =
-                                        let uu____73895 =
-                                          let uu____73896 =
-                                            let uu____73901 =
+                                    quant xy uu____73880  in
+                                  (FStar_Parser_Const.op_GT, uu____73861)  in
+                                let uu____73905 =
+                                  let uu____73928 =
+                                    let uu____73949 =
+                                      let uu____73968 =
+                                        let uu____73969 =
+                                          let uu____73970 =
+                                            let uu____73975 =
                                               FStar_SMTEncoding_Term.unboxInt
                                                 x
                                                in
-                                            let uu____73902 =
+                                            let uu____73976 =
                                               FStar_SMTEncoding_Term.unboxInt
                                                 y
                                                in
-                                            (uu____73901, uu____73902)  in
+                                            (uu____73975, uu____73976)  in
                                           FStar_SMTEncoding_Util.mkGTE
-                                            uu____73896
+                                            uu____73970
                                            in
                                         FStar_All.pipe_left
                                           FStar_SMTEncoding_Term.boxBool
-                                          uu____73895
+                                          uu____73969
                                          in
-                                      quant xy uu____73894  in
-                                    (FStar_Parser_Const.op_GTE, uu____73875)
+                                      quant xy uu____73968  in
+                                    (FStar_Parser_Const.op_GTE, uu____73949)
                                      in
-                                  let uu____73919 =
-                                    let uu____73942 =
-                                      let uu____73963 =
-                                        let uu____73982 =
-                                          let uu____73983 =
-                                            let uu____73984 =
-                                              let uu____73989 =
+                                  let uu____73993 =
+                                    let uu____74016 =
+                                      let uu____74037 =
+                                        let uu____74056 =
+                                          let uu____74057 =
+                                            let uu____74058 =
+                                              let uu____74063 =
                                                 FStar_SMTEncoding_Term.unboxInt
                                                   x
                                                  in
-                                              let uu____73990 =
+                                              let uu____74064 =
                                                 FStar_SMTEncoding_Term.unboxInt
                                                   y
                                                  in
-                                              (uu____73989, uu____73990)  in
+                                              (uu____74063, uu____74064)  in
                                             FStar_SMTEncoding_Util.mkSub
-                                              uu____73984
+                                              uu____74058
                                              in
                                           FStar_All.pipe_left
                                             FStar_SMTEncoding_Term.boxInt
-                                            uu____73983
+                                            uu____74057
                                            in
-                                        quant xy uu____73982  in
+                                        quant xy uu____74056  in
                                       (FStar_Parser_Const.op_Subtraction,
-                                        uu____73963)
+                                        uu____74037)
                                        in
-                                    let uu____74007 =
-                                      let uu____74030 =
-                                        let uu____74051 =
-                                          let uu____74070 =
-                                            let uu____74071 =
-                                              let uu____74072 =
+                                    let uu____74081 =
+                                      let uu____74104 =
+                                        let uu____74125 =
+                                          let uu____74144 =
+                                            let uu____74145 =
+                                              let uu____74146 =
                                                 FStar_SMTEncoding_Term.unboxInt
                                                   x
                                                  in
                                               FStar_SMTEncoding_Util.mkMinus
-                                                uu____74072
+                                                uu____74146
                                                in
                                             FStar_All.pipe_left
                                               FStar_SMTEncoding_Term.boxInt
-                                              uu____74071
+                                              uu____74145
                                              in
-                                          quant qx uu____74070  in
+                                          quant qx uu____74144  in
                                         (FStar_Parser_Const.op_Minus,
-                                          uu____74051)
+                                          uu____74125)
                                          in
-                                      let uu____74089 =
-                                        let uu____74112 =
-                                          let uu____74133 =
-                                            let uu____74152 =
-                                              let uu____74153 =
-                                                let uu____74154 =
-                                                  let uu____74159 =
+                                      let uu____74163 =
+                                        let uu____74186 =
+                                          let uu____74207 =
+                                            let uu____74226 =
+                                              let uu____74227 =
+                                                let uu____74228 =
+                                                  let uu____74233 =
                                                     FStar_SMTEncoding_Term.unboxInt
                                                       x
                                                      in
-                                                  let uu____74160 =
+                                                  let uu____74234 =
                                                     FStar_SMTEncoding_Term.unboxInt
                                                       y
                                                      in
-                                                  (uu____74159, uu____74160)
+                                                  (uu____74233, uu____74234)
                                                    in
                                                 FStar_SMTEncoding_Util.mkAdd
-                                                  uu____74154
+                                                  uu____74228
                                                  in
                                               FStar_All.pipe_left
                                                 FStar_SMTEncoding_Term.boxInt
-                                                uu____74153
+                                                uu____74227
                                                in
-                                            quant xy uu____74152  in
+                                            quant xy uu____74226  in
                                           (FStar_Parser_Const.op_Addition,
-                                            uu____74133)
+                                            uu____74207)
                                            in
-                                        let uu____74177 =
-                                          let uu____74200 =
-                                            let uu____74221 =
-                                              let uu____74240 =
-                                                let uu____74241 =
-                                                  let uu____74242 =
-                                                    let uu____74247 =
+                                        let uu____74251 =
+                                          let uu____74274 =
+                                            let uu____74295 =
+                                              let uu____74314 =
+                                                let uu____74315 =
+                                                  let uu____74316 =
+                                                    let uu____74321 =
                                                       FStar_SMTEncoding_Term.unboxInt
                                                         x
                                                        in
-                                                    let uu____74248 =
+                                                    let uu____74322 =
                                                       FStar_SMTEncoding_Term.unboxInt
                                                         y
                                                        in
-                                                    (uu____74247,
-                                                      uu____74248)
+                                                    (uu____74321,
+                                                      uu____74322)
                                                      in
                                                   FStar_SMTEncoding_Util.mkMul
-                                                    uu____74242
+                                                    uu____74316
                                                    in
                                                 FStar_All.pipe_left
                                                   FStar_SMTEncoding_Term.boxInt
-                                                  uu____74241
+                                                  uu____74315
                                                  in
-                                              quant xy uu____74240  in
+                                              quant xy uu____74314  in
                                             (FStar_Parser_Const.op_Multiply,
-                                              uu____74221)
+                                              uu____74295)
                                              in
-                                          let uu____74265 =
-                                            let uu____74288 =
-                                              let uu____74309 =
-                                                let uu____74328 =
-                                                  let uu____74329 =
-                                                    let uu____74330 =
-                                                      let uu____74335 =
+                                          let uu____74339 =
+                                            let uu____74362 =
+                                              let uu____74383 =
+                                                let uu____74402 =
+                                                  let uu____74403 =
+                                                    let uu____74404 =
+                                                      let uu____74409 =
                                                         FStar_SMTEncoding_Term.unboxInt
                                                           x
                                                          in
-                                                      let uu____74336 =
+                                                      let uu____74410 =
                                                         FStar_SMTEncoding_Term.unboxInt
                                                           y
                                                          in
-                                                      (uu____74335,
-                                                        uu____74336)
+                                                      (uu____74409,
+                                                        uu____74410)
                                                        in
                                                     FStar_SMTEncoding_Util.mkDiv
-                                                      uu____74330
+                                                      uu____74404
                                                      in
                                                   FStar_All.pipe_left
                                                     FStar_SMTEncoding_Term.boxInt
-                                                    uu____74329
+                                                    uu____74403
                                                    in
-                                                quant xy uu____74328  in
+                                                quant xy uu____74402  in
                                               (FStar_Parser_Const.op_Division,
-                                                uu____74309)
+                                                uu____74383)
                                                in
-                                            let uu____74353 =
-                                              let uu____74376 =
-                                                let uu____74397 =
-                                                  let uu____74416 =
-                                                    let uu____74417 =
-                                                      let uu____74418 =
-                                                        let uu____74423 =
+                                            let uu____74427 =
+                                              let uu____74450 =
+                                                let uu____74471 =
+                                                  let uu____74490 =
+                                                    let uu____74491 =
+                                                      let uu____74492 =
+                                                        let uu____74497 =
                                                           FStar_SMTEncoding_Term.unboxInt
                                                             x
                                                            in
-                                                        let uu____74424 =
+                                                        let uu____74498 =
                                                           FStar_SMTEncoding_Term.unboxInt
                                                             y
                                                            in
-                                                        (uu____74423,
-                                                          uu____74424)
+                                                        (uu____74497,
+                                                          uu____74498)
                                                          in
                                                       FStar_SMTEncoding_Util.mkMod
-                                                        uu____74418
+                                                        uu____74492
                                                        in
                                                     FStar_All.pipe_left
                                                       FStar_SMTEncoding_Term.boxInt
-                                                      uu____74417
+                                                      uu____74491
                                                      in
-                                                  quant xy uu____74416  in
+                                                  quant xy uu____74490  in
                                                 (FStar_Parser_Const.op_Modulus,
-                                                  uu____74397)
+                                                  uu____74471)
                                                  in
-                                              let uu____74441 =
-                                                let uu____74464 =
-                                                  let uu____74485 =
-                                                    let uu____74504 =
-                                                      let uu____74505 =
-                                                        let uu____74506 =
-                                                          let uu____74511 =
+                                              let uu____74515 =
+                                                let uu____74538 =
+                                                  let uu____74559 =
+                                                    let uu____74578 =
+                                                      let uu____74579 =
+                                                        let uu____74580 =
+                                                          let uu____74585 =
                                                             FStar_SMTEncoding_Term.unboxReal
                                                               x
                                                              in
-                                                          let uu____74512 =
+                                                          let uu____74586 =
                                                             FStar_SMTEncoding_Term.unboxReal
                                                               y
                                                              in
-                                                          (uu____74511,
-                                                            uu____74512)
+                                                          (uu____74585,
+                                                            uu____74586)
                                                            in
                                                         FStar_SMTEncoding_Util.mkLT
-                                                          uu____74506
+                                                          uu____74580
                                                          in
                                                       FStar_All.pipe_left
                                                         FStar_SMTEncoding_Term.boxBool
-                                                        uu____74505
+                                                        uu____74579
                                                        in
-                                                    quant xy uu____74504  in
+                                                    quant xy uu____74578  in
                                                   (FStar_Parser_Const.real_op_LT,
-                                                    uu____74485)
+                                                    uu____74559)
                                                    in
-                                                let uu____74529 =
-                                                  let uu____74552 =
-                                                    let uu____74573 =
-                                                      let uu____74592 =
-                                                        let uu____74593 =
-                                                          let uu____74594 =
-                                                            let uu____74599 =
+                                                let uu____74603 =
+                                                  let uu____74626 =
+                                                    let uu____74647 =
+                                                      let uu____74666 =
+                                                        let uu____74667 =
+                                                          let uu____74668 =
+                                                            let uu____74673 =
                                                               FStar_SMTEncoding_Term.unboxReal
                                                                 x
                                                                in
-                                                            let uu____74600 =
+                                                            let uu____74674 =
                                                               FStar_SMTEncoding_Term.unboxReal
                                                                 y
                                                                in
-                                                            (uu____74599,
-                                                              uu____74600)
+                                                            (uu____74673,
+                                                              uu____74674)
                                                              in
                                                           FStar_SMTEncoding_Util.mkLTE
-                                                            uu____74594
+                                                            uu____74668
                                                            in
                                                         FStar_All.pipe_left
                                                           FStar_SMTEncoding_Term.boxBool
-                                                          uu____74593
+                                                          uu____74667
                                                          in
-                                                      quant xy uu____74592
+                                                      quant xy uu____74666
                                                        in
                                                     (FStar_Parser_Const.real_op_LTE,
-                                                      uu____74573)
+                                                      uu____74647)
                                                      in
-                                                  let uu____74617 =
-                                                    let uu____74640 =
-                                                      let uu____74661 =
-                                                        let uu____74680 =
-                                                          let uu____74681 =
-                                                            let uu____74682 =
-                                                              let uu____74687
+                                                  let uu____74691 =
+                                                    let uu____74714 =
+                                                      let uu____74735 =
+                                                        let uu____74754 =
+                                                          let uu____74755 =
+                                                            let uu____74756 =
+                                                              let uu____74761
                                                                 =
                                                                 FStar_SMTEncoding_Term.unboxReal
                                                                   x
                                                                  in
-                                                              let uu____74688
+                                                              let uu____74762
                                                                 =
                                                                 FStar_SMTEncoding_Term.unboxReal
                                                                   y
                                                                  in
-                                                              (uu____74687,
-                                                                uu____74688)
+                                                              (uu____74761,
+                                                                uu____74762)
                                                                in
                                                             FStar_SMTEncoding_Util.mkGT
-                                                              uu____74682
+                                                              uu____74756
                                                              in
                                                           FStar_All.pipe_left
                                                             FStar_SMTEncoding_Term.boxBool
-                                                            uu____74681
+                                                            uu____74755
                                                            in
-                                                        quant xy uu____74680
+                                                        quant xy uu____74754
                                                          in
                                                       (FStar_Parser_Const.real_op_GT,
-                                                        uu____74661)
+                                                        uu____74735)
                                                        in
-                                                    let uu____74705 =
-                                                      let uu____74728 =
-                                                        let uu____74749 =
-                                                          let uu____74768 =
-                                                            let uu____74769 =
-                                                              let uu____74770
+                                                    let uu____74779 =
+                                                      let uu____74802 =
+                                                        let uu____74823 =
+                                                          let uu____74842 =
+                                                            let uu____74843 =
+                                                              let uu____74844
                                                                 =
-                                                                let uu____74775
+                                                                let uu____74849
                                                                   =
                                                                   FStar_SMTEncoding_Term.unboxReal
                                                                     x
                                                                    in
-                                                                let uu____74776
+                                                                let uu____74850
                                                                   =
                                                                   FStar_SMTEncoding_Term.unboxReal
                                                                     y
                                                                    in
-                                                                (uu____74775,
-                                                                  uu____74776)
+                                                                (uu____74849,
+                                                                  uu____74850)
                                                                  in
                                                               FStar_SMTEncoding_Util.mkGTE
-                                                                uu____74770
+                                                                uu____74844
                                                                in
                                                             FStar_All.pipe_left
                                                               FStar_SMTEncoding_Term.boxBool
-                                                              uu____74769
+                                                              uu____74843
                                                              in
                                                           quant xy
-                                                            uu____74768
+                                                            uu____74842
                                                            in
                                                         (FStar_Parser_Const.real_op_GTE,
-                                                          uu____74749)
+                                                          uu____74823)
                                                          in
-                                                      let uu____74793 =
-                                                        let uu____74816 =
-                                                          let uu____74837 =
-                                                            let uu____74856 =
-                                                              let uu____74857
+                                                      let uu____74867 =
+                                                        let uu____74890 =
+                                                          let uu____74911 =
+                                                            let uu____74930 =
+                                                              let uu____74931
                                                                 =
-                                                                let uu____74858
+                                                                let uu____74932
                                                                   =
-                                                                  let uu____74863
+                                                                  let uu____74937
                                                                     =
                                                                     FStar_SMTEncoding_Term.unboxReal
                                                                     x  in
-                                                                  let uu____74864
+                                                                  let uu____74938
                                                                     =
                                                                     FStar_SMTEncoding_Term.unboxReal
                                                                     y  in
-                                                                  (uu____74863,
-                                                                    uu____74864)
+                                                                  (uu____74937,
+                                                                    uu____74938)
                                                                    in
                                                                 FStar_SMTEncoding_Util.mkSub
-                                                                  uu____74858
+                                                                  uu____74932
                                                                  in
                                                               FStar_All.pipe_left
                                                                 FStar_SMTEncoding_Term.boxReal
-                                                                uu____74857
+                                                                uu____74931
                                                                in
                                                             quant xy
-                                                              uu____74856
+                                                              uu____74930
                                                              in
                                                           (FStar_Parser_Const.real_op_Subtraction,
-                                                            uu____74837)
+                                                            uu____74911)
                                                            in
-                                                        let uu____74881 =
-                                                          let uu____74904 =
-                                                            let uu____74925 =
-                                                              let uu____74944
+                                                        let uu____74955 =
+                                                          let uu____74978 =
+                                                            let uu____74999 =
+                                                              let uu____75018
                                                                 =
-                                                                let uu____74945
+                                                                let uu____75019
                                                                   =
-                                                                  let uu____74946
+                                                                  let uu____75020
                                                                     =
-                                                                    let uu____74951
+                                                                    let uu____75025
                                                                     =
                                                                     FStar_SMTEncoding_Term.unboxReal
                                                                     x  in
-                                                                    let uu____74952
+                                                                    let uu____75026
                                                                     =
                                                                     FStar_SMTEncoding_Term.unboxReal
                                                                     y  in
-                                                                    (uu____74951,
-                                                                    uu____74952)
+                                                                    (uu____75025,
+                                                                    uu____75026)
                                                                      in
                                                                   FStar_SMTEncoding_Util.mkAdd
-                                                                    uu____74946
+                                                                    uu____75020
                                                                    in
                                                                 FStar_All.pipe_left
                                                                   FStar_SMTEncoding_Term.boxReal
-                                                                  uu____74945
+                                                                  uu____75019
                                                                  in
                                                               quant xy
-                                                                uu____74944
+                                                                uu____75018
                                                                in
                                                             (FStar_Parser_Const.real_op_Addition,
-                                                              uu____74925)
+                                                              uu____74999)
                                                              in
-                                                          let uu____74969 =
-                                                            let uu____74992 =
-                                                              let uu____75013
+                                                          let uu____75043 =
+                                                            let uu____75066 =
+                                                              let uu____75087
                                                                 =
-                                                                let uu____75032
+                                                                let uu____75106
                                                                   =
-                                                                  let uu____75033
+                                                                  let uu____75107
                                                                     =
-                                                                    let uu____75034
+                                                                    let uu____75108
                                                                     =
-                                                                    let uu____75039
+                                                                    let uu____75113
                                                                     =
                                                                     FStar_SMTEncoding_Term.unboxReal
                                                                     x  in
-                                                                    let uu____75040
+                                                                    let uu____75114
                                                                     =
                                                                     FStar_SMTEncoding_Term.unboxReal
                                                                     y  in
-                                                                    (uu____75039,
-                                                                    uu____75040)
+                                                                    (uu____75113,
+                                                                    uu____75114)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkMul
-                                                                    uu____75034
+                                                                    uu____75108
                                                                      in
                                                                   FStar_All.pipe_left
                                                                     FStar_SMTEncoding_Term.boxReal
-                                                                    uu____75033
+                                                                    uu____75107
                                                                    in
                                                                 quant xy
-                                                                  uu____75032
+                                                                  uu____75106
                                                                  in
                                                               (FStar_Parser_Const.real_op_Multiply,
-                                                                uu____75013)
+                                                                uu____75087)
                                                                in
-                                                            let uu____75057 =
-                                                              let uu____75080
+                                                            let uu____75131 =
+                                                              let uu____75154
                                                                 =
-                                                                let uu____75101
+                                                                let uu____75175
                                                                   =
-                                                                  let uu____75120
+                                                                  let uu____75194
                                                                     =
-                                                                    let uu____75121
+                                                                    let uu____75195
                                                                     =
-                                                                    let uu____75122
+                                                                    let uu____75196
                                                                     =
-                                                                    let uu____75127
+                                                                    let uu____75201
                                                                     =
                                                                     FStar_SMTEncoding_Term.unboxReal
                                                                     x  in
-                                                                    let uu____75128
+                                                                    let uu____75202
                                                                     =
                                                                     FStar_SMTEncoding_Term.unboxReal
                                                                     y  in
-                                                                    (uu____75127,
-                                                                    uu____75128)
+                                                                    (uu____75201,
+                                                                    uu____75202)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkRealDiv
-                                                                    uu____75122
+                                                                    uu____75196
                                                                      in
                                                                     FStar_All.pipe_left
                                                                     FStar_SMTEncoding_Term.boxReal
-                                                                    uu____75121
+                                                                    uu____75195
                                                                      in
                                                                   quant xy
-                                                                    uu____75120
+                                                                    uu____75194
                                                                    in
                                                                 (FStar_Parser_Const.real_op_Division,
-                                                                  uu____75101)
+                                                                  uu____75175)
                                                                  in
-                                                              let uu____75145
+                                                              let uu____75219
                                                                 =
-                                                                let uu____75168
+                                                                let uu____75242
                                                                   =
-                                                                  let uu____75189
+                                                                  let uu____75263
                                                                     =
-                                                                    let uu____75208
+                                                                    let uu____75282
                                                                     =
-                                                                    let uu____75209
+                                                                    let uu____75283
                                                                     =
-                                                                    let uu____75210
+                                                                    let uu____75284
                                                                     =
                                                                     FStar_SMTEncoding_Term.unboxInt
                                                                     x  in
                                                                     FStar_SMTEncoding_Term.mkRealOfInt
-                                                                    uu____75210
+                                                                    uu____75284
                                                                     FStar_Range.dummyRange
                                                                      in
                                                                     FStar_All.pipe_left
                                                                     FStar_SMTEncoding_Term.boxReal
-                                                                    uu____75209
+                                                                    uu____75283
                                                                      in
                                                                     quant qx
-                                                                    uu____75208
+                                                                    uu____75282
                                                                      in
                                                                   (FStar_Parser_Const.real_of_int,
-                                                                    uu____75189)
+                                                                    uu____75263)
                                                                    in
-                                                                [uu____75168]
+                                                                [uu____75242]
                                                                  in
-                                                              uu____75080 ::
-                                                                uu____75145
+                                                              uu____75154 ::
+                                                                uu____75219
                                                                in
-                                                            uu____74992 ::
-                                                              uu____75057
+                                                            uu____75066 ::
+                                                              uu____75131
                                                              in
-                                                          uu____74904 ::
-                                                            uu____74969
+                                                          uu____74978 ::
+                                                            uu____75043
                                                            in
-                                                        uu____74816 ::
-                                                          uu____74881
+                                                        uu____74890 ::
+                                                          uu____74955
                                                          in
-                                                      uu____74728 ::
-                                                        uu____74793
+                                                      uu____74802 ::
+                                                        uu____74867
                                                        in
-                                                    uu____74640 ::
-                                                      uu____74705
+                                                    uu____74714 ::
+                                                      uu____74779
                                                      in
-                                                  uu____74552 :: uu____74617
+                                                  uu____74626 :: uu____74691
                                                    in
-                                                uu____74464 :: uu____74529
+                                                uu____74538 :: uu____74603
                                                  in
-                                              uu____74376 :: uu____74441  in
-                                            uu____74288 :: uu____74353  in
-                                          uu____74200 :: uu____74265  in
-                                        uu____74112 :: uu____74177  in
-                                      uu____74030 :: uu____74089  in
-                                    uu____73942 :: uu____74007  in
-                                  uu____73854 :: uu____73919  in
-                                uu____73766 :: uu____73831  in
-                              uu____73678 :: uu____73743  in
-                            uu____73590 :: uu____73655  in
-                          uu____73508 :: uu____73567  in
-                        uu____73420 :: uu____73485  in
-                      uu____73332 :: uu____73397  in
-                    uu____73250 :: uu____73309  in
-                  uu____73169 :: uu____73227  in
+                                              uu____74450 :: uu____74515  in
+                                            uu____74362 :: uu____74427  in
+                                          uu____74274 :: uu____74339  in
+                                        uu____74186 :: uu____74251  in
+                                      uu____74104 :: uu____74163  in
+                                    uu____74016 :: uu____74081  in
+                                  uu____73928 :: uu____73993  in
+                                uu____73840 :: uu____73905  in
+                              uu____73752 :: uu____73817  in
+                            uu____73664 :: uu____73729  in
+                          uu____73582 :: uu____73641  in
+                        uu____73494 :: uu____73559  in
+                      uu____73406 :: uu____73471  in
+                    uu____73324 :: uu____73383  in
+                  uu____73243 :: uu____73301  in
                 let mk1 l v1 =
-                  let uu____75749 =
-                    let uu____75761 =
+                  let uu____75823 =
+                    let uu____75835 =
                       FStar_All.pipe_right prims1
                         (FStar_List.find
-                           (fun uu____75851  ->
-                              match uu____75851 with
-                              | (l',uu____75872) ->
+                           (fun uu____75925  ->
+                              match uu____75925 with
+                              | (l',uu____75946) ->
                                   FStar_Ident.lid_equals l l'))
                        in
-                    FStar_All.pipe_right uu____75761
+                    FStar_All.pipe_right uu____75835
                       (FStar_Option.map
-                         (fun uu____75971  ->
-                            match uu____75971 with
-                            | (uu____75999,b) ->
-                                let uu____76033 = FStar_Ident.range_of_lid l
+                         (fun uu____76045  ->
+                            match uu____76045 with
+                            | (uu____76073,b) ->
+                                let uu____76107 = FStar_Ident.range_of_lid l
                                    in
-                                b uu____76033 v1))
+                                b uu____76107 v1))
                      in
-                  FStar_All.pipe_right uu____75749 FStar_Option.get  in
+                  FStar_All.pipe_right uu____75823 FStar_Option.get  in
                 let is l =
                   FStar_All.pipe_right prims1
                     (FStar_Util.for_some
-                       (fun uu____76116  ->
-                          match uu____76116 with
-                          | (l',uu____76137) -> FStar_Ident.lid_equals l l'))
+                       (fun uu____76190  ->
+                          match uu____76190 with
+                          | (l',uu____76211) -> FStar_Ident.lid_equals l l'))
                    in
                 { mk = mk1; is }))
   
@@ -800,19 +800,19 @@ let (pretype_axiom :
     fun env  ->
       fun tapp  ->
         fun vars  ->
-          let uu____76211 =
+          let uu____76285 =
             FStar_SMTEncoding_Env.fresh_fvar
               env.FStar_SMTEncoding_Env.current_module_name "x"
               FStar_SMTEncoding_Term.Term_sort
              in
-          match uu____76211 with
+          match uu____76285 with
           | (xxsym,xx) ->
-              let uu____76222 =
+              let uu____76296 =
                 FStar_SMTEncoding_Env.fresh_fvar
                   env.FStar_SMTEncoding_Env.current_module_name "f"
                   FStar_SMTEncoding_Term.Fuel_sort
                  in
-              (match uu____76222 with
+              (match uu____76296 with
                | (ffsym,ff) ->
                    let xx_has_type =
                      FStar_SMTEncoding_Term.mk_HasTypeFuel ff xx tapp  in
@@ -820,50 +820,50 @@ let (pretype_axiom :
                       in
                    let module_name =
                      env.FStar_SMTEncoding_Env.current_module_name  in
-                   let uu____76238 =
-                     let uu____76246 =
-                       let uu____76247 =
-                         let uu____76258 =
-                           let uu____76259 =
+                   let uu____76312 =
+                     let uu____76320 =
+                       let uu____76321 =
+                         let uu____76332 =
+                           let uu____76333 =
                              FStar_SMTEncoding_Term.mk_fv
                                (xxsym, FStar_SMTEncoding_Term.Term_sort)
                               in
-                           let uu____76269 =
-                             let uu____76280 =
+                           let uu____76343 =
+                             let uu____76354 =
                                FStar_SMTEncoding_Term.mk_fv
                                  (ffsym, FStar_SMTEncoding_Term.Fuel_sort)
                                 in
-                             uu____76280 :: vars  in
-                           uu____76259 :: uu____76269  in
-                         let uu____76306 =
-                           let uu____76307 =
-                             let uu____76312 =
-                               let uu____76313 =
-                                 let uu____76318 =
+                             uu____76354 :: vars  in
+                           uu____76333 :: uu____76343  in
+                         let uu____76380 =
+                           let uu____76381 =
+                             let uu____76386 =
+                               let uu____76387 =
+                                 let uu____76392 =
                                    FStar_SMTEncoding_Util.mkApp
                                      ("PreType", [xx])
                                     in
-                                 (tapp, uu____76318)  in
-                               FStar_SMTEncoding_Util.mkEq uu____76313  in
-                             (xx_has_type, uu____76312)  in
-                           FStar_SMTEncoding_Util.mkImp uu____76307  in
-                         ([[xx_has_type]], uu____76258, uu____76306)  in
-                       FStar_SMTEncoding_Term.mkForall rng uu____76247  in
-                     let uu____76331 =
-                       let uu____76333 =
-                         let uu____76335 =
-                           let uu____76337 =
+                                 (tapp, uu____76392)  in
+                               FStar_SMTEncoding_Util.mkEq uu____76387  in
+                             (xx_has_type, uu____76386)  in
+                           FStar_SMTEncoding_Util.mkImp uu____76381  in
+                         ([[xx_has_type]], uu____76332, uu____76380)  in
+                       FStar_SMTEncoding_Term.mkForall rng uu____76321  in
+                     let uu____76405 =
+                       let uu____76407 =
+                         let uu____76409 =
+                           let uu____76411 =
                              FStar_Util.digest_of_string tapp_hash  in
-                           Prims.op_Hat "_pretyping_" uu____76337  in
-                         Prims.op_Hat module_name uu____76335  in
+                           Prims.op_Hat "_pretyping_" uu____76411  in
+                         Prims.op_Hat module_name uu____76409  in
                        FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
-                         uu____76333
+                         uu____76407
                         in
-                     (uu____76246,
+                     (uu____76320,
                        (FStar_Pervasives_Native.Some "pretyping"),
-                       uu____76331)
+                       uu____76405)
                       in
-                   FStar_SMTEncoding_Util.mkAssume uu____76238)
+                   FStar_SMTEncoding_Util.mkAssume uu____76312)
   
 let (primitive_type_axioms :
   FStar_TypeChecker_Env.env ->
@@ -878,107 +878,107 @@ let (primitive_type_axioms :
     FStar_SMTEncoding_Term.mk_fv ("y", FStar_SMTEncoding_Term.Term_sort)  in
   let y = FStar_SMTEncoding_Util.mkFreeV yy  in
   let mkForall_fuel1 env =
-    let uu____76393 =
-      let uu____76395 = FStar_TypeChecker_Env.current_module env  in
-      FStar_Ident.string_of_lid uu____76395  in
-    FStar_SMTEncoding_EncodeTerm.mkForall_fuel uu____76393  in
+    let uu____76467 =
+      let uu____76469 = FStar_TypeChecker_Env.current_module env  in
+      FStar_Ident.string_of_lid uu____76469  in
+    FStar_SMTEncoding_EncodeTerm.mkForall_fuel uu____76467  in
   let mk_unit env nm tt =
     let typing_pred = FStar_SMTEncoding_Term.mk_HasType x tt  in
-    let uu____76417 =
-      let uu____76418 =
-        let uu____76426 =
+    let uu____76491 =
+      let uu____76492 =
+        let uu____76500 =
           FStar_SMTEncoding_Term.mk_HasType
             FStar_SMTEncoding_Term.mk_Term_unit tt
            in
-        (uu____76426, (FStar_Pervasives_Native.Some "unit typing"),
+        (uu____76500, (FStar_Pervasives_Native.Some "unit typing"),
           "unit_typing")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____76418  in
-    let uu____76431 =
-      let uu____76434 =
-        let uu____76435 =
-          let uu____76443 =
-            let uu____76444 =
-              let uu____76455 =
-                let uu____76456 =
-                  let uu____76461 =
+      FStar_SMTEncoding_Util.mkAssume uu____76492  in
+    let uu____76505 =
+      let uu____76508 =
+        let uu____76509 =
+          let uu____76517 =
+            let uu____76518 =
+              let uu____76529 =
+                let uu____76530 =
+                  let uu____76535 =
                     FStar_SMTEncoding_Util.mkEq
                       (x, FStar_SMTEncoding_Term.mk_Term_unit)
                      in
-                  (typing_pred, uu____76461)  in
-                FStar_SMTEncoding_Util.mkImp uu____76456  in
-              ([[typing_pred]], [xx], uu____76455)  in
-            let uu____76486 =
-              let uu____76501 = FStar_TypeChecker_Env.get_range env  in
-              let uu____76502 = mkForall_fuel1 env  in
-              uu____76502 uu____76501  in
-            uu____76486 uu____76444  in
-          (uu____76443, (FStar_Pervasives_Native.Some "unit inversion"),
+                  (typing_pred, uu____76535)  in
+                FStar_SMTEncoding_Util.mkImp uu____76530  in
+              ([[typing_pred]], [xx], uu____76529)  in
+            let uu____76560 =
+              let uu____76575 = FStar_TypeChecker_Env.get_range env  in
+              let uu____76576 = mkForall_fuel1 env  in
+              uu____76576 uu____76575  in
+            uu____76560 uu____76518  in
+          (uu____76517, (FStar_Pervasives_Native.Some "unit inversion"),
             "unit_inversion")
            in
-        FStar_SMTEncoding_Util.mkAssume uu____76435  in
-      [uu____76434]  in
-    uu____76417 :: uu____76431  in
+        FStar_SMTEncoding_Util.mkAssume uu____76509  in
+      [uu____76508]  in
+    uu____76491 :: uu____76505  in
   let mk_bool env nm tt =
     let typing_pred = FStar_SMTEncoding_Term.mk_HasType x tt  in
     let bb =
       FStar_SMTEncoding_Term.mk_fv ("b", FStar_SMTEncoding_Term.Bool_sort)
        in
     let b = FStar_SMTEncoding_Util.mkFreeV bb  in
-    let uu____76549 =
-      let uu____76550 =
-        let uu____76558 =
-          let uu____76559 = FStar_TypeChecker_Env.get_range env  in
-          let uu____76560 =
-            let uu____76571 =
-              let uu____76576 =
-                let uu____76579 = FStar_SMTEncoding_Term.boxBool b  in
-                [uu____76579]  in
-              [uu____76576]  in
-            let uu____76584 =
-              let uu____76585 = FStar_SMTEncoding_Term.boxBool b  in
-              FStar_SMTEncoding_Term.mk_HasType uu____76585 tt  in
-            (uu____76571, [bb], uu____76584)  in
-          FStar_SMTEncoding_Term.mkForall uu____76559 uu____76560  in
-        (uu____76558, (FStar_Pervasives_Native.Some "bool typing"),
+    let uu____76623 =
+      let uu____76624 =
+        let uu____76632 =
+          let uu____76633 = FStar_TypeChecker_Env.get_range env  in
+          let uu____76634 =
+            let uu____76645 =
+              let uu____76650 =
+                let uu____76653 = FStar_SMTEncoding_Term.boxBool b  in
+                [uu____76653]  in
+              [uu____76650]  in
+            let uu____76658 =
+              let uu____76659 = FStar_SMTEncoding_Term.boxBool b  in
+              FStar_SMTEncoding_Term.mk_HasType uu____76659 tt  in
+            (uu____76645, [bb], uu____76658)  in
+          FStar_SMTEncoding_Term.mkForall uu____76633 uu____76634  in
+        (uu____76632, (FStar_Pervasives_Native.Some "bool typing"),
           "bool_typing")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____76550  in
-    let uu____76610 =
-      let uu____76613 =
-        let uu____76614 =
-          let uu____76622 =
-            let uu____76623 =
-              let uu____76634 =
-                let uu____76635 =
-                  let uu____76640 =
+      FStar_SMTEncoding_Util.mkAssume uu____76624  in
+    let uu____76684 =
+      let uu____76687 =
+        let uu____76688 =
+          let uu____76696 =
+            let uu____76697 =
+              let uu____76708 =
+                let uu____76709 =
+                  let uu____76714 =
                     FStar_SMTEncoding_Term.mk_tester
                       (FStar_Pervasives_Native.fst
                          FStar_SMTEncoding_Term.boxBoolFun) x
                      in
-                  (typing_pred, uu____76640)  in
-                FStar_SMTEncoding_Util.mkImp uu____76635  in
-              ([[typing_pred]], [xx], uu____76634)  in
-            let uu____76667 =
-              let uu____76682 = FStar_TypeChecker_Env.get_range env  in
-              let uu____76683 = mkForall_fuel1 env  in
-              uu____76683 uu____76682  in
-            uu____76667 uu____76623  in
-          (uu____76622, (FStar_Pervasives_Native.Some "bool inversion"),
+                  (typing_pred, uu____76714)  in
+                FStar_SMTEncoding_Util.mkImp uu____76709  in
+              ([[typing_pred]], [xx], uu____76708)  in
+            let uu____76741 =
+              let uu____76756 = FStar_TypeChecker_Env.get_range env  in
+              let uu____76757 = mkForall_fuel1 env  in
+              uu____76757 uu____76756  in
+            uu____76741 uu____76697  in
+          (uu____76696, (FStar_Pervasives_Native.Some "bool inversion"),
             "bool_inversion")
            in
-        FStar_SMTEncoding_Util.mkAssume uu____76614  in
-      [uu____76613]  in
-    uu____76549 :: uu____76610  in
+        FStar_SMTEncoding_Util.mkAssume uu____76688  in
+      [uu____76687]  in
+    uu____76623 :: uu____76684  in
   let mk_int env nm tt =
     let lex_t1 =
-      let uu____76726 =
-        let uu____76727 =
-          let uu____76733 =
+      let uu____76800 =
+        let uu____76801 =
+          let uu____76807 =
             FStar_Ident.text_of_lid FStar_Parser_Const.lex_t_lid  in
-          (uu____76733, FStar_SMTEncoding_Term.Term_sort)  in
-        FStar_SMTEncoding_Term.mk_fv uu____76727  in
-      FStar_All.pipe_left FStar_SMTEncoding_Util.mkFreeV uu____76726  in
+          (uu____76807, FStar_SMTEncoding_Term.Term_sort)  in
+        FStar_SMTEncoding_Term.mk_fv uu____76801  in
+      FStar_All.pipe_left FStar_SMTEncoding_Util.mkFreeV uu____76800  in
     let typing_pred = FStar_SMTEncoding_Term.mk_HasType x tt  in
     let typing_pred_y = FStar_SMTEncoding_Term.mk_HasType y tt  in
     let aa =
@@ -988,129 +988,129 @@ let (primitive_type_axioms :
       FStar_SMTEncoding_Term.mk_fv ("b", FStar_SMTEncoding_Term.Int_sort)  in
     let b = FStar_SMTEncoding_Util.mkFreeV bb  in
     let precedes_y_x =
-      let uu____76747 =
+      let uu____76821 =
         FStar_SMTEncoding_Util.mkApp
           ("Prims.precedes", [lex_t1; lex_t1; y; x])
          in
-      FStar_All.pipe_left FStar_SMTEncoding_Term.mk_Valid uu____76747  in
-    let uu____76752 =
-      let uu____76753 =
-        let uu____76761 =
-          let uu____76762 = FStar_TypeChecker_Env.get_range env  in
-          let uu____76763 =
-            let uu____76774 =
-              let uu____76779 =
-                let uu____76782 = FStar_SMTEncoding_Term.boxInt b  in
-                [uu____76782]  in
-              [uu____76779]  in
-            let uu____76787 =
-              let uu____76788 = FStar_SMTEncoding_Term.boxInt b  in
-              FStar_SMTEncoding_Term.mk_HasType uu____76788 tt  in
-            (uu____76774, [bb], uu____76787)  in
-          FStar_SMTEncoding_Term.mkForall uu____76762 uu____76763  in
-        (uu____76761, (FStar_Pervasives_Native.Some "int typing"),
+      FStar_All.pipe_left FStar_SMTEncoding_Term.mk_Valid uu____76821  in
+    let uu____76826 =
+      let uu____76827 =
+        let uu____76835 =
+          let uu____76836 = FStar_TypeChecker_Env.get_range env  in
+          let uu____76837 =
+            let uu____76848 =
+              let uu____76853 =
+                let uu____76856 = FStar_SMTEncoding_Term.boxInt b  in
+                [uu____76856]  in
+              [uu____76853]  in
+            let uu____76861 =
+              let uu____76862 = FStar_SMTEncoding_Term.boxInt b  in
+              FStar_SMTEncoding_Term.mk_HasType uu____76862 tt  in
+            (uu____76848, [bb], uu____76861)  in
+          FStar_SMTEncoding_Term.mkForall uu____76836 uu____76837  in
+        (uu____76835, (FStar_Pervasives_Native.Some "int typing"),
           "int_typing")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____76753  in
-    let uu____76813 =
-      let uu____76816 =
-        let uu____76817 =
-          let uu____76825 =
-            let uu____76826 =
-              let uu____76837 =
-                let uu____76838 =
-                  let uu____76843 =
+      FStar_SMTEncoding_Util.mkAssume uu____76827  in
+    let uu____76887 =
+      let uu____76890 =
+        let uu____76891 =
+          let uu____76899 =
+            let uu____76900 =
+              let uu____76911 =
+                let uu____76912 =
+                  let uu____76917 =
                     FStar_SMTEncoding_Term.mk_tester
                       (FStar_Pervasives_Native.fst
                          FStar_SMTEncoding_Term.boxIntFun) x
                      in
-                  (typing_pred, uu____76843)  in
-                FStar_SMTEncoding_Util.mkImp uu____76838  in
-              ([[typing_pred]], [xx], uu____76837)  in
-            let uu____76870 =
-              let uu____76885 = FStar_TypeChecker_Env.get_range env  in
-              let uu____76886 = mkForall_fuel1 env  in
-              uu____76886 uu____76885  in
-            uu____76870 uu____76826  in
-          (uu____76825, (FStar_Pervasives_Native.Some "int inversion"),
+                  (typing_pred, uu____76917)  in
+                FStar_SMTEncoding_Util.mkImp uu____76912  in
+              ([[typing_pred]], [xx], uu____76911)  in
+            let uu____76944 =
+              let uu____76959 = FStar_TypeChecker_Env.get_range env  in
+              let uu____76960 = mkForall_fuel1 env  in
+              uu____76960 uu____76959  in
+            uu____76944 uu____76900  in
+          (uu____76899, (FStar_Pervasives_Native.Some "int inversion"),
             "int_inversion")
            in
-        FStar_SMTEncoding_Util.mkAssume uu____76817  in
-      let uu____76908 =
-        let uu____76911 =
-          let uu____76912 =
-            let uu____76920 =
-              let uu____76921 =
-                let uu____76932 =
-                  let uu____76933 =
-                    let uu____76938 =
-                      let uu____76939 =
-                        let uu____76942 =
-                          let uu____76945 =
-                            let uu____76948 =
-                              let uu____76949 =
-                                let uu____76954 =
+        FStar_SMTEncoding_Util.mkAssume uu____76891  in
+      let uu____76982 =
+        let uu____76985 =
+          let uu____76986 =
+            let uu____76994 =
+              let uu____76995 =
+                let uu____77006 =
+                  let uu____77007 =
+                    let uu____77012 =
+                      let uu____77013 =
+                        let uu____77016 =
+                          let uu____77019 =
+                            let uu____77022 =
+                              let uu____77023 =
+                                let uu____77028 =
                                   FStar_SMTEncoding_Term.unboxInt x  in
-                                let uu____76955 =
+                                let uu____77029 =
                                   FStar_SMTEncoding_Util.mkInteger'
                                     (Prims.parse_int "0")
                                    in
-                                (uu____76954, uu____76955)  in
-                              FStar_SMTEncoding_Util.mkGT uu____76949  in
-                            let uu____76957 =
-                              let uu____76960 =
-                                let uu____76961 =
-                                  let uu____76966 =
+                                (uu____77028, uu____77029)  in
+                              FStar_SMTEncoding_Util.mkGT uu____77023  in
+                            let uu____77031 =
+                              let uu____77034 =
+                                let uu____77035 =
+                                  let uu____77040 =
                                     FStar_SMTEncoding_Term.unboxInt y  in
-                                  let uu____76967 =
+                                  let uu____77041 =
                                     FStar_SMTEncoding_Util.mkInteger'
                                       (Prims.parse_int "0")
                                      in
-                                  (uu____76966, uu____76967)  in
-                                FStar_SMTEncoding_Util.mkGTE uu____76961  in
-                              let uu____76969 =
-                                let uu____76972 =
-                                  let uu____76973 =
-                                    let uu____76978 =
+                                  (uu____77040, uu____77041)  in
+                                FStar_SMTEncoding_Util.mkGTE uu____77035  in
+                              let uu____77043 =
+                                let uu____77046 =
+                                  let uu____77047 =
+                                    let uu____77052 =
                                       FStar_SMTEncoding_Term.unboxInt y  in
-                                    let uu____76979 =
+                                    let uu____77053 =
                                       FStar_SMTEncoding_Term.unboxInt x  in
-                                    (uu____76978, uu____76979)  in
-                                  FStar_SMTEncoding_Util.mkLT uu____76973  in
-                                [uu____76972]  in
-                              uu____76960 :: uu____76969  in
-                            uu____76948 :: uu____76957  in
-                          typing_pred_y :: uu____76945  in
-                        typing_pred :: uu____76942  in
-                      FStar_SMTEncoding_Util.mk_and_l uu____76939  in
-                    (uu____76938, precedes_y_x)  in
-                  FStar_SMTEncoding_Util.mkImp uu____76933  in
+                                    (uu____77052, uu____77053)  in
+                                  FStar_SMTEncoding_Util.mkLT uu____77047  in
+                                [uu____77046]  in
+                              uu____77034 :: uu____77043  in
+                            uu____77022 :: uu____77031  in
+                          typing_pred_y :: uu____77019  in
+                        typing_pred :: uu____77016  in
+                      FStar_SMTEncoding_Util.mk_and_l uu____77013  in
+                    (uu____77012, precedes_y_x)  in
+                  FStar_SMTEncoding_Util.mkImp uu____77007  in
                 ([[typing_pred; typing_pred_y; precedes_y_x]], [xx; yy],
-                  uu____76932)
+                  uu____77006)
                  in
-              let uu____77012 =
-                let uu____77027 = FStar_TypeChecker_Env.get_range env  in
-                let uu____77028 = mkForall_fuel1 env  in
-                uu____77028 uu____77027  in
-              uu____77012 uu____76921  in
-            (uu____76920,
+              let uu____77086 =
+                let uu____77101 = FStar_TypeChecker_Env.get_range env  in
+                let uu____77102 = mkForall_fuel1 env  in
+                uu____77102 uu____77101  in
+              uu____77086 uu____76995  in
+            (uu____76994,
               (FStar_Pervasives_Native.Some
                  "well-founded ordering on nat (alt)"),
               "well-founded-ordering-on-nat")
              in
-          FStar_SMTEncoding_Util.mkAssume uu____76912  in
-        [uu____76911]  in
-      uu____76816 :: uu____76908  in
-    uu____76752 :: uu____76813  in
+          FStar_SMTEncoding_Util.mkAssume uu____76986  in
+        [uu____76985]  in
+      uu____76890 :: uu____76982  in
+    uu____76826 :: uu____76887  in
   let mk_real env nm tt =
     let lex_t1 =
-      let uu____77071 =
-        let uu____77072 =
-          let uu____77078 =
+      let uu____77145 =
+        let uu____77146 =
+          let uu____77152 =
             FStar_Ident.text_of_lid FStar_Parser_Const.lex_t_lid  in
-          (uu____77078, FStar_SMTEncoding_Term.Term_sort)  in
-        FStar_SMTEncoding_Term.mk_fv uu____77072  in
-      FStar_All.pipe_left FStar_SMTEncoding_Util.mkFreeV uu____77071  in
+          (uu____77152, FStar_SMTEncoding_Term.Term_sort)  in
+        FStar_SMTEncoding_Term.mk_fv uu____77146  in
+      FStar_All.pipe_left FStar_SMTEncoding_Util.mkFreeV uu____77145  in
     let typing_pred = FStar_SMTEncoding_Term.mk_HasType x tt  in
     let typing_pred_y = FStar_SMTEncoding_Term.mk_HasType y tt  in
     let aa =
@@ -1124,188 +1124,188 @@ let (primitive_type_axioms :
        in
     let b = FStar_SMTEncoding_Util.mkFreeV bb  in
     let precedes_y_x =
-      let uu____77094 =
+      let uu____77168 =
         FStar_SMTEncoding_Util.mkApp
           ("Prims.precedes", [lex_t1; lex_t1; y; x])
          in
-      FStar_All.pipe_left FStar_SMTEncoding_Term.mk_Valid uu____77094  in
-    let uu____77099 =
-      let uu____77100 =
-        let uu____77108 =
-          let uu____77109 = FStar_TypeChecker_Env.get_range env  in
-          let uu____77110 =
-            let uu____77121 =
-              let uu____77126 =
-                let uu____77129 = FStar_SMTEncoding_Term.boxReal b  in
-                [uu____77129]  in
-              [uu____77126]  in
-            let uu____77134 =
-              let uu____77135 = FStar_SMTEncoding_Term.boxReal b  in
-              FStar_SMTEncoding_Term.mk_HasType uu____77135 tt  in
-            (uu____77121, [bb], uu____77134)  in
-          FStar_SMTEncoding_Term.mkForall uu____77109 uu____77110  in
-        (uu____77108, (FStar_Pervasives_Native.Some "real typing"),
+      FStar_All.pipe_left FStar_SMTEncoding_Term.mk_Valid uu____77168  in
+    let uu____77173 =
+      let uu____77174 =
+        let uu____77182 =
+          let uu____77183 = FStar_TypeChecker_Env.get_range env  in
+          let uu____77184 =
+            let uu____77195 =
+              let uu____77200 =
+                let uu____77203 = FStar_SMTEncoding_Term.boxReal b  in
+                [uu____77203]  in
+              [uu____77200]  in
+            let uu____77208 =
+              let uu____77209 = FStar_SMTEncoding_Term.boxReal b  in
+              FStar_SMTEncoding_Term.mk_HasType uu____77209 tt  in
+            (uu____77195, [bb], uu____77208)  in
+          FStar_SMTEncoding_Term.mkForall uu____77183 uu____77184  in
+        (uu____77182, (FStar_Pervasives_Native.Some "real typing"),
           "real_typing")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____77100  in
-    let uu____77160 =
-      let uu____77163 =
-        let uu____77164 =
-          let uu____77172 =
-            let uu____77173 =
-              let uu____77184 =
-                let uu____77185 =
-                  let uu____77190 =
+      FStar_SMTEncoding_Util.mkAssume uu____77174  in
+    let uu____77234 =
+      let uu____77237 =
+        let uu____77238 =
+          let uu____77246 =
+            let uu____77247 =
+              let uu____77258 =
+                let uu____77259 =
+                  let uu____77264 =
                     FStar_SMTEncoding_Term.mk_tester
                       (FStar_Pervasives_Native.fst
                          FStar_SMTEncoding_Term.boxRealFun) x
                      in
-                  (typing_pred, uu____77190)  in
-                FStar_SMTEncoding_Util.mkImp uu____77185  in
-              ([[typing_pred]], [xx], uu____77184)  in
-            let uu____77217 =
-              let uu____77232 = FStar_TypeChecker_Env.get_range env  in
-              let uu____77233 = mkForall_fuel1 env  in
-              uu____77233 uu____77232  in
-            uu____77217 uu____77173  in
-          (uu____77172, (FStar_Pervasives_Native.Some "real inversion"),
+                  (typing_pred, uu____77264)  in
+                FStar_SMTEncoding_Util.mkImp uu____77259  in
+              ([[typing_pred]], [xx], uu____77258)  in
+            let uu____77291 =
+              let uu____77306 = FStar_TypeChecker_Env.get_range env  in
+              let uu____77307 = mkForall_fuel1 env  in
+              uu____77307 uu____77306  in
+            uu____77291 uu____77247  in
+          (uu____77246, (FStar_Pervasives_Native.Some "real inversion"),
             "real_inversion")
            in
-        FStar_SMTEncoding_Util.mkAssume uu____77164  in
-      let uu____77255 =
-        let uu____77258 =
-          let uu____77259 =
-            let uu____77267 =
-              let uu____77268 =
-                let uu____77279 =
-                  let uu____77280 =
-                    let uu____77285 =
-                      let uu____77286 =
-                        let uu____77289 =
-                          let uu____77292 =
-                            let uu____77295 =
-                              let uu____77296 =
-                                let uu____77301 =
+        FStar_SMTEncoding_Util.mkAssume uu____77238  in
+      let uu____77329 =
+        let uu____77332 =
+          let uu____77333 =
+            let uu____77341 =
+              let uu____77342 =
+                let uu____77353 =
+                  let uu____77354 =
+                    let uu____77359 =
+                      let uu____77360 =
+                        let uu____77363 =
+                          let uu____77366 =
+                            let uu____77369 =
+                              let uu____77370 =
+                                let uu____77375 =
                                   FStar_SMTEncoding_Term.unboxReal x  in
-                                let uu____77302 =
+                                let uu____77376 =
                                   FStar_SMTEncoding_Util.mkReal "0.0"  in
-                                (uu____77301, uu____77302)  in
-                              FStar_SMTEncoding_Util.mkGT uu____77296  in
-                            let uu____77304 =
-                              let uu____77307 =
-                                let uu____77308 =
-                                  let uu____77313 =
+                                (uu____77375, uu____77376)  in
+                              FStar_SMTEncoding_Util.mkGT uu____77370  in
+                            let uu____77378 =
+                              let uu____77381 =
+                                let uu____77382 =
+                                  let uu____77387 =
                                     FStar_SMTEncoding_Term.unboxReal y  in
-                                  let uu____77314 =
+                                  let uu____77388 =
                                     FStar_SMTEncoding_Util.mkReal "0.0"  in
-                                  (uu____77313, uu____77314)  in
-                                FStar_SMTEncoding_Util.mkGTE uu____77308  in
-                              let uu____77316 =
-                                let uu____77319 =
-                                  let uu____77320 =
-                                    let uu____77325 =
+                                  (uu____77387, uu____77388)  in
+                                FStar_SMTEncoding_Util.mkGTE uu____77382  in
+                              let uu____77390 =
+                                let uu____77393 =
+                                  let uu____77394 =
+                                    let uu____77399 =
                                       FStar_SMTEncoding_Term.unboxReal y  in
-                                    let uu____77326 =
+                                    let uu____77400 =
                                       FStar_SMTEncoding_Term.unboxReal x  in
-                                    (uu____77325, uu____77326)  in
-                                  FStar_SMTEncoding_Util.mkLT uu____77320  in
-                                [uu____77319]  in
-                              uu____77307 :: uu____77316  in
-                            uu____77295 :: uu____77304  in
-                          typing_pred_y :: uu____77292  in
-                        typing_pred :: uu____77289  in
-                      FStar_SMTEncoding_Util.mk_and_l uu____77286  in
-                    (uu____77285, precedes_y_x)  in
-                  FStar_SMTEncoding_Util.mkImp uu____77280  in
+                                    (uu____77399, uu____77400)  in
+                                  FStar_SMTEncoding_Util.mkLT uu____77394  in
+                                [uu____77393]  in
+                              uu____77381 :: uu____77390  in
+                            uu____77369 :: uu____77378  in
+                          typing_pred_y :: uu____77366  in
+                        typing_pred :: uu____77363  in
+                      FStar_SMTEncoding_Util.mk_and_l uu____77360  in
+                    (uu____77359, precedes_y_x)  in
+                  FStar_SMTEncoding_Util.mkImp uu____77354  in
                 ([[typing_pred; typing_pred_y; precedes_y_x]], [xx; yy],
-                  uu____77279)
+                  uu____77353)
                  in
-              let uu____77359 =
-                let uu____77374 = FStar_TypeChecker_Env.get_range env  in
-                let uu____77375 = mkForall_fuel1 env  in
-                uu____77375 uu____77374  in
-              uu____77359 uu____77268  in
-            (uu____77267,
+              let uu____77433 =
+                let uu____77448 = FStar_TypeChecker_Env.get_range env  in
+                let uu____77449 = mkForall_fuel1 env  in
+                uu____77449 uu____77448  in
+              uu____77433 uu____77342  in
+            (uu____77341,
               (FStar_Pervasives_Native.Some "well-founded ordering on real"),
               "well-founded-ordering-on-real")
              in
-          FStar_SMTEncoding_Util.mkAssume uu____77259  in
-        [uu____77258]  in
-      uu____77163 :: uu____77255  in
-    uu____77099 :: uu____77160  in
+          FStar_SMTEncoding_Util.mkAssume uu____77333  in
+        [uu____77332]  in
+      uu____77237 :: uu____77329  in
+    uu____77173 :: uu____77234  in
   let mk_str env nm tt =
     let typing_pred = FStar_SMTEncoding_Term.mk_HasType x tt  in
     let bb =
       FStar_SMTEncoding_Term.mk_fv ("b", FStar_SMTEncoding_Term.String_sort)
        in
     let b = FStar_SMTEncoding_Util.mkFreeV bb  in
-    let uu____77422 =
-      let uu____77423 =
-        let uu____77431 =
-          let uu____77432 = FStar_TypeChecker_Env.get_range env  in
-          let uu____77433 =
-            let uu____77444 =
-              let uu____77449 =
-                let uu____77452 = FStar_SMTEncoding_Term.boxString b  in
-                [uu____77452]  in
-              [uu____77449]  in
-            let uu____77457 =
-              let uu____77458 = FStar_SMTEncoding_Term.boxString b  in
-              FStar_SMTEncoding_Term.mk_HasType uu____77458 tt  in
-            (uu____77444, [bb], uu____77457)  in
-          FStar_SMTEncoding_Term.mkForall uu____77432 uu____77433  in
-        (uu____77431, (FStar_Pervasives_Native.Some "string typing"),
+    let uu____77496 =
+      let uu____77497 =
+        let uu____77505 =
+          let uu____77506 = FStar_TypeChecker_Env.get_range env  in
+          let uu____77507 =
+            let uu____77518 =
+              let uu____77523 =
+                let uu____77526 = FStar_SMTEncoding_Term.boxString b  in
+                [uu____77526]  in
+              [uu____77523]  in
+            let uu____77531 =
+              let uu____77532 = FStar_SMTEncoding_Term.boxString b  in
+              FStar_SMTEncoding_Term.mk_HasType uu____77532 tt  in
+            (uu____77518, [bb], uu____77531)  in
+          FStar_SMTEncoding_Term.mkForall uu____77506 uu____77507  in
+        (uu____77505, (FStar_Pervasives_Native.Some "string typing"),
           "string_typing")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____77423  in
-    let uu____77483 =
-      let uu____77486 =
-        let uu____77487 =
-          let uu____77495 =
-            let uu____77496 =
-              let uu____77507 =
-                let uu____77508 =
-                  let uu____77513 =
+      FStar_SMTEncoding_Util.mkAssume uu____77497  in
+    let uu____77557 =
+      let uu____77560 =
+        let uu____77561 =
+          let uu____77569 =
+            let uu____77570 =
+              let uu____77581 =
+                let uu____77582 =
+                  let uu____77587 =
                     FStar_SMTEncoding_Term.mk_tester
                       (FStar_Pervasives_Native.fst
                          FStar_SMTEncoding_Term.boxStringFun) x
                      in
-                  (typing_pred, uu____77513)  in
-                FStar_SMTEncoding_Util.mkImp uu____77508  in
-              ([[typing_pred]], [xx], uu____77507)  in
-            let uu____77540 =
-              let uu____77555 = FStar_TypeChecker_Env.get_range env  in
-              let uu____77556 = mkForall_fuel1 env  in
-              uu____77556 uu____77555  in
-            uu____77540 uu____77496  in
-          (uu____77495, (FStar_Pervasives_Native.Some "string inversion"),
+                  (typing_pred, uu____77587)  in
+                FStar_SMTEncoding_Util.mkImp uu____77582  in
+              ([[typing_pred]], [xx], uu____77581)  in
+            let uu____77614 =
+              let uu____77629 = FStar_TypeChecker_Env.get_range env  in
+              let uu____77630 = mkForall_fuel1 env  in
+              uu____77630 uu____77629  in
+            uu____77614 uu____77570  in
+          (uu____77569, (FStar_Pervasives_Native.Some "string inversion"),
             "string_inversion")
            in
-        FStar_SMTEncoding_Util.mkAssume uu____77487  in
-      [uu____77486]  in
-    uu____77422 :: uu____77483  in
+        FStar_SMTEncoding_Util.mkAssume uu____77561  in
+      [uu____77560]  in
+    uu____77496 :: uu____77557  in
   let mk_true_interp env nm true_tm =
     let valid = FStar_SMTEncoding_Util.mkApp ("Valid", [true_tm])  in
-    let uu____77603 =
+    let uu____77677 =
       FStar_SMTEncoding_Util.mkAssume
         (valid, (FStar_Pervasives_Native.Some "True interpretation"),
           "true_interp")
        in
-    [uu____77603]  in
+    [uu____77677]  in
   let mk_false_interp env nm false_tm =
     let valid = FStar_SMTEncoding_Util.mkApp ("Valid", [false_tm])  in
-    let uu____77633 =
-      let uu____77634 =
-        let uu____77642 =
+    let uu____77707 =
+      let uu____77708 =
+        let uu____77716 =
           FStar_SMTEncoding_Util.mkIff
             (FStar_SMTEncoding_Util.mkFalse, valid)
            in
-        (uu____77642, (FStar_Pervasives_Native.Some "False interpretation"),
+        (uu____77716, (FStar_Pervasives_Native.Some "False interpretation"),
           "false_interp")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____77634  in
-    [uu____77633]  in
-  let mk_and_interp env conj uu____77665 =
+      FStar_SMTEncoding_Util.mkAssume uu____77708  in
+    [uu____77707]  in
+  let mk_and_interp env conj uu____77739 =
     let aa =
       FStar_SMTEncoding_Term.mk_fv ("a", FStar_SMTEncoding_Term.Term_sort)
        in
@@ -1318,25 +1318,25 @@ let (primitive_type_axioms :
     let valid = FStar_SMTEncoding_Util.mkApp ("Valid", [l_and_a_b])  in
     let valid_a = FStar_SMTEncoding_Util.mkApp ("Valid", [a])  in
     let valid_b = FStar_SMTEncoding_Util.mkApp ("Valid", [b])  in
-    let uu____77694 =
-      let uu____77695 =
-        let uu____77703 =
-          let uu____77704 = FStar_TypeChecker_Env.get_range env  in
-          let uu____77705 =
-            let uu____77716 =
-              let uu____77717 =
-                let uu____77722 =
+    let uu____77768 =
+      let uu____77769 =
+        let uu____77777 =
+          let uu____77778 = FStar_TypeChecker_Env.get_range env  in
+          let uu____77779 =
+            let uu____77790 =
+              let uu____77791 =
+                let uu____77796 =
                   FStar_SMTEncoding_Util.mkAnd (valid_a, valid_b)  in
-                (uu____77722, valid)  in
-              FStar_SMTEncoding_Util.mkIff uu____77717  in
-            ([[l_and_a_b]], [aa; bb], uu____77716)  in
-          FStar_SMTEncoding_Term.mkForall uu____77704 uu____77705  in
-        (uu____77703, (FStar_Pervasives_Native.Some "/\\ interpretation"),
+                (uu____77796, valid)  in
+              FStar_SMTEncoding_Util.mkIff uu____77791  in
+            ([[l_and_a_b]], [aa; bb], uu____77790)  in
+          FStar_SMTEncoding_Term.mkForall uu____77778 uu____77779  in
+        (uu____77777, (FStar_Pervasives_Native.Some "/\\ interpretation"),
           "l_and-interp")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____77695  in
-    [uu____77694]  in
-  let mk_or_interp env disj uu____77777 =
+      FStar_SMTEncoding_Util.mkAssume uu____77769  in
+    [uu____77768]  in
+  let mk_or_interp env disj uu____77851 =
     let aa =
       FStar_SMTEncoding_Term.mk_fv ("a", FStar_SMTEncoding_Term.Term_sort)
        in
@@ -1349,24 +1349,24 @@ let (primitive_type_axioms :
     let valid = FStar_SMTEncoding_Util.mkApp ("Valid", [l_or_a_b])  in
     let valid_a = FStar_SMTEncoding_Util.mkApp ("Valid", [a])  in
     let valid_b = FStar_SMTEncoding_Util.mkApp ("Valid", [b])  in
-    let uu____77806 =
-      let uu____77807 =
-        let uu____77815 =
-          let uu____77816 = FStar_TypeChecker_Env.get_range env  in
-          let uu____77817 =
-            let uu____77828 =
-              let uu____77829 =
-                let uu____77834 =
+    let uu____77880 =
+      let uu____77881 =
+        let uu____77889 =
+          let uu____77890 = FStar_TypeChecker_Env.get_range env  in
+          let uu____77891 =
+            let uu____77902 =
+              let uu____77903 =
+                let uu____77908 =
                   FStar_SMTEncoding_Util.mkOr (valid_a, valid_b)  in
-                (uu____77834, valid)  in
-              FStar_SMTEncoding_Util.mkIff uu____77829  in
-            ([[l_or_a_b]], [aa; bb], uu____77828)  in
-          FStar_SMTEncoding_Term.mkForall uu____77816 uu____77817  in
-        (uu____77815, (FStar_Pervasives_Native.Some "\\/ interpretation"),
+                (uu____77908, valid)  in
+              FStar_SMTEncoding_Util.mkIff uu____77903  in
+            ([[l_or_a_b]], [aa; bb], uu____77902)  in
+          FStar_SMTEncoding_Term.mkForall uu____77890 uu____77891  in
+        (uu____77889, (FStar_Pervasives_Native.Some "\\/ interpretation"),
           "l_or-interp")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____77807  in
-    [uu____77806]  in
+      FStar_SMTEncoding_Util.mkAssume uu____77881  in
+    [uu____77880]  in
   let mk_eq2_interp env eq2 tt =
     let aa =
       FStar_SMTEncoding_Term.mk_fv ("a", FStar_SMTEncoding_Term.Term_sort)
@@ -1382,23 +1382,23 @@ let (primitive_type_axioms :
     let y1 = FStar_SMTEncoding_Util.mkFreeV yy1  in
     let eq2_x_y = FStar_SMTEncoding_Util.mkApp (eq2, [a; x1; y1])  in
     let valid = FStar_SMTEncoding_Util.mkApp ("Valid", [eq2_x_y])  in
-    let uu____77912 =
-      let uu____77913 =
-        let uu____77921 =
-          let uu____77922 = FStar_TypeChecker_Env.get_range env  in
-          let uu____77923 =
-            let uu____77934 =
-              let uu____77935 =
-                let uu____77940 = FStar_SMTEncoding_Util.mkEq (x1, y1)  in
-                (uu____77940, valid)  in
-              FStar_SMTEncoding_Util.mkIff uu____77935  in
-            ([[eq2_x_y]], [aa; xx1; yy1], uu____77934)  in
-          FStar_SMTEncoding_Term.mkForall uu____77922 uu____77923  in
-        (uu____77921, (FStar_Pervasives_Native.Some "Eq2 interpretation"),
+    let uu____77986 =
+      let uu____77987 =
+        let uu____77995 =
+          let uu____77996 = FStar_TypeChecker_Env.get_range env  in
+          let uu____77997 =
+            let uu____78008 =
+              let uu____78009 =
+                let uu____78014 = FStar_SMTEncoding_Util.mkEq (x1, y1)  in
+                (uu____78014, valid)  in
+              FStar_SMTEncoding_Util.mkIff uu____78009  in
+            ([[eq2_x_y]], [aa; xx1; yy1], uu____78008)  in
+          FStar_SMTEncoding_Term.mkForall uu____77996 uu____77997  in
+        (uu____77995, (FStar_Pervasives_Native.Some "Eq2 interpretation"),
           "eq2-interp")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____77913  in
-    [uu____77912]  in
+      FStar_SMTEncoding_Util.mkAssume uu____77987  in
+    [uu____77986]  in
   let mk_eq3_interp env eq3 tt =
     let aa =
       FStar_SMTEncoding_Term.mk_fv ("a", FStar_SMTEncoding_Term.Term_sort)
@@ -1418,23 +1418,23 @@ let (primitive_type_axioms :
     let y1 = FStar_SMTEncoding_Util.mkFreeV yy1  in
     let eq3_x_y = FStar_SMTEncoding_Util.mkApp (eq3, [a; b; x1; y1])  in
     let valid = FStar_SMTEncoding_Util.mkApp ("Valid", [eq3_x_y])  in
-    let uu____78030 =
-      let uu____78031 =
-        let uu____78039 =
-          let uu____78040 = FStar_TypeChecker_Env.get_range env  in
-          let uu____78041 =
-            let uu____78052 =
-              let uu____78053 =
-                let uu____78058 = FStar_SMTEncoding_Util.mkEq (x1, y1)  in
-                (uu____78058, valid)  in
-              FStar_SMTEncoding_Util.mkIff uu____78053  in
-            ([[eq3_x_y]], [aa; bb; xx1; yy1], uu____78052)  in
-          FStar_SMTEncoding_Term.mkForall uu____78040 uu____78041  in
-        (uu____78039, (FStar_Pervasives_Native.Some "Eq3 interpretation"),
+    let uu____78104 =
+      let uu____78105 =
+        let uu____78113 =
+          let uu____78114 = FStar_TypeChecker_Env.get_range env  in
+          let uu____78115 =
+            let uu____78126 =
+              let uu____78127 =
+                let uu____78132 = FStar_SMTEncoding_Util.mkEq (x1, y1)  in
+                (uu____78132, valid)  in
+              FStar_SMTEncoding_Util.mkIff uu____78127  in
+            ([[eq3_x_y]], [aa; bb; xx1; yy1], uu____78126)  in
+          FStar_SMTEncoding_Term.mkForall uu____78114 uu____78115  in
+        (uu____78113, (FStar_Pervasives_Native.Some "Eq3 interpretation"),
           "eq3-interp")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____78031  in
-    [uu____78030]  in
+      FStar_SMTEncoding_Util.mkAssume uu____78105  in
+    [uu____78104]  in
   let mk_imp_interp env imp tt =
     let aa =
       FStar_SMTEncoding_Term.mk_fv ("a", FStar_SMTEncoding_Term.Term_sort)
@@ -1448,24 +1448,24 @@ let (primitive_type_axioms :
     let valid = FStar_SMTEncoding_Util.mkApp ("Valid", [l_imp_a_b])  in
     let valid_a = FStar_SMTEncoding_Util.mkApp ("Valid", [a])  in
     let valid_b = FStar_SMTEncoding_Util.mkApp ("Valid", [b])  in
-    let uu____78158 =
-      let uu____78159 =
-        let uu____78167 =
-          let uu____78168 = FStar_TypeChecker_Env.get_range env  in
-          let uu____78169 =
-            let uu____78180 =
-              let uu____78181 =
-                let uu____78186 =
+    let uu____78232 =
+      let uu____78233 =
+        let uu____78241 =
+          let uu____78242 = FStar_TypeChecker_Env.get_range env  in
+          let uu____78243 =
+            let uu____78254 =
+              let uu____78255 =
+                let uu____78260 =
                   FStar_SMTEncoding_Util.mkImp (valid_a, valid_b)  in
-                (uu____78186, valid)  in
-              FStar_SMTEncoding_Util.mkIff uu____78181  in
-            ([[l_imp_a_b]], [aa; bb], uu____78180)  in
-          FStar_SMTEncoding_Term.mkForall uu____78168 uu____78169  in
-        (uu____78167, (FStar_Pervasives_Native.Some "==> interpretation"),
+                (uu____78260, valid)  in
+              FStar_SMTEncoding_Util.mkIff uu____78255  in
+            ([[l_imp_a_b]], [aa; bb], uu____78254)  in
+          FStar_SMTEncoding_Term.mkForall uu____78242 uu____78243  in
+        (uu____78241, (FStar_Pervasives_Native.Some "==> interpretation"),
           "l_imp-interp")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____78159  in
-    [uu____78158]  in
+      FStar_SMTEncoding_Util.mkAssume uu____78233  in
+    [uu____78232]  in
   let mk_iff_interp env iff tt =
     let aa =
       FStar_SMTEncoding_Term.mk_fv ("a", FStar_SMTEncoding_Term.Term_sort)
@@ -1479,24 +1479,24 @@ let (primitive_type_axioms :
     let valid = FStar_SMTEncoding_Util.mkApp ("Valid", [l_iff_a_b])  in
     let valid_a = FStar_SMTEncoding_Util.mkApp ("Valid", [a])  in
     let valid_b = FStar_SMTEncoding_Util.mkApp ("Valid", [b])  in
-    let uu____78270 =
-      let uu____78271 =
-        let uu____78279 =
-          let uu____78280 = FStar_TypeChecker_Env.get_range env  in
-          let uu____78281 =
-            let uu____78292 =
-              let uu____78293 =
-                let uu____78298 =
+    let uu____78344 =
+      let uu____78345 =
+        let uu____78353 =
+          let uu____78354 = FStar_TypeChecker_Env.get_range env  in
+          let uu____78355 =
+            let uu____78366 =
+              let uu____78367 =
+                let uu____78372 =
                   FStar_SMTEncoding_Util.mkIff (valid_a, valid_b)  in
-                (uu____78298, valid)  in
-              FStar_SMTEncoding_Util.mkIff uu____78293  in
-            ([[l_iff_a_b]], [aa; bb], uu____78292)  in
-          FStar_SMTEncoding_Term.mkForall uu____78280 uu____78281  in
-        (uu____78279, (FStar_Pervasives_Native.Some "<==> interpretation"),
+                (uu____78372, valid)  in
+              FStar_SMTEncoding_Util.mkIff uu____78367  in
+            ([[l_iff_a_b]], [aa; bb], uu____78366)  in
+          FStar_SMTEncoding_Term.mkForall uu____78354 uu____78355  in
+        (uu____78353, (FStar_Pervasives_Native.Some "<==> interpretation"),
           "l_iff-interp")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____78271  in
-    [uu____78270]  in
+      FStar_SMTEncoding_Util.mkAssume uu____78345  in
+    [uu____78344]  in
   let mk_not_interp env l_not tt =
     let aa =
       FStar_SMTEncoding_Term.mk_fv ("a", FStar_SMTEncoding_Term.Term_sort)
@@ -1505,38 +1505,38 @@ let (primitive_type_axioms :
     let l_not_a = FStar_SMTEncoding_Util.mkApp (l_not, [a])  in
     let valid = FStar_SMTEncoding_Util.mkApp ("Valid", [l_not_a])  in
     let not_valid_a =
-      let uu____78369 = FStar_SMTEncoding_Util.mkApp ("Valid", [a])  in
-      FStar_All.pipe_left FStar_SMTEncoding_Util.mkNot uu____78369  in
-    let uu____78374 =
-      let uu____78375 =
-        let uu____78383 =
-          let uu____78384 = FStar_TypeChecker_Env.get_range env  in
-          let uu____78385 =
-            let uu____78396 =
+      let uu____78443 = FStar_SMTEncoding_Util.mkApp ("Valid", [a])  in
+      FStar_All.pipe_left FStar_SMTEncoding_Util.mkNot uu____78443  in
+    let uu____78448 =
+      let uu____78449 =
+        let uu____78457 =
+          let uu____78458 = FStar_TypeChecker_Env.get_range env  in
+          let uu____78459 =
+            let uu____78470 =
               FStar_SMTEncoding_Util.mkIff (not_valid_a, valid)  in
-            ([[l_not_a]], [aa], uu____78396)  in
-          FStar_SMTEncoding_Term.mkForall uu____78384 uu____78385  in
-        (uu____78383, (FStar_Pervasives_Native.Some "not interpretation"),
+            ([[l_not_a]], [aa], uu____78470)  in
+          FStar_SMTEncoding_Term.mkForall uu____78458 uu____78459  in
+        (uu____78457, (FStar_Pervasives_Native.Some "not interpretation"),
           "l_not-interp")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____78375  in
-    [uu____78374]  in
+      FStar_SMTEncoding_Util.mkAssume uu____78449  in
+    [uu____78448]  in
   let mk_range_interp env range tt =
     let range_ty = FStar_SMTEncoding_Util.mkApp (range, [])  in
-    let uu____78449 =
-      let uu____78450 =
-        let uu____78458 =
-          let uu____78459 = FStar_SMTEncoding_Term.mk_Range_const ()  in
-          FStar_SMTEncoding_Term.mk_HasTypeZ uu____78459 range_ty  in
-        let uu____78460 =
+    let uu____78523 =
+      let uu____78524 =
+        let uu____78532 =
+          let uu____78533 = FStar_SMTEncoding_Term.mk_Range_const ()  in
+          FStar_SMTEncoding_Term.mk_HasTypeZ uu____78533 range_ty  in
+        let uu____78534 =
           FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
             "typing_range_const"
            in
-        (uu____78458, (FStar_Pervasives_Native.Some "Range_const typing"),
-          uu____78460)
+        (uu____78532, (FStar_Pervasives_Native.Some "Range_const typing"),
+          uu____78534)
          in
-      FStar_SMTEncoding_Util.mkAssume uu____78450  in
-    [uu____78449]  in
+      FStar_SMTEncoding_Util.mkAssume uu____78524  in
+    [uu____78523]  in
   let mk_inversion_axiom env inversion tt =
     let tt1 =
       FStar_SMTEncoding_Term.mk_fv ("t", FStar_SMTEncoding_Term.Term_sort)
@@ -1551,29 +1551,29 @@ let (primitive_type_axioms :
     let body =
       let hastypeZ = FStar_SMTEncoding_Term.mk_HasTypeZ x1 t  in
       let hastypeS =
-        let uu____78506 = FStar_SMTEncoding_Term.n_fuel (Prims.parse_int "1")
+        let uu____78580 = FStar_SMTEncoding_Term.n_fuel (Prims.parse_int "1")
            in
-        FStar_SMTEncoding_Term.mk_HasTypeFuel uu____78506 x1 t  in
-      let uu____78508 = FStar_TypeChecker_Env.get_range env  in
-      let uu____78509 =
-        let uu____78520 = FStar_SMTEncoding_Util.mkImp (hastypeZ, hastypeS)
+        FStar_SMTEncoding_Term.mk_HasTypeFuel uu____78580 x1 t  in
+      let uu____78582 = FStar_TypeChecker_Env.get_range env  in
+      let uu____78583 =
+        let uu____78594 = FStar_SMTEncoding_Util.mkImp (hastypeZ, hastypeS)
            in
-        ([[hastypeZ]], [xx1], uu____78520)  in
-      FStar_SMTEncoding_Term.mkForall uu____78508 uu____78509  in
-    let uu____78545 =
-      let uu____78546 =
-        let uu____78554 =
-          let uu____78555 = FStar_TypeChecker_Env.get_range env  in
-          let uu____78556 =
-            let uu____78567 = FStar_SMTEncoding_Util.mkImp (valid, body)  in
-            ([[inversion_t]], [tt1], uu____78567)  in
-          FStar_SMTEncoding_Term.mkForall uu____78555 uu____78556  in
-        (uu____78554,
+        ([[hastypeZ]], [xx1], uu____78594)  in
+      FStar_SMTEncoding_Term.mkForall uu____78582 uu____78583  in
+    let uu____78619 =
+      let uu____78620 =
+        let uu____78628 =
+          let uu____78629 = FStar_TypeChecker_Env.get_range env  in
+          let uu____78630 =
+            let uu____78641 = FStar_SMTEncoding_Util.mkImp (valid, body)  in
+            ([[inversion_t]], [tt1], uu____78641)  in
+          FStar_SMTEncoding_Term.mkForall uu____78629 uu____78630  in
+        (uu____78628,
           (FStar_Pervasives_Native.Some "inversion interpretation"),
           "inversion-interp")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____78546  in
-    [uu____78545]  in
+      FStar_SMTEncoding_Util.mkAssume uu____78620  in
+    [uu____78619]  in
   let mk_with_type_axiom env with_type1 tt =
     let tt1 =
       FStar_SMTEncoding_Term.mk_fv ("t", FStar_SMTEncoding_Term.Term_sort)
@@ -1584,30 +1584,30 @@ let (primitive_type_axioms :
        in
     let e = FStar_SMTEncoding_Util.mkFreeV ee  in
     let with_type_t_e = FStar_SMTEncoding_Util.mkApp (with_type1, [t; e])  in
-    let uu____78628 =
-      let uu____78629 =
-        let uu____78637 =
-          let uu____78638 = FStar_TypeChecker_Env.get_range env  in
-          let uu____78639 =
-            let uu____78655 =
-              let uu____78656 =
-                let uu____78661 =
+    let uu____78702 =
+      let uu____78703 =
+        let uu____78711 =
+          let uu____78712 = FStar_TypeChecker_Env.get_range env  in
+          let uu____78713 =
+            let uu____78729 =
+              let uu____78730 =
+                let uu____78735 =
                   FStar_SMTEncoding_Util.mkEq (with_type_t_e, e)  in
-                let uu____78662 =
+                let uu____78736 =
                   FStar_SMTEncoding_Term.mk_HasType with_type_t_e t  in
-                (uu____78661, uu____78662)  in
-              FStar_SMTEncoding_Util.mkAnd uu____78656  in
+                (uu____78735, uu____78736)  in
+              FStar_SMTEncoding_Util.mkAnd uu____78730  in
             ([[with_type_t_e]],
               (FStar_Pervasives_Native.Some (Prims.parse_int "0")),
-              [tt1; ee], uu____78655)
+              [tt1; ee], uu____78729)
              in
-          FStar_SMTEncoding_Term.mkForall' uu____78638 uu____78639  in
-        (uu____78637,
+          FStar_SMTEncoding_Term.mkForall' uu____78712 uu____78713  in
+        (uu____78711,
           (FStar_Pervasives_Native.Some "with_type primitive axiom"),
           "@with_type_primitive_axiom")
          in
-      FStar_SMTEncoding_Util.mkAssume uu____78629  in
-    [uu____78628]  in
+      FStar_SMTEncoding_Util.mkAssume uu____78703  in
+    [uu____78702]  in
   let prims1 =
     [(FStar_Parser_Const.unit_lid, mk_unit);
     (FStar_Parser_Const.bool_lid, mk_bool);
@@ -1630,15 +1630,15 @@ let (primitive_type_axioms :
     fun t  ->
       fun s  ->
         fun tt  ->
-          let uu____79220 =
+          let uu____79294 =
             FStar_Util.find_opt
-              (fun uu____79258  ->
-                 match uu____79258 with
-                 | (l,uu____79274) -> FStar_Ident.lid_equals l t) prims1
+              (fun uu____79332  ->
+                 match uu____79332 with
+                 | (l,uu____79348) -> FStar_Ident.lid_equals l t) prims1
              in
-          match uu____79220 with
+          match uu____79294 with
           | FStar_Pervasives_Native.None  -> []
-          | FStar_Pervasives_Native.Some (uu____79317,f) -> f env s tt
+          | FStar_Pervasives_Native.Some (uu____79391,f) -> f env s tt
   
 let (encode_smt_lemma :
   FStar_SMTEncoding_Env.env_t ->
@@ -1649,25 +1649,25 @@ let (encode_smt_lemma :
     fun fv  ->
       fun t  ->
         let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v  in
-        let uu____79378 =
+        let uu____79452 =
           FStar_SMTEncoding_EncodeTerm.encode_function_type_as_formula t env
            in
-        match uu____79378 with
+        match uu____79452 with
         | (form,decls) ->
-            let uu____79387 =
-              let uu____79390 =
-                let uu____79393 =
+            let uu____79461 =
+              let uu____79464 =
+                let uu____79467 =
                   FStar_SMTEncoding_Util.mkAssume
                     (form,
                       (FStar_Pervasives_Native.Some
                          (Prims.op_Hat "Lemma: " lid.FStar_Ident.str)),
                       (Prims.op_Hat "lemma_" lid.FStar_Ident.str))
                    in
-                [uu____79393]  in
-              FStar_All.pipe_right uu____79390
+                [uu____79467]  in
+              FStar_All.pipe_right uu____79464
                 FStar_SMTEncoding_Term.mk_decls_trivial
                in
-            FStar_List.append decls uu____79387
+            FStar_List.append decls uu____79461
   
 let (encode_free_var :
   Prims.bool ->
@@ -1686,35 +1686,35 @@ let (encode_free_var :
             fun quals  ->
               let lid =
                 (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v  in
-              let uu____79452 =
-                ((let uu____79456 =
+              let uu____79526 =
+                ((let uu____79530 =
                     (FStar_Syntax_Util.is_pure_or_ghost_function t_norm) ||
                       (FStar_TypeChecker_Env.is_reifiable_function
                          env.FStar_SMTEncoding_Env.tcenv t_norm)
                      in
-                  FStar_All.pipe_left Prims.op_Negation uu____79456) ||
+                  FStar_All.pipe_left Prims.op_Negation uu____79530) ||
                    (FStar_Syntax_Util.is_lemma t_norm))
                   || uninterpreted
                  in
-              if uu____79452
+              if uu____79526
               then
                 let arg_sorts =
-                  let uu____79468 =
-                    let uu____79469 = FStar_Syntax_Subst.compress t_norm  in
-                    uu____79469.FStar_Syntax_Syntax.n  in
-                  match uu____79468 with
-                  | FStar_Syntax_Syntax.Tm_arrow (binders,uu____79475) ->
+                  let uu____79542 =
+                    let uu____79543 = FStar_Syntax_Subst.compress t_norm  in
+                    uu____79543.FStar_Syntax_Syntax.n  in
+                  match uu____79542 with
+                  | FStar_Syntax_Syntax.Tm_arrow (binders,uu____79549) ->
                       FStar_All.pipe_right binders
                         (FStar_List.map
-                           (fun uu____79513  ->
+                           (fun uu____79587  ->
                               FStar_SMTEncoding_Term.Term_sort))
-                  | uu____79520 -> []  in
+                  | uu____79594 -> []  in
                 let arity = FStar_List.length arg_sorts  in
-                let uu____79522 =
+                let uu____79596 =
                   FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid
                     env lid arity
                    in
-                match uu____79522 with
+                match uu____79596 with
                 | (vname,vtok,env1) ->
                     let d =
                       FStar_SMTEncoding_Term.DeclFun
@@ -1728,198 +1728,198 @@ let (encode_free_var :
                           (FStar_Pervasives_Native.Some
                              "Uninterpreted name for impure function"))
                        in
-                    let uu____79558 =
+                    let uu____79632 =
                       FStar_All.pipe_right [d; dd]
                         FStar_SMTEncoding_Term.mk_decls_trivial
                        in
-                    (uu____79558, env1)
+                    (uu____79632, env1)
               else
-                (let uu____79563 = prims.is lid  in
-                 if uu____79563
+                (let uu____79637 = prims.is lid  in
+                 if uu____79637
                  then
                    let vname =
                      FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.new_fvar
                        lid
                       in
-                   let uu____79572 = prims.mk lid vname  in
-                   match uu____79572 with
+                   let uu____79646 = prims.mk lid vname  in
+                   match uu____79646 with
                    | (tok,arity,definition) ->
                        let env1 =
                          FStar_SMTEncoding_Env.push_free_var env lid arity
                            vname (FStar_Pervasives_Native.Some tok)
                           in
-                       let uu____79596 =
+                       let uu____79670 =
                          FStar_All.pipe_right definition
                            FStar_SMTEncoding_Term.mk_decls_trivial
                           in
-                       (uu____79596, env1)
+                       (uu____79670, env1)
                  else
                    (let encode_non_total_function_typ =
                       lid.FStar_Ident.nsstr <> "Prims"  in
-                    let uu____79605 =
-                      let uu____79624 =
+                    let uu____79679 =
+                      let uu____79698 =
                         FStar_SMTEncoding_EncodeTerm.curried_arrow_formals_comp
                           t_norm
                          in
-                      match uu____79624 with
+                      match uu____79698 with
                       | (args,comp) ->
                           let comp1 =
-                            let uu____79652 =
+                            let uu____79726 =
                               FStar_TypeChecker_Env.is_reifiable_comp
                                 env.FStar_SMTEncoding_Env.tcenv comp
                                in
-                            if uu____79652
+                            if uu____79726
                             then
-                              let uu____79657 =
+                              let uu____79731 =
                                 FStar_TypeChecker_Env.reify_comp
-                                  (let uu___931_79660 =
+                                  (let uu___931_79734 =
                                      env.FStar_SMTEncoding_Env.tcenv  in
                                    {
                                      FStar_TypeChecker_Env.solver =
-                                       (uu___931_79660.FStar_TypeChecker_Env.solver);
+                                       (uu___931_79734.FStar_TypeChecker_Env.solver);
                                      FStar_TypeChecker_Env.range =
-                                       (uu___931_79660.FStar_TypeChecker_Env.range);
+                                       (uu___931_79734.FStar_TypeChecker_Env.range);
                                      FStar_TypeChecker_Env.curmodule =
-                                       (uu___931_79660.FStar_TypeChecker_Env.curmodule);
+                                       (uu___931_79734.FStar_TypeChecker_Env.curmodule);
                                      FStar_TypeChecker_Env.gamma =
-                                       (uu___931_79660.FStar_TypeChecker_Env.gamma);
+                                       (uu___931_79734.FStar_TypeChecker_Env.gamma);
                                      FStar_TypeChecker_Env.gamma_sig =
-                                       (uu___931_79660.FStar_TypeChecker_Env.gamma_sig);
+                                       (uu___931_79734.FStar_TypeChecker_Env.gamma_sig);
                                      FStar_TypeChecker_Env.gamma_cache =
-                                       (uu___931_79660.FStar_TypeChecker_Env.gamma_cache);
+                                       (uu___931_79734.FStar_TypeChecker_Env.gamma_cache);
                                      FStar_TypeChecker_Env.modules =
-                                       (uu___931_79660.FStar_TypeChecker_Env.modules);
+                                       (uu___931_79734.FStar_TypeChecker_Env.modules);
                                      FStar_TypeChecker_Env.expected_typ =
-                                       (uu___931_79660.FStar_TypeChecker_Env.expected_typ);
+                                       (uu___931_79734.FStar_TypeChecker_Env.expected_typ);
                                      FStar_TypeChecker_Env.sigtab =
-                                       (uu___931_79660.FStar_TypeChecker_Env.sigtab);
+                                       (uu___931_79734.FStar_TypeChecker_Env.sigtab);
                                      FStar_TypeChecker_Env.attrtab =
-                                       (uu___931_79660.FStar_TypeChecker_Env.attrtab);
+                                       (uu___931_79734.FStar_TypeChecker_Env.attrtab);
                                      FStar_TypeChecker_Env.is_pattern =
-                                       (uu___931_79660.FStar_TypeChecker_Env.is_pattern);
+                                       (uu___931_79734.FStar_TypeChecker_Env.is_pattern);
                                      FStar_TypeChecker_Env.instantiate_imp =
-                                       (uu___931_79660.FStar_TypeChecker_Env.instantiate_imp);
+                                       (uu___931_79734.FStar_TypeChecker_Env.instantiate_imp);
                                      FStar_TypeChecker_Env.effects =
-                                       (uu___931_79660.FStar_TypeChecker_Env.effects);
+                                       (uu___931_79734.FStar_TypeChecker_Env.effects);
                                      FStar_TypeChecker_Env.generalize =
-                                       (uu___931_79660.FStar_TypeChecker_Env.generalize);
+                                       (uu___931_79734.FStar_TypeChecker_Env.generalize);
                                      FStar_TypeChecker_Env.letrecs =
-                                       (uu___931_79660.FStar_TypeChecker_Env.letrecs);
+                                       (uu___931_79734.FStar_TypeChecker_Env.letrecs);
                                      FStar_TypeChecker_Env.top_level =
-                                       (uu___931_79660.FStar_TypeChecker_Env.top_level);
+                                       (uu___931_79734.FStar_TypeChecker_Env.top_level);
                                      FStar_TypeChecker_Env.check_uvars =
-                                       (uu___931_79660.FStar_TypeChecker_Env.check_uvars);
+                                       (uu___931_79734.FStar_TypeChecker_Env.check_uvars);
                                      FStar_TypeChecker_Env.use_eq =
-                                       (uu___931_79660.FStar_TypeChecker_Env.use_eq);
+                                       (uu___931_79734.FStar_TypeChecker_Env.use_eq);
                                      FStar_TypeChecker_Env.is_iface =
-                                       (uu___931_79660.FStar_TypeChecker_Env.is_iface);
+                                       (uu___931_79734.FStar_TypeChecker_Env.is_iface);
                                      FStar_TypeChecker_Env.admit =
-                                       (uu___931_79660.FStar_TypeChecker_Env.admit);
+                                       (uu___931_79734.FStar_TypeChecker_Env.admit);
                                      FStar_TypeChecker_Env.lax = true;
                                      FStar_TypeChecker_Env.lax_universes =
-                                       (uu___931_79660.FStar_TypeChecker_Env.lax_universes);
+                                       (uu___931_79734.FStar_TypeChecker_Env.lax_universes);
                                      FStar_TypeChecker_Env.phase1 =
-                                       (uu___931_79660.FStar_TypeChecker_Env.phase1);
+                                       (uu___931_79734.FStar_TypeChecker_Env.phase1);
                                      FStar_TypeChecker_Env.failhard =
-                                       (uu___931_79660.FStar_TypeChecker_Env.failhard);
+                                       (uu___931_79734.FStar_TypeChecker_Env.failhard);
                                      FStar_TypeChecker_Env.nosynth =
-                                       (uu___931_79660.FStar_TypeChecker_Env.nosynth);
+                                       (uu___931_79734.FStar_TypeChecker_Env.nosynth);
                                      FStar_TypeChecker_Env.uvar_subtyping =
-                                       (uu___931_79660.FStar_TypeChecker_Env.uvar_subtyping);
+                                       (uu___931_79734.FStar_TypeChecker_Env.uvar_subtyping);
                                      FStar_TypeChecker_Env.tc_term =
-                                       (uu___931_79660.FStar_TypeChecker_Env.tc_term);
+                                       (uu___931_79734.FStar_TypeChecker_Env.tc_term);
                                      FStar_TypeChecker_Env.type_of =
-                                       (uu___931_79660.FStar_TypeChecker_Env.type_of);
+                                       (uu___931_79734.FStar_TypeChecker_Env.type_of);
                                      FStar_TypeChecker_Env.universe_of =
-                                       (uu___931_79660.FStar_TypeChecker_Env.universe_of);
+                                       (uu___931_79734.FStar_TypeChecker_Env.universe_of);
                                      FStar_TypeChecker_Env.check_type_of =
-                                       (uu___931_79660.FStar_TypeChecker_Env.check_type_of);
+                                       (uu___931_79734.FStar_TypeChecker_Env.check_type_of);
                                      FStar_TypeChecker_Env.use_bv_sorts =
-                                       (uu___931_79660.FStar_TypeChecker_Env.use_bv_sorts);
+                                       (uu___931_79734.FStar_TypeChecker_Env.use_bv_sorts);
                                      FStar_TypeChecker_Env.qtbl_name_and_index
                                        =
-                                       (uu___931_79660.FStar_TypeChecker_Env.qtbl_name_and_index);
+                                       (uu___931_79734.FStar_TypeChecker_Env.qtbl_name_and_index);
                                      FStar_TypeChecker_Env.normalized_eff_names
                                        =
-                                       (uu___931_79660.FStar_TypeChecker_Env.normalized_eff_names);
+                                       (uu___931_79734.FStar_TypeChecker_Env.normalized_eff_names);
                                      FStar_TypeChecker_Env.fv_delta_depths =
-                                       (uu___931_79660.FStar_TypeChecker_Env.fv_delta_depths);
+                                       (uu___931_79734.FStar_TypeChecker_Env.fv_delta_depths);
                                      FStar_TypeChecker_Env.proof_ns =
-                                       (uu___931_79660.FStar_TypeChecker_Env.proof_ns);
+                                       (uu___931_79734.FStar_TypeChecker_Env.proof_ns);
                                      FStar_TypeChecker_Env.synth_hook =
-                                       (uu___931_79660.FStar_TypeChecker_Env.synth_hook);
+                                       (uu___931_79734.FStar_TypeChecker_Env.synth_hook);
                                      FStar_TypeChecker_Env.splice =
-                                       (uu___931_79660.FStar_TypeChecker_Env.splice);
+                                       (uu___931_79734.FStar_TypeChecker_Env.splice);
                                      FStar_TypeChecker_Env.postprocess =
-                                       (uu___931_79660.FStar_TypeChecker_Env.postprocess);
+                                       (uu___931_79734.FStar_TypeChecker_Env.postprocess);
                                      FStar_TypeChecker_Env.is_native_tactic =
-                                       (uu___931_79660.FStar_TypeChecker_Env.is_native_tactic);
+                                       (uu___931_79734.FStar_TypeChecker_Env.is_native_tactic);
                                      FStar_TypeChecker_Env.identifier_info =
-                                       (uu___931_79660.FStar_TypeChecker_Env.identifier_info);
+                                       (uu___931_79734.FStar_TypeChecker_Env.identifier_info);
                                      FStar_TypeChecker_Env.tc_hooks =
-                                       (uu___931_79660.FStar_TypeChecker_Env.tc_hooks);
+                                       (uu___931_79734.FStar_TypeChecker_Env.tc_hooks);
                                      FStar_TypeChecker_Env.dsenv =
-                                       (uu___931_79660.FStar_TypeChecker_Env.dsenv);
+                                       (uu___931_79734.FStar_TypeChecker_Env.dsenv);
                                      FStar_TypeChecker_Env.nbe =
-                                       (uu___931_79660.FStar_TypeChecker_Env.nbe)
+                                       (uu___931_79734.FStar_TypeChecker_Env.nbe)
                                    }) comp FStar_Syntax_Syntax.U_unknown
                                  in
-                              FStar_Syntax_Syntax.mk_Total uu____79657
+                              FStar_Syntax_Syntax.mk_Total uu____79731
                             else comp  in
                           if encode_non_total_function_typ
                           then
-                            let uu____79683 =
+                            let uu____79757 =
                               FStar_TypeChecker_Util.pure_or_ghost_pre_and_post
                                 env.FStar_SMTEncoding_Env.tcenv comp1
                                in
-                            (args, uu____79683)
+                            (args, uu____79757)
                           else
                             (args,
                               (FStar_Pervasives_Native.None,
                                 (FStar_Syntax_Util.comp_result comp1)))
                        in
-                    match uu____79605 with
+                    match uu____79679 with
                     | (formals,(pre_opt,res_t)) ->
                         let mk_disc_proj_axioms guard encoded_res_t vapp vars
                           =
                           FStar_All.pipe_right quals
                             (FStar_List.collect
-                               (fun uu___639_79789  ->
-                                  match uu___639_79789 with
+                               (fun uu___639_79863  ->
+                                  match uu___639_79863 with
                                   | FStar_Syntax_Syntax.Discriminator d ->
-                                      let uu____79793 =
+                                      let uu____79867 =
                                         FStar_Util.prefix vars  in
-                                      (match uu____79793 with
-                                       | (uu____79826,xxv) ->
+                                      (match uu____79867 with
+                                       | (uu____79900,xxv) ->
                                            let xx =
-                                             let uu____79865 =
-                                               let uu____79866 =
-                                                 let uu____79872 =
+                                             let uu____79939 =
+                                               let uu____79940 =
+                                                 let uu____79946 =
                                                    FStar_SMTEncoding_Term.fv_name
                                                      xxv
                                                     in
-                                                 (uu____79872,
+                                                 (uu____79946,
                                                    FStar_SMTEncoding_Term.Term_sort)
                                                   in
                                                FStar_SMTEncoding_Term.mk_fv
-                                                 uu____79866
+                                                 uu____79940
                                                 in
                                              FStar_All.pipe_left
                                                FStar_SMTEncoding_Util.mkFreeV
-                                               uu____79865
+                                               uu____79939
                                               in
-                                           let uu____79875 =
-                                             let uu____79876 =
-                                               let uu____79884 =
-                                                 let uu____79885 =
+                                           let uu____79949 =
+                                             let uu____79950 =
+                                               let uu____79958 =
+                                                 let uu____79959 =
                                                    FStar_Syntax_Syntax.range_of_fv
                                                      fv
                                                     in
-                                                 let uu____79886 =
-                                                   let uu____79897 =
-                                                     let uu____79898 =
-                                                       let uu____79903 =
-                                                         let uu____79904 =
+                                                 let uu____79960 =
+                                                   let uu____79971 =
+                                                     let uu____79972 =
+                                                       let uu____79977 =
+                                                         let uu____79978 =
                                                            FStar_SMTEncoding_Term.mk_tester
                                                              (FStar_SMTEncoding_Env.escape
                                                                 d.FStar_Ident.str)
@@ -1927,20 +1927,20 @@ let (encode_free_var :
                                                             in
                                                          FStar_All.pipe_left
                                                            FStar_SMTEncoding_Term.boxBool
-                                                           uu____79904
+                                                           uu____79978
                                                           in
-                                                       (vapp, uu____79903)
+                                                       (vapp, uu____79977)
                                                         in
                                                      FStar_SMTEncoding_Util.mkEq
-                                                       uu____79898
+                                                       uu____79972
                                                       in
                                                    ([[vapp]], vars,
-                                                     uu____79897)
+                                                     uu____79971)
                                                     in
                                                  FStar_SMTEncoding_Term.mkForall
-                                                   uu____79885 uu____79886
+                                                   uu____79959 uu____79960
                                                   in
-                                               (uu____79884,
+                                               (uu____79958,
                                                  (FStar_Pervasives_Native.Some
                                                     "Discriminator equation"),
                                                  (Prims.op_Hat
@@ -1949,30 +1949,30 @@ let (encode_free_var :
                                                        d.FStar_Ident.str)))
                                                 in
                                              FStar_SMTEncoding_Util.mkAssume
-                                               uu____79876
+                                               uu____79950
                                               in
-                                           [uu____79875])
+                                           [uu____79949])
                                   | FStar_Syntax_Syntax.Projector (d,f) ->
-                                      let uu____79919 =
+                                      let uu____79993 =
                                         FStar_Util.prefix vars  in
-                                      (match uu____79919 with
-                                       | (uu____79952,xxv) ->
+                                      (match uu____79993 with
+                                       | (uu____80026,xxv) ->
                                            let xx =
-                                             let uu____79991 =
-                                               let uu____79992 =
-                                                 let uu____79998 =
+                                             let uu____80065 =
+                                               let uu____80066 =
+                                                 let uu____80072 =
                                                    FStar_SMTEncoding_Term.fv_name
                                                      xxv
                                                     in
-                                                 (uu____79998,
+                                                 (uu____80072,
                                                    FStar_SMTEncoding_Term.Term_sort)
                                                   in
                                                FStar_SMTEncoding_Term.mk_fv
-                                                 uu____79992
+                                                 uu____80066
                                                 in
                                              FStar_All.pipe_left
                                                FStar_SMTEncoding_Util.mkFreeV
-                                               uu____79991
+                                               uu____80065
                                               in
                                            let f1 =
                                              {
@@ -1990,64 +1990,64 @@ let (encode_free_var :
                                              FStar_SMTEncoding_Util.mkApp
                                                (tp_name, [xx])
                                               in
-                                           let uu____80009 =
-                                             let uu____80010 =
-                                               let uu____80018 =
-                                                 let uu____80019 =
+                                           let uu____80083 =
+                                             let uu____80084 =
+                                               let uu____80092 =
+                                                 let uu____80093 =
                                                    FStar_Syntax_Syntax.range_of_fv
                                                      fv
                                                     in
-                                                 let uu____80020 =
-                                                   let uu____80031 =
+                                                 let uu____80094 =
+                                                   let uu____80105 =
                                                      FStar_SMTEncoding_Util.mkEq
                                                        (vapp, prim_app)
                                                       in
                                                    ([[vapp]], vars,
-                                                     uu____80031)
+                                                     uu____80105)
                                                     in
                                                  FStar_SMTEncoding_Term.mkForall
-                                                   uu____80019 uu____80020
+                                                   uu____80093 uu____80094
                                                   in
-                                               (uu____80018,
+                                               (uu____80092,
                                                  (FStar_Pervasives_Native.Some
                                                     "Projector equation"),
                                                  (Prims.op_Hat
                                                     "proj_equation_" tp_name))
                                                 in
                                              FStar_SMTEncoding_Util.mkAssume
-                                               uu____80010
+                                               uu____80084
                                               in
-                                           [uu____80009])
-                                  | uu____80044 -> []))
+                                           [uu____80083])
+                                  | uu____80118 -> []))
                            in
-                        let uu____80045 =
+                        let uu____80119 =
                           FStar_SMTEncoding_EncodeTerm.encode_binders
                             FStar_Pervasives_Native.None formals env
                            in
-                        (match uu____80045 with
-                         | (vars,guards,env',decls1,uu____80070) ->
-                             let uu____80083 =
+                        (match uu____80119 with
+                         | (vars,guards,env',decls1,uu____80144) ->
+                             let uu____80157 =
                                match pre_opt with
                                | FStar_Pervasives_Native.None  ->
-                                   let uu____80096 =
+                                   let uu____80170 =
                                      FStar_SMTEncoding_Util.mk_and_l guards
                                       in
-                                   (uu____80096, decls1)
+                                   (uu____80170, decls1)
                                | FStar_Pervasives_Native.Some p ->
-                                   let uu____80100 =
+                                   let uu____80174 =
                                      FStar_SMTEncoding_EncodeTerm.encode_formula
                                        p env'
                                       in
-                                   (match uu____80100 with
+                                   (match uu____80174 with
                                     | (g,ds) ->
-                                        let uu____80113 =
+                                        let uu____80187 =
                                           FStar_SMTEncoding_Util.mk_and_l (g
                                             :: guards)
                                            in
-                                        (uu____80113,
+                                        (uu____80187,
                                           (FStar_List.append decls1 ds)))
                                 in
-                             (match uu____80083 with
+                             (match uu____80157 with
                               | (guard,decls11) ->
                                   let dummy_var =
                                     FStar_SMTEncoding_Term.mk_fv
@@ -2058,29 +2058,29 @@ let (encode_free_var :
                                     FStar_SMTEncoding_Term.mkFreeV dummy_var
                                       FStar_Range.dummyRange
                                      in
-                                  let should_thunk uu____80136 =
+                                  let should_thunk uu____80210 =
                                     let is_type1 t =
-                                      let uu____80144 =
-                                        let uu____80145 =
+                                      let uu____80218 =
+                                        let uu____80219 =
                                           FStar_Syntax_Subst.compress t  in
-                                        uu____80145.FStar_Syntax_Syntax.n  in
-                                      match uu____80144 with
+                                        uu____80219.FStar_Syntax_Syntax.n  in
+                                      match uu____80218 with
                                       | FStar_Syntax_Syntax.Tm_type
-                                          uu____80149 -> true
-                                      | uu____80151 -> false  in
+                                          uu____80223 -> true
+                                      | uu____80225 -> false  in
                                     let is_squash1 t =
-                                      let uu____80160 =
+                                      let uu____80234 =
                                         FStar_Syntax_Util.head_and_args t  in
-                                      match uu____80160 with
-                                      | (head1,uu____80179) ->
-                                          let uu____80204 =
-                                            let uu____80205 =
+                                      match uu____80234 with
+                                      | (head1,uu____80253) ->
+                                          let uu____80278 =
+                                            let uu____80279 =
                                               FStar_Syntax_Util.un_uinst
                                                 head1
                                                in
-                                            uu____80205.FStar_Syntax_Syntax.n
+                                            uu____80279.FStar_Syntax_Syntax.n
                                              in
-                                          (match uu____80204 with
+                                          (match uu____80278 with
                                            | FStar_Syntax_Syntax.Tm_fvar fv1
                                                ->
                                                FStar_Syntax_Syntax.fv_eq_lid
@@ -2089,159 +2089,159 @@ let (encode_free_var :
                                            | FStar_Syntax_Syntax.Tm_refine
                                                ({
                                                   FStar_Syntax_Syntax.ppname
-                                                    = uu____80210;
+                                                    = uu____80284;
                                                   FStar_Syntax_Syntax.index =
-                                                    uu____80211;
+                                                    uu____80285;
                                                   FStar_Syntax_Syntax.sort =
                                                     {
                                                       FStar_Syntax_Syntax.n =
                                                         FStar_Syntax_Syntax.Tm_fvar
                                                         fv1;
                                                       FStar_Syntax_Syntax.pos
-                                                        = uu____80213;
+                                                        = uu____80287;
                                                       FStar_Syntax_Syntax.vars
-                                                        = uu____80214;_};_},uu____80215)
+                                                        = uu____80288;_};_},uu____80289)
                                                ->
                                                FStar_Syntax_Syntax.fv_eq_lid
                                                  fv1
                                                  FStar_Parser_Const.unit_lid
-                                           | uu____80223 -> false)
+                                           | uu____80297 -> false)
                                        in
                                     (((lid.FStar_Ident.nsstr <> "Prims") &&
-                                        (let uu____80228 =
+                                        (let uu____80302 =
                                            FStar_All.pipe_right quals
                                              (FStar_List.contains
                                                 FStar_Syntax_Syntax.Logic)
                                             in
-                                         Prims.op_Negation uu____80228))
+                                         Prims.op_Negation uu____80302))
                                        &&
-                                       (let uu____80234 = is_squash1 t_norm
+                                       (let uu____80308 = is_squash1 t_norm
                                            in
-                                        Prims.op_Negation uu____80234))
+                                        Prims.op_Negation uu____80308))
                                       &&
-                                      (let uu____80237 = is_type1 t_norm  in
-                                       Prims.op_Negation uu____80237)
+                                      (let uu____80311 = is_type1 t_norm  in
+                                       Prims.op_Negation uu____80311)
                                      in
-                                  let uu____80239 =
+                                  let uu____80313 =
                                     match vars with
                                     | [] when should_thunk () ->
                                         (true, [dummy_var])
-                                    | uu____80298 -> (false, vars)  in
-                                  (match uu____80239 with
+                                    | uu____80372 -> (false, vars)  in
+                                  (match uu____80313 with
                                    | (thunked,vars1) ->
                                        let arity = FStar_List.length formals
                                           in
-                                       let uu____80348 =
+                                       let uu____80422 =
                                          FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid_maybe_thunked
                                            env lid arity thunked
                                           in
-                                       (match uu____80348 with
+                                       (match uu____80422 with
                                         | (vname,vtok_opt,env1) ->
-                                            let get_vtok uu____80384 =
+                                            let get_vtok uu____80458 =
                                               FStar_Option.get vtok_opt  in
                                             let vtok_tm =
                                               match formals with
                                               | [] when
                                                   Prims.op_Negation thunked
                                                   ->
-                                                  let uu____80393 =
+                                                  let uu____80467 =
                                                     FStar_SMTEncoding_Term.mk_fv
                                                       (vname,
                                                         FStar_SMTEncoding_Term.Term_sort)
                                                      in
                                                   FStar_All.pipe_left
                                                     FStar_SMTEncoding_Util.mkFreeV
-                                                    uu____80393
+                                                    uu____80467
                                               | [] when thunked ->
                                                   FStar_SMTEncoding_Util.mkApp
                                                     (vname, [dummy_tm])
-                                              | uu____80404 ->
-                                                  let uu____80413 =
-                                                    let uu____80421 =
+                                              | uu____80478 ->
+                                                  let uu____80487 =
+                                                    let uu____80495 =
                                                       get_vtok ()  in
-                                                    (uu____80421, [])  in
+                                                    (uu____80495, [])  in
                                                   FStar_SMTEncoding_Util.mkApp
-                                                    uu____80413
+                                                    uu____80487
                                                in
                                             let vtok_app =
                                               FStar_SMTEncoding_EncodeTerm.mk_Apply
                                                 vtok_tm vars1
                                                in
                                             let vapp =
-                                              let uu____80428 =
-                                                let uu____80436 =
+                                              let uu____80502 =
+                                                let uu____80510 =
                                                   FStar_List.map
                                                     FStar_SMTEncoding_Util.mkFreeV
                                                     vars1
                                                    in
-                                                (vname, uu____80436)  in
+                                                (vname, uu____80510)  in
                                               FStar_SMTEncoding_Util.mkApp
-                                                uu____80428
+                                                uu____80502
                                                in
-                                            let uu____80450 =
+                                            let uu____80524 =
                                               let vname_decl =
-                                                let uu____80458 =
-                                                  let uu____80470 =
+                                                let uu____80532 =
+                                                  let uu____80544 =
                                                     FStar_All.pipe_right
                                                       vars1
                                                       (FStar_List.map
                                                          FStar_SMTEncoding_Term.fv_sort)
                                                      in
-                                                  (vname, uu____80470,
+                                                  (vname, uu____80544,
                                                     FStar_SMTEncoding_Term.Term_sort,
                                                     FStar_Pervasives_Native.None)
                                                    in
                                                 FStar_SMTEncoding_Term.DeclFun
-                                                  uu____80458
+                                                  uu____80532
                                                  in
-                                              let uu____80481 =
+                                              let uu____80555 =
                                                 let env2 =
-                                                  let uu___1026_80487 = env1
+                                                  let uu___1026_80561 = env1
                                                      in
                                                   {
                                                     FStar_SMTEncoding_Env.bvar_bindings
                                                       =
-                                                      (uu___1026_80487.FStar_SMTEncoding_Env.bvar_bindings);
+                                                      (uu___1026_80561.FStar_SMTEncoding_Env.bvar_bindings);
                                                     FStar_SMTEncoding_Env.fvar_bindings
                                                       =
-                                                      (uu___1026_80487.FStar_SMTEncoding_Env.fvar_bindings);
+                                                      (uu___1026_80561.FStar_SMTEncoding_Env.fvar_bindings);
                                                     FStar_SMTEncoding_Env.depth
                                                       =
-                                                      (uu___1026_80487.FStar_SMTEncoding_Env.depth);
+                                                      (uu___1026_80561.FStar_SMTEncoding_Env.depth);
                                                     FStar_SMTEncoding_Env.tcenv
                                                       =
-                                                      (uu___1026_80487.FStar_SMTEncoding_Env.tcenv);
+                                                      (uu___1026_80561.FStar_SMTEncoding_Env.tcenv);
                                                     FStar_SMTEncoding_Env.warn
                                                       =
-                                                      (uu___1026_80487.FStar_SMTEncoding_Env.warn);
+                                                      (uu___1026_80561.FStar_SMTEncoding_Env.warn);
                                                     FStar_SMTEncoding_Env.nolabels
                                                       =
-                                                      (uu___1026_80487.FStar_SMTEncoding_Env.nolabels);
+                                                      (uu___1026_80561.FStar_SMTEncoding_Env.nolabels);
                                                     FStar_SMTEncoding_Env.use_zfuel_name
                                                       =
-                                                      (uu___1026_80487.FStar_SMTEncoding_Env.use_zfuel_name);
+                                                      (uu___1026_80561.FStar_SMTEncoding_Env.use_zfuel_name);
                                                     FStar_SMTEncoding_Env.encode_non_total_function_typ
                                                       =
                                                       encode_non_total_function_typ;
                                                     FStar_SMTEncoding_Env.current_module_name
                                                       =
-                                                      (uu___1026_80487.FStar_SMTEncoding_Env.current_module_name);
+                                                      (uu___1026_80561.FStar_SMTEncoding_Env.current_module_name);
                                                     FStar_SMTEncoding_Env.encoding_quantifier
                                                       =
-                                                      (uu___1026_80487.FStar_SMTEncoding_Env.encoding_quantifier);
+                                                      (uu___1026_80561.FStar_SMTEncoding_Env.encoding_quantifier);
                                                     FStar_SMTEncoding_Env.global_cache
                                                       =
-                                                      (uu___1026_80487.FStar_SMTEncoding_Env.global_cache)
+                                                      (uu___1026_80561.FStar_SMTEncoding_Env.global_cache)
                                                   }  in
-                                                let uu____80488 =
-                                                  let uu____80490 =
+                                                let uu____80562 =
+                                                  let uu____80564 =
                                                     FStar_SMTEncoding_EncodeTerm.head_normal
                                                       env2 tt
                                                      in
                                                   Prims.op_Negation
-                                                    uu____80490
+                                                    uu____80564
                                                    in
-                                                if uu____80488
+                                                if uu____80562
                                                 then
                                                   FStar_SMTEncoding_EncodeTerm.encode_term_pred
                                                     FStar_Pervasives_Native.None
@@ -2251,9 +2251,9 @@ let (encode_free_var :
                                                     FStar_Pervasives_Native.None
                                                     t_norm env2 vtok_tm
                                                  in
-                                              match uu____80481 with
+                                              match uu____80555 with
                                               | (tok_typing,decls2) ->
-                                                  let uu____80507 =
+                                                  let uu____80581 =
                                                     match vars1 with
                                                     | [] ->
                                                         let tok_typing1 =
@@ -2265,86 +2265,86 @@ let (encode_free_var :
                                                                  "function_token_typing_"
                                                                  vname))
                                                            in
-                                                        let uu____80533 =
-                                                          let uu____80536 =
+                                                        let uu____80607 =
+                                                          let uu____80610 =
                                                             FStar_All.pipe_right
                                                               [tok_typing1]
                                                               FStar_SMTEncoding_Term.mk_decls_trivial
                                                              in
                                                           FStar_List.append
                                                             decls2
-                                                            uu____80536
+                                                            uu____80610
                                                            in
-                                                        let uu____80543 =
-                                                          let uu____80544 =
-                                                            let uu____80547 =
-                                                              let uu____80548
+                                                        let uu____80617 =
+                                                          let uu____80618 =
+                                                            let uu____80621 =
+                                                              let uu____80622
                                                                 =
                                                                 FStar_SMTEncoding_Term.mk_fv
                                                                   (vname,
                                                                     FStar_SMTEncoding_Term.Term_sort)
                                                                  in
                                                               FStar_SMTEncoding_Util.mkFreeV
-                                                                uu____80548
+                                                                uu____80622
                                                                in
                                                             FStar_All.pipe_left
-                                                              (fun _80552  ->
+                                                              (fun _80626  ->
                                                                  FStar_Pervasives_Native.Some
-                                                                   _80552)
-                                                              uu____80547
+                                                                   _80626)
+                                                              uu____80621
                                                              in
                                                           FStar_SMTEncoding_Env.push_free_var
                                                             env1 lid arity
-                                                            vname uu____80544
+                                                            vname uu____80618
                                                            in
-                                                        (uu____80533,
-                                                          uu____80543)
-                                                    | uu____80559 when
+                                                        (uu____80607,
+                                                          uu____80617)
+                                                    | uu____80633 when
                                                         thunked ->
-                                                        let uu____80570 =
+                                                        let uu____80644 =
                                                           FStar_Options.protect_top_level_axioms
                                                             ()
                                                            in
-                                                        if uu____80570
+                                                        if uu____80644
                                                         then (decls2, env1)
                                                         else
                                                           (let intro_ambient1
                                                              =
                                                              let t =
-                                                               let uu____80585
+                                                               let uu____80659
                                                                  =
-                                                                 let uu____80593
+                                                                 let uu____80667
                                                                    =
-                                                                   let uu____80596
+                                                                   let uu____80670
                                                                     =
-                                                                    let uu____80599
+                                                                    let uu____80673
                                                                     =
                                                                     FStar_All.pipe_left
                                                                     FStar_SMTEncoding_Util.mkFreeV
                                                                     (vname,
                                                                     FStar_SMTEncoding_Term.Term_sort,
                                                                     true)  in
-                                                                    [uu____80599]
+                                                                    [uu____80673]
                                                                      in
                                                                    FStar_SMTEncoding_Term.mk_Term_unit
                                                                     ::
-                                                                    uu____80596
+                                                                    uu____80670
                                                                     in
                                                                  ("FStar.Pervasives.ambient",
-                                                                   uu____80593)
+                                                                   uu____80667)
                                                                   in
                                                                FStar_SMTEncoding_Term.mkApp
-                                                                 uu____80585
+                                                                 uu____80659
                                                                  FStar_Range.dummyRange
                                                                 in
-                                                             let uu____80607
+                                                             let uu____80681
                                                                =
-                                                               let uu____80615
+                                                               let uu____80689
                                                                  =
                                                                  FStar_SMTEncoding_Term.mk_Valid
                                                                    t
                                                                   in
-                                                               (uu____80615,
+                                                               (uu____80689,
                                                                  (FStar_Pervasives_Native.Some
                                                                     "Ambient nullary symbol trigger"),
                                                                  (Prims.op_Hat
@@ -2352,10 +2352,10 @@ let (encode_free_var :
                                                                     vname))
                                                                 in
                                                              FStar_SMTEncoding_Util.mkAssume
-                                                               uu____80607
+                                                               uu____80681
                                                               in
-                                                           let uu____80620 =
-                                                             let uu____80623
+                                                           let uu____80694 =
+                                                             let uu____80697
                                                                =
                                                                FStar_All.pipe_right
                                                                  [intro_ambient1]
@@ -2363,11 +2363,11 @@ let (encode_free_var :
                                                                 in
                                                              FStar_List.append
                                                                decls2
-                                                               uu____80623
+                                                               uu____80697
                                                               in
-                                                           (uu____80620,
+                                                           (uu____80694,
                                                              env1))
-                                                    | uu____80632 ->
+                                                    | uu____80706 ->
                                                         let vtok =
                                                           get_vtok ()  in
                                                         let vtok_decl =
@@ -2378,30 +2378,30 @@ let (encode_free_var :
                                                            in
                                                         let name_tok_corr_formula
                                                           pat =
-                                                          let uu____80656 =
+                                                          let uu____80730 =
                                                             FStar_Syntax_Syntax.range_of_fv
                                                               fv
                                                              in
-                                                          let uu____80657 =
-                                                            let uu____80668 =
+                                                          let uu____80731 =
+                                                            let uu____80742 =
                                                               FStar_SMTEncoding_Util.mkEq
                                                                 (vtok_app,
                                                                   vapp)
                                                                in
                                                             ([[pat]], vars1,
-                                                              uu____80668)
+                                                              uu____80742)
                                                              in
                                                           FStar_SMTEncoding_Term.mkForall
-                                                            uu____80656
-                                                            uu____80657
+                                                            uu____80730
+                                                            uu____80731
                                                            in
                                                         let name_tok_corr =
-                                                          let uu____80678 =
-                                                            let uu____80686 =
+                                                          let uu____80752 =
+                                                            let uu____80760 =
                                                               name_tok_corr_formula
                                                                 vtok_app
                                                                in
-                                                            (uu____80686,
+                                                            (uu____80760,
                                                               (FStar_Pervasives_Native.Some
                                                                  "Name-token correspondence"),
                                                               (Prims.op_Hat
@@ -2409,7 +2409,7 @@ let (encode_free_var :
                                                                  vname))
                                                              in
                                                           FStar_SMTEncoding_Util.mkAssume
-                                                            uu____80678
+                                                            uu____80752
                                                            in
                                                         let tok_typing1 =
                                                           let ff =
@@ -2422,52 +2422,52 @@ let (encode_free_var :
                                                               ff
                                                              in
                                                           let vtok_app_r =
-                                                            let uu____80697 =
-                                                              let uu____80698
+                                                            let uu____80771 =
+                                                              let uu____80772
                                                                 =
                                                                 FStar_SMTEncoding_Term.mk_fv
                                                                   (vtok,
                                                                     FStar_SMTEncoding_Term.Term_sort)
                                                                  in
-                                                              [uu____80698]
+                                                              [uu____80772]
                                                                in
                                                             FStar_SMTEncoding_EncodeTerm.mk_Apply
-                                                              f uu____80697
+                                                              f uu____80771
                                                              in
                                                           let guarded_tok_typing
                                                             =
-                                                            let uu____80725 =
+                                                            let uu____80799 =
                                                               FStar_Syntax_Syntax.range_of_fv
                                                                 fv
                                                                in
-                                                            let uu____80726 =
-                                                              let uu____80737
+                                                            let uu____80800 =
+                                                              let uu____80811
                                                                 =
-                                                                let uu____80738
+                                                                let uu____80812
                                                                   =
-                                                                  let uu____80743
+                                                                  let uu____80817
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk_NoHoist
                                                                     f
                                                                     tok_typing
                                                                      in
-                                                                  let uu____80744
+                                                                  let uu____80818
                                                                     =
                                                                     name_tok_corr_formula
                                                                     vapp  in
-                                                                  (uu____80743,
-                                                                    uu____80744)
+                                                                  (uu____80817,
+                                                                    uu____80818)
                                                                    in
                                                                 FStar_SMTEncoding_Util.mkAnd
-                                                                  uu____80738
+                                                                  uu____80812
                                                                  in
                                                               ([[vtok_app_r]],
                                                                 [ff],
-                                                                uu____80737)
+                                                                uu____80811)
                                                                in
                                                             FStar_SMTEncoding_Term.mkForall
-                                                              uu____80725
-                                                              uu____80726
+                                                              uu____80799
+                                                              uu____80800
                                                              in
                                                           FStar_SMTEncoding_Util.mkAssume
                                                             (guarded_tok_typing,
@@ -2477,8 +2477,8 @@ let (encode_free_var :
                                                                  "function_token_typing_"
                                                                  vname))
                                                            in
-                                                        let uu____80773 =
-                                                          let uu____80776 =
+                                                        let uu____80847 =
+                                                          let uu____80850 =
                                                             FStar_All.pipe_right
                                                               [vtok_decl;
                                                               name_tok_corr;
@@ -2487,56 +2487,56 @@ let (encode_free_var :
                                                              in
                                                           FStar_List.append
                                                             decls2
-                                                            uu____80776
+                                                            uu____80850
                                                            in
-                                                        (uu____80773, env1)
+                                                        (uu____80847, env1)
                                                      in
-                                                  (match uu____80507 with
+                                                  (match uu____80581 with
                                                    | (tok_decl,env2) ->
-                                                       let uu____80797 =
-                                                         let uu____80800 =
+                                                       let uu____80871 =
+                                                         let uu____80874 =
                                                            FStar_All.pipe_right
                                                              [vname_decl]
                                                              FStar_SMTEncoding_Term.mk_decls_trivial
                                                             in
                                                          FStar_List.append
-                                                           uu____80800
+                                                           uu____80874
                                                            tok_decl
                                                           in
-                                                       (uu____80797, env2))
+                                                       (uu____80871, env2))
                                                in
-                                            (match uu____80450 with
+                                            (match uu____80524 with
                                              | (decls2,env2) ->
-                                                 let uu____80819 =
+                                                 let uu____80893 =
                                                    let res_t1 =
                                                      FStar_Syntax_Subst.compress
                                                        res_t
                                                       in
-                                                   let uu____80829 =
+                                                   let uu____80903 =
                                                      FStar_SMTEncoding_EncodeTerm.encode_term
                                                        res_t1 env'
                                                       in
-                                                   match uu____80829 with
+                                                   match uu____80903 with
                                                    | (encoded_res_t,decls) ->
-                                                       let uu____80844 =
+                                                       let uu____80918 =
                                                          FStar_SMTEncoding_Term.mk_HasType
                                                            vapp encoded_res_t
                                                           in
                                                        (encoded_res_t,
-                                                         uu____80844, decls)
+                                                         uu____80918, decls)
                                                     in
-                                                 (match uu____80819 with
+                                                 (match uu____80893 with
                                                   | (encoded_res_t,ty_pred,decls3)
                                                       ->
                                                       let typingAx =
-                                                        let uu____80859 =
-                                                          let uu____80867 =
-                                                            let uu____80868 =
+                                                        let uu____80933 =
+                                                          let uu____80941 =
+                                                            let uu____80942 =
                                                               FStar_Syntax_Syntax.range_of_fv
                                                                 fv
                                                                in
-                                                            let uu____80869 =
-                                                              let uu____80880
+                                                            let uu____80943 =
+                                                              let uu____80954
                                                                 =
                                                                 FStar_SMTEncoding_Util.mkImp
                                                                   (guard,
@@ -2544,13 +2544,13 @@ let (encode_free_var :
                                                                  in
                                                               ([[vapp]],
                                                                 vars1,
-                                                                uu____80880)
+                                                                uu____80954)
                                                                in
                                                             FStar_SMTEncoding_Term.mkForall
-                                                              uu____80868
-                                                              uu____80869
+                                                              uu____80942
+                                                              uu____80943
                                                              in
-                                                          (uu____80867,
+                                                          (uu____80941,
                                                             (FStar_Pervasives_Native.Some
                                                                "free var typing"),
                                                             (Prims.op_Hat
@@ -2558,69 +2558,69 @@ let (encode_free_var :
                                                                vname))
                                                            in
                                                         FStar_SMTEncoding_Util.mkAssume
-                                                          uu____80859
+                                                          uu____80933
                                                          in
                                                       let freshness =
-                                                        let uu____80896 =
+                                                        let uu____80970 =
                                                           FStar_All.pipe_right
                                                             quals
                                                             (FStar_List.contains
                                                                FStar_Syntax_Syntax.New)
                                                            in
-                                                        if uu____80896
+                                                        if uu____80970
                                                         then
-                                                          let uu____80904 =
-                                                            let uu____80905 =
+                                                          let uu____80978 =
+                                                            let uu____80979 =
                                                               FStar_Syntax_Syntax.range_of_fv
                                                                 fv
                                                                in
-                                                            let uu____80906 =
-                                                              let uu____80919
+                                                            let uu____80980 =
+                                                              let uu____80993
                                                                 =
                                                                 FStar_All.pipe_right
                                                                   vars1
                                                                   (FStar_List.map
                                                                     FStar_SMTEncoding_Term.fv_sort)
                                                                  in
-                                                              let uu____80926
+                                                              let uu____81000
                                                                 =
                                                                 FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.next_id
                                                                   ()
                                                                  in
                                                               (vname,
-                                                                uu____80919,
+                                                                uu____80993,
                                                                 FStar_SMTEncoding_Term.Term_sort,
-                                                                uu____80926)
+                                                                uu____81000)
                                                                in
                                                             FStar_SMTEncoding_Term.fresh_constructor
-                                                              uu____80905
-                                                              uu____80906
+                                                              uu____80979
+                                                              uu____80980
                                                              in
-                                                          let uu____80932 =
-                                                            let uu____80935 =
-                                                              let uu____80936
+                                                          let uu____81006 =
+                                                            let uu____81009 =
+                                                              let uu____81010
                                                                 =
                                                                 FStar_Syntax_Syntax.range_of_fv
                                                                   fv
                                                                  in
                                                               pretype_axiom
-                                                                uu____80936
+                                                                uu____81010
                                                                 env2 vapp
                                                                 vars1
                                                                in
-                                                            [uu____80935]  in
-                                                          uu____80904 ::
-                                                            uu____80932
+                                                            [uu____81009]  in
+                                                          uu____80978 ::
+                                                            uu____81006
                                                         else []  in
                                                       let g =
-                                                        let uu____80942 =
-                                                          let uu____80945 =
-                                                            let uu____80948 =
-                                                              let uu____80951
+                                                        let uu____81016 =
+                                                          let uu____81019 =
+                                                            let uu____81022 =
+                                                              let uu____81025
                                                                 =
-                                                                let uu____80954
+                                                                let uu____81028
                                                                   =
-                                                                  let uu____80957
+                                                                  let uu____81031
                                                                     =
                                                                     mk_disc_proj_axioms
                                                                     guard
@@ -2628,26 +2628,26 @@ let (encode_free_var :
                                                                     vapp
                                                                     vars1  in
                                                                   typingAx ::
-                                                                    uu____80957
+                                                                    uu____81031
                                                                    in
                                                                 FStar_List.append
                                                                   freshness
-                                                                  uu____80954
+                                                                  uu____81028
                                                                  in
                                                               FStar_All.pipe_right
-                                                                uu____80951
+                                                                uu____81025
                                                                 FStar_SMTEncoding_Term.mk_decls_trivial
                                                                in
                                                             FStar_List.append
                                                               decls3
-                                                              uu____80948
+                                                              uu____81022
                                                              in
                                                           FStar_List.append
                                                             decls2
-                                                            uu____80945
+                                                            uu____81019
                                                            in
                                                         FStar_List.append
-                                                          decls11 uu____80942
+                                                          decls11 uu____81016
                                                          in
                                                       (g, env2)))))))))
   
@@ -2664,14 +2664,14 @@ let (declare_top_level_let :
     fun x  ->
       fun t  ->
         fun t_norm  ->
-          let uu____80997 =
+          let uu____81071 =
             FStar_SMTEncoding_Env.lookup_fvar_binding env
               (x.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
              in
-          match uu____80997 with
+          match uu____81071 with
           | FStar_Pervasives_Native.None  ->
-              let uu____81008 = encode_free_var false env x t t_norm []  in
-              (match uu____81008 with
+              let uu____81082 = encode_free_var false env x t t_norm []  in
+              (match uu____81082 with
                | (decls,env1) ->
                    let fvb =
                      FStar_SMTEncoding_Env.lookup_lid env1
@@ -2694,17 +2694,17 @@ let (encode_top_level_val :
         fun t  ->
           fun quals  ->
             let tt = FStar_SMTEncoding_EncodeTerm.norm env t  in
-            let uu____81071 =
+            let uu____81145 =
               encode_free_var uninterpreted env lid t tt quals  in
-            match uu____81071 with
+            match uu____81145 with
             | (decls,env1) ->
-                let uu____81082 = FStar_Syntax_Util.is_smt_lemma t  in
-                if uu____81082
+                let uu____81156 = FStar_Syntax_Util.is_smt_lemma t  in
+                if uu____81156
                 then
-                  let uu____81089 =
-                    let uu____81090 = encode_smt_lemma env1 lid tt  in
-                    FStar_List.append decls uu____81090  in
-                  (uu____81089, env1)
+                  let uu____81163 =
+                    let uu____81164 = encode_smt_lemma env1 lid tt  in
+                    FStar_List.append decls uu____81164  in
+                  (uu____81163, env1)
                 else (decls, env1)
   
 let (encode_top_level_vals :
@@ -2719,17 +2719,17 @@ let (encode_top_level_vals :
       fun quals  ->
         FStar_All.pipe_right bindings
           (FStar_List.fold_left
-             (fun uu____81146  ->
+             (fun uu____81220  ->
                 fun lb  ->
-                  match uu____81146 with
+                  match uu____81220 with
                   | (decls,env1) ->
-                      let uu____81166 =
-                        let uu____81171 =
+                      let uu____81240 =
+                        let uu____81245 =
                           FStar_Util.right lb.FStar_Syntax_Syntax.lbname  in
-                        encode_top_level_val false env1 uu____81171
+                        encode_top_level_val false env1 uu____81245
                           lb.FStar_Syntax_Syntax.lbtyp quals
                          in
-                      (match uu____81166 with
+                      (match uu____81240 with
                        | (decls',env2) ->
                            ((FStar_List.append decls decls'), env2)))
              ([], env))
@@ -2738,56 +2738,56 @@ let (is_tactic : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t  ->
     let fstar_tactics_tactic_lid =
       FStar_Parser_Const.p2l ["FStar"; "Tactics"; "tactic"]  in
-    let uu____81200 = FStar_Syntax_Util.head_and_args t  in
-    match uu____81200 with
+    let uu____81274 = FStar_Syntax_Util.head_and_args t  in
+    match uu____81274 with
     | (hd1,args) ->
-        let uu____81244 =
-          let uu____81245 = FStar_Syntax_Util.un_uinst hd1  in
-          uu____81245.FStar_Syntax_Syntax.n  in
-        (match uu____81244 with
+        let uu____81318 =
+          let uu____81319 = FStar_Syntax_Util.un_uinst hd1  in
+          uu____81319.FStar_Syntax_Syntax.n  in
+        (match uu____81318 with
          | FStar_Syntax_Syntax.Tm_fvar fv when
              FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_tactic_lid ->
              true
-         | FStar_Syntax_Syntax.Tm_arrow (uu____81251,c) ->
+         | FStar_Syntax_Syntax.Tm_arrow (uu____81325,c) ->
              let effect_name = FStar_Syntax_Util.comp_effect_name c  in
              FStar_Util.starts_with "FStar.Tactics"
                effect_name.FStar_Ident.str
-         | uu____81275 -> false)
+         | uu____81349 -> false)
   
 exception Let_rec_unencodeable 
 let (uu___is_Let_rec_unencodeable : Prims.exn -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Let_rec_unencodeable  -> true
-    | uu____81286 -> false
+    | uu____81360 -> false
   
 let (copy_env : FStar_SMTEncoding_Env.env_t -> FStar_SMTEncoding_Env.env_t) =
   fun en  ->
-    let uu___1113_81294 = en  in
-    let uu____81295 =
+    let uu___1113_81368 = en  in
+    let uu____81369 =
       FStar_Util.smap_copy en.FStar_SMTEncoding_Env.global_cache  in
     {
       FStar_SMTEncoding_Env.bvar_bindings =
-        (uu___1113_81294.FStar_SMTEncoding_Env.bvar_bindings);
+        (uu___1113_81368.FStar_SMTEncoding_Env.bvar_bindings);
       FStar_SMTEncoding_Env.fvar_bindings =
-        (uu___1113_81294.FStar_SMTEncoding_Env.fvar_bindings);
+        (uu___1113_81368.FStar_SMTEncoding_Env.fvar_bindings);
       FStar_SMTEncoding_Env.depth =
-        (uu___1113_81294.FStar_SMTEncoding_Env.depth);
+        (uu___1113_81368.FStar_SMTEncoding_Env.depth);
       FStar_SMTEncoding_Env.tcenv =
-        (uu___1113_81294.FStar_SMTEncoding_Env.tcenv);
+        (uu___1113_81368.FStar_SMTEncoding_Env.tcenv);
       FStar_SMTEncoding_Env.warn =
-        (uu___1113_81294.FStar_SMTEncoding_Env.warn);
+        (uu___1113_81368.FStar_SMTEncoding_Env.warn);
       FStar_SMTEncoding_Env.nolabels =
-        (uu___1113_81294.FStar_SMTEncoding_Env.nolabels);
+        (uu___1113_81368.FStar_SMTEncoding_Env.nolabels);
       FStar_SMTEncoding_Env.use_zfuel_name =
-        (uu___1113_81294.FStar_SMTEncoding_Env.use_zfuel_name);
+        (uu___1113_81368.FStar_SMTEncoding_Env.use_zfuel_name);
       FStar_SMTEncoding_Env.encode_non_total_function_typ =
-        (uu___1113_81294.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+        (uu___1113_81368.FStar_SMTEncoding_Env.encode_non_total_function_typ);
       FStar_SMTEncoding_Env.current_module_name =
-        (uu___1113_81294.FStar_SMTEncoding_Env.current_module_name);
+        (uu___1113_81368.FStar_SMTEncoding_Env.current_module_name);
       FStar_SMTEncoding_Env.encoding_quantifier =
-        (uu___1113_81294.FStar_SMTEncoding_Env.encoding_quantifier);
-      FStar_SMTEncoding_Env.global_cache = uu____81295
+        (uu___1113_81368.FStar_SMTEncoding_Env.encoding_quantifier);
+      FStar_SMTEncoding_Env.global_cache = uu____81369
     }
   
 let (encode_top_level_let :
@@ -2797,188 +2797,188 @@ let (encode_top_level_let :
         (FStar_SMTEncoding_Term.decls_t * FStar_SMTEncoding_Env.env_t))
   =
   fun env  ->
-    fun uu____81325  ->
+    fun uu____81399  ->
       fun quals  ->
-        match uu____81325 with
+        match uu____81399 with
         | (is_rec,bindings) ->
             let eta_expand1 binders formals body t =
               let nbinders = FStar_List.length binders  in
-              let uu____81430 = FStar_Util.first_N nbinders formals  in
-              match uu____81430 with
+              let uu____81504 = FStar_Util.first_N nbinders formals  in
+              match uu____81504 with
               | (formals1,extra_formals) ->
                   let subst1 =
                     FStar_List.map2
-                      (fun uu____81531  ->
-                         fun uu____81532  ->
-                           match (uu____81531, uu____81532) with
-                           | ((formal,uu____81558),(binder,uu____81560)) ->
-                               let uu____81581 =
-                                 let uu____81588 =
+                      (fun uu____81605  ->
+                         fun uu____81606  ->
+                           match (uu____81605, uu____81606) with
+                           | ((formal,uu____81632),(binder,uu____81634)) ->
+                               let uu____81655 =
+                                 let uu____81662 =
                                    FStar_Syntax_Syntax.bv_to_name binder  in
-                                 (formal, uu____81588)  in
-                               FStar_Syntax_Syntax.NT uu____81581) formals1
+                                 (formal, uu____81662)  in
+                               FStar_Syntax_Syntax.NT uu____81655) formals1
                       binders
                      in
                   let extra_formals1 =
-                    let uu____81602 =
+                    let uu____81676 =
                       FStar_All.pipe_right extra_formals
                         (FStar_List.map
-                           (fun uu____81643  ->
-                              match uu____81643 with
+                           (fun uu____81717  ->
+                              match uu____81717 with
                               | (x,i) ->
-                                  let uu____81662 =
-                                    let uu___1139_81663 = x  in
-                                    let uu____81664 =
+                                  let uu____81736 =
+                                    let uu___1139_81737 = x  in
+                                    let uu____81738 =
                                       FStar_Syntax_Subst.subst subst1
                                         x.FStar_Syntax_Syntax.sort
                                        in
                                     {
                                       FStar_Syntax_Syntax.ppname =
-                                        (uu___1139_81663.FStar_Syntax_Syntax.ppname);
+                                        (uu___1139_81737.FStar_Syntax_Syntax.ppname);
                                       FStar_Syntax_Syntax.index =
-                                        (uu___1139_81663.FStar_Syntax_Syntax.index);
-                                      FStar_Syntax_Syntax.sort = uu____81664
+                                        (uu___1139_81737.FStar_Syntax_Syntax.index);
+                                      FStar_Syntax_Syntax.sort = uu____81738
                                     }  in
-                                  (uu____81662, i)))
+                                  (uu____81736, i)))
                        in
-                    FStar_All.pipe_right uu____81602
+                    FStar_All.pipe_right uu____81676
                       FStar_Syntax_Util.name_binders
                      in
                   let body1 =
-                    let uu____81688 =
-                      let uu____81693 = FStar_Syntax_Subst.compress body  in
-                      let uu____81694 =
-                        let uu____81695 =
+                    let uu____81762 =
+                      let uu____81767 = FStar_Syntax_Subst.compress body  in
+                      let uu____81768 =
+                        let uu____81769 =
                           FStar_Syntax_Util.args_of_binders extra_formals1
                            in
                         FStar_All.pipe_left FStar_Pervasives_Native.snd
-                          uu____81695
+                          uu____81769
                          in
-                      FStar_Syntax_Syntax.extend_app_n uu____81693
-                        uu____81694
+                      FStar_Syntax_Syntax.extend_app_n uu____81767
+                        uu____81768
                        in
-                    uu____81688 FStar_Pervasives_Native.None
+                    uu____81762 FStar_Pervasives_Native.None
                       body.FStar_Syntax_Syntax.pos
                      in
                   ((FStar_List.append binders extra_formals1), body1)
                in
             let destruct_bound_function t e =
               let tcenv =
-                let uu___1146_81746 = env.FStar_SMTEncoding_Env.tcenv  in
+                let uu___1146_81820 = env.FStar_SMTEncoding_Env.tcenv  in
                 {
                   FStar_TypeChecker_Env.solver =
-                    (uu___1146_81746.FStar_TypeChecker_Env.solver);
+                    (uu___1146_81820.FStar_TypeChecker_Env.solver);
                   FStar_TypeChecker_Env.range =
-                    (uu___1146_81746.FStar_TypeChecker_Env.range);
+                    (uu___1146_81820.FStar_TypeChecker_Env.range);
                   FStar_TypeChecker_Env.curmodule =
-                    (uu___1146_81746.FStar_TypeChecker_Env.curmodule);
+                    (uu___1146_81820.FStar_TypeChecker_Env.curmodule);
                   FStar_TypeChecker_Env.gamma =
-                    (uu___1146_81746.FStar_TypeChecker_Env.gamma);
+                    (uu___1146_81820.FStar_TypeChecker_Env.gamma);
                   FStar_TypeChecker_Env.gamma_sig =
-                    (uu___1146_81746.FStar_TypeChecker_Env.gamma_sig);
+                    (uu___1146_81820.FStar_TypeChecker_Env.gamma_sig);
                   FStar_TypeChecker_Env.gamma_cache =
-                    (uu___1146_81746.FStar_TypeChecker_Env.gamma_cache);
+                    (uu___1146_81820.FStar_TypeChecker_Env.gamma_cache);
                   FStar_TypeChecker_Env.modules =
-                    (uu___1146_81746.FStar_TypeChecker_Env.modules);
+                    (uu___1146_81820.FStar_TypeChecker_Env.modules);
                   FStar_TypeChecker_Env.expected_typ =
-                    (uu___1146_81746.FStar_TypeChecker_Env.expected_typ);
+                    (uu___1146_81820.FStar_TypeChecker_Env.expected_typ);
                   FStar_TypeChecker_Env.sigtab =
-                    (uu___1146_81746.FStar_TypeChecker_Env.sigtab);
+                    (uu___1146_81820.FStar_TypeChecker_Env.sigtab);
                   FStar_TypeChecker_Env.attrtab =
-                    (uu___1146_81746.FStar_TypeChecker_Env.attrtab);
+                    (uu___1146_81820.FStar_TypeChecker_Env.attrtab);
                   FStar_TypeChecker_Env.is_pattern =
-                    (uu___1146_81746.FStar_TypeChecker_Env.is_pattern);
+                    (uu___1146_81820.FStar_TypeChecker_Env.is_pattern);
                   FStar_TypeChecker_Env.instantiate_imp =
-                    (uu___1146_81746.FStar_TypeChecker_Env.instantiate_imp);
+                    (uu___1146_81820.FStar_TypeChecker_Env.instantiate_imp);
                   FStar_TypeChecker_Env.effects =
-                    (uu___1146_81746.FStar_TypeChecker_Env.effects);
+                    (uu___1146_81820.FStar_TypeChecker_Env.effects);
                   FStar_TypeChecker_Env.generalize =
-                    (uu___1146_81746.FStar_TypeChecker_Env.generalize);
+                    (uu___1146_81820.FStar_TypeChecker_Env.generalize);
                   FStar_TypeChecker_Env.letrecs =
-                    (uu___1146_81746.FStar_TypeChecker_Env.letrecs);
+                    (uu___1146_81820.FStar_TypeChecker_Env.letrecs);
                   FStar_TypeChecker_Env.top_level =
-                    (uu___1146_81746.FStar_TypeChecker_Env.top_level);
+                    (uu___1146_81820.FStar_TypeChecker_Env.top_level);
                   FStar_TypeChecker_Env.check_uvars =
-                    (uu___1146_81746.FStar_TypeChecker_Env.check_uvars);
+                    (uu___1146_81820.FStar_TypeChecker_Env.check_uvars);
                   FStar_TypeChecker_Env.use_eq =
-                    (uu___1146_81746.FStar_TypeChecker_Env.use_eq);
+                    (uu___1146_81820.FStar_TypeChecker_Env.use_eq);
                   FStar_TypeChecker_Env.is_iface =
-                    (uu___1146_81746.FStar_TypeChecker_Env.is_iface);
+                    (uu___1146_81820.FStar_TypeChecker_Env.is_iface);
                   FStar_TypeChecker_Env.admit =
-                    (uu___1146_81746.FStar_TypeChecker_Env.admit);
+                    (uu___1146_81820.FStar_TypeChecker_Env.admit);
                   FStar_TypeChecker_Env.lax = true;
                   FStar_TypeChecker_Env.lax_universes =
-                    (uu___1146_81746.FStar_TypeChecker_Env.lax_universes);
+                    (uu___1146_81820.FStar_TypeChecker_Env.lax_universes);
                   FStar_TypeChecker_Env.phase1 =
-                    (uu___1146_81746.FStar_TypeChecker_Env.phase1);
+                    (uu___1146_81820.FStar_TypeChecker_Env.phase1);
                   FStar_TypeChecker_Env.failhard =
-                    (uu___1146_81746.FStar_TypeChecker_Env.failhard);
+                    (uu___1146_81820.FStar_TypeChecker_Env.failhard);
                   FStar_TypeChecker_Env.nosynth =
-                    (uu___1146_81746.FStar_TypeChecker_Env.nosynth);
+                    (uu___1146_81820.FStar_TypeChecker_Env.nosynth);
                   FStar_TypeChecker_Env.uvar_subtyping =
-                    (uu___1146_81746.FStar_TypeChecker_Env.uvar_subtyping);
+                    (uu___1146_81820.FStar_TypeChecker_Env.uvar_subtyping);
                   FStar_TypeChecker_Env.tc_term =
-                    (uu___1146_81746.FStar_TypeChecker_Env.tc_term);
+                    (uu___1146_81820.FStar_TypeChecker_Env.tc_term);
                   FStar_TypeChecker_Env.type_of =
-                    (uu___1146_81746.FStar_TypeChecker_Env.type_of);
+                    (uu___1146_81820.FStar_TypeChecker_Env.type_of);
                   FStar_TypeChecker_Env.universe_of =
-                    (uu___1146_81746.FStar_TypeChecker_Env.universe_of);
+                    (uu___1146_81820.FStar_TypeChecker_Env.universe_of);
                   FStar_TypeChecker_Env.check_type_of =
-                    (uu___1146_81746.FStar_TypeChecker_Env.check_type_of);
+                    (uu___1146_81820.FStar_TypeChecker_Env.check_type_of);
                   FStar_TypeChecker_Env.use_bv_sorts =
-                    (uu___1146_81746.FStar_TypeChecker_Env.use_bv_sorts);
+                    (uu___1146_81820.FStar_TypeChecker_Env.use_bv_sorts);
                   FStar_TypeChecker_Env.qtbl_name_and_index =
-                    (uu___1146_81746.FStar_TypeChecker_Env.qtbl_name_and_index);
+                    (uu___1146_81820.FStar_TypeChecker_Env.qtbl_name_and_index);
                   FStar_TypeChecker_Env.normalized_eff_names =
-                    (uu___1146_81746.FStar_TypeChecker_Env.normalized_eff_names);
+                    (uu___1146_81820.FStar_TypeChecker_Env.normalized_eff_names);
                   FStar_TypeChecker_Env.fv_delta_depths =
-                    (uu___1146_81746.FStar_TypeChecker_Env.fv_delta_depths);
+                    (uu___1146_81820.FStar_TypeChecker_Env.fv_delta_depths);
                   FStar_TypeChecker_Env.proof_ns =
-                    (uu___1146_81746.FStar_TypeChecker_Env.proof_ns);
+                    (uu___1146_81820.FStar_TypeChecker_Env.proof_ns);
                   FStar_TypeChecker_Env.synth_hook =
-                    (uu___1146_81746.FStar_TypeChecker_Env.synth_hook);
+                    (uu___1146_81820.FStar_TypeChecker_Env.synth_hook);
                   FStar_TypeChecker_Env.splice =
-                    (uu___1146_81746.FStar_TypeChecker_Env.splice);
+                    (uu___1146_81820.FStar_TypeChecker_Env.splice);
                   FStar_TypeChecker_Env.postprocess =
-                    (uu___1146_81746.FStar_TypeChecker_Env.postprocess);
+                    (uu___1146_81820.FStar_TypeChecker_Env.postprocess);
                   FStar_TypeChecker_Env.is_native_tactic =
-                    (uu___1146_81746.FStar_TypeChecker_Env.is_native_tactic);
+                    (uu___1146_81820.FStar_TypeChecker_Env.is_native_tactic);
                   FStar_TypeChecker_Env.identifier_info =
-                    (uu___1146_81746.FStar_TypeChecker_Env.identifier_info);
+                    (uu___1146_81820.FStar_TypeChecker_Env.identifier_info);
                   FStar_TypeChecker_Env.tc_hooks =
-                    (uu___1146_81746.FStar_TypeChecker_Env.tc_hooks);
+                    (uu___1146_81820.FStar_TypeChecker_Env.tc_hooks);
                   FStar_TypeChecker_Env.dsenv =
-                    (uu___1146_81746.FStar_TypeChecker_Env.dsenv);
+                    (uu___1146_81820.FStar_TypeChecker_Env.dsenv);
                   FStar_TypeChecker_Env.nbe =
-                    (uu___1146_81746.FStar_TypeChecker_Env.nbe)
+                    (uu___1146_81820.FStar_TypeChecker_Env.nbe)
                 }  in
               let subst_comp1 formals actuals comp =
                 let subst1 =
                   FStar_List.map2
-                    (fun uu____81818  ->
-                       fun uu____81819  ->
-                         match (uu____81818, uu____81819) with
-                         | ((x,uu____81845),(b,uu____81847)) ->
-                             let uu____81868 =
-                               let uu____81875 =
+                    (fun uu____81892  ->
+                       fun uu____81893  ->
+                         match (uu____81892, uu____81893) with
+                         | ((x,uu____81919),(b,uu____81921)) ->
+                             let uu____81942 =
+                               let uu____81949 =
                                  FStar_Syntax_Syntax.bv_to_name b  in
-                               (x, uu____81875)  in
-                             FStar_Syntax_Syntax.NT uu____81868) formals
+                               (x, uu____81949)  in
+                             FStar_Syntax_Syntax.NT uu____81942) formals
                     actuals
                    in
                 FStar_Syntax_Subst.subst_comp subst1 comp  in
               let rec arrow_formals_comp_norm norm1 t1 =
                 let t2 =
-                  let uu____81900 = FStar_Syntax_Subst.compress t1  in
-                  FStar_All.pipe_left FStar_Syntax_Util.unascribe uu____81900
+                  let uu____81974 = FStar_Syntax_Subst.compress t1  in
+                  FStar_All.pipe_left FStar_Syntax_Util.unascribe uu____81974
                    in
                 match t2.FStar_Syntax_Syntax.n with
                 | FStar_Syntax_Syntax.Tm_arrow (formals,comp) ->
                     FStar_Syntax_Subst.open_comp formals comp
-                | FStar_Syntax_Syntax.Tm_refine uu____81929 ->
-                    let uu____81936 = FStar_Syntax_Util.unrefine t2  in
-                    arrow_formals_comp_norm norm1 uu____81936
-                | uu____81937 when Prims.op_Negation norm1 ->
+                | FStar_Syntax_Syntax.Tm_refine uu____82003 ->
+                    let uu____82010 = FStar_Syntax_Util.unrefine t2  in
+                    arrow_formals_comp_norm norm1 uu____82010
+                | uu____82011 when Prims.op_Negation norm1 ->
                     let t_norm =
                       FStar_TypeChecker_Normalize.normalize
                         [FStar_TypeChecker_Env.AllowUnboundUniverses;
@@ -2992,62 +2992,62 @@ let (encode_top_level_let :
                         FStar_TypeChecker_Env.EraseUniverses] tcenv t2
                        in
                     arrow_formals_comp_norm true t_norm
-                | uu____81940 ->
-                    let uu____81941 = FStar_Syntax_Syntax.mk_Total t2  in
-                    ([], uu____81941)
+                | uu____82014 ->
+                    let uu____82015 = FStar_Syntax_Syntax.mk_Total t2  in
+                    ([], uu____82015)
                  in
               let aux t1 e1 =
-                let uu____81983 = FStar_Syntax_Util.abs_formals e1  in
-                match uu____81983 with
+                let uu____82057 = FStar_Syntax_Util.abs_formals e1  in
+                match uu____82057 with
                 | (binders,body,lopt) ->
-                    let uu____82015 =
+                    let uu____82089 =
                       match binders with
                       | [] -> arrow_formals_comp_norm true t1
-                      | uu____82031 -> arrow_formals_comp_norm false t1  in
-                    (match uu____82015 with
+                      | uu____82105 -> arrow_formals_comp_norm false t1  in
+                    (match uu____82089 with
                      | (formals,comp) ->
                          let nformals = FStar_List.length formals  in
                          let nbinders = FStar_List.length binders  in
-                         let uu____82065 =
+                         let uu____82139 =
                            if nformals < nbinders
                            then
-                             let uu____82109 =
+                             let uu____82183 =
                                FStar_Util.first_N nformals binders  in
-                             match uu____82109 with
+                             match uu____82183 with
                              | (bs0,rest) ->
                                  let body1 =
                                    FStar_Syntax_Util.abs rest body lopt  in
-                                 let uu____82193 =
+                                 let uu____82267 =
                                    subst_comp1 formals bs0 comp  in
-                                 (bs0, body1, uu____82193)
+                                 (bs0, body1, uu____82267)
                            else
                              if nformals > nbinders
                              then
-                               (let uu____82233 =
+                               (let uu____82307 =
                                   eta_expand1 binders formals body
                                     (FStar_Syntax_Util.comp_result comp)
                                    in
-                                match uu____82233 with
+                                match uu____82307 with
                                 | (binders1,body1) ->
-                                    let uu____82286 =
+                                    let uu____82360 =
                                       subst_comp1 formals binders1 comp  in
-                                    (binders1, body1, uu____82286))
+                                    (binders1, body1, uu____82360))
                              else
-                               (let uu____82299 =
+                               (let uu____82373 =
                                   subst_comp1 formals binders comp  in
-                                (binders, body, uu____82299))
+                                (binders, body, uu____82373))
                             in
-                         (match uu____82065 with
+                         (match uu____82139 with
                           | (binders1,body1,comp1) ->
                               (binders1, body1, comp1)))
                  in
-              let uu____82359 = aux t e  in
-              match uu____82359 with
+              let uu____82433 = aux t e  in
+              match uu____82433 with
               | (binders,body,comp) ->
-                  let uu____82405 =
-                    let uu____82416 =
+                  let uu____82479 =
+                    let uu____82490 =
                       FStar_TypeChecker_Env.is_reifiable_comp tcenv comp  in
-                    if uu____82416
+                    if uu____82490
                     then
                       let comp1 =
                         FStar_TypeChecker_Env.reify_comp tcenv comp
@@ -3055,27 +3055,27 @@ let (encode_top_level_let :
                          in
                       let body1 =
                         FStar_TypeChecker_Util.reify_body tcenv body  in
-                      let uu____82431 = aux comp1 body1  in
-                      match uu____82431 with
+                      let uu____82505 = aux comp1 body1  in
+                      match uu____82505 with
                       | (more_binders,body2,comp2) ->
                           ((FStar_List.append binders more_binders), body2,
                             comp2)
                     else (binders, body, comp)  in
-                  (match uu____82405 with
+                  (match uu____82479 with
                    | (binders1,body1,comp1) ->
-                       let uu____82514 =
+                       let uu____82588 =
                          FStar_Syntax_Util.ascribe body1
                            ((FStar_Util.Inl
                                (FStar_Syntax_Util.comp_result comp1)),
                              FStar_Pervasives_Native.None)
                           in
-                       (binders1, uu____82514, comp1))
+                       (binders1, uu____82588, comp1))
                in
             (try
-               (fun uu___1216_82541  ->
+               (fun uu___1216_82615  ->
                   match () with
                   | () ->
-                      let uu____82548 =
+                      let uu____82622 =
                         FStar_All.pipe_right bindings
                           (FStar_Util.for_all
                              (fun lb  ->
@@ -3083,21 +3083,21 @@ let (encode_top_level_let :
                                    lb.FStar_Syntax_Syntax.lbtyp)
                                   || (is_tactic lb.FStar_Syntax_Syntax.lbtyp)))
                          in
-                      if uu____82548
+                      if uu____82622
                       then encode_top_level_vals env bindings quals
                       else
-                        (let uu____82564 =
+                        (let uu____82638 =
                            FStar_All.pipe_right bindings
                              (FStar_List.fold_left
-                                (fun uu____82627  ->
+                                (fun uu____82701  ->
                                    fun lb  ->
-                                     match uu____82627 with
+                                     match uu____82701 with
                                      | (toks,typs,decls,env1) ->
-                                         ((let uu____82682 =
+                                         ((let uu____82756 =
                                              FStar_Syntax_Util.is_lemma
                                                lb.FStar_Syntax_Syntax.lbtyp
                                               in
-                                           if uu____82682
+                                           if uu____82756
                                            then
                                              FStar_Exn.raise
                                                Let_rec_unencodeable
@@ -3107,23 +3107,23 @@ let (encode_top_level_let :
                                                env1
                                                lb.FStar_Syntax_Syntax.lbtyp
                                               in
-                                           let uu____82688 =
-                                             let uu____82697 =
+                                           let uu____82762 =
+                                             let uu____82771 =
                                                FStar_Util.right
                                                  lb.FStar_Syntax_Syntax.lbname
                                                 in
                                              declare_top_level_let env1
-                                               uu____82697
+                                               uu____82771
                                                lb.FStar_Syntax_Syntax.lbtyp
                                                t_norm
                                               in
-                                           match uu____82688 with
+                                           match uu____82762 with
                                            | (tok,decl,env2) ->
                                                ((tok :: toks), (t_norm ::
                                                  typs), (decl :: decls),
                                                  env2)))) ([], [], [], env))
                             in
-                         match uu____82564 with
+                         match uu____82638 with
                          | (toks,typs,decls,env1) ->
                              let toks_fvbs = FStar_List.rev toks  in
                              let decls1 =
@@ -3137,108 +3137,108 @@ let (encode_top_level_let :
                                match (bindings1, typs2, toks1) with
                                | ({ FStar_Syntax_Syntax.lbname = lbn;
                                     FStar_Syntax_Syntax.lbunivs = uvs;
-                                    FStar_Syntax_Syntax.lbtyp = uu____82838;
-                                    FStar_Syntax_Syntax.lbeff = uu____82839;
+                                    FStar_Syntax_Syntax.lbtyp = uu____82912;
+                                    FStar_Syntax_Syntax.lbeff = uu____82913;
                                     FStar_Syntax_Syntax.lbdef = e;
-                                    FStar_Syntax_Syntax.lbattrs = uu____82841;
-                                    FStar_Syntax_Syntax.lbpos = uu____82842;_}::[],t_norm::[],fvb::[])
+                                    FStar_Syntax_Syntax.lbattrs = uu____82915;
+                                    FStar_Syntax_Syntax.lbpos = uu____82916;_}::[],t_norm::[],fvb::[])
                                    ->
                                    let flid =
                                      fvb.FStar_SMTEncoding_Env.fvar_lid  in
-                                   let uu____82866 =
-                                     let uu____82873 =
+                                   let uu____82940 =
+                                     let uu____82947 =
                                        FStar_TypeChecker_Env.open_universes_in
                                          env2.FStar_SMTEncoding_Env.tcenv uvs
                                          [e; t_norm]
                                         in
-                                     match uu____82873 with
-                                     | (tcenv',uu____82889,e_t) ->
-                                         let uu____82895 =
+                                     match uu____82947 with
+                                     | (tcenv',uu____82963,e_t) ->
+                                         let uu____82969 =
                                            match e_t with
                                            | e1::t_norm1::[] -> (e1, t_norm1)
-                                           | uu____82906 ->
+                                           | uu____82980 ->
                                                failwith "Impossible"
                                             in
-                                         (match uu____82895 with
+                                         (match uu____82969 with
                                           | (e1,t_norm1) ->
-                                              ((let uu___1279_82923 = env2
+                                              ((let uu___1279_82997 = env2
                                                    in
                                                 {
                                                   FStar_SMTEncoding_Env.bvar_bindings
                                                     =
-                                                    (uu___1279_82923.FStar_SMTEncoding_Env.bvar_bindings);
+                                                    (uu___1279_82997.FStar_SMTEncoding_Env.bvar_bindings);
                                                   FStar_SMTEncoding_Env.fvar_bindings
                                                     =
-                                                    (uu___1279_82923.FStar_SMTEncoding_Env.fvar_bindings);
+                                                    (uu___1279_82997.FStar_SMTEncoding_Env.fvar_bindings);
                                                   FStar_SMTEncoding_Env.depth
                                                     =
-                                                    (uu___1279_82923.FStar_SMTEncoding_Env.depth);
+                                                    (uu___1279_82997.FStar_SMTEncoding_Env.depth);
                                                   FStar_SMTEncoding_Env.tcenv
                                                     = tcenv';
                                                   FStar_SMTEncoding_Env.warn
                                                     =
-                                                    (uu___1279_82923.FStar_SMTEncoding_Env.warn);
+                                                    (uu___1279_82997.FStar_SMTEncoding_Env.warn);
                                                   FStar_SMTEncoding_Env.nolabels
                                                     =
-                                                    (uu___1279_82923.FStar_SMTEncoding_Env.nolabels);
+                                                    (uu___1279_82997.FStar_SMTEncoding_Env.nolabels);
                                                   FStar_SMTEncoding_Env.use_zfuel_name
                                                     =
-                                                    (uu___1279_82923.FStar_SMTEncoding_Env.use_zfuel_name);
+                                                    (uu___1279_82997.FStar_SMTEncoding_Env.use_zfuel_name);
                                                   FStar_SMTEncoding_Env.encode_non_total_function_typ
                                                     =
-                                                    (uu___1279_82923.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+                                                    (uu___1279_82997.FStar_SMTEncoding_Env.encode_non_total_function_typ);
                                                   FStar_SMTEncoding_Env.current_module_name
                                                     =
-                                                    (uu___1279_82923.FStar_SMTEncoding_Env.current_module_name);
+                                                    (uu___1279_82997.FStar_SMTEncoding_Env.current_module_name);
                                                   FStar_SMTEncoding_Env.encoding_quantifier
                                                     =
-                                                    (uu___1279_82923.FStar_SMTEncoding_Env.encoding_quantifier);
+                                                    (uu___1279_82997.FStar_SMTEncoding_Env.encoding_quantifier);
                                                   FStar_SMTEncoding_Env.global_cache
                                                     =
-                                                    (uu___1279_82923.FStar_SMTEncoding_Env.global_cache)
+                                                    (uu___1279_82997.FStar_SMTEncoding_Env.global_cache)
                                                 }), e1, t_norm1))
                                       in
-                                   (match uu____82866 with
+                                   (match uu____82940 with
                                     | (env',e1,t_norm1) ->
-                                        let uu____82933 =
+                                        let uu____83007 =
                                           destruct_bound_function t_norm1 e1
                                            in
-                                        (match uu____82933 with
+                                        (match uu____83007 with
                                          | (binders,body,t_body_comp) ->
                                              let t_body =
                                                FStar_Syntax_Util.comp_result
                                                  t_body_comp
                                                 in
-                                             ((let uu____82953 =
+                                             ((let uu____83027 =
                                                  FStar_All.pipe_left
                                                    (FStar_TypeChecker_Env.debug
                                                       env2.FStar_SMTEncoding_Env.tcenv)
                                                    (FStar_Options.Other
                                                       "SMTEncoding")
                                                   in
-                                               if uu____82953
+                                               if uu____83027
                                                then
-                                                 let uu____82958 =
+                                                 let uu____83032 =
                                                    FStar_Syntax_Print.binders_to_string
                                                      ", " binders
                                                     in
-                                                 let uu____82961 =
+                                                 let uu____83035 =
                                                    FStar_Syntax_Print.term_to_string
                                                      body
                                                     in
                                                  FStar_Util.print2
                                                    "Encoding let : binders=[%s], body=%s\n"
-                                                   uu____82958 uu____82961
+                                                   uu____83032 uu____83035
                                                else ());
-                                              (let uu____82966 =
+                                              (let uu____83040 =
                                                  FStar_SMTEncoding_EncodeTerm.encode_binders
                                                    FStar_Pervasives_Native.None
                                                    binders env'
                                                   in
-                                               match uu____82966 with
-                                               | (vars,_guards,env'1,binder_decls,uu____82993)
+                                               match uu____83040 with
+                                               | (vars,_guards,env'1,binder_decls,uu____83067)
                                                    ->
-                                                   let uu____83006 =
+                                                   let uu____83080 =
                                                      if
                                                        fvb.FStar_SMTEncoding_Env.fvb_thunked
                                                          && (vars = [])
@@ -3254,46 +3254,46 @@ let (encode_top_level_let :
                                                            FStar_Range.dummyRange
                                                           in
                                                        let app =
-                                                         let uu____83023 =
+                                                         let uu____83097 =
                                                            FStar_Syntax_Util.range_of_lbname
                                                              lbn
                                                             in
                                                          FStar_SMTEncoding_Term.mkApp
                                                            ((fvb.FStar_SMTEncoding_Env.smt_id),
                                                              [dummy_tm])
-                                                           uu____83023
+                                                           uu____83097
                                                           in
                                                        ([dummy_var], app)
                                                      else
-                                                       (let uu____83045 =
-                                                          let uu____83046 =
+                                                       (let uu____83119 =
+                                                          let uu____83120 =
                                                             FStar_Syntax_Util.range_of_lbname
                                                               lbn
                                                              in
-                                                          let uu____83047 =
+                                                          let uu____83121 =
                                                             FStar_List.map
                                                               FStar_SMTEncoding_Util.mkFreeV
                                                               vars
                                                              in
                                                           FStar_SMTEncoding_EncodeTerm.maybe_curry_fvb
-                                                            uu____83046 fvb
-                                                            uu____83047
+                                                            uu____83120 fvb
+                                                            uu____83121
                                                            in
-                                                        (vars, uu____83045))
+                                                        (vars, uu____83119))
                                                       in
-                                                   (match uu____83006 with
+                                                   (match uu____83080 with
                                                     | (vars1,app) ->
-                                                        let uu____83058 =
+                                                        let uu____83132 =
                                                           let is_logical =
-                                                            let uu____83071 =
-                                                              let uu____83072
+                                                            let uu____83145 =
+                                                              let uu____83146
                                                                 =
                                                                 FStar_Syntax_Subst.compress
                                                                   t_body
                                                                  in
-                                                              uu____83072.FStar_Syntax_Syntax.n
+                                                              uu____83146.FStar_Syntax_Syntax.n
                                                                in
-                                                            match uu____83071
+                                                            match uu____83145
                                                             with
                                                             | FStar_Syntax_Syntax.Tm_fvar
                                                                 fv when
@@ -3301,34 +3301,34 @@ let (encode_top_level_let :
                                                                   fv
                                                                   FStar_Parser_Const.logical_lid
                                                                 -> true
-                                                            | uu____83078 ->
+                                                            | uu____83152 ->
                                                                 false
                                                              in
                                                           let is_prims =
-                                                            let uu____83082 =
-                                                              let uu____83083
+                                                            let uu____83156 =
+                                                              let uu____83157
                                                                 =
                                                                 FStar_All.pipe_right
                                                                   lbn
                                                                   FStar_Util.right
                                                                  in
                                                               FStar_All.pipe_right
-                                                                uu____83083
+                                                                uu____83157
                                                                 FStar_Syntax_Syntax.lid_of_fv
                                                                in
                                                             FStar_All.pipe_right
-                                                              uu____83082
+                                                              uu____83156
                                                               (fun lid  ->
-                                                                 let uu____83092
+                                                                 let uu____83166
                                                                    =
                                                                    FStar_Ident.lid_of_ids
                                                                     lid.FStar_Ident.ns
                                                                     in
                                                                  FStar_Ident.lid_equals
-                                                                   uu____83092
+                                                                   uu____83166
                                                                    FStar_Parser_Const.prims_lid)
                                                              in
-                                                          let uu____83093 =
+                                                          let uu____83167 =
                                                             (Prims.op_Negation
                                                                is_prims)
                                                               &&
@@ -3339,45 +3339,45 @@ let (encode_top_level_let :
                                                                  ||
                                                                  is_logical)
                                                              in
-                                                          if uu____83093
+                                                          if uu____83167
                                                           then
-                                                            let uu____83109 =
+                                                            let uu____83183 =
                                                               FStar_SMTEncoding_Term.mk_Valid
                                                                 app
                                                                in
-                                                            let uu____83110 =
+                                                            let uu____83184 =
                                                               FStar_SMTEncoding_EncodeTerm.encode_formula
                                                                 body env'1
                                                                in
                                                             (app,
-                                                              uu____83109,
-                                                              uu____83110)
+                                                              uu____83183,
+                                                              uu____83184)
                                                           else
-                                                            (let uu____83121
+                                                            (let uu____83195
                                                                =
                                                                FStar_SMTEncoding_EncodeTerm.encode_term
                                                                  body env'1
                                                                 in
                                                              (app, app,
-                                                               uu____83121))
+                                                               uu____83195))
                                                            in
-                                                        (match uu____83058
+                                                        (match uu____83132
                                                          with
                                                          | (pat,app1,
                                                             (body1,decls2))
                                                              ->
                                                              let eqn =
-                                                               let uu____83145
+                                                               let uu____83219
                                                                  =
-                                                                 let uu____83153
+                                                                 let uu____83227
                                                                    =
-                                                                   let uu____83154
+                                                                   let uu____83228
                                                                     =
                                                                     FStar_Syntax_Util.range_of_lbname
                                                                     lbn  in
-                                                                   let uu____83155
+                                                                   let uu____83229
                                                                     =
-                                                                    let uu____83166
+                                                                    let uu____83240
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkEq
                                                                     (app1,
@@ -3385,43 +3385,43 @@ let (encode_top_level_let :
                                                                      in
                                                                     ([[pat]],
                                                                     vars1,
-                                                                    uu____83166)
+                                                                    uu____83240)
                                                                      in
                                                                    FStar_SMTEncoding_Term.mkForall
-                                                                    uu____83154
-                                                                    uu____83155
+                                                                    uu____83228
+                                                                    uu____83229
                                                                     in
-                                                                 let uu____83175
+                                                                 let uu____83249
                                                                    =
-                                                                   let uu____83176
+                                                                   let uu____83250
                                                                     =
                                                                     FStar_Util.format1
                                                                     "Equation for %s"
                                                                     flid.FStar_Ident.str
                                                                      in
                                                                    FStar_Pervasives_Native.Some
-                                                                    uu____83176
+                                                                    uu____83250
                                                                     in
-                                                                 (uu____83153,
-                                                                   uu____83175,
+                                                                 (uu____83227,
+                                                                   uu____83249,
                                                                    (Prims.op_Hat
                                                                     "equation_"
                                                                     fvb.FStar_SMTEncoding_Env.smt_id))
                                                                   in
                                                                FStar_SMTEncoding_Util.mkAssume
-                                                                 uu____83145
+                                                                 uu____83219
                                                                 in
-                                                             let uu____83182
+                                                             let uu____83256
                                                                =
-                                                               let uu____83185
+                                                               let uu____83259
                                                                  =
-                                                                 let uu____83188
+                                                                 let uu____83262
                                                                    =
-                                                                   let uu____83191
+                                                                   let uu____83265
                                                                     =
-                                                                    let uu____83194
+                                                                    let uu____83268
                                                                     =
-                                                                    let uu____83197
+                                                                    let uu____83271
                                                                     =
                                                                     primitive_type_axioms
                                                                     env2.FStar_SMTEncoding_Env.tcenv
@@ -3429,198 +3429,198 @@ let (encode_top_level_let :
                                                                     fvb.FStar_SMTEncoding_Env.smt_id
                                                                     app1  in
                                                                     eqn ::
-                                                                    uu____83197
+                                                                    uu____83271
                                                                      in
                                                                     FStar_All.pipe_right
-                                                                    uu____83194
+                                                                    uu____83268
                                                                     FStar_SMTEncoding_Term.mk_decls_trivial
                                                                      in
                                                                    FStar_List.append
                                                                     decls2
-                                                                    uu____83191
+                                                                    uu____83265
                                                                     in
                                                                  FStar_List.append
                                                                    binder_decls
-                                                                   uu____83188
+                                                                   uu____83262
                                                                   in
                                                                FStar_List.append
                                                                  decls1
-                                                                 uu____83185
+                                                                 uu____83259
                                                                 in
-                                                             (uu____83182,
+                                                             (uu____83256,
                                                                env2)))))))
-                               | uu____83206 -> failwith "Impossible"  in
+                               | uu____83280 -> failwith "Impossible"  in
                              let encode_rec_lbdefs bindings1 typs2 toks1 env2
                                =
                                let fuel =
-                                 let uu____83266 =
-                                   let uu____83272 =
+                                 let uu____83340 =
+                                   let uu____83346 =
                                      FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.fresh
                                        env2.FStar_SMTEncoding_Env.current_module_name
                                        "fuel"
                                       in
-                                   (uu____83272,
+                                   (uu____83346,
                                      FStar_SMTEncoding_Term.Fuel_sort)
                                     in
-                                 FStar_SMTEncoding_Term.mk_fv uu____83266  in
+                                 FStar_SMTEncoding_Term.mk_fv uu____83340  in
                                let fuel_tm =
                                  FStar_SMTEncoding_Util.mkFreeV fuel  in
                                let env0 = env2  in
-                               let uu____83278 =
+                               let uu____83352 =
                                  FStar_All.pipe_right toks1
                                    (FStar_List.fold_left
-                                      (fun uu____83331  ->
+                                      (fun uu____83405  ->
                                          fun fvb  ->
-                                           match uu____83331 with
+                                           match uu____83405 with
                                            | (gtoks,env3) ->
                                                let flid =
                                                  fvb.FStar_SMTEncoding_Env.fvar_lid
                                                   in
                                                let g =
-                                                 let uu____83386 =
+                                                 let uu____83460 =
                                                    FStar_Ident.lid_add_suffix
                                                      flid "fuel_instrumented"
                                                     in
                                                  FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.new_fvar
-                                                   uu____83386
+                                                   uu____83460
                                                   in
                                                let gtok =
-                                                 let uu____83390 =
+                                                 let uu____83464 =
                                                    FStar_Ident.lid_add_suffix
                                                      flid
                                                      "fuel_instrumented_token"
                                                     in
                                                  FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.new_fvar
-                                                   uu____83390
+                                                   uu____83464
                                                   in
                                                let env4 =
-                                                 let uu____83393 =
-                                                   let uu____83396 =
+                                                 let uu____83467 =
+                                                   let uu____83470 =
                                                      FStar_SMTEncoding_Util.mkApp
                                                        (g, [fuel_tm])
                                                       in
                                                    FStar_All.pipe_left
-                                                     (fun _83402  ->
+                                                     (fun _83476  ->
                                                         FStar_Pervasives_Native.Some
-                                                          _83402) uu____83396
+                                                          _83476) uu____83470
                                                     in
                                                  FStar_SMTEncoding_Env.push_free_var
                                                    env3 flid
                                                    fvb.FStar_SMTEncoding_Env.smt_arity
-                                                   gtok uu____83393
+                                                   gtok uu____83467
                                                   in
                                                (((fvb, g, gtok) :: gtoks),
                                                  env4)) ([], env2))
                                   in
-                               match uu____83278 with
+                               match uu____83352 with
                                | (gtoks,env3) ->
                                    let gtoks1 = FStar_List.rev gtoks  in
-                                   let encode_one_binding env01 uu____83522
-                                     t_norm uu____83524 =
-                                     match (uu____83522, uu____83524) with
+                                   let encode_one_binding env01 uu____83596
+                                     t_norm uu____83598 =
+                                     match (uu____83596, uu____83598) with
                                      | ((fvb,g,gtok),{
                                                        FStar_Syntax_Syntax.lbname
                                                          = lbn;
                                                        FStar_Syntax_Syntax.lbunivs
                                                          = uvs;
                                                        FStar_Syntax_Syntax.lbtyp
-                                                         = uu____83554;
+                                                         = uu____83628;
                                                        FStar_Syntax_Syntax.lbeff
-                                                         = uu____83555;
+                                                         = uu____83629;
                                                        FStar_Syntax_Syntax.lbdef
                                                          = e;
                                                        FStar_Syntax_Syntax.lbattrs
-                                                         = uu____83557;
+                                                         = uu____83631;
                                                        FStar_Syntax_Syntax.lbpos
-                                                         = uu____83558;_})
+                                                         = uu____83632;_})
                                          ->
-                                         let uu____83585 =
-                                           let uu____83592 =
+                                         let uu____83659 =
+                                           let uu____83666 =
                                              FStar_TypeChecker_Env.open_universes_in
                                                env3.FStar_SMTEncoding_Env.tcenv
                                                uvs [e; t_norm]
                                               in
-                                           match uu____83592 with
-                                           | (tcenv',uu____83608,e_t) ->
-                                               let uu____83614 =
+                                           match uu____83666 with
+                                           | (tcenv',uu____83682,e_t) ->
+                                               let uu____83688 =
                                                  match e_t with
                                                  | e1::t_norm1::[] ->
                                                      (e1, t_norm1)
-                                                 | uu____83625 ->
+                                                 | uu____83699 ->
                                                      failwith "Impossible"
                                                   in
-                                               (match uu____83614 with
+                                               (match uu____83688 with
                                                 | (e1,t_norm1) ->
-                                                    ((let uu___1366_83642 =
+                                                    ((let uu___1366_83716 =
                                                         env3  in
                                                       {
                                                         FStar_SMTEncoding_Env.bvar_bindings
                                                           =
-                                                          (uu___1366_83642.FStar_SMTEncoding_Env.bvar_bindings);
+                                                          (uu___1366_83716.FStar_SMTEncoding_Env.bvar_bindings);
                                                         FStar_SMTEncoding_Env.fvar_bindings
                                                           =
-                                                          (uu___1366_83642.FStar_SMTEncoding_Env.fvar_bindings);
+                                                          (uu___1366_83716.FStar_SMTEncoding_Env.fvar_bindings);
                                                         FStar_SMTEncoding_Env.depth
                                                           =
-                                                          (uu___1366_83642.FStar_SMTEncoding_Env.depth);
+                                                          (uu___1366_83716.FStar_SMTEncoding_Env.depth);
                                                         FStar_SMTEncoding_Env.tcenv
                                                           = tcenv';
                                                         FStar_SMTEncoding_Env.warn
                                                           =
-                                                          (uu___1366_83642.FStar_SMTEncoding_Env.warn);
+                                                          (uu___1366_83716.FStar_SMTEncoding_Env.warn);
                                                         FStar_SMTEncoding_Env.nolabels
                                                           =
-                                                          (uu___1366_83642.FStar_SMTEncoding_Env.nolabels);
+                                                          (uu___1366_83716.FStar_SMTEncoding_Env.nolabels);
                                                         FStar_SMTEncoding_Env.use_zfuel_name
                                                           =
-                                                          (uu___1366_83642.FStar_SMTEncoding_Env.use_zfuel_name);
+                                                          (uu___1366_83716.FStar_SMTEncoding_Env.use_zfuel_name);
                                                         FStar_SMTEncoding_Env.encode_non_total_function_typ
                                                           =
-                                                          (uu___1366_83642.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+                                                          (uu___1366_83716.FStar_SMTEncoding_Env.encode_non_total_function_typ);
                                                         FStar_SMTEncoding_Env.current_module_name
                                                           =
-                                                          (uu___1366_83642.FStar_SMTEncoding_Env.current_module_name);
+                                                          (uu___1366_83716.FStar_SMTEncoding_Env.current_module_name);
                                                         FStar_SMTEncoding_Env.encoding_quantifier
                                                           =
-                                                          (uu___1366_83642.FStar_SMTEncoding_Env.encoding_quantifier);
+                                                          (uu___1366_83716.FStar_SMTEncoding_Env.encoding_quantifier);
                                                         FStar_SMTEncoding_Env.global_cache
                                                           =
-                                                          (uu___1366_83642.FStar_SMTEncoding_Env.global_cache)
+                                                          (uu___1366_83716.FStar_SMTEncoding_Env.global_cache)
                                                       }), e1, t_norm1))
                                             in
-                                         (match uu____83585 with
+                                         (match uu____83659 with
                                           | (env',e1,t_norm1) ->
-                                              ((let uu____83655 =
+                                              ((let uu____83729 =
                                                   FStar_All.pipe_left
                                                     (FStar_TypeChecker_Env.debug
                                                        env01.FStar_SMTEncoding_Env.tcenv)
                                                     (FStar_Options.Other
                                                        "SMTEncoding")
                                                    in
-                                                if uu____83655
+                                                if uu____83729
                                                 then
-                                                  let uu____83660 =
+                                                  let uu____83734 =
                                                     FStar_Syntax_Print.lbname_to_string
                                                       lbn
                                                      in
-                                                  let uu____83662 =
+                                                  let uu____83736 =
                                                     FStar_Syntax_Print.term_to_string
                                                       t_norm1
                                                      in
-                                                  let uu____83664 =
+                                                  let uu____83738 =
                                                     FStar_Syntax_Print.term_to_string
                                                       e1
                                                      in
                                                   FStar_Util.print3
                                                     "Encoding let rec %s : %s = %s\n"
-                                                    uu____83660 uu____83662
-                                                    uu____83664
+                                                    uu____83734 uu____83736
+                                                    uu____83738
                                                 else ());
-                                               (let uu____83669 =
+                                               (let uu____83743 =
                                                   destruct_bound_function
                                                     t_norm1 e1
                                                    in
-                                                match uu____83669 with
+                                                match uu____83743 with
                                                 | (binders,body,tres_comp) ->
                                                     let curry =
                                                       fvb.FStar_SMTEncoding_Env.smt_arity
@@ -3628,94 +3628,94 @@ let (encode_top_level_let :
                                                         (FStar_List.length
                                                            binders)
                                                        in
-                                                    let uu____83696 =
+                                                    let uu____83770 =
                                                       FStar_TypeChecker_Util.pure_or_ghost_pre_and_post
                                                         env3.FStar_SMTEncoding_Env.tcenv
                                                         tres_comp
                                                        in
-                                                    (match uu____83696 with
+                                                    (match uu____83770 with
                                                      | (pre_opt,tres) ->
-                                                         ((let uu____83718 =
+                                                         ((let uu____83792 =
                                                              FStar_All.pipe_left
                                                                (FStar_TypeChecker_Env.debug
                                                                   env01.FStar_SMTEncoding_Env.tcenv)
                                                                (FStar_Options.Other
                                                                   "SMTEncodingReify")
                                                               in
-                                                           if uu____83718
+                                                           if uu____83792
                                                            then
-                                                             let uu____83723
+                                                             let uu____83797
                                                                =
                                                                FStar_Syntax_Print.lbname_to_string
                                                                  lbn
                                                                 in
-                                                             let uu____83725
+                                                             let uu____83799
                                                                =
                                                                FStar_Syntax_Print.binders_to_string
                                                                  ", " binders
                                                                 in
-                                                             let uu____83728
+                                                             let uu____83802
                                                                =
                                                                FStar_Syntax_Print.term_to_string
                                                                  body
                                                                 in
-                                                             let uu____83730
+                                                             let uu____83804
                                                                =
                                                                FStar_Syntax_Print.comp_to_string
                                                                  tres_comp
                                                                 in
                                                              FStar_Util.print4
                                                                "Encoding let rec %s: \n\tbinders=[%s], \n\tbody=%s, \n\ttres=%s\n"
-                                                               uu____83723
-                                                               uu____83725
-                                                               uu____83728
-                                                               uu____83730
+                                                               uu____83797
+                                                               uu____83799
+                                                               uu____83802
+                                                               uu____83804
                                                            else ());
-                                                          (let uu____83735 =
+                                                          (let uu____83809 =
                                                              FStar_SMTEncoding_EncodeTerm.encode_binders
                                                                FStar_Pervasives_Native.None
                                                                binders env'
                                                               in
-                                                           match uu____83735
+                                                           match uu____83809
                                                            with
-                                                           | (vars,guards,env'1,binder_decls,uu____83764)
+                                                           | (vars,guards,env'1,binder_decls,uu____83838)
                                                                ->
-                                                               let uu____83777
+                                                               let uu____83851
                                                                  =
                                                                  match pre_opt
                                                                  with
                                                                  | FStar_Pervasives_Native.None
                                                                      ->
-                                                                    let uu____83790
+                                                                    let uu____83864
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_and_l
                                                                     guards
                                                                      in
-                                                                    (uu____83790,
+                                                                    (uu____83864,
                                                                     [])
                                                                  | FStar_Pervasives_Native.Some
                                                                     pre ->
-                                                                    let uu____83794
+                                                                    let uu____83868
                                                                     =
                                                                     FStar_SMTEncoding_EncodeTerm.encode_formula
                                                                     pre env'1
                                                                      in
-                                                                    (match uu____83794
+                                                                    (match uu____83868
                                                                     with
                                                                     | 
                                                                     (guard,decls0)
                                                                     ->
-                                                                    let uu____83807
+                                                                    let uu____83881
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_and_l
                                                                     (FStar_List.append
                                                                     guards
                                                                     [guard])
                                                                      in
-                                                                    (uu____83807,
+                                                                    (uu____83881,
                                                                     decls0))
                                                                   in
-                                                               (match uu____83777
+                                                               (match uu____83851
                                                                 with
                                                                 | (guard,guard_decls)
                                                                     ->
@@ -3727,38 +3727,38 @@ let (encode_top_level_let :
                                                                      in
                                                                     let decl_g
                                                                     =
-                                                                    let uu____83828
+                                                                    let uu____83902
                                                                     =
-                                                                    let uu____83840
+                                                                    let uu____83914
                                                                     =
-                                                                    let uu____83843
+                                                                    let uu____83917
                                                                     =
-                                                                    let uu____83846
+                                                                    let uu____83920
                                                                     =
-                                                                    let uu____83849
+                                                                    let uu____83923
                                                                     =
                                                                     FStar_Util.first_N
                                                                     fvb.FStar_SMTEncoding_Env.smt_arity
                                                                     vars  in
                                                                     FStar_Pervasives_Native.fst
-                                                                    uu____83849
+                                                                    uu____83923
                                                                      in
                                                                     FStar_List.map
                                                                     FStar_SMTEncoding_Term.fv_sort
-                                                                    uu____83846
+                                                                    uu____83920
                                                                      in
                                                                     FStar_SMTEncoding_Term.Fuel_sort
                                                                     ::
-                                                                    uu____83843
+                                                                    uu____83917
                                                                      in
                                                                     (g,
-                                                                    uu____83840,
+                                                                    uu____83914,
                                                                     FStar_SMTEncoding_Term.Term_sort,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "Fuel-instrumented function name"))
                                                                      in
                                                                     FStar_SMTEncoding_Term.DeclFun
-                                                                    uu____83828
+                                                                    uu____83902
                                                                      in
                                                                     let env02
                                                                     =
@@ -3784,14 +3784,14 @@ let (encode_top_level_let :
                                                                     FStar_Syntax_Util.range_of_lbname
                                                                     lbn  in
                                                                     let app =
-                                                                    let uu____83879
+                                                                    let uu____83953
                                                                     =
                                                                     FStar_List.map
                                                                     FStar_SMTEncoding_Util.mkFreeV
                                                                     vars  in
                                                                     FStar_SMTEncoding_EncodeTerm.maybe_curry_fvb
                                                                     rng fvb
-                                                                    uu____83879
+                                                                    uu____83953
                                                                      in
                                                                     let mk_g_app
                                                                     args =
@@ -3806,74 +3806,74 @@ let (encode_top_level_let :
                                                                     args  in
                                                                     let gsapp
                                                                     =
-                                                                    let uu____83894
+                                                                    let uu____83968
                                                                     =
-                                                                    let uu____83897
+                                                                    let uu____83971
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkApp
                                                                     ("SFuel",
                                                                     [fuel_tm])
                                                                      in
-                                                                    uu____83897
+                                                                    uu____83971
                                                                     ::
                                                                     vars_tm
                                                                      in
                                                                     mk_g_app
-                                                                    uu____83894
+                                                                    uu____83968
                                                                      in
                                                                     let gmax
                                                                     =
-                                                                    let uu____83903
+                                                                    let uu____83977
                                                                     =
-                                                                    let uu____83906
+                                                                    let uu____83980
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkApp
                                                                     ("MaxFuel",
                                                                     [])  in
-                                                                    uu____83906
+                                                                    uu____83980
                                                                     ::
                                                                     vars_tm
                                                                      in
                                                                     mk_g_app
-                                                                    uu____83903
+                                                                    uu____83977
                                                                      in
-                                                                    let uu____83911
+                                                                    let uu____83985
                                                                     =
                                                                     FStar_SMTEncoding_EncodeTerm.encode_term
                                                                     body
                                                                     env'1  in
-                                                                    (match uu____83911
+                                                                    (match uu____83985
                                                                     with
                                                                     | 
                                                                     (body_tm,decls2)
                                                                     ->
                                                                     let eqn_g
                                                                     =
-                                                                    let uu____83927
+                                                                    let uu____84001
                                                                     =
-                                                                    let uu____83935
+                                                                    let uu____84009
                                                                     =
-                                                                    let uu____83936
+                                                                    let uu____84010
                                                                     =
                                                                     FStar_Syntax_Util.range_of_lbname
                                                                     lbn  in
-                                                                    let uu____83937
+                                                                    let uu____84011
                                                                     =
-                                                                    let uu____83953
+                                                                    let uu____84027
                                                                     =
-                                                                    let uu____83954
+                                                                    let uu____84028
                                                                     =
-                                                                    let uu____83959
+                                                                    let uu____84033
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkEq
                                                                     (gsapp,
                                                                     body_tm)
                                                                      in
                                                                     (guard,
-                                                                    uu____83959)
+                                                                    uu____84033)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkImp
-                                                                    uu____83954
+                                                                    uu____84028
                                                                      in
                                                                     ([
                                                                     [gsapp]],
@@ -3881,123 +3881,123 @@ let (encode_top_level_let :
                                                                     (Prims.parse_int "0")),
                                                                     (fuel ::
                                                                     vars),
-                                                                    uu____83953)
+                                                                    uu____84027)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall'
-                                                                    uu____83936
-                                                                    uu____83937
+                                                                    uu____84010
+                                                                    uu____84011
                                                                      in
-                                                                    let uu____83973
+                                                                    let uu____84047
                                                                     =
-                                                                    let uu____83974
+                                                                    let uu____84048
                                                                     =
                                                                     FStar_Util.format1
                                                                     "Equation for fuel-instrumented recursive function: %s"
                                                                     (fvb.FStar_SMTEncoding_Env.fvar_lid).FStar_Ident.str
                                                                      in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu____83974
+                                                                    uu____84048
                                                                      in
-                                                                    (uu____83935,
-                                                                    uu____83973,
+                                                                    (uu____84009,
+                                                                    uu____84047,
                                                                     (Prims.op_Hat
                                                                     "equation_with_fuel_"
                                                                     g))  in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____83927
+                                                                    uu____84001
                                                                      in
                                                                     let eqn_f
                                                                     =
-                                                                    let uu____83981
+                                                                    let uu____84055
                                                                     =
-                                                                    let uu____83989
+                                                                    let uu____84063
                                                                     =
-                                                                    let uu____83990
+                                                                    let uu____84064
                                                                     =
                                                                     FStar_Syntax_Util.range_of_lbname
                                                                     lbn  in
-                                                                    let uu____83991
+                                                                    let uu____84065
                                                                     =
-                                                                    let uu____84002
+                                                                    let uu____84076
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkEq
                                                                     (app,
                                                                     gmax)  in
                                                                     ([[app]],
                                                                     vars,
-                                                                    uu____84002)
+                                                                    uu____84076)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____83990
-                                                                    uu____83991
+                                                                    uu____84064
+                                                                    uu____84065
                                                                      in
-                                                                    (uu____83989,
+                                                                    (uu____84063,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "Correspondence of recursive function to instrumented version"),
                                                                     (Prims.op_Hat
                                                                     "@fuel_correspondence_"
                                                                     g))  in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____83981
+                                                                    uu____84055
                                                                      in
                                                                     let eqn_g'
                                                                     =
-                                                                    let uu____84016
+                                                                    let uu____84090
                                                                     =
-                                                                    let uu____84024
+                                                                    let uu____84098
                                                                     =
-                                                                    let uu____84025
+                                                                    let uu____84099
                                                                     =
                                                                     FStar_Syntax_Util.range_of_lbname
                                                                     lbn  in
-                                                                    let uu____84026
+                                                                    let uu____84100
                                                                     =
-                                                                    let uu____84037
+                                                                    let uu____84111
                                                                     =
-                                                                    let uu____84038
+                                                                    let uu____84112
                                                                     =
-                                                                    let uu____84043
+                                                                    let uu____84117
                                                                     =
-                                                                    let uu____84044
+                                                                    let uu____84118
                                                                     =
-                                                                    let uu____84047
+                                                                    let uu____84121
                                                                     =
                                                                     FStar_SMTEncoding_Term.n_fuel
                                                                     (Prims.parse_int "0")
                                                                      in
-                                                                    uu____84047
+                                                                    uu____84121
                                                                     ::
                                                                     vars_tm
                                                                      in
                                                                     mk_g_app
-                                                                    uu____84044
+                                                                    uu____84118
                                                                      in
                                                                     (gsapp,
-                                                                    uu____84043)
+                                                                    uu____84117)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkEq
-                                                                    uu____84038
+                                                                    uu____84112
                                                                      in
                                                                     ([
                                                                     [gsapp]],
                                                                     (fuel ::
                                                                     vars),
-                                                                    uu____84037)
+                                                                    uu____84111)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____84025
-                                                                    uu____84026
+                                                                    uu____84099
+                                                                    uu____84100
                                                                      in
-                                                                    (uu____84024,
+                                                                    (uu____84098,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "Fuel irrelevance"),
                                                                     (Prims.op_Hat
                                                                     "@fuel_irrelevance_"
                                                                     g))  in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____84016
+                                                                    uu____84090
                                                                      in
-                                                                    let uu____84061
+                                                                    let uu____84135
                                                                     =
                                                                     let gapp
                                                                     =
@@ -4010,9 +4010,9 @@ let (encode_top_level_let :
                                                                     =
                                                                     let tok_app
                                                                     =
-                                                                    let uu____84073
+                                                                    let uu____84147
                                                                     =
-                                                                    let uu____84074
+                                                                    let uu____84148
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk_fv
                                                                     (gtok,
@@ -4020,23 +4020,23 @@ let (encode_top_level_let :
                                                                      in
                                                                     FStar_All.pipe_left
                                                                     FStar_SMTEncoding_Util.mkFreeV
-                                                                    uu____84074
+                                                                    uu____84148
                                                                      in
                                                                     FStar_SMTEncoding_EncodeTerm.mk_Apply
-                                                                    uu____84073
+                                                                    uu____84147
                                                                     (fuel ::
                                                                     vars)  in
-                                                                    let uu____84076
+                                                                    let uu____84150
                                                                     =
-                                                                    let uu____84084
+                                                                    let uu____84158
                                                                     =
-                                                                    let uu____84085
+                                                                    let uu____84159
                                                                     =
                                                                     FStar_Syntax_Util.range_of_lbname
                                                                     lbn  in
-                                                                    let uu____84086
+                                                                    let uu____84160
                                                                     =
-                                                                    let uu____84097
+                                                                    let uu____84171
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkEq
                                                                     (tok_app,
@@ -4045,13 +4045,13 @@ let (encode_top_level_let :
                                                                     [tok_app]],
                                                                     (fuel ::
                                                                     vars),
-                                                                    uu____84097)
+                                                                    uu____84171)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____84085
-                                                                    uu____84086
+                                                                    uu____84159
+                                                                    uu____84160
                                                                      in
-                                                                    (uu____84084,
+                                                                    (uu____84158,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "Fuel token correspondence"),
                                                                     (Prims.op_Hat
@@ -4059,37 +4059,37 @@ let (encode_top_level_let :
                                                                     gtok))
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____84076
+                                                                    uu____84150
                                                                      in
-                                                                    let uu____84110
+                                                                    let uu____84184
                                                                     =
-                                                                    let uu____84119
+                                                                    let uu____84193
                                                                     =
                                                                     FStar_SMTEncoding_EncodeTerm.encode_term_pred
                                                                     FStar_Pervasives_Native.None
                                                                     tres
                                                                     env'1
                                                                     gapp  in
-                                                                    match uu____84119
+                                                                    match uu____84193
                                                                     with
                                                                     | 
                                                                     (g_typing,d3)
                                                                     ->
-                                                                    let uu____84134
+                                                                    let uu____84208
                                                                     =
-                                                                    let uu____84137
+                                                                    let uu____84211
                                                                     =
-                                                                    let uu____84138
+                                                                    let uu____84212
                                                                     =
-                                                                    let uu____84146
+                                                                    let uu____84220
                                                                     =
-                                                                    let uu____84147
+                                                                    let uu____84221
                                                                     =
                                                                     FStar_Syntax_Util.range_of_lbname
                                                                     lbn  in
-                                                                    let uu____84148
+                                                                    let uu____84222
                                                                     =
-                                                                    let uu____84159
+                                                                    let uu____84233
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkImp
                                                                     (guard,
@@ -4098,27 +4098,27 @@ let (encode_top_level_let :
                                                                     ([[gapp]],
                                                                     (fuel ::
                                                                     vars),
-                                                                    uu____84159)
+                                                                    uu____84233)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____84147
-                                                                    uu____84148
+                                                                    uu____84221
+                                                                    uu____84222
                                                                      in
-                                                                    (uu____84146,
+                                                                    (uu____84220,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "Typing correspondence of token to term"),
                                                                     (Prims.op_Hat
                                                                     "token_correspondence_"
                                                                     g))  in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____84138
+                                                                    uu____84212
                                                                      in
-                                                                    [uu____84137]
+                                                                    [uu____84211]
                                                                      in
                                                                     (d3,
-                                                                    uu____84134)
+                                                                    uu____84208)
                                                                      in
-                                                                    match uu____84110
+                                                                    match uu____84184
                                                                     with
                                                                     | 
                                                                     (aux_decls,typing_corr)
@@ -4128,18 +4128,18 @@ let (encode_top_level_let :
                                                                     typing_corr
                                                                     [tok_corr]))
                                                                      in
-                                                                    (match uu____84061
+                                                                    (match uu____84135
                                                                     with
                                                                     | 
                                                                     (aux_decls,g_typing)
                                                                     ->
-                                                                    let uu____84216
+                                                                    let uu____84290
                                                                     =
-                                                                    let uu____84219
+                                                                    let uu____84293
                                                                     =
-                                                                    let uu____84222
+                                                                    let uu____84296
                                                                     =
-                                                                    let uu____84225
+                                                                    let uu____84299
                                                                     =
                                                                     FStar_All.pipe_right
                                                                     [decl_g;
@@ -4148,17 +4148,17 @@ let (encode_top_level_let :
                                                                      in
                                                                     FStar_List.append
                                                                     aux_decls
-                                                                    uu____84225
+                                                                    uu____84299
                                                                      in
                                                                     FStar_List.append
                                                                     decls2
-                                                                    uu____84222
+                                                                    uu____84296
                                                                      in
                                                                     FStar_List.append
                                                                     binder_decls1
-                                                                    uu____84219
+                                                                    uu____84293
                                                                      in
-                                                                    let uu____84232
+                                                                    let uu____84306
                                                                     =
                                                                     FStar_All.pipe_right
                                                                     (FStar_List.append
@@ -4168,55 +4168,55 @@ let (encode_top_level_let :
                                                                     g_typing)
                                                                     FStar_SMTEncoding_Term.mk_decls_trivial
                                                                      in
-                                                                    (uu____84216,
-                                                                    uu____84232,
+                                                                    (uu____84290,
+                                                                    uu____84306,
                                                                     env02))))))))))
                                       in
-                                   let uu____84237 =
-                                     let uu____84250 =
+                                   let uu____84311 =
+                                     let uu____84324 =
                                        FStar_List.zip3 gtoks1 typs2 bindings1
                                         in
                                      FStar_List.fold_left
-                                       (fun uu____84313  ->
-                                          fun uu____84314  ->
-                                            match (uu____84313, uu____84314)
+                                       (fun uu____84387  ->
+                                          fun uu____84388  ->
+                                            match (uu____84387, uu____84388)
                                             with
                                             | ((decls2,eqns,env01),(gtok,ty,lb))
                                                 ->
-                                                let uu____84439 =
+                                                let uu____84513 =
                                                   encode_one_binding env01
                                                     gtok ty lb
                                                    in
-                                                (match uu____84439 with
+                                                (match uu____84513 with
                                                  | (decls',eqns',env02) ->
                                                      ((decls' :: decls2),
                                                        (FStar_List.append
                                                           eqns' eqns), env02)))
-                                       ([decls1], [], env0) uu____84250
+                                       ([decls1], [], env0) uu____84324
                                       in
-                                   (match uu____84237 with
+                                   (match uu____84311 with
                                     | (decls2,eqns,env01) ->
-                                        let uu____84506 =
-                                          let isDeclFun uu___640_84523 =
-                                            match uu___640_84523 with
+                                        let uu____84580 =
+                                          let isDeclFun uu___640_84597 =
+                                            match uu___640_84597 with
                                             | FStar_SMTEncoding_Term.DeclFun
-                                                uu____84525 -> true
-                                            | uu____84538 -> false  in
-                                          let uu____84540 =
+                                                uu____84599 -> true
+                                            | uu____84612 -> false  in
+                                          let uu____84614 =
                                             FStar_All.pipe_right decls2
                                               FStar_List.flatten
                                              in
-                                          FStar_All.pipe_right uu____84540
+                                          FStar_All.pipe_right uu____84614
                                             (fun decls3  ->
-                                               let uu____84570 =
+                                               let uu____84644 =
                                                  FStar_List.fold_left
-                                                   (fun uu____84601  ->
+                                                   (fun uu____84675  ->
                                                       fun elt  ->
-                                                        match uu____84601
+                                                        match uu____84675
                                                         with
                                                         | (prefix_decls,elts,rest)
                                                             ->
-                                                            let uu____84642 =
+                                                            let uu____84716 =
                                                               (FStar_All.pipe_right
                                                                  elt.FStar_SMTEncoding_Term.key
                                                                  FStar_Util.is_some)
@@ -4225,7 +4225,7 @@ let (encode_top_level_let :
                                                                    isDeclFun
                                                                    elt.FStar_SMTEncoding_Term.decls)
                                                                in
-                                                            if uu____84642
+                                                            if uu____84716
                                                             then
                                                               (prefix_decls,
                                                                 (FStar_List.append
@@ -4233,13 +4233,13 @@ let (encode_top_level_let :
                                                                    [elt]),
                                                                 rest)
                                                             else
-                                                              (let uu____84670
+                                                              (let uu____84744
                                                                  =
                                                                  FStar_List.partition
                                                                    isDeclFun
                                                                    elt.FStar_SMTEncoding_Term.decls
                                                                   in
-                                                               match uu____84670
+                                                               match uu____84744
                                                                with
                                                                | (elt_decl_funs,elt_rest)
                                                                    ->
@@ -4250,34 +4250,34 @@ let (encode_top_level_let :
                                                                     (FStar_List.append
                                                                     rest
                                                                     [(
-                                                                    let uu___1459_84708
+                                                                    let uu___1459_84782
                                                                     = elt  in
                                                                     {
                                                                     FStar_SMTEncoding_Term.sym_name
                                                                     =
-                                                                    (uu___1459_84708.FStar_SMTEncoding_Term.sym_name);
+                                                                    (uu___1459_84782.FStar_SMTEncoding_Term.sym_name);
                                                                     FStar_SMTEncoding_Term.key
                                                                     =
-                                                                    (uu___1459_84708.FStar_SMTEncoding_Term.key);
+                                                                    (uu___1459_84782.FStar_SMTEncoding_Term.key);
                                                                     FStar_SMTEncoding_Term.decls
                                                                     =
                                                                     elt_rest;
                                                                     FStar_SMTEncoding_Term.a_names
                                                                     =
-                                                                    (uu___1459_84708.FStar_SMTEncoding_Term.a_names)
+                                                                    (uu___1459_84782.FStar_SMTEncoding_Term.a_names)
                                                                     })]))))
                                                    ([], [], []) decls3
                                                   in
-                                               match uu____84570 with
+                                               match uu____84644 with
                                                | (prefix_decls,elts,rest) ->
-                                                   let uu____84740 =
+                                                   let uu____84814 =
                                                      FStar_All.pipe_right
                                                        prefix_decls
                                                        FStar_SMTEncoding_Term.mk_decls_trivial
                                                       in
-                                                   (uu____84740, elts, rest))
+                                                   (uu____84814, elts, rest))
                                            in
-                                        (match uu____84506 with
+                                        (match uu____84580 with
                                          | (prefix_decls,elts,rest) ->
                                              let eqns1 = FStar_List.rev eqns
                                                 in
@@ -4286,19 +4286,19 @@ let (encode_top_level_let :
                                                     (FStar_List.append rest
                                                        eqns1))), env01)))
                                 in
-                             let uu____84769 =
+                             let uu____84843 =
                                (FStar_All.pipe_right quals
                                   (FStar_Util.for_some
-                                     (fun uu___641_84775  ->
-                                        match uu___641_84775 with
+                                     (fun uu___641_84849  ->
+                                        match uu___641_84849 with
                                         | FStar_Syntax_Syntax.HasMaskedEffect
                                              -> true
-                                        | uu____84778 -> false)))
+                                        | uu____84852 -> false)))
                                  ||
                                  (FStar_All.pipe_right typs1
                                     (FStar_Util.for_some
                                        (fun t  ->
-                                          let uu____84786 =
+                                          let uu____84860 =
                                             (FStar_Syntax_Util.is_pure_or_ghost_function
                                                t)
                                               ||
@@ -4307,13 +4307,13 @@ let (encode_top_level_let :
                                                  t)
                                              in
                                           FStar_All.pipe_left
-                                            Prims.op_Negation uu____84786)))
+                                            Prims.op_Negation uu____84860)))
                                 in
-                             if uu____84769
+                             if uu____84843
                              then (decls1, env_decls)
                              else
                                (try
-                                  (fun uu___1476_84808  ->
+                                  (fun uu___1476_84882  ->
                                      match () with
                                      | () ->
                                          if Prims.op_Negation is_rec
@@ -4329,25 +4329,25 @@ let (encode_top_level_let :
              with
              | Let_rec_unencodeable  ->
                  let msg =
-                   let uu____84847 =
+                   let uu____84921 =
                      FStar_All.pipe_right bindings
                        (FStar_List.map
                           (fun lb  ->
                              FStar_Syntax_Print.lbname_to_string
                                lb.FStar_Syntax_Syntax.lbname))
                       in
-                   FStar_All.pipe_right uu____84847
+                   FStar_All.pipe_right uu____84921
                      (FStar_String.concat " and ")
                     in
                  let decl =
                    FStar_SMTEncoding_Term.Caption
                      (Prims.op_Hat "let rec unencodeable: Skipping: " msg)
                     in
-                 let uu____84866 =
+                 let uu____84940 =
                    FStar_All.pipe_right [decl]
                      FStar_SMTEncoding_Term.mk_decls_trivial
                     in
-                 (uu____84866, env))
+                 (uu____84940, env))
   
 let rec (encode_sigelt :
   FStar_SMTEncoding_Env.env_t ->
@@ -4357,48 +4357,48 @@ let rec (encode_sigelt :
   fun env  ->
     fun se  ->
       let nm =
-        let uu____84922 = FStar_Syntax_Util.lid_of_sigelt se  in
-        match uu____84922 with
+        let uu____84996 = FStar_Syntax_Util.lid_of_sigelt se  in
+        match uu____84996 with
         | FStar_Pervasives_Native.None  -> ""
         | FStar_Pervasives_Native.Some l -> l.FStar_Ident.str  in
-      let uu____84928 = encode_sigelt' env se  in
-      match uu____84928 with
+      let uu____85002 = encode_sigelt' env se  in
+      match uu____85002 with
       | (g,env1) ->
           let g1 =
             match g with
             | [] ->
-                let uu____84940 =
-                  let uu____84943 =
-                    let uu____84944 = FStar_Util.format1 "<Skipped %s/>" nm
+                let uu____85014 =
+                  let uu____85017 =
+                    let uu____85018 = FStar_Util.format1 "<Skipped %s/>" nm
                        in
-                    FStar_SMTEncoding_Term.Caption uu____84944  in
-                  [uu____84943]  in
-                FStar_All.pipe_right uu____84940
+                    FStar_SMTEncoding_Term.Caption uu____85018  in
+                  [uu____85017]  in
+                FStar_All.pipe_right uu____85014
                   FStar_SMTEncoding_Term.mk_decls_trivial
-            | uu____84949 ->
-                let uu____84950 =
-                  let uu____84953 =
-                    let uu____84956 =
-                      let uu____84957 =
+            | uu____85023 ->
+                let uu____85024 =
+                  let uu____85027 =
+                    let uu____85030 =
+                      let uu____85031 =
                         FStar_Util.format1 "<Start encoding %s>" nm  in
-                      FStar_SMTEncoding_Term.Caption uu____84957  in
-                    [uu____84956]  in
-                  FStar_All.pipe_right uu____84953
+                      FStar_SMTEncoding_Term.Caption uu____85031  in
+                    [uu____85030]  in
+                  FStar_All.pipe_right uu____85027
                     FStar_SMTEncoding_Term.mk_decls_trivial
                    in
-                let uu____84964 =
-                  let uu____84967 =
-                    let uu____84970 =
-                      let uu____84973 =
-                        let uu____84974 =
+                let uu____85038 =
+                  let uu____85041 =
+                    let uu____85044 =
+                      let uu____85047 =
+                        let uu____85048 =
                           FStar_Util.format1 "</end encoding %s>" nm  in
-                        FStar_SMTEncoding_Term.Caption uu____84974  in
-                      [uu____84973]  in
-                    FStar_All.pipe_right uu____84970
+                        FStar_SMTEncoding_Term.Caption uu____85048  in
+                      [uu____85047]  in
+                    FStar_All.pipe_right uu____85044
                       FStar_SMTEncoding_Term.mk_decls_trivial
                      in
-                  FStar_List.append g uu____84967  in
-                FStar_List.append uu____84950 uu____84964
+                  FStar_List.append g uu____85041  in
+                FStar_List.append uu____85024 uu____85038
              in
           (g1, env1)
 
@@ -4409,56 +4409,56 @@ and (encode_sigelt' :
   =
   fun env  ->
     fun se  ->
-      (let uu____84988 =
+      (let uu____85062 =
          FStar_All.pipe_left
            (FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv)
            (FStar_Options.Other "SMTEncoding")
           in
-       if uu____84988
+       if uu____85062
        then
-         let uu____84993 = FStar_Syntax_Print.sigelt_to_string se  in
-         FStar_Util.print1 "@@@Encoding sigelt %s\n" uu____84993
+         let uu____85067 = FStar_Syntax_Print.sigelt_to_string se  in
+         FStar_Util.print1 "@@@Encoding sigelt %s\n" uu____85067
        else ());
       (let is_opaque_to_smt t =
-         let uu____85005 =
-           let uu____85006 = FStar_Syntax_Subst.compress t  in
-           uu____85006.FStar_Syntax_Syntax.n  in
-         match uu____85005 with
+         let uu____85079 =
+           let uu____85080 = FStar_Syntax_Subst.compress t  in
+           uu____85080.FStar_Syntax_Syntax.n  in
+         match uu____85079 with
          | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string
-             (s,uu____85011)) -> s = "opaque_to_smt"
-         | uu____85016 -> false  in
+             (s,uu____85085)) -> s = "opaque_to_smt"
+         | uu____85090 -> false  in
        let is_uninterpreted_by_smt t =
-         let uu____85025 =
-           let uu____85026 = FStar_Syntax_Subst.compress t  in
-           uu____85026.FStar_Syntax_Syntax.n  in
-         match uu____85025 with
+         let uu____85099 =
+           let uu____85100 = FStar_Syntax_Subst.compress t  in
+           uu____85100.FStar_Syntax_Syntax.n  in
+         match uu____85099 with
          | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string
-             (s,uu____85031)) -> s = "uninterpreted_by_smt"
-         | uu____85036 -> false  in
+             (s,uu____85105)) -> s = "uninterpreted_by_smt"
+         | uu____85110 -> false  in
        match se.FStar_Syntax_Syntax.sigel with
-       | FStar_Syntax_Syntax.Sig_new_effect_for_free uu____85042 ->
+       | FStar_Syntax_Syntax.Sig_new_effect_for_free uu____85116 ->
            failwith
              "impossible -- new_effect_for_free should have been removed by Tc.fs"
-       | FStar_Syntax_Syntax.Sig_splice uu____85048 ->
+       | FStar_Syntax_Syntax.Sig_splice uu____85122 ->
            failwith "impossible -- splice should have been removed by Tc.fs"
-       | FStar_Syntax_Syntax.Sig_pragma uu____85060 -> ([], env)
-       | FStar_Syntax_Syntax.Sig_main uu____85061 -> ([], env)
-       | FStar_Syntax_Syntax.Sig_effect_abbrev uu____85062 -> ([], env)
-       | FStar_Syntax_Syntax.Sig_sub_effect uu____85075 -> ([], env)
+       | FStar_Syntax_Syntax.Sig_pragma uu____85134 -> ([], env)
+       | FStar_Syntax_Syntax.Sig_main uu____85135 -> ([], env)
+       | FStar_Syntax_Syntax.Sig_effect_abbrev uu____85136 -> ([], env)
+       | FStar_Syntax_Syntax.Sig_sub_effect uu____85149 -> ([], env)
        | FStar_Syntax_Syntax.Sig_new_effect ed ->
-           let uu____85077 =
-             let uu____85079 =
+           let uu____85151 =
+             let uu____85153 =
                FStar_TypeChecker_Env.is_reifiable_effect
                  env.FStar_SMTEncoding_Env.tcenv ed.FStar_Syntax_Syntax.mname
                 in
-             Prims.op_Negation uu____85079  in
-           if uu____85077
+             Prims.op_Negation uu____85153  in
+           if uu____85151
            then ([], env)
            else
              (let close_effect_params tm =
                 match ed.FStar_Syntax_Syntax.binders with
                 | [] -> tm
-                | uu____85108 ->
+                | uu____85182 ->
                     FStar_Syntax_Syntax.mk
                       (FStar_Syntax_Syntax.Tm_abs
                          ((ed.FStar_Syntax_Syntax.binders), tm,
@@ -4470,190 +4470,190 @@ and (encode_sigelt' :
                       FStar_Pervasives_Native.None tm.FStar_Syntax_Syntax.pos
                  in
               let encode_action env1 a =
-                let uu____85140 =
+                let uu____85214 =
                   FStar_Syntax_Util.arrow_formals_comp
                     a.FStar_Syntax_Syntax.action_typ
                    in
-                match uu____85140 with
-                | (formals,uu____85160) ->
+                match uu____85214 with
+                | (formals,uu____85234) ->
                     let arity = FStar_List.length formals  in
-                    let uu____85184 =
+                    let uu____85258 =
                       FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid
                         env1 a.FStar_Syntax_Syntax.action_name arity
                        in
-                    (match uu____85184 with
+                    (match uu____85258 with
                      | (aname,atok,env2) ->
-                         let uu____85210 =
-                           let uu____85215 =
+                         let uu____85284 =
+                           let uu____85289 =
                              close_effect_params
                                a.FStar_Syntax_Syntax.action_defn
                               in
                            FStar_SMTEncoding_EncodeTerm.encode_term
-                             uu____85215 env2
+                             uu____85289 env2
                             in
-                         (match uu____85210 with
+                         (match uu____85284 with
                           | (tm,decls) ->
                               let a_decls =
-                                let uu____85227 =
-                                  let uu____85228 =
-                                    let uu____85240 =
+                                let uu____85301 =
+                                  let uu____85302 =
+                                    let uu____85314 =
                                       FStar_All.pipe_right formals
                                         (FStar_List.map
-                                           (fun uu____85260  ->
+                                           (fun uu____85334  ->
                                               FStar_SMTEncoding_Term.Term_sort))
                                        in
-                                    (aname, uu____85240,
+                                    (aname, uu____85314,
                                       FStar_SMTEncoding_Term.Term_sort,
                                       (FStar_Pervasives_Native.Some "Action"))
                                      in
-                                  FStar_SMTEncoding_Term.DeclFun uu____85228
+                                  FStar_SMTEncoding_Term.DeclFun uu____85302
                                    in
-                                [uu____85227;
+                                [uu____85301;
                                 FStar_SMTEncoding_Term.DeclFun
                                   (atok, [],
                                     FStar_SMTEncoding_Term.Term_sort,
                                     (FStar_Pervasives_Native.Some
                                        "Action token"))]
                                  in
-                              let uu____85277 =
-                                let aux uu____85323 uu____85324 =
-                                  match (uu____85323, uu____85324) with
-                                  | ((bv,uu____85368),(env3,acc_sorts,acc))
+                              let uu____85351 =
+                                let aux uu____85397 uu____85398 =
+                                  match (uu____85397, uu____85398) with
+                                  | ((bv,uu____85442),(env3,acc_sorts,acc))
                                       ->
-                                      let uu____85400 =
+                                      let uu____85474 =
                                         FStar_SMTEncoding_Env.gen_term_var
                                           env3 bv
                                          in
-                                      (match uu____85400 with
+                                      (match uu____85474 with
                                        | (xxsym,xx,env4) ->
-                                           let uu____85423 =
-                                             let uu____85426 =
+                                           let uu____85497 =
+                                             let uu____85500 =
                                                FStar_SMTEncoding_Term.mk_fv
                                                  (xxsym,
                                                    FStar_SMTEncoding_Term.Term_sort)
                                                 in
-                                             uu____85426 :: acc_sorts  in
-                                           (env4, uu____85423, (xx :: acc)))
+                                             uu____85500 :: acc_sorts  in
+                                           (env4, uu____85497, (xx :: acc)))
                                    in
                                 FStar_List.fold_right aux formals
                                   (env2, [], [])
                                  in
-                              (match uu____85277 with
-                               | (uu____85458,xs_sorts,xs) ->
+                              (match uu____85351 with
+                               | (uu____85532,xs_sorts,xs) ->
                                    let app =
                                      FStar_SMTEncoding_Util.mkApp (aname, xs)
                                       in
                                    let a_eq =
-                                     let uu____85474 =
-                                       let uu____85482 =
-                                         let uu____85483 =
+                                     let uu____85548 =
+                                       let uu____85556 =
+                                         let uu____85557 =
                                            FStar_Ident.range_of_lid
                                              a.FStar_Syntax_Syntax.action_name
                                             in
-                                         let uu____85484 =
-                                           let uu____85495 =
-                                             let uu____85496 =
-                                               let uu____85501 =
+                                         let uu____85558 =
+                                           let uu____85569 =
+                                             let uu____85570 =
+                                               let uu____85575 =
                                                  FStar_SMTEncoding_EncodeTerm.mk_Apply
                                                    tm xs_sorts
                                                   in
-                                               (app, uu____85501)  in
+                                               (app, uu____85575)  in
                                              FStar_SMTEncoding_Util.mkEq
-                                               uu____85496
+                                               uu____85570
                                               in
-                                           ([[app]], xs_sorts, uu____85495)
+                                           ([[app]], xs_sorts, uu____85569)
                                             in
                                          FStar_SMTEncoding_Term.mkForall
-                                           uu____85483 uu____85484
+                                           uu____85557 uu____85558
                                           in
-                                       (uu____85482,
+                                       (uu____85556,
                                          (FStar_Pervasives_Native.Some
                                             "Action equality"),
                                          (Prims.op_Hat aname "_equality"))
                                         in
                                      FStar_SMTEncoding_Util.mkAssume
-                                       uu____85474
+                                       uu____85548
                                       in
                                    let tok_correspondence =
                                      let tok_term =
-                                       let uu____85516 =
+                                       let uu____85590 =
                                          FStar_SMTEncoding_Term.mk_fv
                                            (atok,
                                              FStar_SMTEncoding_Term.Term_sort)
                                           in
                                        FStar_All.pipe_left
                                          FStar_SMTEncoding_Util.mkFreeV
-                                         uu____85516
+                                         uu____85590
                                         in
                                      let tok_app =
                                        FStar_SMTEncoding_EncodeTerm.mk_Apply
                                          tok_term xs_sorts
                                         in
-                                     let uu____85519 =
-                                       let uu____85527 =
-                                         let uu____85528 =
+                                     let uu____85593 =
+                                       let uu____85601 =
+                                         let uu____85602 =
                                            FStar_Ident.range_of_lid
                                              a.FStar_Syntax_Syntax.action_name
                                             in
-                                         let uu____85529 =
-                                           let uu____85540 =
+                                         let uu____85603 =
+                                           let uu____85614 =
                                              FStar_SMTEncoding_Util.mkEq
                                                (tok_app, app)
                                               in
                                            ([[tok_app]], xs_sorts,
-                                             uu____85540)
+                                             uu____85614)
                                             in
                                          FStar_SMTEncoding_Term.mkForall
-                                           uu____85528 uu____85529
+                                           uu____85602 uu____85603
                                           in
-                                       (uu____85527,
+                                       (uu____85601,
                                          (FStar_Pervasives_Native.Some
                                             "Action token correspondence"),
                                          (Prims.op_Hat aname
                                             "_token_correspondence"))
                                         in
                                      FStar_SMTEncoding_Util.mkAssume
-                                       uu____85519
+                                       uu____85593
                                       in
-                                   let uu____85553 =
-                                     let uu____85556 =
+                                   let uu____85627 =
+                                     let uu____85630 =
                                        FStar_All.pipe_right
                                          (FStar_List.append a_decls
                                             [a_eq; tok_correspondence])
                                          FStar_SMTEncoding_Term.mk_decls_trivial
                                         in
-                                     FStar_List.append decls uu____85556  in
-                                   (env2, uu____85553))))
+                                     FStar_List.append decls uu____85630  in
+                                   (env2, uu____85627))))
                  in
-              let uu____85565 =
+              let uu____85639 =
                 FStar_Util.fold_map encode_action env
                   ed.FStar_Syntax_Syntax.actions
                  in
-              match uu____85565 with
+              match uu____85639 with
               | (env1,decls2) -> ((FStar_List.flatten decls2), env1))
-       | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____85591,uu____85592)
+       | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____85665,uu____85666)
            when FStar_Ident.lid_equals lid FStar_Parser_Const.precedes_lid ->
-           let uu____85593 =
+           let uu____85667 =
              FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid env lid
                (Prims.parse_int "4")
               in
-           (match uu____85593 with | (tname,ttok,env1) -> ([], env1))
-       | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____85615,t) ->
+           (match uu____85667 with | (tname,ttok,env1) -> ([], env1))
+       | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____85689,t) ->
            let quals = se.FStar_Syntax_Syntax.sigquals  in
            let will_encode_definition =
-             let uu____85622 =
+             let uu____85696 =
                FStar_All.pipe_right quals
                  (FStar_Util.for_some
-                    (fun uu___642_85628  ->
-                       match uu___642_85628 with
+                    (fun uu___642_85702  ->
+                       match uu___642_85702 with
                        | FStar_Syntax_Syntax.Assumption  -> true
-                       | FStar_Syntax_Syntax.Projector uu____85631 -> true
-                       | FStar_Syntax_Syntax.Discriminator uu____85637 ->
+                       | FStar_Syntax_Syntax.Projector uu____85705 -> true
+                       | FStar_Syntax_Syntax.Discriminator uu____85711 ->
                            true
                        | FStar_Syntax_Syntax.Irreducible  -> true
-                       | uu____85640 -> false))
+                       | uu____85714 -> false))
                 in
-             Prims.op_Negation uu____85622  in
+             Prims.op_Negation uu____85696  in
            if will_encode_definition
            then ([], env)
            else
@@ -4662,62 +4662,62 @@ and (encode_sigelt' :
                   FStar_Syntax_Syntax.delta_constant
                   FStar_Pervasives_Native.None
                  in
-              let uu____85650 =
-                let uu____85655 =
+              let uu____85724 =
+                let uu____85729 =
                   FStar_All.pipe_right se.FStar_Syntax_Syntax.sigattrs
                     (FStar_Util.for_some is_uninterpreted_by_smt)
                    in
-                encode_top_level_val uu____85655 env fv t quals  in
-              match uu____85650 with
+                encode_top_level_val uu____85729 env fv t quals  in
+              match uu____85724 with
               | (decls,env1) ->
                   let tname = lid.FStar_Ident.str  in
                   let tsym =
-                    let uu____85669 =
+                    let uu____85743 =
                       FStar_SMTEncoding_Env.try_lookup_free_var env1 lid  in
-                    FStar_Option.get uu____85669  in
-                  let uu____85672 =
-                    let uu____85673 =
-                      let uu____85676 =
+                    FStar_Option.get uu____85743  in
+                  let uu____85746 =
+                    let uu____85747 =
+                      let uu____85750 =
                         primitive_type_axioms
                           env1.FStar_SMTEncoding_Env.tcenv lid tname tsym
                          in
-                      FStar_All.pipe_right uu____85676
+                      FStar_All.pipe_right uu____85750
                         FStar_SMTEncoding_Term.mk_decls_trivial
                        in
-                    FStar_List.append decls uu____85673  in
-                  (uu____85672, env1))
+                    FStar_List.append decls uu____85747  in
+                  (uu____85746, env1))
        | FStar_Syntax_Syntax.Sig_assume (l,us,f) ->
-           let uu____85686 = FStar_Syntax_Subst.open_univ_vars us f  in
-           (match uu____85686 with
+           let uu____85760 = FStar_Syntax_Subst.open_univ_vars us f  in
+           (match uu____85760 with
             | (uvs,f1) ->
                 let env1 =
-                  let uu___1612_85698 = env  in
-                  let uu____85699 =
+                  let uu___1612_85772 = env  in
+                  let uu____85773 =
                     FStar_TypeChecker_Env.push_univ_vars
                       env.FStar_SMTEncoding_Env.tcenv uvs
                      in
                   {
                     FStar_SMTEncoding_Env.bvar_bindings =
-                      (uu___1612_85698.FStar_SMTEncoding_Env.bvar_bindings);
+                      (uu___1612_85772.FStar_SMTEncoding_Env.bvar_bindings);
                     FStar_SMTEncoding_Env.fvar_bindings =
-                      (uu___1612_85698.FStar_SMTEncoding_Env.fvar_bindings);
+                      (uu___1612_85772.FStar_SMTEncoding_Env.fvar_bindings);
                     FStar_SMTEncoding_Env.depth =
-                      (uu___1612_85698.FStar_SMTEncoding_Env.depth);
-                    FStar_SMTEncoding_Env.tcenv = uu____85699;
+                      (uu___1612_85772.FStar_SMTEncoding_Env.depth);
+                    FStar_SMTEncoding_Env.tcenv = uu____85773;
                     FStar_SMTEncoding_Env.warn =
-                      (uu___1612_85698.FStar_SMTEncoding_Env.warn);
+                      (uu___1612_85772.FStar_SMTEncoding_Env.warn);
                     FStar_SMTEncoding_Env.nolabels =
-                      (uu___1612_85698.FStar_SMTEncoding_Env.nolabels);
+                      (uu___1612_85772.FStar_SMTEncoding_Env.nolabels);
                     FStar_SMTEncoding_Env.use_zfuel_name =
-                      (uu___1612_85698.FStar_SMTEncoding_Env.use_zfuel_name);
+                      (uu___1612_85772.FStar_SMTEncoding_Env.use_zfuel_name);
                     FStar_SMTEncoding_Env.encode_non_total_function_typ =
-                      (uu___1612_85698.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+                      (uu___1612_85772.FStar_SMTEncoding_Env.encode_non_total_function_typ);
                     FStar_SMTEncoding_Env.current_module_name =
-                      (uu___1612_85698.FStar_SMTEncoding_Env.current_module_name);
+                      (uu___1612_85772.FStar_SMTEncoding_Env.current_module_name);
                     FStar_SMTEncoding_Env.encoding_quantifier =
-                      (uu___1612_85698.FStar_SMTEncoding_Env.encoding_quantifier);
+                      (uu___1612_85772.FStar_SMTEncoding_Env.encoding_quantifier);
                     FStar_SMTEncoding_Env.global_cache =
-                      (uu___1612_85698.FStar_SMTEncoding_Env.global_cache)
+                      (uu___1612_85772.FStar_SMTEncoding_Env.global_cache)
                   }  in
                 let f2 =
                   FStar_TypeChecker_Normalize.normalize
@@ -4725,35 +4725,35 @@ and (encode_sigelt' :
                     FStar_TypeChecker_Env.Eager_unfolding]
                     env1.FStar_SMTEncoding_Env.tcenv f1
                    in
-                let uu____85701 =
+                let uu____85775 =
                   FStar_SMTEncoding_EncodeTerm.encode_formula f2 env1  in
-                (match uu____85701 with
+                (match uu____85775 with
                  | (f3,decls) ->
                      let g =
-                       let uu____85715 =
-                         let uu____85718 =
-                           let uu____85719 =
-                             let uu____85727 =
-                               let uu____85728 =
-                                 let uu____85730 =
+                       let uu____85789 =
+                         let uu____85792 =
+                           let uu____85793 =
+                             let uu____85801 =
+                               let uu____85802 =
+                                 let uu____85804 =
                                    FStar_Syntax_Print.lid_to_string l  in
                                  FStar_Util.format1 "Assumption: %s"
-                                   uu____85730
+                                   uu____85804
                                   in
-                               FStar_Pervasives_Native.Some uu____85728  in
-                             let uu____85734 =
+                               FStar_Pervasives_Native.Some uu____85802  in
+                             let uu____85808 =
                                FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
                                  (Prims.op_Hat "assumption_"
                                     l.FStar_Ident.str)
                                 in
-                             (f3, uu____85727, uu____85734)  in
-                           FStar_SMTEncoding_Util.mkAssume uu____85719  in
-                         [uu____85718]  in
-                       FStar_All.pipe_right uu____85715
+                             (f3, uu____85801, uu____85808)  in
+                           FStar_SMTEncoding_Util.mkAssume uu____85793  in
+                         [uu____85792]  in
+                       FStar_All.pipe_right uu____85789
                          FStar_SMTEncoding_Term.mk_decls_trivial
                         in
                      ((FStar_List.append decls g), env1)))
-       | FStar_Syntax_Syntax.Sig_let (lbs,uu____85743) when
+       | FStar_Syntax_Syntax.Sig_let (lbs,uu____85817) when
            (FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
               (FStar_List.contains FStar_Syntax_Syntax.Irreducible))
              ||
@@ -4761,63 +4761,63 @@ and (encode_sigelt' :
                 (FStar_Util.for_some is_opaque_to_smt))
            ->
            let attrs = se.FStar_Syntax_Syntax.sigattrs  in
-           let uu____85757 =
+           let uu____85831 =
              FStar_Util.fold_map
                (fun env1  ->
                   fun lb  ->
                     let lid =
-                      let uu____85779 =
-                        let uu____85782 =
+                      let uu____85853 =
+                        let uu____85856 =
                           FStar_Util.right lb.FStar_Syntax_Syntax.lbname  in
-                        uu____85782.FStar_Syntax_Syntax.fv_name  in
-                      uu____85779.FStar_Syntax_Syntax.v  in
-                    let uu____85783 =
-                      let uu____85785 =
+                        uu____85856.FStar_Syntax_Syntax.fv_name  in
+                      uu____85853.FStar_Syntax_Syntax.v  in
+                    let uu____85857 =
+                      let uu____85859 =
                         FStar_TypeChecker_Env.try_lookup_val_decl
                           env1.FStar_SMTEncoding_Env.tcenv lid
                          in
-                      FStar_All.pipe_left FStar_Option.isNone uu____85785  in
-                    if uu____85783
+                      FStar_All.pipe_left FStar_Option.isNone uu____85859  in
+                    if uu____85857
                     then
                       let val_decl =
-                        let uu___1629_85817 = se  in
+                        let uu___1629_85891 = se  in
                         {
                           FStar_Syntax_Syntax.sigel =
                             (FStar_Syntax_Syntax.Sig_declare_typ
                                (lid, (lb.FStar_Syntax_Syntax.lbunivs),
                                  (lb.FStar_Syntax_Syntax.lbtyp)));
                           FStar_Syntax_Syntax.sigrng =
-                            (uu___1629_85817.FStar_Syntax_Syntax.sigrng);
+                            (uu___1629_85891.FStar_Syntax_Syntax.sigrng);
                           FStar_Syntax_Syntax.sigquals =
                             (FStar_Syntax_Syntax.Irreducible ::
                             (se.FStar_Syntax_Syntax.sigquals));
                           FStar_Syntax_Syntax.sigmeta =
-                            (uu___1629_85817.FStar_Syntax_Syntax.sigmeta);
+                            (uu___1629_85891.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs =
-                            (uu___1629_85817.FStar_Syntax_Syntax.sigattrs)
+                            (uu___1629_85891.FStar_Syntax_Syntax.sigattrs)
                         }  in
-                      let uu____85818 = encode_sigelt' env1 val_decl  in
-                      match uu____85818 with | (decls,env2) -> (env2, decls)
+                      let uu____85892 = encode_sigelt' env1 val_decl  in
+                      match uu____85892 with | (decls,env2) -> (env2, decls)
                     else (env1, [])) env (FStar_Pervasives_Native.snd lbs)
               in
-           (match uu____85757 with
+           (match uu____85831 with
             | (env1,decls) -> ((FStar_List.flatten decls), env1))
        | FStar_Syntax_Syntax.Sig_let
-           ((uu____85854,{ FStar_Syntax_Syntax.lbname = FStar_Util.Inr b2t1;
-                           FStar_Syntax_Syntax.lbunivs = uu____85856;
-                           FStar_Syntax_Syntax.lbtyp = uu____85857;
-                           FStar_Syntax_Syntax.lbeff = uu____85858;
-                           FStar_Syntax_Syntax.lbdef = uu____85859;
-                           FStar_Syntax_Syntax.lbattrs = uu____85860;
-                           FStar_Syntax_Syntax.lbpos = uu____85861;_}::[]),uu____85862)
+           ((uu____85928,{ FStar_Syntax_Syntax.lbname = FStar_Util.Inr b2t1;
+                           FStar_Syntax_Syntax.lbunivs = uu____85930;
+                           FStar_Syntax_Syntax.lbtyp = uu____85931;
+                           FStar_Syntax_Syntax.lbeff = uu____85932;
+                           FStar_Syntax_Syntax.lbdef = uu____85933;
+                           FStar_Syntax_Syntax.lbattrs = uu____85934;
+                           FStar_Syntax_Syntax.lbpos = uu____85935;_}::[]),uu____85936)
            when FStar_Syntax_Syntax.fv_eq_lid b2t1 FStar_Parser_Const.b2t_lid
            ->
-           let uu____85881 =
+           let uu____85955 =
              FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid env
                (b2t1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                (Prims.parse_int "1")
               in
-           (match uu____85881 with
+           (match uu____85955 with
             | (tname,ttok,env1) ->
                 let xx =
                   FStar_SMTEncoding_Term.mk_fv
@@ -4829,293 +4829,293 @@ and (encode_sigelt' :
                 let valid_b2t_x =
                   FStar_SMTEncoding_Util.mkApp ("Valid", [b2t_x])  in
                 let decls =
-                  let uu____85919 =
-                    let uu____85922 =
-                      let uu____85923 =
-                        let uu____85931 =
-                          let uu____85932 =
+                  let uu____85993 =
+                    let uu____85996 =
+                      let uu____85997 =
+                        let uu____86005 =
+                          let uu____86006 =
                             FStar_Syntax_Syntax.range_of_fv b2t1  in
-                          let uu____85933 =
-                            let uu____85944 =
-                              let uu____85945 =
-                                let uu____85950 =
+                          let uu____86007 =
+                            let uu____86018 =
+                              let uu____86019 =
+                                let uu____86024 =
                                   FStar_SMTEncoding_Util.mkApp
                                     ((FStar_Pervasives_Native.snd
                                         FStar_SMTEncoding_Term.boxBoolFun),
                                       [x])
                                    in
-                                (valid_b2t_x, uu____85950)  in
-                              FStar_SMTEncoding_Util.mkEq uu____85945  in
-                            ([[b2t_x]], [xx], uu____85944)  in
-                          FStar_SMTEncoding_Term.mkForall uu____85932
-                            uu____85933
+                                (valid_b2t_x, uu____86024)  in
+                              FStar_SMTEncoding_Util.mkEq uu____86019  in
+                            ([[b2t_x]], [xx], uu____86018)  in
+                          FStar_SMTEncoding_Term.mkForall uu____86006
+                            uu____86007
                            in
-                        (uu____85931,
+                        (uu____86005,
                           (FStar_Pervasives_Native.Some "b2t def"),
                           "b2t_def")
                          in
-                      FStar_SMTEncoding_Util.mkAssume uu____85923  in
-                    [uu____85922]  in
+                      FStar_SMTEncoding_Util.mkAssume uu____85997  in
+                    [uu____85996]  in
                   (FStar_SMTEncoding_Term.DeclFun
                      (tname, [FStar_SMTEncoding_Term.Term_sort],
                        FStar_SMTEncoding_Term.Term_sort,
                        FStar_Pervasives_Native.None))
-                    :: uu____85919
+                    :: uu____85993
                    in
-                let uu____85988 =
+                let uu____86062 =
                   FStar_All.pipe_right decls
                     FStar_SMTEncoding_Term.mk_decls_trivial
                    in
-                (uu____85988, env1))
-       | FStar_Syntax_Syntax.Sig_let (uu____85991,uu____85992) when
+                (uu____86062, env1))
+       | FStar_Syntax_Syntax.Sig_let (uu____86065,uu____86066) when
            FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
              (FStar_Util.for_some
-                (fun uu___643_86002  ->
-                   match uu___643_86002 with
-                   | FStar_Syntax_Syntax.Discriminator uu____86004 -> true
-                   | uu____86006 -> false))
+                (fun uu___643_86076  ->
+                   match uu___643_86076 with
+                   | FStar_Syntax_Syntax.Discriminator uu____86078 -> true
+                   | uu____86080 -> false))
            -> ([], env)
-       | FStar_Syntax_Syntax.Sig_let (uu____86008,lids) when
+       | FStar_Syntax_Syntax.Sig_let (uu____86082,lids) when
            (FStar_All.pipe_right lids
               (FStar_Util.for_some
                  (fun l  ->
-                    let uu____86020 =
-                      let uu____86022 = FStar_List.hd l.FStar_Ident.ns  in
-                      uu____86022.FStar_Ident.idText  in
-                    uu____86020 = "Prims")))
+                    let uu____86094 =
+                      let uu____86096 = FStar_List.hd l.FStar_Ident.ns  in
+                      uu____86096.FStar_Ident.idText  in
+                    uu____86094 = "Prims")))
              &&
              (FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
                 (FStar_Util.for_some
-                   (fun uu___644_86029  ->
-                      match uu___644_86029 with
+                   (fun uu___644_86103  ->
+                      match uu___644_86103 with
                       | FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen 
                           -> true
-                      | uu____86032 -> false)))
+                      | uu____86106 -> false)))
            -> ([], env)
-       | FStar_Syntax_Syntax.Sig_let ((false ,lb::[]),uu____86035) when
+       | FStar_Syntax_Syntax.Sig_let ((false ,lb::[]),uu____86109) when
            FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
              (FStar_Util.for_some
-                (fun uu___645_86049  ->
-                   match uu___645_86049 with
-                   | FStar_Syntax_Syntax.Projector uu____86051 -> true
-                   | uu____86057 -> false))
+                (fun uu___645_86123  ->
+                   match uu___645_86123 with
+                   | FStar_Syntax_Syntax.Projector uu____86125 -> true
+                   | uu____86131 -> false))
            ->
            let fv = FStar_Util.right lb.FStar_Syntax_Syntax.lbname  in
            let l = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v  in
-           let uu____86061 = FStar_SMTEncoding_Env.try_lookup_free_var env l
+           let uu____86135 = FStar_SMTEncoding_Env.try_lookup_free_var env l
               in
-           (match uu____86061 with
-            | FStar_Pervasives_Native.Some uu____86068 -> ([], env)
+           (match uu____86135 with
+            | FStar_Pervasives_Native.Some uu____86142 -> ([], env)
             | FStar_Pervasives_Native.None  ->
                 let se1 =
-                  let uu___1694_86070 = se  in
-                  let uu____86071 = FStar_Ident.range_of_lid l  in
+                  let uu___1694_86144 = se  in
+                  let uu____86145 = FStar_Ident.range_of_lid l  in
                   {
                     FStar_Syntax_Syntax.sigel =
                       (FStar_Syntax_Syntax.Sig_declare_typ
                          (l, (lb.FStar_Syntax_Syntax.lbunivs),
                            (lb.FStar_Syntax_Syntax.lbtyp)));
-                    FStar_Syntax_Syntax.sigrng = uu____86071;
+                    FStar_Syntax_Syntax.sigrng = uu____86145;
                     FStar_Syntax_Syntax.sigquals =
-                      (uu___1694_86070.FStar_Syntax_Syntax.sigquals);
+                      (uu___1694_86144.FStar_Syntax_Syntax.sigquals);
                     FStar_Syntax_Syntax.sigmeta =
-                      (uu___1694_86070.FStar_Syntax_Syntax.sigmeta);
+                      (uu___1694_86144.FStar_Syntax_Syntax.sigmeta);
                     FStar_Syntax_Syntax.sigattrs =
-                      (uu___1694_86070.FStar_Syntax_Syntax.sigattrs)
+                      (uu___1694_86144.FStar_Syntax_Syntax.sigattrs)
                   }  in
                 encode_sigelt env se1)
-       | FStar_Syntax_Syntax.Sig_let ((is_rec,bindings),uu____86074) ->
+       | FStar_Syntax_Syntax.Sig_let ((is_rec,bindings),uu____86148) ->
            encode_top_level_let env (is_rec, bindings)
              se.FStar_Syntax_Syntax.sigquals
-       | FStar_Syntax_Syntax.Sig_bundle (ses,uu____86089) ->
-           let uu____86098 = encode_sigelts env ses  in
-           (match uu____86098 with
+       | FStar_Syntax_Syntax.Sig_bundle (ses,uu____86163) ->
+           let uu____86172 = encode_sigelts env ses  in
+           (match uu____86172 with
             | (g,env1) ->
-                let uu____86109 =
+                let uu____86183 =
                   FStar_List.fold_left
-                    (fun uu____86133  ->
+                    (fun uu____86207  ->
                        fun elt  ->
-                         match uu____86133 with
+                         match uu____86207 with
                          | (g',inversions) ->
-                             let uu____86161 =
+                             let uu____86235 =
                                FStar_All.pipe_right
                                  elt.FStar_SMTEncoding_Term.decls
                                  (FStar_List.partition
-                                    (fun uu___646_86184  ->
-                                       match uu___646_86184 with
+                                    (fun uu___646_86258  ->
+                                       match uu___646_86258 with
                                        | FStar_SMTEncoding_Term.Assume
                                            {
                                              FStar_SMTEncoding_Term.assumption_term
-                                               = uu____86186;
+                                               = uu____86260;
                                              FStar_SMTEncoding_Term.assumption_caption
                                                = FStar_Pervasives_Native.Some
                                                "inversion axiom";
                                              FStar_SMTEncoding_Term.assumption_name
-                                               = uu____86187;
+                                               = uu____86261;
                                              FStar_SMTEncoding_Term.assumption_fact_ids
-                                               = uu____86188;_}
+                                               = uu____86262;_}
                                            -> false
-                                       | uu____86195 -> true))
+                                       | uu____86269 -> true))
                                 in
-                             (match uu____86161 with
+                             (match uu____86235 with
                               | (elt_g',elt_inversions) ->
                                   ((FStar_List.append g'
-                                      [(let uu___1726_86220 = elt  in
+                                      [(let uu___1726_86294 = elt  in
                                         {
                                           FStar_SMTEncoding_Term.sym_name =
-                                            (uu___1726_86220.FStar_SMTEncoding_Term.sym_name);
+                                            (uu___1726_86294.FStar_SMTEncoding_Term.sym_name);
                                           FStar_SMTEncoding_Term.key =
-                                            (uu___1726_86220.FStar_SMTEncoding_Term.key);
+                                            (uu___1726_86294.FStar_SMTEncoding_Term.key);
                                           FStar_SMTEncoding_Term.decls =
                                             elt_g';
                                           FStar_SMTEncoding_Term.a_names =
-                                            (uu___1726_86220.FStar_SMTEncoding_Term.a_names)
+                                            (uu___1726_86294.FStar_SMTEncoding_Term.a_names)
                                         })]),
                                     (FStar_List.append inversions
                                        elt_inversions)))) ([], []) g
                    in
-                (match uu____86109 with
+                (match uu____86183 with
                  | (g',inversions) ->
-                     let uu____86239 =
+                     let uu____86313 =
                        FStar_List.fold_left
-                         (fun uu____86270  ->
+                         (fun uu____86344  ->
                             fun elt  ->
-                              match uu____86270 with
+                              match uu____86344 with
                               | (decls,elts,rest) ->
-                                  let uu____86311 =
+                                  let uu____86385 =
                                     (FStar_All.pipe_right
                                        elt.FStar_SMTEncoding_Term.key
                                        FStar_Util.is_some)
                                       &&
                                       (FStar_List.existsb
-                                         (fun uu___647_86320  ->
-                                            match uu___647_86320 with
+                                         (fun uu___647_86394  ->
+                                            match uu___647_86394 with
                                             | FStar_SMTEncoding_Term.DeclFun
-                                                uu____86322 -> true
-                                            | uu____86335 -> false)
+                                                uu____86396 -> true
+                                            | uu____86409 -> false)
                                          elt.FStar_SMTEncoding_Term.decls)
                                      in
-                                  if uu____86311
+                                  if uu____86385
                                   then
                                     (decls, (FStar_List.append elts [elt]),
                                       rest)
                                   else
-                                    (let uu____86358 =
+                                    (let uu____86432 =
                                        FStar_All.pipe_right
                                          elt.FStar_SMTEncoding_Term.decls
                                          (FStar_List.partition
-                                            (fun uu___648_86379  ->
-                                               match uu___648_86379 with
+                                            (fun uu___648_86453  ->
+                                               match uu___648_86453 with
                                                | FStar_SMTEncoding_Term.DeclFun
-                                                   uu____86381 -> true
-                                               | uu____86394 -> false))
+                                                   uu____86455 -> true
+                                               | uu____86468 -> false))
                                         in
-                                     match uu____86358 with
+                                     match uu____86432 with
                                      | (elt_decls,elt_rest) ->
                                          ((FStar_List.append decls elt_decls),
                                            elts,
                                            (FStar_List.append rest
-                                              [(let uu___1748_86425 = elt  in
+                                              [(let uu___1748_86499 = elt  in
                                                 {
                                                   FStar_SMTEncoding_Term.sym_name
                                                     =
-                                                    (uu___1748_86425.FStar_SMTEncoding_Term.sym_name);
+                                                    (uu___1748_86499.FStar_SMTEncoding_Term.sym_name);
                                                   FStar_SMTEncoding_Term.key
                                                     =
-                                                    (uu___1748_86425.FStar_SMTEncoding_Term.key);
+                                                    (uu___1748_86499.FStar_SMTEncoding_Term.key);
                                                   FStar_SMTEncoding_Term.decls
                                                     = elt_rest;
                                                   FStar_SMTEncoding_Term.a_names
                                                     =
-                                                    (uu___1748_86425.FStar_SMTEncoding_Term.a_names)
+                                                    (uu___1748_86499.FStar_SMTEncoding_Term.a_names)
                                                 })])))) ([], [], []) g'
                         in
-                     (match uu____86239 with
+                     (match uu____86313 with
                       | (decls,elts,rest) ->
-                          let uu____86451 =
-                            let uu____86452 =
+                          let uu____86525 =
+                            let uu____86526 =
                               FStar_All.pipe_right decls
                                 FStar_SMTEncoding_Term.mk_decls_trivial
                                in
-                            let uu____86459 =
-                              let uu____86462 =
-                                let uu____86465 =
+                            let uu____86533 =
+                              let uu____86536 =
+                                let uu____86539 =
                                   FStar_All.pipe_right inversions
                                     FStar_SMTEncoding_Term.mk_decls_trivial
                                    in
-                                FStar_List.append rest uu____86465  in
-                              FStar_List.append elts uu____86462  in
-                            FStar_List.append uu____86452 uu____86459  in
-                          (uu____86451, env1))))
+                                FStar_List.append rest uu____86539  in
+                              FStar_List.append elts uu____86536  in
+                            FStar_List.append uu____86526 uu____86533  in
+                          (uu____86525, env1))))
        | FStar_Syntax_Syntax.Sig_inductive_typ
-           (t,universe_names,tps,k,uu____86476,datas) ->
+           (t,universe_names,tps,k,uu____86550,datas) ->
            let tcenv = env.FStar_SMTEncoding_Env.tcenv  in
            let is_injective =
-             let uu____86489 =
+             let uu____86563 =
                FStar_Syntax_Subst.univ_var_opening universe_names  in
-             match uu____86489 with
+             match uu____86563 with
              | (usubst,uvs) ->
-                 let uu____86509 =
-                   let uu____86516 =
+                 let uu____86583 =
+                   let uu____86590 =
                      FStar_TypeChecker_Env.push_univ_vars tcenv uvs  in
-                   let uu____86517 =
+                   let uu____86591 =
                      FStar_Syntax_Subst.subst_binders usubst tps  in
-                   let uu____86518 =
-                     let uu____86519 =
+                   let uu____86592 =
+                     let uu____86593 =
                        FStar_Syntax_Subst.shift_subst (FStar_List.length tps)
                          usubst
                         in
-                     FStar_Syntax_Subst.subst uu____86519 k  in
-                   (uu____86516, uu____86517, uu____86518)  in
-                 (match uu____86509 with
+                     FStar_Syntax_Subst.subst uu____86593 k  in
+                   (uu____86590, uu____86591, uu____86592)  in
+                 (match uu____86583 with
                   | (env1,tps1,k1) ->
-                      let uu____86532 = FStar_Syntax_Subst.open_term tps1 k1
+                      let uu____86606 = FStar_Syntax_Subst.open_term tps1 k1
                          in
-                      (match uu____86532 with
+                      (match uu____86606 with
                        | (tps2,k2) ->
-                           let uu____86540 =
+                           let uu____86614 =
                              FStar_Syntax_Util.arrow_formals k2  in
-                           (match uu____86540 with
-                            | (uu____86556,k3) ->
-                                let uu____86578 =
+                           (match uu____86614 with
+                            | (uu____86630,k3) ->
+                                let uu____86652 =
                                   FStar_TypeChecker_TcTerm.tc_binders env1
                                     tps2
                                    in
-                                (match uu____86578 with
-                                 | (tps3,env_tps,uu____86590,us) ->
+                                (match uu____86652 with
+                                 | (tps3,env_tps,uu____86664,us) ->
                                      let u_k =
-                                       let uu____86593 =
-                                         let uu____86594 =
+                                       let uu____86667 =
+                                         let uu____86668 =
                                            FStar_Ident.range_of_lid t  in
-                                         let uu____86595 =
-                                           let uu____86600 =
+                                         let uu____86669 =
+                                           let uu____86674 =
                                              FStar_Syntax_Syntax.fvar t
                                                (FStar_Syntax_Syntax.Delta_constant_at_level
                                                   (Prims.parse_int "0"))
                                                FStar_Pervasives_Native.None
                                               in
-                                           let uu____86602 =
-                                             let uu____86603 =
+                                           let uu____86676 =
+                                             let uu____86677 =
                                                FStar_Syntax_Util.args_of_binders
                                                  tps3
                                                 in
                                              FStar_Pervasives_Native.snd
-                                               uu____86603
+                                               uu____86677
                                               in
                                            FStar_Syntax_Syntax.mk_Tm_app
-                                             uu____86600 uu____86602
+                                             uu____86674 uu____86676
                                             in
-                                         uu____86595
+                                         uu____86669
                                            FStar_Pervasives_Native.None
-                                           uu____86594
+                                           uu____86668
                                           in
                                        FStar_TypeChecker_TcTerm.level_of_type
-                                         env_tps uu____86593 k3
+                                         env_tps uu____86667 k3
                                         in
                                      let rec universe_leq u v1 =
                                        match (u, v1) with
                                        | (FStar_Syntax_Syntax.U_zero
-                                          ,uu____86623) -> true
+                                          ,uu____86697) -> true
                                        | (FStar_Syntax_Syntax.U_succ
                                           u0,FStar_Syntax_Syntax.U_succ v0)
                                            -> universe_leq u0 v0
@@ -5123,90 +5123,90 @@ and (encode_sigelt' :
                                           u0,FStar_Syntax_Syntax.U_name v0)
                                            -> FStar_Ident.ident_equals u0 v0
                                        | (FStar_Syntax_Syntax.U_name
-                                          uu____86629,FStar_Syntax_Syntax.U_succ
+                                          uu____86703,FStar_Syntax_Syntax.U_succ
                                           v0) -> universe_leq u v0
                                        | (FStar_Syntax_Syntax.U_max
-                                          us1,uu____86632) ->
+                                          us1,uu____86706) ->
                                            FStar_All.pipe_right us1
                                              (FStar_Util.for_all
                                                 (fun u1  ->
                                                    universe_leq u1 v1))
-                                       | (uu____86640,FStar_Syntax_Syntax.U_max
+                                       | (uu____86714,FStar_Syntax_Syntax.U_max
                                           vs) ->
                                            FStar_All.pipe_right vs
                                              (FStar_Util.for_some
                                                 (universe_leq u))
                                        | (FStar_Syntax_Syntax.U_unknown
-                                          ,uu____86647) ->
-                                           let uu____86648 =
-                                             let uu____86650 =
+                                          ,uu____86721) ->
+                                           let uu____86722 =
+                                             let uu____86724 =
                                                FStar_Ident.string_of_lid t
                                                 in
                                              FStar_Util.format1
                                                "Impossible: Unresolved or unknown universe in inductive type %s"
-                                               uu____86650
+                                               uu____86724
                                               in
-                                           failwith uu____86648
-                                       | (uu____86654,FStar_Syntax_Syntax.U_unknown
+                                           failwith uu____86722
+                                       | (uu____86728,FStar_Syntax_Syntax.U_unknown
                                           ) ->
-                                           let uu____86655 =
-                                             let uu____86657 =
+                                           let uu____86729 =
+                                             let uu____86731 =
                                                FStar_Ident.string_of_lid t
                                                 in
                                              FStar_Util.format1
                                                "Impossible: Unresolved or unknown universe in inductive type %s"
-                                               uu____86657
+                                               uu____86731
                                               in
-                                           failwith uu____86655
+                                           failwith uu____86729
                                        | (FStar_Syntax_Syntax.U_unif
-                                          uu____86661,uu____86662) ->
-                                           let uu____86671 =
-                                             let uu____86673 =
+                                          uu____86735,uu____86736) ->
+                                           let uu____86745 =
+                                             let uu____86747 =
                                                FStar_Ident.string_of_lid t
                                                 in
                                              FStar_Util.format1
                                                "Impossible: Unresolved or unknown universe in inductive type %s"
-                                               uu____86673
+                                               uu____86747
                                               in
-                                           failwith uu____86671
-                                       | (uu____86677,FStar_Syntax_Syntax.U_unif
-                                          uu____86678) ->
-                                           let uu____86687 =
-                                             let uu____86689 =
+                                           failwith uu____86745
+                                       | (uu____86751,FStar_Syntax_Syntax.U_unif
+                                          uu____86752) ->
+                                           let uu____86761 =
+                                             let uu____86763 =
                                                FStar_Ident.string_of_lid t
                                                 in
                                              FStar_Util.format1
                                                "Impossible: Unresolved or unknown universe in inductive type %s"
-                                               uu____86689
+                                               uu____86763
                                               in
-                                           failwith uu____86687
-                                       | uu____86693 -> false  in
+                                           failwith uu____86761
+                                       | uu____86767 -> false  in
                                      let u_leq_u_k u =
-                                       let uu____86706 =
+                                       let uu____86780 =
                                          FStar_TypeChecker_Normalize.normalize_universe
                                            env_tps u
                                           in
-                                       universe_leq uu____86706 u_k  in
+                                       universe_leq uu____86780 u_k  in
                                      let tp_ok tp u_tp =
                                        let t_tp =
                                          (FStar_Pervasives_Native.fst tp).FStar_Syntax_Syntax.sort
                                           in
-                                       let uu____86724 = u_leq_u_k u_tp  in
-                                       if uu____86724
+                                       let uu____86798 = u_leq_u_k u_tp  in
+                                       if uu____86798
                                        then true
                                        else
-                                         (let uu____86731 =
+                                         (let uu____86805 =
                                             FStar_Syntax_Util.arrow_formals
                                               t_tp
                                              in
-                                          match uu____86731 with
-                                          | (formals,uu____86748) ->
-                                              let uu____86769 =
+                                          match uu____86805 with
+                                          | (formals,uu____86822) ->
+                                              let uu____86843 =
                                                 FStar_TypeChecker_TcTerm.tc_binders
                                                   env_tps formals
                                                  in
-                                              (match uu____86769 with
-                                               | (uu____86779,uu____86780,uu____86781,u_formals)
+                                              (match uu____86843 with
+                                               | (uu____86853,uu____86854,uu____86855,u_formals)
                                                    ->
                                                    FStar_Util.for_all
                                                      (fun u_formal  ->
@@ -5215,137 +5215,137 @@ and (encode_sigelt' :
                                         in
                                      FStar_List.forall2 tp_ok tps3 us))))
               in
-           ((let uu____86792 =
+           ((let uu____86866 =
                FStar_All.pipe_left
                  (FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv)
                  (FStar_Options.Other "SMTEncoding")
                 in
-             if uu____86792
+             if uu____86866
              then
-               let uu____86797 = FStar_Ident.string_of_lid t  in
+               let uu____86871 = FStar_Ident.string_of_lid t  in
                FStar_Util.print2 "%s injectivity for %s\n"
-                 (if is_injective then "YES" else "NO") uu____86797
+                 (if is_injective then "YES" else "NO") uu____86871
              else ());
             (let quals = se.FStar_Syntax_Syntax.sigquals  in
              let is_logical =
                FStar_All.pipe_right quals
                  (FStar_Util.for_some
-                    (fun uu___649_86817  ->
-                       match uu___649_86817 with
+                    (fun uu___649_86891  ->
+                       match uu___649_86891 with
                        | FStar_Syntax_Syntax.Logic  -> true
                        | FStar_Syntax_Syntax.Assumption  -> true
-                       | uu____86821 -> false))
+                       | uu____86895 -> false))
                 in
              let constructor_or_logic_type_decl c =
                if is_logical
                then
-                 let uu____86834 = c  in
-                 match uu____86834 with
-                 | (name,args,uu____86839,uu____86840,uu____86841) ->
-                     let uu____86852 =
-                       let uu____86853 =
-                         let uu____86865 =
+                 let uu____86908 = c  in
+                 match uu____86908 with
+                 | (name,args,uu____86913,uu____86914,uu____86915) ->
+                     let uu____86926 =
+                       let uu____86927 =
+                         let uu____86939 =
                            FStar_All.pipe_right args
                              (FStar_List.map
-                                (fun uu____86892  ->
-                                   match uu____86892 with
-                                   | (uu____86901,sort,uu____86903) -> sort))
+                                (fun uu____86966  ->
+                                   match uu____86966 with
+                                   | (uu____86975,sort,uu____86977) -> sort))
                             in
-                         (name, uu____86865,
+                         (name, uu____86939,
                            FStar_SMTEncoding_Term.Term_sort,
                            FStar_Pervasives_Native.None)
                           in
-                       FStar_SMTEncoding_Term.DeclFun uu____86853  in
-                     [uu____86852]
+                       FStar_SMTEncoding_Term.DeclFun uu____86927  in
+                     [uu____86926]
                else
-                 (let uu____86914 = FStar_Ident.range_of_lid t  in
-                  FStar_SMTEncoding_Term.constructor_to_decl uu____86914 c)
+                 (let uu____86988 = FStar_Ident.range_of_lid t  in
+                  FStar_SMTEncoding_Term.constructor_to_decl uu____86988 c)
                 in
              let inversion_axioms tapp vars =
-               let uu____86932 =
+               let uu____87006 =
                  FStar_All.pipe_right datas
                    (FStar_Util.for_some
                       (fun l  ->
-                         let uu____86940 =
+                         let uu____87014 =
                            FStar_TypeChecker_Env.try_lookup_lid
                              env.FStar_SMTEncoding_Env.tcenv l
                             in
-                         FStar_All.pipe_right uu____86940 FStar_Option.isNone))
+                         FStar_All.pipe_right uu____87014 FStar_Option.isNone))
                   in
-               if uu____86932
+               if uu____87006
                then []
                else
-                 (let uu____86975 =
+                 (let uu____87049 =
                     FStar_SMTEncoding_Env.fresh_fvar
                       env.FStar_SMTEncoding_Env.current_module_name "x"
                       FStar_SMTEncoding_Term.Term_sort
                      in
-                  match uu____86975 with
+                  match uu____87049 with
                   | (xxsym,xx) ->
-                      let uu____86988 =
+                      let uu____87062 =
                         FStar_All.pipe_right datas
                           (FStar_List.fold_left
-                             (fun uu____87027  ->
+                             (fun uu____87101  ->
                                 fun l  ->
-                                  match uu____87027 with
+                                  match uu____87101 with
                                   | (out,decls) ->
-                                      let uu____87047 =
+                                      let uu____87121 =
                                         FStar_TypeChecker_Env.lookup_datacon
                                           env.FStar_SMTEncoding_Env.tcenv l
                                          in
-                                      (match uu____87047 with
-                                       | (uu____87058,data_t) ->
-                                           let uu____87060 =
+                                      (match uu____87121 with
+                                       | (uu____87132,data_t) ->
+                                           let uu____87134 =
                                              FStar_Syntax_Util.arrow_formals
                                                data_t
                                               in
-                                           (match uu____87060 with
+                                           (match uu____87134 with
                                             | (args,res) ->
                                                 let indices =
-                                                  let uu____87104 =
-                                                    let uu____87105 =
+                                                  let uu____87178 =
+                                                    let uu____87179 =
                                                       FStar_Syntax_Subst.compress
                                                         res
                                                        in
-                                                    uu____87105.FStar_Syntax_Syntax.n
+                                                    uu____87179.FStar_Syntax_Syntax.n
                                                      in
-                                                  match uu____87104 with
+                                                  match uu____87178 with
                                                   | FStar_Syntax_Syntax.Tm_app
-                                                      (uu____87108,indices)
+                                                      (uu____87182,indices)
                                                       -> indices
-                                                  | uu____87134 -> []  in
+                                                  | uu____87208 -> []  in
                                                 let env1 =
                                                   FStar_All.pipe_right args
                                                     (FStar_List.fold_left
                                                        (fun env1  ->
-                                                          fun uu____87164  ->
-                                                            match uu____87164
+                                                          fun uu____87238  ->
+                                                            match uu____87238
                                                             with
-                                                            | (x,uu____87172)
+                                                            | (x,uu____87246)
                                                                 ->
-                                                                let uu____87177
+                                                                let uu____87251
                                                                   =
-                                                                  let uu____87178
+                                                                  let uu____87252
                                                                     =
-                                                                    let uu____87186
+                                                                    let uu____87260
                                                                     =
                                                                     FStar_SMTEncoding_Env.mk_term_projector_name
                                                                     l x  in
-                                                                    (uu____87186,
+                                                                    (uu____87260,
                                                                     [xx])  in
                                                                   FStar_SMTEncoding_Util.mkApp
-                                                                    uu____87178
+                                                                    uu____87252
                                                                    in
                                                                 FStar_SMTEncoding_Env.push_term_var
                                                                   env1 x
-                                                                  uu____87177)
+                                                                  uu____87251)
                                                        env)
                                                    in
-                                                let uu____87191 =
+                                                let uu____87265 =
                                                   FStar_SMTEncoding_EncodeTerm.encode_args
                                                     indices env1
                                                    in
-                                                (match uu____87191 with
+                                                (match uu____87265 with
                                                  | (indices1,decls') ->
                                                      (if
                                                         (FStar_List.length
@@ -5362,58 +5362,58 @@ and (encode_sigelt' :
                                                            FStar_List.map2
                                                              (fun v1  ->
                                                                 fun a  ->
-                                                                  let uu____87226
+                                                                  let uu____87300
                                                                     =
-                                                                    let uu____87231
+                                                                    let uu____87305
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkFreeV
                                                                     v1  in
-                                                                    (uu____87231,
+                                                                    (uu____87305,
                                                                     a)  in
                                                                   FStar_SMTEncoding_Util.mkEq
-                                                                    uu____87226)
+                                                                    uu____87300)
                                                              vars indices1
                                                          else []  in
-                                                       let uu____87234 =
-                                                         let uu____87235 =
-                                                           let uu____87240 =
-                                                             let uu____87241
+                                                       let uu____87308 =
+                                                         let uu____87309 =
+                                                           let uu____87314 =
+                                                             let uu____87315
                                                                =
-                                                               let uu____87246
+                                                               let uu____87320
                                                                  =
                                                                  FStar_SMTEncoding_Env.mk_data_tester
                                                                    env1 l xx
                                                                   in
-                                                               let uu____87247
+                                                               let uu____87321
                                                                  =
                                                                  FStar_All.pipe_right
                                                                    eqs
                                                                    FStar_SMTEncoding_Util.mk_and_l
                                                                   in
-                                                               (uu____87246,
-                                                                 uu____87247)
+                                                               (uu____87320,
+                                                                 uu____87321)
                                                                 in
                                                              FStar_SMTEncoding_Util.mkAnd
-                                                               uu____87241
+                                                               uu____87315
                                                               in
-                                                           (out, uu____87240)
+                                                           (out, uu____87314)
                                                             in
                                                          FStar_SMTEncoding_Util.mkOr
-                                                           uu____87235
+                                                           uu____87309
                                                           in
-                                                       (uu____87234,
+                                                       (uu____87308,
                                                          (FStar_List.append
                                                             decls decls'))))))))
                              (FStar_SMTEncoding_Util.mkFalse, []))
                          in
-                      (match uu____86988 with
+                      (match uu____87062 with
                        | (data_ax,decls) ->
-                           let uu____87262 =
+                           let uu____87336 =
                              FStar_SMTEncoding_Env.fresh_fvar
                                env.FStar_SMTEncoding_Env.current_module_name
                                "f" FStar_SMTEncoding_Term.Fuel_sort
                               in
-                           (match uu____87262 with
+                           (match uu____87336 with
                             | (ffsym,ff) ->
                                 let fuel_guarded_inversion =
                                   let xx_has_type_sfuel =
@@ -5421,159 +5421,159 @@ and (encode_sigelt' :
                                       (FStar_List.length datas) >
                                         (Prims.parse_int "1")
                                     then
-                                      let uu____87279 =
+                                      let uu____87353 =
                                         FStar_SMTEncoding_Util.mkApp
                                           ("SFuel", [ff])
                                          in
                                       FStar_SMTEncoding_Term.mk_HasTypeFuel
-                                        uu____87279 xx tapp
+                                        uu____87353 xx tapp
                                     else
                                       FStar_SMTEncoding_Term.mk_HasTypeFuel
                                         ff xx tapp
                                      in
-                                  let uu____87286 =
-                                    let uu____87294 =
-                                      let uu____87295 =
+                                  let uu____87360 =
+                                    let uu____87368 =
+                                      let uu____87369 =
                                         FStar_Ident.range_of_lid t  in
-                                      let uu____87296 =
-                                        let uu____87307 =
-                                          let uu____87308 =
+                                      let uu____87370 =
+                                        let uu____87381 =
+                                          let uu____87382 =
                                             FStar_SMTEncoding_Term.mk_fv
                                               (ffsym,
                                                 FStar_SMTEncoding_Term.Fuel_sort)
                                              in
-                                          let uu____87310 =
-                                            let uu____87313 =
+                                          let uu____87384 =
+                                            let uu____87387 =
                                               FStar_SMTEncoding_Term.mk_fv
                                                 (xxsym,
                                                   FStar_SMTEncoding_Term.Term_sort)
                                                in
-                                            uu____87313 :: vars  in
+                                            uu____87387 :: vars  in
                                           FStar_SMTEncoding_Env.add_fuel
-                                            uu____87308 uu____87310
+                                            uu____87382 uu____87384
                                            in
-                                        let uu____87315 =
+                                        let uu____87389 =
                                           FStar_SMTEncoding_Util.mkImp
                                             (xx_has_type_sfuel, data_ax)
                                            in
-                                        ([[xx_has_type_sfuel]], uu____87307,
-                                          uu____87315)
+                                        ([[xx_has_type_sfuel]], uu____87381,
+                                          uu____87389)
                                          in
                                       FStar_SMTEncoding_Term.mkForall
-                                        uu____87295 uu____87296
+                                        uu____87369 uu____87370
                                        in
-                                    let uu____87324 =
+                                    let uu____87398 =
                                       FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
                                         (Prims.op_Hat
                                            "fuel_guarded_inversion_"
                                            t.FStar_Ident.str)
                                        in
-                                    (uu____87294,
+                                    (uu____87368,
                                       (FStar_Pervasives_Native.Some
-                                         "inversion axiom"), uu____87324)
+                                         "inversion axiom"), uu____87398)
                                      in
-                                  FStar_SMTEncoding_Util.mkAssume uu____87286
+                                  FStar_SMTEncoding_Util.mkAssume uu____87360
                                    in
-                                let uu____87330 =
+                                let uu____87404 =
                                   FStar_All.pipe_right
                                     [fuel_guarded_inversion]
                                     FStar_SMTEncoding_Term.mk_decls_trivial
                                    in
-                                FStar_List.append decls uu____87330)))
+                                FStar_List.append decls uu____87404)))
                 in
-             let uu____87337 =
-               let uu____87342 =
-                 let uu____87343 = FStar_Syntax_Subst.compress k  in
-                 uu____87343.FStar_Syntax_Syntax.n  in
-               match uu____87342 with
+             let uu____87411 =
+               let uu____87416 =
+                 let uu____87417 = FStar_Syntax_Subst.compress k  in
+                 uu____87417.FStar_Syntax_Syntax.n  in
+               match uu____87416 with
                | FStar_Syntax_Syntax.Tm_arrow (formals,kres) ->
                    ((FStar_List.append tps formals),
                      (FStar_Syntax_Util.comp_result kres))
-               | uu____87378 -> (tps, k)  in
-             match uu____87337 with
+               | uu____87452 -> (tps, k)  in
+             match uu____87411 with
              | (formals,res) ->
-                 let uu____87385 = FStar_Syntax_Subst.open_term formals res
+                 let uu____87459 = FStar_Syntax_Subst.open_term formals res
                     in
-                 (match uu____87385 with
+                 (match uu____87459 with
                   | (formals1,res1) ->
-                      let uu____87396 =
+                      let uu____87470 =
                         FStar_SMTEncoding_EncodeTerm.encode_binders
                           FStar_Pervasives_Native.None formals1 env
                          in
-                      (match uu____87396 with
-                       | (vars,guards,env',binder_decls,uu____87421) ->
+                      (match uu____87470 with
+                       | (vars,guards,env',binder_decls,uu____87495) ->
                            let arity = FStar_List.length vars  in
-                           let uu____87435 =
+                           let uu____87509 =
                              FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid
                                env t arity
                               in
-                           (match uu____87435 with
+                           (match uu____87509 with
                             | (tname,ttok,env1) ->
                                 let ttok_tm =
                                   FStar_SMTEncoding_Util.mkApp (ttok, [])  in
                                 let guard =
                                   FStar_SMTEncoding_Util.mk_and_l guards  in
                                 let tapp =
-                                  let uu____87465 =
-                                    let uu____87473 =
+                                  let uu____87539 =
+                                    let uu____87547 =
                                       FStar_List.map
                                         FStar_SMTEncoding_Util.mkFreeV vars
                                        in
-                                    (tname, uu____87473)  in
-                                  FStar_SMTEncoding_Util.mkApp uu____87465
+                                    (tname, uu____87547)  in
+                                  FStar_SMTEncoding_Util.mkApp uu____87539
                                    in
-                                let uu____87479 =
+                                let uu____87553 =
                                   let tname_decl =
-                                    let uu____87489 =
-                                      let uu____87490 =
+                                    let uu____87563 =
+                                      let uu____87564 =
                                         FStar_All.pipe_right vars
                                           (FStar_List.map
                                              (fun fv  ->
-                                                let uu____87509 =
-                                                  let uu____87511 =
+                                                let uu____87583 =
+                                                  let uu____87585 =
                                                     FStar_SMTEncoding_Term.fv_name
                                                       fv
                                                      in
                                                   Prims.op_Hat tname
-                                                    uu____87511
+                                                    uu____87585
                                                    in
-                                                let uu____87513 =
+                                                let uu____87587 =
                                                   FStar_SMTEncoding_Term.fv_sort
                                                     fv
                                                    in
-                                                (uu____87509, uu____87513,
+                                                (uu____87583, uu____87587,
                                                   false)))
                                          in
-                                      let uu____87517 =
+                                      let uu____87591 =
                                         FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.next_id
                                           ()
                                          in
-                                      (tname, uu____87490,
+                                      (tname, uu____87564,
                                         FStar_SMTEncoding_Term.Term_sort,
-                                        uu____87517, false)
+                                        uu____87591, false)
                                        in
                                     constructor_or_logic_type_decl
-                                      uu____87489
+                                      uu____87563
                                      in
-                                  let uu____87525 =
+                                  let uu____87599 =
                                     match vars with
                                     | [] ->
-                                        let uu____87538 =
-                                          let uu____87539 =
-                                            let uu____87542 =
+                                        let uu____87612 =
+                                          let uu____87613 =
+                                            let uu____87616 =
                                               FStar_SMTEncoding_Util.mkApp
                                                 (tname, [])
                                                in
                                             FStar_All.pipe_left
-                                              (fun _87548  ->
+                                              (fun _87622  ->
                                                  FStar_Pervasives_Native.Some
-                                                   _87548) uu____87542
+                                                   _87622) uu____87616
                                              in
                                           FStar_SMTEncoding_Env.push_free_var
-                                            env1 t arity tname uu____87539
+                                            env1 t arity tname uu____87613
                                            in
-                                        ([], uu____87538)
-                                    | uu____87555 ->
+                                        ([], uu____87612)
+                                    | uu____87629 ->
                                         let ttok_decl =
                                           FStar_SMTEncoding_Term.DeclFun
                                             (ttok, [],
@@ -5582,14 +5582,14 @@ and (encode_sigelt' :
                                                  "token"))
                                            in
                                         let ttok_fresh =
-                                          let uu____87565 =
+                                          let uu____87639 =
                                             FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.next_id
                                               ()
                                              in
                                           FStar_SMTEncoding_Term.fresh_token
                                             (ttok,
                                               FStar_SMTEncoding_Term.Term_sort)
-                                            uu____87565
+                                            uu____87639
                                            in
                                         let ttok_app =
                                           FStar_SMTEncoding_EncodeTerm.mk_Apply
@@ -5597,191 +5597,191 @@ and (encode_sigelt' :
                                            in
                                         let pats = [[ttok_app]; [tapp]]  in
                                         let name_tok_corr =
-                                          let uu____87581 =
-                                            let uu____87589 =
-                                              let uu____87590 =
+                                          let uu____87655 =
+                                            let uu____87663 =
+                                              let uu____87664 =
                                                 FStar_Ident.range_of_lid t
                                                  in
-                                              let uu____87591 =
-                                                let uu____87607 =
+                                              let uu____87665 =
+                                                let uu____87681 =
                                                   FStar_SMTEncoding_Util.mkEq
                                                     (ttok_app, tapp)
                                                    in
                                                 (pats,
                                                   FStar_Pervasives_Native.None,
-                                                  vars, uu____87607)
+                                                  vars, uu____87681)
                                                  in
                                               FStar_SMTEncoding_Term.mkForall'
-                                                uu____87590 uu____87591
+                                                uu____87664 uu____87665
                                                in
-                                            (uu____87589,
+                                            (uu____87663,
                                               (FStar_Pervasives_Native.Some
                                                  "name-token correspondence"),
                                               (Prims.op_Hat
                                                  "token_correspondence_" ttok))
                                              in
                                           FStar_SMTEncoding_Util.mkAssume
-                                            uu____87581
+                                            uu____87655
                                            in
                                         ([ttok_decl;
                                          ttok_fresh;
                                          name_tok_corr], env1)
                                      in
-                                  match uu____87525 with
+                                  match uu____87599 with
                                   | (tok_decls,env2) ->
-                                      let uu____87634 =
+                                      let uu____87708 =
                                         FStar_Ident.lid_equals t
                                           FStar_Parser_Const.lex_t_lid
                                          in
-                                      if uu____87634
+                                      if uu____87708
                                       then (tok_decls, env2)
                                       else
                                         ((FStar_List.append tname_decl
                                             tok_decls), env2)
                                    in
-                                (match uu____87479 with
+                                (match uu____87553 with
                                  | (decls,env2) ->
                                      let kindingAx =
-                                       let uu____87662 =
+                                       let uu____87736 =
                                          FStar_SMTEncoding_EncodeTerm.encode_term_pred
                                            FStar_Pervasives_Native.None res1
                                            env' tapp
                                           in
-                                       match uu____87662 with
+                                       match uu____87736 with
                                        | (k1,decls1) ->
                                            let karr =
                                              if
                                                (FStar_List.length formals1) >
                                                  (Prims.parse_int "0")
                                              then
-                                               let uu____87684 =
-                                                 let uu____87685 =
-                                                   let uu____87693 =
-                                                     let uu____87694 =
+                                               let uu____87758 =
+                                                 let uu____87759 =
+                                                   let uu____87767 =
+                                                     let uu____87768 =
                                                        FStar_SMTEncoding_Term.mk_PreType
                                                          ttok_tm
                                                         in
                                                      FStar_SMTEncoding_Term.mk_tester
-                                                       "Tm_arrow" uu____87694
+                                                       "Tm_arrow" uu____87768
                                                       in
-                                                   (uu____87693,
+                                                   (uu____87767,
                                                      (FStar_Pervasives_Native.Some
                                                         "kinding"),
                                                      (Prims.op_Hat
                                                         "pre_kinding_" ttok))
                                                     in
                                                  FStar_SMTEncoding_Util.mkAssume
-                                                   uu____87685
+                                                   uu____87759
                                                   in
-                                               [uu____87684]
+                                               [uu____87758]
                                              else []  in
-                                           let uu____87702 =
-                                             let uu____87705 =
-                                               let uu____87708 =
-                                                 let uu____87711 =
-                                                   let uu____87712 =
-                                                     let uu____87720 =
-                                                       let uu____87721 =
+                                           let uu____87776 =
+                                             let uu____87779 =
+                                               let uu____87782 =
+                                                 let uu____87785 =
+                                                   let uu____87786 =
+                                                     let uu____87794 =
+                                                       let uu____87795 =
                                                          FStar_Ident.range_of_lid
                                                            t
                                                           in
-                                                       let uu____87722 =
-                                                         let uu____87733 =
+                                                       let uu____87796 =
+                                                         let uu____87807 =
                                                            FStar_SMTEncoding_Util.mkImp
                                                              (guard, k1)
                                                             in
                                                          ([[tapp]], vars,
-                                                           uu____87733)
+                                                           uu____87807)
                                                           in
                                                        FStar_SMTEncoding_Term.mkForall
-                                                         uu____87721
-                                                         uu____87722
+                                                         uu____87795
+                                                         uu____87796
                                                         in
-                                                     (uu____87720,
+                                                     (uu____87794,
                                                        FStar_Pervasives_Native.None,
                                                        (Prims.op_Hat
                                                           "kinding_" ttok))
                                                       in
                                                    FStar_SMTEncoding_Util.mkAssume
-                                                     uu____87712
+                                                     uu____87786
                                                     in
-                                                 [uu____87711]  in
+                                                 [uu____87785]  in
                                                FStar_List.append karr
-                                                 uu____87708
+                                                 uu____87782
                                                 in
-                                             FStar_All.pipe_right uu____87705
+                                             FStar_All.pipe_right uu____87779
                                                FStar_SMTEncoding_Term.mk_decls_trivial
                                               in
                                            FStar_List.append decls1
-                                             uu____87702
+                                             uu____87776
                                         in
                                      let aux =
-                                       let uu____87752 =
-                                         let uu____87755 =
+                                       let uu____87826 =
+                                         let uu____87829 =
                                            inversion_axioms tapp vars  in
-                                         let uu____87758 =
-                                           let uu____87761 =
-                                             let uu____87764 =
-                                               let uu____87765 =
+                                         let uu____87832 =
+                                           let uu____87835 =
+                                             let uu____87838 =
+                                               let uu____87839 =
                                                  FStar_Ident.range_of_lid t
                                                   in
-                                               pretype_axiom uu____87765 env2
+                                               pretype_axiom uu____87839 env2
                                                  tapp vars
                                                 in
-                                             [uu____87764]  in
-                                           FStar_All.pipe_right uu____87761
+                                             [uu____87838]  in
+                                           FStar_All.pipe_right uu____87835
                                              FStar_SMTEncoding_Term.mk_decls_trivial
                                             in
-                                         FStar_List.append uu____87755
-                                           uu____87758
+                                         FStar_List.append uu____87829
+                                           uu____87832
                                           in
                                        FStar_List.append kindingAx
-                                         uu____87752
+                                         uu____87826
                                         in
                                      let g =
-                                       let uu____87773 =
+                                       let uu____87847 =
                                          FStar_All.pipe_right decls
                                            FStar_SMTEncoding_Term.mk_decls_trivial
                                           in
-                                       FStar_List.append uu____87773
+                                       FStar_List.append uu____87847
                                          (FStar_List.append binder_decls aux)
                                         in
                                      (g, env2)))))))
        | FStar_Syntax_Syntax.Sig_datacon
-           (d,uu____87781,uu____87782,uu____87783,uu____87784,uu____87785)
+           (d,uu____87855,uu____87856,uu____87857,uu____87858,uu____87859)
            when FStar_Ident.lid_equals d FStar_Parser_Const.lexcons_lid ->
            ([], env)
        | FStar_Syntax_Syntax.Sig_datacon
-           (d,uu____87793,t,uu____87795,n_tps,uu____87797) ->
+           (d,uu____87867,t,uu____87869,n_tps,uu____87871) ->
            let quals = se.FStar_Syntax_Syntax.sigquals  in
-           let uu____87807 = FStar_Syntax_Util.arrow_formals t  in
-           (match uu____87807 with
+           let uu____87881 = FStar_Syntax_Util.arrow_formals t  in
+           (match uu____87881 with
             | (formals,t_res) ->
                 let arity = FStar_List.length formals  in
-                let uu____87855 =
+                let uu____87929 =
                   FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid
                     env d arity
                    in
-                (match uu____87855 with
+                (match uu____87929 with
                  | (ddconstrsym,ddtok,env1) ->
                      let ddtok_tm = FStar_SMTEncoding_Util.mkApp (ddtok, [])
                         in
-                     let uu____87883 =
+                     let uu____87957 =
                        FStar_SMTEncoding_Env.fresh_fvar
                          env1.FStar_SMTEncoding_Env.current_module_name "f"
                          FStar_SMTEncoding_Term.Fuel_sort
                         in
-                     (match uu____87883 with
+                     (match uu____87957 with
                       | (fuel_var,fuel_tm) ->
                           let s_fuel_tm =
                             FStar_SMTEncoding_Util.mkApp ("SFuel", [fuel_tm])
                              in
-                          let uu____87903 =
+                          let uu____87977 =
                             FStar_SMTEncoding_EncodeTerm.encode_binders
                               (FStar_Pervasives_Native.Some fuel_tm) formals
                               env1
                              in
-                          (match uu____87903 with
+                          (match uu____87977 with
                            | (vars,guards,env',binder_decls,names1) ->
                                let fields =
                                  FStar_All.pipe_right names1
@@ -5789,31 +5789,31 @@ and (encode_sigelt' :
                                       (fun n1  ->
                                          fun x  ->
                                            let projectible = true  in
-                                           let uu____87982 =
+                                           let uu____88056 =
                                              FStar_SMTEncoding_Env.mk_term_projector_name
                                                d x
                                               in
-                                           (uu____87982,
+                                           (uu____88056,
                                              FStar_SMTEncoding_Term.Term_sort,
                                              projectible)))
                                   in
                                let datacons =
-                                 let uu____87989 =
-                                   let uu____87990 =
+                                 let uu____88063 =
+                                   let uu____88064 =
                                      FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.next_id
                                        ()
                                       in
                                    (ddconstrsym, fields,
                                      FStar_SMTEncoding_Term.Term_sort,
-                                     uu____87990, true)
+                                     uu____88064, true)
                                     in
-                                 let uu____87998 =
-                                   let uu____88005 =
+                                 let uu____88072 =
+                                   let uu____88079 =
                                      FStar_Ident.range_of_lid d  in
                                    FStar_SMTEncoding_Term.constructor_to_decl
-                                     uu____88005
+                                     uu____88079
                                     in
-                                 FStar_All.pipe_right uu____87989 uu____87998
+                                 FStar_All.pipe_right uu____88063 uu____88072
                                   in
                                let app =
                                  FStar_SMTEncoding_EncodeTerm.mk_Apply
@@ -5829,16 +5829,16 @@ and (encode_sigelt' :
                                  FStar_SMTEncoding_Util.mkApp
                                    (ddconstrsym, xvars)
                                   in
-                               let uu____88017 =
+                               let uu____88091 =
                                  FStar_SMTEncoding_EncodeTerm.encode_term_pred
                                    FStar_Pervasives_Native.None t env1
                                    ddtok_tm
                                   in
-                               (match uu____88017 with
+                               (match uu____88091 with
                                 | (tok_typing,decls3) ->
                                     let tok_typing1 =
                                       match fields with
-                                      | uu____88029::uu____88030 ->
+                                      | uu____88103::uu____88104 ->
                                           let ff =
                                             FStar_SMTEncoding_Term.mk_fv
                                               ("ty",
@@ -5852,38 +5852,38 @@ and (encode_sigelt' :
                                               ddtok_tm [ff]
                                              in
                                           let vtok_app_r =
-                                            let uu____88079 =
-                                              let uu____88080 =
+                                            let uu____88153 =
+                                              let uu____88154 =
                                                 FStar_SMTEncoding_Term.mk_fv
                                                   (ddtok,
                                                     FStar_SMTEncoding_Term.Term_sort)
                                                  in
-                                              [uu____88080]  in
+                                              [uu____88154]  in
                                             FStar_SMTEncoding_EncodeTerm.mk_Apply
-                                              f uu____88079
+                                              f uu____88153
                                              in
-                                          let uu____88106 =
+                                          let uu____88180 =
                                             FStar_Ident.range_of_lid d  in
-                                          let uu____88107 =
-                                            let uu____88118 =
+                                          let uu____88181 =
+                                            let uu____88192 =
                                               FStar_SMTEncoding_Term.mk_NoHoist
                                                 f tok_typing
                                                in
                                             ([[vtok_app_l]; [vtok_app_r]],
-                                              [ff], uu____88118)
+                                              [ff], uu____88192)
                                              in
                                           FStar_SMTEncoding_Term.mkForall
-                                            uu____88106 uu____88107
-                                      | uu____88145 -> tok_typing  in
-                                    let uu____88156 =
+                                            uu____88180 uu____88181
+                                      | uu____88219 -> tok_typing  in
+                                    let uu____88230 =
                                       FStar_SMTEncoding_EncodeTerm.encode_binders
                                         (FStar_Pervasives_Native.Some fuel_tm)
                                         formals env1
                                        in
-                                    (match uu____88156 with
-                                     | (vars',guards',env'',decls_formals,uu____88181)
+                                    (match uu____88230 with
+                                     | (vars',guards',env'',decls_formals,uu____88255)
                                          ->
-                                         let uu____88194 =
+                                         let uu____88268 =
                                            let xvars1 =
                                              FStar_List.map
                                                FStar_SMTEncoding_Util.mkFreeV
@@ -5897,7 +5897,7 @@ and (encode_sigelt' :
                                              (FStar_Pervasives_Native.Some
                                                 fuel_tm) t_res env'' dapp1
                                             in
-                                         (match uu____88194 with
+                                         (match uu____88268 with
                                           | (ty_pred',decls_pred) ->
                                               let guard' =
                                                 FStar_SMTEncoding_Util.mk_and_l
@@ -5906,34 +5906,34 @@ and (encode_sigelt' :
                                               let proxy_fresh =
                                                 match formals with
                                                 | [] -> []
-                                                | uu____88224 ->
-                                                    let uu____88233 =
-                                                      let uu____88234 =
+                                                | uu____88298 ->
+                                                    let uu____88307 =
+                                                      let uu____88308 =
                                                         FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.next_id
                                                           ()
                                                          in
                                                       FStar_SMTEncoding_Term.fresh_token
                                                         (ddtok,
                                                           FStar_SMTEncoding_Term.Term_sort)
-                                                        uu____88234
+                                                        uu____88308
                                                        in
-                                                    [uu____88233]
+                                                    [uu____88307]
                                                  in
-                                              let encode_elim uu____88250 =
-                                                let uu____88251 =
+                                              let encode_elim uu____88324 =
+                                                let uu____88325 =
                                                   FStar_Syntax_Util.head_and_args
                                                     t_res
                                                    in
-                                                match uu____88251 with
+                                                match uu____88325 with
                                                 | (head1,args) ->
-                                                    let uu____88302 =
-                                                      let uu____88303 =
+                                                    let uu____88376 =
+                                                      let uu____88377 =
                                                         FStar_Syntax_Subst.compress
                                                           head1
                                                          in
-                                                      uu____88303.FStar_Syntax_Syntax.n
+                                                      uu____88377.FStar_Syntax_Syntax.n
                                                        in
-                                                    (match uu____88302 with
+                                                    (match uu____88376 with
                                                      | FStar_Syntax_Syntax.Tm_uinst
                                                          ({
                                                             FStar_Syntax_Syntax.n
@@ -5941,9 +5941,9 @@ and (encode_sigelt' :
                                                               FStar_Syntax_Syntax.Tm_fvar
                                                               fv;
                                                             FStar_Syntax_Syntax.pos
-                                                              = uu____88315;
+                                                              = uu____88389;
                                                             FStar_Syntax_Syntax.vars
-                                                              = uu____88316;_},uu____88317)
+                                                              = uu____88390;_},uu____88391)
                                                          ->
                                                          let encoded_head_fvb
                                                            =
@@ -5951,11 +5951,11 @@ and (encode_sigelt' :
                                                              env'
                                                              fv.FStar_Syntax_Syntax.fv_name
                                                             in
-                                                         let uu____88323 =
+                                                         let uu____88397 =
                                                            FStar_SMTEncoding_EncodeTerm.encode_args
                                                              args env'
                                                             in
-                                                         (match uu____88323
+                                                         (match uu____88397
                                                           with
                                                           | (encoded_args,arg_decls)
                                                               ->
@@ -5969,26 +5969,26 @@ and (encode_sigelt' :
                                                                   | FStar_SMTEncoding_Term.FreeV
                                                                     fv1 ->
                                                                     fv1
-                                                                  | uu____88386
+                                                                  | uu____88460
                                                                     ->
-                                                                    let uu____88387
+                                                                    let uu____88461
                                                                     =
-                                                                    let uu____88393
+                                                                    let uu____88467
                                                                     =
-                                                                    let uu____88395
+                                                                    let uu____88469
                                                                     =
                                                                     FStar_Syntax_Print.term_to_string
                                                                     orig_arg
                                                                      in
                                                                     FStar_Util.format1
                                                                     "Inductive type parameter %s must be a variable ; You may want to change it to an index."
-                                                                    uu____88395
+                                                                    uu____88469
                                                                      in
                                                                     (FStar_Errors.Fatal_NonVariableInductiveTypeParameter,
-                                                                    uu____88393)
+                                                                    uu____88467)
                                                                      in
                                                                     FStar_Errors.raise_error
-                                                                    uu____88387
+                                                                    uu____88461
                                                                     orig_arg.FStar_Syntax_Syntax.pos
                                                                    in
                                                                 let guards1 =
@@ -5998,33 +5998,33 @@ and (encode_sigelt' :
                                                                     FStar_List.collect
                                                                     (fun g 
                                                                     ->
-                                                                    let uu____88418
+                                                                    let uu____88492
                                                                     =
-                                                                    let uu____88420
+                                                                    let uu____88494
                                                                     =
                                                                     FStar_SMTEncoding_Term.free_variables
                                                                     g  in
                                                                     FStar_List.contains
                                                                     fv1
-                                                                    uu____88420
+                                                                    uu____88494
                                                                      in
                                                                     if
-                                                                    uu____88418
+                                                                    uu____88492
                                                                     then
-                                                                    let uu____88442
+                                                                    let uu____88516
                                                                     =
                                                                     FStar_SMTEncoding_Term.subst
                                                                     g fv1 xv
                                                                      in
-                                                                    [uu____88442]
+                                                                    [uu____88516]
                                                                     else []))
                                                                    in
                                                                 FStar_SMTEncoding_Util.mk_and_l
                                                                   guards1
                                                                  in
-                                                              let uu____88445
+                                                              let uu____88519
                                                                 =
-                                                                let uu____88459
+                                                                let uu____88533
                                                                   =
                                                                   FStar_List.zip
                                                                     args
@@ -6032,22 +6032,22 @@ and (encode_sigelt' :
                                                                    in
                                                                 FStar_List.fold_left
                                                                   (fun
-                                                                    uu____88516
+                                                                    uu____88590
                                                                      ->
                                                                     fun
-                                                                    uu____88517
+                                                                    uu____88591
                                                                      ->
                                                                     match 
-                                                                    (uu____88516,
-                                                                    uu____88517)
+                                                                    (uu____88590,
+                                                                    uu____88591)
                                                                     with
                                                                     | 
                                                                     ((env2,arg_vars,eqns_or_guards,i),
                                                                     (orig_arg,arg))
                                                                     ->
-                                                                    let uu____88628
+                                                                    let uu____88702
                                                                     =
-                                                                    let uu____88636
+                                                                    let uu____88710
                                                                     =
                                                                     FStar_Syntax_Syntax.new_bv
                                                                     FStar_Pervasives_Native.None
@@ -6055,35 +6055,35 @@ and (encode_sigelt' :
                                                                      in
                                                                     FStar_SMTEncoding_Env.gen_term_var
                                                                     env2
-                                                                    uu____88636
+                                                                    uu____88710
                                                                      in
-                                                                    (match uu____88628
+                                                                    (match uu____88702
                                                                     with
                                                                     | 
-                                                                    (uu____88650,xv,env3)
+                                                                    (uu____88724,xv,env3)
                                                                     ->
                                                                     let eqns
                                                                     =
                                                                     if
                                                                     i < n_tps
                                                                     then
-                                                                    let uu____88661
+                                                                    let uu____88735
                                                                     =
                                                                     guards_for_parameter
                                                                     (FStar_Pervasives_Native.fst
                                                                     orig_arg)
                                                                     arg xv
                                                                      in
-                                                                    uu____88661
+                                                                    uu____88735
                                                                     ::
                                                                     eqns_or_guards
                                                                     else
-                                                                    (let uu____88666
+                                                                    (let uu____88740
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkEq
                                                                     (arg, xv)
                                                                      in
-                                                                    uu____88666
+                                                                    uu____88740
                                                                     ::
                                                                     eqns_or_guards)
                                                                      in
@@ -6096,11 +6096,11 @@ and (encode_sigelt' :
                                                                   (env', [],
                                                                     [],
                                                                     (Prims.parse_int "0"))
-                                                                  uu____88459
+                                                                  uu____88533
                                                                  in
-                                                              (match uu____88445
+                                                              (match uu____88519
                                                                with
-                                                               | (uu____88687,arg_vars,elim_eqns_or_guards,uu____88690)
+                                                               | (uu____88761,arg_vars,elim_eqns_or_guards,uu____88764)
                                                                    ->
                                                                    let arg_vars1
                                                                     =
@@ -6139,35 +6139,35 @@ and (encode_sigelt' :
                                                                      in
                                                                    let typing_inversion
                                                                     =
-                                                                    let uu____88717
+                                                                    let uu____88791
                                                                     =
-                                                                    let uu____88725
+                                                                    let uu____88799
                                                                     =
-                                                                    let uu____88726
+                                                                    let uu____88800
                                                                     =
                                                                     FStar_Ident.range_of_lid
                                                                     d  in
-                                                                    let uu____88727
+                                                                    let uu____88801
                                                                     =
-                                                                    let uu____88738
+                                                                    let uu____88812
                                                                     =
-                                                                    let uu____88739
+                                                                    let uu____88813
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk_fv
                                                                     (fuel_var,
                                                                     FStar_SMTEncoding_Term.Fuel_sort)
                                                                      in
                                                                     FStar_SMTEncoding_Env.add_fuel
-                                                                    uu____88739
+                                                                    uu____88813
                                                                     (FStar_List.append
                                                                     vars
                                                                     arg_binders)
                                                                      in
-                                                                    let uu____88741
+                                                                    let uu____88815
                                                                     =
-                                                                    let uu____88742
+                                                                    let uu____88816
                                                                     =
-                                                                    let uu____88747
+                                                                    let uu____88821
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_and_l
                                                                     (FStar_List.append
@@ -6175,21 +6175,21 @@ and (encode_sigelt' :
                                                                     guards)
                                                                      in
                                                                     (ty_pred,
-                                                                    uu____88747)
+                                                                    uu____88821)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkImp
-                                                                    uu____88742
+                                                                    uu____88816
                                                                      in
                                                                     ([
                                                                     [ty_pred]],
-                                                                    uu____88738,
-                                                                    uu____88741)
+                                                                    uu____88812,
+                                                                    uu____88815)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____88726
-                                                                    uu____88727
+                                                                    uu____88800
+                                                                    uu____88801
                                                                      in
-                                                                    (uu____88725,
+                                                                    (uu____88799,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "data constructor typing elim"),
                                                                     (Prims.op_Hat
@@ -6197,128 +6197,128 @@ and (encode_sigelt' :
                                                                     ddconstrsym))
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____88717
+                                                                    uu____88791
                                                                      in
                                                                    let subterm_ordering
                                                                     =
                                                                     let lex_t1
                                                                     =
-                                                                    let uu____88762
+                                                                    let uu____88836
                                                                     =
-                                                                    let uu____88763
+                                                                    let uu____88837
                                                                     =
-                                                                    let uu____88769
+                                                                    let uu____88843
                                                                     =
                                                                     FStar_Ident.text_of_lid
                                                                     FStar_Parser_Const.lex_t_lid
                                                                      in
-                                                                    (uu____88769,
+                                                                    (uu____88843,
                                                                     FStar_SMTEncoding_Term.Term_sort)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mk_fv
-                                                                    uu____88763
+                                                                    uu____88837
                                                                      in
                                                                     FStar_All.pipe_left
                                                                     FStar_SMTEncoding_Util.mkFreeV
-                                                                    uu____88762
+                                                                    uu____88836
                                                                      in
-                                                                    let uu____88772
+                                                                    let uu____88846
                                                                     =
                                                                     FStar_Ident.lid_equals
                                                                     d
                                                                     FStar_Parser_Const.lextop_lid
                                                                      in
                                                                     if
-                                                                    uu____88772
+                                                                    uu____88846
                                                                     then
                                                                     let x =
-                                                                    let uu____88776
+                                                                    let uu____88850
                                                                     =
-                                                                    let uu____88782
+                                                                    let uu____88856
                                                                     =
                                                                     FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.fresh
                                                                     env1.FStar_SMTEncoding_Env.current_module_name
                                                                     "x"  in
-                                                                    (uu____88782,
+                                                                    (uu____88856,
                                                                     FStar_SMTEncoding_Term.Term_sort)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mk_fv
-                                                                    uu____88776
+                                                                    uu____88850
                                                                      in
                                                                     let xtm =
                                                                     FStar_SMTEncoding_Util.mkFreeV
                                                                     x  in
-                                                                    let uu____88787
+                                                                    let uu____88861
                                                                     =
-                                                                    let uu____88795
+                                                                    let uu____88869
                                                                     =
-                                                                    let uu____88796
+                                                                    let uu____88870
                                                                     =
                                                                     FStar_Ident.range_of_lid
                                                                     d  in
-                                                                    let uu____88797
+                                                                    let uu____88871
                                                                     =
-                                                                    let uu____88808
+                                                                    let uu____88882
                                                                     =
-                                                                    let uu____88813
+                                                                    let uu____88887
                                                                     =
-                                                                    let uu____88816
+                                                                    let uu____88890
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_Precedes
                                                                     lex_t1
                                                                     lex_t1
                                                                     xtm dapp1
                                                                      in
-                                                                    [uu____88816]
+                                                                    [uu____88890]
                                                                      in
-                                                                    [uu____88813]
+                                                                    [uu____88887]
                                                                      in
-                                                                    let uu____88821
+                                                                    let uu____88895
                                                                     =
-                                                                    let uu____88822
+                                                                    let uu____88896
                                                                     =
-                                                                    let uu____88827
+                                                                    let uu____88901
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk_tester
                                                                     "LexCons"
                                                                     xtm  in
-                                                                    let uu____88829
+                                                                    let uu____88903
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_Precedes
                                                                     lex_t1
                                                                     lex_t1
                                                                     xtm dapp1
                                                                      in
-                                                                    (uu____88827,
-                                                                    uu____88829)
+                                                                    (uu____88901,
+                                                                    uu____88903)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkImp
-                                                                    uu____88822
+                                                                    uu____88896
                                                                      in
-                                                                    (uu____88808,
+                                                                    (uu____88882,
                                                                     [x],
-                                                                    uu____88821)
+                                                                    uu____88895)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____88796
-                                                                    uu____88797
+                                                                    uu____88870
+                                                                    uu____88871
                                                                      in
-                                                                    let uu____88850
+                                                                    let uu____88924
                                                                     =
                                                                     FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
                                                                     "lextop"
                                                                      in
-                                                                    (uu____88795,
+                                                                    (uu____88869,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "lextop is top"),
-                                                                    uu____88850)
+                                                                    uu____88924)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____88787
+                                                                    uu____88861
                                                                     else
                                                                     (let prec
                                                                     =
-                                                                    let uu____88861
+                                                                    let uu____88935
                                                                     =
                                                                     FStar_All.pipe_right
                                                                     vars
@@ -6331,71 +6331,71 @@ and (encode_sigelt' :
                                                                     i < n_tps
                                                                     then []
                                                                     else
-                                                                    (let uu____88884
+                                                                    (let uu____88958
                                                                     =
-                                                                    let uu____88885
+                                                                    let uu____88959
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkFreeV
                                                                     v1  in
                                                                     FStar_SMTEncoding_Util.mk_Precedes
                                                                     lex_t1
                                                                     lex_t1
-                                                                    uu____88885
+                                                                    uu____88959
                                                                     dapp1  in
-                                                                    [uu____88884])))
+                                                                    [uu____88958])))
                                                                      in
                                                                     FStar_All.pipe_right
-                                                                    uu____88861
+                                                                    uu____88935
                                                                     FStar_List.flatten
                                                                      in
-                                                                    let uu____88892
+                                                                    let uu____88966
                                                                     =
-                                                                    let uu____88900
+                                                                    let uu____88974
                                                                     =
-                                                                    let uu____88901
+                                                                    let uu____88975
                                                                     =
                                                                     FStar_Ident.range_of_lid
                                                                     d  in
-                                                                    let uu____88902
+                                                                    let uu____88976
                                                                     =
-                                                                    let uu____88913
+                                                                    let uu____88987
                                                                     =
-                                                                    let uu____88914
+                                                                    let uu____88988
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk_fv
                                                                     (fuel_var,
                                                                     FStar_SMTEncoding_Term.Fuel_sort)
                                                                      in
                                                                     FStar_SMTEncoding_Env.add_fuel
-                                                                    uu____88914
+                                                                    uu____88988
                                                                     (FStar_List.append
                                                                     vars
                                                                     arg_binders)
                                                                      in
-                                                                    let uu____88916
+                                                                    let uu____88990
                                                                     =
-                                                                    let uu____88917
+                                                                    let uu____88991
                                                                     =
-                                                                    let uu____88922
+                                                                    let uu____88996
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_and_l
                                                                     prec  in
                                                                     (ty_pred,
-                                                                    uu____88922)
+                                                                    uu____88996)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkImp
-                                                                    uu____88917
+                                                                    uu____88991
                                                                      in
                                                                     ([
                                                                     [ty_pred]],
-                                                                    uu____88913,
-                                                                    uu____88916)
+                                                                    uu____88987,
+                                                                    uu____88990)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____88901
-                                                                    uu____88902
+                                                                    uu____88975
+                                                                    uu____88976
                                                                      in
-                                                                    (uu____88900,
+                                                                    (uu____88974,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "subterm ordering"),
                                                                     (Prims.op_Hat
@@ -6403,7 +6403,7 @@ and (encode_sigelt' :
                                                                     ddconstrsym))
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____88892)
+                                                                    uu____88966)
                                                                      in
                                                                    (arg_decls,
                                                                     [typing_inversion;
@@ -6416,11 +6416,11 @@ and (encode_sigelt' :
                                                              env'
                                                              fv.FStar_Syntax_Syntax.fv_name
                                                             in
-                                                         let uu____88941 =
+                                                         let uu____89015 =
                                                            FStar_SMTEncoding_EncodeTerm.encode_args
                                                              args env'
                                                             in
-                                                         (match uu____88941
+                                                         (match uu____89015
                                                           with
                                                           | (encoded_args,arg_decls)
                                                               ->
@@ -6434,26 +6434,26 @@ and (encode_sigelt' :
                                                                   | FStar_SMTEncoding_Term.FreeV
                                                                     fv1 ->
                                                                     fv1
-                                                                  | uu____89004
+                                                                  | uu____89078
                                                                     ->
-                                                                    let uu____89005
+                                                                    let uu____89079
                                                                     =
-                                                                    let uu____89011
+                                                                    let uu____89085
                                                                     =
-                                                                    let uu____89013
+                                                                    let uu____89087
                                                                     =
                                                                     FStar_Syntax_Print.term_to_string
                                                                     orig_arg
                                                                      in
                                                                     FStar_Util.format1
                                                                     "Inductive type parameter %s must be a variable ; You may want to change it to an index."
-                                                                    uu____89013
+                                                                    uu____89087
                                                                      in
                                                                     (FStar_Errors.Fatal_NonVariableInductiveTypeParameter,
-                                                                    uu____89011)
+                                                                    uu____89085)
                                                                      in
                                                                     FStar_Errors.raise_error
-                                                                    uu____89005
+                                                                    uu____89079
                                                                     orig_arg.FStar_Syntax_Syntax.pos
                                                                    in
                                                                 let guards1 =
@@ -6463,33 +6463,33 @@ and (encode_sigelt' :
                                                                     FStar_List.collect
                                                                     (fun g 
                                                                     ->
-                                                                    let uu____89036
+                                                                    let uu____89110
                                                                     =
-                                                                    let uu____89038
+                                                                    let uu____89112
                                                                     =
                                                                     FStar_SMTEncoding_Term.free_variables
                                                                     g  in
                                                                     FStar_List.contains
                                                                     fv1
-                                                                    uu____89038
+                                                                    uu____89112
                                                                      in
                                                                     if
-                                                                    uu____89036
+                                                                    uu____89110
                                                                     then
-                                                                    let uu____89060
+                                                                    let uu____89134
                                                                     =
                                                                     FStar_SMTEncoding_Term.subst
                                                                     g fv1 xv
                                                                      in
-                                                                    [uu____89060]
+                                                                    [uu____89134]
                                                                     else []))
                                                                    in
                                                                 FStar_SMTEncoding_Util.mk_and_l
                                                                   guards1
                                                                  in
-                                                              let uu____89063
+                                                              let uu____89137
                                                                 =
-                                                                let uu____89077
+                                                                let uu____89151
                                                                   =
                                                                   FStar_List.zip
                                                                     args
@@ -6497,22 +6497,22 @@ and (encode_sigelt' :
                                                                    in
                                                                 FStar_List.fold_left
                                                                   (fun
-                                                                    uu____89134
+                                                                    uu____89208
                                                                      ->
                                                                     fun
-                                                                    uu____89135
+                                                                    uu____89209
                                                                      ->
                                                                     match 
-                                                                    (uu____89134,
-                                                                    uu____89135)
+                                                                    (uu____89208,
+                                                                    uu____89209)
                                                                     with
                                                                     | 
                                                                     ((env2,arg_vars,eqns_or_guards,i),
                                                                     (orig_arg,arg))
                                                                     ->
-                                                                    let uu____89246
+                                                                    let uu____89320
                                                                     =
-                                                                    let uu____89254
+                                                                    let uu____89328
                                                                     =
                                                                     FStar_Syntax_Syntax.new_bv
                                                                     FStar_Pervasives_Native.None
@@ -6520,35 +6520,35 @@ and (encode_sigelt' :
                                                                      in
                                                                     FStar_SMTEncoding_Env.gen_term_var
                                                                     env2
-                                                                    uu____89254
+                                                                    uu____89328
                                                                      in
-                                                                    (match uu____89246
+                                                                    (match uu____89320
                                                                     with
                                                                     | 
-                                                                    (uu____89268,xv,env3)
+                                                                    (uu____89342,xv,env3)
                                                                     ->
                                                                     let eqns
                                                                     =
                                                                     if
                                                                     i < n_tps
                                                                     then
-                                                                    let uu____89279
+                                                                    let uu____89353
                                                                     =
                                                                     guards_for_parameter
                                                                     (FStar_Pervasives_Native.fst
                                                                     orig_arg)
                                                                     arg xv
                                                                      in
-                                                                    uu____89279
+                                                                    uu____89353
                                                                     ::
                                                                     eqns_or_guards
                                                                     else
-                                                                    (let uu____89284
+                                                                    (let uu____89358
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkEq
                                                                     (arg, xv)
                                                                      in
-                                                                    uu____89284
+                                                                    uu____89358
                                                                     ::
                                                                     eqns_or_guards)
                                                                      in
@@ -6561,11 +6561,11 @@ and (encode_sigelt' :
                                                                   (env', [],
                                                                     [],
                                                                     (Prims.parse_int "0"))
-                                                                  uu____89077
+                                                                  uu____89151
                                                                  in
-                                                              (match uu____89063
+                                                              (match uu____89137
                                                                with
-                                                               | (uu____89305,arg_vars,elim_eqns_or_guards,uu____89308)
+                                                               | (uu____89379,arg_vars,elim_eqns_or_guards,uu____89382)
                                                                    ->
                                                                    let arg_vars1
                                                                     =
@@ -6604,35 +6604,35 @@ and (encode_sigelt' :
                                                                      in
                                                                    let typing_inversion
                                                                     =
-                                                                    let uu____89335
+                                                                    let uu____89409
                                                                     =
-                                                                    let uu____89343
+                                                                    let uu____89417
                                                                     =
-                                                                    let uu____89344
+                                                                    let uu____89418
                                                                     =
                                                                     FStar_Ident.range_of_lid
                                                                     d  in
-                                                                    let uu____89345
+                                                                    let uu____89419
                                                                     =
-                                                                    let uu____89356
+                                                                    let uu____89430
                                                                     =
-                                                                    let uu____89357
+                                                                    let uu____89431
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk_fv
                                                                     (fuel_var,
                                                                     FStar_SMTEncoding_Term.Fuel_sort)
                                                                      in
                                                                     FStar_SMTEncoding_Env.add_fuel
-                                                                    uu____89357
+                                                                    uu____89431
                                                                     (FStar_List.append
                                                                     vars
                                                                     arg_binders)
                                                                      in
-                                                                    let uu____89359
+                                                                    let uu____89433
                                                                     =
-                                                                    let uu____89360
+                                                                    let uu____89434
                                                                     =
-                                                                    let uu____89365
+                                                                    let uu____89439
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_and_l
                                                                     (FStar_List.append
@@ -6640,21 +6640,21 @@ and (encode_sigelt' :
                                                                     guards)
                                                                      in
                                                                     (ty_pred,
-                                                                    uu____89365)
+                                                                    uu____89439)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkImp
-                                                                    uu____89360
+                                                                    uu____89434
                                                                      in
                                                                     ([
                                                                     [ty_pred]],
-                                                                    uu____89356,
-                                                                    uu____89359)
+                                                                    uu____89430,
+                                                                    uu____89433)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____89344
-                                                                    uu____89345
+                                                                    uu____89418
+                                                                    uu____89419
                                                                      in
-                                                                    (uu____89343,
+                                                                    (uu____89417,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "data constructor typing elim"),
                                                                     (Prims.op_Hat
@@ -6662,128 +6662,128 @@ and (encode_sigelt' :
                                                                     ddconstrsym))
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____89335
+                                                                    uu____89409
                                                                      in
                                                                    let subterm_ordering
                                                                     =
                                                                     let lex_t1
                                                                     =
-                                                                    let uu____89380
+                                                                    let uu____89454
                                                                     =
-                                                                    let uu____89381
+                                                                    let uu____89455
                                                                     =
-                                                                    let uu____89387
+                                                                    let uu____89461
                                                                     =
                                                                     FStar_Ident.text_of_lid
                                                                     FStar_Parser_Const.lex_t_lid
                                                                      in
-                                                                    (uu____89387,
+                                                                    (uu____89461,
                                                                     FStar_SMTEncoding_Term.Term_sort)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mk_fv
-                                                                    uu____89381
+                                                                    uu____89455
                                                                      in
                                                                     FStar_All.pipe_left
                                                                     FStar_SMTEncoding_Util.mkFreeV
-                                                                    uu____89380
+                                                                    uu____89454
                                                                      in
-                                                                    let uu____89390
+                                                                    let uu____89464
                                                                     =
                                                                     FStar_Ident.lid_equals
                                                                     d
                                                                     FStar_Parser_Const.lextop_lid
                                                                      in
                                                                     if
-                                                                    uu____89390
+                                                                    uu____89464
                                                                     then
                                                                     let x =
-                                                                    let uu____89394
+                                                                    let uu____89468
                                                                     =
-                                                                    let uu____89400
+                                                                    let uu____89474
                                                                     =
                                                                     FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.fresh
                                                                     env1.FStar_SMTEncoding_Env.current_module_name
                                                                     "x"  in
-                                                                    (uu____89400,
+                                                                    (uu____89474,
                                                                     FStar_SMTEncoding_Term.Term_sort)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mk_fv
-                                                                    uu____89394
+                                                                    uu____89468
                                                                      in
                                                                     let xtm =
                                                                     FStar_SMTEncoding_Util.mkFreeV
                                                                     x  in
-                                                                    let uu____89405
+                                                                    let uu____89479
                                                                     =
-                                                                    let uu____89413
+                                                                    let uu____89487
                                                                     =
-                                                                    let uu____89414
+                                                                    let uu____89488
                                                                     =
                                                                     FStar_Ident.range_of_lid
                                                                     d  in
-                                                                    let uu____89415
+                                                                    let uu____89489
                                                                     =
-                                                                    let uu____89426
+                                                                    let uu____89500
                                                                     =
-                                                                    let uu____89431
+                                                                    let uu____89505
                                                                     =
-                                                                    let uu____89434
+                                                                    let uu____89508
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_Precedes
                                                                     lex_t1
                                                                     lex_t1
                                                                     xtm dapp1
                                                                      in
-                                                                    [uu____89434]
+                                                                    [uu____89508]
                                                                      in
-                                                                    [uu____89431]
+                                                                    [uu____89505]
                                                                      in
-                                                                    let uu____89439
+                                                                    let uu____89513
                                                                     =
-                                                                    let uu____89440
+                                                                    let uu____89514
                                                                     =
-                                                                    let uu____89445
+                                                                    let uu____89519
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk_tester
                                                                     "LexCons"
                                                                     xtm  in
-                                                                    let uu____89447
+                                                                    let uu____89521
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_Precedes
                                                                     lex_t1
                                                                     lex_t1
                                                                     xtm dapp1
                                                                      in
-                                                                    (uu____89445,
-                                                                    uu____89447)
+                                                                    (uu____89519,
+                                                                    uu____89521)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkImp
-                                                                    uu____89440
+                                                                    uu____89514
                                                                      in
-                                                                    (uu____89426,
+                                                                    (uu____89500,
                                                                     [x],
-                                                                    uu____89439)
+                                                                    uu____89513)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____89414
-                                                                    uu____89415
+                                                                    uu____89488
+                                                                    uu____89489
                                                                      in
-                                                                    let uu____89468
+                                                                    let uu____89542
                                                                     =
                                                                     FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
                                                                     "lextop"
                                                                      in
-                                                                    (uu____89413,
+                                                                    (uu____89487,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "lextop is top"),
-                                                                    uu____89468)
+                                                                    uu____89542)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____89405
+                                                                    uu____89479
                                                                     else
                                                                     (let prec
                                                                     =
-                                                                    let uu____89479
+                                                                    let uu____89553
                                                                     =
                                                                     FStar_All.pipe_right
                                                                     vars
@@ -6796,71 +6796,71 @@ and (encode_sigelt' :
                                                                     i < n_tps
                                                                     then []
                                                                     else
-                                                                    (let uu____89502
+                                                                    (let uu____89576
                                                                     =
-                                                                    let uu____89503
+                                                                    let uu____89577
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkFreeV
                                                                     v1  in
                                                                     FStar_SMTEncoding_Util.mk_Precedes
                                                                     lex_t1
                                                                     lex_t1
-                                                                    uu____89503
+                                                                    uu____89577
                                                                     dapp1  in
-                                                                    [uu____89502])))
+                                                                    [uu____89576])))
                                                                      in
                                                                     FStar_All.pipe_right
-                                                                    uu____89479
+                                                                    uu____89553
                                                                     FStar_List.flatten
                                                                      in
-                                                                    let uu____89510
+                                                                    let uu____89584
                                                                     =
-                                                                    let uu____89518
+                                                                    let uu____89592
                                                                     =
-                                                                    let uu____89519
+                                                                    let uu____89593
                                                                     =
                                                                     FStar_Ident.range_of_lid
                                                                     d  in
-                                                                    let uu____89520
+                                                                    let uu____89594
                                                                     =
-                                                                    let uu____89531
+                                                                    let uu____89605
                                                                     =
-                                                                    let uu____89532
+                                                                    let uu____89606
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk_fv
                                                                     (fuel_var,
                                                                     FStar_SMTEncoding_Term.Fuel_sort)
                                                                      in
                                                                     FStar_SMTEncoding_Env.add_fuel
-                                                                    uu____89532
+                                                                    uu____89606
                                                                     (FStar_List.append
                                                                     vars
                                                                     arg_binders)
                                                                      in
-                                                                    let uu____89534
+                                                                    let uu____89608
                                                                     =
-                                                                    let uu____89535
+                                                                    let uu____89609
                                                                     =
-                                                                    let uu____89540
+                                                                    let uu____89614
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_and_l
                                                                     prec  in
                                                                     (ty_pred,
-                                                                    uu____89540)
+                                                                    uu____89614)
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkImp
-                                                                    uu____89535
+                                                                    uu____89609
                                                                      in
                                                                     ([
                                                                     [ty_pred]],
-                                                                    uu____89531,
-                                                                    uu____89534)
+                                                                    uu____89605,
+                                                                    uu____89608)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____89519
-                                                                    uu____89520
+                                                                    uu____89593
+                                                                    uu____89594
                                                                      in
-                                                                    (uu____89518,
+                                                                    (uu____89592,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "subterm ordering"),
                                                                     (Prims.op_Hat
@@ -6868,98 +6868,98 @@ and (encode_sigelt' :
                                                                     ddconstrsym))
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____89510)
+                                                                    uu____89584)
                                                                      in
                                                                    (arg_decls,
                                                                     [typing_inversion;
                                                                     subterm_ordering])))
-                                                     | uu____89557 ->
-                                                         ((let uu____89559 =
-                                                             let uu____89565
+                                                     | uu____89631 ->
+                                                         ((let uu____89633 =
+                                                             let uu____89639
                                                                =
-                                                               let uu____89567
+                                                               let uu____89641
                                                                  =
                                                                  FStar_Syntax_Print.lid_to_string
                                                                    d
                                                                   in
-                                                               let uu____89569
+                                                               let uu____89643
                                                                  =
                                                                  FStar_Syntax_Print.term_to_string
                                                                    head1
                                                                   in
                                                                FStar_Util.format2
                                                                  "Constructor %s builds an unexpected type %s\n"
-                                                                 uu____89567
-                                                                 uu____89569
+                                                                 uu____89641
+                                                                 uu____89643
                                                                 in
                                                              (FStar_Errors.Warning_ConstructorBuildsUnexpectedType,
-                                                               uu____89565)
+                                                               uu____89639)
                                                               in
                                                            FStar_Errors.log_issue
                                                              se.FStar_Syntax_Syntax.sigrng
-                                                             uu____89559);
+                                                             uu____89633);
                                                           ([], [])))
                                                  in
-                                              let uu____89577 =
+                                              let uu____89651 =
                                                 encode_elim ()  in
-                                              (match uu____89577 with
+                                              (match uu____89651 with
                                                | (decls2,elim) ->
                                                    let g =
-                                                     let uu____89603 =
-                                                       let uu____89606 =
-                                                         let uu____89609 =
-                                                           let uu____89612 =
-                                                             let uu____89615
+                                                     let uu____89677 =
+                                                       let uu____89680 =
+                                                         let uu____89683 =
+                                                           let uu____89686 =
+                                                             let uu____89689
                                                                =
-                                                               let uu____89618
+                                                               let uu____89692
                                                                  =
-                                                                 let uu____89621
+                                                                 let uu____89695
                                                                    =
-                                                                   let uu____89622
+                                                                   let uu____89696
                                                                     =
-                                                                    let uu____89634
+                                                                    let uu____89708
                                                                     =
-                                                                    let uu____89635
+                                                                    let uu____89709
                                                                     =
-                                                                    let uu____89637
+                                                                    let uu____89711
                                                                     =
                                                                     FStar_Syntax_Print.lid_to_string
                                                                     d  in
                                                                     FStar_Util.format1
                                                                     "data constructor proxy: %s"
-                                                                    uu____89637
+                                                                    uu____89711
                                                                      in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu____89635
+                                                                    uu____89709
                                                                      in
                                                                     (ddtok,
                                                                     [],
                                                                     FStar_SMTEncoding_Term.Term_sort,
-                                                                    uu____89634)
+                                                                    uu____89708)
                                                                      in
                                                                    FStar_SMTEncoding_Term.DeclFun
-                                                                    uu____89622
+                                                                    uu____89696
                                                                     in
-                                                                 [uu____89621]
+                                                                 [uu____89695]
                                                                   in
                                                                FStar_List.append
-                                                                 uu____89618
+                                                                 uu____89692
                                                                  proxy_fresh
                                                                 in
                                                              FStar_All.pipe_right
-                                                               uu____89615
+                                                               uu____89689
                                                                FStar_SMTEncoding_Term.mk_decls_trivial
                                                               in
-                                                           let uu____89648 =
-                                                             let uu____89651
+                                                           let uu____89722 =
+                                                             let uu____89725
                                                                =
-                                                               let uu____89654
+                                                               let uu____89728
                                                                  =
-                                                                 let uu____89657
+                                                                 let uu____89731
                                                                    =
-                                                                   let uu____89660
+                                                                   let uu____89734
                                                                     =
-                                                                    let uu____89663
+                                                                    let uu____89737
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkAssume
                                                                     (tok_typing1,
@@ -6969,34 +6969,34 @@ and (encode_sigelt' :
                                                                     "typing_tok_"
                                                                     ddtok))
                                                                      in
-                                                                    let uu____89668
+                                                                    let uu____89742
                                                                     =
-                                                                    let uu____89671
+                                                                    let uu____89745
                                                                     =
-                                                                    let uu____89672
+                                                                    let uu____89746
                                                                     =
-                                                                    let uu____89680
+                                                                    let uu____89754
                                                                     =
-                                                                    let uu____89681
+                                                                    let uu____89755
                                                                     =
                                                                     FStar_Ident.range_of_lid
                                                                     d  in
-                                                                    let uu____89682
+                                                                    let uu____89756
                                                                     =
-                                                                    let uu____89693
+                                                                    let uu____89767
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkEq
                                                                     (app,
                                                                     dapp)  in
                                                                     ([[app]],
                                                                     vars,
-                                                                    uu____89693)
+                                                                    uu____89767)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____89681
-                                                                    uu____89682
+                                                                    uu____89755
+                                                                    uu____89756
                                                                      in
-                                                                    (uu____89680,
+                                                                    (uu____89754,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "equality for proxy"),
                                                                     (Prims.op_Hat
@@ -7004,34 +7004,34 @@ and (encode_sigelt' :
                                                                     ddtok))
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____89672
+                                                                    uu____89746
                                                                      in
-                                                                    let uu____89706
+                                                                    let uu____89780
                                                                     =
-                                                                    let uu____89709
+                                                                    let uu____89783
                                                                     =
-                                                                    let uu____89710
+                                                                    let uu____89784
                                                                     =
-                                                                    let uu____89718
+                                                                    let uu____89792
                                                                     =
-                                                                    let uu____89719
+                                                                    let uu____89793
                                                                     =
                                                                     FStar_Ident.range_of_lid
                                                                     d  in
-                                                                    let uu____89720
+                                                                    let uu____89794
                                                                     =
-                                                                    let uu____89731
+                                                                    let uu____89805
                                                                     =
-                                                                    let uu____89732
+                                                                    let uu____89806
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk_fv
                                                                     (fuel_var,
                                                                     FStar_SMTEncoding_Term.Fuel_sort)
                                                                      in
                                                                     FStar_SMTEncoding_Env.add_fuel
-                                                                    uu____89732
+                                                                    uu____89806
                                                                     vars'  in
-                                                                    let uu____89734
+                                                                    let uu____89808
                                                                     =
                                                                     FStar_SMTEncoding_Util.mkImp
                                                                     (guard',
@@ -7039,14 +7039,14 @@ and (encode_sigelt' :
                                                                      in
                                                                     ([
                                                                     [ty_pred']],
-                                                                    uu____89731,
-                                                                    uu____89734)
+                                                                    uu____89805,
+                                                                    uu____89808)
                                                                      in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu____89719
-                                                                    uu____89720
+                                                                    uu____89793
+                                                                    uu____89794
                                                                      in
-                                                                    (uu____89718,
+                                                                    (uu____89792,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "data constructor typing intro"),
                                                                     (Prims.op_Hat
@@ -7054,58 +7054,58 @@ and (encode_sigelt' :
                                                                     ddtok))
                                                                      in
                                                                     FStar_SMTEncoding_Util.mkAssume
-                                                                    uu____89710
+                                                                    uu____89784
                                                                      in
-                                                                    [uu____89709]
+                                                                    [uu____89783]
                                                                      in
-                                                                    uu____89671
+                                                                    uu____89745
                                                                     ::
-                                                                    uu____89706
+                                                                    uu____89780
                                                                      in
-                                                                    uu____89663
+                                                                    uu____89737
                                                                     ::
-                                                                    uu____89668
+                                                                    uu____89742
                                                                      in
                                                                    FStar_List.append
-                                                                    uu____89660
+                                                                    uu____89734
                                                                     elim
                                                                     in
                                                                  FStar_All.pipe_right
-                                                                   uu____89657
+                                                                   uu____89731
                                                                    FStar_SMTEncoding_Term.mk_decls_trivial
                                                                   in
                                                                FStar_List.append
                                                                  decls_pred
-                                                                 uu____89654
+                                                                 uu____89728
                                                                 in
                                                              FStar_List.append
                                                                decls_formals
-                                                               uu____89651
+                                                               uu____89725
                                                               in
                                                            FStar_List.append
-                                                             uu____89612
-                                                             uu____89648
+                                                             uu____89686
+                                                             uu____89722
                                                             in
                                                          FStar_List.append
-                                                           decls3 uu____89609
+                                                           decls3 uu____89683
                                                           in
                                                        FStar_List.append
-                                                         decls2 uu____89606
+                                                         decls2 uu____89680
                                                         in
                                                      FStar_List.append
                                                        binder_decls
-                                                       uu____89603
+                                                       uu____89677
                                                       in
-                                                   let uu____89751 =
-                                                     let uu____89752 =
+                                                   let uu____89825 =
+                                                     let uu____89826 =
                                                        FStar_All.pipe_right
                                                          datacons
                                                          FStar_SMTEncoding_Term.mk_decls_trivial
                                                         in
                                                      FStar_List.append
-                                                       uu____89752 g
+                                                       uu____89826 g
                                                       in
-                                                   (uu____89751, env1))))))))))
+                                                   (uu____89825, env1))))))))))
 
 and (encode_sigelts :
   FStar_SMTEncoding_Env.env_t ->
@@ -7116,12 +7116,12 @@ and (encode_sigelts :
     fun ses  ->
       FStar_All.pipe_right ses
         (FStar_List.fold_left
-           (fun uu____89786  ->
+           (fun uu____89860  ->
               fun se  ->
-                match uu____89786 with
+                match uu____89860 with
                 | (g,env1) ->
-                    let uu____89806 = encode_sigelt env1 se  in
-                    (match uu____89806 with
+                    let uu____89880 = encode_sigelt env1 se  in
+                    (match uu____89880 with
                      | (g',env2) -> ((FStar_List.append g g'), env2)))
            ([], env))
 
@@ -7132,11 +7132,11 @@ let (encode_env_bindings :
   =
   fun env  ->
     fun bindings  ->
-      let encode_binding b uu____89874 =
-        match uu____89874 with
+      let encode_binding b uu____89948 =
+        match uu____89948 with
         | (i,decls,env1) ->
             (match b with
-             | FStar_Syntax_Syntax.Binding_univ uu____89911 ->
+             | FStar_Syntax_Syntax.Binding_univ uu____89985 ->
                  ((i + (Prims.parse_int "1")), decls, env1)
              | FStar_Syntax_Syntax.Binding_var x ->
                  let t1 =
@@ -7149,65 +7149,65 @@ let (encode_env_bindings :
                      env1.FStar_SMTEncoding_Env.tcenv
                      x.FStar_Syntax_Syntax.sort
                     in
-                 ((let uu____89919 =
+                 ((let uu____89993 =
                      FStar_All.pipe_left
                        (FStar_TypeChecker_Env.debug
                           env1.FStar_SMTEncoding_Env.tcenv)
                        (FStar_Options.Other "SMTEncoding")
                       in
-                   if uu____89919
+                   if uu____89993
                    then
-                     let uu____89924 = FStar_Syntax_Print.bv_to_string x  in
-                     let uu____89926 =
+                     let uu____89998 = FStar_Syntax_Print.bv_to_string x  in
+                     let uu____90000 =
                        FStar_Syntax_Print.term_to_string
                          x.FStar_Syntax_Syntax.sort
                         in
-                     let uu____89928 = FStar_Syntax_Print.term_to_string t1
+                     let uu____90002 = FStar_Syntax_Print.term_to_string t1
                         in
                      FStar_Util.print3 "Normalized %s : %s to %s\n"
-                       uu____89924 uu____89926 uu____89928
+                       uu____89998 uu____90000 uu____90002
                    else ());
-                  (let uu____89933 =
+                  (let uu____90007 =
                      FStar_SMTEncoding_EncodeTerm.encode_term t1 env1  in
-                   match uu____89933 with
+                   match uu____90007 with
                    | (t,decls') ->
                        let t_hash = FStar_SMTEncoding_Term.hash_of_term t  in
-                       let uu____89951 =
-                         let uu____89959 =
-                           let uu____89961 =
-                             let uu____89963 =
+                       let uu____90025 =
+                         let uu____90033 =
+                           let uu____90035 =
+                             let uu____90037 =
                                FStar_Util.digest_of_string t_hash  in
-                             Prims.op_Hat uu____89963
+                             Prims.op_Hat uu____90037
                                (Prims.op_Hat "_" (Prims.string_of_int i))
                               in
-                           Prims.op_Hat "x_" uu____89961  in
+                           Prims.op_Hat "x_" uu____90035  in
                          FStar_SMTEncoding_Env.new_term_constant_from_string
-                           env1 x uu____89959
+                           env1 x uu____90033
                           in
-                       (match uu____89951 with
+                       (match uu____90025 with
                         | (xxsym,xx,env') ->
                             let t2 =
                               FStar_SMTEncoding_Term.mk_HasTypeWithFuel
                                 FStar_Pervasives_Native.None xx t
                                in
                             let caption =
-                              let uu____89983 = FStar_Options.log_queries ()
+                              let uu____90057 = FStar_Options.log_queries ()
                                  in
-                              if uu____89983
+                              if uu____90057
                               then
-                                let uu____89986 =
-                                  let uu____89988 =
+                                let uu____90060 =
+                                  let uu____90062 =
                                     FStar_Syntax_Print.bv_to_string x  in
-                                  let uu____89990 =
+                                  let uu____90064 =
                                     FStar_Syntax_Print.term_to_string
                                       x.FStar_Syntax_Syntax.sort
                                      in
-                                  let uu____89992 =
+                                  let uu____90066 =
                                     FStar_Syntax_Print.term_to_string t1  in
                                   FStar_Util.format3 "%s : %s (%s)"
-                                    uu____89988 uu____89990 uu____89992
+                                    uu____90062 uu____90064 uu____90066
                                    in
-                                FStar_Pervasives_Native.Some uu____89986
+                                FStar_Pervasives_Native.Some uu____90060
                               else FStar_Pervasives_Native.None  in
                             let ax =
                               let a_name = Prims.op_Hat "binder_" xxsym  in
@@ -7216,7 +7216,7 @@ let (encode_env_bindings :
                                   a_name)
                                in
                             let g =
-                              let uu____90008 =
+                              let uu____90082 =
                                 FStar_All.pipe_right
                                   [FStar_SMTEncoding_Term.DeclFun
                                      (xxsym, [],
@@ -7224,34 +7224,34 @@ let (encode_env_bindings :
                                        caption)]
                                   FStar_SMTEncoding_Term.mk_decls_trivial
                                  in
-                              let uu____90018 =
-                                let uu____90021 =
+                              let uu____90092 =
+                                let uu____90095 =
                                   FStar_All.pipe_right [ax]
                                     FStar_SMTEncoding_Term.mk_decls_trivial
                                    in
-                                FStar_List.append decls' uu____90021  in
-                              FStar_List.append uu____90008 uu____90018  in
+                                FStar_List.append decls' uu____90095  in
+                              FStar_List.append uu____90082 uu____90092  in
                             ((i + (Prims.parse_int "1")),
                               (FStar_List.append decls g), env'))))
-             | FStar_Syntax_Syntax.Binding_lid (x,(uu____90033,t)) ->
+             | FStar_Syntax_Syntax.Binding_lid (x,(uu____90107,t)) ->
                  let t_norm = FStar_SMTEncoding_EncodeTerm.whnf env1 t  in
                  let fv =
                    FStar_Syntax_Syntax.lid_as_fv x
                      FStar_Syntax_Syntax.delta_constant
                      FStar_Pervasives_Native.None
                     in
-                 let uu____90053 = encode_free_var false env1 fv t t_norm []
+                 let uu____90127 = encode_free_var false env1 fv t t_norm []
                     in
-                 (match uu____90053 with
+                 (match uu____90127 with
                   | (g,env') ->
                       ((i + (Prims.parse_int "1")),
                         (FStar_List.append decls g), env')))
          in
-      let uu____90074 =
+      let uu____90148 =
         FStar_List.fold_right encode_binding bindings
           ((Prims.parse_int "0"), [], env)
          in
-      match uu____90074 with | (uu____90101,decls,env1) -> (decls, env1)
+      match uu____90148 with | (uu____90175,decls,env1) -> (decls, env1)
   
 let (encode_labels :
   FStar_SMTEncoding_Term.error_label Prims.list ->
@@ -7262,34 +7262,34 @@ let (encode_labels :
     let prefix1 =
       FStar_All.pipe_right labs
         (FStar_List.map
-           (fun uu____90154  ->
-              match uu____90154 with
-              | (l,uu____90163,uu____90164) ->
-                  let uu____90167 =
-                    let uu____90179 = FStar_SMTEncoding_Term.fv_name l  in
-                    (uu____90179, [], FStar_SMTEncoding_Term.Bool_sort,
+           (fun uu____90228  ->
+              match uu____90228 with
+              | (l,uu____90237,uu____90238) ->
+                  let uu____90241 =
+                    let uu____90253 = FStar_SMTEncoding_Term.fv_name l  in
+                    (uu____90253, [], FStar_SMTEncoding_Term.Bool_sort,
                       FStar_Pervasives_Native.None)
                      in
-                  FStar_SMTEncoding_Term.DeclFun uu____90167))
+                  FStar_SMTEncoding_Term.DeclFun uu____90241))
        in
     let suffix =
       FStar_All.pipe_right labs
         (FStar_List.collect
-           (fun uu____90212  ->
-              match uu____90212 with
-              | (l,uu____90223,uu____90224) ->
-                  let uu____90227 =
-                    let uu____90228 = FStar_SMTEncoding_Term.fv_name l  in
+           (fun uu____90286  ->
+              match uu____90286 with
+              | (l,uu____90297,uu____90298) ->
+                  let uu____90301 =
+                    let uu____90302 = FStar_SMTEncoding_Term.fv_name l  in
                     FStar_All.pipe_left
-                      (fun _90231  -> FStar_SMTEncoding_Term.Echo _90231)
-                      uu____90228
+                      (fun _90305  -> FStar_SMTEncoding_Term.Echo _90305)
+                      uu____90302
                      in
-                  let uu____90232 =
-                    let uu____90235 =
-                      let uu____90236 = FStar_SMTEncoding_Util.mkFreeV l  in
-                      FStar_SMTEncoding_Term.Eval uu____90236  in
-                    [uu____90235]  in
-                  uu____90227 :: uu____90232))
+                  let uu____90306 =
+                    let uu____90309 =
+                      let uu____90310 = FStar_SMTEncoding_Util.mkFreeV l  in
+                      FStar_SMTEncoding_Term.Eval uu____90310  in
+                    [uu____90309]  in
+                  uu____90301 :: uu____90306))
        in
     (prefix1, suffix)
   
@@ -7297,31 +7297,31 @@ let (last_env : FStar_SMTEncoding_Env.env_t Prims.list FStar_ST.ref) =
   FStar_Util.mk_ref [] 
 let (init_env : FStar_TypeChecker_Env.env -> unit) =
   fun tcenv  ->
-    let uu____90265 =
-      let uu____90268 =
-        let uu____90269 = FStar_Util.psmap_empty ()  in
-        let uu____90284 =
-          let uu____90293 = FStar_Util.psmap_empty ()  in (uu____90293, [])
+    let uu____90339 =
+      let uu____90342 =
+        let uu____90343 = FStar_Util.psmap_empty ()  in
+        let uu____90358 =
+          let uu____90367 = FStar_Util.psmap_empty ()  in (uu____90367, [])
            in
-        let uu____90300 =
-          let uu____90302 = FStar_TypeChecker_Env.current_module tcenv  in
-          FStar_All.pipe_right uu____90302 FStar_Ident.string_of_lid  in
-        let uu____90304 = FStar_Util.smap_create (Prims.parse_int "100")  in
+        let uu____90374 =
+          let uu____90376 = FStar_TypeChecker_Env.current_module tcenv  in
+          FStar_All.pipe_right uu____90376 FStar_Ident.string_of_lid  in
+        let uu____90378 = FStar_Util.smap_create (Prims.parse_int "100")  in
         {
-          FStar_SMTEncoding_Env.bvar_bindings = uu____90269;
-          FStar_SMTEncoding_Env.fvar_bindings = uu____90284;
+          FStar_SMTEncoding_Env.bvar_bindings = uu____90343;
+          FStar_SMTEncoding_Env.fvar_bindings = uu____90358;
           FStar_SMTEncoding_Env.depth = (Prims.parse_int "0");
           FStar_SMTEncoding_Env.tcenv = tcenv;
           FStar_SMTEncoding_Env.warn = true;
           FStar_SMTEncoding_Env.nolabels = false;
           FStar_SMTEncoding_Env.use_zfuel_name = false;
           FStar_SMTEncoding_Env.encode_non_total_function_typ = true;
-          FStar_SMTEncoding_Env.current_module_name = uu____90300;
+          FStar_SMTEncoding_Env.current_module_name = uu____90374;
           FStar_SMTEncoding_Env.encoding_quantifier = false;
-          FStar_SMTEncoding_Env.global_cache = uu____90304
+          FStar_SMTEncoding_Env.global_cache = uu____90378
         }  in
-      [uu____90268]  in
-    FStar_ST.op_Colon_Equals last_env uu____90265
+      [uu____90342]  in
+    FStar_ST.op_Colon_Equals last_env uu____90339
   
 let (get_env :
   FStar_Ident.lident ->
@@ -7329,60 +7329,60 @@ let (get_env :
   =
   fun cmn  ->
     fun tcenv  ->
-      let uu____90348 = FStar_ST.op_Bang last_env  in
-      match uu____90348 with
+      let uu____90422 = FStar_ST.op_Bang last_env  in
+      match uu____90422 with
       | [] -> failwith "No env; call init first!"
-      | e::uu____90376 ->
-          let uu___2175_90379 = e  in
-          let uu____90380 = FStar_Ident.string_of_lid cmn  in
+      | e::uu____90450 ->
+          let uu___2175_90453 = e  in
+          let uu____90454 = FStar_Ident.string_of_lid cmn  in
           {
             FStar_SMTEncoding_Env.bvar_bindings =
-              (uu___2175_90379.FStar_SMTEncoding_Env.bvar_bindings);
+              (uu___2175_90453.FStar_SMTEncoding_Env.bvar_bindings);
             FStar_SMTEncoding_Env.fvar_bindings =
-              (uu___2175_90379.FStar_SMTEncoding_Env.fvar_bindings);
+              (uu___2175_90453.FStar_SMTEncoding_Env.fvar_bindings);
             FStar_SMTEncoding_Env.depth =
-              (uu___2175_90379.FStar_SMTEncoding_Env.depth);
+              (uu___2175_90453.FStar_SMTEncoding_Env.depth);
             FStar_SMTEncoding_Env.tcenv = tcenv;
             FStar_SMTEncoding_Env.warn =
-              (uu___2175_90379.FStar_SMTEncoding_Env.warn);
+              (uu___2175_90453.FStar_SMTEncoding_Env.warn);
             FStar_SMTEncoding_Env.nolabels =
-              (uu___2175_90379.FStar_SMTEncoding_Env.nolabels);
+              (uu___2175_90453.FStar_SMTEncoding_Env.nolabels);
             FStar_SMTEncoding_Env.use_zfuel_name =
-              (uu___2175_90379.FStar_SMTEncoding_Env.use_zfuel_name);
+              (uu___2175_90453.FStar_SMTEncoding_Env.use_zfuel_name);
             FStar_SMTEncoding_Env.encode_non_total_function_typ =
-              (uu___2175_90379.FStar_SMTEncoding_Env.encode_non_total_function_typ);
-            FStar_SMTEncoding_Env.current_module_name = uu____90380;
+              (uu___2175_90453.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+            FStar_SMTEncoding_Env.current_module_name = uu____90454;
             FStar_SMTEncoding_Env.encoding_quantifier =
-              (uu___2175_90379.FStar_SMTEncoding_Env.encoding_quantifier);
+              (uu___2175_90453.FStar_SMTEncoding_Env.encoding_quantifier);
             FStar_SMTEncoding_Env.global_cache =
-              (uu___2175_90379.FStar_SMTEncoding_Env.global_cache)
+              (uu___2175_90453.FStar_SMTEncoding_Env.global_cache)
           }
   
 let (set_env : FStar_SMTEncoding_Env.env_t -> unit) =
   fun env  ->
-    let uu____90388 = FStar_ST.op_Bang last_env  in
-    match uu____90388 with
+    let uu____90462 = FStar_ST.op_Bang last_env  in
+    match uu____90462 with
     | [] -> failwith "Empty env stack"
-    | uu____90415::tl1 -> FStar_ST.op_Colon_Equals last_env (env :: tl1)
+    | uu____90489::tl1 -> FStar_ST.op_Colon_Equals last_env (env :: tl1)
   
 let (push_env : unit -> unit) =
-  fun uu____90447  ->
-    let uu____90448 = FStar_ST.op_Bang last_env  in
-    match uu____90448 with
+  fun uu____90521  ->
+    let uu____90522 = FStar_ST.op_Bang last_env  in
+    match uu____90522 with
     | [] -> failwith "Empty env stack"
     | hd1::tl1 ->
         let top = copy_env hd1  in
         FStar_ST.op_Colon_Equals last_env (top :: hd1 :: tl1)
   
 let (pop_env : unit -> unit) =
-  fun uu____90508  ->
-    let uu____90509 = FStar_ST.op_Bang last_env  in
-    match uu____90509 with
+  fun uu____90582  ->
+    let uu____90583 = FStar_ST.op_Bang last_env  in
+    match uu____90583 with
     | [] -> failwith "Popping an empty stack"
-    | uu____90536::tl1 -> FStar_ST.op_Colon_Equals last_env tl1
+    | uu____90610::tl1 -> FStar_ST.op_Colon_Equals last_env tl1
   
 let (snapshot_env : unit -> (Prims.int * unit)) =
-  fun uu____90573  -> FStar_Common.snapshot push_env last_env () 
+  fun uu____90647  -> FStar_Common.snapshot push_env last_env () 
 let (rollback_env : Prims.int FStar_Pervasives_Native.option -> unit) =
   fun depth  -> FStar_Common.rollback pop_env last_env depth 
 let (init : FStar_TypeChecker_Env.env -> unit) =
@@ -7395,17 +7395,17 @@ let (snapshot :
   Prims.string -> (FStar_TypeChecker_Env.solver_depth_t * unit)) =
   fun msg  ->
     FStar_Util.atomically
-      (fun uu____90626  ->
-         let uu____90627 = snapshot_env ()  in
-         match uu____90627 with
+      (fun uu____90700  ->
+         let uu____90701 = snapshot_env ()  in
+         match uu____90701 with
          | (env_depth,()) ->
-             let uu____90649 =
+             let uu____90723 =
                FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.snapshot ()
                 in
-             (match uu____90649 with
+             (match uu____90723 with
               | (varops_depth,()) ->
-                  let uu____90671 = FStar_SMTEncoding_Z3.snapshot msg  in
-                  (match uu____90671 with
+                  let uu____90745 = FStar_SMTEncoding_Z3.snapshot msg  in
+                  (match uu____90745 with
                    | (z3_depth,()) ->
                        ((env_depth, varops_depth, z3_depth), ()))))
   
@@ -7417,8 +7417,8 @@ let (rollback :
   fun msg  ->
     fun depth  ->
       FStar_Util.atomically
-        (fun uu____90729  ->
-           let uu____90730 =
+        (fun uu____90803  ->
+           let uu____90804 =
              match depth with
              | FStar_Pervasives_Native.Some (s1,s2,s3) ->
                  ((FStar_Pervasives_Native.Some s1),
@@ -7428,7 +7428,7 @@ let (rollback :
                  (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None,
                    FStar_Pervasives_Native.None)
               in
-           match uu____90730 with
+           match uu____90804 with
            | (env_depth,varops_depth,z3_depth) ->
                (rollback_env env_depth;
                 FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.rollback
@@ -7436,7 +7436,7 @@ let (rollback :
                 FStar_SMTEncoding_Z3.rollback msg z3_depth))
   
 let (push : Prims.string -> unit) =
-  fun msg  -> let uu____90825 = snapshot msg  in () 
+  fun msg  -> let uu____90899 = snapshot msg  in () 
 let (pop : Prims.string -> unit) =
   fun msg  -> rollback msg FStar_Pervasives_Native.None 
 let (open_fact_db_tags :
@@ -7451,19 +7451,19 @@ let (place_decl_in_fact_dbs :
     fun fact_db_ids  ->
       fun d  ->
         match (fact_db_ids, d) with
-        | (uu____90871::uu____90872,FStar_SMTEncoding_Term.Assume a) ->
+        | (uu____90945::uu____90946,FStar_SMTEncoding_Term.Assume a) ->
             FStar_SMTEncoding_Term.Assume
-              (let uu___2236_90880 = a  in
+              (let uu___2236_90954 = a  in
                {
                  FStar_SMTEncoding_Term.assumption_term =
-                   (uu___2236_90880.FStar_SMTEncoding_Term.assumption_term);
+                   (uu___2236_90954.FStar_SMTEncoding_Term.assumption_term);
                  FStar_SMTEncoding_Term.assumption_caption =
-                   (uu___2236_90880.FStar_SMTEncoding_Term.assumption_caption);
+                   (uu___2236_90954.FStar_SMTEncoding_Term.assumption_caption);
                  FStar_SMTEncoding_Term.assumption_name =
-                   (uu___2236_90880.FStar_SMTEncoding_Term.assumption_name);
+                   (uu___2236_90954.FStar_SMTEncoding_Term.assumption_name);
                  FStar_SMTEncoding_Term.assumption_fact_ids = fact_db_ids
                })
-        | uu____90881 -> d
+        | uu____90955 -> d
   
 let (place_decl_elt_in_fact_dbs :
   FStar_SMTEncoding_Env.env_t ->
@@ -7473,19 +7473,19 @@ let (place_decl_elt_in_fact_dbs :
   fun env  ->
     fun fact_db_ids  ->
       fun elt  ->
-        let uu___2242_90908 = elt  in
-        let uu____90909 =
+        let uu___2242_90982 = elt  in
+        let uu____90983 =
           FStar_All.pipe_right elt.FStar_SMTEncoding_Term.decls
             (FStar_List.map (place_decl_in_fact_dbs env fact_db_ids))
            in
         {
           FStar_SMTEncoding_Term.sym_name =
-            (uu___2242_90908.FStar_SMTEncoding_Term.sym_name);
+            (uu___2242_90982.FStar_SMTEncoding_Term.sym_name);
           FStar_SMTEncoding_Term.key =
-            (uu___2242_90908.FStar_SMTEncoding_Term.key);
-          FStar_SMTEncoding_Term.decls = uu____90909;
+            (uu___2242_90982.FStar_SMTEncoding_Term.key);
+          FStar_SMTEncoding_Term.decls = uu____90983;
           FStar_SMTEncoding_Term.a_names =
-            (uu___2242_90908.FStar_SMTEncoding_Term.a_names)
+            (uu___2242_90982.FStar_SMTEncoding_Term.a_names)
         }
   
 let (fact_dbs_for_lid :
@@ -7494,14 +7494,14 @@ let (fact_dbs_for_lid :
   =
   fun env  ->
     fun lid  ->
-      let uu____90929 =
-        let uu____90932 =
-          let uu____90933 = FStar_Ident.lid_of_ids lid.FStar_Ident.ns  in
-          FStar_SMTEncoding_Term.Namespace uu____90933  in
-        let uu____90934 = open_fact_db_tags env  in uu____90932 ::
-          uu____90934
+      let uu____91003 =
+        let uu____91006 =
+          let uu____91007 = FStar_Ident.lid_of_ids lid.FStar_Ident.ns  in
+          FStar_SMTEncoding_Term.Namespace uu____91007  in
+        let uu____91008 = open_fact_db_tags env  in uu____91006 ::
+          uu____91008
          in
-      (FStar_SMTEncoding_Term.Name lid) :: uu____90929
+      (FStar_SMTEncoding_Term.Name lid) :: uu____91003
   
 let (encode_top_level_facts :
   FStar_SMTEncoding_Env.env_t ->
@@ -7515,8 +7515,8 @@ let (encode_top_level_facts :
         FStar_All.pipe_right (FStar_Syntax_Util.lids_of_sigelt se)
           (FStar_List.collect (fact_dbs_for_lid env))
          in
-      let uu____90961 = encode_sigelt env se  in
-      match uu____90961 with
+      let uu____91035 = encode_sigelt env se  in
+      match uu____91035 with
       | (g,env1) ->
           let g1 =
             FStar_All.pipe_right g
@@ -7537,27 +7537,27 @@ let (recover_caching_and_update_env :
                 elt.FStar_SMTEncoding_Term.key = FStar_Pervasives_Native.None
               then [elt]
               else
-                (let uu____91007 =
-                   let uu____91010 =
+                (let uu____91081 =
+                   let uu____91084 =
                      FStar_All.pipe_right elt.FStar_SMTEncoding_Term.key
                        FStar_Util.must
                       in
                    FStar_Util.smap_try_find
-                     env.FStar_SMTEncoding_Env.global_cache uu____91010
+                     env.FStar_SMTEncoding_Env.global_cache uu____91084
                     in
-                 match uu____91007 with
+                 match uu____91081 with
                  | FStar_Pervasives_Native.Some cache_elt ->
                      FStar_All.pipe_right
                        [FStar_SMTEncoding_Term.RetainAssumptions
                           (cache_elt.FStar_SMTEncoding_Term.a_names)]
                        FStar_SMTEncoding_Term.mk_decls_trivial
                  | FStar_Pervasives_Native.None  ->
-                     ((let uu____91025 =
+                     ((let uu____91099 =
                          FStar_All.pipe_right elt.FStar_SMTEncoding_Term.key
                            FStar_Util.must
                           in
                        FStar_Util.smap_add
-                         env.FStar_SMTEncoding_Env.global_cache uu____91025
+                         env.FStar_SMTEncoding_Env.global_cache uu____91099
                          elt);
                       [elt]))))
   
@@ -7566,47 +7566,47 @@ let (encode_sig :
   fun tcenv  ->
     fun se  ->
       let caption decls =
-        let uu____91055 = FStar_Options.log_queries ()  in
-        if uu____91055
+        let uu____91129 = FStar_Options.log_queries ()  in
+        if uu____91129
         then
-          let uu____91060 =
-            let uu____91061 =
-              let uu____91063 =
-                let uu____91065 =
+          let uu____91134 =
+            let uu____91135 =
+              let uu____91137 =
+                let uu____91139 =
                   FStar_All.pipe_right (FStar_Syntax_Util.lids_of_sigelt se)
                     (FStar_List.map FStar_Syntax_Print.lid_to_string)
                    in
-                FStar_All.pipe_right uu____91065 (FStar_String.concat ", ")
+                FStar_All.pipe_right uu____91139 (FStar_String.concat ", ")
                  in
-              Prims.op_Hat "encoding sigelt " uu____91063  in
-            FStar_SMTEncoding_Term.Caption uu____91061  in
-          uu____91060 :: decls
+              Prims.op_Hat "encoding sigelt " uu____91137  in
+            FStar_SMTEncoding_Term.Caption uu____91135  in
+          uu____91134 :: decls
         else decls  in
-      (let uu____91084 =
+      (let uu____91158 =
          FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium  in
-       if uu____91084
+       if uu____91158
        then
-         let uu____91087 = FStar_Syntax_Print.sigelt_to_string se  in
-         FStar_Util.print1 "+++++++++++Encoding sigelt %s\n" uu____91087
+         let uu____91161 = FStar_Syntax_Print.sigelt_to_string se  in
+         FStar_Util.print1 "+++++++++++Encoding sigelt %s\n" uu____91161
        else ());
       (let env =
-         let uu____91093 = FStar_TypeChecker_Env.current_module tcenv  in
-         get_env uu____91093 tcenv  in
-       let uu____91094 = encode_top_level_facts env se  in
-       match uu____91094 with
+         let uu____91167 = FStar_TypeChecker_Env.current_module tcenv  in
+         get_env uu____91167 tcenv  in
+       let uu____91168 = encode_top_level_facts env se  in
+       match uu____91168 with
        | (decls,env1) ->
            (set_env env1;
-            (let uu____91108 =
-               let uu____91111 =
-                 let uu____91114 =
+            (let uu____91182 =
+               let uu____91185 =
+                 let uu____91188 =
                    FStar_All.pipe_right decls
                      (recover_caching_and_update_env env1)
                     in
-                 FStar_All.pipe_right uu____91114
+                 FStar_All.pipe_right uu____91188
                    FStar_SMTEncoding_Term.decls_list_of
                   in
-               caption uu____91111  in
-             FStar_SMTEncoding_Z3.giveZ3 uu____91108)))
+               caption uu____91185  in
+             FStar_SMTEncoding_Z3.giveZ3 uu____91182)))
   
 let (give_decls_to_z3_and_set_env :
   FStar_SMTEncoding_Env.env_t ->
@@ -7616,8 +7616,8 @@ let (give_decls_to_z3_and_set_env :
     fun name  ->
       fun decls  ->
         let caption decls1 =
-          let uu____91147 = FStar_Options.log_queries ()  in
-          if uu____91147
+          let uu____91221 = FStar_Options.log_queries ()  in
+          if uu____91221
           then
             let msg = Prims.op_Hat "Externals for " name  in
             [FStar_SMTEncoding_Term.Module
@@ -7627,40 +7627,40 @@ let (give_decls_to_z3_and_set_env :
                     [FStar_SMTEncoding_Term.Caption (Prims.op_Hat "End " msg)]))]
           else [FStar_SMTEncoding_Term.Module (name, decls1)]  in
         set_env
-          (let uu___2280_91167 = env  in
+          (let uu___2280_91241 = env  in
            {
              FStar_SMTEncoding_Env.bvar_bindings =
-               (uu___2280_91167.FStar_SMTEncoding_Env.bvar_bindings);
+               (uu___2280_91241.FStar_SMTEncoding_Env.bvar_bindings);
              FStar_SMTEncoding_Env.fvar_bindings =
-               (uu___2280_91167.FStar_SMTEncoding_Env.fvar_bindings);
+               (uu___2280_91241.FStar_SMTEncoding_Env.fvar_bindings);
              FStar_SMTEncoding_Env.depth =
-               (uu___2280_91167.FStar_SMTEncoding_Env.depth);
+               (uu___2280_91241.FStar_SMTEncoding_Env.depth);
              FStar_SMTEncoding_Env.tcenv =
-               (uu___2280_91167.FStar_SMTEncoding_Env.tcenv);
+               (uu___2280_91241.FStar_SMTEncoding_Env.tcenv);
              FStar_SMTEncoding_Env.warn = true;
              FStar_SMTEncoding_Env.nolabels =
-               (uu___2280_91167.FStar_SMTEncoding_Env.nolabels);
+               (uu___2280_91241.FStar_SMTEncoding_Env.nolabels);
              FStar_SMTEncoding_Env.use_zfuel_name =
-               (uu___2280_91167.FStar_SMTEncoding_Env.use_zfuel_name);
+               (uu___2280_91241.FStar_SMTEncoding_Env.use_zfuel_name);
              FStar_SMTEncoding_Env.encode_non_total_function_typ =
-               (uu___2280_91167.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+               (uu___2280_91241.FStar_SMTEncoding_Env.encode_non_total_function_typ);
              FStar_SMTEncoding_Env.current_module_name =
-               (uu___2280_91167.FStar_SMTEncoding_Env.current_module_name);
+               (uu___2280_91241.FStar_SMTEncoding_Env.current_module_name);
              FStar_SMTEncoding_Env.encoding_quantifier =
-               (uu___2280_91167.FStar_SMTEncoding_Env.encoding_quantifier);
+               (uu___2280_91241.FStar_SMTEncoding_Env.encoding_quantifier);
              FStar_SMTEncoding_Env.global_cache =
-               (uu___2280_91167.FStar_SMTEncoding_Env.global_cache)
+               (uu___2280_91241.FStar_SMTEncoding_Env.global_cache)
            });
         (let z3_decls =
-           let uu____91172 =
-             let uu____91175 =
+           let uu____91246 =
+             let uu____91249 =
                FStar_All.pipe_right decls
                  (recover_caching_and_update_env env)
                 in
-             FStar_All.pipe_right uu____91175
+             FStar_All.pipe_right uu____91249
                FStar_SMTEncoding_Term.decls_list_of
               in
-           caption uu____91172  in
+           caption uu____91246  in
          FStar_SMTEncoding_Z3.giveZ3 z3_decls)
   
 let (encode_modul :
@@ -7671,9 +7671,9 @@ let (encode_modul :
   =
   fun tcenv  ->
     fun modul  ->
-      let uu____91195 = (FStar_Options.lax ()) && (FStar_Options.ml_ish ())
+      let uu____91269 = (FStar_Options.lax ()) && (FStar_Options.ml_ish ())
          in
-      if uu____91195
+      if uu____91269
       then ([], [])
       else
         (FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.reset_fresh ();
@@ -7684,79 +7684,79 @@ let (encode_modul :
                else "module")
               (modul.FStar_Syntax_Syntax.name).FStar_Ident.str
              in
-          (let uu____91219 =
+          (let uu____91293 =
              FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium  in
-           if uu____91219
+           if uu____91293
            then
-             let uu____91222 =
+             let uu____91296 =
                FStar_All.pipe_right
                  (FStar_List.length modul.FStar_Syntax_Syntax.exports)
                  Prims.string_of_int
                 in
              FStar_Util.print2
                "+++++++++++Encoding externals for %s ... %s exports\n" name
-               uu____91222
+               uu____91296
            else ());
           (let env =
-             let uu____91230 = get_env modul.FStar_Syntax_Syntax.name tcenv
+             let uu____91304 = get_env modul.FStar_Syntax_Syntax.name tcenv
                 in
-             FStar_All.pipe_right uu____91230
+             FStar_All.pipe_right uu____91304
                FStar_SMTEncoding_Env.reset_current_module_fvbs
               in
            let encode_signature env1 ses =
              FStar_All.pipe_right ses
                (FStar_List.fold_left
-                  (fun uu____91269  ->
+                  (fun uu____91343  ->
                      fun se  ->
-                       match uu____91269 with
+                       match uu____91343 with
                        | (g,env2) ->
-                           let uu____91289 = encode_top_level_facts env2 se
+                           let uu____91363 = encode_top_level_facts env2 se
                               in
-                           (match uu____91289 with
+                           (match uu____91363 with
                             | (g',env3) -> ((FStar_List.append g g'), env3)))
                   ([], env1))
               in
-           let uu____91312 =
+           let uu____91386 =
              encode_signature
-               (let uu___2303_91321 = env  in
+               (let uu___2303_91395 = env  in
                 {
                   FStar_SMTEncoding_Env.bvar_bindings =
-                    (uu___2303_91321.FStar_SMTEncoding_Env.bvar_bindings);
+                    (uu___2303_91395.FStar_SMTEncoding_Env.bvar_bindings);
                   FStar_SMTEncoding_Env.fvar_bindings =
-                    (uu___2303_91321.FStar_SMTEncoding_Env.fvar_bindings);
+                    (uu___2303_91395.FStar_SMTEncoding_Env.fvar_bindings);
                   FStar_SMTEncoding_Env.depth =
-                    (uu___2303_91321.FStar_SMTEncoding_Env.depth);
+                    (uu___2303_91395.FStar_SMTEncoding_Env.depth);
                   FStar_SMTEncoding_Env.tcenv =
-                    (uu___2303_91321.FStar_SMTEncoding_Env.tcenv);
+                    (uu___2303_91395.FStar_SMTEncoding_Env.tcenv);
                   FStar_SMTEncoding_Env.warn = false;
                   FStar_SMTEncoding_Env.nolabels =
-                    (uu___2303_91321.FStar_SMTEncoding_Env.nolabels);
+                    (uu___2303_91395.FStar_SMTEncoding_Env.nolabels);
                   FStar_SMTEncoding_Env.use_zfuel_name =
-                    (uu___2303_91321.FStar_SMTEncoding_Env.use_zfuel_name);
+                    (uu___2303_91395.FStar_SMTEncoding_Env.use_zfuel_name);
                   FStar_SMTEncoding_Env.encode_non_total_function_typ =
-                    (uu___2303_91321.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+                    (uu___2303_91395.FStar_SMTEncoding_Env.encode_non_total_function_typ);
                   FStar_SMTEncoding_Env.current_module_name =
-                    (uu___2303_91321.FStar_SMTEncoding_Env.current_module_name);
+                    (uu___2303_91395.FStar_SMTEncoding_Env.current_module_name);
                   FStar_SMTEncoding_Env.encoding_quantifier =
-                    (uu___2303_91321.FStar_SMTEncoding_Env.encoding_quantifier);
+                    (uu___2303_91395.FStar_SMTEncoding_Env.encoding_quantifier);
                   FStar_SMTEncoding_Env.global_cache =
-                    (uu___2303_91321.FStar_SMTEncoding_Env.global_cache)
+                    (uu___2303_91395.FStar_SMTEncoding_Env.global_cache)
                 }) modul.FStar_Syntax_Syntax.exports
               in
-           match uu____91312 with
+           match uu____91386 with
            | (decls,env1) ->
                (give_decls_to_z3_and_set_env env1 name decls;
-                (let uu____91337 =
+                (let uu____91411 =
                    FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium  in
-                 if uu____91337
+                 if uu____91411
                  then
                    FStar_Util.print1 "Done encoding externals for %s\n" name
                  else ());
-                (let uu____91343 =
+                (let uu____91417 =
                    FStar_All.pipe_right env1
                      FStar_SMTEncoding_Env.get_current_module_fvbs
                     in
-                 (decls, uu____91343))))))
+                 (decls, uu____91417))))))
   
 let (encode_modul_from_cache :
   FStar_TypeChecker_Env.env ->
@@ -7766,35 +7766,35 @@ let (encode_modul_from_cache :
   =
   fun tcenv  ->
     fun name  ->
-      fun uu____91371  ->
-        match uu____91371 with
+      fun uu____91445  ->
+        match uu____91445 with
         | (decls,fvbs) ->
-            ((let uu____91385 =
+            ((let uu____91459 =
                 (FStar_Options.lax ()) && (FStar_Options.ml_ish ())  in
-              if uu____91385
+              if uu____91459
               then ()
               else
-                (let uu____91390 =
+                (let uu____91464 =
                    FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium  in
-                 if uu____91390
+                 if uu____91464
                  then
-                   let uu____91393 =
+                   let uu____91467 =
                      FStar_All.pipe_right (FStar_List.length decls)
                        Prims.string_of_int
                       in
                    FStar_Util.print2
                      "+++++++++++Encoding externals from cache for %s ... %s decls\n"
-                     name.FStar_Ident.str uu____91393
+                     name.FStar_Ident.str uu____91467
                  else ()));
              (let env =
-                let uu____91401 = get_env name tcenv  in
-                FStar_All.pipe_right uu____91401
+                let uu____91475 = get_env name tcenv  in
+                FStar_All.pipe_right uu____91475
                   FStar_SMTEncoding_Env.reset_current_module_fvbs
                  in
               let env1 =
-                let uu____91403 = FStar_All.pipe_right fvbs FStar_List.rev
+                let uu____91477 = FStar_All.pipe_right fvbs FStar_List.rev
                    in
-                FStar_All.pipe_right uu____91403
+                FStar_All.pipe_right uu____91477
                   (FStar_List.fold_left
                      (fun env1  ->
                         fun fvb  ->
@@ -7802,9 +7802,9 @@ let (encode_modul_from_cache :
                             env1) env)
                  in
               give_decls_to_z3_and_set_env env1 name.FStar_Ident.str decls;
-              (let uu____91417 =
+              (let uu____91491 =
                  FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium  in
-               if uu____91417
+               if uu____91491
                then
                  FStar_Util.print1
                    "Done encoding externals from cache for %s\n"
@@ -7823,36 +7823,36 @@ let (encode_query :
   fun use_env_msg  ->
     fun tcenv  ->
       fun q  ->
-        (let uu____91479 =
-           let uu____91481 = FStar_TypeChecker_Env.current_module tcenv  in
-           uu____91481.FStar_Ident.str  in
+        (let uu____91553 =
+           let uu____91555 = FStar_TypeChecker_Env.current_module tcenv  in
+           uu____91555.FStar_Ident.str  in
          FStar_SMTEncoding_Z3.query_logging.FStar_SMTEncoding_Z3.set_module_name
-           uu____91479);
+           uu____91553);
         (let env =
-           let uu____91483 = FStar_TypeChecker_Env.current_module tcenv  in
-           get_env uu____91483 tcenv  in
-         let uu____91484 =
+           let uu____91557 = FStar_TypeChecker_Env.current_module tcenv  in
+           get_env uu____91557 tcenv  in
+         let uu____91558 =
            let rec aux bindings =
              match bindings with
              | (FStar_Syntax_Syntax.Binding_var x)::rest ->
-                 let uu____91523 = aux rest  in
-                 (match uu____91523 with
+                 let uu____91597 = aux rest  in
+                 (match uu____91597 with
                   | (out,rest1) ->
                       let t =
-                        let uu____91551 =
+                        let uu____91625 =
                           FStar_Syntax_Util.destruct_typ_as_formula
                             x.FStar_Syntax_Syntax.sort
                            in
-                        match uu____91551 with
-                        | FStar_Pervasives_Native.Some uu____91554 ->
-                            let uu____91555 =
+                        match uu____91625 with
+                        | FStar_Pervasives_Native.Some uu____91628 ->
+                            let uu____91629 =
                               FStar_Syntax_Syntax.new_bv
                                 FStar_Pervasives_Native.None
                                 FStar_Syntax_Syntax.t_unit
                                in
-                            FStar_Syntax_Util.refine uu____91555
+                            FStar_Syntax_Util.refine uu____91629
                               x.FStar_Syntax_Syntax.sort
-                        | uu____91556 -> x.FStar_Syntax_Syntax.sort  in
+                        | uu____91630 -> x.FStar_Syntax_Syntax.sort  in
                       let t1 =
                         FStar_TypeChecker_Normalize.normalize
                           [FStar_TypeChecker_Env.Eager_unfolding;
@@ -7862,36 +7862,36 @@ let (encode_query :
                           FStar_TypeChecker_Env.EraseUniverses]
                           env.FStar_SMTEncoding_Env.tcenv t
                          in
-                      let uu____91560 =
-                        let uu____91563 =
+                      let uu____91634 =
+                        let uu____91637 =
                           FStar_Syntax_Syntax.mk_binder
-                            (let uu___2344_91566 = x  in
+                            (let uu___2344_91640 = x  in
                              {
                                FStar_Syntax_Syntax.ppname =
-                                 (uu___2344_91566.FStar_Syntax_Syntax.ppname);
+                                 (uu___2344_91640.FStar_Syntax_Syntax.ppname);
                                FStar_Syntax_Syntax.index =
-                                 (uu___2344_91566.FStar_Syntax_Syntax.index);
+                                 (uu___2344_91640.FStar_Syntax_Syntax.index);
                                FStar_Syntax_Syntax.sort = t1
                              })
                            in
-                        uu____91563 :: out  in
-                      (uu____91560, rest1))
-             | uu____91571 -> ([], bindings)  in
-           let uu____91578 = aux tcenv.FStar_TypeChecker_Env.gamma  in
-           match uu____91578 with
+                        uu____91637 :: out  in
+                      (uu____91634, rest1))
+             | uu____91645 -> ([], bindings)  in
+           let uu____91652 = aux tcenv.FStar_TypeChecker_Env.gamma  in
+           match uu____91652 with
            | (closing,bindings) ->
-               let uu____91605 =
+               let uu____91679 =
                  FStar_Syntax_Util.close_forall_no_univs
                    (FStar_List.rev closing) q
                   in
-               (uu____91605, bindings)
+               (uu____91679, bindings)
             in
-         match uu____91484 with
+         match uu____91558 with
          | (q1,bindings) ->
-             let uu____91636 = encode_env_bindings env bindings  in
-             (match uu____91636 with
+             let uu____91710 = encode_env_bindings env bindings  in
+             (match uu____91710 with
               | (env_decls,env1) ->
-                  ((let uu____91658 =
+                  ((let uu____91732 =
                       ((FStar_TypeChecker_Env.debug tcenv
                           FStar_Options.Medium)
                          ||
@@ -7903,90 +7903,90 @@ let (encode_query :
                            (FStar_TypeChecker_Env.debug tcenv)
                            (FStar_Options.Other "SMTQuery"))
                        in
-                    if uu____91658
+                    if uu____91732
                     then
-                      let uu____91665 = FStar_Syntax_Print.term_to_string q1
+                      let uu____91739 = FStar_Syntax_Print.term_to_string q1
                          in
                       FStar_Util.print1 "Encoding query formula: %s\n"
-                        uu____91665
+                        uu____91739
                     else ());
-                   (let uu____91670 =
+                   (let uu____91744 =
                       FStar_SMTEncoding_EncodeTerm.encode_formula q1 env1  in
-                    match uu____91670 with
+                    match uu____91744 with
                     | (phi,qdecls) ->
-                        let uu____91691 =
-                          let uu____91696 =
+                        let uu____91765 =
+                          let uu____91770 =
                             FStar_TypeChecker_Env.get_range tcenv  in
                           FStar_SMTEncoding_ErrorReporting.label_goals
-                            use_env_msg uu____91696 phi
+                            use_env_msg uu____91770 phi
                            in
-                        (match uu____91691 with
+                        (match uu____91765 with
                          | (labels,phi1) ->
-                             let uu____91713 = encode_labels labels  in
-                             (match uu____91713 with
+                             let uu____91787 = encode_labels labels  in
+                             (match uu____91787 with
                               | (label_prefix,label_suffix) ->
                                   let caption =
-                                    let uu____91749 =
+                                    let uu____91823 =
                                       FStar_Options.log_queries ()  in
-                                    if uu____91749
+                                    if uu____91823
                                     then
-                                      let uu____91754 =
-                                        let uu____91755 =
-                                          let uu____91757 =
+                                      let uu____91828 =
+                                        let uu____91829 =
+                                          let uu____91831 =
                                             FStar_Syntax_Print.term_to_string
                                               q1
                                              in
                                           Prims.op_Hat
                                             "Encoding query formula: "
-                                            uu____91757
+                                            uu____91831
                                            in
                                         FStar_SMTEncoding_Term.Caption
-                                          uu____91755
+                                          uu____91829
                                          in
-                                      [uu____91754]
+                                      [uu____91828]
                                     else []  in
                                   let query_prelude =
-                                    let uu____91765 =
-                                      let uu____91766 =
-                                        let uu____91767 =
-                                          let uu____91770 =
+                                    let uu____91839 =
+                                      let uu____91840 =
+                                        let uu____91841 =
+                                          let uu____91844 =
                                             FStar_All.pipe_right label_prefix
                                               FStar_SMTEncoding_Term.mk_decls_trivial
                                              in
-                                          let uu____91777 =
-                                            let uu____91780 =
+                                          let uu____91851 =
+                                            let uu____91854 =
                                               FStar_All.pipe_right caption
                                                 FStar_SMTEncoding_Term.mk_decls_trivial
                                                in
                                             FStar_List.append qdecls
-                                              uu____91780
+                                              uu____91854
                                              in
-                                          FStar_List.append uu____91770
-                                            uu____91777
+                                          FStar_List.append uu____91844
+                                            uu____91851
                                            in
                                         FStar_List.append env_decls
-                                          uu____91767
+                                          uu____91841
                                          in
-                                      FStar_All.pipe_right uu____91766
+                                      FStar_All.pipe_right uu____91840
                                         (recover_caching_and_update_env env1)
                                        in
-                                    FStar_All.pipe_right uu____91765
+                                    FStar_All.pipe_right uu____91839
                                       FStar_SMTEncoding_Term.decls_list_of
                                      in
                                   let qry =
-                                    let uu____91790 =
-                                      let uu____91798 =
+                                    let uu____91864 =
+                                      let uu____91872 =
                                         FStar_SMTEncoding_Util.mkNot phi1  in
-                                      let uu____91799 =
+                                      let uu____91873 =
                                         FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
                                           "@query"
                                          in
-                                      (uu____91798,
+                                      (uu____91872,
                                         (FStar_Pervasives_Native.Some "query"),
-                                        uu____91799)
+                                        uu____91873)
                                        in
                                     FStar_SMTEncoding_Util.mkAssume
-                                      uu____91790
+                                      uu____91864
                                      in
                                   let suffix =
                                     FStar_List.append

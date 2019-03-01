@@ -340,6 +340,8 @@ type __internal_ocaml_attributes =
      * inductives), indicate that the header file should only contain a forward
      * declaration, which in turn forces the client to only ever use this type
      * through a pointer. *)
+  | CIfDef
+    (* KreMLin-only: on a given `val foo`, compile if foo with #ifdef. *)
 
 (* Some supported attributes encoded using functions. *)
 
