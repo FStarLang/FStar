@@ -20,7 +20,7 @@ unfold
 let bind_wp (_ : range) (a : Type) (b : Type) (wp : wp_type a) (f : a -> wp_type b) =
   fun p q -> wp (fun x -> f x p q) (fun e -> q e)
   
-let interp (a:Type) (c : repr a) : wp_type a = fun p q -> 
+let interp (#a:Type) (c : repr a) : wp_type a = fun p q ->
   match c with
   | Inl x -> p x
   | Inr e -> q e
@@ -75,12 +75,9 @@ let wp_try_catch (#a:Type)
                  (wp2:a -> wp_type b) : wp_type b = 
   fun p q -> wp1 (fun x -> wp2 x p q) (fun e -> h_wp e p q)
 
-let related #a (r : repr a) (wp : wp_type a) =
-  EXC?.stronger _ wp (interp _ r)
-
 (* We should get this from the framework FIXME *)
 assume val reify_related (#a #b:Type) (wp:_) (c : (x:a -> EXC b (wp x))) :
-                         Lemma (forall (x:a). related (reify (c x)) (wp x))
+                         Lemma (forall (x:a). EXC?.mrelation (reify (c x)) (wp x))
 
 let lemma_try_catch (#a:Type) 
                     (#b:Type) 
@@ -90,15 +87,15 @@ let lemma_try_catch (#a:Type)
                     (h_c:(e:exn -> either b exn))
                     (wp2:a -> wp_type b) 
                     (c2:(x:a -> either b exn))
-  : Lemma (requires ((related c1 wp1) /\
-                     (forall x . related (c2 x) (wp2 x)) /\
-                     (forall e . related (h_c e) (h_wp e))))
+  : Lemma (requires ((EXC?.mrelation c1 wp1) /\
+                     (forall x . EXC?.mrelation (c2 x) (wp2 x)) /\
+                     (forall e . EXC?.mrelation (h_c e) (h_wp e))))
           (ensures  (forall p q . wp_try_catch wp1 h_wp wp2 p q 
                                   ==>
                                   (match (rep_try_catch c1 h_c c2) with 
                                    | Inl x -> p x
                                    | Inr e -> q e))) =
-          (*(ensures  (forall p q . related (rep_try_catch c1 h_c c2) (wp_try_catch wp1 h_wp wp2))) =*)
+          (*(ensures  (forall p q . EXC?.mrelation (rep_try_catch c1 h_c c2) (wp_try_catch wp1 h_wp wp2))) =*)
           (* Logically equivalent to the uncommented ensures, but F*/Z3 below doesn't like it in try_catch below. *)
   match c1 with
   | Inl x -> ()

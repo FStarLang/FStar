@@ -42,7 +42,6 @@ new_effect {
      ; bind_wp   = bind_wp
 
      ; interp    = interp
-     ; mrelation = rel
 }
 
 val raise : #a:Type0 -> e:exn -> EXC a (fun p -> p (Inr e))

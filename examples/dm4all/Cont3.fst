@@ -53,6 +53,8 @@ new_effect {
      ; wp_type   = wpty
      ; return_wp = return_wp
      ; bind_wp   = bind_wp
+
+     ; mrelation = rel
 }
 
 let call_cc (#a:Type) (f : (a -> repr ans) -> repr ans) : repr a =
