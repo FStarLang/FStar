@@ -68,18 +68,18 @@ unfold let store_pre
 
     (forall (s:Seq.seq a).  //monotonicity precondition that once the contents of the buffer
                        //between [i, j) are replaced as per the predicate, the preorder rel is satisfied
-    
+
        (Seq.length s == len  /\
         Seq.equal (Seq.slice s 0 i) (Seq.slice sb 0 i) /\
         Seq.equal (Seq.slice s (i + j) len) (Seq.slice sb (i + j) len) /\
         predicate (Seq.slice s i (i + j)))
-      
+
        ==> rel sb s)
 
 
 /// Common postcondition
 
-unfold let store_post 
+unfold let store_post
   (#a:Type) (#rrel #rel:B.srel a) (b:B.mbuffer a rrel rel)
   (i:nat) (j:nat{i + j <= B.length b}) (predicate:Seq.seq a -> Type0)
    = fun (h0:HS.mem) (_:unit) (h1:HS.mem) ->
@@ -93,7 +93,7 @@ unfold let store_post
       Seq.equal (Seq.slice s2 0 i) (Seq.slice s1 0 i) /\
       Seq.equal (Seq.slice s2 (i + j) len) (Seq.slice s1 (i + j) len) /\
       predicate (Seq.slice s2 i (i + j)))
-     
+
 
 /// Loads and stores
 /// ----------------

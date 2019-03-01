@@ -23,6 +23,7 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 module S = FStar.Seq
 
+noextract
 type bytes = S.seq U8.t
 
 open FStar.Mul
@@ -103,20 +104,18 @@ let rec lemma_be_to_n_is_bounded b =
 
 /// n_to_le encodes a number as a little-endian byte sequence of a fixed,
 /// sufficiently large length.
-///
-/// TODO why is len a U32.t? should be a nat
-val n_to_le : len:U32.t -> n:nat{n < pow2 (8 * U32.v len)} ->
-  Tot (b:bytes{S.length b == U32.v len /\ n == le_to_n b})
-  (decreases (U32.v len))
+val n_to_le : len:nat -> n:nat{n < pow2 (8 * len)} ->
+  Tot (b:bytes{S.length b == len /\ n == le_to_n b})
+  (decreases len)
 let rec n_to_le len n =
-  if len = 0ul then
+  if len = 0 then
     S.empty
   else
-    let len = U32.(len -^ 1ul) in
+    let len = len - 1 in
     let byte = U8.uint_to_t (n % 256) in
     let n' = n / 256 in
-    Math.pow2_plus 8 (8 * U32.v len);
-    assert(n' < pow2 (8 * U32.v len ));
+    Math.pow2_plus 8 (8 * len);
+    assert(n' < pow2 (8 * len ));
     let b' = n_to_le len n' in
     let b = S.cons byte b' in
     S.lemma_eq_intro b' (S.tail b);
@@ -124,38 +123,35 @@ let rec n_to_le len n =
 
 /// n_to_be encodes a numbers as a big-endian byte sequence of a fixed,
 /// sufficiently large length
-///
-/// TODO why is len a U32.t? should be a nat
 val n_to_be:
-  len:U32.t -> n:nat{n < pow2 (8 * U32.v len)} ->
-  Tot (b:bytes{S.length b == U32.v len /\ n == be_to_n b})
-  (decreases (U32.v len))
+  len:nat -> n:nat{n < pow2 (8 * len)} ->
+  Tot (b:bytes{S.length b == len /\ n == be_to_n b})
+  (decreases len)
 let rec n_to_be len n =
-  if len = 0ul then
+  if len = 0 then
     S.empty
   else
-    let len = U32.(len -^ 1ul) in
+    let len = len - 1 in
     let byte = U8.uint_to_t (n % 256) in
     let n' = n / 256 in
-    Math.pow2_plus 8 (8 * U32.v len);
-    assert(n' < pow2 (8 * U32.v len ));
+    Math.pow2_plus 8 (8 * len);
     let b' = n_to_be len n' in
     let b'' = S.create 1 byte in
     let b = S.append b' b'' in
-    S.lemma_eq_intro b' (S.slice b 0 (U32.v len));
+    S.lemma_eq_intro b' (S.slice b 0 len);
     b
 
 /// Injectivity
 /// -----------
 
-let n_to_le_inj (len:U32.t) (n1 n2: (n:nat{n < pow2 (8 * U32.v len)})) :
+let n_to_le_inj (len: nat) (n1 n2: (n:nat{n < pow2 (8 * len)})) :
   Lemma (requires (n_to_le len n1 == n_to_le len n2))
         (ensures (n1 == n2)) =
   // this lemma easily follows from le_to_n . (n_to_le len) == id, the inversion
   // proof in the spec for n_to_le
   ()
 
-let n_to_be_inj (len:U32.t) (n1 n2: (n:nat{n < pow2 (8 * U32.v len)})) :
+let n_to_be_inj (len: nat) (n1 n2: (n:nat{n < pow2 (8 * len)})) :
   Lemma (requires (n_to_be len n1 == n_to_be len n2))
         (ensures (n1 == n2)) =
   ()
@@ -191,20 +187,20 @@ let rec le_to_n_inj
 /// Roundtripping
 /// -------------
 
-let n_to_be_be_to_n (len: U32.t) (s: Seq.seq U8.t) : Lemma
-  (requires (Seq.length s == U32.v len))
+let n_to_be_be_to_n (len: nat) (s: Seq.seq U8.t) : Lemma
+  (requires (Seq.length s == len))
   (ensures (
-    be_to_n s < pow2 (8 `Prims.op_Multiply` U32.v len) /\
+    be_to_n s < pow2 (8 * len) /\
     n_to_be len (be_to_n s) == s
   ))
   [SMTPat (n_to_be len (be_to_n s))]
 = lemma_be_to_n_is_bounded s;
   be_to_n_inj s (n_to_be len (be_to_n s))
 
-let n_to_le_le_to_n (len: U32.t) (s: Seq.seq U8.t) : Lemma
-  (requires (Seq.length s == U32.v len))
+let n_to_le_le_to_n (len: nat) (s: Seq.seq U8.t) : Lemma
+  (requires (Seq.length s == len))
   (ensures (
-    le_to_n s < pow2 (8 `Prims.op_Multiply` U32.v len) /\
+    le_to_n s < pow2 (8 * len) /\
     n_to_le len (le_to_n s) == s
   ))
   [SMTPat (n_to_le len (le_to_n s))]
@@ -220,7 +216,7 @@ let uint32_of_le (b: bytes { S.length b = 4 }) =
   UInt32.uint_to_t n
 
 let le_of_uint32 (x: UInt32.t): b:bytes{ S.length b = 4 } =
-  n_to_le 4ul (UInt32.v x)
+  n_to_le 4 (UInt32.v x)
 
 let uint32_of_be (b: bytes { S.length b = 4 }) =
   let n = be_to_n b in
@@ -228,7 +224,7 @@ let uint32_of_be (b: bytes { S.length b = 4 }) =
   UInt32.uint_to_t n
 
 let be_of_uint32 (x: UInt32.t): b:bytes{ S.length b = 4 } =
-  n_to_be 4ul (UInt32.v x)
+  n_to_be 4 (UInt32.v x)
 
 let uint64_of_le (b: bytes { S.length b = 8 }) =
   let n = le_to_n b in
@@ -236,7 +232,7 @@ let uint64_of_le (b: bytes { S.length b = 8 }) =
   UInt64.uint_to_t n
 
 let le_of_uint64 (x: UInt64.t): b:bytes{ S.length b = 8 } =
-  n_to_le 8ul (UInt64.v x)
+  n_to_le 8 (UInt64.v x)
 
 let uint64_of_be (b: bytes { S.length b = 8 }) =
   let n = be_to_n b in
@@ -244,7 +240,7 @@ let uint64_of_be (b: bytes { S.length b = 8 }) =
   UInt64.uint_to_t n
 
 let be_of_uint64 (x: UInt64.t): b:bytes{ S.length b = 8 } =
-  n_to_be 8ul (UInt64.v x)
+  n_to_be 8 (UInt64.v x)
 
 /// Reasoning over sequences of integers
 /// ------------------------------------
@@ -546,7 +542,7 @@ let rec be_of_seq_uint32_seq_uint32_of_be (n: nat) (s: S.seq U8.t) : Lemma
     let s'' = be_of_seq_uint32 s' in
     S.lemma_split s'' 4;
     S.lemma_append_inj (S.slice s'' 0 4) (S.slice s'' 4 (S.length s'')) (be_of_uint32 (S.head s')) (be_of_seq_uint32 (S.tail s'));
-    n_to_be_be_to_n 4ul hd
+    n_to_be_be_to_n 4 hd
   end
 
 let slice_seq_uint32_of_be (n: nat) (s: S.seq U8.t) (lo: nat) (hi: nat) : Lemma
