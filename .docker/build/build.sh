@@ -202,7 +202,7 @@ function refresh_hints() {
     export GIT_MERGE_AUTOEDIT=no
     git merge $commit -Xtheirs
     # Push.
-    git push $remote $CI_BRANCH
+    git push $remote BuildHints
 }
 
 function build_fstar() {
@@ -335,7 +335,7 @@ function build_fstar() {
 
             # We should not generate hints when building on Windows
             if [[ $localTarget == "uregressions-ulong" && "$OS" != "Windows_NT" ]]; then
-                refresh_fstar_hints
+                refresh_fstar_hints || echo false >$status_file
             fi
         fi
     fi
