@@ -6,7 +6,10 @@ open FStar.WellFounded
 (* Reasoning about IO where the specs are over a list
  * of outputs corresponding to the history (the previously
  * outputted values) and postconditions over the "local" output,
- * (the output emitted by the program in question). *)
+ * (the output emitted by the program in question).
+ *
+ * In other words, this is update monads style.
+ *)
 
 type input = int
 type output = int
@@ -30,7 +33,6 @@ let h_trace = list output
 let l_trace = list output
 
 let post a = a -> l_trace -> Type0
-(* flipping these arguments will break the gen_wps_for_free logic, FIXME *)
 let wpty a = h_trace -> post a -> Type0
 
 unfold
@@ -68,9 +70,6 @@ val read : unit -> IO int (fun h p -> forall x. p x [])
 let read () =
     IO?.reflect (Read (fun i -> Return i))
 
-(* Keeping the log backwards, since otherwise the VCs are too contrived for z3.
- * Likely something we should fix separately.. *)
-
 val write : o:int -> IO unit (fun h p -> p () [o])
 let write i =
     IO?.reflect (Write i (Return ()))
@@ -78,14 +77,12 @@ let write i =
 val need_a_1 : unit -> IO int (fun h p -> List.memP 1 h /\ p 42 [])
 let need_a_1 () = 42
 
-open FStar.Tactics
-
-(* GM: This stupid length precondition only there to help z3. If we flip
+(* This stupid length precondition only there to help z3. If we flip
  * the ordering on the history list, then this works like a charm but test9
  * below starts displaying the same bad behaviour.
  *
  * This works without this condition in IOHist.fst. I believe since there
- * the order is flipped. *)
+ * the log order is flipped and there's more reduction involved. *)
 let test_hist_1 () : IO unit (fun h p -> List.length h <= 5 /\ p () [1]) =
   write 1;
   let _ = need_a_1 () in
@@ -179,4 +176,3 @@ let print_increasing (i:int) : IO unit (fun h p -> p () [i+1;i]) =
   write i;
   mustHaveOccurred i; 
   write (i+1)
-

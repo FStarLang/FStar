@@ -1,6 +1,8 @@
 module ExnHandle
 
-module List = FStar.List.Tot
+(* Reasoning about exceptions, where the postconditions speak of both
+ * successful runs and exception-raising ones. Further, we provide a
+ * handler for raise along with some examples below. *)
 
 let repr (a:Type) = either a exn
 
@@ -84,12 +86,12 @@ let wp_try_catch (#a:Type)
 
 let extract_ref #a #phi (x:a{phi x}) : Lemma (phi x) = ()
 
+(* This lemma is awkward, this should come more automatically *)
 val reify_related (#a #b:Type) (wp:_) (c : (x:a -> EXC b (wp x))) :
     Lemma (forall x. rel (reify (c x)) (wp x))
 let reify_related #a #b wp c =
   let sublem x : Lemma (rel (reify (c x)) (wp x)) =
     let rc : (v:repr b{rel v (wp x)}) = reify (c x) in
-    (* very awkward *)
     extract_ref #_ #(fun v -> rel v (wp x)) rc;
     ()
   in

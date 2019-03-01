@@ -1,6 +1,5 @@
 module IOHist2
 
-open FStar.List
 open FStar.WellFounded
 
 (* Similar to IOHist, but with uncurried postconditions *)
@@ -54,21 +53,16 @@ new_effect {
      ; return_wp = return_wp
      ; bind_wp   = bind_wp
 
-     ; interp = interpretation
+     ; interp    = interpretation
 }
 
 val read : unit -> IO int (fun h p -> forall x. p (x, h))
 let read () =
     IO?.reflect (Read (fun i -> Return i))
 
-(* Keeping the log backwards, since otherwise the VCs are too contrived for z3.
- * Likely something we should fix separately.. *)
-
 val write : i:int -> IO unit (fun h p -> p ((), i::h))
 let write i =
     IO?.reflect (Write i (Return ()))
-
-open FStar.Tactics
 
 let x = 1
 
@@ -77,7 +71,10 @@ let test1 () : IO int (fun h p -> p (1, 3::2::h)) =
   write 3;
   1
 
-(* GM: For some reason I need to compute() in order to prove this *)
+open FStar.Tactics
+
+(* These need a bit of normalization in the VCs, so we use tactics *)
+
 let test2 () : IO int (fun h p -> p (1, 3::2::h)) by (compute ()) =
   write 2;
   let x = read () in

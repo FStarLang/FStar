@@ -26,14 +26,13 @@ let rec bind (a : Type u#aa) (b : Type u#bb)
   | Return v -> k v
 
 type event =
-  | Rd : input -> event
-  | Wr : output -> event
+  | In  : input -> event
+  | Out : output -> event
 
 let h_trace = list event
 let l_trace = list event
 
 let post a = a -> l_trace -> Type0
-(* flipping these arguments will break the gen_wps_for_free logic, FIXME *)
 let wpty a = h_trace -> post a -> Type0
 
 unfold
@@ -46,8 +45,8 @@ let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty
 
 let rec interpretation #a (m : io a) (h : h_trace) (p : post a) : Type0 =
   match m with
-  | Write o m -> interpretation m (h @ [Wr o]) (fun x l -> p x ((Wr o) :: l))
-  | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) (h @ [Rd i]) (fun x l -> p x ((Rd i) :: l)))
+  | Write o m -> interpretation m (h @ [Out o]) (fun x l -> p x ((Out o) :: l))
+  | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) (h @ [In i]) (fun x l -> p x ((In i) :: l)))
   | Return x -> p x []
 
 total
@@ -67,23 +66,20 @@ new_effect {
      ; interp = interpretation
 }
 
-val read : unit -> IO int (fun h p -> forall x. p x [Rd x])
+val read : unit -> IO int (fun h p -> forall x. p x [In x])
 let read () =
     IO?.reflect (Read (fun i -> Return i))
 
-(* Keeping the log backwards, since otherwise the VCs are too contrived for z3.
- * Likely something we should fix separately.. *)
-
-val write : o:int -> IO unit (fun h p -> p () [Wr o])
+val write : o:int -> IO unit (fun h p -> p () [Out o])
 let write i =
     IO?.reflect (Write i (Return ()))
 
-let test1 () : IO int (fun h p -> p 1 [Wr 2; Wr 3]) =
+let test1 () : IO int (fun h p -> p 1 [Out 2; Out 3]) =
   write 2;
   write 3;
   1
 
-let test2 () : IO int (fun h p -> forall i . p 1 [Wr 2; Rd i; Wr 3]) =
+let test2 () : IO int (fun h p -> forall i . p 1 [Out 2; In i; Out 3]) =
   write 2;
   let x = read () in
   write 3;
@@ -93,8 +89,8 @@ effect Io (a:Type) (pre':h_trace -> Type0) (post':h_trace -> a -> l_trace -> Typ
         IO a (fun h p -> pre' h /\ (forall r l . post' h r l ==> p r l))
 
 let test3 (i:int) 
-  : Io int (requires (fun h     -> exists h' h'' . h = h' @ (Rd i :: h''))) 
-           (ensures  (fun h x l -> exists x . l = [Wr i; Rd x; Wr x])) =
+  : Io int (requires (fun h     -> exists h' h'' . h = h' @ (In i :: h''))) 
+           (ensures  (fun h x l -> exists x . l = [Out i; In x; Out x])) =
   write i;
   let x = read () in
   write x;
@@ -103,7 +99,7 @@ let test3 (i:int)
 let rec n_w_events (n:nat) (i:int) = 
   if n = 0 
   then []
-  else Wr i :: n_w_events (n - 1) i
+  else Out i :: n_w_events (n - 1) i
 
 let rec test4 (n:nat) (i:int)
   : Io unit (requires (fun _     -> True)) 

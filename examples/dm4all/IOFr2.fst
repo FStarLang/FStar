@@ -1,6 +1,5 @@
 module IOFr2
 
-open FStar.List
 open FStar.WellFounded
 
 (* Similar to IOFr, just with uncurried WPs *)

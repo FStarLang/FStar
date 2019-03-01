@@ -1,6 +1,5 @@
 module IOFr
 
-open FStar.List
 open FStar.WellFounded
 
 (* Reasoning about IO, but ignoring inputs. Postconditions are
@@ -73,8 +72,6 @@ let test1 () =
   write 3;
   1
 
-open FStar.Tactics
-
 let test2 () : IO int (fun p -> p 1 [2; 3]) =
   write 2;
   let x = read () in
@@ -105,5 +102,3 @@ let test5 () : IO int (fun p -> forall x. p 1 [x; x]) =
   write x;
   write x;
   1
-
-let ref = normalize_term (reify (test5 ()))

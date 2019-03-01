@@ -1,6 +1,6 @@
 module IOHist
 
-open FStar.List
+module List = FStar.List
 open FStar.WellFounded
 
 (* Reasoning about IO, with access to the history of output previous to
@@ -27,7 +27,6 @@ let rec bind (a : Type u#aa) (b : Type u#bb)
   | Return v -> k v
 
 let post a = a -> list output -> Type0
-(* flipping these arguments will break the gen_wps_for_free logic, FIXME *)
 let wpty a = list output -> post a -> Type0
 
 unfold
@@ -74,8 +73,6 @@ let write i =
 
 val need_a_1 : unit -> IO int (fun h p -> List.memP 1 h /\ p 42 h)
 let need_a_1 () = 42
-
-open FStar.Tactics
 
 let test_hist_1 () : IO unit (fun h p -> p () (1::h)) =
   write 1;
@@ -125,18 +122,19 @@ let test5 () : IO int (fun h p -> forall x. p 1 (x::x::h)) =
   1
 
 [@expect_failure]
-let mustHaveOccurred_wrong (i:int) : IO unit (fun h p -> mem i h) =
+let mustHaveOccurred_wrong (i:int) : IO unit (fun h p -> List.memP i h) =
   ()
 
-let mustHaveOccurred (i:int) : IO unit (fun h p -> mem i h /\ p () h) =
+let mustHaveOccurred (i:int) : IO unit (fun h p -> List.memP i h /\ p () h) =
   ()
 
-let print_increasing (i:int) : IO unit (fun h p -> p () ((i+1) :: i :: h)) = 
+let print_increasing (i:int) : IO unit (fun h p -> forall h'. p () h') = 
   write i;
   mustHaveOccurred i;
-  write (i+1)
+  write (i+1);
+  ()
 
-let rec print_nums_aux (m i : nat) : IO unit (fun h p -> (forall (i':nat). i' < i ==> mem i' h) /\ (forall x. p () x))
+let rec print_nums_aux (m i : nat) : IO unit (fun h p -> (forall (i':nat). i' < i ==> List.memP i' h) /\ (forall x. p () x))
                                            (decreases (m-i)) =
   if i >= m then ()
   else begin

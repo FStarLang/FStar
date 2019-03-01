@@ -1,6 +1,5 @@
 module IOForget
 
-open FStar.List
 open FStar.WellFounded
 
 (* Reasoning about IO without the IO: we only care about the
@@ -64,8 +63,6 @@ let test1 () =
   write 3;
   1
 
-open FStar.Tactics
-
 let test2 () : IO int (fun p -> p 1) =
   write 2;
   let x = read () in
@@ -96,5 +93,3 @@ let test5 () : IO int (fun p -> p 1) =
   write x;
   write x;
   1
-
-let ref = normalize_term (reify (test5 ()))

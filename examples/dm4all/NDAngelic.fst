@@ -9,8 +9,6 @@ let return (a:Type u#a) (x:a) = [x]
 let bind (a : Type u#aa) (b : Type u#bb)
     (l : repr a) (f : a -> repr b) = List.flatten (List.map f l)
 
-(* let choose (#a : Type) (x y : a) : repr a = [x;y] *)
-
 (* Angelic interpretation *)
 let interp (#a:Type) (l : repr a) : pure_wp a =
     fun p -> exists (x:a). List.memP x l /\ p x
@@ -30,24 +28,12 @@ new_effect {
      ; bind_wp   = pure_bind_wp
 
      ; interp    = interp
-
-     (* ; choose    = choose *)
 }
-
-let test1 () : ND int (fun p -> p 5 /\ p 3) = 5
-let test2 () : ND int (fun p -> p 5 /\ p 3) = 3
-
-// Whoa! This used to succeed since the effect is marked as reifiable,
-// and Rel compares the representation types on each side for the
-// subtyping. and both are just `unit -> list a`. I changed it to check
-// the WPs via stronger-than instead of always unfolding.
-[@expect_failure]
-let test3 () : ND int (fun p -> p 5 /\ p 3) = 4
 
 effect Nd (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
         ND a (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result))
 
-effect NDTot (a:Type) = ND a (pure_null_wp a)
+(* Actions *)
 
 val choose : #a:Type0 -> x:a -> y:a -> ND a (fun p -> p x \/ p y)
 let choose #a x y =
@@ -56,6 +42,9 @@ let choose #a x y =
 val fail : #a:Type0 -> unit -> ND a (fun p -> False)
 let fail #a () =
     ND?.reflect []
+
+let flip () : ND bool (fun p -> p true \/ p false) =
+    choose true false
 
 let test () : ND int (fun p -> exists (x:int). 6 <= x /\ x <= 9 /\ p x) =
     let x = choose 0 1 in
@@ -74,10 +63,7 @@ let rec pick #a (l : list a) : ND a (fun p -> exists x. List.memP x l /\ p x) =
     match l with
     | [] -> fail ()
     | x::xs ->
-      // choose x (pick xs)
-      // ^ this is wrong! it will call `pick xs` before choosing and always
-      //   end up returning []
-      if choose true false
+      if flip ()
       then x
       else pick xs
 
@@ -103,12 +89,12 @@ let pyths () : ND (int & int & int) (fun p -> exists x y z. x >= 1 /\ x <= 10 /\
   let x = pick l in
   let y = pick l in
   let z = pick l in
-  // Not needed! We're doing angelic ND
+  // Not needed! We're doing angelic ND so we "just" make the right choice
   (* gguard (x*x + y*y = z*z); *)
   (x,y,z)
 #pop-options
 
-(* Check ND.ml for the triples:
+(* The extracted code for pyths:
 
 let (pyths_norm : unit -> (Prims.int * Prims.int * Prims.int) Prims.list) =
   fun uu____1038  ->
@@ -118,10 +104,3 @@ let (pyths_norm : unit -> (Prims.int * Prims.int * Prims.int) Prims.list) =
     ((Prims.parse_int "8"), (Prims.parse_int "6"), (Prims.parse_int "10"))]
 *)
 let pyths_norm () = normalize_term (reify (pyths ()))
-
-let test_reify_1 () = assert (reify (test1 ()) ==  [5])
-let test_reify_2 () = assert (reify (test2 ()) ==  [3])
-let test_reify_3 () = assert (reify (test1 ()) =!= [4])
-
-[@expect_failure]
-let _ = assert False

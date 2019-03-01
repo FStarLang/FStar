@@ -1,6 +1,7 @@
 module ExnHandleTwoPostCond
 
-module List = FStar.List.Tot
+(* Similar to ExnHandle.fst, but with a different (yet isomorphic)
+ * shape for postconditions. *)
 
 let repr (a:Type) = either a exn
 

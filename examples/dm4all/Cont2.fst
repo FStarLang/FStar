@@ -12,15 +12,16 @@ let bind (a : Type) (b : Type)
 
 let wpty a = (a -> pure_wp ans) -> pure_wp ans
 
-let rel (#a : Type) (l : repr a) (w : wpty a) : Type =
-  forall (k : a -> ans) (p : ans -> Type). (w (fun x q -> q (k x)) p ==> p (l k)) /\
-                                    (p (l k) ==> w (fun x q -> q (k x)) p)
-
 let return_wp (a:Type) (x:a) : wpty a =
   fun p -> p x
 
 let bind_wp (_:range) (a b : Type) (m : wpty a) (f : a -> wpty b) : wpty b =
   fun p -> m (fun x -> f x p)
+
+(* Monadic relation *)
+let rel (#a : Type) (l : repr a) (w : wpty a) : Type =
+  forall (k : a -> ans) (p : ans -> Type). (w (fun x q -> q (k x)) p ==> p (l k)) /\
+                                    (p (l k) ==> w (fun x q -> q (k x)) p)
 
 total
 reifiable
