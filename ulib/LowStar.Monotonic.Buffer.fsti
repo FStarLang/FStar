@@ -452,6 +452,16 @@ val loc_buffer (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot loc
 val loc_buffer_eq (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : Lemma
   (loc_buffer b == loc_buffer_from_to b 0ul (len b))
 
+val loc_buffer_from_to_high (#a: Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (from to: U32.t)
+: Lemma
+  (requires (length b <= U32.v to))
+  (ensures (loc_buffer_from_to b from to == loc_buffer_from_to b from (len b)))
+
+val loc_buffer_from_to_none (#a: Type) (#rrel #rel: srel a) (b: mbuffer a rrel rel) (from to: U32.t)
+: Lemma
+  (requires (g_is_null b \/ length b < U32.v from \/ U32.v to < U32.v from))
+  (ensures (loc_buffer_from_to b from to == loc_none))
+
 val loc_buffer_from_to_mgsub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t)
   (from to: U32.t)

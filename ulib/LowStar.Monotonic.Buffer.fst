@@ -746,6 +746,10 @@ let loc_buffer #_ #_ #_ b =
 
 let loc_buffer_eq #_ #_ #_ _ = ()
 
+let loc_buffer_from_to_high #_ #_ #_ _ _ _ = ()
+
+let loc_buffer_from_to_none #_ #_ #_ _ _ _ = ()
+
 let loc_buffer_from_to_mgsub #_ #_ #_ _ _ _ _ _ _ = ()
 
 let loc_buffer_mgsub_eq #_ #_ #_ _ _ _ _ = ()
