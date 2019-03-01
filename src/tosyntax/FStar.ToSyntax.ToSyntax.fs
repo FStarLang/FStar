@@ -2383,7 +2383,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
             }, doc
         | _ ->
             raise_error (Errors.Fatal_MalformedActionDeclaration,
-                "GG REVISE Malformed action declaration; if this is an \"effect \
+                "Malformed action declaration; if this is an \"effect \
                  for free\", just provide the direct-style declaration. If this is \
                  not an \"effect for free\", please provide a pair of the definition \
                  and its cps-type with arrows inserted in the right place (see \
@@ -2406,13 +2406,12 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
         let l = Env.qualify env (mk_ident(s, d.drange)) in
         match try_lookup_definition env l with
         | None -> None
-        | Some t -> Some (Subst.close binders t)
+        | Some t -> Some ([], Subst.close binders t)
     in
     let mname       =qualify env0 eff_name in
     let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
     let se =
       let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
-      (* let un_ts = [], Syntax.tun in *)
       { sigel =
         (Sig_new_effect({
            mname       = mname;
@@ -2518,8 +2517,8 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             elaborated  =ed.elaborated;
             spec_dm4f   =ed.spec_dm4f;
 
-            interp      = BU.map_opt ed.interp (fun t -> snd (sub ([], t)));
-            mrelation   = BU.map_opt ed.mrelation (fun t -> snd (sub ([], t)));
+            interp      = BU.map_opt ed.interp sub;
+            mrelation   = BU.map_opt ed.mrelation sub;
             repr = {
               monad_m = snd (sub ([], ed.repr.monad_m));
               monad_ret = sub ed.repr.monad_ret;

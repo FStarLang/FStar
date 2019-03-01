@@ -651,6 +651,8 @@ let eff_decl_to_string' r q ed =
       ; repr        = %s\n\
       ; bind_repr   = %s\n\
       ; return_repr = %s\n\
+      ; interp      = %s\n\
+      ; mrelation   = %s\n\
       and effect_actions\n\t%s\n}\n"
         [lid_to_string ed.mname;
          enclose_universes <| univ_names_to_string ed.univs;
@@ -669,6 +671,8 @@ let eff_decl_to_string' r q ed =
          term_to_string ed.repr.monad_m;
          tscheme_to_string ed.repr.monad_bind;
          tscheme_to_string ed.repr.monad_ret;
+         FStar.Common.string_of_option tscheme_to_string ed.interp;
+         FStar.Common.string_of_option tscheme_to_string ed.mrelation;
          actions_to_string ed.actions]
 
 let eff_decl_to_string ed =

@@ -444,26 +444,26 @@ let gen_wps_for_free
   // we can define mrelation = fun #a c wp -> M?.stronger a wp (interp #a c)
   let mrelation_from_interp (interp:term) : term =
     let repr_a = U.mk_app ed.repr.monad_m [S.as_arg (S.bv_to_name a)] in
-    let c  = S.new_bv (Some interp.pos) repr_a in
-    let wp = S.new_bv (Some interp.pos) wp_a in
+    let c  = S.gen_bv "c"  (Some interp.pos) repr_a in
+    let wp = S.gen_bv "wp" (Some interp.pos) wp_a in
     let body = U.mk_app stronger
-                                 [S.as_arg (S.bv_to_name a);
-                                  S.as_arg (S.bv_to_name wp);
-                                  S.as_arg (U.mk_app interp [S.iarg (S.bv_to_name a);
-                                                             S.as_arg (S.bv_to_name c)])]
+                         [S.as_arg (S.bv_to_name a);
+                          S.as_arg (S.bv_to_name wp);
+                          S.as_arg (U.mk_app interp [S.iarg (S.bv_to_name a);
+                                                     S.as_arg (S.bv_to_name c)])]
     in
-    let abs = U.abs [S.mk_implicit_binder a; S.mk_binder c; S.mk_binder wp]
+    let abs = U.abs (binders @ [S.mk_implicit_binder a; S.mk_binder c; S.mk_binder wp])
                     body
-                    None
+                    ret_tot_type
     in
     abs
   in
 
   let mrelation =
     match ed.interp, ed.mrelation with
-    | _, Some t -> Some t
+    | _, Some t -> Some (snd t)
     | None, None -> None
-    | Some i, None -> Some (mrelation_from_interp i)
+    | Some i, None -> Some (mrelation_from_interp (snd i))
   in
   let mrelation = BU.map_opt mrelation (register env (mk_lid "mrelation")) in
   let mrelation = BU.map_opt mrelation mk_generic_app in
@@ -533,7 +533,7 @@ let gen_wps_for_free
     assume_p     = ([], c wp_assume);
     close_wp     = ([], c wp_close);
     stronger     = ([], c stronger);
-    mrelation    = BU.map_opt mrelation (fun t -> c t);
+    mrelation    = BU.map_opt mrelation (fun t -> [], c t);
     trivial      = ([], c wp_trivial);
     ite_wp       = ([], c ite_wp);
     null_wp      = ([], c null_wp)

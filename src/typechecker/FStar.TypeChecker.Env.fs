@@ -1255,11 +1255,16 @@ let effect_repr_aux only_reifiable env c u_c =
           if ed.spec_dm4f
           then Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
           else
+            let mrelation =
+                match ed.mrelation with
+                | None ->
+                  raise_error (Errors.Error_NoMRelation, "This DM4A effect has no mrelation, cannot reify")
+                              (get_range env)
+                | Some t -> inst_effect_fun_with [u_c] env ed t
+            in
             let base = S.mk (Tm_app(repr, [as_arg res_typ])) None c.result_typ.pos in
             let bv = S.new_bv (Some c.result_typ.pos) base in
-            let ref = U.mk_app (BU.must ed.mrelation) [S.iarg res_typ;
-                                                       S.as_arg (S.bv_to_name bv);
-                                                       wp] in
+            let ref = U.mk_app mrelation [S.iarg res_typ; S.as_arg (S.bv_to_name bv); wp] in
             let t = U.refine bv ref in
             Some t
 

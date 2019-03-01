@@ -268,7 +268,7 @@ let cps_and_elaborate_ed env ed =
   in
 
   (* let return_wp = *)
-  (*   // TODO: fix [tc_eff_decl] to deal with currying *)
+  (*   (* TODO: fix [tc_eff_decl] to deal with currying *) *)
   (*   match (SS.compress return_wp).n with *)
   (*   | Tm_abs (b1 :: b2 :: bs, body, what) -> *)
   (*       U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot) *)
@@ -578,11 +578,12 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     | None -> None
     | Some interp ->
       let a, wp_a = fresh_effect_signature () in
-      let repr_a = U.mk_app ed.repr.monad_m [S.as_arg (S.bv_to_name a)] in
+      let repr = ed.repr.monad_m in
+      let repr_a = U.mk_app repr [S.as_arg (S.bv_to_name a)] in
       let expected_k = U.arrow [S.mk_implicit_binder a;
                                    S.null_binder repr_a]
                                    (S.mk_Total wp_a) in
-      Some <| check_and_gen' env ([], interp) expected_k
+      Some <| check_and_gen' env interp expected_k
   in
 
   let mrelation =
@@ -590,12 +591,13 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     | None -> None
     | Some mrelation ->
       let a, wp_a = fresh_effect_signature () in
+      let t, _ = U.type_u () in
       let repr_a = U.mk_app ed.repr.monad_m [S.as_arg (S.bv_to_name a)] in
       let expected_k = U.arrow [S.mk_implicit_binder a;
                                    S.null_binder repr_a;
                                    S.null_binder wp_a]
-                                (S.mk_Total U.ktype0) in
-      Some <| check_and_gen' env ([], mrelation) expected_k
+                                (S.mk_Total t) in
+      Some <| check_and_gen' env mrelation expected_k
   in
 
   let if_then_else =
@@ -654,7 +656,7 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     check_and_gen' env ed.trivial expected_k in
 
   let repr, bind_repr, return_repr, actions =
-      match (SS.compress ed.repr.monad_m).n, (SS.compress ed.spec.monad_m).n with
+      match () with
       | _ when ed.spec_dm4f ->
         //This is a DM4F effect definition
         //Need to check that the repr, bind, return and actions have their expected types
@@ -842,7 +844,7 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
 
-      | _, _ ->
+      | _ ->
         (ed.repr.monad_m,
          ed.repr.monad_bind,
          ed.repr.monad_ret,
@@ -913,8 +915,8 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     ; assume_p    = close 0 assume_p
     ; null_wp     = close 0 null_wp
     ; trivial     = close 0 trivial_wp
-    ; interp      = BU.map_opt ed.interp (fun t -> snd (close 0 ([], t)))
-    ; mrelation   = BU.map_opt ed.mrelation (fun t -> snd (close 0 ([], t)))
+    ; interp      = BU.map_opt interp (close 0)
+    ; mrelation   = BU.map_opt mrelation (close 0)
     ; repr = {
         monad_m    = snd (close 0 ([], repr))
       ; monad_ret  = close 0 return_repr
