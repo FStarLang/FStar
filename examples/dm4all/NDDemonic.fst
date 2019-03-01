@@ -15,9 +15,6 @@ let bind (a : Type u#aa) (b : Type u#bb)
 let interp (#a:Type) (l : repr a) : pure_wp a =
     fun p -> forall (x:a). List.memP x l ==> p x
 
-let rel (#a:Type) (l : repr a) (w : pure_wp a) =
-    forall p. w p ==> interp l p
-
 total
 reifiable
 reflectable
@@ -33,7 +30,6 @@ new_effect {
      ; bind_wp   = pure_bind_wp
 
      ; interp    = interp
-     ; mrelation = rel
 
      (* ; choose    = choose *)
 }
