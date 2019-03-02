@@ -59,13 +59,13 @@ let test_bad () : ND int (fun p -> exists (x:int). 0 <= x /\ x < 5 /\ p x) =
     let z = choose 4 5 in
     x + y + z
 
-let rec pick #a (l : list a) : ND a (fun p -> exists x. List.memP x l /\ p x) =
+let rec pick_from #a (l : list a) : ND a (fun p -> exists x. List.memP x l /\ p x) =
     match l with
     | [] -> fail ()
     | x::xs ->
       if flip ()
       then x
-      else pick xs
+      else pick_from xs
 
 let gguard (b:bool) : ND unit (fun p -> b /\ p ()) =
   if b
@@ -86,9 +86,9 @@ let pyths () : ND (int & int & int) (fun p -> exists x y z. x >= 1 /\ x <= 10 /\
                by (compute (); explode ())
              =
   let l = [1;2;3;4;5;6;7;8;9;10] in
-  let x = pick l in
-  let y = pick l in
-  let z = pick l in
+  let x = pick_from l in
+  let y = pick_from l in
+  let z = pick_from l in
   // Not needed! We're doing angelic ND so we "just" make the right choice
   (* gguard (x*x + y*y = z*z); *)
   (x,y,z)

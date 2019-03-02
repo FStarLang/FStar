@@ -1,7 +1,6 @@
-module IOHist
+module IOWSt
 
 module List = FStar.List
-open FStar.WellFounded
 
 (* Reasoning about IO, with access to the history of output previous to
  * running the program. Postconditions are over the (accumulated) output
@@ -22,7 +21,7 @@ let return (a:Type u#a) (x:a) = Return x
 let rec bind (a : Type u#aa) (b : Type u#bb)
          (l : io a) (k : a -> io b) : io b =
   match l with
-  | Read f -> Read (fun i -> axiom1 f i; bind _ _ (f i) k)
+  | Read f -> Read (fun i -> FStar.WellFounded.axiom1 f i; bind _ _ (f i) k)
   | Write o k' -> Write o (bind _ _ k' k)
   | Return v -> k v
 
@@ -36,11 +35,11 @@ let return_wp (a:Type) (x:a) : wpty a =
 unfold
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
   fun h p -> w h (fun x h' -> kw x h' (fun y h'' -> p y h''))
-  
+
 let rec interpretation #a (m : io a) (h : list output) (p : post a) : Type0 =
   match m with
   | Write o m -> interpretation m (o :: h) p
-  | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) h p)
+  | Read f -> forall (i : input). (FStar.WellFounded.axiom1 f i; interpretation (f i) h p)
   | Return x -> p x h
 
 total
@@ -63,9 +62,6 @@ new_effect {
 val read : unit -> IO int (fun h p -> forall x. p x h)
 let read () =
     IO?.reflect (Read (fun i -> Return i))
-
-(* Keeping the log backwards, since otherwise the VCs are too contrived for z3.
- * Likely something we should fix separately.. *)
 
 val write : i:int -> IO unit (fun h p -> p () (i::h))
 let write i =
@@ -128,7 +124,7 @@ let mustHaveOccurred_wrong (i:int) : IO unit (fun h p -> List.memP i h) =
 let mustHaveOccurred (i:int) : IO unit (fun h p -> List.memP i h /\ p () h) =
   ()
 
-let print_increasing (i:int) : IO unit (fun h p -> forall h'. p () h') = 
+let print_increasing (i:int) : IO unit (fun h p -> forall h'. p () h') =
   write i;
   mustHaveOccurred i;
   write (i+1);

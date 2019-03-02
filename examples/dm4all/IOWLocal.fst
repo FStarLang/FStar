@@ -1,7 +1,6 @@
-module IOLocal
+module IOWLocal
 
 open FStar.List
-open FStar.WellFounded
 
 (* Reasoning about IO where the specs are over a list
  * of outputs corresponding to the history (the previously
@@ -9,7 +8,8 @@ open FStar.WellFounded
  * (the output emitted by the program in question).
  *
  * In other words, this is update monads style.
- *)
+ *
+ * Input is treated demonically, and not kept in the log nor trace.  *)
 
 type input = int
 type output = int
@@ -25,7 +25,7 @@ let return (a:Type u#a) (x:a) = Return x
 let rec bind (a : Type u#aa) (b : Type u#bb)
          (l : io a) (k : a -> io b) : io b =
   match l with
-  | Read f -> Read (fun i -> axiom1 f i; bind _ _ (f i) k)
+  | Read f -> Read (fun i -> FStar.WellFounded.axiom1 f i; bind _ _ (f i) k)
   | Write o k' -> Write o (bind _ _ k' k)
   | Return v -> k v
 
@@ -46,7 +46,7 @@ let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty
 let rec interpretation #a (m : io a) (h : list output) (p : post a) : Type0 =
   match m with
   | Write o m -> interpretation m (h @ [o]) (fun x l -> p x (l @ [o]))
-  | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) h p)
+  | Read f -> forall (i : input). (FStar.WellFounded.axiom1 f i; interpretation (f i) h p)
   | Return x -> p x []
 
 total
@@ -130,39 +130,39 @@ let test6 () : Io int (fun _ -> True) (fun h x l -> x = 1 /\ (exists y . l = [y;
   write x;
   1
 
-let test7 (b:bool) 
-  : Io int (fun _ -> True) 
+let test7 (b:bool)
+  : Io int (fun _ -> True)
            (fun h x l -> x = 1 /\ (exists y . l = [y;y] \/ l = [y;y+1])) =
   let x = read () in
-  (if b 
+  (if b
    then write (x + 1)
    else write x);
   write x;
   1
 
-let test8 (b:bool) 
-  : Io int (fun _ -> True) 
+let test8 (b:bool)
+  : Io int (fun _ -> True)
            (fun h x l -> x = 1 /\ (exists y z . z < y /\ l = [z;y])) =
   let x = read () in
-  (if b 
+  (if b
    then write (x + 1)
    else write x);
   write (x - 1);
   1
 
-let rec n_writes (n:nat) (i:int) = 
-  if n = 0 
+let rec n_writes (n:nat) (i:int) =
+  if n = 0
   then []
   else n_writes (n - 1) i @ [i]
 
 let rec test9 (n:nat) (i:int)
-  : Io unit (requires (fun _     -> True)) 
-            (ensures  (fun h x l -> l = n_writes n i)) = 
+  : Io unit (requires (fun _     -> True))
+            (ensures  (fun h x l -> l = n_writes n i)) =
   if n = 0
   then ()
   else (write i; test9 (n - 1) i)
 
-let test10 (h0:h_trace) 
+let test10 (h0:h_trace)
   : Io unit (requires (fun h -> h = h0))
             (ensures  (fun h _ l -> h = h0 /\ length l > 1)) =
   write 24;
@@ -172,7 +172,7 @@ let test10 (h0:h_trace)
 let mustHaveOccurred (i:int) : IO unit (fun h p -> mem i h /\ p () []) =
   ()
 
-let print_increasing (i:int) : IO unit (fun h p -> p () [i+1;i]) = 
+let print_increasing (i:int) : IO unit (fun h p -> p () [i+1;i]) =
   write i;
-  mustHaveOccurred i; 
+  mustHaveOccurred i;
   write (i+1)

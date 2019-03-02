@@ -1,4 +1,4 @@
-module StExn
+module StExnTotal
 
 (* Reasoning about State plus exceptions, but WPs only over
  * the stateful part. Exceptions are all failures, i.e.,

@@ -60,13 +60,13 @@ let test_bad () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 5 ==> p x) =
     let z = choose 4 5 in
     x + y + z
 
-let rec pick #a (l : list a) : ND a (fun p -> forall x. List.memP x l ==> p x) =
+let rec pick_from #a (l : list a) : ND a (fun p -> forall x. List.memP x l ==> p x) =
     match l with
     | [] -> fail ()
     | x::xs ->
       if flip ()
       then x
-      else pick xs
+      else pick_from xs
 
 let guard (b:bool) : ND unit (fun p -> b ==> p ()) =
   if b
@@ -77,9 +77,9 @@ let ( * ) = op_Multiply
 
 let pyths () : ND (int & int & int) (fun p -> forall x y z. x*x + y*y == z*z ==> p (x,y,z)) =
   let l = [1;2;3;4;5;6;7;8;9;10] in
-  let x = pick l in
-  let y = pick l in
-  let z = pick l in
+  let x = pick_from l in
+  let y = pick_from l in
+  let z = pick_from l in
   guard (x*x + y*y = z*z);
   (x,y,z)
 

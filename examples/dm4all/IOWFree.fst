@@ -1,9 +1,7 @@
-module IOFr
+module IOWFree
 
-open FStar.WellFounded
-
-(* Reasoning about IO, but ignoring inputs. Postconditions are
- * predicates over the output of the program and its return value.
+(* Reasoning about IO, but ignoring inputs and history. Postconditions
+ * are predicates over the output of the program and its return value.
  * Inputs are treated as a demonic non-deterministic choice. *)
 
 type input = int
@@ -23,7 +21,7 @@ let return (a:Type u#a) (x:a) = Return x
 let rec bind (a : Type u#aa) (b : Type u#bb)
          (l : io a) (k : a -> io b) : io b =
   match l with
-  | Read f -> Read (fun i -> axiom1 f i; bind _ _ (f i) k)
+  | Read f -> Read (fun i -> FStar.WellFounded.axiom1 f i; bind _ _ (f i) k)
   | Write o k' -> Write o (bind _ _ k' k)
   | Return v -> k v
 
@@ -38,7 +36,7 @@ let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty
 let rec interpretation #a (m : io a) (p : post a) : Type0 =
   match m with
   | Write o m -> interpretation m (fun x l -> p x (o :: l))
-  | Read f -> forall (i : input). (axiom1 f i ; interpretation (f i) p)
+  | Read f -> forall (i : input). (FStar.WellFounded.axiom1 f i; interpretation (f i) p)
   | Return x -> p x []
 
 total

@@ -1,4 +1,4 @@
-module Exn
+module ExnTotal
 
 (* Reasoning about programs with exceptions, but with
  * pure WPs, in a total correctness setting. That is,
@@ -39,6 +39,7 @@ let raise (#a:Type) (e:exn) : EXN a (fun p -> False)  =
 (* An alias for convenience *)
 effect Ex (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
         EXN a (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result))
+
 exception Neg
 
 let test (x:int) : EXN int (fun p -> x >= 0 /\ (forall y. p y)) =
