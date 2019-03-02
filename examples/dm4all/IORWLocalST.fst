@@ -43,24 +43,24 @@ type event =
 let h_trace = list event
 let l_trace = list event
 
-let post a = a -> state * l_trace -> Type0
+let post a = a * state * l_trace -> Type0
 let wpty a = state -> h_trace -> post a -> Type0
 
 unfold
 let return_wp (a:Type) (x:a) : wpty a =
-  fun s h p -> p x (s,[])
+  fun s h p -> p (x,s,[])
 
 unfold
 let bind_wp (_ : range) (a:Type) (b:Type) (w : wpty a) (kw : a -> wpty b) : wpty b =
-  fun s h p -> w s h (fun x (s',l) -> kw x s' (h @ l) (fun y (s'',l') -> p y (s'',l @ l')))
+  fun s h p -> w s h (fun (x,s',l) -> kw x s' (h @ l) (fun (y,s'',l') -> p (y,s'',l @ l')))
 
 let rec interpretation_rec #a (m : io (a * state)) (s : state) (h : h_trace) (p : post a) : Type0 =
   match m with
-  | Write o m -> interpretation_rec m s (h @ [Out o]) (fun x (s',l) -> p x (s',(Out o) :: l))
+  | Write o m -> interpretation_rec m s (h @ [Out o]) (fun (x,s',l) -> p (x,s',(Out o) :: l))
   | Read f -> forall (i : input). 
                 (FStar.WellFounded.axiom1 f i;
-                 interpretation_rec (f i) s (h @ [In i]) (fun x (s',l) -> p x (s',(In i) :: l)))
-  | Return (x,s') -> p x (s',[])
+                 interpretation_rec (f i) s (h @ [In i]) (fun (x,s',l) -> p (x,s',(In i) :: l)))
+  | Return (x,s') -> p (x,s',[])
 
 let interpretation #a (m : iost a) (s : state) (h : h_trace) (p : post a) : Type0 =
   interpretation_rec (m s) s h p
@@ -83,34 +83,34 @@ new_effect {
 }
 
 
-val read : unit -> IOST int (fun s h p -> forall x. p x (s,[In x]))
+val read : unit -> IOST int (fun s h p -> forall x. p (x,s,[In x]))
 let read () =
     IOST?.reflect (fun s -> Read (fun i -> Return (i,s)))
 
-val write : o:int -> IOST unit (fun s h p -> p () (s,[Out o]))
+val write : o:int -> IOST unit (fun s h p -> p ((),s,[Out o]))
 let write i =
     IOST?.reflect (fun s -> Write i (Return ((),s)))
 
-val get : unit -> IOST state (fun s h p -> p s (s,[]))
+val get : unit -> IOST state (fun s h p -> p (s,s,[]))
 let get () =
     IOST?.reflect (fun s -> Return (s,s))
 
-val put : s:state -> IOST unit (fun _ h p -> p () (s,[]))
+val put : s:state -> IOST unit (fun _ h p -> p ((),s,[]))
 let put s =
     IOST?.reflect (fun _ -> Return ((),s))
 
-let test1 () : IOST int (fun s h p -> p 1 (s,[Out 2; Out 3])) =
+let test1 () : IOST int (fun s h p -> p (1,s,[Out 2; Out 3])) =
   write 2;
   write 3;
   1
 
-let test2 () : IOST int (fun s h p -> forall i . p 1 (s,[Out 2; In i; Out 3])) =
+let test2 () : IOST int (fun s h p -> forall i . p (1,s,[Out 2; In i; Out 3])) =
   write 2;
   let x = read () in
   write 3;
   1
 
-let mustHaveOccurred (i:int) : IOST unit (fun s h p -> List.memP (Out i) h /\ p () (s,[])) =
+let mustHaveOccurred (i:int) : IOST unit (fun s h p -> List.memP (Out i) h /\ p ((),s,[])) =
   ()
 
 (* Needed to have z3 prove `memP (Out x) (h @ [Out x])`, but
@@ -123,59 +123,58 @@ let rec lem_memP_append #a x y l =
   | [] -> ()
   | _::t -> lem_memP_append x y t
 
-let print_increasing (i:int) : IOST unit (fun s h p -> p () (s,[Out i; Out (i+1)])) =
+let print_increasing (i:int) : IOST unit (fun s h p -> p ((),s,[Out i; Out (i+1)])) =
   write i;
   mustHaveOccurred i;
   write (i+1)
 
 (* weaker spec *)
-let print_increasing' (i:int) : IOST unit (fun s h p -> forall h'. p () (s,h')) =
+let print_increasing' (i:int) : IOST unit (fun s h p -> forall h'. p ((),s,h')) =
   write i;
   mustHaveOccurred i;
   write (i+1)
 
 (* won't work *)
 [@expect_failure]
-let print_increasing'' (i:int) : IOST unit (fun s h p -> forall h'. p () (s,h')) =
+let print_increasing'' (i:int) : IOST unit (fun s h p -> forall h'. p ((),s,h')) =
   mustHaveOccurred i;
   write (i+1)
   
 (* won't work *)
 [@expect_failure]
-let print_increasing''' (i:int) : IOST unit (fun s h p -> forall h'. p () (s,h')) =
+let print_increasing''' (i:int) : IOST unit (fun s h p -> forall h'. p ((),s,h')) =
   mustHaveOccurred i;
   write i;
   write (i+1)
   
 (* won't work *)
 [@expect_failure]
-let print_increasing'''' (i:int) : IOST unit (fun s h p -> forall h'. p () (s,h')) =
+let print_increasing'''' (i:int) : IOST unit (fun s h p -> forall h'. p ((),s,h')) =
   write (i+1);
   mustHaveOccurred i;
   write i
 
-let test3 () : IOST int (fun s h p -> forall i . p 1 (i,[In i])) =
+let test3 () : IOST int (fun s h p -> forall i . p (1,i,[In i])) =
   let x = read () in
   put x;
   1
 
-let test4 () : IOST int (fun s h p -> p 1 (s,[Out s])) =
+let test4 () : IOST int (fun s h p -> p (1,s,[Out s])) =
   let x = get () in
   write x;
   1
 
-let test5 () : IOST int (fun s h p -> forall i . p 1 (i,[In i;Out (i+1)])) =
+let test5 () : IOST int (fun s h p -> forall i . p (1,i,[In i;Out (i+1)])) =
   let x = read () in
   put x;
   let y = get () in 
   write (y+1);
   1
 
-let test6 () : IOST int (fun s h p -> forall i . p 1 (s,[In i;Out (s+i+1)])) =
+let do_io_then_roll_back_state () : IOST unit (fun s h p -> forall i . p ((),s,[In i;Out (s+i+1)])) =
   let x = get () in 
   let y = read () in
   put (x+y);
   let z = get () in 
   write (z+1);
-  put x;
-  1
+  put x
