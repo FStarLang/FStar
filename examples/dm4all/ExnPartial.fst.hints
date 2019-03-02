@@ -1,0 +1,87 @@
+[
+  "à%î$„Â\u007f‰D‡¿÷Ó¡âj",
+  [
+    [
+      "ExnPartial.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr", "equation_ExnPartial.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "8bc2e66a34879b049da752360419f549"
+    ],
+    [
+      "ExnPartial.Ex",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6c10cf34da2f578de273b7430dbd65e3"
+    ],
+    [
+      "ExnPartial.test",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "79e82bd6f7bb365c17016910e25ebcee"
+    ],
+    [
+      "ExnPartial.test'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c61717115d46c9bd79a514d0d2c22931"
+    ],
+    [
+      "ExnPartial.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr", "equation_ExnPartial.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "435bdb8e977cbcb87896498b3c9ab9cb"
+    ],
+    [
+      "ExnPartial.Ex",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "21878835ee436e92062c6656186ba148"
+    ],
+    [
+      "ExnPartial.test",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7f66e26c9ef3885a9cdaf26d53a6caad"
+    ],
+    [
+      "ExnPartial.test'",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ce4d9435344279c7cf276239896b4eea"
+    ]
+  ]
+]

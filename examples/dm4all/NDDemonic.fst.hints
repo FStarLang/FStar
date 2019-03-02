@@ -1,0 +1,163 @@
+[
+  "\u0019ŒœÇŽþÝ¬\u001b5Ei¼ElÚ",
+  [
+    [
+      "NDDemonic.l",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5e7419b3580240182d7844bef00a6097"
+    ],
+    [
+      "NDDemonic.Nd",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "942996836b5546d76e3f1b29e08e0ca4"
+    ],
+    [
+      "NDDemonic.choose",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "93e1dde26c5348ce2b2fd212977a3bb0"
+    ],
+    [
+      "NDDemonic.test",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "1eef2333a04f64b314815e2dabcdc189"
+    ],
+    [
+      "NDDemonic.pick_from",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list", "l_or-interp",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "8241b0f20e1ea731ca3d63a0ec9cf9b2"
+    ],
+    [
+      "NDDemonic.guard",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "projection_inverse_BoxBool_proj_0", "unit_inversion"
+      ],
+      0,
+      "2be4234f17700314d6aa741b5fbc65a3"
+    ],
+    [
+      "NDDemonic.pyths",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "af742c25eb6a260d06ba4f3d89be5325"
+    ],
+    [
+      "NDDemonic.l",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "83a6aa6630a450e0383a5b8cb98bb0c3"
+    ],
+    [
+      "NDDemonic.Nd",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ac28f067ff9368bd3d49dbe024c674c6"
+    ],
+    [
+      "NDDemonic.choose",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4a9b2861a70935549c922da603568a75"
+    ],
+    [
+      "NDDemonic.test",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "f89fc22bf004ebb7ad02ab3e3947d397"
+    ],
+    [
+      "NDDemonic.pick_from",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "eq2-interp",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list", "l_or-interp",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "856ea35b2abbabd5125c2303a862cdc5"
+    ],
+    [
+      "NDDemonic.guard",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "projection_inverse_BoxBool_proj_0", "unit_inversion"
+      ],
+      0,
+      "98b7bde6dc56e6afe1f9ad356b2ec95c"
+    ],
+    [
+      "NDDemonic.pyths",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "211c636bf51ecadf9d1230e3be5a75b1"
+    ]
+  ]
+]

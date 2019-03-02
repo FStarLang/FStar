@@ -1,0 +1,93 @@
+[
+  ":+‹\u001aj\u0017S\u007fç\u0014é≈»≠ ∆",
+  [
+    [
+      "PartialityPartial.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_PartialityPartial.repr",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "dae5f3bc039d1f4daaa006e60d78e193"
+    ],
+    [
+      "PartialityPartial.Dv",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "27db2767cc2fbedfe84058109045bcc5"
+    ],
+    [
+      "PartialityPartial.test",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b094d2db02ecb499282c572c49788bc3"
+    ],
+    [
+      "PartialityPartial.test'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "83e5d1f7130d6ebd24df282b79770642"
+    ],
+    [
+      "PartialityPartial.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_PartialityPartial.repr",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "b3e394eb8fbe81fb668eb6eca1759370"
+    ],
+    [
+      "PartialityPartial.Dv",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4851e49c78fc77b440e565cd09636238"
+    ],
+    [
+      "PartialityPartial.test",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2c3639db31d528236685c1e6ce0cf052"
+    ],
+    [
+      "PartialityPartial.test'",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e3af1f7b6bb4806c9530ed07b57ac099"
+    ]
+  ]
+]

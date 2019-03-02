@@ -1,0 +1,244 @@
+[
+  "7¢³I\"UGü²\u007f\r\u001b¢ùœ›",
+  [
+    [
+      "ExnHandleTwoPostCond.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_ExnHandleTwoPostCond.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "89b2eb5741c31799e059f7b336279af2"
+    ],
+    [
+      "ExnHandleTwoPostCond.interp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_ExnHandleTwoPostCond.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "f761626c2461c9eb6436d953f1bef570"
+    ],
+    [
+      "ExnHandleTwoPostCond.rep_try_catch",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_ExnHandleTwoPostCond.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "2fff9f30cd290e6516d66ada90bd844c"
+    ],
+    [
+      "ExnHandleTwoPostCond.lemma_try_catch",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "ExnHandleTwoPostCond_interpretation_Tm_arrow_afa6b0ade1f971aee97ee05300057471",
+        "ExnHandleTwoPostCond_interpretation_Tm_arrow_f2d128b41b807a50fc4bea0cd4f225d8",
+        "constructor_distinct_FStar.Pervasives.Inl",
+        "constructor_distinct_FStar.Pervasives.Inr",
+        "data_elim_FStar.Pervasives.Inl", "data_elim_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_ExnHandleTwoPostCond.interp",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "interpretation_ExnHandleTwoPostCond_Tm_abs_07a00cdd521011bf487600027d39b7c0",
+        "interpretation_ExnHandleTwoPostCond_Tm_abs_f61f9009156398cf7a12f15f58ecc5a2",
+        "l_quant_interp__1788", "projection_inverse_FStar.Pervasives.Inl__a",
+        "projection_inverse_FStar.Pervasives.Inl__b",
+        "projection_inverse_FStar.Pervasives.Inl_v",
+        "projection_inverse_FStar.Pervasives.Inr__a",
+        "projection_inverse_FStar.Pervasives.Inr__b",
+        "projection_inverse_FStar.Pervasives.Inr_v",
+        "token_correspondence_ExnHandleTwoPostCond.interp",
+        "typing_ExnHandleTwoPostCond_Tm_abs_f61f9009156398cf7a12f15f58ecc5a2"
+      ],
+      0,
+      "82e59e170d0718588d50c5d43573ab78"
+    ],
+    [
+      "ExnHandleTwoPostCond.try_catch",
+      1,
+      2,
+      1,
+      [ "@query", "unit_typing" ],
+      0,
+      "167b1f3621278086d7f6684cf358ca7b"
+    ],
+    [
+      "ExnHandleTwoPostCond.test2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5298319b2787d13a611c32040782f3b2"
+    ],
+    [
+      "ExnHandleTwoPostCond.div",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_ExnHandleTwoPostCond.div_wp",
+        "function_token_typing_ExnHandleTwoPostCond.div_by_zero_exn",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "b50ce207631c3b94f8f66586f96f11ff"
+    ],
+    [
+      "ExnHandleTwoPostCond.try_div",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "equation_ExnHandleTwoPostCond.div_wp",
+        "function_token_typing_ExnHandleTwoPostCond.div_by_zero_exn",
+        "int_inversion",
+        "interpretation_ExnHandleTwoPostCond_Tm_abs_cb546051409baa5738a488bc341478a0"
+      ],
+      0,
+      "850330d84c766e859524db17432c2f9a"
+    ],
+    [
+      "ExnHandleTwoPostCond.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_ExnHandleTwoPostCond.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "505e52dbeba3d5e46dff326efc81ea57"
+    ],
+    [
+      "ExnHandleTwoPostCond.interp",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_ExnHandleTwoPostCond.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "044cf09a8bd9b9701180c4c287fd8d2d"
+    ],
+    [
+      "ExnHandleTwoPostCond.rep_try_catch",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_ExnHandleTwoPostCond.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "aee7944a3f5d3ae14ff0b5e70bc6b07a"
+    ],
+    [
+      "ExnHandleTwoPostCond.lemma_try_catch",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "ExnHandleTwoPostCond_interpretation_Tm_arrow_afa6b0ade1f971aee97ee05300057471",
+        "ExnHandleTwoPostCond_interpretation_Tm_arrow_f2d128b41b807a50fc4bea0cd4f225d8",
+        "data_elim_FStar.Pervasives.Inl", "data_elim_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "3d6cea6f4ae9e58a677db6aec8887831"
+    ],
+    [
+      "ExnHandleTwoPostCond.try_catch",
+      2,
+      2,
+      1,
+      [ "@query", "unit_typing" ],
+      0,
+      "d9d3b93330d3fc0ef8aaa3f069eaf277"
+    ],
+    [
+      "ExnHandleTwoPostCond.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1c961e2cea40c869b6ecb1bb618a1fc1"
+    ],
+    [
+      "ExnHandleTwoPostCond.div",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_ExnHandleTwoPostCond.div_wp",
+        "function_token_typing_ExnHandleTwoPostCond.div_by_zero_exn",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "74041a312c8a9f4825ac9b19fb411b68"
+    ],
+    [
+      "ExnHandleTwoPostCond.try_div",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "equation_ExnHandleTwoPostCond.div_wp",
+        "function_token_typing_ExnHandleTwoPostCond.div_by_zero_exn",
+        "int_inversion",
+        "interpretation_ExnHandleTwoPostCond_Tm_abs_cb546051409baa5738a488bc341478a0"
+      ],
+      0,
+      "96816fa8c75e0e03db5bfa4f80c024dc"
+    ]
+  ]
+]

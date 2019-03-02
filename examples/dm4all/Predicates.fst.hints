@@ -1,0 +1,63 @@
+[
+  "V\u007f ôo#;µ{9\f<ìD•Õ",
+  [
+    [
+      "Predicates.test2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "Prims_interpretation_Tm_arrow_e9338c9e176627b4318e37ce7ca5332a",
+        "equation_Predicates.monotonic",
+        "equation_Predicates.monotonic_from_stronger",
+        "equation_Predicates.stronger", "equation_Predicates.stronger_arr",
+        "equation_Predicates.stronger_def", "equation_Predicates.uu___101",
+        "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_", "equation_Prims.pure_pre",
+        "equation_Prims.pure_wp",
+        "interpretation_Predicates_Tm_abs_115e049e4b00c21f0b308c9f5f2bc6e3",
+        "interpretation_Predicates_Tm_abs_1fe8abe739bc3d67c847bfdb3b3cf0f5",
+        "interpretation_Predicates_Tm_abs_50fc7001cb3bb2a75cb4044f029a6fb0",
+        "interpretation_Predicates_Tm_abs_aea7df7c8c8c88240dee1e5762721524",
+        "l_quant_interp__13697",
+        "proj_equation_Predicates.Mkhas_monotonic_monotonic",
+        "proj_equation_Predicates.Mkhas_stronger_stronger",
+        "projection_inverse_Predicates.Mkhas_monotonic_monotonic",
+        "projection_inverse_Predicates.Mkhas_stronger_stronger",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "token_correspondence_Predicates.monotonic",
+        "token_correspondence_Predicates.stronger",
+        "typing_Predicates_Tm_abs_50fc7001cb3bb2a75cb4044f029a6fb0"
+      ],
+      0,
+      "0a3a84c5ba9d26027dabb7f9a54f03c4"
+    ],
+    [
+      "Predicates.test3",
+      1,
+      2,
+      1,
+      [
+        "@query", "Prims_pretyping_cd1dd43c7849cf822e800878c71021f1",
+        "eq2-interp", "equation_Predicates.monotonic",
+        "equation_Predicates.monotonic_from_stronger",
+        "equation_Predicates.stronger", "equation_Predicates.stronger_arr",
+        "equation_Predicates.stronger_def",
+        "interpretation_Predicates_Tm_abs_115e049e4b00c21f0b308c9f5f2bc6e3",
+        "interpretation_Predicates_Tm_abs_aea7df7c8c8c88240dee1e5762721524",
+        "l_quant_interp__13697",
+        "proj_equation_Predicates.Mkhas_monotonic_monotonic",
+        "proj_equation_Predicates.Mkhas_stronger_stronger",
+        "projection_inverse_Predicates.Mkhas_monotonic_monotonic",
+        "projection_inverse_Predicates.Mkhas_stronger_stronger",
+        "token_correspondence_Predicates.monotonic",
+        "token_correspondence_Predicates.stronger",
+        "token_correspondence_Prims.eq2", "typing_range_const"
+      ],
+      0,
+      "1533d37bae68a9aff90622bd532794cb"
+    ]
+  ]
+]

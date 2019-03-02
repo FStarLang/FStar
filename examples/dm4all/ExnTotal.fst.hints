@@ -1,0 +1,99 @@
+[
+  "›™b\u0007õý¾õpþ}vðêÜ[",
+  [
+    [
+      "ExnTotal.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr", "equation_ExnTotal.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "9cafdec4e1e5008acde18343074f6f9e"
+    ],
+    [
+      "ExnTotal.Ex",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e011c536c8b26c6e496ed9cba1d9dfe0"
+    ],
+    [
+      "ExnTotal.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "3893c1f0c7c051eb71136179af7e3ea9"
+    ],
+    [
+      "ExnTotal.test'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "92535ded6a6e8548948bf67c720c31a0"
+    ],
+    [
+      "ExnTotal.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr", "equation_ExnTotal.repr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "077f59ced0aecff7b518b3d27e56de5a"
+    ],
+    [
+      "ExnTotal.Ex",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ed76afc9f4f2b13dcd546954eeab1627"
+    ],
+    [
+      "ExnTotal.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "8d25cb7c2078bb515ac104efabbd26ae"
+    ],
+    [
+      "ExnTotal.test'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "2645138152b1ac17e9071dc0f4ccc56d"
+    ]
+  ]
+]

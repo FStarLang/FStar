@@ -1,0 +1,155 @@
+[
+  "©G’ãÂû°¶Ý-YÝã×—û",
+  [
+    [
+      "StExnTotal.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "StExnTotal_interpretation_Tm_arrow_0be46514fe61755cfabf3fe87e746ccc",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Prims.eqtype", "equation_StExnTotal.st",
+        "equation_StExnTotal.state", "function_token_typing_Prims.int",
+        "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "5d9b98cfe6ace6b6b5a66da6ba089530"
+    ],
+    [
+      "StExnTotal.interpretation",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "StExnTotal_interpretation_Tm_arrow_0be46514fe61755cfabf3fe87e746ccc",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Prims.eqtype", "equation_StExnTotal.st",
+        "equation_StExnTotal.state", "function_token_typing_Prims.int",
+        "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "7f2648b9494b9b714e040556098bcb2d"
+    ],
+    [
+      "StExnTotal.test1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_StExnTotal.return_wp",
+        "equation_StExnTotal.state",
+        "interpretation_StExnTotal_Tm_abs_60e5f24175446d2ae917cd524862d8ab",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "token_correspondence_StExnTotal.return_wp"
+      ],
+      0,
+      "d17e2a734d192147d4e596d1089ed320"
+    ],
+    [
+      "StExnTotal.test3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_StExnTotal.return_wp", "equation_StExnTotal.state",
+        "int_inversion",
+        "interpretation_StExnTotal_Tm_abs_60e5f24175446d2ae917cd524862d8ab",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThan",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "token_correspondence_StExnTotal.return_wp", "unit_inversion",
+        "unit_typing"
+      ],
+      0,
+      "ce6db06f482b04c3ec8d2df16b72f0a5"
+    ],
+    [
+      "StExnTotal.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "StExnTotal_interpretation_Tm_arrow_0be46514fe61755cfabf3fe87e746ccc",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Prims.eqtype", "equation_StExnTotal.st",
+        "equation_StExnTotal.state", "function_token_typing_Prims.int",
+        "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "ddcea552d0e88980619ae9e7a449541d"
+    ],
+    [
+      "StExnTotal.interpretation",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "StExnTotal_interpretation_Tm_arrow_0be46514fe61755cfabf3fe87e746ccc",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Prims.eqtype", "equation_StExnTotal.st",
+        "equation_StExnTotal.state", "function_token_typing_Prims.int",
+        "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "1613c9397173d72b6862fa7795392050"
+    ],
+    [
+      "StExnTotal.test1",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_StExnTotal.return_wp",
+        "equation_StExnTotal.state",
+        "interpretation_StExnTotal_Tm_abs_60e5f24175446d2ae917cd524862d8ab",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "token_correspondence_StExnTotal.return_wp"
+      ],
+      0,
+      "17cb42c6328ea3eb12fc701304aee257"
+    ],
+    [
+      "StExnTotal.test3",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_StExnTotal.return_wp", "equation_StExnTotal.state",
+        "int_inversion",
+        "interpretation_StExnTotal_Tm_abs_60e5f24175446d2ae917cd524862d8ab",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThan",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "token_correspondence_StExnTotal.return_wp", "unit_inversion",
+        "unit_typing"
+      ],
+      0,
+      "de0d7729367ebb4f364195fe2d1b089d"
+    ]
+  ]
+]

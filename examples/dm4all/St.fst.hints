@@ -1,0 +1,85 @@
+[
+  "\u0000моf\r~®и/%А/П\u0000%\u000b",
+  [
+    [
+      "St.test1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_St.return_wp", "equation_St.state",
+        "interpretation_St_Tm_abs_4d3c93234355d1cb91650e206d004a2b",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "token_correspondence_St.return_wp"
+      ],
+      0,
+      "1e004039de3791080cb561a88bc4e5c5"
+    ],
+    [
+      "St.test2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_St.return_wp", "equation_St.state",
+        "interpretation_St_Tm_abs_4d3c93234355d1cb91650e206d004a2b",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "token_correspondence_St.return_wp"
+      ],
+      0,
+      "a4ab75d3fda93551355a2ffc182bf40f"
+    ],
+    [
+      "St.test3",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "bb1a23cfee6dd11b3edb290b74d1bcfc"
+    ],
+    [
+      "St.test1",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_St.return_wp", "equation_St.state",
+        "interpretation_St_Tm_abs_4d3c93234355d1cb91650e206d004a2b",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "token_correspondence_St.return_wp"
+      ],
+      0,
+      "5239c0db155bf50511bcb2a4110f7930"
+    ],
+    [
+      "St.test2",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_St.return_wp", "equation_St.state",
+        "interpretation_St_Tm_abs_4d3c93234355d1cb91650e206d004a2b",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "token_correspondence_St.return_wp"
+      ],
+      0,
+      "2b28caf03aaccf109c7fe250db3ed600"
+    ],
+    [
+      "St.test3",
+      2,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "4e4e020649c1de61bff6ca694b750412"
+    ]
+  ]
+]

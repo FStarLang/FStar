@@ -1,0 +1,165 @@
+[
+  "ZÀ\u0017§'~\u0006Ëò3þÁSÐO‘",
+  [
+    [
+      "NDAngelic.Nd",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "067504e00f063ba1161281c6067e53fd"
+    ],
+    [
+      "NDAngelic.choose",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "26dbf80fb358353d775059c26a334891"
+    ],
+    [
+      "NDAngelic.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "aa2e65d5f88aa93e1f00c8084c969f1f"
+    ],
+    [
+      "NDAngelic.pick_from",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "eq2-interp",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list", "l_or-interp",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "e0aa59a3cb1f46d8195c5ed32329abb0"
+    ],
+    [
+      "NDAngelic.gguard",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "unit_inversion"
+      ],
+      0,
+      "271d50252f9464a0cd6b8a59fdf91f0c"
+    ],
+    [
+      "NDAngelic.pyths",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_NDAngelic_Tm_refine_9ac23566a65af532936627937df937cf"
+      ],
+      0,
+      "d05ef5f8b186be3fb7e88c9fddce19d4"
+    ],
+    [
+      "NDAngelic.Nd",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a1a1eb31ebf7a0d2d91eb5512efd32dc"
+    ],
+    [
+      "NDAngelic.choose",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7c043a494676094d7faa006bef6effb2"
+    ],
+    [
+      "NDAngelic.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "de2d57f3e74ca17538e847729777c902"
+    ],
+    [
+      "NDAngelic.pick_from",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "eq2-interp",
+        "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Prims.list", "l_or-interp",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "3da90bd33c385d7b4c6939e4e6e5687a"
+    ],
+    [
+      "NDAngelic.gguard",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "unit_inversion"
+      ],
+      0,
+      "9fd785371c7b40f5904a294520301226"
+    ],
+    [
+      "NDAngelic.pyths",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_NDAngelic_Tm_refine_9ac23566a65af532936627937df937cf"
+      ],
+      0,
+      "647a01af765522482667b951925abbb1"
+    ]
+  ]
+]

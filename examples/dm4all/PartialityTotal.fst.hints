@@ -1,0 +1,105 @@
+[
+  "P\u000eﬂ9\tÂâ7«ˇééN dÅ",
+  [
+    [
+      "PartialityTotal.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_PartialityTotal.repr",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "46df6fa0192f82dd0b015ada9679ed97"
+    ],
+    [
+      "PartialityTotal.Dv",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "50efe1846b20d37b24b70c7fd2303e36"
+    ],
+    [
+      "PartialityTotal.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "57b9ba191c5410ce70fee7aa271d57b6"
+    ],
+    [
+      "PartialityTotal.test'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "ef25b49545f6013566780d62ac69bc8e"
+    ],
+    [
+      "PartialityTotal.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_PartialityTotal.repr",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "3d1ad8443d57d08e973d583e2bb7e2b1"
+    ],
+    [
+      "PartialityTotal.Dv",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b787fc8690968fb3da5278991ada7541"
+    ],
+    [
+      "PartialityTotal.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "b6cd8e082a4079bde142515eead41328"
+    ],
+    [
+      "PartialityTotal.test'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "aee5074d7ef0086d403639d01998b56d"
+    ]
+  ]
+]

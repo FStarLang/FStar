@@ -1,0 +1,241 @@
+[
+  "úa~èå/!ÕU~ª’Â9®€",
+  [
+    [
+      "IOForget.__proj__Read__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOForget.Read",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOForget_Tm_refine_af0933496230a40f6fdd5d2004eb1bc0"
+      ],
+      0,
+      "0424be88075d2c660c1214fcdc1b553e"
+    ],
+    [
+      "IOForget.__proj__Write__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOForget.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOForget_Tm_refine_d3f216f148c5d9ca5a202e4ae290ffa7"
+      ],
+      0,
+      "590bc2d4feebcf75bd1e0927aaacce12"
+    ],
+    [
+      "IOForget.__proj__Write__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOForget.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOForget_Tm_refine_d3f216f148c5d9ca5a202e4ae290ffa7"
+      ],
+      0,
+      "ea895755a171bce7621f1e50f2b0838e"
+    ],
+    [
+      "IOForget.__proj__Return__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOForget.Return",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOForget_Tm_refine_65cc53a0fb4d7d981d28c2d0315adfe4"
+      ],
+      0,
+      "2c613bb0d403a47d85a9ac872e41763d"
+    ],
+    [
+      "IOForget.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_a2c0eff826fe06b382ebcc4bb9360610_4",
+        "disc_equation_IOForget.Read", "disc_equation_IOForget.Return",
+        "disc_equation_IOForget.Write", "fuel_guarded_inversion_IOForget.io",
+        "subterm_ordering_IOForget.Read", "subterm_ordering_IOForget.Write"
+      ],
+      0,
+      "0bc5c1b299c0177a2fe556ba597138fd"
+    ],
+    [
+      "IOForget.interpretation",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_72489d6929aa0815fbd18d9e39bc366b_2",
+        "disc_equation_IOForget.Read", "disc_equation_IOForget.Return",
+        "disc_equation_IOForget.Write", "fuel_guarded_inversion_IOForget.io",
+        "subterm_ordering_IOForget.Read", "subterm_ordering_IOForget.Write"
+      ],
+      0,
+      "2e33ed0fefc745036722f1f792b0614a"
+    ],
+    [
+      "IOForget.test1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f2f9b9d3664667e50ac672f53354b8c4"
+    ],
+    [
+      "IOForget.test2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "897b6b24444fc54541a4095885072947"
+    ],
+    [
+      "IOForget.test3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "dd408913b831d4b32dd3662814894bed"
+    ],
+    [
+      "IOForget.test5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "47542508e2016187f33501eb9fc46951"
+    ],
+    [
+      "IOForget.__proj__Read__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOForget.Read",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOForget_Tm_refine_af0933496230a40f6fdd5d2004eb1bc0"
+      ],
+      0,
+      "d874761a36c16a3b324892514f7a05d8"
+    ],
+    [
+      "IOForget.__proj__Write__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOForget.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOForget_Tm_refine_d3f216f148c5d9ca5a202e4ae290ffa7"
+      ],
+      0,
+      "0631b943ebdf633dab233328c8942ee8"
+    ],
+    [
+      "IOForget.__proj__Write__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOForget.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOForget_Tm_refine_d3f216f148c5d9ca5a202e4ae290ffa7"
+      ],
+      0,
+      "9a51ec1247db7593d7f1a162101c88e0"
+    ],
+    [
+      "IOForget.__proj__Return__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IOForget.Return",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_IOForget_Tm_refine_65cc53a0fb4d7d981d28c2d0315adfe4"
+      ],
+      0,
+      "d11766a1c06280bcff828980eecfa007"
+    ],
+    [
+      "IOForget.bind",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_a2c0eff826fe06b382ebcc4bb9360610_4",
+        "disc_equation_IOForget.Read", "disc_equation_IOForget.Return",
+        "disc_equation_IOForget.Write", "fuel_guarded_inversion_IOForget.io",
+        "subterm_ordering_IOForget.Read", "subterm_ordering_IOForget.Write"
+      ],
+      0,
+      "deafcfc6fd6136566889a1030914e208"
+    ],
+    [
+      "IOForget.interpretation",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_72489d6929aa0815fbd18d9e39bc366b_2",
+        "disc_equation_IOForget.Read", "disc_equation_IOForget.Return",
+        "disc_equation_IOForget.Write", "fuel_guarded_inversion_IOForget.io",
+        "subterm_ordering_IOForget.Read", "subterm_ordering_IOForget.Write"
+      ],
+      0,
+      "f9931aa1cf09cc13717476463c5e0184"
+    ],
+    [
+      "IOForget.test1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9dd11e284ce6c597f9c28f6cb63c868f"
+    ],
+    [
+      "IOForget.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "84bf92b8870c7c6f145136fd180df442"
+    ],
+    [
+      "IOForget.test3",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "bd9290e740149274bc2c83f5c8bc771d"
+    ],
+    [
+      "IOForget.test5",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0ab0c2b5ab1dcc16c7b855efa93127ee"
+    ]
+  ]
+]
