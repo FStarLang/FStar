@@ -94,8 +94,6 @@ noeq type mbuffer (a:Type0) (rrel:srel a) (rel:srel a) :Type0 =
     content:HST.mreference (Seq.lseq a (U32.v max_length)) (srel_to_lsrel (U32.v max_length) rrel) ->
     idx:U32.t ->
     length:U32.t{U32.v idx + U32.v length <= U32.v max_length} ->
-    compatible:squash (compatible_sub_preorder (U32.v max_length) rrel
-                                               (U32.v idx) (U32.v idx + U32.v length) rel) ->  //proof of compatibility
     mbuffer a rrel rel
 
 let g_is_null #_ #_ #_ b = Null? b
@@ -107,12 +105,15 @@ let null_unique #_ #_ #_ _ = ()
 let unused_in #_ #_ #_ b h =
   match b with
   | Null -> False
-  | Buffer _ content _ _ _ -> content `HS.unused_in` h
+  | Buffer _ content _ _ -> content `HS.unused_in` h
 
-let live #_ #_ #_ h b =
+let live #_ #rrel #rel h b =
   match b with
   | Null -> True
-  | Buffer _ content _ _ _ -> h `HS.contains` content
+  | Buffer max_length content idx length ->
+      h `HS.contains` content /\
+      compatible_sub_preorder (U32.v max_length) rrel
+        (U32.v idx) (U32.v idx + U32.v length) rel  //proof of compatibility
 
 let live_null _ _ _ _ = ()
 
@@ -132,14 +133,14 @@ let live_region_frameOf #_ #_ #_ _ _ = ()
 let len #_ #_ #_ b =
   match b with
   | Null -> 0ul
-  | Buffer _ _ _ len _ -> len
+  | Buffer _ _ _ len -> len
 
 let len_null a _ _ = ()
 
 let as_seq #_ #_ #_ h b =
   match b with
   | Null -> Seq.empty
-  | Buffer max_len content idx len _ ->
+  | Buffer max_len content idx len ->
     Seq.slice (HS.sel h content) (U32.v idx) (U32.v idx + U32.v len)
 
 let length_as_seq #_ #_ #_ _ _ = ()
@@ -149,13 +150,18 @@ let mbuffer_injectivity_in_first_preorder () = ()
 let mgsub #a #rrel #rel sub_rel b i len =
   match b with
   | Null -> Null
-  | Buffer max_len content idx length () ->
+  | Buffer max_len content idx length ->
+    Buffer max_len content (U32.add idx i) len
+
+let live_gsub #_ #rrel #rel _ b i len sub_rel =
+  match b with
+  | Null -> ()
+  | Buffer max_len content idx length ->
     lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel
                                               (U32.v idx) (U32.v idx + U32.v length) rel
-		         	              (U32.v i) (U32.v i + U32.v len) sub_rel;
-    Buffer max_len content (U32.add idx i) len ()
+		         	              (U32.v i) (U32.v i + U32.v len) sub_rel
 
-let live_gsub #_ #_ #_ _ _ _ _ _ = ()
+let live_gsub_recip #_ #_ #_ _ _ _ _ _ = ()
 
 let gsub_is_null #_ #_ #_ _ _ _ _ = ()
 
@@ -169,8 +175,14 @@ let mgsub_inj #_ #_ #_ _ _ _ _ _ _ _ _ = ()
 
 #push-options "--z3rlimit 20"
 let gsub_gsub #_ #_ #rel b i1 len1 sub_rel1 i2 len2 sub_rel2 =
+  let prf () : Lemma
+    (requires (compatible_sub b i1 len1 sub_rel1 /\  compatible_sub (mgsub sub_rel1 b i1 len1) i2 len2 sub_rel2))
+    (ensures (compatible_sub b (U32.add i1 i2) len2 sub_rel2))
+  =
   lemma_seq_sub_compatibility_is_transitive (length b) rel (U32.v i1) (U32.v i1 + U32.v len1) sub_rel1
                                             (U32.v i2) (U32.v i2 + U32.v len2) sub_rel2
+  in
+  Classical.move_requires prf ()
 #pop-options
 
 /// A buffer ``b`` is equal to its "largest" sub-buffer, at index 0 and
@@ -181,7 +193,7 @@ let gsub_zero_length #_ #_ #rel b = lemma_seq_sub_compatilibity_is_reflexive (le
 let as_seq_gsub #_ #_ #_ h b i len _ =
   match b with
   | Null -> ()
-  | Buffer _ content idx len0 _ ->
+  | Buffer _ content idx len0 ->
     Seq.slice_slice (HS.sel h content) (U32.v idx) (U32.v idx + U32.v len0) (U32.v i) (U32.v i + U32.v len)
 
 (* Untyped view of buffers, used only to implement the generic modifies clause. DO NOT USE in client code. *)
@@ -231,7 +243,7 @@ let ubuffer_preserved'
     (live h b' ==> live h' b') /\ (
     ((live h b' /\ live h' b' /\ Buffer? b') ==> (
     let ({ b_max_length = bmax; b_offset = boff; b_length = blen }) = Ghost.reveal b in
-    let Buffer max _ idx len _ = b' in (
+    let Buffer max _ idx len = b' in (
       U32.v max == bmax /\
       U32.v idx <= boff /\
       boff + blen <= U32.v idx + U32.v len
@@ -266,7 +278,7 @@ let ubuffer_preserved_intro
       live h b' /\ live h' b' /\
       Buffer? b' /\ (
       let ({ b_max_length = bmax; b_offset = boff; b_length = blen }) = Ghost.reveal b in
-      let Buffer max _ idx len _ = b' in (
+      let Buffer max _ idx len = b' in (
         U32.v max == bmax /\
         U32.v idx <= boff /\
         boff + blen <= U32.v idx + U32.v len
@@ -274,7 +286,7 @@ let ubuffer_preserved_intro
     (ensures (
       Buffer? b' /\ (
       let ({ b_max_length = bmax; b_offset = boff; b_length = blen }) = Ghost.reveal b in
-      let Buffer max _ idx len _ = b' in
+      let Buffer max _ idx len = b' in
         U32.v max == bmax /\
         U32.v idx <= boff /\
         boff + blen <= U32.v idx + U32.v len /\
@@ -291,7 +303,7 @@ let ubuffer_preserved_intro
     (live h b' ==> live h' b') /\ (
     ((live h b' /\ live h' b' /\ Buffer? b') ==> (
     let ({ b_max_length = bmax; b_offset = boff; b_length = blen }) = Ghost.reveal b in
-    let Buffer max _ idx len _ = b' in (
+    let Buffer max _ idx len = b' in (
       U32.v max == bmax /\
       U32.v idx <= boff /\
       boff + blen <= U32.v idx + U32.v len
@@ -1191,10 +1203,13 @@ let disjoint_neq #_ #_ #_ #_ #_ #_ b1 b2 =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2 then
     MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
   else ()
+
+(*
 let includes_live #a #rrel #rel1 #rel2 h larger smaller =
   if Null? larger || Null? smaller then ()
   else
     MG.loc_includes_aloc_elim #_ #cls #(frameOf larger) #(frameOf smaller) #(as_addr larger) #(as_addr smaller) (ubuffer_of_buffer larger) (ubuffer_of_buffer smaller)
+*)
 
 let includes_frameOf_as_addr #_ #_ #_ #_ #_ #_ larger smaller =
   if Null? larger || Null? smaller then ()
@@ -1215,18 +1230,14 @@ let is_null #_ #_ #_ b = Null? b
 let msub #a #rrel #rel sub_rel b i len =
   match b with
   | Null -> Null
-  | Buffer max_len content i0 len0 () ->
-    lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel (U32.v i0) (U32.v i0 + U32.v len0) rel
-                                              (U32.v i) (U32.v i + U32.v len) sub_rel;
-    Buffer max_len content (U32.add i0 i) len ()
+  | Buffer max_len content i0 len0 ->
+    Buffer max_len content (U32.add i0 i) len
 
 let moffset #a #rrel #rel sub_rel b i =
   match b with
   | Null -> Null
-  | Buffer max_len content i0 len () ->
-    lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel (U32.v i0) (U32.v i0 + U32.v len) rel
-                                              (U32.v i) (U32.v i + U32.v (U32.sub len i)) sub_rel;
-    Buffer max_len content (U32.add i0 i) (U32.sub len i) ()
+  | Buffer max_len content i0 len ->
+    Buffer max_len content (U32.add i0 i) (U32.sub len i)
 
 let index #_ #_ #_ b i =
   let open HST in
@@ -1237,14 +1248,14 @@ let g_upd_seq #_ #_ #_ b s h =
   if Seq.length s = 0 then h
   else
     let s0 = HS.sel h (Buffer?.content b) in
-    let Buffer _ content idx length () = b in
+    let Buffer _ content idx length = b in
     HS.upd h (Buffer?.content b) (Seq.replace_subseq s0 (U32.v idx) (U32.v idx + U32.v length) s)
 
 let lemma_g_upd_with_same_seq #_ #_ #_ b h =
   if Null? b then ()
   else
     let open FStar.UInt32 in
-    let Buffer _ content idx length () = b in
+    let Buffer _ content idx length = b in
     let s = HS.sel h content in
     assert (Seq.equal (Seq.replace_subseq s (v idx) (v idx + v length) (Seq.slice s (v idx) (v idx + v length))) s);
     HS.lemma_heap_equality_upd_with_sel h (Buffer?.content b)
@@ -1273,7 +1284,7 @@ let g_upd_modifies_strong #_ #_ #_ b i v h =
 
 let upd' #_ #_ #_ b i v =
   let open HST in
-  let Buffer max_length content idx len () = b in
+  let Buffer max_length content idx len = b in
   let s0 = !content in
   let sb0 = Seq.slice s0 (U32.v idx) (U32.v idx + U32.v len) in
   content := Seq.replace_subseq s0 (U32.v idx) (U32.v idx + U32.v len) (Seq.upd sb0 (U32.v i) v)
@@ -1281,34 +1292,57 @@ let upd' #_ #_ #_ b i v =
 let recallable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0 =
   (not (g_is_null b)) ==> (
     HST.is_eternal_region (frameOf b) /\
-    not (HS.is_mm (Buffer?.content b)))
+    not (HS.is_mm (Buffer?.content b)) /\ (
+    let Buffer max_length content idx length = b in
+      compatible_sub_preorder (U32.v max_length) rrel
+        (U32.v idx) (U32.v idx + U32.v length) rel  //proof of compatibility
+  ))
 
 let recallable_null #_ #_ #_ = ()
 
+let recallable_mgsub #_ #rrel #rel b i len sub_rel =
+  match b with
+  | Null -> ()
+  | Buffer max_len content idx length ->
+    lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel
+                                              (U32.v idx) (U32.v idx + U32.v length) rel
+		         	              (U32.v i) (U32.v i + U32.v len) sub_rel
+
+(*
 let recallable_includes #_ #_ #_ #_ #_ #_ larger smaller =
   if Null? larger || Null? smaller then ()
   else
     MG.loc_includes_aloc_elim #_ #cls #(frameOf larger) #(frameOf smaller) #(as_addr larger) #(as_addr smaller) (ubuffer_of_buffer larger) (ubuffer_of_buffer smaller)
+*)
 
 let recall #_ #_ #_ b = if Null? b then () else HST.recall (Buffer?.content b)
 
 private let spred_as_mempred (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
   :HST.mem_predicate
-  = fun h -> p (as_seq h b)
+  = fun h ->
+    begin match b with
+    | Null -> True
+    | Buffer max_length content idx length ->
+      compatible_sub_preorder (U32.v max_length) rrel
+        (U32.v idx) (U32.v idx + U32.v length) rel
+    end ==>
+    p (as_seq h b)
 
-let witnessed #_ #_ #_ b p =
+let witnessed #_ #rrel #rel b p =
   match b with
   | Null -> p Seq.empty
-  | Buffer _ content _ _ () -> HST.token_p content (spred_as_mempred b p)
+  | Buffer max_length content idx length ->
+    HST.token_p content (spred_as_mempred b p)
 
 private let lemma_stable_on_rel_is_stable_on_rrel (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (p:spred a)
   :Lemma (requires (Buffer? b /\ stable_on p rel))
          (ensures  (HST.stable_on (spred_as_mempred b p) (Buffer?.content b)))
-  = let Buffer _ content _ _ () = b in
+  = let Buffer max_length content idx length = b in
     let mp = spred_as_mempred b p in
     let aux (h0 h1:HS.mem) :Lemma ((mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content)) ==> mp h1)
-      = Classical.arrow_to_impl #(mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content)) #(mp h1)
+      = Classical.arrow_to_impl #(mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content) /\ compatible_sub_preorder (U32.v max_length) rrel
+        (U32.v idx) (U32.v idx + U32.v length) rel) #(mp h1)
           (fun _ -> assert (rel (as_seq h0 b) (as_seq h1 b)))
     in
     Classical.forall_intro_2 aux
@@ -1316,7 +1350,7 @@ private let lemma_stable_on_rel_is_stable_on_rrel (#a:Type0) (#rrel #rel:srel a)
 let witness_p #a #rrel #rel b p =
   match b with
   | Null -> ()
-  | Buffer _ content _ _ () ->
+  | Buffer _ content _ _ ->
     lemma_stable_on_rel_is_stable_on_rrel b p;
     //AR: TODO: the proof doesn't go through without this assertion, which should follow directly from the lemma call
     assert (HST.stable_on #(Seq.lseq a (U32.v (Buffer?.max_length b))) #(srel_to_lsrel (U32.v (Buffer?.max_length b)) rrel) (spred_as_mempred b p) (Buffer?.content b));
@@ -1325,7 +1359,7 @@ let witness_p #a #rrel #rel b p =
 let recall_p #_ #_ #_ b p =
   match b with
   | Null -> ()
-  | Buffer _ content _ _ () -> HST.recall_p content (spred_as_mempred b p)
+  | Buffer _ content _ _ -> HST.recall_p content (spred_as_mempred b p)
 
 let freeable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) =
   (not (g_is_null b)) /\
@@ -1357,7 +1391,7 @@ private let alloc_heap_common (#a:Type0) (#rrel:srel a)
     let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
       if mm then HST.ralloc_mm r s else HST.ralloc r s
     in
-    let b = Buffer len content 0ul len () in
+    let b = Buffer len content 0ul len in
     b
 
 let mgcmalloc #_ #_ r init len = alloc_heap_common r init len false
@@ -1369,7 +1403,7 @@ let malloca #a #rrel init len =
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc (Seq.create (U32.v len) init)
   in
-  let b = Buffer len content 0ul len () in
+  let b = Buffer len content 0ul len in
   b
 
 let malloca_of_list #a #rrel init =
@@ -1379,7 +1413,7 @@ let malloca_of_list #a #rrel init =
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc s
   in
-  let b = Buffer len content 0ul len () in
+  let b = Buffer len content 0ul len in
   b
 
 let mgcmalloc_of_list #a #rrel r init =
@@ -1389,17 +1423,17 @@ let mgcmalloc_of_list #a #rrel r init =
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.ralloc r s
   in
-  let b = Buffer len content 0ul len () in
+  let b = Buffer len content 0ul len in
   b
 
-#push-options "--z3rlimit 16 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#push-options "--z3rlimit 32 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
   if len = 0ul then ()
   else
     let h = get () in
-    let Buffer _ content1 idx1 length1 () = src in
-    let Buffer _ content2 idx2 length2 () = dst in
+    let Buffer _ content1 idx1 length1 = src in
+    let Buffer _ content2 idx2 length2 = dst in
     let s_full1 = !content1 in
     let s_full2 = !content2 in
     let s1 = Seq.slice s_full1 (U32.v idx1) (U32.v idx1 + U32.v length1) in
@@ -1427,7 +1461,7 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
     g_upd_seq_as_seq dst s2' h  //for modifies clause
 #pop-options
 
-#push-options "--z3rlimit 32 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1"
+#push-options "--z3rlimit 64 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1"
 let fill' (#t:Type) (#rrel #rel: srel t)
   (b: mbuffer t rrel rel)
   (z:t)
@@ -1448,7 +1482,7 @@ let fill' (#t:Type) (#rrel #rel: srel t)
   if len = 0ul then ()
   else begin
     let h = get () in
-    let Buffer max_length content idx length () = b in
+    let Buffer max_length content idx length = b in
     let s_full = !content in
     let s = Seq.slice s_full (U32.v idx) (U32.v idx + U32.v length) in
     let s_src = Seq.create (U32.v len) z in
