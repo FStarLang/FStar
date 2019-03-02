@@ -1,8 +1,8 @@
 module Continuations
 
-let repr (a:Type) = (a -> Type) -> Type
+let repr (a:Type) = (a -> Type0) -> Type0
 
-let return (a:Type) (x:a) = fun k -> k x
+let return (a:Type) (x:a) : repr a = fun k -> k x
 
 let bind (a : Type) (b : Type)
     (l : repr a) (f : a -> repr b) =

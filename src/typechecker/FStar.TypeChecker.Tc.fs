@@ -348,7 +348,12 @@ let cps_and_elaborate_ed env ed =
 
   let repr =
     if not ed.spec_dm4f
-    then repr
+    then 
+      let repr = match (SS.compress repr).n with
+                 | Tm_uinst (t, univs) -> mk_Tm_uinst t (List.map (fun _ -> U_unknown) univs)
+                 | _ -> repr
+      in
+      repr
     else
       let wp = S.gen_bv "wp_a" None wp_a in
       let binders = [ S.mk_binder a; S.mk_binder wp ] in
@@ -408,16 +413,14 @@ let cps_and_elaborate_ed env ed =
   ignore (register "post" post);
   ignore (register "wp" wp_type);
 
+  if Env.debug env (Options.Other "ED") then BU.print1 "GGG 14 Representation is: %s\n" (Print.term_to_string repr);
+
   let ed = { ed with
     signature = close effect_binders effect_signature;
     repr = {
       monad_m = apply_close repr;
       monad_ret = [], apply_close return_elab;
-      monad_bind =
-        if ed.spec_dm4f
-        then [], apply_close bind_elab
-        else [gen Range.dummyRange], apply_close bind_elab;
-        // GG: FIXME, we shouldn't need this bogus univ
+      monad_bind = [], apply_close bind_elab;
     };
     spec = {
       monad_m = S.tun;
@@ -573,13 +576,16 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
                                  (S.mk_Total wp_b) in
     check_and_gen' env ed.spec.monad_bind expected_k in
 
+  let mk_simple_repr (t:term) =
+    let repr, _, _ = tc_tot_or_gtot_term env ed.repr.monad_m in
+    U.mk_app repr [S.as_arg t]
+  in
+
   let interp =
     match ed.interp with
     | None -> None
     | Some interp ->
-      let a, wp_a = fresh_effect_signature () in
-      let repr = ed.repr.monad_m in
-      let repr_a = U.mk_app repr [S.as_arg (S.bv_to_name a)] in
+      let repr_a = mk_simple_repr (S.bv_to_name a) in
       let expected_k = U.arrow [S.mk_implicit_binder a;
                                    S.null_binder repr_a]
                                    (S.mk_Total wp_a) in
@@ -590,9 +596,8 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
     match ed.mrelation with
     | None -> None
     | Some mrelation ->
-      let a, wp_a = fresh_effect_signature () in
       let t, _ = U.type_u () in
-      let repr_a = U.mk_app ed.repr.monad_m [S.as_arg (S.bv_to_name a)] in
+      let repr_a = mk_simple_repr (S.bv_to_name a) in
       let expected_k = U.arrow [S.mk_implicit_binder a;
                                    S.null_binder repr_a;
                                    S.null_binder wp_a]
@@ -843,6 +848,72 @@ let tc_eff_decl env0 se (ed:Syntax.eff_decl) =
         in
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
+
+      | _ when not (is_unknown ed.repr.monad_m) ->
+        let repr =
+            let t, _ = U.type_u () in
+            let expected_k = U.arrow [S.mk_binder a] (S.mk_GTotal t) in
+             if Env.debug env (Options.Other "ED") then
+                BU.print2 "About to check repr=%s\nat type %s\n" (Print.term_to_string ed.repr.monad_m) (Print.term_to_string expected_k);
+            tc_check_trivial_guard env ed.repr.monad_m expected_k in
+
+        let mk_repr' t =
+            let repr = N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env repr in
+            mk (Tm_app(repr, [as_arg t])) None Range.dummyRange in
+
+        let mk_repr a =
+            mk_repr' (S.bv_to_name a) in
+
+        let destruct_repr t =
+            match (SS.compress t).n with
+            | Tm_app(_, [(t, _); (wp, _)]) -> t, wp
+            | _ -> failwith "Unexpected repr type" in
+
+        let bind_repr =
+            let r = S.lid_as_fv PC.range_0 delta_constant None |> S.fv_to_tm in
+            let b, wp_b = fresh_effect_signature () in
+            let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
+            let expected_k = U.arrow ([S.mk_binder a;
+                                         S.mk_binder b;
+                                         S.null_binder (mk_repr a);
+                                         S.null_binder (U.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b))])
+                                        (S.mk_Total (mk_repr b)) in
+            if Env.debug env (Options.Other "ED") then
+              BU.print1 "About to check expected_k %s\n" (Print.term_to_string expected_k);
+            let expected_k, _, _ =
+                tc_tot_or_gtot_term env expected_k in
+            if Env.debug env (Options.Other "ED") then
+              BU.print2 "About to check bind=%s\n\n, at type %s\n"
+                         (Print.term_to_string (snd ed.repr.monad_bind))
+                         (Print.term_to_string expected_k);
+            let env = Env.set_range env (snd (ed.repr.monad_bind)).pos in
+            let br = check_and_gen' env ed.repr.monad_bind expected_k in
+            if Env.debug env (Options.Other "ED") then
+              BU.print2 "After checking bind_repr is %s\nexpected_k is %s\n" (Print.tscheme_to_string br) (Print.term_to_string expected_k);
+            br
+        in
+
+        let return_repr =
+            let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
+            let res = mk_repr a in
+            let expected_k = U.arrow [S.mk_binder a;
+                                         S.mk_binder x_a]
+                                       (S.mk_Total res) in
+            let expected_k, _, _ =
+                tc_tot_or_gtot_term env expected_k in
+            (* printfn "About to check return_repr=%s, at type %s\n" *)
+            (*         (Print.term_to_string (snd ed.repr.monad_ret)) *)
+            (*         (Print.term_to_string expected_k); *)
+            let env = Env.set_range env (snd (ed.repr.monad_ret)).pos in
+            let univs, repr = check_and_gen' env ed.repr.monad_ret expected_k in
+            match univs with
+            | [] -> [], repr
+            | _ -> raise_error (Errors.Fatal_UnexpectedUniversePolymorphicReturn, "Unexpected universe-polymorphic return for effect") repr.pos in
+
+        (repr,
+         bind_repr,
+         return_repr,
+         ed.actions)
 
       | _ ->
         (ed.repr.monad_m,
