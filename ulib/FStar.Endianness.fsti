@@ -311,8 +311,8 @@ val be_of_seq_uint32_seq_uint32_of_be (n: nat) (s: S.seq U8.t) : Lemma
   (decreases n)
   [SMTPat (be_of_seq_uint32 (seq_uint32_of_be n s))]
 
-/// Reasoning about appending such sequences
-/// ----------------------------------------
+/// Reasoning about slicing such sequences
+/// --------------------------------------
 ///
 /// (Needs SMTPats above for roundtripping in their proof, hence why they're at the end.)
 
