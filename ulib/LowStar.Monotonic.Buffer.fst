@@ -107,13 +107,19 @@ let unused_in #_ #_ #_ b h =
   | Null -> False
   | Buffer _ content _ _ -> content `HS.unused_in` h
 
+let buffer_compatible (#t: Type) (#rrel #rel: srel t) (b: mbuffer t rrel rel) : GTot Type0 =
+  match b with
+  | Null -> True
+  | Buffer max_length content idx length ->
+      compatible_sub_preorder (U32.v max_length) rrel
+        (U32.v idx) (U32.v idx + U32.v length) rel  //proof of compatibility
+
 let live #_ #rrel #rel h b =
   match b with
   | Null -> True
   | Buffer max_length content idx length ->
       h `HS.contains` content /\
-      compatible_sub_preorder (U32.v max_length) rrel
-        (U32.v idx) (U32.v idx + U32.v length) rel  //proof of compatibility
+      buffer_compatible b
 
 let live_null _ _ _ _ = ()
 
@@ -157,11 +163,15 @@ let live_gsub #_ #rrel #rel _ b i len sub_rel =
   match b with
   | Null -> ()
   | Buffer max_len content idx length ->
+    let prf () : Lemma
+      (requires (buffer_compatible b))
+      (ensures (buffer_compatible (mgsub sub_rel b i len)))
+    =
     lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel
                                               (U32.v idx) (U32.v idx + U32.v length) rel
 		         	              (U32.v i) (U32.v i + U32.v len) sub_rel
-
-let live_gsub_recip #_ #_ #_ _ _ _ _ _ = ()
+    in
+    Classical.move_requires prf ()
 
 let gsub_is_null #_ #_ #_ _ _ _ _ = ()
 
@@ -1292,11 +1302,9 @@ let upd' #_ #_ #_ b i v =
 let recallable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0 =
   (not (g_is_null b)) ==> (
     HST.is_eternal_region (frameOf b) /\
-    not (HS.is_mm (Buffer?.content b)) /\ (
-    let Buffer max_length content idx length = b in
-      compatible_sub_preorder (U32.v max_length) rrel
-        (U32.v idx) (U32.v idx + U32.v length) rel  //proof of compatibility
-  ))
+    not (HS.is_mm (Buffer?.content b)) /\
+    buffer_compatible b
+  )
 
 let recallable_null #_ #_ #_ = ()
 
@@ -1320,12 +1328,7 @@ let recall #_ #_ #_ b = if Null? b then () else HST.recall (Buffer?.content b)
 private let spred_as_mempred (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
   :HST.mem_predicate
   = fun h ->
-    begin match b with
-    | Null -> True
-    | Buffer max_length content idx length ->
-      compatible_sub_preorder (U32.v max_length) rrel
-        (U32.v idx) (U32.v idx + U32.v length) rel
-    end ==>
+    buffer_compatible b ==>
     p (as_seq h b)
 
 let witnessed #_ #rrel #rel b p =
@@ -1341,8 +1344,7 @@ private let lemma_stable_on_rel_is_stable_on_rrel (#a:Type0) (#rrel #rel:srel a)
   = let Buffer max_length content idx length = b in
     let mp = spred_as_mempred b p in
     let aux (h0 h1:HS.mem) :Lemma ((mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content)) ==> mp h1)
-      = Classical.arrow_to_impl #(mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content) /\ compatible_sub_preorder (U32.v max_length) rrel
-        (U32.v idx) (U32.v idx + U32.v length) rel) #(mp h1)
+      = Classical.arrow_to_impl #(mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content) /\ buffer_compatible b) #(mp h1)
           (fun _ -> assert (rel (as_seq h0 b) (as_seq h1 b)))
     in
     Classical.forall_intro_2 aux
@@ -1426,7 +1428,7 @@ let mgcmalloc_of_list #a #rrel r init =
   let b = Buffer len content 0ul len in
   b
 
-#push-options "--z3rlimit 32 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#push-options "--z3rlimit 64 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
   if len = 0ul then ()

@@ -291,17 +291,12 @@ val mgsub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a)
 
 val live_gsub (#a:Type0) (#rrel #rel:srel a)
   (h:HS.mem) (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
-  :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel /\ live h b))
-         (ensures  (live h (mgsub sub_rel b i len)))
+  :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
+         (ensures  (live h b <==> (live h (mgsub sub_rel b i len) /\ (exists h0 . {:pattern (live h0 b)} live h0 b))))
          [SMTPatOr [
              [SMTPat (live h (mgsub sub_rel b i len))];
              [SMTPat (live h b); SMTPat (mgsub sub_rel b i len);]
          ]]
-
-val live_gsub_recip (#a:Type0) (#rrel #rel:srel a)
-  (h:HS.mem) (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
-  :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel /\ (exists h0 . live h0 b)))
-         (ensures  (live h (mgsub sub_rel b i len) <==> live h b))
 
 
 val gsub_is_null (#a:Type0) (#rrel #rel:srel a)
