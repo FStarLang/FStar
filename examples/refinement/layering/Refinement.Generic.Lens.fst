@@ -3,7 +3,6 @@ open FStar.HyperStack.ST
 module B = LowStar.Buffer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-module T = FStar.Tactics.Typeclasses
 
 let get_t a b = a -> GTot b
 let put_t a b = b -> a -> GTot a
