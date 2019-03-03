@@ -4,9 +4,7 @@ open FStar.HyperStack.ST
 module B = LowStar.Buffer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-module T = FStar.Tactics.Typeclasses
 open Refinement.Generic.Effect
-
 
 let composable (l1:hs_lens 'a 'b) (l2:hs_lens 'c 'd) =
     B.all_disjoint [Ghost.reveal l1.footprint;
@@ -57,6 +55,37 @@ let mk #a1 #b1 (l1 : hs_lens a1 b1)
       snapshot = snap;
       hs_lens_laws = ();
     }
+
+let snapped_op #a #b (lens:hs_lens a b) result pre post =
+  s:imem (lens.invariant lens.x) ->
+  RST result (snap lens s) pre post
+
+let op_fst #a #b #c #d #result #pre #post
+      (l1:hs_lens a b)
+      (l2:hs_lens c d{composable l1 l2})
+      (op:snapped_op l1 result pre post)
+  : RST result (mk l1 l2)
+    (requires fun (b0, d0) -> pre b0)
+    (ensures fun (b0, d0) r (b1, d1) ->
+      d0 == d1 /\
+      post b0 r b1)
+  = reveal_mods ();
+    let s = FStar.HyperStack.ST.get () in
+    op s
+
+let op_snd #a #b #c #d #result #pre #post
+      (l1:hs_lens a b)
+      (l2:hs_lens c d{composable l1 l2})
+      (op:snapped_op l2 result pre post)
+  : RST result (mk l1 l2)
+    (requires fun (b0, d0) -> pre d0)
+    (ensures fun (b0, d0) r (b1, d1) ->
+      b0 == b1 /\
+      post d0 r d1)
+  = reveal_mods ();
+    let s = FStar.HyperStack.ST.get () in
+    op s
+
 
 let read_fst
       (l1:hs_lens 'a 'b)
