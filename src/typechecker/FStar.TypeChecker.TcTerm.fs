@@ -246,11 +246,33 @@ let check_pat_fvs rng env pats bs =
         | Some (x,_) -> Errors.log_issue rng (Errors.Warning_PatternMissingBoundVar, (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
     end
 
+(*
+ * Collect smt theory symbols in the term t
+ * These symbols are fvs with attribute smt_theory_symbol from Prims
+ *)
+let smt_theory_symbols (en:env) (t:term) :list<lident> =
+  t |> Syntax.Free.fvars
+    |> set_elements
+    |> List.filter (fun l -> Env.fv_with_lid_has_attr en l (Const.smt_theory_symbol_attr_lid))
+
+(*
+ * Check that term t (an smt pattern) does not contain theory symbols
+ *)
+let check_no_smt_theory_symbols (en:env) (t:term) : unit =
+  let lids = smt_theory_symbols en t in
+  match lids with
+  | [] -> ()
+  | _  ->
+   let msg = List.fold_left (fun s l -> s ^ " " ^ l.str) "" lids in
+   Errors.log_issue t.pos (Errors.Warning_PatternUsesTheorySymbols,
+     BU.format1 "Pattern uses theory symbols: %s" msg)
+
 let check_smt_pat env t bs c =
     if U.is_smt_lemma t //check patterns cover the bound vars
     then match c.n with
         | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
-            check_pat_fvs t.pos env pats bs
+            check_pat_fvs t.pos env pats bs;
+            check_no_smt_theory_symbols env pats
         | _ -> failwith "Impossible"
 
 (************************************************************************************************************)
@@ -2714,15 +2736,18 @@ and tc_binders env bs =
           b::bs, env', Env.conj_guard g (Env.close_guard_univs [u] [b] g'), u::us in
     aux env bs
 
-and tc_smt_pats env pats =
-    let tc_args env args : Syntax.args * guard_t =
+and tc_smt_pats en pats =
+    let tc_args en args : Syntax.args * guard_t =
        //an optimization for checking arguments in cases where we know that their types match the types of the corresponding formal parameters
        //notably, this is used when checking the application  (?u x1 ... xn). NS: which we do not currently do!
        List.fold_right (fun (t, imp) (args, g) ->
-                             let t, _, g' = tc_term env t in
+                             t |> check_no_smt_theory_symbols en;
+                             let t, _, g' = tc_term en t in
                              (t, imp)::args, Env.conj_guard g g')
           args ([], Env.trivial_guard) in
-    List.fold_right (fun p (pats, g) -> let args, g' = tc_args env p in (args::pats, Env.conj_guard g g')) pats ([], Env.trivial_guard)
+    List.fold_right (fun p (pats, g) ->
+      let args, g' = tc_args en p in
+      (args::pats, Env.conj_guard g g')) pats ([], Env.trivial_guard)
 
 and tc_tot_or_gtot_term env e : term
                                 * lcomp
