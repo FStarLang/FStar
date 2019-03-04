@@ -685,8 +685,7 @@ let collect_one
         | Name lid ->
             record_lid lid
         | Construct (lid, termimps) ->
-            if List.length termimps = 1 then
-              record_lid lid;
+            record_lid lid;
             List.iter (fun (t, _) -> collect_term t) termimps
         | Abs (pats, t) ->
             collect_patterns pats;
