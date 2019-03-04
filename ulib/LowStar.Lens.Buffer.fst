@@ -87,7 +87,8 @@ let view_type_of #a #p #q (b:B.mbuffer a p q) (f:flavor b) =
 ///   of flavor `f`
 let buffer_hs_lens #a #p #q (b:B.mbuffer a p q) (f:flavor b) =
   l:hs_lens (B.mbuffer a p q) (view_type_of b f){
-    Ghost.reveal l.footprint == B.loc_buffer b
+    Ghost.reveal l.footprint == B.loc_buffer b /\
+    l.x == b
   }
 
 /// `get_value_at` and `put_value_at`: provide a uniform sequence- or
@@ -236,14 +237,16 @@ let elim_inv #a #p #q
              (#b:B.mbuffer a p q)
              (#f:flavor b)
              (bl:buffer_lens b f)
-             (h:HS.mem)
-  : Lemma (let l = lens_of bl in
+  : Lemma (reveal_inv();
+          (forall (h:HS.mem).{:pattern (lens_of bl).invariant (lens_of bl).x h}
+           let l = lens_of bl in
            (exists h'.{:pattern mk b f h'} B.live h' b /\ bl == mk b f h') /\
-            inv l h ==>
+             (lens_of bl).invariant (lens_of bl).x h ==>
              B.live h b /\
-             view l h == (match f with
-                          | Pointer -> B.get h b 0
-                          | Buffer -> B.as_seq h b))
+             view (snap l h) h == 
+               (match f with
+                | Pointer -> B.get h b 0
+                | Buffer -> B.as_seq h b)))
   = reveal_inv ()
 
 /// `index`: The analog of LowStar.Monotonic.Buffer.index
