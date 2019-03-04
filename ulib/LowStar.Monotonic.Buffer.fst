@@ -778,6 +778,10 @@ let loc_buffer_mgsub_eq #_ #_ #_ _ _ _ _ = ()
 
 let loc_buffer_null _ _ _ = ()
 
+let loc_buffer_from_to_eq #_ #_ #_ _ _ _ = ()
+
+let loc_buffer_mgsub_rel_eq #_ #_ #_ _ _ _ _ _ = ()
+
 let loc_addresses = MG.loc_addresses
 
 let loc_regions = MG.loc_regions

@@ -484,6 +484,26 @@ val loc_buffer_null (a:Type0) (rrel rel:srel a)
   :Lemma (loc_buffer (mnull #a #rrel #rel) == loc_none)
          [SMTPat (loc_buffer (mnull #a #rrel #rel))]
 
+val loc_buffer_from_to_eq
+  (#a:Type0) (#rrel #rel:srel a)
+  (b: mbuffer a rrel rel)
+  (from to: U32.t)
+: Lemma
+  (requires (U32.v from <= U32.v to /\ U32.v to <= length b))
+  (ensures (loc_buffer_from_to b from to == loc_buffer (mgsub rel b from (to `U32.sub` from))))
+  [SMTPat (loc_buffer_from_to b from to)]
+
+val loc_buffer_mgsub_rel_eq
+  (#a:Type0) (#rrel #rel:srel a)
+  (b: mbuffer a rrel rel)
+  (rel1 rel2: srel a)
+  (i len: U32.t)
+: Lemma
+  (requires (U32.v i + U32.v len <= length b))
+  (ensures (loc_buffer (mgsub rel1 b i len) == loc_buffer (mgsub rel2 b i len)))
+  [SMTPat (loc_buffer (mgsub rel1 b i len)); SMTPat (loc_buffer (mgsub rel2 b i len))]
+
+
 /// ``loc_addresses r n`` is the set of memory locations associated to a
 /// set of addresses ``n`` in a given region ``r``.
 
