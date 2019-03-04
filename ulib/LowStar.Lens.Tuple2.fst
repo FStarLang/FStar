@@ -135,16 +135,16 @@ type tup2_t
   | Mk : bl1:LB.buffer_lens b1 f1 ->
          bl2:LB.buffer_lens b2 f2{composable (LB.lens_of bl1) (LB.lens_of bl2)} ->
          read_fst:LB.reader_t f1
-                              (lens_fst #(LB.view_type_of b1 f1) #(LB.view_type_of b2 f2))
+                              (lens_fst #(LB.view_type_of f1) #(LB.view_type_of f2))
                               (mk (LB.lens_of bl1) (LB.lens_of bl2)) ->
          read_snd:LB.reader_t f2
-                              (lens_snd #(LB.view_type_of b1 f1) #(LB.view_type_of b2 f2))
+                              (lens_snd #(LB.view_type_of f1) #(LB.view_type_of f2))
                               (mk (LB.lens_of bl1) (LB.lens_of bl2)) ->
          write_fst:LB.writer_t f1
-                              (lens_fst #(LB.view_type_of b1 f1) #(LB.view_type_of b2 f2))
+                              (lens_fst #(LB.view_type_of f1) #(LB.view_type_of f2))
                               (mk (LB.lens_of bl1) (LB.lens_of bl2)) ->
          write_snd:LB.writer_t f2
-                              (lens_snd #(LB.view_type_of b1 f1) #(LB.view_type_of b2 f2))
+                              (lens_snd #(LB.view_type_of f1) #(LB.view_type_of f2))
                               (mk (LB.lens_of bl1) (LB.lens_of bl2)) ->
          tup2_t f1 f2
 
@@ -156,8 +156,8 @@ let mk_tup2
        (bl2:LB.buffer_lens b2 f2{composable (LB.lens_of bl1) (LB.lens_of bl2)})
   : tup2_t f1 f2
   = let pl = mk (LB.lens_of bl1) (LB.lens_of bl2) in
-    let l_fst = lens_fst #(LB.view_type_of b1 f1) #(LB.view_type_of b2 f2) in
-    let l_snd = lens_snd #(LB.view_type_of b1 f1) #(LB.view_type_of b2 f2) in
+    let l_fst = lens_fst #(LB.view_type_of f1) #(LB.view_type_of f2) in
+    let l_snd = lens_snd #(LB.view_type_of f1) #(LB.view_type_of f2) in
     let read_fst
        : LB.reader_t f1 l_fst pl
        = fun i ->
@@ -193,19 +193,19 @@ let lens_of (#b1:B.mbuffer 'a 'b 'c) (#f1:LB.flavor b1)
             (#b2:B.mbuffer 'p 'q 'r) (#f2:LB.flavor b2)
             (t:tup2_t f1 f2)
    : hs_lens (B.mbuffer 'a 'b 'c & B.mbuffer 'p 'q 'r)
-          LB.(view_type_of b1 f1 & view_type_of b2 f2) =
+          LB.(view_type_of f1 & view_type_of f2) =
   mk (LB.lens_of t.bl1) (LB.lens_of t.bl2)
 
 (* Exporting the projectors at cleaner types for tighter VC generation *)
 unfold
 let l_fst (#b1:B.mbuffer 'a 'b 'c) (#f1:LB.flavor b1)
           (#b2:B.mbuffer 'p 'q 'r) (#f2:LB.flavor b2)
-    = lens_fst #(LB.view_type_of b1 f1) #(LB.view_type_of b2 f2)
+    = lens_fst #(LB.view_type_of f1) #(LB.view_type_of f2)
 
 unfold
 let l_snd (#b1:B.mbuffer 'a 'b 'c) (#f1:LB.flavor b1)
           (#b2:B.mbuffer 'p 'q 'r) (#f2:LB.flavor b2)
-    = lens_snd #(LB.view_type_of b1 f1) #(LB.view_type_of b2 f2)
+    = lens_snd #(LB.view_type_of f1) #(LB.view_type_of f2)
 
 let read_fst (#b1:B.mbuffer 'a 'b 'c) (#f1:LB.flavor b1)
              (#b2:B.mbuffer 'p 'q 'r) (#f2:LB.flavor b2)
