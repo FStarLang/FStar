@@ -77,7 +77,8 @@ let lseq_of #a #p #q (b:B.mbuffer a p q) =
   Seq.lseq a (B.length b)
 
 /// `view_type_of b f`: Provides an f-flavored voew on the buffer `b`
-let view_type_of #a #p #q (b:B.mbuffer a p q) (f:flavor b) =
+unfold
+let view_type_of #a #p #q (#b:B.mbuffer a p q) (f:flavor b) =
   match f with
   | Buffer -> lseq_of b
   | Pointer -> a
@@ -86,7 +87,7 @@ let view_type_of #a #p #q (b:B.mbuffer a p q) (f:flavor b) =
 ///   hs_lens between a buffer `b` and `lseq_of b`
 ///   of flavor `f`
 let buffer_hs_lens #a #p #q (b:B.mbuffer a p q) (f:flavor b) =
-  l:hs_lens (B.mbuffer a p q) (view_type_of b f){
+  l:hs_lens (B.mbuffer a p q) (view_type_of f){
     Ghost.reveal l.footprint == B.loc_buffer b /\
     l.x == b
   }
@@ -95,7 +96,7 @@ let buffer_hs_lens #a #p #q (b:B.mbuffer a p q) (f:flavor b) =
 ///  element-based view on top of both flavors of buffers
 unfold
 let get_value_at #a #p #q (#b:B.mbuffer a p q) (#f:flavor b)
-                 (v:view_type_of b f)
+                 (v:view_type_of f)
                  (i:uint_32{ i < B.len b })
     : a =
     match f with
@@ -104,10 +105,10 @@ let get_value_at #a #p #q (#b:B.mbuffer a p q) (#f:flavor b)
 
 unfold
 let put_value_at #a #p #q (#b:B.mbuffer a p q) (#f:flavor b)
-                 (v0:view_type_of b f)
+                 (v0:view_type_of f)
                  (i:uint_32{ i < B.len b })
                  (x:a)
-    : view_type_of b f =
+    : view_type_of f =
     match f with
     | Pointer -> x
     | Buffer -> Seq.upd v0 (UInt32.v i) x
@@ -117,7 +118,7 @@ unfold
 let as_seq #a #p #q 
            (#b:B.mbuffer a p q)
            (#f:flavor b)
-           (v0:view_type_of b f)
+           (v0:view_type_of f)
    : lseq_of b
    = match f with
      | Pointer -> Seq.create 1 v0
@@ -142,7 +143,7 @@ let ix #a #p #q (b:B.mbuffer a p q) = i:uint_32{i < B.len b}
 module LL = LowStar.Lens
 /// `writer_t l`: writes a single element to a buffer
 let reader_t #a #p #q (#b:B.mbuffer a p q) (f:flavor b)
-             #from #to (layer: lens to (view_type_of b f))
+             #from #to (layer: lens to (view_type_of f))
              (l:hs_lens from to)
   = i:ix b ->
     LensST a l
@@ -153,7 +154,7 @@ let reader_t #a #p #q (#b:B.mbuffer a p q) (f:flavor b)
 
 /// `writer_t l`: writes a single element to a buffer
 let writer_t #a #p #q (#b:B.mbuffer a p q) (f:flavor b)
-             #from #to (layer: lens to (view_type_of b f))
+             #from #to (layer: lens to (view_type_of f))
              (l:hs_lens from to)
   = i:ix b ->
     v:a ->
@@ -194,19 +195,19 @@ let mk #a #p #q (b:B.mbuffer a p q) (f:flavor b) (snap:HS.mem{B.live snap b})
           B.live h x
         in
         let fp = Ghost.hide (B.loc_buffer b) in
-        let get : get_t (imem (invariant b)) (view_type_of b f) =
+        let get : get_t (imem (invariant b)) (view_type_of f) =
           fun h -> 
             match f with
             | Buffer -> B.as_seq h b
             | Pointer -> B.get h b 0
         in
-        let put : put_t (imem (invariant b)) (view_type_of b f) =
+        let put : put_t (imem (invariant b)) (view_type_of f) =
           fun v h ->
             match f with
             | Buffer -> B.g_upd_seq b v h
             | Pointer -> B.g_upd b 0 v h
         in
-        let l : imem_lens (invariant b) (view_type_of b f) fp = {
+        let l : imem_lens (invariant b) (view_type_of f) fp = {
           get = get;
           put = put;
           lens_laws = ()
