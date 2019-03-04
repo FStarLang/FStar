@@ -77,7 +77,6 @@ let lseq_of #a #p #q (b:B.mbuffer a p q) =
   Seq.lseq a (B.length b)
 
 /// `view_type_of b f`: Provides an f-flavored voew on the buffer `b`
-unfold
 let view_type_of #a #p #q (#b:B.mbuffer a p q) (f:flavor b) =
   match f with
   | Buffer -> lseq_of b
