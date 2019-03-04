@@ -562,3 +562,27 @@ let rec list_unref #a #p l =
     match l with
     | [] -> []
     | x::xs -> x :: list_unref xs
+
+val list_refb: #a:eqtype -> #p:(a -> Tot bool) ->
+  l:list a { for_all p l } ->
+  Tot (l':list (x:a{ p x }) {
+    length l = length l' /\
+    (forall i. {:pattern (index l i) } index l i = index l' i) })
+let rec list_refb #a #p l =
+  match l with
+  | hd :: tl -> hd :: list_refb #a #p tl
+  | [] -> []
+
+val list_ref: #a:eqtype -> #p:(a -> Tot prop) -> l:list a {
+  forall x. {:pattern mem x l} mem x l ==> p x
+} -> Tot (l':list (x:a{ p x }) {
+    length l = length l' /\
+    (forall i. {:pattern (index l i) } index l i = index l' i) })
+let rec list_ref #a #p l =
+  match l with
+  | hd :: tl ->
+      assert (mem hd l);
+      assert (p hd);
+      assert (forall x. {:pattern mem x tl} mem x tl ==> mem x l);
+      hd :: list_ref #a #p tl
+  | [] -> []

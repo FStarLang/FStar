@@ -106,6 +106,7 @@ let rec extract_meta x =
       | "FStar.Pervasives.Substitute" -> Some Substitute
       | "FStar.Pervasives.Gc" -> Some GCType
       | "FStar.Pervasives.CAbstractStruct" -> Some CAbstract
+      | "FStar.Pervasives.CIfDef" -> Some CIfDef
       | _ -> None
       end
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } ->
@@ -839,7 +840,6 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
          g, []
 
 let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
-  S.reset_gensym();
   let _ = Options.restore_cmd_line_options true in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with env_tcenv=FStar.TypeChecker.Env.set_current_module g.env_tcenv m.name;

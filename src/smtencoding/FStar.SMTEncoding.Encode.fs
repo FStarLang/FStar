@@ -80,8 +80,14 @@ let prims =
     let xy = List.map mk_fv [(xsym, Term_sort); (ysym, Term_sort)] in
     let qx = List.map mk_fv [(xsym, Term_sort)] in
     let prims = [
+        //equality
         (Const.op_Eq,          (quant axy (boxBool <| mkEq(x,y))));
         (Const.op_notEq,       (quant axy (boxBool <| mkNot(mkEq(x,y)))));
+        //boolean ops
+        (Const.op_And,         (quant xy  (boxBool <| mkAnd(unboxBool x, unboxBool y))));
+        (Const.op_Or,          (quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y))));
+        (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
+        //integer ops
         (Const.op_LT,          (quant xy  (boxBool <| mkLT(unboxInt x, unboxInt y))));
         (Const.op_LTE,         (quant xy  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
         (Const.op_GT,          (quant xy  (boxBool <| mkGT(unboxInt x, unboxInt y))));
@@ -92,9 +98,16 @@ let prims =
         (Const.op_Multiply,    (quant xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
         (Const.op_Division,    (quant xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
         (Const.op_Modulus,     (quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
-        (Const.op_And,         (quant xy  (boxBool <| mkAnd(unboxBool x, unboxBool y))));
-        (Const.op_Or,          (quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y))));
-        (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
+        //real ops
+        (Const.real_op_LT,          (quant xy  (boxBool <| mkLT(unboxReal x, unboxReal y))));
+        (Const.real_op_LTE,         (quant xy  (boxBool <| mkLTE(unboxReal x, unboxReal y))));
+        (Const.real_op_GT,          (quant xy  (boxBool <| mkGT(unboxReal x, unboxReal y))));
+        (Const.real_op_GTE,         (quant xy  (boxBool <| mkGTE(unboxReal x, unboxReal y))));
+        (Const.real_op_Subtraction, (quant xy  (boxReal <| mkSub(unboxReal x, unboxReal y))));
+        (Const.real_op_Addition,    (quant xy  (boxReal <| mkAdd(unboxReal x, unboxReal y))));
+        (Const.real_op_Multiply,    (quant xy  (boxReal <| mkMul(unboxReal x, unboxReal y))));
+        (Const.real_op_Division,    (quant xy  (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
+        (Const.real_of_int,         (quant qx  (boxReal <| mkRealOfInt (unboxInt x) Range.dummyRange)))
         ]
     in
     let mk : lident -> string -> term * int * list<decl> =
@@ -161,6 +174,44 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                                                    mkLT (Term.unboxInt y, Term.unboxInt x)],
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
+    let mk_real : env -> string -> term -> list<decl>  = fun env nm tt ->
+        let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
+        let typing_pred = mk_HasType x tt in
+        let typing_pred_y = mk_HasType y tt in
+        let aa = mk_fv ("a", Sort "Real") in
+        let a = mkFreeV aa in
+        let bb = mk_fv ("b", Sort "Real") in
+        let b = mkFreeV bb in
+        let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [lex_t; lex_t;y;x]) in
+        [Util.mkAssume(mkForall
+                         (Env.get_range env)
+                         ([[Term.boxReal b]],
+                          [bb],
+                          mk_HasType (Term.boxReal b) tt),
+                          Some "real typing",
+                          "real_typing");
+         Util.mkAssume(mkForall_fuel
+                         env
+                         (Env.get_range env)
+                         ([[typing_pred]],
+                          [xx],
+                          mkImp(typing_pred,
+                                mk_tester (fst boxRealFun) x)),
+                          Some "real inversion",
+                          "real_inversion");
+         Util.mkAssume(mkForall_fuel
+                         env
+                         (Env.get_range env)
+                           ([[typing_pred; typing_pred_y;precedes_y_x]],
+                            [xx;yy],
+                            mkImp(mk_and_l [typing_pred;
+                                            typing_pred_y;
+                                            mkGT (Term.unboxReal x, mkReal "0.0");
+                                            mkGTE (Term.unboxReal y,mkReal "0.0");
+                                            mkLT (Term.unboxReal y, Term.unboxReal x)],
+                                   precedes_y_x)),
+                            Some "well-founded ordering on real", "well-founded-ordering-on-real")]
+    in
     let mk_str : env -> string -> term -> list<decl>  = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         let bb = mk_fv ("b", String_sort) in
@@ -290,6 +341,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
    let prims =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
+                 (Const.real_lid,   mk_real);
                  (Const.string_lid, mk_str);
                  (Const.true_lid,   mk_true_interp);
                  (Const.false_lid,  mk_false_interp);
@@ -995,7 +1047,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
                  env fv t quals in
              let tname = lid.str in
-             let tsym = mkFreeV <| mk_fv (tname, Term_sort) in
+             let tsym = Option.get (try_lookup_free_var env lid) in
              decls
              @ (primitive_type_axioms env.tcenv lid tname tsym |> mk_decls_trivial),
              env
@@ -1080,7 +1132,62 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        ) ([], [], []) g' in
        (decls |> mk_decls_trivial) @ elts @ rest @ (inversions |> mk_decls_trivial), env
 
-     | Sig_inductive_typ(t, _, tps, k, _, datas) ->
+     | Sig_inductive_typ(t, universe_names, tps, k, _, datas) ->
+         let tcenv = env.tcenv in
+         let is_injective  =
+             let usubst, uvs = SS.univ_var_opening universe_names in
+             let env, tps, k =
+                Env.push_univ_vars tcenv uvs,
+                SS.subst_binders usubst tps,
+                SS.subst (SS.shift_subst (List.length tps) usubst) k
+             in
+             let tps, k = SS.open_term tps k in
+             let _, k = U.arrow_formals k in //don't care about indices here
+             let tps, env_tps, _, us = TcTerm.tc_binders env tps in
+             let u_k =
+               TcTerm.level_of_type
+                 env_tps
+                 (S.mk_Tm_app
+                   (S.fvar t (Delta_constant_at_level 0) None)
+                   (snd (U.args_of_binders tps))
+                   None
+                   (Ident.range_of_lid t))
+                 k
+             in
+             //BU.print2 "Universe of tycon: %s : %s\n" (Ident.string_of_lid t) (Print.univ_to_string u_k);
+             let rec universe_leq u v =
+                 match u, v with
+                 | U_zero, _ -> true
+                 | U_succ u0, U_succ v0 -> universe_leq u0 v0
+                 | U_name u0, U_name v0 -> Ident.ident_equals u0 v0
+                 | U_name _,  U_succ v0 -> universe_leq u v0
+                 | U_max us,  _         -> us |> BU.for_all (fun u -> universe_leq u v)
+                 | _,         U_max vs  -> vs |> BU.for_some (universe_leq u)
+                 | U_unknown, _
+                 | _, U_unknown
+                 | U_unif _, _
+                 | _, U_unif _ -> failwith (BU.format1 "Impossible: Unresolved or unknown universe in inductive type %s"
+                                                      (Ident.string_of_lid t))
+                 | _ -> false
+             in
+             let u_leq_u_k u =
+                universe_leq (N.normalize_universe env_tps u) u_k
+             in
+             let tp_ok (tp:S.binder) (u_tp:universe) =
+                let t_tp = (fst tp).sort in
+                if u_leq_u_k u_tp
+                then true
+                else let formals, _ = U.arrow_formals t_tp in
+                     let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
+                     //List.iter (fun u -> BU.print1 "Universe of formal: %s\n" (Print.univ_to_string u)) u_formals;
+                     BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals
+             in
+             List.forall2 tp_ok tps us
+        in
+        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+        then BU.print2 "%s injectivity for %s\n"
+                    (if is_injective then "YES" else "NO")
+                    (Ident.string_of_lid t);
         let quals = se.sigquals in
         let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
         let constructor_or_logic_type_decl (c:constructor_t) =
@@ -1088,7 +1195,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             then let name, args, _, _, _ = c in
                  [Term.DeclFun(name, args |> List.map (fun (_, sort, _) -> sort), Term_sort, None)]
             else constructor_to_decl (Ident.range_of_lid t) c in
-
         let inversion_axioms tapp vars =
             if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
             then []
@@ -1106,8 +1212,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     let indices, decls' = encode_args indices env in
                     if List.length indices <> List.length vars
                     then failwith "Impossible";
-                    let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices |> mk_and_l in
-                    mkOr(out, mkAnd(mk_data_tester env l xx, eqs)), decls@decls') (mkFalse, []) in
+                    let eqs =
+                        if is_injective
+                        then List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices
+                        else [] in
+                    mkOr(out, mkAnd(mk_data_tester env l xx, eqs |> mk_and_l)), decls@decls') (mkFalse, []) in
                 let ffsym, ff = fresh_fvar env.current_module_name "f" Fuel_sort in
                 let fuel_guarded_inversion =
                     let xx_has_type_sfuel =
@@ -1496,7 +1605,7 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
          | None ->  //no hit, update cache and retain elt
            BU.smap_add env.global_cache (elt.key |> BU.must) elt;
            [elt]
-  ) 
+  )
 
 let encode_sig tcenv se =
    let caption decls =

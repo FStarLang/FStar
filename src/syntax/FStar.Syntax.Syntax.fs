@@ -617,30 +617,23 @@ let pat_bvs (p:pat) : list<bv> =
   List.rev <| aux [] p
 
 (* Gen sym *)
-let gen_reset =
-    let x = Util.mk_ref 0 in
-    let gen () = incr x; !x in
-    let reset () = x := 0 in
-    gen, reset
-let next_id = fst gen_reset
-let reset_gensym = snd gen_reset
 let range_of_ropt = function
     | None -> dummyRange
     | Some r -> r
 let gen_bv : string -> option<Range.range> -> typ -> bv = fun s r t ->
   let id = mk_ident(s, range_of_ropt r) in
-  {ppname=id; index=next_id(); sort=t}
+  {ppname=id; index=Ident.next_id(); sort=t}
 let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
 
 let freshen_bv bv =
     if is_null_bv bv
     then new_bv (Some (range_of_bv bv)) bv.sort
-    else {bv with index=next_id()}
+    else {bv with index=Ident.next_id()}
 
 let freshen_binder (b:binder) = let (bv, aq) = b in (freshen_bv bv, aq)
 
 let new_univ_name ropt =
-    let id = next_id() in
+    let id = Ident.next_id() in
     mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
 let mkbv x y t  = {ppname=x;index=y;sort=t}
 let lbname_eq l1 l2 = match l1, l2 with
@@ -699,6 +692,7 @@ let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid
 let t_string    = tconst PC.string_lid
 let t_exn       = tconst PC.exn_lid
+let t_real      = tconst PC.real_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid

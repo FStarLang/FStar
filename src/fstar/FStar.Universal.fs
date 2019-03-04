@@ -49,7 +49,7 @@ module Dep     = FStar.Parser.Dep
 module NBE     = FStar.TypeChecker.NBE
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
-let cache_version_number = 8
+let cache_version_number = 9
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -428,7 +428,7 @@ let tc_one_file
     * option<FStar.Extraction.ML.Syntax.mllib>
     * uenv
     * delta_env =
-  Syntax.reset_gensym();
+  Ident.reset_gensym();
 
   (*
    * AR: smt encode_modul functions are now here instead of in Tc.fs

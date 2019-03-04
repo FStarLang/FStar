@@ -79,19 +79,9 @@ let is_reserved k =
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
 
-type gensym_t = {
-    gensym: unit -> mlident;
-    reset:unit -> unit;
-}
-
-let gs =
-  let ctr = Util.mk_ref 0 in
-  let n_resets = Util.mk_ref 0 in
-  {gensym =(fun () -> incr ctr; "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (!ctr)));
-   reset = (fun () -> ctr := 0; incr n_resets)}
-
-let gensym () = gs.gensym()
-let reset_gensym() = gs.reset()
+let gensym () =
+    let i = Ident.next_id() in
+   "_" ^ Util.string_of_int i
 let rec gensyms x = match x with
   | 0 -> []
   | n -> gensym ()::gensyms (n-1)
@@ -166,6 +156,7 @@ type meta =
   | CCConv of string
   | Erased
   | CAbstract
+  | CIfDef
 
 // rename
 type metadata = list<meta>

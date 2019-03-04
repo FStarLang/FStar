@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Ex06d
-
+#set-options "--z3rlimit_factor 2"
 
 (* Instead of a Boolean check that an element belongs to a list, count
 the number of occurrences of an element in a list *)
