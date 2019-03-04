@@ -283,7 +283,7 @@ let load_module_from_cache
                     source_file
                     cache_file
             with
-            | Some digest' ->
+            | Inr digest' ->
                 if digest=digest'
                 then Inr tc_result
                 else begin
@@ -306,8 +306,8 @@ let load_module_from_cache
                 end;
                 Inl "Stale"
                 end
-            | _ ->
-                Inl "Unable to compute digest of"
+            | Inl msg -> Inl msg
+
     in
     fun env fn ->
       let load_it () =
@@ -320,12 +320,12 @@ let load_module_from_cache
                FStar.Errors.log_issue
                     (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
                     (Errors.Warning_CachedFile,
-                     BU.format3 "%s cache file %s; will recheck %s and all subsequent files" tag cache_file fn)
+                     BU.format3 "Unable to compute digest of %s since %s; will recheck %s and all subsequent files" cache_file tag fn)
         in
         match !some_cache_invalid with
         | Some _ -> None
         | _ ->
-          if not (BU.file_exists cache_file) then None
+          if not (BU.file_exists cache_file) then let _ = fail (Some (BU.format1 "file %s does not exists" cache_file)) cache_file in None
           else match load env.env_tcenv fn cache_file with
                | Inl msg ->
                  fail (Some msg) cache_file;
@@ -355,7 +355,7 @@ let store_module_to_cache (env:uenv) fn (parsing_data:FStar.Parser.Dep.parsing_d
             cache_file
         in
         match digest with
-        | Some hashes ->
+        | Inr hashes ->
           //cache_version_number should always be the first field here
           let tc_result = {
               tc_result with
@@ -366,13 +366,13 @@ let store_module_to_cache (env:uenv) fn (parsing_data:FStar.Parser.Dep.parsing_d
                                            BU.digest_of_file fn,
                                            parsing_data,
                                            tc_result)
-        | _ ->
+        | Inl msg ->
           FStar.Errors.log_issue
             (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
                                      (FStar.Range.mk_pos 0 0))
             (Errors.Warning_FileNotWritten,
-             BU.format1 "%s was not written, since some of its dependences were not also checked"
-                        cache_file)
+             BU.format2 "%s was not written, since some of its dependences were not also checked: %s"
+                        cache_file msg)
     end
 
 (***********************************************************************)

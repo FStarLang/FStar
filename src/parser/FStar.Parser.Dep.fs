@@ -1204,7 +1204,7 @@ let hash_dependences deps fn cache_file =
                             (lowercase_module_name fn2))
         binary_deps in
     let rec hash_deps out = function
-        | [] -> Some (("source", source_hash)::interface_hash@out)
+        | [] -> Inr (("source", source_hash)::interface_hash@out)
         | fn::deps ->
           let cache_fn = cache_file_name fn in
           let digest = if Util.file_exists cache_fn then Some (digest_of_file fn) else None in
@@ -1212,7 +1212,7 @@ let hash_dependences deps fn cache_file =
           | None ->
             if Options.debug_any()
             then BU.print2 "%s: missed digest of file %s\n" cache_file (FStar.Util.basename cache_fn);
-            None
+            Inl (BU.format1 "cache file %s does not exist" cache_fn)
           | Some dig ->
             hash_deps ((lowercase_module_name fn, dig) :: out) deps
     in
