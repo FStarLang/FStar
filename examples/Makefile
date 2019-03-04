@@ -37,7 +37,8 @@ indexed_effects \
 doublylinkedlist \
 regional \
 generic \
-calc
+calc \
+lowstar_lenses
 
 # low-level \  ... NS: removing from CI for this branch
 
