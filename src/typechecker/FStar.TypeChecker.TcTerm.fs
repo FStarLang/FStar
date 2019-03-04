@@ -247,25 +247,62 @@ let check_pat_fvs rng env pats bs =
     end
 
 (*
- * Collect smt theory symbols in the term t
- * These symbols are fvs with attribute smt_theory_symbol from Prims
- *)
-let smt_theory_symbols (en:env) (t:term) :list<lident> =
-  t |> Syntax.Free.fvars
-    |> set_elements
-    |> List.filter (fun l -> Env.fv_with_lid_has_attr en l (Const.smt_theory_symbol_attr_lid))
-
-(*
  * Check that term t (an smt pattern) does not contain theory symbols
+ * These symbols are fvs with attribute smt_theory_symbol from Prims
+ *   and other terms such as abs, arrows etc.
  *)
-let check_no_smt_theory_symbols (en:env) (t:term) : unit =
-  let lids = smt_theory_symbols en t in
-  match lids with
-  | [] -> ()
-  | _  ->
-   let msg = List.fold_left (fun s l -> s ^ " " ^ l.str) "" lids in
-   Errors.log_issue t.pos (Errors.Warning_PatternUsesTheorySymbols,
-     BU.format1 "Pattern uses theory symbols: %s" msg)
+let check_no_smt_theory_symbols (en:env) (t:term) :unit =
+  let rec pat_terms (t:term) :list<term> =
+    let t = unmeta t in
+    let head, args = head_and_args t in
+    match (un_uinst head).n, args with
+    | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid -> []
+    | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv Const.cons_lid ->
+      pat_terms hd @ pat_terms tl
+    | Tm_fvar fv, [_; (pat, _)] when fv_eq_lid fv Const.smtpat_lid -> [pat]
+    | Tm_fvar fv, [(subpats, None)] when fv_eq_lid fv Const.smtpatOr_lid ->
+      pat_terms subpats
+    | _ -> []  //TODO: should this be a hard error?
+  in
+  let rec aux (t:term) :list<term> =
+    match (SS.compress t).n with
+    //these cases are fine
+    | Tm_bvar _
+    | Tm_name _
+    | Tm_type _
+    | Tm_uvar _
+    | Tm_lazy _
+    | Tm_unknown -> []
+
+    //these should not be allowed
+    | Tm_constant _
+    | Tm_abs _
+    | Tm_arrow _
+    | Tm_refine _
+    | Tm_match _
+    | Tm_let _
+    | Tm_delayed _
+    | Tm_quoted _ -> [t]
+    
+    //these descend more in the term
+    | Tm_fvar fv ->
+      if Env.fv_has_attr en fv Const.smt_theory_symbol_attr_lid then [t]
+      else []
+
+    | Tm_app (t, args) ->
+      List.fold_left (fun acc (t, _) ->
+        acc @ aux t) (aux t) args
+    
+    | Tm_ascribed (t, _, _)
+    | Tm_uinst (t, _)
+    | Tm_meta (t, _) -> aux t
+  in
+  let tlist = t |> pat_terms |> List.collect aux in
+  if List.length tlist = 0 then ()
+  else
+    let msg = List.fold_left (fun s t -> s ^ " " ^ (Print.term_to_string t)) "" tlist in
+    Errors.log_issue t.pos (Errors.Warning_PatternUsesTheorySymbols,
+      BU.format2 "Pattern %s uses theory symbols: %s" (Print.term_to_string t) msg)
 
 let check_smt_pat env t bs c =
     if U.is_smt_lemma t //check patterns cover the bound vars
