@@ -32,7 +32,7 @@ total reifiable reflectable new_effect {
       ; return   = hreturn
 }
 
-effect HTot (a:Type) = ReifiedTc.HIGH a (fun s post -> forall x. post x)
+effect HTot (a:Type) = HIGH a (fun s post -> forall x. post x)
 let test_return () : HTot bool = true
 assume val eq_any : #a:Type -> #b:Type -> x:a -> y:b -> Lemma (x === y)
 
