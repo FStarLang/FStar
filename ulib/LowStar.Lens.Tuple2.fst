@@ -288,3 +288,24 @@ let test_write_buf (#a #p:_) (#q #r: _)
       a0 == a1 /\
       b1 == Seq.upd b0 (UInt32.v i) v))
   = write_snd t i v
+
+let elim_tup2_inv
+       (#a1:_) (#p1:_) (#q1:_) (#b1:B.mbuffer a1 p1 q1) (#f1:LB.flavor b1)
+       (#a2:_) (#p2:_) (#q2:_) (#b2:B.mbuffer a2 p2 q2) (#f2:LB.flavor b2)
+       (bl1:LB.buffer_lens b1 f1)
+       (bl2:LB.buffer_lens b2 f2{composable (LB.lens_of bl1) (LB.lens_of bl2)})
+   : Lemma (let t = mk_tup2 bl1 bl2 in
+            reveal_inv();
+            (forall h. {:pattern inv (lens_of t) h}
+              inv (lens_of t) h ==>
+              (LB.lens_of bl1).invariant b1 h /\
+              (LB.lens_of bl2).invariant b2 h /\              
+              B.modifies (B.loc_union (B.loc_buffer b1) (B.loc_buffer b2))
+                         (LB.lens_of bl1).snapshot
+                         h /\
+              HST.equal_stack_domains (LB.lens_of bl1).snapshot h /\
+              view (lens_of t) h ==
+               (view (snap (LB.lens_of bl1) h) h, 
+                view (snap (LB.lens_of bl2) h) h)))
+
+   = reveal_inv()
