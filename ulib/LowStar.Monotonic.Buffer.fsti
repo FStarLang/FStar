@@ -370,6 +370,20 @@ val as_seq_gsub (#a:Type0) (#rrel #rel:srel a)
          (ensures (as_seq h (mgsub sub_rel b i len) == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len)))
          [SMTPat (as_seq h (mgsub sub_rel b i len))]
 
+/// Two live non-null buffers having the same region and address have
+/// their elements of the same type.
+
+val live_same_addresses_equal_types_and_preorders
+  (#a1 #a2: Type0)
+  (#rrel1 #rel1: srel a1)
+  (#rrel2 #rel2: srel a2)
+  (b1: mbuffer a1 rrel1 rel1)
+  (b2: mbuffer a2 rrel2 rel2)
+  (h: HS.mem)
+: Lemma
+  ((frameOf b1 == frameOf b2 /\ as_addr b1 == as_addr b2 /\ live h b1 /\ live h b2 /\ (~ (g_is_null b1 /\ g_is_null b2))) ==> (a1 == a2 /\ rrel1 == rrel2))
+
+
 /// # The modifies clause
 ///
 /// The modifies clause for regions, references and buffers.

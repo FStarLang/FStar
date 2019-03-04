@@ -184,6 +184,27 @@ let as_seq_gsub #_ #_ #_ h b i len _ =
   | Buffer _ content idx len0 _ ->
     Seq.slice_slice (HS.sel h content) (U32.v idx) (U32.v idx + U32.v len0) (U32.v i) (U32.v i + U32.v len)
 
+let live_same_addresses_equal_types_and_preorders'
+  (#a1 #a2: Type0)
+  (#rrel1 #rel1: srel a1)
+  (#rrel2 #rel2: srel a2)
+  (b1: mbuffer a1 rrel1 rel1)
+  (b2: mbuffer a2 rrel2 rel2)
+  (h: HS.mem)
+: Lemma
+  (requires (frameOf b1 == frameOf b2 /\ as_addr b1 == as_addr b2 /\ live h b1 /\ live h b2 /\ (~ (g_is_null b1 /\ g_is_null b2))))
+  (ensures (
+    a1 == a2 /\
+    rrel1 == rrel2
+  ))
+=   Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();
+    Seq.lemma_equal_instances_implies_equal_types ()
+
+let live_same_addresses_equal_types_and_preorders
+  #_ #_ #_ #_ #_ #_ b1 b2 h
+= Classical.move_requires (live_same_addresses_equal_types_and_preorders' b1 b2) h
+
 (* Untyped view of buffers, used only to implement the generic modifies clause. DO NOT USE in client code. *)
 
 noeq
