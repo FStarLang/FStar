@@ -96,6 +96,16 @@ type lens 'a 'b = {
   )
 }
 
+unfold
+let get (l:lens 'a 'b) (x:'a) : GTot 'b =
+  match l with
+  | {get=get} -> get x
+
+unfold
+let put (l:lens 'a 'b) (x:'a) (y:'b) : GTot 'a =
+  match l with
+  | {put=put} -> put y x
+
 (* Now, we work towards defining `hs_lens`, a lens on hyperstacks *)
 
 /// `imem inv`:
@@ -233,13 +243,14 @@ let reveal_inv ()
              view l h == l.l.get h))
   = ()
 
-/// `with_state t pre post`:
+
+/// `with_snapshot t pre post`:
 ///
 ///    A computation in `LensST` which supports updating the snapshot
 ///
 ///    This is a technical device, not intended for typical use in
 ///    client code, but is useful in libraries that provide support for
 ///    composing and de-composing hs_lenses.
-let with_state #a #b (lens:hs_lens a b) result pre post =
+let with_snapshot #a #b (lens:hs_lens a b) result pre post =
   s:imem (lens.invariant lens.x) ->
   LensST result (snap lens s) pre post
