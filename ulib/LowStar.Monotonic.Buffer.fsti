@@ -1551,7 +1551,7 @@ let fresh_loc (l: loc) (h h' : HS.mem) : GTot Type0 =
   loc_not_unused_in h' `loc_includes` l
 
 let ralloc_post_fresh_loc (#a:Type) (#rel:Preorder.preorder a) (i: HS.rid) (init:a) (m0: HS.mem)
-                       (x: HST.mreference a rel{HST.is_eternal_region (HS.frameOf x)}) (m1: HS.mem) : Lemma
+                       (x: HST.mreference a rel{HS.is_eternal_region (HS.frameOf x)}) (m1: HS.mem) : Lemma
     (requires (HST.ralloc_post i init m0 x m1))
     (ensures (fresh_loc (loc_freed_mreference x) m0 m1))
     [SMTPat (HST.ralloc_post i init m0 x m1)]
