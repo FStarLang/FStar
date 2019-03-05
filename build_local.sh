@@ -6,8 +6,12 @@ if [ ! -f $FILE ]; then
    echo "File $FILE does not exist."
 fi
 
-# In case you want to build windows, change agentOS here to windows-nt
+# In case you want to build windows, change agentOS here to windows-nt if OSTYPE is not working
 agentOS=Linux
+if [[ "$OSTYPE" == "cygwin" ]]; then
+    agentOS=windows-nt
+fi
+
 DOCKERFILE=$(jq -c -r ".DockerFile" "$FILE")
 DOCKERFILE=$( echo ${DOCKERFILE} | sed "s/{agentOS}/${agentOS}/g" )
 
