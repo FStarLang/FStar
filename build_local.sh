@@ -7,7 +7,7 @@ if [ ! -f $FILE ]; then
 fi
 
 # In case you want to build windows, change agentOS here to windows-nt if OSTYPE is not working
-agentOS=Linux
+agentOS=linux
 if [[ "$OSTYPE" == "cygwin" ]]; then
     agentOS=windows-nt
 fi
