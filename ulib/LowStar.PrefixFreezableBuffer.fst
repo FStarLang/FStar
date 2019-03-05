@@ -42,17 +42,6 @@ module LE = LowStar.Endianness
 
 let le_to_n s = E.le_to_n s
 
-let rec le_to_n_zeros (s:Seq.seq u8)
-  : Lemma
-    (requires
-      forall (i:nat). i < Seq.length s ==> Seq.index s i == 0uy)
-    (ensures
-      le_to_n s == 0)
-    (decreases (Seq.length s))
-  = E.reveal_le_to_n s;
-    if Seq.length s = 0 then ()
-    else le_to_n_zeros (Seq.tail s)
-
 let prefix_freezable_preorder = pre
 
 let prefix_freezable_preorder_elim _ _ = ()
@@ -78,7 +67,7 @@ let gcmalloc r len =
   
   let b = mgcmalloc #_ #prefix_freezable_preorder r 0uy (U32.add len 4ul) in
 
-  let h = ST.get () in le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
+  let h = ST.get () in E.le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
 
   assert (fresh_loc (loc_buffer b) h0 h);  //TODO: necessary for firing modifies_remove_new_locs lemma?
   update_frozen_until_alloc b;
@@ -89,7 +78,7 @@ let malloc r len =
   
   let b = mmalloc #_ #prefix_freezable_preorder r 0uy (U32.add len 4ul) in
 
-  let h = ST.get () in le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
+  let h = ST.get () in E.le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
 
   assert (fresh_loc (loc_buffer b) h0 h);  //TODO: necessary for firing modifies_remove_new_locs lemma?
   update_frozen_until_alloc b;
@@ -100,7 +89,7 @@ let alloca len =
   
   let b = malloca #_ #prefix_freezable_preorder 0uy (U32.add len 4ul) in
 
-  let h = ST.get () in le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
+  let h = ST.get () in E.le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
 
   assert (fresh_loc (loc_buffer b) h0 h);  //TODO: necessary for firing modifies_remove_new_locs lemma?
   update_frozen_until_alloc b;

@@ -339,3 +339,26 @@ val slice_seq_uint32_of_be (n: nat) (s: S.seq U8.t) (lo: nat) (hi: nat) : Lemma
 val be_of_seq_uint32_slice (s: S.seq U32.t) (lo: nat) (hi: nat) : Lemma
   (requires (lo <= hi /\ hi <= S.length s))
   (ensures (be_of_seq_uint32 (S.slice s lo hi) `S.equal` S.slice (be_of_seq_uint32 s) (4 * lo) (4 * hi)))
+
+
+/// Some reasoning about zero bytes
+
+let rec le_to_n_zeros (s:bytes)
+  : Lemma
+    (requires
+      forall (i:nat). i < Seq.length s ==> Seq.index s i == 0uy)
+    (ensures le_to_n s == 0)
+    (decreases (Seq.length s))
+  = reveal_le_to_n s;
+    if Seq.length s = 0 then ()
+    else le_to_n_zeros (Seq.tail s)
+
+let rec be_to_n_zeros (s:bytes)
+  : Lemma
+    (requires
+      forall (i:nat). i < Seq.length s ==> Seq.index s i == 0uy)
+    (ensures be_to_n s == 0)
+    (decreases (Seq.length s))
+  = reveal_be_to_n s;
+    if Seq.length s = 0 then ()
+    else be_to_n_zeros (Seq.slice s 0 (Seq.length s - 1))
