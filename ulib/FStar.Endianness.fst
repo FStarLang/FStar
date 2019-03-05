@@ -36,6 +36,10 @@ let rec be_to_n b: Tot nat (decreases (S.length b)) =
   if S.length b = 0 then 0
   else U8.v (S.last b) + pow2 8 * be_to_n (S.slice b 0 (S.length b - 1))
 
+let reveal_le_to_n _ = ()
+
+let reveal_be_to_n _ = ()
+
 /// Inverse operations
 /// ------------------
 
