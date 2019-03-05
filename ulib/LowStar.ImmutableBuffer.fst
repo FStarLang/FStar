@@ -25,7 +25,7 @@ module Seq = FStar.Seq
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-private let immutable_preorder (a:Type0) :srel a = fun s1 s2 -> Seq.equal s1 s2
+let immutable_preorder (a:Type0) :srel a = fun s1 s2 -> Seq.equal s1 s2
 
 type ibuffer (a:Type0) = mbuffer a (immutable_preorder a) (immutable_preorder a)
 
