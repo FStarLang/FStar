@@ -320,12 +320,17 @@ let load_module_from_cache
                FStar.Errors.log_issue
                     (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
                     (Errors.Warning_CachedFile,
-                     BU.format3 "Unable to compute digest of %s since %s; will recheck %s and all subsequent files" cache_file tag fn)
+                     BU.format3
+                       "Unable to compute digest of %s since %s; will recheck %s and all subsequent files"
+                       cache_file tag fn)
         in
         match !some_cache_invalid with
         | Some _ -> None
         | _ ->
-          if not (BU.file_exists cache_file) then let _ = fail (Some (BU.format1 "file %s does not exists" cache_file)) cache_file in None
+          if not (BU.file_exists cache_file) then begin
+            fail (Some (BU.format1 "file %s does not exists" cache_file)) cache_file;
+            None
+          end
           else match load env.env_tcenv fn cache_file with
                | Inl msg ->
                  fail (Some msg) cache_file;
