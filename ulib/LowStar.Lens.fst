@@ -254,3 +254,23 @@ let reveal_inv ()
 let with_snapshot #a #b (lens:hs_lens a b) result pre post =
   s:imem (lens.invariant lens.x) ->
   LensST result (snap lens s) pre post
+
+/// `for_n`: A simple for-loop, for i in [0 .. n)
+let for_n (#a #b:_) (#lens:hs_lens a b)
+          (n:nat)
+          (inv: nat -> b -> prop)
+          (f: (i:nat{i<n}
+              -> LensST unit lens
+                (requires fun b -> inv i b)
+                (ensures fun b0 _ b1 -> inv (i + 1) b1)))
+   : LensST unit lens
+     (requires fun b0 -> inv 0 b0)
+     (ensures fun b0 _ b1 -> inv n b1)
+   = let rec aux (i:nat{i <= n})
+       : LensST unit lens
+           (inv i)
+           (fun _ _ -> inv n)
+       = if i = n then ()
+         else (f i; aux (i + 1))
+     in
+     aux 0
