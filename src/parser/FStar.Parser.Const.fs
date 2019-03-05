@@ -85,6 +85,8 @@ let heap_lid   = p2l ["FStar"; "Heap"; "heap"]
 
 let logical_lid = pconst "logical"
 
+let smt_theory_symbol_attr_lid = pconst "smt_theory_symbol"
+
 let true_lid   = pconst "l_True"
 let false_lid  = pconst "l_False"
 let and_lid    = pconst "l_and"
