@@ -30,8 +30,6 @@ module Seq = FStar.Seq
 module HS = FStar.HyperStack
 module ST = FStar.HyperStack.ST
 
-friend FStar.Endianness
-
 module E = FStar.Endianness
 module LE = LowStar.Endianness
 
@@ -44,8 +42,6 @@ module LE = LowStar.Endianness
 
 let le_to_n s = E.le_to_n s
 
-
-#push-options "--max_fuel 1 --initial_fuel 1"  //to unroll E.le_to_n
 let rec le_to_n_zeros (s:Seq.seq u8)
   : Lemma
     (requires
@@ -53,9 +49,9 @@ let rec le_to_n_zeros (s:Seq.seq u8)
     (ensures
       le_to_n s == 0)
     (decreases (Seq.length s))
-  = if Seq.length s = 0 then ()
+  = E.reveal_le_to_n s;
+    if Seq.length s = 0 then ()
     else le_to_n_zeros (Seq.tail s)
-#pop-options
 
 let prefix_freezable_preorder = pre
 
