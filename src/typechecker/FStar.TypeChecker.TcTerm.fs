@@ -296,8 +296,8 @@ let check_no_smt_theory_symbols (en:env) (t:term) :unit =
     //string to be displayed in the warning
     let msg = List.fold_left (fun s t -> s ^ " " ^ (Print.term_to_string t)) "" tlist in
     Errors.log_issue t.pos (Errors.Warning_SMTPatternIllFormed,
-      BU.format2 "Pattern uses these theory symbols or terms that should not be in an smt pattern: %s"
-                 (Print.term_to_string t) msg)
+      BU.format1 "Pattern uses these theory symbols or terms that should not be in an smt pattern: %s"
+                 msg)
 
 let check_smt_pat env t bs c =
     if U.is_smt_lemma t //check patterns cover the bound vars
