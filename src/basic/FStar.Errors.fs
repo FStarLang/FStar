@@ -275,11 +275,12 @@ type raw_error =
   | Warning_NormalizationFailure
   | Warning_NotDependentArrow
   | Warning_NotEmbedded
-  | Warning_PatternMissingBoundVar
+  | Warning_PatternMissingBoundVar  //AR: this is deprecated, use Warning_SMTPatternIllFormed instead
+                                    //    not removing it so as not to mess up the error numbers
   | Warning_RecursiveDependency
   | Warning_RedundantExplicitCurrying
   | Warning_SMTPatTDeprecated
-  | Warning_SMTPatternMissingBoundVar
+  | Warning_SMTPatternIllFormed
   | Warning_TopLevelEffect
   | Warning_UnboundModuleReference
   | Warning_UnexpectedFile
@@ -330,8 +331,6 @@ type raw_error =
   | Error_MustEraseMissing
   | Warning_EffectfulArgumentToErasedFunction
   | Fatal_EmptySurfaceLet
-  | Warning_PatternUsesTheorySymbols
-
 
 
 type flag = error_flag
@@ -611,7 +610,7 @@ let default_flags =
   (Warning_RecursiveDependency                       , CWarning);
   (Warning_RedundantExplicitCurrying                 , CWarning);
   (Warning_SMTPatTDeprecated                         , CWarning);
-  (Warning_SMTPatternMissingBoundVar                 , CWarning);
+  (Warning_SMTPatternIllFormed                       , CWarning);
   (Warning_TopLevelEffect                            , CWarning);
   (Warning_UnboundModuleReference                    , CWarning);
   (Warning_UnexpectedFile                            , CWarning);
@@ -661,7 +660,6 @@ let default_flags =
   (Error_MustEraseMissing                            , CWarning);
   (Warning_EffectfulArgumentToErasedFunction         , CWarning);
   (Fatal_EmptySurfaceLet                             , CFatal);
-  (Warning_PatternUsesTheorySymbols                  , CWarning);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]

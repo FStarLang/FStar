@@ -243,7 +243,10 @@ let check_pat_fvs rng env pats bs =
     let pat_vars = get_pat_vars (List.map fst bs) (N.normalize [Env.Beta] env pats) in
     begin match bs |> BU.find_opt (fun (b, _) -> not(BU.set_mem b pat_vars)) with
         | None -> ()
-        | Some (x,_) -> Errors.log_issue rng (Errors.Warning_PatternMissingBoundVar, (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
+        | Some (x,_) ->
+          Errors.log_issue rng
+            (Errors.Warning_SMTPatternIllFormed,
+             (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
     end
 
 (*
@@ -267,22 +270,12 @@ let check_no_smt_theory_symbols (en:env) (t:term) :unit =
   let rec aux (t:term) :list<term> =
     match (SS.compress t).n with
     //these cases are fine
-    | Tm_bvar _
-    | Tm_name _
-    | Tm_type _
-    | Tm_uvar _
-    | Tm_lazy _
-    | Tm_unknown -> []
+    | Tm_bvar _ | Tm_name _ | Tm_type _ | Tm_uvar _
+    | Tm_lazy _ | Tm_unknown -> []
 
-    //these should not be allowed
-    | Tm_constant _
-    | Tm_abs _
-    | Tm_arrow _
-    | Tm_refine _
-    | Tm_match _
-    | Tm_let _
-    | Tm_delayed _
-    | Tm_quoted _ -> [t]
+    //these should not be allowed in patterns
+    | Tm_constant _ | Tm_abs _ | Tm_arrow _ | Tm_refine _
+    | Tm_match _ | Tm_let _ | Tm_delayed _ | Tm_quoted _ -> [t]
     
     //these descend more in the term
     | Tm_fvar fv ->
@@ -298,11 +291,13 @@ let check_no_smt_theory_symbols (en:env) (t:term) :unit =
     | Tm_meta (t, _) -> aux t
   in
   let tlist = t |> pat_terms |> List.collect aux in
-  if List.length tlist = 0 then ()
+  if List.length tlist = 0 then ()  //did not find any offending term
   else
+    //string to be displayed in the warning
     let msg = List.fold_left (fun s t -> s ^ " " ^ (Print.term_to_string t)) "" tlist in
-    Errors.log_issue t.pos (Errors.Warning_PatternUsesTheorySymbols,
-      BU.format2 "Pattern %s uses theory symbols: %s" (Print.term_to_string t) msg)
+    Errors.log_issue t.pos (Errors.Warning_SMTPatternIllFormed,
+      BU.format2 "Pattern uses these theory symbols or terms that should not be in an smt pattern: %s"
+                 (Print.term_to_string t) msg)
 
 let check_smt_pat env t bs c =
     if U.is_smt_lemma t //check patterns cover the bound vars
