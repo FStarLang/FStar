@@ -44,6 +44,22 @@ val le_to_n : b:bytes -> Tot nat (decreases (S.length b))
 /// be_to_n interprets a byte sequence as a big-endian natural number
 val be_to_n : b:bytes -> Tot nat (decreases (S.length b))
 
+/// Induction for le_to_n and be_to_n
+
+val reveal_le_to_n (b:bytes)
+  : Lemma
+    (le_to_n b ==
+     (match Seq.length b with
+      | 0 -> 0
+      | _ -> U8.v (S.head b) + pow2 8 * le_to_n (S.tail b)))
+
+val reveal_be_to_n (b:bytes)
+  : Lemma
+    (be_to_n b ==
+     (match Seq.length b with
+      | 0 -> 0
+      | _ -> U8.v (S.last b) + pow2 8 * be_to_n (S.slice b 0 (S.length b - 1))))
+
 val lemma_le_to_n_is_bounded: b:bytes -> Lemma
   (requires True)
   (ensures  (le_to_n b < pow2 (8 * Seq.length b)))
