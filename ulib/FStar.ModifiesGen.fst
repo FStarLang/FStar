@@ -1342,6 +1342,80 @@ let modifies_upd #al #c #t #pre r v h =
     (fun r n -> ())
     (fun r a b -> c.same_mreference_aloc_preserved #r #a b h h' (fun a' pre' r' -> ()))
 
+#push-options "--z3rlimit 16"
+
+let addrs_of_loc_loc_union_loc_of_aloc_eq_loc_union_loc_addresses_singleton
+  (#al: aloc_t) (#c: cls al) (l: loc c) (#r0: HS.rid) (#a0: nat) (al0: al r0 a0) (r: HS.rid)
+: Lemma
+  (addrs_of_loc (loc_union l (loc_of_aloc al0)) r == addrs_of_loc (loc_union l (loc_addresses true r0 (Set.singleton a0))) r)
+= assert (addrs_of_loc (loc_union l (loc_of_aloc al0)) r `GSet.equal` addrs_of_loc (loc_union l (loc_addresses true r0 (Set.singleton a0))) r)
+
+#pop-options
+
+let addrs_of_loc_weak_loc_includes #al (#c: cls al) (l: loc c) (r0: HS.rid) (a0: nat) : Lemma
+  (requires (a0 `GSet.mem` addrs_of_loc_weak l r0))
+  (ensures (l `loc_includes` loc_addresses true r0 (Set.singleton a0)))
+= ()
+
+val modifies_strengthen'
+  (#al: aloc_t) (#c: cls al) (l: loc c) (#r0: HS.rid) (#a0: nat) (al0: al r0 a0) (h h' : HS.mem)
+  (alocs: (
+    (f: ((t: Type) -> (pre: Preorder.preorder t) -> (m: HS.mreference t pre) -> Lemma
+      (requires (HS.frameOf m == r0 /\ HS.as_addr m == a0 /\ HS.contains h m))
+      (ensures (HS.contains h' m))
+    )) ->
+    (x: al r0 a0) ->
+    Lemma
+    (requires (c.aloc_disjoint x al0 /\ loc_disjoint (loc_of_aloc x) l))
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (requires ((~ (a0 `GSet.mem` addrs_of_loc_weak l r0)) /\  modifies (loc_union l (loc_addresses true r0 (Set.singleton a0))) h h'))
+  (ensures (modifies (loc_union l (loc_of_aloc al0)) h h'))
+
+#push-options "--z3rlimit 128"
+
+let modifies_strengthen' #al #c l #r0 #a0 al0 h h' alocs =
+  Classical.forall_intro (addrs_of_loc_loc_union_loc_of_aloc_eq_loc_union_loc_addresses_singleton l al0);
+  assert (modifies_preserves_regions (loc_union l (loc_of_aloc al0)) h h');
+  assert (modifies_preserves_mreferences (loc_union l (loc_of_aloc al0)) h h');
+  assert (modifies_preserves_not_unused_in (loc_union l (loc_of_aloc al0)) h h');
+  assert (modifies_preserves_livenesses (loc_union l (loc_of_aloc al0)) h h');
+  modifies_preserves_alocs_intro (loc_union l (loc_of_aloc al0)) h h' () (fun r a b ->
+    if r = r0 && a = a0
+    then begin
+      assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_union l (loc_of_aloc al0)))) (GSet.singleton (ALoc r0 a0 (Some b))));
+      assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux l)) (GSet.singleton (ALoc r0 a0 (Some b))));
+      assert (loc_disjoint l (loc_of_aloc b));
+      loc_disjoint_sym l (loc_of_aloc b);
+      assert (loc_aux_disjoint #_ #c (Ghost.reveal (Loc?.aux (loc_of_aloc al0))) (GSet.singleton (ALoc r0 a0 (Some b))));
+      assert (loc_aux_disjoint #_ #c (GSet.singleton (ALoc r0 a0 (Some al0))) (GSet.singleton (ALoc r0 a0 (Some b))));
+      assert (GSet.mem (ALoc r0 a0 (Some al0)) (GSet.singleton (ALoc #_ #c r0 a0 (Some al0))));
+      assert (GSet.mem (ALoc r0 a0 (Some b)) (GSet.singleton (ALoc #_ #c r0 a0 (Some b))));
+      assert (aloc_disjoint #_ #c (ALoc r0 a0 (Some al0)) (ALoc r0 a0 (Some b)));
+      assert (c.aloc_disjoint al0 b);
+      c.aloc_disjoint_sym al0 b;
+      alocs (fun t pre m -> ()) b
+    end 
+    else ()
+  );
+  assert (modifies (loc_union l (loc_of_aloc al0)) h h')
+
+#pop-options
+
+let modifies_strengthen #al #c l #r0 #a0 al0 h h' alocs =
+  if a0 `GSet.mem` addrs_of_loc_weak l r0
+  then begin
+    addrs_of_loc_weak_loc_includes l r0 a0;
+    loc_includes_refl l;
+    loc_includes_union_r l l (loc_addresses true r0 (Set.singleton a0));
+    loc_includes_union_l l (loc_of_aloc al0) l;
+    loc_includes_trans (loc_union l (loc_of_aloc al0)) l (loc_union l (loc_addresses true r0 (Set.singleton a0)));
+    modifies_loc_includes (loc_union l (loc_of_aloc al0)) h h' (loc_union l (loc_addresses true r0 (Set.singleton a0)))
+  end
+  else
+    modifies_strengthen' l al0 h h' alocs
+
 
 let does_not_contain_addr' (h: HS.mem) (ra: HS.rid * nat) : GTot Type0 =
   HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` (fst ra))

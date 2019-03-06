@@ -282,7 +282,7 @@ unfold let compatible_sub
 val mgsub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t)
   :Ghost (mbuffer a rrel sub_rel)
-         (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
+         (requires (U32.v i + U32.v len <= length b))
 	 (ensures (fun _ -> True))
 
 // goffset
@@ -292,7 +292,7 @@ val mgsub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a)
 val live_gsub (#a:Type0) (#rrel #rel:srel a)
   (h:HS.mem) (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
   :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
-         (ensures  (live h (mgsub sub_rel b i len) <==> live h b))
+         (ensures  (live h b <==> (live h (mgsub sub_rel b i len) /\ (exists h0 . {:pattern (live h0 b)} live h0 b))))
          [SMTPatOr [
              [SMTPat (live h (mgsub sub_rel b i len))];
              [SMTPat (live h b); SMTPat (mgsub sub_rel b i len);]
@@ -301,7 +301,7 @@ val live_gsub (#a:Type0) (#rrel #rel:srel a)
 
 val gsub_is_null (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
-  :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
+  :Lemma (requires (U32.v i + U32.v len <= length b))
          (ensures (g_is_null (mgsub sub_rel b i len) <==> g_is_null b))
          [SMTPat (g_is_null (mgsub sub_rel b i len))]
 
@@ -311,7 +311,7 @@ val gsub_is_null (#a:Type0) (#rrel #rel:srel a)
 
 val len_gsub (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len':U32.t) (sub_rel:srel a)
-  :Lemma (requires (U32.v i + U32.v len' <= length b /\ compatible_sub b i len' sub_rel))
+  :Lemma (requires (U32.v i + U32.v len' <= length b))
          (ensures (len (mgsub sub_rel b i len') == len'))
          [SMTPatOr [
              [SMTPat (len (mgsub sub_rel b i len'))];
@@ -321,13 +321,13 @@ val len_gsub (#a:Type0) (#rrel #rel:srel a)
 
 val frameOf_gsub (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
-  :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
+  :Lemma (requires (U32.v i + U32.v len <= length b))
          (ensures (frameOf (mgsub sub_rel b i len) == frameOf b))
   [SMTPat (frameOf (mgsub sub_rel b i len))]
 
 val as_addr_gsub (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
-  :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
+  :Lemma (requires (U32.v i + U32.v len <= length b))
          (ensures (as_addr (mgsub sub_rel b i len) == as_addr b))
          [SMTPat (as_addr (mgsub sub_rel b i len))]
 
@@ -335,8 +335,8 @@ val mgsub_inj (#a:Type0) (#rrel #rel:srel a) (sub_rel1 sub_rel2:srel a)
   (b1 b2:mbuffer a rrel rel)
   (i1 i2:U32.t)
   (len1 len2:U32.t)
-  :Lemma (requires (U32.v i1 + U32.v len1 <= length b1 /\ compatible_sub b1 i1 len1 sub_rel1 /\
-                    U32.v i2 + U32.v len2 <= length b2 /\ compatible_sub b2 i2 len2 sub_rel2 /\
+  :Lemma (requires (U32.v i1 + U32.v len1 <= length b1 /\
+                    U32.v i2 + U32.v len2 <= length b2 /\
 		    mgsub sub_rel1 b1 i1 len1 === mgsub sub_rel2 b2 i2 len2))
          (ensures (len1 == len2 /\ (b1 == b2 ==> i1 == i2) /\ ((i1 == i2 /\ length b1 == length b2) ==> b1 == b2)))
 
@@ -347,9 +347,9 @@ val gsub_gsub (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel)
   (i1:U32.t) (len1:U32.t) (sub_rel1:srel a)
   (i2: U32.t) (len2: U32.t) (sub_rel2:srel a)
-  :Lemma (requires (U32.v i1 + U32.v len1 <= length b /\ compatible_sub b i1 len1 sub_rel1 /\
-                    U32.v i2 + U32.v len2 <= U32.v len1 /\ compatible_sub (mgsub sub_rel1 b i1 len1) i2 len2 sub_rel2))
-         (ensures  (compatible_sub b (U32.add i1 i2) len2 sub_rel2 /\
+  :Lemma (requires (U32.v i1 + U32.v len1 <= length b /\ 
+                    U32.v i2 + U32.v len2 <= U32.v len1))
+         (ensures  (((compatible_sub b i1 len1 sub_rel1 /\  compatible_sub (mgsub sub_rel1 b i1 len1) i2 len2 sub_rel2) ==> compatible_sub b (U32.add i1 i2) len2 sub_rel2) /\
                     mgsub sub_rel2 (mgsub sub_rel1 b i1 len1) i2 len2 == mgsub sub_rel2 b (U32.add i1 i2) len2))
          [SMTPat (mgsub sub_rel2 (mgsub sub_rel1 b i1 len1) i2 len2)]
 
@@ -366,7 +366,7 @@ val gsub_zero_length (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
 
 val as_seq_gsub (#a:Type0) (#rrel #rel:srel a)
   (h:HS.mem) (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
-  :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
+  :Lemma (requires (U32.v i + U32.v len <= length b))
          (ensures (as_seq h (mgsub sub_rel b i len) == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len)))
          [SMTPat (as_seq h (mgsub sub_rel b i len))]
 
@@ -445,11 +445,64 @@ val loc_union_loc_none_r
 
 /// ``loc_buffer b`` is the set of memory locations associated to a buffer ``b``.
 
+val loc_buffer_from_to (#a:Type0) (#rrel #rel:srel a) (b: mbuffer a rrel rel) (from to: U32.t) : GTot loc
+
 val loc_buffer (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot loc
+
+val loc_buffer_eq (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : Lemma
+  (loc_buffer b == loc_buffer_from_to b 0ul (len b))
+
+val loc_buffer_from_to_high (#a: Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (from to: U32.t)
+: Lemma
+  (requires (length b <= U32.v to))
+  (ensures (loc_buffer_from_to b from to == loc_buffer_from_to b from (len b)))
+
+val loc_buffer_from_to_none (#a: Type) (#rrel #rel: srel a) (b: mbuffer a rrel rel) (from to: U32.t)
+: Lemma
+  (requires (g_is_null b \/ length b < U32.v from \/ U32.v to < U32.v from))
+  (ensures (loc_buffer_from_to b from to == loc_none))
+
+val loc_buffer_from_to_mgsub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a)
+  (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t)
+  (from to: U32.t)
+: Lemma
+  (requires (
+    U32.v i + U32.v len <= length b /\
+    U32.v from <= U32.v to /\ U32.v to <= U32.v len
+  ))
+  (ensures (
+    loc_buffer_from_to (mgsub sub_rel b i len) from to == loc_buffer_from_to b (i `U32.add` from) (i `U32.add` to)
+  ))
+
+val loc_buffer_mgsub_eq (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a)
+  (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t)
+  :Lemma
+         (requires (U32.v i + U32.v len <= length b))
+	 (ensures (loc_buffer (mgsub sub_rel b i len) == loc_buffer_from_to b i (i `U32.add` len)))
 
 val loc_buffer_null (a:Type0) (rrel rel:srel a)
   :Lemma (loc_buffer (mnull #a #rrel #rel) == loc_none)
          [SMTPat (loc_buffer (mnull #a #rrel #rel))]
+
+val loc_buffer_from_to_eq
+  (#a:Type0) (#rrel #rel:srel a)
+  (b: mbuffer a rrel rel)
+  (from to: U32.t)
+: Lemma
+  (requires (U32.v from <= U32.v to /\ U32.v to <= length b))
+  (ensures (loc_buffer_from_to b from to == loc_buffer (mgsub rel b from (to `U32.sub` from))))
+  [SMTPat (loc_buffer_from_to b from to)]
+
+val loc_buffer_mgsub_rel_eq
+  (#a:Type0) (#rrel #rel:srel a)
+  (b: mbuffer a rrel rel)
+  (rel1 rel2: srel a)
+  (i len: U32.t)
+: Lemma
+  (requires (U32.v i + U32.v len <= length b))
+  (ensures (loc_buffer (mgsub rel1 b i len) == loc_buffer (mgsub rel2 b i len)))
+  [SMTPat (loc_buffer (mgsub rel1 b i len)); SMTPat (loc_buffer (mgsub rel2 b i len))]
+
 
 /// ``loc_addresses r n`` is the set of memory locations associated to a
 /// set of addresses ``n`` in a given region ``r``.
@@ -597,14 +650,13 @@ val loc_includes_gsub_buffer_r
   (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:UInt32.t) (len:UInt32.t) (sub_rel:srel a)
 : Lemma (requires (UInt32.v i + UInt32.v len <= (length b) /\
-                   compatible_sub b i len sub_rel /\
                    loc_includes l (loc_buffer b)))
         (ensures  (loc_includes l (loc_buffer (mgsub sub_rel b i len))))
         [SMTPat (loc_includes l (loc_buffer (mgsub sub_rel b i len)))]
 
 let loc_includes_gsub_buffer_r' (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:UInt32.t) (len:UInt32.t) (sub_rel:srel a)
-  :Lemma (requires (UInt32.v i + UInt32.v len <= (length b) /\ compatible_sub b i len sub_rel))
+  :Lemma (requires (UInt32.v i + UInt32.v len <= (length b)))
          (ensures  (loc_includes (loc_buffer b) (loc_buffer (mgsub sub_rel b i len))))
          [SMTPat (mgsub sub_rel b i len)]
   = ()
@@ -613,10 +665,25 @@ val loc_includes_gsub_buffer_l (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel 
   (i1:UInt32.t) (len1:UInt32.t) (sub_rel1:srel a)
   (i2:UInt32.t) (len2:UInt32.t) (sub_rel2:srel a)
   :Lemma (requires (UInt32.v i1 + UInt32.v len1 <= (length b) /\
-                    UInt32.v i1 <= UInt32.v i2 /\ UInt32.v i2 + UInt32.v len2 <= UInt32.v i1 + UInt32.v len1 /\
-		    compatible_sub b i1 len1 sub_rel1 /\ compatible_sub b i2 len2 sub_rel2))
+                    UInt32.v i1 <= UInt32.v i2 /\ UInt32.v i2 + UInt32.v len2 <= UInt32.v i1 + UInt32.v len1
+         ))
          (ensures  (loc_includes (loc_buffer (mgsub sub_rel1 b i1 len1)) (loc_buffer (mgsub sub_rel2 b i2 len2))))
          [SMTPat (mgsub sub_rel1 b i1 len1); SMTPat (mgsub sub_rel2 b i2 len2)]
+
+val loc_includes_loc_buffer_loc_buffer_from_to
+  (#a: _) (#rrel #rel: _)
+  (b: mbuffer a rrel rel)
+  (from to: U32.t)
+: Lemma
+  (loc_includes (loc_buffer b) (loc_buffer_from_to b from to))
+
+val loc_includes_loc_buffer_from_to
+  (#a: _) (#rrel #rel: _)
+  (b: mbuffer a rrel rel)
+  (from1 to1 from2 to2: U32.t)
+: Lemma
+  (requires (U32.v from1 <= U32.v from2 /\ U32.v to2 <= U32.v to1))
+  (ensures (loc_includes (loc_buffer_from_to b from1 to1) (loc_buffer_from_to b from2 to2)))
 
 /// If the contents of a buffer are equal in two given heaps, then so
 /// are the contents of any of its sub-buffers.
@@ -856,12 +923,18 @@ val loc_disjoint_gsub_buffer (#a:Type0) (#rrel:srel a) (#rel:srel a)
   (i2:UInt32.t) (len2:UInt32.t) (sub_rel2:srel a)
   :Lemma (requires (UInt32.v i1 + UInt32.v len1 <= (length b) /\
                     UInt32.v i2 + UInt32.v len2 <= (length b) /\
-		    compatible_sub b i1 len1 sub_rel1 /\ compatible_sub b i2 len2 sub_rel2 /\
 		    (UInt32.v i1 + UInt32.v len1 <= UInt32.v i2 \/
                      UInt32.v i2 + UInt32.v len2 <= UInt32.v i1)))
          (ensures  (loc_disjoint (loc_buffer (mgsub sub_rel1 b i1 len1)) (loc_buffer (mgsub sub_rel2 b i2 len2))))
          [SMTPat (mgsub sub_rel1 b i1 len1); SMTPat (mgsub sub_rel2 b i2 len2)]
 
+val loc_disjoint_loc_buffer_from_to
+  (#a: _) (#rrel #rel: _)
+  (b: mbuffer a rrel rel)
+  (from1 to1 from2 to2: U32.t)
+: Lemma
+  (requires (U32.v to1 <= U32.v from2 \/ U32.v to2 <= U32.v from1))
+  (ensures (loc_disjoint (loc_buffer_from_to b from1 to1) (loc_buffer_from_to b from2 to2)))
 
 /// If two sets of addresses correspond to different regions or are
 /// disjoint, then their corresponding sets of memory locations are
@@ -993,6 +1066,11 @@ val modifies_buffer_elim (#a:Type0) (#rrel #rel:srel a)
              [ SMTPat (modifies p h h'); SMTPat (as_seq h' b) ] ;
              [ SMTPat (modifies p h h'); SMTPat (live h' b) ]
          ]]
+
+val modifies_buffer_from_to_elim (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (from to: U32.t) (p:loc) (h h':HS.mem)
+  :Lemma (requires (loc_disjoint (loc_buffer_from_to b from to) p /\ live h b /\ modifies p h h' /\ U32.v from <= U32.v to /\ U32.v to <= length b))
+         (ensures  (live h' b /\ Seq.slice (as_seq h b) (U32.v from) (U32.v to) == Seq.slice (as_seq h' b) (U32.v from) (U32.v to)))
 
 /// If the memory state does not change, then any memory location is
 /// modified (and, in particular, the empty set, ``loc_none``.)
@@ -1349,6 +1427,26 @@ val modifies_upd
   (ensures (modifies (loc_mreference r) h (HS.upd h r v)))
   [SMTPat (HS.upd h r v)]
 
+/// Introduction lemma for modifying loc_buffer_from_to
+
+val modifies_loc_buffer_from_to_intro
+  (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  (from to: U32.t)
+  (l: loc) (h h' : HS.mem)
+: Lemma
+  (requires (
+    let s = as_seq h b in
+    let s' = as_seq h' b in
+    live h b /\
+    modifies (loc_union l (loc_buffer b)) h h' /\
+    U32.v from <= U32.v to /\
+    U32.v to <= length b /\
+    Seq.slice s 0 (U32.v from) `Seq.equal` Seq.slice s' 0 (U32.v from) /\
+    Seq.slice s (U32.v to) (length b) `Seq.equal` Seq.slice s' (U32.v to) (length b)
+  ))
+  (ensures (modifies (loc_union l (loc_buffer_from_to b from to)) h h'))
+  
+
 ///  A memory ``h`` does not contain address ``a`` in region ``r``, denoted
 ///  ``does_not_contain_addr h (r, a)``, only if, either region ``r`` is
 ///  not live, or address ``a`` is unused in region ``r``.
@@ -1612,17 +1710,19 @@ val disjoint_neq (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
          (ensures (~(b1 === b2)))
 
 
-/// The liveness of a sub-buffer is exactly equivalent to the liveness
+(*
+/// The liveness of a sub-buffer entails from the liveness
 /// of its enclosing buffer.
 
 val includes_live (#a:Type0) (#rrel #rel1 #rel2:srel a)
   (h:HS.mem) (larger:mbuffer a rrel rel1) (smaller:mbuffer a rrel rel2)
   :Lemma (requires (larger `includes` smaller))
-         (ensures  (live h larger <==> live h smaller))
+         (ensures  (live h larger ==> live h smaller))
          [SMTPatOr [
              [SMTPat (includes larger smaller); SMTPat (live h larger)];
              [SMTPat (includes larger smaller); SMTPat (live h smaller)];
          ]]
+*)
 
 val includes_frameOf_as_addr (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
   (larger:mbuffer a1 rrel1 rel1) (smaller:mbuffer a2 rrel2 rel2)
@@ -1743,6 +1843,13 @@ let g_upd (#a:Type0) (#rrel #rel:srel a)
   : GTot HS.mem
   = g_upd_seq b (Seq.upd (as_seq h b) i v) h
 
+val g_upd_modifies_strong (#a:Type0) (#rrel #rel:srel a)
+                   (b:mbuffer a rrel rel)
+                   (i:nat{i < length b})
+                   (v:a)
+                   (h:HS.mem{live h b})
+  : Lemma (modifies (loc_buffer_from_to b (U32.uint_to_t i) (U32.uint_to_t (i + 1))) h (g_upd b i v h))
+
 /// ``upd b i v`` writes ``v`` to the memory, at offset ``i`` of
 /// buffer ``b``. KreMLin compiles it as ``b[i] = v``.
 
@@ -1778,6 +1885,7 @@ val recallable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0
 val recallable_null (#a:Type0) (#rrel #rel:srel a)
   :Lemma (recallable (mnull #a #rrel #rel)) [SMTPat (recallable (mnull #a #rrel #rel))]
 
+(*
 val recallable_includes (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
   (larger:mbuffer a1 rrel1 rel1) (smaller:mbuffer a2 rrel2 rel2)
   :Lemma (requires (larger `includes` smaller))
@@ -1785,6 +1893,16 @@ val recallable_includes (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:sre
          [SMTPatOr [
              [SMTPat (recallable larger); SMTPat (recallable smaller);];
              [SMTPat (larger `includes` smaller)];
+         ]]
+*)
+
+val recallable_mgsub (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
+  :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel /\ recallable b))
+         (ensures  (recallable (mgsub sub_rel b i len)))
+         [SMTPatOr [
+             [SMTPat (recallable (mgsub sub_rel b i len))];
+             [SMTPat (recallable b); SMTPat (mgsub sub_rel b i len);]
          ]]
 
 val recall (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
@@ -2039,9 +2157,11 @@ val blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
   (dst:mbuffer a rrel2 rel2)
   (idx_dst:U32.t)
   (len:U32.t)
-  :HST.Stack unit (requires (fun h -> live h src /\ live h dst /\ disjoint src dst /\
+  :HST.Stack unit (requires (fun h -> live h src /\ live h dst /\
                                     U32.v idx_src + U32.v len <= length src /\
                                     U32.v idx_dst + U32.v len <= length dst /\
+                                    (* TODO: remove the rhs part of this disjunction once patterns on loc_buffer_from_to are introduced *)
+                                    (loc_disjoint (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len)) \/ disjoint src dst) /\
 				    rel2 (as_seq h dst)
 				         (Seq.replace_subseq (as_seq h dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len)
 					                     (Seq.slice (as_seq h src) (U32.v idx_src) (U32.v idx_src + U32.v len)))))
