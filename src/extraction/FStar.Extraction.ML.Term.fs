@@ -673,13 +673,10 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
     in
     if TcUtil.must_erase_for_extraction g.env_tcenv t0
     then MLTY_Erased
-    else aux g t0
-
-         // if is_top_ty mlt
-         // then //Try normalizing t fully, this time with Delta steps, and translate again, to see if we can get a better translation for it
-         //      let t = N.normalize (Env.UnfoldUntil delta_constant::basic_norm_steps) g.env_tcenv t0 in
-         //      aux g t
-         // else mlt
+    else let mlt = aux g t0 in
+         if is_top_ty mlt
+         then MLTY_Top
+         else mlt
 
 
 and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv =
