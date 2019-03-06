@@ -74,6 +74,9 @@ val write : o:int -> IO unit (fun h p -> p () [Out o])
 let write i =
     IO?.reflect (Write i (Return ()))
 
+effect Io (a:Type) (pre':h_trace -> Type0) (post':h_trace -> a -> l_trace -> Type0) =
+        IO a (fun h p -> pre' h /\ (forall r l . post' h r l ==> p r l))
+
 let test1 () : IO int (fun h p -> p 1 [Out 2; Out 3]) =
   write 2;
   write 3;
@@ -84,9 +87,6 @@ let test2 () : IO int (fun h p -> forall i . p 1 [Out 2; In i; Out 3]) =
   let x = read () in
   write 3;
   1
-
-effect Io (a:Type) (pre':h_trace -> Type0) (post':h_trace -> a -> l_trace -> Type0) =
-        IO a (fun h p -> pre' h /\ (forall r l . post' h r l ==> p r l))
 
 let test3 (i:int)
   : Io int (requires (fun h     -> exists h' h'' . h = h' @ (In i :: h'')))
@@ -151,3 +151,45 @@ let print_increasing'''' (i:int) : IO unit (fun h p -> forall h'. p () h') =
   write (i+1);
   mustHaveOccurred i;
   write i
+
+let mustHaveOccurred_pp (i:int) 
+  : Io unit (requires (fun h -> List.memP (Out i) h)) 
+            (ensures  (fun h _ l -> l = [])) =
+  ()
+
+let print_increasing_pp (i:int) 
+  : Io unit (requires (fun _ -> True))
+            (ensures  (fun h _ l -> l = [Out i; Out (i+1)])) =
+  write i;
+  mustHaveOccurred_pp i;
+  write (i+1)
+
+let print_increasing_pp' (i:int) 
+  : Io unit (requires (fun _ -> True))
+            (ensures  (fun _ _ _ -> True)) =
+  write i;
+  write (i+1);
+  mustHaveOccurred_pp i
+
+let print_increasing_pp'' (i:int) 
+  : Io unit (requires (fun _ -> True))
+            (ensures  (fun _ _ _ -> True)) =
+  write i;
+  mustHaveOccurred_pp i;
+  write (i+1)
+
+[@expect_failure]
+let print_increasing_pp''' (i:int) 
+  : Io unit (requires (fun _ -> True))
+            (ensures  (fun h _ l -> l = [Out i; Out (i+1)])) =
+  mustHaveOccurred_pp i;
+  write (i+1)
+
+[@expect_failure]
+let print_increasing_pp'''' (i:int) 
+  : Io unit (requires (fun _ -> True))
+            (ensures  (fun h _ l -> l = [Out i; Out (i+1)])) =
+  mustHaveOccurred_pp i;
+  write i;
+  write (i+1)
+

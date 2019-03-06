@@ -99,7 +99,17 @@ val put : s:state -> IOST unit (fun _ h p -> p ((),s,[]))
 let put s =
     IOST?.reflect (fun _ -> Return ((),s))
 
+effect IoSt (a:Type) (pre':state -> h_trace -> Type0) (post':state -> h_trace -> a -> state -> l_trace -> Type0) =
+        IOST a (fun s h p -> pre' s h /\ (forall r s' l . post' s h r s' l ==> p (r,s',l)))
+
 let test1 () : IOST int (fun s h p -> p (1,s,[Out 2; Out 3])) =
+  write 2;
+  write 3;
+  1
+
+let test1' () 
+  : IoSt int (requires (fun _ _ -> True))
+             (ensures  (fun s _ r s' l -> r = 1 /\ s = s' /\ l = [Out 2; Out 3])) =
   write 2;
   write 3;
   1
@@ -172,6 +182,16 @@ let test5 () : IOST int (fun s h p -> forall i . p (1,i,[In i;Out (i+1)])) =
   1
 
 let do_io_then_roll_back_state () : IOST unit (fun s h p -> forall i . p ((),s,[In i;Out (s+i+1)])) =
+  let x = get () in 
+  let y = read () in
+  put (x+y);
+  let z = get () in 
+  write (z+1);
+  put x
+
+let do_io_then_roll_back_state_pp () 
+  : IoSt unit (requires (fun _ _ -> True))
+              (ensures  (fun s _ _ s' l -> s = s' /\ (exists i . l = [In i;Out (s+i+1)]))) =
   let x = get () in 
   let y = read () in
   put (x+y);
