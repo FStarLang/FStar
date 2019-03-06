@@ -30,6 +30,9 @@ module Seq = FStar.Seq
 module HS = FStar.HyperStack
 module ST = FStar.HyperStack.ST
 
+module E = FStar.Endianness
+module LE = LowStar.Endianness
+
 
 (*
  * Implementation for LowStar.PrefixfreezableBuffer
@@ -37,66 +40,7 @@ module ST = FStar.HyperStack.ST
 
 #set-options "--max_fuel 0 --max_ifuel 0"
 
-(****** Functions that will come from LowStar.Endianness ******)
-
-/// Read a sequence of bytes as a nat in the little-endian order
-
-assume val le_to_n_endianness (s:Seq.seq u8) : Tot nat
-assume val le_to_n_zeros (s:Seq.seq u8)  //if everything in a sequence is 0, then le_to_n of first 4 bytes is 0
-  : Lemma
-    (requires
-      Seq.length s >= 4 /\
-      (forall (i:nat). i < Seq.length s ==> Seq.index s i == 0uy))
-    (ensures le_to_n_endianness (Seq.slice s 0 4) == 0)
-
-
-/// Storing a u32 in the first 4 bytes of the input buffer
-///
-/// Precondition requires the callers to prove that it is consistent with the preorder
-///
-/// The following load and store will be more general in LowStar.Endianness in terms of indices
-
-assume
-val store32_le
-  (#rrel #rel:srel u8)
-  (b:mbuffer u8 rrel rel)
-  (i:u32)
-  : Stack
-    unit
-    (requires fun h ->
-      live h b /\
-      4 <= length b /\
-      (forall (s:Seq.seq u8).
-         (Seq.length s == length b /\
-	  (forall (i:nat). 4 <= i /\ i < length b ==> Seq.index s i == Seq.index (as_seq h b) i) /\
-	  le_to_n_endianness (Seq.slice s 0 4) == U32.v i) ==>
-	 (rel (as_seq h b) s)))
-    (ensures  fun h0 _ h1 ->
-      live h1 b /\
-      modifies (loc_buffer b) h0 h1 /\
-      le_to_n_endianness (Seq.slice (as_seq h1 b) 0 4) == U32.v i /\
-      (forall (k:nat).{:pattern (Seq.index (as_seq h1 b) k)}
-         (4 <= k /\ k < length b) ==> Seq.index (as_seq h1 b) k == Seq.index (as_seq h0 b) k))
-
-
-/// Loading first 4 bytes of the buffer as a u32
-
-assume
-val load32_le
-  (#rrel #rel:srel u8)
-  (b:mbuffer u8 rrel rel)
-  : Stack
-    u32
-    (requires fun h ->
-      live h b /\
-      4 <= length b)
-    (ensures  fun h0 r h1 ->
-      h0 == h1 /\
-      U32.v r == le_to_n_endianness (Seq.slice (as_seq h1 b) 0 4))
-
-(****** End LowStar.Endianness functions ******)
-
-let le_to_n s = le_to_n_endianness s
+let le_to_n s = E.le_to_n s
 
 let prefix_freezable_preorder = pre
 
@@ -115,7 +59,7 @@ private let update_frozen_until_alloc
       modifies (loc_buffer b) h0 h1 /\
       frozen_until (as_seq h1 b) == 4 /\
       witnessed b (frozen_until_at_least 4))
-  = store32_le b 4ul;
+  = LE.store32_le_i b 0ul 4ul;
     witness_p b (frozen_until_at_least 4)
 
 let gcmalloc r len =
@@ -123,7 +67,7 @@ let gcmalloc r len =
   
   let b = mgcmalloc #_ #prefix_freezable_preorder r 0uy (U32.add len 4ul) in
 
-  let h = ST.get () in le_to_n_zeros (as_seq h b);
+  let h = ST.get () in E.le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
 
   assert (fresh_loc (loc_buffer b) h0 h);  //TODO: necessary for firing modifies_remove_new_locs lemma?
   update_frozen_until_alloc b;
@@ -134,7 +78,7 @@ let malloc r len =
   
   let b = mmalloc #_ #prefix_freezable_preorder r 0uy (U32.add len 4ul) in
 
-  let h = ST.get () in le_to_n_zeros (as_seq h b);
+  let h = ST.get () in E.le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
 
   assert (fresh_loc (loc_buffer b) h0 h);  //TODO: necessary for firing modifies_remove_new_locs lemma?
   update_frozen_until_alloc b;
@@ -145,7 +89,7 @@ let alloca len =
   
   let b = malloca #_ #prefix_freezable_preorder 0uy (U32.add len 4ul) in
 
-  let h = ST.get () in le_to_n_zeros (as_seq h b);
+  let h = ST.get () in E.le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
 
   assert (fresh_loc (loc_buffer b) h0 h);  //TODO: necessary for firing modifies_remove_new_locs lemma?
   update_frozen_until_alloc b;
@@ -155,12 +99,38 @@ let upd b i v =
   recall_p b (frozen_until_at_least 4);
   upd b i v
 
+(*
+ * This lemma handles the mismatch between the style of the spec
+ *   in LE.store_pre and LE.store_post, and the preorder of PrefixFreezableBuffers
+ * Basically the sequence library is missing a lemma that eliminates
+ *   equality on two slices to some equality on the base sequences
+ *)
+let le_pre_post_index
+  (s1 s2:Seq.seq u8)
+  : Lemma
+    (ensures
+      (Seq.length s1 == Seq.length s2 /\
+       Seq.length s1 >= 4 /\
+       Seq.equal (Seq.slice s1 0 0) (Seq.slice s2 0 0) /\
+       Seq.equal (Seq.slice s1 4 (Seq.length s1))
+                 (Seq.slice s2 4 (Seq.length s2))) ==>
+
+      (forall (i:nat).{:pattern (Seq.index s1 i); (Seq.index s2 i)}
+         (i >= 4 /\ i < Seq.length s1) ==>
+         (Seq.index s1 i == Seq.index s2 i)))
+  = assert (forall (s:Seq.seq u8).
+              Seq.length s >= 4 ==>
+	      (forall (i:nat).
+	         (i >= 4 /\ i < Seq.length s) ==>
+	         Seq.index s i == Seq.index (Seq.slice s 4 (Seq.length s)) (i - 4)))
+               
 let freeze b i =
   recall_p b (frozen_until_at_least 4);
-  store32_le b i;
+  FStar.Classical.forall_intro_2 le_pre_post_index;
+  LE.store32_le_i b 0ul i;
   witness_p b (frozen_until_at_least (U32.v i))
 
-let frozen_until_st b = load32_le b
+let frozen_until_st b = LE.load32_le_i b 0ul
 
 let witness_slice b i j snap =
   witness_p b (slice_is i j snap)
