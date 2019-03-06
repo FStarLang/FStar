@@ -175,7 +175,7 @@ let rec is_arity env t =
         FStar.TypeChecker.Env.lookup_definition
           [Env.Unfold delta_constant]
           env.env_tcenv
-          f.fv_name.v
+          fv.fv_name.v
       in
       begin
       match topt with
