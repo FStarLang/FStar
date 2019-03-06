@@ -14,7 +14,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5c0ea04aa6daa18424ea6c6065d26051"
+      "2b2b1b3e891fd48055c0b77c9e233f9e"
     ],
     [
       "Lens.rgb",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "afb93d521d3b3aca57211a1bc08f6d2d"
+      "ff1bde48f2e12add6c94e9e0dd352d5c"
     ],
     [
       "Lens.colored",
@@ -37,7 +37,7 @@
       1,
       [ "@query", "assumption_Lens.rgb__uu___haseq" ],
       0,
-      "7b06a8ae884592057b96e7d159fea0a3"
+      "df29ce255c718bb456301414d1cea2e5"
     ],
     [
       "Lens.stlens",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a377b1c7b602077d60d891c1dea03050"
+      "bd62d19f162ef06e22e10af1cd0d8267"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5ade2a3d664f6fdf7271dfb9a9763ba0"
+      "a474aec9b441112e7312ffe73ef5ab19"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -79,7 +79,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5e4adbff2204a87b547495e73b486b56"
+      "947175b796e91c228298760b88eab3ec"
     ],
     [
       "Lens.st",
@@ -97,7 +97,7 @@
         "typing_FStar.Ref.addr_of", "typing_FStar.Ref.only"
       ],
       0,
-      "c19d8a90af00b0ce05efe20db7e6cd6d"
+      "a67d2726b3907901fa96d52f56a975c2"
     ],
     [
       "Lens.op_Bar_Colon_Dot_Dot",
@@ -122,7 +122,7 @@
         "token_correspondence_Lens.op_Bar_Colon_Equals"
       ],
       0,
-      "78deb7847e251f0e19ba5cf6895d5542"
+      "56300c778b27f39ce05d9557ab63e3cb"
     ],
     [
       "Lens.circle",
@@ -137,7 +137,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f1db5880cd022de0382ed66e3d826565"
+      "fdc1590d68020b1fdc949a0b3c5b1c17"
     ],
     [
       "Lens.rgb",
@@ -151,7 +151,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "16af00dd30063ab67419d3edaa362feb"
+      "f5cb48e8e70e96189fc268eb6cbcc95b"
     ],
     [
       "Lens.colored",
@@ -160,7 +160,7 @@
       1,
       [ "@query", "assumption_Lens.rgb__uu___haseq" ],
       0,
-      "a22b1cc4b05c3cbabb3b8a274bb97ae5"
+      "4313a10a275f92471678918ee5a3217f"
     ],
     [
       "Lens.stlens",
@@ -174,7 +174,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7524fa36b9c3e54bc203165efcc895ac"
+      "afe343f2751b6158f5091141e6de1973"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -188,7 +188,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c506b7724cc2c42d306862732cd96b6c"
+      "b9ecab38372a129b705a6cba78170dd8"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -202,7 +202,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "87190c9668e3199ddd57b7540f82b80a"
+      "41fa63688183ae6556c5b8dd750c7ef0"
     ],
     [
       "Lens.st",
@@ -220,7 +220,7 @@
         "typing_FStar.Ref.addr_of", "typing_FStar.Ref.only"
       ],
       0,
-      "a26303cbabfbac244682bbfab9e37d5e"
+      "6cc2accecde2b93c7979299bf2620778"
     ],
     [
       "Lens.op_Bar_Colon_Dot_Dot",
@@ -245,7 +245,7 @@
         "token_correspondence_Lens.op_Bar_Colon_Equals"
       ],
       0,
-      "816ec551c56d75ea97d8c1050f5e46d7"
+      "5efb785ae5f4a301c0befd688b4acd7a"
     ],
     [
       "Lens.op_Bar_Colon_Colon_Equals",
@@ -259,7 +259,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "bcf066b41bd279456e39008745a36433"
+      "db47e27f305400db5b100f155d5a286c"
     ],
     [
       "Lens.op_Array_Assignment",
@@ -273,7 +273,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "cb4153a1040cf16877275b73fee50e86"
+      "284f25c92b88afbf31c80af6960d7665"
     ],
     [
       "Lens.mutate",
@@ -287,7 +287,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3682144b3b1e588783a871fcdc922f8b"
+      "67701c31f3191dc7aabba58a0ea86e85"
     ],
     [
       "Lens.mutate2",
@@ -301,7 +301,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "603808c8b78204e32f892b7a068b7ce4"
+      "3d835b99e1b00d43758ac88035406b1a"
     ],
     [
       "Lens.mutate3",
@@ -315,7 +315,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c876fbb74502497cc8ae14977ce5ca45"
+      "1ff8f1af11939b4d43b50123d59fa575"
     ]
   ]
 ]
