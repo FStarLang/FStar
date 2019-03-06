@@ -86,7 +86,7 @@ let op_fst #a #b #c #d #result #pre #post
     let s = FStar.HyperStack.ST.get () in
     op s
 
-/// `op_fst`: Generically lift an operation on
+/// `op_snd`: Generically lift an operation on
 /// the second component
 let op_snd #a #b #c #d #result #pre #post
       (l1:hs_lens a b)
