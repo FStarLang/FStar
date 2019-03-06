@@ -170,11 +170,17 @@ let rec is_arity env t =
     | Tm_type _ -> true
     | Tm_arrow(_, c) ->
       is_arity env (FStar.Syntax.Util.comp_result c)
-    | Tm_fvar _ ->
-      let t = N.normalize [Env.AllowUnboundUniverses; Env.EraseUniverses; Env.UnfoldUntil delta_constant] env.env_tcenv t in
-      begin match (SS.compress t).n with
-        | Tm_fvar _ -> false
-        | _ -> is_arity env t
+    | Tm_fvar fv ->
+      let topt =
+        FStar.TypeChecker.Env.lookup_definition
+          [Env.Unfold delta_constant]
+          env.env_tcenv
+          f.fv_name.v
+      in
+      begin
+      match topt with
+      | None -> false
+      | Some (_, t) -> is_arity env t
       end
     | Tm_app _ ->
       let head, _ = U.head_and_args t in
