@@ -16,20 +16,20 @@ let (__proj__Mkvops_t__item__next_minor :
 let (vops : vops_t) =
   let major = FStar_Util.mk_ref (Prims.parse_int "0")  in
   let minor = FStar_Util.mk_ref (Prims.parse_int "0")  in
-  let next_major uu____38214 =
+  let next_major uu____37618 =
     FStar_ST.op_Colon_Equals minor (Prims.parse_int "0");
-    (let uu____38238 = FStar_Util.incr major; FStar_ST.op_Bang major  in
+    (let uu____37642 = FStar_Util.incr major; FStar_ST.op_Bang major  in
      {
-       FStar_Syntax_Syntax.major = uu____38238;
+       FStar_Syntax_Syntax.major = uu____37642;
        FStar_Syntax_Syntax.minor = (Prims.parse_int "0")
      })
      in
-  let next_minor uu____38268 =
-    let uu____38269 = FStar_ST.op_Bang major  in
-    let uu____38292 = FStar_Util.incr minor; FStar_ST.op_Bang minor  in
+  let next_minor uu____37672 =
+    let uu____37673 = FStar_ST.op_Bang major  in
+    let uu____37696 = FStar_Util.incr minor; FStar_ST.op_Bang minor  in
     {
-      FStar_Syntax_Syntax.major = uu____38269;
-      FStar_Syntax_Syntax.minor = uu____38292
+      FStar_Syntax_Syntax.major = uu____37673;
+      FStar_Syntax_Syntax.minor = uu____37696
     }  in
   { next_major; next_minor } 
 type tgraph =
@@ -56,74 +56,74 @@ let (__proj__Mkuf__item__version : uf -> FStar_Syntax_Syntax.version) =
   
 let (empty : FStar_Syntax_Syntax.version -> uf) =
   fun v1  ->
-    let uu____38372 = FStar_Unionfind.puf_empty ()  in
-    let uu____38375 = FStar_Unionfind.puf_empty ()  in
-    { term_graph = uu____38372; univ_graph = uu____38375; version = v1 }
+    let uu____37776 = FStar_Unionfind.puf_empty ()  in
+    let uu____37779 = FStar_Unionfind.puf_empty ()  in
+    { term_graph = uu____37776; univ_graph = uu____37779; version = v1 }
   
 let (version_to_string : FStar_Syntax_Syntax.version -> Prims.string) =
   fun v1  ->
-    let uu____38385 = FStar_Util.string_of_int v1.FStar_Syntax_Syntax.major
+    let uu____37789 = FStar_Util.string_of_int v1.FStar_Syntax_Syntax.major
        in
-    let uu____38387 = FStar_Util.string_of_int v1.FStar_Syntax_Syntax.minor
+    let uu____37791 = FStar_Util.string_of_int v1.FStar_Syntax_Syntax.minor
        in
-    FStar_Util.format2 "%s.%s" uu____38385 uu____38387
+    FStar_Util.format2 "%s.%s" uu____37789 uu____37791
   
 let (state : uf FStar_ST.ref) =
-  let uu____38393 =
-    let uu____38394 = vops.next_major ()  in empty uu____38394  in
-  FStar_Util.mk_ref uu____38393 
+  let uu____37797 =
+    let uu____37798 = vops.next_major ()  in empty uu____37798  in
+  FStar_Util.mk_ref uu____37797 
 type tx =
   | TX of uf 
 let (uu___is_TX : tx -> Prims.bool) = fun projectee  -> true 
 let (__proj__TX__item___0 : tx -> uf) =
   fun projectee  -> match projectee with | TX _0 -> _0 
-let (get : unit -> uf) = fun uu____38420  -> FStar_ST.op_Bang state 
+let (get : unit -> uf) = fun uu____37824  -> FStar_ST.op_Bang state 
 let (set : uf -> unit) = fun u  -> FStar_ST.op_Colon_Equals state u 
 let (reset : unit -> unit) =
-  fun uu____38470  ->
+  fun uu____37874  ->
     let v1 = vops.next_major ()  in
-    let uu____38472 = empty v1  in set uu____38472
+    let uu____37876 = empty v1  in set uu____37876
   
 let (new_transaction : unit -> tx) =
-  fun uu____38478  ->
-    let tx = let uu____38480 = get ()  in TX uu____38480  in
-    (let uu____38482 =
-       let uu___425_38483 = get ()  in
-       let uu____38484 = vops.next_minor ()  in
+  fun uu____37882  ->
+    let tx = let uu____37884 = get ()  in TX uu____37884  in
+    (let uu____37886 =
+       let uu___425_37887 = get ()  in
+       let uu____37888 = vops.next_minor ()  in
        {
-         term_graph = (uu___425_38483.term_graph);
-         univ_graph = (uu___425_38483.univ_graph);
-         version = uu____38484
+         term_graph = (uu___425_37887.term_graph);
+         univ_graph = (uu___425_37887.univ_graph);
+         version = uu____37888
        }  in
-     set uu____38482);
+     set uu____37886);
     tx
   
 let (commit : tx -> unit) = fun tx  -> () 
 let (rollback : tx -> unit) =
-  fun uu____38496  -> match uu____38496 with | TX uf -> set uf 
+  fun uu____37900  -> match uu____37900 with | TX uf -> set uf 
 let update_in_tx : 'a . 'a FStar_ST.ref -> 'a -> unit =
   fun r  -> fun x  -> () 
 let (get_term_graph : unit -> tgraph) =
-  fun uu____38525  -> let uu____38526 = get ()  in uu____38526.term_graph 
+  fun uu____37929  -> let uu____37930 = get ()  in uu____37930.term_graph 
 let (get_version : unit -> FStar_Syntax_Syntax.version) =
-  fun uu____38532  -> let uu____38533 = get ()  in uu____38533.version 
+  fun uu____37936  -> let uu____37937 = get ()  in uu____37937.version 
 let (set_term_graph : tgraph -> unit) =
   fun tg  ->
-    let uu____38540 =
-      let uu___438_38541 = get ()  in
+    let uu____37944 =
+      let uu___438_37945 = get ()  in
       {
         term_graph = tg;
-        univ_graph = (uu___438_38541.univ_graph);
-        version = (uu___438_38541.version)
+        univ_graph = (uu___438_37945.univ_graph);
+        version = (uu___438_37945.version)
       }  in
-    set uu____38540
+    set uu____37944
   
 let chk_v :
-  'Auu____38547 .
-    ('Auu____38547 * FStar_Syntax_Syntax.version) -> 'Auu____38547
+  'Auu____37951 .
+    ('Auu____37951 * FStar_Syntax_Syntax.version) -> 'Auu____37951
   =
-  fun uu____38556  ->
-    match uu____38556 with
+  fun uu____37960  ->
+    match uu____37960 with
     | (u,v1) ->
         let expected = get_version ()  in
         if
@@ -133,128 +133,128 @@ let chk_v :
                expected.FStar_Syntax_Syntax.minor)
         then u
         else
-          (let uu____38568 =
-             let uu____38570 = version_to_string expected  in
-             let uu____38572 = version_to_string v1  in
+          (let uu____37972 =
+             let uu____37974 = version_to_string expected  in
+             let uu____37976 = version_to_string v1  in
              FStar_Util.format2
                "Incompatible version for unification variable: current version is %s; got version %s"
-               uu____38570 uu____38572
+               uu____37974 uu____37976
               in
-           failwith uu____38568)
+           failwith uu____37972)
   
 let (uvar_id : FStar_Syntax_Syntax.uvar -> Prims.int) =
   fun u  ->
-    let uu____38582 = get_term_graph ()  in
-    let uu____38587 = chk_v u  in
-    FStar_Unionfind.puf_id uu____38582 uu____38587
+    let uu____37986 = get_term_graph ()  in
+    let uu____37991 = chk_v u  in
+    FStar_Unionfind.puf_id uu____37986 uu____37991
   
 let (from_id : Prims.int -> FStar_Syntax_Syntax.uvar) =
   fun n1  ->
-    let uu____38608 =
-      let uu____38615 = get_term_graph ()  in
-      FStar_Unionfind.puf_fromid uu____38615 n1  in
-    let uu____38622 = get_version ()  in (uu____38608, uu____38622)
+    let uu____38012 =
+      let uu____38019 = get_term_graph ()  in
+      FStar_Unionfind.puf_fromid uu____38019 n1  in
+    let uu____38026 = get_version ()  in (uu____38012, uu____38026)
   
 let (fresh : unit -> FStar_Syntax_Syntax.uvar) =
-  fun uu____38634  ->
-    let uu____38635 =
-      let uu____38642 = get_term_graph ()  in
-      FStar_Unionfind.puf_fresh uu____38642 FStar_Pervasives_Native.None  in
-    let uu____38649 = get_version ()  in (uu____38635, uu____38649)
+  fun uu____38038  ->
+    let uu____38039 =
+      let uu____38046 = get_term_graph ()  in
+      FStar_Unionfind.puf_fresh uu____38046 FStar_Pervasives_Native.None  in
+    let uu____38053 = get_version ()  in (uu____38039, uu____38053)
   
 let (find :
   FStar_Syntax_Syntax.uvar ->
     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
   =
   fun u  ->
-    let uu____38664 = get_term_graph ()  in
-    let uu____38669 = chk_v u  in
-    FStar_Unionfind.puf_find uu____38664 uu____38669
+    let uu____38068 = get_term_graph ()  in
+    let uu____38073 = chk_v u  in
+    FStar_Unionfind.puf_find uu____38068 uu____38073
   
 let (change : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit) =
   fun u  ->
     fun t  ->
-      let uu____38693 =
-        let uu____38694 = get_term_graph ()  in
-        let uu____38699 = chk_v u  in
-        FStar_Unionfind.puf_change uu____38694 uu____38699
+      let uu____38097 =
+        let uu____38098 = get_term_graph ()  in
+        let uu____38103 = chk_v u  in
+        FStar_Unionfind.puf_change uu____38098 uu____38103
           (FStar_Pervasives_Native.Some t)
          in
-      set_term_graph uu____38693
+      set_term_graph uu____38097
   
 let (equiv :
   FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.uvar -> Prims.bool) =
   fun u  ->
     fun v1  ->
-      let uu____38724 = get_term_graph ()  in
-      let uu____38729 = chk_v u  in
-      let uu____38740 = chk_v v1  in
-      FStar_Unionfind.puf_equivalent uu____38724 uu____38729 uu____38740
+      let uu____38128 = get_term_graph ()  in
+      let uu____38133 = chk_v u  in
+      let uu____38144 = chk_v v1  in
+      FStar_Unionfind.puf_equivalent uu____38128 uu____38133 uu____38144
   
 let (union : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.uvar -> unit) =
   fun u  ->
     fun v1  ->
-      let uu____38764 =
-        let uu____38765 = get_term_graph ()  in
-        let uu____38770 = chk_v u  in
-        let uu____38781 = chk_v v1  in
-        FStar_Unionfind.puf_union uu____38765 uu____38770 uu____38781  in
-      set_term_graph uu____38764
+      let uu____38168 =
+        let uu____38169 = get_term_graph ()  in
+        let uu____38174 = chk_v u  in
+        let uu____38185 = chk_v v1  in
+        FStar_Unionfind.puf_union uu____38169 uu____38174 uu____38185  in
+      set_term_graph uu____38168
   
 let (get_univ_graph : unit -> ugraph) =
-  fun uu____38799  -> let uu____38800 = get ()  in uu____38800.univ_graph 
+  fun uu____38203  -> let uu____38204 = get ()  in uu____38204.univ_graph 
 let (set_univ_graph : ugraph -> unit) =
   fun ug  ->
-    let uu____38807 =
-      let uu___457_38808 = get ()  in
+    let uu____38211 =
+      let uu___457_38212 = get ()  in
       {
-        term_graph = (uu___457_38808.term_graph);
+        term_graph = (uu___457_38212.term_graph);
         univ_graph = ug;
-        version = (uu___457_38808.version)
+        version = (uu___457_38212.version)
       }  in
-    set uu____38807
+    set uu____38211
   
 let (univ_uvar_id : FStar_Syntax_Syntax.universe_uvar -> Prims.int) =
   fun u  ->
-    let uu____38816 = get_univ_graph ()  in
-    let uu____38821 = chk_v u  in
-    FStar_Unionfind.puf_id uu____38816 uu____38821
+    let uu____38220 = get_univ_graph ()  in
+    let uu____38225 = chk_v u  in
+    FStar_Unionfind.puf_id uu____38220 uu____38225
   
 let (univ_from_id : Prims.int -> FStar_Syntax_Syntax.universe_uvar) =
   fun n1  ->
-    let uu____38840 =
-      let uu____38845 = get_univ_graph ()  in
-      FStar_Unionfind.puf_fromid uu____38845 n1  in
-    let uu____38852 = get_version ()  in (uu____38840, uu____38852)
+    let uu____38244 =
+      let uu____38249 = get_univ_graph ()  in
+      FStar_Unionfind.puf_fromid uu____38249 n1  in
+    let uu____38256 = get_version ()  in (uu____38244, uu____38256)
   
 let (univ_fresh : unit -> FStar_Syntax_Syntax.universe_uvar) =
-  fun uu____38862  ->
-    let uu____38863 =
-      let uu____38868 = get_univ_graph ()  in
-      FStar_Unionfind.puf_fresh uu____38868 FStar_Pervasives_Native.None  in
-    let uu____38875 = get_version ()  in (uu____38863, uu____38875)
+  fun uu____38266  ->
+    let uu____38267 =
+      let uu____38272 = get_univ_graph ()  in
+      FStar_Unionfind.puf_fresh uu____38272 FStar_Pervasives_Native.None  in
+    let uu____38279 = get_version ()  in (uu____38267, uu____38279)
   
 let (univ_find :
   FStar_Syntax_Syntax.universe_uvar ->
     FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
   =
   fun u  ->
-    let uu____38888 = get_univ_graph ()  in
-    let uu____38893 = chk_v u  in
-    FStar_Unionfind.puf_find uu____38888 uu____38893
+    let uu____38292 = get_univ_graph ()  in
+    let uu____38297 = chk_v u  in
+    FStar_Unionfind.puf_find uu____38292 uu____38297
   
 let (univ_change :
   FStar_Syntax_Syntax.universe_uvar -> FStar_Syntax_Syntax.universe -> unit)
   =
   fun u  ->
     fun t  ->
-      let uu____38915 =
-        let uu____38916 = get_univ_graph ()  in
-        let uu____38921 = chk_v u  in
-        FStar_Unionfind.puf_change uu____38916 uu____38921
+      let uu____38319 =
+        let uu____38320 = get_univ_graph ()  in
+        let uu____38325 = chk_v u  in
+        FStar_Unionfind.puf_change uu____38320 uu____38325
           (FStar_Pervasives_Native.Some t)
          in
-      set_univ_graph uu____38915
+      set_univ_graph uu____38319
   
 let (univ_equiv :
   FStar_Syntax_Syntax.universe_uvar ->
@@ -262,10 +262,10 @@ let (univ_equiv :
   =
   fun u  ->
     fun v1  ->
-      let uu____38944 = get_univ_graph ()  in
-      let uu____38949 = chk_v u  in
-      let uu____38958 = chk_v v1  in
-      FStar_Unionfind.puf_equivalent uu____38944 uu____38949 uu____38958
+      let uu____38348 = get_univ_graph ()  in
+      let uu____38353 = chk_v u  in
+      let uu____38362 = chk_v v1  in
+      FStar_Unionfind.puf_equivalent uu____38348 uu____38353 uu____38362
   
 let (univ_union :
   FStar_Syntax_Syntax.universe_uvar ->
@@ -273,10 +273,10 @@ let (univ_union :
   =
   fun u  ->
     fun v1  ->
-      let uu____38980 =
-        let uu____38981 = get_univ_graph ()  in
-        let uu____38986 = chk_v u  in
-        let uu____38995 = chk_v v1  in
-        FStar_Unionfind.puf_union uu____38981 uu____38986 uu____38995  in
-      set_univ_graph uu____38980
+      let uu____38384 =
+        let uu____38385 = get_univ_graph ()  in
+        let uu____38390 = chk_v u  in
+        let uu____38399 = chk_v v1  in
+        FStar_Unionfind.puf_union uu____38385 uu____38390 uu____38399  in
+      set_univ_graph uu____38384
   

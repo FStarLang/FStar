@@ -24,19 +24,19 @@ let (disentangle_abbrevs_from_bundle :
                         ((false
                           ,{
                              FStar_Syntax_Syntax.lbname = FStar_Util.Inr
-                               uu____40842;
-                             FStar_Syntax_Syntax.lbunivs = uu____40843;
-                             FStar_Syntax_Syntax.lbtyp = uu____40844;
-                             FStar_Syntax_Syntax.lbeff = uu____40845;
-                             FStar_Syntax_Syntax.lbdef = uu____40846;
-                             FStar_Syntax_Syntax.lbattrs = uu____40847;
-                             FStar_Syntax_Syntax.lbpos = uu____40848;_}::[]),uu____40849)
+                               uu____40243;
+                             FStar_Syntax_Syntax.lbunivs = uu____40244;
+                             FStar_Syntax_Syntax.lbtyp = uu____40245;
+                             FStar_Syntax_Syntax.lbeff = uu____40246;
+                             FStar_Syntax_Syntax.lbdef = uu____40247;
+                             FStar_Syntax_Syntax.lbattrs = uu____40248;
+                             FStar_Syntax_Syntax.lbpos = uu____40249;_}::[]),uu____40250)
                         -> [x]
-                    | FStar_Syntax_Syntax.Sig_let (uu____40868,uu____40869)
+                    | FStar_Syntax_Syntax.Sig_let (uu____40269,uu____40270)
                         ->
                         failwith
                           "mutrecty: disentangle_abbrevs_from_bundle: type_abbrev_sigelts: impossible"
-                    | uu____40877 -> []))
+                    | uu____40278 -> []))
              in
           match type_abbrev_sigelts with
           | [] ->
@@ -49,31 +49,31 @@ let (disentangle_abbrevs_from_bundle :
                    FStar_Syntax_Syntax.default_sigmeta;
                  FStar_Syntax_Syntax.sigattrs = sigattrs
                }, [])
-          | uu____40890 ->
+          | uu____40291 ->
               let type_abbrevs =
                 FStar_All.pipe_right type_abbrev_sigelts
                   (FStar_List.map
                      (fun x  ->
                         match x.FStar_Syntax_Syntax.sigel with
                         | FStar_Syntax_Syntax.Sig_let
-                            ((uu____40911,{
+                            ((uu____40312,{
                                             FStar_Syntax_Syntax.lbname =
                                               FStar_Util.Inr fv;
                                             FStar_Syntax_Syntax.lbunivs =
-                                              uu____40913;
+                                              uu____40314;
                                             FStar_Syntax_Syntax.lbtyp =
-                                              uu____40914;
+                                              uu____40315;
                                             FStar_Syntax_Syntax.lbeff =
-                                              uu____40915;
+                                              uu____40316;
                                             FStar_Syntax_Syntax.lbdef =
-                                              uu____40916;
+                                              uu____40317;
                                             FStar_Syntax_Syntax.lbattrs =
-                                              uu____40917;
+                                              uu____40318;
                                             FStar_Syntax_Syntax.lbpos =
-                                              uu____40918;_}::[]),uu____40919)
+                                              uu____40319;_}::[]),uu____40320)
                             ->
                             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                        | uu____40938 ->
+                        | uu____40339 ->
                             failwith
                               "mutrecty: disentangle_abbrevs_from_bundle: type_abbrevs: impossible"))
                  in
@@ -83,149 +83,149 @@ let (disentangle_abbrevs_from_bundle :
                 let not_unfolded_yet = FStar_Util.mk_ref type_abbrev_sigelts
                    in
                 let remove_not_unfolded lid =
-                  let uu____40970 =
-                    let uu____40973 = FStar_ST.op_Bang not_unfolded_yet  in
-                    FStar_All.pipe_right uu____40973
+                  let uu____40371 =
+                    let uu____40374 = FStar_ST.op_Bang not_unfolded_yet  in
+                    FStar_All.pipe_right uu____40374
                       (FStar_List.filter
                          (fun x  ->
                             match x.FStar_Syntax_Syntax.sigel with
                             | FStar_Syntax_Syntax.Sig_let
-                                ((uu____41016,{
+                                ((uu____40417,{
                                                 FStar_Syntax_Syntax.lbname =
                                                   FStar_Util.Inr fv;
                                                 FStar_Syntax_Syntax.lbunivs =
-                                                  uu____41018;
+                                                  uu____40419;
                                                 FStar_Syntax_Syntax.lbtyp =
-                                                  uu____41019;
+                                                  uu____40420;
                                                 FStar_Syntax_Syntax.lbeff =
-                                                  uu____41020;
+                                                  uu____40421;
                                                 FStar_Syntax_Syntax.lbdef =
-                                                  uu____41021;
+                                                  uu____40422;
                                                 FStar_Syntax_Syntax.lbattrs =
-                                                  uu____41022;
+                                                  uu____40423;
                                                 FStar_Syntax_Syntax.lbpos =
-                                                  uu____41023;_}::[]),uu____41024)
+                                                  uu____40424;_}::[]),uu____40425)
                                 ->
-                                let uu____41043 =
+                                let uu____40444 =
                                   FStar_Ident.lid_equals lid
                                     (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                                    in
-                                Prims.op_Negation uu____41043
-                            | uu____41045 -> true))
+                                Prims.op_Negation uu____40444
+                            | uu____40446 -> true))
                      in
-                  FStar_ST.op_Colon_Equals not_unfolded_yet uu____40970  in
+                  FStar_ST.op_Colon_Equals not_unfolded_yet uu____40371  in
                 let rec unfold_abbrev_fv t fv =
                   let replacee x =
                     match x.FStar_Syntax_Syntax.sigel with
                     | FStar_Syntax_Syntax.Sig_let
-                        ((uu____41096,{
+                        ((uu____40497,{
                                         FStar_Syntax_Syntax.lbname =
                                           FStar_Util.Inr fv';
                                         FStar_Syntax_Syntax.lbunivs =
-                                          uu____41098;
+                                          uu____40499;
                                         FStar_Syntax_Syntax.lbtyp =
-                                          uu____41099;
+                                          uu____40500;
                                         FStar_Syntax_Syntax.lbeff =
-                                          uu____41100;
+                                          uu____40501;
                                         FStar_Syntax_Syntax.lbdef =
-                                          uu____41101;
+                                          uu____40502;
                                         FStar_Syntax_Syntax.lbattrs =
-                                          uu____41102;
+                                          uu____40503;
                                         FStar_Syntax_Syntax.lbpos =
-                                          uu____41103;_}::[]),uu____41104)
+                                          uu____40504;_}::[]),uu____40505)
                         when
                         FStar_Ident.lid_equals
                           (fv'.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                         -> FStar_Pervasives_Native.Some x
-                    | uu____41123 -> FStar_Pervasives_Native.None  in
+                    | uu____40524 -> FStar_Pervasives_Native.None  in
                   let replacee_term x =
                     match replacee x with
                     | FStar_Pervasives_Native.Some
                         {
                           FStar_Syntax_Syntax.sigel =
                             FStar_Syntax_Syntax.Sig_let
-                            ((uu____41138,{
+                            ((uu____40539,{
                                             FStar_Syntax_Syntax.lbname =
-                                              uu____41139;
+                                              uu____40540;
                                             FStar_Syntax_Syntax.lbunivs =
-                                              uu____41140;
+                                              uu____40541;
                                             FStar_Syntax_Syntax.lbtyp =
-                                              uu____41141;
+                                              uu____40542;
                                             FStar_Syntax_Syntax.lbeff =
-                                              uu____41142;
+                                              uu____40543;
                                             FStar_Syntax_Syntax.lbdef = tm;
                                             FStar_Syntax_Syntax.lbattrs =
-                                              uu____41144;
+                                              uu____40545;
                                             FStar_Syntax_Syntax.lbpos =
-                                              uu____41145;_}::[]),uu____41146);
-                          FStar_Syntax_Syntax.sigrng = uu____41147;
-                          FStar_Syntax_Syntax.sigquals = uu____41148;
-                          FStar_Syntax_Syntax.sigmeta = uu____41149;
-                          FStar_Syntax_Syntax.sigattrs = uu____41150;_}
+                                              uu____40546;_}::[]),uu____40547);
+                          FStar_Syntax_Syntax.sigrng = uu____40548;
+                          FStar_Syntax_Syntax.sigquals = uu____40549;
+                          FStar_Syntax_Syntax.sigmeta = uu____40550;
+                          FStar_Syntax_Syntax.sigattrs = uu____40551;_}
                         -> FStar_Pervasives_Native.Some tm
-                    | uu____41179 -> FStar_Pervasives_Native.None  in
-                  let uu____41184 =
-                    let uu____41189 =
+                    | uu____40580 -> FStar_Pervasives_Native.None  in
+                  let uu____40585 =
+                    let uu____40590 =
                       FStar_ST.op_Bang rev_unfolded_type_abbrevs  in
-                    FStar_Util.find_map uu____41189 replacee_term  in
-                  match uu____41184 with
+                    FStar_Util.find_map uu____40590 replacee_term  in
+                  match uu____40585 with
                   | FStar_Pervasives_Native.Some x -> x
                   | FStar_Pervasives_Native.None  ->
-                      let uu____41224 =
+                      let uu____40625 =
                         FStar_Util.find_map type_abbrev_sigelts replacee  in
-                      (match uu____41224 with
+                      (match uu____40625 with
                        | FStar_Pervasives_Native.Some se ->
-                           let uu____41228 =
-                             let uu____41230 = FStar_ST.op_Bang in_progress
+                           let uu____40629 =
+                             let uu____40631 = FStar_ST.op_Bang in_progress
                                 in
                              FStar_List.existsb
                                (fun x  ->
                                   FStar_Ident.lid_equals x
                                     (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
-                               uu____41230
+                               uu____40631
                               in
-                           if uu____41228
+                           if uu____40629
                            then
                              let msg =
                                FStar_Util.format1
                                  "Cycle on %s in mutually recursive type abbreviations"
                                  ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.str
                                 in
-                             let uu____41262 =
+                             let uu____40663 =
                                FStar_Ident.range_of_lid
                                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                                 in
                              FStar_Errors.raise_error
                                (FStar_Errors.Fatal_CycleInRecTypeAbbreviation,
-                                 msg) uu____41262
+                                 msg) uu____40663
                            else unfold_abbrev se
-                       | uu____41266 -> t)
+                       | uu____40667 -> t)
                 
                 and unfold_abbrev x =
                   match x.FStar_Syntax_Syntax.sigel with
-                  | FStar_Syntax_Syntax.Sig_let ((false ,lb::[]),uu____41271)
+                  | FStar_Syntax_Syntax.Sig_let ((false ,lb::[]),uu____40672)
                       ->
                       let quals1 =
                         FStar_All.pipe_right x.FStar_Syntax_Syntax.sigquals
                           (FStar_List.filter
-                             (fun uu___402_41288  ->
-                                match uu___402_41288 with
+                             (fun uu___402_40689  ->
+                                match uu___402_40689 with
                                 | FStar_Syntax_Syntax.Noeq  -> false
-                                | uu____41291 -> true))
+                                | uu____40692 -> true))
                          in
                       let lid =
                         match lb.FStar_Syntax_Syntax.lbname with
                         | FStar_Util.Inr fv ->
                             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                        | uu____41295 ->
+                        | uu____40696 ->
                             failwith
                               "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible"
                          in
-                      ((let uu____41302 =
-                          let uu____41305 = FStar_ST.op_Bang in_progress  in
-                          lid :: uu____41305  in
-                        FStar_ST.op_Colon_Equals in_progress uu____41302);
+                      ((let uu____40703 =
+                          let uu____40706 = FStar_ST.op_Bang in_progress  in
+                          lid :: uu____40706  in
+                        FStar_ST.op_Colon_Equals in_progress uu____40703);
                        (match () with
                         | () ->
                             (remove_not_unfolded lid;
@@ -240,68 +240,68 @@ let (disentangle_abbrevs_from_bundle :
                                       lb.FStar_Syntax_Syntax.lbdef
                                      in
                                   let lb' =
-                                    let uu___547_41358 = lb  in
+                                    let uu___547_40759 = lb  in
                                     {
                                       FStar_Syntax_Syntax.lbname =
-                                        (uu___547_41358.FStar_Syntax_Syntax.lbname);
+                                        (uu___547_40759.FStar_Syntax_Syntax.lbname);
                                       FStar_Syntax_Syntax.lbunivs =
-                                        (uu___547_41358.FStar_Syntax_Syntax.lbunivs);
+                                        (uu___547_40759.FStar_Syntax_Syntax.lbunivs);
                                       FStar_Syntax_Syntax.lbtyp = ty';
                                       FStar_Syntax_Syntax.lbeff =
-                                        (uu___547_41358.FStar_Syntax_Syntax.lbeff);
+                                        (uu___547_40759.FStar_Syntax_Syntax.lbeff);
                                       FStar_Syntax_Syntax.lbdef = tm';
                                       FStar_Syntax_Syntax.lbattrs =
-                                        (uu___547_41358.FStar_Syntax_Syntax.lbattrs);
+                                        (uu___547_40759.FStar_Syntax_Syntax.lbattrs);
                                       FStar_Syntax_Syntax.lbpos =
-                                        (uu___547_41358.FStar_Syntax_Syntax.lbpos)
+                                        (uu___547_40759.FStar_Syntax_Syntax.lbpos)
                                     }  in
                                   let sigelt' =
                                     FStar_Syntax_Syntax.Sig_let
                                       ((false, [lb']), [lid])
                                      in
-                                  ((let uu____41367 =
-                                      let uu____41370 =
+                                  ((let uu____40768 =
+                                      let uu____40771 =
                                         FStar_ST.op_Bang
                                           rev_unfolded_type_abbrevs
                                          in
-                                      (let uu___551_41397 = x  in
+                                      (let uu___551_40798 = x  in
                                        {
                                          FStar_Syntax_Syntax.sigel = sigelt';
                                          FStar_Syntax_Syntax.sigrng =
-                                           (uu___551_41397.FStar_Syntax_Syntax.sigrng);
+                                           (uu___551_40798.FStar_Syntax_Syntax.sigrng);
                                          FStar_Syntax_Syntax.sigquals =
                                            quals1;
                                          FStar_Syntax_Syntax.sigmeta =
-                                           (uu___551_41397.FStar_Syntax_Syntax.sigmeta);
+                                           (uu___551_40798.FStar_Syntax_Syntax.sigmeta);
                                          FStar_Syntax_Syntax.sigattrs =
-                                           (uu___551_41397.FStar_Syntax_Syntax.sigattrs)
-                                       }) :: uu____41370
+                                           (uu___551_40798.FStar_Syntax_Syntax.sigattrs)
+                                       }) :: uu____40771
                                        in
                                     FStar_ST.op_Colon_Equals
-                                      rev_unfolded_type_abbrevs uu____41367);
+                                      rev_unfolded_type_abbrevs uu____40768);
                                    (match () with
                                     | () ->
-                                        ((let uu____41422 =
-                                            let uu____41425 =
+                                        ((let uu____40823 =
+                                            let uu____40826 =
                                               FStar_ST.op_Bang in_progress
                                                in
-                                            FStar_List.tl uu____41425  in
+                                            FStar_List.tl uu____40826  in
                                           FStar_ST.op_Colon_Equals
-                                            in_progress uu____41422);
+                                            in_progress uu____40823);
                                          (match () with | () -> tm'))))))))
-                  | uu____41474 ->
+                  | uu____40875 ->
                       failwith
                         "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible"
                  in
-                let rec aux uu____41483 =
-                  let uu____41484 = FStar_ST.op_Bang not_unfolded_yet  in
-                  match uu____41484 with
-                  | x::uu____41513 ->
+                let rec aux uu____40884 =
+                  let uu____40885 = FStar_ST.op_Bang not_unfolded_yet  in
+                  match uu____40885 with
+                  | x::uu____40914 ->
                       let _unused = unfold_abbrev x  in aux ()
-                  | uu____41517 ->
-                      let uu____41520 =
+                  | uu____40918 ->
+                      let uu____40921 =
                         FStar_ST.op_Bang rev_unfolded_type_abbrevs  in
-                      FStar_List.rev uu____41520
+                      FStar_List.rev uu____40921
                    in
                 aux ()  in
               let filter_out_type_abbrevs l =
@@ -309,9 +309,9 @@ let (disentangle_abbrevs_from_bundle :
                   (fun lid  ->
                      FStar_List.for_all
                        (fun lid'  ->
-                          let uu____41563 = FStar_Ident.lid_equals lid lid'
+                          let uu____40964 = FStar_Ident.lid_equals lid lid'
                              in
-                          Prims.op_Negation uu____41563) type_abbrevs) l
+                          Prims.op_Negation uu____40964) type_abbrevs) l
                  in
               let inductives_with_abbrevs_unfolded =
                 let find_in_unfolded fv =
@@ -319,32 +319,32 @@ let (disentangle_abbrevs_from_bundle :
                     (fun x  ->
                        match x.FStar_Syntax_Syntax.sigel with
                        | FStar_Syntax_Syntax.Sig_let
-                           ((uu____41595,{
+                           ((uu____40996,{
                                            FStar_Syntax_Syntax.lbname =
                                              FStar_Util.Inr fv';
                                            FStar_Syntax_Syntax.lbunivs =
-                                             uu____41597;
+                                             uu____40998;
                                            FStar_Syntax_Syntax.lbtyp =
-                                             uu____41598;
+                                             uu____40999;
                                            FStar_Syntax_Syntax.lbeff =
-                                             uu____41599;
+                                             uu____41000;
                                            FStar_Syntax_Syntax.lbdef = tm;
                                            FStar_Syntax_Syntax.lbattrs =
-                                             uu____41601;
+                                             uu____41002;
                                            FStar_Syntax_Syntax.lbpos =
-                                             uu____41602;_}::[]),uu____41603)
+                                             uu____41003;_}::[]),uu____41004)
                            when
                            FStar_Ident.lid_equals
                              (fv'.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                              (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                            -> FStar_Pervasives_Native.Some tm
-                       | uu____41624 -> FStar_Pervasives_Native.None)
+                       | uu____41025 -> FStar_Pervasives_Native.None)
                    in
                 let unfold_fv t fv =
-                  let uu____41638 = find_in_unfolded fv  in
-                  match uu____41638 with
+                  let uu____41039 = find_in_unfolded fv  in
+                  match uu____41039 with
                   | FStar_Pervasives_Native.Some t' -> t'
-                  | uu____41648 -> t  in
+                  | uu____41049 -> t  in
                 let unfold_in_sig x =
                   match x.FStar_Syntax_Syntax.sigel with
                   | FStar_Syntax_Syntax.Sig_inductive_typ
@@ -353,41 +353,41 @@ let (disentangle_abbrevs_from_bundle :
                         FStar_Syntax_InstFV.inst_binders unfold_fv bnd  in
                       let ty' = FStar_Syntax_InstFV.inst unfold_fv ty  in
                       let mut' = filter_out_type_abbrevs mut  in
-                      [(let uu___606_41683 = x  in
+                      [(let uu___606_41084 = x  in
                         {
                           FStar_Syntax_Syntax.sigel =
                             (FStar_Syntax_Syntax.Sig_inductive_typ
                                (lid, univs, bnd', ty', mut', dc));
                           FStar_Syntax_Syntax.sigrng =
-                            (uu___606_41683.FStar_Syntax_Syntax.sigrng);
+                            (uu___606_41084.FStar_Syntax_Syntax.sigrng);
                           FStar_Syntax_Syntax.sigquals =
-                            (uu___606_41683.FStar_Syntax_Syntax.sigquals);
+                            (uu___606_41084.FStar_Syntax_Syntax.sigquals);
                           FStar_Syntax_Syntax.sigmeta =
-                            (uu___606_41683.FStar_Syntax_Syntax.sigmeta);
+                            (uu___606_41084.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs =
-                            (uu___606_41683.FStar_Syntax_Syntax.sigattrs)
+                            (uu___606_41084.FStar_Syntax_Syntax.sigattrs)
                         })]
                   | FStar_Syntax_Syntax.Sig_datacon
                       (lid,univs,ty,res,npars,mut) ->
                       let ty' = FStar_Syntax_InstFV.inst unfold_fv ty  in
                       let mut' = filter_out_type_abbrevs mut  in
-                      [(let uu___618_41705 = x  in
+                      [(let uu___618_41106 = x  in
                         {
                           FStar_Syntax_Syntax.sigel =
                             (FStar_Syntax_Syntax.Sig_datacon
                                (lid, univs, ty', res, npars, mut'));
                           FStar_Syntax_Syntax.sigrng =
-                            (uu___618_41705.FStar_Syntax_Syntax.sigrng);
+                            (uu___618_41106.FStar_Syntax_Syntax.sigrng);
                           FStar_Syntax_Syntax.sigquals =
-                            (uu___618_41705.FStar_Syntax_Syntax.sigquals);
+                            (uu___618_41106.FStar_Syntax_Syntax.sigquals);
                           FStar_Syntax_Syntax.sigmeta =
-                            (uu___618_41705.FStar_Syntax_Syntax.sigmeta);
+                            (uu___618_41106.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs =
-                            (uu___618_41705.FStar_Syntax_Syntax.sigattrs)
+                            (uu___618_41106.FStar_Syntax_Syntax.sigattrs)
                         })]
-                  | FStar_Syntax_Syntax.Sig_let (uu____41709,uu____41710) ->
+                  | FStar_Syntax_Syntax.Sig_let (uu____41110,uu____41111) ->
                       []
-                  | uu____41715 ->
+                  | uu____41116 ->
                       failwith
                         "mutrecty: inductives_with_abbrevs_unfolded: unfold_in_sig: impossible"
                    in
