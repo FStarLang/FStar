@@ -535,15 +535,16 @@ let bv_as_mlty (g:uenv) (bv:bv) =
         a bloated type is atleast as good as unknownType?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-let basic_norm_steps = [
-                Env.Beta;
-                Env.Eager_unfolding;
-                Env.Iota;
-                Env.Zeta;
-                Env.Inlining;
-                Env.EraseUniverses;
-                Env.AllowUnboundUniverses
-    ]
+let extraction_norm_steps =
+    [Env.AllowUnboundUniverses;
+     Env.EraseUniverses;
+     Env.Inlining;
+     Env.Eager_unfolding;
+     Env.Exclude Env.Zeta;
+     Env.PureSubtermsWithinComputations;
+     Env.Primops;
+     Env.Unascribe;
+     Env.ForExtraction]
 
 let comp_no_args c =
     match c.n with
@@ -675,7 +676,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
     then MLTY_Erased
     else let mlt = aux g t0 in
          if is_top_ty mlt
-         then MLTY_Top
+         then MLTY_Erased
          else mlt
 
 
@@ -698,7 +699,7 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
     env
 
 let term_as_mlty g t0 =
-    let t = N.normalize basic_norm_steps g.env_tcenv t0 in
+    let t = N.normalize extraction_norm_steps g.env_tcenv t0 in
     translate_term_to_mlty g t
 
 
@@ -1435,11 +1436,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                         if Options.ml_ish()
                         then lb.lbdef
                         else let norm_call () =
-                                 N.normalize ([Env.AllowUnboundUniverses; Env.EraseUniverses;
-                                               Env.Inlining; Env.Eager_unfolding;
-                                               Env.Exclude Env.Zeta; Env.PureSubtermsWithinComputations;
-                                               Env.Primops; Env.Unascribe; Env.ForExtraction])
-                                              tcenv lb.lbdef
+                                 N.normalize extraction_norm_steps tcenv lb.lbdef
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
