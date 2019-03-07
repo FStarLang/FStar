@@ -312,28 +312,27 @@ let load_module_from_cache
     fun env fn ->
       let load_it () =
         let cache_file = Dep.cache_file_name fn in
-        let fail maybe_warn cache_file =
-             invalidate_cache();
-             match maybe_warn with
-             | None -> ()
-             | Some tag ->
-               FStar.Errors.log_issue
-                    (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
-                    (Errors.Warning_CachedFile,
-                     BU.format3
-                       "Unable to compute digest of %s since %s; will recheck %s and all subsequent files"
-                       cache_file tag fn)
+        let fail msg cache_file =
+          invalidate_cache();
+          //Don't feel too bad if fn is the file on the command line
+          if not (Options.should_verify_file fn) then
+            FStar.Errors.log_issue
+              (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
+              (Errors.Warning_CachedFile,
+               BU.format3
+                 "Unable to compute digest of %s since %s; will recheck %s and all subsequent files"
+                 cache_file msg fn)
         in
         match !some_cache_invalid with
         | Some _ -> None
         | _ ->
           if not (BU.file_exists cache_file) then begin
-            fail (Some (BU.format1 "file %s does not exists" cache_file)) cache_file;
+            fail (BU.format1 "file %s does not exists" cache_file) cache_file;
             None
           end
           else match load env.env_tcenv fn cache_file with
                | Inl msg ->
-                 fail (Some msg) cache_file;
+                 fail msg cache_file;
                  None
                | Inr res -> Some res
       in
