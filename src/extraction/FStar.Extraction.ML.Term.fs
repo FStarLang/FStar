@@ -676,7 +676,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
     then MLTY_Erased
     else let mlt = aux g t0 in
          if is_top_ty mlt
-         then MLTY_Erased
+         then MLTY_Top
          else mlt
 
 
