@@ -290,8 +290,8 @@ let (delta_fully : Prims.string Prims.list -> norm_step) =
   fun s  -> UnfoldFully s 
 let (delta_attr : Prims.string Prims.list -> norm_step) =
   fun s  -> UnfoldAttr s 
-let (norm : norm_step Prims.list -> unit -> unit -> unit) =
-  fun s  -> fun a  -> fun x  -> () 
+let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
+  fun s  -> fun a  -> fun x  -> x 
 
 
 

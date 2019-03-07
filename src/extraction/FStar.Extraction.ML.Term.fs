@@ -541,7 +541,6 @@ let extraction_norm_steps =
      Env.Inlining;
      Env.Eager_unfolding;
      Env.Exclude Env.Zeta;
-     Env.PureSubtermsWithinComputations;
      Env.Primops;
      Env.Unascribe;
      Env.ForExtraction]
@@ -1436,7 +1435,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                         if Options.ml_ish()
                         then lb.lbdef
                         else let norm_call () =
-                                 N.normalize extraction_norm_steps tcenv lb.lbdef
+                                 N.normalize (Env.PureSubtermsWithinComputations::extraction_norm_steps) tcenv lb.lbdef
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"

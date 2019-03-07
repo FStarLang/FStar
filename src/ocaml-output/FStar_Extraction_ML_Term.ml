@@ -864,7 +864,6 @@ let (extraction_norm_steps : FStar_TypeChecker_Env.step Prims.list) =
   FStar_TypeChecker_Env.Inlining;
   FStar_TypeChecker_Env.Eager_unfolding;
   FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
-  FStar_TypeChecker_Env.PureSubtermsWithinComputations;
   FStar_TypeChecker_Env.Primops;
   FStar_TypeChecker_Env.Unascribe;
   FStar_TypeChecker_Env.ForExtraction] 
@@ -3504,7 +3503,8 @@ and (term_as_mlexpr' :
                               else
                                 (let norm_call uu____77496 =
                                    FStar_TypeChecker_Normalize.normalize
-                                     extraction_norm_steps tcenv
+                                     (FStar_TypeChecker_Env.PureSubtermsWithinComputations
+                                     :: extraction_norm_steps) tcenv
                                      lb.FStar_Syntax_Syntax.lbdef
                                     in
                                  let uu____77497 =
