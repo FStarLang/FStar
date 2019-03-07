@@ -1149,7 +1149,7 @@ let rec (translate_term_to_mlty :
       else
         (let mlt = aux g t0  in
          let uu____69574 = is_top_ty mlt  in
-         if uu____69574 then FStar_Extraction_ML_Syntax.MLTY_Erased else mlt)
+         if uu____69574 then FStar_Extraction_ML_Syntax.MLTY_Top else mlt)
 
 and (binders_as_ml_binders :
   FStar_Extraction_ML_UEnv.uenv ->
