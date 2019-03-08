@@ -494,6 +494,9 @@ let ubuffer_includes_ubuffer_preserved #r #a larger smaller h1 h2 =
   )*)
 
 let ubuffer_disjoint' (x1 x2: ubuffer_) : GTot Type0 =
+  if x1.b_length = 0 || x2.b_length = 0
+  then True
+  else
   (x1.b_max_length == x2.b_max_length /\
     (x1.b_offset + x1.b_length <= x2.b_offset \/
      x2.b_offset + x2.b_length <= x1.b_offset))
@@ -1237,6 +1240,14 @@ let modifies_remove_new_locs l_fresh l_aux l_goal h1 h2 h3 =
 let disjoint_neq #_ #_ #_ #_ #_ #_ b1 b2 =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2 then
     MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
+  else ()
+
+let empty_disjoint
+  #t1 #t2 #rrel1 #rel1 #rrel2 #rel2 b1 b2
+= let r = frameOf b1 in
+  let a = as_addr b1 in
+  if r = frameOf b2 && a = as_addr b2 then
+    MG.loc_disjoint_aloc_intro #_ #cls #r #a #r #a (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
   else ()
 
 (*

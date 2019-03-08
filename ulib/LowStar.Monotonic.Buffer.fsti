@@ -1723,6 +1723,10 @@ val disjoint_neq (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
   :Lemma (requires (disjoint b1 b2 /\ U32.v (len b1) > 0))
          (ensures (~(b1 === b2)))
 
+val empty_disjoint (#t1 #t2: Type) (#rrel1 #rel1: srel t1) (#rrel2 #rel2: srel t2) (b1: mbuffer t1 rrel1 rel1) (b2: mbuffer t2 rrel2 rel2) : Lemma
+  (requires (length b1 == 0))
+  (ensures (disjoint b1 b2))
+
 
 (*
 /// The liveness of a sub-buffer entails from the liveness
