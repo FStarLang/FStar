@@ -201,7 +201,7 @@ let check_pattern_vars env vars pats =
         | None -> ()
         | Some (x,_) ->
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
-        Errors.log_issue pos (Errors.Warning_SMTPatternMissingBoundVar,
+        Errors.log_issue pos (Errors.Warning_SMTPatternIllFormed,
                               BU.format1 "SMT pattern misses at least one bound variable: %s"
                                          (Print.bv_to_string x))
 
@@ -1219,7 +1219,7 @@ and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * 
                     | Some illegal_subterm ->
                       Errors.log_issue
                             p.pos
-                            (Errors.Warning_SMTPatternMissingBoundVar,
+                            (Errors.Warning_SMTPatternIllFormed,
                              BU.format2 "Pattern %s contains illegal sub-term (%s); dropping it"
                                         (Print.term_to_string p)
                                         (Term.print_smt_term illegal_subterm));

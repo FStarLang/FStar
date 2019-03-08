@@ -1,6 +1,7 @@
 # Fstar docs container used to build fstar documentation.
+ARG DOCKERHUBPROJECT
 ARG COMMITID
-FROM fstar-linux:${COMMITID}
+FROM ${DOCKERHUBPROJECT}fstar-linux:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS

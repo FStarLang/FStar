@@ -1,6 +1,7 @@
 # Fstar binaries container used to build fstar binaries.
+ARG DOCKERHUBPROJECT
 ARG COMMITID
-FROM fstar-windows-nt:${COMMITID}
+FROM ${DOCKERHUBPROJECT}fstar-windows-nt:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
