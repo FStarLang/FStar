@@ -153,3 +153,26 @@ let inhabited_immutable_buffer_is_distinct_from_buffer (#a:Type0) (x:a) (ib:ibuf
         assert (s1 == s2); assert (Seq.length s1 == Seq.length s2)
     in
     (Classical.move_requires aux) ()
+
+abstract
+let buffer_immutable_buffer_disjoint
+  (#t: Type) (#ti: Type)
+  (b: LowStar.Buffer.buffer t)
+  (bi: ibuffer ti)
+  (h: HS.mem)
+: Lemma
+  (requires (
+    live h b /\ live h bi /\ (~ (length b == 0 /\ length bi == 0))
+  ))
+  (ensures (
+    disjoint b bi
+  ))
+= begin if length b = 0
+  then
+    let s = as_seq h bi in
+    assert (~ (LowStar.Buffer.trivial_preorder ti Seq.empty Seq.empty <==> immutable_preorder _ Seq.empty s))
+  else
+    let s = as_seq h b in
+    assert (~ (LowStar.Buffer.trivial_preorder _ Seq.empty s <==> immutable_preorder _ Seq.empty s))
+  end;
+  live_same_addresses_equal_types_and_preorders b bi h
