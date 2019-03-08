@@ -162,17 +162,17 @@ let buffer_immutable_buffer_disjoint
   (h: HS.mem)
 : Lemma
   (requires (
-    live h b /\ live h bi /\ (~ (length b == 0 /\ length bi == 0))
+    live h b /\ live h bi
   ))
   (ensures (
     disjoint b bi
   ))
-= begin if length b = 0
-  then
-    let s = as_seq h bi in
-    assert (~ (LowStar.Buffer.trivial_preorder ti Seq.empty Seq.empty <==> immutable_preorder _ Seq.empty s))
-  else
+= if length b = 0
+  then empty_disjoint b bi
+  else if length bi = 0
+  then empty_disjoint bi b
+  else begin
     let s = as_seq h b in
-    assert (~ (LowStar.Buffer.trivial_preorder _ Seq.empty s <==> immutable_preorder _ Seq.empty s))
-  end;
+    assert (~ (LowStar.Buffer.trivial_preorder _ Seq.empty s <==> immutable_preorder _ Seq.empty s));
   live_same_addresses_equal_types_and_preorders b bi h
+  end
