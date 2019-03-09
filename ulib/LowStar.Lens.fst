@@ -258,7 +258,7 @@ let with_snapshot #a #b (lens:hs_lens a b) result pre post =
 /// `for_n`: A simple for-loop, for i in [0 .. n)
 let for_n (#a #b:_) (#lens:hs_lens a b)
           (n:nat)
-          (inv: nat -> b -> prop)
+          (inv: (i:nat{i<=n} -> b -> prop))
           (f: (i:nat{i<n}
               -> LensST unit lens
                 (requires fun b -> inv i b)
