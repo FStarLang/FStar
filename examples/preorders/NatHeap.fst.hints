@@ -46,7 +46,6 @@
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_elim_FStar.Pervasives.Native.Some",
         "equation_FStar.FunctionalExtensionality.feq",
-        "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_NatHeap.contains",
         "equation_NatHeap.heap", "equation_NatHeap.ref",
@@ -81,7 +80,7 @@
         "typing_Tm_abs_827f13a9613cacc88efb4deda70b853c"
       ],
       0,
-      "4113a4efa6de8d9afeb355198dec920c"
+      "ea7338e01c23c220326ee2216f9005cb"
     ],
     [
       "NatHeap.upd",
@@ -142,7 +141,7 @@
         "typing_Tm_abs_827f13a9613cacc88efb4deda70b853c"
       ],
       0,
-      "ec2fcdbf5b8972ccad1dea69eeb0f998"
+      "fbd2f1f22104e65f956b8209136214e5"
     ],
     [
       "NatHeap.emp",
@@ -173,7 +172,7 @@
         "typing_Tm_abs_827f13a9613cacc88efb4deda70b853c"
       ],
       0,
-      "810eef0c0e189a838b543e5ad05e58e3"
+      "da281a45a5b52eef3a6caa8d9b79cce3"
     ],
     [
       "NatHeap.concat",
@@ -231,7 +230,7 @@
         "typing_Tm_abs_827f13a9613cacc88efb4deda70b853c"
       ],
       0,
-      "aa8204ea57ef24a8407a3a05c21c18d6"
+      "766d51256b4b7941f57e0d1dd4752e3b"
     ],
     [
       "NatHeap.consistent_refl",
@@ -275,7 +274,7 @@
         "typing_Tm_abs_827f13a9613cacc88efb4deda70b853c"
       ],
       0,
-      "aafd8f051d218f9fff44be4d5804508e"
+      "6e27f64639dcfa96715a0918f4e92025"
     ],
     [
       "NatHeap.upd_consistent",
@@ -320,7 +319,7 @@
         "typing_Tm_abs_c8377daa6996bf7cce8b21e4d75b66ee"
       ],
       0,
-      "5ccec78d8d40c4eb780258a99fdf6c64"
+      "9824174b2d5647d02920e7a5ffd6f700"
     ],
     [
       "NatHeap.alloc_ref_consistent",
@@ -359,7 +358,7 @@
         "typing_Tm_abs_b5a95a18a36603c66bbc964cc60e2242"
       ],
       0,
-      "37b8036b42426eac4603c520f43adea3"
+      "f6736f9d3c4f87293a7d64d5208bb342"
     ],
     [
       "NatHeap.contains_sel",
@@ -395,7 +394,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "5c4fa7d8e14d3fd1ef30b2c9b5ab0575"
+      "3095998eddfdf661d5438f58dc89ab6d"
     ],
     [
       "NatHeap.contains_emp",
@@ -424,7 +423,7 @@
         "typing_Tm_abs_827f13a9613cacc88efb4deda70b853c"
       ],
       0,
-      "414185b52497f2662021e66876823a6b"
+      "b3a078d15bc38ad6ed9b40cd36605a42"
     ],
     [
       "NatHeap.sel_upd1",
@@ -450,7 +449,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "5ffc7a931f3cedde5aae20b3167f9cfb"
+      "aaf9e2d699300dd26ca5e1165f46fec1"
     ],
     [
       "NatHeap.sel_upd2",
@@ -476,7 +475,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "720352087ff63341b2ab326847e65e48"
+      "4ac84b2ed87018beaa228117b2cd6867"
     ],
     [
       "NatHeap.upd_sel",
@@ -525,7 +524,7 @@
         "typing_Tm_abs_c8377daa6996bf7cce8b21e4d75b66ee"
       ],
       0,
-      "d7bab828511f66476c316076263903eb"
+      "dd2b4ebbdc987c7949cda1a8459525ec"
     ],
     [
       "NatHeap.contains_concat1",
@@ -578,7 +577,7 @@
         "typing_Tm_abs_827f13a9613cacc88efb4deda70b853c"
       ],
       0,
-      "7fc5589b62cab1ebc42db7e3604b97d6"
+      "b203961c338e1c6c996beb9e3b2a9a53"
     ],
     [
       "NatHeap.contains_concat2",
@@ -614,7 +613,7 @@
         "typing_Tm_abs_827f13a9613cacc88efb4deda70b853c"
       ],
       0,
-      "b977ac1f40433aa2f88ad6cc4871dde5"
+      "5fcdf2c9b6dd9a12fcfceddc1bbe09cd"
     ],
     [
       "NatHeap.sel_concat1",
@@ -686,7 +685,7 @@
         "typing_Tm_abs_827f13a9613cacc88efb4deda70b853c"
       ],
       0,
-      "dfdbf6ef547b563529a100d15ec288ae"
+      "d80a9284959fe658a71b717186ae2fc6"
     ],
     [
       "NatHeap.sel_concat2",
@@ -738,7 +737,7 @@
         "typing_Tm_abs_827f13a9613cacc88efb4deda70b853c"
       ],
       0,
-      "5c9161078b09fd328094a6922eb9393f"
+      "4ad3f818bacc29617859dcbeb9641394"
     ],
     [
       "NatHeap.alloc_ref",

@@ -87,7 +87,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "e036497c73f60ec7ec9732b58045b662"
+      "8ce64f4d60cc477f4a465e5142dcb0f0"
     ],
     [
       "StringPrinterTest.Aux.print_cipher_suite_spec",
@@ -301,7 +301,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "2b6424becd5f6588007e9a8fe876b976"
+      "93e7987dc04a488c2328d56ffcf9b2d5"
     ],
     [
       "StringPrinterTest.Aux.print_cipher_suite_spec",

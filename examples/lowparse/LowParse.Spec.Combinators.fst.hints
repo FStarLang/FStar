@@ -361,7 +361,7 @@
         "typing_LowParse.Spec.Base.__proj__Mkparser_kind___item__parser_kind_subkind"
       ],
       0,
-      "aa0b720e60a8a69a2c9df121de65a2de"
+      "b9338709587c49e8a1b3c655b9122a57"
     ],
     [
       "LowParse.Spec.Combinators.and_then_bare",
@@ -2358,7 +2358,7 @@
         "typing_LowParse.Spec.Base.__proj__Mkparser_kind___item__parser_kind_subkind"
       ],
       0,
-      "9022833e7bf177442de5c1e3bfc37470"
+      "7c8bfdb8fcc7ef59f9b78b18d97f4370"
     ],
     [
       "LowParse.Spec.Combinators.and_then_bare",

@@ -73,7 +73,7 @@
         "typing_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "c9cd5cc29575d0885384511904cae25a"
+      "a853a4522a358620649eb19ee9694a48"
     ],
     [
       "Effects.Def.bind_ex",
@@ -161,7 +161,7 @@
         "unit_typing"
       ],
       0,
-      "d421c1761b52328ab1e8c207c35d8ac8"
+      "c119d1744aab93f0289c28ca6c1ecdfe"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -206,7 +206,6 @@
         "equation_Effects.Def.return_stexn", "equation_Effects.Def.stexn",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
-        "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
@@ -299,7 +298,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "d880123dc5ef3fa13b585a1bf09f9c1b"
+      "0d83221f67960de7f07211c32baa76f3"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -352,7 +351,7 @@
         "typing_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "9c3702c36bbb995b65ea98b8ad0c68cf"
+      "f2cfc7aa03e11ae7a04a1cfe851e6a94"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -406,7 +405,7 @@
         "typing_Tm_abs_e822774a69ccfeb590e7552bf686252d", "unit_typing"
       ],
       0,
-      "386ffe2f11e361e7cc9aa1ab21fdcb3c"
+      "0070d250a0f23d1036491dde15849dd4"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -458,7 +457,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "5ebe2808a83d9e0d5a1a5491c96350d0"
+      "13e30fd42f4f198229a4eb4fe6a4a58d"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -541,7 +540,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c", "unit_typing"
       ],
       0,
-      "7aeaec7aff03df25befa542234a37ef3"
+      "a2d5bc1328331c5f7ad7969ebb2852dd"
     ],
     [
       "Effects.Def.st_laws",
@@ -581,7 +580,7 @@
         "typing_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "f067b349247da26f813dedae440cf5af"
+      "dac19ef85792f97e200cc0e4e3ecc245"
     ],
     [
       "Effects.Def.bind_ex",
@@ -669,7 +668,7 @@
         "unit_typing"
       ],
       0,
-      "46fdf40deb2519cdc514ac081f31ec50"
+      "2b2c957ecaa271daf6415d68fae4c87e"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -714,7 +713,6 @@
         "equation_Effects.Def.return_stexn", "equation_Effects.Def.stexn",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
-        "equation_FStar.FunctionalExtensionality.on_dom",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
@@ -807,7 +805,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "633f253fef50d277f6816e4886ef381f"
+      "e4ca89686d15985f41af8dcf275cd4ea"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -860,7 +858,7 @@
         "typing_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "a5dfd2e592ea4bf63b04f2a4526d1d7b"
+      "9e049192a1ebe19b3b5e6e43002e6cdf"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -914,7 +912,7 @@
         "typing_Tm_abs_e822774a69ccfeb590e7552bf686252d", "unit_typing"
       ],
       0,
-      "f2d1c43eeff8570ac7f233ab66cfe2b7"
+      "3f369a664ae62efae213263166281374"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -966,7 +964,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "cfaf65e9efcc5cbe171410df26bdd842"
+      "268c23f6c60d40b984298a177ecc449f"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -1049,7 +1047,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c", "unit_typing"
       ],
       0,
-      "e1ded115bd2dd4d97a4d39701190b113"
+      "e23cba727104e6d3513b93782947b94c"
     ]
   ]
 ]

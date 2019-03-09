@@ -1517,7 +1517,7 @@
         "token_correspondence_X64.Poly1305.Spec_s.modp_"
       ],
       0,
-      "a0129d5a7a7e05197384c4e7d9d98e02"
+      "16f494545063035cd27224bc5c6c6afc"
     ],
     [
       "X64.Poly1305.bare_r",
@@ -1811,7 +1811,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "8c903e15b9d2bc12409ef2491d81c23c"
+      "815b2ab4676769555c819771a0936e29"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305",
