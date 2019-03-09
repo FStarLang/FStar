@@ -25,10 +25,10 @@ let rec (encode : Prims.int -> FStar_Syntax_Syntax.term) =
     if n1 = (Prims.parse_int "0")
     then z
     else
-      (let uu____78010 =
-         let uu____78013 = encode (n1 - (Prims.parse_int "1"))  in
-         [uu____78013]  in
-       FStar_Tests_Util.app succ uu____78010)
+      (let uu____78023 =
+         let uu____78026 = encode (n1 - (Prims.parse_int "1"))  in
+         [uu____78026]  in
+       FStar_Tests_Util.app succ uu____78023)
   
 let (minus :
   FStar_Syntax_Syntax.term ->
@@ -44,11 +44,11 @@ let (let_ :
   fun x1  ->
     fun e  ->
       fun e'  ->
-        let uu____78052 =
-          let uu____78055 = let uu____78056 = b x1  in [uu____78056]  in
-          FStar_Syntax_Util.abs uu____78055 e' FStar_Pervasives_Native.None
+        let uu____78065 =
+          let uu____78068 = let uu____78069 = b x1  in [uu____78069]  in
+          FStar_Syntax_Util.abs uu____78068 e' FStar_Pervasives_Native.None
            in
-        FStar_Tests_Util.app uu____78052 [e]
+        FStar_Tests_Util.app uu____78065 [e]
   
 let (mk_let :
   FStar_Syntax_Syntax.bv ->
@@ -80,14 +80,14 @@ let (mk_let :
 let (lid : Prims.string -> FStar_Ident.lident) =
   fun x1  -> FStar_Ident.lid_of_path ["Test"; x1] FStar_Range.dummyRange 
 let (znat_l : FStar_Syntax_Syntax.fv) =
-  let uu____78126 = lid "Z"  in
-  FStar_Syntax_Syntax.lid_as_fv uu____78126
+  let uu____78139 = lid "Z"  in
+  FStar_Syntax_Syntax.lid_as_fv uu____78139
     FStar_Syntax_Syntax.delta_constant
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
   
 let (snat_l : FStar_Syntax_Syntax.fv) =
-  let uu____78129 = lid "S"  in
-  FStar_Syntax_Syntax.lid_as_fv uu____78129
+  let uu____78142 = lid "S"  in
+  FStar_Syntax_Syntax.lid_as_fv uu____78142
     FStar_Syntax_Syntax.delta_constant
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
   
@@ -105,21 +105,21 @@ let (snat :
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun s  ->
-    let uu____78148 =
-      let uu____78155 =
-        let uu____78156 =
-          let uu____78173 = tm_fv snat_l  in
-          let uu____78176 =
-            let uu____78187 = FStar_Syntax_Syntax.as_arg s  in [uu____78187]
+    let uu____78161 =
+      let uu____78168 =
+        let uu____78169 =
+          let uu____78186 = tm_fv snat_l  in
+          let uu____78189 =
+            let uu____78200 = FStar_Syntax_Syntax.as_arg s  in [uu____78200]
              in
-          (uu____78173, uu____78176)  in
-        FStar_Syntax_Syntax.Tm_app uu____78156  in
-      FStar_Syntax_Syntax.mk uu____78155  in
-    uu____78148 FStar_Pervasives_Native.None FStar_Range.dummyRange
+          (uu____78186, uu____78189)  in
+        FStar_Syntax_Syntax.Tm_app uu____78169  in
+      FStar_Syntax_Syntax.mk uu____78168  in
+    uu____78161 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let pat :
-  'Auu____78229 .
-    'Auu____78229 -> 'Auu____78229 FStar_Syntax_Syntax.withinfo_t
+  'Auu____78242 .
+    'Auu____78242 -> 'Auu____78242 FStar_Syntax_Syntax.withinfo_t
   = fun p  -> FStar_Syntax_Syntax.withinfo p FStar_Range.dummyRange 
 let (mk_match :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -141,34 +141,34 @@ let (pred_nat :
   =
   fun s  ->
     let zbranch =
-      let uu____78338 = pat (FStar_Syntax_Syntax.Pat_cons (znat_l, []))  in
-      (uu____78338, FStar_Pervasives_Native.None, znat)  in
+      let uu____78351 = pat (FStar_Syntax_Syntax.Pat_cons (znat_l, []))  in
+      (uu____78351, FStar_Pervasives_Native.None, znat)  in
     let sbranch =
-      let uu____78382 =
-        let uu____78385 =
-          let uu____78386 =
-            let uu____78400 =
-              let uu____78410 =
-                let uu____78418 =
+      let uu____78395 =
+        let uu____78398 =
+          let uu____78399 =
+            let uu____78413 =
+              let uu____78423 =
+                let uu____78431 =
                   pat (FStar_Syntax_Syntax.Pat_var FStar_Tests_Util.x)  in
-                (uu____78418, false)  in
-              [uu____78410]  in
-            (snat_l, uu____78400)  in
-          FStar_Syntax_Syntax.Pat_cons uu____78386  in
-        pat uu____78385  in
-      let uu____78448 =
+                (uu____78431, false)  in
+              [uu____78423]  in
+            (snat_l, uu____78413)  in
+          FStar_Syntax_Syntax.Pat_cons uu____78399  in
+        pat uu____78398  in
+      let uu____78461 =
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_bvar
-             (let uu___763_78453 = FStar_Tests_Util.x  in
+             (let uu___763_78466 = FStar_Tests_Util.x  in
               {
                 FStar_Syntax_Syntax.ppname =
-                  (uu___763_78453.FStar_Syntax_Syntax.ppname);
+                  (uu___763_78466.FStar_Syntax_Syntax.ppname);
                 FStar_Syntax_Syntax.index = (Prims.parse_int "0");
                 FStar_Syntax_Syntax.sort =
-                  (uu___763_78453.FStar_Syntax_Syntax.sort)
+                  (uu___763_78466.FStar_Syntax_Syntax.sort)
               })) FStar_Pervasives_Native.None FStar_Range.dummyRange
          in
-      (uu____78382, FStar_Pervasives_Native.None, uu____78448)  in
+      (uu____78395, FStar_Pervasives_Native.None, uu____78461)  in
     mk_match s [zbranch; sbranch]
   
 let (minus_nat :
@@ -180,78 +180,78 @@ let (minus_nat :
     fun t2  ->
       let minus1 = FStar_Tests_Util.m  in
       let zbranch =
-        let uu____78494 = pat (FStar_Syntax_Syntax.Pat_cons (znat_l, []))  in
-        let uu____78513 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-        (uu____78494, FStar_Pervasives_Native.None, uu____78513)  in
+        let uu____78507 = pat (FStar_Syntax_Syntax.Pat_cons (znat_l, []))  in
+        let uu____78526 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+        (uu____78507, FStar_Pervasives_Native.None, uu____78526)  in
       let sbranch =
-        let uu____78541 =
-          let uu____78544 =
-            let uu____78545 =
-              let uu____78559 =
-                let uu____78569 =
-                  let uu____78577 =
+        let uu____78554 =
+          let uu____78557 =
+            let uu____78558 =
+              let uu____78572 =
+                let uu____78582 =
+                  let uu____78590 =
                     pat (FStar_Syntax_Syntax.Pat_var FStar_Tests_Util.n)  in
-                  (uu____78577, false)  in
-                [uu____78569]  in
-              (snat_l, uu____78559)  in
-            FStar_Syntax_Syntax.Pat_cons uu____78545  in
-          pat uu____78544  in
-        let uu____78607 =
-          let uu____78610 = FStar_Tests_Util.nm minus1  in
-          let uu____78613 =
-            let uu____78616 =
-              let uu____78617 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-              pred_nat uu____78617  in
-            let uu____78620 =
-              let uu____78623 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-              [uu____78623]  in
-            uu____78616 :: uu____78620  in
-          FStar_Tests_Util.app uu____78610 uu____78613  in
-        (uu____78541, FStar_Pervasives_Native.None, uu____78607)  in
+                  (uu____78590, false)  in
+                [uu____78582]  in
+              (snat_l, uu____78572)  in
+            FStar_Syntax_Syntax.Pat_cons uu____78558  in
+          pat uu____78557  in
+        let uu____78620 =
+          let uu____78623 = FStar_Tests_Util.nm minus1  in
+          let uu____78626 =
+            let uu____78629 =
+              let uu____78630 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+              pred_nat uu____78630  in
+            let uu____78633 =
+              let uu____78636 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+              [uu____78636]  in
+            uu____78629 :: uu____78633  in
+          FStar_Tests_Util.app uu____78623 uu____78626  in
+        (uu____78554, FStar_Pervasives_Native.None, uu____78620)  in
       let lb =
-        let uu____78635 =
+        let uu____78648 =
           FStar_Ident.lid_of_path ["Pure"] FStar_Range.dummyRange  in
-        let uu____78639 =
-          let uu____78642 =
-            let uu____78643 =
-              let uu____78644 = b FStar_Tests_Util.x  in
-              let uu____78651 =
-                let uu____78660 = b FStar_Tests_Util.y  in [uu____78660]  in
-              uu____78644 :: uu____78651  in
-            let uu____78685 =
-              let uu____78688 = FStar_Tests_Util.nm FStar_Tests_Util.y  in
-              mk_match uu____78688 [zbranch; sbranch]  in
-            FStar_Syntax_Util.abs uu____78643 uu____78685
+        let uu____78652 =
+          let uu____78655 =
+            let uu____78656 =
+              let uu____78657 = b FStar_Tests_Util.x  in
+              let uu____78664 =
+                let uu____78673 = b FStar_Tests_Util.y  in [uu____78673]  in
+              uu____78657 :: uu____78664  in
+            let uu____78698 =
+              let uu____78701 = FStar_Tests_Util.nm FStar_Tests_Util.y  in
+              mk_match uu____78701 [zbranch; sbranch]  in
+            FStar_Syntax_Util.abs uu____78656 uu____78698
               FStar_Pervasives_Native.None
              in
           FStar_Syntax_Subst.subst
             [FStar_Syntax_Syntax.NM (minus1, (Prims.parse_int "0"))]
-            uu____78642
+            uu____78655
            in
         {
           FStar_Syntax_Syntax.lbname = (FStar_Util.Inl minus1);
           FStar_Syntax_Syntax.lbunivs = [];
           FStar_Syntax_Syntax.lbtyp = FStar_Syntax_Syntax.tun;
-          FStar_Syntax_Syntax.lbeff = uu____78635;
-          FStar_Syntax_Syntax.lbdef = uu____78639;
+          FStar_Syntax_Syntax.lbeff = uu____78648;
+          FStar_Syntax_Syntax.lbdef = uu____78652;
           FStar_Syntax_Syntax.lbattrs = [];
           FStar_Syntax_Syntax.lbpos = FStar_Range.dummyRange
         }  in
-      let uu____78695 =
-        let uu____78702 =
-          let uu____78703 =
-            let uu____78717 =
-              let uu____78720 =
-                let uu____78721 = FStar_Tests_Util.nm minus1  in
-                FStar_Tests_Util.app uu____78721 [t1; t2]  in
+      let uu____78708 =
+        let uu____78715 =
+          let uu____78716 =
+            let uu____78730 =
+              let uu____78733 =
+                let uu____78734 = FStar_Tests_Util.nm minus1  in
+                FStar_Tests_Util.app uu____78734 [t1; t2]  in
               FStar_Syntax_Subst.subst
                 [FStar_Syntax_Syntax.NM (minus1, (Prims.parse_int "0"))]
-                uu____78720
+                uu____78733
                in
-            ((true, [lb]), uu____78717)  in
-          FStar_Syntax_Syntax.Tm_let uu____78703  in
-        FStar_Syntax_Syntax.mk uu____78702  in
-      uu____78695 FStar_Pervasives_Native.None FStar_Range.dummyRange
+            ((true, [lb]), uu____78730)  in
+          FStar_Syntax_Syntax.Tm_let uu____78716  in
+        FStar_Syntax_Syntax.mk uu____78715  in
+      uu____78708 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (encode_nat : Prims.int -> FStar_Syntax_Syntax.term) =
   fun n1  ->
@@ -259,8 +259,8 @@ let (encode_nat : Prims.int -> FStar_Syntax_Syntax.term) =
       if n2 = (Prims.parse_int "0")
       then out
       else
-        (let uu____78765 = snat out  in
-         aux uu____78765 (n2 - (Prims.parse_int "1")))
+        (let uu____78778 = snat out  in
+         aux uu____78778 (n2 - (Prims.parse_int "1")))
        in
     aux znat n1
   
@@ -307,1160 +307,1160 @@ let (tests :
   FStar_Tests_Pars.pars_and_tc_fragment "let fst_a (x: 'a) (y: 'a) = x";
   FStar_Tests_Pars.pars_and_tc_fragment "let id_list (x: list 'a) = x";
   FStar_Tests_Pars.pars_and_tc_fragment "let id_list_m (x: list tb) = x";
-  (let uu____78831 =
-     let uu____78843 =
-       let uu____78846 =
-         let uu____78849 =
-           let uu____78852 =
-             let uu____78855 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-             [uu____78855]  in
-           id :: uu____78852  in
-         one :: uu____78849  in
-       FStar_Tests_Util.app apply uu____78846  in
-     let uu____78856 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-     ((Prims.parse_int "0"), uu____78843, uu____78856)  in
-   let uu____78865 =
-     let uu____78879 =
-       let uu____78891 =
-         let uu____78894 =
-           let uu____78897 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-           [uu____78897]  in
-         FStar_Tests_Util.app id uu____78894  in
-       let uu____78898 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-       ((Prims.parse_int "1"), uu____78891, uu____78898)  in
-     let uu____78907 =
-       let uu____78921 =
-         let uu____78933 =
-           let uu____78936 =
-             let uu____78939 =
-               let uu____78942 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-               let uu____78943 =
-                 let uu____78946 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
-                 [uu____78946]  in
-               uu____78942 :: uu____78943  in
-             tt :: uu____78939  in
-           FStar_Tests_Util.app apply uu____78936  in
-         let uu____78947 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-         ((Prims.parse_int "1"), uu____78933, uu____78947)  in
-       let uu____78956 =
-         let uu____78970 =
-           let uu____78982 =
-             let uu____78985 =
-               let uu____78988 =
-                 let uu____78991 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-                 let uu____78992 =
-                   let uu____78995 = FStar_Tests_Util.nm FStar_Tests_Util.m
+  (let uu____78844 =
+     let uu____78856 =
+       let uu____78859 =
+         let uu____78862 =
+           let uu____78865 =
+             let uu____78868 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+             [uu____78868]  in
+           id :: uu____78865  in
+         one :: uu____78862  in
+       FStar_Tests_Util.app apply uu____78859  in
+     let uu____78869 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+     ((Prims.parse_int "0"), uu____78856, uu____78869)  in
+   let uu____78878 =
+     let uu____78892 =
+       let uu____78904 =
+         let uu____78907 =
+           let uu____78910 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+           [uu____78910]  in
+         FStar_Tests_Util.app id uu____78907  in
+       let uu____78911 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+       ((Prims.parse_int "1"), uu____78904, uu____78911)  in
+     let uu____78920 =
+       let uu____78934 =
+         let uu____78946 =
+           let uu____78949 =
+             let uu____78952 =
+               let uu____78955 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+               let uu____78956 =
+                 let uu____78959 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
+                 [uu____78959]  in
+               uu____78955 :: uu____78956  in
+             tt :: uu____78952  in
+           FStar_Tests_Util.app apply uu____78949  in
+         let uu____78960 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+         ((Prims.parse_int "1"), uu____78946, uu____78960)  in
+       let uu____78969 =
+         let uu____78983 =
+           let uu____78995 =
+             let uu____78998 =
+               let uu____79001 =
+                 let uu____79004 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+                 let uu____79005 =
+                   let uu____79008 = FStar_Tests_Util.nm FStar_Tests_Util.m
                       in
-                   [uu____78995]  in
-                 uu____78991 :: uu____78992  in
-               ff :: uu____78988  in
-             FStar_Tests_Util.app apply uu____78985  in
-           let uu____78996 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
-           ((Prims.parse_int "2"), uu____78982, uu____78996)  in
-         let uu____79005 =
-           let uu____79019 =
-             let uu____79031 =
-               let uu____79034 =
-                 let uu____79037 =
-                   let uu____79040 =
-                     let uu____79043 =
-                       let uu____79046 =
-                         let uu____79049 =
-                           let uu____79052 =
-                             let uu____79055 =
+                   [uu____79008]  in
+                 uu____79004 :: uu____79005  in
+               ff :: uu____79001  in
+             FStar_Tests_Util.app apply uu____78998  in
+           let uu____79009 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
+           ((Prims.parse_int "2"), uu____78995, uu____79009)  in
+         let uu____79018 =
+           let uu____79032 =
+             let uu____79044 =
+               let uu____79047 =
+                 let uu____79050 =
+                   let uu____79053 =
+                     let uu____79056 =
+                       let uu____79059 =
+                         let uu____79062 =
+                           let uu____79065 =
+                             let uu____79068 =
                                FStar_Tests_Util.nm FStar_Tests_Util.n  in
-                             let uu____79056 =
-                               let uu____79059 =
+                             let uu____79069 =
+                               let uu____79072 =
                                  FStar_Tests_Util.nm FStar_Tests_Util.m  in
-                               [uu____79059]  in
-                             uu____79055 :: uu____79056  in
-                           ff :: uu____79052  in
-                         apply :: uu____79049  in
-                       apply :: uu____79046  in
-                     apply :: uu____79043  in
-                   apply :: uu____79040  in
-                 apply :: uu____79037  in
-               FStar_Tests_Util.app apply uu____79034  in
-             let uu____79060 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
-             ((Prims.parse_int "3"), uu____79031, uu____79060)  in
-           let uu____79069 =
-             let uu____79083 =
-               let uu____79095 =
-                 let uu____79098 =
-                   let uu____79101 =
-                     let uu____79104 =
-                       let uu____79107 =
+                               [uu____79072]  in
+                             uu____79068 :: uu____79069  in
+                           ff :: uu____79065  in
+                         apply :: uu____79062  in
+                       apply :: uu____79059  in
+                     apply :: uu____79056  in
+                   apply :: uu____79053  in
+                 apply :: uu____79050  in
+               FStar_Tests_Util.app apply uu____79047  in
+             let uu____79073 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
+             ((Prims.parse_int "3"), uu____79044, uu____79073)  in
+           let uu____79082 =
+             let uu____79096 =
+               let uu____79108 =
+                 let uu____79111 =
+                   let uu____79114 =
+                     let uu____79117 =
+                       let uu____79120 =
                          FStar_Tests_Util.nm FStar_Tests_Util.n  in
-                       let uu____79108 =
-                         let uu____79111 =
+                       let uu____79121 =
+                         let uu____79124 =
                            FStar_Tests_Util.nm FStar_Tests_Util.m  in
-                         [uu____79111]  in
-                       uu____79107 :: uu____79108  in
-                     ff :: uu____79104  in
-                   apply :: uu____79101  in
-                 FStar_Tests_Util.app twice uu____79098  in
-               let uu____79112 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
-               ((Prims.parse_int "4"), uu____79095, uu____79112)  in
-             let uu____79121 =
-               let uu____79135 =
-                 let uu____79147 = minus one z  in
-                 ((Prims.parse_int "5"), uu____79147, one)  in
-               let uu____79156 =
-                 let uu____79170 =
-                   let uu____79182 = FStar_Tests_Util.app pred [one]  in
-                   ((Prims.parse_int "6"), uu____79182, z)  in
-                 let uu____79191 =
-                   let uu____79205 =
-                     let uu____79217 = minus one one  in
-                     ((Prims.parse_int "7"), uu____79217, z)  in
-                   let uu____79226 =
-                     let uu____79240 =
-                       let uu____79252 = FStar_Tests_Util.app mul [one; one]
+                         [uu____79124]  in
+                       uu____79120 :: uu____79121  in
+                     ff :: uu____79117  in
+                   apply :: uu____79114  in
+                 FStar_Tests_Util.app twice uu____79111  in
+               let uu____79125 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
+               ((Prims.parse_int "4"), uu____79108, uu____79125)  in
+             let uu____79134 =
+               let uu____79148 =
+                 let uu____79160 = minus one z  in
+                 ((Prims.parse_int "5"), uu____79160, one)  in
+               let uu____79169 =
+                 let uu____79183 =
+                   let uu____79195 = FStar_Tests_Util.app pred [one]  in
+                   ((Prims.parse_int "6"), uu____79195, z)  in
+                 let uu____79204 =
+                   let uu____79218 =
+                     let uu____79230 = minus one one  in
+                     ((Prims.parse_int "7"), uu____79230, z)  in
+                   let uu____79239 =
+                     let uu____79253 =
+                       let uu____79265 = FStar_Tests_Util.app mul [one; one]
                           in
-                       ((Prims.parse_int "8"), uu____79252, one)  in
-                     let uu____79261 =
-                       let uu____79275 =
-                         let uu____79287 =
+                       ((Prims.parse_int "8"), uu____79265, one)  in
+                     let uu____79274 =
+                       let uu____79288 =
+                         let uu____79300 =
                            FStar_Tests_Util.app mul [two; one]  in
-                         ((Prims.parse_int "9"), uu____79287, two)  in
-                       let uu____79296 =
-                         let uu____79310 =
-                           let uu____79322 =
-                             let uu____79325 =
-                               let uu____79328 =
+                         ((Prims.parse_int "9"), uu____79300, two)  in
+                       let uu____79309 =
+                         let uu____79323 =
+                           let uu____79335 =
+                             let uu____79338 =
+                               let uu____79341 =
                                  FStar_Tests_Util.app succ [one]  in
-                               [uu____79328; one]  in
-                             FStar_Tests_Util.app mul uu____79325  in
-                           ((Prims.parse_int "10"), uu____79322, two)  in
-                         let uu____79335 =
-                           let uu____79349 =
-                             let uu____79361 =
-                               let uu____79364 =
+                               [uu____79341; one]  in
+                             FStar_Tests_Util.app mul uu____79338  in
+                           ((Prims.parse_int "10"), uu____79335, two)  in
+                         let uu____79348 =
+                           let uu____79362 =
+                             let uu____79374 =
+                               let uu____79377 =
                                  encode (Prims.parse_int "10")  in
-                               let uu____79366 =
+                               let uu____79379 =
                                  encode (Prims.parse_int "10")  in
-                               minus uu____79364 uu____79366  in
-                             ((Prims.parse_int "11"), uu____79361, z)  in
-                           let uu____79376 =
-                             let uu____79390 =
-                               let uu____79402 =
-                                 let uu____79405 =
+                               minus uu____79377 uu____79379  in
+                             ((Prims.parse_int "11"), uu____79374, z)  in
+                           let uu____79389 =
+                             let uu____79403 =
+                               let uu____79415 =
+                                 let uu____79418 =
                                    encode (Prims.parse_int "100")  in
-                                 let uu____79407 =
+                                 let uu____79420 =
                                    encode (Prims.parse_int "100")  in
-                                 minus uu____79405 uu____79407  in
-                               ((Prims.parse_int "12"), uu____79402, z)  in
-                             let uu____79417 =
-                               let uu____79431 =
-                                 let uu____79443 =
-                                   let uu____79446 =
+                                 minus uu____79418 uu____79420  in
+                               ((Prims.parse_int "12"), uu____79415, z)  in
+                             let uu____79430 =
+                               let uu____79444 =
+                                 let uu____79456 =
+                                   let uu____79459 =
                                      encode (Prims.parse_int "100")  in
-                                   let uu____79448 =
-                                     let uu____79451 =
+                                   let uu____79461 =
+                                     let uu____79464 =
                                        FStar_Tests_Util.nm FStar_Tests_Util.x
                                         in
-                                     let uu____79452 =
+                                     let uu____79465 =
                                        FStar_Tests_Util.nm FStar_Tests_Util.x
                                         in
-                                     minus uu____79451 uu____79452  in
-                                   let_ FStar_Tests_Util.x uu____79446
-                                     uu____79448
+                                     minus uu____79464 uu____79465  in
+                                   let_ FStar_Tests_Util.x uu____79459
+                                     uu____79461
                                     in
-                                 ((Prims.parse_int "13"), uu____79443, z)  in
-                               let uu____79461 =
-                                 let uu____79475 =
-                                   let uu____79487 =
-                                     let uu____79490 =
+                                 ((Prims.parse_int "13"), uu____79456, z)  in
+                               let uu____79474 =
+                                 let uu____79488 =
+                                   let uu____79500 =
+                                     let uu____79503 =
                                        FStar_Tests_Util.app succ [one]  in
-                                     let uu____79491 =
-                                       let uu____79494 =
-                                         let uu____79495 =
-                                           let uu____79498 =
+                                     let uu____79504 =
+                                       let uu____79507 =
+                                         let uu____79508 =
+                                           let uu____79511 =
                                              FStar_Tests_Util.nm
                                                FStar_Tests_Util.x
                                               in
-                                           let uu____79499 =
-                                             let uu____79502 =
+                                           let uu____79512 =
+                                             let uu____79515 =
                                                FStar_Tests_Util.nm
                                                  FStar_Tests_Util.x
                                                 in
-                                             [uu____79502]  in
-                                           uu____79498 :: uu____79499  in
-                                         FStar_Tests_Util.app mul uu____79495
+                                             [uu____79515]  in
+                                           uu____79511 :: uu____79512  in
+                                         FStar_Tests_Util.app mul uu____79508
                                           in
-                                       let uu____79503 =
-                                         let uu____79506 =
-                                           let uu____79507 =
-                                             let uu____79510 =
+                                       let uu____79516 =
+                                         let uu____79519 =
+                                           let uu____79520 =
+                                             let uu____79523 =
                                                FStar_Tests_Util.nm
                                                  FStar_Tests_Util.y
                                                 in
-                                             let uu____79511 =
-                                               let uu____79514 =
+                                             let uu____79524 =
+                                               let uu____79527 =
                                                  FStar_Tests_Util.nm
                                                    FStar_Tests_Util.y
                                                   in
-                                               [uu____79514]  in
-                                             uu____79510 :: uu____79511  in
+                                               [uu____79527]  in
+                                             uu____79523 :: uu____79524  in
                                            FStar_Tests_Util.app mul
-                                             uu____79507
+                                             uu____79520
                                             in
-                                         let uu____79515 =
-                                           let uu____79518 =
+                                         let uu____79528 =
+                                           let uu____79531 =
                                              FStar_Tests_Util.nm
                                                FStar_Tests_Util.h
                                               in
-                                           let uu____79519 =
+                                           let uu____79532 =
                                              FStar_Tests_Util.nm
                                                FStar_Tests_Util.h
                                               in
-                                           minus uu____79518 uu____79519  in
-                                         let_ FStar_Tests_Util.h uu____79506
-                                           uu____79515
+                                           minus uu____79531 uu____79532  in
+                                         let_ FStar_Tests_Util.h uu____79519
+                                           uu____79528
                                           in
-                                       let_ FStar_Tests_Util.y uu____79494
-                                         uu____79503
+                                       let_ FStar_Tests_Util.y uu____79507
+                                         uu____79516
                                         in
-                                     let_ FStar_Tests_Util.x uu____79490
-                                       uu____79491
+                                     let_ FStar_Tests_Util.x uu____79503
+                                       uu____79504
                                       in
-                                   ((Prims.parse_int "15"), uu____79487, z)
+                                   ((Prims.parse_int "15"), uu____79500, z)
                                     in
-                                 let uu____79528 =
-                                   let uu____79542 =
-                                     let uu____79554 =
-                                       let uu____79557 =
+                                 let uu____79541 =
+                                   let uu____79555 =
+                                     let uu____79567 =
+                                       let uu____79570 =
                                          FStar_Tests_Util.app succ [one]  in
-                                       let uu____79560 =
-                                         let uu____79561 =
-                                           let uu____79564 =
-                                             let uu____79567 =
+                                       let uu____79573 =
+                                         let uu____79574 =
+                                           let uu____79577 =
+                                             let uu____79580 =
                                                FStar_Tests_Util.nm
                                                  FStar_Tests_Util.x
                                                 in
-                                             let uu____79568 =
-                                               let uu____79571 =
+                                             let uu____79581 =
+                                               let uu____79584 =
                                                  FStar_Tests_Util.nm
                                                    FStar_Tests_Util.x
                                                   in
-                                               [uu____79571]  in
-                                             uu____79567 :: uu____79568  in
+                                               [uu____79584]  in
+                                             uu____79580 :: uu____79581  in
                                            FStar_Tests_Util.app mul
-                                             uu____79564
+                                             uu____79577
                                             in
-                                         let uu____79572 =
-                                           let uu____79573 =
-                                             let uu____79576 =
-                                               let uu____79579 =
+                                         let uu____79585 =
+                                           let uu____79586 =
+                                             let uu____79589 =
+                                               let uu____79592 =
                                                  FStar_Tests_Util.nm
                                                    FStar_Tests_Util.y
                                                   in
-                                               let uu____79580 =
-                                                 let uu____79583 =
+                                               let uu____79593 =
+                                                 let uu____79596 =
                                                    FStar_Tests_Util.nm
                                                      FStar_Tests_Util.y
                                                     in
-                                                 [uu____79583]  in
-                                               uu____79579 :: uu____79580  in
+                                                 [uu____79596]  in
+                                               uu____79592 :: uu____79593  in
                                              FStar_Tests_Util.app mul
-                                               uu____79576
+                                               uu____79589
                                               in
-                                           let uu____79584 =
-                                             let uu____79585 =
+                                           let uu____79597 =
+                                             let uu____79598 =
                                                FStar_Tests_Util.nm
                                                  FStar_Tests_Util.h
                                                 in
-                                             let uu____79586 =
+                                             let uu____79599 =
                                                FStar_Tests_Util.nm
                                                  FStar_Tests_Util.h
                                                 in
-                                             minus uu____79585 uu____79586
+                                             minus uu____79598 uu____79599
                                               in
                                            mk_let FStar_Tests_Util.h
-                                             uu____79573 uu____79584
+                                             uu____79586 uu____79597
                                             in
                                          mk_let FStar_Tests_Util.y
-                                           uu____79561 uu____79572
+                                           uu____79574 uu____79585
                                           in
-                                       mk_let FStar_Tests_Util.x uu____79557
-                                         uu____79560
+                                       mk_let FStar_Tests_Util.x uu____79570
+                                         uu____79573
                                         in
-                                     ((Prims.parse_int "16"), uu____79554, z)
+                                     ((Prims.parse_int "16"), uu____79567, z)
                                       in
-                                   let uu____79595 =
-                                     let uu____79609 =
-                                       let uu____79621 =
-                                         let uu____79624 =
+                                   let uu____79608 =
+                                     let uu____79622 =
+                                       let uu____79634 =
+                                         let uu____79637 =
                                            FStar_Tests_Util.app succ [one]
                                             in
-                                         let uu____79625 =
-                                           let uu____79628 =
-                                             let uu____79629 =
-                                               let uu____79632 =
+                                         let uu____79638 =
+                                           let uu____79641 =
+                                             let uu____79642 =
+                                               let uu____79645 =
                                                  FStar_Tests_Util.nm
                                                    FStar_Tests_Util.x
                                                   in
-                                               let uu____79633 =
-                                                 let uu____79636 =
+                                               let uu____79646 =
+                                                 let uu____79649 =
                                                    FStar_Tests_Util.nm
                                                      FStar_Tests_Util.x
                                                     in
-                                                 [uu____79636]  in
-                                               uu____79632 :: uu____79633  in
+                                                 [uu____79649]  in
+                                               uu____79645 :: uu____79646  in
                                              FStar_Tests_Util.app mul
-                                               uu____79629
+                                               uu____79642
                                               in
-                                           let uu____79637 =
-                                             let uu____79640 =
-                                               let uu____79641 =
-                                                 let uu____79644 =
+                                           let uu____79650 =
+                                             let uu____79653 =
+                                               let uu____79654 =
+                                                 let uu____79657 =
                                                    FStar_Tests_Util.nm
                                                      FStar_Tests_Util.y
                                                     in
-                                                 let uu____79645 =
-                                                   let uu____79648 =
+                                                 let uu____79658 =
+                                                   let uu____79661 =
                                                      FStar_Tests_Util.nm
                                                        FStar_Tests_Util.y
                                                       in
-                                                   [uu____79648]  in
-                                                 uu____79644 :: uu____79645
+                                                   [uu____79661]  in
+                                                 uu____79657 :: uu____79658
                                                   in
                                                FStar_Tests_Util.app mul
-                                                 uu____79641
+                                                 uu____79654
                                                 in
-                                             let uu____79649 =
-                                               let uu____79652 =
+                                             let uu____79662 =
+                                               let uu____79665 =
                                                  FStar_Tests_Util.nm
                                                    FStar_Tests_Util.h
                                                   in
-                                               let uu____79653 =
+                                               let uu____79666 =
                                                  FStar_Tests_Util.nm
                                                    FStar_Tests_Util.h
                                                   in
-                                               minus uu____79652 uu____79653
+                                               minus uu____79665 uu____79666
                                                 in
                                              let_ FStar_Tests_Util.h
-                                               uu____79640 uu____79649
+                                               uu____79653 uu____79662
                                               in
                                            let_ FStar_Tests_Util.y
-                                             uu____79628 uu____79637
+                                             uu____79641 uu____79650
                                             in
-                                         let_ FStar_Tests_Util.x uu____79624
-                                           uu____79625
+                                         let_ FStar_Tests_Util.x uu____79637
+                                           uu____79638
                                           in
-                                       ((Prims.parse_int "17"), uu____79621,
+                                       ((Prims.parse_int "17"), uu____79634,
                                          z)
                                         in
-                                     let uu____79662 =
-                                       let uu____79676 =
-                                         let uu____79688 =
-                                           let uu____79691 =
-                                             let uu____79694 = snat znat  in
-                                             snat uu____79694  in
-                                           pred_nat uu____79691  in
-                                         let uu____79695 = snat znat  in
+                                     let uu____79675 =
+                                       let uu____79689 =
+                                         let uu____79701 =
+                                           let uu____79704 =
+                                             let uu____79707 = snat znat  in
+                                             snat uu____79707  in
+                                           pred_nat uu____79704  in
+                                         let uu____79708 = snat znat  in
                                          ((Prims.parse_int "18"),
-                                           uu____79688, uu____79695)
+                                           uu____79701, uu____79708)
                                           in
-                                       let uu____79704 =
-                                         let uu____79718 =
-                                           let uu____79730 =
-                                             let uu____79733 =
-                                               let uu____79734 =
-                                                 let uu____79735 = snat znat
+                                       let uu____79717 =
+                                         let uu____79731 =
+                                           let uu____79743 =
+                                             let uu____79746 =
+                                               let uu____79747 =
+                                                 let uu____79748 = snat znat
                                                     in
-                                                 snat uu____79735  in
-                                               let uu____79736 = snat znat
+                                                 snat uu____79748  in
+                                               let uu____79749 = snat znat
                                                   in
-                                               minus_nat uu____79734
-                                                 uu____79736
+                                               minus_nat uu____79747
+                                                 uu____79749
                                                 in
                                              FStar_Tests_Pars.tc_nbe_term
-                                               uu____79733
+                                               uu____79746
                                               in
-                                           let uu____79737 = snat znat  in
+                                           let uu____79750 = snat znat  in
                                            ((Prims.parse_int "19"),
-                                             uu____79730, uu____79737)
+                                             uu____79743, uu____79750)
                                             in
-                                         let uu____79746 =
-                                           let uu____79760 =
-                                             let uu____79772 =
-                                               let uu____79775 =
-                                                 let uu____79776 =
+                                         let uu____79759 =
+                                           let uu____79773 =
+                                             let uu____79785 =
+                                               let uu____79788 =
+                                                 let uu____79789 =
                                                    encode_nat
                                                      (Prims.parse_int "10")
                                                     in
-                                                 let uu____79778 =
+                                                 let uu____79791 =
                                                    encode_nat
                                                      (Prims.parse_int "10")
                                                     in
-                                                 minus_nat uu____79776
-                                                   uu____79778
+                                                 minus_nat uu____79789
+                                                   uu____79791
                                                   in
                                                FStar_Tests_Pars.tc_nbe_term
-                                                 uu____79775
+                                                 uu____79788
                                                 in
                                              ((Prims.parse_int "20"),
-                                               uu____79772, znat)
+                                               uu____79785, znat)
                                               in
-                                           let uu____79786 =
-                                             let uu____79800 =
-                                               let uu____79812 =
-                                                 let uu____79815 =
-                                                   let uu____79816 =
+                                           let uu____79799 =
+                                             let uu____79813 =
+                                               let uu____79825 =
+                                                 let uu____79828 =
+                                                   let uu____79829 =
                                                      encode_nat
                                                        (Prims.parse_int "100")
                                                       in
-                                                   let uu____79818 =
+                                                   let uu____79831 =
                                                      encode_nat
                                                        (Prims.parse_int "100")
                                                       in
-                                                   minus_nat uu____79816
-                                                     uu____79818
+                                                   minus_nat uu____79829
+                                                     uu____79831
                                                     in
                                                  FStar_Tests_Pars.tc_nbe_term
-                                                   uu____79815
+                                                   uu____79828
                                                   in
                                                ((Prims.parse_int "21"),
-                                                 uu____79812, znat)
+                                                 uu____79825, znat)
                                                 in
-                                             let uu____79826 =
-                                               let uu____79840 =
-                                                 let uu____79852 =
+                                             let uu____79839 =
+                                               let uu____79853 =
+                                                 let uu____79865 =
                                                    FStar_Tests_Pars.tc_nbe
                                                      "recons [0;1]"
                                                     in
-                                                 let uu____79856 =
+                                                 let uu____79869 =
                                                    FStar_Tests_Pars.tc_nbe
                                                      "[0;1]"
                                                     in
                                                  ((Prims.parse_int "24"),
-                                                   uu____79852, uu____79856)
+                                                   uu____79865, uu____79869)
                                                   in
-                                               let uu____79866 =
-                                                 let uu____79880 =
-                                                   let uu____79892 =
+                                               let uu____79879 =
+                                                 let uu____79893 =
+                                                   let uu____79905 =
                                                      FStar_Tests_Pars.tc_nbe
                                                        "recons [false;true;false]"
                                                       in
-                                                   let uu____79896 =
+                                                   let uu____79909 =
                                                      FStar_Tests_Pars.tc_nbe
                                                        "[false;true;false]"
                                                       in
                                                    ((Prims.parse_int "241"),
-                                                     uu____79892,
-                                                     uu____79896)
+                                                     uu____79905,
+                                                     uu____79909)
                                                     in
-                                                 let uu____79906 =
-                                                   let uu____79920 =
-                                                     let uu____79932 =
+                                                 let uu____79919 =
+                                                   let uu____79933 =
+                                                     let uu____79945 =
                                                        FStar_Tests_Pars.tc_nbe
                                                          "copy [0;1]"
                                                         in
-                                                     let uu____79936 =
+                                                     let uu____79949 =
                                                        FStar_Tests_Pars.tc_nbe
                                                          "[0;1]"
                                                         in
                                                      ((Prims.parse_int "25"),
-                                                       uu____79932,
-                                                       uu____79936)
+                                                       uu____79945,
+                                                       uu____79949)
                                                       in
-                                                   let uu____79946 =
-                                                     let uu____79960 =
-                                                       let uu____79972 =
+                                                   let uu____79959 =
+                                                     let uu____79973 =
+                                                       let uu____79985 =
                                                          FStar_Tests_Pars.tc_nbe
                                                            "rev [0;1;2;3;4;5;6;7;8;9;10]"
                                                           in
-                                                       let uu____79976 =
+                                                       let uu____79989 =
                                                          FStar_Tests_Pars.tc_nbe
                                                            "[10;9;8;7;6;5;4;3;2;1;0]"
                                                           in
                                                        ((Prims.parse_int "26"),
-                                                         uu____79972,
-                                                         uu____79976)
+                                                         uu____79985,
+                                                         uu____79989)
                                                         in
-                                                     let uu____79986 =
-                                                       let uu____80000 =
-                                                         let uu____80012 =
+                                                     let uu____79999 =
+                                                       let uu____80013 =
+                                                         let uu____80025 =
                                                            FStar_Tests_Pars.tc_nbe
                                                              "(fun x y z q -> z) T T F T"
                                                             in
-                                                         let uu____80016 =
+                                                         let uu____80029 =
                                                            FStar_Tests_Pars.tc_nbe
                                                              "F"
                                                             in
                                                          ((Prims.parse_int "28"),
-                                                           uu____80012,
-                                                           uu____80016)
+                                                           uu____80025,
+                                                           uu____80029)
                                                           in
-                                                       let uu____80026 =
-                                                         let uu____80040 =
-                                                           let uu____80052 =
+                                                       let uu____80039 =
+                                                         let uu____80053 =
+                                                           let uu____80065 =
                                                              FStar_Tests_Pars.tc_nbe
                                                                "[T; F]"
                                                               in
-                                                           let uu____80056 =
+                                                           let uu____80069 =
                                                              FStar_Tests_Pars.tc_nbe
                                                                "[T; F]"
                                                               in
                                                            ((Prims.parse_int "29"),
-                                                             uu____80052,
-                                                             uu____80056)
+                                                             uu____80065,
+                                                             uu____80069)
                                                             in
-                                                         let uu____80066 =
-                                                           let uu____80080 =
-                                                             let uu____80092
+                                                         let uu____80079 =
+                                                           let uu____80093 =
+                                                             let uu____80105
                                                                =
                                                                FStar_Tests_Pars.tc_nbe
                                                                  "id_tb T"
                                                                 in
-                                                             let uu____80096
+                                                             let uu____80109
                                                                =
                                                                FStar_Tests_Pars.tc_nbe
                                                                  "T"
                                                                 in
                                                              ((Prims.parse_int "31"),
-                                                               uu____80092,
-                                                               uu____80096)
+                                                               uu____80105,
+                                                               uu____80109)
                                                               in
-                                                           let uu____80106 =
-                                                             let uu____80120
+                                                           let uu____80119 =
+                                                             let uu____80133
                                                                =
-                                                               let uu____80132
+                                                               let uu____80145
                                                                  =
                                                                  FStar_Tests_Pars.tc_nbe
                                                                    "(fun #a x -> x) #tb T"
                                                                   in
-                                                               let uu____80136
+                                                               let uu____80149
                                                                  =
                                                                  FStar_Tests_Pars.tc_nbe
                                                                    "T"
                                                                   in
                                                                ((Prims.parse_int "32"),
-                                                                 uu____80132,
-                                                                 uu____80136)
+                                                                 uu____80145,
+                                                                 uu____80149)
                                                                 in
-                                                             let uu____80146
+                                                             let uu____80159
                                                                =
-                                                               let uu____80160
+                                                               let uu____80173
                                                                  =
-                                                                 let uu____80172
+                                                                 let uu____80185
                                                                    =
                                                                    FStar_Tests_Pars.tc_nbe
                                                                     "revtb T"
                                                                     in
-                                                                 let uu____80176
+                                                                 let uu____80189
                                                                    =
                                                                    FStar_Tests_Pars.tc_nbe
                                                                     "F"
                                                                     in
                                                                  ((Prims.parse_int "33"),
-                                                                   uu____80172,
-                                                                   uu____80176)
+                                                                   uu____80185,
+                                                                   uu____80189)
                                                                   in
-                                                               let uu____80186
+                                                               let uu____80199
                                                                  =
-                                                                 let uu____80200
+                                                                 let uu____80213
                                                                    =
-                                                                   let uu____80212
+                                                                   let uu____80225
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "(fun x y -> x) T F"
                                                                      in
-                                                                   let uu____80216
+                                                                   let uu____80229
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "T"  in
                                                                    ((Prims.parse_int "34"),
-                                                                    uu____80212,
-                                                                    uu____80216)
+                                                                    uu____80225,
+                                                                    uu____80229)
                                                                     in
-                                                                 let uu____80226
+                                                                 let uu____80239
                                                                    =
-                                                                   let uu____80240
+                                                                   let uu____80253
                                                                     =
-                                                                    let uu____80252
+                                                                    let uu____80265
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "fst_a T F"
                                                                      in
-                                                                    let uu____80256
+                                                                    let uu____80269
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "T"  in
                                                                     ((Prims.parse_int "35"),
-                                                                    uu____80252,
-                                                                    uu____80256)
+                                                                    uu____80265,
+                                                                    uu____80269)
                                                                      in
-                                                                   let uu____80266
+                                                                   let uu____80279
                                                                     =
-                                                                    let uu____80280
+                                                                    let uu____80293
                                                                     =
-                                                                    let uu____80292
+                                                                    let uu____80305
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "idd T"
                                                                      in
-                                                                    let uu____80296
+                                                                    let uu____80309
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "T"  in
                                                                     ((Prims.parse_int "36"),
-                                                                    uu____80292,
-                                                                    uu____80296)
+                                                                    uu____80305,
+                                                                    uu____80309)
                                                                      in
-                                                                    let uu____80306
+                                                                    let uu____80319
                                                                     =
-                                                                    let uu____80320
+                                                                    let uu____80333
                                                                     =
-                                                                    let uu____80332
+                                                                    let uu____80345
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "id_list [T]"
                                                                      in
-                                                                    let uu____80336
+                                                                    let uu____80349
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[T]"  in
                                                                     ((Prims.parse_int "301"),
-                                                                    uu____80332,
-                                                                    uu____80336)
+                                                                    uu____80345,
+                                                                    uu____80349)
                                                                      in
-                                                                    let uu____80346
+                                                                    let uu____80359
                                                                     =
-                                                                    let uu____80360
+                                                                    let uu____80373
                                                                     =
-                                                                    let uu____80372
+                                                                    let uu____80385
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "id_list_m [T]"
                                                                      in
-                                                                    let uu____80376
+                                                                    let uu____80389
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[T]"  in
                                                                     ((Prims.parse_int "3012"),
-                                                                    uu____80372,
-                                                                    uu____80376)
+                                                                    uu____80385,
+                                                                    uu____80389)
                                                                      in
-                                                                    let uu____80386
+                                                                    let uu____80399
                                                                     =
-                                                                    let uu____80400
+                                                                    let uu____80413
                                                                     =
-                                                                    let uu____80412
+                                                                    let uu____80425
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "recons_m [T; F]"
                                                                      in
-                                                                    let uu____80416
+                                                                    let uu____80429
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[T; F]"
                                                                      in
                                                                     ((Prims.parse_int "302"),
-                                                                    uu____80412,
-                                                                    uu____80416)
+                                                                    uu____80425,
+                                                                    uu____80429)
                                                                      in
-                                                                    let uu____80426
+                                                                    let uu____80439
                                                                     =
-                                                                    let uu____80440
+                                                                    let uu____80453
                                                                     =
-                                                                    let uu____80452
+                                                                    let uu____80465
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "select T A1 A3"
                                                                      in
-                                                                    let uu____80456
+                                                                    let uu____80469
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "A1"  in
                                                                     ((Prims.parse_int "303"),
-                                                                    uu____80452,
-                                                                    uu____80456)
+                                                                    uu____80465,
+                                                                    uu____80469)
                                                                      in
-                                                                    let uu____80466
+                                                                    let uu____80479
                                                                     =
-                                                                    let uu____80480
+                                                                    let uu____80493
                                                                     =
-                                                                    let uu____80492
+                                                                    let uu____80505
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "select T 3 4"
                                                                      in
-                                                                    let uu____80496
+                                                                    let uu____80509
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "3"  in
                                                                     ((Prims.parse_int "3031"),
-                                                                    uu____80492,
-                                                                    uu____80496)
+                                                                    uu____80505,
+                                                                    uu____80509)
                                                                      in
-                                                                    let uu____80506
+                                                                    let uu____80519
                                                                     =
-                                                                    let uu____80520
+                                                                    let uu____80533
                                                                     =
-                                                                    let uu____80532
+                                                                    let uu____80545
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "select_bool false 3 4"
                                                                      in
-                                                                    let uu____80536
+                                                                    let uu____80549
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "4"  in
                                                                     ((Prims.parse_int "3032"),
-                                                                    uu____80532,
-                                                                    uu____80536)
+                                                                    uu____80545,
+                                                                    uu____80549)
                                                                      in
-                                                                    let uu____80546
+                                                                    let uu____80559
                                                                     =
-                                                                    let uu____80560
+                                                                    let uu____80573
                                                                     =
-                                                                    let uu____80572
+                                                                    let uu____80585
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "select_int3 1 7 8 9"
                                                                      in
-                                                                    let uu____80576
+                                                                    let uu____80589
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "8"  in
                                                                     ((Prims.parse_int "3033"),
-                                                                    uu____80572,
-                                                                    uu____80576)
+                                                                    uu____80585,
+                                                                    uu____80589)
                                                                      in
-                                                                    let uu____80586
+                                                                    let uu____80599
                                                                     =
-                                                                    let uu____80600
+                                                                    let uu____80613
                                                                     =
-                                                                    let uu____80612
+                                                                    let uu____80625
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[5]"  in
-                                                                    let uu____80616
+                                                                    let uu____80629
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[5]"  in
                                                                     ((Prims.parse_int "3034"),
-                                                                    uu____80612,
-                                                                    uu____80616)
+                                                                    uu____80625,
+                                                                    uu____80629)
                                                                      in
-                                                                    let uu____80626
+                                                                    let uu____80639
                                                                     =
-                                                                    let uu____80640
+                                                                    let uu____80653
                                                                     =
-                                                                    let uu____80652
+                                                                    let uu____80665
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[\"abcd\"]"
                                                                      in
-                                                                    let uu____80656
+                                                                    let uu____80669
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[\"abcd\"]"
                                                                      in
                                                                     ((Prims.parse_int "3035"),
-                                                                    uu____80652,
-                                                                    uu____80656)
+                                                                    uu____80665,
+                                                                    uu____80669)
                                                                      in
-                                                                    let uu____80666
+                                                                    let uu____80679
                                                                     =
-                                                                    let uu____80680
+                                                                    let uu____80693
                                                                     =
-                                                                    let uu____80692
+                                                                    let uu____80705
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "select_string3 \"def\" 5 6 7"
                                                                      in
-                                                                    let uu____80696
+                                                                    let uu____80709
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "6"  in
                                                                     ((Prims.parse_int "3036"),
-                                                                    uu____80692,
-                                                                    uu____80696)
+                                                                    uu____80705,
+                                                                    uu____80709)
                                                                      in
-                                                                    let uu____80706
+                                                                    let uu____80719
                                                                     =
-                                                                    let uu____80720
+                                                                    let uu____80733
                                                                     =
-                                                                    let uu____80732
+                                                                    let uu____80745
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "idd T"
                                                                      in
-                                                                    let uu____80736
+                                                                    let uu____80749
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "T"  in
                                                                     ((Prims.parse_int "305"),
-                                                                    uu____80732,
-                                                                    uu____80736)
+                                                                    uu____80745,
+                                                                    uu____80749)
                                                                      in
-                                                                    let uu____80746
+                                                                    let uu____80759
                                                                     =
-                                                                    let uu____80760
+                                                                    let uu____80773
                                                                     =
-                                                                    let uu____80772
+                                                                    let uu____80785
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "recons [T]"
                                                                      in
-                                                                    let uu____80776
+                                                                    let uu____80789
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[T]"  in
                                                                     ((Prims.parse_int "306"),
-                                                                    uu____80772,
-                                                                    uu____80776)
+                                                                    uu____80785,
+                                                                    uu____80789)
                                                                      in
-                                                                    let uu____80786
+                                                                    let uu____80799
                                                                     =
-                                                                    let uu____80800
+                                                                    let uu____80813
                                                                     =
-                                                                    let uu____80812
+                                                                    let uu____80825
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "copy_tb_list_2 [T;F;T;F;T;F;F]"
                                                                      in
-                                                                    let uu____80816
+                                                                    let uu____80829
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[T;F;T;F;T;F;F]"
                                                                      in
                                                                     ((Prims.parse_int "307"),
-                                                                    uu____80812,
-                                                                    uu____80816)
+                                                                    uu____80825,
+                                                                    uu____80829)
                                                                      in
-                                                                    let uu____80826
+                                                                    let uu____80839
                                                                     =
-                                                                    let uu____80840
+                                                                    let uu____80853
                                                                     =
-                                                                    let uu____80852
+                                                                    let uu____80865
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "copy_list_2    [T;F;T;F;T;F;F]"
                                                                      in
-                                                                    let uu____80856
+                                                                    let uu____80869
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[T;F;T;F;T;F;F]"
                                                                      in
                                                                     ((Prims.parse_int "308"),
-                                                                    uu____80852,
-                                                                    uu____80856)
+                                                                    uu____80865,
+                                                                    uu____80869)
                                                                      in
-                                                                    let uu____80866
+                                                                    let uu____80879
                                                                     =
-                                                                    let uu____80880
+                                                                    let uu____80893
                                                                     =
-                                                                    let uu____80892
+                                                                    let uu____80905
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "rev [T; F; F]"
                                                                      in
-                                                                    let uu____80896
+                                                                    let uu____80909
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[F; F; T]"
                                                                      in
                                                                     ((Prims.parse_int "304"),
-                                                                    uu____80892,
-                                                                    uu____80896)
+                                                                    uu____80905,
+                                                                    uu____80909)
                                                                      in
-                                                                    let uu____80906
+                                                                    let uu____80919
                                                                     =
-                                                                    let uu____80920
+                                                                    let uu____80933
                                                                     =
-                                                                    let uu____80932
+                                                                    let uu____80945
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "rev [[T]; [F; T]]"
                                                                      in
-                                                                    let uu____80936
+                                                                    let uu____80949
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "[[F; T]; [T]]"
                                                                      in
                                                                     ((Prims.parse_int "305"),
-                                                                    uu____80932,
-                                                                    uu____80936)
+                                                                    uu____80945,
+                                                                    uu____80949)
                                                                      in
-                                                                    let uu____80946
+                                                                    let uu____80959
                                                                     =
-                                                                    let uu____80960
+                                                                    let uu____80973
                                                                     =
-                                                                    let uu____80972
+                                                                    let uu____80985
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "x1"  in
-                                                                    let uu____80976
+                                                                    let uu____80989
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "6"  in
                                                                     ((Prims.parse_int "309"),
-                                                                    uu____80972,
-                                                                    uu____80976)
+                                                                    uu____80985,
+                                                                    uu____80989)
                                                                      in
-                                                                    let uu____80986
+                                                                    let uu____80999
                                                                     =
-                                                                    let uu____81000
+                                                                    let uu____81013
                                                                     =
-                                                                    let uu____81012
+                                                                    let uu____81025
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "x2"  in
-                                                                    let uu____81016
+                                                                    let uu____81029
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "2"  in
                                                                     ((Prims.parse_int "310"),
-                                                                    uu____81012,
-                                                                    uu____81016)
+                                                                    uu____81025,
+                                                                    uu____81029)
                                                                      in
-                                                                    let uu____81026
+                                                                    let uu____81039
                                                                     =
-                                                                    let uu____81040
+                                                                    let uu____81053
                                                                     =
-                                                                    let uu____81052
+                                                                    let uu____81065
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "7 + 3"
                                                                      in
-                                                                    let uu____81056
+                                                                    let uu____81069
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "10"  in
                                                                     ((Prims.parse_int "401"),
-                                                                    uu____81052,
-                                                                    uu____81056)
+                                                                    uu____81065,
+                                                                    uu____81069)
                                                                      in
-                                                                    let uu____81066
+                                                                    let uu____81079
                                                                     =
-                                                                    let uu____81080
+                                                                    let uu____81093
                                                                     =
-                                                                    let uu____81092
+                                                                    let uu____81105
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "true && false"
                                                                      in
-                                                                    let uu____81096
+                                                                    let uu____81109
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "false"
                                                                      in
                                                                     ((Prims.parse_int "402"),
-                                                                    uu____81092,
-                                                                    uu____81096)
+                                                                    uu____81105,
+                                                                    uu____81109)
                                                                      in
-                                                                    let uu____81106
+                                                                    let uu____81119
                                                                     =
-                                                                    let uu____81120
+                                                                    let uu____81133
                                                                     =
-                                                                    let uu____81132
+                                                                    let uu____81145
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "3 = 5"
                                                                      in
-                                                                    let uu____81136
+                                                                    let uu____81149
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "false"
                                                                      in
                                                                     ((Prims.parse_int "403"),
-                                                                    uu____81132,
-                                                                    uu____81136)
+                                                                    uu____81145,
+                                                                    uu____81149)
                                                                      in
-                                                                    let uu____81146
+                                                                    let uu____81159
                                                                     =
-                                                                    let uu____81160
+                                                                    let uu____81173
                                                                     =
-                                                                    let uu____81172
+                                                                    let uu____81185
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "\"abc\" ^ \"def\""
                                                                      in
-                                                                    let uu____81176
+                                                                    let uu____81189
                                                                     =
                                                                     FStar_Tests_Pars.tc_nbe
                                                                     "\"abcdef\""
                                                                      in
                                                                     ((Prims.parse_int "404"),
-                                                                    uu____81172,
-                                                                    uu____81176)
+                                                                    uu____81185,
+                                                                    uu____81189)
                                                                      in
-                                                                    [uu____81160]
+                                                                    [uu____81173]
                                                                      in
-                                                                    uu____81120
+                                                                    uu____81133
                                                                     ::
-                                                                    uu____81146
+                                                                    uu____81159
                                                                      in
-                                                                    uu____81080
+                                                                    uu____81093
                                                                     ::
-                                                                    uu____81106
+                                                                    uu____81119
                                                                      in
-                                                                    uu____81040
+                                                                    uu____81053
                                                                     ::
-                                                                    uu____81066
+                                                                    uu____81079
                                                                      in
-                                                                    uu____81000
+                                                                    uu____81013
                                                                     ::
-                                                                    uu____81026
+                                                                    uu____81039
                                                                      in
-                                                                    uu____80960
+                                                                    uu____80973
                                                                     ::
-                                                                    uu____80986
+                                                                    uu____80999
                                                                      in
-                                                                    uu____80920
+                                                                    uu____80933
                                                                     ::
-                                                                    uu____80946
+                                                                    uu____80959
                                                                      in
-                                                                    uu____80880
+                                                                    uu____80893
                                                                     ::
-                                                                    uu____80906
+                                                                    uu____80919
                                                                      in
-                                                                    uu____80840
+                                                                    uu____80853
                                                                     ::
-                                                                    uu____80866
+                                                                    uu____80879
                                                                      in
-                                                                    uu____80800
+                                                                    uu____80813
                                                                     ::
-                                                                    uu____80826
+                                                                    uu____80839
                                                                      in
-                                                                    uu____80760
+                                                                    uu____80773
                                                                     ::
-                                                                    uu____80786
+                                                                    uu____80799
                                                                      in
-                                                                    uu____80720
+                                                                    uu____80733
                                                                     ::
-                                                                    uu____80746
+                                                                    uu____80759
                                                                      in
-                                                                    uu____80680
+                                                                    uu____80693
                                                                     ::
-                                                                    uu____80706
+                                                                    uu____80719
                                                                      in
-                                                                    uu____80640
+                                                                    uu____80653
                                                                     ::
-                                                                    uu____80666
+                                                                    uu____80679
                                                                      in
-                                                                    uu____80600
+                                                                    uu____80613
                                                                     ::
-                                                                    uu____80626
+                                                                    uu____80639
                                                                      in
-                                                                    uu____80560
+                                                                    uu____80573
                                                                     ::
-                                                                    uu____80586
+                                                                    uu____80599
                                                                      in
-                                                                    uu____80520
+                                                                    uu____80533
                                                                     ::
-                                                                    uu____80546
+                                                                    uu____80559
                                                                      in
-                                                                    uu____80480
+                                                                    uu____80493
                                                                     ::
-                                                                    uu____80506
+                                                                    uu____80519
                                                                      in
-                                                                    uu____80440
+                                                                    uu____80453
                                                                     ::
-                                                                    uu____80466
+                                                                    uu____80479
                                                                      in
-                                                                    uu____80400
+                                                                    uu____80413
                                                                     ::
-                                                                    uu____80426
+                                                                    uu____80439
                                                                      in
-                                                                    uu____80360
+                                                                    uu____80373
                                                                     ::
-                                                                    uu____80386
+                                                                    uu____80399
                                                                      in
-                                                                    uu____80320
+                                                                    uu____80333
                                                                     ::
-                                                                    uu____80346
+                                                                    uu____80359
                                                                      in
-                                                                    uu____80280
+                                                                    uu____80293
                                                                     ::
-                                                                    uu____80306
+                                                                    uu____80319
                                                                      in
-                                                                   uu____80240
+                                                                   uu____80253
                                                                     ::
-                                                                    uu____80266
+                                                                    uu____80279
                                                                     in
-                                                                 uu____80200
+                                                                 uu____80213
                                                                    ::
-                                                                   uu____80226
+                                                                   uu____80239
                                                                   in
-                                                               uu____80160 ::
-                                                                 uu____80186
+                                                               uu____80173 ::
+                                                                 uu____80199
                                                                 in
-                                                             uu____80120 ::
-                                                               uu____80146
+                                                             uu____80133 ::
+                                                               uu____80159
                                                               in
-                                                           uu____80080 ::
-                                                             uu____80106
+                                                           uu____80093 ::
+                                                             uu____80119
                                                             in
-                                                         uu____80040 ::
-                                                           uu____80066
+                                                         uu____80053 ::
+                                                           uu____80079
                                                           in
-                                                       uu____80000 ::
-                                                         uu____80026
+                                                       uu____80013 ::
+                                                         uu____80039
                                                         in
-                                                     uu____79960 ::
-                                                       uu____79986
+                                                     uu____79973 ::
+                                                       uu____79999
                                                       in
-                                                   uu____79920 :: uu____79946
+                                                   uu____79933 :: uu____79959
                                                     in
-                                                 uu____79880 :: uu____79906
+                                                 uu____79893 :: uu____79919
                                                   in
-                                               uu____79840 :: uu____79866  in
-                                             uu____79800 :: uu____79826  in
-                                           uu____79760 :: uu____79786  in
-                                         uu____79718 :: uu____79746  in
-                                       uu____79676 :: uu____79704  in
-                                     uu____79609 :: uu____79662  in
-                                   uu____79542 :: uu____79595  in
-                                 uu____79475 :: uu____79528  in
-                               uu____79431 :: uu____79461  in
-                             uu____79390 :: uu____79417  in
-                           uu____79349 :: uu____79376  in
-                         uu____79310 :: uu____79335  in
-                       uu____79275 :: uu____79296  in
-                     uu____79240 :: uu____79261  in
-                   uu____79205 :: uu____79226  in
-                 uu____79170 :: uu____79191  in
-               uu____79135 :: uu____79156  in
-             uu____79083 :: uu____79121  in
-           uu____79019 :: uu____79069  in
-         uu____78970 :: uu____79005  in
-       uu____78921 :: uu____78956  in
-     uu____78879 :: uu____78907  in
-   uu____78831 :: uu____78865)
+                                               uu____79853 :: uu____79879  in
+                                             uu____79813 :: uu____79839  in
+                                           uu____79773 :: uu____79799  in
+                                         uu____79731 :: uu____79759  in
+                                       uu____79689 :: uu____79717  in
+                                     uu____79622 :: uu____79675  in
+                                   uu____79555 :: uu____79608  in
+                                 uu____79488 :: uu____79541  in
+                               uu____79444 :: uu____79474  in
+                             uu____79403 :: uu____79430  in
+                           uu____79362 :: uu____79389  in
+                         uu____79323 :: uu____79348  in
+                       uu____79288 :: uu____79309  in
+                     uu____79253 :: uu____79274  in
+                   uu____79218 :: uu____79239  in
+                 uu____79183 :: uu____79204  in
+               uu____79148 :: uu____79169  in
+             uu____79096 :: uu____79134  in
+           uu____79032 :: uu____79082  in
+         uu____78983 :: uu____79018  in
+       uu____78934 :: uu____78969  in
+     uu____78892 :: uu____78920  in
+   uu____78844 :: uu____78878)
   
 let run_either :
-  'Auu____81824 .
+  'Auu____81837 .
     Prims.int ->
-      'Auu____81824 ->
+      'Auu____81837 ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
           (FStar_TypeChecker_Env.env ->
-             'Auu____81824 -> FStar_Syntax_Syntax.term)
+             'Auu____81837 -> FStar_Syntax_Syntax.term)
             -> unit
   =
   fun i  ->
     fun r  ->
       fun expected  ->
         fun normalizer  ->
-          (let uu____81862 = FStar_Util.string_of_int i  in
-           FStar_Util.print1 "%s: ... \n\n" uu____81862);
+          (let uu____81875 = FStar_Util.string_of_int i  in
+           FStar_Util.print1 "%s: ... \n\n" uu____81875);
           (let tcenv = FStar_Tests_Pars.init ()  in
-           (let uu____81867 = FStar_Main.process_args ()  in
-            FStar_All.pipe_right uu____81867 (fun a1  -> ()));
+           (let uu____81880 = FStar_Main.process_args ()  in
+            FStar_All.pipe_right uu____81880 (fun a1  -> ()));
            (let x1 = normalizer tcenv r  in
             FStar_Options.init ();
             FStar_Options.set_option "print_universes"
               (FStar_Options.Bool true);
             FStar_Options.set_option "print_implicits"
               (FStar_Options.Bool true);
-            (let uu____81890 =
-               let uu____81892 = FStar_Syntax_Util.unascribe x1  in
-               FStar_Tests_Util.term_eq uu____81892 expected  in
-             FStar_Tests_Util.always i uu____81890)))
+            (let uu____81903 =
+               let uu____81905 = FStar_Syntax_Util.unascribe x1  in
+               FStar_Tests_Util.term_eq uu____81905 expected  in
+             FStar_Tests_Util.always i uu____81903)))
   
 let (run_interpreter :
   Prims.int ->
@@ -1499,11 +1499,11 @@ let (run_interpreter_with_time :
   fun i  ->
     fun r  ->
       fun expected  ->
-        let interp uu____81971 = run_interpreter i r expected  in
-        let uu____81972 =
-          let uu____81973 = FStar_Util.return_execution_time interp  in
-          FStar_Pervasives_Native.snd uu____81973  in
-        (i, uu____81972)
+        let interp uu____81984 = run_interpreter i r expected  in
+        let uu____81985 =
+          let uu____81986 = FStar_Util.return_execution_time interp  in
+          FStar_Pervasives_Native.snd uu____81986  in
+        (i, uu____81985)
   
 let (run_nbe_with_time :
   Prims.int ->
@@ -1514,52 +1514,52 @@ let (run_nbe_with_time :
   fun i  ->
     fun r  ->
       fun expected  ->
-        let nbe1 uu____82011 = run_nbe i r expected  in
-        let uu____82012 =
-          let uu____82013 = FStar_Util.return_execution_time nbe1  in
-          FStar_Pervasives_Native.snd uu____82013  in
-        (i, uu____82012)
+        let nbe1 uu____82024 = run_nbe i r expected  in
+        let uu____82025 =
+          let uu____82026 = FStar_Util.return_execution_time nbe1  in
+          FStar_Pervasives_Native.snd uu____82026  in
+        (i, uu____82025)
   
 let run_tests :
-  'Auu____82024 .
+  'Auu____82037 .
     (Prims.int ->
        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-           'Auu____82024)
-      -> 'Auu____82024 Prims.list
+           'Auu____82037)
+      -> 'Auu____82037 Prims.list
   =
   fun run1  ->
     FStar_Options.__set_unit_tests ();
     (let l =
        FStar_List.map
-         (fun uu___742_82076  ->
-            match uu___742_82076 with | (no,test,res) -> run1 no test res)
+         (fun uu___742_82089  ->
+            match uu___742_82089 with | (no,test,res) -> run1 no test res)
          tests
         in
      FStar_Options.__clear_unit_tests (); l)
   
 let (run_all_nbe : unit -> unit) =
-  fun uu____82107  ->
+  fun uu____82120  ->
     FStar_Util.print_string "Testing NBE\n";
-    (let uu____82110 = run_tests run_nbe  in
+    (let uu____82123 = run_tests run_nbe  in
      FStar_Util.print_string "NBE ok\n")
   
 let (run_all_interpreter : unit -> unit) =
-  fun uu____82119  ->
+  fun uu____82132  ->
     FStar_Util.print_string "Testing the normalizer\n";
-    (let uu____82122 = run_tests run_interpreter  in
+    (let uu____82135 = run_tests run_interpreter  in
      FStar_Util.print_string "Normalizer ok\n")
   
 let (run_all_nbe_with_time :
   unit -> (Prims.int * FStar_BaseTypes.float) Prims.list) =
-  fun uu____82138  ->
+  fun uu____82151  ->
     FStar_Util.print_string "Testing NBE\n";
     (let l = run_tests run_nbe_with_time  in
      FStar_Util.print_string "NBE ok\n"; l)
   
 let (run_all_interpreter_with_time :
   unit -> (Prims.int * FStar_BaseTypes.float) Prims.list) =
-  fun uu____82168  ->
+  fun uu____82181  ->
     FStar_Util.print_string "Testing the normalizer\n";
     (let l = run_tests run_interpreter_with_time  in
      FStar_Util.print_string "Normalizer ok\n"; l)
@@ -1572,24 +1572,24 @@ let (run_both_with_time :
   fun i  ->
     fun r  ->
       fun expected  ->
-        let nbe1 uu____82213 = run_nbe i r expected  in
-        let norm1 uu____82219 = run_interpreter i r expected  in
+        let nbe1 uu____82226 = run_nbe i r expected  in
+        let norm1 uu____82232 = run_interpreter i r expected  in
         FStar_Util.measure_execution_time "nbe" nbe1;
         FStar_Util.print_string "\n";
         FStar_Util.measure_execution_time "normalizer" norm1;
         FStar_Util.print_string "\n"
   
 let (compare : unit -> unit) =
-  fun uu____82232  ->
+  fun uu____82245  ->
     FStar_Util.print_string "Comparing times for normalization and nbe\n";
-    (let uu____82235 =
-       let uu____82236 = encode (Prims.parse_int "1000")  in
-       let uu____82238 =
-         let uu____82241 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-         let uu____82242 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-         minus uu____82241 uu____82242  in
-       let_ FStar_Tests_Util.x uu____82236 uu____82238  in
-     run_both_with_time (Prims.parse_int "14") uu____82235 z)
+    (let uu____82248 =
+       let uu____82249 = encode (Prims.parse_int "1000")  in
+       let uu____82251 =
+         let uu____82254 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+         let uu____82255 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+         minus uu____82254 uu____82255  in
+       let_ FStar_Tests_Util.x uu____82249 uu____82251  in
+     run_both_with_time (Prims.parse_int "14") uu____82248 z)
   
 let (compare_times :
   (Prims.int * FStar_BaseTypes.float) Prims.list ->
@@ -1601,26 +1601,26 @@ let (compare_times :
       FStar_List.iter2
         (fun res1  ->
            fun res2  ->
-             let uu____82318 = res1  in
-             match uu____82318 with
+             let uu____82331 = res1  in
+             match uu____82331 with
              | (t1,time_int) ->
-                 let uu____82328 = res2  in
-                 (match uu____82328 with
+                 let uu____82341 = res2  in
+                 (match uu____82341 with
                   | (t2,time_nbe) ->
                       if t1 = t2
                       then
-                        let uu____82340 = FStar_Util.string_of_int t1  in
+                        let uu____82353 = FStar_Util.string_of_int t1  in
                         FStar_Util.print3 "Test %s\nNBE %s\nInterpreter %s\n"
-                          uu____82340 (FStar_Util.string_of_float time_nbe)
+                          uu____82353 (FStar_Util.string_of_float time_nbe)
                           (FStar_Util.string_of_float time_int)
                       else
                         FStar_Util.print_string
                           "Test numbers do not match...\n")) l_int l_nbe
   
 let (run_all : unit -> unit) =
-  fun uu____82351  ->
-    (let uu____82353 = FStar_Syntax_Print.term_to_string znat  in
-     FStar_Util.print1 "%s" uu____82353);
+  fun uu____82364  ->
+    (let uu____82366 = FStar_Syntax_Print.term_to_string znat  in
+     FStar_Util.print1 "%s" uu____82366);
     (let l_int = run_all_interpreter_with_time ()  in
      let l_nbe = run_all_nbe_with_time ()  in compare_times l_int l_nbe)
   
