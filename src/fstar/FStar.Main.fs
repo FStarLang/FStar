@@ -113,7 +113,7 @@ let go _ =
         (* --dep: Just compute and print the transitive dependency graph;
                   don't verify anything *)
         if Options.dep() <> None
-        then let _, deps = Parser.Dep.collect filenames FStar.Universal.load_parsing_data_from_cache in
+        then let _, deps = Parser.Dep.collect filenames FStar.CheckedFiles.load_parsing_data_from_cache in
              Parser.Dep.print deps
 
         (* Input validation: should this go to process_args? *)
@@ -163,7 +163,7 @@ let go _ =
 
         (* Normal, batch mode compiler *)
         else if List.length filenames >= 1 then begin //normal batch mode
-          let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames FStar.Universal.load_parsing_data_from_cache in
+          let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames FStar.CheckedFiles.load_parsing_data_from_cache in
           let tcrs, env, delta_env = Universal.batch_mode_tc filenames dep_graph in
           let module_names_and_times =
             tcrs
