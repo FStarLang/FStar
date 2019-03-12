@@ -20,6 +20,7 @@ open FStar.All
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
+open FStar.CheckedFiles
 open FStar.Universal
 module E = FStar.Errors
 
