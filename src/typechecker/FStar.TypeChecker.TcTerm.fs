@@ -2403,13 +2403,13 @@ and maybe_intro_smt_lemma env lem_typ c2 =
                    let u = env.universe_of env (fst b).sort in
                    let env = Env.push_binders env [b] in
                    env, u::us)
-                 (env_x, [])
+                 (env, [])
                  bs
              in
              List.rev us
          in
-         let quant = U.smt_lemma_as_forall c1.res_typ universe_of_binders in
-         TcUtil.weaken_precondition env_x c2 (NonTrivial quant)
+         let quant = U.smt_lemma_as_forall lem_typ universe_of_binders in
+         TcUtil.weaken_precondition env c2 (NonTrivial quant)
     else c2
 
 (******************************************************************************)
@@ -2568,11 +2568,11 @@ and check_inner_let_rec env top =
           let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
-          let c2 =
+          let cres =
             List.fold_right
-              (fun lbs c2 -> maybe_intro_smt_lemma env lb.lbtyp c2)
+              (fun lb cres -> maybe_intro_smt_lemma env lb.lbtyp cres)
               lbs
-              c2
+              cres
           in
           let cres = TcUtil.maybe_assume_result_eq_pure_term env e2 cres in
           let cres = Util.lcomp_set_flags cres [SHOULD_NOT_INLINE] in //cf. issue #1362
