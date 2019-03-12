@@ -2394,6 +2394,24 @@ and check_top_level_let env e =
 
      | _ -> failwith "Impossible"
 
+and maybe_intro_smt_lemma env lem_typ c2 =
+    if U.is_smt_lemma lem_typ
+    then let universe_of_binders bs =
+             let _, us =
+               List.fold_left
+                 (fun (env, us) b ->
+                   let u = env.universe_of env (fst b).sort in
+                   let env = Env.push_binders env [b] in
+                   env, u::us)
+                 (env_x, [])
+                 bs
+             in
+             List.rev us
+         in
+         let quant = U.smt_lemma_as_forall c1.res_typ universe_of_binders in
+         TcUtil.weaken_precondition env_x c2 (NonTrivial quant)
+    else c2
+
 (******************************************************************************)
 (* Checking an inner non-recursive let-binding:                               *)
 (* inner let's are never implicitly generalized                               *)
@@ -2432,23 +2450,7 @@ and check_inner_let env e =
        let x = fst xbinder in
        let env_x = Env.push_bv env x in
        let e2, c2, g2 = tc_term env_x e2 in
-       let c2 =
-         if U.is_smt_lemma c1.res_typ
-         then let universe_of_binders bs =
-                  let _, us =
-                    List.fold_left (fun (env, us) b ->
-                      let u = env.universe_of env (fst b).sort in
-                      let env = Env.push_binders env [b] in
-                      env, u::us)
-                      (env_x, [])
-                      bs
-                  in
-                  List.rev us
-              in
-              let quant = U.smt_lemma_as_forall c1.res_typ universe_of_binders in
-              TcUtil.weaken_precondition env_x c2 (NonTrivial quant)
-         else c2
-       in
+       let c2 = maybe_intro_smt_lemma env_x c1.res_typ c2 in
        let cres =
          TcUtil.maybe_return_e2_and_bind
            e1.pos
@@ -2566,6 +2568,12 @@ and check_inner_let_rec env top =
           let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
+          let c2 =
+            List.fold_right
+              (fun lbs c2 -> maybe_intro_smt_lemma env lb.lbtyp c2)
+              lbs
+              c2
+          in
           let cres = TcUtil.maybe_assume_result_eq_pure_term env e2 cres in
           let cres = Util.lcomp_set_flags cres [SHOULD_NOT_INLINE] in //cf. issue #1362
           let guard = Env.conj_guard g_lbs (Env.close_guard env (List.map S.mk_binder bvs) g2) in
