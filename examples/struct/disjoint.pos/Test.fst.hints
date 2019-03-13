@@ -50,7 +50,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "1996a196f9781331de7defd33235f3fb"
+      "97ab008b0ae3d0129b8fb1d31d4a2b6f"
     ],
     [
       "Test.callee",
@@ -125,7 +125,7 @@
         "typing_Test.struct_t"
       ],
       0,
-      "3d8c8849d22cf4f2e1841df2ec37e06d"
+      "1039796a8a7bc86148194ec8c70694ec"
     ],
     [
       "Test.more_struct",
@@ -179,7 +179,7 @@
         "typing_Test.struct_t"
       ],
       0,
-      "a4fab6bf34eb3775843e5d7bd6faa349"
+      "bccf87362d4de0384647d5612640f8f7"
     ],
     [
       "Test.caller",
@@ -342,7 +342,7 @@
         "typing_Tm_abs_35dde1e06a2e2d55c427174b04c5ef2d"
       ],
       0,
-      "7a10cb451939229f6d166a20672ec8e5"
+      "e22d6c307e27cce556174cc2968b09a5"
     ]
   ]
 ]
