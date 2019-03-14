@@ -206,6 +206,27 @@ let as_seq_gsub #_ #_ #_ h b i len _ =
   | Buffer _ content idx len0 ->
     Seq.slice_slice (HS.sel h content) (U32.v idx) (U32.v idx + U32.v len0) (U32.v i) (U32.v i + U32.v len)
 
+let live_same_addresses_equal_types_and_preorders'
+  (#a1 #a2: Type0)
+  (#rrel1 #rel1: srel a1)
+  (#rrel2 #rel2: srel a2)
+  (b1: mbuffer a1 rrel1 rel1)
+  (b2: mbuffer a2 rrel2 rel2)
+  (h: HS.mem)
+: Lemma
+  (requires (frameOf b1 == frameOf b2 /\ as_addr b1 == as_addr b2 /\ live h b1 /\ live h b2 /\ (~ (g_is_null b1 /\ g_is_null b2))))
+  (ensures (
+    a1 == a2 /\
+    rrel1 == rrel2
+  ))
+=   Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();
+    Seq.lemma_equal_instances_implies_equal_types ()
+
+let live_same_addresses_equal_types_and_preorders
+  #_ #_ #_ #_ #_ #_ b1 b2 h
+= Classical.move_requires (live_same_addresses_equal_types_and_preorders' b1 b2) h
+
 (* Untyped view of buffers, used only to implement the generic modifies clause. DO NOT USE in client code. *)
 
 noeq
@@ -473,6 +494,9 @@ let ubuffer_includes_ubuffer_preserved #r #a larger smaller h1 h2 =
   )*)
 
 let ubuffer_disjoint' (x1 x2: ubuffer_) : GTot Type0 =
+  if x1.b_length = 0 || x2.b_length = 0
+  then True
+  else
   (x1.b_max_length == x2.b_max_length /\
     (x1.b_offset + x1.b_length <= x2.b_offset \/
      x2.b_offset + x2.b_length <= x1.b_offset))
@@ -1216,6 +1240,14 @@ let modifies_remove_new_locs l_fresh l_aux l_goal h1 h2 h3 =
 let disjoint_neq #_ #_ #_ #_ #_ #_ b1 b2 =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2 then
     MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
+  else ()
+
+let empty_disjoint
+  #t1 #t2 #rrel1 #rel1 #rrel2 #rel2 b1 b2
+= let r = frameOf b1 in
+  let a = as_addr b1 in
+  if r = frameOf b2 && a = as_addr b2 then
+    MG.loc_disjoint_aloc_intro #_ #cls #r #a #r #a (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
   else ()
 
 (*
