@@ -127,6 +127,7 @@ let (^->) (a:Type) (b:Type)
 (* `on_dom a f`:
      A convenience function to introduce a restricted, dependent function
  *)
+unfold
 let on_dom (a:Type) (#b:a -> Type) (f:arrow a b)
   : restricted_t a b
   = on_domain a f

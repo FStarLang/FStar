@@ -898,6 +898,22 @@ val modifies_upd
   (requires (HS.contains h r))
   (ensures (modifies #_ #c (loc_mreference r) h (HS.upd h r v)))
 
+val modifies_strengthen
+  (#al: aloc_t) (#c: cls al) (l: loc c) (#r0: HS.rid) (#a0: nat) (al0: al r0 a0) (h h' : HS.mem)
+  (alocs: (
+    (f: ((t: Type) -> (pre: Preorder.preorder t) -> (m: HS.mreference t pre) -> Lemma
+      (requires (HS.frameOf m == r0 /\ HS.as_addr m == a0 /\ HS.contains h m))
+      (ensures (HS.contains h' m))
+    )) ->
+    (x: al r0 a0) ->
+    Lemma
+    (requires (c.aloc_disjoint x al0 /\ loc_disjoint (loc_of_aloc x) l))
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (requires (modifies (loc_union l (loc_addresses true r0 (Set.singleton a0))) h h'))
+  (ensures (modifies (loc_union l (loc_of_aloc al0)) h h'))
+
 (** BEGIN TODO: move to FStar.Monotonic.HyperStack *)
 
 val does_not_contain_addr
