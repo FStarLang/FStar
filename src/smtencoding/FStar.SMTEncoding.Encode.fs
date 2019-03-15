@@ -1112,6 +1112,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      end
 
     | Sig_let((is_rec, bindings), _) ->
+      let bindings =
+        List.map
+          (fun lb -> let def = N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env.tcenv lb.lbdef in
+                  let typ = N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env.tcenv lb.lbtyp in
+                  {lb with lbdef=def; lbtyp=typ})
+          bindings
+      in
       encode_top_level_let env (is_rec, bindings) se.sigquals
 
     | Sig_bundle(ses, _) ->
