@@ -4,8 +4,9 @@
 # By default it always look for the latest container available
 # In case you would like to reference a specific commit,
 # replace latest with the commit id from github using 12 characters.
+ARG DOCKERHUBPROJECT
 ARG COMMITID
-FROM everest-ci-linux:${COMMITID}
+FROM ${DOCKERHUBPROJECT}everest-ci-linux:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS

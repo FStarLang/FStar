@@ -37,7 +37,7 @@ val parsing_data_of: deps -> string -> parsing_data
 val collect: list<string> -> (string -> option<parsing_data>) -> list<string> * deps
 val deps_of : deps -> string -> list<string>
 val print : deps -> unit
-val hash_dependences: deps -> source_file:string -> checked_file:string -> option<(list<(string*string)>)>
+val hash_dependences: deps -> source_file:string -> checked_file:string -> either<string, (list<(string*string)>)>
 val print_digest: list<(string * string)> -> string
 val module_has_interface: deps -> module_name:Ident.lident -> bool
 val deps_has_implementation: deps -> module_name:Ident.lident -> bool

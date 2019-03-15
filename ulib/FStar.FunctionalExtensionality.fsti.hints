@@ -1,5 +1,5 @@
 [
-  "uê^xì;IE\u0015\u0001ÀTçcr~",
+  "CXﬂ@fƒ¬ºíxù Ä8…®",
   [
     [
       "FStar.FunctionalExtensionality.on_dom",
@@ -11,7 +11,7 @@
         "lemma_FStar.FunctionalExtensionality.idempotence_on_domain"
       ],
       0,
-      "f6ee90ad473364ce2f2fafb106091a32"
+      "89356e0e086d1ce85468d86e3d9c4bb1"
     ],
     [
       "FStar.FunctionalExtensionality.on_dom_g",
@@ -23,7 +23,7 @@
         "lemma_FStar.FunctionalExtensionality.idempotence_on_domain_g"
       ],
       0,
-      "e88bfeacd80d8f150008964e1b130a8f"
+      "2dd4dbd9f289613a30cb7a68aafbc237"
     ]
   ]
 ]

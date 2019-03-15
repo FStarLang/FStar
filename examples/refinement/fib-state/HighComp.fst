@@ -100,7 +100,7 @@ effect Hi (a:Type)
 
 // GM: Is this qualifying by the current module? How the hell is that succeeding, given #451?
 // GM: Also what's the difference with `H`?
-effect HTot (a:Type) = HighComp.HIGH a (null_wp a)
+effect HTot (a:Type) = HIGH a (null_wp a)
 
 
 (** WP combinators *)
