@@ -4933,7 +4933,9 @@ and (encode_sigelt' :
                     FStar_TypeChecker_Env.Simplify;
                     FStar_TypeChecker_Env.Primops;
                     FStar_TypeChecker_Env.AllowUnboundUniverses;
-                    FStar_TypeChecker_Env.EraseUniverses]  in
+                    FStar_TypeChecker_Env.EraseUniverses;
+                    FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
+                     in
                   let def =
                     FStar_TypeChecker_Normalize.normalize steps
                       env.FStar_SMTEncoding_Env.tcenv

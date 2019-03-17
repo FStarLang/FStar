@@ -1115,7 +1115,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       let bindings =
         List.map
           (fun lb ->
-            let steps = [Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.AllowUnboundUniverses; Env.EraseUniverses] in
+            let steps = [Env.Eager_unfolding;
+                         Env.Simplify;
+                         Env.Primops;
+                         Env.AllowUnboundUniverses;
+                         Env.EraseUniverses;
+                         Env.Exclude Env.Zeta] in
             let def = N.normalize steps env.tcenv lb.lbdef in
             let typ = N.normalize steps env.tcenv lb.lbtyp in
             {lb with lbdef=def; lbtyp=typ})
