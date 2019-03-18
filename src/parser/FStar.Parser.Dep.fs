@@ -180,25 +180,28 @@ let resolve_module_name (file_system_map:files_for_module_name) (key:module_name
       | Some (_, Some fn) -> Some (lowercase_module_name fn)
       | _ -> None
 
-let interface_of (file_system_map:files_for_module_name) (key:module_name)
+let interface_of_internal (file_system_map:files_for_module_name) (key:module_name)
     : option<file_name> =
     match BU.smap_try_find file_system_map key with
     | Some (Some iface, _) -> Some iface
     | _ -> None
 
-let implementation_of (file_system_map:files_for_module_name) (key:module_name)
+let implementation_of_internal (file_system_map:files_for_module_name) (key:module_name)
     : option<file_name> =
     match BU.smap_try_find file_system_map key with
     | Some (_, Some impl) -> Some impl
     | _ -> None
 
+let interface_of deps key = interface_of_internal deps.file_system_map key
+let implementation_of deps key = implementation_of_internal deps.file_system_map key
+
 let has_interface (file_system_map:files_for_module_name) (key:module_name)
     : bool =
-    Option.isSome (interface_of file_system_map key)
+    Option.isSome (interface_of_internal file_system_map key)
 
 let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
-    Option.isSome (implementation_of file_system_map key)
+    Option.isSome (implementation_of_internal file_system_map key)
 
 
 let cache_file_name_internal (fn:string) : string * bool =  //bool indicates if the cache file exists
@@ -238,7 +241,7 @@ let file_of_dep_aux
     match d with
     | UseInterface key ->
       //This key always resolves to an interface source file
-      (match interface_of file_system_map key with
+      (match interface_of_internal file_system_map key with
        | None ->
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
          raise_err (Errors.Fatal_MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
@@ -250,21 +253,21 @@ let file_of_dep_aux
       if cmd_line_has_impl key //unless the cmd line contains 'a.fst'
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
-           then maybe_use_cache_of (Option.get (implementation_of file_system_map key))
+           then maybe_use_cache_of (Option.get (implementation_of_internal file_system_map key))
            else raise_err (Errors.Fatal_MissingExposeInterfacesOption,
                            BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
                                        Alternatively, invoking fstar with %s on the command line breaks \
                                        the abstraction imposed by its interface %s; \
                                        if you really want this behavior add the option '--expose_interfaces'"
                                        key
-                                       (Option.get (implementation_of file_system_map key))
-                                       (Option.get (interface_of file_system_map key)))
-      else maybe_use_cache_of (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
+                                       (Option.get (implementation_of_internal file_system_map key))
+                                       (Option.get (interface_of_internal file_system_map key)))
+      else maybe_use_cache_of (Option.get (interface_of_internal file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
     | UseImplementation key
     | FriendImplementation key ->
-        match implementation_of file_system_map key with
+        match implementation_of_internal file_system_map key with
         | None ->
           //if d is actually an edge in the dep_graph computed by discover
           //then d is only present if either an interface or an implementation exist
@@ -1111,7 +1114,7 @@ let collect (all_cmd_line_files: list<file_name>)
             | UseInterface f
             | PreferInterface f ->
               begin
-              match implementation_of file_system_map f with
+              match implementation_of_internal file_system_map f with
               | None -> [x]
               | Some fn when fn=filename ->
                 //don't add trivial self-loops
@@ -1169,54 +1172,6 @@ let collect (all_cmd_line_files: list<file_name>)
 let deps_of deps (f:file_name)
     : list<file_name> =
     dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
-
-(* In public interface *)
-let hash_dependences deps fn cache_file =
-    let file_system_map = deps.file_system_map in
-    let all_cmd_line_files = deps.cmd_line_files in
-    let deps = deps.dep_graph in
-    let fn =
-        match FStar.Options.find_file fn with
-        | Some fn -> fn
-        | _ -> fn
-    in
-    let digest_of_file fn =
-        if Options.debug_any()
-        then BU.print2 "%s: contains digest of %s\n" cache_file fn;
-        BU.digest_of_file fn
-    in
-    let module_name = lowercase_module_name fn in
-    let source_hash = digest_of_file fn in
-    let interface_hash =
-        if is_implementation fn
-        && has_interface file_system_map module_name
-        then ["interface", digest_of_file (Option.get (interface_of file_system_map module_name))]
-        else []
-    in
-    let binary_deps = dependences_of file_system_map deps all_cmd_line_files fn
-                |> List.filter (fun fn ->
-                not (is_interface fn &&
-                    lowercase_module_name fn = module_name)) in
-    let binary_deps =
-        FStar.List.sortWith
-          (fun fn1 fn2 ->
-             String.compare (lowercase_module_name fn1)
-                            (lowercase_module_name fn2))
-        binary_deps in
-    let rec hash_deps out = function
-        | [] -> Inr (("source", source_hash)::interface_hash@out)
-        | fn::deps ->
-          let cache_fn = cache_file_name fn in
-          let digest = if Util.file_exists cache_fn then Some (digest_of_file fn) else None in
-          match digest with
-          | None ->
-            if Options.debug_any()
-            then BU.print2 "%s: missed digest of file %s\n" cache_file (FStar.Util.basename cache_fn);
-            Inl (BU.format1 "cache file %s does not exist" cache_fn)
-          | Some dig ->
-            hash_deps ((lowercase_module_name fn, dig) :: out) deps
-    in
-    hash_deps [] binary_deps
 
 (* In public interface *)
 let print_digest (dig:list<(string * string)>) : string =
@@ -1298,8 +1253,8 @@ let print_full (deps:deps) : unit =
               if should_visit lc_module_name then begin
                  let ml_file_opt = mark_visiting lc_module_name in
                  //visit all its dependences
-                 visit_file (implementation_of deps.file_system_map lc_module_name);
-                 visit_file (interface_of deps.file_system_map lc_module_name);
+                 visit_file (implementation_of deps lc_module_name);
+                 visit_file (interface_of deps lc_module_name);
                  //and then emit this one's ML file
                  emit_output_file_opt ml_file_opt
               end;
@@ -1325,7 +1280,7 @@ let print_full (deps:deps) : unit =
           let iface_deps =
               if is_interface file_name
               then None
-              else match interface_of deps.file_system_map (lowercase_module_name file_name) with
+              else match interface_of deps (lowercase_module_name file_name) with
                    | None ->
                      None
                    | Some iface ->
