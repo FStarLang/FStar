@@ -165,7 +165,8 @@ let go _ =
         (* Normal, batch mode compiler *)
         else if List.length filenames >= 1 then begin //normal batch mode
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames FStar.CheckedFiles.load_parsing_data_from_cache in
-          let tcrs, env, delta_env = Universal.batch_mode_tc filenames dep_graph in
+          let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in
+          ignore (cleanup env);
           let module_names_and_times =
             tcrs
             |> List.map (fun tcr ->
