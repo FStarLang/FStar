@@ -199,11 +199,7 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
       end
 
 
-(*
- * Read parsing data from the checked file
- * This function is passed as a callback to Parser.Dep
- *)
-let load_parsing_data_from_cache file_name :option<Parser.Dep.parsing_data> =
+let load_parsing_data_from_cache file_name =
   let cache_file =  //AR: why are we catching this exception?
     try
      Parser.Dep.cache_file_name file_name |> Some
@@ -219,49 +215,43 @@ let load_parsing_data_from_cache file_name :option<Parser.Dep.parsing_data> =
     | None -> failwith "Impossible, after load_checked_file, mcache should have an entry"
 
 
-(***********************************************************************)
-(* Loading and storing cache files                                     *)
-(***********************************************************************)
-let load_module_from_cache
-    : uenv
-    -> string
-    -> option<tc_result> =
-    let already_failed = BU.mk_ref false in
-    fun env fn ->
-      let load_it () =
-        let cache_file = Dep.cache_file_name fn in
-        let fail msg cache_file =
-          //Don't feel too bad if fn is the file on the command line
-          //Also suppress the warning if already given to avoid a deluge
-          let suppress_warning = Options.should_verify_file fn || !already_failed in
-          if not suppress_warning then begin
-            already_failed := true;
-            FStar.Errors.log_issue
-              (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
-              (Errors.Warning_CachedFile,
-               BU.format3
-                 "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
-                 cache_file msg fn)
-          end
-        in
-        load_checked_file_with_tc_result (TcEnv.dep_graph env.env_tcenv) fn cache_file;
-        match BU.smap_try_find mcache cache_file with
-        | Some (Invalid msg, _) -> fail msg cache_file; None
-        | Some (Valid (_, tc_result), _) ->
-          if Options.debug_any () then
-          BU.print1 "Successfully loaded module from checked file %s\n" cache_file;
-          Some tc_result
-        | _ -> failwith "load_checked_file_tc_result must have an Invalid or Valid entry"
+let load_module_from_cache =
+  let already_failed = BU.mk_ref false in
+  fun env fn ->
+    let load_it () =
+      let cache_file = Dep.cache_file_name fn in
+      let fail msg cache_file =
+        //Don't feel too bad if fn is the file on the command line
+        //Also suppress the warning if already given to avoid a deluge
+        let suppress_warning = Options.should_verify_file fn || !already_failed in
+        if not suppress_warning then begin
+          already_failed := true;
+          FStar.Errors.log_issue
+            (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
+            (Errors.Warning_CachedFile,
+             BU.format3
+               "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
+               cache_file msg fn)
+        end
       in
-      Options.profile load_it (fun res ->
-        let msg =
-          if Option.isSome res
-          then "ok"
-          else "failed"
-        in
-        BU.format2 "Loading checked file %s ... %s"
-                     (Dep.cache_file_name fn)
-                     msg)
+      load_checked_file_with_tc_result (TcEnv.dep_graph env.env_tcenv) fn cache_file;
+      match BU.smap_try_find mcache cache_file with
+      | Some (Invalid msg, _) -> fail msg cache_file; None
+      | Some (Valid (_, tc_result), _) ->
+        if Options.debug_any () then
+        BU.print1 "Successfully loaded module from checked file %s\n" cache_file;
+        Some tc_result
+      | _ -> failwith "load_checked_file_tc_result must have an Invalid or Valid entry"
+    in
+    Options.profile load_it (fun res ->
+      let msg =
+        if Option.isSome res
+        then "ok"
+        else "failed"
+      in
+      BU.format2 "Loading checked file %s ... %s"
+                 (Dep.cache_file_name fn)
+                 msg)
 
 
 (*
@@ -270,32 +260,27 @@ let load_module_from_cache
 let store_value_to_cache (cache_file:string) (data:checked_file_entry) :unit =
   BU.save_value_to_file cache_file data
 
-let store_module_to_cache (env:uenv) fn (parsing_data:FStar.Parser.Dep.parsing_data)
-                          (tc_result:tc_result) =
-    if Options.cache_checked_modules()
-    && not (Options.cache_off())
-    then begin
-      let cache_file = FStar.Parser.Dep.cache_file_name fn in
-      let digest =
-        hash_dependences
-        (TcEnv.dep_graph env.env_tcenv)
-        fn
-      in
-      match digest with
-      | Inr hashes ->
-        let tc_result = { tc_result with tc_time=0; } in
+let store_module_to_cache env fn parsing_data tc_result =
+  if Options.cache_checked_modules()
+  && not (Options.cache_off())
+  then begin
+    let cache_file = FStar.Parser.Dep.cache_file_name fn in
+    let digest = hash_dependences (TcEnv.dep_graph env.env_tcenv) fn in
+    match digest with
+    | Inr hashes ->
+      let tc_result = { tc_result with tc_time=0; } in
         
-        //cache_version_number should always be the first field here
-        store_value_to_cache cache_file (cache_version_number,
-                                         hashes,
-                                         BU.digest_of_file fn,
-                                         parsing_data,
-                                         tc_result)
-      | Inl msg ->
-        FStar.Errors.log_issue
-          (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
-                                   (FStar.Range.mk_pos 0 0))
-          (Errors.Warning_FileNotWritten,
-           BU.format2 "%s was not written since %s"
-                      cache_file msg)
-    end
+      //cache_version_number should always be the first field here
+      store_value_to_cache cache_file (cache_version_number,
+                                       hashes,
+                                       BU.digest_of_file fn,
+                                       parsing_data,
+                                       tc_result)
+    | Inl msg ->
+      FStar.Errors.log_issue
+        (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
+                                 (FStar.Range.mk_pos 0 0))
+        (Errors.Warning_FileNotWritten,
+         BU.format2 "%s was not written since %s"
+                    cache_file msg)
+  end
