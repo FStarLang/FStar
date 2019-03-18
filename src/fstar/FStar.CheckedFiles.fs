@@ -23,30 +23,17 @@ open FStar
 open FStar.Errors
 open FStar.Util
 open FStar.Getopt
-open FStar.Ident
 open FStar.Syntax.Syntax
-open FStar.TypeChecker.Common
-open FStar.Dependencies
 open FStar.Extraction.ML.UEnv
 open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
-open FStar.TypeChecker
-open FStar.Tactics
 
 (* Module abbreviations for the universal type-checker  *)
-module DsEnv   = FStar.Syntax.DsEnv
-module TcEnv   = FStar.TypeChecker.Env
 module Syntax  = FStar.Syntax.Syntax
-module Util    = FStar.Syntax.Util
-module Desugar = FStar.ToSyntax.ToSyntax
+module TcEnv   = FStar.TypeChecker.Env
 module SMT     = FStar.SMTEncoding.Solver
-module Const   = FStar.Parser.Const
-module Pars    = FStar.Parser.ParseIt
-module Tc      = FStar.TypeChecker.Tc
-module TcTerm  = FStar.TypeChecker.TcTerm
 module BU      = FStar.Util
 module Dep     = FStar.Parser.Dep
-module NBE     = FStar.TypeChecker.NBE
 
 
 (*
