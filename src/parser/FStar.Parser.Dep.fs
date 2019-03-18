@@ -443,7 +443,11 @@ let collect_one
   : parsing_data
 =
   let data_from_cache = filename |> get_parsing_data_from_cache in
-  if data_from_cache |> is_some then data_from_cache |> must
+  if data_from_cache |> is_some then begin
+    if Options.debug_any ()
+    then BU.print1 "Reading parsing data for %s from its checked file\n" filename;
+    data_from_cache |> must
+  end
   else
       let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
       let mo_roots : ref<(list<dependence>)> = BU.mk_ref [] in
