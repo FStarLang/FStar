@@ -68,12 +68,14 @@ type checked_file_entry =
  *)
 
 (*
- * Cache files could be loaded in two phases
+ * Cache files could be loaded in two steps
  * 
  * Initially the dependence analysis is just interested in the parsing data
- *   and till that point we don't have the dependences sorted out
+ *   and till that point we don't have the dependences sorted out, because of
+ *   which we can't check the validity of tc data (since we need to check hashes
+ *   of direct dependences etc.)
  *
- * So we read the checked file and mark the validity if tc data as Unknown
+ * So in this step, we read the checked file and mark the validity if tc data as Unknown
  *
  * Later on, we have figured the complete dependence graph, and want to load
  *   the tc data
@@ -127,7 +129,11 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
   | [] -> Inr (("source", source_hash)::interface_hash@out)
   | fn::deps ->
     let cache_fn = Dep.cache_file_name fn in
-    let digest =  //get it from mcache
+    (*
+     * It is crucial to get the digest of fn from mcache, rather than computing it directly
+     * See #1668
+     *)
+    let digest =
       match BU.smap_try_find mcache cache_fn with
       | None ->  //this should really be impossible
         let msg = BU.format2 "For dependency %n, cache file %s is not loaded" fn cache_fn in
@@ -136,7 +142,10 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
         Inl msg
       | Some (Invalid msg, _) -> Inl msg
       | Some (Valid (dig, _), _) -> Inr dig
-      | Some (Unknown _, _) -> failwith "Impossible: unknown entry in the cache for a dependence"
+      | Some (Unknown _, _) ->
+        failwith (BU.format2
+                    "Impossible: unknown entry in the cache for dependence %s of module %s"
+                    fn module_name)
     in
     match digest with
     | Inl msg -> Inl msg
@@ -148,12 +157,12 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
 (*
  * Load a checked file into mcache
  *
- * This is loading the parsing data and tc data as Unknown (unless checked file is invalid)
+ * This is loading the parsing data, and tc data as Unknown (unless checked file is invalid)
  *
- * See above for the two phases of loading the checked files
+ * See above for the two steps of loading the checked files
  *)
 let load_checked_file (fn:string) (checked_fn:string) :unit =
-  if checked_fn |> BU.smap_try_find mcache |> is_some then ()
+  if checked_fn |> BU.smap_try_find mcache |> is_some then ()  //already loaded
   else
     if not (BU.file_exists checked_fn)
     then let msg = BU.format1 "checked file %s does not exist" checked_fn in
@@ -179,21 +188,41 @@ let load_checked_file (fn:string) (checked_fn:string) :unit =
                 else BU.smap_add mcache checked_fn (Unknown (deps_dig, dig, tc_result), Inr parsing_data)
 
 (*
- * Second phase for loading checked files, validates the tc data
+ * Second step for loading checked files, validates the tc data
  *)
 let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:string) :unit =
-  load_checked_file fn checked_fn;
+  load_checked_file fn checked_fn;  //first step, in case some client calls it directly
   match BU.smap_try_find mcache checked_fn with
   | None -> failwith "Impossible, load_checked_file must add an entry to mcache"
   | Some (Invalid _, _)
-  | Some (Valid _, _) -> ()
+  | Some (Valid _, _) -> ()  //already marked Valid or Invalid
   | Some (Unknown (deps_dig, dig, tc_result), parsing_data) ->
     match hash_dependences deps fn with
     | Inl msg ->
       BU.smap_add mcache checked_fn (Invalid msg, parsing_data)
     | Inr deps_dig' ->
       if deps_dig = deps_dig'
-      then BU.smap_add mcache checked_fn (Valid (dig, tc_result), parsing_data)
+      then begin
+        //mark the tc data of the file as valid
+        BU.smap_add mcache checked_fn (Valid (dig, tc_result), parsing_data);
+        //if there exists an interface for it, mark that too as valid
+        //validity of implementaton tc data implies validity of iface tc data
+        let validate_iface_cache () =
+          let iface = fn |> Dep.lowercase_module_name |> Dep.interface_of deps in
+          match iface with
+          | None -> ()
+          | Some iface ->
+            try
+              let iface_checked_fn = iface |> Dep.cache_file_name in
+              match BU.smap_try_find mcache iface_checked_fn with
+              | Some (Unknown (_, dig, tc_result), parsing_data) ->
+                BU.smap_add mcache iface_checked_fn (Valid (dig, tc_result), parsing_data)
+              | _ -> ()
+            with
+              | _ -> ()
+        in
+        validate_iface_cache ()
+      end
       else begin
         if Options.debug_any()
         then begin
