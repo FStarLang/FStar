@@ -148,7 +148,7 @@ let (hash_dependences :
               | FStar_Pervasives_Native.None  ->
                   let msg =
                     FStar_Util.format2
-                      "For dependency %n, cache file %s is not loaded" fn2
+                      "For dependency %s, cache file %s is not loaded" fn2
                       cache_fn
                      in
                   ((let uu____66737 = FStar_Options.debug_any ()  in
