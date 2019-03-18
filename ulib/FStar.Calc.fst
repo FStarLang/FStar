@@ -33,15 +33,15 @@ let calc_init (#t:Type) (x : t) : calc_proof [] x x = CalcRefl
 
 abstract
 let calc_step (#t:Type) (#rs : list (relation t)) (#x #y : t)
-         (p : relation t)                  (* Relation for this step *)
-         (z : t)                           (* Next expression *)
-         (pf : unit -> calc_proof rs x y)  (* Rest of the proof *)
-         (j : unit -> squash (p y z))      (* Justification, thunked to avoid confusion such as #1397 *)
-         : Tot (calc_proof (p::rs) x z)
+         (p : relation t)                           (* Relation for this step *)
+         (z : t)                                    (* Next expression *)
+         (pf : unit -> GTot (calc_proof rs x y))    (* Rest of the proof *)
+         (j : unit -> Tot (squash (p y z)))         (* Justification, thunked to avoid confusion such as #1397 *)
+         : GTot (calc_proof (p::rs) x z)
          (* Need to annotate #p seemingly due to #1486 *)
          = CalcStep rs #p (pf ()) (j ())
 
-let calc_finish (#t:Type) (#rs : list (relation t)) (p : relation t) (#x #y : t) (pf : unit -> calc_proof rs x y)
+let calc_finish (#t:Type) (#rs : list (relation t)) (p : relation t) (#x #y : t) (pf : unit -> GTot (calc_proof rs x y))
   : Lemma (requires (norm [delta_only [`%calc_chain_compatible; `%calc_chain_related];
                            iota;
                            zeta] (calc_chain_compatible rs p)))
