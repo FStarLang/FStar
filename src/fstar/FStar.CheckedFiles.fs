@@ -136,7 +136,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
     let digest =
       match BU.smap_try_find mcache cache_fn with
       | None ->  //this should really be impossible
-        let msg = BU.format2 "For dependency %n, cache file %s is not loaded" fn cache_fn in
+        let msg = BU.format2 "For dependency %s, cache file %s is not loaded" fn cache_fn in
         if Options.debug_any ()
         then BU.print1 "%s\m" msg;
         Inl msg
