@@ -140,15 +140,15 @@ let load_checked_file (fn:string) (checked_fn:string) :unit =
   if checked_fn |> BU.smap_try_find mcache |> is_some then ()
   else
     if not (BU.file_exists checked_fn)
-    then let msg = BU.format1 "Checked file %s does not exist" checked_fn in
+    then let msg = BU.format1 "checked file %s does not exist" checked_fn in
          BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
     else match BU.load_value_from_file checked_fn with
          | None ->
-           let msg = BU.format1 "Checked file %s is corrupt" checked_fn in
+           let msg = BU.format1 "checked file %s is corrupt" checked_fn in
            BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
          | Some (vnum, deps_dig, dig, parsing_data, tc_result) ->
            if vnum <> cache_version_number
-           then let msg = BU.format1 "Checked file %s has incorrect version" checked_fn in
+           then let msg = BU.format1 "checked file %s has incorrect version" checked_fn in
                 BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
            else let current_dig = BU.digest_of_file fn in
                 if dig <> current_dig
@@ -157,7 +157,7 @@ let load_checked_file (fn:string) (checked_fn:string) :unit =
                   BU.print4 "Checked file %s is stale since incorrect digest of %s, \
                     expected: %s, found: %s\n"
                     checked_fn fn current_dig dig;
-                  let msg = BU.format2 "Checked file %s is stale since digest mismatch for %s" checked_fn fn in
+                  let msg = BU.format2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn in
                   BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
                 end
                 else BU.smap_add mcache checked_fn (Unknown (deps_dig, dig, tc_result), Inr parsing_data)
@@ -192,7 +192,7 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
         end;
         let msg =
           BU.format1
-            "Checked file %s is stale since dependence hash mismatch, use --debug yes for more details"
+            "checked file %s is stale (dependence hash mismatch, use --debug yes for more details)"
             checked_fn
         in
         BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
@@ -226,23 +226,31 @@ let load_module_from_cache
     : uenv
     -> string
     -> option<tc_result> =
+    let already_failed = BU.mk_ref false in
     fun env fn ->
       let load_it () =
         let cache_file = Dep.cache_file_name fn in
         let fail msg cache_file =
           //Don't feel too bad if fn is the file on the command line
-          if not (Options.should_verify_file fn) then
+          //Also suppress the warning if already given to avoid a deluge
+          let suppress_warning = Options.should_verify_file fn || !already_failed in
+          if not suppress_warning then begin
+            already_failed := true;
             FStar.Errors.log_issue
               (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
               (Errors.Warning_CachedFile,
                BU.format3
-                 "Unable to load %s since %s; will recheck %s and all subsequent files"
+                 "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
                  cache_file msg fn)
+          end
         in
         load_checked_file_with_tc_result (TcEnv.dep_graph env.env_tcenv) fn cache_file;
         match BU.smap_try_find mcache cache_file with
         | Some (Invalid msg, _) -> fail msg cache_file; None
-        | Some (Valid (_, tc_result), _) -> Some tc_result
+        | Some (Valid (_, tc_result), _) ->
+          if Options.debug_any () then
+          BU.print1 "Successfully loaded module from checked file %s\n" cache_file;
+          Some tc_result
         | _ -> failwith "load_checked_file_tc_result must have an Invalid or Valid entry"
       in
       Options.profile load_it (fun res ->
