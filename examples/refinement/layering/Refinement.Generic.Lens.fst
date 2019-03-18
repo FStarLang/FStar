@@ -62,7 +62,6 @@ let ih_lens inv b loc =
     put_modifies_loc loc l.put
   }
 
-
 abstract
 let mods fp snap (h:HS.mem) =
   B.modifies (l fp) snap h /\
