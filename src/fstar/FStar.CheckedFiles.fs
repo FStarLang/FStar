@@ -67,25 +67,37 @@ type checked_file_entry =
  * Note that a checked file could have valid parsing data but stale tc data
  *)
 
+(*
+ * Cache files could be loaded in two phases
+ * 
+ * Initially the dependence analysis is just interested in the parsing data
+ *   and till that point we don't have the dependences sorted out
+ *
+ * So we read the checked file and mark the validity if tc data as Unknown
+ *
+ * Later on, we have figured the complete dependence graph, and want to load
+ *   the tc data
+ *
+ *  At that point, the cache is updated to either Valid or Invalid w.r.t. the tc data
+ *)
 type tc_result_t =
-  | Unknown of (list<(string * string)>) * string * tc_result
-  | Invalid of string
-  | Valid   of string * tc_result
+  | Unknown of (list<(string * string)>) * string * tc_result  //deps string, digest of this file, tc_result
+  | Invalid of string  //reason why this is invalid
+  | Valid   of string * tc_result  //digest, tc_result
 
+(*
+ * The cache of checked files
+ *)
 type cache_t =
-  //either : reason why this checked file is not valid for tc data
-  //or     : digest of this file, tc_result
-  tc_result_t *
+  tc_result_t *  //tc data part
 
   //either: reason why this checked file is not valid for parsing data
   //or    : parsing_data
   either<string, Dep.parsing_data>
 
+//Internal cache
 let mcache : smap<cache_t> = BU.smap_create 50
 
-(*
- * Get the string for hash of dependences of fn
- *)
 let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * string)>> =
   let fn =
     match FStar.Options.find_file fn with
@@ -115,9 +127,9 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
   | [] -> Inr (("source", source_hash)::interface_hash@out)
   | fn::deps ->
     let cache_fn = Dep.cache_file_name fn in
-    let digest =
+    let digest =  //get it from mcache
       match BU.smap_try_find mcache cache_fn with
-      | None ->
+      | None ->  //this should really be impossible
         let msg = BU.format2 "For dependency %n, cache file %s is not loaded" fn cache_fn in
         if Options.debug_any ()
         then BU.print1 "%s\m" msg;
@@ -135,6 +147,10 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
 
 (*
  * Load a checked file into mcache
+ *
+ * This is loading the parsing data and tc data as Unknown (unless checked file is invalid)
+ *
+ * See above for the two phases of loading the checked files
  *)
 let load_checked_file (fn:string) (checked_fn:string) :unit =
   if checked_fn |> BU.smap_try_find mcache |> is_some then ()
@@ -162,6 +178,9 @@ let load_checked_file (fn:string) (checked_fn:string) :unit =
                 end
                 else BU.smap_add mcache checked_fn (Unknown (deps_dig, dig, tc_result), Inr parsing_data)
 
+(*
+ * Second phase for loading checked files, validates the tc data
+ *)
 let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:string) :unit =
   load_checked_file fn checked_fn;
   match BU.smap_try_find mcache checked_fn with
@@ -216,6 +235,7 @@ let load_parsing_data_from_cache file_name =
 
 
 let load_module_from_cache =
+  //this is only used for supressing more than one cache invalid warnings
   let already_failed = BU.mk_ref false in
   fun env fn ->
     let load_it () =

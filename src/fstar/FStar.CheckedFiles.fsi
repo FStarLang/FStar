@@ -27,7 +27,9 @@ open FStar.Syntax.DsEnv
 module Syntax  = FStar.Syntax.Syntax
 module Dep     = FStar.Parser.Dep
 
-
+(*
+ * This is what is returned when clients read a module from the caches
+ *)
 type tc_result = {
   checked_module: Syntax.modul; //persisted
   mii:module_inclusion_info; //persisted
