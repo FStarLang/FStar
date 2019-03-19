@@ -374,34 +374,30 @@ let tc_one_file
             end;
             (), env
         in
+
+        let env =
+          Options.profile
+            (fun () -> with_tcenv_of_env env (extend_tcenv tcmod) |> snd)
+            (fun _ -> BU.format1 "Extending environment with module %s"
+                                 tcmod.name.str) in
+
+
         (* If we have to extract this module, then do it first *)
         let mllib =
             if Options.codegen()<>None
             && Options.should_extract tcmod.name.str
             && (not tcmod.is_interface || Options.codegen()=Some Options.Kremlin)
             then with_env env (fun env ->
-                     let extract_defs tcmod env =
-                         let _, env = with_tcenv_of_env env (extend_tcenv tcmod) in
-                         maybe_extract_mldefs tcmod env
-                     in
-                     let extracted_defs, extraction_time = extract_defs tcmod env in
-                     extracted_defs)
+                   let extracted_defs, _extraction_time = maybe_extract_mldefs tcmod env in
+                   extracted_defs)
             else None
         in
 
-        let extend_env env =
-            Options.profile
-              (fun () ->
-                let _, env = with_tcenv_of_env env (extend_tcenv tcmod) in
-                let env, _time = with_env env (maybe_extract_ml_iface tcmod) in
-                env)
-             (fun _ ->
-               BU.format1 "Extending environment with module %s"
-                 tcmod.name.str)
-        in
+        let env, _time = with_env env (maybe_extract_ml_iface tcmod) in
+
         tc_result,
         mllib,
-        extend_env env
+        env
 
   else let tc_result, mllib, env = tc_source_file () in
        tc_result, mllib, env
