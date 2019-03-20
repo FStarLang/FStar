@@ -276,7 +276,7 @@ let check_no_smt_theory_symbols (en:env) (t:term) :unit =
     //these should not be allowed in patterns
     | Tm_constant _ | Tm_abs _ | Tm_arrow _ | Tm_refine _
     | Tm_match _ | Tm_let _ | Tm_delayed _ | Tm_quoted _ -> [t]
-    
+
     //these descend more in the term
     | Tm_fvar fv ->
       if Env.fv_has_attr en fv Const.smt_theory_symbol_attr_lid then [t]
@@ -285,7 +285,7 @@ let check_no_smt_theory_symbols (en:env) (t:term) :unit =
     | Tm_app (t, args) ->
       List.fold_left (fun acc (t, _) ->
         acc @ aux t) (aux t) args
-    
+
     | Tm_ascribed (t, _, _)
     | Tm_uinst (t, _)
     | Tm_meta (t, _) -> aux t
@@ -2394,6 +2394,24 @@ and check_top_level_let env e =
 
      | _ -> failwith "Impossible"
 
+and maybe_intro_smt_lemma env lem_typ c2 =
+    if U.is_smt_lemma lem_typ
+    then let universe_of_binders bs =
+             let _, us =
+               List.fold_left
+                 (fun (env, us) b ->
+                   let u = env.universe_of env (fst b).sort in
+                   let env = Env.push_binders env [b] in
+                   env, u::us)
+                 (env, [])
+                 bs
+             in
+             List.rev us
+         in
+         let quant = U.smt_lemma_as_forall lem_typ universe_of_binders in
+         TcUtil.weaken_precondition env c2 (NonTrivial quant)
+    else c2
+
 (******************************************************************************)
 (* Checking an inner non-recursive let-binding:                               *)
 (* inner let's are never implicitly generalized                               *)
@@ -2432,8 +2450,16 @@ and check_inner_let env e =
        let x = fst xbinder in
        let env_x = Env.push_bv env x in
        let e2, c2, g2 = tc_term env_x e2 in
+       let c2 = maybe_intro_smt_lemma env_x c1.res_typ c2 in
        let cres =
-         TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (Some x, c2) in
+         TcUtil.maybe_return_e2_and_bind
+           e1.pos
+           env
+           (Some e1)
+           c1
+           e2
+           (Some x, c2)
+       in
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
        let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
@@ -2542,6 +2568,12 @@ and check_inner_let_rec env top =
           let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
+          let cres =
+            List.fold_right
+              (fun lb cres -> maybe_intro_smt_lemma env lb.lbtyp cres)
+              lbs
+              cres
+          in
           let cres = TcUtil.maybe_assume_result_eq_pure_term env e2 cres in
           let cres = Util.lcomp_set_flags cres [SHOULD_NOT_INLINE] in //cf. issue #1362
           let guard = Env.conj_guard g_lbs (Env.close_guard env (List.map S.mk_binder bvs) g2) in
