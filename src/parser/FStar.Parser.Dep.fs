@@ -214,13 +214,21 @@ let cache_file_name =
       let mname = fn |> module_name_of_file in
       match Options.find_file (cache_fn |> Util.basename) with
       | Some path ->
-        if mname |> Options.should_be_already_cached
-        then path
-        else if path <> Options.prepend_cache_dir cache_fn
-        then FStar.Errors.raise_err
-                (FStar.Errors.Error_AlreadyCachedAssertionFailure,
-                 BU.format2 "Did not expected %s to be already checked, but found it in an unexpected location %s" mname path)
-        else path
+        let expected_cache_file = Options.prepend_cache_dir cache_fn in
+        if not (Options.should_be_already_cached mname)
+        && (not (BU.file_exists expected_cache_file)
+            || not (BU.paths_to_same_file path expected_cache_file))
+        then
+            FStar.Errors.log_issue
+                Range.dummyRange
+                (FStar.Errors.Warning_UnexpectedCheckedFile,
+                    BU.format3 "Did not expected %s to be already checked, \
+                                but found it in an unexpected location %s \
+                                instead of %s"
+                                mname
+                                path
+                                (Options.prepend_cache_dir cache_fn));
+        path
       | None ->
           if mname |> Options.should_be_already_cached
           then
