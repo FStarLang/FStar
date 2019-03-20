@@ -1360,7 +1360,8 @@ let find_file =
            with | _ -> //to deal with issues like passing bogus strings as paths like "<input>"
                   None)
        in
-       Util.smap_add file_map filename result;
+       if Option.isSome result
+       then Util.smap_add file_map filename result;
        result
 
 let prims () =
