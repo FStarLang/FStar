@@ -2246,7 +2246,7 @@ let (print_full : deps -> unit) =
        sort_output_files krml_file_map  in
      let print_all tag files =
        pr tag;
-       pr "\\\n\t";
+       pr "=\\\n\t";
        FStar_List.iter (fun f  -> pr (norm_path f); pr " \\\n\t") files;
        pr "\n"  in
      print_all "ALL_FST_FILES" all_fst_files;

@@ -1532,7 +1532,7 @@ let print_full (deps:deps) : unit =
     in
     let print_all tag files =
         pr tag;
-        pr "\\\n\t";
+        pr "=\\\n\t";
         List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files;
         pr "\n"
     in
