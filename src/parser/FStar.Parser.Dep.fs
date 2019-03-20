@@ -201,23 +201,33 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     Option.isSome (implementation_of file_system_map key)
 
 
-let cache_file_name_internal =
+(*
+ * Public interface
+ *)
+let cache_file_name =
     let checked_file_and_exists_flag fn =
       let lax = Options.lax () in
       let cache_fn =
         if lax then fn ^".checked.lax"
         else fn ^".checked"
       in
+      let mname = fn |> module_name_of_file in
       match Options.find_file (cache_fn |> Util.basename) with
-      | Some path -> path, true
-      | None      ->
-          let mname = fn |> module_name_of_file in
+      | Some path ->
+        if mname |> Options.should_be_already_cached
+        then path
+        else if path <> Options.prepend_cache_dir cache_fn
+        then FStar.Errors.raise_err
+                (FStar.Errors.Error_AlreadyCachedAssertionFailure,
+                 BU.format2 "Did not expected %s to be already checked, but found it in an unexpected location %s" mname path)
+        else path
+      | None ->
           if mname |> Options.should_be_already_cached
           then
             FStar.Errors.raise_err
               (FStar.Errors.Error_AlreadyCachedAssertionFailure,
                BU.format1 "Expected %s to be already checked but could not find it" mname)
-          else FStar.Options.prepend_cache_dir cache_fn, false
+          else FStar.Options.prepend_cache_dir cache_fn
     in
     let memo = Util.smap_create 100 in
     let memo f x =
@@ -229,11 +239,6 @@ let cache_file_name_internal =
         res
     in
     memo checked_file_and_exists_flag
-
-(*
- * Public interface
- *)
-let cache_file_name fn = fn |> cache_file_name_internal |> fst
 
 let parsing_data_of deps fn = BU.smap_try_find deps.parse_results fn |> must
 
@@ -1353,11 +1358,11 @@ let print_full (deps:deps) : unit =
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
-    let cache_file f = f |> cache_file_name_internal |> (fun (f, b) -> norm_path f) in
-    let _ =
+    let cache_file f = norm_path (cache_file_name f) in
+    let all_checked_files =
         keys |>
-        List.iter
-        (fun file_name ->
+        List.fold_left
+        (fun all_checked_files file_name ->
           let process_one_key () =
             let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
             let iface_deps =
@@ -1399,9 +1404,14 @@ let print_full (deps:deps) : unit =
             in
             let cache_file_name = cache_file file_name in
 
-            //this one prints:
-            //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-            print_entry cache_file_name norm_f files;
+            let all_checked_files =
+                if not (Options.should_be_already_cached (module_name_of_file file_name))
+                then //this one prints:
+                     //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
+                     (print_entry cache_file_name norm_f files;
+                      cache_file_name::all_checked_files)
+                else all_checked_files
+            in
 
             //And, if this is not an interface, we also print out the dependences among the .ml files
             // excluding files in ulib, since these are packaged in fstarlib.cmxa
@@ -1503,11 +1513,12 @@ let print_full (deps:deps) : unit =
                     ""
             end
           in
-          ()
+          all_checked_files
         in
         Options.profile
           process_one_key
           (fun _ -> BU.format1 "Dependence analysis: output key %s" file_name))
+        []
     in
     let all_fst_files =
       keys |> List.filter is_implementation
@@ -1537,6 +1548,7 @@ let print_full (deps:deps) : unit =
         pr "\n"
     in
     print_all "ALL_FST_FILES" all_fst_files;
+    print_all "ALL_CHECKED_FILES" all_checked_files;
     print_all "ALL_ML_FILES" all_ml_files;
     print_all "ALL_KRML_FILES" all_krml_files;
 
