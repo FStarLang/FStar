@@ -32,7 +32,7 @@ type parsing_data  //cached in the checked files
 val empty_parsing_data: parsing_data  //for legacy ide
 type deps
 val empty_deps : deps
-val cache_file_name: string -> string
+val cache_file_name: (string -> string)
 val parsing_data_of: deps -> string -> parsing_data
 val collect: list<string> -> (string -> option<parsing_data>) -> list<string> * deps
 val deps_of : deps -> string -> list<string>
