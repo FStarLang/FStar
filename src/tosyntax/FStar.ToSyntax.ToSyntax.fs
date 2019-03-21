@@ -1540,7 +1540,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let (e, _) = List.fold_left (fun (e, prev) (CalcStep (rel, just, next_expr)) ->
                           let pf = mkApp (step rel.range)
                                           [(wild rel.range, Hash);
-                                           (wild rel.range, Hash);
                                            (init_expr, Hash);
                                            (prev, Hash);
                                            (eta_and_annot rel, Nothing); (next_expr, Nothing);
