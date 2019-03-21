@@ -116,7 +116,7 @@
       1,
       [ "@query", "lemma_FStar.DependentMap.equal_intro" ],
       0,
-      "45b4659c733e806df45688b38e415fdc"
+      "d5f3b0c7946e6ddc6ed49d518e1bd72a"
     ],
     [
       "FStar.DependentMap.equal_elim",
@@ -447,7 +447,7 @@
         "typing_Tm_abs_44386888ed6d3845a43412dbf2df4f16"
       ],
       0,
-      "4ee70a8ab4903dc142200c2b2c44fc56"
+      "4fac9b61af77d9d0f7dee66a34ee229d"
     ],
     [
       "FStar.DependentMap.restrict",

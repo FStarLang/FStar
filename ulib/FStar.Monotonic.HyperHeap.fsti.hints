@@ -53,7 +53,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "f62ef46559e48427a65dd582000dd691"
+      "e2fce4b50cb5541465de438dd02d40be"
     ],
     [
       "FStar.Monotonic.HyperHeap.lemma_modifies_trans",
@@ -87,7 +87,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "4f7713e7b282650776aed7da0ac4bb16"
+      "978d8100e48780a0fbbe4c192c5aab62"
     ],
     [
       "FStar.Monotonic.HyperHeap.extend",

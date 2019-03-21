@@ -72,7 +72,7 @@
         "typing_TestMRef.y", "typing_TestMRef.z"
       ],
       0,
-      "d57b9794e1da0b5b0753c8dc770bf5f3"
+      "0b8148d2971d05cebe812bc0c40cc03a"
     ],
     [
       "TestMRef.test_frame_write_mref",
@@ -134,7 +134,7 @@
         "typing_TestMRef.y"
       ],
       0,
-      "fdcd7a7ff47838365e91f5cc73214d94"
+      "61c2350cf259b1430206ab0894a702c5"
     ],
     [
       "TestMRef.test_frame_alloc_mref",

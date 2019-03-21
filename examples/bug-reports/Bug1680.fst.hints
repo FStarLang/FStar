@@ -23,7 +23,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c17136983806b2cc5c1785b813bc295e"
+      "5991ad40f5022c370f369cd526614591"
     ],
     [
       "Bug1680.sum",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "cc9442c3ffaf20c4cb46812bb90c030e"
+      "4037c9da48dd77d887dd4a6a7c356156"
     ],
     [
       "Bug1680.x",
@@ -54,17 +54,16 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5f26c81733798505dfcd2a521c71f8a8"
+      "28afd68b519c4a987753e97ad882a7ad"
     ],
     [
-      "Bug1680.uu___346",
+      "Bug1680.uu___52",
       1,
       2,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Bug1680.sum_i.fuel_instrumented",
-        "@fuel_irrelevance_Bug1680.sum_i.fuel_instrumented", "@query",
+        "@fuel_correspondence_Bug1680.sum_i.fuel_instrumented", "@query",
         "Bug1680_interpretation_Tm_arrow_0e652739261e3dd8cdc9a44f151e0e26",
         "Bug1680_interpretation_Tm_arrow_3047922e7fb5e7ad22dd88705f578d25",
         "Bug1680_interpretation_Tm_arrow_37ac36d2ca6b7b23ccb88ad4d3738ce7",
@@ -85,7 +84,6 @@
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "equation_Prims.eqtype", "equation_Prims.nat",
         "equation_with_fuel_Bug1680.sum_i.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "interpretation_Tm_abs_01ba659248aa8e90d2027a5176467106",
@@ -125,10 +123,10 @@
         "typing_Tm_abs_f2d4269dce22cfdac686a71960b27de9"
       ],
       0,
-      "20c45a0ce2e8b3c626d0cca1a676ef35"
+      "0a4879102c989e06ef7d7fc8d36fa3e1"
     ],
     [
-      "Bug1680.uu___347",
+      "Bug1680.uu___53",
       1,
       2,
       1,
@@ -178,7 +176,6 @@
         "refinement_interpretation_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "token_correspondence_Bug1680.sum_i.fuel_instrumented",
         "typing_Bug1680.col", "typing_Bug1680.knat", "typing_Bug1680.row",
         "typing_Bug1680.vec_prod_pointwise", "typing_Bug1680.x",
         "typing_Bug1680.xt",
@@ -193,10 +190,10 @@
         "typing_Tm_abs_f2d4269dce22cfdac686a71960b27de9"
       ],
       0,
-      "1135a55d994789a7c8347b5456f71e81"
+      "afd939f29dc7c0aa3165781038770da9"
     ],
     [
-      "Bug1680.uu___348",
+      "Bug1680.uu___54",
       1,
       2,
       1,
@@ -247,6 +244,7 @@
         "refinement_interpretation_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "token_correspondence_Bug1680.sum_i.fuel_instrumented",
         "typing_Bug1680.col", "typing_Bug1680.knat", "typing_Bug1680.row",
         "typing_Bug1680.vec_prod_pointwise", "typing_Bug1680.x",
         "typing_Bug1680.xt", "typing_Bug1680.xtx",
@@ -261,13 +259,13 @@
         "typing_Tm_abs_f2d4269dce22cfdac686a71960b27de9"
       ],
       0,
-      "229bf6ba3cb312d8f59150a07446f4ed"
+      "bee2c01fe24df22bcd386612da1ce843"
     ],
     [
-      "Bug1680.uu___349",
+      "Bug1680.uu___55",
       1,
       2,
-      2,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug1680.sum_i.fuel_instrumented",
@@ -330,10 +328,10 @@
         "typing_Tm_abs_f2d4269dce22cfdac686a71960b27de9"
       ],
       0,
-      "d838240160d92f5fd39c0acaf58af5a9"
+      "2a67b204e965877d5951f79c0ae9d263"
     ],
     [
-      "Bug1680.uu___353",
+      "Bug1680.uu___59",
       1,
       2,
       1,
@@ -388,7 +386,7 @@
         "token_correspondence_Bug1680.sum_i.fuel_instrumented",
         "typing_Bug1680.col", "typing_Bug1680.knat", "typing_Bug1680.row",
         "typing_Bug1680.vec_prod_pointwise", "typing_Bug1680.x",
-        "typing_Bug1680.xt",
+        "typing_Bug1680.xt", "typing_Bug1680.xtx_unfolded",
         "typing_Tm_abs_01ba659248aa8e90d2027a5176467106",
         "typing_Tm_abs_030044b8d4363cdedd699cfb66829ce3",
         "typing_Tm_abs_2904128eb930286bf113d50b002ea991",
@@ -400,10 +398,10 @@
         "typing_Tm_abs_f2d4269dce22cfdac686a71960b27de9"
       ],
       0,
-      "4de795205bdc73cab28e47914ff76647"
+      "d2bf5f3514be05d598208736e22baf61"
     ],
     [
-      "Bug1680.uu___354",
+      "Bug1680.uu___60",
       1,
       2,
       1,
@@ -425,8 +423,8 @@
         "equation_Bug1680.knat", "equation_Bug1680.row",
         "equation_Bug1680.sum", "equation_Bug1680.transpose",
         "equation_Bug1680.vec_prod", "equation_Bug1680.vec_prod_pointwise",
-        "equation_Bug1680.x", "equation_Bug1680.xt",
-        "equation_Bug1680.xtx_unfolded",
+        "equation_Bug1680.vector", "equation_Bug1680.x",
+        "equation_Bug1680.xt", "equation_Bug1680.xtx_unfolded",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "equation_Prims.eqtype", "equation_Prims.nat",
@@ -455,6 +453,7 @@
         "refinement_interpretation_Tm_refine_b0ec1ad4c766f179179881d04d9cace4",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "token_correspondence_Bug1680.sum_i.fuel_instrumented",
         "typing_Bug1680.col", "typing_Bug1680.knat", "typing_Bug1680.row",
         "typing_Bug1680.vec_prod_pointwise", "typing_Bug1680.x",
         "typing_Bug1680.xt", "typing_Bug1680.xtx_unfolded",
@@ -469,17 +468,16 @@
         "typing_Tm_abs_f2d4269dce22cfdac686a71960b27de9"
       ],
       0,
-      "b5a3bed35fa32de10502bbca93be7193"
+      "74a10402e71020938d955fe660287cf4"
     ],
     [
-      "Bug1680.uu___355",
+      "Bug1680.uu___61",
       1,
       2,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Bug1680.sum_i.fuel_instrumented",
-        "@fuel_irrelevance_Bug1680.sum_i.fuel_instrumented", "@query",
+        "@fuel_correspondence_Bug1680.sum_i.fuel_instrumented", "@query",
         "Bug1680_interpretation_Tm_arrow_0e652739261e3dd8cdc9a44f151e0e26",
         "Bug1680_interpretation_Tm_arrow_3047922e7fb5e7ad22dd88705f578d25",
         "Bug1680_interpretation_Tm_arrow_37ac36d2ca6b7b23ccb88ad4d3738ce7",
@@ -539,17 +537,16 @@
         "typing_Tm_abs_f2d4269dce22cfdac686a71960b27de9"
       ],
       0,
-      "43f09d19a47fd8e0c9b86c81fc3457dc"
+      "145a459bb8332a3c1f85104352aa947b"
     ],
     [
-      "Bug1680.uu___356",
+      "Bug1680.uu___62",
       1,
       2,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Bug1680.sum_i.fuel_instrumented",
-        "@fuel_irrelevance_Bug1680.sum_i.fuel_instrumented", "@query",
+        "@fuel_correspondence_Bug1680.sum_i.fuel_instrumented", "@query",
         "Bug1680_interpretation_Tm_arrow_0e652739261e3dd8cdc9a44f151e0e26",
         "Bug1680_interpretation_Tm_arrow_3047922e7fb5e7ad22dd88705f578d25",
         "Bug1680_interpretation_Tm_arrow_37ac36d2ca6b7b23ccb88ad4d3738ce7",
@@ -608,7 +605,7 @@
         "typing_Tm_abs_f2d4269dce22cfdac686a71960b27de9"
       ],
       0,
-      "ef47e91e8f8a8d347a95127e113a6574"
+      "1562dce37dd344ae213ed684c1d698e8"
     ]
   ]
 ]
