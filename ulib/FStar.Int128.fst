@@ -1,18 +1,3 @@
-(*
-   Copyright 2008-2018 Microsoft Research
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*)
 module FStar.Int128
 (* This module generated automatically using [mk_int.sh] *)
 
@@ -78,9 +63,10 @@ let div (a:t) (b:t{v b <> 0}) : Pure t
   = Mk (div (v a) (v b))
 
 (* Modulo primitives *)
+(* If a/b is not representable the result of a%b is undefind *)
 abstract
 let rem (a:t) (b:t{v b <> 0}) : Pure t
-  (requires True)
+  (requires (size (v a / v b) n))
   (ensures (fun c -> FStar.Int.mod (v a) (v b) = v c))
   = Mk (mod (v a) (v b))
 
@@ -110,15 +96,18 @@ let lognot (x:t) : Pure t
   = Mk (lognot (v x))
 
 (* Shift operators *)
+
+(** If a is negative the result is implementation defined *)
 abstract
 let shift_right (a:t) (s:UInt32.t) : Pure t
-  (requires (UInt32.v s < n))
+  (requires (0 <= v a /\ UInt32.v s < n))
   (ensures (fun c -> FStar.Int.shift_right (v a) (UInt32.v s) = v c))
   = Mk (shift_right (v a) (UInt32.v s))
 
+(** If a is negative the result is undefined behaviour *)
 abstract
 let shift_left (a:t) (s:UInt32.t) : Pure t
-  (requires (UInt32.v s < n))
+  (requires (0 <= v a /\ UInt32.v s < n))
   (ensures (fun c -> FStar.Int.shift_left (v a) (UInt32.v s) = v c))
   = Mk (shift_left (v a) (UInt32.v s))
 
@@ -154,7 +143,7 @@ assume val of_string: string -> Tot t
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
-//rather than an expensive verifiation check.
+//rather than an expensive verification check.
 //Since it is marked private, client programs cannot call it directly
 //Since it is marked unfold, it eagerly reduces,
 //eliminating the verification overhead of the wrapper
@@ -164,7 +153,8 @@ let __int_to_t (x:int) : Tot t
     = int_to_t x
 #reset-options
 
-abstract val mul_wide: a:Int64.t -> b:Int64.t -> Pure t
+abstract
+val mul_wide: a:Int64.t -> b:Int64.t -> Pure t
   (requires True)
   (ensures (fun c -> v c = Int64.v a * Int64.v b))
 let mul_wide a b = 
