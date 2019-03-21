@@ -170,20 +170,22 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
  *
  * See above for the two steps of loading the checked files
  *)
-let load_checked_file (fn:string) (checked_fn:string) :unit =
-  if checked_fn |> BU.smap_try_find mcache |> is_some then ()  //already loaded
+let load_checked_file (fn:string) (checked_fn:string) :cache_t =
+  let elt = checked_fn |> BU.smap_try_find mcache in
+  if elt |> is_some then elt |> must  //already loaded
   else
+    let add_and_return elt = BU.smap_add mcache checked_fn elt; elt in
     if not (BU.file_exists checked_fn)
     then let msg = BU.format1 "checked file %s does not exist" checked_fn in
-         BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
+         add_and_return (Invalid msg, Inl msg)
     else match BU.load_value_from_file checked_fn with
          | None ->
            let msg = BU.format1 "checked file %s is corrupt" checked_fn in
-           BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
+           add_and_return (Invalid msg, Inl msg)
          | Some (vnum, deps_dig, dig, parsing_data, tc_result) ->
            if vnum <> cache_version_number
            then let msg = BU.format1 "checked file %s has incorrect version" checked_fn in
-                BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
+                add_and_return (Invalid msg, Inl msg)
            else let current_dig = BU.digest_of_file fn in
                 if dig <> current_dig
                 then begin
@@ -192,32 +194,51 @@ let load_checked_file (fn:string) (checked_fn:string) :unit =
                     expected: %s, found: %s\n"
                     checked_fn fn current_dig dig;
                   let msg = BU.format2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn in
-                  BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
+                  add_and_return (Invalid msg, Inl msg)
                 end
-                else BU.smap_add mcache checked_fn (Unknown (deps_dig, tc_result), Inr parsing_data)
+                else add_and_return (Unknown (deps_dig, tc_result), Inr parsing_data)
 
 (*
  * Second step for loading checked files, validates the tc data
  *)
-let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:string) :unit =
-  load_checked_file fn checked_fn;  //first step, in case some client calls it directly
-  match BU.smap_try_find mcache checked_fn with
-  | None -> failwith "Impossible, load_checked_file must add an entry to mcache"
-  | Some (Invalid _, _)
-  | Some (Valid _, _) -> ()  //already marked Valid or Invalid
-  | Some (Unknown (deps_dig, tc_result), parsing_data) ->
+let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:string) :cache_t =
+  let elt = load_checked_file fn checked_fn in
+  match elt with  //first step, in case some client calls it directly
+  | Invalid _, _
+  | Valid _, _ -> elt  //already marked Valid or Invalid
+  | Unknown (deps_dig, tc_result), parsing_data ->
     match hash_dependences deps fn with
     | Inl msg ->
-      BU.smap_add mcache checked_fn (Invalid msg, parsing_data)
+      let elt = (Invalid msg, parsing_data) in
+      BU.smap_add mcache checked_fn elt;
+      elt
     | Inr deps_dig' ->
       if deps_dig = deps_dig'
       then begin
         //mark the tc data of the file as valid
-        BU.smap_add mcache
-          checked_fn
-          (Valid (BU.digest_of_file checked_fn, tc_result), parsing_data);
-        //if there exists an interface for it, mark that too as valid
-        //validity of implementaton tc data implies validity of iface tc data
+        let elt = (Valid (BU.digest_of_file checked_fn, tc_result), parsing_data) in 
+        BU.smap_add mcache checked_fn elt;
+        (*
+         * if there exists an interface for it, mark that too as valid
+         * this is specially needed for extraction invocations of F* with --cmi flag
+         * for example, consider a scenario:
+         * A.fst -> B.fsti -> prims.fst
+         *            ^      ^
+         *            |     /
+         *             B.fst
+         *
+         * when all the checked files are present and F* is invoked with --extract A --cmi
+         * during parsing, all checked files are loaded with tc data statemachine as Unknown
+         * since it is cmi (and say B has an inline_for_extraction symbol), the client
+         * then loads B.fst.checked BUT NOT B.fsti.checked
+         * this advances the state machine for B.fst, but not for B.fsti
+         * so when client loads A.fst.checked, B.fsti -- a dependence of A -- is still in Unknown
+         * following code relies on the invariant that:
+         * validity of implementaton tc data implies validity of iface tc data
+         *
+         * an alternative is to not do this, but in hash_dependences, if some dependence
+         * is in Unknown state, it could call load_checked_file_with_tc_result
+         *)
         let validate_iface_cache () =
           let iface = fn |> Dep.lowercase_module_name |> Dep.interface_of deps in
           match iface with
@@ -234,7 +255,8 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
             with
               | _ -> ()
         in
-        validate_iface_cache ()
+        validate_iface_cache ();
+        elt
       end
       else begin
         if Options.debug_any()
@@ -256,7 +278,9 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
             "checked file %s is stale (dependence hash mismatch, use --debug yes for more details)"
             checked_fn
         in
-        BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
+        let elt = (Invalid msg, Inl msg) in
+        BU.smap_add mcache checked_fn elt;
+        elt
       end
 
 
@@ -269,12 +293,9 @@ let load_parsing_data_from_cache file_name =
   match cache_file with
   | None -> None
   | Some cache_file ->
-    load_checked_file file_name cache_file;
-    match BU.smap_try_find mcache cache_file with
-    | Some (_, Inl msg)  -> None
-    | Some (_, Inr data) -> Some data
-    | None -> failwith "Impossible, after load_checked_file, mcache should have an entry"
-
+    match load_checked_file file_name cache_file with
+    | _, Inl msg  -> None
+    | _, Inr data -> Some data
 
 let load_module_from_cache =
   //this is only used for supressing more than one cache invalid warnings
@@ -296,10 +317,12 @@ let load_module_from_cache =
                cache_file msg fn)
         end
       in
-      load_checked_file_with_tc_result (TcEnv.dep_graph env.env_tcenv) fn cache_file;
-      match BU.smap_try_find mcache cache_file with
-      | Some (Invalid msg, _) -> fail msg cache_file; None
-      | Some (Valid (_, tc_result), _) ->
+      match load_checked_file_with_tc_result
+              (TcEnv.dep_graph env.env_tcenv)
+              fn
+              cache_file |> fst with
+      | Invalid msg -> fail msg cache_file; None
+      | Valid (_, tc_result) ->
         if Options.debug_any () then
         BU.print1 "Successfully loaded module from checked file %s\n" cache_file;
         Some tc_result
@@ -330,7 +353,7 @@ let store_module_to_cache env fn parsing_data tc_result =
     let digest = hash_dependences (TcEnv.dep_graph env.env_tcenv) fn in
     match digest with
     | Inr hashes ->
-      let tc_result = { tc_result with tc_time=0; } in
+      let tc_result = { tc_result with tc_time=0; extraction_time=0 } in
         
       //cache_version_number should always be the first field here
       store_value_to_cache cache_file (cache_version_number,
