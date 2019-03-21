@@ -34,7 +34,7 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 NegativeTests.ZZImplicitFalse.uver StableErr.uver   ChrisCheck.uver PatCoerce.uver \
 	 OccursCheckOnArrows.uver Test.Integers.uver AnotType.uver Test.ReifyNBE.fst TestHasEq.uver \
 	 PatAnnot.uver TupleSyntax.uver Test.FunctionalExtensionality.uver ArgsAndQuals.uver Test.Printf.uver \
-	 MustEraseForExtraction.uver UnifyReify.uver
+	 MustEraseForExtraction.uver UnifyReify.uver NestedLemma.uver
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^

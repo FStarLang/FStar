@@ -4,16 +4,16 @@ let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
   fun s  -> FStar_Parser_Const.fstar_tactics_lid' s 
 let (lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l  ->
-    let uu____63654 =
+    let uu____63687 =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.delta_constant
         FStar_Pervasives_Native.None
        in
-    FStar_All.pipe_right uu____63654 FStar_Syntax_Syntax.fv_to_tm
+    FStar_All.pipe_right uu____63687 FStar_Syntax_Syntax.fv_to_tm
   
 let (mk_tactic_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s  ->
-    let uu____63663 = fstar_tactics_lid' ["Effect"; s]  in
-    lid_as_tm uu____63663
+    let uu____63696 = fstar_tactics_lid' ["Effect"; s]  in
+    lid_as_tm uu____63696
   
 let (lid_as_data_fv : FStar_Ident.lident -> FStar_Syntax_Syntax.fv) =
   fun l  ->
@@ -22,14 +22,14 @@ let (lid_as_data_fv : FStar_Ident.lident -> FStar_Syntax_Syntax.fv) =
   
 let (lid_as_data_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l  ->
-    let uu____63680 = lid_as_data_fv l  in
-    FStar_Syntax_Syntax.fv_to_tm uu____63680
+    let uu____63713 = lid_as_data_fv l  in
+    FStar_Syntax_Syntax.fv_to_tm uu____63713
   
 let (fstar_tactics_lid_as_data_tm : Prims.string -> FStar_Syntax_Syntax.term)
   =
   fun s  ->
-    let uu____63689 = fstar_tactics_lid' ["Effect"; s]  in
-    lid_as_data_tm uu____63689
+    let uu____63722 = fstar_tactics_lid' ["Effect"; s]  in
+    lid_as_data_tm uu____63722
   
 let (fstar_tactics_Failed_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Result"; "Failed"] 
@@ -92,44 +92,44 @@ let (fstar_tactics_TacticFailure_fv : FStar_Syntax_Syntax.fv) =
 let (fstar_tactics_EExn_fv : FStar_Syntax_Syntax.fv) =
   lid_as_data_fv fstar_tactics_EExn_lid 
 let (t_proofstate : FStar_Syntax_Syntax.term) =
-  let uu____63775 = fstar_tactics_lid' ["Types"; "proofstate"]  in
-  FStar_Syntax_Syntax.tconst uu____63775 
+  let uu____63808 = fstar_tactics_lid' ["Types"; "proofstate"]  in
+  FStar_Syntax_Syntax.tconst uu____63808 
 let (fv_proofstate : FStar_Syntax_Syntax.fv) =
-  let uu____63782 = fstar_tactics_lid' ["Types"; "proofstate"]  in
-  FStar_Syntax_Syntax.fvconst uu____63782 
+  let uu____63815 = fstar_tactics_lid' ["Types"; "proofstate"]  in
+  FStar_Syntax_Syntax.fvconst uu____63815 
 let (t_goal : FStar_Syntax_Syntax.term) =
-  let uu____63789 = fstar_tactics_lid' ["Types"; "goal"]  in
-  FStar_Syntax_Syntax.tconst uu____63789 
+  let uu____63822 = fstar_tactics_lid' ["Types"; "goal"]  in
+  FStar_Syntax_Syntax.tconst uu____63822 
 let (fv_goal : FStar_Syntax_Syntax.fv) =
-  let uu____63796 = fstar_tactics_lid' ["Types"; "goal"]  in
-  FStar_Syntax_Syntax.fvconst uu____63796 
+  let uu____63829 = fstar_tactics_lid' ["Types"; "goal"]  in
+  FStar_Syntax_Syntax.fvconst uu____63829 
 let (t_result_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Types"; "result"] 
 let (t_result : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst t_result_lid 
 let (fv_result : FStar_Syntax_Syntax.fv) =
-  let uu____63810 = fstar_tactics_lid' ["Types"; "result"]  in
-  FStar_Syntax_Syntax.fvconst uu____63810 
+  let uu____63843 = fstar_tactics_lid' ["Types"; "result"]  in
+  FStar_Syntax_Syntax.fvconst uu____63843 
 let (t_result_of :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun t  ->
-    let uu____63824 =
-      let uu____63835 = FStar_Syntax_Syntax.as_arg t  in [uu____63835]  in
-    FStar_Syntax_Util.mk_app t_result uu____63824
+    let uu____63857 =
+      let uu____63868 = FStar_Syntax_Syntax.as_arg t  in [uu____63868]  in
+    FStar_Syntax_Util.mk_app t_result uu____63857
   
 let (t_guard_policy : FStar_Syntax_Syntax.term) =
-  let uu____63861 = fstar_tactics_lid' ["Types"; "guard_policy"]  in
-  FStar_Syntax_Syntax.tconst uu____63861 
+  let uu____63894 = fstar_tactics_lid' ["Types"; "guard_policy"]  in
+  FStar_Syntax_Syntax.tconst uu____63894 
 let (fv_guard_policy : FStar_Syntax_Syntax.fv) =
-  let uu____63868 = fstar_tactics_lid' ["Types"; "guard_policy"]  in
-  FStar_Syntax_Syntax.fvconst uu____63868 
+  let uu____63901 = fstar_tactics_lid' ["Types"; "guard_policy"]  in
+  FStar_Syntax_Syntax.fvconst uu____63901 
 let (t_direction : FStar_Syntax_Syntax.term) =
-  let uu____63875 = fstar_tactics_lid' ["Types"; "direction"]  in
-  FStar_Syntax_Syntax.tconst uu____63875 
+  let uu____63908 = fstar_tactics_lid' ["Types"; "direction"]  in
+  FStar_Syntax_Syntax.tconst uu____63908 
 let (fv_direction : FStar_Syntax_Syntax.fv) =
-  let uu____63882 = fstar_tactics_lid' ["Types"; "direction"]  in
-  FStar_Syntax_Syntax.fvconst uu____63882 
+  let uu____63915 = fstar_tactics_lid' ["Types"; "direction"]  in
+  FStar_Syntax_Syntax.fvconst uu____63915 
 let mk_emb :
   'a .
     (FStar_Range.range -> 'a -> FStar_Syntax_Syntax.term) ->
@@ -140,35 +140,35 @@ let mk_emb :
   fun em  ->
     fun un  ->
       fun t  ->
-        let uu____63941 = FStar_Syntax_Embeddings.term_as_fv t  in
+        let uu____63974 = FStar_Syntax_Embeddings.term_as_fv t  in
         FStar_Syntax_Embeddings.mk_emb
           (fun x  -> fun r  -> fun _topt  -> fun _norm  -> em r x)
-          (fun x  -> fun w  -> fun _norm  -> un w x) uu____63941
+          (fun x  -> fun w  -> fun _norm  -> un w x) uu____63974
   
 let embed :
-  'Auu____63968 .
-    'Auu____63968 FStar_Syntax_Embeddings.embedding ->
-      FStar_Range.range -> 'Auu____63968 -> FStar_Syntax_Syntax.term
+  'Auu____64001 .
+    'Auu____64001 FStar_Syntax_Embeddings.embedding ->
+      FStar_Range.range -> 'Auu____64001 -> FStar_Syntax_Syntax.term
   =
   fun e  ->
     fun r  ->
       fun x  ->
-        let uu____63988 = FStar_Syntax_Embeddings.embed e x  in
-        uu____63988 r FStar_Pervasives_Native.None
+        let uu____64021 = FStar_Syntax_Embeddings.embed e x  in
+        uu____64021 r FStar_Pervasives_Native.None
           FStar_Syntax_Embeddings.id_norm_cb
   
 let unembed' :
-  'Auu____64006 .
+  'Auu____64039 .
     Prims.bool ->
-      'Auu____64006 FStar_Syntax_Embeddings.embedding ->
+      'Auu____64039 FStar_Syntax_Embeddings.embedding ->
         FStar_Syntax_Syntax.term ->
-          'Auu____64006 FStar_Pervasives_Native.option
+          'Auu____64039 FStar_Pervasives_Native.option
   =
   fun w  ->
     fun e  ->
       fun x  ->
-        let uu____64030 = FStar_Syntax_Embeddings.unembed e x  in
-        uu____64030 w FStar_Syntax_Embeddings.id_norm_cb
+        let uu____64063 = FStar_Syntax_Embeddings.unembed e x  in
+        uu____64063 w FStar_Syntax_Embeddings.id_norm_cb
   
 let (hd'_and_args :
   FStar_Syntax_Syntax.term ->
@@ -178,13 +178,13 @@ let (hd'_and_args :
   =
   fun tm  ->
     let tm1 = FStar_Syntax_Util.unascribe tm  in
-    let uu____64058 = FStar_Syntax_Util.head_and_args tm1  in
-    match uu____64058 with
+    let uu____64091 = FStar_Syntax_Util.head_and_args tm1  in
+    match uu____64091 with
     | (hd1,args) ->
-        let uu____64115 =
-          let uu____64116 = FStar_Syntax_Util.un_uinst hd1  in
-          uu____64116.FStar_Syntax_Syntax.n  in
-        (uu____64115, args)
+        let uu____64148 =
+          let uu____64149 = FStar_Syntax_Util.un_uinst hd1  in
+          uu____64149.FStar_Syntax_Syntax.n  in
+        (uu____64148, args)
   
 let (e_proofstate :
   FStar_Tactics_Types.proofstate FStar_Syntax_Embeddings.embedding) =
@@ -193,30 +193,30 @@ let (e_proofstate :
       FStar_Syntax_Syntax.Lazy_proofstate (FStar_Pervasives_Native.Some rng)
      in
   let unembed_proofstate w t =
-    let uu____64160 =
-      let uu____64161 = FStar_Syntax_Subst.compress t  in
-      uu____64161.FStar_Syntax_Syntax.n  in
-    match uu____64160 with
+    let uu____64193 =
+      let uu____64194 = FStar_Syntax_Subst.compress t  in
+      uu____64194.FStar_Syntax_Syntax.n  in
+    match uu____64193 with
     | FStar_Syntax_Syntax.Tm_lazy
         { FStar_Syntax_Syntax.blob = b;
           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_proofstate ;
-          FStar_Syntax_Syntax.ltyp = uu____64167;
-          FStar_Syntax_Syntax.rng = uu____64168;_}
+          FStar_Syntax_Syntax.ltyp = uu____64200;
+          FStar_Syntax_Syntax.rng = uu____64201;_}
         ->
-        let uu____64171 = FStar_Dyn.undyn b  in
+        let uu____64204 = FStar_Dyn.undyn b  in
         FStar_All.pipe_left
-          (fun _64174  -> FStar_Pervasives_Native.Some _64174) uu____64171
-    | uu____64175 ->
+          (fun _64207  -> FStar_Pervasives_Native.Some _64207) uu____64204
+    | uu____64208 ->
         (if w
          then
-           (let uu____64178 =
-              let uu____64184 =
-                let uu____64186 = FStar_Syntax_Print.term_to_string t  in
+           (let uu____64211 =
+              let uu____64217 =
+                let uu____64219 = FStar_Syntax_Print.term_to_string t  in
                 FStar_Util.format1 "Not an embedded proofstate: %s"
-                  uu____64186
+                  uu____64219
                  in
-              (FStar_Errors.Warning_NotEmbedded, uu____64184)  in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____64178)
+              (FStar_Errors.Warning_NotEmbedded, uu____64217)  in
+            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____64211)
          else ();
          FStar_Pervasives_Native.None)
      in
@@ -250,28 +250,28 @@ let (mkConstruct :
   
 let (fv_as_emb_typ : FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.emb_typ) =
   fun fv  ->
-    let uu____64277 =
-      let uu____64285 =
+    let uu____64310 =
+      let uu____64318 =
         FStar_Ident.string_of_lid
           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
          in
-      (uu____64285, [])  in
-    FStar_Syntax_Syntax.ET_app uu____64277
+      (uu____64318, [])  in
+    FStar_Syntax_Syntax.ET_app uu____64310
   
 let (e_proofstate_nbe :
   FStar_Tactics_Types.proofstate FStar_TypeChecker_NBETerm.embedding) =
   let embed_proofstate _cb ps =
     let li =
-      let uu____64305 = FStar_Dyn.mkdyn ps  in
+      let uu____64338 = FStar_Dyn.mkdyn ps  in
       {
-        FStar_Syntax_Syntax.blob = uu____64305;
+        FStar_Syntax_Syntax.blob = uu____64338;
         FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_proofstate;
         FStar_Syntax_Syntax.ltyp = t_proofstate;
         FStar_Syntax_Syntax.rng = FStar_Range.dummyRange
       }  in
     let thunk1 =
       FStar_Common.mk_thunk
-        (fun uu____64310  ->
+        (fun uu____64343  ->
            FStar_TypeChecker_NBETerm.Constant
              (FStar_TypeChecker_NBETerm.String
                 ("(((proofstate.nbe)))", FStar_Range.dummyRange)))
@@ -283,30 +283,30 @@ let (e_proofstate_nbe :
         (FStar_Util.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_proofstate ;
-           FStar_Syntax_Syntax.ltyp = uu____64343;
-           FStar_Syntax_Syntax.rng = uu____64344;_},uu____64345)
+           FStar_Syntax_Syntax.ltyp = uu____64376;
+           FStar_Syntax_Syntax.rng = uu____64377;_},uu____64378)
         ->
-        let uu____64364 = FStar_Dyn.undyn b  in
+        let uu____64397 = FStar_Dyn.undyn b  in
         FStar_All.pipe_left
-          (fun _64367  -> FStar_Pervasives_Native.Some _64367) uu____64364
-    | uu____64368 ->
-        ((let uu____64370 =
-            let uu____64376 =
-              let uu____64378 = FStar_TypeChecker_NBETerm.t_to_string t  in
+          (fun _64400  -> FStar_Pervasives_Native.Some _64400) uu____64397
+    | uu____64401 ->
+        ((let uu____64403 =
+            let uu____64409 =
+              let uu____64411 = FStar_TypeChecker_NBETerm.t_to_string t  in
               FStar_Util.format1 "Not an embedded NBE proofstate: %s"
-                uu____64378
+                uu____64411
                in
-            (FStar_Errors.Warning_NotEmbedded, uu____64376)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____64370);
+            (FStar_Errors.Warning_NotEmbedded, uu____64409)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____64403);
          FStar_Pervasives_Native.None)
      in
-  let uu____64382 = mkFV fv_proofstate [] []  in
-  let uu____64387 = fv_as_emb_typ fv_proofstate  in
+  let uu____64415 = mkFV fv_proofstate [] []  in
+  let uu____64420 = fv_as_emb_typ fv_proofstate  in
   {
     FStar_TypeChecker_NBETerm.em = embed_proofstate;
     FStar_TypeChecker_NBETerm.un = unembed_proofstate;
-    FStar_TypeChecker_NBETerm.typ = uu____64382;
-    FStar_TypeChecker_NBETerm.emb_typ = uu____64387
+    FStar_TypeChecker_NBETerm.typ = uu____64415;
+    FStar_TypeChecker_NBETerm.emb_typ = uu____64420
   } 
 let (e_goal : FStar_Tactics_Types.goal FStar_Syntax_Embeddings.embedding) =
   let embed_goal rng g =
@@ -314,28 +314,28 @@ let (e_goal : FStar_Tactics_Types.goal FStar_Syntax_Embeddings.embedding) =
       (FStar_Pervasives_Native.Some rng)
      in
   let unembed_goal w t =
-    let uu____64419 =
-      let uu____64420 = FStar_Syntax_Subst.compress t  in
-      uu____64420.FStar_Syntax_Syntax.n  in
-    match uu____64419 with
+    let uu____64452 =
+      let uu____64453 = FStar_Syntax_Subst.compress t  in
+      uu____64453.FStar_Syntax_Syntax.n  in
+    match uu____64452 with
     | FStar_Syntax_Syntax.Tm_lazy
         { FStar_Syntax_Syntax.blob = b;
           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_goal ;
-          FStar_Syntax_Syntax.ltyp = uu____64426;
-          FStar_Syntax_Syntax.rng = uu____64427;_}
+          FStar_Syntax_Syntax.ltyp = uu____64459;
+          FStar_Syntax_Syntax.rng = uu____64460;_}
         ->
-        let uu____64430 = FStar_Dyn.undyn b  in
+        let uu____64463 = FStar_Dyn.undyn b  in
         FStar_All.pipe_left
-          (fun _64433  -> FStar_Pervasives_Native.Some _64433) uu____64430
-    | uu____64434 ->
+          (fun _64466  -> FStar_Pervasives_Native.Some _64466) uu____64463
+    | uu____64467 ->
         (if w
          then
-           (let uu____64437 =
-              let uu____64443 =
-                let uu____64445 = FStar_Syntax_Print.term_to_string t  in
-                FStar_Util.format1 "Not an embedded goal: %s" uu____64445  in
-              (FStar_Errors.Warning_NotEmbedded, uu____64443)  in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____64437)
+           (let uu____64470 =
+              let uu____64476 =
+                let uu____64478 = FStar_Syntax_Print.term_to_string t  in
+                FStar_Util.format1 "Not an embedded goal: %s" uu____64478  in
+              (FStar_Errors.Warning_NotEmbedded, uu____64476)  in
+            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____64470)
          else ();
          FStar_Pervasives_Native.None)
      in
@@ -347,16 +347,16 @@ let (e_goal_nbe :
   FStar_Tactics_Types.goal FStar_TypeChecker_NBETerm.embedding) =
   let embed_goal _cb ps =
     let li =
-      let uu____64473 = FStar_Dyn.mkdyn ps  in
+      let uu____64506 = FStar_Dyn.mkdyn ps  in
       {
-        FStar_Syntax_Syntax.blob = uu____64473;
+        FStar_Syntax_Syntax.blob = uu____64506;
         FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_goal;
         FStar_Syntax_Syntax.ltyp = t_goal;
         FStar_Syntax_Syntax.rng = FStar_Range.dummyRange
       }  in
     let thunk1 =
       FStar_Common.mk_thunk
-        (fun uu____64478  ->
+        (fun uu____64511  ->
            FStar_TypeChecker_NBETerm.Constant
              (FStar_TypeChecker_NBETerm.String
                 ("(((goal.nbe)))", FStar_Range.dummyRange)))
@@ -368,134 +368,134 @@ let (e_goal_nbe :
         (FStar_Util.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_goal ;
-           FStar_Syntax_Syntax.ltyp = uu____64511;
-           FStar_Syntax_Syntax.rng = uu____64512;_},uu____64513)
+           FStar_Syntax_Syntax.ltyp = uu____64544;
+           FStar_Syntax_Syntax.rng = uu____64545;_},uu____64546)
         ->
-        let uu____64532 = FStar_Dyn.undyn b  in
+        let uu____64565 = FStar_Dyn.undyn b  in
         FStar_All.pipe_left
-          (fun _64535  -> FStar_Pervasives_Native.Some _64535) uu____64532
-    | uu____64536 ->
-        ((let uu____64538 =
-            let uu____64544 =
-              let uu____64546 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded NBE goal: %s" uu____64546
+          (fun _64568  -> FStar_Pervasives_Native.Some _64568) uu____64565
+    | uu____64569 ->
+        ((let uu____64571 =
+            let uu____64577 =
+              let uu____64579 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded NBE goal: %s" uu____64579
                in
-            (FStar_Errors.Warning_NotEmbedded, uu____64544)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____64538);
+            (FStar_Errors.Warning_NotEmbedded, uu____64577)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____64571);
          FStar_Pervasives_Native.None)
      in
-  let uu____64550 = mkFV fv_goal [] []  in
-  let uu____64555 = fv_as_emb_typ fv_goal  in
+  let uu____64583 = mkFV fv_goal [] []  in
+  let uu____64588 = fv_as_emb_typ fv_goal  in
   {
     FStar_TypeChecker_NBETerm.em = embed_goal;
     FStar_TypeChecker_NBETerm.un = unembed_goal;
-    FStar_TypeChecker_NBETerm.typ = uu____64550;
-    FStar_TypeChecker_NBETerm.emb_typ = uu____64555
+    FStar_TypeChecker_NBETerm.typ = uu____64583;
+    FStar_TypeChecker_NBETerm.emb_typ = uu____64588
   } 
 let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
-  let embed_exn e rng uu____64581 uu____64582 =
+  let embed_exn e rng uu____64614 uu____64615 =
     match e with
     | FStar_Tactics_Types.TacticFailure s ->
-        let uu____64586 =
-          let uu____64591 =
-            let uu____64592 =
-              let uu____64601 = embed FStar_Syntax_Embeddings.e_string rng s
+        let uu____64619 =
+          let uu____64624 =
+            let uu____64625 =
+              let uu____64634 = embed FStar_Syntax_Embeddings.e_string rng s
                  in
-              FStar_Syntax_Syntax.as_arg uu____64601  in
-            [uu____64592]  in
+              FStar_Syntax_Syntax.as_arg uu____64634  in
+            [uu____64625]  in
           FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure_tm
-            uu____64591
+            uu____64624
            in
-        uu____64586 FStar_Pervasives_Native.None rng
+        uu____64619 FStar_Pervasives_Native.None rng
     | FStar_Tactics_Types.EExn t ->
-        let uu___726_64620 = t  in
+        let uu___726_64653 = t  in
         {
-          FStar_Syntax_Syntax.n = (uu___726_64620.FStar_Syntax_Syntax.n);
+          FStar_Syntax_Syntax.n = (uu___726_64653.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = rng;
           FStar_Syntax_Syntax.vars =
-            (uu___726_64620.FStar_Syntax_Syntax.vars)
+            (uu___726_64653.FStar_Syntax_Syntax.vars)
         }
     | e1 ->
         let s =
-          let uu____64624 = FStar_Util.message_of_exn e1  in
-          Prims.op_Hat "uncaught exception: " uu____64624  in
-        let uu____64627 =
-          let uu____64632 =
-            let uu____64633 =
-              let uu____64642 = embed FStar_Syntax_Embeddings.e_string rng s
+          let uu____64657 = FStar_Util.message_of_exn e1  in
+          Prims.op_Hat "uncaught exception: " uu____64657  in
+        let uu____64660 =
+          let uu____64665 =
+            let uu____64666 =
+              let uu____64675 = embed FStar_Syntax_Embeddings.e_string rng s
                  in
-              FStar_Syntax_Syntax.as_arg uu____64642  in
-            [uu____64633]  in
+              FStar_Syntax_Syntax.as_arg uu____64675  in
+            [uu____64666]  in
           FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure_tm
-            uu____64632
+            uu____64665
            in
-        uu____64627 FStar_Pervasives_Native.None rng
+        uu____64660 FStar_Pervasives_Native.None rng
      in
-  let unembed_exn t w uu____64679 =
-    let uu____64684 = hd'_and_args t  in
-    match uu____64684 with
-    | (FStar_Syntax_Syntax.Tm_fvar fv,(s,uu____64703)::[]) when
+  let unembed_exn t w uu____64712 =
+    let uu____64717 = hd'_and_args t  in
+    match uu____64717 with
+    | (FStar_Syntax_Syntax.Tm_fvar fv,(s,uu____64736)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure_lid ->
-        let uu____64738 = unembed' w FStar_Syntax_Embeddings.e_string s  in
-        FStar_Util.bind_opt uu____64738
+        let uu____64771 = unembed' w FStar_Syntax_Embeddings.e_string s  in
+        FStar_Util.bind_opt uu____64771
           (fun s1  ->
              FStar_Pervasives_Native.Some
                (FStar_Tactics_Types.TacticFailure s1))
-    | uu____64747 ->
+    | uu____64780 ->
         FStar_Pervasives_Native.Some (FStar_Tactics_Types.EExn t)
      in
-  let uu____64762 =
-    let uu____64763 =
-      let uu____64771 =
+  let uu____64795 =
+    let uu____64796 =
+      let uu____64804 =
         FStar_All.pipe_right FStar_Parser_Const.exn_lid
           FStar_Ident.string_of_lid
          in
-      (uu____64771, [])  in
-    FStar_Syntax_Syntax.ET_app uu____64763  in
+      (uu____64804, [])  in
+    FStar_Syntax_Syntax.ET_app uu____64796  in
   FStar_Syntax_Embeddings.mk_emb_full embed_exn unembed_exn
-    FStar_Syntax_Syntax.t_exn (fun uu____64778  -> "(exn)") uu____64762
+    FStar_Syntax_Syntax.t_exn (fun uu____64811  -> "(exn)") uu____64795
   
 let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
   let embed_exn cb e =
     match e with
     | FStar_Tactics_Types.TacticFailure s ->
-        let uu____64796 =
-          let uu____64803 =
-            let uu____64808 =
+        let uu____64829 =
+          let uu____64836 =
+            let uu____64841 =
               FStar_TypeChecker_NBETerm.embed
                 FStar_TypeChecker_NBETerm.e_string cb s
                in
-            FStar_TypeChecker_NBETerm.as_arg uu____64808  in
-          [uu____64803]  in
-        mkConstruct fstar_tactics_TacticFailure_fv [] uu____64796
-    | uu____64818 ->
-        let uu____64819 =
-          let uu____64821 = FStar_Util.message_of_exn e  in
-          FStar_Util.format1 "cannot embed exn (NBE) : %s" uu____64821  in
-        failwith uu____64819
+            FStar_TypeChecker_NBETerm.as_arg uu____64841  in
+          [uu____64836]  in
+        mkConstruct fstar_tactics_TacticFailure_fv [] uu____64829
+    | uu____64851 ->
+        let uu____64852 =
+          let uu____64854 = FStar_Util.message_of_exn e  in
+          FStar_Util.format1 "cannot embed exn (NBE) : %s" uu____64854  in
+        failwith uu____64852
      in
   let unembed_exn cb t =
     match t with
     | FStar_TypeChecker_NBETerm.Construct
-        (fv,uu____64840,(s,uu____64842)::[]) when
+        (fv,uu____64873,(s,uu____64875)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure_lid ->
-        let uu____64861 =
+        let uu____64894 =
           FStar_TypeChecker_NBETerm.unembed
             FStar_TypeChecker_NBETerm.e_string cb s
            in
-        FStar_Util.bind_opt uu____64861
+        FStar_Util.bind_opt uu____64894
           (fun s1  ->
              FStar_Pervasives_Native.Some
                (FStar_Tactics_Types.TacticFailure s1))
-    | uu____64870 -> FStar_Pervasives_Native.None  in
+    | uu____64903 -> FStar_Pervasives_Native.None  in
   let fv_exn = FStar_Syntax_Syntax.fvconst FStar_Parser_Const.exn_lid  in
-  let uu____64872 = mkFV fv_exn [] []  in
-  let uu____64877 = fv_as_emb_typ fv_exn  in
+  let uu____64905 = mkFV fv_exn [] []  in
+  let uu____64910 = fv_as_emb_typ fv_exn  in
   {
     FStar_TypeChecker_NBETerm.em = embed_exn;
     FStar_TypeChecker_NBETerm.un = unembed_exn;
-    FStar_TypeChecker_NBETerm.typ = uu____64872;
-    FStar_TypeChecker_NBETerm.emb_typ = uu____64877
+    FStar_TypeChecker_NBETerm.typ = uu____64905;
+    FStar_TypeChecker_NBETerm.emb_typ = uu____64910
   } 
 let e_result :
   'a .
@@ -503,108 +503,108 @@ let e_result :
       'a FStar_Tactics_Result.__result FStar_Syntax_Embeddings.embedding
   =
   fun ea  ->
-    let embed_result res rng uu____64919 uu____64920 =
+    let embed_result res rng uu____64952 uu____64953 =
       match res with
       | FStar_Tactics_Result.Success (a,ps) ->
-          let uu____64926 =
-            let uu____64931 =
+          let uu____64959 =
+            let uu____64964 =
               FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Success_tm
                 [FStar_Syntax_Syntax.U_zero]
                in
-            let uu____64932 =
-              let uu____64933 =
-                let uu____64942 = FStar_Syntax_Embeddings.type_of ea  in
-                FStar_Syntax_Syntax.iarg uu____64942  in
-              let uu____64943 =
-                let uu____64954 =
-                  let uu____64963 = embed ea rng a  in
-                  FStar_Syntax_Syntax.as_arg uu____64963  in
-                let uu____64964 =
-                  let uu____64975 =
-                    let uu____64984 = embed e_proofstate rng ps  in
-                    FStar_Syntax_Syntax.as_arg uu____64984  in
-                  [uu____64975]  in
-                uu____64954 :: uu____64964  in
-              uu____64933 :: uu____64943  in
-            FStar_Syntax_Syntax.mk_Tm_app uu____64931 uu____64932  in
-          uu____64926 FStar_Pervasives_Native.None rng
+            let uu____64965 =
+              let uu____64966 =
+                let uu____64975 = FStar_Syntax_Embeddings.type_of ea  in
+                FStar_Syntax_Syntax.iarg uu____64975  in
+              let uu____64976 =
+                let uu____64987 =
+                  let uu____64996 = embed ea rng a  in
+                  FStar_Syntax_Syntax.as_arg uu____64996  in
+                let uu____64997 =
+                  let uu____65008 =
+                    let uu____65017 = embed e_proofstate rng ps  in
+                    FStar_Syntax_Syntax.as_arg uu____65017  in
+                  [uu____65008]  in
+                uu____64987 :: uu____64997  in
+              uu____64966 :: uu____64976  in
+            FStar_Syntax_Syntax.mk_Tm_app uu____64964 uu____64965  in
+          uu____64959 FStar_Pervasives_Native.None rng
       | FStar_Tactics_Result.Failed (e,ps) ->
-          let uu____65019 =
-            let uu____65024 =
+          let uu____65052 =
+            let uu____65057 =
               FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Failed_tm
                 [FStar_Syntax_Syntax.U_zero]
                in
-            let uu____65025 =
-              let uu____65026 =
-                let uu____65035 = FStar_Syntax_Embeddings.type_of ea  in
-                FStar_Syntax_Syntax.iarg uu____65035  in
-              let uu____65036 =
-                let uu____65047 =
-                  let uu____65056 = embed e_exn rng e  in
-                  FStar_Syntax_Syntax.as_arg uu____65056  in
-                let uu____65057 =
-                  let uu____65068 =
-                    let uu____65077 = embed e_proofstate rng ps  in
-                    FStar_Syntax_Syntax.as_arg uu____65077  in
-                  [uu____65068]  in
-                uu____65047 :: uu____65057  in
-              uu____65026 :: uu____65036  in
-            FStar_Syntax_Syntax.mk_Tm_app uu____65024 uu____65025  in
-          uu____65019 FStar_Pervasives_Native.None rng
+            let uu____65058 =
+              let uu____65059 =
+                let uu____65068 = FStar_Syntax_Embeddings.type_of ea  in
+                FStar_Syntax_Syntax.iarg uu____65068  in
+              let uu____65069 =
+                let uu____65080 =
+                  let uu____65089 = embed e_exn rng e  in
+                  FStar_Syntax_Syntax.as_arg uu____65089  in
+                let uu____65090 =
+                  let uu____65101 =
+                    let uu____65110 = embed e_proofstate rng ps  in
+                    FStar_Syntax_Syntax.as_arg uu____65110  in
+                  [uu____65101]  in
+                uu____65080 :: uu____65090  in
+              uu____65059 :: uu____65069  in
+            FStar_Syntax_Syntax.mk_Tm_app uu____65057 uu____65058  in
+          uu____65052 FStar_Pervasives_Native.None rng
        in
-    let unembed_result t w uu____65131 =
-      let uu____65138 = hd'_and_args t  in
-      match uu____65138 with
+    let unembed_result t w uu____65164 =
+      let uu____65171 = hd'_and_args t  in
+      match uu____65171 with
       | (FStar_Syntax_Syntax.Tm_fvar
-         fv,_t::(a,uu____65160)::(ps,uu____65162)::[]) when
+         fv,_t::(a,uu____65193)::(ps,uu____65195)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Success_lid ->
-          let uu____65229 = unembed' w ea a  in
-          FStar_Util.bind_opt uu____65229
+          let uu____65262 = unembed' w ea a  in
+          FStar_Util.bind_opt uu____65262
             (fun a1  ->
-               let uu____65237 = unembed' w e_proofstate ps  in
-               FStar_Util.bind_opt uu____65237
+               let uu____65270 = unembed' w e_proofstate ps  in
+               FStar_Util.bind_opt uu____65270
                  (fun ps1  ->
                     FStar_Pervasives_Native.Some
                       (FStar_Tactics_Result.Success (a1, ps1))))
       | (FStar_Syntax_Syntax.Tm_fvar
-         fv,_t::(e,uu____65249)::(ps,uu____65251)::[]) when
+         fv,_t::(e,uu____65282)::(ps,uu____65284)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Failed_lid ->
-          let uu____65318 = unembed' w e_exn e  in
-          FStar_Util.bind_opt uu____65318
+          let uu____65351 = unembed' w e_exn e  in
+          FStar_Util.bind_opt uu____65351
             (fun e1  ->
-               let uu____65326 = unembed' w e_proofstate ps  in
-               FStar_Util.bind_opt uu____65326
+               let uu____65359 = unembed' w e_proofstate ps  in
+               FStar_Util.bind_opt uu____65359
                  (fun ps1  ->
                     FStar_Pervasives_Native.Some
                       (FStar_Tactics_Result.Failed (e1, ps1))))
-      | uu____65335 ->
+      | uu____65368 ->
           (if w
            then
-             (let uu____65352 =
-                let uu____65358 =
-                  let uu____65360 = FStar_Syntax_Print.term_to_string t  in
+             (let uu____65385 =
+                let uu____65391 =
+                  let uu____65393 = FStar_Syntax_Print.term_to_string t  in
                   FStar_Util.format1 "Not an embedded tactic result: %s"
-                    uu____65360
+                    uu____65393
                    in
-                (FStar_Errors.Warning_NotEmbedded, uu____65358)  in
-              FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____65352)
+                (FStar_Errors.Warning_NotEmbedded, uu____65391)  in
+              FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____65385)
            else ();
            FStar_Pervasives_Native.None)
        in
-    let uu____65368 =
-      let uu____65369 = FStar_Syntax_Embeddings.type_of ea  in
-      t_result_of uu____65369  in
-    let uu____65370 =
-      let uu____65371 =
-        let uu____65379 =
+    let uu____65401 =
+      let uu____65402 = FStar_Syntax_Embeddings.type_of ea  in
+      t_result_of uu____65402  in
+    let uu____65403 =
+      let uu____65404 =
+        let uu____65412 =
           FStar_All.pipe_right t_result_lid FStar_Ident.string_of_lid  in
-        let uu____65382 =
-          let uu____65385 = FStar_Syntax_Embeddings.emb_typ_of ea  in
-          [uu____65385]  in
-        (uu____65379, uu____65382)  in
-      FStar_Syntax_Syntax.ET_app uu____65371  in
+        let uu____65415 =
+          let uu____65418 = FStar_Syntax_Embeddings.emb_typ_of ea  in
+          [uu____65418]  in
+        (uu____65412, uu____65415)  in
+      FStar_Syntax_Syntax.ET_app uu____65404  in
     FStar_Syntax_Embeddings.mk_emb_full embed_result unembed_result
-      uu____65368 (fun uu____65392  -> "") uu____65370
+      uu____65401 (fun uu____65425  -> "") uu____65403
   
 let e_result_nbe :
   'a .
@@ -615,82 +615,82 @@ let e_result_nbe :
     let embed_result cb res =
       match res with
       | FStar_Tactics_Result.Failed (e,ps) ->
-          let uu____65432 =
-            let uu____65439 =
-              let uu____65444 = FStar_TypeChecker_NBETerm.type_of ea  in
-              FStar_TypeChecker_NBETerm.as_iarg uu____65444  in
-            let uu____65445 =
-              let uu____65452 =
-                let uu____65457 =
+          let uu____65465 =
+            let uu____65472 =
+              let uu____65477 = FStar_TypeChecker_NBETerm.type_of ea  in
+              FStar_TypeChecker_NBETerm.as_iarg uu____65477  in
+            let uu____65478 =
+              let uu____65485 =
+                let uu____65490 =
                   FStar_TypeChecker_NBETerm.embed e_exn_nbe cb e  in
-                FStar_TypeChecker_NBETerm.as_arg uu____65457  in
-              let uu____65458 =
-                let uu____65465 =
-                  let uu____65470 =
+                FStar_TypeChecker_NBETerm.as_arg uu____65490  in
+              let uu____65491 =
+                let uu____65498 =
+                  let uu____65503 =
                     FStar_TypeChecker_NBETerm.embed e_proofstate_nbe cb ps
                      in
-                  FStar_TypeChecker_NBETerm.as_arg uu____65470  in
-                [uu____65465]  in
-              uu____65452 :: uu____65458  in
-            uu____65439 :: uu____65445  in
+                  FStar_TypeChecker_NBETerm.as_arg uu____65503  in
+                [uu____65498]  in
+              uu____65485 :: uu____65491  in
+            uu____65472 :: uu____65478  in
           mkConstruct fstar_tactics_Failed_fv [FStar_Syntax_Syntax.U_zero]
-            uu____65432
+            uu____65465
       | FStar_Tactics_Result.Success (a,ps) ->
-          let uu____65489 =
-            let uu____65496 =
-              let uu____65501 = FStar_TypeChecker_NBETerm.type_of ea  in
-              FStar_TypeChecker_NBETerm.as_iarg uu____65501  in
-            let uu____65502 =
-              let uu____65509 =
-                let uu____65514 = FStar_TypeChecker_NBETerm.embed ea cb a  in
-                FStar_TypeChecker_NBETerm.as_arg uu____65514  in
-              let uu____65515 =
-                let uu____65522 =
-                  let uu____65527 =
+          let uu____65522 =
+            let uu____65529 =
+              let uu____65534 = FStar_TypeChecker_NBETerm.type_of ea  in
+              FStar_TypeChecker_NBETerm.as_iarg uu____65534  in
+            let uu____65535 =
+              let uu____65542 =
+                let uu____65547 = FStar_TypeChecker_NBETerm.embed ea cb a  in
+                FStar_TypeChecker_NBETerm.as_arg uu____65547  in
+              let uu____65548 =
+                let uu____65555 =
+                  let uu____65560 =
                     FStar_TypeChecker_NBETerm.embed e_proofstate_nbe cb ps
                      in
-                  FStar_TypeChecker_NBETerm.as_arg uu____65527  in
-                [uu____65522]  in
-              uu____65509 :: uu____65515  in
-            uu____65496 :: uu____65502  in
+                  FStar_TypeChecker_NBETerm.as_arg uu____65560  in
+                [uu____65555]  in
+              uu____65542 :: uu____65548  in
+            uu____65529 :: uu____65535  in
           mkConstruct fstar_tactics_Success_fv [FStar_Syntax_Syntax.U_zero]
-            uu____65489
+            uu____65522
        in
     let unembed_result cb t =
       match t with
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____65564,(ps,uu____65566)::(a,uu____65568)::_t::[]) when
+          (fv,uu____65597,(ps,uu____65599)::(a,uu____65601)::_t::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Success_lid ->
-          let uu____65600 = FStar_TypeChecker_NBETerm.unembed ea cb a  in
-          FStar_Util.bind_opt uu____65600
+          let uu____65633 = FStar_TypeChecker_NBETerm.unembed ea cb a  in
+          FStar_Util.bind_opt uu____65633
             (fun a1  ->
-               let uu____65608 =
+               let uu____65641 =
                  FStar_TypeChecker_NBETerm.unembed e_proofstate_nbe cb ps  in
-               FStar_Util.bind_opt uu____65608
+               FStar_Util.bind_opt uu____65641
                  (fun ps1  ->
                     FStar_Pervasives_Native.Some
                       (FStar_Tactics_Result.Success (a1, ps1))))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____65618,(ps,uu____65620)::(e,uu____65622)::_t::[]) when
+          (fv,uu____65651,(ps,uu____65653)::(e,uu____65655)::_t::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Failed_lid ->
-          let uu____65654 = FStar_TypeChecker_NBETerm.unembed e_exn_nbe cb e
+          let uu____65687 = FStar_TypeChecker_NBETerm.unembed e_exn_nbe cb e
              in
-          FStar_Util.bind_opt uu____65654
+          FStar_Util.bind_opt uu____65687
             (fun e1  ->
-               let uu____65662 =
+               let uu____65695 =
                  FStar_TypeChecker_NBETerm.unembed e_proofstate_nbe cb ps  in
-               FStar_Util.bind_opt uu____65662
+               FStar_Util.bind_opt uu____65695
                  (fun ps1  ->
                     FStar_Pervasives_Native.Some
                       (FStar_Tactics_Result.Failed (e1, ps1))))
-      | uu____65671 -> FStar_Pervasives_Native.None  in
-    let uu____65674 = mkFV fv_result [] []  in
-    let uu____65679 = fv_as_emb_typ fv_result  in
+      | uu____65704 -> FStar_Pervasives_Native.None  in
+    let uu____65707 = mkFV fv_result [] []  in
+    let uu____65712 = fv_as_emb_typ fv_result  in
     {
       FStar_TypeChecker_NBETerm.em = embed_result;
       FStar_TypeChecker_NBETerm.un = unembed_result;
-      FStar_TypeChecker_NBETerm.typ = uu____65674;
-      FStar_TypeChecker_NBETerm.emb_typ = uu____65679
+      FStar_TypeChecker_NBETerm.typ = uu____65707;
+      FStar_TypeChecker_NBETerm.emb_typ = uu____65712
     }
   
 let (e_direction :
@@ -700,27 +700,27 @@ let (e_direction :
     | FStar_Tactics_Types.TopDown  -> fstar_tactics_topdown
     | FStar_Tactics_Types.BottomUp  -> fstar_tactics_bottomup  in
   let unembed_direction w t =
-    let uu____65713 =
-      let uu____65714 = FStar_Syntax_Subst.compress t  in
-      uu____65714.FStar_Syntax_Syntax.n  in
-    match uu____65713 with
+    let uu____65746 =
+      let uu____65747 = FStar_Syntax_Subst.compress t  in
+      uu____65747.FStar_Syntax_Syntax.n  in
+    match uu____65746 with
     | FStar_Syntax_Syntax.Tm_fvar fv when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_topdown_lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.TopDown
     | FStar_Syntax_Syntax.Tm_fvar fv when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_bottomup_lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.BottomUp
-    | uu____65721 ->
+    | uu____65754 ->
         (if w
          then
-           (let uu____65724 =
-              let uu____65730 =
-                let uu____65732 = FStar_Syntax_Print.term_to_string t  in
+           (let uu____65757 =
+              let uu____65763 =
+                let uu____65765 = FStar_Syntax_Print.term_to_string t  in
                 FStar_Util.format1 "Not an embedded direction: %s"
-                  uu____65732
+                  uu____65765
                  in
-              (FStar_Errors.Warning_NotEmbedded, uu____65730)  in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____65724)
+              (FStar_Errors.Warning_NotEmbedded, uu____65763)  in
+            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____65757)
          else ();
          FStar_Pervasives_Native.None)
      in
@@ -736,29 +736,29 @@ let (e_direction_nbe :
      in
   let unembed_direction cb t =
     match t with
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65776,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65809,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_topdown_lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.TopDown
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65792,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65825,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_bottomup_lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.BottomUp
-    | uu____65807 ->
-        ((let uu____65809 =
-            let uu____65815 =
-              let uu____65817 = FStar_TypeChecker_NBETerm.t_to_string t  in
-              FStar_Util.format1 "Not an embedded direction: %s" uu____65817
+    | uu____65840 ->
+        ((let uu____65842 =
+            let uu____65848 =
+              let uu____65850 = FStar_TypeChecker_NBETerm.t_to_string t  in
+              FStar_Util.format1 "Not an embedded direction: %s" uu____65850
                in
-            (FStar_Errors.Warning_NotEmbedded, uu____65815)  in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu____65809);
+            (FStar_Errors.Warning_NotEmbedded, uu____65848)  in
+          FStar_Errors.log_issue FStar_Range.dummyRange uu____65842);
          FStar_Pervasives_Native.None)
      in
-  let uu____65821 = mkFV fv_direction [] []  in
-  let uu____65826 = fv_as_emb_typ fv_direction  in
+  let uu____65854 = mkFV fv_direction [] []  in
+  let uu____65859 = fv_as_emb_typ fv_direction  in
   {
     FStar_TypeChecker_NBETerm.em = embed_direction;
     FStar_TypeChecker_NBETerm.un = unembed_direction;
-    FStar_TypeChecker_NBETerm.typ = uu____65821;
-    FStar_TypeChecker_NBETerm.emb_typ = uu____65826
+    FStar_TypeChecker_NBETerm.typ = uu____65854;
+    FStar_TypeChecker_NBETerm.emb_typ = uu____65859
   } 
 let (e_guard_policy :
   FStar_Tactics_Types.guard_policy FStar_Syntax_Embeddings.embedding) =
@@ -769,10 +769,10 @@ let (e_guard_policy :
     | FStar_Tactics_Types.Force  -> fstar_tactics_Force
     | FStar_Tactics_Types.Drop  -> fstar_tactics_Drop  in
   let unembed_guard_policy w t =
-    let uu____65858 =
-      let uu____65859 = FStar_Syntax_Subst.compress t  in
-      uu____65859.FStar_Syntax_Syntax.n  in
-    match uu____65858 with
+    let uu____65891 =
+      let uu____65892 = FStar_Syntax_Subst.compress t  in
+      uu____65892.FStar_Syntax_Syntax.n  in
+    match uu____65891 with
     | FStar_Syntax_Syntax.Tm_fvar fv when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SMT_lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.SMT
@@ -785,17 +785,17 @@ let (e_guard_policy :
     | FStar_Syntax_Syntax.Tm_fvar fv when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Drop_lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.Drop
-    | uu____65868 ->
+    | uu____65901 ->
         (if w
          then
-           (let uu____65871 =
-              let uu____65877 =
-                let uu____65879 = FStar_Syntax_Print.term_to_string t  in
+           (let uu____65904 =
+              let uu____65910 =
+                let uu____65912 = FStar_Syntax_Print.term_to_string t  in
                 FStar_Util.format1 "Not an embedded guard_policy: %s"
-                  uu____65879
+                  uu____65912
                  in
-              (FStar_Errors.Warning_NotEmbedded, uu____65877)  in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____65871)
+              (FStar_Errors.Warning_NotEmbedded, uu____65910)  in
+            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____65904)
          else ();
          FStar_Pervasives_Native.None)
      in
@@ -811,24 +811,24 @@ let (e_guard_policy_nbe :
      in
   let unembed_guard_policy cb t =
     match t with
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65933,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65966,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SMT_lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.SMT
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65949,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65982,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Goal_lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.Goal
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65965,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65998,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Force_lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.Force
-    | FStar_TypeChecker_NBETerm.Construct (fv,uu____65981,[]) when
+    | FStar_TypeChecker_NBETerm.Construct (fv,uu____66014,[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Drop_lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.Drop
-    | uu____65996 -> FStar_Pervasives_Native.None  in
-  let uu____65997 = mkFV fv_guard_policy [] []  in
-  let uu____66002 = fv_as_emb_typ fv_guard_policy  in
+    | uu____66029 -> FStar_Pervasives_Native.None  in
+  let uu____66030 = mkFV fv_guard_policy [] []  in
+  let uu____66035 = fv_as_emb_typ fv_guard_policy  in
   {
     FStar_TypeChecker_NBETerm.em = embed_guard_policy;
     FStar_TypeChecker_NBETerm.un = unembed_guard_policy;
-    FStar_TypeChecker_NBETerm.typ = uu____65997;
-    FStar_TypeChecker_NBETerm.emb_typ = uu____66002
+    FStar_TypeChecker_NBETerm.typ = uu____66030;
+    FStar_TypeChecker_NBETerm.emb_typ = uu____66035
   } 
