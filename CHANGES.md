@@ -107,6 +107,16 @@ Guidelines for the changelog:
      in `fstar --version`. This is to prevent needlessly rebuilding
      F\* even when the code does not change.
 
+## Dependence analysis and build
+
+   * --already_cached provides a way to assert that some modules, and
+     only those modules, have already been verified, i.e, valid
+     .checked files exist for them. In case a module that is marked
+     `--already_cached` does not have a valid .checked file, Error 317
+     is raised. Otherwise, if we find a checked file for a module that
+     is not already_cached in a location that is not the same as its
+     expected output location, we raise Warning 321.
+
 # Version 0.9.6.0
 
 ## Command line options

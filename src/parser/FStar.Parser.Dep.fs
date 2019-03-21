@@ -215,8 +215,9 @@ let cache_file_name =
       match Options.find_file (cache_fn |> Util.basename) with
       | Some path ->
         let expected_cache_file = Options.prepend_cache_dir cache_fn in
-        if not (Options.should_be_already_cached mname)
-        && (not (BU.file_exists expected_cache_file)
+        if Option.isSome (Options.dep()) //if we're in the dependence analysis
+        && not (Options.should_be_already_cached mname) //and checked file is in the
+        && (not (BU.file_exists expected_cache_file) //wrong spot ... complain
             || not (BU.paths_to_same_file path expected_cache_file))
         then
             FStar.Errors.log_issue
