@@ -101,7 +101,7 @@
         "typing_FStar.Seq.Base.upd", "typing_FStar.Seq.Properties.mem"
       ],
       0,
-      "c81e1328e34ee643794bcf68cd056c0f"
+      "3bacde5db227717eb83ed3a752c18256"
     ],
     [
       "QuickSort.Array.lemma_slice_cons_pv",
@@ -161,7 +161,7 @@
         "typing_FStar.Seq.Properties.cons"
       ],
       0,
-      "67d2da7bc1d005a8d60be0090a923f58"
+      "1900dff38d0e56dd2e9c994bee132717"
     ],
     [
       "QuickSort.Array.sort",
@@ -256,7 +256,7 @@
         "typing_FStar.Array.sel", "typing_FStar.Seq.Properties.sorted"
       ],
       0,
-      "7e58eb41aedc48d3c2c5b323a86ee177"
+      "d0658f95849bacba011fe1eff0960b52"
     ],
     [
       "QuickSort.Array.partition_pre",

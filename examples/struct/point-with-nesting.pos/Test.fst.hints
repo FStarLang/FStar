@@ -134,7 +134,7 @@
         "token_correspondence_FStar.Pointer.Base.type_of_typ"
       ],
       0,
-      "5ed1ceb8a3215cbac6f82fa729af30c6"
+      "36d8b360e6e2ef4ad6ef7d70115d379b"
     ],
     [
       "Test.flip",
@@ -225,7 +225,7 @@
         "typing_Test.point_struct", "typing_Test.point_t"
       ],
       0,
-      "c2f638316d8469e10e387c952185ed78"
+      "c18fbce0a8f73da822d1e768177b6372"
     ],
     [
       "Test.flip'",
@@ -316,7 +316,7 @@
         "typing_Test.point_struct", "typing_Test.point_t"
       ],
       0,
-      "eaf6e11b599907a2e729ad0cf5d1e5fe"
+      "605917994a898b149f6220abc9bff9f9"
     ]
   ]
 ]

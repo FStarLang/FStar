@@ -631,7 +631,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "29bc0f42e8a83b49705842ea4f9b9265"
+      "ad1ca793e55abd2ef31573aaf4848e77"
     ],
     [
       "FStar.Seq.Base.lemma_index_upd1",
@@ -1005,7 +1005,7 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
+        "refinement_interpretation_Tm_refine_26f049019fc9977ff2ac1fb2e44537c7",
         "refinement_interpretation_Tm_refine_5b76b1c4682092d8298d5677347b4a58",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_d64551f2e3af311862d064f60915767e",
@@ -1087,9 +1087,8 @@
         "binder_x_e22ba7a032a73f6d0678d3d186686631_3",
         "binder_x_f419b35605f06cb45eb668d745588284_5",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "constructor_distinct_BoxInt", "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
-        "equality_tok_Prims.LexTop@tok", "equation_FStar.List.Tot.Base.hd",
+        "constructor_distinct_Prims.Cons", "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl", "equation_FStar.Seq.Base.cons",
         "equation_FStar.Seq.Base.hd", "equation_FStar.Seq.Base.index",
@@ -1120,7 +1119,6 @@
         "refinement_interpretation_Tm_refine_aebc5aa9049e78f605051015a3436e68",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_d3d8dcc0b03a1c4029672200cc7c71b6",
-        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_FStar.Seq.Base.__proj__MkSeq__item__l",
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.slice",
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
@@ -1282,7 +1280,7 @@
       1,
       [ "@query", "lemma_FStar.Seq.Base.lemma_eq_intro" ],
       0,
-      "6637cc31a3b4b93ffbb0808192884b7b"
+      "ff519a070e91b33be35b25a7886a50fd"
     ],
     [
       "FStar.Seq.Base.lemma_eq_elim",
@@ -1436,7 +1434,7 @@
         "typing_FStar.Seq.Base.init_aux", "well-founded-ordering-on-nat"
       ],
       0,
-      "6493d1bb039260cb2a88856141c269b7"
+      "063cdca1ab3a60f7020a8a754a64430a"
     ],
     [
       "FStar.Seq.Base.init_index",

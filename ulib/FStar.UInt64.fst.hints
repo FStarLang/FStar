@@ -526,7 +526,7 @@
         "typing_FStar.UInt64.minus", "typing_FStar.UInt64.v"
       ],
       0,
-      "c8b5ca7aa9ccf6589ea7a9659147bbb8"
+      "26cc91cab99f0c4afe2933ad7c4cbb4d"
     ],
     [
       "FStar.UInt64.lemma_sub_msbs",
@@ -667,7 +667,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "616082458f4e080ee7cd71ce9493f4ba"
+      "af64bfb59481facf97cb8ea19365c2fa"
     ],
     [
       "FStar.UInt64.uint_to_t",
@@ -964,7 +964,7 @@
         "typing_FStar.UInt64.minus", "typing_FStar.UInt64.v"
       ],
       0,
-      "e16702ee17f70c6acc0c463fa0628554"
+      "36e46255f9cd34c837da34bc2e579a9e"
     ],
     [
       "FStar.UInt64.eq_mask",
@@ -1060,7 +1060,7 @@
         "typing_FStar.UInt32.v", "typing_FStar.UInt64.v", "typing_Prims.pow2"
       ],
       0,
-      "deac5e7c068bd553b7fcf51e354b7d78"
+      "451f1a6a6b8761cdbf0bc98026b01d9e"
     ],
     [
       "FStar.UInt64.op_Plus_Percent_Hat",

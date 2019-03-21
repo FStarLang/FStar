@@ -99,7 +99,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "5fca08c9583556641d8dcf06944f696f"
+      "0c2cf3def91a76119d91fcc4ee15fc26"
     ],
     [
       "FStar.OrdSet.hd_unique",
@@ -865,7 +865,7 @@
         "typing_FStar.OrdSet.singleton"
       ],
       0,
-      "1a7caccbdabf4732dcfa6a615eb50c75"
+      "6c5c3cae2528bd55b2c0fcf63d5a0a68"
     ],
     [
       "FStar.OrdSet.mem_remove",
@@ -1067,7 +1067,7 @@
         "typing_FStar.OrdSet.size"
       ],
       0,
-      "cbef6417ab93be183775b0562f691ed1"
+      "fb61f0d8a3a7bb4d78478c32e50cf523"
     ],
     [
       "FStar.OrdSet.subset_size",
@@ -1439,7 +1439,7 @@
         "typing_FStar.Set.singleton", "unit_inversion", "unit_typing"
       ],
       0,
-      "7b0deebeda8b4701efccb20e4931c627"
+      "f940b17fc37b2021ac867e6182d2f359"
     ],
     [
       "FStar.OrdSet.sorted",

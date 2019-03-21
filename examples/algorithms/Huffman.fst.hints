@@ -250,7 +250,7 @@
         "subterm_ordering_Prims.Cons", "typing_Huffman.sorted"
       ],
       0,
-      "24bdb8669dd45ff67ec4850efc6bedec"
+      "2e0da5279207dd46634804a27ed641d3"
     ],
     [
       "Huffman.insertion_sort",
@@ -1235,7 +1235,7 @@
         "subterm_ordering_Prims.Cons", "typing_Huffman.sorted"
       ],
       0,
-      "0c4bfbf1a51639ed7f4b601bb19fdb3a"
+      "6f42ac28a06c0d0a28875b6e204c16be"
     ],
     [
       "Huffman.insertion_sort",

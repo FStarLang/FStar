@@ -38,7 +38,7 @@
         "typing_ArrayUtils.get_some_equivalent"
       ],
       0,
-      "a0d9e0c931278d41612f640057ece03b"
+      "dd922abf34ddd7083313a967c6c20ccb"
     ],
     [
       "ArrayUtils.lemma_get_some_equivalent_snoc",
@@ -131,7 +131,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1f9f93a2758c56f5f04ef65c4f6c4c70"
+      "3d99f06907cd85d120dab0dd77eaa132"
     ],
     [
       "ArrayUtils.lemma_get_equivalent_sequence_slice",
@@ -255,7 +255,7 @@
       1,
       [ "@query", "lemma_ArrayUtils.lemma_get_some_equivalent_length" ],
       0,
-      "851e588a59ae2455cc0346195eb6fd25"
+      "af2d1143dcdc518c2c24833deaa07c7f"
     ],
     [
       "ArrayUtils.lemma_get_some_equivalent_snoc",
@@ -348,7 +348,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "829a57a0654f2c47acf183e32add4ab7"
+      "2886d17e7f2e06c1a40ea8d5d738e99e"
     ],
     [
       "ArrayUtils.lemma_get_equivalent_sequence_slice",
