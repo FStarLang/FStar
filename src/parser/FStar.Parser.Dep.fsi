@@ -34,7 +34,7 @@ type deps
 val empty_deps : deps
 val interface_of : deps -> module_name:string -> option<string>  //return value is the file name
 val implementation_of : deps -> module_name:string -> option<string>  //return value is the file name
-val cache_file_name: string -> string
+val cache_file_name: (string -> string)
 val parsing_data_of: deps -> string -> parsing_data
 val collect: list<string> -> (string -> option<parsing_data>) -> list<string> * deps
 val deps_of : deps -> string -> list<string>
