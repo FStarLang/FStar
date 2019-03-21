@@ -1251,16 +1251,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 decls
                 @([fuel_guarded_inversion] |> mk_decls_trivial) in
 
-        let k = norm_before_encoding env k in
         let formals, res =
-          match (SS.compress k).n with
-          | Tm_arrow(formals, kres) ->
-            tps@formals, U.comp_result kres
-          | _ ->
-            tps, k
+          let k =
+            match tps with
+            | [] -> k
+            | _ -> S.mk (Tm_arrow (tps, S.mk_Total k)) None k.pos
+          in
+          let k = norm_before_encoding env k in
+          U.arrow_formals k
         in
 
-        let formals, res = SS.open_term formals res in
         let vars, guards, env', binder_decls, _ = encode_binders None formals env in
         let arity = List.length vars in
         let tname, ttok, env = new_term_constant_and_tok_from_lid env t arity in
