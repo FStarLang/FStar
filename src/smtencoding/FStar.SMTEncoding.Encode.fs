@@ -1005,14 +1005,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             in
 
             let encode_action env (a:S.action) =
-              let a = { a
-                with action_typ = norm_before_encoding env a.action_typ;
-                     action_defn = norm_before_encoding env a.action_defn
-              } in
+              let action_defn = norm_before_encoding env (close_effect_params a.action_defn) in
               let formals, _ = U.arrow_formals_comp a.action_typ in
               let arity = List.length formals in
               let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name arity in
-              let tm, decls = encode_term (close_effect_params a.action_defn) env in
+              let tm, decls = encode_term action_defn env in
               let a_decls =
                 [Term.DeclFun(aname, formals |> List.map (fun _ -> Term_sort), Term_sort, Some "Action");
                   Term.DeclFun(atok, [], Term_sort, Some "Action token")]
