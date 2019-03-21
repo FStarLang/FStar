@@ -57,9 +57,18 @@ type tc_result = {
  *)
 type checked_file_entry =
   int *                      //cache version number
-  list<(string * string)> *  //digest of direct dependencies
-  string *                   //digest of just this file
+  
+  list<(string * string)> *  //list of (file_name * digest) of direct dependences
+                             //file_name is name of the source file and
+                             //digest is that of the corresponding checked file
+                             //except when the entries are for the current .fst and .fsti,
+                             //digest is that of the source file
+  
+  string *                   //digest of this source file
+                             //also present in the list above, but handy to have it here
+  
   Parser.Dep.parsing_data *  //parsing data for this file
+  
   tc_result                  //typechecking result, including the smt encoding
 
 (*
@@ -83,9 +92,9 @@ type checked_file_entry =
  *  At that point, the cache is updated to either Valid or Invalid w.r.t. the tc data
  *)
 type tc_result_t =
-  | Unknown of (list<(string * string)>) * string * tc_result  //deps string, digest of this file, tc_result
+  | Unknown of (list<(string * string)>) * tc_result  //deps as in the checked_file_entry, tc_result
   | Invalid of string  //reason why this is invalid
-  | Valid   of string * tc_result  //digest, tc_result
+  | Valid   of string * tc_result  //digest of the checked file, tc_result
 
 (*
  * The cache of checked files
@@ -185,7 +194,7 @@ let load_checked_file (fn:string) (checked_fn:string) :unit =
                   let msg = BU.format2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn in
                   BU.smap_add mcache checked_fn (Invalid msg, Inl msg)
                 end
-                else BU.smap_add mcache checked_fn (Unknown (deps_dig, dig, tc_result), Inr parsing_data)
+                else BU.smap_add mcache checked_fn (Unknown (deps_dig, tc_result), Inr parsing_data)
 
 (*
  * Second step for loading checked files, validates the tc data
@@ -196,7 +205,7 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
   | None -> failwith "Impossible, load_checked_file must add an entry to mcache"
   | Some (Invalid _, _)
   | Some (Valid _, _) -> ()  //already marked Valid or Invalid
-  | Some (Unknown (deps_dig, dig, tc_result), parsing_data) ->
+  | Some (Unknown (deps_dig, tc_result), parsing_data) ->
     match hash_dependences deps fn with
     | Inl msg ->
       BU.smap_add mcache checked_fn (Invalid msg, parsing_data)
@@ -204,7 +213,9 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
       if deps_dig = deps_dig'
       then begin
         //mark the tc data of the file as valid
-        BU.smap_add mcache checked_fn (Valid (dig, tc_result), parsing_data);
+        BU.smap_add mcache
+          checked_fn
+          (Valid (BU.digest_of_file checked_fn, tc_result), parsing_data);
         //if there exists an interface for it, mark that too as valid
         //validity of implementaton tc data implies validity of iface tc data
         let validate_iface_cache () =
@@ -215,8 +226,10 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
             try
               let iface_checked_fn = iface |> Dep.cache_file_name in
               match BU.smap_try_find mcache iface_checked_fn with
-              | Some (Unknown (_, dig, tc_result), parsing_data) ->
-                BU.smap_add mcache iface_checked_fn (Valid (dig, tc_result), parsing_data)
+              | Some (Unknown (_, tc_result), parsing_data) ->
+                BU.smap_add mcache
+                  iface_checked_fn
+                  (Valid (BU.digest_of_file iface_checked_fn, tc_result), parsing_data)
               | _ -> ()
             with
               | _ -> ()
