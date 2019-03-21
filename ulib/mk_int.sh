@@ -13,6 +13,7 @@ EOF
   if [ $i -eq 128 ]; then
       cat >> $f <<EOF
 
+abstract
 val mul_wide: a:Int64.t -> b:Int64.t -> Pure t
   (requires True)
   (ensures (fun c -> v c = Int64.v a * Int64.v b))
@@ -39,6 +40,7 @@ EOF
   if [ $i -eq 128 ]; then
       cat >> $f <<EOF
 
+abstract
 val mul_wide: a:UInt64.t -> b:UInt64.t -> Pure t
   (requires True)
   (ensures (fun c -> v c = UInt64.v a * UInt64.v b))
