@@ -47,6 +47,15 @@ open FStar.Parser
 
 module Env = FStar.TypeChecker.Env
 
+let norm_before_encoding env t =
+    let steps = [Env.Eager_unfolding;
+                 Env.Simplify;
+                 Env.Primops;
+                 Env.AllowUnboundUniverses;
+                 Env.EraseUniverses;
+                 Env.Exclude Env.Zeta] in
+    N.normalize steps env.tcenv t
+
 type prims_t = {
     mk:lident -> string -> term * int * list<decl>;
     is:lident -> bool;
@@ -566,7 +575,7 @@ let declare_top_level_let env x t t_norm =
 
 
 let encode_top_level_val uninterpreted env lid t quals =
-    let tt = norm env t in
+    let tt = norm_before_encoding env t in
 //        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
 //        then Printf.printf "Encoding top-level val %s : %s\Normalized to is %s\n"
 //            (Print.lid_to_string lid)
@@ -693,7 +702,7 @@ let encode_top_level_let :
           bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
             (* some, but not all are lemmas; impossible *)
             if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
-            let t_norm = whnf env lb.lbtyp in
+            let t_norm = norm_before_encoding env lb.lbtyp in
             (* We are declaring the top_level_let with t_norm which might contain *)
             (* non-reified reifiable computation type. *)
             (* TODO : clear this mess, the declaration should have a type corresponding to *)
@@ -996,6 +1005,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             in
 
             let encode_action env (a:S.action) =
+              let a = { a
+                with action_typ = norm_before_encoding env a.action_typ;
+                     action_defn = norm_before_encoding env a.action_defn
+              } in
               let formals, _ = U.arrow_formals_comp a.action_typ in
               let arity = List.length formals in
               let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name arity in
@@ -1055,7 +1068,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_assume(l, us, f) ->
         let uvs, f = SS.open_univ_vars us f in
         let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
-        let f = N.normalize [Env.Beta; Env.Eager_unfolding] env.tcenv f in
+        let f = norm_before_encoding env f in
         let f, decls = encode_formula f env in
         let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^l.str)))]
                 |> mk_decls_trivial in
@@ -1115,14 +1128,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       let bindings =
         List.map
           (fun lb ->
-            let steps = [Env.Eager_unfolding;
-                         Env.Simplify;
-                         Env.Primops;
-                         Env.AllowUnboundUniverses;
-                         Env.EraseUniverses;
-                         Env.Exclude Env.Zeta] in
-            let def = N.normalize steps env.tcenv lb.lbdef in
-            let typ = N.normalize steps env.tcenv lb.lbtyp in
+            let def = norm_before_encoding env lb.lbdef in
+            let typ = norm_before_encoding env lb.lbtyp in
             {lb with lbdef=def; lbtyp=typ})
           bindings
       in
@@ -1244,11 +1251,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 decls
                 @([fuel_guarded_inversion] |> mk_decls_trivial) in
 
-        let formals, res = match (SS.compress k).n with
-                | Tm_arrow(formals, kres) ->
-                  tps@formals, U.comp_result kres
-                | _ ->
-                  tps, k in
+        let k = norm_before_encoding env k in
+        let formals, res =
+          match (SS.compress k).n with
+          | Tm_arrow(formals, kres) ->
+            tps@formals, U.comp_result kres
+          | _ ->
+            tps, k
+        in
 
         let formals, res = SS.open_term formals res in
         let vars, guards, env', binder_decls, _ = encode_binders None formals env in
@@ -1307,6 +1317,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_datacon(d, _, t, _, n_tps, _) ->
         let quals = se.sigquals in
+        let t = norm_before_encoding env t in
         let formals, t_res = U.arrow_formals t in
         let arity = List.length formals in
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
@@ -1492,7 +1503,7 @@ let encode_env_bindings (env:env_t) (bindings:list<S.binding>) : (decls_t * env_
           i+1, decls, env
 
         | S.Binding_var x ->
-            let t1 = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv x.sort in
+            let t1 = norm_before_encoding env x.sort in
             if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (BU.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term t1 env in
@@ -1514,7 +1525,7 @@ let encode_env_bindings (env:env_t) (bindings:list<S.binding>) : (decls_t * env_
             i+1, decls@g, env'
 
         | S.Binding_lid(x, (_, t)) ->
-            let t_norm = whnf env t in
+            let t_norm = norm_before_encoding env t in
             let fv = S.lid_as_fv x delta_constant None in
 //            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
             let g, env' = encode_free_var false env fv t t_norm [] in
