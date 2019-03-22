@@ -852,7 +852,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
             encode_term e env
 
-        | Tm_constant (Const_reflect _), [(arg, _)] ->
+        | Tm_constant (Const_reflect _), [_; (arg, _)] ->
             encode_term arg env
 
         | _ ->

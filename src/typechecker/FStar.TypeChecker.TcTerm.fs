@@ -577,15 +577,21 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   (* Unary operators. Explicitly curry extra arguments *)
   | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest)
-  | Tm_app({n=Tm_constant Const_reify}, a::hd::rest)
-  | Tm_app({n=Tm_constant (Const_reflect _)}, a::hd::rest) ->
+  | Tm_app({n=Tm_constant Const_reify}, a::hd::rest) ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args top in
     let head = mk (Tm_app(unary_op, [a])) None (Range.union_ranges unary_op.pos (fst a).pos) in
     let t = mk (Tm_app(head, rest)) None top.pos in
     tc_term env t
 
+  (* Elaborate reflects without an implicit WP arg *)
+  | Tm_app({n=Tm_constant (Const_reflect _)}, (a, None)::rest) ->
+    let unary_op, _ = U.head_and_args top in
+    let t = mk (Tm_app(unary_op, (S.iarg S.tun)::(a, None)::rest)) None top.pos in
+    tc_term env t
+
   (* Binary operators *)
+  | Tm_app({n=Tm_constant (Const_reflect _)}, a1::a2::hd::rest)
   | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::hd::rest) ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args top in
@@ -636,9 +642,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e, c, g' = comp_check_expected_typ env e c in
     e, c, Env.conj_guard g g'
 
-  | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)])->
-    if Option.isSome aqual then
-        Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
+  | Tm_app({n=Tm_constant (Const_reflect l)}, [(ewp, Some (Implicit _)); (e, None)])->
+    (* if Option.isSome aqual then *)
+    (*     Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored"); *)
+    let ewp, _, gwp = tc_term (Env.clear_expected_typ env |> fst) ewp in
     if not (is_user_reifiable_effect env l) then
         raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) e.pos;
     let reflect_op, _ = U.head_and_args top in
@@ -646,32 +653,47 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     | None -> failwith "internal error: user reifiable effect has no decl?"
     | Some (ed, qualifiers) ->
         let env_no_ex, topt = Env.clear_expected_typ env in
-        let expected_repr_typ, res_typ, wp, g0 =
+        let expected_repr_typ, res_typ, wp, g0, g1 =
           let u = Env.new_u_univ () in
           let repr = Env.inst_effect_fun_with [u] env ed ([], ed.repr.monad_m) in
           let t =
             if ed.spec_dm4f
-            then mk (Tm_app(repr, [as_arg S.tun; as_arg S.tun])) None top.pos
+            then mk (Tm_app(repr, [as_arg S.tun; as_arg ewp])) None top.pos
             else mk (Tm_app(repr, [as_arg S.tun])) None top.pos
           in
           let t, _, g = tc_tot_or_gtot_term (Env.clear_expected_typ env |> fst) t in
           match (SS.compress t).n with
-          | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g
+          | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g, Env.trivial_guard
           | Tm_app(_, [(res, _)]) ->
-            let interp_ts =
+            let wp, g'=
                 match ed.interp with
-                | Some ts -> ts
+                | Some interp_ts ->
+                  let interp = Env.inst_effect_fun_with [u] env ed interp_ts in
+                  (* actual wp *)
+                  let awp = U.mk_app interp [iarg res; as_arg e] in
+                  let awp, _, g' = tc_term (Env.clear_expected_typ env |> fst) awp in
+                  let g = Rel.teq env awp ewp in
+                  awp, Env.conj_guard g g'
+
                 | None ->
-                    failwith (BU.format1 "error: effect %s has no interp function \
-                                                 in order to use reflection" (string_of_lid ed.mname))
+                    match ed.mrelation with
+                    | None ->
+                      raise_error (Errors.Error_CannotReflect,
+                            BU.format1 "error: effect %s has no interpretation nor monadic \
+                                               relation, which are needed in order to use \
+                                               reflection" (string_of_lid ed.mname)) top.pos
+
+                    | Some mrelation_ts ->
+                      let mrelation = Env.inst_effect_fun_with [u] env ed mrelation_ts in
+                      let gf = U.mk_app mrelation [S.iarg res; S.as_arg e; S.as_arg ewp] in
+                      let gf = { gf with pos = top.pos } in
+                      ewp, Env.guard_of_guard_formula (NonTrivial gf)
             in
-            let interp = snd <| Env.inst_tscheme interp_ts in
-            let wp = U.mk_app interp [iarg res; as_arg e] in
             (* GG FIXME: This is a cannonball, but some normalization is required
              * to verify even the simplest ND actions. *)
             let wp = N.normalize [Env.UnfoldTac; Env.UnfoldUntil delta_constant;
                                   Env.AllowUnboundUniverses] env wp in
-            t, res, wp, g
+            t, res, wp, g, g'
           | _ -> failwith "unexpected shape after typechecking reflect term"
         in
         let e, g =
@@ -691,10 +713,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
               flags=[]
             }) |> U.lcomp_of_comp
         in
-        let e = mk (Tm_app(reflect_op, [(e, aqual)])) None top.pos in
+        let e = mk (Tm_app(reflect_op, [S.iarg ewp; S.as_arg e])) None top.pos in
         let e, c, g' = comp_check_expected_typ env e c in
         let e = S.mk (Tm_meta(e, Meta_monadic(c.eff_name, c.res_typ))) None e.pos in
-        e, c, Env.conj_guard g' g
+        let c, g = TcUtil.strengthen_precondition None env e c g1 in
+        e, c, Env.conj_guard g' (Env.conj_guard g gwp)
     end
 
   // If we're on the first phase, we don't synth, and just wait for the next phase

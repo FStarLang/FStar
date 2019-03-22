@@ -334,6 +334,7 @@ type raw_error =
   | Warning_UnexpectedCheckedFile
   | Fatal_ExtractionUnsupported
   | Error_NoMRelation
+  | Error_CannotReflect
 
 type flag = error_flag
 
@@ -665,6 +666,7 @@ let default_flags =
   (Warning_UnexpectedCheckedFile                     , CWarning); //321
   (Fatal_ExtractionUnsupported                       , CFatal);
   (Error_NoMRelation                                 , CError);
+  (Error_CannotReflect                               , CError);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]
