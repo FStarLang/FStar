@@ -81,7 +81,7 @@ let zero n = 0
 val pow2_n: #n:pos -> p:nat{p < n-1} -> Tot (int_t n)
 let pow2_n #n p = pow2_le_compat (n - 2) p; pow2 p
 
-val pow2_minus_one: #n:pos{1 < n} -> m:nat{m < n} -> int_t n
+val pow2_minus_one: #n:pos{1 < n} -> m:nat{m < n} -> Tot (int_t n)
 let pow2_minus_one #n m =
   pow2_le_compat (n - 1) m;
   pow2 m - 1 
@@ -198,14 +198,14 @@ let div_size #n a b =
   FStar.Math.Lib.slash_decr_axiom (abs a) (abs b)
 
 val udiv: #n:pos -> a:int_t n{min_int n < a} -> b:int_t n{b <> 0} -> 
-  c:int_t n{b <> 0 ==> a / b = c}
+  Tot (c:int_t n{b <> 0 ==> a / b = c})
 let udiv #n a b =
   div_size #n a b;
   a / b
 
 
 (* Modulo primitives *)
-val mod: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> int_t n
+val mod: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Tot (int_t n)
 let mod #n a b = a - ((a/b) * b)
 
 (* Comparison operators *)
@@ -219,11 +219,11 @@ let lte #n (a:int_t n) (b:int_t n) : Tot bool = a <= b
 
 /// Casts
 
-val to_uint: #n:pos -> x:int_t n -> UInt.uint_t n
+val to_uint: #n:pos -> x:int_t n -> Tot (UInt.uint_t n)
 let to_uint #n x = 
   if 0 <= x then x else x + pow2 n 
 
-val from_uint: #n:pos -> x:UInt.uint_t n -> int_t n
+val from_uint: #n:pos -> x:UInt.uint_t n -> Tot (int_t n)
 let from_uint #n x = 
   if x <= max_int n then x else x - pow2 n 
 
@@ -445,7 +445,7 @@ let logand_pos_le #n a b =
 val logand_pow2_minus_one: #n:pos{1 < n} -> a:int_t n -> m:pos{m < n} ->
   Lemma (0 <= logand a (pow2_minus_one m) /\ 
     logand a (pow2_minus_one m) <= pow2_minus_one #n m)
-let logand_test #n a m =
+let logand_pow2_minus_one #n a m =
   UInt.logand_le (to_uint a) (to_uint (pow2_minus_one #n m))
 
 val logand_max: #n:pos{1 < n} -> a:int_t n{0 <= a} ->
@@ -490,11 +490,11 @@ let logxor_neq_nonzero #n a b =
 (* Shift operators *)
 
 (** If a is negative the result is undefined behaviour *)
-val shift_left: #n:pos -> a:int_t n{0 <= a} -> s:nat -> int_t n
+val shift_left: #n:pos -> a:int_t n{0 <= a} -> s:nat -> Tot (int_t n)
 let shift_left #n a s = from_vec (shift_left_vec #n (to_vec #n a) s)
 
 (** If a is negative the result is implementation defined *)
-val shift_right: #n:pos -> a:int_t n{0 <= a} -> s:nat -> int_t n
+val shift_right: #n:pos -> a:int_t n{0 <= a} -> s:nat -> Tot (int_t n)
 let shift_right #n a s = from_vec (shift_right_vec #n (to_vec #n a) s)
 
 (* Shift operators lemmas *)

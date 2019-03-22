@@ -198,14 +198,14 @@ let div_size #n a b =
   FStar.Math.Lib.slash_decr_axiom a b; ()
 
 val udiv: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} ->
-  c:uint_t n{b <> 0 ==> a / b = c}
+  Tot (c:uint_t n{b <> 0 ==> a / b = c})
 let udiv #n a b =
   div_size #n a b;
   a / b
 
 
 (* Modulo primitives *)
-val mod: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> uint_t n
+val mod: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Tot (uint_t n)
 let mod #n a b = a - ((a/b) * b)
 
 (* Comparison operators *)
@@ -718,10 +718,10 @@ let logand_mask #n a m =
 
 (* Shift operators *)
 
-val shift_left: #n:pos -> a:uint_t n -> s:nat -> uint_t n
+val shift_left: #n:pos -> a:uint_t n -> s:nat -> Tot (uint_t n)
 let shift_left #n a s = from_vec (shift_left_vec #n (to_vec #n a) s)
 
-val shift_right: #n:pos -> a:uint_t n -> s:nat -> uint_t n
+val shift_right: #n:pos -> a:uint_t n -> s:nat -> Tot (uint_t n)
 let shift_right #n a s = from_vec (shift_right_vec #n (to_vec #n a) s)
 
 (* Shift operators lemmas *)
