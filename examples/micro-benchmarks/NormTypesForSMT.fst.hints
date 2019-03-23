@@ -1,0 +1,35 @@
+[
+  "°$)êƒAÌ\u007f{o«Íclš\u000b",
+  [
+    [
+      "NormTypesForSMT.test",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_NormTypesForSMT.a",
+        "equation_NormTypesForSMT.a_", "equation_NormTypesForSMT.b",
+        "equation_NormTypesForSMT.b_", "equation_NormTypesForSMT.c",
+        "equation_NormTypesForSMT.c_", "equation_NormTypesForSMT.d",
+        "equation_NormTypesForSMT.d_"
+      ],
+      0,
+      "a5ffe171b7c120c735bbe9c1d3ecab85"
+    ],
+    [
+      "NormTypesForSMT.test",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_NormTypesForSMT.a",
+        "equation_NormTypesForSMT.a_", "equation_NormTypesForSMT.b",
+        "equation_NormTypesForSMT.b_", "equation_NormTypesForSMT.c",
+        "equation_NormTypesForSMT.c_", "equation_NormTypesForSMT.d",
+        "equation_NormTypesForSMT.d_"
+      ],
+      0,
+      "ea822c5a013d87a81f6bf4ea83dd66d8"
+    ]
+  ]
+]
