@@ -48,9 +48,8 @@ argument `--codegen OCaml` or `--codegen FSharp`. More details on
 
 ### Chatting about F* on Zulip
 
-Users can chat about F* or ask questions at: https://fstar.zulipchat.com
-
-Zulip (https://zulipchat.com) is an open source alternative to Slack.
+Users can chat about F* or ask questions at https://fstar.zulipchat.com
+([Zulip](https://zulipchat.com) is a good open source alternative to Slack)
 
 ### Community mailing list
 
