@@ -821,6 +821,11 @@ let getcwd () =
 let readdir d =
   List.ofArray (System.IO.Directory.GetFiles d)
 
+let paths_to_same_file f g =
+    let path1 = Path.GetFullPath f in
+    let path2 = Path.GetFullPath g in
+    path1=path2
+
 let file_exists f =
   System.IO.File.Exists f || System.IO.Directory.Exists f
 

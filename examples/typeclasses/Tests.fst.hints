@@ -16,25 +16,25 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "469a81b8cdbd19457559a70bed95f587"
+      "20a29019a62b330bf98d1d7ed4081950"
     ],
     [
-      "Tests.uu___320",
+      "Tests.uu___13",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "34b0826757773aa5d8a43fffd97abe8c"
+      "39ee63f498558503d571ea4d61c7bd17"
     ],
     [
-      "Tests.uu___321",
+      "Tests.uu___14",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "998def21bac0dafadfdf9c251ca0340e"
+      "432c2162715821edd1a4a709aaf5ed29"
     ],
     [
       "Tests.test1",
@@ -69,7 +69,7 @@
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "f604cf95928cc74e6373885cb7b84325"
+      "b7b93ed2608a4bba207afc07068d4817"
     ],
     [
       "Tests.test2",
@@ -92,7 +92,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "825317b2de6c5c1bb6704d7421878723"
+      "8480c16b0511756874e946e91817524f"
     ],
     [
       "Tests.sum",
@@ -109,25 +109,25 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7f847f46833c16903a9b4733915ffb5f"
+      "2f637193ef77c0d91163ee290e50bb03"
     ],
     [
-      "Tests.uu___320",
+      "Tests.uu___13",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "ce4a46f7965078bb068a99020bb37114"
+      "d4cb5ea2c8761147f00ce9e185b4a4d1"
     ],
     [
-      "Tests.uu___321",
+      "Tests.uu___14",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "fce6f0d01bb580e5b5ea331ce2ced0b1"
+      "f583260b58f9fda25b5f4659c6106c57"
     ],
     [
       "Tests.test1",
@@ -162,7 +162,7 @@
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "242ecafe22cf08ef936965b8f3c287ed"
+      "df27741b76cd97fd05ab54aa5641defe"
     ],
     [
       "Tests.test2",
@@ -185,7 +185,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "d73c1043a6e8ebd92de9c5d5c24d18d8"
+      "b29b9cba745b8b84e6e96907ae5e286e"
     ]
   ]
 ]

@@ -1562,8 +1562,16 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
             else e_lax
           | _ -> e_lax  //leave recursive lets as is
         in
-        let e = tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env' |> drop_lbtyp in
-        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Let binding after phase 1: %s\n" (Print.term_to_string e);
+        let (e, ms) =
+            BU.record_time (fun () ->
+              tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env' |> drop_lbtyp
+            ) in
+        if Env.debug env <| Options.Other "TwoPhases" then
+          BU.print1 "Let binding after phase 1: %s\n"
+            (Print.term_to_string e);
+        if Env.debug env <| Options.Other "TCDeclTime" then
+          BU.print1 "Let binding elaborated (phase 1) in %s milliseconds\n"
+            (string_of_int ms);
         e
       end
       else e
@@ -1583,7 +1591,12 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         let lbdef = env.postprocess env tau lb.lbtyp lb.lbdef in
         { lb with lbdef = lbdef }
     in
-    let se, lbs = match tc_maybe_toplevel_term env' e with
+    let (r, ms) = BU.record_time (fun () -> tc_maybe_toplevel_term env' e) in
+    if Env.debug env <| Options.Other "TCDeclTime" then
+      BU.print1 "Let binding typechecked in phase 2 in %s milliseconds\n"
+        (string_of_int ms);
+
+    let se, lbs = match r with
       | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
