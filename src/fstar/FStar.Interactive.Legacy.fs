@@ -225,7 +225,7 @@ let deps_of_our_file filename =
    * and lax-check everything but the current module we're editing. This
    * function may, optionally, return an interface if the currently edited
    * module is an implementation and an interface was found. *)
-  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [ filename ] FStar.Universal.load_parsing_data_from_cache in
+  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [ filename ] FStar.CheckedFiles.load_parsing_data_from_cache in
   let deps, same_name = List.partition (fun x ->
     Parser.Dep.lowercase_module_name x <> Parser.Dep.lowercase_module_name filename
   ) deps in

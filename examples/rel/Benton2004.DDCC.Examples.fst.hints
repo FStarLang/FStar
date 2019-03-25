@@ -12,7 +12,7 @@
         "equation_Benton2004.op_abs", "lemma_Benton2004.DDCC.holds_ns_singl"
       ],
       0,
-      "0d0abce788a467fc64e736b8e3dcbf8f"
+      "3125457fdf30b075d53973227e44017c"
     ],
     [
       "Benton2004.DDCC.Examples.d_op_singl",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "0f777bca2a0b83d5aefc120de0731a31"
+      "63f2ae1a16acb4b7fe63971c6e605ce3"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d1",
@@ -51,7 +51,7 @@
         "typing_Benton2004.evar", "typing_Benton2004.skip"
       ],
       0,
-      "c43903bff1430a20568ad97bee9fc78b"
+      "b389fb2220bc885b5a5c46203a1e5399"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d2",
@@ -96,7 +96,7 @@
         "typing_Tm_abs_04b4b1a839a48e842d2fa816f86804d5"
       ],
       0,
-      "16fe96bf624285863398f3a794b49a16"
+      "6e1a4568f12c0ac41a77a060d37b5e51"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d3",
@@ -136,7 +136,7 @@
         "typing_Tm_abs_04b4b1a839a48e842d2fa816f86804d5"
       ],
       0,
-      "061b5b124c3e0ed9bd9aa62e944b3a97"
+      "a3986cdd8865285fa431ecee3d04f136"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -184,7 +184,7 @@
         "typing_Tm_abs_04b4b1a839a48e842d2fa816f86804d5"
       ],
       0,
-      "5f7b10c0ef58b4e1c11fc14f80fd37e2"
+      "16bbb739ababb88806ec3ccf9740c930"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d1",
@@ -193,7 +193,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "887944fc6731b25688c68780a655173b"
+      "b6e0ecf69470aadfe7fb327f1cb8b492"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d2",
@@ -224,7 +224,7 @@
         "typing_Tm_abs_04b4b1a839a48e842d2fa816f86804d5"
       ],
       0,
-      "1909d2fb579ac9facb797cd43b3f9aef"
+      "22c43309b91d29cb6f96caccd127e260"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d3",
@@ -255,7 +255,7 @@
         "typing_Tm_abs_04b4b1a839a48e842d2fa816f86804d5"
       ],
       0,
-      "c911fdc01e88b51d3817f5f84ab7528d"
+      "53932acbe5271b4bdbd1c663e2e08c4f"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -286,7 +286,7 @@
         "typing_Tm_abs_04b4b1a839a48e842d2fa816f86804d5"
       ],
       0,
-      "34f1ac0facb83b85d690330e6a20000a"
+      "82c31835c982725652579e500c16c7c5"
     ]
   ]
 ]

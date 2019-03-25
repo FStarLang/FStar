@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "6b765401ad148bd89c91cf02d10edd59"
+      "f52b9da961a95ed94d4a03ba7581f52b"
     ],
     [
       "HighComp._dm4f_HIGH___proj__HIGH__item__put_elab",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "f073c42f9d8ee553659ccd7df23a85bf"
+      "3c5894279cac86a046942d6a868a1555"
     ],
     [
       "HighComp.HIGH",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "8bee3420d680f3babd1c455e0d51e903"
+      "48e1ceb574efae0169a94d534a1bb744"
     ],
     [
       "HighComp.HIGH",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "9e7c829ee10f122b5e8caaf4f20ec06a"
+      "eb5c148486cdb699a450427d2af76c3b"
     ],
     [
       "HighComp.null_wp",
@@ -48,7 +48,7 @@
         "l_quant_interp_d07a446dc42f9dbdf2ec501ea6daf07e"
       ],
       0,
-      "31ce9d12547b679b434209b04948f3f7"
+      "76417e11d13e89dae5072e24e49b40b7"
     ],
     [
       "HighComp.comp_p",
@@ -66,7 +66,7 @@
         "l_and-interp", "l_quant_interp_06b95131b311ecdb7f2b5a8ef9c9684c"
       ],
       0,
-      "e19ea2263361f12717d854f14130d18a"
+      "c2fb2ae2938aec5fb503d7b82dc26d6a"
     ],
     [
       "HighComp.Hi",
@@ -84,7 +84,7 @@
         "l_and-interp", "l_quant_interp_06b95131b311ecdb7f2b5a8ef9c9684c"
       ],
       0,
-      "984b913a9255ba29a15ed11f01eef653"
+      "662de22945957cfbf8e08f78d5f66c86"
     ],
     [
       "HighComp.return_wp",
@@ -99,7 +99,7 @@
         "interpretation_Tm_abs_fbf3138696c9f5ef6a98555cde25a77f"
       ],
       0,
-      "07e6b347439717602cb1fd7c96eecb70"
+      "4e12296a1dc99b002b016f1af13462c4"
     ],
     [
       "HighComp.bind_wp",
@@ -121,7 +121,7 @@
         "typing_Tm_abs_d587337e289a5f558084aab62bcd5ae4"
       ],
       0,
-      "143642c39c1ea3601ac664e21e519b24"
+      "cb0acdd68c178b683dc7861bca1b32d5"
     ],
     [
       "HighComp.read_wp",
@@ -145,7 +145,7 @@
         "token_correspondence_HighComp.hread"
       ],
       0,
-      "115c78d112bdcfb35a462f1ad6ff9e05"
+      "9285861237cd444e66c67665a7329a4d"
     ],
     [
       "HighComp.write_wp",
@@ -167,7 +167,7 @@
         "unit_typing"
       ],
       0,
-      "07951fd89aac68418aa2b0524ff68a21"
+      "d5166aa4d5f19a0e95c834a1887ad1ec"
     ],
     [
       "HighComp.ite_wp",
@@ -183,7 +183,7 @@
         "refinement_interpretation_Tm_refine_56e456688dd4d1622be7afafae18c069"
       ],
       0,
-      "a611014164bc0fe8c11c7d50e25bd257"
+      "0979cd3fc830b2842fd2b545518605e6"
     ],
     [
       "HighComp.for_wp",
@@ -204,7 +204,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5df0ca26b6cdb6f00c34e87e30bc915b"
+      "9d0059550b9525803252e44a143f95cf"
     ],
     [
       "HighComp.for_wp_unfold",
@@ -227,7 +227,7 @@
         "unit_typing"
       ],
       0,
-      "532faa0c9b3172753cc3b52f6e05e8cb"
+      "f53761eca1c2cd52b0f96a68e0f79de8"
     ],
     [
       "HighComp.for",
@@ -236,7 +236,7 @@
       1,
       [ "@query" ],
       0,
-      "2ff3d7aa4c3793475f088174b335a741"
+      "b64783a238a662cac8eea7d5a86c0d16"
     ],
     [
       "HighComp.for",
@@ -248,6 +248,7 @@
         "@fuel_correspondence_HighComp.for_wp.fuel_instrumented",
         "@fuel_irrelevance_HighComp.for_wp.fuel_instrumented", "@query",
         "HighComp_interpretation_Tm_arrow_3c176054cf96076f830aea276ec03568",
+        "HighComp_interpretation_Tm_arrow_75bf25b98aa6263501669510483d2c7e",
         "HighComp_interpretation_Tm_arrow_c08aeed28d2bd085c3c5793e25168258",
         "HighComp_interpretation_Tm_arrow_d0aa44f0ba28d0fd18a7018f827358d9",
         "Prims_interpretation_Tm_arrow_0ec447216505a81a2a46f6969481fbca",
@@ -264,14 +265,15 @@
         "equation_with_fuel_HighComp.for_wp.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_token_correspondence_HighComp.for_wp.fuel_instrumented_token",
+        "function_token_typing_HighComp.for_wp",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing",
-        "interpretation_Tm_abs_642d278646f164d4767ee8b437f62a06",
+        "interpretation_Tm_abs_32536923e1baa40de4a47dd6f944396f",
         "interpretation_Tm_abs_79d44e4d2ef5b3cbc748e6d59016d5f8",
         "interpretation_Tm_abs_a24c6e1169be9aca1e1a99ce88f45d12",
         "interpretation_Tm_abs_bfcef404e2c3840e321b567111dd3c47",
         "l_and-interp", "l_imp-interp",
-        "l_quant_interp_9847de3609c9aff170130a220b45a43a",
+        "l_quant_interp_ab3ba345a74327c2a98fd7e9e78b03b9",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
@@ -281,14 +283,13 @@
         "refinement_interpretation_Tm_refine_56e456688dd4d1622be7afafae18c069",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Tm_refine_b154ce3b342a495bb8730cab2e6b9e58",
-        "token_correspondence_HighComp.for_wp",
-        "token_correspondence_HighComp.for_wp.fuel_instrumented",
-        "true_interp", "typing_Tm_abs_642d278646f164d4767ee8b437f62a06",
+        "token_correspondence_HighComp.for_wp", "true_interp",
+        "typing_Tm_abs_32536923e1baa40de4a47dd6f944396f",
         "typing_Tm_abs_a24c6e1169be9aca1e1a99ce88f45d12", "unit_inversion",
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "1ca624e397c9bc9d57206732f32bb1a1"
+      "f6bacc58e92406662434aeb7872d83bb"
     ],
     [
       "HighComp.get",
@@ -311,7 +312,7 @@
         "token_correspondence_HighComp.null_wp"
       ],
       0,
-      "f7b1bba46e00aa2bd6426ad00901cc1a"
+      "f0412b9edd494c405c07e24d1f8d40ac"
     ],
     [
       "HighComp.for'",
@@ -334,7 +335,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "34a6e593df73ae0f8e34c1d1d80db0d5"
+      "a8fdb0e56535565214222ec791cdc6b8"
     ],
     [
       "HighComp.for_elab",
@@ -343,7 +344,7 @@
       1,
       [ "@query" ],
       0,
-      "4c4b8f9d2ff6a92dca75a565a4a8a45c"
+      "e332d09a75c4d37746ee520f1b0279d8"
     ],
     [
       "HighComp.for_elab",
@@ -375,7 +376,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8895bce46c2f0c3926fa41b5a708d5cf"
+      "4314628380a5744323ae71d5d8f7dba4"
     ],
     [
       "HighComp.for_elab_unfold",
@@ -416,7 +417,7 @@
         "typing_Tm_abs_f68e7722c5dceb4fee17cee0cae947e1", "unit_typing"
       ],
       0,
-      "b5dbbb6e45b35df621d0e5ec68a47296"
+      "6e6520573a0660a3d791d54b388bf004"
     ],
     [
       "HighComp.for_elab_unfold",
@@ -441,7 +442,7 @@
         "unit_typing"
       ],
       0,
-      "7afaa30ad24ffd5461a5c0836a83193a"
+      "04646a7443a96ff4f9be6ffb78224e08"
     ],
     [
       "HighComp.for_elab'",
@@ -473,7 +474,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "10f614bc9439271aa525deb134ebe9c5"
+      "6a760f4e5997da84770de7fe62b0ef01"
     ],
     [
       "HighComp.hread_elab",
@@ -493,7 +494,7 @@
         "token_correspondence_HighComp.hread"
       ],
       0,
-      "9f84e0bcf60137e66a00dbd0422eb35b"
+      "3243fdd1edd5c6cc825336b65a38a0e6"
     ],
     [
       "HighComp.hwrite_elab",
@@ -514,7 +515,7 @@
         "token_correspondence_HighComp.hwrite", "unit_typing"
       ],
       0,
-      "61a11956090e2689aad3d00371df83c9"
+      "5443d2e60f1d8ad9393353a7b9ff01dd"
     ],
     [
       "HighComp.ite_elab",
@@ -538,7 +539,7 @@
         "true_interp"
       ],
       0,
-      "9d41f7c72906a54ebd94bcb8073f4865"
+      "eb14c3dc3dafb2a2a5a6bc8fc7817ea0"
     ],
     [
       "HighComp.for_inv",
@@ -547,7 +548,7 @@
       1,
       [ "@query" ],
       0,
-      "9a8450e0914b26774b1e1b7b0e26702f"
+      "d9c64b244d6e2808be7bf5e584d061d0"
     ],
     [
       "HighComp.cast",
@@ -567,7 +568,7 @@
         "true_interp"
       ],
       0,
-      "2c4384126ec37b0624520f6bc9a084f2"
+      "4f49c4fd1c6d59efb2cdc2ab4e42b225"
     ],
     [
       "HighComp.h_eq",
@@ -592,7 +593,7 @@
         "typing_Tm_abs_8c0133fab609362d9e6cef621bc2f5aa"
       ],
       0,
-      "8c5899c7749d165424694cfdec0cabb4"
+      "a3fc031442853ac0ad63a7f143026cd2"
     ],
     [
       "HighComp.hwrite_eq",
@@ -617,7 +618,7 @@
         "token_correspondence_HighComp.hwrite", "unit_typing"
       ],
       0,
-      "6656d55ab3a5320716e83068fcfe02b9"
+      "c372f8d847fde1d216229863827e6130"
     ],
     [
       "HighComp.hread_eq",
@@ -641,7 +642,7 @@
         "token_correspondence_HighComp.hread"
       ],
       0,
-      "9f57efea23fce900e41a129ea5ddecd5"
+      "255d877f001ecd6cc067963d720c79a8"
     ],
     [
       "HighComp.reify_bind_commutes",
@@ -672,7 +673,7 @@
         "typing_Tm_abs_c9d56696e845a71d264470daaa6ec149"
       ],
       0,
-      "77a58446e8c94a5445d1cc93f95a0fe1"
+      "5d1f7242514b2ab55a535c29e07682c3"
     ],
     [
       "HighComp.ite_reif",
@@ -696,7 +697,7 @@
         "true_interp"
       ],
       0,
-      "d35869471a9bfbea77a0ba10f18a7576"
+      "c698efeb428a5862ae20aa26cce7621a"
     ],
     [
       "HighComp.reify_ite_commutes",
@@ -724,7 +725,7 @@
         "typing_Tm_abs_cd3563a0e39e3c90b5ab349badd138b3"
       ],
       0,
-      "9857c46bc9672f6c792216cb8e11f885"
+      "1ecb807fdb629b7fab60eac4bad73630"
     ],
     [
       "HighComp.test",
@@ -749,7 +750,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "a0a3ffc86f12637fb35d9bbb95be72e9"
+      "6b5ec70a0336fb8efb0420ad174af2d3"
     ],
     [
       "HighComp.test2_tac",
@@ -774,7 +775,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "720d28c60d901b04001fed6fd851f00c"
+      "04ff28c7b05b44511e6d79098b767bce"
     ],
     [
       "HighComp.test2_tac_again",
@@ -801,7 +802,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "11f950026f5d316b6b9aac597bed267e"
+      "2937034044841271af1dff4b00a78289"
     ],
     [
       "HighComp.test2_tac_again",
@@ -828,7 +829,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "316cd77ee4872c3ccd138d944f5f2a4f"
+      "c92ffab74363d2a93c9e8d816653a400"
     ],
     [
       "HighComp.bind_commutes_lemma",
@@ -837,7 +838,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "a2f3f0c7561157a655ffea8297b91bee"
+      "61153dc39c5a6a634385553475b84383"
     ],
     [
       "HighComp.ite_commutes_lemma",
@@ -860,7 +861,7 @@
         "token_correspondence_HighComp.ite_reif", "unit_typing"
       ],
       0,
-      "3c98e50485c724ca920d981585856368"
+      "e28305301e72ac75b915760465e03464"
     ]
   ]
 ]

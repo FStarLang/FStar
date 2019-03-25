@@ -81,6 +81,8 @@
     <Compile Include="boot/NotFStar.Compiler.Bytes.fs" />
     <Compile Include="boot/FStar.Dyn.fsi" />
     <Compile Include="boot/NotFStar.Dyn.fs" />
+    <Compile Include="boot/FStar.StringBuffer.fsi" />
+    <Compile Include="boot/FStar.StringBuffer.fs" />
     <Compile Include="profiling.fs" />
     <Compile Include="FStar.Platform.fsi" />
     <Compile Include="NotFStar.Platform.fs" />
