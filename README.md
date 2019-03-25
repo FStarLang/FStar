@@ -39,10 +39,10 @@ details on [editor support] on the [F\* wiki].
 ### Executing F* code
 
 By default F* only verifies the input code, it does not compile or execute it.
-To execute F* code one needs to translate it to either OCaml or F\#, using
-F\*'s code extraction facility---this is invoked using the command line
-argument `--codegen OCaml` or `--codegen FSharp`. More details on
-[executing F\* code] on the [F\* wiki].
+To execute F* code one needs to translate it for instance to OCaml or F\#,
+using F\*'s code extraction facility---this is invoked using the
+command line argument `--codegen OCaml` or `--codegen FSharp`.
+More details on [executing F\* code] on the [F\* wiki].
 
 [executing F\* code]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
 
