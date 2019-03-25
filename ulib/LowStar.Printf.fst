@@ -126,10 +126,12 @@ type base_typ =
   | I64
 
 /// Argument types are base types and arrays thereof
+/// Or polymorphic arguments specified by "%a"
 noextract
 type arg =
   | Base of base_typ
   | Array of base_typ
+  | Any
 
 /// Interpreting a `base_typ` as a type
 [@__reduce__]
@@ -188,6 +190,10 @@ let rec parse_format
    | [] -> Some []
    | ['%'] -> None
 
+   // %a... polymorphic arguments and preceded by their printers
+   | '%' :: 'a' :: s' ->
+     add_dir Any (parse_format s')
+
    // %x... arrays of base types
    | '%' :: 'x' :: s' ->
      head_buffer (parse_format ('%' :: s'))
@@ -244,7 +250,7 @@ let rec arg_t (a:arg) : Type u#1 =
   match a with
   | Base t -> lift (base_typ_as_type t)
   | Array t -> (l:UInt32.t & r:_ & s:_ & lmbuffer (base_typ_as_type t) r s l)
-
+  | Any -> (a:Type0 & (a -> StTrivial unit) & a)
 
 /// `frag_t`: a fragment is either a string literal or a argument to be interpolated
 noextract
@@ -260,6 +266,7 @@ let rec live_frags (h:_) (l:list frag_t) : prop =
   | Inr a :: rest ->
     (match a with
      | (| Base _, _ |) -> live_frags h rest
+     | (| Any, _ |) -> live_frags h rest
      | (| Array _, (| _, _, _, b |) |) -> LB.live h b /\ live_frags h rest)
 
 
@@ -294,6 +301,12 @@ let rec interpret_frags (l:fragments) (acc:list frag_t) : Type u#1 =
     b:lmbuffer (base_typ_as_type t) r s l ->
     interpret_frags args (Inr (| Array t, (| l, r, s, b |) |)  :: acc)
 
+  | Interpolate Any :: args ->
+    #a:Type0 ->
+    p:(a -> StTrivial unit) ->
+    x:a ->
+    interpret_frags args (Inr (| Any, (| a, p, x |) |) :: acc)
+
   | Frag s :: args ->
     // Literal fragments do not incur an additional argument
     // We just accumulate them and recur
@@ -316,6 +329,13 @@ let normal (#a:Type) (x:a) : a =
 noextract
 let coerce (x:'a{'a == 'b}) : 'b = x
 
+/// `fragment_printer`: The type of a printer of fragments
+let fragment_printer =
+  (acc:list frag_t)
+  -> Stack unit
+    (requires fun h0 -> live_frags h0 acc)
+    (ensures fun h0 _ h1 -> h0 == h1)
+
 /// `print_frags`: Having accumulated all the pieces of a format
 /// string and the arguments to the printed (i.e., the `list frag_t`),
 /// this function does the actual work of printing them all using the
@@ -323,8 +343,8 @@ let coerce (x:'a{'a == 'b}) : 'b = x
 noextract inline_for_extraction
 let rec print_frags (acc:list frag_t)
   : Stack unit
-        (requires fun h0 -> live_frags h0 acc)
-        (ensures fun h0 _ h1 -> h0 == h1)
+    (requires fun h0 -> live_frags h0 acc)
+    (ensures fun h0 _ h1 -> h0 == h1)
   = match acc with
     | [] -> ()
     | hd::tl ->
@@ -356,30 +376,39 @@ let rec print_frags (acc:list frag_t)
            | I8 ->   print_lmbuffer_i8 l value
            | I16 ->  print_lmbuffer_i16 l value
            | I32 ->  print_lmbuffer_i32 l value
-           | I64 ->  print_lmbuffer_i64 l value))
+           | I64 ->  print_lmbuffer_i64 l value)
+       | Inr (| Any, (| _, printer, value |) |) ->
+         printer value)
 
+[@__reduce__]
+let no_inst #a (#b:a -> Type) (f: (#x:a -> b x)) : unit -> #x:a -> b x = fun () -> f
+[@__reduce__]
+let elim_unit_arrow #t (f:unit -> t) : t = f ()
+
+// let test2 (f: (#a:Type -> a -> a)) : id_t 0 = test f ()
+// let coerce #a (#b: (a -> Type)) ($f: (#x:a -> b x)) (t:Type{norm t == (#x:a -> b x)})
 /// `aux frags acc`: This is the main workhorse which interprets a
 /// parsed format string (`frags`) as a variadic, stateful function
 [@__reduce__]
 noextract inline_for_extraction
-let rec aux (frags:fragments) (acc:list frag_t) : interpret_frags frags acc =
+let rec aux (frags:fragments) (acc:list frag_t) (fp: fragment_printer) : interpret_frags frags acc =
   match frags with
   | [] ->
     let f (l:lift u#0 u#1 unit)
       : Stack unit
         (requires fun h0 -> live_frags h0 acc)
         (ensures fun h0 _ h1 -> h0 == h1)
-      = print_frags acc
+      = fp acc
     in
     (f <: interpret_frags [] acc)
 
   | Frag s :: rest ->
-    coerce (aux rest (Inl s :: acc))
+    coerce (aux rest (Inl s :: acc) fp)
 
   | Interpolate (Base t) :: args ->
     let f (x:base_typ_as_type t)
       : interpret_frags args (Inr (| Base t, Lift x |) :: acc)
-      = aux args (Inr (| Base t, Lift x |) :: acc)
+      = aux args (Inr (| Base t, Lift x |) :: acc) fp
     in
     f
 
@@ -390,9 +419,20 @@ let rec aux (frags:fragments) (acc:list frag_t) : interpret_frags frags acc =
      -> #s:LB.srel (base_typ_as_type t)
      -> b:lmbuffer (base_typ_as_type t) r s l
      -> interpret_frags rest (Inr (| Array t, (| l, r, s, b |) |) :: acc)
-     = fun l #r #s b -> aux rest (Inr (| Array t, (| l, r, s, b |) |) :: acc)
+     = fun l #r #s b -> aux rest (Inr (| Array t, (| l, r, s, b |) |) :: acc) fp
     in
     f <: interpret_frags (Interpolate (Array t) :: rest) acc
+
+  | Interpolate Any :: rest ->
+    let f :
+        unit
+      -> #a:Type
+      -> p:(a -> StTrivial unit)
+      -> x:a
+      -> interpret_frags rest (Inr (| Any, (| a, p, x |) |) :: acc)
+      = fun () #a p x -> aux rest (Inr (| Any, (| a, p, x |) |) :: acc) fp
+    in
+    elim_unit_arrow (no_inst (f ()) <: (unit -> interpret_frags (Interpolate Any :: rest) acc))
 
 /// `format_string` : A valid format string is one that can be successfully parsed
 [@__reduce__]
@@ -415,7 +455,7 @@ noextract inline_for_extraction
 let printf' (s:format_string) : interpret_format_string s =
   normalize_term
   (match parse_format_string s with
-    | Some frags -> aux frags [])
+    | Some frags -> aux frags [] print_frags)
 
 /// `intro_normal_f`: a technical gadget to introduce
 /// implicit normalization in the domain and co-domain of a function type
@@ -437,6 +477,20 @@ val printf : s:normal format_string -> normal (interpret_format_string s)
 let printf = intro_normal_f #format_string interpret_format_string printf'
 
 
+/// `skip`: We also provide `skip`, a funcion that has the same type as printf
+///  but normalizes to `()`, i.e., it prints nothing. This is useful for conditional
+///  printing in debug code, for instance.
+noextract inline_for_extraction
+let skip' (s:format_string) : interpret_format_string s =
+  normalize_term
+  (match parse_format_string s with
+    | Some frags -> aux frags [] (fun _ -> ()))
+
+noextract inline_for_extraction
+val skip : s:normal format_string -> normal (interpret_format_string s)
+let skip = intro_normal_f #format_string interpret_format_string skip'
+
+
 /// `test`: A small test function
 /// Running `fstar --codegen OCaml LowStar.Printf.fst --extract LowStar.Printf`
 /// produces the following for the body of this function
@@ -455,6 +509,23 @@ let test (m:UInt64.t) (l:UInt32.t) (#r:_) (#s:_) (x:LB.mbuffer bool r s{LB.len x
     (requires (fun h0 -> LB.live h0 x))
     (ensures (fun h0 _ h1 -> h0 == h1))
   = printf "Hello %b Low* %uL Printf %xb %s"
+              true  //%b boolean
+              m     //%uL u64
+              l x   //%xb (buffer bool)
+              "bye"
+              done //dummy universe coercion
+
+let test2 (x:(int * int)) (print_pair:(int * int) -> StTrivial unit)
+  : Stack unit
+    (requires (fun h0 -> True))
+    (ensures (fun h0 _ h1 -> h0 == h1))
+  = printf "Hello pair %a" print_pair x done
+
+let test3 (m:UInt64.t) (l:UInt32.t) (#r:_) (#s:_) (x:LB.mbuffer bool r s{LB.len x = l})
+  : Stack unit
+    (requires (fun h0 -> LB.live h0 x))
+    (ensures (fun h0 _ h1 -> h0 == h1))
+  = skip "Hello %b Low* %uL Printf %xb %s"
               true  //%b boolean
               m     //%uL u64
               l x   //%xb (buffer bool)
