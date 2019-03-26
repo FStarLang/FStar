@@ -58,6 +58,12 @@ val contains: #key:eqtype -> #value:Type -> t key value -> key -> Tot bool
 *)
 val concat: #key:eqtype -> #value:Type -> t key value -> t key value -> Tot (t key value)
 
+(* map_val f m:
+      A map whose domain is the same as `m` but all values have
+      `f` applied to them.
+*)
+val map_val: #val1:Type -> #val2:Type -> f:(val1 -> val2) -> #key:eqtype -> t key val1 -> Tot (t key val2)
+
 (* restrict s m:
       Restricts the domain of `m` to (domain m `intersect` s)
 *)

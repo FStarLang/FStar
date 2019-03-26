@@ -62,6 +62,11 @@ let concat #key #value m1 m2 = {
   domain =   union m1.domain m2.domain
 }
 
+let map_val #_ #_ f #key m = {
+  mappings = F.on key (fun x -> f (m.mappings x));
+  domain =   m.domain
+}
+
 let restrict #key #value s m = {
   mappings = m.mappings;
   domain =   intersect s m.domain
