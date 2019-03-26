@@ -78,12 +78,19 @@ let (add_errors :
                              let uu____307 =
                                let uu____309 =
                                  FStar_Range.string_of_use_range r  in
-                               Prims.op_Hat uu____309 ")"  in
-                             Prims.op_Hat " (Also see: " uu____307  in
+                               let uu____311 =
+                                 let uu____313 =
+                                   let uu____315 =
+                                     FStar_Range.string_of_def_range r  in
+                                   Prims.op_Hat uu____315 ")"  in
+                                 Prims.op_Hat " and " uu____313  in
+                               Prims.op_Hat uu____309 uu____311  in
+                             Prims.op_Hat " (Related locations: " uu____307
+                              in
                            Prims.op_Hat msg uu____305  in
-                         let uu____313 = FStar_TypeChecker_Env.get_range env
+                         let uu____320 = FStar_TypeChecker_Env.get_range env
                             in
-                         (e, uu____303, uu____313)
+                         (e, uu____303, uu____320)
                        else (e, msg, r))))
          in
       FStar_Errors.add_errors errs1
@@ -101,17 +108,17 @@ let (err_msg_type_strings :
         if s1 = s2
         then
           FStar_Options.with_saved_options
-            (fun uu____368  ->
-               (let uu____370 =
+            (fun uu____375  ->
+               (let uu____377 =
                   FStar_Options.set_options FStar_Options.Set
                     "--print_full_names --print_universes"
                    in
                 ());
-               (let uu____372 =
+               (let uu____379 =
                   FStar_TypeChecker_Normalize.term_to_string env t1  in
-                let uu____374 =
+                let uu____381 =
                   FStar_TypeChecker_Normalize.term_to_string env t2  in
-                (uu____372, uu____374)))
+                (uu____379, uu____381)))
         else (s1, s2)
   
 let (err_msg_comp_strings :
@@ -127,17 +134,17 @@ let (err_msg_comp_strings :
         if s1 = s2
         then
           FStar_Options.with_saved_options
-            (fun uu____432  ->
-               (let uu____434 =
+            (fun uu____439  ->
+               (let uu____441 =
                   FStar_Options.set_options FStar_Options.Set
                     "--print_full_names --print_universes --print_effect_args"
                    in
                 ());
-               (let uu____436 =
+               (let uu____443 =
                   FStar_TypeChecker_Normalize.comp_to_string env c1  in
-                let uu____438 =
+                let uu____445 =
                   FStar_TypeChecker_Normalize.comp_to_string env c2  in
-                (uu____436, uu____438)))
+                (uu____443, uu____445)))
         else (s1, s2)
   
 let (exhaustiveness_check : Prims.string) = "Patterns are incomplete" 
@@ -150,8 +157,8 @@ let (subtyping_failed :
     fun t1  ->
       fun t2  ->
         fun x  ->
-          let uu____471 = err_msg_type_strings env t1 t2  in
-          match uu____471 with
+          let uu____478 = err_msg_type_strings env t1 t2  in
+          match uu____478 with
           | (s1,s2) ->
               FStar_Util.format2
                 "Subtyping check failed; expected type %s; got type %s" s2 s1
@@ -166,14 +173,14 @@ let (unexpected_signature_for_monad :
   fun env  ->
     fun m  ->
       fun k  ->
-        let uu____513 =
-          let uu____515 = FStar_TypeChecker_Normalize.term_to_string env k
+        let uu____520 =
+          let uu____522 = FStar_TypeChecker_Normalize.term_to_string env k
              in
           FStar_Util.format2
             "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => Effect); got %s"
-            m.FStar_Ident.str uu____515
+            m.FStar_Ident.str uu____522
            in
-        (FStar_Errors.Fatal_UnexpectedSignatureForMonad, uu____513)
+        (FStar_Errors.Fatal_UnexpectedSignatureForMonad, uu____520)
   
 let (expected_a_term_of_type_t_got_a_function :
   FStar_TypeChecker_Env.env ->
@@ -185,15 +192,15 @@ let (expected_a_term_of_type_t_got_a_function :
     fun msg  ->
       fun t  ->
         fun e  ->
-          let uu____547 =
-            let uu____549 = FStar_TypeChecker_Normalize.term_to_string env t
+          let uu____554 =
+            let uu____556 = FStar_TypeChecker_Normalize.term_to_string env t
                in
-            let uu____551 = FStar_Syntax_Print.term_to_string e  in
+            let uu____558 = FStar_Syntax_Print.term_to_string e  in
             FStar_Util.format3
               "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
-              uu____549 uu____551 msg
+              uu____556 uu____558 msg
              in
-          (FStar_Errors.Fatal_ExpectTermGotFunction, uu____547)
+          (FStar_Errors.Fatal_ExpectTermGotFunction, uu____554)
   
 let (unexpected_implicit_argument : (FStar_Errors.raw_error * Prims.string))
   =
@@ -210,16 +217,16 @@ let (expected_expression_of_type :
     fun t1  ->
       fun e  ->
         fun t2  ->
-          let uu____589 = err_msg_type_strings env t1 t2  in
-          match uu____589 with
+          let uu____596 = err_msg_type_strings env t1 t2  in
+          match uu____596 with
           | (s1,s2) ->
-              let uu____607 =
-                let uu____609 = FStar_Syntax_Print.term_to_string e  in
+              let uu____614 =
+                let uu____616 = FStar_Syntax_Print.term_to_string e  in
                 FStar_Util.format3
                   "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
-                  s1 uu____609 s2
+                  s1 uu____616 s2
                  in
-              (FStar_Errors.Fatal_UnexpectedExpressionType, uu____607)
+              (FStar_Errors.Fatal_UnexpectedExpressionType, uu____614)
   
 let (expected_pattern_of_type :
   FStar_TypeChecker_Env.env ->
@@ -231,16 +238,16 @@ let (expected_pattern_of_type :
     fun t1  ->
       fun e  ->
         fun t2  ->
-          let uu____639 = err_msg_type_strings env t1 t2  in
-          match uu____639 with
+          let uu____646 = err_msg_type_strings env t1 t2  in
+          match uu____646 with
           | (s1,s2) ->
-              let uu____657 =
-                let uu____659 = FStar_Syntax_Print.term_to_string e  in
+              let uu____664 =
+                let uu____666 = FStar_Syntax_Print.term_to_string e  in
                 FStar_Util.format3
                   "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
-                  s1 uu____659 s2
+                  s1 uu____666 s2
                  in
-              (FStar_Errors.Fatal_UnexpectedPattern, uu____657)
+              (FStar_Errors.Fatal_UnexpectedPattern, uu____664)
   
 let (basic_type_error :
   FStar_TypeChecker_Env.env ->
@@ -252,8 +259,8 @@ let (basic_type_error :
     fun eopt  ->
       fun t1  ->
         fun t2  ->
-          let uu____693 = err_msg_type_strings env t1 t2  in
-          match uu____693 with
+          let uu____700 = err_msg_type_strings env t1 t2  in
+          match uu____700 with
           | (s1,s2) ->
               let msg =
                 match eopt with
@@ -261,11 +268,11 @@ let (basic_type_error :
                     FStar_Util.format2
                       "Expected type \"%s\"; got type \"%s\"" s1 s2
                 | FStar_Pervasives_Native.Some e ->
-                    let uu____716 =
+                    let uu____723 =
                       FStar_TypeChecker_Normalize.term_to_string env e  in
                     FStar_Util.format3
                       "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1
-                      uu____716 s2
+                      uu____723 s2
                  in
               (FStar_Errors.Error_TypeError, msg)
   
@@ -281,15 +288,15 @@ let (incompatible_kinds :
   fun env  ->
     fun k1  ->
       fun k2  ->
-        let uu____749 =
-          let uu____751 = FStar_TypeChecker_Normalize.term_to_string env k1
+        let uu____756 =
+          let uu____758 = FStar_TypeChecker_Normalize.term_to_string env k1
              in
-          let uu____753 = FStar_TypeChecker_Normalize.term_to_string env k2
+          let uu____760 = FStar_TypeChecker_Normalize.term_to_string env k2
              in
           FStar_Util.format2 "Kinds \"%s\" and \"%s\" are incompatible"
-            uu____751 uu____753
+            uu____758 uu____760
            in
-        (FStar_Errors.Fatal_IncompatibleKinds, uu____749)
+        (FStar_Errors.Fatal_IncompatibleKinds, uu____756)
   
 let (constructor_builds_the_wrong_type :
   FStar_TypeChecker_Env.env ->
@@ -301,46 +308,46 @@ let (constructor_builds_the_wrong_type :
     fun d  ->
       fun t  ->
         fun t'  ->
-          let uu____783 =
-            let uu____785 = FStar_Syntax_Print.term_to_string d  in
-            let uu____787 = FStar_TypeChecker_Normalize.term_to_string env t
+          let uu____790 =
+            let uu____792 = FStar_Syntax_Print.term_to_string d  in
+            let uu____794 = FStar_TypeChecker_Normalize.term_to_string env t
                in
-            let uu____789 = FStar_TypeChecker_Normalize.term_to_string env t'
+            let uu____796 = FStar_TypeChecker_Normalize.term_to_string env t'
                in
             FStar_Util.format3
               "Constructor \"%s\" builds a value of type \"%s\"; expected \"%s\""
-              uu____785 uu____787 uu____789
+              uu____792 uu____794 uu____796
              in
-          (FStar_Errors.Fatal_ConstsructorBuildWrongType, uu____783)
+          (FStar_Errors.Fatal_ConstsructorBuildWrongType, uu____790)
   
 let constructor_fails_the_positivity_check :
-  'Auu____802 .
-    'Auu____802 ->
+  'Auu____809 .
+    'Auu____809 ->
       FStar_Syntax_Syntax.term ->
         FStar_Ident.lid -> (FStar_Errors.raw_error * Prims.string)
   =
   fun env  ->
     fun d  ->
       fun l  ->
-        let uu____823 =
-          let uu____825 = FStar_Syntax_Print.term_to_string d  in
-          let uu____827 = FStar_Syntax_Print.lid_to_string l  in
+        let uu____830 =
+          let uu____832 = FStar_Syntax_Print.term_to_string d  in
+          let uu____834 = FStar_Syntax_Print.lid_to_string l  in
           FStar_Util.format2
             "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
-            uu____825 uu____827
+            uu____832 uu____834
            in
-        (FStar_Errors.Fatal_ConstructorFailedCheck, uu____823)
+        (FStar_Errors.Fatal_ConstructorFailedCheck, uu____830)
   
 let (inline_type_annotation_and_val_decl :
   FStar_Ident.lid -> (FStar_Errors.raw_error * Prims.string)) =
   fun l  ->
-    let uu____842 =
-      let uu____844 = FStar_Syntax_Print.lid_to_string l  in
+    let uu____849 =
+      let uu____851 = FStar_Syntax_Print.lid_to_string l  in
       FStar_Util.format1
         "\"%s\" has a val declaration as well as an inlined type annotation; remove one"
-        uu____844
+        uu____851
        in
-    (FStar_Errors.Fatal_DuplicateTypeAnnotationAndValDecl, uu____842)
+    (FStar_Errors.Fatal_DuplicateTypeAnnotationAndValDecl, uu____849)
   
 let (inferred_type_causes_variable_to_escape :
   FStar_TypeChecker_Env.env ->
@@ -350,15 +357,15 @@ let (inferred_type_causes_variable_to_escape :
   fun env  ->
     fun t  ->
       fun x  ->
-        let uu____869 =
-          let uu____871 = FStar_TypeChecker_Normalize.term_to_string env t
+        let uu____876 =
+          let uu____878 = FStar_TypeChecker_Normalize.term_to_string env t
              in
-          let uu____873 = FStar_Syntax_Print.bv_to_string x  in
+          let uu____880 = FStar_Syntax_Print.bv_to_string x  in
           FStar_Util.format2
             "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
-            uu____871 uu____873
+            uu____878 uu____880
            in
-        (FStar_Errors.Fatal_InferredTypeCauseVarEscape, uu____869)
+        (FStar_Errors.Fatal_InferredTypeCauseVarEscape, uu____876)
   
 let (expected_function_typ :
   FStar_TypeChecker_Env.env ->
@@ -366,12 +373,12 @@ let (expected_function_typ :
   =
   fun env  ->
     fun t  ->
-      let uu____893 =
-        let uu____895 = FStar_TypeChecker_Normalize.term_to_string env t  in
+      let uu____900 =
+        let uu____902 = FStar_TypeChecker_Normalize.term_to_string env t  in
         FStar_Util.format1
-          "Expected a function; got an expression of type \"%s\"" uu____895
+          "Expected a function; got an expression of type \"%s\"" uu____902
          in
-      (FStar_Errors.Fatal_FunctionTypeExpected, uu____893)
+      (FStar_Errors.Fatal_FunctionTypeExpected, uu____900)
   
 let (expected_poly_typ :
   FStar_TypeChecker_Env.env ->
@@ -383,17 +390,17 @@ let (expected_poly_typ :
     fun f  ->
       fun t  ->
         fun targ  ->
-          let uu____925 =
-            let uu____927 = FStar_Syntax_Print.term_to_string f  in
-            let uu____929 = FStar_TypeChecker_Normalize.term_to_string env t
+          let uu____932 =
+            let uu____934 = FStar_Syntax_Print.term_to_string f  in
+            let uu____936 = FStar_TypeChecker_Normalize.term_to_string env t
                in
-            let uu____931 =
+            let uu____938 =
               FStar_TypeChecker_Normalize.term_to_string env targ  in
             FStar_Util.format3
               "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
-              uu____927 uu____929 uu____931
+              uu____934 uu____936 uu____938
              in
-          (FStar_Errors.Fatal_PolyTypeExpected, uu____925)
+          (FStar_Errors.Fatal_PolyTypeExpected, uu____932)
   
 let (disjunctive_pattern_vars :
   FStar_Syntax_Syntax.bv Prims.list ->
@@ -403,19 +410,19 @@ let (disjunctive_pattern_vars :
   fun v1  ->
     fun v2  ->
       let vars v3 =
-        let uu____970 =
+        let uu____977 =
           FStar_All.pipe_right v3
             (FStar_List.map FStar_Syntax_Print.bv_to_string)
            in
-        FStar_All.pipe_right uu____970 (FStar_String.concat ", ")  in
-      let uu____985 =
-        let uu____987 = vars v1  in
-        let uu____989 = vars v2  in
+        FStar_All.pipe_right uu____977 (FStar_String.concat ", ")  in
+      let uu____992 =
+        let uu____994 = vars v1  in
+        let uu____996 = vars v2  in
         FStar_Util.format2
           "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
-          uu____987 uu____989
+          uu____994 uu____996
          in
-      (FStar_Errors.Fatal_DisjuctivePatternVarsMismatch, uu____985)
+      (FStar_Errors.Fatal_DisjuctivePatternVarsMismatch, uu____992)
   
 let (name_and_result :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
@@ -423,18 +430,18 @@ let (name_and_result :
   =
   fun c  ->
     match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Total (t,uu____1018) -> ("Tot", t)
-    | FStar_Syntax_Syntax.GTotal (t,uu____1032) -> ("GTot", t)
+    | FStar_Syntax_Syntax.Total (t,uu____1025) -> ("Tot", t)
+    | FStar_Syntax_Syntax.GTotal (t,uu____1039) -> ("GTot", t)
     | FStar_Syntax_Syntax.Comp ct ->
-        let uu____1046 =
+        let uu____1053 =
           FStar_Syntax_Print.lid_to_string ct.FStar_Syntax_Syntax.effect_name
            in
-        (uu____1046, (ct.FStar_Syntax_Syntax.result_typ))
+        (uu____1053, (ct.FStar_Syntax_Syntax.result_typ))
   
 let computed_computation_type_does_not_match_annotation :
-  'Auu____1062 .
+  'Auu____1069 .
     FStar_TypeChecker_Env.env ->
-      'Auu____1062 ->
+      'Auu____1069 ->
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
             (FStar_Errors.raw_error * Prims.string)
@@ -443,27 +450,27 @@ let computed_computation_type_does_not_match_annotation :
     fun e  ->
       fun c  ->
         fun c'  ->
-          let uu____1096 = name_and_result c  in
-          match uu____1096 with
+          let uu____1103 = name_and_result c  in
+          match uu____1103 with
           | (f1,r1) ->
-              let uu____1117 = name_and_result c'  in
-              (match uu____1117 with
+              let uu____1124 = name_and_result c'  in
+              (match uu____1124 with
                | (f2,r2) ->
-                   let uu____1138 = err_msg_type_strings env r1 r2  in
-                   (match uu____1138 with
+                   let uu____1145 = err_msg_type_strings env r1 r2  in
+                   (match uu____1145 with
                     | (s1,s2) ->
-                        let uu____1156 =
+                        let uu____1163 =
                           FStar_Util.format4
                             "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
                             s1 f1 s2 f2
                            in
                         (FStar_Errors.Fatal_ComputedTypeNotMatchAnnotation,
-                          uu____1156)))
+                          uu____1163)))
   
 let computed_computation_type_does_not_match_annotation_eq :
-  'Auu____1171 .
+  'Auu____1178 .
     FStar_TypeChecker_Env.env ->
-      'Auu____1171 ->
+      'Auu____1178 ->
         FStar_Syntax_Syntax.comp ->
           FStar_Syntax_Syntax.comp -> (FStar_Errors.raw_error * Prims.string)
   =
@@ -471,15 +478,15 @@ let computed_computation_type_does_not_match_annotation_eq :
     fun e  ->
       fun c  ->
         fun c'  ->
-          let uu____1197 = err_msg_comp_strings env c c'  in
-          match uu____1197 with
+          let uu____1204 = err_msg_comp_strings env c c'  in
+          match uu____1204 with
           | (s1,s2) ->
-              let uu____1215 =
+              let uu____1222 =
                 FStar_Util.format2
                   "Computed type \"%s\" does not match annotated type \"%s\", and no subtyping was allowed"
                   s1 s2
                  in
-              (FStar_Errors.Fatal_ComputedTypeNotMatchAnnotation, uu____1215)
+              (FStar_Errors.Fatal_ComputedTypeNotMatchAnnotation, uu____1222)
   
 let (unexpected_non_trivial_precondition_on_term :
   FStar_TypeChecker_Env.env ->
@@ -487,12 +494,12 @@ let (unexpected_non_trivial_precondition_on_term :
   =
   fun env  ->
     fun f  ->
-      let uu____1235 =
-        let uu____1237 = FStar_TypeChecker_Normalize.term_to_string env f  in
+      let uu____1242 =
+        let uu____1244 = FStar_TypeChecker_Normalize.term_to_string env f  in
         FStar_Util.format1
-          "Term has an unexpected non-trivial pre-condition: %s" uu____1237
+          "Term has an unexpected non-trivial pre-condition: %s" uu____1244
          in
-      (FStar_Errors.Fatal_UnExpectedPreCondition, uu____1235)
+      (FStar_Errors.Fatal_UnExpectedPreCondition, uu____1242)
   
 let (expected_pure_expression :
   FStar_Syntax_Syntax.term ->
@@ -501,16 +508,16 @@ let (expected_pure_expression :
   =
   fun e  ->
     fun c  ->
-      let uu____1261 =
-        let uu____1263 = FStar_Syntax_Print.term_to_string e  in
-        let uu____1265 =
-          let uu____1267 = name_and_result c  in
-          FStar_All.pipe_left FStar_Pervasives_Native.fst uu____1267  in
+      let uu____1268 =
+        let uu____1270 = FStar_Syntax_Print.term_to_string e  in
+        let uu____1272 =
+          let uu____1274 = name_and_result c  in
+          FStar_All.pipe_left FStar_Pervasives_Native.fst uu____1274  in
         FStar_Util.format2
           "Expected a pure expression; got an expression \"%s\" with effect \"%s\""
-          uu____1263 uu____1265
+          uu____1270 uu____1272
          in
-      (FStar_Errors.Fatal_ExpectedPureExpression, uu____1261)
+      (FStar_Errors.Fatal_ExpectedPureExpression, uu____1268)
   
 let (expected_ghost_expression :
   FStar_Syntax_Syntax.term ->
@@ -519,16 +526,16 @@ let (expected_ghost_expression :
   =
   fun e  ->
     fun c  ->
-      let uu____1308 =
-        let uu____1310 = FStar_Syntax_Print.term_to_string e  in
-        let uu____1312 =
-          let uu____1314 = name_and_result c  in
-          FStar_All.pipe_left FStar_Pervasives_Native.fst uu____1314  in
+      let uu____1315 =
+        let uu____1317 = FStar_Syntax_Print.term_to_string e  in
+        let uu____1319 =
+          let uu____1321 = name_and_result c  in
+          FStar_All.pipe_left FStar_Pervasives_Native.fst uu____1321  in
         FStar_Util.format2
           "Expected a ghost expression; got an expression \"%s\" with effect \"%s\""
-          uu____1310 uu____1312
+          uu____1317 uu____1319
          in
-      (FStar_Errors.Fatal_ExpectedGhostExpression, uu____1308)
+      (FStar_Errors.Fatal_ExpectedGhostExpression, uu____1315)
   
 let (expected_effect_1_got_effect_2 :
   FStar_Ident.lident ->
@@ -536,14 +543,14 @@ let (expected_effect_1_got_effect_2 :
   =
   fun c1  ->
     fun c2  ->
-      let uu____1351 =
-        let uu____1353 = FStar_Syntax_Print.lid_to_string c1  in
-        let uu____1355 = FStar_Syntax_Print.lid_to_string c2  in
+      let uu____1358 =
+        let uu____1360 = FStar_Syntax_Print.lid_to_string c1  in
+        let uu____1362 = FStar_Syntax_Print.lid_to_string c2  in
         FStar_Util.format2
           "Expected a computation with effect %s; but it has effect %s"
-          uu____1353 uu____1355
+          uu____1360 uu____1362
          in
-      (FStar_Errors.Fatal_UnexpectedEffect, uu____1351)
+      (FStar_Errors.Fatal_UnexpectedEffect, uu____1358)
   
 let (failed_to_prove_specification_of :
   FStar_Syntax_Syntax.lbname ->
@@ -551,15 +558,15 @@ let (failed_to_prove_specification_of :
   =
   fun l  ->
     fun lbls  ->
-      let uu____1381 =
-        let uu____1383 = FStar_Syntax_Print.lbname_to_string l  in
-        let uu____1385 = FStar_All.pipe_right lbls (FStar_String.concat ", ")
+      let uu____1388 =
+        let uu____1390 = FStar_Syntax_Print.lbname_to_string l  in
+        let uu____1392 = FStar_All.pipe_right lbls (FStar_String.concat ", ")
            in
         FStar_Util.format2
           "Failed to prove specification of %s; assertions at [%s] may fail"
-          uu____1383 uu____1385
+          uu____1390 uu____1392
          in
-      (FStar_Errors.Error_TypeCheckerFailToProve, uu____1381)
+      (FStar_Errors.Error_TypeCheckerFailToProve, uu____1388)
   
 let (failed_to_prove_specification :
   Prims.string Prims.list -> (FStar_Errors.raw_error * Prims.string)) =
@@ -568,11 +575,11 @@ let (failed_to_prove_specification :
       match lbls with
       | [] ->
           "An unknown assertion in the term at this location was not provable"
-      | uu____1416 ->
-          let uu____1420 =
+      | uu____1423 ->
+          let uu____1427 =
             FStar_All.pipe_right lbls (FStar_String.concat "\n\t")  in
           FStar_Util.format1 "The following problems were found:\n\t%s"
-            uu____1420
+            uu____1427
        in
     (FStar_Errors.Error_TypeCheckerFailToProve, msg)
   
@@ -587,13 +594,13 @@ let (cardinality_constraint_violated :
   =
   fun l  ->
     fun a  ->
-      let uu____1457 =
-        let uu____1459 = FStar_Syntax_Print.lid_to_string l  in
-        let uu____1461 =
+      let uu____1464 =
+        let uu____1466 = FStar_Syntax_Print.lid_to_string l  in
+        let uu____1468 =
           FStar_Syntax_Print.bv_to_string a.FStar_Syntax_Syntax.v  in
         FStar_Util.format2
           "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed"
-          uu____1459 uu____1461
+          uu____1466 uu____1468
          in
-      (FStar_Errors.Fatal_CardinalityConstraintViolated, uu____1457)
+      (FStar_Errors.Fatal_CardinalityConstraintViolated, uu____1464)
   
