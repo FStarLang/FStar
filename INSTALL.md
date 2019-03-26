@@ -99,6 +99,12 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
 
+   Note: If you hand-rolled your own F* binary then remember that you need to
+         also build our OCaml support library, as further documented
+         [here](https://github.com/FStarLang/FStar/wiki/Executing-F*-code):
+        
+        $ make -C ulib/ml
+
 4. You can verify the F* library and all the examples,
    keeping in mind that this might take a long time.
 
@@ -106,11 +112,20 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ make -j6 -C examples
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
-   Note: Some of the examples currently require having OCaml installed (as for step 3 above).
+   Note: Some of the examples require having OCaml installed (as for step 3 above).
+
+   Note: Some of the examples require our
+         [OCaml support library](https://github.com/FStarLang/FStar/wiki/Executing-F*-code)
+         (as for step 3 above)
 
    Note: Some of the examples currently require having [KreMLin](https://github.com/FStarLang/kremlin)
          installed and the `KREMLIN_HOME` variable pointing to its location.
-         
+
+   Note: The option `-j6` controls the number of cores to be used in parallel build.
+         Using more cores results in greater RAM usage. This can make builds slow
+         if you do not have enough RAM to support all parallel builds. Consider monitoring
+         RAM usage when building, and use fewer cores if you are using 100% of your RAM. 
+
    Note: On Linux if you get a file descriptor exhaustion error that looks
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
          you can increase the limits with `ulimit -n 4000`.
@@ -188,12 +203,6 @@ Some convenience Makefile targets are available for steps 2 and 3:
 
 - To run steps 2 and 3, do `make -C src -j 6 fstar-ocaml`.
 - To run steps 3, 2 and 3 again, do: `make -C src -j 6 ocaml-fstar-ocaml`.
-
-The option `-j 6` controls the number of cores to be used in parallel build.
-Using more cores results in greater RAM usage. This can make builds slow if you do not have enough RAM to support all parallel builds. Consider monitoring RAM usage when building, and use fewer cores if you are using 100% of your RAM. 
-
-The latter step is not always guaranteed to work but almost always does,
-and is a tiny bit faster than extracting F\* using the F# version.
 
 
 ### Step 1. Building F\* from sources using the F# compiler ###
