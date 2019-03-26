@@ -621,7 +621,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                    | FreeV _
                    | App(_, []) ->
                      let sym_name = "@kick_partial_app_" ^ (BU.digest_of_string tkey_hash) in  //the '@' retains this for hints
-                     BU.print1 "generating kick partial app %s\n" (Print.term_to_string t);
+                     // BU.print1 "generating kick partial app %s\n" (Print.term_to_string t);
                      [Util.mkAssume(kick_partial_app tok,
                                     Some "kick_partial_app",
                                     sym_name)], sym_name
@@ -861,20 +861,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
             let encode_partial_app ht_opt =
                 let head_tm, decls' = encode_term head env in
-                let is_kick_partial_app decls' =
-                  match decls' with
-                  | [{decls=[Assume {assumption_caption=Some "kick_partial_app"}]}] ->
-                    BU.print1 "got kick_partial_app %s\n" (Print.term_to_string head)
-                  | _ -> ()
-                in
-                is_kick_partial_app decls';
                 let app_tm = mk_Apply_args head_tm args in
                 let decls' =
                   //if we have at least one arg
                   //no need to kick partial app
                   match args, (U.un_uinst head).n, decls' with
                   | _::_, Tm_fvar _, [{decls=[Assume {assumption_caption=Some "kick_partial_app"}]}] ->
-                    BU.print1 "dropping kick_partial_app %s" (Print.term_to_string head);
+                    // BU.print1 "dropping kick_partial_app %s" (Print.term_to_string head);
                     []
                   | _ -> decls'
                 in
