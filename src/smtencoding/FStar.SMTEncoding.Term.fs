@@ -963,10 +963,12 @@ and mkPrelude z3options =
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
-                (assert (forall ((t Term))\n\
-                            (! (iff (exists ((e Term)) (HasType e t))\n\
-                                    (Valid t))\n\
-                                :pattern ((Valid t)))))\n\
+                (assert (forall ((e Term) (t Term))\n\
+                            (! (implies (HasType e t)\n\
+                                        (Valid t))\n\
+                                :pattern ((HasType e t)\n\
+                                          (Valid t))\n\
+                                :qid __prelude_valid_intro)))\n\
                 (declare-fun Prims.precedes (Term Term Term Term) Term)\n\
                 (declare-fun Range_const (Int) Term)\n\
                 (declare-fun _mul (Int Int) Int)\n\
