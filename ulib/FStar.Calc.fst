@@ -25,7 +25,7 @@ let rec calc_chain_related (#t : Type) (rs : list (relation t)) (x y : t) : Tot 
 
 (* Every chain of `t`'s related by `rs` **(reversed!)** has its endpoints related by p *)
 [@"opaque_to_smt"]
-let calc_chain_compatible (#t : Type) (rs : list (relation t)) (p : relation t) : Type0 =
+let calc_chain_compatible (#t : Type) (rs : list (relation t)) (p : relation t) : Tot Type0 =
   forall x y. calc_chain_related rs x y ==> p x y
 
 [@"opaque_to_smt"]
@@ -47,7 +47,7 @@ let _calc_step (#t:Type) (#rs : list (relation t)) (#x #y : t)
          (p : relation t)                         (* Relation for this step *)
          (z : t)                                  (* Next expression *)
          (pf : unit -> GTot (calc_proof rs x y))  (* Rest of the proof *)
-         (j : unit -> squash (p y z))             (* Justification, thunked to avoid confusion such as #1397 *)
+         (j : unit -> Tot (squash (p y z)))       (* Justification, thunked to avoid confusion such as #1397 *)
          : GTot (calc_proof (p::rs) x z)
          (* Need to annotate #p seemingly due to #1486 *)
          = CalcStep rs #p (pf ()) (j ())
@@ -56,7 +56,7 @@ let _calc_step (#t:Type) (#rs : list (relation t)) (#x #y : t)
 let calc_step (#t:Type) (#x #y : t) (p : relation t)
          (z : t)
          (pf : unit -> GTot (calc_pack x y))
-         (j : unit -> squash (p y z))
+         (j : unit -> Tot (squash (p y z)))
          : GTot (calc_pack x z)
          =
          let pk = pf () in
