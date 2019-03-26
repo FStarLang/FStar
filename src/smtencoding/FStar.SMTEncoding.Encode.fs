@@ -519,7 +519,9 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
                       let tok_typing =
                         let ff = mk_fv ("ty", Term_sort) in
                         let f = mkFreeV ff in
-                        let vtok_app_r = mk_Apply f [mk_fv (vtok, Term_sort)] in
+                        let vtok_fv = mk_fv (vtok, Term_sort) in
+                        let vtok_app_r = mk_Apply f [vtok_fv] in
+                        let vtok_app_l = mk_Apply (mkFreeV vtok_fv) [ff] in
                         //guard the token typing assumption with a Apply(f, tok), where f is typically __uu__PartialApp
                         //Additionally, the body of the term becomes
                         //                NoHoist f (and (HasType tok ...)
@@ -533,7 +535,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
                         //these patterns aim to restrict the use of the typing assumption until such point as it is actually needed
                         let guarded_tok_typing =
                           mkForall (S.range_of_fv fv)
-                                   ([[vtok_app_r]],
+                                   ([[vtok_app_r]; [vtok_app_l]],
                                     [ff],
                                     mkAnd(Term.mk_NoHoist f tok_typing,
                                           name_tok_corr_formula vapp)) in
@@ -1317,8 +1319,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let t = norm_before_encoding env t in
         let formals, t_res = U.arrow_formals t in
         let arity = List.length formals in
-        let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
-        let ddtok_tm = mkApp(ddtok, []) in
         let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
         let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
         let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
@@ -1330,7 +1330,21 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                             //as well as (nat * bool), without leading us to conclude that int=nat
                                             //Also see https://github.com/FStarLang/FStar/issues/349
             mk_term_projector_name d x, Term_sort, projectible) in
-        let datacons = (ddconstrsym, fields, Term_sort, varops.next_id(), true) |> Term.constructor_to_decl (Ident.range_of_lid d) in
+        let dummy_var = mk_fv ("@dummy", dummy_sort) in
+        let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
+        let thunked, fields, vars =
+            match fields with
+            | []  when d.nsstr <> "Prims"   (* things not in prims *) ->
+              true,  [(d.str ^ "_0", dummy_sort, false)], [dummy_var]
+            | _ -> false, fields, vars
+        in
+        let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid_maybe_thunked env d arity thunked in
+        let ddtok_tm =
+            match ddtok with
+            | Some ddtok -> mkApp(ddtok, [])
+            | None -> mkApp(ddconstrsym, [dummy_tm])
+        in
+        let datacons = Term.constructor_to_decl (Ident.range_of_lid d) (ddconstrsym, fields, Term_sort, varops.next_id(), true)  in
         let app = mk_Apply ddtok_tm vars in
         let guard = mk_and_l guards in
         let xvars = List.map mkFreeV vars in
@@ -1339,11 +1353,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let tok_typing, decls3 = encode_term_pred None t env ddtok_tm in
         let tok_typing =
              match fields with
-             | _::_ ->
+             | _::_ when not thunked ->
                let ff = mk_fv ("ty", Term_sort) in
                let f = mkFreeV ff in
                let vtok_app_l = mk_Apply ddtok_tm [ff] in
-               let vtok_app_r = mk_Apply f [mk_fv (ddtok, Term_sort)] in
+               let vtok_app_r = mk_Apply f [mk_fv (Option.get ddtok, Term_sort)] in
                 //guard the token typing assumption with a Apply(tok, f) or Apply(f, tok)
                 //Additionally, the body of the term becomes NoHoist f (HasType tok ...)
                 //   to prevent the Z3 simplifier from hoisting the (HasType tok ...) part out
@@ -1355,16 +1369,25 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         ([[vtok_app_l]; [vtok_app_r]],
                         [ff],
                         Term.mk_NoHoist f tok_typing)
-             | _ -> tok_typing in
+             | _ ->
+               mkForall (Ident.range_of_lid d)
+                        ([[dapp]],
+                         [dummy_var],
+                        tok_typing)
+        in
         let vars', guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
+        let vars' =
+            if thunked then dummy_var::vars' else vars'
+        in
         let ty_pred', decls_pred =
              let xvars = List.map mkFreeV vars' in
              let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
              encode_term_pred (Some fuel_tm) t_res env'' dapp in
         let guard' = mk_and_l guards' in
         let proxy_fresh = match formals with
-            | [] -> []
-            | _ -> [Term.fresh_token (ddtok, Term_sort) (varops.next_id())] in
+            | _::_ when not thunked -> [Term.fresh_token (Option.get ddtok, Term_sort) (varops.next_id())]
+            | _ -> []
+        in
 
         let encode_elim () =
             let head, args = U.head_and_args t_res in
@@ -1420,10 +1443,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     if lid_equals d Const.lextop_lid
                     then let x = mk_fv (varops.fresh env.current_module_name "x", Term_sort) in
                          let xtm = mkFreeV x in
-                         Util.mkAssume(mkForall (Ident.range_of_lid d)
+                         [Util.mkAssume(mkForall (Ident.range_of_lid d)
                                                 ([[mk_Precedes lex_t lex_t xtm dapp]], [x], mkImp(mk_tester "LexCons" xtm, mk_Precedes lex_t lex_t xtm dapp)),
                                      Some "lextop is top",
-                                     (varops.mk_unique "lextop"))
+                                     (varops.mk_unique "lextop"))]
+                    else if thunked
+                    then []
                     else (* subterm ordering *)
                       let prec =
                         vars
@@ -1434,12 +1459,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
                           |> List.flatten
                       in
-                      Util.mkAssume(mkForall (Ident.range_of_lid d)
+                      [Util.mkAssume(mkForall (Ident.range_of_lid d)
                                              ([[ty_pred]], add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders), mkImp(ty_pred, mk_and_l prec)),
                                     Some "subterm ordering",
-                                    ("subterm_ordering_"^ddconstrsym))
+                                    ("subterm_ordering_"^ddconstrsym))]
                   in
-                  arg_decls, [typing_inversion; subterm_ordering]
+                  arg_decls, [typing_inversion]@subterm_ordering
 
                 | _ ->
                   Errors.log_issue se.sigrng (Errors.Warning_ConstructorBuildsUnexpectedType, (BU.format2 "Constructor %s builds an unexpected type %s\n"
@@ -1449,19 +1474,28 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let g = binder_decls
                 @decls2
                 @decls3
-                @([Term.DeclFun(ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (Print.lid_to_string d)))]
+                @(match ddtok with
+                 | None -> []
+                 | _ -> [Term.DeclFun(Option.get ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (Print.lid_to_string d)))]
                   @proxy_fresh |> mk_decls_trivial)
                 @decls_formals
                 @decls_pred
-                @([Util.mkAssume(tok_typing, Some "typing for data constructor proxy", ("typing_tok_"^ddtok));
-                   Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                          ([[app]], vars,
-                                           mkEq(app, dapp)), Some "equality for proxy", ("equality_tok_"^ddtok));
-                   Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                          ([[ty_pred']],add_fuel (mk_fv (fuel_var, Fuel_sort)) vars', mkImp(guard', ty_pred')),
-                               Some "data constructor typing intro",
-                               ("data_typing_intro_"^ddtok));
-                   ]@elim |> mk_decls_trivial) in
+                @(
+                    [Util.mkAssume(tok_typing, Some "typing for data constructor proxy", ("typing_tok_"^ddconstrsym))]
+                    @(if thunked then []
+                     else [
+                        Util.mkAssume(mkForall
+                                        (Ident.range_of_lid d)
+                                        ([[app]], vars,
+                                         mkEq(app, dapp)),
+                                         Some "equality for proxy",
+                                         ("equality_tok_"^ddconstrsym))])
+                    @[
+                      Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                             ([[ty_pred']], add_fuel (mk_fv (fuel_var, Fuel_sort)) vars', mkImp(guard', ty_pred')),
+                                 Some "data constructor typing intro",
+                               ("data_typing_intro_"^ddconstrsym))]
+                    @elim |> mk_decls_trivial) in
         (datacons |> mk_decls_trivial) @ g, env
 
 and encode_sigelts env ses :(decls_t * env_t) =

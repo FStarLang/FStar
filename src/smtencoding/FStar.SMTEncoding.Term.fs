@@ -241,7 +241,7 @@ let mk_decls name key decls aux_decls = [{
   decls       = decls;
   a_names     =  //AR: collect the names of aux_decls and decls to be retained in case of a cache hit
     let sm = BU.smap_create 20 in
-    List.iter (fun elt -> 
+    List.iter (fun elt ->
       List.iter (fun s -> BU.smap_add sm s "0") elt.a_names
     ) aux_decls;
     List.iter (fun d -> match d with
@@ -259,7 +259,7 @@ let mk_decls_trivial decls = [{
               | _ -> []) decls;
 }]
 
-let decls_list_of l = l |> List.collect (fun elt -> elt.decls) 
+let decls_list_of l = l |> List.collect (fun elt -> elt.decls)
 
 type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
