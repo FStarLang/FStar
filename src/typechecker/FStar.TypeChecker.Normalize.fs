@@ -2485,7 +2485,11 @@ let normalize_universe env u = norm_universe (config [] env) [] u
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
 *)
 let ghost_to_pure env c =
-    let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses] env in
+    let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses;
+                      Unascribe;   //remove ascriptions
+                      ForExtraction //and refinement types
+                     ]
+              env in
     let non_info t = non_informative (norm cfg [] [] t) in
     match c.n with
     | Total _ -> c
@@ -2507,7 +2511,15 @@ let ghost_to_pure env c =
     | _ -> c
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
-    let cfg = config [Eager_unfolding; UnfoldUntil delta_constant; EraseUniverses; AllowUnboundUniverses] env in
+     let cfg =
+        config [Eager_unfolding;
+                UnfoldUntil delta_constant;
+                EraseUniverses;
+                AllowUnboundUniverses;
+                Unascribe;   //remove ascriptions
+                ForExtraction //and refinement types
+                ]
+        env in
     let non_info t = non_informative (norm cfg [] [] t) in
     if U.is_ghost_effect lc.eff_name
     && non_info lc.res_typ
