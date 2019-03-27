@@ -498,6 +498,8 @@ let interval_4_disjoint (i j: nat)
 
 #reset-options "--z3rlimit 16 --max_fuel 0 --max_ifuel 0"
 
+open FStar.Mul
+
 inline_for_extraction
 let upd_32_be
   (#rrel #rel:MB.srel u8) (b:MB.mbuffer u8 rrel rel)
@@ -510,51 +512,51 @@ let upd_32_be
      (ensures fun h0 _ h1 ->
        MB.(modifies (loc_buffer b) h0 h1) /\
        seq_uint32_of_be (MB.length b / 4) (MB.as_seq h1 b) `Seq.equal` Seq.upd (seq_uint32_of_be (MB.length b / 4) (MB.as_seq h0 b)) (U32.v i) v)
-
   = let h0 = get () in
     store32_be_i b U32.(4ul *^ i) v;
     let h1 = get () in
-
     //AR: 03/01: the following 3 assertions say how the buffer changed
     assert (be_to_n (Seq.slice (MB.as_seq h1 b) (U32.(v (4ul *^ i))) (U32.(v (4ul *^ i) + 4))) == U32.v v);
     assert (Seq.equal (Seq.slice (MB.as_seq h0 b) 0 (U32.(v (4ul *^ i))))
                       (Seq.slice (MB.as_seq h1 b) 0 (U32.(v (4ul *^ i)))));
     assert (Seq.equal (Seq.slice (MB.as_seq h0 b) (U32.(v (4ul *^ i) + 4)) (MB.length b))
                       (Seq.slice (MB.as_seq h1 b) (U32.(v (4ul *^ i) + 4)) (MB.length b)));
-
     let f () : Lemma
       (seq_uint32_of_be (MB.length b / 4) (MB.as_seq h1 b) `Seq.equal` Seq.upd (seq_uint32_of_be (MB.length b / 4) (MB.as_seq h0 b))
                         (UInt32.v i) v)
     = let s0 = MB.as_seq h0 b in
       let s1 = MB.as_seq h1 b in
-    let n = MB.length b / 4 in
-    assert (4 `Prims.op_Multiply` n == MB.length b);
-    let s0' = seq_uint32_of_be n s0 in
-    let s1' = seq_uint32_of_be n s1 in
-    let lo = UInt32.v i in
-    let hi = lo + 1 in
-    let s2' = Seq.upd s0' lo v in
-    assert (Seq.length s1' == Seq.length s2');
-    let f
-      (j: nat)
-    : Lemma
-      (requires (j < n))
-      (ensures (j < n /\ Seq.index s1' j == Seq.index s2' j))
-    =
-      if j = lo
-      then ()
-      else begin
-        slice_seq_uint32_of_be n s0 j (j + 1);
-        slice_seq_uint32_of_be n s1 j (j + 1);
-	let init = U32.v (4ul `UInt32.mul` UInt32.uint_to_t j) in
-        let sj0 = seq_uint32_of_be 1 (Seq.slice (MB.as_seq h0 b) init (init + 4)) in
-        let sj1 = seq_uint32_of_be 1 (Seq.slice (MB.as_seq h1 b) init (init + 4)) in
-        assert (Seq.index s1' j == Seq.index sj1 0);
-        assert (Seq.index s0' j == Seq.index sj0 0);
-        interval_4_disjoint j lo;
-        admit ()  //AR: 03/01: TODO
-      end
+      let n = MB.length b / 4 in
+      assert (4 `Prims.op_Multiply` n == MB.length b);
+      let s0' = seq_uint32_of_be n s0 in
+      let s1' = seq_uint32_of_be n s1 in
+      let lo = UInt32.v i in
+      let hi = lo + 1 in
+      let s2' = Seq.upd s0' lo v in
+      assert (Seq.length s1' == Seq.length s2');
+      let i' = UInt32.v i in
+      let g
+        (j' : nat)
+      : Lemma
+        (requires (j' < n))
+        (ensures (j' < n /\ Seq.index s1' j' == Seq.index s2' j'))
+      = if j' = UInt32.v i
+        then ()
+        else begin
+          let u () : Lemma
+            (Seq.slice s0 (4 * j') (4 * j' + 4) == Seq.slice s1 (4 * j') (4 * j' + 4))
+          = if j' < UInt32.v i
+            then begin
+              Seq.slice_slice s0 0 (4 * i') (4 * j') (4 * j' + 4);
+              Seq.slice_slice s1 0 (4 * i') (4 * j') (4 * j' + 4)
+            end else begin
+              Seq.slice_slice s0 (4 * i' + 4) (MB.length b) (4 * (j' - i' - 1)) (4 * (j' - i'));
+              Seq.slice_slice s1 (4 * i' + 4) (MB.length b) (4 * (j' - i' - 1)) (4 * (j' - i'))
+            end
+          in
+          u ()
+        end
+      in
+      Classical.forall_intro (Classical.move_requires g)
     in
-    Classical.forall_intro (Classical.move_requires f)
-  in
-  f ()
+    f ()
