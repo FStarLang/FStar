@@ -2490,7 +2490,16 @@ let ghost_to_pure env c =
                       ForExtraction //and refinement types
                      ]
               env in
-    let non_info t = non_informative (norm cfg [] [] t) in
+    let cfg_ni = config
+            [Eager_unfolding;  //don't unfold everything just to decide non-info
+             AllowUnboundUniverses;
+             EraseUniverses;
+             Unascribe;   //remove ascriptions
+             ForExtraction //and refinement types
+            ]
+            env in
+    let non_info t =
+        non_informative (norm cfg_ni [] [] t) in
     match c.n with
     | Total _ -> c
     | GTotal (t, uopt) when non_info t -> {c with n = Total (t, uopt)}
@@ -2513,7 +2522,6 @@ let ghost_to_pure env c =
 let ghost_to_pure_lcomp env (lc:lcomp) =
      let cfg =
         config [Eager_unfolding;
-                UnfoldUntil delta_constant;
                 EraseUniverses;
                 AllowUnboundUniverses;
                 Unascribe;   //remove ascriptions
