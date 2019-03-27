@@ -1274,7 +1274,7 @@
         "typing_FStar.Seq.Base.length", "typing_FStar.UInt.fits"
       ],
       0,
-      "b1f4a6e41305e15c9430eb60a03e407e"
+      "49f0b8661fa3885880d2b1652b3acefb"
     ],
     [
       "FStar.UInt.from_vec_propriety",
@@ -6629,7 +6629,7 @@
         "token_correspondence_Prims.pow2.fuel_instrumented"
       ],
       0,
-      "c267dacc65a7f67334f2c3fc56f0d305"
+      "6f31b852b6ba9f028be612ae227d798d"
     ],
     [
       "FStar.UInt.lemma_mod_variation",
@@ -6770,7 +6770,7 @@
         "token_correspondence_Prims.pow2.fuel_instrumented"
       ],
       0,
-      "6a11ff24151eda160770f4e7cf786a9e"
+      "36dd8483ea15afadc0e84b6abe973630"
     ],
     [
       "FStar.UInt.lemma_lognot_value_nonzero",
@@ -6843,7 +6843,7 @@
         "typing_FStar.UInt.lognot"
       ],
       0,
-      "1b704889a264366f8cd19e0386d0c437"
+      "dd2808413194f99e05166b49f74f292f"
     ],
     [
       "FStar.UInt.lemma_lognot_value",
@@ -6903,7 +6903,7 @@
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "93f46a7ed519613a8796eac5cc5feacb"
+      "69888c006c480ff2f385a5e7c5f4cab3"
     ],
     [
       "FStar.UInt.lemma_minus_eq_zero_sub",

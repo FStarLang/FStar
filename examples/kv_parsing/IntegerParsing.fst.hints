@@ -2243,7 +2243,7 @@
         "typing_IntegerParsing.encode_u16"
       ],
       0,
-      "3c078918f12dc8d2a972f97c3eaa3b98"
+      "081b93ce2b1e20a3a52c5863ac170f9e"
     ],
     [
       "IntegerParsing.enc_u32_array_st",
@@ -2318,7 +2318,7 @@
         "typing_IntegerParsing.encode_u32"
       ],
       0,
-      "82d90faf93e96f206b49667ea7eeeb9b"
+      "7f4df953c00c4f753aa49dbe3c69e35e"
     ],
     [
       "IntegerParsing.u16_array",
@@ -3411,7 +3411,7 @@
         "typing_IntegerParsing.encode_u16"
       ],
       0,
-      "83b794295784155655c09320c654aab5"
+      "1407c8c486255be094c2acdf92c77132"
     ],
     [
       "IntegerParsing.ser_u16_array",
@@ -3486,7 +3486,7 @@
         "typing_IntegerParsing.encode_u32"
       ],
       0,
-      "e69914545553d96d827bc311d2b61f43"
+      "b58175490d26e39f7d311512d88e74cb"
     ],
     [
       "IntegerParsing.ser_u32_array",
