@@ -7623,7 +7623,9 @@ let (ghost_to_pure :
           [FStar_TypeChecker_Env.UnfoldUntil
              FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Env.AllowUnboundUniverses;
-          FStar_TypeChecker_Env.EraseUniverses] env
+          FStar_TypeChecker_Env.EraseUniverses;
+          FStar_TypeChecker_Env.Unascribe;
+          FStar_TypeChecker_Env.ForExtraction] env
          in
       let non_info t =
         let uu____25628 = norm cfg [] [] t  in
@@ -7720,7 +7722,9 @@ let (ghost_to_pure_lcomp :
           FStar_TypeChecker_Env.UnfoldUntil
             FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Env.EraseUniverses;
-          FStar_TypeChecker_Env.AllowUnboundUniverses] env
+          FStar_TypeChecker_Env.AllowUnboundUniverses;
+          FStar_TypeChecker_Env.Unascribe;
+          FStar_TypeChecker_Env.ForExtraction] env
          in
       let non_info t =
         let uu____25705 = norm cfg [] [] t  in
