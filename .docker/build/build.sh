@@ -288,14 +288,6 @@ function build_fstar() {
                     }
             } &
 
-            {
-                OTHERFLAGS='--use_hint_hashes' make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
-                    {
-                        echo "Error - Crypto.AEAD.Encrypt.fst-ver (HACL*)"
-                        echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >>$ORANGE_FILE
-                    }
-            } &
-
             # We now run all (hardcoded) tests in mitls-fstar@master
             {
                 # First regenerate dependencies and parsers (maybe not
