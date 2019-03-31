@@ -34,6 +34,11 @@ let inv : inv_t roots = pre_inv
 
 type mapt = DM.t (i:nat{i < 2}) (function 0 -> nat | 1 -> bool)
 
+(* create : t -> f:(t -> Type) -> ptr:DM.t t (\x. pointer (f x)) -> h:HS.mem{inv h ?} -> HS.Lens (DM.t t (\x. pointer (f x))) (DM.t t f) *)
+
+(* All the pointers disjoint and live *)
+
+
 /// `get`: viewing an memory as an abstract state (a pair)
 abstract
 let get (r:roots) (h:imem inv r) : GTot mapt =
