@@ -77,9 +77,6 @@ let dom (#a:eqtype) (lst:list a) : Tot eqtype = x:a{List.memP x lst}
 unfold 
 let fin (#a:eqtype) (lst:list a) = (forall x. List.memP x lst) /\ List.noRepeats lst
 
-
-let from_list (#a:eqtype) (l : ) (f:list a{fin l})
-
 (* Lens constructor *)
 
 (* Try 1 : every element of the type t is in the list *)
@@ -110,7 +107,7 @@ let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B
   in
   (* get *) 
   let get : get_t (imem (map_inv f ptr keys)) (DM.t t f) = 
-    let value k =
+    let value (k:t) : GTot (f k) =
       assert (List.memP k keys);
       let b = DM.sel ptr k in 
       assume (B.live h b);
