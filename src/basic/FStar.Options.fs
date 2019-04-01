@@ -247,6 +247,8 @@ let defaults =
       ("smtencoding.elim_box"         , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
+      ("smtencoding.valid_intro"      , Bool false);
+      ("smtencoding.valid_elim"       , Bool false);
       ("tactics_failhard"             , Bool false);
       ("tactics_info"                 , Bool false);
       ("tactic_raw_binders"           , Bool false);
@@ -389,6 +391,8 @@ let get_smt                     ()      = lookup_opt "smt"                      
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
+let get_smtencoding_valid_intro ()      = lookup_opt "smtencoding.valid_intro"  as_bool
+let get_smtencoding_valid_elim  ()      = lookup_opt "smtencoding.valid_elim"  as_bool
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactics_failhard        ()      = lookup_opt "tactics_failhard"         as_bool
 let get_tactics_info            ()      = lookup_opt "tactics_info"             as_bool
@@ -951,6 +955,16 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          i.e., if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'; \n\t\t\
                if 'native', use '+, -, -'; \n\t\t\
                (default 'boxwrap')");
+
+       (noshort,
+        "smtencoding.valid_intro",
+        BoolStr,
+        "Include an axiom in the SMT encoding to introduce proof-irrelevance from a constructive proof");
+
+       (noshort,
+        "smtencoding.valid_elim",
+        BoolStr,
+        "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
 
        ( noshort,
         "tactic_raw_binders",
@@ -1518,6 +1532,8 @@ let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrappe
 let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwrap"
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
+let smtencoding_valid_intro      () = get_smtencoding_valid_intro     ()
+let smtencoding_valid_elim       () = get_smtencoding_valid_elim      ()
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactics_failhard             () = get_tactics_failhard            ()
 let tactics_info                 () = get_tactics_info                ()
