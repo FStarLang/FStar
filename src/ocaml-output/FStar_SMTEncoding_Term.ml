@@ -2083,7 +2083,7 @@ and (mkPrelude : Prims.string -> Prims.string) =
       "(assert (forall ((e Term) (t Term))\n(! (implies (HasType e t)\n(Valid t))\n:pattern ((HasType e t)\n(Valid t))\n:qid __prelude_valid_intro)))\n"
        in
     let valid_elim =
-      "(assert (forall ((t Term))\n(! (implies (Valid t)\n(exists (e Term) (HasType e t)))\n:pattern ((Valid t))\n:qid __prelude_valid_elim)))\n"
+      "(assert (forall ((t Term))\n(! (implies (Valid t)\n(exists ((e Term)) (HasType e t)))\n:pattern ((Valid t))\n:qid __prelude_valid_elim)))\n"
        in
     let uu____8268 =
       let uu____8270 =
