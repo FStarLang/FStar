@@ -963,12 +963,6 @@ and mkPrelude z3options =
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
-                (assert (forall ((e Term) (t Term))\n\
-                            (! (implies (HasType e t)\n\
-                                        (Valid t))\n\
-                                :pattern ((HasType e t)\n\
-                                          (Valid t))\n\
-                                :qid __prelude_valid_intro)))\n\
                 (declare-fun Prims.precedes (Term Term Term Term) Term)\n\
                 (declare-fun Range_const (Int) Term)\n\
                 (declare-fun _mul (Int Int) Int)\n\
@@ -1010,8 +1004,30 @@ and mkPrelude z3options =
                                       (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
                                       (< (Rank t1) (Rank t2)))\n\
                                       :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
-
-   basic ^ bcons ^ lex_ordering
+   let valid_intro =
+     "(assert (forall ((e Term) (t Term))\n\
+                      (! (implies (HasType e t)\n\
+                                  (Valid t))\n\
+                       :pattern ((HasType e t)\n\
+                                 (Valid t))\n\
+                       :qid __prelude_valid_intro)))\n"
+   in                       
+   let valid_elim =
+     "(assert (forall ((t Term))\n\
+                      (! (implies (Valid t)\n\
+                                  (exists (e Term) (HasType e t)))\n\
+                       :pattern ((Valid t))\n\
+                       :qid __prelude_valid_elim)))\n"
+   in                       
+   basic 
+   ^ bcons
+   ^ lex_ordering
+   ^ (if FStar.Options.smt_encoding_valid_intro()
+      then valid_intro
+      else "")
+   ^ (if FStar.Options.smt_encoding_valid_elim()
+      then valid_elim
+      else "")
 
 
 (* Generate boxing/unboxing functions for bitvectors of various sizes. *)
