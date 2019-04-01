@@ -1015,7 +1015,7 @@ and mkPrelude z3options =
    let valid_elim =
      "(assert (forall ((t Term))\n\
                       (! (implies (Valid t)\n\
-                                  (exists (e Term) (HasType e t)))\n\
+                                  (exists ((e Term)) (HasType e t)))\n\
                        :pattern ((Valid t))\n\
                        :qid __prelude_valid_elim)))\n"
    in
