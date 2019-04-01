@@ -247,7 +247,7 @@ let defaults =
       ("smtencoding.elim_box"         , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
-      ("smtencoding.valid_intro"      , Bool false);
+      ("smtencoding.valid_intro"      , Bool true);
       ("smtencoding.valid_elim"       , Bool false);
       ("tactics_failhard"             , Bool false);
       ("tactics_info"                 , Bool false);
