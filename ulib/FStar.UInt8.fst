@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2019 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -276,7 +276,7 @@ assume val of_string: string -> Tot t
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
-//rather than an expensive verifiation check.
+//rather than an expensive verification check.
 //Since it is marked private, client programs cannot call it directly
 //Since it is marked unfold, it eagerly reduces,
 //eliminating the verification overhead of the wrapper

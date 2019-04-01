@@ -15,13 +15,17 @@
 *)
 module FStar.UInt
 
+(* NOTE: anything that you fix/update here should be reflected in [FStar.Int.fst], which is mostly
+ * a copy-paste of this module. *)
+
 open FStar.Mul
 open FStar.BitVector
 open FStar.Math.Lemmas
 
+#push-options "--max_fuel 0 --max_ifuel 0"
+
 val pow2_values: x:nat -> Lemma
-  (requires True)
-  (ensures (let p = pow2 x in
+  (let p = pow2 x in
    match x with
    | 0  -> p=1
    | 1  -> p=2
@@ -32,7 +36,7 @@ val pow2_values: x:nat -> Lemma
    | 63 -> p=9223372036854775808
    | 64 -> p=18446744073709551616
    | 128 -> p=0x100000000000000000000000000000000
-   | _  -> True))
+   | _  -> True)
   [SMTPat (pow2 x)]
 let pow2_values x =
    match x with
@@ -47,15 +51,11 @@ let pow2_values x =
    | 128 -> assert_norm (pow2 128 = 0x100000000000000000000000000000000)
    | _  -> ()
 
-(* NOTE: anything that you fix/update here should be reflected in [FStar.Int.fst], which is mostly
- * a copy-paste of this module. *)
-
-(* Specs. Note: lacking any type of functors for F*, this is a copy/paste of [FStar.Int.fst], where
- * the relevant bits that changed are:
- * - definition of max and min
- * - use of regular integer modulus instead of wrap-around modulus *)
-
-#reset-options "--initial_fuel 0 --max_fuel 0"
+/// Specs
+///
+/// Note: lacking any type of functors for F*, this is a copy/paste of [FStar.Int.fst], where the relevant bits that changed are:
+///  - definition of max and min
+///  - use of regular integer modulus instead of wrap-around modulus
 
 let max_int (n:nat) : Tot int = pow2 n - 1
 let min_int (n:nat) : Tot int = 0
@@ -66,11 +66,12 @@ let size (x:int) (n:nat) : Tot Type0 = b2t(fits x n)
 (* Machine integer type *)
 type uint_t (n:nat) = x:int{size x n}
 
-(* Constants *)
+/// Constants
+
 val zero: n:nat -> Tot (uint_t n)
 let zero n = 0
 
-#reset-options "--initial_fuel 1 --max_fuel 1"
+#push-options "--initial_fuel 1 --max_fuel 1"
 
 val pow2_n: #n:pos -> p:nat{p < n} -> Tot (uint_t n)
 let pow2_n #n p = pow2_le_compat (n - 1) p; pow2 p
@@ -78,7 +79,7 @@ let pow2_n #n p = pow2_le_compat (n - 1) p; pow2 p
 val one: n:pos -> Tot (uint_t n)
 let one n = 1
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#pop-options
 
 val ones: n:nat -> Tot (uint_t n)
 let ones n = max_int n
@@ -86,20 +87,21 @@ let ones n = max_int n
 (* Increment and decrement *)
 val incr: #n:nat -> a:uint_t n -> Pure (uint_t n)
   (requires (b2t (a < max_int n))) (ensures (fun _ -> True))
-let incr #n a =
-  a + 1
+let incr #n a = a + 1
+
 val decr: #n:nat -> a:uint_t n -> Pure (uint_t n)
   (requires (b2t (a > min_int n))) (ensures (fun _ -> True))
-let decr #n a =
-  a - 1
+let decr #n a = a - 1
 
-abstract val incr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
+abstract
+val incr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
   (requires (b2t (a < max_int n)))
   (ensures (fun b -> a + 1 = b))
 let incr_underspec #n a =
   if a < max_int n then a + 1 else 0
 
-abstract val decr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
+abstract
+val decr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
   (requires (b2t (a > min_int n)))
   (ensures (fun b -> a - 1 = b))
 let decr_underspec #n a =
@@ -107,6 +109,7 @@ let decr_underspec #n a =
 
 val incr_mod: #n:nat -> a:uint_t n -> Tot (uint_t n)
 let incr_mod #n a = (a + 1) % (pow2 n)
+
 val decr_mod: #n:nat -> a:uint_t n -> Tot (uint_t n)
 let decr_mod #n a = (a - 1) % (pow2 n)
 
@@ -114,10 +117,10 @@ let decr_mod #n a = (a - 1) % (pow2 n)
 val add: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
   (requires (size (a + b) n))
   (ensures (fun _ -> True))
-let add #n a b =
-  a + b
+let add #n a b = a + b
 
-abstract val add_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
+abstract
+val add_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
   (requires True)
   (ensures (fun c ->
     size (a + b) n ==> a + b = c))
@@ -132,8 +135,7 @@ let add_mod #n a b =
 val sub: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
   (requires (size (a - b) n))
   (ensures (fun _ -> True))
-let sub #n a b =
-  a - b
+let sub #n a b = a - b
 
 abstract val sub_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
   (requires True)
@@ -150,10 +152,10 @@ let sub_mod #n a b =
 val mul: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
   (requires (size (a * b) n))
   (ensures (fun _ -> True))
-let mul #n a b =
-  a * b
+let mul #n a b = a * b
 
-abstract val mul_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
+abstract
+val mul_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
   (requires True)
   (ensures (fun c ->
     size (a * b) n ==> a * b = c))
@@ -164,27 +166,26 @@ val mul_mod: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let mul_mod #n a b =
   (a * b) % (pow2 n)
 
+private
 let lt_square_div_lt (a:nat) (b:pos) : Lemma
   (requires (a < b * b))
   (ensures (a / b < b))
   = ()
 
 val mul_div: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
-#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 80"
 let mul_div #n a b =
   FStar.Math.Lemmas.lemma_mult_lt_sqr a b (pow2 n);
   lt_square_div_lt (a * b) (pow2 n);
   (a * b) / (pow2 n)
 
-#reset-options "--max_fuel 0 --max_ifuel 0"
 (* Division primitives *)
 val div: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (uint_t n)
   (requires (size (a / b) n))
   (ensures (fun c -> b <> 0 ==> a / b = c))
-let div #n a b =
-  a / b
+let div #n a b = a / b
 
-abstract val div_underspec: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (uint_t n)
+abstract
+val div_underspec: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (uint_t n)
   (requires True)
   (ensures (fun c ->
     (b <> 0 /\ size (a / b) n) ==> a / b = c))
@@ -196,9 +197,8 @@ val div_size: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} ->
 let div_size #n a b =
   FStar.Math.Lib.slash_decr_axiom a b; ()
 
-val udiv: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (uint_t n)
-  (requires (True))
-  (ensures (fun c -> b <> 0 ==> a / b = c))
+val udiv: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} ->
+  Tot (c:uint_t n{b <> 0 ==> a / b = c})
 let udiv #n a b =
   div_size #n a b;
   a / b
@@ -215,15 +215,16 @@ let gte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a >= b)
 let lt #n (a:uint_t n) (b:uint_t n) : Tot bool = (a < b)
 let lte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a <= b)
 
-(* Casts *)
+/// Casts
+
+#push-options "--initial_fuel 1 --max_fuel 1"
+
 val to_uint_t: m:nat -> a:int -> Tot (uint_t m)
 let to_uint_t m a = a % pow2 m
 
 open FStar.Seq
 
 (* WARNING: Mind the big endian vs little endian definition *)
-
-#reset-options "--initial_fuel 1 --max_fuel 1"
 
 (* Casts *)
 val to_vec: #n:nat -> num:uint_t n -> Tot (bv_t n)
@@ -256,7 +257,9 @@ val inverse_aux: #n:nat -> vec:bv_t n -> i:nat{i < n} ->
   Lemma (requires True) (ensures index vec i = index (to_vec (from_vec vec)) i)
         [SMTPat (index (to_vec (from_vec vec)) i)]
 let rec inverse_aux #n vec i =
-  if i = n - 1 then assert((from_vec vec) % 2 = (if index vec (n - 1) then 1 else 0)) else inverse_aux #(n - 1) (slice vec 0 (n - 1)) i
+  if i = n - 1 then
+    assert((from_vec vec) % 2 = (if index vec (n - 1) then 1 else 0))
+  else inverse_aux #(n - 1) (slice vec 0 (n - 1)) i
 
 val inverse_vec_lemma: #n:nat -> vec:bv_t n ->
   Lemma (requires True) (ensures equal vec (to_vec (from_vec vec)))
@@ -279,7 +282,7 @@ let from_vec_lemma_2 #n a b = inverse_vec_lemma a; inverse_vec_lemma b
 
 open FStar.Math.Lemmas
 
-#set-options "--initial_fuel 0 --max_fuel 0"
+#pop-options
 
 val from_vec_aux: #n:nat -> a:bv_t n -> s1:nat{s1 < n} -> s2:nat{s2 < s1} ->
   Lemma (requires True)
@@ -289,18 +292,16 @@ let from_vec_aux #n a s1 s2 =
   paren_mul_right (from_vec #s2 (slice a 0 s2)) (pow2 (s1 - s2)) (pow2 (n - s1));
   pow2_plus (s1 - s2) (n - s1)
 
-#set-options "--initial_fuel 0 --max_fuel 0"
-
 val seq_slice_lemma: #n:nat -> a:bv_t n -> s1:nat{s1 < n} -> t1:nat{t1 >= s1 && t1 <= n} -> s2:nat{s2 < t1 - s1} -> t2:nat{t2 >= s2 && t2 <= t1 - s1} ->
   Lemma (equal (slice (slice a s1 t1) s2 t2) (slice a (s1 + s2) (s1 + t2)))
 let seq_slice_lemma #n a s1 t1 s2 t2 = ()
 
-#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 20"
+#push-options "--initial_fuel 1 --max_fuel 1"
 
 val from_vec_propriety: #n:pos -> a:bv_t n -> s:nat{s < n} ->
   Lemma (requires True)
         (ensures from_vec a = (from_vec #s (slice a 0 s)) * pow2 (n - s) + from_vec #(n - s) (slice a s n))
-	(decreases (n - s))
+        (decreases (n - s))
 let rec from_vec_propriety #n a s =
   if s = n - 1 then () else begin
     from_vec_propriety #n a (s + 1);
@@ -313,7 +314,7 @@ let rec from_vec_propriety #n a s =
     seq_slice_lemma #n a s n 1 (n - s)
   end
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#pop-options
 
 val append_lemma: #n:pos -> #m:pos -> a:bv_t n -> b:bv_t m ->
   Lemma (from_vec #(n + m) (append a b) = (from_vec #n a) * pow2 m + (from_vec #m b))
@@ -338,7 +339,7 @@ let slice_right_lemma #n a s =
   modulo_addition_lemma (from_vec #s (slice a (n - s) n)) (pow2 s) (from_vec #(n - s) (slice a 0 (n - s)));
   small_modulo_lemma_1 (from_vec #s (slice a (n - s) n)) (pow2 s)
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#push-options "--initial_fuel 1 --max_fuel 1"
 
 (* Relations between constants in BitVector and in UInt. *)
 val zero_to_vec_lemma: #n:pos -> i:nat{i < n} ->
@@ -355,14 +356,14 @@ let zero_from_vec_lemma #n = to_vec_lemma_2 (from_vec (zero_vec #n)) (zero n)
 val one_to_vec_lemma: #n:pos -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures index (to_vec (one n)) i = index (elem_vec #n (n - 1)) i)
-	[SMTPat (index (to_vec (one n)) i)]
+        [SMTPat (index (to_vec (one n)) i)]
 let one_to_vec_lemma #n i =
   if i = n - 1 then () else zero_to_vec_lemma #n i
 
 val pow2_to_vec_lemma: #n:pos -> p:nat{p < n} -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures index (to_vec (pow2_n #n p)) i = index (elem_vec #n (n - p - 1)) i)
-	[SMTPat (index (to_vec (pow2_n #n p)) i)]
+        [SMTPat (index (to_vec (pow2_n #n p)) i)]
 let rec pow2_to_vec_lemma #n p i =
   if i = n - 1 then ()
   else if p = 0 then one_to_vec_lemma #n i
@@ -377,7 +378,7 @@ let pow2_from_vec_lemma #n p =
 val ones_to_vec_lemma: #n:pos -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures index (to_vec (ones n)) i = index (ones_vec #n) i)
-	[SMTPat (index (to_vec (ones n)) i)]
+        [SMTPat (index (to_vec (ones n)) i)]
 let rec ones_to_vec_lemma #n i =
   if i = n - 1 then () else ones_to_vec_lemma #(n - 1) i
 
@@ -408,14 +409,14 @@ let rec zero_nth_lemma #n i = ()
 val pow2_nth_lemma: #n:pos -> p:nat{p < n} -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures (i = n - p - 1 ==> nth (pow2_n #n p) i = true) /\
-	         (i <> n - p - 1 ==> nth (pow2_n #n p) i = false))
+                 (i <> n - p - 1 ==> nth (pow2_n #n p) i = false))
         [SMTPat (nth (pow2_n #n p) i)]
 let pow2_nth_lemma #n p i = ()
 
 val one_nth_lemma: #n:pos -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures (i = n - 1 ==> nth (one n) i = true) /\
-	         (i < n - 1 ==> nth (one n) i = false))
+                 (i < n - 1 ==> nth (one n) i = false))
         [SMTPat (nth (one n) i)]
 let one_nth_lemma #n i = ()
 
@@ -427,33 +428,39 @@ let rec ones_nth_lemma #n i = ()
 (* Bitwise operators *)
 val logand: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let logand #n a b = from_vec #n (logand_vec #n (to_vec #n a) (to_vec #n b))
+
 val logxor: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let logxor #n a b = from_vec #n (logxor_vec #n (to_vec #n a) (to_vec #n b))
+
 val logor: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let logor #n a b = from_vec #n (logor_vec #n (to_vec #n a) (to_vec #n b))
+
 val lognot: #n:pos -> a:uint_t n  -> Tot (uint_t n)
 let lognot #n a = from_vec #n (lognot_vec #n (to_vec #n a))
 
 (* Bitwise operators definitions *)
 val logand_definition: #n:pos -> a:uint_t n -> b:uint_t n -> i:nat{i < n} ->
   Lemma (requires True)
-	(ensures (nth (logand a b) i = (nth a i && nth b i)))
-	[SMTPat (nth (logand a b) i)]
+        (ensures (nth (logand a b) i = (nth a i && nth b i)))
+        [SMTPat (nth (logand a b) i)]
 let logand_definition #n a b i = ()
+
 val logxor_definition: #n:pos -> a:uint_t n -> b:uint_t n -> i:nat{i < n} ->
   Lemma (requires True)
-	(ensures (nth (logxor a b) i = (nth a i <> nth b i)))
-	[SMTPat (nth (logxor a b) i)]
+        (ensures (nth (logxor a b) i = (nth a i <> nth b i)))
+        [SMTPat (nth (logxor a b) i)]
 let logxor_definition #n a b i = ()
+
 val logor_definition: #n:pos -> a:uint_t n -> b:uint_t n -> i:nat{i < n} ->
   Lemma (requires True)
-	(ensures (nth (logor a b) i = (nth a i || nth b i)))
-	[SMTPat (nth (logor a b) i)]
+        (ensures (nth (logor a b) i = (nth a i || nth b i)))
+        [SMTPat (nth (logor a b) i)]
 let logor_definition #n a b i = ()
+
 val lognot_definition: #n:pos -> a:uint_t n -> i:nat{i < n} ->
   Lemma (requires True)
-	(ensures (nth (lognot a) i = not(nth a i)))
-	[SMTPat (nth (lognot a) i)]
+        (ensures (nth (lognot a) i = not(nth a i)))
+        [SMTPat (nth (lognot a) i)]
 let lognot_definition #n a i = ()
 
 (* Two's complement unary minus *)
@@ -470,7 +477,7 @@ let logand_commutative #n a b = nth_lemma #n (logand #n a b) (logand #n b a)
 
 val logand_associative: #n:pos -> a:uint_t n -> b:uint_t n -> c:uint_t n ->
   Lemma (requires True)
-	(ensures (logand #n (logand #n a b) c = logand #n a (logand #n b c)))
+        (ensures (logand #n (logand #n a b) c = logand #n a (logand #n b c)))
 let logand_associative #n a b c = nth_lemma #n (logand #n (logand #n a b) c) (logand #n a (logand #n b c))
 
 val logand_self: #n:pos -> a:uint_t n ->
@@ -572,7 +579,7 @@ let logor_commutative #n a b = nth_lemma #n (logor #n a b) (logor #n b a)
 
 val logor_associative: #n:pos -> a:uint_t n -> b:uint_t n -> c:uint_t n ->
   Lemma (requires True)
-	(ensures (logor #n (logor #n a b) c = logor #n a (logor #n b c)))
+        (ensures (logor #n (logor #n a b) c = logor #n a (logor #n b c)))
 let logor_associative #n a b c = nth_lemma #n (logor #n (logor #n a b) c) (logor #n a (logor #n b c))
 
 val logor_self: #n:pos -> a:uint_t n ->
@@ -710,31 +717,36 @@ let logand_mask #n a m =
 
 
 (* Shift operators *)
+
 val shift_left: #n:pos -> a:uint_t n -> s:nat -> Tot (uint_t n)
 let shift_left #n a s = from_vec (shift_left_vec #n (to_vec #n a) s)
+
 val shift_right: #n:pos -> a:uint_t n -> s:nat -> Tot (uint_t n)
 let shift_right #n a s = from_vec (shift_right_vec #n (to_vec #n a) s)
 
 (* Shift operators lemmas *)
 val shift_left_lemma_1: #n:pos -> a:uint_t n -> s:nat -> i:nat{i < n && i >= n - s} ->
   Lemma (requires True)
-	(ensures (nth (shift_left #n a s) i = false))
-	[SMTPat (nth (shift_left #n a s) i)]
+        (ensures (nth (shift_left #n a s) i = false))
+        [SMTPat (nth (shift_left #n a s) i)]
 let shift_left_lemma_1 #n a s i = ()
+
 val shift_left_lemma_2: #n:pos -> a:uint_t n -> s:nat -> i:nat{i < n && i < n - s} ->
   Lemma (requires True)
         (ensures (nth (shift_left #n a s) i = nth #n a (i + s)))
-	[SMTPat (nth (shift_left #n a s) i)]
+        [SMTPat (nth (shift_left #n a s) i)]
 let shift_left_lemma_2 #n a s i = ()
+
 val shift_right_lemma_1: #n:pos -> a:uint_t n -> s:nat -> i:nat{i < n && i < s} ->
   Lemma (requires True)
-	(ensures (nth (shift_right #n a s) i = false))
-	[SMTPat (nth (shift_right #n a s) i)]
+        (ensures (nth (shift_right #n a s) i = false))
+        [SMTPat (nth (shift_right #n a s) i)]
 let shift_right_lemma_1 #n a s i = ()
+
 val shift_right_lemma_2: #n:pos -> a:uint_t n -> s:nat -> i:nat{i < n && i >= s} ->
   Lemma (requires True)
         (ensures (nth (shift_right #n a s) i = nth #n a (i - s)))
-	[SMTPat (nth (shift_right #n a s) i)]
+        [SMTPat (nth (shift_right #n a s) i)]
 let shift_right_lemma_2 #n a s i = ()
 
 (* Lemmas with shift operators and bitwise operators *)
@@ -793,7 +805,7 @@ let shift_left_value_aux_3 #n a s =
 val shift_left_value_lemma: #n:pos -> a:uint_t n -> s:nat ->
   Lemma (requires True)
         (ensures shift_left #n a s = (a * pow2 s) % pow2 n)
-	[SMTPat (shift_left #n a s)]
+        [SMTPat (shift_left #n a s)]
 let shift_left_value_lemma #n a s =
   if s >= n then shift_left_value_aux_1 #n a s
   else if s = 0 then shift_left_value_aux_2 #n a
@@ -821,7 +833,7 @@ let shift_right_value_aux_3 #n a s =
 val shift_right_value_lemma: #n:pos -> a:uint_t n -> s:nat ->
   Lemma (requires True)
         (ensures shift_right #n a s = a / pow2 s)
-	[SMTPat (shift_right #n a s)]
+        [SMTPat (shift_right #n a s)]
 let shift_right_value_lemma #n a s =
   if s >= n then shift_right_value_aux_1 #n a s
   else if s = 0 then shift_right_value_aux_2 #n a
@@ -858,95 +870,6 @@ val lemma_msb_gte: #n:pos{n > 1} -> a:uint_t n -> b:uint_t n ->
 let lemma_msb_gte #n a b =
   from_vec_propriety (to_vec a) 1;
   from_vec_propriety (to_vec b) 1
-
-(* val lemma_pow2_values: n:nat -> Lemma *)
-(*   (requires (n <= 64)) *)
-(*   (ensures  (pow2 0 = 1 *)
-(*     /\ pow2 1 = 2 *)
-(*     /\ pow2 2 = 4 *)
-(*     /\ pow2 3 = 8 *)
-(*     /\ pow2 4 = 16 *)
-(*     /\ pow2 5 = 32 *)
-(*     /\ pow2 6 = 64 *)
-(*     /\ pow2 7 = 128 *)
-(*     /\ pow2 8 = 256 *)
-(*     /\ pow2 9 = 512 *)
-(*     /\ pow2 10 = 1024 *)
-(*     /\ pow2 11 = 2048 *)
-(*     /\ pow2 12 = 4096 *)
-(*     /\ pow2 13 = 8192 *)
-(*     /\ pow2 14 = 16384 *)
-(*     /\ pow2 15 = 32768 *)
-(*     /\ pow2 16 = 65536 *)
-(*     /\ pow2 17 = 131072 *)
-(*     /\ pow2 18 = 262144 *)
-(*     /\ pow2 19 = 524288 *)
-(*     /\ pow2 20 = 1048576 *)
-(*     /\ pow2 21 = 2097152 *)
-(*     /\ pow2 22 = 4194304 *)
-(*     /\ pow2 23 = 8388608 *)
-(*     /\ pow2 24 = 16777216 *)
-(*     /\ pow2 25 = 33554432 *)
-(*     /\ pow2 26 = 67108864 *)
-(*     /\ pow2 27 = 134217728 *)
-(*     /\ pow2 28 = 268435456 *)
-(*     /\ pow2 29 = 536870912 *)
-(*     /\ pow2 30 = 1073741824 *)
-(*     /\ pow2 31 = 2147483648 *)
-(*     /\ pow2 32 = 4294967296 *)
-(*     /\ pow2 33 = 8589934592 *)
-(*     /\ pow2 34 = 17179869184 *)
-(*     /\ pow2 35 = 34359738368 *)
-(*     /\ pow2 36 = 68719476736 *)
-(*     /\ pow2 37 = 137438953472 *)
-(*     /\ pow2 38 = 274877906944 *)
-(*     /\ pow2 39 = 549755813888 *)
-(*     /\ pow2 40 = 1099511627776 *)
-(*     /\ pow2 41 = 2199023255552 *)
-(*     /\ pow2 42 = 4398046511104 *)
-(*     /\ pow2 43 = 8796093022208 *)
-(*     /\ pow2 44 = 17592186044416 *)
-(*     /\ pow2 45 = 35184372088832 *)
-(*     /\ pow2 46 = 70368744177664 *)
-(*     /\ pow2 47 = 140737488355328 *)
-(*     /\ pow2 48 = 281474976710656 *)
-(*     /\ pow2 49 = 562949953421312 *)
-(*     /\ pow2 50 = 1125899906842624 *)
-(*     /\ pow2 51 = 2251799813685248 *)
-(*     /\ pow2 52 = 4503599627370496 *)
-(*     /\ pow2 53 = 9007199254740992 *)
-(*     /\ pow2 54 = 18014398509481984 *)
-(*     /\ pow2 55 = 36028797018963968 *)
-(*     /\ pow2 56 = 72057594037927936 *)
-(*     /\ pow2 57 = 144115188075855872 *)
-(*     /\ pow2 58 = 288230376151711744 *)
-(*     /\ pow2 59 = 576460752303423488 *)
-(*     /\ pow2 60 = 1152921504606846976 *)
-(*     /\ pow2 61 = 2305843009213693952 *)
-(*     /\ pow2 62 = 4611686018427387904 *)
-(*     /\ pow2 63 = 9223372036854775808 *)
-(*     /\ pow2 64 = 18446744073709551616 )) *)
-(*     [SMTPat (pow2 n)] *)
-(* let lemma_pow2_values n = admit() *)
-
-(* assume Lemma_pow2_values: *)
-(*   (pow2 0 = 1 /\ pow2 1 = 2 /\ pow2 2 = 4 /\ pow2 3 = 8 *)
-(*     /\ pow2 4 = 16 /\ pow2 5 = 32 /\ pow2 6 = 64 /\ pow2 7 = 128 *)
-(*     /\ pow2 8 = 256 /\ pow2 9 = 512 /\ pow2 10 = 1024 /\ pow2 11 = 2048 *)
-(*     /\ pow2 12 = 4096 /\ pow2 13 = 8192 /\ pow2 14 = 16384 /\ pow2 15 = 32768 *)
-(*     /\ pow2 16 = 65536 /\ pow2 17 = 131072 /\ pow2 18 = 262144 /\ pow2 19 = 524288 *)
-(*     /\ pow2 20 = 1048576 /\ pow2 21 = 2097152 /\ pow2 22 = 4194304 /\ pow2 23 = 8388608 *)
-(*     /\ pow2 24 = 16777216 /\ pow2 25 = 33554432 /\ pow2 26 = 67108864 /\ pow2 27 = 134217728 *)
-(*     /\ pow2 28 = 268435456 /\ pow2 29 = 536870912 /\ pow2 30 = 1073741824 /\ pow2 31 = 2147483648 *)
-(*     /\ pow2 32 = 4294967296 /\ pow2 33 = 8589934592 /\ pow2 34 = 17179869184 /\ pow2 35 = 34359738368 *)
-(*     /\ pow2 36 = 68719476736 /\ pow2 37 = 137438953472 /\ pow2 38 = 274877906944 /\ pow2 39 = 549755813888 *)
-(*     /\ pow2 40 = 1099511627776 /\ pow2 41 = 2199023255552 /\ pow2 42 = 4398046511104 /\ pow2 43 = 8796093022208 *)
-(*     /\ pow2 44 = 17592186044416 /\ pow2 45 = 35184372088832 /\ pow2 46 = 70368744177664 /\ pow2 47 = 140737488355328 *)
-(*     /\ pow2 48 = 281474976710656 /\ pow2 49 = 562949953421312 /\ pow2 50 = 1125899906842624 /\ pow2 51 = 2251799813685248 *)
-(*     /\ pow2 52 = 4503599627370496 /\ pow2 53 = 9007199254740992 /\ pow2 54 = 18014398509481984 /\ pow2 55 = 36028797018963968 *)
-(*     /\ pow2 56 = 72057594037927936 /\ pow2 57 = 144115188075855872 /\ pow2 58 = 288230376151711744 /\ pow2 59 = 576460752303423488 *)
-(*     /\ pow2 60 = 1152921504606846976 /\ pow2 61 = 2305843009213693952 /\ pow2 62 = 4611686018427387904 /\ pow2 63 = 9223372036854775808 *)
-(*     /\ pow2 64 = 18446744073709551616) *)
 
 
 (* Lemmas toward showing ~n + 1 = -a *)
@@ -1119,29 +1042,27 @@ let rec lemma_lognot_value_mod #n a =
       end
     end
 
-#set-options "--z3rlimit 100"
-val lemma_lognot_value_zero: #n:pos -> a:uint_t n ->
-  Lemma (a = 0 ==> lognot a = sub_mod (sub_mod 0 a) 1)
+val lemma_lognot_value_zero: #n:pos -> a:uint_t n{a = 0} ->
+  Lemma (lognot a = sub_mod (sub_mod 0 a) 1)
 let lemma_lognot_value_zero #n a =
-  if a = 0 then
-  begin
-    let p = pow2 n in
-    lemma_lognot_value_mod a;
-
-    pow2_lt_compat n 0;  //for (fits 0 n)
-    assert (fits 0 n);
-
-    assert (lognot #n 0 = pow2 n - 0 - 1);
-    assert (lognot a = (-1) % p);
-    assert (sub_mod #n 0 0 = 0);
-
-    assert_norm (pow2 1 == 2);  //this step and
-    assert (1 <= (pow2 1 - 1));  //this one  and
-    pow2_le_compat n 1;         //this one are to prove (fits 1 n)
-    assert (fits 1 n);
-
-    assert (lognot a == sub_mod (sub_mod 0 0) 1)
-  end
+  let p = pow2 n in
+  calc (==) {
+    sub_mod (sub_mod 0 a) 1;
+    == { }
+    sub_mod ((0 - a) % p) 1;
+    == { }
+    ((0 - a) % p - 1) % p;
+    == { }
+    (0 % p - 1) % p;
+    == { modulo_lemma 0 p }
+    (0 - 1) % p;
+    == { lemma_mod_sub_0 p }
+    p - 1;
+    == { }
+    p - 0 - 1;
+    == { lemma_lognot_value_mod a }
+    lognot a;
+  }
 
 #set-options "--z3rlimit 50"
 private
@@ -1154,51 +1075,40 @@ val lemma_one_mod_pow2: #n:pos ->
   Lemma (1 = 1 % (pow2 n))
 let lemma_one_mod_pow2 #n = ()
 
-#reset-options "--z3rlimit 1000 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+#set-options "--z3rlimit 50"
 private
-val lemma_lognot_value_variation: #n:pos -> a:uint_t n ->
-  Lemma (a <> 0 ==> lognot #n a = (-a) % (pow2 n) - 1 % (pow2 n))
+val lemma_lognot_value_variation: #n:pos -> a:uint_t n{a <> 0} ->
+  Lemma (lognot a = (-a) % pow2 n - 1 % pow2 n)
 let lemma_lognot_value_variation #n a =
-  if a <> 0 then
-  begin
-    let p = pow2 n in
-    lemma_lognot_value_mod a;
-    assert (lognot a = p - a - 1);
-    assert (lognot a = p + (0 - a) - 1);
-    FStar.Math.Lemmas.lemma_mod_sub_1 a p;
-    assert ((-a) % p = p - (a % p));
-    assert (lognot #n a = p - (a % p) - 1);
-    lemma_one_mod_pow2 #n;
-    assert (lognot #n a = p - (a % p) - (1 % p));
-    assert (p - a - 1 = p - (a % p) - (1 % p));
-    assert (- a - 1 = -(a % p) - (1 % p));
-    assert (-a = - (a % p));
-    assert (-1 = -(1 % p))
-  end
-#reset-options
+  let p = pow2 n in
+  calc (==) {
+    lognot a <: int;
+    == { lemma_lognot_value_mod a }
+    p - a - 1;
+    == { FStar.Math.Lemmas.modulo_lemma a p }
+    p - (a % p) - 1;
+    == { FStar.Math.Lemmas.modulo_lemma 1 p }
+    (p - (a % p)) - (1 % p);
+    == { FStar.Math.Lemmas.lemma_mod_sub_1 a p }
+    (-a) % p - 1 % p;
+  }
 
-val lemma_lognot_value_nonzero: #n:pos -> a:uint_t n ->
-  Lemma (a <> 0 ==> (lognot a = sub_mod (sub_mod 0 a) 1))
+val lemma_lognot_value_nonzero: #n:pos -> a:uint_t n{a <> 0} ->
+  Lemma (lognot a = sub_mod (sub_mod 0 a) 1)
 let lemma_lognot_value_nonzero #n a =
-  if a <> 0 then
-  begin
-    let p = pow2 n in
-
-    lemma_lognot_value_variation #n a;
-    assert (lognot a = (-a) % (pow2 n) - 1 % (pow2 n));
-
-    assert (sub_mod (sub_mod 0 a) 1 = (((0 - a) % p) - 1) % p);
-
-    lemma_mod_variation #n a;
-    assert (((-a) % p) - 1 % p = (((-a) % p) - 1) % p);
-    assert (a <> 0 ==> (-a) % p - 1 % p = (((0 - a) % p) - 1) % p)
-  end
+  let p = pow2 n in
+  lemma_lognot_value_variation #n a;
+  assert (lognot a = (-a) % (pow2 n) - 1 % (pow2 n));
+  assert (sub_mod (sub_mod 0 a) 1 = (((0 - a) % p) - 1) % p);
+  lemma_mod_variation #n a;
+  assert (((-a) % p) - 1 % p = (((-a) % p) - 1) % p);
+  assert ((-a) % p - 1 % p = (((0 - a) % p) - 1) % p)
 
 val lemma_lognot_value: #n:pos -> a:uint_t n ->
-  Lemma (lognot a = sub_mod (sub_mod 0 a) 1)
+  Lemma (lognot #n a = sub_mod (sub_mod 0 a) 1)
 let lemma_lognot_value #n a =
-  lemma_lognot_value_zero a;
-  lemma_lognot_value_nonzero a
+  if a = 0 then lemma_lognot_value_zero a
+  else lemma_lognot_value_nonzero a
 
 val lemma_minus_eq_zero_sub: #n:pos -> a:uint_t n ->
   Lemma (minus #n a = sub_mod #n 0 a)

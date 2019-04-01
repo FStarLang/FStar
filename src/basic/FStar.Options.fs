@@ -208,7 +208,6 @@ let defaults =
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
       ("profile"                      , Bool false);
-      ("protect_top_level_axioms"     , Bool true);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("keep_query_captions"          , Bool true);
@@ -353,7 +352,6 @@ let get_include                 ()      = lookup_opt "include"                  
 let get_print                   ()      = lookup_opt "print"                    as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
 let get_profile                 ()      = lookup_opt "profile"                  as_bool
-let get_protect_top_level_axioms()      = lookup_opt "protect_top_level_axioms" as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
@@ -776,11 +774,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "profile",
         Const (mk_bool true),
         "Prints timing information for various operations in the compiler");
-
-       ( noshort,
-        "protect_top_level_axioms",
-        BoolStr,
-        "Guard nullary top-level symbols in the SMT encoding from provide ambient ground facts (default 'true')");
 
        ( noshort,
         "initial_fuel",
@@ -1484,7 +1477,6 @@ let profile (f:unit -> 'a) (msg:'a -> string) : 'a =
                      (msg a);
          a
     else f ()
-let protect_top_level_axioms     () = get_protect_top_level_axioms()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()

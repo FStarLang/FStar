@@ -446,11 +446,12 @@ let ( / ) (#sw:signed_width{sw <> Unsigned W128})
 unfold
 let ( % ) (#sw:signed_width{sw <> Unsigned W128})
           (x:int_t sw)
-          (y:int_t sw{0 <> (v y <: Prims.int)  /\
+          (y:int_t sw{0 <> (v y <: Prims.int) /\
                       (match sw with
                        | Unsigned _ -> within_bounds sw (FStar.UInt.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y))
                        | Signed Winfinite -> True
-                       | Signed _ -> within_bounds sw (FStar.Int.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y)))})
+                       | Signed _ -> within_bounds sw (FStar.Int.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y))) /\
+                       within_bounds sw (FStar.Int.op_Slash (v x) (v y))})
    : Tot (int_t sw)
    = match sw with
      | Signed Winfinite -> x % y
@@ -530,7 +531,7 @@ let ( |^ ) #sw (x:int_t sw) (y:int_t sw{width_of_sw sw <> Winfinite})
 
 [@mark_for_norm]
 unfold
-let ( <<^ ) #sw (x:int_t sw)
+let ( <<^ ) #sw (x:int_t sw{0 <= (v x <: Prims.int)}) 
                 (y:int_t (Unsigned W32){width_of_sw sw <> Winfinite /\ v y < nat_of_fixed_width (width_of_sw sw)})
     : Tot (int_t sw)
     = match sw with
@@ -551,7 +552,7 @@ let ( <<^ ) #sw (x:int_t sw)
 
 [@mark_for_norm]
 unfold
-let ( >>^ ) #sw (x:int_t sw)
+let ( >>^ ) #sw (x:int_t sw{0 <= (v x <: Prims.int)})
                 (y:int_t (Unsigned W32){width_of_sw sw <> Winfinite /\ v y < nat_of_fixed_width (width_of_sw sw)})
     : Tot (int_t sw)
     = match sw with
