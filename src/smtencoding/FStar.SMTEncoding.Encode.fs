@@ -489,18 +489,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
                       in
                       decls2@([tok_typing] |> mk_decls_trivial), push_free_var env lid arity vname (Some <| mkFreeV (mk_fv (vname, Term_sort)))
 
-                    | _ when thunked ->
-                      if Options.protect_top_level_axioms()
-                      then decls2, env
-                      else let intro_ambient =
-                               let t = Term.mkApp ("FStar.Pervasives.ambient",
-                                                   [mk_Term_unit;
-                                                    mkFreeV <| (vname, Term_sort, true)])
-                                                  Range.dummyRange
-                               in
-                               Util.mkAssume (Term.mk_Valid t, Some "Ambient nullary symbol trigger", ("intro_ambient_"^vname))
-                           in
-                           decls2@([intro_ambient] |> mk_decls_trivial), env
+                    | _ when thunked -> decls2, env
 
                     | _ ->
                      (* Generate a token and a function symbol;

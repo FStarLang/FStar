@@ -2085,7 +2085,6 @@ let snapshot_context env msg = BU.atomically (fun () ->
 
 let rollback_context solver msg depth : env = BU.atomically (fun () ->
     let env = TypeChecker.Env.rollback solver msg depth in
-    solver.refresh ();
     env)
 
 let push_context env msg = snd (snapshot_context env msg)
