@@ -5,7 +5,7 @@ open FStar.HyperStack.ST
 open FStar.Tactics
 open FStar.BigOps
   
-module DM = FStar.DependentMap
+module DM = FStar.DependentGMap
 module B = LowStar.Buffer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
@@ -14,18 +14,17 @@ module List = FStar.List.Tot.Base
 
 // DependentMap iterators on the sub-domain of interest
 
-let fold (#t:eqtype) #a (f:t -> Type) (m:DM.t t f) (dom:list t) 
-  (h : (k:t -> b:(f k) -> a -> a)) (acc : a) : a = 
-  List.fold_left (fun v k -> h k (DM.sel m k) v) acc dom 
+// let fold (#t:eqtype) #a (f:t -> Type) (m:DM.t t f) (dom:list t) 
+//   (h : (k:t -> b:(f k) -> a -> a)) (acc : a) : GTot a = 
+//   List.fold_left (fun v k -> h k (DM.sel m k) v) acc dom 
 
-let map  (#t:eqtype) #a (f:t -> Type) (m:DM.t t f) (dom:list t) 
-  (h : (k:t -> b:(f k) -> a)) : list a = 
-  List.map (fun k -> h k (DM.sel m k)) dom 
+// let map  (#t:eqtype) #a (f:t -> Type) (m:DM.t t f) (dom:list t) 
+//   (h : (k:t -> b:(f k) -> a)) : list a = 
+//   List.map (fun k -> h k (DM.sel m k)) dom 
 
-// List of dependent pairs from a dependent map
-let to_list (#t:eqtype) (f:t -> Type) (m:DM.t t f) (dom:list t) : list (x:t & (f x)) = 
-  List.map (fun k -> (| k,  DM.sel m k |)) dom 
-
+// // List of dependent pairs from a dependent map
+// let to_list (#t:eqtype) (f:t -> Type) (m:DM.t t f) (dom:list t) : list (x:t & (f x)) = 
+//   List.map (fun k -> (| k,  DM.sel m k |)) dom 
 
 // all pointers in a heap are live in a given mem 
 let map_inv (#t:eqtype) (f: t -> Type) (m:DM.t t (fun (x:t) -> B.pointer (f x))) (dom:list t) (h : HS.mem) : Type0 =
@@ -107,15 +106,13 @@ let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B
   in
   (* get *) 
   let get : get_t (imem (map_inv f ptr keys)) (DM.t t f) = 
-    let value (k:t) : GTot (f k) =
+    let aux h = 
+      let value (k:t) : GTot (f k) =
       assert (List.memP k keys);
       let b = DM.sel ptr k in 
       assume (B.live h b);
       B.get h b 0
-    in 
-    admit ()
-    DM.create value // XXX: this needs a Tot function but value is GTot. But we're in a Ghost context, is there any way around it?
-    // Depentent ghost function that is not abstract (); (x: t -> GTot (f x))
+    in DM.create value in aux
   in
   admit ()
 
