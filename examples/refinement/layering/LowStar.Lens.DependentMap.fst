@@ -114,7 +114,8 @@ let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B
       B.get h b 0
     in 
     admit ()
-    // DM.create value // XXX: this needs a Tot function but value is GTot. But we're in a Ghost context, is there any way around it?
+    DM.create value // XXX: this needs a Tot function but value is GTot. But we're in a Ghost context, is there any way around it?
+    // Depentent ghost function that is not abstract (); (x: t -> GTot (f x))
   in
   admit ()
 
