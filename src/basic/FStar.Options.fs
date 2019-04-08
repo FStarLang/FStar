@@ -1425,10 +1425,10 @@ let parse_settings ns : list<(list<string> * bool)> =
       let s = FStar.Util.trim_string s in
       if s = "" then []
       else with_cache (fun s ->
+             let s = FStar.Util.replace_chars s '*' " *" in
+             let s = FStar.Util.replace_chars s '+' " +" in
+             let s = FStar.Util.replace_chars s '-' " -" in
              FStar.Util.splitlines s
-             |> (fun s -> FStar.Util.replace_chars s '*' " *")
-             |> (fun s -> FStar.Util.replace_chars s '+' " +")
-             |> (fun s -> FStar.Util.replace_chars s '-' " -")
              |> List.concatMap (fun s -> FStar.Util.split s " ")
              |> List.map parse_one_setting) s)
              |> List.rev
