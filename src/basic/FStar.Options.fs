@@ -1428,8 +1428,10 @@ let parse_settings ns : list<(list<string> * bool)> =
              let s = FStar.Util.replace_chars s '*' " *" in
              let s = FStar.Util.replace_chars s '+' " +" in
              let s = FStar.Util.replace_chars s '-' " -" in
+             let s = FStar.Util.trim_string s in
              FStar.Util.splitlines s
              |> List.concatMap (fun s -> FStar.Util.split s " ")
+             |> List.filter (fun s -> s <> "")
              |> List.map parse_one_setting) s)
              |> List.rev
 
