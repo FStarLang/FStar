@@ -946,7 +946,7 @@ and mkPrelude z3options =
                 (assert (forall ((f Fuel) (x Term) (t Term))\n\
                                 (! (= (HasTypeFuel (SFuel f) x t)\n\
                                           (HasTypeZ x t))\n\
-                                   :pattern ((HasTypeZ x t) (HasTypeFuel (SFuel f) x t)))))\n\
+                                   :pattern ((HasTypeFuel (SFuel f) x t)))))\n\
                 (declare-fun NoHoist (Term Bool) Bool)\n\
                 ;;no-hoist\n\
                 (assert (forall ((dummy Term) (b Bool))\n\
