@@ -278,7 +278,7 @@ let defaults =
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
-      ("warn_error"                   , String "");
+      ("warn_error"                   , List []);
       ("use_extracted_interfaces"     , Bool false);
       ("use_nbe"                      , Bool false)]
 
@@ -423,7 +423,7 @@ let get_z3seed                  ()      = lookup_opt "z3seed"                   
 let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
-let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
+let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 
@@ -1145,7 +1145,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
         ( noshort,
         "warn_error",
-        SimpleStr (""),
+        Accumulated (SimpleStr ("")),
         "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t\
          - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
          - [-r] silences range [r]\n\t\t\
@@ -1254,7 +1254,7 @@ let settable = function
 // command-line arguments;
 // using_facts_from requires pruning the Z3 context.
 // All of these can only be used with #reset_options, with re-starts the z3 process
-let resettable s = settable s || s="z3seed" || s="z3cliopt" || s="using_facts_from"
+let resettable s = settable s || s="z3seed" || s="z3cliopt" || s="using_facts_from" || s="smtencoding.valid_intro" || s="smtencoding.valid_elim"
 let all_specs = specs ()
 let all_specs_with_types = specs_with_types ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
@@ -1571,7 +1571,7 @@ let use_two_phase_tc             () = get_use_two_phase_tc            ()
                                     && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
-let warn_error                   () = get_warn_error                  ()
+let warn_error                   () = String.concat "" (get_warn_error ())
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 let use_nbe                      () = get_use_nbe                     ()
 
