@@ -95,7 +95,7 @@ Guidelines for the changelog:
    * An optimization of the SMT encoding removes, by default,
      expensive axioms about validity from the prelude.
 
-     The axim in question is the following:
+     The axiom in question is the following:
 
      ```
        (assert (forall ((t Term))
