@@ -97,6 +97,14 @@ let lift_st_stexn (a:Type) (wp:st_wp a) (post:stexn_post a) (h0:HS.mem) =
 
 sub_effect STATE ~> STEXN = lift_st_stexn
 
+effect STExn (a:Type)
+  (req:HS.mem -> Type) (ens:(h0:HS.mem -> stexn_post_with_pre a (req h0)))
+  = STEXN a
+    (fun (post:stexn_post a) (h0:HS.mem) ->
+     req h0 /\ (forall r h1. (req h0 /\ ens h0 r h1) ==> post r h1))
+
+effect StExn (a:Type) = STExn a (fun _ -> True) (fun _ _ _ -> True)
+
 
 (***** Repr for the STEXN effect *****)
 
