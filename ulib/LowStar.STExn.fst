@@ -32,8 +32,9 @@ unfold
 let stexn_bind (_:range)
   (a:Type) (b:Type)
   (wp_a:stexn_wp a) (wp_b:a -> stexn_wp b)
-  (post:stexn_post b) (h0:HS.mem)
-  = wp_a
+  : stexn_wp b
+  = fun (post:stexn_post b) (h0:HS.mem) ->
+    wp_a
       (fun ra h1 ->
        match ra with
        | V x     -> wp_b x post h1
@@ -43,8 +44,9 @@ unfold
 let stexn_if_then_else
   (a:Type) (p:Type)
   (wp_then wp_else:stexn_wp a)
-  (post:stexn_post a) (h0:HS.mem)
-  = l_ITE p (wp_then post h0) (wp_else post h0)
+  : stexn_wp a
+  = fun (post:stexn_post a) (h0:HS.mem) ->
+    l_ITE p (wp_then post h0) (wp_else post h0)
 
 unfold
 let stexn_stronger (a:Type) (wp1 wp2:stexn_wp a) =
@@ -53,24 +55,31 @@ let stexn_stronger (a:Type) (wp1 wp2:stexn_wp a) =
 unfold
 let stexn_close
   (a:Type) (b:Type)
-  (wp:b -> stexn_wp a) (post:stexn_post a) (h:HS.mem)
-  = forall (x:b). wp x post h
+  (wp:b -> stexn_wp a)
+  : stexn_wp a
+  = fun (post:stexn_post a) (h:HS.mem) ->
+    forall (x:b). wp x post h
 
 unfold
 let stexn_assert
   (a:Type) (p:Type)
-  (wp:stexn_wp a) (post:stexn_post a) (h:HS.mem)
-  = p /\ wp post h
+  (wp:stexn_wp a)
+  : stexn_wp a
+  = fun (post:stexn_post a) (h:HS.mem) ->
+    p /\ wp post h
 
 unfold
 let stexn_assume
   (a:Type) (p:Type)
-  (wp:stexn_wp a) (post:stexn_post a) (h:HS.mem)
-  = p ==> wp post h
+  (wp:stexn_wp a)
+  : stexn_wp a
+  = fun (post:stexn_post a) (h:HS.mem) ->
+    p ==> wp post h
 
 unfold
-let stexn_null (a:Type) (post:stexn_post a) (h:HS.mem) =
-  forall (r:result a). post r h
+let stexn_null (a:Type) : stexn_wp a =
+  fun (post:stexn_post a) (h:HS.mem) ->
+    forall (r:result a). post r h
 
 unfold
 let stexn_trivial (a:Type) (wp:stexn_wp a) =
@@ -90,6 +99,24 @@ new_effect {
     null_wp      = stexn_null;
     trivial      = stexn_trivial
 }
+
+unfold
+let raise_wp (a:Type) (e:exn) : stexn_wp a =
+  fun (post:stexn_post a) (h:HS.mem) -> post (E e) h
+
+assume val raise (#a:Type) (e:exn)
+  : STEXN a (raise_wp a e)
+
+unfold
+let trywith_wp (a:Type)
+  (try_wp:stexn_wp a) (with_wp:exn -> stexn_wp a)
+  : stexn_wp a
+  = fun (post:stexn_post a) (h0:HS.mem) ->
+    try_wp
+      (fun r h1 ->
+       match r with
+       | V x -> post (V x) h1
+       | E e -> (with_wp e) post h1) h0
 
 unfold
 let lift_st_stexn (a:Type) (wp:st_wp a) (post:stexn_post a) (h0:HS.mem) =
@@ -154,3 +181,17 @@ let lift_st_repr
     fun _ ->
     let x = f () in
     Inl x
+
+let raise_repr (a:Type) (e:exn) : repr_comp a (raise_wp a e)
+  = fun _ -> Inr e
+
+let trywith_repr (a:Type)
+  (wp_try:stexn_wp a) (f:repr_comp a wp_try)
+  (wp_with:exn -> stexn_wp a) (g:(e:exn -> repr_comp a (wp_with e)))
+  : repr_comp a (trywith_wp a wp_try wp_with)
+  = wp_monotonic_stexn ();
+    fun _ ->
+    let r = f () in
+    match r with
+    | Inl x -> Inl x
+    | Inr e -> g e ()
