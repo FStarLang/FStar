@@ -11,7 +11,7 @@
         "projection_inverse_BugWildcardTelescopes.Entry_a"
       ],
       0,
-      "1112febb2a478b1427a4cdd348d67821"
+      "6f3628343e37bad1b279e3fbd3cf92bc"
     ],
     [
       "BugWildcardTelescopes.__proj__T1__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_6f800725a2ab3936b9ac21216e7655c8"
       ],
       0,
-      "a1e7e3d0ea737dc6f832eb723764d545"
+      "4fa7540fc39b1d6acb58818e0658e389"
     ],
     [
       "BugWildcardTelescopes.__proj__T1__item___1",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_6f800725a2ab3936b9ac21216e7655c8"
       ],
       0,
-      "7d7116f86bb9f668a39badb0bd7721f2"
+      "17230d3a0e10d4053ea960fe5bd91502"
     ],
     [
       "BugWildcardTelescopes.__proj__T2__item___0",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_12dd99db1541ccf13536d82eba053826"
       ],
       0,
-      "c1e10eefb2332dc2d3c5b3b164f09b3f"
+      "6a18ba74ec4a9e5c941f53d05256745c"
     ],
     [
       "BugWildcardTelescopes.__proj__T2__item___1",
@@ -67,7 +67,7 @@
         "refinement_interpretation_Tm_refine_12dd99db1541ccf13536d82eba053826"
       ],
       0,
-      "f8049d138dbaafb1ef2b3be92cc105c4"
+      "e4c4bcb8099abe6ba99ab4091246e7c7"
     ],
     [
       "BugWildcardTelescopes.bar",
@@ -81,7 +81,7 @@
         "fuel_guarded_inversion_BugWildcardTelescopes.simple"
       ],
       0,
-      "a288680495736d21ed4b2ce33095146a"
+      "994561c457a7bd1994d701525fe77232"
     ],
     [
       "BugWildcardTelescopes.__proj__E__item__a",
@@ -95,7 +95,7 @@
         "refinement_interpretation_Tm_refine_f702fff5c1aebb395ca937da1bbf7e4a"
       ],
       0,
-      "7e314ba6d221da7de19cdfddd90c6152"
+      "21a6a4ccccfa0d3c63a3bf3c1565aafc"
     ],
     [
       "BugWildcardTelescopes.__proj__F__item__a",
@@ -109,7 +109,7 @@
         "refinement_interpretation_Tm_refine_b31795212ab701a8f413cfe25bda86bc"
       ],
       0,
-      "55469ea73e38216018e7b47fec7ab666"
+      "a527916d28ad8b4bcbdb452d90489714"
     ],
     [
       "BugWildcardTelescopes.f",
@@ -128,7 +128,7 @@
         "refinement_interpretation_Tm_refine_13822e8d415cca32657fdd044ba9fbfb"
       ],
       0,
-      "2101a25e7f191993494be73acec45691"
+      "4cf9dbb4489ee14434a3ab1e9b74915f"
     ],
     [
       "BugWildcardTelescopes.__proj__G__item__a",
@@ -142,7 +142,7 @@
         "refinement_interpretation_Tm_refine_16580d568b4e5780ab3a53ee95d43ee0"
       ],
       0,
-      "431ae5d94a7d0dbe4f0c4012026e3bcf"
+      "b608cb730e989e30490189fc32111fb2"
     ],
     [
       "BugWildcardTelescopes.__proj__G__item__b",
@@ -158,7 +158,7 @@
         "refinement_interpretation_Tm_refine_16580d568b4e5780ab3a53ee95d43ee0"
       ],
       0,
-      "e53948822bbb998c94eb203fad644de8"
+      "7650c1830242771ff2384f908bab25c9"
     ],
     [
       "BugWildcardTelescopes.__proj__H__item__a",
@@ -172,7 +172,7 @@
         "refinement_interpretation_Tm_refine_8f3af65825926c1ffb9a05035c6296e2"
       ],
       0,
-      "266045ccc6416f7a52ecc8ccb4468e25"
+      "3e5f8b7bb115cc58ece3c2fb2bc52411"
     ],
     [
       "BugWildcardTelescopes.__proj__H__item__b",
@@ -188,7 +188,7 @@
         "refinement_interpretation_Tm_refine_8f3af65825926c1ffb9a05035c6296e2"
       ],
       0,
-      "f1973bbc927a875762f0fa9579db3419"
+      "7ec7bfc8f6004884c594c512654c19f0"
     ],
     [
       "BugWildcardTelescopes.foo3",
@@ -202,7 +202,7 @@
         "fuel_guarded_inversion_BugWildcardTelescopes.e"
       ],
       0,
-      "a91389b8806f4d04b3b220c1f6dad160"
+      "ce5c0983e03da4ca21d1ad300134f6d6"
     ]
   ]
 ]
