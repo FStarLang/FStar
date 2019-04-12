@@ -1412,6 +1412,7 @@ let prepend_cache_dir fpath =
 //Used to parse the options of
 //   --using_facts_from
 //   --extract
+//   --already_cached
 let path_of_text text = String.split ['.'] text
 
 let parse_settings ns : list<(list<string> * bool)> =
@@ -1438,8 +1439,10 @@ let parse_settings ns : list<(list<string> * bool)> =
       let s = FStar.Util.trim_string s in
       if s = "" then []
       else with_cache (fun s ->
+             let s = FStar.Util.replace_char s ' ' ',' in
              FStar.Util.splitlines s
-             |> List.concatMap (fun s -> FStar.Util.split s " ")
+             |> List.concatMap (fun s -> FStar.Util.split s ",")
+             |> List.filter (fun s -> s <> "")
              |> List.map parse_one_setting) s)
              |> List.rev
 
