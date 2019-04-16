@@ -1048,10 +1048,22 @@ let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
     | Some (U.BaseConn(l, [_; (e1, _); (e2, _)]))
       when Ident.lid_equals l PC.eq2_lid
-      ||    Ident.lid_equals l PC.c_eq2_lid ->
+      ||   Ident.lid_equals l PC.c_eq2_lid
+      ->
         Some (e1, e2)
     | _ ->
-        None
+      match U.unb2t typ with
+      | None -> None
+      | Some t ->
+        begin
+        BU.print1 "GG t = %s\n" (Print.term_to_string t);
+        let hd, args = U.head_and_args t in
+        match (SS.compress hd).n, args with
+        | Tm_fvar fv, [(_, Some (Implicit _)); (e1, None); (e2, None)] when S.fv_eq_lid fv PC.op_Eq ->
+            (BU.print2 "wat %s -- %s\n" (Print.term_to_string e1) (Print.term_to_string e2);
+            Some (e1, e2))
+        | _ -> None
+        end
 
 let destruct_eq (typ : typ) : option<(term * term)> =
     match destruct_eq' typ with
