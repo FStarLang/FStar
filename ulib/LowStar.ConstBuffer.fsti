@@ -153,3 +153,28 @@ val sub (c:const_buffer 'a) (i len:U32.t)
       h0 == h1 /\
       qbuf_qual qc == qbuf_qual qc' /\
       qbuf_mbuf qc' == B.mgsub (qbuf_pre qc) (qbuf_mbuf qc) i len)
+
+let test (x:B.buffer U32.t) (y:I.ibuffer U32.t)
+  : Stack U32.t
+    (requires fun h ->
+      B.live h x /\
+      B.live h y /\
+      B.length x > 0 /\
+      B.length y > 2 /\
+      B.get h y 0 == 1ul /\
+      B.get h y 1 == 2ul /\
+      B.disjoint x y)
+    (ensures fun h0 a h1 ->
+      B.modifies (B.loc_buffer x) h0 h1 /\
+      a == 4ul)
+  = let c1 = of_buffer x in
+    let c2 = of_ibuffer y in
+    B.upd x 0ul 1ul;
+    let a = index c1 0ul in
+    assert (a == 1ul);
+    let a' = index c2 0ul in
+    assert (a' == 1ul);
+    let c3 = sub c2 1ul 1ul in
+    let a'' = index c3 0ul in
+    assert (a'' == 2ul);
+    U32.(a +^ a' +^ a'')
