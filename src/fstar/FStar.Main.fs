@@ -106,7 +106,7 @@ let go _ =
     | Help ->
         Options.display_usage(); exit 0
     | Error msg ->
-        Util.print_string msg; exit 1
+        Util.print_error msg; exit 1
     | Success ->
         fstar_files := Some filenames;
         load_native_tactics ();

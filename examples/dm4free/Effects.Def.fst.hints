@@ -16,7 +16,7 @@
         "typing_Tm_abs_2814ab78f1ec085ea6966d552a2e5be0"
       ],
       0,
-      "d5504bd02712f6c8f3275d8c448fd94e"
+      "77cc8abfaee334ef8eb35d58ae21b256"
     ],
     [
       "Effects.Def.morphism_laws_via_eq",
@@ -33,7 +33,7 @@
         "typing_Tm_abs_cdab0838a98b60fad4414a65cba3416e"
       ],
       0,
-      "9a1a9910c5ac3b7dd7f8baae89318c00"
+      "a5c49fc10b2efa9c78eefa1e8462848d"
     ],
     [
       "Effects.Def.st_laws",
@@ -73,7 +73,7 @@
         "typing_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "38498ba52da243eefe208b55bac521fd"
+      "2c35bd294d2a45b2b9d99673a28c91e2"
     ],
     [
       "Effects.Def.bind_ex",
@@ -94,7 +94,7 @@
         "unit_typing"
       ],
       0,
-      "472050cc875c18f6856722b022bfdc03"
+      "302b29f2b47466a2e866e07de593846d"
     ],
     [
       "Effects.Def.handle",
@@ -115,7 +115,7 @@
         "unit_typing"
       ],
       0,
-      "6eaf277aa7e80f6a06f8a1ec506e2b53"
+      "4cdd7571d66f5496ba3ef7bd6502e3f1"
     ],
     [
       "Effects.Def.ex_laws",
@@ -161,7 +161,7 @@
         "unit_typing"
       ],
       0,
-      "b93d5c89c5a5eae9092ee442188b007f"
+      "f33b7c700f7dc51014998fbae155368c"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -185,7 +185,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "803d73feabd9d859f5c871cbd5414d30"
+      "ef806ecfab58b17361ce60b500febb86"
     ],
     [
       "Effects.Def.stexn_laws",
@@ -251,7 +251,7 @@
         "refinement_interpretation_Tm_refine_b0ec1ad4c766f179179881d04d9cace4"
       ],
       0,
-      "9bed7263305aa5eac33835fecc771d90"
+      "6cf679acfabacbdc56a5bd4a33d98aaa"
     ],
     [
       "Effects.Def.exnst_laws",
@@ -298,7 +298,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "9a6404ab01c622494fb8bece67c3967b"
+      "27e6edb2fa577dc659062fa1f8df2dd6"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -351,7 +351,7 @@
         "typing_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "e092b4a9beab3fc2a72422a613f7dc5a"
+      "1d4bf2bf05dd9c75ddbfc35959fbf355"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -405,7 +405,7 @@
         "typing_Tm_abs_e822774a69ccfeb590e7552bf686252d", "unit_typing"
       ],
       0,
-      "179f9c79e8160317c26571cc296a81e8"
+      "fab2c48ba56749fd1c568622b566477e"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -457,7 +457,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "e3457bf56ba33b5c87c5781a05934e7c"
+      "11cb4fdfc4c5770401079bc3c14bdd20"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -478,7 +478,7 @@
         "unit_typing"
       ],
       0,
-      "e07e1049f75dc840b5837495d953e2e8"
+      "c711c6fac103924007e4f995fa2f773a"
     ],
     [
       "Effects.Def.morphism_lift_ex_exnst",
@@ -540,7 +540,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c", "unit_typing"
       ],
       0,
-      "52168867ba5f75825cc6688623327251"
+      "62e5213b7c28f9ec4a0e9fe94c25e7c6"
     ],
     [
       "Effects.Def.st_laws",
@@ -580,7 +580,7 @@
         "typing_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "6e8f80ba667d1ac1187abe3cc36df419"
+      "6b5ce7c94356389d7689892e66bd06cb"
     ],
     [
       "Effects.Def.bind_ex",
@@ -601,7 +601,7 @@
         "unit_typing"
       ],
       0,
-      "dd890cb5a854c3129864a37ea489aadb"
+      "74bc186cffe8471274782843f10db228"
     ],
     [
       "Effects.Def.handle",
@@ -622,7 +622,7 @@
         "unit_typing"
       ],
       0,
-      "5aaff4a24c84d33f697c55bf31331ba4"
+      "a9450b4703d533c8c20a64a9102e4617"
     ],
     [
       "Effects.Def.ex_laws",
@@ -668,7 +668,7 @@
         "unit_typing"
       ],
       0,
-      "1989e781ad7eb3793df2d2e48e8531dd"
+      "a22cb3b6d1641f2046434ddf4ac9f64d"
     ],
     [
       "Effects.Def.bind_stexn",
@@ -692,7 +692,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "ac7897c864e8d9d9eb48fcd26302e66e"
+      "e01d1a34b78a2c0b339e0208aa8204dc"
     ],
     [
       "Effects.Def.stexn_laws",
@@ -758,7 +758,7 @@
         "refinement_interpretation_Tm_refine_b0ec1ad4c766f179179881d04d9cace4"
       ],
       0,
-      "7fce3ee997e7b8809d4fa10145825b0c"
+      "c4bcb1f7376270667ab58d7b9bcfaf11"
     ],
     [
       "Effects.Def.exnst_laws",
@@ -805,7 +805,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "c564b7722fda80b70a62b64c9c918b74"
+      "95ab4647a24bc252092202c45c59bdc2"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -858,7 +858,7 @@
         "typing_Tm_abs_fac55f38068347e789289e065c63960c"
       ],
       0,
-      "749d401f7657304ecdd9b6577e67a3c2"
+      "1bf55fd5738fc31c98dfbfa18d253b43"
     ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
@@ -912,7 +912,7 @@
         "typing_Tm_abs_e822774a69ccfeb590e7552bf686252d", "unit_typing"
       ],
       0,
-      "9ab3f04585e277ad115c2d21d49927df"
+      "5d25d7e1fc982a57079f9a0977f0cae2"
     ],
     [
       "Effects.Def.morphism_lift_st_exnst",
@@ -964,7 +964,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c"
       ],
       0,
-      "a2a677da05144bde890bc5bdd71780d7"
+      "65b83391dc2660692e783c3438726a3f"
     ],
     [
       "Effects.Def.lift_ex_exnst",
@@ -985,7 +985,7 @@
         "unit_typing"
       ],
       0,
-      "84c019756d94d279119c3d59a448397d"
+      "60197f05e6afa3f7ff41317decdf816f"
     ],
     [
       "Effects.Def.morphism_lift_ex_exnst",
@@ -1047,7 +1047,7 @@
         "typing_Tm_abs_ffaa440a3980f0efc75aba2bccee5d2c", "unit_typing"
       ],
       0,
-      "43698e339114f90acd890c5e898e55e2"
+      "08a31d17087d2898954909c30ef5efe8"
     ]
   ]
 ]
