@@ -1592,23 +1592,6 @@ let join () : tac<unit> =
     | _ -> fail "join: less than 2 goals"
     )
 
-(* TODO: special case of destruct? But `bool` is not an inductive.. *)
-let cases (t : term) : tac<(term * term)> = wrap_err "cases" <|
-    bind (cur_goal ()) (fun g ->
-    bind (__tc (goal_env g) t) (fun (t, typ, guard) ->
-    let hd, args = U.head_and_args typ in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(p, _); (q, _)] when S.fv_eq_lid fv PC.or_lid ->
-        let v_p = S.new_bv None p in
-        let v_q = S.new_bv None q in
-        let g1 = goal_with_env g (Env.push_bv (goal_env g) v_p) in
-        let g2 = goal_with_env g (Env.push_bv (goal_env g) v_q) in
-        bind __dismiss (fun _ ->
-        bind (add_goals [g1; g2]) (fun _ ->
-        ret (S.bv_to_name v_p, S.bv_to_name v_q)))
-    | _ ->
-        fail1 "Not a disjunction: %s" (tts (goal_env g) typ)))
-
 let set_options (s : string) : tac<unit> = wrap_err "set_options" <|
     bind (cur_goal ()) (fun g ->
     FStar.Options.push ();

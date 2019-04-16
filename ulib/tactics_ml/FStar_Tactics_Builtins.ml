@@ -94,7 +94,6 @@ let trefl                   = from_tac_1 B.trefl
 let dup                     = from_tac_1 B.dup
 let prune                   = from_tac_1 B.prune
 let addns                   = from_tac_1 B.addns
-let cases                   = from_tac_1 B.cases
 let t_destruct              = from_tac_1 B.t_destruct
 let set_options             = from_tac_1 B.set_options
 let uvar_env                = from_tac_2 B.uvar_env

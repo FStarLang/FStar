@@ -233,13 +233,6 @@ assume val prune : string -> Tac unit
 (** The opposite operation of [prune]. The latest one takes precedence. *)
 assume val addns : string -> Tac unit
 
-(** Given a disjunction [e], destruct it and generate two goals
-for each case. Return value is terms representing proofs for each case.
-The first one is only valid in the first goal, and likewise for
-the second (TODO: change this awful behaviour).
-*)
-assume val cases : term -> Tac (term * term)
-
 (** Destruct a value of an inductive type by matching on it. The generated
 match has one branch for each constructor and is therefore trivially
 exhaustive, no VC is generated for that purpose. It returns a list

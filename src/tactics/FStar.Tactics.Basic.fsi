@@ -87,7 +87,6 @@ val trefl : unit -> tac<unit>
 val dup      : unit -> tac<unit>
 val tadmit_t : term -> tac<unit>
 
-val cases : term -> tac<(term * term)>
 val t_destruct : term -> tac<list<(fv * Z.t)>>
 
 val top_env : unit -> tac<env>
