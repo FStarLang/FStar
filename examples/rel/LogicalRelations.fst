@@ -233,6 +233,7 @@ let eps = nat
 
 // eq r eps x y
 //    x and y are related by `r`, up to eps
+// Maybe index by the set of hypotheses
 noeq
 type eq (#a:Type) (r:rel a) : eps -> a -> a -> Type =
   | Perfect :
@@ -269,3 +270,14 @@ type eq (#a:Type) (r:rel a) : eps -> a -> a -> Type =
 
 let g_eq_g' : eq (arrow (lo int ** hi int) (lo int ** hi int)) 0 g g' =
   Perfect g g' ()
+
+////////////////////////////////////////////////////////////////////////////////
+open FStar.Integers
+
+let byte = uint_8
+let tape = nat -> Tot byte
+let eff (st:Type) (a:Type) =
+  tape & st ->
+  Tot (option a & st & nat)
+
+
