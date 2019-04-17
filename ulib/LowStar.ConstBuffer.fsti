@@ -154,6 +154,13 @@ val sub (c:const_buffer 'a) (i len:U32.t)
       qbuf_qual qc == qbuf_qual qc' /\
       qbuf_mbuf qc' == B.mgsub (qbuf_pre qc) (qbuf_mbuf qc) i len)
 
+/// `cast`: It is possible to cast away the const qualifier recovering
+///  a mutable or immutable pointer, in case the context can prove
+///  that `qbuf_qual c` is MUTABLE or IMMUTABLE, respectively
+val cast (c:const_buffer 'a)
+  : Tot (B.mbuffer 'a (qbuf_pre (as_qbuf c)) (qbuf_pre (as_qbuf c)))
+
+////////////////////////////////////////////////////////////////////////////////
 let test (x:B.buffer U32.t) (y:I.ibuffer U32.t)
   : Stack U32.t
     (requires fun h ->
