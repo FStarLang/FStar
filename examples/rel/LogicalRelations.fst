@@ -177,7 +177,7 @@ let two_b : t_two =
     l <-- get_fst ;
     return (x = l)
 
-#push-options "--max_fuel 0 --z3rlimit_factor 4 --max_ifuel 0"
+#push-options "--max_fuel 0 --z3rlimit_factor 8 --max_ifuel 0"
 let one_a_rel_one_b : squash (one_a `arrow (lo int) (st_rel state_rel (lo int))` one_b) = ()
 let two_a_rel_two_b : squash (two_a `arrow (lo int) (st_rel state_rel (lo bool))` two_b) = ()
 #pop-options
@@ -185,18 +185,55 @@ let two_a_rel_two_b : squash (two_a `arrow (lo int) (st_rel state_rel (lo bool))
 (* Now for encoding "Modules" *)
 module DM = FStar.DependentMap
 
-/// `map_rel`: an equivalence relation on maps
+/// The type of module signatures
+noeq
+type sig = {
+  labels:eqtype;
+  ops:labels -> Type;
+  rels:(l:labels -> rel (ops l))
+}
+
+let module_t (s:sig) = 
+  DM.t s.labels s.ops
+
+/// `sig_rel`: an equivalence relation on module signatures
 /// lifting pointwise an equivalence relation on its elements
-let map_rel (key:eqtype)
-            (types:key -> Type)
-            (vrel: (k:key -> rel (types k)))
-   : rel (DM.t key types)
-   = let r (m1 m2: DM.t key types) : prop =
-       forall (k:key). DM.sel m1 k `vrel k` DM.sel m2 k
+let sig_rel (s:sig)
+   : rel (module_t s)
+   = let r (m1 m2: module_t s) : prop =
+       forall (k:s.labels). DM.sel m1 k `s.rels k` DM.sel m2 k
      in
      r
 
+let functor_t (#underlay:sig) (urel:rel (module_t underlay))
+              (#overlay:sig) (orel:rel (module_t overlay)) =
+  urel ^--> orel
 
+let sig_unit = {
+  labels=unit;
+  ops=(fun _ -> unit);
+  rels=(fun l -> (fun _ _ -> (True <: prop)) <: rel unit)
+}
+
+let mod_unit : module_t sig_unit =
+  DM.create (fun () -> ())
+
+let rel_sig_unit : rel (module_t sig_unit) =
+  fun s1 s2 -> True
+
+let as_fun (#s:sig) (m:module_t s) 
+  : functor_t rel_sig_unit
+              (sig_rel s)
+  = fun _ -> m              
+
+let comp (#a:sig) (#rel_a:rel (module_t a))
+         (#b:sig) (#rel_b:rel (module_t b))
+         (f:functor_t rel_a rel_b)
+         (#c:sig) (#rel_c:rel (module_t c))
+         (g:functor_t rel_c rel_a)
+  : functor_t rel_c rel_b
+  = fun x -> f (g x)
+  
 /// Here's a simple module
 
 /// `key`: A type of labels
@@ -214,19 +251,23 @@ let field_rels : (k:key -> rel (field_types k)) =
     | ONE -> arrow (lo int) (st_rel state_rel (lo int))
     | TWO -> arrow (lo int) (st_rel state_rel (lo bool))
 
-let module_gen_t_two =
-  DM.t key field_types
+let sig_x = {
+  labels=key;
+  ops=field_types;
+  rels=field_rels
+}
 
-let module_a : module_gen_t_two =
-  DM.create #key #field_types
+let module_a : module_t sig_x =
+  DM.create #_ #sig_x.ops
     (function ONE -> one_a
             | TWO -> two_a)
-let module_b : module_gen_t_two =
-  DM.create #key #field_types
+
+let module_b : module_t sig_x =
+  DM.create #_ #sig_x.ops
     (function ONE -> one_b
             | TWO -> two_b)
 
-let equiv_module_0_1 : squash (module_a `map_rel key field_types field_rels` module_b) = ()
+let equiv_module_0_1 : squash (module_a `sig_rel sig_x` module_b) = ()
 
 /// Now for axiomatic some epsilon equivalences
 let eps = nat
@@ -270,14 +311,3 @@ type eq (#a:Type) (r:rel a) : eps -> a -> a -> Type =
 
 let g_eq_g' : eq (arrow (lo int ** hi int) (lo int ** hi int)) 0 g g' =
   Perfect g g' ()
-
-////////////////////////////////////////////////////////////////////////////////
-open FStar.Integers
-
-let byte = uint_8
-let tape = nat -> Tot byte
-let eff (st:Type) (a:Type) =
-  tape & st ->
-  Tot (option a & st & nat)
-
-
