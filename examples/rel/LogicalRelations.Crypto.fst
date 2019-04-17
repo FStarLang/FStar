@@ -110,7 +110,7 @@ let lift_right #st1 #st2 #a (f:eff st2 a)
 let key (n:nat) = Seq.lseq byte n
 let state (n:nat) = option (bool & key n)
 
-let gen : eff (state 1) unit =
+let key_gen : eff (state 1) unit =
     s <-- get ;
     match s with
     | Some _ ->
@@ -119,4 +119,35 @@ let gen : eff (state 1) unit =
       k <-- sample ;
       set (Some (true, (Seq.create 1 k <: Seq.lseq byte 1)))
 
+let key_set (k_in:Seq.lseq byte 1) : eff (state 1) unit =
+    s <-- get ;
+    match s with
+    | Some _ ->
+      raise
+    | _ ->
+      set (Some (true, k_in))
+
+let key_cset (k_in:Seq.lseq byte 1) : eff (state 1) unit =
+    s <-- get ;
+    match s with
+    | Some _ ->
+      raise
+    | _ ->
+      set (Some (false, k_in))
+
+let key_get : eff (state 1) (Seq.lseq byte 1) =
+    s <-- get ;
+    match s with
+    | None ->
+      raise
+    | Some (_,k) ->
+      return k
+
+let key_hon : eff (state 1) bool =
+    s <-- get ;
+    match s with
+    | None ->
+      raise
+    | Some (h,_) ->
+      return h
 ////////////////////////////////////////////////////////////////////////////////
