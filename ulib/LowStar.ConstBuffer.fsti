@@ -17,7 +17,7 @@ module LowStar.ConstBuffer
 
 (* This module provides a model of const pointers in C.
 
-   A well-typed module guarantees that it will not mutate memory
+   A well-typed client guarantees that it will not mutate memory
    through a const pointer. But it cannot rely on the context not
    mutating the same memory.
 
@@ -27,11 +27,9 @@ module LowStar.ConstBuffer
    the weakest (i.e., mutability).
 
    The main type of this module is `const_buffer t`. It is extracted
-   by KreMLin to  `const t*`, i.e., a
+   by KreMLin to  `const t*`.
 *)
 
-module P = FStar.Preorder
-module G = FStar.Ghost
 module U32 = FStar.UInt32
 module Seq = FStar.Seq
 
@@ -136,9 +134,9 @@ val index (c:const_buffer 'a) (i:U32.t)
     (requires fun h ->
       live h c /\
       U32.v i < length c)
-    (ensures fun h y h' ->
-      h == h' /\
-      y == Seq.index (as_seq h c) (U32.v i))
+    (ensures fun h0 y h1 ->
+      h0 == h1 /\
+      y == Seq.index (as_seq h0 c) (U32.v i))
 
 /// `sub`: A sub-buffer of a const buffer points to a given
 /// within-bounds offset of its head
