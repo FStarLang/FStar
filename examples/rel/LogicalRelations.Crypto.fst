@@ -1,6 +1,7 @@
 module LogicalRelations.Crypto
 module L = LogicalRelations
 open FStar.Integers
+open FStar.Map
 
 let byte = uint_8
 
@@ -104,13 +105,15 @@ let lift_right #st1 #st2 #a (f:eff st2 a)
       | Some x, s2', n -> Some x, (s1, s2'), n
 
 ////////////////////////////////////////////////////////////////////////////////
-//Example
+//KEY package
 ////////////////////////////////////////////////////////////////////////////////
 
-let key (n:nat) = Seq.lseq byte n
-let state (n:nat) = option (bool & key n)
+let lbytes (n:nat) = Seq.lseq byte n
+let bytes = Seq.seq byte
+let key (n:nat) = lbytes n
+let key_state (n:nat) = option (bool & key n)
 
-let key_gen : eff (state 1) unit =
+let key_gen : eff (key_state 1) unit =
     s <-- get ;
     match s with
     | Some _ ->
@@ -119,7 +122,7 @@ let key_gen : eff (state 1) unit =
       k <-- sample ;
       set (Some (true, (Seq.create 1 k <: Seq.lseq byte 1)))
 
-let key_set (k_in:Seq.lseq byte 1) : eff (state 1) unit =
+let key_set (k_in:Seq.lseq byte 1) : eff (key_state 1) unit =
     s <-- get ;
     match s with
     | Some _ ->
@@ -127,7 +130,7 @@ let key_set (k_in:Seq.lseq byte 1) : eff (state 1) unit =
     | _ ->
       set (Some (true, k_in))
 
-let key_cset (k_in:Seq.lseq byte 1) : eff (state 1) unit =
+let key_cset (k_in:Seq.lseq byte 1) : eff (key_state 1) unit =
     s <-- get ;
     match s with
     | Some _ ->
@@ -135,7 +138,7 @@ let key_cset (k_in:Seq.lseq byte 1) : eff (state 1) unit =
     | _ ->
       set (Some (false, k_in))
 
-let key_get : eff (state 1) (Seq.lseq byte 1) =
+let key_get : eff (key_state 1) (Seq.lseq byte 1) =
     s <-- get ;
     match s with
     | None ->
@@ -143,11 +146,39 @@ let key_get : eff (state 1) (Seq.lseq byte 1) =
     | Some (_,k) ->
       return k
 
-let key_hon : eff (state 1) bool =
+let key_hon : eff (key_state 1) bool =
     s <-- get ;
     match s with
     | None ->
       raise
     | Some (h,_) ->
       return h
+
 ////////////////////////////////////////////////////////////////////////////////
+//AE package
+////////////////////////////////////////////////////////////////////////////////
+noeq type ae_scheme (n:nat) =
+  | AES:
+  enc: (p:bytes -> k:key n -> nonce:bytes -> c:bytes) ->
+  dec: (c:bytes -> k:key n -> nonce:bytes -> option (p:bytes)) ->
+  ae_scheme n
+
+/// Map from nonces to a maps from ciphertext to plaintexts
+let ae_state #n (aes:ae_scheme n) =
+  Map.t bytes (Map.t bytes bytes)
+
+let ae_key_state #n aes = ae_state #n aes & key_state n
+
+let enc_0 (#n:nat) (aes:ae_scheme n) (plain:bytes) (nonce:bytes) : (eff (ae_key_state aes) bytes) =
+  state <-- get ;
+  let ae_st = fst state in
+  let key_st = snd state in
+  match Map.contains ae_st nonce with
+  | true ->
+    raise
+  | false ->
+    bind #key_state #(lbytes n) #bytes key_get (fun k ->
+    let c = aes.enc plain k nonce in
+    return c
+    )
+    //k <-- key_get ;
