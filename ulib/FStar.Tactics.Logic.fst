@@ -56,10 +56,8 @@ private val split_lem : (#a:Type) -> (#b:Type) ->
 let split_lem #a #b sa sb = ()
 
 let split () : Tac unit =
-    let g = cur_goal () in
-    match term_as_formula g with
-    | And _ _ -> apply_lemma (`split_lem)
-    | _       -> fail "not a conjunction"
+    try apply_lemma (`split_lem)
+    with | _ -> fail "Could not split goal"
 
 private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
                             (a -> squash b) ->
