@@ -110,49 +110,63 @@ let lift_right #st1 #st2 #a (f:eff st2 a)
 
 let lbytes (n:nat) = Seq.lseq byte n
 let bytes = Seq.seq byte
+let handle = bytes&bytes
 let key (n:nat) = lbytes n
-let key_state (n:nat) = option (bool & key n)
+let key_state (n:nat) = (Map.t handle bool & Map.t handle (key n))
 
-let key_gen : eff (key_state 1) unit =
+let key_gen (h:handle) : eff (key_state 1) handle =
     s <-- get ;
-    match s with
-    | Some _ ->
-      raise
-    | _ ->
+    let (h_map,k_map) = s in
+    match Map.contains h_map h,Map.contains k_map h with
+    | false,false ->
       k <-- sample ;
-      set (Some (true, (Seq.create 1 k <: Seq.lseq byte 1)))
-
-let key_set (k_in:Seq.lseq byte 1) : eff (key_state 1) unit =
-    s <-- get ;
-    match s with
-    | Some _ ->
-      raise
-    | _ ->
-      set (Some (true, k_in))
-
-let key_cset (k_in:Seq.lseq byte 1) : eff (key_state 1) unit =
-    s <-- get ;
-    match s with
-    | Some _ ->
-      raise
-    | _ ->
-      set (Some (false, k_in))
-
-let key_get : eff (key_state 1) (Seq.lseq byte 1) =
-    s <-- get ;
-    match s with
-    | None ->
-      raise
-    | Some (_,k) ->
-      return k
-
-let key_hon : eff (key_state 1) bool =
-    s <-- get ;
-    match s with
-    | None ->
-      raise
-    | Some (h,_) ->
+      let s':key_state 1 = (Map.upd h_map h true, Map.upd k_map h (Seq.create 1 k <: Seq.lseq byte 1)) in
+      //set s' ;
       return h
+    | _,_ ->
+      raise
+
+let key_set (h:handle) (k_in:Seq.lseq byte 1) : eff (key_state 1) handle =
+    s <-- get ;
+    let (h_map,k_map) = s in
+    match Map.contains h_map h,Map.contains k_map h with
+    | false,false ->
+      let s':key_state 1 = (Map.upd h_map h true, Map.upd k_map h k_in) in
+      //set s' ;
+      return h
+    | _,_ ->
+      raise
+
+let key_cset (h:handle) (k_in:Seq.lseq byte 1) : eff (key_state 1) handle =
+    s <-- get ;
+    let (h_map,k_map) = s in
+    match Map.contains h_map h,Map.contains k_map h with
+    | false,false ->
+      let s':key_state 1 = (Map.upd h_map h false, Map.upd k_map h k_in) in
+      //set s' ;
+      return h
+    | _,_ ->
+      raise
+
+let key_get (h:handle) : eff (key_state 1) (key 1) =
+    s <-- get ;
+    let (h_map,k_map) = s in
+    match Map.contains h_map h,Map.contains k_map h with
+    | true,true ->
+      let k = Map.sel k_map h in
+      return k
+    | _,_ ->
+      raise
+
+let key_hon (h:handle) : eff (key_state 1) bool =
+    s <-- get ;
+    let (h_map,k_map) = s in
+    match Map.contains h_map h,Map.contains k_map h with
+    | true,true ->
+      let honest = Map.sel h_map h in
+      return honest
+    | _,_ ->
+      raise
 
 ////////////////////////////////////////////////////////////////////////////////
 //AE package
@@ -169,7 +183,7 @@ let ae_state #n (aes:ae_scheme n) =
 
 let ae_key_state #n aes = ae_state #n aes & key_state n
 
-let enc_0 (#n:nat) (aes:ae_scheme n) (plain:bytes) (nonce:bytes) : (eff (ae_key_state aes) bytes) =
+let enc_0 (#n:nat) (aes:ae_scheme n) (plain:bytes) (nonce:bytes) (h:handle) : (eff (ae_key_state aes) bytes) =
   state <-- get ;
   let ae_st = fst state in
   let key_st = snd state in
@@ -177,8 +191,37 @@ let enc_0 (#n:nat) (aes:ae_scheme n) (plain:bytes) (nonce:bytes) : (eff (ae_key_
   | true ->
     raise
   | false ->
-    bind #key_state #(lbytes n) #bytes key_get (fun k ->
+    k <-- get key_st h;
     let c = aes.enc plain k nonce in
     return c
-    )
-    //k <-- key_get ;
+
+let enc_1 (#n:nat) (aes:ae_scheme n) (plain:bytes) (nonce:bytes) : (eff (ae_key_state aes) bytes) =
+  state <-- get ;
+  let ae_st = fst state in
+  let key_st = snd state in
+  match Map.contains ae_st nonce with
+  | true ->
+    raise
+  | false ->
+    let c = Map.upd ae_st nonce (Map.sel ae_st plain) in
+    return c
+
+////////////////////////////////////////////////////////////////////////////////
+//ODH package
+////////////////////////////////////////////////////////////////////////////////
+
+let share (n:nat) = lbytes n
+let exponent (n:nat) = lbytes n
+assume val exponentiate : #n:nat -> x:share n -> y:exponent n -> share
+let odh
+
+let odh_0  : (eff (ae_key_state aes) bytes) =
+  state <-- get ;
+  let ae_st = fst state in
+  let key_st = snd state in
+  match Map.contains ae_st nonce with
+  | true ->
+    raise
+  | false ->
+    let c = Map.upd ae_st nonce (Map.sel ae_st plain) in
+    return c
