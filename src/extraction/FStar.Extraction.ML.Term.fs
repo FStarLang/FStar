@@ -82,31 +82,31 @@ let record_fields fs vs = List.map2 (fun (f:ident) e -> f.idText, e) fs vs
 let fail r err =
     Errors.raise_error err r
 
-let err_uninst env (t:term) (vars, ty) (app:term) =
-    fail t.pos (Fatal_Uninstantiated, (BU.format4 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
-                    (Print.term_to_string t)
-                    (vars |> String.concat ", ")
-                    (Code.string_of_mlty env.currentModule ty)
-                    (Print.term_to_string app)))
-
 let err_ill_typed_application env (t : term) mlhead args (ty : mlty) =
-    fail t.pos (Fatal_IllTyped, (BU.format4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
+    fail t.pos
+      (Fatal_IllTyped,
+       BU.format4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
                 (Print.term_to_string t)
                 (Code.string_of_mlexpr env.currentModule mlhead)
                 (Code.string_of_mlty env.currentModule ty)
-                (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " ")))
+                (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " "))
 
 let err_ill_typed_erasure env pos (ty : mlty) =
-    fail pos (Fatal_IllTyped, (BU.format1 "Erased value found where a value of type %s was expected"
-                (Code.string_of_mlty env.currentModule ty)))
+    fail pos
+      (Fatal_IllTyped,
+       BU.format1 "Erased value found where a value of type %s was expected"
+                  (Code.string_of_mlty env.currentModule ty))
 
 let err_value_restriction t =
-    fail t.pos (Fatal_ValueRestriction, (BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
-                    (Print.tag_of_term t) (Print.term_to_string t)))
+    fail t.pos
+      (Fatal_ValueRestriction,
+       BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
+                    (Print.tag_of_term t) (Print.term_to_string t))
 
 let err_unexpected_eff env t ty f0 f1 =
-    Errors.log_issue t.pos (Warning_ExtractionUnexpectedEffect,
-                BU.format4 "for expression %s of type %s, Expected effect %s; got effect %s"
+    Errors.log_issue t.pos
+      (Warning_ExtractionUnexpectedEffect,
+       BU.format4 "for expression %s of type %s, Expected effect %s; got effect %s"
                         (Print.term_to_string t)
                         (Code.string_of_mlty env.currentModule ty)
                         (eff_to_string f0)
@@ -380,10 +380,53 @@ let check_pats_for_ite (l:list<(pat * option<term> * term)>) : (bool   //if l is
 (*     2. Erasure of terms                                                                  *)
 (*     3. Coercion (Obj.magic)                                                              *)
 (********************************************************************************************)
-//instantiate s args:
+
+//instantiate_tyscheme s args:
 //      only handles fully applied types,
 //      pre-condition: List.length (fst s) = List.length args
-let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args
+let instantiate_tyscheme (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args
+
+//instantiate_maybe_partial:
+//  When `e` has polymorphic type `s`
+//  and isn't instantiated in F* (e.g., because of first-class polymorphism)
+//  we extract e to a type application in ML by instantiating all its
+//  type arguments to MLTY_Erased (later, perhaps, being forced to insert magics)
+let instantiate_maybe_partial (e:mlexpr) (s:mltyscheme) (tyargs:list<mlty>) : mlexpr * e_tag * mlty =
+    let vars, t = s in
+    let n_vars = List.length vars in
+    let n_args = List.length tyargs in
+    if n_args = n_vars
+    then //easy, just make a type application node
+      let tapp = {e with expr=MLE_TApp(e, tyargs) } in
+      let ts = instantiate_tyscheme (vars, t) tyargs in
+      tapp, E_PURE, ts
+    else if n_args < n_vars
+    then //We have a partial type-application in F*
+         //So, make a full type application node in ML,
+         //by generating dummy instantiations.
+         //And then expand it out by adding as many unit
+         //arguments as dummy instantiations, since these
+         //will be applied later to F* types that get erased to ()
+      let extra_tyargs =
+        let _, rest_vars = BU.first_N n_args vars in
+        rest_vars |> List.map (fun _ -> MLTY_Erased)
+      in
+      let tyargs = tyargs@extra_tyargs in
+      let tapp = {e with expr=MLE_TApp(e, tyargs) } in
+      let ts = instantiate_tyscheme (vars, t) tyargs in
+      let t =
+        List.fold_left
+          (fun out t -> MLTY_Fun(t, E_PURE, out))
+          ts
+          extra_tyargs
+      in
+      let f =
+        let vs_ts = List.map (fun t -> fresh "t", t) extra_tyargs in
+        with_ty t <| MLE_Fun (vs_ts, tapp)
+      in
+      f, E_PURE, t
+    else failwith "Impossible: instantiate_maybe_partial called with too many arguments"
+
 
 (* eta-expand `e` according to its type `t` *)
 let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
@@ -1150,9 +1193,16 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                 | Inr ({exp_b_expr=x; exp_b_tscheme=mltys}), qual ->
                   //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
                   begin match mltys with
-                    | ([], t) when (t=ml_unit_ty) -> ml_unit, E_PURE, t //optimize (x:unit) to ()
-                    | ([], t) -> maybe_eta_data_and_project_record g qual t x, E_PURE, t
-                    | _ -> err_uninst g t mltys t
+                    | ([], t) when t=ml_unit_ty ->
+                      ml_unit, E_PURE, t //optimize (x:unit) to ()
+
+                    | ([], t) ->
+                      maybe_eta_data_and_project_record g qual t x, E_PURE, t
+
+                    | _ ->
+                      (* We have a first-class polymorphic value;
+                         Extract it to ML by instantiating its type arguments to MLTY_Erased *)
+                      instantiate_maybe_partial x mltys []
                   end
                end
 
@@ -1174,7 +1224,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                  begin match mltys with
                     | ([], t) when (t=ml_unit_ty) -> ml_unit, E_PURE, t //optimize (x:unit) to ()
                     | ([], t) -> maybe_eta_data_and_project_record g fv.fv_qual t x, E_PURE, t
-                    | _ -> err_uninst g t mltys t
+                    | _ -> instantiate_maybe_partial x mltys []
                  end
           end
 
@@ -1324,61 +1374,65 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                       let has_typ_apps = match args with
                         | (a, _)::_ -> is_type g a
                         | _ -> false in
-                      //              debug g (fun () -> printfn "\n (*looked up tyscheme \n %A *) \n" (vars,t));
-                      let head_ml, head_t, args = match vars with
+                      let head_ml, head_t, args =
+                        match vars with
                         | _::_ when ((not has_typ_apps) && inst_ok) ->
                           (* no explicit type applications although some were expected; but instantiation is permissible *)
                           //              debug g (fun () -> printfn "Taking the type of %A to be %A\n" head_ml t);
                           head_ml, t, args
 
                         | _ ->
+                          (* Here, we have, say, f extracted to head_ml, with a polymorphic ML type with n type-args
+                             If, in F*, `f` is applied to exactly `n` type args, then things are easy:
+                               We extract those n arguments to ML types
+                               Instantiate the type scheme of head_ml
+                               Generate a type application node, and continue
+                             If `f` is only partially applied, i.e., to less than `n` args then
+                               we follow a strategy similar to the case of Tm_name and Tm_fvar
+                               when we deal with higher rank polymorphism.
+                               i.e., we use instantiate_maybe_partial to "complete" the type application
+                               with additional MLTY_Erased type arguments.
+
+                             Note, in both cases, we preserve type application in the ML AST
+                             since KreMLin requires it.
+
+                             See e.g., bug #1694.
+                           *)
                           let n = List.length vars in
-                          if n <= List.length args
-                          then let prefix, rest = BU.first_N n args in
-        //                       let _ = (if n=1 then printfn "\n (*prefix was  \n %A \n  *) \n" prefix) in
-                               let prefixAsMLTypes = List.map (fun (x, _) -> term_as_mlty g x) prefix in
-        //                        let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
-                               let t = instantiate (vars, t) prefixAsMLTypes in
-                               debug g (fun () ->
-                                  BU.print4 "@@@looked up %s, instantiated with [%s] translated to [%s], got %s\n"
-                                      (Print.term_to_string head)
-                                      (Print.args_to_string prefix)
-                                      (List.map (Code.string_of_mlty g.currentModule) prefixAsMLTypes |> String.concat ", ")
-                                      (Code.string_of_mlty g.currentModule t));
-                               // If I understand this code correctly when we reach this branch we are observing an
-                               // application of the form:
-                               //
-                               // (f u_1 .. u_n) e_1 .. e_2
-                               //
-                               // where f : forall (t_1 ... t_n : Type), t1 -> ... t_n
-                               //
-                               // The old code was converting `f u_1 ... u_n`, to a term with a type `u_1 -> ... -> u_n`.
-                               //
-                               // We now preserve these type applications, by wrapping the head in type applications,
-                               // instantiating the type assigning it to this new type application expression,
-                               // and continuing with the rest of the pipeline.
-                               //
-                               // @jroesch
-                               //
-                               // This helper ensures we don't generate empty type applications, which will cause
-                               // problems in FStar.Extraction.Kremlin when trying match aganist head symbols which
-                               // are now wrapped with empty type applications.
-                               let mk_tapp e ty_args =
-                                    match ty_args with
-                                    | [] -> e
-                                    | _ -> { e with expr=MLE_TApp(e, ty_args)} in
-                               let head = match head_ml.expr with
-                                 | MLE_Name _
-                                 | MLE_Var _ -> { mk_tapp head_ml prefixAsMLTypes with mlty=t }
-                                 | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) ->
-                                    MLE_App({ mk_tapp head prefixAsMLTypes with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
-                                 | _ -> failwith "Impossible: Unexpected head term" in
-                               head, t, rest
-                          else err_uninst g head (vars, t) top in
-                        //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
-                       begin match args with
-                            | [] -> maybe_eta_data_and_project_record g qual head_t head_ml, E_PURE, head_t
-                            | _  -> extract_app_maybe_projector qual head_ml (E_PURE, head_t) args
+                          let provided_type_args, rest =
+                            if List.length args <= n
+                            then List.map (fun (x, _) -> term_as_mlty g x) args,
+                                 []
+                            else let prefix, rest = BU.first_N n args in
+                                 List.map (fun (x, _) -> term_as_mlty g x) prefix,
+                                 rest
+                          in
+                          let head, t =
+                              match head_ml.expr with
+                              | MLE_Name _
+                              | MLE_Var _ ->
+                                let head, _, t =
+                                  instantiate_maybe_partial head_ml (vars, t) provided_type_args
+                                in
+                                head, t
+
+                              | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) ->
+                                //this happens when the extraction inserted an extra
+                                //unit argument to circumvent ML's value restriction
+                                let head, _, t =
+                                  instantiate_maybe_partial head (vars, t) provided_type_args
+                                in
+                                MLE_App(head, [ ml_unit ]) |> with_ty t,
+                                t
+
+                              | _ -> failwith "Impossible: Unexpected head term"
+                          in
+                          head, t, rest
+                       in
+                       begin
+                       match args with
+                       | [] -> maybe_eta_data_and_project_record g qual head_t head_ml, E_PURE, head_t
+                       | _  -> extract_app_maybe_projector qual head_ml (E_PURE, head_t) args
                        end
 
                     | _ ->
@@ -1453,7 +1507,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                              else norm_call ()
                     in
                     {lb with lbdef=lbdef})
-            else lbs in
+            else lbs
+          in
 
           let check_lb env (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, e)) =
               let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in
@@ -1468,7 +1523,6 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               in
               f, {mllb_meta = meta; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
-
           let lbs = extract_lb_sig g (is_rec, lbs) in
 
           let env_body, lbs = List.fold_right (fun lb (env, lbs) ->
