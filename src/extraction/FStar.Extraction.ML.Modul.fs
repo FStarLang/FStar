@@ -289,7 +289,7 @@ let gamma_to_string env =
       - The list<mlmodule1> returned is the concrete definition
         of the abbreviation in ML, emitted only in the implementation
 *)
-let extract_typ_abbrev env quals attrs lb
+let extract_typ_abbrev env quals attrs lb body_mlty_opt
     : env_t
     * iface
     * list<mlmodule1> =
@@ -316,7 +316,11 @@ let extract_typ_abbrev env quals attrs lb
         | _ -> [], def in
     let assumed = BU.for_some (function Assumption -> true | _ -> false) quals in
     let env1, ml_bs = binders_as_mlty_binders env bs in
-    let body = Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1) in
+    let body =
+      match body_mlty_opt with
+      | Some t -> t
+      | _ -> Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
+    in
     let mangled_projector =
          if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
          then let mname = mangle_projector_lid lid in
@@ -396,7 +400,7 @@ let extract_type_declaration (g:uenv) lid quals attrs univs t
                lbattrs = attrs;
                lbpos = t.pos
            } in
-           extract_typ_abbrev g quals attrs lb
+           extract_typ_abbrev g quals attrs lb None
 
 let extract_reifiable_effect g ed
     : uenv
@@ -479,6 +483,36 @@ let extract_reifiable_effect g ed
     iface_union_l (return_iface::bind_iface::actions_iface),
     return_decl::bind_decl::actions
 
+let extract_let_rec_type se (env:uenv) (lbs:list<letbinding>) =
+    //extracting `let rec t .. : Type = e
+    //            and ...
+    if BU.for_some (fun lb -> not (Term.is_arity env lb.lbtyp)) lbs
+    then //mixtures of mutually recursively defined types and terms
+         //are not yet supported
+         Errors.raise_error
+           (Errors.Fatal_ExtractionUnsupported,
+             "Mutually recursively defined typed and terms cannot yet be extracted")
+           se.sigrng
+    else
+      let env, iface_opt, impls =
+          List.fold_left
+            (fun (env, iface_opt, impls) lb ->
+              let env, iface, impl =
+                extract_typ_abbrev env se.sigquals se.sigattrs lb (Some MLTY_Top)
+              in
+              let iface_opt =
+                match iface_opt with
+                | None -> Some iface
+                | Some iface' -> Some (iface_union iface' iface)
+              in
+              (env, iface_opt, impl::impls))
+            (env, None, [])
+            lbs
+      in
+      env,
+      Option.get iface_opt,
+      List.rev impls |> List.flatten
+
 
 (*  The top-level extraction of a sigelt to an interface *)
 let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
@@ -496,7 +530,14 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
 
     | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
       let env, iface, _ =
-          extract_typ_abbrev g se.sigquals se.sigattrs lb
+          extract_typ_abbrev g se.sigquals se.sigattrs lb None
+      in
+      env, iface
+
+    | Sig_let ((true, lbs), _)
+      when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
+      let env, iface, _ =
+        extract_let_rec_type se g lbs
       in
       env, iface
 
@@ -706,7 +747,16 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           //extracting `type t = e`
           //or         `let t = e` when e is a type
           let env, _, impl =
-              extract_typ_abbrev g se.sigquals se.sigattrs lb
+              extract_typ_abbrev g se.sigquals se.sigattrs lb None
+          in
+          env, impl
+
+        | Sig_let((true, lbs), _)
+          when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
+          //extracting `let rec t .. : Type = e
+          //            and ...
+          let env, _, impl =
+            extract_let_rec_type se g lbs
           in
           env, impl
 
