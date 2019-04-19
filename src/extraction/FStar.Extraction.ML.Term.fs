@@ -397,9 +397,12 @@ let instantiate_maybe_partial (e:mlexpr) (s:mltyscheme) (tyargs:list<mlty>) : ml
     let n_args = List.length tyargs in
     if n_args = n_vars
     then //easy, just make a type application node
-      let tapp = {e with expr=MLE_TApp(e, tyargs) } in
-      let ts = instantiate_tyscheme (vars, t) tyargs in
-      tapp, E_PURE, ts
+      if n_args = 0
+      then e, E_PURE, t
+      else
+        let tapp = {e with expr=MLE_TApp(e, tyargs) } in
+        let ts = instantiate_tyscheme (vars, t) tyargs in
+        tapp, E_PURE, ts
     else if n_args < n_vars
     then //We have a partial type-application in F*
          //So, make a full type application node in ML,
