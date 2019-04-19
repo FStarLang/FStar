@@ -537,17 +537,16 @@ let (instantiate_maybe_partial :
               (if n_args = (Prims.parse_int "0")
                then (e, FStar_Extraction_ML_Syntax.E_PURE, t)
                else
-                 (let tapp =
-                    let uu___364_2099 = e  in
+                 (let ts = instantiate_tyscheme (vars, t) tyargs  in
+                  let tapp =
+                    let uu___365_2100 = e  in
                     {
                       FStar_Extraction_ML_Syntax.expr =
                         (FStar_Extraction_ML_Syntax.MLE_TApp (e, tyargs));
-                      FStar_Extraction_ML_Syntax.mlty =
-                        (uu___364_2099.FStar_Extraction_ML_Syntax.mlty);
+                      FStar_Extraction_ML_Syntax.mlty = ts;
                       FStar_Extraction_ML_Syntax.loc =
-                        (uu___364_2099.FStar_Extraction_ML_Syntax.loc)
+                        (uu___365_2100.FStar_Extraction_ML_Syntax.loc)
                     }  in
-                  let ts = instantiate_tyscheme (vars, t) tyargs  in
                   (tapp, FStar_Extraction_ML_Syntax.E_PURE, ts)))
             else
               if n_args < n_vars
@@ -562,17 +561,16 @@ let (instantiate_maybe_partial :
                                FStar_Extraction_ML_Syntax.MLTY_Erased))
                     in
                  let tyargs1 = FStar_List.append tyargs extra_tyargs  in
+                 let ts = instantiate_tyscheme (vars, t) tyargs1  in
                  let tapp =
-                   let uu___375_2156 = e  in
+                   let uu___376_2157 = e  in
                    {
                      FStar_Extraction_ML_Syntax.expr =
                        (FStar_Extraction_ML_Syntax.MLE_TApp (e, tyargs1));
-                     FStar_Extraction_ML_Syntax.mlty =
-                       (uu___375_2156.FStar_Extraction_ML_Syntax.mlty);
+                     FStar_Extraction_ML_Syntax.mlty = ts;
                      FStar_Extraction_ML_Syntax.loc =
-                       (uu___375_2156.FStar_Extraction_ML_Syntax.loc)
+                       (uu___376_2157.FStar_Extraction_ML_Syntax.loc)
                    }  in
-                 let ts = instantiate_tyscheme (vars, t) tyargs1  in
                  let t1 =
                    FStar_List.fold_left
                      (fun out  ->
