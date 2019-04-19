@@ -206,22 +206,22 @@ let enc_1 (#n:nat) (aes:ae_scheme n) (plain:bytes) (nonce:bytes) : (eff (ae_key_
     let c = Map.upd ae_st nonce (Map.sel ae_st plain) in
     return c
 
-////////////////////////////////////////////////////////////////////////////////
-//ODH package
-////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////
+// //ODH package
+// ////////////////////////////////////////////////////////////////////////////////
 
-let share (n:nat) = lbytes n
-let exponent (n:nat) = lbytes n
-assume val exponentiate : #n:nat -> x:share n -> y:exponent n -> share
-let odh
+// let share (n:nat) = lbytes n
+// let exponent (n:nat) = lbytes n
+// assume val exponentiate : #n:nat -> x:share n -> y:exponent n -> share
+// let odh
 
-let odh_0  : (eff (ae_key_state aes) bytes) =
-  state <-- get ;
-  let ae_st = fst state in
-  let key_st = snd state in
-  match Map.contains ae_st nonce with
-  | true ->
-    raise
-  | false ->
-    let c = Map.upd ae_st nonce (Map.sel ae_st plain) in
-    return c
+// let odh_0  : (eff (ae_key_state aes) bytes) =
+//   state <-- get ;
+//   let ae_st = fst state in
+//   let key_st = snd state in
+//   match Map.contains ae_st nonce with
+//   | true ->
+//     raise
+//   | false ->
+//     let c = Map.upd ae_st nonce (Map.sel ae_st plain) in
+//     return c

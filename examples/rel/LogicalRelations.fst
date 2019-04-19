@@ -6,7 +6,7 @@ module LogicalRelations
    It also provides an axiomatic treatment of "equivalence up to",
    meant to serve as a basis for hypothetical and probabilistic
    equivalence
-*)   
+*)
 
 
 /// `rel'` : The type of relations
@@ -31,6 +31,11 @@ let equiv (#s:Type) (r: rel' s) =
 
 /// `rel` : The type of equivalence relations
 let rel (s:Type) = r:rel' s { equiv r }
+
+/// Maybe we could package all types as relational types
+/// to avoid some redundancy.
+/// But, we're not yet doing that ...
+let rel_t = (t:Type & rel t)
 
 /// `( ** )`: product relation
 ///  Building an equivalence relation on a pair from
@@ -182,10 +187,27 @@ let one_a_rel_one_b : squash (one_a `arrow (lo int) (st_rel state_rel (lo int))`
 let two_a_rel_two_b : squash (two_a `arrow (lo int) (st_rel state_rel (lo bool))` two_b) = ()
 #pop-options
 
-(* Now for encoding "Modules" *)
+
+////////////////////////////////////////////////////////////////////////////////
+// Modules
+////////////////////////////////////////////////////////////////////////////////
+
 module DM = FStar.DependentMap
 
 /// The type of module signatures
+///
+/// E.g.,
+///  sig = {
+///     val f : nat -> nat;
+///     val rel_f : rel (nat -> nat)
+///
+///     val g : bool -> bool
+///     val rel_g: rel (bool -> bool)
+///  }
+///
+///  A signature maps labels (`f`, `g`, etc.)
+///  to their types (nat -> nat, bool -> bool, etc.)
+///  and also equivalence relations on those types (rel_f, rel_g, etc.)
 noeq
 type sig = {
   labels:eqtype;
@@ -193,7 +215,8 @@ type sig = {
   rels:(l:labels -> rel (ops l))
 }
 
-let module_t (s:sig) = 
+/// A module is a map providing the operations in the signature
+let module_t (s:sig) =
   DM.t s.labels s.ops
 
 /// `sig_rel`: an equivalence relation on module signatures
@@ -205,36 +228,47 @@ let sig_rel (s:sig)
      in
      r
 
-let functor_t (#underlay:sig) (urel:rel (module_t underlay))
-              (#overlay:sig) (orel:rel (module_t overlay)) =
-  urel ^--> orel
+/// An example module: The trivial unit module
 
+/// The unit signature has one label and one operation, i.e., () : unit
 let sig_unit = {
   labels=unit;
   ops=(fun _ -> unit);
   rels=(fun l -> (fun _ _ -> (True <: prop)) <: rel unit)
 }
 
+/// The implementation of the unit signature provides its single operation
 let mod_unit : module_t sig_unit =
   DM.create (fun () -> ())
 
-let rel_sig_unit : rel (module_t sig_unit) =
-  fun s1 s2 -> True
+/// Its equivalence relation is just the lifting from its signature
+let rel_sig_unit : rel (module_t sig_unit) = sig_rel sig_unit
 
-let as_fun (#s:sig) (m:module_t s) 
-  : functor_t rel_sig_unit
-              (sig_rel s)
-  = fun _ -> m              
 
-let comp (#a:sig) (#rel_a:rel (module_t a))
-         (#b:sig) (#rel_b:rel (module_t b))
-         (f:functor_t rel_a rel_b)
-         (#c:sig) (#rel_c:rel (module_t c))
-         (g:functor_t rel_c rel_a)
-  : functor_t rel_c rel_b
-  = fun x -> f (g x)
-  
-/// Here's a simple module
+/// Another example module: The module with no operations
+
+/// The empty signature has no labels
+let sig_empty = {
+  labels=False;
+  ops=(fun _ -> False);
+  rels=(fun (l:False) ->
+          let r : rel _ =
+            fun _ _ -> True
+          in
+          r)
+}
+
+/// The implementation of the unit signature provides its single operation
+let mod_empty : module_t sig_empty =
+  DM.create (fun _ -> false_elim())
+
+/// Its equivalence relation is just the lifting from its signature
+let rel_sig_empty : rel (module_t sig_empty) = sig_rel sig_empty
+
+/// We might have a constant module
+
+
+/// Here's a module with a couple of fields
 
 /// `key`: A type of labels
 type key =
@@ -245,7 +279,7 @@ type key =
 let field_types : key -> Type =
     function  ONE -> t_one
             | TWO -> t_two
-            
+
 let field_rels : (k:key -> rel (field_types k)) =
   function
     | ONE -> arrow (lo int) (st_rel state_rel (lo int))
@@ -268,6 +302,95 @@ let module_b : module_t sig_x =
             | TWO -> two_b)
 
 let equiv_module_0_1 : squash (module_a `sig_rel sig_x` module_b) = ()
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Functors
+////////////////////////////////////////////////////////////////////////////////
+
+
+/// Functors are equivalence-preserving functions from underlays to
+/// overlays.
+///
+/// This means that functors are equipped already with this
+/// contextual equivalence
+///
+///   A ( B )
+///   B ~ B'
+///  ===============
+///   A (B) ~ A (B')
+///
+let functor_t (#underlay:sig) (urel:rel (module_t underlay))
+              (#overlay:sig) (orel:rel (module_t overlay)) =
+  urel ^--> orel
+
+/// Lifting a module to a functor
+///   by parameterizing it over the unit module
+let as_fun (#s:sig) (m:module_t s)
+  : functor_t rel_sig_unit
+              (sig_rel s)
+  = fun _ -> m
+
+/// Functor composition
+let comp (#a:sig) (#rel_a:rel (module_t a))
+         (#b:sig) (#rel_b:rel (module_t b))
+         (f:functor_t rel_a rel_b)
+         (#c:sig) (#rel_c:rel (module_t c))
+         (g:functor_t rel_c rel_a)
+  : functor_t rel_c rel_b
+  = fun x -> f (g x)
+
+/// Functor composition is associative
+///   Note, we prove that left-associative composition is
+///   logically related to right-associative composition
+///
+///   NOT that the two are extensionally equal (although we might try
+///   that too ... not sure it's needed)
+let assoc (#a:sig) (#rel_a:rel (module_t a))
+          (#b:sig) (#rel_b:rel (module_t b))
+          (f_ab:functor_t rel_a rel_b)
+          (#c:sig) (#rel_c:rel (module_t c))
+          (f_ca:functor_t rel_c rel_a)
+          (#d:sig) (#rel_d:rel (module_t d))
+          (f_dc:functor_t rel_d rel_c)
+  : Lemma
+      (let f1 : functor_t rel_d rel_b = f_ab `comp` (f_ca `comp` f_dc) in
+       let f2 : functor_t rel_d rel_b = (f_ab `comp` f_ca) `comp` f_dc in
+       f1 `arrow rel_d rel_b` f2)
+  = ()
+
+/// A polymorphic identity functor
+let id_func (#a:sig) (#rel_a: rel (module_t a))
+  : functor_t rel_a rel_a
+  = fun m -> m
+
+
+/// The product signature
+let sig_prod (a:sig) (b:sig) : sig = {
+   labels=either a.labels b.labels;
+   ops=(function
+         | Inl l -> a.ops l
+         | Inr r -> b.ops r);
+   rels=(function
+         | Inl l -> a.rels l
+         | Inr r -> b.rels r)
+}
+
+/// product of modules
+let module_prod (a:sig) (b:sig)
+    :  (sig_rel a ^--> (arrow (sig_rel b) (sig_rel (a `sig_prod` b))))
+   = fun (ma:module_t a) (mb:module_t b) ->
+       let ab = a `sig_prod` b in
+       let f : (l:ab.labels -> Tot (ab.ops l)) =
+         fun (x:either a.labels b.labels) ->
+         match x with
+         | Inl l -> DM.sel ma l
+         | Inr r -> DM.sel mb r
+       in
+     let m : module_t ab =
+       DM.create #_ #ab.ops f
+     in
+     m
 
 /// Now for axiomatic some epsilon equivalences
 let eps = nat
