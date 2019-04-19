@@ -289,7 +289,7 @@ let gamma_to_string env =
       - The list<mlmodule1> returned is the concrete definition
         of the abbreviation in ML, emitted only in the implementation
 *)
-let extract_typ_abbrev env quals attrs lb body_mlty_opt
+let extract_typ_abbrev env quals attrs lb
     : env_t
     * iface
     * list<mlmodule1> =
@@ -317,9 +317,7 @@ let extract_typ_abbrev env quals attrs lb body_mlty_opt
     let assumed = BU.for_some (function Assumption -> true | _ -> false) quals in
     let env1, ml_bs = binders_as_mlty_binders env bs in
     let body =
-      match body_mlty_opt with
-      | Some t -> t
-      | _ -> Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
+      Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
     in
     let mangled_projector =
          if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
@@ -335,6 +333,41 @@ let extract_typ_abbrev env quals attrs lb body_mlty_opt
         else let env, tydef = UEnv.extend_tydef env fv td in
              env, iface_of_tydefs [tydef]
     in
+    env,
+    iface,
+    def
+
+let extract_let_rec_type env quals attrs lb
+    : env_t
+    * iface
+    * list<mlmodule1> =
+    let lbtyp =
+      FStar.TypeChecker.Normalize.normalize
+        [Env.Beta;
+         Env.AllowUnboundUniverses;
+         Env.EraseUniverses;
+         Env.UnfoldUntil delta_constant]
+        env.env_tcenv
+        lb.lbtyp
+    in
+    let bs, _ = U.arrow_formals lbtyp in
+    let env1, ml_bs = binders_as_mlty_binders env bs in
+    let fv = right lb.lbname in
+    let lid = fv.fv_name.v in
+    let body = MLTY_Top in
+    let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
+    let assumed = false in
+    let td =
+      assumed,
+      lident_as_mlsymbol lid,
+      None,
+      ml_bs,
+      metadata,
+      Some (MLTD_Abbrev body)
+    in
+    let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
+    let env, tydef = UEnv.extend_tydef env fv td in
+    let iface = iface_of_tydefs [tydef] in
     env,
     iface,
     def
@@ -400,7 +433,7 @@ let extract_type_declaration (g:uenv) lid quals attrs univs t
                lbattrs = attrs;
                lbpos = t.pos
            } in
-           extract_typ_abbrev g quals attrs lb None
+           extract_typ_abbrev g quals attrs lb
 
 let extract_reifiable_effect g ed
     : uenv
@@ -483,7 +516,7 @@ let extract_reifiable_effect g ed
     iface_union_l (return_iface::bind_iface::actions_iface),
     return_decl::bind_decl::actions
 
-let extract_let_rec_type se (env:uenv) (lbs:list<letbinding>) =
+let extract_let_rec_types se (env:uenv) (lbs:list<letbinding>) =
     //extracting `let rec t .. : Type = e
     //            and ...
     if BU.for_some (fun lb -> not (Term.is_arity env lb.lbtyp)) lbs
@@ -498,7 +531,7 @@ let extract_let_rec_type se (env:uenv) (lbs:list<letbinding>) =
           List.fold_left
             (fun (env, iface_opt, impls) lb ->
               let env, iface, impl =
-                extract_typ_abbrev env se.sigquals se.sigattrs lb (Some MLTY_Top)
+                extract_let_rec_type env se.sigquals se.sigattrs lb
               in
               let iface_opt =
                 match iface_opt with
@@ -530,14 +563,14 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
 
     | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
       let env, iface, _ =
-          extract_typ_abbrev g se.sigquals se.sigattrs lb None
+          extract_typ_abbrev g se.sigquals se.sigattrs lb
       in
       env, iface
 
     | Sig_let ((true, lbs), _)
       when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
       let env, iface, _ =
-        extract_let_rec_type se g lbs
+        extract_let_rec_types se g lbs
       in
       env, iface
 
@@ -747,7 +780,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           //extracting `type t = e`
           //or         `let t = e` when e is a type
           let env, _, impl =
-              extract_typ_abbrev g se.sigquals se.sigattrs lb None
+              extract_typ_abbrev g se.sigquals se.sigattrs lb
           in
           env, impl
 
@@ -756,7 +789,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           //extracting `let rec t .. : Type = e
           //            and ...
           let env, _, impl =
-            extract_let_rec_type se g lbs
+            extract_let_rec_types se g lbs
           in
           env, impl
 
