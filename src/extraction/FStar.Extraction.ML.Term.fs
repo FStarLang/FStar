@@ -400,8 +400,12 @@ let instantiate_maybe_partial (e:mlexpr) (s:mltyscheme) (tyargs:list<mlty>) : ml
       if n_args = 0
       then e, E_PURE, t
       else
-        let tapp = {e with expr=MLE_TApp(e, tyargs) } in
         let ts = instantiate_tyscheme (vars, t) tyargs in
+        let tapp = {
+          e with
+            expr=MLE_TApp(e, tyargs);
+            mlty=ts
+        } in
         tapp, E_PURE, ts
     else if n_args < n_vars
     then //We have a partial type-application in F*
@@ -415,8 +419,12 @@ let instantiate_maybe_partial (e:mlexpr) (s:mltyscheme) (tyargs:list<mlty>) : ml
         rest_vars |> List.map (fun _ -> MLTY_Erased)
       in
       let tyargs = tyargs@extra_tyargs in
-      let tapp = {e with expr=MLE_TApp(e, tyargs) } in
       let ts = instantiate_tyscheme (vars, t) tyargs in
+      let tapp = {
+        e with
+          expr=MLE_TApp(e, tyargs);
+          mlty=ts
+      } in
       let t =
         List.fold_left
           (fun out t -> MLTY_Fun(t, E_PURE, out))
