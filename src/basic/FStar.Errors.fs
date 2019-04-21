@@ -331,7 +331,8 @@ type raw_error =
   | Error_MustEraseMissing
   | Warning_EffectfulArgumentToErasedFunction
   | Fatal_EmptySurfaceLet
-
+  | Warning_UnexpectedCheckedFile
+  | Fatal_ExtractionUnsupported
 
 type flag = error_flag
 
@@ -660,6 +661,8 @@ let default_flags =
   (Error_MustEraseMissing                            , CWarning);
   (Warning_EffectfulArgumentToErasedFunction         , CWarning);
   (Fatal_EmptySurfaceLet                             , CFatal);
+  (Warning_UnexpectedCheckedFile                     , CWarning); //321
+  (Fatal_ExtractionUnsupported                       , CFatal);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]

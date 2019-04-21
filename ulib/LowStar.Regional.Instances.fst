@@ -95,6 +95,7 @@ val buffer_r_alloc:
       Set.subset (Map.domain (HS.get_hmap h0))
                  (Map.domain (HS.get_hmap h1)) /\
       modifies loc_none h0 h1 /\
+      fresh_loc (B.loc_buffer v) h0 h1 /\
       buffer_r_alloc_p v /\
       buffer_r_inv len h1 v /\
       buffer_region_of v = r /\
@@ -131,6 +132,7 @@ val buffer_regional:
   regional (B.buffer a)
 let buffer_regional #a ia len =
   Rgl (buffer_region_of #a)
+      B.loc_buffer
       (buffer_dummy a)
       (buffer_r_inv #a len)
       (buffer_r_inv_reg #a len)
@@ -211,6 +213,7 @@ val vector_r_alloc:
       Set.subset (Map.domain (HS.get_hmap h0))
                  (Map.domain (HS.get_hmap h1)) /\
       modifies loc_none h0 h1 /\
+      fresh_loc (V.loc_vector v) h0 h1 /\
       vector_r_alloc_p v /\
       vector_r_inv h1 v /\
       vector_region_of v = r /\
@@ -232,6 +235,7 @@ val vector_regional:
   #a:Type -> rg:regional a -> regional (rvector rg)
 let vector_regional #a rg =
   Rgl (vector_region_of #a #rg)
+      V.loc_vector
       (vector_dummy #a rg)
       (vector_r_inv #a #rg)
       (vector_r_inv_reg #a #rg)

@@ -341,7 +341,7 @@ let deps_and_repl_ld_tasks_of_our_file filename
   let has_our_mod_name f =
     (get_mod_name f = our_mod_name) in
 
-  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [filename] FStar.Universal.load_parsing_data_from_cache in
+  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [filename] FStar.CheckedFiles.load_parsing_data_from_cache in
   let same_name, real_deps =
     List.partition has_our_mod_name deps in
 

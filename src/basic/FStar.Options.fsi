@@ -208,6 +208,8 @@ val smtencoding_nl_arith_wrapped: unit    -> bool
 val smtencoding_nl_arith_native : unit    -> bool
 val smtencoding_l_arith_default : unit    -> bool
 val smtencoding_l_arith_native  : unit    -> bool
+val smtencoding_valid_intro     : unit    -> bool
+val smtencoding_valid_elim      : unit    -> bool
 val tactic_raw_binders          : unit    -> bool
 val tactics_failhard            : unit    -> bool
 val tactics_info                : unit    -> bool
@@ -215,7 +217,6 @@ val tactic_trace                : unit    -> bool
 val tactic_trace_d              : unit    -> int
 val tactics_nbe                 : unit    -> bool
 val tcnorm                      : unit    -> bool
-val protect_top_level_axioms    : unit    -> bool
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
 val ugly                        : unit    -> bool

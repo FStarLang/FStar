@@ -282,7 +282,8 @@ val alloc_rid:
            Set.equal (Map.domain (HS.get_hmap h0))
                      (Map.domain (HS.get_hmap h1)) /\
            size_of vec = len /\
-           S.equal (as_seq h1 vec) (S.create (U32.v len) v)))
+           S.equal (as_seq h1 vec) (S.create (U32.v len) v) /\
+           B.fresh_loc (loc_vector vec) h0 h1))
 let alloc_rid #a len v rid =
   Vec len len (B.malloc rid v len)
 
@@ -299,7 +300,8 @@ val alloc:
            Set.equal (Map.domain (HS.get_hmap h0))
                      (Map.domain (HS.get_hmap h1)) /\
            size_of vec = len /\
-           S.equal (as_seq h1 vec) (S.create (U32.v len) v)))
+           S.equal (as_seq h1 vec) (S.create (U32.v len) v) /\
+           B.fresh_loc (loc_vector vec) h0 h1))
 let alloc #a len v =
   alloc_rid len v HS.root
 
@@ -313,6 +315,7 @@ val alloc_reserve:
          (ensures (fun h0 vec h1 ->
            frameOf vec = rid /\ live h1 vec /\ freeable vec /\
            modifies loc_none h0 h1 /\
+           B.fresh_loc (loc_vector vec) h0 h1 /\
            Set.equal (Map.domain (HS.get_hmap h0))
                      (Map.domain (HS.get_hmap h1)) /\
            size_of vec = 0ul /\

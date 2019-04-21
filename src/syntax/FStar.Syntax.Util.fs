@@ -355,24 +355,6 @@ let un_uinst t =
         | Tm_uinst(t, _) -> Subst.compress t
         | _ -> t
 
-let is_smt_lemma t = match (compress t).n with
-    | Tm_arrow(_, c) ->
-      begin match c.n with
-        | Comp ct when lid_equals ct.effect_name PC.effect_Lemma_lid ->
-            begin match ct.effect_args with
-                | _req::_ens::(pats, _)::_ ->
-                  let pats' = unmeta pats in
-                  let head, _ = head_and_args pats' in
-                  begin match (un_uinst head).n with
-                    | Tm_fvar fv -> fv_eq_lid fv PC.cons_lid
-                    | _ -> false
-                  end
-                | _ -> false
-            end
-        | _ -> false
-      end
-    | _ -> false
-
 let is_ml_comp c = match c.n with
   | Comp c -> lid_equals c.effect_name PC.effect_ML_lid
               || c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
@@ -1550,17 +1532,6 @@ let destruct_typ_as_formula f : option<connective> =
         catch_opt (destruct_sq_exists phi) (fun () ->
                    None)))))
 
-let unthunk_lemma_post t =
-    match (compress t).n with
-    | Tm_abs ([b], e, _) ->
-        let bs, e = open_term [b] e in
-        let b = List.hd bs in
-        if is_free_in (fst b) e
-        then mk_app t [as_arg exp_unit]
-        else e
-    | _ ->
-        mk_app t [as_arg exp_unit]
-
 let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
@@ -1624,17 +1595,6 @@ let incr_delta_qualifier t =
     incr_delta_depth (delta_qualifier t)
 
 let is_unknown t = match (Subst.compress t).n with | Tm_unknown -> true | _ -> false
-
-let rec list_elements (e:term) : option<list<term>> =
-  let head, args = head_and_args (unmeta e) in
-  match (un_uinst head).n, args with
-  | Tm_fvar fv, _ when fv_eq_lid fv PC.nil_lid ->
-      Some []
-  | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv PC.cons_lid ->
-      Some (hd::must (list_elements tl))
-  | _ ->
-      None
-
 
 let rec apply_last f l = match l with
    | [] -> failwith "apply_last: got empty list"
@@ -2028,3 +1988,111 @@ let extract_attr (attr_lid:lid) (se:sigelt) : option<(sigelt * args)> =
     match extract_attr' attr_lid se.sigattrs with
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
+
+
+(* Utilities for working with Lemma's decorated with SMTPat *)
+let is_smt_lemma t = match (compress t).n with
+    | Tm_arrow(_, c) ->
+      begin match c.n with
+        | Comp ct when lid_equals ct.effect_name PC.effect_Lemma_lid ->
+            begin match ct.effect_args with
+                | _req::_ens::(pats, _)::_ ->
+                  let pats' = unmeta pats in
+                  let head, _ = head_and_args pats' in
+                  begin match (un_uinst head).n with
+                    | Tm_fvar fv -> fv_eq_lid fv PC.cons_lid
+                    | _ -> false
+                  end
+                | _ -> false
+            end
+        | _ -> false
+      end
+    | _ -> false
+
+let rec list_elements (e:term) : option<list<term>> =
+  let head, args = head_and_args (unmeta e) in
+  match (un_uinst head).n, args with
+  | Tm_fvar fv, _ when fv_eq_lid fv PC.nil_lid ->
+      Some []
+  | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv PC.cons_lid ->
+      Some (hd::must (list_elements tl))
+  | _ ->
+      None
+
+let unthunk_lemma_post t =
+    match (compress t).n with
+    | Tm_abs ([b], e, _) ->
+        let bs, e = open_term [b] e in
+        let b = List.hd bs in
+        if is_free_in (fst b) e
+        then mk_app t [as_arg exp_unit]
+        else e
+    | _ ->
+        mk_app t [as_arg exp_unit]
+
+let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>)
+   : term
+   =
+    let list_elements (e:term) : list<term> =
+      match list_elements e with
+      | Some l -> l
+      | None ->
+        Errors.log_issue e.pos
+          (Errors.Warning_NonListLiteralSMTPattern,
+            "SMT pattern is not a list literal; ignoring the pattern");
+        []
+    in
+
+    let one_pat p =
+        let head, args = unmeta p |> head_and_args in
+        match (un_uinst head).n, args with
+        | Tm_fvar fv, [(_, _); arg]
+            when fv_eq_lid fv PC.smtpat_lid ->
+          arg
+        | _ -> failwith "Unexpected pattern term"
+    in
+
+    let lemma_pats p =
+        let elts = list_elements p in
+        let smt_pat_or t =
+            let head, args = unmeta t |> head_and_args in
+            match (un_uinst head).n, args with
+                | Tm_fvar fv, [(e, _)]
+                    when fv_eq_lid fv PC.smtpatOr_lid ->
+                  Some e
+                | _ -> None in
+        match elts with
+            | [t] ->
+             begin match smt_pat_or t with
+                | Some e ->
+                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map one_pat)
+                | _ -> [elts |> List.map one_pat]
+              end
+            | _ -> [elts |> List.map one_pat]
+    in
+
+    let binders, pre, post, patterns =
+        match (Subst.compress t).n with
+        | Tm_arrow(binders, c) ->
+          let binders, c = Subst.open_comp binders c in
+          begin match c.n with
+            | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
+              binders, pre, post, lemma_pats pats
+            | _ -> failwith "impos"
+          end
+
+        | _ -> failwith "Impos"
+    in
+    (* Postcondition is thunked, c.f. #57 *)
+    let post = unthunk_lemma_post post in
+    let body = mk (Tm_meta (mk_imp pre post, Meta_pattern patterns)) None t.pos in
+    let quant =
+      List.fold_right2
+        (fun b u out -> mk_forall u (fst b) out)
+        binders
+        (universe_of_binders binders)
+        body
+    in
+    quant
+
+(* End SMT Lemma utilities *)

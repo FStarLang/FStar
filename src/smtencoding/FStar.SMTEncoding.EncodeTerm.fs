@@ -696,7 +696,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                                 mkIff(f_has_t_z, t_interp)),
                                Some a_name,
                                module_name ^ "_" ^ a_name) in
-                  
+
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
              t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
@@ -788,7 +788,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         Util.mkAssume(mkForall t0.pos ([[x_has_t]], ffv::xfv::cvars, mkIff(x_has_t, encoding)),
                         Some "refinement_interpretation",
                         "refinement_interpretation_"^tsym) in
-              
+
         let t_decls = [tdecl;
                        t_kinding; //t_valid;
                        t_interp; t_haseq] in
@@ -1139,59 +1139,10 @@ and encode_args (l:args) (env:env_t) : (list<term> * decls_t)  =
 
 (* this assumes t is a Lemma *)
 and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
-    let list_elements (e:S.term) : list<S.term> =
-      match U.list_elements e with
-      | Some l -> l
-      | None -> Errors.log_issue e.pos (Errors.Warning_NonListLiteralSMTPattern, "SMT pattern is not a list literal; ignoring the pattern"); [] in
-
-    let one_pat p =
-        let head, args = U.unmeta p |> U.head_and_args in
-        match (U.un_uinst head).n, args with
-        | Tm_fvar fv, [(_, _); arg] when S.fv_eq_lid fv Const.smtpat_lid -> arg
-        | _ -> failwith "Unexpected pattern term"  in
-
-    let lemma_pats p =
-        let elts = list_elements p in
-        let smt_pat_or t =
-            let head, args = U.unmeta t |> U.head_and_args in
-            match (U.un_uinst head).n, args with
-                | Tm_fvar fv, [(e, _)] when S.fv_eq_lid fv Const.smtpatOr_lid ->
-                  Some e
-                | _ -> None in
-        match elts with
-            | [t] ->
-             begin match smt_pat_or t with
-                | Some e ->
-                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map one_pat)
-                | _ -> [elts |> List.map one_pat]
-              end
-            | _ -> [elts |> List.map one_pat] in
-
-    let binders, pre, post, patterns = match (SS.compress t).n with
-        | Tm_arrow(binders, c) ->
-          let binders, c = SS.open_comp binders c in
-          begin match c.n with
-            | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
-              binders, pre, post, lemma_pats pats
-            | _ -> failwith "impos"
-          end
-
-        | _ -> failwith "Impos" in
-
+    let universe_of_binders binders = List.map (fun _ -> U_zero) binders in
+    let quant = U.smt_lemma_as_forall t universe_of_binders in
     let env = {env with use_zfuel_name=true} in //see #1028; SMT lemmas should not violate the fuel instrumentation
-
-    let vars, guards, env, decls, _ = encode_binders None binders env in
-
-    let pats, decls' = encode_smt_patterns patterns env in
-
-    (* Postcondition is thunked, c.f. #57 *)
-    let post = U.unthunk_lemma_post post in
-
-    let env = {env with nolabels=true} in
-    let pre, decls'' = encode_formula (U.unmeta pre) env in
-    let post, decls''' = encode_formula (U.unmeta post) env in
-    let decls = decls@decls'@decls''@decls''' in
-    mkForall t.pos (pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
+    encode_formula quant env
 
 and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * decls_t =
     let env = {env with use_zfuel_name=true} in

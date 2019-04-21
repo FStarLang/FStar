@@ -51,7 +51,8 @@ ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
 			          Tactics.Interpreter.fsti \
 			          TypeChecker.NBETerm.fst \
 			          TypeChecker.NBETerm.fsti \
-			          Tests.Test.fst)
+			          Tests.Test.fst \
+			          StringBuffer.fsti)
 
 boot/%.fsti: basic/boot/%.fsi | boot_dir
 	cp $^ $@

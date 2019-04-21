@@ -14,7 +14,7 @@
         "unit_typing"
       ],
       0,
-      "9b9fef5603667fe0f8ffcf032be16fac"
+      "f797f394d6fcfa7744af55580ca4e88a"
     ],
     [
       "Bug1533.elim2",
@@ -23,7 +23,7 @@
       1,
       [ "@query" ],
       0,
-      "9b14e3f056c55e68f448400b975b0642"
+      "ccc9512ba3aa69886dc45863b6dbe2e3"
     ],
     [
       "Bug1533.elim3",
@@ -39,7 +39,7 @@
         "unit_typing"
       ],
       0,
-      "392b118e00fcb79f60eef7e702c195c5"
+      "e44f3486c6fd6fa804bf2094f8838b4c"
     ],
     [
       "Bug1533.elim3'",
@@ -48,7 +48,7 @@
       1,
       [ "@query" ],
       0,
-      "734c63643abb753fe8939a022091040e"
+      "1c5ce538301f303e65d3b5abe7cbf950"
     ],
     [
       "Bug1533.coerce",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_770aa551c1985581cf5d9ce92df5e8e5"
       ],
       0,
-      "8827a912d2f4f02809b0a6f993fc2240"
+      "5d406d30a24054513392755960e93565"
     ]
   ]
 ]

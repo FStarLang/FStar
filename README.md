@@ -36,21 +36,27 @@ details on [editor support] on the [F\* wiki].
 
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
 
-### Executing F* code
+### Extracting and executing F* code
 
 By default F* only verifies the input code, it does not compile or execute it.
-To execute F* code one needs to translate it to either OCaml or F\#, using
-F\*'s code extraction facility---this is invoked using the command line
-argument `--codegen OCaml` or `--codegen FSharp`. More details on
-[executing F\* code] on the [F\* wiki].
+To execute F* code one needs to translate it for instance to OCaml or F\#,
+using F\*'s code extraction facility---this is invoked using the
+command line argument `--codegen OCaml` or `--codegen FSharp`.
+More details on [executing F\* code via OCaml] on the [F\* wiki].
 
-[executing F\* code]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
+[executing F\* code via OCaml]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
+
+Also, code written in a C-like shalowly embedded DSL can be extracted to
+[C](https://arxiv.org/abs/1703.00053)
+or [WASM](https://doi.ieeecomputersociety.org/10.1109/SP.2019.00064)
+by the [KreMLin tool](https://github.com/FStarLang/kremlin),
+and code written in an ASM-like deeply embedded DSL can be extracted
+to ASM by the [Vale tool](https://github.com/project-everest/vale).
 
 ### Chatting about F* on Zulip
 
-Users can chat about F* or ask questions at: https://fstar.zulipchat.com
-
-Zulip (https://zulipchat.com) is an open source alternative to Slack.
+Users can chat about F* or ask questions at https://fstar.zulipchat.com
+([Zulip](https://zulipchat.com) is a good open source alternative to Slack)
 
 ### Community mailing list
 

@@ -1529,14 +1529,24 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
       let wild r = mk_term Wild r Expr in
       let init   = mk_term (Var C.calc_init_lid) init_expr.range Expr in
+      let last_expr = match List.last steps with
+                      | Some (CalcStep (_, _, last_expr)) -> last_expr
+                      | _ -> failwith "impossible: no last_expr on calc"
+      in
       let step r = mk_term (Var C.calc_step_lid) r Expr in
       let finish = mkApp (mk_term (Var C.calc_finish_lid) top.range Expr) [(rel, Nothing)] top.range in
 
       let e = mkApp init [(init_expr, Nothing)] init_expr.range in
-      let e = List.fold_left (fun e (CalcStep (rel, just, next_expr)) ->
-                                  mkApp (step rel.range)
-                                        [(eta_and_annot rel, Nothing); (next_expr, Nothing); (thunk e, Nothing); (thunk just, Nothing)] just.range) e steps in
-      let e = mkApp finish [(thunk e, Nothing)] init_expr.range in
+      let (e, _) = List.fold_left (fun (e, prev) (CalcStep (rel, just, next_expr)) ->
+                          let pf = mkApp (step rel.range)
+                                          [(wild rel.range, Hash);
+                                           (init_expr, Hash);
+                                           (prev, Hash);
+                                           (eta_and_annot rel, Nothing); (next_expr, Nothing);
+                                           (thunk e, Nothing); (thunk just, Nothing)] just.range in
+                          (pf, next_expr))
+                   (e, init_expr) steps in
+      let e = mkApp finish [(init_expr, Hash); (last_expr, Hash); (thunk e, Nothing)] init_expr.range in
       desugar_term_maybe_top top_level env e
 
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs

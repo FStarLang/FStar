@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "901028437eb25a9c9eef20b685ec1678"
+      "19b07fd2b747035c2455663ee5b0c369"
     ],
     [
       "NegativeTests.Bug260.__proj__S__item___0",
@@ -22,7 +22,7 @@
         "refinement_interpretation_Tm_refine_c7798980fdaa69b62544817f36c3402f"
       ],
       0,
-      "ead86497780c4e76e80d61841d253e02"
+      "76fd38895266489678f93f0349ba923e"
     ],
     [
       "NegativeTests.Bug260.validity",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
       0,
-      "4d2f042095debeffe374f326000709dd"
+      "77f9ffe3167b9a6e3c1f6a4989214c49"
     ],
     [
       "NegativeTests.Bug260.pnat",
@@ -40,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "519a5a4476ab9bf04210db5ed26f0a7d"
+      "702bbb5a50037ec44d1ac2bee15937ce"
     ],
     [
       "NegativeTests.Bug260.__proj__S__item___0",
@@ -54,7 +54,7 @@
         "refinement_interpretation_Tm_refine_c7798980fdaa69b62544817f36c3402f"
       ],
       0,
-      "8881e1c7c67bd11694123108de282fd5"
+      "b1a8c6120050646bab3ad0cd363fd0e3"
     ],
     [
       "NegativeTests.Bug260.validity",
@@ -63,7 +63,7 @@
       1,
       [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
       0,
-      "ca9e8fbafee21860edf82b8bc70b3768"
+      "16b768e9eadbe808ac406d8317739983"
     ]
   ]
 ]

@@ -86,11 +86,6 @@ let rec gensyms x = match x with
   | 0 -> []
   | n -> gensym ()::gensyms (n-1)
 
-(* -------------------------------------------------------------------- *)
-let mlpath_of_lident (x : lident) : mlpath =
-    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
-    then ([], x.ident.idText)
-    else (List.map (fun x -> x.idText) x.ns, x.ident.idText)
 
 (* -------------------------------------------------------------------- *)
 type mlidents  = list<mlident>
@@ -292,6 +287,12 @@ let bv_as_mlident (x:bv): mlident =
   || is_null_bv x || is_reserved x.ppname.idText
   then avoid_keyword <| x.ppname.idText ^ "_" ^ (string_of_int x.index)
   else avoid_keyword <| x.ppname.idText
+
+(* -------------------------------------------------------------------- *)
+let mlpath_of_lident (x : lident) : mlpath =
+    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
+    then ([], x.ident.idText)
+    else (List.map (fun x -> x.idText) x.ns, avoid_keyword x.ident.idText)
 
 let push_unit (ts : mltyscheme) : mltyscheme =
     let vs, ty = ts in

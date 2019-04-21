@@ -936,7 +936,8 @@ and assert_lid env t =
         TApp (lid, List.map (translate_type env) ts)
       else
         TQualified lid
-  | _ -> failwith "invalid argument: assert_lid"
+  | _ -> failwith (BU.format1 "invalid argument: expected MLTY_Named, got %s"
+                             (ML.Code.string_of_mlty ([], "") t))
 
 and translate_branches env branches =
   List.map (translate_branch env) branches
