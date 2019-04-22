@@ -156,7 +156,10 @@ val sub (c:const_buffer 'a) (i len:U32.t)
 ///  a mutable or immutable pointer, in case the context can prove
 ///  that `qbuf_qual c` is MUTABLE or IMMUTABLE, respectively
 val cast (c:const_buffer 'a)
-  : Tot (B.mbuffer 'a (qbuf_pre (as_qbuf c)) (qbuf_pre (as_qbuf c)))
+  : Pure (B.mbuffer 'a (qbuf_pre (as_qbuf c)) (qbuf_pre (as_qbuf c)))
+    (requires True)
+    (ensures fun x ->
+      x == as_mbuf c)
 
 ////////////////////////////////////////////////////////////////////////////////
 let test (x:B.buffer U32.t) (y:I.ibuffer U32.t)
