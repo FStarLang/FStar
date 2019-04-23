@@ -9,6 +9,7 @@ open LowStar.BufferOps
 open FStar.Modifies
 
 module L = LowStar.Lens
+module LB = LowStar.Lens.Buffer
 module DGM = FStar.DependentGMap
 module DM = FStar.DependentMap
 
@@ -32,6 +33,7 @@ let map_inv (#t:eqtype) (f: t -> Type) (m:DM.t t (fun (x:t) -> B.pointer (f x)))
   forall (x:t). B.live h (DM.sel m x)
   
 
+ 
 // locations of a dependent map
 let rec map_loc (#t:eqtype) (f: t -> Type) (m:DM.t t (fun (x:t) -> B.pointer (f x))) (dom:list t) : GTot B.loc =
 match dom with 
@@ -78,7 +80,6 @@ let g_upd_preserves_map_inv' #a #t f h b v ptr dom =
       aux ks'
   in aux dom
 
-
 val g_upd_preserves_map_inv : #a:Type -> #t:eqtype -> f:(t -> Type) -> h:HS.mem -> b:B.pointer a{B.live h b} -> v:a ->
   ptr:(DM.t t (fun (x:t) -> B.pointer (f x))){map_inv f ptr h} ->
   Lemma (let h' = B.g_upd b 0 v h in B.modifies (B.loc_buffer b) h h' /\ B.live h' b /\ map_inv f ptr h')
@@ -119,8 +120,7 @@ let map_eloc_eq (#t:eqtype) (f: t -> Type) (m:DM.t t (fun (x:t) -> B.pointer (f 
 : Lemma (as_loc (map_eloc f m ks) == map_loc f m ks) = 
   Ghost.reveal_hide (map_loc f m ks)
 
-
-(** put *)
+(* put *)
 let rec put_aux (#t:eqtype) (f:t -> Type) (keys:list t) (ptr:DM.t t (fun x -> B.pointer (f x))) (vmap : DGM.t t f) (h : imem (map_inv f ptr))
 : GTot (imem (map_inv f ptr)) =
   match keys with 
@@ -133,25 +133,51 @@ let rec put_aux (#t:eqtype) (f:t -> Type) (keys:list t) (ptr:DM.t t (fun x -> B.
      let _ = g_upd_preserves_map_inv f h b v ptr in 
      put_aux f ks' ptr vmap h'
 
+
 let put (#t:eqtype) (f:t -> Type) (keys:list t) (ptr:DM.t t (fun x -> B.pointer (f x))) : put_t (imem (map_inv f ptr)) (DGM.t t f) = put_aux f keys ptr 
 
-(** get *) 
+(* get *) 
 let get (#t:eqtype) (f:t -> Type) (ptr:DM.t t (fun x -> B.pointer (f x))) : get_t (imem (map_inv f ptr)) (DGM.t t f) = 
-  let aux h = 
+  fun h -> 
     let value (k:t) : GTot (f k) =
       let b = DM.sel ptr k in 
       let _ = map_inv_mem #t f ptr h k in 
       assert (B.live h b);
       B.get h b 0
-    in DGM.create value in aux
-
+    in DGM.create value 
 
 let get_eq (#t:eqtype) (f:t -> Type) (ptr:DM.t t (fun x -> B.pointer (f x))) (x:t) (h : (imem (map_inv f ptr)))
 : Lemma (DGM.sel (get f ptr h) x == (let b = DM.sel ptr x in 
                                      let _ = map_inv_mem #t f ptr h x in 
                                      B.get h b 0)) = ()
 
+let get_reads_lemma' (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) 
+  (h0 h1:imem (map_inv f ptr)) loc : 
+  Lemma (requires (B.loc_disjoint (L.as_loc (map_eloc f ptr keys)) loc /\
+                   B.modifies loc h0 h1))
+        (ensures (get f ptr h0 == get f ptr h1)) = 
+     let lem (x:t) : Lemma (DGM.sel (get f ptr h0) x == DGM.sel (get f  ptr h1) x) = 
+       let m0 = get f ptr h0 in
+       let m1 = get f ptr h1 in
+       let b = DM.sel ptr x in 
+       map_inv_mem #t f ptr h0 x;
+       map_inv_mem #t f ptr h1 x;
+       assert (DGM.sel m0 x == B.get h0 b 0);
+       assert (DGM.sel m1 x ==  B.get h1 b 0);
+       map_eloc_includes f ptr keys x;
+       B.loc_includes_refl loc;
+       B.loc_disjoint_includes (L.as_loc (map_eloc f ptr keys)) loc (B.loc_buffer b) loc;
+       assert (B.loc_disjoint (B.loc_buffer b) loc);
+       B.modifies_buffer_elim b loc h0 h1
+     in  
+     forall_intro lem;
+     let _ = DGM.equal_elim (get f ptr h0) (get f ptr h1) in ()
 
+let get_reads_lemma (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) 
+: Lemma (L.get_reads_loc #_ #(map_inv f ptr) (map_eloc f ptr keys) (get f ptr)) = 
+  let lem h0 h1 loc : Lemma (B.loc_disjoint (L.as_loc (map_eloc f ptr keys)) loc /\ B.modifies loc h0 h1 ==> get f ptr h0 == get f ptr h1)[SMTPat (B.modifies loc h0 h1); SMTPat (get f ptr h1)] = 
+     move_requires (get_reads_lemma' f keys ptr h0 h1) loc
+  in ()
 
 
 let put_modifies_lemma' (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) (vmap : DGM.t t f) (h : imem (map_inv f ptr))
@@ -172,126 +198,125 @@ let rec aux (ks : list t) (h : imem (map_inv f ptr)) : Lemma (B.modifies (as_loc
  in aux keys h
 
  let put_modifies_lemma (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x)))
- : Lemma (put_modifies_loc #_ #(map_inv f ptr) (map_eloc f ptr keys) (put f keys ptr)) =  
+ : Lemma (L.put_modifies_loc #_ #(map_inv f ptr) (map_eloc f ptr keys) (put f keys ptr)) =  
  let _ = put_modifies_lemma' f keys ptr in ()
-  
+
+
+let invariant_reads_loc_lemma' (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) 
+  (h0 h1:imem (map_inv f ptr)) loc : Lemma (requires (map_inv f ptr h0 /\ B.loc_disjoint (as_loc (map_eloc f ptr keys)) loc /\ B.modifies loc h0 h1))
+                                           (ensures (map_inv f ptr h1)) = 
+  let aux (x:t) : Lemma (B.live h1 (DM.sel ptr x)) =
+    let b = DM.sel ptr x in 
+    map_eloc_includes f ptr keys x;
+    B.loc_includes_refl loc;
+    B.loc_disjoint_includes (L.as_loc (map_eloc f ptr keys)) loc (B.loc_buffer b) loc;
+    assert (B.loc_disjoint (B.loc_buffer b) loc);
+    B.address_liveness_insensitive_buffer b;
+    assert (B.live h0 b); 
+    B.loc_includes_none B.address_liveness_insensitive_locs;
+    B.modifies_liveness_insensitive_buffer loc B.loc_none h0 h1 b
+  in ()
+
+let invariant_reads_loc_lemma (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) 
+: Lemma (L.invariant_reads_loc (map_inv f ptr) (map_eloc f ptr keys)) =
+  let lem (h0 h1:imem (map_inv f ptr)) loc : Lemma (map_inv f ptr h0 /\ B.loc_disjoint (as_loc (map_eloc f ptr keys)) loc /\ B.modifies loc h0 h1 ==> map_inv f ptr h1)[SMTPat (B.modifies loc h0 h1); SMTPat (map_inv f ptr h1)] = 
+    move_requires (invariant_reads_loc_lemma' f keys ptr h0 h1) loc
+  in admit ()
 
 (* First lens law *)
 let put_property (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x)))
   (m : DGM.t t f) (h : (imem (map_inv f ptr))) (k : t) : Lemma (let b = DM.sel ptr k in B.get (put f keys ptr m h) b 0 == DGM.sel m k) =
   admit ()
 
-
 let get_put_lem (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) 
-  (h : (imem (map_inv f ptr))) (m : DGM.t t f) (k : t) : Lemma (DGM.sel (get f keys ptr (put f keys ptr m h)) k == DGM.sel m k) = 
+  (h : (imem (map_inv f ptr))) (m : DGM.t t f) (k : t) : Lemma (DGM.sel (get f ptr (put f keys ptr m h)) k == DGM.sel m k) = 
    let h' = put f keys ptr m h in 
    let _ = put_property f keys ptr m h k in  // main assumption about put
    () 
    
-   
 let get_put_lem_ext (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) 
-  (h : (imem (map_inv f ptr))) (m : DGM.t t f) : Lemma (get f keys ptr (put f keys ptr m h) == m)[SMTPat (get f keys ptr (put f keys ptr m h))] = 
+  (h : (imem (map_inv f ptr))) (m : DGM.t t f) : Lemma (get f ptr (put f keys ptr m h) == m)[SMTPat (get f ptr (put f keys ptr m h))] = 
   forall_intro (get_put_lem f keys ptr h m);
-  DGM.equal_elim (get  f keys ptr (put  f keys ptr m h)) m
+  DGM.equal_elim (get f ptr (put  f keys ptr m h)) m
 
 // These do not work when nested 
-let get_put_law (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) : Lemma (get_put (get f keys ptr) (put f keys ptr)) = 
+let get_put_law (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) : Lemma (get_put (get f ptr) (put f keys ptr)) = 
   let p = get_put_lem_ext f keys ptr in
   ()
 
-let get_put_law' (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) : squash (get_put (get f keys ptr) (put f keys ptr)) = 
+let get_put_law' (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) : squash (get_put (get f ptr) (put f keys ptr)) = 
   let p = get_put_lem_ext f keys ptr in
   ()
 
 
+let mem_lens (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) fp : imem_lens (map_inv f ptr) (DGM.t t f) fp = 
+  get_reads_lemma f keys ptr;
+  put_modifies_lemma f keys ptr;
+  invariant_reads_loc_lemma f keys ptr;
+  let p = {  
+    get = get f ptr;
+    put = put f keys ptr;
+    lens_laws = get_put_law' f keys ptr 
+  }
+  in admit() // XXX doesn't work
+  
 
+let reader_t (#t:eqtype) (#f: t -> Type) (l : hs_lens (DM.t t (fun (x:t) -> B.pointer (f x))) (DGM.t t f)) = 
+    (i:t) -> 
+    LensST (f i) l 
+      (requires (fun f1 -> True)) 
+      (ensures (fun f1 v f2 -> f1 == f2 /\ v == DGM.sel f2 i))
 
-
-let mem_lens (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) fp : imem_lens (map_inv f ptr) (DGM.t t f) fp = { 
-  get = get f keys ptr;
-  put = put f keys ptr;
-  lens_laws = get_put_law' f keys ptr
-} 
-
-(* put helper *)
-
-// let rec put_aux (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DGM.t t (fun x -> B.pointer (f x))) (vmap : DGM.t t f) (h : imem (map_inv f ptr keys)) : GTot (imem (map_inv f ptr keys))  = 
-//   let rec aux (ks : list t{List.noRepeats ks}) (h : imem (map_inv f ptr keys){map_inv f ptr ks h})
-//   : GTot (h':imem (map_inv f ptr keys){forall x, ~ List.mem x ks /\ B.live h x => B.get }) = 
-//     match ks with 
-//     | [] -> h 
-//     | k :: ks' ->
-//       let b = DGM.sel ptr k in 
-//       let v = DGM.sel vmap k in 
-//       let h' = B.g_upd b 0 v h in
-//       (* liveness preservation *)
-//       let _ = g_upd_preserves_map_inv f h b v ptr keys in 
-//       let _ = g_upd_preserves_map_inv f h b v ptr ks' in   
-//       aux ks' h'
-//   in aux keys h
-
-
-//   let rec put_aux (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DGM.t t (fun x -> B.pointer (f x))) (vmap : DGM.t t f) (h : imem (map_inv f ptr keys)) : GTot (imem (map_inv f ptr keys))  = 
-//     let rec aux (ks : list t{List.noRepeats ks}) (h : imem (map_inv f ptr keys){map_inv f ptr ks h})
-//     : GTot (h':imem (map_inv f ptr keys){ forall x}) = 
-//       match ks with 
-//       | [] -> h 
-//       | k :: ks' ->
-//         let b = DGM.sel ptr k in 
-//         let v = DGM.sel vmap k in 
-//         let h' = B.g_upd b 0 v h in
-//         (* liveness preservation *)
-//         let _ = g_upd_preserves_map_inv f h b v ptr keys in 
-//         let _ = g_upd_preserves_map_inv f h b v ptr ks' in   
-//         aux ks' h'
-//     in aux keys h
-
+let writer_t (#t:eqtype) (#f: t -> Type) (l : hs_lens (DM.t t (fun (x:t) -> B.pointer (f x))) (DGM.t t f)) = 
+    (i:t) -> (v: f i) -> 
+    LensST unit l 
+      (requires (fun f1 -> True)) 
+      (ensures (fun f1 _ f2 -> f2 == DGM.upd f1 i v))
+noeq
+type map_lens (#t:eqtype) (f:t -> Type) = 
+  | Mk : lens:hs_lens (DM.t t (fun (x:t) -> B.pointer (f x))) (DGM.t t f) -> 
+         reader:LB.with_state lens reader_t -> 
+         writer:LB.with_state lens writer_t ->
+         map_lens f
 
 (* Lens constructor *)
 
-(* Try 1 : every element of the type t is in the list *)
-
 let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) (h:imem (map_inv f ptr)) 
-: hs_lens (DM.t t (fun (x:t) -> B.pointer (f x))) (DGM.t t f) =
+: map_lens f =
   (* invariant *) 
   let inv = map_inv f ptr in
   (* mem snapshot *)
   let (snap : imem (map_inv f ptr)) = h in 
   (* footprint *)
   let fp = map_eloc #t f ptr keys in
-  { 
+  let lens : hs_lens (DM.t t (fun (x:t) -> B.pointer (f x))) (DGM.t t f) = { 
     footprint = fp;
     invariant = map_inv f;
     x = ptr;
     snapshot = snap;
-    l = l
-  }
- 
-
-// Get and set 
+    l = mem_lens f keys ptr fp
+  } in
+  let reader : LB.with_state lens reader_t = 
+    fun s i -> 
+      reveal_inv ();
+      let h = HST.get () in 
+      assume (L.inv lens h); // XXX fails
+      assume (map_inv f ptr h); // XXX fails
+      let b = DM.sel ptr i in 
+      assume (B.live h b); // XXX fails
+      let v = B.index b 0ul in 
+      assert (v == B.get h b 0);
+      let _ =  gest_eq f ptr i h in 
+      v
+  in 
+  let writer : LB.with_state lens writer_t = 
+    fun s i v -> 
+      let b = DM.sel ptr i in
+      admit () // B.upd b 0ul v
+  in 
+  Mk lens reader writer
   
-// read ith buffer
-let read_i (#t:eqtype) (#f: t -> Type) (l : hs_lens (DM.t t (fun (x:t) -> B.pointer (f x))) (DGM.t t f)) 
-      (i:t) : LensST (f i) l  // TODO : write field lens i 
-                  (requires (fun f1 -> True)) 
-                  (ensures (fun f1 v f2 -> f1 == f2 /\ v == DGM.sel f2 i)) = 
-  reveal_inv ();
-  let h = HST.get () in 
-  assert (L.inv l h);
-  assert (map_inv f l.x h);
-  let b = DM.sel l.x i in 
-  //assert (B.live h b);
-  admit ()
-  //!*b
-
-  // write ith buffer
-  let write_i (i:dom) (v : f_t i) : LensST unit lens 
-                                    (requires (fun f1 -> True)) 
-                                    (ensures (fun f1 _ f2 -> DM.upd f1 i v  == f2)) = 
-      let b = DM.sel lens.x i in 
-      b *= v
-
-
+      
 
 
 // Allocation: scoped allocation
@@ -310,3 +335,4 @@ let dom (#a:eqtype) (lst:list a) : Tot eqtype = x:a{List.memP x lst}
 
 // let mk2 (#t:eqtype) (f:t -> Type) (keys:list t) (ptr:DGM.t (dom keys) (fun x -> B.pointer (f x))) (h:imem (map_inv f ptr (coerce keys))) 
 // : hs_lens (DGM.t (dom keys) (fun (x:t) -> B.pointer (f x))) (DGM.t (dom keys) f) = admit ()
+*)
