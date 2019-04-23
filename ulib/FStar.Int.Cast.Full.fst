@@ -20,8 +20,12 @@ include FStar.Int.Cast
 module U64  = FStar.UInt64
 module U128 = FStar.UInt128
 
+inline_for_extraction noextract
 val uint64_to_uint128: a:U64.t -> b:U128.t{U128.v b == U64.v a}
+inline_for_extraction noextract
 let uint64_to_uint128 a = U128.uint64_to_uint128 a
 
+inline_for_extraction noextract
 val uint128_to_uint64: a:U128.t -> b:U64.t{U64.v b == U128.v a % pow2 64}
+inline_for_extraction noextract
 let uint128_to_uint64 a = U128.uint128_to_uint64 a

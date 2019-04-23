@@ -94,8 +94,12 @@ let modifies_t (s:tset nat) (h0:heap) (h1:heap) =
 let modifies (s:set nat) (h0:heap) (h1:heap) = modifies_t (TS.tset_of_set s) h0 h1
 
 let equal_dom (h1:heap) (h2:heap) :GTot Type0 =
-  (forall (a:Type0) (rel:preorder a) (r:mref a rel). h1 `contains` r <==> h2 `contains` r) /\
-  (forall (a:Type0) (rel:preorder a) (r:mref a rel). r `unused_in` h1 <==> r `unused_in` h2)
+  (forall (a:Type0) (rel:preorder a) (r:mref a rel).
+     {:pattern (h1 `contains` r) \/ (h2 `contains` r)}
+     h1 `contains` r <==> h2 `contains` r) /\
+  (forall (a:Type0) (rel:preorder a) (r:mref a rel).
+     {:pattern (r `unused_in` h1) \/ (r `unused_in` h2)}
+     r `unused_in` h1 <==> r `unused_in` h2)
 
 val lemma_ref_unused_iff_addr_unused (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
   :Lemma (requires True)

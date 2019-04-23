@@ -247,6 +247,8 @@ let defaults =
       ("smtencoding.elim_box"         , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
+      ("smtencoding.valid_intro"      , Bool true);
+      ("smtencoding.valid_elim"       , Bool false);
       ("tactics_failhard"             , Bool false);
       ("tactics_info"                 , Bool false);
       ("tactic_raw_binders"           , Bool false);
@@ -276,7 +278,7 @@ let defaults =
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
-      ("warn_error"                   , String "");
+      ("warn_error"                   , List []);
       ("use_extracted_interfaces"     , Bool false);
       ("use_nbe"                      , Bool false)]
 
@@ -389,6 +391,8 @@ let get_smt                     ()      = lookup_opt "smt"                      
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
+let get_smtencoding_valid_intro ()      = lookup_opt "smtencoding.valid_intro"  as_bool
+let get_smtencoding_valid_elim  ()      = lookup_opt "smtencoding.valid_elim"  as_bool
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactics_failhard        ()      = lookup_opt "tactics_failhard"         as_bool
 let get_tactics_info            ()      = lookup_opt "tactics_info"             as_bool
@@ -419,7 +423,7 @@ let get_z3seed                  ()      = lookup_opt "z3seed"                   
 let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
-let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
+let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 
@@ -952,6 +956,16 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
                if 'native', use '+, -, -'; \n\t\t\
                (default 'boxwrap')");
 
+       (noshort,
+        "smtencoding.valid_intro",
+        BoolStr,
+        "Include an axiom in the SMT encoding to introduce proof-irrelevance from a constructive proof");
+
+       (noshort,
+        "smtencoding.valid_elim",
+        BoolStr,
+        "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
+
        ( noshort,
         "tactic_raw_binders",
         Const (mk_bool true),
@@ -1131,7 +1145,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
         ( noshort,
         "warn_error",
-        SimpleStr (""),
+        Accumulated (SimpleStr ("")),
         "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t\
          - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
          - [-r] silences range [r]\n\t\t\
@@ -1240,7 +1254,7 @@ let settable = function
 // command-line arguments;
 // using_facts_from requires pruning the Z3 context.
 // All of these can only be used with #reset_options, with re-starts the z3 process
-let resettable s = settable s || s="z3seed" || s="z3cliopt" || s="using_facts_from"
+let resettable s = settable s || s="z3seed" || s="z3cliopt" || s="using_facts_from" || s="smtencoding.valid_intro" || s="smtencoding.valid_elim"
 let all_specs = specs ()
 let all_specs_with_types = specs_with_types ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
@@ -1518,6 +1532,8 @@ let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrappe
 let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwrap"
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
+let smtencoding_valid_intro      () = get_smtencoding_valid_intro     ()
+let smtencoding_valid_elim       () = get_smtencoding_valid_elim      ()
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactics_failhard             () = get_tactics_failhard            ()
 let tactics_info                 () = get_tactics_info                ()
@@ -1555,7 +1571,7 @@ let use_two_phase_tc             () = get_use_two_phase_tc            ()
                                     && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
-let warn_error                   () = get_warn_error                  ()
+let warn_error                   () = String.concat "" (get_warn_error ())
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 let use_nbe                      () = get_use_nbe                     ()
 

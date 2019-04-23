@@ -152,7 +152,7 @@ let go : 'Auu____394 . 'Auu____394 -> unit =
              (FStar_Options.display_usage ();
               FStar_All.exit (Prims.parse_int "0"))
          | FStar_Getopt.Error msg ->
-             (FStar_Util.print_string msg;
+             (FStar_Util.print_error msg;
               FStar_All.exit (Prims.parse_int "1"))
          | FStar_Getopt.Success  ->
              (FStar_ST.op_Colon_Equals fstar_files
