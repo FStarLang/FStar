@@ -62,6 +62,11 @@ let concat #key #value m1 m2 = {
   domain =   union m1.domain m2.domain
 }
 
+let map_val #_ #_ f #key m = {
+  mappings = F.on key (fun x -> f (m.mappings x));
+  domain =   m.domain
+}
+
 let restrict #key #value s m = {
   mappings = m.mappings;
   domain =   intersect s m.domain
@@ -73,10 +78,12 @@ let lemma_SelConst #key #value v k         = ()
 let lemma_SelRestrict #key #value m ks k   = ()
 let lemma_SelConcat1 #key #value m1 m2 k   = ()
 let lemma_SelConcat2 #key #value m1 m2 k   = ()
+let lemma_SelMapVal #val1 #val2 f #key m k = ()
 let lemma_InDomUpd1 #key #value m k1 k2 v  = ()
 let lemma_InDomUpd2 #key #value m k1 k2 v  = ()
 let lemma_InDomConstMap #key #value v k    = ()
 let lemma_InDomConcat #key #value m1 m2 k  = ()
+let lemma_InMapVal #val1 #val2 f #key m k  = ()
 let lemma_InDomRestrict #key #value m ks k = ()
 let lemma_ContainsDom #key #value m k      = ()
 let lemma_UpdDomain #key #value m k v      = ()
