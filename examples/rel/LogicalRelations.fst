@@ -12,6 +12,8 @@ module LogicalRelations
 /// `rel'` : The type of relations
 let rel (s:Type) = s -> s -> prop
 
+let type_of (#a:_) (r:rel a) = a
+
 let refl (#s:Type) (r: rel s) =
   (forall x. x `r` x)
 
@@ -21,13 +23,17 @@ let sym (#s:Type) (r: rel s) =
 let trans (#s:Type) (r: rel s) =
   (forall x y z. x `r` y /\ y `r` z ==> x `r` z)
 
+let is_per #a (r:rel a) =
+    sym r /\
+    trans r
+/// `per a`: a partial equivalence relation on `a`
+let per (a:Type) = r:rel a{ is_per r }
 
 /// `equiv r`: `r` is an equivalence relation
 unfold
 let equiv (#s:Type) (r: rel s) =
   refl r /\
-  sym r /\
-  trans r
+  is_per r
 
 /// `rel` : The type of equivalence relations
 let erel (s:Type) = r:rel s { equiv r }
@@ -362,8 +368,6 @@ let sig_prod (a:sig) (b:sig) : sig = {
          | Inr r -> b.rels r)
 }
 
-let type_of (#a:_) (r:rel a) = a
-
 /// product of modules
 let module_prod (a:sig) (b:sig)
     :  type_of (arrow (sig_rel a)
@@ -382,6 +386,44 @@ let module_prod (a:sig) (b:sig)
      in
      m
 
+/// projection of modules
+let module_fst (a:sig) (b:sig)
+    :  functor_t (a `sig_prod` b) a
+   = fun (ma:module_t (a `sig_prod` b)) ->
+       let f : (l:a.labels -> Tot (a.ops l)) =
+         fun (x:a.labels) -> DM.sel ma (Inl x)
+       in
+       let m : module_t a =
+         DM.create #_ #a.ops f
+       in
+       m
+
+/// projection of modules
+let module_snd (a:sig) (b:sig)
+    : functor_t (a `sig_prod` b) b
+   = fun (mb:module_t (a `sig_prod` b)) ->
+       let f : (l:b.labels -> Tot (b.ops l)) =
+         fun (x:b.labels) -> DM.sel mb (Inr x)
+       in
+       let m : module_t b =
+         DM.create #_ #b.ops f
+       in
+       m
+
+/// product of functors
+let functor_prod (a0 a1: sig) (b0 b1:sig)
+                 (fa: functor_t a0 a1)
+                 (fb: functor_t b0 b1)
+   : functor_t (a0 `sig_prod` b0) (a1 `sig_prod` b1)
+   = fun (m:module_t (a0 `sig_prod` b0)) ->
+       let ma0 = module_fst a0 b0 m in
+       let ma1 = fa ma0 in
+       let mb0 = module_snd a0 b0 m in
+       let mb1 = fb mb0 in
+       module_prod a1 b1 ma1 mb1
+
+(* Epsilon equivalences *)
+
 /// Now for axiomatic some epsilon equivalences
 let eps = nat
 
@@ -389,10 +431,10 @@ let eps = nat
 //    x and y are related by `r`, up to eps
 // Maybe index by the set of hypotheses
 noeq
-type eq : #a:Type -> rel a -> eps -> a -> a -> Type =
+type eq : #a:Type -> per a -> eps -> a -> a -> Type =
   | Sym:
     #a:Type ->
-    #r:rel a ->
+    #r:per a ->
     #x:a ->
     #y:a ->
     #e:eps ->
@@ -401,7 +443,7 @@ type eq : #a:Type -> rel a -> eps -> a -> a -> Type =
 
   | Trans:
     #a:Type ->
-    #r:rel a ->
+    #r:per a ->
     #x:a ->
     #y:a ->
     #z:a ->
@@ -413,7 +455,7 @@ type eq : #a:Type -> rel a -> eps -> a -> a -> Type =
 
   | Perfect :
     #a:Type ->
-    #r:rel a ->
+    #r:per a ->
     x:a ->
     y:a ->
     squash (x `r` y) ->
@@ -421,7 +463,7 @@ type eq : #a:Type -> rel a -> eps -> a -> a -> Type =
 
   | Weaken:
     #a:Type ->
-    #r:rel a ->
+    #r:per a ->
     #x:a ->
     #y:a ->
     #e1:eps ->
@@ -431,7 +473,7 @@ type eq : #a:Type -> rel a -> eps -> a -> a -> Type =
 
   | Refine:
     #a:Type ->
-    #r:rel a ->
+    #r:per a ->
     #x:a ->
     #y:a ->
     #e:eps ->
@@ -441,37 +483,44 @@ type eq : #a:Type -> rel a -> eps -> a -> a -> Type =
 
   | Ctx:
     #a:Type ->
-    #r:rel a ->
+    #r:per a ->
     #b:Type ->
     #e:eps ->
     #x:b ->
     #y:b ->
-    #rb:rel b ->
+    #rb:per b ->
     #eq rb e x y ->
     f:(rb ^--> r) ->
     eq r e (f x) (f y)
 
-let eeq' #a (r:rel a) (x y : a) = (e:eps & eq r e x y)
-let eeq #a (r:rel a) : rel a = fun x y -> squash (eeq' r x y)
-let get_eeq #a (r:rel a) (x:a) (y:a{eeq r x y})
+let eeq' #a (r:per a) (x y : a) = (e:eps & eq r e x y)
+let eeq #a (r:per a) : rel a = fun x y -> squash (eeq' r x y)
+let get_eeq #a (r:per a) (x:a) (y:a{eeq r x y})
   : Tot (eeq r x y)
   = FStar.Squash.join_squash (() <: squash (eeq r x y))
 
-let sym_eeq #a (r:rel a) (x:a) (y:a)
+let per_eeq #a (r:per a)
+  : Lemma (sym (eeq r) /\
+           trans (eeq r))
+          [SMTPat (is_per (eeq r))]
+  = let sym_eeq (x:a) (y:a)
       : Lemma
         (requires eeq r x y)
         (ensures eeq r y x)
-      = let open FStar.Squash in
-        let eeq_xy : eeq r x y = get_eeq r x y in
-        let eeq_yx : eeq r y x =
+        [SMTPat (eeq r y x)]
+    = let open FStar.Squash in
+      let eeq_xy : eeq r x y = get_eeq r x y in
+      let eeq_yx : eeq r y x =
           bind_squash eeq_xy (fun (| e, eq_xy |) ->
           return_squash (| e, Sym eq_xy |)) in
-        eeq_yx
-
-let trans_eeq #a (r:rel a) (x y z:a)
+      eeq_yx
+    in
+    let trans_eeq (x y z:a)
       : Lemma
         (requires eeq r x y /\ eeq r y z)
         (ensures eeq r x z)
+        [SMTPat (eeq r x y);
+         SMTPat (eeq r y z)]
       = let open FStar.Squash in
         let eeq_xy : eeq r x y = get_eeq r x y in
         let eeq_yz : eeq r y z = get_eeq r y z in
@@ -481,6 +530,8 @@ let trans_eeq #a (r:rel a) (x y z:a)
           return_squash #(eeq' r x z) (| e0+e1, Trans eq_xy eq_yz |)))
         in
         eeq_xz
+    in
+    ()
 
 let erel_eeq #a (r:erel a)
   : Lemma (equiv (eeq r))
@@ -493,50 +544,39 @@ let erel_eeq #a (r:erel a)
           FStar.Squash.return_squash #(eeq' r x x) (| 0, Perfect x x () |) in
         y
     in
-    let sym (x:a) (y:a)
-      : Lemma
-        (requires eeq r x y)
-        (ensures eeq r y x)
-        [SMTPat (eeq r y x)]
-      = sym_eeq r x y
-    in
-    let trans (x y z:a)
-      : Lemma
-        (requires eeq r x y /\ eeq r y z)
-        (ensures eeq r x z)
-        [SMTPat (eeq r x y); SMTPat (eeq r y z)]
-      = trans_eeq r x y z
-    in
     ()
 
-let eeq_diag (r:rel 'a) (x:'a) = eeq r x x
-let eeq_t (r:rel 'a) = f:'a{eeq_diag r f}
+let eeq_diag (r:per 'a) (x:'a) = eeq r x x
+let eeq_t (r:per 'a) = f:'a{eeq_diag r f}
+
 #push-options "--max_fuel 0 --max_ifuel 0"
 let nat_ref (x:int) : Type = b2t (x >= 0)
-let test_diag (x y : nat) (r:rel int) (eps:eps) (e:eq r eps x x)
+let test_diag (x y : nat) (r:per int) (eps:eps) (e:eq r eps x x)
   : eq #(x:int{nat_ref x}) r eps x x
   = Refine nat_ref e
 
-
-let refine_eeq #a (r0:rel a) (x y:eeq_t r0)
+let refine_eeq #a (r0:per a) (x y:eeq_t r0)
   : Lemma
-    (requires (eeq r0 x y))
-    (ensures (let r : rel (eeq_t r0) = r0 in eeq r x y))
-  = let r : rel (eeq_t r0) = r0 in
+    (requires
+      eeq r0 x y)
+    (ensures (
+      let r : per (eeq_t r0) = r0 in
+      eeq r x y))
+  = let r : per (eeq_t r0) = r0 in
     let eeq_r0_xy : eeq r0 x y = get_eeq r0 x y in
     let eeq_r_xy : eeq r x y =
         FStar.Squash.bind_squash eeq_r0_xy (fun (| e, eq_r0_xy |) ->
           let eq_r_xy : eq #(eeq_t r0) r e x y = Refine (eeq_diag r0) eq_r0_xy in
           let eeq_r_xy : eeq' r x y = (| e, eq_r_xy |) in
           FStar.Squash.return_squash eeq_r_xy)
-        in
-        eeq_r_xy
+    in
+    eeq_r_xy
 
-let refl_closure_erel #a (r:rel a)
-  : Lemma (let r : rel (eeq_t r) = r in
+let refl_closure_erel #a (r:per a)
+  : Lemma (let r : per (eeq_t r) = r in
            equiv (eeq r))
   = let r0 = r in
-    let r : rel (eeq_t r0) = r0 in
+    let r : per (eeq_t r0) = r0 in
     let refine (x y:eeq_t r0)
       : Lemma
         (requires (eeq r0 x y))
@@ -549,44 +589,28 @@ let refl_closure_erel #a (r:rel a)
               [SMTPat (eeq r x x)]
       = ()
     in
-    let sym_ (x y: eeq_t r0)
-      : Lemma
-        (requires eeq r x y)
-        (ensures eeq r y x)
-        [SMTPat (eeq r y x)]
-      = sym_eeq r x y
-    in
-    let trans_ (x y z: eeq_t r0)
-      : Lemma
-        (requires eeq r x y /\ eeq r y z)
-        (ensures eeq r x z)
-        [SMTPat (eeq r x y); SMTPat (eeq r y z)]
-      = trans_eeq r x y z
-    in
-    assert (refl (eeq r));
-    assert (trans (eeq r));
-    assert (sym (eeq r));
-    assert (equiv (eeq r))
+    per_eeq r
 
-let refl_closure (r:rel 'a) : erel (eeq_t r) =
+let refl_closure (r:per 'a) : erel (eeq_t r) =
   refl_closure_erel r;
-  let r : rel (eeq_t r) = r in
+  let r : per (eeq_t r) = r in
   eeq r
 
 
-let hi_lo_rel : rel (int -> int) = arrow_rel' (hi int) (lo int)
-let hi_lo_eeq : rel (int -> int) = eeq hi_lo_rel
+let hi_lo_rel : per (int -> int) = arrow_rel' (hi int) (lo int)
+let hi_lo_eeq : per (int -> int) = eeq hi_lo_rel
 assume val enc : int -> int
 assume val ideal_enc: hi int ^--> lo int
 assume val enc_eeq_ideal_enc : squash (hi_lo_eeq enc ideal_enc)
 
 let enc_in_rel : squash (eeq hi_lo_rel enc enc) =
-  sym_eeq hi_lo_rel enc ideal_enc;
-  assert (hi_lo_eeq ideal_enc enc);
-  trans_eeq hi_lo_rel enc ideal_enc enc
+  // sym_eeq hi_lo_rel enc ideal_enc;
+  // trans_eeq hi_lo_rel enc ideal_enc enc
+  ()
 
 let ideal_enc_in_rel : squash (eeq hi_lo_rel ideal_enc ideal_enc) =
-  FStar.Squash.return_squash (FStar.Squash.return_squash (| 0, Perfect #_ #hi_lo_rel ideal_enc ideal_enc () |))
+  FStar.Squash.return_squash
+    (FStar.Squash.return_squash (| 0, Perfect #_ #hi_lo_rel ideal_enc ideal_enc () |))
 
 let enc' : eeq_t hi_lo_rel = enc
 let ideal_enc' : eeq_t hi_lo_rel = ideal_enc
