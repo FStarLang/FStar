@@ -20,6 +20,12 @@ open FStar.Reflection.Types
 open FStar.Reflection.Data
 
 (* Views  *)
+
+(* NOTE: You probably want inspect/pack from FStar.Tactics, which work
+ * over a fully named representation. If you use these, you have to
+ * work with de Bruijn indices (using Tv_BVar). The only reason these
+ * two exists is that they can be made Tot, and hence can be used in
+ * specifications. *)
 assume val inspect_ln     : (t:term) -> tv:term_view{smaller tv t}
 assume val pack_ln        : term_view -> term
 
