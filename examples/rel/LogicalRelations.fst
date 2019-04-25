@@ -53,16 +53,17 @@ let ( ** ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (p0 p1:(a & b)) : prop 
 
 /// ` arrow_rel' `: A relation (not necessarily an equivalence relation) on
 ///  arrows, from equivalence relation on domain and co-domain
-let arrow_rel' (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) : prop =
+let arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) : prop =
     forall x0 x1. x0 `arel` x1 ==>
              f x0 `brel` g x1
 
 /// ` ^--> `: the type of arrows that take related arguments to related results
 let ( ^--> ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) =
-  f:(a -> b){ arrow_rel' arel brel f f }
+  f:(a -> b){ arrow_rel arel brel f f }
 
 ///  `arrow_rel` is an equivalence relation on `^-->` arrows
-let arrow #a #b (ra:erel a) (rb:erel b) : erel (ra ^--> rb) = arrow_rel' ra rb
+let arrow_rel_is_equiv #a #b (ra:erel a) (rb:erel b) : Lemma (equiv #(ra ^--> rb) (arrow_rel ra rb)) = ()
+let arrow #a #b (ra:erel a) (rb:erel b) : erel (ra ^--> rb) = arrow_rel ra rb
 
 /// Some simple relations
 
@@ -83,6 +84,8 @@ let f'' : (lo int ^--> hi int) = fun x -> x + 45
 [@(expect_failure [19])]
 let f''' : (hi int ^--> lo int) = fun x -> x + 45
 let f'''' : (hi int ^--> lo int) = fun x -> x - x
+let f''''' : int -> int = fun x -> x - x
+let _ = assert (f''''' `arrow_rel (hi int) (lo int)` f''''')
 
 /// g manipulates both secrets and public values
 /// but doesn't leak secrets
@@ -199,10 +202,10 @@ module DM = FStar.DependentMap
 /// E.g.,
 ///  sig = {
 ///     val f : nat -> nat;
-///     val rel_f : rel (nat -> nat)
+///     val rel_f : erel (nat -> nat)
 ///
 ///     val g : bool -> bool
-///     val rel_g: rel (bool -> bool)
+///     val rel_g: erel (bool -> bool)
 ///  }
 ///
 ///  A signature maps labels (`f`, `g`, etc.)
@@ -235,7 +238,7 @@ let sig_rel (s:sig)
 let sig_unit = {
   labels=unit;
   ops=(fun _ -> unit);
-  rels=(fun l -> (fun _ _ -> (True <: prop)) <: rel unit)
+  rels=(fun l -> (fun _ _ -> (True <: prop)) <: erel unit)
 }
 
 /// The implementation of the unit signature provides its single operation
@@ -489,7 +492,7 @@ type eq : #a:Type -> per a -> eps -> a -> a -> Type =
     #x:b ->
     #y:b ->
     #rb:per b ->
-    #eq rb e x y ->
+    eq rb e x y ->
     f:(rb ^--> r) ->
     eq r e (f x) (f y)
 
@@ -546,23 +549,26 @@ let erel_eeq #a (r:erel a)
     in
     ()
 
-let eeq_diag (r:per 'a) (x:'a) = eeq r x x
+let eeq_diag (r:per 'a) (x:'a) = x `eeq r` x
 let eeq_t (r:per 'a) = f:'a{eeq_diag r f}
 
 #push-options "--max_fuel 0 --max_ifuel 0"
 let nat_ref (x:int) : Type = b2t (x >= 0)
-let test_diag (x y : nat) (r:per int) (eps:eps) (e:eq r eps x x)
-  : eq #(x:int{nat_ref x}) r eps x x
+let test_diag (x y : nat) (r:per int) (eps:eps) (e:eq r eps x y)
+  : eq #(x:int{nat_ref x}) r eps x y
   = Refine nat_ref e
 
-let refine_eeq #a (r0:per a) (x y:eeq_t r0)
+let refine_eeq #a (r0:per a) (x y: a)
   : Lemma
     (requires
-      eeq r0 x y)
+      x `eeq #a r0` y)
     (ensures (
       let r : per (eeq_t r0) = r0 in
-      eeq r x y))
-  = let r : per (eeq_t r0) = r0 in
+      x `eeq #a r0` x /\
+      y `eeq #a r0` y /\
+      x `eeq #(eeq_t r0) r` y))
+  = assert (is_per (eeq #a r0));
+    let r : per (eeq_t r0) = r0 in
     let eeq_r0_xy : eeq r0 x y = get_eeq r0 x y in
     let eeq_r_xy : eeq r x y =
         FStar.Squash.bind_squash eeq_r0_xy (fun (| e, eq_r0_xy |) ->
@@ -597,10 +603,10 @@ let refl_closure (r:per 'a) : erel (eeq_t r) =
   eeq r
 
 
-let hi_lo_rel : per (int -> int) = arrow_rel' (hi int) (lo int)
-let hi_lo_eeq : per (int -> int) = eeq hi_lo_rel
-assume val enc : int -> int
-assume val ideal_enc: hi int ^--> lo int
+let hi_lo_rel : per (int & int -> int) = arrow_rel (hi int ** lo int) (lo int)
+let hi_lo_eeq : per (int & int -> int) = eeq hi_lo_rel
+assume val enc : int & int -> int
+assume val ideal_enc: (hi int ** lo int) ^--> lo int
 assume val enc_eeq_ideal_enc : squash (hi_lo_eeq enc ideal_enc)
 
 let enc_in_rel : squash (eeq hi_lo_rel enc enc) =
