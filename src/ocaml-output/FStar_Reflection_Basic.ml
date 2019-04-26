@@ -644,3 +644,5 @@ let (term_eq :
   
 let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
   fun t  -> FStar_Syntax_Print.term_to_string t 
+let (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
+  fun c  -> FStar_Syntax_Print.comp_to_string c 
