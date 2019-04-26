@@ -74,6 +74,23 @@ let implies_intros () : Tac binders = repeat1 implies_intro
 let l_intro () = forall_intro `or_else` implies_intro
 let l_intros () = repeat l_intro
 
+private
+let __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens =
+  h ()
+
+let pose_lemma (t : term) : Tac binder =
+  let c = tcc t in
+  let pre, post =
+    match inspect_comp c with
+    | C_Lemma pre post -> pre, post
+    | _ -> fail ""
+  in
+  let reqb = tcut (`squash (`#pre)) in
+  let b = pose (`(__lemma_to_squash #(`#pre) #(`#post) (`#(binder_to_term reqb)) (fun () -> (`#t)))) in
+  flip ();
+  ignore (trytac trivial);
+  b
+
 let explode () : Tac unit =
     ignore (
     repeatseq (fun () -> first [(fun () -> ignore (l_intro ()));
