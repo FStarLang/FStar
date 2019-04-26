@@ -16,14 +16,15 @@ open FStar.ST
 val env_hook : ref<option<Env.env>>
 
 (* Primitives *)
-val compare_bv     : bv -> bv -> order
-val lookup_typ     : Env.env -> list<string> -> option<sigelt>
-val is_free        : bv -> term -> bool
-val lookup_attr    : term -> Env.env -> list<fv>
-val binders_of_env : Env.env -> binders
-val moduleof       : Env.env -> list<string>
-val term_eq        : term -> term -> bool
-val term_to_string : term -> string
+val compare_bv            : bv -> bv -> order
+val lookup_typ            : Env.env -> list<string> -> option<sigelt>
+val is_free               : bv -> term -> bool
+val lookup_attr           : term -> Env.env -> list<fv>
+val binders_of_env        : Env.env -> binders
+val moduleof              : Env.env -> list<string>
+val term_eq               : term -> term -> bool
+val term_to_string        : term -> string
+val env_open_modules      : Env.env -> list<name>
 
 val sigelt_attrs     : sigelt -> list<attribute>
 val set_sigelt_attrs : list<attribute> -> sigelt -> sigelt

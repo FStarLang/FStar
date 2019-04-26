@@ -45,14 +45,15 @@ assume val inspect_binder : binder -> bv * aqualv
 assume val pack_binder    : bv -> aqualv -> binder
 
 (* Primitives & helpers *)
-assume val lookup_typ     : env -> name -> option sigelt
-assume val compare_bv     : bv -> bv -> order
-assume val binders_of_env : env -> binders
-assume val moduleof       : env -> list string
-assume val is_free        : bv -> term -> bool
-assume val lookup_attr    : term -> env -> list fv
-assume val term_eq        : term -> term -> bool
-assume val term_to_string : term -> string
+assume val lookup_typ            : env -> name -> option sigelt
+assume val compare_bv            : bv -> bv -> order
+assume val binders_of_env        : env -> binders
+assume val moduleof              : env -> list string
+assume val is_free               : bv -> term -> bool
+assume val lookup_attr           : term -> env -> list fv
+assume val term_eq               : term -> term -> bool
+assume val term_to_string        : term -> string
+assume val env_open_modules      : env -> list name
 
 (* Attributes are terms, not to be confused with Prims.attribute *)
 assume val sigelt_attrs     : sigelt -> list term

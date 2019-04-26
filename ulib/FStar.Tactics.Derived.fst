@@ -134,8 +134,11 @@ let exact_guard (t : term) : Tac unit =
 let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp tau
 let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  tau
 
-let cur_module () : Tac (list string) =
-    moduleof (cur_env ())
+let cur_module () : Tac name =
+    moduleof (top_env ())
+
+let open_modules () : Tac (list name) =
+    env_open_modules (top_env ())
 
 let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
     if n = 0
