@@ -360,7 +360,6 @@ let pose (t:term) : Tac binder =
     apply (`__cut);
     flip ();
     exact t;
-    let _ = trytac flip in // maybe we have less than 2 goals now
     intro ()
 
 let intro_as (s:string) : Tac binder =
