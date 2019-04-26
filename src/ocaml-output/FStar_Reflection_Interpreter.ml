@@ -485,7 +485,26 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                 FStar_TypeChecker_NBETerm.e_string_list
                                                 uu____1038
                                                in
-                                            [uu____1032]  in
+                                            let uu____1054 =
+                                              let uu____1057 =
+                                                let uu____1058 =
+                                                  FStar_Syntax_Embeddings.e_list
+                                                    FStar_Syntax_Embeddings.e_string_list
+                                                   in
+                                                let uu____1069 =
+                                                  FStar_TypeChecker_NBETerm.e_list
+                                                    FStar_TypeChecker_NBETerm.e_string_list
+                                                   in
+                                                mk1 "env_open_modules"
+                                                  FStar_Reflection_Basic.env_open_modules
+                                                  FStar_Reflection_Embeddings.e_env
+                                                  uu____1058
+                                                  FStar_Reflection_Basic.env_open_modules
+                                                  FStar_Reflection_NBEEmbeddings.e_env
+                                                  uu____1069
+                                                 in
+                                              [uu____1057]  in
+                                            uu____1032 :: uu____1054  in
                                           uu____1027 :: uu____1029  in
                                         uu____1020 :: uu____1024  in
                                       uu____1009 :: uu____1017  in
