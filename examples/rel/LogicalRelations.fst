@@ -17,29 +17,28 @@ module LogicalRelations
 
 
 /// `rel'` : The type of relations
-let rel (s:Type) = s -> s -> prop
+let rel (s:Type) = s -> s -> Type0
 
 unfold
-let type_of (#a:_) (r:rel a) = a
+let type_of #a (r:rel a) = a
 
-let refl (#s:Type) (r: rel s) =
-  (forall x. x `r` x)
+let refl #s (r: rel s) =
+  forall x. x `r` x
 
-let sym (#s:Type) (r: rel s) =
-  (forall x y. x `r` y <==> y `r` x)
+let sym #s (r: rel s) =
+  forall x y. x `r` y <==> y `r` x
 
-let trans (#s:Type) (r: rel s) =
-  (forall x y z. x `r` y /\ y `r` z ==> x `r` z)
+let trans #s (r: rel s) =
+  forall x y z. x `r` y /\ y `r` z ==> x `r` z
 
 let is_per #a (r:rel a) =
-    sym r /\
-    trans r
+  sym r /\
+  trans r
 
 /// `per a`: a partial equivalence relation on `a`
 let per (a:Type) = r:rel a{ is_per r }
 
 /// `equiv r`: `r` is an equivalence relation
-unfold
 let equiv (#s:Type) (r: rel s) =
   refl r /\
   is_per r
@@ -457,10 +456,8 @@ let eps = nat
 //    x and y are related by `r`, up to eps
 // Maybe index by the set of hypotheses
 noeq
-type eq : #a:Type -> per a -> eps -> a -> a -> Type =
+type eq (#a:Type) (r:per a) : eps -> a -> a -> Type =
   | Sym:
-    #a:Type ->
-    #r:per a ->
     #x:a ->
     #y:a ->
     #e:eps ->
@@ -468,8 +465,6 @@ type eq : #a:Type -> per a -> eps -> a -> a -> Type =
     eq r e y x
 
   | Trans:
-    #a:Type ->
-    #r:per a ->
     #x:a ->
     #y:a ->
     #z:a ->
@@ -480,16 +475,12 @@ type eq : #a:Type -> per a -> eps -> a -> a -> Type =
     eq r (e1 + e2) x z
 
   | Perfect :
-    #a:Type ->
-    #r:per a ->
     x:a ->
     y:a ->
     squash (x `r` y) ->
     eq r 0 x y
 
   | Weaken:
-    #a:Type ->
-    #r:per a ->
     #x:a ->
     #y:a ->
     #e1:eps ->
@@ -498,8 +489,6 @@ type eq : #a:Type -> per a -> eps -> a -> a -> Type =
     eq #a r e2 x y
 
   | Ctx:
-    #a:Type ->
-    #r:per a ->
     #b:Type ->
     #e:eps ->
     #x:b ->
@@ -509,11 +498,11 @@ type eq : #a:Type -> per a -> eps -> a -> a -> Type =
     f:(rb ^--> r) ->
     eq r e (f x) (f y)
 
-let eeq' #a (r:per a) (x y : a) = (e:eps & eq r e x y)
-let eeq #a (r:per a) : rel a = fun x y -> squash (eeq' r x y)
+let eeq #a (r:per a) : rel a = fun (x y : a) -> (e:eps & squash (eq r e x y))
+
 let get_eeq #a (r:per a) (x:a) (y:a{eeq r x y})
-  : Tot (eeq r x y)
-  = FStar.Squash.join_squash (() <: squash (eeq r x y))
+  : Tot (squash (eeq r x y))
+  = ()
 
 let per_eeq #a (r:per a)
   : Lemma (sym (eeq r) /\
@@ -525,10 +514,15 @@ let per_eeq #a (r:per a)
         (ensures eeq r y x)
         [SMTPat (eeq r y x)]
     = let open FStar.Squash in
-      let eeq_xy : eeq r x y = get_eeq r x y in
-      let eeq_yx : eeq r y x =
-          bind_squash eeq_xy (fun (| e, eq_xy |) ->
-          return_squash (| e, Sym eq_xy |)) in
+      let eeq_xy : squash (eeq r x y) = () in
+      let eeq_yx : squash (eeq r y x) =
+          bind_squash eeq_xy (fun (| e, s_eq_xy |) ->
+          let s_eq_xy : squash (eq r e y x) =
+            bind_squash s_eq_xy (fun eq_xy ->
+            return_squash (Sym eq_xy))
+          in
+          return_squash (| e, s_eq_xy |))
+      in
       eeq_yx
     in
     let trans_eeq (x y z:a)
@@ -538,12 +532,17 @@ let per_eeq #a (r:per a)
         [SMTPat (eeq r x y);
          SMTPat (eeq r y z)]
       = let open FStar.Squash in
-        let eeq_xy : eeq r x y = get_eeq r x y in
-        let eeq_yz : eeq r y z = get_eeq r y z in
-        let eeq_xz : eeq r x z =
-          bind_squash eeq_xy (fun (| e0, eq_xy |) ->
-          bind_squash eeq_yz (fun (| e1, eq_yz |) ->
-          return_squash #(eeq' r x z) (| e0+e1, Trans eq_xy eq_yz |)))
+        let eeq_xy = get_eeq r x y in
+        let eeq_yz = get_eeq r y z in
+        let eeq_xz : squash (eeq r x z) =
+          bind_squash eeq_xy (fun (| e0, s_eq_xy |) ->
+          bind_squash eeq_yz (fun (| e1, s_eq_yz |) ->
+          let s_eq_xz : squash (eq r (e0+e1) x z) =
+            bind_squash s_eq_xy (fun eq_xy ->
+            bind_squash s_eq_yz (fun eq_yz ->
+            return_squash (Trans eq_xy eq_yz)))
+          in
+          return_squash #(eeq r x z) (| e0+e1, s_eq_xz |)))
         in
         eeq_xz
     in
@@ -554,15 +553,10 @@ let erel_eeq #a (r:erel a)
   = let refl (x:a)
       : Lemma (eeq r x x)
               [SMTPat (eeq r x x)]
-      = let e : eps = 0 in
-        let p : eq r e x x = Perfect x x () in
-        let y : eeq r x x =
-          FStar.Squash.return_squash #(eeq' r x x) (| 0, Perfect x x () |) in
-        y
+      = let p : eq r 0 x x = Perfect x x () in
+        FStar.Squash.return_squash #(eeq r x x) (| 0, FStar.Squash.return_squash p |)
     in
     ()
-
-#push-options "--max_fuel 0 --max_ifuel 0"
 
 let hi_lo_rel : per (int & int -> int) = arrow_rel (hi int ** lo int) (lo int)
 let hi_lo_eeq : per (int & int -> int) = eeq hi_lo_rel
