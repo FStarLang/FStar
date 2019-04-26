@@ -1,4 +1,4 @@
-module LogicalRelations
+module Setoids
 
 (* This module is a small development of a theory of relational
    equivalences over pure, simply typed F* terms.
