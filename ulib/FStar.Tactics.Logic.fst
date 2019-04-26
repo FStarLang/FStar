@@ -188,6 +188,27 @@ let and_elim (t : term) : Tac unit =
     let ae = `__and_elim in
     apply_lemma (mk_e_app ae [t])
 
+private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
+private let __witness #a x #p _ =
+  let x : squash (exists x. p x) = () in
+  x
+
+let witness (t : term) : Tac unit =
+    apply_raw (`__witness);
+    exact t
+
+private
+let __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x. pred x))
+                          (k : (x:t -> pred x -> squash goal)) : squash goal =
+  FStar.Squash.bind_squash h (fun (|x, pf|) -> k x pf)
+
+(* returns witness and proof as binders *)
+let elim_exists (t : term) : Tac (binder & binder) =
+  apply_lemma (`(__elim_exists' (`#(t))));
+  let x = intro () in
+  let pf = intro () in
+  (x, pf)
+
 private
 let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :
   Lemma (requires (forall x. p x ==> phi))

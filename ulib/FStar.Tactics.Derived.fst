@@ -494,15 +494,6 @@ let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     | t::ts -> let _ = divide 1 t (fun () -> iseq ts) in ()
     | []    -> ()
 
-private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
-private let __witness #a x #p _ =
-  let x : squash (exists x. p x) = () in
-  x
-
-let witness (t : term) : Tac unit =
-    apply_raw (`__witness);
-    exact t
-
 private val push1 : (#p:Type) -> (#q:Type) ->
                         squash (p ==> q) ->
                         squash p ->
