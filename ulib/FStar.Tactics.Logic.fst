@@ -210,6 +210,13 @@ let elim_exists (t : term) : Tac (binder & binder) =
   (x, pf)
 
 private
+let __forall_inst #t (#pred : t -> Type0) (h : (forall x. pred x)) (x : t) : squash (pred x) =
+    ()
+
+let instantiate (fa : term) (x : term) : Tac binder =
+    pose (`__forall_inst (`#fa) (`#x))
+
+private
 let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :
   Lemma (requires (forall x. p x ==> phi))
         (ensures phi) = ()
