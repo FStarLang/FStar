@@ -422,3 +422,4 @@ let env_open_modules (e : Env.env) : list<name> =
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
 let term_to_string t = Print.term_to_string t
+let comp_to_string c = Print.comp_to_string c

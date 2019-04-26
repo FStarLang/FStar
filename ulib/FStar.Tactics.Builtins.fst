@@ -49,6 +49,10 @@ assume val refine_intro : unit -> Tac unit
 or fails if it is untypeable. *)
 assume val tc : term -> Tac term
 
+(** [tcc] like [tc], but returns the full computation type
+with the effect label and its arguments (WPs, etc) as well *)
+assume val tcc : term -> Tac comp
+
 (** [unshelve] creates a goal from a term for its given type.
 It can be used when the system decided not to present a goal, but
 you want one anyway. For example, if you request a uvar through

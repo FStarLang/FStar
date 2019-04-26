@@ -70,6 +70,7 @@ val revert : unit -> tac<unit>
 val clear : binder -> tac<unit>
 val clear_top : unit -> tac<unit>
 val tc : term -> tac<typ>
+val tcc : term -> tac<comp>
 
 val is_irrelevant : goal -> bool
 

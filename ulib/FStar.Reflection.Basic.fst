@@ -53,6 +53,7 @@ assume val is_free               : bv -> term -> bool
 assume val lookup_attr           : term -> env -> list fv
 assume val term_eq               : term -> term -> bool
 assume val term_to_string        : term -> string
+assume val comp_to_string        : comp -> string
 assume val env_open_modules      : env -> list name
 
 (* Attributes are terms, not to be confused with Prims.attribute *)

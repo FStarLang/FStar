@@ -70,6 +70,7 @@ let top_env                 = from_tac_1 B.top_env
 let fresh                   = from_tac_1 B.fresh
 let refine_intro            = from_tac_1 B.refine_intro
 let tc                      = from_tac_1 B.tc
+let tcc                     = from_tac_1 B.tcc
 let unshelve                = from_tac_1 B.unshelve
 let unquote                 = fun t -> failwith "Sorry, unquote does not work in compiled tactics"
 let trivial                 = from_tac_1 B.trivial

@@ -153,6 +153,9 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "term_to_string"        term_to_string        E.e_term            e_string
                                 term_to_string        NRE.e_term          NBET.e_string;
 
+    mk1 "comp_to_string"        comp_to_string        E.e_comp            e_string
+                                comp_to_string        NRE.e_comp          NBET.e_string;
+
     mk1 "binders_of_env"        binders_of_env        E.e_env             E.e_binders
                                 binders_of_env        NRE.e_env           NRE.e_binders;
 
