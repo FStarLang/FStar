@@ -6,12 +6,20 @@ module LogicalRelations
    It also provides an axiomatic treatment of "equivalence up to",
    meant to serve as a basis for hypothetical and probabilistic
    equivalence
+
+   Some relevant reading:
+     Setoids in type theory:
+       http://www.cs.nott.ac.uk/~pszvc/publications/Setoids_JFP_2003.pdf
+
+     PER model of secure information flow
+       https://www.cse.chalmers.se/~andrei/esop99.pdf
 *)
 
 
 /// `rel'` : The type of relations
 let rel (s:Type) = s -> s -> prop
 
+unfold
 let type_of (#a:_) (r:rel a) = a
 
 let refl (#s:Type) (r: rel s) =
@@ -26,6 +34,7 @@ let trans (#s:Type) (r: rel s) =
 let is_per #a (r:rel a) =
     sym r /\
     trans r
+
 /// `per a`: a partial equivalence relation on `a`
 let per (a:Type) = r:rel a{ is_per r }
 
@@ -38,10 +47,26 @@ let equiv (#s:Type) (r: rel s) =
 /// `rel` : The type of equivalence relations
 let erel (s:Type) = r:rel s { equiv r }
 
+/// `erel_of_per`: A PER is an equivalence relation on
+///  the diagonal of its domain
+let erel_of_per (#a:Type) (r:per a)
+  : erel (x:a{x `r` x})
+  = r
+
+/// In fact, every pair of elements in the PER is also on its diagonal
+let per_diagonal #a (r:per a) (x y : a)
+  : Lemma
+    (requires x `r` y)
+    (ensures
+      x `r` x /\
+      y `r` y)
+  = ()
+
+
 /// Maybe we could package all types as relational types
 /// to avoid some redundancy.
 /// But, we're not yet doing that ...
-let rel_t = (t:Type & rel t)
+let per_t = (t:Type & per t)
 
 /// `( ** )`: product relation
 ///  Building an equivalence relation on a pair from
@@ -49,21 +74,21 @@ let rel_t = (t:Type & rel t)
 let ( ** ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (p0 p1:(a & b)) : prop =
   let (x0, y0) = p0 in
   let (x1, y1) = p1 in
-  x0 `arel` x1 /\ y0 `brel` y1
+  x0 `arel` x1 /\
+  y0 `brel` y1
+
+// let ( ** ) (#a #b:Type) (arel:erel a) (brel:erel b) : erel (a & b) = prod arel brel
 
 /// ` arrow_rel' `: A relation (not necessarily an equivalence relation) on
 ///  arrows, from equivalence relation on domain and co-domain
 let arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) : prop =
     forall x0 x1. x0 `arel` x1 ==>
              f x0 `brel` g x1
+let arrow #a #b (ra:per a) (rb:per b) : per (a -> b) = arrow_rel ra rb
 
-/// ` ^--> `: the type of arrows that take related arguments to related results
+/// ` ^--> `: the type of functions that take related arguments to related results
 let ( ^--> ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) =
-  f:(a -> b){ arrow_rel arel brel f f }
-
-///  `arrow_rel` is an equivalence relation on `^-->` arrows
-let arrow_rel_is_equiv #a #b (ra:erel a) (rb:erel b) : Lemma (equiv #(ra ^--> rb) (arrow_rel ra rb)) = ()
-let arrow #a #b (ra:erel a) (rb:erel b) : erel (ra ^--> rb) = arrow_rel ra rb
+  f:(a -> b){ f `arrow_rel arel brel` f}
 
 /// Some simple relations
 
@@ -113,19 +138,15 @@ let g_rel_g'_alt' : squash (g `arrow (lo int ** lo int) (lo int ** lo int)` g') 
   st s a = s -> a * s
 *)
 /// `st`: A relational state monad
+let st0 s a = s -> a & s
 let st (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) =
   srel ^--> (arel ** srel)
-
-/// `st_rel`: an equivalence relation for the relational state monad
+/// `st_rel`: an PER for the relational state monad
 let st_rel #s #a
     (srel: erel s)
     (arel: erel a)
     : erel (st srel arel)
-  = arrow srel (arel ** srel)
-  // let r (f g:st  srel arel) : prop =
-  //    (forall s0 s1. s0 `srel` s1 ==>
-  //              f s0 `(arel ** srel)` g s1) in
-  //   r
+  = arrow_rel srel (arel ** srel)
 
 /// `bind`: sequential composition for the relational state monad
 let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
@@ -215,7 +236,7 @@ noeq
 type sig = {
   labels:eqtype;
   ops:labels -> Type;
-  rels:(l:labels -> erel (ops l))
+  rels:(l:labels -> per (ops l))
 }
 
 /// A module is a map providing the operations in the signature
@@ -229,7 +250,7 @@ let sig_rel' (s:sig) (m1 m2: module_t s)
   = forall (k:s.labels). DM.sel m1 k `s.rels k` DM.sel m2 k
 
 let sig_rel (s:sig)
-  : erel (module_t s)
+  : per (module_t s)
   = sig_rel' s
 
 /// An example module: The trivial unit module
@@ -305,7 +326,9 @@ let module_b : module_t sig_x =
     (function ONE -> one_b
             | TWO -> two_b)
 
-let equiv_module_0_1 : squash (module_a `sig_rel sig_x` module_b) = ()
+let equiv_module_ab : squash (module_a `sig_rel sig_x` module_b) = ()
+let equiv_module_aa : squash (module_a `sig_rel sig_x` module_a) = ()
+let equiv_module_bb : squash (module_b `sig_rel sig_x` module_b) = ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -329,7 +352,7 @@ let functor_t (underlay:sig) (overlay:sig) =
 
 /// Lifting a module to a functor
 ///   by parameterizing it over the unit module
-let as_fun (#s:sig) (m:module_t s)
+let as_fun (#s:sig) (m:module_t s{m `sig_rel s` m})
   : functor_t sig_unit s
   = fun _ -> m
 
@@ -474,16 +497,6 @@ type eq : #a:Type -> per a -> eps -> a -> a -> Type =
     eq #a r e1 x y ->
     eq #a r e2 x y
 
-  | Refine:
-    #a:Type ->
-    #r:per a ->
-    #x:a ->
-    #y:a ->
-    #e:eps ->
-    ref:(a -> Type){ref x /\ ref y} ->
-    eq #a r e x y ->
-    eq #(x:a{ref x}) r e x y
-
   | Ctx:
     #a:Type ->
     #r:per a ->
@@ -549,82 +562,11 @@ let erel_eeq #a (r:erel a)
     in
     ()
 
-let eeq_diag (r:per 'a) (x:'a) = x `eeq r` x
-let eeq_t (r:per 'a) = f:'a{eeq_diag r f}
-
 #push-options "--max_fuel 0 --max_ifuel 0"
-let nat_ref (x:int) : Type = b2t (x >= 0)
-let test_diag (x y : nat) (r:per int) (eps:eps) (e:eq r eps x y)
-  : eq #(x:int{nat_ref x}) r eps x y
-  = Refine nat_ref e
-
-let refine_eeq #a (r0:per a) (x y: a)
-  : Lemma
-    (requires
-      x `eeq #a r0` y)
-    (ensures (
-      let r : per (eeq_t r0) = r0 in
-      x `eeq #a r0` x /\
-      y `eeq #a r0` y /\
-      x `eeq #(eeq_t r0) r` y))
-  = assert (is_per (eeq #a r0));
-    let r : per (eeq_t r0) = r0 in
-    let eeq_r0_xy : eeq r0 x y = get_eeq r0 x y in
-    let eeq_r_xy : eeq r x y =
-        FStar.Squash.bind_squash eeq_r0_xy (fun (| e, eq_r0_xy |) ->
-          let eq_r_xy : eq #(eeq_t r0) r e x y = Refine (eeq_diag r0) eq_r0_xy in
-          let eeq_r_xy : eeq' r x y = (| e, eq_r_xy |) in
-          FStar.Squash.return_squash eeq_r_xy)
-    in
-    eeq_r_xy
-
-let refl_closure_erel #a (r:per a)
-  : Lemma (let r : per (eeq_t r) = r in
-           equiv (eeq r))
-  = let r0 = r in
-    let r : per (eeq_t r0) = r0 in
-    let refine (x y:eeq_t r0)
-      : Lemma
-        (requires (eeq r0 x y))
-        (ensures (eeq r x y))
-        [SMTPat (eeq r x y)]
-      = refine_eeq r0 x y
-    in
-    let refl_ (x:eeq_t r0)
-      : Lemma (eeq r x x)
-              [SMTPat (eeq r x x)]
-      = ()
-    in
-    per_eeq r
-
-let refl_closure (r:per 'a) : erel (eeq_t r) =
-  refl_closure_erel r;
-  let r : per (eeq_t r) = r in
-  eeq r
-
 
 let hi_lo_rel : per (int & int -> int) = arrow_rel (hi int ** lo int) (lo int)
 let hi_lo_eeq : per (int & int -> int) = eeq hi_lo_rel
 assume val enc : int & int -> int
 assume val ideal_enc: (hi int ** lo int) ^--> lo int
 assume val enc_eeq_ideal_enc : squash (hi_lo_eeq enc ideal_enc)
-
-let enc_in_rel : squash (eeq hi_lo_rel enc enc) =
-  // sym_eeq hi_lo_rel enc ideal_enc;
-  // trans_eeq hi_lo_rel enc ideal_enc enc
-  ()
-
-let ideal_enc_in_rel : squash (eeq hi_lo_rel ideal_enc ideal_enc) =
-  FStar.Squash.return_squash
-    (FStar.Squash.return_squash (| 0, Perfect #_ #hi_lo_rel ideal_enc ideal_enc () |))
-
-let enc' : eeq_t hi_lo_rel = enc
-let ideal_enc' : eeq_t hi_lo_rel = ideal_enc
-
-let hi_lo_eeq_erel : erel (eeq_t hi_lo_rel) =
-  refl_closure_erel hi_lo_rel;
-  let hi_lo_rel : rel (eeq_t hi_lo_rel) = hi_lo_rel in
-  eeq hi_lo_rel
-
-let enc_ideal_enc_rel : squash (hi_lo_eeq_erel enc ideal_enc) =
-  refine_eeq hi_lo_rel enc ideal_enc
+let _ = assert (enc `erel_of_per hi_lo_eeq` ideal_enc)
