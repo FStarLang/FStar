@@ -447,68 +447,78 @@ let functor_prod (a0 a1: sig) (b0 b1:sig)
        let mb1 = fb mb0 in
        module_prod a1 b1 ma1 mb1
 
-(* Epsilon equivalences *)
+(* Epsilon equivalences:
+      Imperfect equivalences indexed by an adversary's advantage
+*)
+
+/// `atk s t` is an attacker context that can interact with a `s -> t` functor
+let atk (s t : sig) = functor_t t s
 
 /// Now for axiomatic some epsilon equivalences
-let eps = nat
+let eps s t = atk s t -> nat
+
+let sum #s #t (e1 e2:eps s t) : eps s t = fun m -> e1 m + e2 m
+let eps_z #s #t : eps s t = fun m -> 0
+let eps_trans #r #s #t (f:functor_t t r) (e: eps s t)
+  : eps s r
+  = fun (a:atk s r) ->
+      let a':atk s t =
+        fun (m:module_t t) ->
+          a (f m)
+      in
+      e a'
 
 // eq r eps x y
 //    x and y are related by `r`, up to eps
 // Maybe index by the set of hypotheses
 noeq
-type eq (#a:Type) (r:per a) : eps -> a -> a -> Type =
+type eq (#s:sig) (#t:sig) (r:per (functor_t s t)) : eps s t -> functor_t s t -> functor_t s t -> Type =
   | Sym:
-    #x:a ->
-    #y:a ->
-    #e:eps ->
+    #x:functor_t s t ->
+    #y:functor_t s t ->
+    #e:eps s t ->
     eq r e x y ->
     eq r e y x
 
   | Trans:
-    #x:a ->
-    #y:a ->
-    #z:a ->
-    #e1:eps ->
-    #e2:eps ->
+    #x:functor_t s t ->
+    #y:functor_t s t ->
+    #z:functor_t s t ->
+    #e1:eps s t ->
+    #e2:eps s t ->
     eq r e1 x y ->
     eq r e2 y z ->
-    eq r (e1 + e2) x z
+    eq r (e1 `sum` e2) x z
 
   | Perfect :
-    x:a ->
-    y:a ->
+    x:functor_t s t ->
+    y:functor_t s t ->
     squash (x `r` y) ->
-    eq r 0 x y
-
-  | Weaken:
-    #x:a ->
-    #y:a ->
-    #e1:eps ->
-    e2:eps{e1 < e2} ->
-    eq #a r e1 x y ->
-    eq #a r e2 x y
+    eq r eps_z x y
 
   | Ctx:
-    #b:Type ->
-    #e:eps ->
-    #x:b ->
-    #y:b ->
-    #rb:per b ->
+    #q:sig ->
+    #e:eps s q ->
+    #x:functor_t s q ->
+    #y:functor_t s q ->
+    #rb:per (functor_t s q) ->
     eq rb e x y ->
-    f:(rb ^--> r) ->
-    eq r e (f x) (f y)
+    f:functor_t q t ->
+    eq r (eps_trans f e) (f `comp` x) (f `comp` y)
 
-let eeq #a (r:per a) : rel a = fun (x y : a) -> (e:eps & squash (eq r e x y))
+let eeq #s #t (r:per (functor_t s t))
+  : rel (functor_t s t)
+  = fun (x y : functor_t s t) -> (e:eps s t & squash (eq r e x y))
 
-let get_eeq #a (r:per a) (x:a) (y:a{eeq r x y})
+let get_eeq #s #t (r:per (functor_t s t)) (x:functor_t s t) (y:functor_t s t{eeq r x y})
   : Tot (squash (eeq r x y))
   = ()
 
-let per_eeq #a (r:per a)
+let per_eeq #s #t (r:per (functor_t s t))
   : Lemma (sym (eeq r) /\
            trans (eeq r))
           [SMTPat (is_per (eeq r))]
-  = let sym_eeq (x:a) (y:a)
+  = let sym_eeq (x y:functor_t s t)
       : Lemma
         (requires eeq r x y)
         (ensures eeq r y x)
@@ -525,7 +535,7 @@ let per_eeq #a (r:per a)
       in
       eeq_yx
     in
-    let trans_eeq (x y z:a)
+    let trans_eeq (x y z:functor_t s t)
       : Lemma
         (requires eeq r x y /\ eeq r y z)
         (ensures eeq r x z)
@@ -537,30 +547,21 @@ let per_eeq #a (r:per a)
         let eeq_xz : squash (eeq r x z) =
           bind_squash eeq_xy (fun (| e0, s_eq_xy |) ->
           bind_squash eeq_yz (fun (| e1, s_eq_yz |) ->
-          let s_eq_xz : squash (eq r (e0+e1) x z) =
+          let s_eq_xz : squash (eq r (e0 `sum` e1) x z) =
             bind_squash s_eq_xy (fun eq_xy ->
             bind_squash s_eq_yz (fun eq_yz ->
             return_squash (Trans eq_xy eq_yz)))
           in
-          return_squash #(eeq r x z) (| e0+e1, s_eq_xz |)))
+          return_squash #(eeq r x z) (| e0 `sum` e1, s_eq_xz |)))
         in
         eeq_xz
     in
     ()
 
-let erel_eeq #a (r:erel a)
-  : Lemma (equiv (eeq r))
-  = let refl (x:a)
-      : Lemma (eeq r x x)
-              [SMTPat (eeq r x x)]
-      = let p : eq r 0 x x = Perfect x x () in
-        FStar.Squash.return_squash #(eeq r x x) (| 0, FStar.Squash.return_squash p |)
-    in
-    ()
-
-let hi_lo_rel : per (int & int -> int) = arrow_rel (hi int ** lo int) (lo int)
-let hi_lo_eeq : per (int & int -> int) = eeq hi_lo_rel
-assume val enc : int & int -> int
-assume val ideal_enc: (hi int ** lo int) ^--> lo int
-assume val enc_eeq_ideal_enc : squash (hi_lo_eeq enc ideal_enc)
-let _ = assert (enc `erel_of_per hi_lo_eeq` ideal_enc)
+//TODO: restore this to work with the new functorized eeq
+// let hi_lo_rel : per (int & int -> int) = arrow_rel (hi int ** lo int) (lo int)
+// let hi_lo_eeq : per (int & int -> int) = eeq hi_lo_rel
+// assume val enc : int & int -> int
+// assume val ideal_enc: (hi int ** lo int) ^--> lo int
+// assume val enc_eeq_ideal_enc : squash (hi_lo_eeq enc ideal_enc)
+// let _ = assert (enc `erel_of_per hi_lo_eeq` ideal_enc)
