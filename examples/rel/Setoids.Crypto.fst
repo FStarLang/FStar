@@ -1,5 +1,5 @@
-module LogicalRelations.Crypto
-module L = LogicalRelations
+module Setoids.Crypto
+module L = Setoids
 open FStar.Integers
 open FStar.Map
 
