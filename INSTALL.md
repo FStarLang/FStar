@@ -8,18 +8,13 @@
     * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
     * [Running F\* from a docker image](#running-f-from-a-docker-image)
   * [Building F\* from sources](#building-f-from-sources)
-    * [Step 1. Building F\* from sources using the F# compiler](#step-1-building-f-from-sources-using-the-f-compiler)
-      * [On Windows 7/8/10](#on-windows-7810)
-      * [On Linux or Mac OS X using Mono](#on-linux-or-mac-os-x-using-mono)
-    * [Prerequisite for steps 2 and 3: Working OCaml setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup)
+    * [Prerequisites: Working OCaml setup](#prerequisites-working-ocaml-setup)
       * [Instructions for Windows](#instructions-for-windows)
       * [Instructions for Linux and Mac OS X](#instructions-for-linux-and-mac-os-x)
       * [Instructions for all OSes](#instructions-for-all-oses)
+    * [Step 1. Building F\* from the OCaml snapshot](#step-3-building-f-from-the-ocaml-snapshot)
     * [Step 2. Extracting the sources of F\* itself to OCaml](#step-2-extracting-the-sources-of-f-itself-to-ocaml)
-    * [Step 3. Building F\* from the OCaml snapshot](#step-3-building-f-from-the-ocaml-snapshot)
   * [Runtime dependency: Z3 SMT solver](#runtime-dependency-z3-smt-solver)
-
-
 
 ## Online editor ##
 
@@ -102,7 +97,7 @@ following commands. (On Windows this requires Cygwin and `make`)
    Note: If you hand-rolled your own F* binary then remember that you need to
          also build our OCaml support library, as further documented
          [here](https://github.com/FStarLang/FStar/wiki/Executing-F*-code):
-        
+
         $ make -C ulib/ml
 
 4. You can verify the F* library and all the examples,
@@ -124,7 +119,7 @@ following commands. (On Windows this requires Cygwin and `make`)
    Note: The option `-j6` controls the number of cores to be used in parallel build.
          Using more cores results in greater RAM usage. This can make builds slow
          if you do not have enough RAM to support all parallel builds. Consider monitoring
-         RAM usage when building, and use fewer cores if you are using 100% of your RAM. 
+         RAM usage when building, and use fewer cores if you are using 100% of your RAM.
 
    Note: On Linux if you get a file descriptor exhaustion error that looks
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
@@ -164,144 +159,32 @@ The image is automatically kept up to date through a cloud build.
 You only have to install docker and an X server for your platform and you are good to go.
 See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image) for the details on how to use docker.
 
-
-
 ## Building F\* from sources ##
 
-If you have a serious interest in F\* or want to report bugs then we
-recommend that you build F\* from the sources on GitHub (the `master` branch).
+Short version: Simply run `make -C src -j6 ocaml-fstar-ocaml` from the `master` branch of the clone.
 
-F\* is written in a subset of F# that F\* itself can also parse with a
-special flag. Therefore, the standard build process of F\* involves the following
-three steps:
+If you have a serious interest in F\* or want to report bugs then we recommend that you build F\* from the sources on GitHub (the `master` branch).
 
-  **Step 1.** build F\* from sources using the F# compiler
-     (obtaining a .NET binary for F\*);
+The F\* compiler can generate OCaml or F# code from F\*. Therefore, the
+standard bootstrap build process of F\* involves the following three steps:
 
-  **Step 2.** extract the sources of F\* itself to OCaml
-     using the F\* binary produced at step 1 (or even a previous step 3) —
-     **Note:** this no longer works reliably with the .NET binary, please
-     consider doing 3-2-3 instead of 1-2-3;
+  **Step 1.** Build F\* using the OCaml compiler from the (possibly outdated) checked-in generated OCaml code.
 
-  **Step 3.** re-build F\* using the OCaml compiler from the code
-     generated at step 2 (obtaining a faster native binary for F\*).
+  **Step 2.** Extract the sources of F\* itself to OCaml using the F\* binary produced at step 1.
+
+  **Step 3.** Repeat step 1: rebuild F\* from the newly generated OCaml code in the previous step.
 
 **Note:** If you build F\* from sources you will also need to get a Z3
 binary. This is further explained towards the end of this document.
 
-**Easier alternative:**  If you don't care about efficiency, about the .NET
-dependency and quite a few bugs ([#746](https://github.com/FStarLang/FStar/issues/746))
-you can stop already after step 1.
+Some convenience Makefile targets are available:
 
-**Easier alternative:**  If you don't want to use F#/.NET/Mono at all you can
-also build F\* directly from the generated OCaml sources.  Therefore, for
-convenience, we keep a (possibly a bit outdated) snapshot of the F\* sources
-extracted to OCaml (the result of step 2) in the repo.  This allows
-you to skip directly to step 3 and build F\* with just an OCaml compiler.
+- To run steps 2 and 1, do `make -C src -j6 fstar-ocaml`.
+- To run steps 1, 2 and 1 again (step 3), do: `make -C src -j6 ocaml-fstar-ocaml`.
 
-Some convenience Makefile targets are available for steps 2 and 3:
+### Prerequisites: Working OCaml setup  ###
 
-- To run steps 2 and 3, do `make -C src -j 6 fstar-ocaml`.
-- To run steps 3, 2 and 3 again, do: `make -C src -j 6 ocaml-fstar-ocaml`.
-
-
-### Step 1. Building F\* from sources using the F# compiler ###
-
-#### On Windows 7/8/10 ####
-
-  - Prerequisite: .NET framework 4.5
-
-  - Prerequisite: Visual Studio 2017 and its integrated [Visual F# Tools for F# 4.1](http://fsharp.org/use/windows/)
-    - for instance install the **free**
-      [Visual Studio Community](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx)
-    - The Visual F# Tools are installed automatically when you first
-      create or open an F# project.
-
-**Easy alternative:** open a Cygwin command prompt, and run `make`
-from the `src` directory. This will run `msbuild` on the Visual Studio
-solution file; in effect, this performs exactly what you would get by
-clicking the "Build" button within Visual Studio.
-
-Read on for the more complete solution involving Visual Studio itself.
-
-  - Run the `src/VS/nuget-restore.bat` script _from the top-level F\* directory_
-    before opening the solution for the first time.
-    F\* depends upon NuGet packages that are incompatible with
-    Visual Studio's internal invocation of NuGet's restore feature.
-
-        C:\Users\xxx\Desktop\FStar>src\VS\nuget-restore.bat
-        Installing 'FsLexYacc.Runtime 6.1.0'.
-        Installing 'FsLexYacc 6.1.0'.
-        Successfully installed 'FsLexYacc.Runtime 6.1.0'.
-        Successfully installed 'FsLexYacc 6.1.0'.
-        All packages listed in packages.config are already installed.
-
-  - Using Visual Studio, open `src/VS/FStar.sln` and build the solution
-    (in the menus: Build > Build Solution). **Make sure to choose the 'Release' configuration**.
-    Note: the 'Debug' configuration may be the default, although it has no optimizations enabled
-    and is not capable of bootstrapping.
-
-**Note:** If Visual Studio fails to open one or more projects, the
-  problem is likely that the NuGet package cache hasn't been
-  restored. You must either exit Visual Studio to restore the cache
-  (using the `src/VS/nuget-restore.bat` script), or restart Visual
-  Studio after having restored the cache. Otherwise, F\* may not
-  successfully build (or correctly build).
-
-#### On Linux or Mac OS X using Mono ####
-
-  - Install mono (any version from 4.0.3.0 to 5.14.x),
-            fsharp (version 4.1.x, where [on Linux x<=18](https://github.com/FStarLang/FStar/issues/1539)), and
-            msbuild (version 14.1.x-15.8.x)
-
-    - On Debian/Ubuntu
-
-            $ sudo apt-get install mono-complete fsharp
-
-    - On Arch
-
-            $ pacman -S mono
-            $ aura -A msbuild-stable
-            $ git clone https://github.com/catalin-hritcu/arch-fsharp.git
-            $ cd arch-fsharp
-            $ git checkout fsharp-4.1.18
-            $ makepkg
-            $ pacman -U fsharp-4.1.18-1-any.pkg.tar.xz
-
-    - For other Linux distributions check out these links:
-      - http://www.mono-project.com/download/#download-lin
-      - http://fsharp.org/use/linux/
-      - https://github.com/Microsoft/msbuild
-
-    - For Mac OS X use HomeBrew or install the MRE:
-      - http://www.mono-project.com/download/#download-mac
-
-  - Compile F\* from sources
-
-          $ git clone https://github.com/FStarLang/FStar.git
-          $ cd FStar
-          $ make -C src
-
-  - Try out binary using [the instructions above](https://github.com/FStarLang/FStar/blob/master/INSTALL.md#testing-a-binary-package).
-
-  - Another thing you can try is bootstrapping the F\* compiler:
-
-          $ export PATH=/path/to/fstar/bin:$PATH
-          $ make -C src boot
-
-    If `make boot` causes a stack overflow try issuing `ulimit -s unlimited` in the terminal beforehand.
-
-Note: you may want to make the `PATH` change permanent by adding:
-
-```
-export PATH=/path/to/fstar/bin:$PATH
-```
-
-into your `~/.bashrc`.
-
-### Prerequisite for steps 2 and 3: Working OCaml setup  ###
-
-Steps 2 and 3 below require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.0 should work.
+The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.0 should work.
 
 #### Instructions for Windows ####
 
@@ -352,31 +235,12 @@ This will install both OCaml and OPAM.
   above, because the additional packages here are necessary to compile
   F\*.
 
-### Step 2. Extracting the sources of F\* itself to OCaml ###
-
-0. Get an F\* binary, either using the F#/.NET build process (step 1
-   above; remember to build a Release version, else you'll get a
-   `StackOverflowException` in `make ocaml -C src` below),
-   or the OCaml build process (step 3 above).
-
-1. Make sure you follow the instructions above to get a working OCaml setup.
-
-1. On OSX, F\* has some extra dependencies on the GNU version of `head`, `sed`
-   and `find`. These can be installed using `brew install gnu-sed coreutils`.
-
-2. Once you satisfy the prerequisites for your platform,
-   translate the F\* sources from F# to OCaml using F\* by running:
-
-        $ make ocaml -C src
-
-### Step 3. Building F\* from the OCaml snapshot ###
+### Step 1. Building F\* from the OCaml snapshot ###
 
 Once you have a working OCaml setup (see above)
 just run the following command:
 
-        $ make -C src/ocaml-output -j 6
-
-The option `-j 6` controls the number of cores to be used in parallel build. This is a relatively standard unix feature.
+        $ make -C src/ocaml-output -j6
 
 **Note:** On Windows this generates a native F\* binary, that is, a binary that
 does *not* depend on `cygwin1.dll`, since the installer above uses a
@@ -386,6 +250,17 @@ This also means that when linking C libraries with OCaml compiled objects one
 needs to use the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
 special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 `examples/crypto` for examples.
+
+### Step 2. Extracting the sources of F\* itself to OCaml ###
+
+0. Get an F\* binary using the the OCaml build process (step 1 above).
+
+1. Make sure you follow the instructions above to get a working OCaml setup.
+
+2. Once you satisfy the prerequisites for your platform,
+   translate the F\* sources to OCaml using F\* by running:
+
+        $ make ocaml -C src
 
 ## Runtime dependency: Z3 SMT solver ##
 
