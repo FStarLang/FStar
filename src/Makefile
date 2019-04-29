@@ -56,42 +56,41 @@ ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
 
 boot/%.fsti: basic/boot/%.fsi | boot_dir
 	cp $^ $@
-	$(SED) -i 's/<.* when .* : equality>//g' $@
-	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
+	$(SED) -i.bak 's/<.* when .* : equality>//g' $@
+	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
 	touch -r $^ $@
 
 boot/%.fsti: prettyprint/boot/%.fsi | boot_dir
 	cp $^ $@
-	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
+	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
 	touch -r $^ $@
 
 #fix up a use of polymorphic recursion in F#, which has a different syntax than F*
 boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | boot_dir
 	cp $^ $@
-	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
-	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
+	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
+	$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
 	touch -r $^ $@
 
 #fix up by adding an annotation to suppress universe polymorphism in a mutually recursive type
 boot/FStar.TypeChecker.NBETerm.fst: typechecker/boot/FStar.TypeChecker.NBETerm.fs | boot_dir
 	cp $^ $@
-	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
-	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
+	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
+	$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
 
 boot/FStar.TypeChecker.NBETerm.fsti: typechecker/boot/FStar.TypeChecker.NBETerm.fsi | boot_dir
 	cp $^ $@
-	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
-	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
+	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
+	$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
 
 boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
 	cp $^ $@
-	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
+	$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
 	touch -r $^ $@
 
 boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
 	echo "#light \"off\"" > $@
-	$(HEAD) -n -12 $^ >> $@
-	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>\nopen FStar.Syntax.Syntax/' $@
+	$(HEAD) -n12 $^ >> $@
 	touch -r parser/parse.mly $@
 
 boot/%.fst: basic/boot/%.fs | boot_dir
