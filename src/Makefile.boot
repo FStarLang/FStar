@@ -23,7 +23,7 @@ INCLUDE_PATHS = \
 
 CACHE_DIR?=./.cache.boot
 
-FSTAR_BOOT ?= $(FSTAR)
+FSTAR_BOOT=fstar.exe
 FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
 	--use_extracted_interfaces false                                \
 	--lax --MLish --no_location_info				\
@@ -81,20 +81,14 @@ ocaml-output/%.ml:
 # file as the roots, mentioning the the modules that are to be
 # extracted. This emits dependences for each of the ML files we want
 # to produce.
-#
-# We do an indirection via ._depend so we don't write an empty file if
-# the dependency analysis failed.
 
 .depend:
-	$(FSTAR_C) --dep full                 \
+	$(FSTAR_C) --dep full             \
 		   fstar/FStar.Main.fs	      \
 		   boot/FStar.Tests.Test.fst  \
-		   $(EXTRACT)		      > ._depend
-	mv ._depend .depend
+		   $(EXTRACT) >&$@
 	mkdir -p $(CACHE_DIR)
 
-depend: .depend
-
-include .depend
+-include .depend
 
 all-ml: $(ALL_ML_FILES)
