@@ -40,9 +40,6 @@ required dependencies (except for Z3) using the following commands:
         $ opam pin add fstar --dev-repo
         $ opam install fstar
 
-### Platform specific early troubleshooting ###
-- for mac users, make sure that `ginstall`, `gsed` and `gfind` are on your system (present in macports in `coreutils` and `findutils`)
-
 ## Binary releases ##
 
 Every now and then we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
@@ -102,7 +99,7 @@ following commands. (On Windows this requires Cygwin and `make`)
    Note: If you hand-rolled your own F* binary then remember that you need to
          also build our OCaml support library, as further documented
          [here](https://github.com/FStarLang/FStar/wiki/Executing-F*-code):
-        
+
         $ make -C ulib/ml
 
 4. You can verify the F* library and all the examples,
@@ -124,7 +121,7 @@ following commands. (On Windows this requires Cygwin and `make`)
    Note: The option `-j6` controls the number of cores to be used in parallel build.
          Using more cores results in greater RAM usage. This can make builds slow
          if you do not have enough RAM to support all parallel builds. Consider monitoring
-         RAM usage when building, and use fewer cores if you are using 100% of your RAM. 
+         RAM usage when building, and use fewer cores if you are using 100% of your RAM.
 
    Note: On Linux if you get a file descriptor exhaustion error that looks
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
@@ -360,9 +357,6 @@ This will install both OCaml and OPAM.
    or the OCaml build process (step 3 above).
 
 1. Make sure you follow the instructions above to get a working OCaml setup.
-
-1. On OSX, F\* has some extra dependencies on the GNU version of `head`, `sed`
-   and `find`. These can be installed using `brew install gnu-sed coreutils`.
 
 2. Once you satisfy the prerequisites for your platform,
    translate the F\* sources from F# to OCaml using F\* by running:
