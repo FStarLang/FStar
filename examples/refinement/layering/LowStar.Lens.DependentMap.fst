@@ -249,7 +249,11 @@ let get_put_law' (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (
   ()
 
 
-let mem_lens (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) fp : imem_lens (map_inv f ptr) (DGM.t t f) fp = 
+let ptr_t (#t:eqtype) (f:t -> Type) = DM.t t (fun x -> B.pointer (f x))
+
+let mem_lens (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:ptr_t f) fp 
+  : imem_lens (map_inv f ptr) (DGM.t t f) fp 
+  = 
   get_reads_lemma f keys ptr;
   put_modifies_lemma f keys ptr;
   invariant_reads_loc_lemma f keys ptr;
@@ -258,7 +262,12 @@ let mem_lens (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun 
     put = put f keys ptr;
     lens_laws = get_put_law' f keys ptr 
   }
-  in admit() // XXX doesn't work
+  in
+  assume (fp == map_eloc f ptr keys);
+  // assert (L.get_reads_loc fp p.get);
+  // assert (L.put_modifies_loc fp p.put);
+  // assert (L.invariant_reads_loc (map_inv f ptr) fp);
+  p
   
 
 let reader_t (#t:eqtype) (#f: t -> Type) (l : hs_lens (DM.t t (fun (x:t) -> B.pointer (f x))) (DGM.t t f)) = 
@@ -280,8 +289,6 @@ type map_lens (#t:eqtype) (f:t -> Type) =
          map_lens f
 
 (* Lens constructor *)
-
-let ptr_t (#t:eqtype) (f:t -> Type) = DM.t t (fun x -> B.pointer (f x))
 
 
 let reveal_inv' #a #b (l:hs_lens a b) (h:imem (inv l))
