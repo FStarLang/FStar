@@ -281,7 +281,18 @@ type map_lens (#t:eqtype) (f:t -> Type) =
 
 (* Lens constructor *)
 
-let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B.pointer (f x))) (h:imem (map_inv f ptr)) 
+let ptr_t (#t:eqtype) (f:t -> Type) = DM.t t (fun x -> B.pointer (f x))
+
+
+let reveal_inv' #a #b (l:hs_lens a b) (h:imem (inv l))
+  : Lemma ((inv l h <==>
+            (l.invariant l.x h /\
+             B.modifies (as_loc l.footprint) l.snapshot h /\
+             FStar.HyperStack.ST.equal_domains l.snapshot h)) /\
+           view l h == l.l.get h)
+  = L.reveal_inv()
+
+let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:ptr_t f) (h:imem (map_inv f ptr)) 
 : map_lens f =
   (* invariant *) 
   let inv = map_inv f ptr in
@@ -289,7 +300,7 @@ let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B
   let (snap : imem (map_inv f ptr)) = h in 
   (* footprint *)
   let fp = map_eloc #t f ptr keys in
-  let lens : hs_lens (DM.t t (fun (x:t) -> B.pointer (f x))) (DGM.t t f) = { 
+  let lens : hs_lens (ptr_t f) (DGM.t t f) = { 
     footprint = fp;
     invariant = map_inv f;
     x = ptr;
@@ -300,13 +311,17 @@ let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (fun x -> B
     fun s i -> 
       reveal_inv ();
       let h = HST.get () in 
-      assume (L.inv lens h); // XXX fails
-      assume (map_inv f ptr h); // XXX fails
+      let snap_l = (L.snap lens s) in
+      assert (L.inv snap_l h); // XXX fails
+      reveal_inv' snap_l h;
+      assert (snap_l.invariant snap_l.x h);
+      assert (map_inv f ptr h); // XXX fails
       let b = DM.sel ptr i in 
-      assume (B.live h b); // XXX fails
+      assert (B.live h b); // XXX fails
       let v = B.index b 0ul in 
       assert (v == B.get h b 0);
-      let _ =  gest_eq f ptr i h in 
+//      let _ =  gest_eq f ptr i h in 
+      admit();
       v
   in 
   let writer : LB.with_state lens writer_t = 
@@ -335,4 +350,4 @@ let dom (#a:eqtype) (lst:list a) : Tot eqtype = x:a{List.memP x lst}
 
 // let mk2 (#t:eqtype) (f:t -> Type) (keys:list t) (ptr:DGM.t (dom keys) (fun x -> B.pointer (f x))) (h:imem (map_inv f ptr (coerce keys))) 
 // : hs_lens (DGM.t (dom keys) (fun (x:t) -> B.pointer (f x))) (DGM.t (dom keys) f) = admit ()
-*)
+//*)
