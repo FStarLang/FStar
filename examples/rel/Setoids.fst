@@ -1,36 +1,90 @@
-module Setoids
+(*
+   Copyright 2008-2019 Microsoft Research
 
-(* This module is a small development of a theory of relational
-   equivalences over pure, simply typed F* terms.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-   It also provides an axiomatic treatment of "equivalence up to",
-   meant to serve as a basis for hypothetical and probabilistic
-   equivalence
+       http://www.apache.org/licenses/LICENSE-2.0
 
-   Some relevant reading:
-     Setoids in type theory:
-       http://www.cs.nott.ac.uk/~pszvc/publications/Setoids_JFP_2003.pdf
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 
-     PER model of secure information flow
-       https://www.cse.chalmers.se/~andrei/esop99.pdf
+   Authors: K. Kohbrok, M. Kohlweiss, T. Ramananandro, N. Swamy
 *)
 
+module Setoids
+
+/// Markulf and Konrad do proofs of cryptographic security by
+/// reasoning about equivalences of cryptographic functionalities
+/// expressed as functors.
+/// 
+/// Konrad's slides from a talk at Bertinoro provide a good overview
+/// https://github.com/kkohbrok/kkohbrok.github.io/raw/master/talks/skech2018.pdf
+/// 
+/// For instance, they write things like:
+///              PKAE⁰
+///    =         MOD-PKAE⁰ . (ODH⁰ | AE⁰) . KEY
+///    ~εₒ + εₐ  MOD-PKAE¹ . (ODH¹ | AE¹) . KEY
+///    =         PKAE¹
+///
+/// to express the security of a authenticated encryption construction.
+///
+/// Elements like ODH⁰ are functors (parameterized modules) expressing
+/// cryptographic hypotheses
+///      `.` is functor composition
+///      `|` is functor product
+/// 
+/// The equivalences are all contextual, i.e., an attacker functor
+/// when interacting cannot tell two sides of an equivalence apart,
+/// except with a probability ε
+
+/// In trying to formalize what this style of proof might mean in F*,
+/// we develop here a small theory of equivalences for simply typed,
+/// but pure, higher order, monadic F* code packaged into an encoding
+/// of modules and functors within F*'s term language.
+///
+/// This is still work in progress: we have yet to validate whether
+/// this style of proof might work at a scale needed for interesting
+/// crypto proofs. But, it's already quite a bit of fun, I think.
+
+/// It turns out that the techniques we use are related to setoids and
+/// partial equivalence relations. To learn more about those, you
+/// might want to read:
+/// 
+///   Setoids in type theory:
+///       http://www.cs.nott.ac.uk/~pszvc/publications/Setoids_JFP_2003.pdf
+///   PER model of secure information flow
+///       https://www.cse.chalmers.se/~andrei/esop99.pdf
+
+(** First, some basics **)
 
 /// `rel'` : The type of relations
 let rel (s:Type) = s -> s -> Type0
 
+/// `type_of` :
+///
+/// A convenience to compute that type of elements of a relation
 unfold
 let type_of #a (r:rel a) = a
 
+/// Reflexivity
 let refl #s (r: rel s) =
   forall x. x `r` x
 
+/// Symmetry
 let sym #s (r: rel s) =
   forall x y. x `r` y <==> y `r` x
 
+/// Transitivity
 let trans #s (r: rel s) =
   forall x y z. x `r` y /\ y `r` z ==> x `r` z
 
+/// A partial equivalence relation (PER) is not necessarily reflexive,
+/// but is symmetric and transitive
 let is_per #a (r:rel a) =
   sym r /\
   trans r
@@ -39,6 +93,7 @@ let is_per #a (r:rel a) =
 let per (a:Type) = r:rel a{ is_per r }
 
 /// `equiv r`: `r` is an equivalence relation
+///   i.e., a reflexive PER
 let equiv (#s:Type) (r: rel s) =
   refl r /\
   is_per r
@@ -46,13 +101,14 @@ let equiv (#s:Type) (r: rel s) =
 /// `rel` : The type of equivalence relations
 let erel (s:Type) = r:rel s { equiv r }
 
-/// `erel_of_per`: A PER is an equivalence relation on
-///  the diagonal of its domain
+/// `erel_of_per`: Any PER can be seen as an an equivalence relation
+///  on the diagonal of its domain
 let erel_of_per (#a:Type) (r:per a)
   : erel (x:a{x `r` x})
   = r
 
 /// In fact, every pair of elements in the PER is also on its diagonal
+///   (through symmetry and transitivity)
 let per_diagonal #a (r:per a) (x y : a)
   : Lemma
     (requires x `r` y)
@@ -62,37 +118,46 @@ let per_diagonal #a (r:per a) (x y : a)
   = ()
 
 
-/// Maybe we could package all types as relational types
-/// to avoid some redundancy.
-/// But, we're not yet doing that ...
+/// `perₜ` : A partial setoid.
+///
+///    Note, rather than using `perₜ` below, we use instead its
+///    curried form, which turns out to be more convenient for type
+///    inference
 let per_t = (t:Type & per t)
 
 /// `( ** )`: product relation
-///  Building an equivalence relation on a pair from
-///  equivalence relations on its components
+///  Building a relation on pairs from
+///  relations on its components
 let ( ** ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (p0 p1:(a & b)) : prop =
   let (x0, y0) = p0 in
   let (x1, y1) = p1 in
   x0 `arel` x1 /\
   y0 `brel` y1
 
-// let ( ** ) (#a #b:Type) (arel:erel a) (brel:erel b) : erel (a & b) = prod arel brel
-
-/// ` arrow_rel' `: A relation (not necessarily an equivalence relation) on
-///  arrows, from equivalence relation on domain and co-domain
+/// ` arrow_rel' `:
+///  A relation on arrows, from relations on domain and co-domain
 let arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) : prop =
     forall x0 x1. x0 `arel` x1 ==>
              f x0 `brel` g x1
+
+/// `arrow_rel` is a PER when its arguments are PERs
+/// 
+///  Note, `arrow_rel` is not an equivalence relation on `a -> b`
+///  since it need not be reflexive.
 let arrow #a #b (ra:per a) (rb:per b) : per (a -> b) = arrow_rel ra rb
 
 /// ` ^--> `: the type of functions that take related arguments to related results
 let ( ^--> ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) =
   f:(a -> b){ f `arrow_rel arel brel` f}
 
-/// Some simple relations
+/// `e_arrow_rel`: But it is an equivalence relation on reflexive
+/// elements of `arrow_rel`
+let e_arrow_rel #a #b (ra:per a) (rb:per b) : erel (ra ^--> rb) = arrow_rel ra rb
+
+/// Now for some simple examples
 
 /// `lo`: The "low security relation", i.e., adversary visible values
-/// must equal on both sides
+/// must be equal on both sides
 let lo a : erel a = fun x y -> (x == y <: prop)
 
 /// `hi`: The "high security relation", i.e., any two secret values
@@ -132,15 +197,11 @@ let g_rel_g' : squash (g `arrow (lo int ** hi int) (lo int ** hi int)` g') = ()
 let g_rel_g'_alt : squash (g `arrow (lo (int * int)) (lo (int * int))` g') = ()
 let g_rel_g'_alt' : squash (g `arrow (lo int ** lo int) (lo int ** lo int)` g') = ()
 
-(*
- A relational variant of the standard state monad
-  st s a = s -> a * s
-*)
-/// `st`: A relational state monad
-let st0 s a = s -> a & s
+/// `st`: A relational variant of the standard state monad `s -> a * s`
 let st (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) =
   srel ^--> (arel ** srel)
-/// `st_rel`: an PER for the relational state monad
+
+/// `st_rel`: an equivalence relation for the relational state monad
 let st_rel #s #a
     (srel: erel s)
     (arel: erel a)
@@ -184,9 +245,14 @@ let get_snd : st state_rel (hi int) =
   x <-- get ;
   return (snd x)
 
+/// A couple of `st` types
 let t_one = lo int ^--> st_rel state_rel (lo int)
 let t_two = lo int ^--> st_rel state_rel (lo bool)
 
+/// An a couple of simple functions implementing those types
+///
+/// The type of each proves that they are related to themselves e.g.,
+/// that each is information flow secure according to their types
 let one_a : t_one =
   fun x ->
     l <-- get_fst ;
@@ -207,12 +273,13 @@ let two_b : t_two =
     l <-- get_fst ;
     return (x = l)
 
+/// Further, `one_a` and `one_b` cannot be distinguished by an adversary
 let one_a_rel_one_b : squash (one_a `arrow (lo int) (st_rel state_rel (lo int))` one_b) = ()
+/// Likewise for `two_a` and `two_b`
 let two_a_rel_two_b : squash (two_a `arrow (lo int) (st_rel state_rel (lo bool))` two_b) = ()
 
-
 ////////////////////////////////////////////////////////////////////////////////
-// Modules
+// Encoding modules
 ////////////////////////////////////////////////////////////////////////////////
 
 module DM = FStar.DependentMap
@@ -268,7 +335,6 @@ let mod_unit : module_t sig_unit =
 /// Its equivalence relation is just the lifting from its signature
 let rel_sig_unit : rel (module_t sig_unit) = sig_rel sig_unit
 
-
 /// Another example module: The module with no operations
 
 /// The empty signature has no labels
@@ -288,9 +354,6 @@ let mod_empty : module_t sig_empty =
 
 /// Its equivalence relation is just the lifting from its signature
 let rel_sig_empty : erel (module_t sig_empty) = sig_rel sig_empty
-
-/// We might show here a constant module
-
 
 /// Here's a module with a couple of fields
 
@@ -329,14 +392,13 @@ let equiv_module_ab : squash (module_a `sig_rel sig_x` module_b) = ()
 let equiv_module_aa : squash (module_a `sig_rel sig_x` module_a) = ()
 let equiv_module_bb : squash (module_b `sig_rel sig_x` module_b) = ()
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Functors
 ////////////////////////////////////////////////////////////////////////////////
 
 
-/// Functors are equivalence-preserving functions from underlays to
-/// overlays.
+/// Functors are equivalence-preserving functions from modules to
+/// modules
 ///
 /// This means that functors are equipped already with this
 /// contextual equivalence
@@ -346,6 +408,12 @@ let equiv_module_bb : squash (module_b `sig_rel sig_x` module_b) = ()
 ///  ===============
 ///   A (B) ~ A (B')
 ///
+/// Thought of in term of layers, a functor consumes an "underlay" and
+/// provides an "overlay"
+///
+///   overlay  : sig
+///     impl 
+///   underlay : sig
 let functor_t (underlay:sig) (overlay:sig) =
   sig_rel underlay ^--> sig_rel overlay
 
@@ -447,18 +515,28 @@ let functor_prod (a0 a1: sig) (b0 b1:sig)
        let mb1 = fb mb0 in
        module_prod a1 b1 ma1 mb1
 
-(* Epsilon equivalences:
-      Imperfect equivalences indexed by an adversary's advantage
-*)
 
-/// `atk s t` is an attacker context that can interact with a `s -> t` functor
+/// Epsilon equivalences:
+///     Imperfect equivalences indexed by an adversary's advantage
+
+
+/// `atk s t` is an attacker context that can interact with a `s -> t`
+/// functor.
+///
+/// Ultimately, given a "whole program" functor `unit -> t` (i.e, with
+/// a trivial underlay), the attacker is a `t -> unit` context that
+/// can interact with it.
 let atk (s t : sig) = functor_t t s
 
-/// Now for axiomatic some epsilon equivalences
+/// The advantage is a probability associated with an attacker
 let eps s t = atk s t -> nat
 
-let sum #s #t (e1 e2:eps s t) : eps s t = fun m -> e1 m + e2 m
+/// Advantages have a zero and can be summed
 let eps_z #s #t : eps s t = fun m -> 0
+let sum #s #t (e1 e2:eps s t) : eps s t = fun m -> e1 m + e2 m
+
+/// Given an attacker on `s -> t`, and a functor `f: t -> r` we can
+/// adapt the advantage to apply it to `s -> r`
 let eps_trans #r #s #t (f:functor_t t r) (e: eps s t)
   : eps s r
   = fun (a:atk s r) ->
