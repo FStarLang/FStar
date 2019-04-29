@@ -92,6 +92,66 @@ Guidelines for the changelog:
    * The encoding of nullary constants changed. See the documentation
      in https://github.com/FStarLang/FStar/pull/1645
 
+   * An optimization of the SMT encoding removes, by default,
+     expensive axioms about validity from the prelude.
+
+     The axiom in question is the following:
+
+     ```
+       (assert (forall ((t Term))
+                       (! (iff (exists ((e Term)) (HasType e t))
+                               (Valid t))
+                        :pattern ((Valid t)))))
+     ```
+
+     The axiom is justified by our model of squash types and
+     effectively capture the monadic structure of squash: the forward
+     implication is related to `return_squash` and the backwards
+     direction to `bind_squash`.
+
+     However, this axiom is now excluded by default, for two reasons:
+
+     1. The axiom is very expensive for the SMT solver, showing up a
+        lot on most SMT profiles. Every occurrence of `Valid t`
+        introduces a quantifier in scope (and a skolemized occurrence
+        of `HasType e t`).
+
+     2. Most code doesn't actually need these axioms.
+
+     Instead, we now provide two flags to add versions of this axiom
+     on demand.
+
+     The option `--smtencoding.valid_intro true` adds the following
+     axiom to the prelude:
+
+      ```
+        (assert (forall ((e Term) (t Term))
+                      (! (implies (HasType e t)
+                                  (Valid t))
+                       :pattern ((HasType e t)
+                                 (Valid t))
+                       :qid __prelude_valid_intro)))
+      ```
+
+     The option `--smtencoding.valid_elim true` adds the following
+     axiom to the prelude:
+
+     ```
+       (assert (forall ((t Term))
+                      (! (implies (Valid t)
+                                  (exists ((e Term)) (HasType e t)))
+                       :pattern ((Valid t))
+                       :qid __prelude_valid_elim)))
+     ```
+
+     Currently, in the F* tree, these axioms are enabled in our
+     makefiles (see ulib/gmake/fstar.mk), since a few core libraries
+     (FStar.Squash, e.g.) rely on it. But we are working on more
+     tightly scoping the use of these axioms in the F* tree.
+
+     Meanwhile, other projects using F* in project-everest no longer
+     use these axioms by default.
+
 ## Calculational proofs
 
    * F\* now supports proofs in calculational style, i.e. where an
@@ -146,6 +206,9 @@ Guidelines for the changelog:
 
    `--already_cached "(* | [+|-]namespace)*"`, insists that .checked files be
    present or absent for modules that match the namespace pattern provided.
+
+   `--smtencoding.valid_intro` and `--smtencoding.valid_elim`: See PR
+   #1710 and the discussion above in the SMT encoding section.
 
 ## Type inference
 

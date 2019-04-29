@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "4c22c1eb257f34230918fb55af6f67db"
+      "c32363b544a6c13c4deaae74b240dcab"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "7b435fe675f5391469fc6b5d9c0083e3"
+      "6a96a5bfa18e7831e9d4979060ef1ad3"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "701a5f71a9460d981e738dc1066b40ca"
+      "572721dd9ea724a9d5e63188305be8e1"
     ],
     [
       "Ex10a.safe_delete",
@@ -59,7 +59,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "fa9d97a77abebab3606816014fdc24df"
+      "6ef74953db97f5a30ebb6adc13e12eef"
     ],
     [
       "Ex10a.test_acls",
@@ -94,7 +94,7 @@
         "typing_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e", "unit_typing"
       ],
       0,
-      "5ca3606f98a01b50bb33bcfd4c152537"
+      "7f70a7f69c1f2902dd011c5efb22eaf0"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "67caa64e201c9a88caa14bfc9dbb0b5d"
+      "1cfa712945ce46f6aa23290dcf16600f"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "498307ff255b45edb10ca6130aab6367"
+      "0917cf6756a20523b3272824d3f56902"
     ],
     [
       "Ex10a.canRead",
@@ -133,7 +133,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "15e97c1ce1baa7a1fc09c2018bf95206"
+      "5cb1cc2ff9e43d4f5d16a0be38b68fa6"
     ],
     [
       "Ex10a.revoke",
@@ -146,7 +146,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "708e8d820ca695ac0347babdcccfc3c6"
+      "6d042d906d01c60780c81ac54e109cb0"
     ]
   ]
 ]
