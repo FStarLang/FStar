@@ -137,12 +137,6 @@ let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
 let tacprint2 (s:string) x y   = BU.print1 "TAC>> %s\n" (BU.format2 s x y)
 let tacprint3 (s:string) x y z = BU.print1 "TAC>> %s\n" (BU.format3 s x y z)
 
-let comp_to_typ (c:comp) : typ =
-    match c.n with
-    | Total (t, _)
-    | GTotal (t, _) -> t
-    | Comp ct -> ct.result_typ
-
 let get_phi (g:goal) : option<term> =
     U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
 
@@ -538,13 +532,12 @@ let __tc_ghost (e : env) (t : term) : tac<(term * typ * guard_t)> =
                                                   msg
            end))
 
-let __tc_lax (e : env) (t : term) : tac<(term * typ * guard_t)> =
+let __tc_lax (e : env) (t : term) : tac<(term * lcomp * guard_t)> =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
     let e = {e with lax = true} in
-    try let t, lc, g = TcTerm.tc_term e t in
-        ret (t, lc.res_typ, g)
+    try ret (TcTerm.tc_term e t)
     with | Errors.Err (_, msg)
          | Errors.Error (_, msg, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
@@ -618,15 +611,18 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
         | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
                fail1 "Forcing the guard failed (%s)" reason))))))
 
-let tc (t : term) : tac<typ> = wrap_err "tc" <|
+let tcc (t : term) : tac<comp> = wrap_err "tcc" <|
     bind (cur_goal ()) (fun goal ->
-    bind (__tc_lax (goal_env goal) t) (fun (_, typ, _) ->
+    bind (__tc_lax (goal_env goal) t) (fun (_, lc, _) ->
     (* Why lax? What about the guard? It doesn't matter! tc is only
      * a way for metaprograms to query the typechecker, but
      * the result has no effect on the proofstate and nor is it
      * taken for a fact that the typing is correct. *)
-    ret typ
+    ret (S.lcomp_comp lc)
     ))
+
+let tc (t : term) : tac<typ> = wrap_err "tc" <|
+    bind (tcc t) (fun c -> ret (U.comp_result c))
 
 let add_irrelevant_goal reason env phi opts label : tac<unit> =
     bind (mk_irrelevant_goal reason env phi opts label) (fun goal ->
@@ -700,7 +696,7 @@ let intro () : tac<binder> = wrap_err "intro" <|
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
         else let env' = Env.push_binders (goal_env goal) [b] in
-             let typ' = comp_to_typ c in
+             let typ' = U.comp_result c in
              //BU.print1 "[intro]: current goal is %s" (goal_to_string goal);
              //BU.print1 "[intro]: current goal witness is %s" (Print.term_to_string (goal_witness goal));
              //BU.print1 "[intro]: with goal type %s" (Print.term_to_string (goal_type goal));
@@ -752,7 +748,7 @@ let intro_rec () : tac<(binder * binder)> =
         else let bv = gen_bv "__recf" None (goal_type goal) in
              let bs = [S.mk_binder bv; b] in // recursively bound name and argument we're introducing
              let env' = Env.push_binders (goal_env goal) bs in
-             bind (new_uvar "intro_rec" env' (comp_to_typ c)) (fun (u, ctx_uvar_u) ->
+             bind (new_uvar "intro_rec" env' (U.comp_result c)) (fun (u, ctx_uvar_u) ->
              let lb = U.mk_letbinding (Inl bv) [] (goal_type goal) PC.effect_Tot_lid (U.abs [b] u None) [] Range.dummyRange in
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
@@ -865,7 +861,7 @@ let rec  __try_match_by_application (acc : list<(term * aqual * ctx_uvar)>)
         | Some (b, c) ->
             if not (U.is_total_comp c) then fail "Codomain is effectful" else
             bind (new_uvar "apply arg" e (fst b).sort) (fun (uvt, uv) ->
-            let typ = comp_to_typ c in
+            let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (fst b, uvt)] typ in
             __try_match_by_application ((uvt, snd b, uv)::acc) e typ' ty2)
     end)
@@ -1048,10 +1044,22 @@ let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
     | Some (U.BaseConn(l, [_; (e1, _); (e2, _)]))
       when Ident.lid_equals l PC.eq2_lid
-      ||    Ident.lid_equals l PC.c_eq2_lid ->
+      ||   Ident.lid_equals l PC.c_eq2_lid
+      ->
         Some (e1, e2)
     | _ ->
-        None
+      match U.unb2t typ with
+      | None -> None
+      | Some t ->
+        begin
+        BU.print1 "GG t = %s\n" (Print.term_to_string t);
+        let hd, args = U.head_and_args t in
+        match (SS.compress hd).n, args with
+        | Tm_fvar fv, [(_, Some (Implicit _)); (e1, None); (e2, None)] when S.fv_eq_lid fv PC.op_Eq ->
+            (BU.print2 "wat %s -- %s\n" (Print.term_to_string e1) (Print.term_to_string e2);
+            Some (e1, e2))
+        | _ -> None
+        end
 
 let destruct_eq (typ : typ) : option<(term * term)> =
     match destruct_eq' typ with
@@ -1579,23 +1587,6 @@ let join () : tac<unit> =
 
     | _ -> fail "join: less than 2 goals"
     )
-
-(* TODO: special case of destruct? But `bool` is not an inductive.. *)
-let cases (t : term) : tac<(term * term)> = wrap_err "cases" <|
-    bind (cur_goal ()) (fun g ->
-    bind (__tc (goal_env g) t) (fun (t, typ, guard) ->
-    let hd, args = U.head_and_args typ in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(p, _); (q, _)] when S.fv_eq_lid fv PC.or_lid ->
-        let v_p = S.new_bv None p in
-        let v_q = S.new_bv None q in
-        let g1 = goal_with_env g (Env.push_bv (goal_env g) v_p) in
-        let g2 = goal_with_env g (Env.push_bv (goal_env g) v_q) in
-        bind __dismiss (fun _ ->
-        bind (add_goals [g1; g2]) (fun _ ->
-        ret (S.bv_to_name v_p, S.bv_to_name v_q)))
-    | _ ->
-        fail1 "Not a disjunction: %s" (tts (goal_env g) typ)))
 
 let set_options (s : string) : tac<unit> = wrap_err "set_options" <|
     bind (cur_goal ()) (fun g ->

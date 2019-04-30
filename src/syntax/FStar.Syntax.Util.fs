@@ -1159,6 +1159,11 @@ let mk_disj_l phi = match phi with
 let mk_imp phi1 phi2 : term = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2 : term = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
+let unb2t (e:term) : option<term> =
+    let hd, args = head_and_args e in
+    match (compress hd).n, args with
+    | Tm_fvar fv, [(e, _)] when fv_eq_lid fv PC.b2t_lid -> Some e
+    | _ -> None
 
 let is_t_true t =
      match (unmeta t).n with

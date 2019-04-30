@@ -488,7 +488,8 @@ let accumulated_option name value =
     mk_list (value :: prev_values)
 
 let reverse_accumulated_option name value =
-    mk_list ((lookup_opt name as_list') @ [value])
+    let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
+    mk_list (prev_values @ [value])
 
 let accumulate_string name post_processor value =
     set_option name (accumulated_option name (mk_string (post_processor value)))
@@ -1059,7 +1060,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
          "using_facts_from",
-         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
+         ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
         "\n\t\tPrunes the context to include only the facts from the given namespace or fact id. \n\t\t\t\
          Facts can be include or excluded using the [+|-] qualifier. \n\t\t\t\
          For example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
@@ -1426,6 +1427,7 @@ let parse_settings ns : list<(list<string> * bool)> =
     in
     let parse_one_setting s =
         if s = "*" then ([], true)
+        else if s = "-*" then ([], false)
         else if FStar.Util.starts_with s "-"
         then let path = path_of_text (FStar.Util.substring_from s 1) in
              (path, false)
@@ -1440,6 +1442,7 @@ let parse_settings ns : list<(list<string> * bool)> =
       else with_cache (fun s ->
              FStar.Util.splitlines s
              |> List.concatMap (fun s -> FStar.Util.split s " ")
+             |> List.filter (fun s -> s <> "")
              |> List.map parse_one_setting) s)
              |> List.rev
 
