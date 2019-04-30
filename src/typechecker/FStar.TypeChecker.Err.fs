@@ -67,7 +67,7 @@ let err_msg_type_strings env t1 t2 :(string * string) =
   let s2 = N.term_to_string env t2 in
   if s1 = s2 then
     Options.with_saved_options (fun _ ->
-      ignore (Options.set_options Options.Set "--print_full_names --print_universes");
+      ignore (Options.set_options Options.Set "--print_full_names --ugly --print_universes");
       N.term_to_string env t1, N.term_to_string env t2
     )
   else s1, s2
