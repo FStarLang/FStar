@@ -195,6 +195,9 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "set_options"   set_options e_string e_unit
                                set_options NBET.e_string NBET.e_unit;
 
+      mktac1 0 "tcc"           tcc RE.e_term RE.e_comp
+                               tcc NRE.e_term NRE.e_comp;
+
       mktac1 0 "tc"            tc RE.e_term RE.e_term
                                tc NRE.e_term NRE.e_term;
 
@@ -236,9 +239,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
       mktac1 0 "join"          join  e_unit e_unit
                                join  NBET.e_unit NBET.e_unit;
-
-      mktac1 0 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term)
-                               cases NRE.e_term (NBET.e_tuple2 NRE.e_term NRE.e_term);
 
       mktac1 0 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int))
                                t_destruct NRE.e_term (NBET.e_list (NBET.e_tuple2 NRE.e_fv NBET.e_int));
