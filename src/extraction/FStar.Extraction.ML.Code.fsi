@@ -20,7 +20,9 @@ open FStar.ST
 open FStar.All
 
 open FStar.Extraction.ML.Syntax
-open FStar.Format
+open FStar.Pprint
+
+type doc = | Doc of string
 
 val doc_of_mllib :    mllib -> list<(string * doc)>
 val doc_of_sig :      mlsymbol -> mlsig -> doc
