@@ -45,14 +45,10 @@ let sli (l:lident) : string =
     if Options.print_real_names()
     then l.str
     else l.ident.idText
-//    Util.format3 "%s@{def=%s;use=%s}" s
-//        (Range.string_of_range (Ident.range_of_lid l))
-//        (Range.string_of_use_range (Ident.range_of_lid l))
 
 let lid_to_string (l:lid) = sli l
 
-// let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
-let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ delta_depth_to_string fv.fv_delta ^ ")"
+let fv_to_string fv = lid_to_string fv.fv_name.v
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ (string_of_int bv.index)
 
 let nm_to_string bv =
@@ -166,12 +162,6 @@ let rec int_of_univ n u = match Subst.compress_univ u with
     | _ -> n, Some u
 
 let rec univ_to_string u =
-  // VD: commented out for testing NBE
-  // if not (Options.ugly()) then
-  //   let e = Resugar.resugar_universe u Range.dummyRange in
-  //   let d = ToDocument.term_to_document e in
-  //   Pp.pretty_string (float_of_string "1.0") 100 d
-  // else
   match Subst.compress_univ u with
     | U_unif u -> "U_unif "^univ_uvar_to_string u
     | U_name x -> "U_name "^x.idText
@@ -403,14 +393,6 @@ and pat_to_string x =
 
 
 and lbs_to_string quals lbs =
-//    let lbs =
-//        if (Options.print_universes())
-//        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in
-//                                        let t, d = match (Subst.compress td).n with
-//                                            | Tm_app(_, [(t, _); (d, _)]) -> t, d
-//                                            | _ -> failwith "Impossibe" in
-//                                        {lb with lbunivs=us; lbtyp=t; lbdef=d}))
-//        else lbs in
     U.format3 "%slet %s %s"
     (quals_to_string' quals)
     (if fst lbs then "rec" else "")
@@ -432,14 +414,6 @@ and lcomp_to_string lc =
         comp_to_string (lcomp_comp lc)
     else
         U.format2 "%s %s" (sli lc.eff_name) (term_to_string lc.res_typ)
-
-//and uvar_t_to_string (uv, k) =
-//   if false && (Options.print_real_names())
-//   then
-//       U.format2 "(U%s : %s)"
-//       (if (Options.hide_uvar_nums()) then "?" else U.string_of_int (Unionfind.uvar_id uv))
-//       (kind_to_string k)
-//   else U.format1 "U%s"  (if (Options.hide_uvar_nums()) then "?" else U.string_of_int (Unionfind.uvar_id uv))
 
 and aqual_to_string' s = function
   | Some (Implicit false) -> "#" ^ s
@@ -593,17 +567,6 @@ let binder_to_json env b =
 let binders_to_json env bs =
     JsonList (List.map (binder_to_json env) bs)
 
-
-//let subst_to_string subst =
-//   U.format1 "{%s}" <|
-//    (List.map (function
-//        | Inl (a, t) -> U.format2 "(%s -> %s)" (strBvd a) (typ_to_string t)
-//        | Inr (x, e) -> U.format2 "(%s -> %s)" (strBvd x) (exp_to_string e)) subst |> String.concat ", ")
-//let freevars_to_string (fvs:freevars) =
-//    let f (l:set<bvar<'a,'b>>) = l |> U.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
-//    U.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs)
-
-
 let enclose_universes s =
     if Options.print_universes ()
     then "<" ^ s ^ ">"
@@ -676,15 +639,6 @@ let eff_decl_to_string for_free ed =
   eff_decl_to_string' for_free Range.dummyRange [] ed
 
 let rec sigelt_to_string (x: sigelt) =
- // if not (Options.ugly()) then
- //    let e = Resugar.resugar_sigelt x in
- //    begin match e with
- //    | Some d ->
- //      let d = ToDocument.decl_to_document d in
- //      Pp.pretty_string (float_of_string "1.0") 100 d
- //    | _ -> ""
- //    end
- // else
    let basic =
       match x.sigel with
       | Sig_pragma(LightOff) -> "#light \"off\""
@@ -702,11 +656,10 @@ let rec sigelt_to_string (x: sigelt) =
         else U.format4 "%stype %s %s : %s" quals_str lid.str binders_str term_str
       | Sig_datacon(lid, univs, t, _, _, _) ->
         if (Options.print_universes())
-        then //let univs, t = Subst.open_univ_vars univs t in (* AR: don't open the universes, else it's a bit confusing *)
+        then
              U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
         else U.format2 "datacon %s : %s" lid.str (term_to_string t)
       | Sig_declare_typ(lid, univs, t) ->
-        //let univs, t = Subst.open_univ_vars univs t in
         U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) lid.str
             (if (Options.print_universes())
              then U.format1 "<%s>" (univ_names_to_string univs)
@@ -802,7 +755,6 @@ let set_to_string f s =
                        U.string_builder_append strb (f x)
                        ) xs ;
             U.string_builder_append strb "}" ;
-            (* U.string_builder_append strb (list_to_string f (raw_list s)) ; *)
             U.string_of_string_builder strb
 
 let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)
