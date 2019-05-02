@@ -41,22 +41,28 @@ let call h (d0 d:h.dom) : Pure (gr h d0 (h.cod d)) (requires (h.pre d /\ d << d0
 //    by (fail ""; dump "")
 //   = magic ()
 
-
-
-
-let rec eval (h:data)
+(* Without `hh`, the decreases clause is ill-formed. We anyway get rid of it
+ * ahead in `eval`. *)
+let rec eval_boot (h:data)
   (body : (d:h.dom) -> Pure (gr h d (h.cod d)) (requires (h.pre d)) (ensures (lift h _ (h.post d) d)))
   (d0 : h.dom)
   b pre post (c : unit -> Pure (gr h d0 b) (requires pre) (ensures (lift h _ post d0)))
-  () : Pure b (requires pre) (ensures post) (decreases %[d0 ; (assume pre; c ())])
-   by (dump "")
+  (hh : squash pre)
+  () : Pure b (requires True) (ensures post) (decreases %[d0; c ()])
   =
     match c () with
       | Ret x -> x
       | Call d k ->
-        let r = eval h body d (h.cod d) (h.pre d) (h.post d) (fun () ->  body d) in
+        let r = eval_boot h body d (h.cod d) (h.pre d) (h.post d) (fun () ->  body d) hh in
         let r0 = r () in axiom1 k r0 ;
-        eval h body d0 b (pre /\ h.pre d) post (fun () ->  k r0) ()
+        eval_boot h body d0 b (pre /\ h.pre d) post (fun () ->  k r0) hh ()
+
+let eval (h:data)
+  (body : (d:h.dom) -> Pure (gr h d (h.cod d)) (requires (h.pre d)) (ensures (lift h _ (h.post d) d)))
+  (d0 : h.dom)
+  b pre post (c : unit -> Pure (gr h d0 b) (requires pre) (ensures (lift h _ post d0)))
+  () : Pure b (requires pre) (ensures post)
+  = eval_boot h body d0 b pre post c () ()
 
 let fix (h:data) (body : (d:h.dom) -> Pure (gr h d (h.cod d)) (requires (h.pre d)) (ensures (lift h _ (h.post d) d))) (d:h.dom) : Pure (h.cod d) (requires (h.pre d)) (ensures (h.post d)) =
   eval h body d (h.cod d) (h.pre d) (h.post d) (fun () -> body d) ()
