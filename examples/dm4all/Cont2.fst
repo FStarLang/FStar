@@ -40,6 +40,22 @@ new_effect {
      ; mrelation = rel
 }
 
+let test1 (f : unit -> CONT int (fun kwp post -> kwp 1 post)) =
+  reify (f ())
+
+(* #set-options "--debug Cont2 --debug_level SMTQuery" *)
+
+open FStar.Tactics
+
+(* #set-options "--ugly --prn --print_full_names" *)
+
+let test2 () : CONT int (fun kwp post -> kwp 1 post) =
+  let f : repr int = fun k -> k 1 in
+  let wp : wpty int = fun kwp post -> kwp 1 post in
+  CONT?.reflect #wp f
+  // inference failure here, should fix
+  //CONT?.reflect #(fun kwp post -> kwp 1 post) f
+
 let call_cc (#a:Type) (f : (a -> repr ans) -> repr ans) : repr a =
   fun k -> f (fun (r:a) -> return _ (k r)) (fun x -> x)
 
@@ -58,6 +74,7 @@ let rel_2 (#a:Type) (f : (a -> repr ans) -> repr ans) (wpf : (a -> wpty ans) -> 
 open FStar.Tactics
 open Predicates
 
+(* this is admitted *)
 let call_cc_related #a (f : (a -> repr ans) -> repr ans) (wpf : (a -> wpty ans) -> wpty ans)
   : Lemma (requires (rel_2 f wpf /\ monotonic wpf))
           (ensures (rel (call_cc f) (call_cc_wp wpf)))
@@ -65,12 +82,27 @@ let call_cc_related #a (f : (a -> repr ans) -> repr ans) (wpf : (a -> wpty ans) 
                                                   ignore (repeat tadmit));
     ()
 
+(* #set-options "--print_full_names" *)
 
-assume val callcc : #a:Type -> (#wpf:((a -> wpty ans) -> wpty ans)) ->
+let callcc (#a:Type0) (#wpf:((a -> wpty ans) -> wpty ans))
+           (f : (#wpg:(a -> wpty ans) -> (x:a -> CONT ans (wpg x)) -> CONT ans (wpf wpg)))
+           : CONT a (fun kwp post -> call_cc_wp wpf kwp post)
+             by (compute (); explode (); dump "")
+           =
+  let rf : (a -> repr ans) -> repr ans = fun g k ->
+    // Need a wp for g here... what to do?
+    let wpg x : wpty ans = fun kwp post -> False in
+    reify (f #wpg (fun x -> CONT?.reflect #(wpg x) (g x))) k
+  in
+  admit ();
+  CONT?.reflect #(call_cc_wp wpf) (call_cc rf)
+
+assume val callcc' : #a:Type -> (#wpf:((a -> wpty ans) -> wpty ans)) ->
                     (f : (#wpg:(a -> wpty ans) -> (x:a -> CONT ans (wpg x)) -> CONT ans (wpf wpg))) ->
                     CONT a (call_cc_wp wpf)
 
-let em (#a:Type) : CONT (c_or a (a -> CONT ans (fun _ _ -> False))) (fun _ _ -> False) =
-  callcc #_ #(fun _ _ _ -> False)
-             (fun #_ (f : (x : c_or a (a -> CONT ans (fun _ _ -> False))) -> CONT ans (fun _ _ -> False)) ->
+let em (#a:Type) : CONT (c_or a (a -> CONT ans (fun kwp post -> forall x. kwp x post))) (fun kwp post -> forall x. kwp x post) =
+  admit ();
+  callcc #_ #(fun _ kwp post -> forall x. kwp x post)
+             (fun #_ (f : (x : c_or a (a -> CONT ans (fun kwp post -> forall x. kwp x post))) -> CONT ans (fun kwp post -> forall x. kwp x post)) ->
                         f (Right (fun (x:a) -> f (Left x))))
