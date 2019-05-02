@@ -528,7 +528,8 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         // good analysis on them
         if fv_eq f1 f2
         then (
-            assert (List.length args1 = List.length args2);
+            if not (List.length args1 = List.length args2) then
+                failwith "eq_tm: different arg number on data";
             List.fold_left (fun acc ((a1, q1), (a2, q2)) ->
                                 //if q1 <> q2
                                 //then failwith (U.format1 "Arguments of %s mismatch on implicit qualifier\n"
