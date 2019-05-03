@@ -1818,7 +1818,7 @@ and desugar_formula env (f:term) : S.term =
         let body = desugar_formula env body in
         let body = match pats with
           | [] -> body
-          | _ -> mk (Tm_meta (body, Meta_pattern pats)) in
+          | _ -> mk (Tm_meta (body, Meta_pattern ([], pats))) in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
         mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_constant_at_level 1) None, //NS delta: wrong?  Delta_constant_at_level 2?
                       [as_arg body])
