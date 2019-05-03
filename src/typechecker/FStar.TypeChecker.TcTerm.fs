@@ -506,6 +506,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_meta(e, Meta_pattern(names, pats)) ->
     let t, u = U.type_u () in
     let e, c, g = tc_check_tot_or_gtot_term env e t in
+    //NS: PATTERN INFERENCE
+    //if `pats` is empty (that means the user did not annotate a pattern).
+    //In that case try to infer a pattern by
+    //analyzing `e` for the smallest terms that contain all the variables
+    //in `names`.
+    //If not pattern can be inferred, raise a warning
     let pats, g' =
         let env, _ = Env.clear_expected_typ env in
         tc_smt_pats env pats in

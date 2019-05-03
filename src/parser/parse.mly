@@ -677,8 +677,11 @@ typ:
   | q=quantifier bs=binders DOT trigger=trigger e=noSeqTerm
       {
         match bs with
-            | [] -> raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
-            | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
+        | [] ->
+          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
+        | _ ->
+          let idents = idents_of_binders bs (rhs2 parseState 1 3) in
+          mk_term (q (bs, (idents, trigger), e)) (rhs2 parseState 1 5) Formula
       }
 
 %inline quantifier:

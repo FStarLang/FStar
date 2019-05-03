@@ -1809,28 +1809,46 @@ and desugar_formula env (f:term) : S.term =
   let setpos t = {t with pos=f.range} in
   let desugar_quant (q:lident) b pats body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
-    let desugar_pats env pats = List.map (fun es -> es |> List.map (fun e -> arg_withimp_t Nothing <| desugar_term env e)) pats in
+    let with_pats env (names, pats) body =
+      match names, pats with
+      | [], [] -> body
+      | [], _::_ ->
+        //violates an internal invariant
+        failwith "Impossible: Annotated pattern without binders in scope"
+      | _ ->
+        let names =
+          names |> List.map
+          (fun i ->
+          { fail_or2 (try_lookup_id env) i with pos=i.idRange })
+        in
+        let pats =
+          pats |> List.map
+          (fun es -> es |> List.map
+                  (fun e -> arg_withimp_t Nothing <| desugar_term env e))
+        in
+        mk (Tm_meta (body, Meta_pattern (names, pats)))
+    in
     match tk with
       | Some a, k ->
         let env, a = push_bv env a in
         let a = {a with sort=k} in
-        let pats = desugar_pats env pats in
         let body = desugar_formula env body in
-        let body = match pats with
-          | [] -> body
-          | _ -> mk (Tm_meta (body, Meta_pattern ([], pats))) in
+        let body = with_pats env pats body in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
         mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_constant_at_level 1) None, //NS delta: wrong?  Delta_constant_at_level 2?
                       [as_arg body])
 
       | _ -> failwith "impossible" in
 
- let push_quant (q:(list<AST.binder> * list<(list<AST.term>)> * AST.term) -> AST.term') (binders:list<AST.binder>) pats (body:term) =
+ let push_quant
+      (q:(list<AST.binder> * AST.patterns * AST.term) -> AST.term')
+      (binders:list<AST.binder>)
+      pats (body:term) =
     match binders with
     | b::(b'::_rest) ->
       let rest = b'::_rest in
       let body = mk_term (q(rest, pats, body)) (Range.union_ranges b'.brange body.range) Formula in
-      mk_term (q([b], [], body)) f.range Formula
+      mk_term (q([b], ([], []), body)) f.range Formula
     | _ -> failwith "impossible" in
 
   match (unparen f).tm with
