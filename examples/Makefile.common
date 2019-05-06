@@ -58,12 +58,12 @@ include .depend
 # a.fst.checked is the binary, checked version of a.fst
 %.fst.checked:
 	$(MY_FSTAR) $<
-	touch -ac $@
+	touch -c $@
 
 # a.fsti.checked is the binary, checked version of a.fsti
 %.fsti.checked:
 	$(MY_FSTAR) $<
-	touch -ac $@
+	touch -c $@
 
 clean:
 	rm -rf $(CACHE_DIR)
