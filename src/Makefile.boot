@@ -5,7 +5,6 @@ INCLUDE_PATHS = \
 	boot \
 	basic \
 	extraction \
-	format \
 	fsdoc \
 	fstar \
 	parser \
@@ -43,7 +42,7 @@ EXTRACT_NAMESPACES=FStar.Extraction FStar.Fsdoc FStar.Parser		\
 # specific namespace. So, we mention extracting those explicitly.
 EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
 		FStar.Options FStar.Ident FStar.Errors FStar.Const	\
-		FStar.Format FStar.Order FStar.Dependencies		\
+		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
 		FStar.Interactive.Ide FStar.Interactive.Legacy		\
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
