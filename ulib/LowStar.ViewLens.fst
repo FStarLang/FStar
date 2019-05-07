@@ -64,17 +64,36 @@ let fp #roots #view (l:hs_view_lens roots view) =
 let view #roots #view (l:hs_view_lens roots view) (h:imem (inv l)) =
   l.view h
 
-let ( <*> ) #roots #roots' #view #view' 
-            (l:hs_view_lens roots view)
-            (l':hs_view_lens roots' view'{B.loc_disjoint (as_loc l.fp) (as_loc l'.fp)}) 
-  : GTot (hs_view_lens (roots & roots') (view * view')) = 
-  let fp = Ghost.hide (B.loc_union (as_loc l.fp) (as_loc l'.fp)) in
-  let inv (x,y) h = l.inv x h /\ l'.inv y h in
-  let roots = (l.roots,l'.roots) in
-  let view h = (l.view h,l'.view h) in
+let ( <*> ) #roots1 #view1 #roots2 #view2 
+            (l1:hs_view_lens roots1 view1)
+            (l2:hs_view_lens roots2 view2{B.loc_disjoint (as_loc l1.fp) (as_loc l2.fp)}) 
+  : GTot (hs_view_lens (roots1 & roots2) (view1 * view2)) = 
+  let fp = Ghost.hide (B.loc_union (as_loc l1.fp) (as_loc l2.fp)) in
+  let inv (x,y) h = l1.inv x h /\ l2.inv y h in
+  let roots = (l1.roots,l2.roots) in
+  let view h = (l1.view h,l2.view h) in
   {
     fp = fp;
     inv = inv;
     roots = roots;
     view = view
+  }
+
+noeq
+type lens_includes_aux #roots1 #roots2 #view1 #view2
+                       (l1:hs_view_lens roots1 view1)
+                       (l2:hs_view_lens roots2 view2) =
+  {
+    i_roots: roots1 -> roots2;
+    i_views: view1 -> view2
+  }
+
+let lens_includes #roots1 #roots2 #view1 #view2
+                  (l1:hs_view_lens roots1 view1)
+                  (l2:hs_view_lens roots2 view2) = 
+  i:lens_includes_aux l1 l2 {
+    (i.i_roots l1.roots == l2.roots) /\ 
+    (forall h . i.i_views (l1.view h) == l2.view h) /\
+    (B.loc_includes (as_loc l1.fp) (as_loc l2.fp)) /\ 
+    (forall h . l1.inv l1.roots h ==> l2.inv l2.roots h)
   }
