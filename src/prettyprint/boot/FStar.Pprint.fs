@@ -52,10 +52,6 @@ let nest (j:int) (doc:document) : document = P.nest j doc
 
 let group (doc:document) : document = P.group doc
 
-//let column (_: int -> document): document = failwith not_impl_msg
-//let nesting (_: int -> document): document = failwith not_impl_msg
-//let position (_: int -> int -> int -> document): document = failwith not_impl_msg
-
 let ifflat (doc1:document) (doc2:document) : document = P.ifflat doc1 doc2
 
 let align (doc:document) : document = P.align doc
@@ -157,14 +153,6 @@ let surround_separate (n:int) (b:int) (v) (opening) (sep) (closing) (docs) =
     C.surround_separate (n:int) (b:int) (v) (opening) (sep) (closing) (docs)
 
 let surround_separate_map (n:int) (b:int) (v) (opening) (sep) (closing) (f:('a -> document)) (docs:'a list)  = C.surround_separate_map (n:int) (b:int) (v) (opening) (sep) (closing) (f:('a -> document)) (docs:'a list)
-
-//let ( ^^ ) (x) (y)  = failwith not_impl_msg
-
-// let ( !^ ) (s:string)  = failwith not_impl_msg
-
-//let ( ^/^ ) (x) (y)  = failwith not_impl_msg
-
-// let ( ^//^ ) (x) (y)  = failwith not_impl_msg
 
 (* Wrap up ToChannel.pretty *)
 let pretty_out_channel rfrac width doc ch =

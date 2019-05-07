@@ -18,13 +18,13 @@
 
 ## Online editor ##
 
-The easiest way to try out F\* quickly is directly in your browser by using
-either [online F\* editor] that's part of the [F\* tutorial]
+The easiest way to try out F\* quickly is directly in your browser by
+using either the [online F\* editor] that's part of the [F\* tutorial]
 or our new [even cooler online editor] (experimental).
 
 [online F\* editor]: https://www.fstar-lang.org/run.php
-[F\* tutorial]: https://www.fstar-lang.org/tutorial/
-[even cooler online editor]: http://fstar.ht.vc/
+[F\* tutorial]: https://www.fstar-lang.org/tutorial
+[even cooler online editor]: http://fstar.ht.vc
 
 ## OPAM package ##
 
@@ -34,9 +34,6 @@ required dependencies (except for Z3) using the following commands:
 
         $ opam pin add fstar --dev-repo
         $ opam install fstar
-
-### Platform specific early troubleshooting ###
-- for mac users, make sure that `ginstall`, `gsed` and `gfind` are on your system (present in macports in `coreutils` and `findutils`)
 
 ## Binary releases ##
 
@@ -103,8 +100,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 4. You can verify the F* library and all the examples,
    keeping in mind that this might take a long time.
 
-        $ make -j6 -C ulib
-        $ make -j6 -C examples
+        $ make -j6 -C ulib examples
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
    Note: Some of the examples require having OCaml installed (as for step 3 above).
@@ -225,9 +221,9 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process pprint ulex
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process pprint
   ```
-  
+
   **Note:** this list of packages is longer than the list in the
   [Testing a binary package](#testing-a-binary-package) section above,
   because the additional packages here are necessary to compile F\*.
