@@ -1,8 +1,5 @@
 include Makefile.config
 
-# FSTAR_C: This is the way in which we invoke F* for boostrapping
-#   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
-#   -- eager_inference, MLish, lax: all tune type-inference for use with unverified ML programs
 INCLUDE_PATHS = \
 	../ulib \
 	boot \
@@ -24,6 +21,10 @@ INCLUDE_PATHS = \
 CACHE_DIR?=./.cache.boot
 
 FSTAR_BOOT ?= $(FSTAR)
+
+# FSTAR_C: This is the way in which we invoke F* for boostrapping
+#   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
+#   -- MLish and lax tune type-inference for use with unverified ML programs
 FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
 	--use_extracted_interfaces false                                \
 	--lax --MLish --no_location_info				\
