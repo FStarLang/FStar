@@ -50,13 +50,13 @@ let imem_view_lens inv b loc =
 noeq
 type hs_view_lens a b = {
   fp: eloc;                             //footprint of get, put, inv
-  inv: a -> HS.mem -> Type0;            //invariant, typically liveness
+  inv: HS.mem -> Type0;            //invariant, typically liveness
   roots:a;                              //root of the hyperstack fragment
-  view:imem_view_lens (inv roots) b fp  //the imem_view_lens itself
+  view:imem_view_lens inv b fp  //the imem_view_lens itself
 }
 
 let inv #roots #view (l:hs_view_lens roots view) (h:HS.mem) =
-  l.inv l.roots h
+  l.inv h
 
 let fp #roots #view (l:hs_view_lens roots view) = 
   l.fp
@@ -77,7 +77,7 @@ let ( <*> ) #roots1 #view1 #roots2 #view2
   // Footprint is the union of footprints
   let fp = Ghost.hide (B.loc_union (as_loc l1.fp) (as_loc l2.fp)) in
   // Invariant is the pointwise conjunction
-  let inv (x,y) h = l1.inv x h /\ l2.inv y h in
+  let inv h = l1.inv h /\ l2.inv h in
   // Roots are a pair of roots
   let roots = (l1.roots,l2.roots) in
   // Views are pairs of views 
@@ -129,9 +129,9 @@ let star_includes_left #roots1 #view1 #roots2 #view2
   }
 
 let star_includes_right #roots1 #view1 #roots2 #view2
-                       (l1:hs_view_lens roots1 view1)
-                       (l2:hs_view_lens roots2 view2{lens_disjoint l1 l2})
-                     : lens_includes (l1 <*> l2) l2 =
+                        (l1:hs_view_lens roots1 view1)
+                        (l2:hs_view_lens roots2 view2{lens_disjoint l1 l2})
+                      : lens_includes (l1 <*> l2) l2 =
   {
     inc_roots = snd;
     inc_views = snd;
