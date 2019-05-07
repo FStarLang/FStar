@@ -290,7 +290,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           let labels, body = aux default_msg ropt post_name_opt labels body in
           labels, Term.mkLet (es, body) q.rng
     in
-    aux "assertion failed" None None [] q
+    aux "assertion failed" (Some r) None [] q
 
 
 (*
