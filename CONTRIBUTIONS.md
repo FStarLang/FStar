@@ -25,8 +25,8 @@ ones. Specially so if the change is a bugfix, or touches a critical component.
 
 The F\* compiler is written in F\*/F#, then extracted to OCaml. We keep a copy
 of the OCaml extracted compiler under version control. We do *not* expect pull
-requests to refresh the snapshot; reviewers should take it upon themselves to
-merge then let the nightly build refresh the snapshot automatically.
+requests to refresh the snapshot. However, reviewers should take it upon themselves to
+update the snapshot, obtain a green from CI and then merge to master.
 
 ## Merge vs. rebase
 
