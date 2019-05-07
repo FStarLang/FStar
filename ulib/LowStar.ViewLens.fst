@@ -64,10 +64,16 @@ let fp #roots #view (l:hs_view_lens roots view) =
 let view #roots #view (l:hs_view_lens roots view) (h:imem (inv l)) =
   l.view h
 
+unfold
+let lens_disjoint #roots1 #view1 #roots2 #view2 
+                  (l1:hs_view_lens roots1 view1)
+                  (l2:hs_view_lens roots2 view2) =
+  B.loc_disjoint (as_loc l1.fp) (as_loc l2.fp)
+
 let ( <*> ) #roots1 #view1 #roots2 #view2 
             (l1:hs_view_lens roots1 view1)
-            (l2:hs_view_lens roots2 view2{B.loc_disjoint (as_loc l1.fp) (as_loc l2.fp)}) 
-  : GTot (hs_view_lens (roots1 & roots2) (view1 * view2)) = 
+            (l2:hs_view_lens roots2 view2{lens_disjoint l1 l2}) 
+  : hs_view_lens (roots1 & roots2) (view1 * view2) = 
   // Footprint is the union of footprints
   let fp = Ghost.hide (B.loc_union (as_loc l1.fp) (as_loc l2.fp)) in
   // Invariant is the pointwise conjunction
@@ -84,28 +90,50 @@ let ( <*> ) #roots1 #view1 #roots2 #view2
   }
 
 noeq
-type lens_includes_aux #roots1 #roots2 #view1 #view2
+type lens_includes_aux #roots1 #view1 #roots2 #view2
                        (l1:hs_view_lens roots1 view1)
                        (l2:hs_view_lens roots2 view2) =
   {
-    i_roots: roots1 -> roots2;    // Mapping of lens source elements
-    i_views: view1 -> view2;      // Mapping of lens target elements
-    i_fp: eloc                    // Explicit footprints difference
+    inc_roots: roots1 -> roots2;    // Mapping of lens source elements
+    inc_views: view1 -> view2;      // Mapping of lens target elements
+    delta_fp: eloc                  // Explicit footprints difference
   }
 
-let lens_includes #roots1 #roots2 #view1 #view2
+let lens_includes #roots1 #view1 #roots2 #view2
                   (l1:hs_view_lens roots1 view1)
                   (l2:hs_view_lens roots2 view2) = 
   inc:lens_includes_aux l1 l2 {
     // Roots are mapped to roots
-    (inc.i_roots l1.roots == l2.roots) /\ 
+    (inc.inc_roots l1.roots == l2.roots) /\ 
     // Views are mapped to views
-    (forall h . inc.i_views (l1.view h) == l2.view h) /\
+    (forall h .{:pattern (inc.inc_views (l1.view h))} 
+               inc.inc_views (l1.view h) == l2.view h) /\
     // Difference in footprints is exactly inc.i_fp
-    (B.loc_disjoint (as_loc inc.i_fp) (as_loc l2.fp)) /\ 
-    (as_loc l1.fp == B.loc_union (as_loc inc.i_fp) (as_loc l2.fp)) /\ 
+    (B.loc_disjoint (as_loc inc.delta_fp) (as_loc l2.fp)) /\ 
+    (as_loc l1.fp == B.loc_union (as_loc inc.delta_fp) (as_loc l2.fp)) /\ 
     // Larger lens's invariant implies the smaller lens's one (e.g., liveness)
-    (forall h . inv l1 h ==> inv l2 h) /\ 
+    (forall h .{:pattern (inv l1 h); (inv l2 h)} inv l1 h ==> inv l2 h) /\ 
     // Larger lens's invariant can be framed across modifications by the smaller lens
-    (forall h0 h1 . inv l1 h0 /\ B.modifies (as_loc l2.fp) h0 h1 ==> inv l1 h1)
+    (forall h0 h1 .{:pattern (inv l1 h1); (B.modifies (as_loc l2.fp) h0 h1)} 
+                   inv l1 h0 /\ B.modifies (as_loc l2.fp) h0 h1 /\ inv l2 h1 ==> inv l1 h1)
+  }
+
+let star_includes_left #roots1 #view1 #roots2 #view2
+                       (l1:hs_view_lens roots1 view1)
+                       (l2:hs_view_lens roots2 view2{lens_disjoint l1 l2})
+                     : lens_includes (l1 <*> l2) l1 =
+  {
+    inc_roots = fst;
+    inc_views = fst;
+    delta_fp = l2.fp
+  }
+
+let star_includes_right #roots1 #view1 #roots2 #view2
+                       (l1:hs_view_lens roots1 view1)
+                       (l2:hs_view_lens roots2 view2{lens_disjoint l1 l2})
+                     : lens_includes (l1 <*> l2) l2 =
+  {
+    inc_roots = snd;
+    inc_views = snd;
+    delta_fp = l1.fp
   }
