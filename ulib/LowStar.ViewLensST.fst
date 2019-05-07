@@ -47,12 +47,46 @@ let star_post_t (#a:Type) (#v:Type) (#v':Type)
                 (post:v -> a -> v -> Type0) (x:v * v') (y:a) (z:v * v') : Type0 =
   post (fst x) y (fst z)
 
-let frame (#a:Type) (#roots1:Type) (#view1:Type) (#roots2:Type) (#view2:Type)
-          (#pre:view1 -> Type0) (#post:view1 -> a -> view1 -> Type0)
+let frame (#roots1:Type) (#view1:Type) 
+          (#roots2:Type) (#view2:Type)
           (#l1:hs_view_lens roots1 view1) 
-          (#l2:hs_view_lens roots2 view2{B.loc_disjoint (as_loc l1.fp) (as_loc l2.fp)})
+          (#l2:hs_view_lens roots2 view2
+               {B.loc_disjoint (as_loc l1.fp) (as_loc l2.fp)})
+          (#a:Type) (#pre:view1 -> Type0) 
+          (#post:view1 -> a -> view1 -> Type0)
           (f:unit -> LensST a l1 pre post)
         : LensST a (l1 <*> l2) (star_pre_t pre) (star_post_t post) = 
+  f ()
+
+let include_pre_t (#roots1:Type) (#view1:Type) 
+                  (#roots2:Type) (#view2:Type)
+                  (l1:hs_view_lens roots1 view1) 
+                  (l2:hs_view_lens roots2 view2)
+                  (inc:lens_includes l1 l2)
+                  (pre:view2 -> Type0)
+                  (x:view1) : Type0 =
+  pre (inc.i_views x)
+
+let include_post_t (#roots1:Type) (#view1:Type) 
+                   (#roots2:Type) (#view2:Type)
+                   (l1:hs_view_lens roots1 view1) 
+                   (l2:hs_view_lens roots2 view2)
+                   (inc:lens_includes l1 l2)
+                   (#a:Type)
+                   (post:view2 -> a -> view2 -> Type0)
+                   (x:view1) (y:a) (z:view1) : Type0 =
+  post (inc.i_views x) y (inc.i_views z)
+
+let lens_include (#roots1:Type) (#view1:Type) 
+                 (#roots2:Type) (#view2:Type)
+                 (#l1:hs_view_lens roots1 view1) 
+                 (#l2:hs_view_lens roots2 view2)
+                 (#inc:lens_includes l1 l2)
+                 (#a:Type) (#pre:view2 -> Type0) 
+                 (#post:view2 -> a -> view2 -> Type0)
+                 (f: unit -> LensST a l2 pre post)
+               : LensST a l1 (include_pre_t l1 l2 inc pre) 
+                             (include_post_t l1 l2 inc post) =
   f ()
 
 
