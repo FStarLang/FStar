@@ -1380,8 +1380,8 @@ and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range
 and p_typ_sep ps pb e = with_comment_sep (p_typ' ps pb) e e.range
 
 and p_typ' ps pb e = match e.tm with
-  | QForall (bs, trigger, e1)
-  | QExists (bs, trigger, e1) ->
+  | QForall (bs, (_, trigger), e1)
+  | QExists (bs, (_, trigger), e1) ->
       let binders_doc = p_binders true bs in
       let term_doc = p_noSeqTermAndComment ps pb e1 in
       //VD: We could dispense with this pattern matching if we removed trailing whitespace after the fact
