@@ -40,9 +40,11 @@ effect LensST (a:Type)
                  post (view l h0) x (view l h1) ==>   //Ensure the post-condition on the view
                  k x h1))                             //prove the  continuation under this hypothesis
 
+unfold
 let star_pre_t (#v:Type) (#v':Type) (pre:v -> Type0) (x:v * v') : Type0 = 
   pre (fst x)
 
+unfold
 let star_post_t (#a:Type) (#v:Type) (#v':Type)
                 (post:v -> a -> v -> Type0) (m1:v * v') (x:a) (m2:v * v') : Type0 =
   post (fst m1) x (fst m2)
@@ -57,19 +59,21 @@ let frame (#roots1:Type) (#view1:Type)
         : LensST a (l1 <*> l2) (star_pre_t pre) (star_post_t post) = 
   f ()
 
+unfold
 let include_pre_t (#roots1:Type) (#view1:Type) 
                   (#roots2:Type) (#view2:Type)
-                  (l1:hs_view_lens roots1 view1) 
-                  (l2:hs_view_lens roots2 view2)
+                  (#l1:hs_view_lens roots1 view1) 
+                  (#l2:hs_view_lens roots2 view2)
                   (inc:lens_includes l1 l2)
                   (pre:view2 -> Type0)
                   (x:view1) : Type0 =
   pre (inc.inc_views x)
 
+unfold
 let include_post_t (#roots1:Type) (#view1:Type) 
                    (#roots2:Type) (#view2:Type)
-                   (l1:hs_view_lens roots1 view1) 
-                   (l2:hs_view_lens roots2 view2)
+                   (#l1:hs_view_lens roots1 view1) 
+                   (#l2:hs_view_lens roots2 view2)
                    (inc:lens_includes l1 l2)
                    (#a:Type)
                    (post:view2 -> a -> view2 -> Type0)
@@ -84,8 +88,8 @@ let lens_include (#roots1:Type) (#view1:Type)
                  (#a:Type) (#pre:view2 -> Type0) 
                  (#post:view2 -> a -> view2 -> Type0)
                  (f: unit -> LensST a l2 pre post)
-               : LensST a l1 (include_pre_t l1 l2 inc pre) 
-                             (include_post_t l1 l2 inc post) =
+               : LensST a l1 (include_pre_t inc pre) 
+                             (include_post_t inc post) =
   f ()
 
 

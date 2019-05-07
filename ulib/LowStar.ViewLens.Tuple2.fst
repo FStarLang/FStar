@@ -20,13 +20,17 @@ open FStar.HyperStack.ST
 module B = LowStar.Buffer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
+module Seq = FStar.Seq
 
 open LowStar.ViewLens
 open LowStar.ViewLensST
 
 noeq
 type pointer_lens a = 
-  | Mk_pl : l:hs_view_lens (B.pointer a) a -> 
+  | Mk_pl : l:hs_view_lens (B.pointer a) a{
+              (as_loc l.fp == B.loc_buffer l.roots) /\ 
+              (forall h . l.inv h ==> B.live h l.roots /\ B.as_seq h l.roots == Seq.create 1 (l.view h)) /\ 
+              (forall h1 h2 . l.view h1 == l.view h2 ==> B.as_seq h1 l.roots == B.as_seq h2 l.roots)} -> 
             pl_reader:(unit -> LensST a l (fun _ -> True) (fun m1 x m2 -> m1 == x /\ x == m2)) -> 
             pl_writer:(x:a -> LensST unit l (fun _ -> True) (fun _ _ m -> m == x)) ->
             pointer_lens a
