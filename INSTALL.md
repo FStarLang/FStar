@@ -35,9 +35,6 @@ required dependencies (except for Z3) using the following commands:
         $ opam pin add fstar --dev-repo
         $ opam install fstar
 
-### Platform specific early troubleshooting ###
-- for mac users, make sure that `ginstall`, `gsed` and `gfind` are on your system (present in macports in `coreutils` and `findutils`)
-
 ## Binary releases ##
 
 Every now and then we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
@@ -227,7 +224,7 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
   ```sh
   $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process pprint ulex
   ```
-  
+
   **Note:** this list of packages is longer than the list in the
   [Testing a binary package](#testing-a-binary-package) section above,
   because the additional packages here are necessary to compile F\*.
