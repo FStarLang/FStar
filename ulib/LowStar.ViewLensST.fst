@@ -47,14 +47,13 @@ let star_post_t (#a:Type) (#v:Type) (#v':Type)
                 (post:v -> a -> v -> Type0) (x:v * v') (y:a) (z:v * v') : Type0 =
   post (fst x) y (fst z)
 
-let frame (#a:Type) (#roots:Type) (#v:Type) (#roots':Type) (#v':Type)
-          (#pre:v -> Type0) (#post:v -> a -> v -> Type0)
-          (l:hs_view_lens roots v) 
-          (l':hs_view_lens roots' v'{B.loc_disjoint (as_loc l.fp) (as_loc l'.fp)})
-          (f:unit -> LensST a l pre post)
-        : LensST a (l <*> l') (star_pre_t pre) (star_post_t post) = 
+let frame (#a:Type) (#roots1:Type) (#view1:Type) (#roots2:Type) (#view2:Type)
+          (#pre:view1 -> Type0) (#post:view1 -> a -> view1 -> Type0)
+          (#l1:hs_view_lens roots1 view1) 
+          (#l2:hs_view_lens roots2 view2{B.loc_disjoint (as_loc l1.fp) (as_loc l2.fp)})
+          (f:unit -> LensST a l1 pre post)
+        : LensST a (l1 <*> l2) (star_pre_t pre) (star_post_t post) = 
   f ()
-
 
 
 (* `for_n`: A simple for-loop example, for i in [0 .. n) *)
