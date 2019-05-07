@@ -165,8 +165,8 @@ Short version: Simply run `make -C src -j6 ocaml-fstar-ocaml` from the `master` 
 
 If you have a serious interest in F\* or want to report bugs then we recommend that you build F\* from the sources on GitHub (the `master` branch).
 
-The F\* compiler can generate OCaml or F# code from F\*. Therefore, the
-standard bootstrap build process of F\* involves the following three steps:
+F* is written in a subset of F* itself and can generate OCaml or F# code from its own sources.
+Therefore, the standard bootstrap build process of F\* involves the following three steps:
 
   **Step 1.** Build F\* using the OCaml compiler from the (possibly outdated) checked-in generated OCaml code.
 
@@ -174,13 +174,13 @@ standard bootstrap build process of F\* involves the following three steps:
 
   **Step 3.** Repeat step 1: rebuild F\* from the newly generated OCaml code in the previous step.
 
-**Note:** If you build F\* from sources you will also need to get a Z3
-binary. This is further explained towards the end of this document.
-
 Some convenience Makefile targets are available:
 
 - To run steps 2 and 1, do `make -C src -j6 fstar-ocaml`.
 - To run steps 1, 2 and 1 again (step 3), do: `make -C src -j6 ocaml-fstar-ocaml`.
+
+**Note:** If you build F\* from sources you will also need to get a Z3 binary.
+          This is further explained towards the end of this document.
 
 ### Prerequisites: Working OCaml setup  ###
 
@@ -188,8 +188,8 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
 
 #### Instructions for Windows ####
 
-Please use [Andreas Hauptmann's OCaml Installer for Windows](https://fdopen.github.io/opam-repository-mingw/installation/).
-This will install both OCaml and OPAM.
+1. Please use [Andreas Hauptmann's OCaml Installer for Windows](https://fdopen.github.io/opam-repository-mingw/installation/)
+   to install both OCaml and OPAM.
 
 #### Instructions for Linux and Mac OS X ####
 
@@ -227,13 +227,10 @@ This will install both OCaml and OPAM.
   ```sh
   $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process pprint ulex
   ```
-  Some of the examples also require the `sqlite3` opam package, which depends
-  on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)
-
-  Please note that this list of packages is longer than the list in
-  the [Testing a binary package](#testing-a-binary-package) section
-  above, because the additional packages here are necessary to compile
-  F\*.
+  
+  **Note:** this list of packages is longer than the list in the
+  [Testing a binary package](#testing-a-binary-package) section above,
+  because the additional packages here are necessary to compile F\*.
 
 ### Step 1. Building F\* from the OCaml snapshot ###
 
