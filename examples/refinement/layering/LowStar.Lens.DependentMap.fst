@@ -23,7 +23,7 @@ module ListP = FStar.List.Tot.Properties
 unfold 
 let fin (#a:eqtype) (lst:list a) = (forall x. List.memP x lst) /\ List.noRepeats lst
 
-// all pointers in a heap are live in a given mem 
+// all pointers are live in a given mem 
 unfold
 let map_inv' (#t:eqtype) (f: t -> Type) (m:DM.t t (fun (x:t) -> B.pointer (f x))) (dom:list t) (h : HS.mem) : Type0 =
   big_and' #t (fun x -> B.live h (DM.sel m x)) dom
@@ -251,23 +251,14 @@ let get_put_law' (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:DM.t t (
 
 let ptr_t (#t:eqtype) (f:t -> Type) = DM.t t (fun x -> B.pointer (f x))
 
-let mem_lens (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:ptr_t f) fp 
-  : imem_lens (map_inv f ptr) (DGM.t t f) fp 
-  = 
+let mem_lens (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:ptr_t f) 
+: imem_lens (map_inv f ptr) (DGM.t t f) (map_eloc f ptr keys) = 
   get_reads_lemma f keys ptr;
   put_modifies_lemma f keys ptr;
   invariant_reads_loc_lemma f keys ptr;
-  let p = {  
-    get = get f ptr;
+  { get = get f ptr;
     put = put f keys ptr;
-    lens_laws = get_put_law' f keys ptr 
-  }
-  in
-  assume (fp == map_eloc f ptr keys);
-  // assert (L.get_reads_loc fp p.get);
-  // assert (L.put_modifies_loc fp p.put);
-  // assert (L.invariant_reads_loc (map_inv f ptr) fp);
-  p
+    lens_laws = get_put_law' f keys ptr }
   
 
 let reader_t (#t:eqtype) (#f: t -> Type) (l : hs_lens (DM.t t (fun (x:t) -> B.pointer (f x))) (DGM.t t f)) = 
@@ -288,7 +279,24 @@ type map_lens (#t:eqtype) (f:t -> Type) =
          writer:LB.with_state lens writer_t ->
          map_lens f
 
+(* getters *)
+let lens_of (#t:eqtype) (#f:t -> Type) (m : map_lens f) : hs_lens (DM.t t (fun (x:t) -> B.pointer (f x))) (DGM.t t f) = 
+  m.lens 
+
+let reader (#t:eqtype) (#f:t -> Type) (m : map_lens f) : LB.with_state (lens_of m) reader_t = 
+  m.reader
+
+let writer (#t:eqtype) (#f:t -> Type) (m : map_lens f) : LB.with_state (lens_of m) writer_t = 
+  m.writer
+
+
 (* Lens constructor *)
+
+
+// TODO move? DMap definition
+
+let pairwise_disjoint (#t:eqtype) (f : t -> Type) (m : ptr_t f) : Type =
+  forall (x y : t). ~ (x == y) -> B.disjoint (DM.sel m x) (DM.sel m y)
 
 
 let reveal_inv' #a #b (l:hs_lens a b) (h:imem (inv l))
@@ -299,7 +307,25 @@ let reveal_inv' #a #b (l:hs_lens a b) (h:imem (inv l))
            view l h == l.l.get h)
   = L.reveal_inv()
 
-let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:ptr_t f) (h:imem (map_inv f ptr)) 
+let reveal_only_inv #a #b (l:hs_lens a b) (h:HS.mem)
+  : Lemma ((inv l h <==>
+            (l.invariant l.x h /\
+             B.modifies (as_loc l.footprint) l.snapshot h /\
+             FStar.HyperStack.ST.equal_domains l.snapshot h)))
+    = L.reveal_inv()
+
+
+// Admits about get/g_upd (XXX proof?)
+val get_upd_same : #a:Type -> h:HS.mem -> b1:B.pointer a{B.live h b1} -> v1:a -> Lemma (B.get (B.g_upd b1 0 v1 h) b1 0 == v1)
+let get_upd_same #a h b1 v1 = admit ()
+
+val get_upd_other : #a:Type -> #b:Type -> h:HS.mem -> b1:B.pointer a{B.live h b1} -> b2:B.pointer b{B.live h b2} -> v1:a -> v2:b ->
+    Lemma (requires (B.get h b2 0 == v2 /\ B.disjoint b1 b2))
+          (ensures (B.get (B.g_upd b1 0 v1 h) b2 0 == v2))
+let get_upd_other #a #b h b1 b2 v1 v2 = admit ()
+
+
+let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:ptr_t f{pairwise_disjoint f ptr}) (h:imem (map_inv f ptr)) 
 : map_lens f =
   (* invariant *) 
   let inv = map_inv f ptr in
@@ -312,35 +338,63 @@ let mk (#t:eqtype) (f:t -> Type) (keys:list t{fin keys}) (ptr:ptr_t f) (h:imem (
     invariant = map_inv f;
     x = ptr;
     snapshot = snap;
-    l = mem_lens f keys ptr fp
+    l = mem_lens f keys ptr
   } in
   let reader : LB.with_state lens reader_t = 
     fun s i -> 
-      reveal_inv ();
       let h = HST.get () in 
       let snap_l = (L.snap lens s) in
-      assert (L.inv snap_l h); // XXX fails
       reveal_inv' snap_l h;
-      assert (snap_l.invariant snap_l.x h);
-      assert (map_inv f ptr h); // XXX fails
       let b = DM.sel ptr i in 
-      assert (B.live h b); // XXX fails
-      let v = B.index b 0ul in 
-      assert (v == B.get h b 0);
-//      let _ =  gest_eq f ptr i h in 
-      admit();
-      v
+      get_eq f ptr i h; B.index b 0ul
   in 
   let writer : LB.with_state lens writer_t = 
     fun s i v -> 
       let b = DM.sel ptr i in
-      admit () // B.upd b 0ul v
+      let h = HST.get () in 
+      let snap_l = (L.snap lens s) in
+      assert (L.inv snap_l h);
+      reveal_inv' snap_l h;
+      (* stateful update *)
+      B.upd' b 0ul v;
+      (* *************** *)
+      let h' = HST.get () in 
+      assert (h' == B.g_upd b 0 v h);
+      get_upd_same h b v;  
+      assert (B.get h' b 0 == v);
+      g_upd_preserves_map_inv f h b v ptr;
+      assert (map_inv f ptr h');
+      reveal_only_inv snap_l h';
+      map_eloc_includes f ptr keys i;
+      assert (B.modifies (as_loc snap_l.footprint) snap_l.snapshot h');
+      reveal_inv' snap_l h';
+      let f1 = L.view snap_l h in
+      let f2 = L.view snap_l h' in 
+      let lem (x : t) : Lemma (DGM.sel f2 x == DGM.sel (DGM.upd f1 i v) x) = 
+        get_eq f ptr i h;
+        get_eq f ptr i h';
+        get_eq f ptr x h;
+        get_eq f ptr x h';
+        if x = i then 
+          (assert (DGM.sel f2 i == v);
+           DGM.sel_upd_same f1 i v)
+        else
+          (DGM.sel_upd_other f1 i v x;
+           let b' = DM.sel ptr x in 
+           assert (pairwise_disjoint f ptr);
+           assert (~ (x == i));
+           assume (B.disjoint b b'); (* XXX why not? *)
+           get_upd_other h b b' v (B.get h b' 0);
+           ())
+      in 
+      let _ = forall_intro lem in
+      let _ = DGM.equal_intro f2 (DGM.upd f1 i v) in
+      let _ = DGM.equal_elim f2 (DGM.upd f1 i v) in 
+      ()
   in 
   Mk lens reader writer
-  
-      
-
-
+   
+       
 // Allocation: scoped allocation
 // Experiment: swap with dep map 
 // Get/put with lens composition 
