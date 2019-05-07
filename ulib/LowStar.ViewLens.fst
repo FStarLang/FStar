@@ -68,9 +68,13 @@ let ( <*> ) #roots1 #view1 #roots2 #view2
             (l1:hs_view_lens roots1 view1)
             (l2:hs_view_lens roots2 view2{B.loc_disjoint (as_loc l1.fp) (as_loc l2.fp)}) 
   : GTot (hs_view_lens (roots1 & roots2) (view1 * view2)) = 
+  // Footprint is the union of footprints
   let fp = Ghost.hide (B.loc_union (as_loc l1.fp) (as_loc l2.fp)) in
+  // Invariant is the pointwise conjunction
   let inv (x,y) h = l1.inv x h /\ l2.inv y h in
+  // Roots are a pair of roots
   let roots = (l1.roots,l2.roots) in
+  // Views are pairs of views 
   let view h = (l1.view h,l2.view h) in
   {
     fp = fp;
@@ -84,16 +88,24 @@ type lens_includes_aux #roots1 #roots2 #view1 #view2
                        (l1:hs_view_lens roots1 view1)
                        (l2:hs_view_lens roots2 view2) =
   {
-    i_roots: roots1 -> roots2;
-    i_views: view1 -> view2
+    i_roots: roots1 -> roots2;    // Mapping of lens source elements
+    i_views: view1 -> view2;      // Mapping of lens target elements
+    i_fp: eloc                    // Explicit footprints difference
   }
 
 let lens_includes #roots1 #roots2 #view1 #view2
                   (l1:hs_view_lens roots1 view1)
                   (l2:hs_view_lens roots2 view2) = 
-  i:lens_includes_aux l1 l2 {
-    (i.i_roots l1.roots == l2.roots) /\ 
-    (forall h . i.i_views (l1.view h) == l2.view h) /\
-    (B.loc_includes (as_loc l1.fp) (as_loc l2.fp)) /\ 
-    (forall h . l1.inv l1.roots h ==> l2.inv l2.roots h)
+  inc:lens_includes_aux l1 l2 {
+    // Roots are mapped to roots
+    (inc.i_roots l1.roots == l2.roots) /\ 
+    // Views are mapped to views
+    (forall h . inc.i_views (l1.view h) == l2.view h) /\
+    // Difference in footprints is exactly inc.i_fp
+    (B.loc_disjoint (as_loc inc.i_fp) (as_loc l2.fp)) /\ 
+    (as_loc l1.fp == B.loc_union (as_loc inc.i_fp) (as_loc l2.fp)) /\ 
+    // Larger lens's invariant implies the smaller lens's one (e.g., liveness)
+    (forall h . inv l1 h ==> inv l2 h) /\ 
+    // Larger lens's invariant can be framed across modifications by the smaller lens
+    (forall h0 h1 . inv l1 h0 /\ B.modifies (as_loc l2.fp) h0 h1 ==> inv l1 h1)
   }
