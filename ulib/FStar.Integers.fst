@@ -153,8 +153,10 @@ let cast_ok #from to (x:int_t from) = within_bounds to (v x)
 unfold
 let ( + ) #sw
           (x:int_t sw)
-          (y:int_t sw{within_bounds sw (v x + v y)})
-  : Tot   (z:int_t sw)
+          (y:int_t sw)
+  : Pure (z:int_t sw)
+    (requires within_bounds sw (v x + v y))
+    (ensures fun _ -> True)
   = match sw with
     | Signed Winfinite -> x + y
     | Unsigned W8   -> FStar.UInt8.(x +^ y)
