@@ -673,7 +673,7 @@ and (translate_fv :
                            FStar_Util.print1 "(3) Decided to not unfold %s\n"
                              uu____3288);
                       FStar_TypeChecker_NBETerm.mkFV fvar1 [] [])))
-           | FStar_TypeChecker_Normalize.Should_unfold_reify  ->
+           | FStar_TypeChecker_Normalize.Should_unfold_yes_delta  ->
                (match qninfo with
                 | FStar_Pervasives_Native.Some
                     (FStar_Util.Inr

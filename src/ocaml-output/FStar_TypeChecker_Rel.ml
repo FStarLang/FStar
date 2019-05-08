@@ -11132,9 +11132,11 @@ let (discharge_guard' :
                   else ();
                   (let vc1 =
                      FStar_TypeChecker_Normalize.normalize
-                       [FStar_TypeChecker_Env.Eager_unfolding;
-                       FStar_TypeChecker_Env.Simplify;
-                       FStar_TypeChecker_Env.Primops] env vc
+                       [FStar_TypeChecker_Env.Simplify;
+                       FStar_TypeChecker_Env.Primops;
+                       FStar_TypeChecker_Env.Eager_unfolding;
+                       FStar_TypeChecker_Env.UnfoldAttr
+                         [FStar_Parser_Const.unfold_for_smt_attr]] env vc
                       in
                    if debug1
                    then

@@ -7,6 +7,8 @@ let (norm_before_encoding :
     fun t  ->
       let steps =
         [FStar_TypeChecker_Env.Eager_unfolding;
+        FStar_TypeChecker_Env.UnfoldAttr
+          [FStar_Parser_Const.unfold_for_smt_attr];
         FStar_TypeChecker_Env.Simplify;
         FStar_TypeChecker_Env.Primops;
         FStar_TypeChecker_Env.AllowUnboundUniverses;
