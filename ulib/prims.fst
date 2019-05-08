@@ -472,8 +472,8 @@ val string_of_int: int -> Tot string
 irreducible
 let labeled (r:range) (msg:string) (b:Type) :Type = b
 
-(* THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.Universal.fs
+(* THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
    Incrementing this forces all .checked files to be invalidated *)
 private
 abstract
-let __cache_version_number__ = 10
+let __cache_version_number__ = 11

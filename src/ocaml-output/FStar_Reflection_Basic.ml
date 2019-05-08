@@ -619,6 +619,18 @@ let (pack_binder :
   fun bv  -> fun aqv  -> let uu____1825 = pack_aqual aqv  in (bv, uu____1825) 
 let (moduleof : FStar_TypeChecker_Env.env -> Prims.string Prims.list) =
   fun e  -> FStar_Ident.path_of_lid e.FStar_TypeChecker_Env.curmodule 
+let (env_open_modules :
+  FStar_TypeChecker_Env.env -> FStar_Reflection_Data.name Prims.list) =
+  fun e  ->
+    let uu____1852 =
+      FStar_Syntax_DsEnv.open_modules e.FStar_TypeChecker_Env.dsenv  in
+    FStar_List.map
+      (fun uu____1870  ->
+         match uu____1870 with
+         | (l,m) ->
+             let uu____1880 = FStar_Ident.ids_of_lid l  in
+             FStar_List.map FStar_Ident.text_of_id uu____1880) uu____1852
+  
 let (binders_of_env :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.binders) =
   fun e  -> FStar_TypeChecker_Env.all_binders e 
@@ -626,9 +638,11 @@ let (term_eq :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t1  ->
     fun t2  ->
-      let uu____1860 = FStar_Syntax_Util.un_uinst t1  in
-      let uu____1861 = FStar_Syntax_Util.un_uinst t2  in
-      FStar_Syntax_Util.term_eq uu____1860 uu____1861
+      let uu____1902 = FStar_Syntax_Util.un_uinst t1  in
+      let uu____1903 = FStar_Syntax_Util.un_uinst t2  in
+      FStar_Syntax_Util.term_eq uu____1902 uu____1903
   
 let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
   fun t  -> FStar_Syntax_Print.term_to_string t 
+let (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
+  fun c  -> FStar_Syntax_Print.comp_to_string c 
