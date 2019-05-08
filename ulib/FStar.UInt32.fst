@@ -174,6 +174,11 @@ let shift_left (a:t) (s:t)
 
 (* Comparison operators *)
 [@unfold_for_smt]
+let eq (a b:t)
+  : Tot bool
+  = a = b
+
+[@unfold_for_smt]
 let gt (a b:t)
   : Tot bool
   = gt #n (v a) (v b)
