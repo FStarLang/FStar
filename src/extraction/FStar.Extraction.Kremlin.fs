@@ -77,6 +77,7 @@ and flag =
   | Epilogue of string
   | Abstract
   | IfDef
+  | Macro
 
 and fsdoc = string
 
@@ -374,6 +375,7 @@ and translate_flags flags =
     | Syntax.CEpilogue s -> Some (Epilogue s)
     | Syntax.CAbstract -> Some Abstract
     | Syntax.CIfDef -> Some IfDef
+    | Syntax.CMacro -> Some Macro
     | _ -> None // is this all of them?
   ) flags
 
