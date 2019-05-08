@@ -1,25 +1,40 @@
-# Contributor's license agreement
+# Open source
 
-Contributors to F\* are required to sign the contributor's license
-agreement provided by https://cla.opensource.microsoft.com/
+F* is an open source project developed in the open using an inclusive
+collaboration model meant to attract contribututions from a broad and
+growing community covering companies, universities, and individuals.
 
-The code of F* is released under the Apache 2.0 license.
+The code of F* is released under the permissive Apache v2.0 License 
+and is developed at https://github.com/FStarLang/FStar
+
+# Contributor License Agreement
+
+Contributors to F\* are required to sign a standard [Contributor License Agreement]
+(CLA) giving a non-exclusive license for their contribution to Microsoft,
+the main contributor to F*. The use of such a CLA is [relatively common]
+for open source projects where companies are involved.
+
+[Contributor License Agreement]: https://cla.opensource.microsoft.com
+[relatively common]: https://en.wikipedia.org/wiki/Contributor_License_Agreement#Users
 
 # Pull requests
 
-Please make your contribution available as a pull request. We expect
-all regression tests to pass on your pull request before considering
-it eligible for review.
+Please make your contribution available as a pull request (PR). We expect
+all regression tests to pass on your PR before considering it eligible
+for review ("All checks have passed" green checkbox on GitHub).
 
-The rationale for the PR should be explained, either in the commit messages
-or in Github's PR system. Ideally, PRs should come with comments and
+The rationale for the PR should be explained, in the commit messages
+and/or the Github PR. Ideally, PRs should come with comments and
 documentation within the source tree, if applicable. If the PR
 involves a non-backwards-compatible or possibly breaking change,
 it should update `CHANGES.md` to reflect it.
 
 Please add regression tests for your PR. Ideally, both positive and negative
-ones. Specially so if the change is a bugfix, or touches a critical component.
+ones; especially so if the change is a bugfix, or touches a critical component.
 [Failure attributes can help for that](https://github.com/FStarLang/FStar/wiki/Failure-attributes).
+
+Finally, contributions should adhere to the following style guide:
+https://github.com/FStarLang/FStar/wiki/Style-guide
 
 ## Snapshots
 
@@ -44,16 +59,15 @@ make it harder to work with your pull request.
 All of the important file formats should be in the `.gitattributes`, but we
 expect any new file to have Unix line endings.
 
-## F\* oranges
+## CI can report "Success with breakages"
 
 Internally, each regression build tests a new F\* version against "important"
 projects, e.g. Vale, HACL\*, etc. Should a new F\* commit break one of these
-projects, the breakage will be flagged via a Slack channel, but the CI system
-will report a successful build on the pull request.
+projects, the breakage will be flagged as a "Success with breakages" in the CI
+logs, but the CI system will still report a successful build on the GitHub PR.
 
-It is up to the reviewer to parse the logs and figure out whether this is
-something that needs attention from you. You should not have to worry about
-this.
+It is up to the reviewer to detect such problems and if they occur parse the
+CI logs and figure out whether this is something that needs attention from you.
 
 ## Debugging a build failure
 
@@ -61,11 +75,7 @@ Right now, the "Details" link points to a Visual Studio instance that requires
 manual approval to read the build logs. We plan to make our CI bot post a
 message on a pull request after each build, with a link to publicly-hosted logs
 (they exist! ask a reviewer about them if you need them) along with a full
-report on the aforementioned "orange" builds.
-
-# Contributions should adhere to the style guide
-
-See https://github.com/FStarLang/FStar/wiki/Style-guide
+report on the aforementioned "Success with breakages" builds.
 
 # Reviewers of pull requests
 
