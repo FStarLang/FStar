@@ -31,11 +31,12 @@ type closure =
   | Dummy                                           //Dummy is a placeholder for a binder when doing strong reduction
 and env = list<(option<binder> * closure)>
 
+
 type should_unfold_res =
     | Should_unfold_no
+    | Should_unfold_yes_delta
     | Should_unfold_yes
     | Should_unfold_fully
-    | Should_unfold_reify
 
 val should_unfold : cfg
                  -> should_reify:(cfg -> bool)

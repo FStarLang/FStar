@@ -222,7 +222,10 @@ type cfg = {
 let cfg_to_string cfg =
     String.concat "\n"
         ["{";
-         BU.format1 "  steps = %s" (steps_to_string cfg.steps);
+         BU.format2 "  steps = %s; delta_level={%s}"
+           (steps_to_string cfg.steps)
+           (List.map Env.string_of_delta_level cfg.delta_level
+             |> String.concat ", ");
          "}" ]
 
 let cfg_env cfg = cfg.tcenv

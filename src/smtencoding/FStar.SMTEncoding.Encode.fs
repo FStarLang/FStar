@@ -49,6 +49,7 @@ module Env = FStar.TypeChecker.Env
 
 let norm_before_encoding env t =
     let steps = [Env.Eager_unfolding;
+                 Env.UnfoldAttr [Const.unfold_for_smt_attr];
                  Env.Simplify;
                  Env.Primops;
                  Env.AllowUnboundUniverses;

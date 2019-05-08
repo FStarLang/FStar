@@ -347,7 +347,7 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
        end
 
 
-     | N.Should_unfold_reify
+     | N.Should_unfold_yes_delta
      | N.Should_unfold_yes ->
        begin match qninfo with
        | Some (BU.Inr ({ sigel = Sig_let ((is_rec, lbs), names) }, _us_opt), _rng) ->

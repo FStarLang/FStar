@@ -3313,7 +3313,15 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-      let vc = N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env vc in
+      let vc =
+        N.normalize
+          [Env.Simplify;
+           Env.Primops;
+           Env.Eager_unfolding;
+           Env.UnfoldAttr [Const.unfold_for_smt_attr]]
+          env
+          vc
+      in
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "After normalization VC=\n%s\n" (Print.term_to_string vc));
