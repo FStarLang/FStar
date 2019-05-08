@@ -85,6 +85,7 @@ unfold
 let r_disjoint (res1 res2:resource) = 
   B.loc_disjoint (as_loc res1.fp) (as_loc res2.fp)
 
+abstract
 let ( <*> ) (res1 res2:resource) : resource = 
   let fp = Ghost.hide (B.loc_union (as_loc res1.fp) (as_loc res2.fp)) in 
   let inv h = inv res1 h /\ inv res2 h /\ r_disjoint res1 res2 in
@@ -97,6 +98,13 @@ let ( <*> ) (res1 res2:resource) : resource =
     inv = inv;
     view = view
   }
+
+let lemma_star_inv (res1 res2:resource) (h:HS.mem)
+  : Lemma (requires ((res1 <*> res2).inv h))
+          (ensures  (res1.inv h /\ res2.inv h)) 
+          [SMTPat ((res1 <*> res2).inv h)]= 
+  ()
+
 
 (* (Constructive) view and resource inclusion *)
 
@@ -165,32 +173,70 @@ effect RST (a:Type)
                  post h0 x h1 ==>                       //Ensure the post-condition
                  k x h1))                               //prove the continuation under this hypothesis
 
+(* Simple packaging of resources with readers-writers for them *)
+noeq
+type resource_w_rw = {
+    res: resource;
+    reader: unit -> RST (res.view.t) res (fun _ -> True) (fun h0 x h1 -> sel res h0 == x /\ x == sel res h1);
+    writer: x:res.view.t -> RST unit res (fun _ -> True) (fun _ _ h1 -> sel res h1 == x)
+  }
+
 (* Framing for RST computations *)
 
-let frame_pre (#res1:resource)
+let frame_left_pre (#res1:resource)
               (#res2:resource)
               (pre:r_pre res1)
               (h:imem (inv (res1 <*> res2))) = 
   pre h
 
-let frame_post (#res1:resource)
+let frame_left_post (#res1:resource)
                (#res2:resource)
                (#a:Type)
                (post:r_post res1 a)
-               (h1:imem (inv (res1 <*> res2)))
+               (h0:imem (inv (res1 <*> res2)))
                (x:a)
-               (h2:imem (inv (res1 <*> res2))) =
-  post h1 x h2 /\
-  sel res2 h1 == sel res2 h2
+               (h1:imem (inv (res1 <*> res2))) =
+  post h0 x h1 /\
+  sel res2 h0 == sel res2 h1
 
-let frame (#a:Type)
+abstract
+let frame_left (#a:Type)
           (#res1:resource)
           (#res2:resource)
           (#pre:r_pre res1)
           (#post:r_post res1 a)
           (f:unit -> RST a res1 pre post)
         : RST a (res1 <*> res2) 
-                (frame_pre pre) (frame_post post) =
+                (frame_left_pre pre) 
+                (frame_left_post post) =
+  f ()
+
+let frame_right_pre (#res1:resource)
+               (#res2:resource)
+               (pre:r_pre res2)
+               (h:imem (inv (res1 <*> res2))) = 
+  pre h
+
+let frame_right_post (#res1:resource)
+                (#res2:resource)
+                (#a:Type)
+                (post:r_post res2 a)
+                (h0:imem (inv (res1 <*> res2)))
+                (x:a)
+                (h1:imem (inv (res1 <*> res2))) =
+  post h0 x h1 /\
+  sel res1 h0 == sel res1 h1
+
+abstract
+let frame_right (#a:Type)
+           (#res1:resource)
+           (#res2:resource)
+           (#pre:r_pre res2)
+           (#post:r_post res2 a)
+           (f:unit -> RST a res2 pre post)
+         : RST a (res1 <*> res2) 
+                 (frame_right_pre pre) 
+                 (frame_right_post post) =
   f ()
 
 (* Resource inclusion for RST computations *)
@@ -207,10 +253,11 @@ let include_post (#res1:resource)
                  (inc:r_includes res1 res2)
                  (#a:Type)
                  (post:r_post res2 a)
-                 (h1:imem (inv res1))
+                 (h0:imem (inv res1))
                  (x:a)
-                 (h2:imem (inv res1)) = 
-  post h1 x h2
+                 (h1:imem (inv res1)) = 
+  (post h0 x h1) /\
+  (B.modifies (as_loc res2.fp) h0 h1) // [DA: can we get rid of this modifies somehow?]
 
 let r_include (#a:Type)
               (#res1:resource)
