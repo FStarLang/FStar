@@ -152,6 +152,7 @@ type meta =
   | Erased
   | CAbstract
   | CIfDef
+  | CMacro
 
 // rename
 type metadata = list<meta>
