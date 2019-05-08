@@ -891,6 +891,12 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let comb_or l = List.fold_right should_unfold_or l Should_unfold_no in
 
     let default_unfolding () =
+      if Option.isSome (find_prim_step cfg fv)
+      then begin
+        log_unfolding cfg (fun () -> BU.print_string " >> It's a primop, not unfolding\n");
+        Should_unfold_no
+      end
+      else
         yes_delta_no <|
         (cfg.delta_level |> BU.for_some (function
              | NoDelta -> false
@@ -909,11 +915,6 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         if b
         then Should_unfold_yes_delta
         else Should_unfold_no
-
-    // If it is handled primitively, then don't unfold
-    | _ when Option.isSome (find_prim_step cfg fv) ->
-        log_unfolding cfg (fun () -> BU.print_string " >> It's a primop, not unfolding\n");
-        Should_unfold_no
 
     // Don't unfold HasMaskedEffect
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when

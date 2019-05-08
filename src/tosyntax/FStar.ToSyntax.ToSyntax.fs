@@ -1919,7 +1919,7 @@ let binder_idents (bs:list<binder>) : list<ident> =
   List.collect (fun b -> FStar.Common.list_of_option (binder_ident b)) bs
 
 // FIXME: Would be nice to add auto-generated docs to these
-let mk_data_discriminators quals env datas =
+let mk_data_discriminators attrs quals env datas =
     let quals = quals |> List.filter (function
         | S.NoExtract
         | S.Abstract
@@ -1937,10 +1937,10 @@ let mk_data_discriminators quals env datas =
           sigrng = range_of_lid disc_name;// FIXME: Isn't that range wrong? // FIXME: Doc?
           sigquals =  quals [(* S.Logic ; *) S.OnlyName ; S.Discriminator d];
           sigmeta = default_sigmeta;
-          sigattrs = []
+          sigattrs = attrs
         })
 
-let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
+let mk_indexed_projector_names attrs iquals fvq env lid (fields:list<S.binder>) =
     let p = range_of_lid lid in
 
     fields |> List.mapi (fun i (x, _) ->
@@ -1969,7 +1969,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                      sigquals = quals;
                      sigrng = range_of_lid field_name;
                      sigmeta = default_sigmeta ;
-                     sigattrs = [] } in // FIXME: Doc?
+                     sigattrs = attrs } in // FIXME: Doc?
         if only_decl
         then [decl] //only the signature
         else
@@ -1991,11 +1991,11 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                          sigquals = quals;
                          sigrng = p;
                          sigmeta = default_sigmeta;
-                         sigattrs = [] } in // FIXME: Doc?
+                         sigattrs = attrs } in // FIXME: Doc?
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
 // FIXME: Would be nice to add auto-generated docs to these
-let mk_data_projector_names iquals env se =
+let mk_data_projector_names attrs iquals env se =
   match se.sigel with
   | Sig_datacon(lid, _, t, _, n, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
@@ -2018,7 +2018,7 @@ let mk_data_projector_names iquals env se =
                 else iquals
             in
             let _, rest = BU.first_N n formals in
-            mk_indexed_projector_names iquals fv_qual env lid rest
+            mk_indexed_projector_names attrs iquals fv_qual env lid rest
     end
 
   | _ -> []
@@ -2043,6 +2043,7 @@ let mk_typ_abbrev lid uvs typars kopt t lids quals rng =
       sigattrs = [] }
 
 let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
+  let attrs = List.map (desugar_term env) d.attrs in
   let rng = d.drange in
   let tycon_id = function
     | TyconAbstract(id, _, _)
@@ -2095,7 +2096,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                  sigquals = quals;
                  sigrng = rng;
                  sigmeta = default_sigmeta  ;
-                 sigattrs = [] } in
+                 sigattrs = attrs } in
       let _env = Env.push_top_level_rec_binding _env id S.delta_constant in
       let _env2 = Env.push_top_level_rec_binding _env' id S.delta_constant in
       _env, _env2, se, tconstr
@@ -2176,7 +2177,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                    sigquals = quals;
                    sigrng = rng;
                    sigmeta = default_sigmeta  ;
-                   sigattrs = [] }
+                   sigattrs = attrs }
             else let t = desugar_typ env' t in
                  mk_typ_abbrev qlid [] typars kopt t [qlid] quals rng in
 
@@ -2248,13 +2249,13 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                             sigquals = quals;
                                             sigrng = rng;
                                             sigmeta = default_sigmeta  ;
-                                            sigattrs = [] }))))
+                                            sigattrs = attrs }))))
           in
           ((tname, d.doc), [], { sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames);
                                  sigquals = tname_quals;
                                  sigrng = rng;
                                  sigmeta = default_sigmeta  ;
-                                 sigattrs = [] })::constrs
+                                 sigattrs = attrs })::constrs
         | _ -> failwith "impossible")
       in
       let name_docs = docs_tps_sigelts |> List.map (fun (name_doc, _, _) -> name_doc) in
@@ -2263,14 +2264,14 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let env = push_sigelt env0 bundle in
       let env = List.fold_left push_sigelt env abbrevs in
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
-      let data_ops = docs_tps_sigelts |> List.collect (fun (_, tps, se) -> mk_data_projector_names quals env se) in
+      let data_ops = docs_tps_sigelts |> List.collect (fun (_, tps, se) -> mk_data_projector_names attrs quals env se) in
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
         | Sig_inductive_typ(tname, _, tps, k, _, constrs) ->
           let quals = se.sigquals in
           let quals = if List.contains S.Abstract quals && not (List.contains S.Private quals)
                       then S.Private::quals
                       else quals in
-          mk_data_discriminators quals env
+          mk_data_discriminators attrs quals env
             (constrs |> List.filter (fun data_lid ->  //AR: create data discriminators only for non-record data constructors
                                      let data_quals =
                                        let data_se = sigelts |> List.find (fun se -> match se.sigel with
@@ -2887,22 +2888,23 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
             let t = desugar_term env term in
             U.arrow ([null_binder t]) (mk_Total <| fail_or env (try_lookup_lid env) C.exn_lid)
     in
+    let attrs = List.map (desugar_term env) d.attrs in
     let l = qualify env id in
     let qual = [ExceptionConstructor] in
     let se = { sigel = Sig_datacon(l, [], t, C.exn_lid, 0, [C.exn_lid]);
                sigquals = qual;
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = [] } in
+               sigattrs = attrs } in
     let se' = { sigel = Sig_bundle([se], [l]);
                 sigquals = qual;
                 sigrng = d.drange;
                 sigmeta = default_sigmeta  ;
-                sigattrs = [] } in
+                sigattrs = attrs } in
     let env = push_sigelt env se' in
     let env = push_doc env l d.doc in
-    let data_ops = mk_data_projector_names [] env se in
-    let discs = mk_data_discriminators [] env [l] in
+    let data_ops = mk_data_projector_names attrs [] env se in
+    let discs = mk_data_discriminators attrs [] env [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
 
