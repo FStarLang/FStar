@@ -58,6 +58,8 @@ let pow2_values x =
 ///  - use of regular integer modulus instead of wrap-around modulus
 
 let max_int (n:nat) : Tot int = pow2 n - 1
+
+unfold
 let min_int (n:nat) : Tot int = 0
 
 let fits (x:int) (n:nat) : Tot bool = min_int n <= x && x <= max_int n
@@ -68,6 +70,7 @@ type uint_t (n:nat) = x:int{size x n}
 
 /// Constants
 
+unfold
 val zero: n:nat -> Tot (uint_t n)
 let zero n = 0
 
@@ -76,6 +79,7 @@ let zero n = 0
 val pow2_n: #n:pos -> p:nat{p < n} -> Tot (uint_t n)
 let pow2_n #n p = pow2_le_compat (n - 1) p; pow2 p
 
+unfold
 val one: n:pos -> Tot (uint_t n)
 let one n = 1
 
@@ -85,10 +89,12 @@ val ones: n:nat -> Tot (uint_t n)
 let ones n = max_int n
 
 (* Increment and decrement *)
+unfold
 val incr: #n:nat -> a:uint_t n -> Pure (uint_t n)
   (requires (b2t (a < max_int n))) (ensures (fun _ -> True))
 let incr #n a = a + 1
 
+unfold
 val decr: #n:nat -> a:uint_t n -> Pure (uint_t n)
   (requires (b2t (a > min_int n))) (ensures (fun _ -> True))
 let decr #n a = a - 1
@@ -114,6 +120,7 @@ val decr_mod: #n:nat -> a:uint_t n -> Tot (uint_t n)
 let decr_mod #n a = (a - 1) % (pow2 n)
 
 (* Addition primitives *)
+unfold
 val add: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
   (requires (size (a + b) n))
   (ensures (fun _ -> True))
@@ -127,11 +134,13 @@ val add_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
 let add_underspec #n a b =
   if fits (a+b) n then a + b else 0
 
+unfold
 val add_mod: #n:nat -> uint_t n -> uint_t n -> Tot (uint_t n)
 let add_mod #n a b =
   (a + b) % (pow2 n)
 
 (* Subtraction primitives *)
+unfold
 val sub: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
   (requires (size (a - b) n))
   (ensures (fun _ -> True))
@@ -144,11 +153,13 @@ abstract val sub_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n
 let sub_underspec #n a b =
   if fits (a-b) n then a - b else 0
 
+unfold
 val sub_mod: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let sub_mod #n a b =
   (a - b) % (pow2 n)
 
 (* Multiplication primitives *)
+unfold
 val mul: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
   (requires (size (a * b) n))
   (ensures (fun _ -> True))
@@ -162,6 +173,7 @@ val mul_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
 let mul_underspec #n a b =
   if fits (a*b) n then a * b else 0
 
+unfold
 val mul_mod: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let mul_mod #n a b =
   (a * b) % (pow2 n)
@@ -172,6 +184,7 @@ let lt_square_div_lt (a:nat) (b:pos) : Lemma
   (ensures (a / b < b))
   = ()
 
+unfold
 val mul_div: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let mul_div #n a b =
   FStar.Math.Lemmas.lemma_mult_lt_sqr a b (pow2 n);
@@ -179,6 +192,7 @@ let mul_div #n a b =
   (a * b) / (pow2 n)
 
 (* Division primitives *)
+unfold
 val div: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (uint_t n)
   (requires (size (a / b) n))
   (ensures (fun c -> b <> 0 ==> a / b = c))
@@ -205,14 +219,20 @@ let udiv #n a b =
 
 
 (* Modulo primitives *)
+unfold
 val mod: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Tot (uint_t n)
 let mod #n a b = a - ((a/b) * b)
 
 (* Comparison operators *)
+unfold
 let eq #n (a:uint_t n) (b:uint_t n) : Tot bool = (a = b)
+unfold
 let gt #n (a:uint_t n) (b:uint_t n) : Tot bool = (a > b)
+unfold
 let gte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a >= b)
+unfold
 let lt #n (a:uint_t n) (b:uint_t n) : Tot bool = (a < b)
+unfold
 let lte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a <= b)
 
 /// Casts

@@ -30,168 +30,189 @@ open FStar.Mul
  * - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
  *)
 
-abstract type t :Type0 =
-  | Mk: v:uint_t n -> t
+private
+type t' =
+  | Mk: v:uint_t n -> t'
 
-abstract
-let v (x:t) : Tot (uint_t n) = x.v
+let t : eqtype = t'
 
-abstract
-let uint_to_t (x:uint_t n) : Pure t
-  (requires True)
-  (ensures (fun y -> v y = x)) = Mk x
+unfold
+let tt (_:t) = True
 
-let uv_inv (x : t) : Lemma
-  (ensures (uint_to_t (v x) == x))
-  [SMTPat (v x)] = ()
+[@unfold_for_smt]
+let v (a:t)
+  : Tot (uint_t n)
+  = a.v
 
-let vu_inv (x : uint_t n) : Lemma
-  (ensures (v (uint_to_t x) == x))
-  [SMTPat (uint_to_t x)] = ()
+[@unfold_for_smt]
+let uint_to_t (a:uint_t n)
+  : Tot t
+  = Mk a
 
-let v_inj (x1 x2: t): Lemma
-  (requires (v x1 == v x2))
-  (ensures (x1 == x2))
-  = ()
-
-abstract
-let add (a:t) (b:t) : Pure t
-  (requires (size (v a + v b) n))
-  (ensures (fun c -> v a + v b = v c))
+[@unfold_for_smt]
+let add (a b:t)
+  : Pure t
+    (requires size (v a + v b) n)
+    (ensures tt)
   = Mk (add (v a) (v b))
 
 abstract
-let add_underspec (a:t) (b:t) : Pure t
-  (requires True)
-  (ensures (fun c ->
-    size (v a + v b) n ==> v a + v b = v c))
+let add_underspec (a b:t)
+  : Pure t
+    (requires True)
+    (ensures fun c ->
+      size (v a + v b) n ==>
+      v a + v b = v c)
  = Mk (add_underspec (v a) (v b))
 
-abstract
-let add_mod (a:t) (b:t) : Pure t
-  (requires True)
-  (ensures (fun c -> FStar.UInt.add_mod (v a) (v b) = v c))
+[@unfold_for_smt]
+let add_mod (a b:t)
+  : Tot t
   = Mk (add_mod (v a) (v b))
 
 (* Subtraction primitives *)
-abstract
-let sub (a:t) (b:t) : Pure t
-  (requires (size (v a - v b) n))
-  (ensures (fun c -> v a - v b = v c))
+[@unfold_for_smt]
+let sub (a b:t)
+  : Pure t
+    (requires size (v a - v b) n)
+    (ensures tt)
   = Mk (sub (v a) (v b))
 
 abstract
-let sub_underspec (a:t) (b:t) : Pure t
-  (requires True)
-  (ensures (fun c ->
-    size (v a - v b) n ==> v a - v b = v c))
+let sub_underspec (a b:t)
+  : Pure t
+    (requires True)
+    (ensures fun c ->
+      size (v a - v b) n ==>
+      v a - v b = v c)
   = Mk (sub_underspec (v a) (v b))
 
-abstract
-let sub_mod (a:t) (b:t) : Pure t
-  (requires True)
-  (ensures (fun c -> FStar.UInt.sub_mod (v a) (v b) = v c))
+[@unfold_for_smt]
+let sub_mod (a b:t)
+  : Tot t
   = Mk (sub_mod (v a) (v b))
 
 (* Multiplication primitives *)
-abstract
-let mul (a:t) (b:t) : Pure t
-  (requires (size (v a * v b) n))
-  (ensures (fun c -> v a * v b = v c))
+[@unfold_for_smt]
+let mul (a b:t)
+  : Pure t
+    (requires size (v a * v b) n)
+    (ensures tt)
   = Mk (mul (v a) (v b))
 
 abstract
-let mul_underspec (a:t) (b:t) : Pure t
-  (requires True)
-  (ensures (fun c ->
-    size (v a * v b) n ==> v a * v b = v c))
-   = Mk (mul_underspec (v a) (v b))
+let mul_underspec (a b:t)
+  : Pure t
+    (requires True)
+    (ensures fun c ->
+      size (v a * v b) n ==>
+      v a * v b = v c)
+  = Mk (mul_underspec (v a) (v b))
 
-abstract
-let mul_mod (a:t) (b:t) : Pure t
-  (requires True)
-  (ensures (fun c -> FStar.UInt.mul_mod (v a) (v b) = v c))
+[@unfold_for_smt]
+let mul_mod (a b:t)
+  : Tot t
   = Mk (mul_mod (v a) (v b))
 
-abstract
-let mul_div (a:t) (b:t) : Pure t
-  (requires True)
-  (ensures (fun c -> FStar.UInt.mul_div (v a) (v b) = v c))
+[@unfold_for_smt]
+let mul_div (a b:t)
+  : Tot t
   = Mk (mul_div (v a) (v b))
 
 (* Division primitives *)
-abstract
-let div (a:t) (b:t{v b <> 0}) : Pure t
-  (requires (True))
-  (ensures (fun c -> v a / v b = v c))
+[@unfold_for_smt]
+let div (a b:t)
+  : Pure t
+    (requires v b <> 0)
+    (ensures tt)
   = Mk (div (v a) (v b))
 
 (* Modulo primitives *)
-abstract
-let rem (a:t) (b:t{v b <> 0}) : Pure t
-  (requires True)
-  (ensures (fun c -> FStar.UInt.mod (v a) (v b) = v c))
+[@unfold_for_smt]
+let rem (a b:t)
+  : Pure t
+    (requires v b <> 0)
+    (ensures tt)
   = Mk (mod (v a) (v b))
 
 (* Bitwise operators *)
 
-abstract
-let logand (x:t) (y:t) : Pure t
-  (requires True)
-  (ensures (fun z -> v x `logand` v y = v z))
-  = Mk (logand (v x) (v y))
+[@unfold_for_smt]
+let logand (a b:t)
+  : Tot t
+  = Mk (logand (v a) (v b))
 
-abstract
-let logxor (x:t) (y:t) : Pure t
-  (requires True)
-  (ensures (fun z -> v x `logxor` v y == v z))
-  = Mk (logxor (v x) (v y))
+[@unfold_for_smt]
+let logxor (a b:t)
+  : Tot t
+  = Mk (logxor (v a) (v b))
 
-abstract
-let logor (x:t) (y:t) : Pure t
-  (requires True)
-  (ensures (fun z -> v x `logor` v y == v z))
-  = Mk (logor (v x) (v y))
+[@unfold_for_smt]
+let logor (a b:t)
+  : Tot t
+  = Mk (logor (v a) (v b))
 
-abstract
-let lognot (x:t) : Pure t
-  (requires True)
-  (ensures (fun z -> lognot (v x) == v z))
-  = Mk (lognot (v x))
+[@unfold_for_smt]
+let lognot (a:t)
+  : Tot t
+  = Mk (lognot (v a))
 
 (* Shift operators *)
-abstract
-let shift_right (a:t) (s:t) : Pure t
-  (requires (v s < n))
-  (ensures (fun c -> FStar.UInt.shift_right (v a) (v s) = v c))
+[@unfold_for_smt]
+let shift_right (a:t) (s:t)
+  : Pure t
+    (requires v s < n)
+    (ensures tt)
   = Mk (shift_right (v a) (v s))
 
-abstract
-let shift_left (a:t) (s:t) : Pure t
-  (requires (v s < n))
-  (ensures (fun c -> FStar.UInt.shift_left (v a) (v s) = v c))
+[@unfold_for_smt]
+let shift_left (a:t) (s:t)
+  : Pure t
+    (requires v s < n)
+    (ensures tt)
   = Mk (shift_left (v a) (v s))
 
 (* Comparison operators *)
-let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
-let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
-let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
-let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
-let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
+[@unfold_for_smt]
+let gt (a b:t)
+  : Tot bool
+  = gt #n (v a) (v b)
 
+[@unfold_for_smt]
+let gte (a b:t)
+  : Tot bool
+  = gte #n (v a) (v b)
+
+[@unfold_for_smt]
+let lt (a b:t)
+  : Tot bool
+  = lt #n (v a) (v b)
+
+[@unfold_for_smt]
+let lte (a b:t)
+  : Tot bool
+  = lte #n (v a) (v b)
+
+[@unfold_for_smt]
 inline_for_extraction
-let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
+let minus (a:t)
+  : Tot t
+  = add_mod (lognot a) (uint_to_t 1)
 
-inline_for_extraction
-let n_minus_one = uint_to_t (n - 1)
+[@unfold_for_smt]
+unfold
+let n_minus_one
+  : t
+  = uint_to_t (n - 1)
 
-#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1"
+#push-options "--z3rlimit_factor 10 --initial_fuel 1 --max_fuel 1"
 // With inspiration from https://git.zx2c4.com/WireGuard/commit/src/crypto/curve25519-hacl64.h?id=2e60bb395c1f589a398ec606d611132ef9ef764b
-let eq_mask (a:t) (b:t)
+let eq_mask (a b:t)
   : Pure t
     (requires True)
-    (ensures (fun c -> (v a = v b ==> v c = pow2 n - 1) /\
-                       (v a <> v b ==> v c = 0)))
+    (ensures fun c ->
+      (v a = v b ==> v c = pow2 n - 1) /\
+      (v a <> v b ==> v c = 0))
   = let x = logxor a b in
     let minus_x = minus x in
     let x_or_minus_x = logor x minus_x in
@@ -217,14 +238,15 @@ let eq_mask (a:t) (b:t)
     c
 
 private
-let lemma_sub_msbs (a:t) (b:t)
-  : Lemma ((msb (v a) = msb (v b)) ==> (v a < v b <==> msb (v (sub_mod a b))))
+let lemma_sub_msbs (a b:t)
+  : Lemma (msb (v a) = msb (v b) ==>
+          (v a < v b <==> msb (v (sub_mod a b))))
   = from_vec_propriety (to_vec (v a)) 1;
     from_vec_propriety (to_vec (v b)) 1;
     from_vec_propriety (to_vec (v (sub_mod a b))) 1
 
 // With inspiration from https://git.zx2c4.com/WireGuard/commit/src/crypto/curve25519-hacl64.h?id=0a483a9b431d87eca1b275463c632f8d5551978a
-let gte_mask (a:t) (b:t)
+let gte_mask (a b:t)
   : Pure t
     (requires True)
     (ensures (fun c -> (v a >= v b ==> v c = pow2 n - 1) /\
@@ -245,28 +267,28 @@ let gte_mask (a:t) (b:t)
 #reset-options
 
 (* Infix notations *)
-unfold let op_Plus_Hat = add
-unfold let op_Plus_Question_Hat = add_underspec
-unfold let op_Plus_Percent_Hat = add_mod
-unfold let op_Subtraction_Hat = sub
-unfold let op_Subtraction_Question_Hat = sub_underspec
-unfold let op_Subtraction_Percent_Hat = sub_mod
-unfold let op_Star_Hat = mul
-unfold let op_Star_Question_Hat = mul_underspec
-unfold let op_Star_Percent_Hat = mul_mod
-unfold let op_Star_Slash_Hat = mul_div
-unfold let op_Slash_Hat = div
-unfold let op_Percent_Hat = rem
-unfold let op_Hat_Hat = logxor
-unfold let op_Amp_Hat = logand
-unfold let op_Bar_Hat = logor
-unfold let op_Less_Less_Hat = shift_left
-unfold let op_Greater_Greater_Hat = shift_right
-unfold let op_Equals_Hat = eq
-unfold let op_Greater_Hat = gt
-unfold let op_Greater_Equals_Hat = gte
-unfold let op_Less_Hat = lt
-unfold let op_Less_Equals_Hat = lte
+unfold let (  +^ ) = add
+unfold let ( +?^ ) = add_underspec
+unfold let ( +%^ ) = add_mod
+unfold let (  -^ ) = sub
+unfold let ( -?^ ) = sub_underspec
+unfold let ( -%^ ) = sub_mod
+unfold let (  *^ ) = mul
+unfold let ( *?^ ) = mul_underspec
+unfold let ( *%^ ) = mul_mod
+unfold let ( */^ ) = mul_div
+unfold let (  /^ ) = div
+unfold let (  %^ ) = rem
+unfold let (  ^^ ) = logxor
+unfold let (  &^ ) = logand
+unfold let (  |^ ) = logor
+unfold let ( <<^ ) = shift_left
+unfold let ( >>^ ) = shift_right
+unfold let (  =^ ) = op_Equality #t
+unfold let (  >^ ) = gt
+unfold let ( >=^ ) = gte
+unfold let (  <^ ) = lt
+unfold let ( <=^ ) = lte
 
 (* To input / output constants *)
 assume val to_string: t -> Tot string
@@ -282,6 +304,7 @@ assume val of_string: string -> Tot t
 //eliminating the verification overhead of the wrapper
 private
 unfold
-let __uint_to_t (x:int) : Tot t
-    = uint_to_t x
+let __uint_to_t (a:int)
+  : Tot t
+  = uint_to_t a
 #reset-options
