@@ -506,8 +506,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | Some (op, _) when op = "forall" || op = "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
           let rec uncurry xs pat (t:A.term) = match t.tm with
-            | A.QExists(x, p , body)
-            | A.QForall(x, p, body)
+            | A.QExists(x, (_, p) , body)
+            | A.QForall(x, (_, p), body)
               -> uncurry (x@xs) (p@pat) body
             | _ -> xs, pat, t
           in
@@ -520,7 +520,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                   | Tm_meta(e, m) ->
                     let body = resugar_term' env e in
                     let pats, body = match m with
-                      | Meta_pattern pats -> List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term' env e)) pats, body
+                      | Meta_pattern (_, pats) ->
+                        List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term' env e)) pats,
+                        body
                       | Meta_labeled (s, r, p) ->
                         // this case can occur in typechecker when a failure is wrapped in meta_labeled
                         [], mk (A.Labeled (body, s, p))
@@ -531,13 +533,15 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                 in
                 let xs, pats, body = uncurry xs pats body in
                 let xs = xs |> List.rev in
-                if op = "forall" then mk (A.QForall(xs, pats, body)) else mk (A.QExists(xs, pats, body))
+                if op = "forall"
+                then mk (A.QForall(xs, (A.idents_of_binders xs t.pos, pats), body))
+                else mk (A.QExists(xs, (A.idents_of_binders xs t.pos, pats), body))
 
             | _ ->
             (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
             (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
-            if op = "forall" then mk (A.QForall([], [[]], resugar_term' env body))
-            else mk (A.QExists([], [[]], resugar_term' env body))
+            if op = "forall" then mk (A.QForall([], ([], []), resugar_term' env body))
+            else mk (A.QExists([], ([], []), resugar_term' env body))
           in
           (* only the last arg is from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
@@ -696,7 +700,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               resugar_term' env e
       in
       begin match m with
-      | Meta_pattern pats ->
+      | Meta_pattern (_, pats) ->
         // This case is possible in TypeChecker when creating "haseq" for Sig_inductive_typ whose Sig_datacon has no binders.
         let pats = List.flatten pats |> List.map (fun (x, _) -> resugar_term' env x) in
         // Is it correct to resugar it to Attributes.
