@@ -1,8 +1,9 @@
 # Open source
 
 F* is an open source project developed in the open using an inclusive
-collaboration model meant to attract contribututions from a broad and
-growing community covering companies, universities, and individuals.
+collaboration model meant to attract contributions from a broad and
+growing community, which includes various companies, universities,
+research institutes, and individuals.
 
 The code of F* is released under the permissive Apache v2.0 License 
 and is developed at https://github.com/FStarLang/FStar
