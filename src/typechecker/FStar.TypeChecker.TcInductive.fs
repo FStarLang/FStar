@@ -1037,7 +1037,8 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
 //for these types we don't generate projectors, discriminators, and hasEq axioms
 let early_prims_inductives = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or" ]
 
-let mk_discriminator_and_indexed_projectors iquals                   (* Qualifiers of the envelopping bundle    *)
+let mk_discriminator_and_indexed_projectors attrs                    (* Attributes of the enveloping bundle    *)
+                                            iquals                   (* Qualifiers of the enveloping bundle    *)
                                             (fvq:fv_qual)            (*                                         *)
                                             (refine_domain:bool)     (* If true, discriminates the projectee    *)
                                             env                      (*                                         *)
@@ -1199,7 +1200,11 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   | _ -> false)
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
-          let attrs = if only_decl then [] else [ U.attr_substitute ] in
+          let attrs = 
+            (if only_decl
+             then []
+             else [ U.attr_substitute ])@attrs
+           in
           let decl = { sigel = Sig_declare_typ(field_name, uvs, t);
                        sigquals = quals;
                        sigrng = range_of_lid field_name;
@@ -1304,6 +1309,6 @@ let mk_data_operations iquals env tcs se =
         let rename = List.map2 (fun (x, _) (x', _) -> S.NT(x, S.bv_to_name x')) imp_tps inductive_tps in
         SS.subst_binders rename fields
     in
-    mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps indices fields
+    mk_discriminator_and_indexed_projectors se.sigattrs iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps indices fields
 
   | _ -> []
