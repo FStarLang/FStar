@@ -1,0 +1,26 @@
+[
+  "›c¯«“Ù`\u007fß\u000fQ5\u001dZp",
+  [
+    [
+      "Instantiate.test",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "5d8b6b2b1bc371d7a480f9dd38a5b70e"
+    ],
+    [
+      "Instantiate.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "c88793cb8bd5b351be1d5cf9cb77d1c2"
+    ]
+  ]
+]

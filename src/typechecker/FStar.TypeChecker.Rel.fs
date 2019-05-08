@@ -941,7 +941,7 @@ let rec head_matches env t1 t2 : match_result =
 (* Does t1 head-match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let maybe_inline t =
-        let head = U.head_of t in
+        let head = U.head_of (unrefine env t) in
         if Env.debug env <| Options.Other "RelDelta" then
             BU.print2 "Head of %s is %s\n" (Print.term_to_string t) (Print.term_to_string head);
         match (U.un_uinst head).n with
