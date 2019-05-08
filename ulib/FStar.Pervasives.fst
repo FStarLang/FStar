@@ -55,8 +55,8 @@ unfold let st_return        (heap:Type) (a:Type)
                             (x:a) (p:st_post_h heap a) =
      p x
 unfold let st_bind_wp       (heap:Type)
-			    (r1:range)
-			    (a:Type) (b:Type)
+                            (r1:range)
+                            (a:Type) (b:Type)
                             (wp1:st_wp_h heap a)
                             (wp2:(a -> GTot (st_wp_h heap b)))
                             (p:st_post_h heap b) (h0:heap) =
@@ -66,13 +66,13 @@ unfold let st_if_then_else  (heap:Type) (a:Type) (p:Type)
                              (post:st_post_h heap a) (h0:heap) =
      l_ITE p
         (wp_then post h0)
-	(wp_else post h0)
+        (wp_else post h0)
 unfold let st_ite_wp        (heap:Type) (a:Type)
                             (wp:st_wp_h heap a)
                             (post:st_post_h heap a) (h0:heap) =
      forall (k:st_post_h heap a).
-	 (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} post x h ==> k x h)
-	 ==> wp k h0
+         (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} post x h ==> k x h)
+         ==> wp k h0
 unfold let st_stronger  (heap:Type) (a:Type) (wp1:st_wp_h heap a)
                         (wp2:st_wp_h heap a) =
      (forall (p:st_post_h heap a) (h:heap). wp1 p h ==> wp2 p h)
@@ -123,8 +123,8 @@ let ex_post  (a:Type) = ex_post' a True
 let ex_wp    (a:Type) = ex_post a -> GTot ex_pre
 unfold let ex_return   (a:Type) (x:a) (p:ex_post a) : GTot Type0 = p (V x)
 unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
-		       (wp1:ex_wp a)
-		       (wp2:(a -> GTot (ex_wp b))) (p:ex_post b)
+                       (wp1:ex_wp a)
+                       (wp2:(a -> GTot (ex_wp b))) (p:ex_post b)
          : GTot Type0 =
   forall (k:ex_post b).
      (forall (rb:result b).{:pattern (guard_free (k rb))} p rb ==> k rb)
@@ -190,8 +190,8 @@ unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
   wp1 (fun ra h1 -> (match ra with
                   | V v     -> wp2 v p h1
-		  | E e     -> p (E e) h1
-		  | Err msg -> p (Err msg) h1)) h0
+                  | E e     -> p (E e) h1
+                  | Err msg -> p (Err msg) h1)) h0
 
 unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
@@ -419,6 +419,15 @@ let assume_strictly_positive : unit = ()
 irreducible
 let unifier_hint_injective : unit = ()
 
+(**
+ * This attribute decorates a definition of a pure/ghost function
+ * that is to be unfolded before presenting it to the SMT solver.
+ *
+ * It is a refinement of the `unfold` qualifier, which unfolds
+ * a definition for SMT, for extraction, during unification etc.
+ **)
+irreducible
+let unfold_for_smt : unit = ()
 
 (*********************************************************************************)
 (* Marking terms for normalization *)
