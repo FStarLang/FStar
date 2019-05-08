@@ -63,7 +63,7 @@ type int_t (n:pos) = x:int{size x n}
 /// Multiplicative operator semantics, see C11 6.5.5
 
 (* Truncation towards zero division *)
-let op_Slash (a:int) (b:int{b <> 0}) : Tot int = 
+let op_Slash (a:int) (b:int{b <> 0}) : Tot int =
   if (a >= 0 && b < 0) || (a < 0 && b >= 0) then - (abs a / abs b)
   else abs a / abs b
 
@@ -73,6 +73,7 @@ let op_At_Percent (v:int) (p:int{p>0/\ p%2=0}) : Tot int =
 
 /// Constants
 
+unfold
 val zero: n:pos -> Tot (int_t n)
 let zero n = 0
 
@@ -84,33 +85,37 @@ let pow2_n #n p = pow2_le_compat (n - 2) p; pow2 p
 val pow2_minus_one: #n:pos{1 < n} -> m:nat{m < n} -> Tot (int_t n)
 let pow2_minus_one #n m =
   pow2_le_compat (n - 1) m;
-  pow2 m - 1 
+  pow2 m - 1
 
+unfold
 val one: n:pos{1 < n} -> Tot (int_t n)
 let one n = 1
 
 #pop-options
 
+unfold
 val ones: n:pos -> Tot (int_t n)
 let ones n = -1
 
 (* Increment and decrement *)
+unfold
 val incr: #n:pos -> a:int_t n -> Pure (int_t n)
   (requires (b2t (a < max_int n))) (ensures (fun _ -> True))
 let incr #n a = a + 1
 
+unfold
 val decr: #n:pos -> a:int_t n -> Pure (int_t n)
   (requires (b2t (a > min_int n))) (ensures (fun _ -> True))
 let decr #n a = a - 1
 
-abstract 
+abstract
 val incr_underspec: #n:pos -> a:int_t n -> Pure (int_t n)
   (requires (b2t (a < max_int n)))
   (ensures (fun b -> a + 1 = b))
 let incr_underspec #n a =
   if a < max_int n then a + 1 else 0
 
-abstract 
+abstract
 val decr_underspec: #n:pos -> a:int_t n -> Pure (int_t n)
   (requires (b2t (a > min_int n)))
   (ensures (fun b -> a - 1 = b))
@@ -124,6 +129,7 @@ val decr_mod: #n:pos -> a:int_t n -> Tot (int_t n)
 let decr_mod #n a = (a - 1) % (pow2 (n-1))
 
 (* Addition primitives *)
+unfold
 val add: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
   (requires (size (a + b) n))
   (ensures (fun _ -> True))
@@ -138,11 +144,13 @@ let add_underspec #n a b =
 
 #push-options "--initial_fuel 1 --max_fuel 1"
 
+unfold
 val add_mod: #n:pos -> int_t n -> int_t n -> Tot (int_t n)
 let add_mod #n a b =
   (a + b) @% (pow2 n)
 
 (* Subtraction primitives *)
+unfold
 val sub: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
   (requires (size (a - b) n))
   (ensures (fun _ -> True))
@@ -155,11 +163,13 @@ abstract val sub_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
 let sub_underspec #n a b =
   if fits (a-b) n then a - b else 0
 
+unfold
 val sub_mod: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)
 let sub_mod #n a b =
   (a - b) @% (pow2 n)
 
 (* Multiplication primitives *)
+unfold
 val mul: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
   (requires (size (a * b) n))
   (ensures (fun _ -> True))
@@ -172,6 +182,7 @@ abstract val mul_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
 let mul_underspec #n a b =
   if fits (a*b) n then a * b else 0
 
+unfold
 val mul_mod: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)
 let mul_mod #n a b =
   (a * b) @% (pow2 n)
@@ -179,12 +190,13 @@ let mul_mod #n a b =
 #pop-options
 
 (* Division primitives *)
+unfold
 val div: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Pure (int_t n)
   (requires (size (a / b) n))
   (ensures (fun c -> b <> 0 ==> a / b = c))
 let div #n a b = a / b
 
-abstract 
+abstract
 val div_underspec: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Pure (int_t n)
   (requires True)
   (ensures (fun c ->
@@ -197,7 +209,8 @@ val div_size: #n:pos -> a:int_t n{min_int n < a} -> b:int_t n{b <> 0} ->
 let div_size #n a b =
   FStar.Math.Lib.slash_decr_axiom (abs a) (abs b)
 
-val udiv: #n:pos -> a:int_t n{min_int n < a} -> b:int_t n{b <> 0} -> 
+unfold
+val udiv: #n:pos -> a:int_t n{min_int n < a} -> b:int_t n{b <> 0} ->
   Tot (c:int_t n{b <> 0 ==> a / b = c})
 let udiv #n a b =
   div_size #n a b;
@@ -209,10 +222,15 @@ val mod: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Tot (int_t n)
 let mod #n a b = a - ((a/b) * b)
 
 (* Comparison operators *)
+unfold
 let eq #n (a:int_t n) (b:int_t n) : Tot bool = a = b
+unfold
 let gt #n (a:int_t n) (b:int_t n) : Tot bool = a > b
+unfold
 let gte #n (a:int_t n) (b:int_t n) : Tot bool = a >= b
+unfold
 let lt #n (a:int_t n) (b:int_t n) : Tot bool = a < b
+unfold
 let lte #n (a:int_t n) (b:int_t n) : Tot bool = a <= b
 
 #push-options "--initial_fuel 1 --max_fuel 1"
@@ -220,12 +238,12 @@ let lte #n (a:int_t n) (b:int_t n) : Tot bool = a <= b
 /// Casts
 
 val to_uint: #n:pos -> x:int_t n -> Tot (UInt.uint_t n)
-let to_uint #n x = 
-  if 0 <= x then x else x + pow2 n 
+let to_uint #n x =
+  if 0 <= x then x else x + pow2 n
 
 val from_uint: #n:pos -> x:UInt.uint_t n -> Tot (int_t n)
-let from_uint #n x = 
-  if x <= max_int n then x else x - pow2 n 
+let from_uint #n x =
+  if x <= max_int n then x else x - pow2 n
 
 val to_uint_injective: #n:pos -> x:int_t n
   -> Lemma (ensures from_uint (to_uint x) == x) [SMTPat (to_uint x)]
@@ -253,15 +271,15 @@ let to_vec_lemma_1 #n a b = ()
 
 val to_vec_lemma_2: #n:pos -> a:int_t n -> b:int_t n ->
   Lemma (requires equal (to_vec a) (to_vec b)) (ensures a = b)
-let to_vec_lemma_2 #n a b = 
+let to_vec_lemma_2 #n a b =
   UInt.to_vec_lemma_2 #n (to_uint a) (to_uint b)
 
 val inverse_aux: #n:nat -> vec:bv_t n -> i:nat{i < n} ->
   Lemma (requires True) (ensures index vec i = index (to_vec (from_vec vec)) i)
         [SMTPat (index (to_vec (from_vec vec)) i)]
 let rec inverse_aux #n vec i =
-  if i = n - 1 then 
-    assert((from_vec vec) % 2 = (if index vec (n - 1) then 1 else 0)) 
+  if i = n - 1 then
+    assert((from_vec vec) % 2 = (if index vec (n - 1) then 1 else 0))
   else inverse_aux #(n - 1) (slice vec 0 (n - 1)) i
 
 val inverse_vec_lemma: #n:pos -> vec:bv_t n ->
@@ -297,14 +315,14 @@ let zero_from_vec_lemma #n = to_vec_lemma_2 (from_vec (zero_vec #n)) (zero n)
 val one_to_vec_lemma: #n:pos{1 < n} -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures index (to_vec (one n)) i = index (elem_vec #n (n - 1)) i)
-	[SMTPat (index (to_vec (one n)) i)]
+        [SMTPat (index (to_vec (one n)) i)]
 let one_to_vec_lemma #n i =
   if i = n - 1 then () else zero_to_vec_lemma #n i
 
 val pow2_to_vec_lemma: #n:pos -> p:nat{p < n-1} -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures index (to_vec (pow2_n #n p)) i = index (elem_vec #n (n - p - 1)) i)
-	[SMTPat (index (to_vec (pow2_n #n p)) i)]
+        [SMTPat (index (to_vec (pow2_n #n p)) i)]
 let rec pow2_to_vec_lemma #n p i =
   if i = n - 1 then ()
   else if p = 0 then one_to_vec_lemma #n i
@@ -319,7 +337,7 @@ let pow2_from_vec_lemma #n p =
 val ones_to_vec_lemma: #n:pos -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures index (to_vec (ones n)) i = index (ones_vec #n) i)
-	[SMTPat (index (to_vec (ones n)) i)]
+        [SMTPat (index (to_vec (ones n)) i)]
 let ones_to_vec_lemma #n i = ()
 
 val ones_from_vec_lemma: #n:pos ->
@@ -349,7 +367,7 @@ let rec zero_nth_lemma #n i = ()
 val one_nth_lemma: #n:pos{1 < n} -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures (i = n - 1 ==> nth (one n) i = true) /\
-	         (i < n - 1 ==> nth (one n) i = false))
+                 (i < n - 1 ==> nth (one n) i = false))
         [SMTPat (nth (one n) i)]
 let one_nth_lemma #n i = ()
 
@@ -374,26 +392,26 @@ let lognot #n a = from_vec #n (lognot_vec #n (to_vec #n a))
 (* Bitwise operators definitions *)
 val logand_definition: #n:pos -> a:int_t n -> b:int_t n -> i:nat{i < n} ->
   Lemma (requires True)
-	(ensures (nth (logand a b) i = (nth a i && nth b i)))
-	[SMTPat (nth (logand a b) i)]
+        (ensures (nth (logand a b) i = (nth a i && nth b i)))
+        [SMTPat (nth (logand a b) i)]
 let logand_definition #n a b i = ()
 
 val logxor_definition: #n:pos -> a:int_t n -> b:int_t n -> i:nat{i < n} ->
   Lemma (requires True)
-	(ensures (nth (logxor a b) i = (nth a i <> nth b i)))
-	[SMTPat (nth (logxor a b) i)]
+        (ensures (nth (logxor a b) i = (nth a i <> nth b i)))
+        [SMTPat (nth (logxor a b) i)]
 let logxor_definition #n a b i = ()
 
 val logor_definition: #n:pos -> a:int_t n -> b:int_t n -> i:nat{i < n} ->
   Lemma (requires True)
-	(ensures (nth (logor a b) i = (nth a i || nth b i)))
-	[SMTPat (nth (logor a b) i)]
+        (ensures (nth (logor a b) i = (nth a i || nth b i)))
+        [SMTPat (nth (logor a b) i)]
 let logor_definition #n a b i = ()
 
 val lognot_definition: #n:pos -> a:int_t n -> i:nat{i < n} ->
   Lemma (requires True)
-	(ensures (nth (lognot a) i = not(nth a i)))
-	[SMTPat (nth (lognot a) i)]
+        (ensures (nth (lognot a) i = not(nth a i)))
+        [SMTPat (nth (lognot a) i)]
 let lognot_definition #n a i = ()
 
 (* Two's complement unary minus *)
@@ -410,7 +428,7 @@ let logand_commutative #n a b = nth_lemma #n (logand #n a b) (logand #n b a)
 
 val logand_associative: #n:pos -> a:int_t n -> b:int_t n -> c:int_t n ->
   Lemma (logand #n (logand #n a b) c = logand #n a (logand #n b c))
-let logand_associative #n a b c = 
+let logand_associative #n a b c =
   nth_lemma #n (logand #n (logand #n a b) c) (logand #n a (logand #n b c))
 
 val logand_self: #n:pos -> a:int_t n ->
@@ -424,15 +442,15 @@ let logand_lemma_1 #n a =
 
 val logand_lemma_2: #n:pos -> a:int_t n ->
   Lemma (logand #n a (ones n) = a)
-let logand_lemma_2 #n a = 
+let logand_lemma_2 #n a =
   nth_lemma #n (logand #n a (ones n)) a
 
-val sign_bit_negative: #n:pos{1 < n} -> a:int_t n -> 
+val sign_bit_negative: #n:pos{1 < n} -> a:int_t n ->
   Lemma (nth a 0 = true <==> a < 0)
 let sign_bit_negative #n a =
   UInt.from_vec_propriety #n (to_vec a) 1
 
-val sign_bit_positive: #n:pos{1 < n} -> a:int_t n -> 
+val sign_bit_positive: #n:pos{1 < n} -> a:int_t n ->
   Lemma (nth a 0 = false <==> 0 <= a)
 let sign_bit_positive #n a =
   UInt.from_vec_propriety #n (to_vec a) 1
@@ -443,7 +461,7 @@ let logand_pos_le #n a b =
   UInt.logand_le (to_uint a) (to_uint b)
 
 val logand_pow2_minus_one: #n:pos{1 < n} -> a:int_t n -> m:pos{m < n} ->
-  Lemma (0 <= logand a (pow2_minus_one m) /\ 
+  Lemma (0 <= logand a (pow2_minus_one m) /\
     logand a (pow2_minus_one m) <= pow2_minus_one #n m)
 let logand_pow2_minus_one #n a m =
   UInt.logand_le (to_uint a) (to_uint (pow2_minus_one #n m))
@@ -483,7 +501,7 @@ let logxor_inv #n a b =
 
 val logxor_neq_nonzero: #n:pos -> a:int_t n -> b:int_t n -> Lemma
    (a <> b ==> logxor a b <> 0)
-let logxor_neq_nonzero #n a b = 
+let logxor_neq_nonzero #n a b =
   UInt.logxor_neq_nonzero (to_uint a) (to_uint b)
 
 
@@ -500,31 +518,31 @@ let shift_right #n a s = from_vec (shift_right_vec #n (to_vec #n a) s)
 (* Shift operators lemmas *)
 val shift_left_lemma_1: #n:pos -> a:int_t n{0 <= a} -> s:nat -> i:nat{i < n && i >= n - s} ->
   Lemma (requires True)
-	(ensures (nth (shift_left #n a s) i = false))
-	[SMTPat (nth (shift_left #n a s) i)]
+        (ensures (nth (shift_left #n a s) i = false))
+        [SMTPat (nth (shift_left #n a s) i)]
 let shift_left_lemma_1 #n a s i = ()
 
 val shift_left_lemma_2: #n:pos -> a:int_t n{0 <= a} -> s:nat -> i:nat{i < n && i < n - s} ->
   Lemma (requires True)
         (ensures (nth (shift_left #n a s) i = nth #n a (i + s)))
-	[SMTPat (nth (shift_left #n a s) i)]
+        [SMTPat (nth (shift_left #n a s) i)]
 let shift_left_lemma_2 #n a s i = ()
 
 val shift_right_lemma_1: #n:pos -> a:int_t n{0 <= a} -> s:nat -> i:nat{i < n && i < s} ->
   Lemma (requires True)
-	(ensures (nth (shift_right #n a s) i = false))
-	[SMTPat (nth (shift_right #n a s) i)]
+        (ensures (nth (shift_right #n a s) i = false))
+        [SMTPat (nth (shift_right #n a s) i)]
 let shift_right_lemma_1 #n a s i = ()
 
 val shift_right_lemma_2: #n:pos -> a:int_t n{0 <= a} -> s:nat -> i:nat{i < n && i >= s} ->
   Lemma (requires True)
         (ensures (nth (shift_right #n a s) i = nth #n a (i - s)))
-	[SMTPat (nth (shift_right #n a s) i)]
+        [SMTPat (nth (shift_right #n a s) i)]
 let shift_right_lemma_2 #n a s i = ()
 
 val shift_left_value_lemma: #n:pos -> a:int_t n{0 <= a} -> s:nat ->
   Lemma (requires True)
         (ensures shift_left #n a s = (a * pow2 s) @% pow2 n)
-	[SMTPat (shift_left #n a s)]
+        [SMTPat (shift_left #n a s)]
 let shift_left_value_lemma #n a s =
   UInt.shift_left_value_lemma #n a s

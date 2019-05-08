@@ -24,131 +24,154 @@ open FStar.Mul
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
 
-abstract type t :Type0 =
-  | Mk: v:int_t n -> t
+private
+type t' =
+  | Mk: v:int_t n -> t'
 
-abstract
-let v (x:t) : Tot (int_t n) = x.v
+let t : eqtype = t'
 
-abstract
-val int_to_t: x:int_t n -> Pure t
-  (requires True)
-  (ensures (fun y -> v y = x))
-let int_to_t x = Mk x
+unfold
+let tt (_:t) = True
 
-let uv_inv (x : t) : Lemma
-  (ensures (int_to_t (v x) == x))
-  [SMTPat (v x)] = ()
+[@unfold_for_smt]
+let v (a:t)
+  : Tot (int_t n)
+  = a.v
 
-let vu_inv (x : int_t n) : Lemma
-  (ensures (v (int_to_t x) == x))
-  [SMTPat (int_to_t x)] = ()
+[@unfold_for_smt]
+let int_to_t (a:int_t n)
+  : Tot t
+  = Mk a
 
-let v_inj (x1 x2: t): Lemma
-  (requires (v x1 == v x2))
-  (ensures (x1 == x2))
-  = ()
-
-abstract
-let add (a:t) (b:t) : Pure t
-  (requires (size (v a + v b) n))
-  (ensures (fun c -> v a + v b = v c))
+[@unfold_for_smt]
+let add (a b:t)
+  : Pure t
+    (requires size (v a + v b) n)
+    (ensures tt)
   = Mk (add (v a) (v b))
 
 (* Subtraction primitives *)
-abstract
-let sub (a:t) (b:t) : Pure t
-  (requires (size (v a - v b) n))
-  (ensures (fun c -> v a - v b = v c))
+[@unfold_for_smt]
+let sub (a b:t)
+  : Pure t
+    (requires size (v a - v b) n)
+    (ensures tt)
   = Mk (sub (v a) (v b))
 
 (* Multiplication primitives *)
-abstract
-let mul (a:t) (b:t) : Pure t
-  (requires (size (v a * v b) n))
-  (ensures (fun c -> v a * v b = v c))
+[@unfold_for_smt]
+let mul (a b:t)
+  : Pure t
+    (requires size (v a * v b) n)
+    (ensures tt)
   = Mk (mul (v a) (v b))
 
 (* Division primitives *)
-abstract
-let div (a:t) (b:t{v b <> 0}) : Pure t
-  // division overflows on INT_MIN / -1
-  (requires (size (v a / v b) n))
-  (ensures (fun c -> v a / v b = v c))
+[@unfold_for_smt]
+let div (a b:t)
+  : Pure t
+    (requires
+      v b <> 0 /\
+      size (v a / v b) n)  // division overflows on INT_MIN / -1
+    (ensures tt)
   = Mk (div (v a) (v b))
 
 (* Modulo primitives *)
 (* If a/b is not representable the result of a%b is undefind *)
-abstract
-let rem (a:t) (b:t{v b <> 0}) : Pure t
-  (requires (size (v a / v b) n))
-  (ensures (fun c -> FStar.Int.mod (v a) (v b) = v c))
+[@unfold_for_smt]
+let rem (a b:t)
+  : Pure t
+    (requires
+      v b <> 0 /\
+      size (v a / v b) n)
+    (ensures tt)
   = Mk (mod (v a) (v b))
 
 (* Bitwise operators *)
-abstract
-let logand (x:t) (y:t) : Pure t
-  (requires True)
-  (ensures (fun z -> v x `logand` v y = v z))
-  = Mk (logand (v x) (v y))
+[@unfold_for_smt]
+let logand (a b:t)
+  : Tot t
+  = Mk (logand (v a) (v b))
 
-abstract
-let logxor (x:t) (y:t) : Pure t
-  (requires True)
-  (ensures (fun z -> v x `logxor` v y == v z))
-  = Mk (logxor (v x) (v y))
+[@unfold_for_smt]
+let logxor (a b:t)
+  : Tot t
+  = Mk (logxor (v a) (v b))
 
-abstract
-let logor (x:t) (y:t) : Pure t
-  (requires True)
-  (ensures (fun z -> v x `logor` v y == v z))
-  = Mk (logor (v x) (v y))
+[@unfold_for_smt]
+let logor (a b:t)
+  : Tot t
+  = Mk (logor (v a) (v b))
 
-abstract
-let lognot (x:t) : Pure t
-  (requires True)
-  (ensures (fun z -> lognot (v x) == v z))
-  = Mk (lognot (v x))
+[@unfold_for_smt]
+let lognot (a:t)
+  : Tot t
+  = Mk (lognot (v a))
 
 (* Shift operators *)
 
 (** If a is negative the result is implementation defined *)
-abstract
-let shift_right (a:t) (s:UInt32.t) : Pure t
-  (requires (0 <= v a /\ UInt32.v s < n))
-  (ensures (fun c -> FStar.Int.shift_right (v a) (UInt32.v s) = v c))
+[@unfold_for_smt]
+let shift_right (a:t) (s:UInt32.t)
+  : Pure t
+    (requires
+      0 <= v a /\
+      UInt32.v s < n)
+    (ensures tt)
   = Mk (shift_right (v a) (UInt32.v s))
 
 (** If a is negative the result is undefined behaviour *)
-abstract
-let shift_left (a:t) (s:UInt32.t) : Pure t
-  (requires (0 <= v a /\ UInt32.v s < n))
-  (ensures (fun c -> FStar.Int.shift_left (v a) (UInt32.v s) = v c))
+[@unfold_for_smt]
+let shift_left (a:t) (s:UInt32.t)
+  : Pure t
+    (requires
+      0 <= v a /\
+      UInt32.v s < n)
+    (ensures tt)
   = Mk (shift_left (v a) (UInt32.v s))
 
 (* Comparison operators *)
-let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
-let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
-let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
-let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
-let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
+[@unfold_for_smt]
+let eq (a b:t)
+  : Tot bool
+  = a = b
+
+[@unfold_for_smt]
+let gt (a b:t)
+  : Tot bool
+  = gt #n (v a) (v b)
+
+[@unfold_for_smt]
+let gte (a b:t)
+  : Tot bool
+  = gte #n (v a) (v b)
+
+[@unfold_for_smt]
+let lt (a b:t)
+  : Tot bool
+  = lt #n (v a) (v b)
+
+[@unfold_for_smt]
+let lte (a b:t)
+  : Tot bool
+  = lte #n (v a) (v b)
 
 (* Infix notations *)
-unfold let op_Plus_Hat = add
-unfold let op_Subtraction_Hat = sub
-unfold let op_Star_Hat = mul
-unfold let op_Slash_Hat = div
-unfold let op_Percent_Hat = rem
-unfold let op_Hat_Hat = logxor
-unfold let op_Amp_Hat = logand
-unfold let op_Bar_Hat = logor
-unfold let op_Less_Less_Hat = shift_left
-unfold let op_Greater_Greater_Hat = shift_right
-unfold let op_Equals_Hat = eq
-unfold let op_Greater_Hat = gt
-unfold let op_Greater_Equals_Hat = gte
-unfold let op_Less_Hat = lt
-unfold let op_Less_Equals_Hat = lte
+unfold let (  +^ ) = add
+unfold let (  -^ ) = sub
+unfold let (  *^ ) = mul
+unfold let (  /^ ) = div
+unfold let (  %^ ) = rem
+unfold let (  ^^ ) = logxor
+unfold let (  &^ ) = logand
+unfold let (  |^ ) = logor
+unfold let ( <<^ ) = shift_left
+unfold let ( >>^ ) = shift_right
+unfold let (  =^ ) = op_Equality #t
+unfold let (  >^ ) = gt
+unfold let ( >=^ ) = gte
+unfold let (  <^ ) = lt
+unfold let ( <=^ ) = lte
 
 (* To input / output constants *)
 assume val to_string: t -> Tot string
@@ -164,8 +187,8 @@ assume val of_string: string -> Tot t
 //eliminating the verification overhead of the wrapper
 private
 unfold
-let __int_to_t (x:int) : Tot t
-    = int_to_t x
+let __int_to_t (a:int) : Tot t
+    = int_to_t a
 #reset-options
 
 abstract
