@@ -24,6 +24,7 @@ module Seq = FStar.Seq
 open LowStar.RST
 open LowStar.BufferOps
 
+abstract
 let r_ptr (#a:Type) (ptr:B.pointer a) : resource = 
   let fp = Ghost.hide (B.loc_buffer ptr) in 
   let inv h = B.live h ptr in
@@ -39,6 +40,18 @@ let r_ptr (#a:Type) (ptr:B.pointer a) : resource =
     view = view
   }
 
+let reveal_ptr_sel_t (#a:Type) (ptr:B.pointer a)
+  : Lemma (sel_t (r_ptr ptr) == a) 
+          [SMTPat (sel_t (r_ptr ptr))] = 
+  reveal ()
+
+let reveal_ptr ()
+  : Lemma ((forall a (ptr:B.pointer a) . as_loc (fp (r_ptr ptr)) == B.loc_buffer ptr) /\
+           (forall a (ptr:B.pointer a) h . inv (r_ptr ptr) h <==> B.live h ptr) /\
+           (forall a (ptr:B.pointer a) h . sel (r_ptr ptr) h == Seq.index (B.as_seq h ptr) 0)) =
+  reveal ()
+
+abstract
 let r_ptr_read (#a:Type)
                (#ptr:B.pointer a)
                (_:unit)
@@ -47,12 +60,15 @@ let r_ptr_read (#a:Type)
                      (fun h0 x h1 -> 
                         sel (r_ptr ptr) h0 == x /\ 
                         x == sel (r_ptr ptr) h1) =
+  reveal ();
   !* ptr
 
+abstract
 let r_ptr_write (#a:Type)
                 (#ptr:B.pointer a)
                 (x:a)
               : RST unit (r_ptr ptr)
                          (fun _ -> True)
                          (fun _ _ h1 -> sel (r_ptr ptr) h1 == x) =
+  reveal ();
   ptr *= x

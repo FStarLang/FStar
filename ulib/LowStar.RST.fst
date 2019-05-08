@@ -46,11 +46,6 @@ type r_view fp inv : Type u#1 = {
     sel: r_view_t fp inv t
   }
 
-let mk_r_view fp inv t sel : r_view fp inv = {
-    t = t;
-    sel = sel
-  }
-
 noeq
 type resource_t : Type u#1 = {
     fp: eloc;
@@ -70,46 +65,70 @@ let resource =
     invariant_reads_fp res.fp res.inv
   }
 
+abstract
 let inv (res:resource) (h:HS.mem) =
   res.inv h
 
+abstract
 let fp (res:resource) = 
   res.fp
 
-let sel (res:resource) (h:imem (inv res)) =
+abstract 
+let sel_t (res:resource) =
+  res.view.t
+  
+abstract
+let sel (res:resource) (h:imem (inv res)) : GTot (sel_t res) =
   res.view.sel h
+
+let reveal ()
+  : Lemma ((forall res h .{:pattern inv res h} inv res h <==> res.inv h) /\ 
+           (forall res .{:pattern fp res} fp res == res.fp) /\ 
+           (forall res .{:pattern sel_t res} sel_t res == res.view.t) /\
+           (forall res h .{:pattern sel res h} sel res h == res.view.sel h)) =
+  ()
 
 (* Separating conjunction on views and resources *)
 
 unfold
 let r_disjoint (res1 res2:resource) = 
-  B.loc_disjoint (as_loc res1.fp) (as_loc res2.fp)
+  B.loc_disjoint (as_loc (fp res1)) (as_loc (fp res2))
 
+abstract
 let ( <*> ) (res1 res2:resource) : resource = 
-  let fp = Ghost.hide (B.loc_union (as_loc res1.fp) (as_loc res2.fp)) in 
+  let fp = Ghost.hide (B.loc_union (as_loc (fp res1)) (as_loc (fp res2))) in 
   let inv h = inv res1 h /\ inv res2 h /\ r_disjoint res1 res2 in
   let view = (
-    let t = res1.view.t & res2.view.t in 
-    let sel h = (res1.view.sel h,res2.view.sel h) in 
-    mk_r_view fp inv t sel) in
+    let t = sel_t res1 & sel_t res2 in 
+    let sel h = (sel res1 h,sel res2 h) in 
+    {
+      t = t;
+      sel = sel
+    }) in
   {
     fp = fp;
     inv = inv;
     view = view
   }
 
-let lemma_star_inv (res1 res2:resource) (h:HS.mem)
-  : Lemma (requires ((res1 <*> res2).inv h))
-          (ensures  (res1.inv h /\ res2.inv h)) 
-          [SMTPat ((res1 <*> res2).inv h)]= 
+let reveal_star_inv (res1 res2:resource) (h:HS.mem)
+  : Lemma ((inv (res1 <*> res2) h) <==> (inv res1 h /\ inv res2 h /\ r_disjoint res1 res2))
+          [SMTPat (inv (res1 <*> res2) h)] = 
   ()
 
+let reveal_star_fp (res1 res2:resource) 
+  : Lemma (as_loc (fp (res1 <*> res2)) == B.loc_union (as_loc (fp res1)) (as_loc (fp res2))) = 
+  ()
+
+let reveal_star_view_t (res1 res2:resource)
+  : Lemma (sel_t (res1 <*> res2) == sel_t res1 & sel_t res2) = 
+  ()
 
 (* (Constructive) view and resource inclusion *)
 
 noeq
 type r_includes_t (res1 res2:resource) = {
-    view_inc: res1.view.t -> res2.view.t;
+    view_inc: sel_t res1 -> sel_t res2;
     fp_delta: eloc
   }
 
@@ -117,7 +136,7 @@ let r_includes res1 res2 =
   inc:r_includes_t res1 res2 {
     // Difference in resource footprints is exactly inc.fp_delta
     (B.loc_disjoint (as_loc inc.fp_delta) (as_loc (fp res2))) /\ 
-    (as_loc res1.fp == B.loc_union (as_loc inc.fp_delta) (as_loc (fp res2))) /\
+    (as_loc (fp res1) == B.loc_union (as_loc inc.fp_delta) (as_loc (fp res2))) /\
     // Larger resource's invariant implies the smaller resource's one (e.g., liveness)
     (forall h .{:pattern (inv res1 h); (inv res2 h)} inv res1 h ==> inv res2 h) /\
     // Views are mapped to views
@@ -134,8 +153,8 @@ let r_includes res1 res2 =
 let star_includes_left (res1:resource) 
                        (res2:resource{B.loc_disjoint (as_loc (fp res1)) (as_loc (fp res2))})
                      : r_includes (res1 <*> res2) res1 = 
-  let view_inc (xy:res1.view.t & res2.view.t) = fst xy in 
-  let fp_delta = res2.fp in
+  let view_inc (xy:sel_t (res1 <*> res2)) = fst xy in 
+  let fp_delta = fp res2 in
   {
     view_inc = view_inc;
     fp_delta = fp_delta
@@ -144,8 +163,8 @@ let star_includes_left (res1:resource)
 let star_includes_right (res1:resource) 
                         (res2:resource{B.loc_disjoint (as_loc (fp res1)) (as_loc (fp res2))})
                       : r_includes (res1 <*> res2) res2 = 
-  let view_inc (xy:res1.view.t & res2.view.t) = snd xy in 
-  let fp_delta = res1.fp in
+  let view_inc (xy:sel_t (res1 <*> res2)) = snd xy in 
+  let fp_delta = fp res1 in
   {
     view_inc = view_inc;
     fp_delta = fp_delta
@@ -254,7 +273,7 @@ let include_post (#res1:resource)
                  (x:a)
                  (h1:imem (inv res1)) = 
   (post h0 x h1) /\
-  (B.modifies (as_loc res2.fp) h0 h1) // [DA: can we get rid of this modifies somehow?]
+  (B.modifies (as_loc (fp res2)) h0 h1) // [DA: can we get rid of this modifies somehow?]
 
 let r_include (#a:Type)
               (#res1:resource)
