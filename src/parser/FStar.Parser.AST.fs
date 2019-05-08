@@ -67,8 +67,8 @@ type term' =
   | Project   of term * lid
   | Product   of list<binder> * term                 (* function space *)
   | Sum       of list<(either<binder,term>)> * term                 (* dependent tuple *)
-  | QForall   of list<binder> * list<list<term>> * term
-  | QExists   of list<binder> * list<list<term>> * term
+  | QForall   of list<binder> * patterns * term
+  | QExists   of list<binder> * patterns * term
   | Refine    of binder * term
   | NamedTyp  of ident * term
   | Paren     of term
@@ -83,6 +83,8 @@ type term' =
   | CalcProof of term * term * list<calc_step> (* A calculational proof with relation, initial expression, and steps *)
 
 and term = {tm:term'; range:range; level:level}
+
+and patterns = list<ident> * list<list<term>>
 
 and calc_step =
   | CalcStep of term * term * term (* Relation, justification and next expression *)
@@ -620,12 +622,12 @@ let rec term_to_string (x:term) = match x.tm with
     List.map (function Inl b -> binder_to_string b
                      | Inr t -> term_to_string t) |>
     String.concat " & "
-  | QForall(bs, pats, t) ->
+  | QForall(bs, (_, pats), t) ->
     Util.format3 "forall %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)
       (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
       (t|> term_to_string)
-  | QExists(bs, pats, t) ->
+  | QExists(bs, (_, pats), t) ->
     Util.format3 "exists %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)
       (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
@@ -748,3 +750,17 @@ let decl_is_val id decl =
 let thunk (ens : term) : term =
     let wildpat = mk_pattern (PatWild None) ens.range in
     mk_term (Abs ([wildpat], ens)) ens.range Expr
+
+let idents_of_binders bs r =
+    bs |> List.map
+      (fun b ->
+        match b.b with
+        | Variable i
+        | TVariable i
+        | Annotated (i, _)
+        | TAnnotated (i, _) ->
+          i
+        | NoName _ ->
+          raise_error (Fatal_MissingQuantifierBinder,
+                      "Wildcard binders in quantifiers are not allowed")
+                      r)

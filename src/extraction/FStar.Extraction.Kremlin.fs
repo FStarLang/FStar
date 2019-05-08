@@ -25,7 +25,6 @@ open FStar.Util
 open FStar.Extraction
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
-open FStar.Format
 open FStar.Const
 open FStar.BaseTypes
 
@@ -78,6 +77,7 @@ and flag =
   | Epilogue of string
   | Abstract
   | IfDef
+  | Macro
 
 and fsdoc = string
 
@@ -375,6 +375,7 @@ and translate_flags flags =
     | Syntax.CEpilogue s -> Some (Epilogue s)
     | Syntax.CAbstract -> Some Abstract
     | Syntax.CIfDef -> Some IfDef
+    | Syntax.CMacro -> Some Macro
     | _ -> None // is this all of them?
   ) flags
 
@@ -717,7 +718,7 @@ and translate_expr env e: expr =
           string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca" ||
           string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca") ->
       EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
-  
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ elen ])
     when string_of_mlpath p = "LowStar.UninitializedBuffer.ualloca" ->
       EBufCreateNoInit (Stack, translate_expr env elen)
