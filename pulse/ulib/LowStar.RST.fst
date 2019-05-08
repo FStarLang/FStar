@@ -85,7 +85,6 @@ unfold
 let r_disjoint (res1 res2:resource) = 
   B.loc_disjoint (as_loc res1.fp) (as_loc res2.fp)
 
-abstract
 let ( <*> ) (res1 res2:resource) : resource = 
   let fp = Ghost.hide (B.loc_union (as_loc res1.fp) (as_loc res2.fp)) in 
   let inv h = inv res1 h /\ inv res2 h /\ r_disjoint res1 res2 in
@@ -199,13 +198,12 @@ let frame_left_post (#res1:resource)
   post h0 x h1 /\
   sel res2 h0 == sel res2 h1
 
-abstract
 let frame_left (#a:Type)
           (#res1:resource)
           (#res2:resource)
           (#pre:r_pre res1)
           (#post:r_post res1 a)
-          (f:unit -> RST a res1 pre post)
+          ($f:unit -> RST a res1 pre post)
         : RST a (res1 <*> res2) 
                 (frame_left_pre pre) 
                 (frame_left_post post) =
@@ -227,13 +225,12 @@ let frame_right_post (#res1:resource)
   post h0 x h1 /\
   sel res1 h0 == sel res1 h1
 
-abstract
 let frame_right (#a:Type)
            (#res1:resource)
            (#res2:resource)
            (#pre:r_pre res2)
            (#post:r_post res2 a)
-           (f:unit -> RST a res2 pre post)
+           ($f:unit -> RST a res2 pre post)
          : RST a (res1 <*> res2) 
                  (frame_right_pre pre) 
                  (frame_right_post post) =
@@ -265,6 +262,6 @@ let r_include (#a:Type)
               (inc:r_includes res1 res2)
               (#pre:r_pre res2)
               (#post:r_post res2 a)
-              (f:unit -> RST a res2 pre post)
+              ($f:unit -> RST a res2 pre post)
             : RST a res1 (include_pre inc pre) (include_post inc post) =
   f ()
