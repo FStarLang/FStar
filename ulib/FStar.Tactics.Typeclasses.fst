@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Tactics.Typeclasses
 
 (* TODO: This must be in the FStar.Tactics.* namespace or we fail to build
@@ -8,50 +23,51 @@ module T = FStar.Tactics
 
 (* The attribute that marks instances *)
 irreducible
-let instance : unit = ()
+let tcinstance : unit = ()
 
 let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     match l with
     | [] -> fail "no cands"
     | x::xs -> (fun () -> f x) `or_else` (fun () -> first f xs)
 
-(* TODO: loop detection (and memoization?) *)
-let rec tcresolve () : Tac unit =
-    local `or_else` (fun () -> global `or_else` (fun () -> fail "Typeclass resolution failed"))
-and local () : Tac unit =
+(* TODO: memoization?. And better errors. *)
+private
+let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
+    if fuel <= 0 then
+        fail "out of fuel";
+    debug ("fuel = " ^ string_of_int fuel);
+    let g = cur_goal () in
+    if FStar.List.Tot.Base.existsb (term_eq g) seen then
+      fail "loop";
+    let seen = g :: seen in
+    local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail ("could not solve constraint: " ^ term_to_string g)))
+and local (seen:list term) (fuel:int) () : Tac unit =
     let bs = binders_of_env (cur_env ()) in
-    first (fun b -> trywith (pack (Tv_Var (bv_of_binder b)))) bs
-and global () : Tac unit =
-    let cands = lookup_attr (`instance) (cur_env ()) in
-    first (fun fv -> trywith (pack (Tv_FVar fv))) cands
-and trywith t : Tac unit =
+    first (fun b -> trywith seen fuel (pack (Tv_Var (bv_of_binder b)))) bs
+and global (seen:list term) (fuel:int) () : Tac unit =
+    let cands = lookup_attr (`tcinstance) (cur_env ()) in
+    first (fun fv -> trywith seen fuel (pack (Tv_FVar fv))) cands
+and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
-    (fun () -> apply t) `seq` tcresolve
+    (fun () -> apply t) `seq` (fun () -> tcresolve' seen (fuel-1))
+
+[@plugin]
+let tcresolve () : Tac unit =
+    try tcresolve' [] 16
+    with
+    | TacticFailure s -> fail ("Typeclass resolution failed: " ^ s)
+    | e -> raise e
 
 (* Solve an explicit argument by typeclass resolution *)
 unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev
 
 (**** Generating methods from a class ****)
 
-let rec drop (n:nat) l =
-  if n = 0 then l
-  else match l with
-       | [] -> []
-       | x::xs -> drop (n-1) xs
-
-let remove s1 s2 =
-  (* FIXME, should check that s1 is a prefix of s2 *)
-  String.substring s2 (String.strlen s1) (String.strlen s2 - String.strlen s1)
-let _ = assert_norm (remove "a" "abc" == "bc")
-
+(* In TAC, not Tot *)
 let rec mk_abs (bs : list binder) (body : term) : Tac term (decreases bs) =
     match bs with
     | [] -> body
     | b::bs -> pack (Tv_Abs b (mk_abs bs body))
-
-let binder_to_term (b : binder) : Tac term =
-  let bv, _ = inspect_binder b in
-  pack (Tv_Var bv)
 
 let rec last (l : list 'a) : Tac 'a =
   match l with
@@ -97,7 +113,6 @@ let mk_class (nm:string) : Tac unit =
     T.iter (fun b ->
                   (* dump ("b = " ^ term_to_string (type_of_binder b)); *)
                   let s = name_of_binder b in
-                  let s = remove "__fname__" s in (* unmangle *)
                   (* dump ("b = " ^ s); *)
                   let ns = cur_module () in
                   let sfv = pack_fv (ns @ [s]) in
@@ -105,16 +120,18 @@ let mk_class (nm:string) : Tac unit =
                   let tcr = (`tcresolve) in
                   let tcdict = pack_binder dbv (Q_Meta tcr) in
                   let bs = ps @ [tcdict] in
-                  (* let ty = mk_tot_arr bs (type_of_binder b) in *)
                   let ty = pack Tv_Unknown in (* Just leave it to inference *)
                   let proj = pack (Tv_FVar (pack_fv (cur_module () @ [base ^ s]))) in
                   let def : term = mk_abs bs (mk_e_app proj [binder_to_term tcdict]) in
+                  //dump ("def = " ^ term_to_string def);
+                  //dump ("ty  = " ^ term_to_string ty);
+
                   let ty : term = ty in
                   let def : term = def in
                   let sfv : fv = sfv in
                   let se = pack_sigelt (Sg_Let false sfv us ty def) in
                   //let se = set_sigelt_attrs [`tcnorm] se in
-                  (* print ("trying to return : " ^ term_to_string (quote se)); *)
+                  //dump ("trying to return : " ^ term_to_string (quote se));
                   add_elem (fun () -> exact (quote se));
                   ()
     ) bs;

@@ -1,15 +1,6 @@
 [
-  "&xŒ>Õ³‘Ø/=\u00068æ}\u0017",
+  "\u0010‘ƒAm‡\u007f–²qEM_zNˆ",
   [
-    [
-      "Unfold.test1",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "d0145964488c457742e52327010c5334"
-    ],
     [
       "Unfold.test3",
       1,
@@ -21,7 +12,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e4e5d28c41a6ab6c0052604843efbb87"
+      "773c454889ebc406bf1559f83150322f"
     ]
   ]
 ]

@@ -1,0 +1,289 @@
+[
+  "2µ\u0011%I6¢ŸŒ×hë5dü\u0019",
+  [
+    [
+      "Lang.__proj__Return__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Return",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3b7831d9973ba6ea1ea4e42a3c37eb98"
+      ],
+      0,
+      "ad6575e85d7a2d64f3cf4296089c45bd"
+    ],
+    [
+      "Lang.__proj__Return__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Return",
+        "proj_equation_Lang.Return_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Lang.Return_a",
+        "refinement_interpretation_Tm_refine_3b7831d9973ba6ea1ea4e42a3c37eb98"
+      ],
+      0,
+      "0cad54ec2545fe3c421fb02e1526e168"
+    ],
+    [
+      "Lang.__proj__Read__item__id",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Read",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_8b0b214c8c365de975ef6f968fef05ff"
+      ],
+      0,
+      "8471f52b10aa6755d22f0ffa20ac84aa"
+    ],
+    [
+      "Lang.__proj__Write__item__id",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_d48ca6a107dccb6956bc9f7c46bdf471"
+      ],
+      0,
+      "4ebeea5c7b85c30918be2b40cd48dfca"
+    ],
+    [
+      "Lang.__proj__Write__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_d48ca6a107dccb6956bc9f7c46bdf471"
+      ],
+      0,
+      "57e2fc4630520c8fc142c5be2a657307"
+    ],
+    [
+      "Lang.__proj__Bind__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Bind",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "64e2a87f862ca92001326948728cb725"
+    ],
+    [
+      "Lang.__proj__Bind__item__b",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Bind",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "17d73ffcab369c74d08011745bec43d6"
+    ],
+    [
+      "Lang.__proj__Bind__item__c1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Bind",
+        "proj_equation_Lang.Bind_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Lang.Bind_a",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "a16ba0ead986478870dbf00696d79c76"
+    ],
+    [
+      "Lang.__proj__Bind__item__c2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Bind",
+        "proj_equation_Lang.Bind_a", "proj_equation_Lang.Bind_b",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Lang.Bind_a", "projection_inverse_Lang.Bind_b",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "2ef5e926f283082a52faf6d546e906ff"
+    ],
+    [
+      "Lang.wpsep_command",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Lang_pretyping_ed25d9a66ef27c141140a01a63efac21",
+        "binder_x_7191e7ec7ec842c79d6210488d715978_1",
+        "data_elim_Lang.Alloc", "data_elim_Lang.Bind", "data_elim_Lang.Read",
+        "data_elim_Lang.Return", "data_elim_Lang.Write",
+        "disc_equation_Lang.Alloc", "disc_equation_Lang.Bind",
+        "disc_equation_Lang.Read", "disc_equation_Lang.Return",
+        "disc_equation_Lang.Write", "equality_tok_Lang.Alloc@tok",
+        "equation_Lang.addr", "fuel_guarded_inversion_Lang.command",
+        "subterm_ordering_Lang.Bind", "typing_tok_Lang.Alloc@tok",
+        "unit_typing"
+      ],
+      0,
+      "32895195257577b0489e4ff0cd7df4a2"
+    ],
+    [
+      "Lang.__proj__Return__item__a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Return",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3b7831d9973ba6ea1ea4e42a3c37eb98"
+      ],
+      0,
+      "5a8f2dee8d354071ef92dd736509c036"
+    ],
+    [
+      "Lang.__proj__Return__item__v",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Return",
+        "proj_equation_Lang.Return_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Lang.Return_a",
+        "refinement_interpretation_Tm_refine_3b7831d9973ba6ea1ea4e42a3c37eb98"
+      ],
+      0,
+      "9e25c9abb401b41cc054d4d1d0b33cda"
+    ],
+    [
+      "Lang.__proj__Read__item__id",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Read",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_8b0b214c8c365de975ef6f968fef05ff"
+      ],
+      0,
+      "0d8e52a98f2ed683b8b30ac022c833bf"
+    ],
+    [
+      "Lang.__proj__Write__item__id",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_d48ca6a107dccb6956bc9f7c46bdf471"
+      ],
+      0,
+      "1f1b01842e6ed61b090e112ab6d95c47"
+    ],
+    [
+      "Lang.__proj__Write__item__v",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Write",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_d48ca6a107dccb6956bc9f7c46bdf471"
+      ],
+      0,
+      "3db397e19409a80e655af9cc96730d1e"
+    ],
+    [
+      "Lang.__proj__Bind__item__a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Bind",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "390436fc4e87c675ff74f73a097a7c4c"
+    ],
+    [
+      "Lang.__proj__Bind__item__b",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Bind",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "67441f5f6c5b53d831ef3b54eece5d98"
+    ],
+    [
+      "Lang.__proj__Bind__item__c1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Bind",
+        "proj_equation_Lang.Bind_a", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Lang.Bind_a",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "c0040397508cc200447d1333b0d162fb"
+    ],
+    [
+      "Lang.__proj__Bind__item__c2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Bind",
+        "proj_equation_Lang.Bind_a", "proj_equation_Lang.Bind_b",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Lang.Bind_a", "projection_inverse_Lang.Bind_b",
+        "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
+      ],
+      0,
+      "f463f3a9f6b9bfdb4e431d94eca434e5"
+    ],
+    [
+      "Lang.wpsep_command",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Lang_pretyping_ed25d9a66ef27c141140a01a63efac21",
+        "binder_x_7191e7ec7ec842c79d6210488d715978_1",
+        "data_elim_Lang.Alloc", "data_elim_Lang.Bind", "data_elim_Lang.Read",
+        "data_elim_Lang.Return", "data_elim_Lang.Write",
+        "disc_equation_Lang.Alloc", "disc_equation_Lang.Bind",
+        "disc_equation_Lang.Read", "disc_equation_Lang.Return",
+        "disc_equation_Lang.Write", "equality_tok_Lang.Alloc@tok",
+        "equation_Lang.addr", "fuel_guarded_inversion_Lang.command",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Lang.Bind",
+        "typing_tok_Lang.Alloc@tok", "unit_typing"
+      ],
+      0,
+      "c0f1fc30da78456c1f3946698b7d9eae"
+    ]
+  ]
+]

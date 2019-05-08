@@ -1,5 +1,5 @@
 [
-  "–‚ü∑\u0019Püè¡£ÈÓÓÏY∆",
+  "%âö/\\Ï¨ô∞l\u000b?\u0015f[⁄",
   [
     [
       "AnnoyingVCs.test1",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "fdd3000bfe8c45b838322f8b7cf4241b"
+      "70cf50e6a4595f96237ae2de0842600e"
     ],
     [
       "AnnoyingVCs.test2",
@@ -17,7 +17,16 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "e64cde25c5bdd52d5cec89ba9af0be93"
+      "d794235a9d6837b990055e0ffe0af42e"
+    ],
+    [
+      "AnnoyingVCs.test2",
+      2,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "4237faa4c6f2064fa4f331dd0419f988"
     ]
   ]
 ]

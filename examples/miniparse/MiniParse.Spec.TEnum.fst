@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module MiniParse.Spec.TEnum
 include MiniParse.Spec.Combinators
 include MiniParse.Tac.Base
@@ -180,7 +195,9 @@ let synth_inverse_forall_tenum_solve () : T.Tac unit =
     if hd' `T.term_eq` (`synth_inverse)
     then match T.trytac synth_inverse_forall_tenum_solve' with
     | Some _ -> ()
-    | _ -> (T.dump "synth_inverse_forall_tenum_solve FAILED here:"; tfail "synth_inverse_forall_tenum_solve failed")
+    | _ -> (if T.debugging () then
+              T.dump "synth_inverse_forall_tenum_solve FAILED here:";
+            tfail "synth_inverse_forall_tenum_solve failed")
     else tfail "not a synth_inverse goal"
   | _ -> tfail "not enough arguments to squash"
   else tfail "not a squash"

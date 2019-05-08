@@ -198,6 +198,7 @@ val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val copy_file: string -> string -> unit
 val flush_file: file_handle -> unit
+val delete_file: string -> unit
 val file_get_contents: string -> string
 val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
 val concat_dir_filename: string -> string -> string
@@ -243,9 +244,11 @@ val basename: string -> string
 val dirname : string -> string
 val getcwd: unit -> string
 val readdir: string -> list<string>
+val paths_to_same_file: string -> string -> bool
 
 open Prims
 val file_exists: string -> Tot<bool>
+val is_directory: string -> Tot<bool>
 
 val int_of_string: string -> int
 val safe_int_of_string: string -> option<int>

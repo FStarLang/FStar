@@ -1,8 +1,23 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.OrdMap
 
 open FStar.OrdSet
 open FStar.FunctionalExtensionality
-
+module F = FStar.FunctionalExtensionality
 (* TODO (KM) : move me this should go in a common file on relations *)
 type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
     (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2) (* anti-symmetry *)
@@ -12,7 +27,7 @@ type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
 let cmp (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
 
 abstract let map_t (k:eqtype) (v:Type) (f:cmp k) (d:ordset k f) =
-  g:(k -> Tot (option v)){forall x. mem x d == Some? (g x)}
+  g:F.restricted_t k (fun _ -> option v){forall x. mem x d == Some? (g x)}
 
 abstract noeq type ordmap (k:eqtype) (v:Type) (f:cmp k) =
   | Mk_map: d:ordset k f -> m:map_t k v f d -> ordmap k v f
@@ -38,11 +53,11 @@ abstract val size    : #key:eqtype -> #value:Type -> #f:cmp key -> ordmap key va
 
 let empty (#k:eqtype) (#v:Type) #f =
   let d = OrdSet.empty in
-  let g = (fun x -> None) in
+  let g = F.on_dom k (fun x -> None) in
   Mk_map d g
 
 let const_on (#k:eqtype) (#v:Type) #f d x =
-  let g : k -> Tot (option v) = (fun y -> if mem y d then Some x else None) in
+  let g = F.on_dom k (fun y -> if mem y d then Some x else None) in
   Mk_map d g
 
 let select (#k:eqtype) (#v:Type) #f x m = (Mk_map?.m m) x
@@ -51,7 +66,7 @@ let insert (#a:eqtype) (#f:cmp a) (x:a) (s:ordset a f) = union #a #f (singleton 
 
 let update (#k:eqtype) (#v:Type) #f x y m =
   let s' = insert x (Mk_map?.d m) in
-  let g' : k -> Tot (option v) = fun (x':k) -> if x' = x then Some y else (Mk_map?.m m) x' in
+  let g' = F.on_dom k (fun (x':k) -> if x' = x then Some y else (Mk_map?.m m) x') in
   Mk_map s' g'
 
 let contains (#k:eqtype) (#v:Type) #f x m = mem x (Mk_map?.d m)
@@ -60,7 +75,7 @@ let dom (#k:eqtype) (#v:Type) #f m = (Mk_map?.d m)
 
 let remove (#k:eqtype) (#v:Type) #f x m =
   let s' = remove x (Mk_map?.d m) in
-  let g' : k -> Tot (option v) = fun x' -> if x' = x then None else (Mk_map?.m m) x' in
+  let g' = F.on_dom k (fun x' -> if x' = x then None else (Mk_map?.m m) x') in
   Mk_map s' g'
 
 let choose (#k:eqtype) (#v:Type) #f m =
@@ -72,7 +87,6 @@ let size (#k:eqtype) (#v:Type) #f m = OrdSet.size (Mk_map?.d m)
 
 abstract type equal (#k:eqtype) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) =
   (forall x. select #k #v #f x m1 == select #k #v #f x m2)
-
 
 abstract val eq_intro: #k:eqtype -> #v:Type -> #f:cmp k -> m1:ordmap k v f -> m2:ordmap k v f
               -> Lemma (requires (forall x. select #k #v #f x m1 == select #k #v #f x m2))

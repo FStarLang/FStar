@@ -20,9 +20,11 @@ open FStar.All
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
+open FStar.CheckedFiles
+open FStar.Universal
 module E = FStar.Errors
 
-let () = FStar.Version.dummy ()
+let _ = FStar.Version.dummy ()
 
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
@@ -59,59 +61,6 @@ let report_errors fmods =
     exit 1
   end
 
-(* Extraction to OCaml, F# or Kremlin *)
-let codegen (umods, env, delta) =
-  let opt = Options.codegen () in
-  if opt <> None then
-    let env = Universal.apply_delta_env env delta in
-    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
-    let mllibs = List.flatten mllibs in
-    let ext = match opt with
-      | Some Options.FSharp -> ".fs"
-      | Some Options.OCaml
-      | Some Options.Plugin -> ".ml"
-      | Some Options.Kremlin -> ".krml"
-      | _ -> failwith "Unrecognized option"
-    in
-    match opt with
-    | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
-        (* When bootstrapped in F#, this will use the old printer in
-           FStar.Extraction.ML.Code for both OCaml and F# extraction.
-           When bootstarpped in OCaml, this will use the old printer
-           for F# extraction and the new printer for OCaml extraction. *)
-        let outdir = Options.output_dir() in
-        List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
-    | Some Options.Kremlin ->
-        let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
-        let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
-        begin match programs with
-        | [ name, _ ] ->
-            save_value_to_file (Options.prepend_output_dir (name ^ ext)) bin
-        | _ ->
-            save_value_to_file (Options.prepend_output_dir "out.krml") bin
-        end
-   | _ -> failwith "Unrecognized option"
-
-//let gen_plugins (umods, env) =
-//    (* Extract module and its dependencies to OCaml *)
-//    let out_dir = match Options.output_dir() with
-//                  | None -> "."
-//                  | Some d -> d
-//    in
-//    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
-//    let mllibs = List.flatten mllibs in
-//    List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
-//
-//    (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
-//    let user_plugin_modules =
-//        umods |> List.collect (fun u ->
-//        let mname = FStar.Syntax.Syntax.mod_name u in
-//        if Options.should_extract (Ident.string_of_lid mname)
-//        then [FStar.Extraction.ML.Util.mlpath_of_lid mname |> FStar.Extraction.ML.Util.flatten_mlpath]
-//        else [])
-//    in
-//    Tactics.Load.compile_modules out_dir user_plugin_modules
-
 let load_native_tactics () =
     let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
     let ml_module_name m =
@@ -142,11 +91,11 @@ let load_native_tactics () =
     List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
     Tactics.Load.load_tactics cmxs_files
 
-let init_warn_error() =
-  Errors.init_warn_error_flags;
-  let s = Options.warn_error() in
-  if s <> "" then
-    FStar.Parser.ParseIt.parse_warn_error s
+
+(* Need to keep names of input files for a second pass when prettyprinting *)
+(* This reference is set once in `go` and read in `main` if the print or *)
+(* print_in_place options are passed *)
+let fstar_files: ref<option<list<string>>> = Util.mk_ref None
 
 (****************************************************************************)
 (* Main function                                                            *)
@@ -157,46 +106,77 @@ let go _ =
     | Help ->
         Options.display_usage(); exit 0
     | Error msg ->
-        Util.print_string msg; exit 1
+        Util.print_error msg; exit 1
     | Success ->
+        fstar_files := Some filenames;
         load_native_tactics ();
-        init_warn_error();
 
-        if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
-        then let _, deps = Parser.Dep.collect filenames in
+        (* --dep: Just compute and print the transitive dependency graph;
+                  don't verify anything *)
+        if Options.dep() <> None
+        then let _, deps = Parser.Dep.collect filenames FStar.CheckedFiles.load_parsing_data_from_cache in
              Parser.Dep.print deps
-        else if Options.use_extracted_interfaces () && (not (Options.expose_interfaces ())) && List.length filenames > 1 then
+
+        (* Input validation: should this go to process_args? *)
+        (*          don't verify anything *)
+        else if Options.use_extracted_interfaces ()
+             && (not (Options.expose_interfaces ()))
+             && List.length filenames > 1
+        then
           Errors.raise_error (Errors.Error_TooManyFiles,
-                              "Only one command line file is allowed if --use_extracted_interfaces is set, found %s" ^ (string_of_int (List.length filenames)))
+                              "Only one command line file is allowed if \
+                               --use_extracted_interfaces is set, \
+                               found " ^ (string_of_int (List.length filenames)))
                              Range.dummyRange
+
+        (* --ide: Interactive mode *)
         else if Options.interactive () then begin
           match filenames with
-          | [] ->
-            Errors. log_issue Range.dummyRange (Errors.Error_MissingFileName, "--ide: Name of current file missing in command line invocation\n"); exit 1
-          | _ :: _ :: _ ->
-            Errors. log_issue Range.dummyRange (Errors.Error_TooManyFiles, "--ide: Too many files in command line invocation\n"); exit 1
+          | [] -> (* input validation: move to process args? *)
+            Errors.log_issue
+              Range.dummyRange
+              (Errors.Error_MissingFileName,
+                "--ide: Name of current file missing in command line invocation\n");
+            exit 1
+          | _ :: _ :: _ -> (* input validation: move to process args? *)
+            Errors.log_issue
+              Range.dummyRange
+              (Errors.Error_TooManyFiles,
+                "--ide: Too many files in command line invocation\n");
+            exit 1
           | [filename] ->
             if Options.legacy_interactive () then
               FStar.Interactive.Legacy.interactive_mode filename
             else
               FStar.Interactive.Ide.interactive_mode filename
           end
-        else if Options.doc() then // --doc Generate Markdown documentation files
+
+        (* --fsdoc: Generate Markdown documentation files *)
+        else if Options.doc() then
           FStar.Fsdoc.Generator.generate filenames
-        else if Options.indent () then
+
+        (* --print: Emit files in canonical source syntax *)
+        else if Options.print () || Options.print_in_place () then
           if FStar.Platform.is_fstar_compiler_using_ocaml
-          then FStar.Indent.generate filenames
+          then FStar.Prettyprint.generate FStar.Prettyprint.ToTempFile filenames
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
+
+        (* Normal, batch mode compiler *)
         else if List.length filenames >= 1 then begin //normal batch mode
-          let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
-          let fmods, env, delta_env = Universal.batch_mode_tc filenames dep_graph in
-          let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
+          let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames FStar.CheckedFiles.load_parsing_data_from_cache in
+          let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in
+          ignore (cleanup env);
+          let module_names_and_times =
+            tcrs
+            |> List.map (fun tcr ->
+               Universal.module_or_interface_name tcr.checked_module,
+               tcr.tc_time)
+          in
           report_errors module_names_and_times;
-          codegen (fmods |> List.map fst, env, delta_env);
-          report_errors module_names_and_times; //codegen errors
           finished_message module_names_and_times 0
-        end //end normal batch mode
+        end //end batch mode
+
         else
           Errors.raise_error (Errors.Error_MissingFileName, "No file provided") Range.dummyRange
 
@@ -216,6 +196,7 @@ let lazy_chooser k i = match k with
 
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
+    Options.initialize_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder
@@ -233,9 +214,20 @@ let handle_error e =
 let main () =
   try
     setup_hooks ();
-    let _, time = FStar.Util.record_time go in
+    let _, time = Util.record_time go in
+    if Options.print () || Options.print_in_place () then
+      match !fstar_files with
+      | Some filenames ->
+          let printing_mode =
+            if Options.print () then
+              FStar.Prettyprint.FromTempToStdout
+            else
+              FStar.Prettyprint.FromTempToFile
+          in
+          FStar.Prettyprint.generate printing_mode filenames
+      | None -> Util.print_error "Internal error: List of source files not properly set";
     if FStar.Options.query_stats()
-    then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"
+    then Util.print2 "TOTAL TIME %s ms: %s\n"
               (FStar.Util.string_of_int time)
               (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();

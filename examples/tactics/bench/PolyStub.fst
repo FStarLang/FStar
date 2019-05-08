@@ -1,6 +1,21 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module __MODULE__
 
-open CanonCommSemiring
+open FStar.Tactics.CanonCommSemiring
 open FStar.Tactics
 open FStar.Mul
 
@@ -17,7 +32,7 @@ assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
 #set-options "--log_queries"
 
 [@tcdecltime]
-let lemma_poly_multiply___SUFFIX__ (p:pos) (n r h r0 r1 h0 h1 h2 s1 d0 d1 d2 h1 h2 hh : int) : Lemma
+let lemma_poly_multiply___SUFFIX__ (p:pos) (n r h r0 r1 h0 h1_ h2_ s1 d0 d1 d2 h1 h2 hh : int) : Lemma
   (requires r1 >= 0 /\ n > 0 /\ 4 * (n * n) == p + 5 /\ r == r1 * n + r0 /\
             h == h2 * (n * n) + h1 * n + h0 /\ s1 == r1 + (r1 / 4) /\ r1 % 4 == 0 /\
             d0 == h0 * r0 + h1 * s1 /\ d1 == h0 * r1 + h1 * r0 + h2 * s1 /\

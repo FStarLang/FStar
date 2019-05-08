@@ -1,5 +1,5 @@
 [
-  "GI»Ä7øÑN& \u000bŒ(+!)",
+  ")\u0003³\u001e£À\u001bÿær›\u001d\u007f\t\fš",
   [
     [
       "LowStar.BufferCompat.rcreate",
@@ -9,11 +9,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_d0636e9ebd413cbbf5e3e3257e4ec277"
+        "equation_LowStar.Buffer.buffer",
+        "refinement_interpretation_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55",
+        "refinement_interpretation_Tm_refine_c91c357d8b481b71bcfe70f0ece722d9"
       ],
       0,
-      "63fb685a7c827d4507880f40e18dc2a6"
+      "e184d2fca2c3d0a196154cc8925800ff"
     ],
     [
       "LowStar.BufferCompat.rcreate_mm",
@@ -23,10 +24,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
+        "equation_LowStar.Buffer.buffer",
+        "refinement_interpretation_Tm_refine_2c83c7bb607ce0f4ff3dd6d04eabda6f",
+        "refinement_interpretation_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
       ],
       0,
-      "7198387e1676441f1a09a5eac4bf2428"
+      "f83d7e707c848101b412ce45340063ba"
     ],
     [
       "LowStar.BufferCompat.create",
@@ -36,10 +39,32 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_9b063033f9f8b075fbdcde91a96a63d9"
+        "equation_LowStar.Buffer.buffer",
+        "refinement_interpretation_Tm_refine_485808b6c08b8fa1bad00cc3070d942a",
+        "refinement_interpretation_Tm_refine_9b063033f9f8b075fbdcde91a96a63d9"
       ],
       0,
-      "81af8165d7ae2798eba674d0f0f6126e"
+      "e8546943685fbbc33f5ab8650832ca3b"
+    ],
+    [
+      "LowStar.BufferCompat.createL",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_LowStar.Buffer.buffer",
+        "equation_LowStar.Buffer.trivial_preorder",
+        "lemma_LowStar.Monotonic.Buffer.length_as_seq",
+        "refinement_interpretation_Tm_refine_bae49c28c457d8a041a1d2652d66bb1c",
+        "refinement_interpretation_Tm_refine_d2d1ea66f2b3a92c2deb42edcbb784ce",
+        "refinement_interpretation_Tm_refine_fdd6ab907516d1d3b973a4a3f9b40794",
+        "typing_FStar.Seq.Properties.seq_of_list",
+        "typing_LowStar.Buffer.trivial_preorder"
+      ],
+      0,
+      "f89a1c6181272cbd7a9baadf0a713bfa"
     ],
     [
       "LowStar.BufferCompat.rcreate",
@@ -49,10 +74,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
+        "refinement_interpretation_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
       ],
       0,
-      "53817ad1d0d038ac4bd768184d50d650"
+      "fc6389dd3f1cc542608f316b096fe732"
     ],
     [
       "LowStar.BufferCompat.rcreate_mm",
@@ -62,10 +87,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
+        "refinement_interpretation_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
       ],
       0,
-      "67f597a0a32b3a7ec92afd2cba274c9b"
+      "46257bc6a7ebd728e78298bea8bcb2db"
     ],
     [
       "LowStar.BufferCompat.create",
@@ -75,10 +100,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_9b063033f9f8b075fbdcde91a96a63d9"
+        "refinement_interpretation_Tm_refine_9b063033f9f8b075fbdcde91a96a63d9"
       ],
       0,
-      "8fc3be87c3defa78c6c58ff287084035"
+      "87909b53f90d49a323d0765e3117ea91"
     ]
   ]
 ]

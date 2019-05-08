@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.BV
 open FStar.UInt // for now just opening this for logand, logxor, etc. but we need a better solution.
  
@@ -29,6 +44,10 @@ val int2bv: #n:pos -> num:uint_t n -> Tot (bv_t n)
 
 val bv2int: #n:pos -> vec:bv_t n -> Tot (uint_t n)
 
+val list2bv: #n:pos -> l:list bool{List.length l = n} -> Tot (bv_t n)
+
+val bv2list: #n:pos -> bv_t n -> Tot (l:list bool{List.length l = n})
+
 unfold
 let bv_zero #n = int2bv #n 0
 
@@ -39,6 +58,14 @@ val int2bv_lemma_1: #n:pos -> a:uint_t n -> b:uint_t n ->
 
 val int2bv_lemma_2: #n:pos -> a:uint_t n -> b:uint_t n ->
   Lemma (requires (int2bv a = int2bv b)) (ensures a = b)
+
+val list2bv_bij: #n:pos -> a:list bool{List.length a = n} ->
+  Lemma (requires (True))
+        (ensures (bv2list (list2bv #n a) = a))
+
+val bv2list_bij: #n:pos -> a:bv_t n ->
+  Lemma (requires (True))
+        (ensures (list2bv (bv2list #n a) = a))
 
 val bvadd :#n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 val bvsub :#n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)

@@ -104,6 +104,9 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_bool true  -> C_True
     | FStar.Const.Const_bool false -> C_False
     | FStar.Const.Const_string (s, _) -> C_String s
+    | FStar.Const.Const_range r -> C_Range r
+    | FStar.Const.Const_reify -> C_Reify
+    | FStar.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 let rec inspect_ln (t:term) : term_view =
@@ -227,15 +230,26 @@ let inspect_comp (c : comp) : comp_view =
 let pack_comp (cv : comp_view) : comp =
     match cv with
     | C_Total (t, _) -> mk_Total t
-    | _ -> failwith "sorry, can embed comp_views other than C_Total for now"
+    | C_Lemma (pre, post) ->
+        let ct = { comp_univs  = []
+                 ; effect_name = PC.effect_Lemma_lid
+                 ; result_typ  = S.t_unit
+                 ; effect_args = [S.as_arg pre; S.as_arg post]
+                 ; flags       = [] } in
+        S.mk_Comp ct
+
+    | _ -> failwith "cannot pack a C_Unknown"
 
 let pack_const (c:vconst) : sconst =
     match c with
-    | C_Unit    -> C.Const_unit
-    | C_Int i   -> C.Const_int (Z.string_of_big_int i, None)
-    | C_True    -> C.Const_bool true
-    | C_False   -> C.Const_bool false
-    | C_String s -> C.Const_string (s, Range.dummyRange)
+    | C_Unit         -> C.Const_unit
+    | C_Int i        -> C.Const_int (Z.string_of_big_int i, None)
+    | C_True         -> C.Const_bool true
+    | C_False        -> C.Const_bool false
+    | C_String s     -> C.Const_string (s, Range.dummyRange)
+    | C_Range  r     -> C.Const_range r
+    | C_Reify        -> C.Const_reify
+    | C_Reflect ns   -> C.Const_reflect (Ident.lid_of_path ns Range.dummyRange)
 
 // TODO: pass in range?
 let pack_ln (tv:term_view) : term =
@@ -401,6 +415,11 @@ open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list<string> =
     Ident.path_of_lid e.curmodule
 
+let env_open_modules (e : Env.env) : list<name> =
+    List.map (fun (l, m) -> List.map Ident.text_of_id (Ident.ids_of_lid l))
+             (DsEnv.open_modules e.dsenv)
+
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
 let term_to_string t = Print.term_to_string t
+let comp_to_string c = Print.comp_to_string c

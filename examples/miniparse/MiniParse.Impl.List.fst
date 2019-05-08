@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module MiniParse.Impl.List
 include MiniParse.Spec.List
 include MiniParse.Impl.Base
@@ -154,7 +169,7 @@ let parse_nlist_impl_body #t p0 pimpl n h0 b len rb rr i =
     assert (U32.v consumed <= U32.v (len `U32.sub` off));
     let off' = off `U32.add` consumed in
     assert (len `U32.sub` off' == B.len b' `U32.sub` consumed);
-    B.gsub_gsub b off (len `U32.sub` off) consumed (len `U32.sub` off');
+    //B.gsub_gsub b off (len `U32.sub` off) consumed (len `U32.sub` off');
     BO.op_Star_Equals rb off';
     let l1 = BO.op_Bang_Star rr in
     BO.op_Star_Equals rr (elem :: l1);

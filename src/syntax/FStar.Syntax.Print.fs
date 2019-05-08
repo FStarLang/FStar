@@ -51,7 +51,7 @@ let sli (l:lident) : string =
 
 let lid_to_string (l:lid) = sli l
 
-//let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
+// let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
 let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ delta_depth_to_string fv.fv_delta ^ ")"
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ (string_of_int bv.index)
 
@@ -117,7 +117,12 @@ let is_ite (t:typ)   = is_prim_op [C.ite_lid] t
 let is_lex_cons (f:exp) = is_prim_op [C.lexcons_lid] f
 let is_lex_top (f:exp) = is_prim_op [C.lextop_lid] f
 let is_inr = function Inl _ -> false | Inr _ -> true
-let filter_imp a = a |> List.filter (function (_, Some (Implicit _)) -> false | _ -> true)
+let filter_imp a =
+   (* keep typeclass args *)
+   a |> List.filter (function | (_, Some (Meta t)) when SU.is_fvar C.tcresolve_lid t -> true
+                              | (_, Some (Implicit _))
+                              | (_, Some (Meta _)) -> false
+                              | _ -> true)
 let rec reconstruct_lex (e:exp) =
   match (compress e).n with
   | Tm_app (f, args) ->
@@ -287,7 +292,7 @@ and term_to_string x =
             U.format1 "quote (%s)" (term_to_string tm)
         end
 
-      | Tm_meta(t, Meta_pattern ps) ->
+      | Tm_meta(t, Meta_pattern (_, ps)) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format2 "{:pattern %s} %s" pats (term_to_string t)
 
@@ -436,14 +441,18 @@ and lcomp_to_string lc =
 //       (kind_to_string k)
 //   else U.format1 "U%s"  (if (Options.hide_uvar_nums()) then "?" else U.string_of_int (Unionfind.uvar_id uv))
 
-and aqual_to_string = function
-  | Some (Implicit false) -> "#"
-  | Some (Implicit true) -> "#."
-  | Some Equality -> "$"
-  | _ -> ""
+and aqual_to_string' s = function
+  | Some (Implicit false) -> "#" ^ s
+  | Some (Implicit true) -> "#." ^ s
+  | Some Equality -> "$" ^ s
+  | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> "[|" ^ s ^ "|]"
+  | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
+  | None -> s
+
+and aqual_to_string aq = aqual_to_string' "" aq
 
 and imp_to_string s aq =
-    aqual_to_string aq ^ s
+    aqual_to_string' s aq
 
 and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
@@ -474,7 +483,7 @@ and arg_to_string = function
 
 and args_to_string args =
     let args = if (Options.print_implicits()) then args else filter_imp args in
-    args |> List.map arg_to_string |> String.concat "; "
+    args |> List.map arg_to_string |> String.concat " "
 
 and comp_to_string' env c =
   if Options.ugly ()
@@ -514,7 +523,7 @@ and comp_to_string c =
                             (c.comp_univs |> List.map univ_to_string |> String.concat ", ")
                             (term_to_string c.result_typ)
                             (c.effect_args |> List.map arg_to_string |> String.concat ", ")
-                            (c.flags |> List.map cflags_to_string |> String.concat " ")
+                            (cflags_to_string c.flags)
           else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
           && not (Options.print_effect_args())
           then U.format1 "Tot %s" (term_to_string c.result_typ)
@@ -529,7 +538,7 @@ and comp_to_string c =
       let dec = c.flags |> List.collect (function DECREASES e -> [U.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       U.format2 "%s%s" basic dec
 
-and cflags_to_string c =
+and cflag_to_string c =
     match c with
         | TOTAL -> "total"
         | MLEFFECT -> "ml"
@@ -542,13 +551,14 @@ and cflags_to_string c =
         | CPS -> "cps"
         | DECREASES _ -> "" (* TODO : already printed for now *)
 
+and cflags_to_string fs = FStar.Common.string_of_list cflag_to_string fs
 
 (* CH: at this point not even trying to detect if something looks like a formula,
        only locally detecting certain patterns *)
 and formula_to_string phi = term_to_string phi
 
 and metadata_to_string = function
-    | Meta_pattern ps ->
+    | Meta_pattern (_, ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format1 "{Meta_pattern %s}" pats
 
@@ -747,8 +757,9 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
     SU.lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =
-  U.format3 "module %s\nDeclarations:\n%s\nExports:\n%s\n" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
-                                                                        (List.map sigelt_to_string m.exports |> String.concat "\n")
+  U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)
+                                                                     (List.map sigelt_to_string m.declarations |> String.concat "\n")
+                                                                     (List.map sigelt_to_string m.exports |> String.concat "\n")
 
 
 let abs_ascription_to_string ascription =

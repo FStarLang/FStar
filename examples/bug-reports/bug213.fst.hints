@@ -1,62 +1,56 @@
 [
-  "u÷ÎONêÉc|&\u0006c½ô*F",
+  "H\u001a\\YŽØ\u0019kã/é/²*¯˜",
   [
     [
-      "Bug213.intPair",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "90f1a856a56a81944d7a48b601c02eb4"
-    ],
-    [
-      "Bug213.__proj__ExIntro__item__p",
+      "Bug213.__proj__ExIntro__item___1",
       1,
       2,
       1,
       [
-        "@query", "proj_equation_Bug213.ExIntro_a",
-        "projection_inverse_Bug213.ExIntro_a"
+        "@query", "proj_equation_Bug213.ExIntro_x",
+        "projection_inverse_Bug213.ExIntro_x"
       ],
       0,
-      "847dd6691defca381ddca29454c1ce35"
+      "fdc57e006820de42739fceba23181ab3"
     ],
     [
-      "Bug213.__proj__ExIntro__item__x",
+      "Bug213.__proj__ExIntro'__item__p",
       1,
       2,
       1,
       [
-        "@query", "proj_equation_Bug213.ExIntro_a",
-        "projection_inverse_Bug213.ExIntro_a"
+        "@query", "proj_equation_Bug213.ExIntro__a",
+        "projection_inverse_Bug213.ExIntro__a"
       ],
       0,
-      "41c880b2402b1d57d810343cf1f63ac2"
+      "00236de4e443eb4fcb95e4ac0aa9c30f"
     ],
     [
-      "Bug213.__proj__ExIntro__item___3",
+      "Bug213.__proj__ExIntro'__item__x",
       1,
       2,
       1,
       [
-        "@query", "proj_equation_Bug213.ExIntro_p",
-        "proj_equation_Bug213.ExIntro_x",
-        "projection_inverse_Bug213.ExIntro_p",
-        "projection_inverse_Bug213.ExIntro_x",
-        "token_correspondence_Bug213.__proj__ExIntro__item__p"
+        "@query", "proj_equation_Bug213.ExIntro__a",
+        "projection_inverse_Bug213.ExIntro__a"
       ],
       0,
-      "6de0a920c9226f4137a3214543ecd25b"
+      "55126f5654d9797d9b912bd742f93a7b"
     ],
     [
-      "Bug213.foo",
+      "Bug213.__proj__ExIntro'__item___3",
       1,
       2,
       1,
-      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug213.ExIntro" ],
+      [
+        "@query", "proj_equation_Bug213.ExIntro__p",
+        "proj_equation_Bug213.ExIntro__x",
+        "projection_inverse_Bug213.ExIntro__p",
+        "projection_inverse_Bug213.ExIntro__x",
+        "token_correspondence_Bug213.__proj__ExIntro___item__p"
+      ],
       0,
-      "63e3baecefb638457c89e9c7754d61f0"
+      "f8693616f48580a83c758df2525187e6"
     ]
   ]
 ]

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Bug1091
 //disabling of two phase tc here is intentional, as the bug happens only then
 #set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1 --use_two_phase_tc false"
@@ -77,7 +92,7 @@ let rec apr19_2017_mem #a x xs =
         | [] -> false
         | hd :: tl -> if x = hd then true else apr19_2017_mem x tl
 
-[@ (expect_failure [19;19;19])]
+[@ (expect_failure [19;19;19;19])]
 let apr19_2017_mem_sanity_fail #a x xs =
         assert_by_tactic (apr19_2017_mem x xs <==> apr19_2017_mem x xs) idtac
 

@@ -1,0 +1,52 @@
+[
+  ".¥”`\u0002\\„B“·\u0013\u0001e›\u000eó",
+  [
+    [
+      "Bug543.u",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "d91733a8897db80b369f8ccb521a36a7"
+    ],
+    [
+      "Bug543.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug543.range",
+        "equation_Bug543.u", "equation_Bug543.wider",
+        "equation_Bug543.within",
+        "refinement_interpretation_Tm_refine_56bc4d4e844454be89f5af10ad5108ed",
+        "typing_Bug543.r"
+      ],
+      0,
+      "7b93bce7692ac02477e80929b139e01d"
+    ],
+    [
+      "Bug543.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug543.range",
+        "equation_Bug543.rint", "equation_Bug543.u", "equation_Bug543.wider",
+        "refinement_interpretation_Tm_refine_56bc4d4e844454be89f5af10ad5108ed",
+        "refinement_interpretation_Tm_refine_af072d5fa2b9485012c36e8074dc7c55",
+        "typing_Bug543.r"
+      ],
+      0,
+      "5477a7b2aca780243c887046ca556854"
+    ]
+  ]
+]

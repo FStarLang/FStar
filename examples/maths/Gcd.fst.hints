@@ -1,28 +1,19 @@
 [
-  "æ¥É\u001e\fP~8\u0004πL\u0018cL'‘",
+  "\r≈‚ﬁ†\u001bØï\u0019Û?J‹\u0015PÛ",
   [
     [
       "Gcd.times_one",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b5e648b7adabe581803b4acbe00baa23"
-    ],
-    [
-      "Gcd.times_one",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
         "int_inversion", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "4532948cab60ad08683c1e0353178d17"
+      "f23ac58a6b73c056cd3dd11bb933d10b"
     ],
     [
       "Gcd.a_divides_a'",
@@ -31,7 +22,7 @@
       1,
       [ "@query" ],
       0,
-      "d5c2edef5ae205aeada8665f60b53f14"
+      "cc4a522be66b8e5598f36566bef73bb0"
     ],
     [
       "Gcd.gcd_triv",
@@ -40,16 +31,7 @@
       1,
       [ "@query", "equation_Gcd.is_gcd" ],
       0,
-      "fca83256b2cf31cef222622bdfb71f21"
-    ],
-    [
-      "Gcd.times_one",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "6d0f638baac1459d7b1f9a6ae853a461"
+      "38d86cac6542d78e9b110028db896cf9"
     ],
     [
       "Gcd.a_divides_a'",
@@ -58,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "f5ff4b1c0262ea690301d76ff6d95e2f"
+      "95d936239ea82b97806efdd03dc59312"
     ]
   ]
 ]

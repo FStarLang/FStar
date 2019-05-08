@@ -1,5 +1,5 @@
 [
-  "\f\u0012<\nƒúv°øÆ9§\u000bî¤",
+  "ïÐÎHÅ³ê1\u0006Ê¥ëè\f‡5",
   [
     [
       "Positivity.mlist",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "73e1d6c07563d60c0ece8cf9076ec2a5"
+      "f3141c4ff3a8c2934b693707336a42ff"
     ],
     [
       "Positivity.__proj__MCons__item___0",
@@ -18,10 +18,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+        "refinement_interpretation_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-      "95674f6bfac00375e0833829a78f8154"
+      "a5eeb29c173680471771b05735f05f3b"
     ],
     [
       "Positivity.__proj__MCons__item___1",
@@ -31,10 +31,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+        "refinement_interpretation_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-      "7ca3944b73b43648914df39dccfeb541"
+      "215779412f16da0f865fffec073f47e5"
     ],
     [
       "Positivity.__proj__NCons__item___0",
@@ -44,10 +44,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+        "refinement_interpretation_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-      "5e47d4a20d280446728e953f3e3176ac"
+      "e7f3777aae4caa4957735fda84a35986"
     ],
     [
       "Positivity.__proj__NCons__item___1",
@@ -57,10 +57,42 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+        "refinement_interpretation_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-      "e7a0d02b371b03e88c8d6286d31fbd07"
+      "2c61d1e3b40eddf248e55f59d1db29de"
+    ],
+    [
+      "Positivity.l_868",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Seq.Base.seq__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "38517508a609a39693b8dbb9a527e211"
+    ],
+    [
+      "Positivity.essai_868",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.list__uu___haseq", "equation_Positivity.l_868",
+        "equation_Prims.eqtype",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_Positivity.essai_868@tok",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Positivity.l_868"
+      ],
+      0,
+      "def14c700fc5eefb5ca1c5a8e04d7d2c"
     ],
     [
       "Positivity.mlist",
@@ -69,7 +101,7 @@
       1,
       [ "@query" ],
       0,
-      "25af0541f95e279db2ba5ff0ba56bfdd"
+      "6c13b757a968ad96dcb168c1bf1ce7b0"
     ],
     [
       "Positivity.__proj__MCons__item___0",
@@ -79,10 +111,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+        "refinement_interpretation_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-      "98ed789803ce2c3e7b730c3efa91fc9d"
+      "3d3441378092bcf3246e2e8c0e26ae63"
     ],
     [
       "Positivity.__proj__MCons__item___1",
@@ -92,10 +124,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+        "refinement_interpretation_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-      "0d691e762c32f0fd02cdfb32f0388bc9"
+      "cce10076651f6b1bc5066c936ccb17ba"
     ],
     [
       "Positivity.__proj__NCons__item___0",
@@ -105,10 +137,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+        "refinement_interpretation_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-      "c860d532e8c5499e33ec9e4f157bb830"
+      "bd9918d156c0b0d00976d573c7950ce6"
     ],
     [
       "Positivity.__proj__NCons__item___1",
@@ -118,10 +150,42 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+        "refinement_interpretation_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-      "2ec6e0c89e32f557164b604557ae49a1"
+      "25a71761080deef72499e38efb62eee0"
+    ],
+    [
+      "Positivity.l_868",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Seq.Base.seq__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "eb90c13e487e7c2686732dd71bd61214"
+    ],
+    [
+      "Positivity.essai_868",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.list__uu___haseq", "equation_Positivity.l_868",
+        "equation_Prims.eqtype",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_Positivity.essai_868@tok",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Positivity.l_868"
+      ],
+      0,
+      "de748d8882571cce065af40e354a2ff1"
     ]
   ]
 ]

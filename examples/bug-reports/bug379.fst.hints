@@ -1,5 +1,5 @@
 [
-  "Ô]´ÜÛ[ˆ(O;¥Ì≥Î\u001d\"",
+  "\u001c}÷ß·ÔAŸç…mëE´ñr",
   [
     [
       "Bug379.test1",
@@ -7,28 +7,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "642ec7999dbe0dd745358bf37055e2b8"
-    ],
-    [
-      "Bug379.test3",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "int_inversion",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "ab3f78caa58407cbffdb549556393e36"
+      "fd559090ec49f7f1c290ae18a0628cc2"
     ]
   ]
 ]

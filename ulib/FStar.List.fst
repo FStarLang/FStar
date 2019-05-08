@@ -328,8 +328,8 @@ let rec splitAt n l =
     match l with
       | []     -> failwith "splitAt index is more that list length"
       | hd::tl ->
-	let l1, l2 = splitAt (n - 1) tl in
-	hd::l1, l2
+        let l1, l2 = splitAt (n - 1) tl in
+        hd::l1, l2
 
 (** [filter_map f l] returns the list of [y] for all elements [x]
 appearing in [l] such that [f x = Some y] for some [y]. (Implemented

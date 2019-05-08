@@ -1,8 +1,25 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.DependentMap
+
+module F = FStar.FunctionalExtensionality
 
 noeq abstract type t (key:eqtype) (value: (key -> Type)) =
 {
-  mappings: (k: key) -> Tot (value k)
+  mappings: F.restricted_t key value
 }
 
 abstract let create
@@ -11,7 +28,7 @@ abstract let create
   (f: ((k: key) -> Tot (value k)))
 : Tot (t key value)
 = {
-  mappings = f
+  mappings = F.on_domain key f
 }
 
 abstract let sel
@@ -41,7 +58,7 @@ abstract let upd
   (v: value k)
 : Tot (t key value)
 = {
-  mappings = (fun k' -> if k' = k then v else m.mappings k')
+  mappings = F.on_domain key (fun k' -> if k' = k then v else m.mappings k')
 }
 
 abstract let sel_upd_same
@@ -95,9 +112,7 @@ abstract let equal_refl
   [SMTPat (equal m m)]
 = ()
 
-(** TODO: we need dependent functional extensionality *)
-
-assume val equal_elim
+abstract let equal_elim
   (#key: eqtype)
   (#value: (key -> Tot Type))
   (m1 m2: t key value)
@@ -105,6 +120,7 @@ assume val equal_elim
   (requires (equal m1 m2))
   (ensures (m1 == m2))
   [SMTPat (equal m1 m2)]
+= F.extensionality key value m1.mappings m2.mappings
 
 abstract let restrict
   (#key: eqtype)
@@ -112,7 +128,7 @@ abstract let restrict
   (p: (key -> Tot Type0))
   (m: t key value)
 : Tot (t (k: key {p k}) value)
-= { mappings = m.mappings }
+= { mappings = F.on_domain (k: key {p k}) m.mappings }
 
 abstract let sel_restrict
   (#key: eqtype)
@@ -157,7 +173,7 @@ abstract let concat
   (m1: t key1 value1)
   (m2: t key2 value2)
 : Tot (t (either key1 key2) (concat_value value1 value2))
-= { mappings = concat_mappings m1.mappings m2.mappings  }
+= { mappings = F.on_domain (either key1 key2) (concat_mappings m1.mappings m2.mappings)  }
 
 abstract let sel_concat_l
   (#key1: eqtype)
@@ -201,7 +217,7 @@ abstract let rename
   (#key2: eqtype)
   (ren: key2 -> Tot key1)
 : Tot (t key2 (rename_value value1 ren))
-= { mappings = fun k2 -> m.mappings (ren k2) }
+= { mappings = F.on_domain key2 (fun k2 -> m.mappings (ren k2)) }
 
 abstract let sel_rename
   (#key1: eqtype)
@@ -221,7 +237,7 @@ abstract let map
   (m: t key value1)
 : Tot (t key value2)
 = {
-  mappings = fun k -> f k (sel m k)
+  mappings = F.on_domain key (fun k -> f k (sel m k))
 }
 
 abstract let sel_map

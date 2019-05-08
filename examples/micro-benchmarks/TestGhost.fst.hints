@@ -1,5 +1,5 @@
 [
-  "‰Ö\u0001šìãPÿGTðì“ƒ×\u0014",
+  "©\u007f©Àp?eH<\u0004º†ZSX",
   [
     [
       "TestGhost.h",
@@ -8,37 +8,20 @@
       1,
       [ "@query" ],
       0,
-      "d98ca2c6ff05ab5d2a0d6a2d7f478d00"
+      "070ce44da0d018955c0477a6f1009e76"
     ],
     [
       "TestGhost.i",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "36206396ab0a831a48fbece139855ea3"
-    ],
-    [
-      "TestGhost.i",
-      2,
       2,
       1,
       [
-        "@query", "function_token_typing_Prims.int",
-        "lemma_FStar.Ghost.hide_reveal"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "38fcf28b4405bd69aca052efd71eaf88"
-    ],
-    [
-      "TestGhost.j",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "053f698641c46c5b88d738468c4b99c0"
+      "a68bd10ca9d904ca03f354d339626c04"
     ],
     [
       "TestGhost.h",
@@ -47,37 +30,20 @@
       1,
       [ "@query" ],
       0,
-      "308c304182c0995efdb222b8788459de"
+      "5925b248c9fa60b69e2130c7d873fcb8"
     ],
     [
       "TestGhost.i",
-      3,
+      2,
       2,
       1,
       [
-        "@query", "function_token_typing_Prims.int",
-        "lemma_FStar.Ghost.hide_reveal"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f45e24c6e9a98d92c8beecb5117e627c"
-    ],
-    [
-      "TestGhost.i",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "9c82e2302f8ce3a9e9063a3fc422923b"
-    ],
-    [
-      "TestGhost.j",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4c4a3f1584e640582af8a12906358a34"
+      "8d4958ad4920fbefedf9e5d74c5b72bf"
     ]
   ]
 ]

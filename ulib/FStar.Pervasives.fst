@@ -1,8 +1,35 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Pervasives
 
 (* This is a file from the core library, dependencies must be explicit *)
 open Prims
 include FStar.Pervasives.Native
+
+(* Sometimes it is convenient to explicit introduce nullary symbols
+ * into the ambient context, so that SMT can appeal to their definitions
+ * even when they are no mentioned explicitly in the program, e.g., when
+ * needed for triggers.
+ * Use `intro_ambient t` for that.
+ * See, e.g., LowStar.Monotonic.Buffer.fst and its usage there for loc_none
+ *)
+abstract
+let ambient (#a:Type) (x:a) = True
+abstract
+let intro_ambient (#a:Type) (x:a) : squash (ambient x) = ()
 
 let id (#a:Type) (x:a) = x
 
@@ -313,16 +340,10 @@ type __internal_ocaml_attributes =
      * inductives), indicate that the header file should only contain a forward
      * declaration, which in turn forces the client to only ever use this type
      * through a pointer. *)
+  | CIfDef
+    (* KreMLin-only: on a given `val foo`, compile if foo with #ifdef. *)
 
 (* Some supported attributes encoded using functions. *)
-
-(*
- * to be used in attributes
- * s is the altertive function that should be printed in the warning
- * it can be omitted if the use case has no such function
- *)
-irreducible
-let deprecated (s:string) : unit = ()
 
 irreducible
 let inline_let : unit = ()
@@ -385,3 +406,84 @@ let tcdecltime : unit = ()
  *)
 irreducible
 let assume_strictly_positive : unit = ()
+
+(**
+ * This attribute is to be used as a hint for the unifier.
+ * A function-typed symbol `t` marked with this attribute
+ * will be treated as being injective in all its arguments
+ * by the unifier.
+ * That is, given a problem `t a1..an =?= t b1..bn`
+ * the unifier will solve it by proving `ai =?= bi` for
+ * all `i`, without trying to unfold the definition of `t`.
+ **)
+irreducible
+let unifier_hint_injective : unit = ()
+
+
+(*********************************************************************************)
+(* Marking terms for normalization *)
+(*********************************************************************************)
+abstract let normalize_term (#a:Type) (x:a) : a = x
+abstract let normalize (a:Type0) :Type0 = a
+
+abstract
+noeq type norm_step =
+  | Simpl
+  | Weak
+  | HNF
+  | Primops
+  | Delta
+  | Zeta
+  | Iota
+  | NBE // use NBE instead of the normalizer
+  | Reify
+  | UnfoldOnly  : list string -> norm_step // each string is a fully qualified name like `A.M.f`
+  | UnfoldFully : list string -> norm_step // idem
+  | UnfoldAttr  : list string -> norm_step
+
+// Helpers, so we don't expose the actual inductive
+abstract let simplify : norm_step = Simpl
+abstract let weak     : norm_step = Weak
+abstract let hnf      : norm_step = HNF
+abstract let primops  : norm_step = Primops
+abstract let delta    : norm_step = Delta
+abstract let zeta     : norm_step = Zeta
+abstract let iota     : norm_step = Iota
+abstract let nbe      : norm_step = NBE
+abstract let reify_   : norm_step = Reify
+abstract let delta_only  (s : list string) : norm_step = UnfoldOnly s
+abstract let delta_fully (s : list string) : norm_step = UnfoldFully s
+abstract let delta_attr  (s : list string) : norm_step = UnfoldAttr s
+
+// Normalization marker
+abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
+
+abstract val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+let assert_norm p = ()
+
+let normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x) = ()
+let normalize_spec (a: Type0) : Lemma (normalize a == a) = ()
+let norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x) = ()
+
+(*
+ * Use the following to expose an `opaque_to_smt` definition to the solver
+ *   as: `reveal_opaque (`%defn) defn
+ *)
+let reveal_opaque (s:string) = norm_spec [delta_only [s]]
+
+(*
+ * Pure and ghost inner let bindings are now always inlined during the wp computation, if:
+ * the return type is not unit and the head symbol is not marked irreducible.
+ * To circumvent this behavior, singleton can be used.
+ * See the example usage in ulib/FStar.Algebra.Monoid.fst.
+ *)
+irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x
+
+
+(*
+ * `with_type t e` is just an identity function, but it receives special treatment
+ *  in the SMT encoding, where in addition to being an identity function, we have
+ *  an SMT axiom:
+ *  `forall t e.{:pattern (with_type t e)} has_type (with_type t e) t`
+ *)
+let with_type (#t:Type) (e:t) = e

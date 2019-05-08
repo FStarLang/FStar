@@ -21,6 +21,7 @@ open FStar
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
+
 module BU = FStar.Util
 
 type step =
@@ -50,6 +51,7 @@ type step =
   | Unmeta          //remove all non-monadic metas.
   | Unascribe
   | NBE
+  | ForExtraction   //marking an invocation of the normalizer for extraction
 and steps = list<step>
 
 val eq_step : step -> step -> bool
@@ -133,14 +135,15 @@ type env = {
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap<lident>;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
+  fv_delta_depths:BU.smap<delta_depth>;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
-  dep_graph      : FStar.Parser.Dep.deps;         (* The result of the dependency analysis *)
   nbe            : list<step> -> env -> term -> term;  (* Callback to the NBE function *)
 }
 
@@ -151,7 +154,6 @@ and solver_t = {
     pop          :string -> unit;
     snapshot     :string -> (solver_depth_t * unit);
     rollback     :string -> option<solver_depth_t> -> unit;
-    encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
     solve        :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
@@ -171,13 +173,13 @@ and implicit = {
     imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
     imp_tm     : term;                    // The term, made up of the ctx_uvar
     imp_range  : Range.range;             // Position where it was introduced
-    imp_meta   : option<(env * term)>;    // An optional metaprogram to try to fill it
 }
 and implicits = list<implicit>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
 val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
+val postprocess : env -> term -> typ -> term -> term
 
 type env_t = env
 val initial_env : FStar.Parser.Dep.deps ->
@@ -237,9 +239,12 @@ val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition_qninfo : list<delta_level> -> lident -> qninfo -> option<(univ_names * term)>
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
+val lookup_nonrec_definition: list<delta_level> -> env -> lident -> option<(univ_names * term)>
 val quals_of_qninfo        : qninfo -> option<list<qualifier>>
 val attrs_of_qninfo        : qninfo -> option<list<attribute>>
 val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
+val fv_with_lid_has_attr   : env -> fv_lid:lid -> attr_lid:lid -> bool
+val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
@@ -256,6 +261,8 @@ val is_interpreted         : (env -> term -> bool)
 val is_irreducible         : env -> lident -> bool
 val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> option<int>
+val delta_depth_of_qninfo  : fv -> qninfo -> option<delta_depth>
+val delta_depth_of_fv      : env -> fv -> delta_depth
 
 (* Universe instantiation *)
 
@@ -317,6 +324,9 @@ val is_reifiable_function    : env -> term -> bool
 (* is reifiable but not user-reifiable.) *)
 val is_user_reifiable_effect : env -> lident -> bool
 
+(* Is this effect marked `total`? *)
+val is_total_effect : env -> lident -> bool
+
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders
 
@@ -344,6 +354,7 @@ val trivial_guard             : guard_t
 val is_trivial                : guard_t -> bool
 val is_trivial_guard_formula  : guard_t -> bool
 val conj_guard                : guard_t -> guard_t -> guard_t
+val conj_guards               : list<guard_t> -> guard_t
 val abstract_guard            : binder -> guard_t -> guard_t
 val abstract_guard_n          : list<binder> -> guard_t -> guard_t
 val imp_guard                 : guard_t -> guard_t -> guard_t
@@ -357,6 +368,6 @@ val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
-val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> (term * list<(ctx_uvar * Range.range)> * guard_t)
+val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> option<(FStar.Dyn.dyn * term)> -> (term * list<(ctx_uvar * Range.range)> * guard_t)
 
 val print_gamma : gamma -> string

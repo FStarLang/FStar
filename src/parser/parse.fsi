@@ -39,6 +39,7 @@ type token =
   | REIFIABLE
   | REFLECTABLE
   | REC
+  | REAL of (string)
   | RBRACK
   | RBRACE
   | RARROW
@@ -74,7 +75,6 @@ type token =
   | NEW_EFFECT
   | NEW
   | NAME of (string)
-  | MUTABLE
   | MODULE
   | MINUS
   | MATCH
@@ -97,6 +97,7 @@ type token =
   | INT32 of (string * bool)
   | INT16 of (string * bool)
   | INT of (string * bool)
+  | INSTANCE
   | INLINE_FOR_EXTRACTION
   | INLINE
   | INCLUDE
@@ -111,6 +112,7 @@ type token =
   | FUN
   | FSDOC_STANDALONE of (fsdoc)
   | FSDOC of (fsdoc)
+  | FRIEND
   | FORALL
   | FALSE
   | EXISTS
@@ -136,6 +138,7 @@ type token =
   | COLON
   | CLASS
   | CHAR of (char)
+  | CALC
   | BYTEARRAY of (bytes)
   | BY
   | BEGIN
@@ -190,6 +193,7 @@ type tokenId =
     | TOKEN_REIFIABLE
     | TOKEN_REFLECTABLE
     | TOKEN_REC
+    | TOKEN_REAL
     | TOKEN_RBRACK
     | TOKEN_RBRACE
     | TOKEN_RARROW
@@ -225,7 +229,6 @@ type tokenId =
     | TOKEN_NEW_EFFECT
     | TOKEN_NEW
     | TOKEN_NAME
-    | TOKEN_MUTABLE
     | TOKEN_MODULE
     | TOKEN_MINUS
     | TOKEN_MATCH
@@ -248,6 +251,7 @@ type tokenId =
     | TOKEN_INT32
     | TOKEN_INT16
     | TOKEN_INT
+    | TOKEN_INSTANCE
     | TOKEN_INLINE_FOR_EXTRACTION
     | TOKEN_INLINE
     | TOKEN_INCLUDE
@@ -262,6 +266,7 @@ type tokenId =
     | TOKEN_FUN
     | TOKEN_FSDOC_STANDALONE
     | TOKEN_FSDOC
+    | TOKEN_FRIEND
     | TOKEN_FORALL
     | TOKEN_FALSE
     | TOKEN_EXISTS
@@ -287,6 +292,7 @@ type tokenId =
     | TOKEN_COLON
     | TOKEN_CLASS
     | TOKEN_CHAR
+    | TOKEN_CALC
     | TOKEN_BYTEARRAY
     | TOKEN_BY
     | TOKEN_BEGIN
@@ -321,6 +327,7 @@ type nonTerminalId =
     | NONTERM_option_fsTypeArgs_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
+    | NONTERM_option_term_
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
@@ -340,6 +347,7 @@ type nonTerminalId =
     | NONTERM_nonempty_list_atomicPattern_
     | NONTERM_nonempty_list_atomicTerm_
     | NONTERM_nonempty_list_atomicUniverse_
+    | NONTERM_nonempty_list_calcStep_
     | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
@@ -361,6 +369,7 @@ type nonTerminalId =
     | NONTERM_attribute
     | NONTERM_decoration
     | NONTERM_decl
+    | NONTERM_typeclassDecl
     | NONTERM_rawDecl
     | NONTERM_typeDecl
     | NONTERM_typars
@@ -404,11 +413,13 @@ type nonTerminalId =
     | NONTERM_thunk_atomicTerm_
     | NONTERM_thunk_tmNoEq_
     | NONTERM_thunk_typ_
+    | NONTERM_thunk2_typ_
     | NONTERM_ascribeTyp
     | NONTERM_ascribeKind
     | NONTERM_kind
     | NONTERM_term
     | NONTERM_noSeqTerm
+    | NONTERM_calcStep
     | NONTERM_typ
     | NONTERM_trigger
     | NONTERM_disjunctivePats
@@ -429,6 +440,7 @@ type nonTerminalId =
     | NONTERM_tmEqWith_tmRefinement_
     | NONTERM_tmNoEqWith_appTerm_
     | NONTERM_tmNoEqWith_tmRefinement_
+    | NONTERM_binop
     | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq
     | NONTERM_tmNoEq

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Test.HyperStack
 
 open FStar.Preorder
@@ -326,3 +341,11 @@ let test_logical_operators_on_witnessed (p q:mem_predicate)
     assert ((witnessed p \/ witnessed q) ==> witnessed (fun s -> p s \/ q s));
     lemma_witnessed_nested p;
     assert (witnessed (fun _ -> witnessed p) <==> witnessed p)
+
+open FStar.Monotonic.Seq
+
+private let test_alloc (#a:Type0) (p:Seq.seq a -> Type) (r:rid) (init:Seq.seq a{p init})
+               : ST unit (requires (fun _ -> witnessed (region_contains_pred r))) (ensures (fun _ _ _ -> True)) =
+  let is = alloc_mref_iseq p r init in
+  let h = get () in
+  assert (i_sel h is == init)

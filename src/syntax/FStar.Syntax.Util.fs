@@ -228,7 +228,7 @@ let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
 let comp_set_flags (c:comp) f =
     {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
 
-let lcomp_set_flags (lc:lcomp) (fs:list<cflags>) =
+let lcomp_set_flags (lc:lcomp) (fs:list<cflag>) =
     let comp_typ_set_flags (c:comp) =
         match c.n with
         | Total _
@@ -349,29 +349,11 @@ let rec head_and_args' t =
             in (head, args'@args)
         | _ -> t, []
 
- let un_uinst t =
+let un_uinst t =
     let t = Subst.compress t in
     match t.n with
         | Tm_uinst(t, _) -> Subst.compress t
         | _ -> t
-
-let is_smt_lemma t = match (compress t).n with
-    | Tm_arrow(_, c) ->
-      begin match c.n with
-        | Comp ct when lid_equals ct.effect_name PC.effect_Lemma_lid ->
-            begin match ct.effect_args with
-                | _req::_ens::(pats, _)::_ ->
-                  let pats' = unmeta pats in
-                  let head, _ = head_and_args pats' in
-                  begin match (un_uinst head).n with
-                    | Tm_fvar fv -> fv_eq_lid fv PC.cons_lid
-                    | _ -> false
-                  end
-                | _ -> false
-            end
-        | _ -> false
-      end
-    | _ -> false
 
 let is_ml_comp c = match c.n with
   | Comp c -> lid_equals c.effect_name PC.effect_ML_lid
@@ -516,6 +498,14 @@ let injectives =
      "FStar.UInt32.__uint_to_t";
      "FStar.UInt64.__uint_to_t"]
 
+let eq_inj f g =
+     match f, g with
+     | Equal, Equal -> Equal
+     | NotEqual, _
+     | _, NotEqual -> NotEqual
+     | Unknown, _
+     | _, Unknown -> Unknown
+
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
 let rec eq_tm (t1:term) (t2:term) : eq_result =
     let t1 = canon_app t1 in
@@ -533,15 +523,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       | Equal -> g()
       | _ -> Unknown
     in
-    let eq_inj f g =
-      match f, g with
-      | Equal, Equal -> Equal
-      | NotEqual, _
-      | _, NotEqual -> NotEqual
-      | Unknown, _
-      | _, Unknown -> Unknown
-    in
-    let equal_data f1 (args1:Syntax.args) f2 (args2:Syntax.args) =
+    let equal_data (f1:fv) (args1:Syntax.args) (f2:fv) (args2:Syntax.args) =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
         if fv_eq f1 f2
@@ -557,6 +539,14 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
     in
+    let heads_and_args_in_case_both_data :option<(fv * args * fv * args)> =
+      let head1, args1 = t1 |> unmeta |> head_and_args in
+      let head2, args2 = t2 |> unmeta |> head_and_args in
+      match (un_uinst head1).n, (un_uinst head2).n with
+      | Tm_fvar f, Tm_fvar g when f.fv_qual = Some Data_ctor &&
+                                  g.fv_qual = Some Data_ctor -> Some (f, args1, g, args2)
+      | _ -> None
+    in
     match (unmeta t1).n, (unmeta t2).n with
     // We sometimes compare open terms, as we get alpha-equivalence
     // for free.
@@ -569,10 +559,12 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
 
-    | Tm_fvar f, Tm_fvar g ->
-      if f.fv_qual = Some Data_ctor && g.fv_qual = Some Data_ctor
-      then equal_data f [] g []
-      else equal_if (fv_eq f g)
+    | _ when heads_and_args_in_case_both_data |> is_some ->  //matches only when both are data constructors
+      heads_and_args_in_case_both_data |> must |> (fun (f, args1, g, args2) ->
+        equal_data f args1 g args2
+      )
+
+    | Tm_fvar f, Tm_fvar g -> equal_if (fv_eq f g)
 
     | Tm_uinst(f, us), Tm_uinst(g, vs) ->
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
@@ -590,9 +582,6 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
 
     | Tm_app (h1, args1), Tm_app (h2, args2) ->
       begin match (un_uinst h1).n, (un_uinst h2).n with
-      | Tm_fvar f1, Tm_fvar f2 when f1.fv_qual = Some Data_ctor && f2.fv_qual = Some Data_ctor ->
-        equal_data f1 args1 f2 args2
-
       | Tm_fvar f1, Tm_fvar f2 when fv_eq f1 f2 && List.mem (string_of_lid (lid_of_fv f1)) injectives ->
         equal_data f1 args1 f2 args2
 
@@ -646,6 +635,7 @@ and eq_aqual a1 a2 =
     | _, None -> NotEqual
     | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
     | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
+    | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
 
 and branch_matches b1 b2 =
@@ -700,8 +690,14 @@ let rec is_unit t =
       fv_eq_lid fv PC.unit_lid
       || fv_eq_lid fv PC.squash_lid
       || fv_eq_lid fv PC.auto_squash_lid
+    | Tm_app (head, _) -> is_unit head
     | Tm_uinst (t, _) -> is_unit t
     | _ -> false
+
+let is_eqtype_no_unrefine (t:term) =
+  match (Subst.compress t).n with
+  | Tm_fvar fv -> fv_eq_lid fv PC.eqtype_lid
+  | _ -> false
 
 let rec non_informative t =
     match (unrefine t).n with
@@ -789,16 +785,10 @@ let mk_app_binders f bs =
 let mk_data l args =
   match args with
     | [] ->
-      mk (fvar l delta_constant (Some Data_ctor)) None (range_of_lid l)
+      mk (fvar l delta_constant (Some Data_ctor)) None (range_of_lid l) //NS delta: ok
     | _ ->
-      let e = mk_app (fvar l delta_constant (Some Data_ctor)) args in
+      let e = mk_app (fvar l delta_constant (Some Data_ctor)) args in //NS delta: ok
       mk e None e.pos
-
-let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
-let unmangle_field_name x =
-    if U.starts_with x.idText "__fname__"
-    then mk_ident(U.substring_from x.idText 9, x.idRange)
-    else x
 
 (***********************************************************************************************)
 (* Combining an effect name with the name of one of its actions, or a
@@ -838,12 +828,11 @@ let mk_field_projector_name_from_string constr field =
     field_projector_prefix ^ constr ^ field_projector_sep ^ field
 
 let mk_field_projector_name_from_ident lid (i : ident) =
-    let j = unmangle_field_name i in
-    let jtext = j.idText in
+    let itext = i.idText in
     let newi =
-        if field_projector_contains_constructor jtext
-        then j
-        else mk_ident (mk_field_projector_name_from_string lid.ident.idText jtext, i.idRange)
+        if field_projector_contains_constructor itext
+        then i
+        else mk_ident (mk_field_projector_name_from_string lid.ident.idText itext, i.idRange)
     in
     lid_of_ids (lid.ns @ [newi])
 
@@ -892,7 +881,7 @@ let abs bs t lopt =
   | _ ->
     let body = compress (Subst.close bs t) in
     match body.n with
-        | Tm_abs(bs', t, lopt') ->  //AR: if the body is an Tm_abs, we can combine the binders and use lopt' ==> ignoring lopt?
+        | Tm_abs(bs', t, lopt') ->  //AR: if the body is an Tm_abs, we can combine the binders and use lopt', ignoring lopt, since lopt will be Tot (non-informative anyway)
           mk (Tm_abs(close_binders bs@bs', t, close_lopt lopt')) None t.pos
         | _ ->
           mk (Tm_abs(close_binders bs, body, close_lopt lopt)) None t.pos
@@ -918,7 +907,11 @@ let flat_arrow bs c =
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) None (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
 
-
+(*
+ * AR: this function returns the binders and comp result type of an arrow type,
+ *     flattening arrows of the form t -> Tot (t1 -> C), so that it returns two binders in this example
+ *     the function also descends under the refinements (e.g. t -> Tot (f:(t1 -> C){phi}))
+ *)
 let rec arrow_formals_comp k =
     let k = Subst.compress k in
     match k.n with
@@ -928,7 +921,17 @@ let rec arrow_formals_comp k =
             then let bs', k = arrow_formals_comp (comp_result c) in
                  bs@bs', k
             else bs, c
-        | Tm_refine ({ sort = k }, _) -> arrow_formals_comp k
+        | Tm_refine ({ sort = s }, _) ->
+          (*
+           * AR: start descending into s, but if s does not turn out to be an arrow later, we want to return k itself
+           *)
+          let rec aux (s:term) (k:term) =
+            match (Subst.compress s).n with
+            | Tm_arrow _ -> arrow_formals_comp s  //found an arrow, go to the main function
+            | Tm_refine ({ sort = s }, _) -> aux s k  //another refinement, descend into it, but with the same def
+            | _ -> [], Syntax.mk_Total k  //return def
+          in
+          aux s k
         | _ -> [], Syntax.mk_Total k
 
 let rec arrow_formals k =
@@ -1108,7 +1111,11 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) delta_constant None)) None Range.dummyRange
+    mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange)
+                           delta_constant
+                           None))
+       None
+       Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
@@ -1121,17 +1128,18 @@ let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) None d
 let fvar_const l = fvar l delta_constant None
 let tand    = fvar_const PC.and_lid
 let tor     = fvar_const PC.or_lid
-let timp    = fvar PC.imp_lid (Delta_constant_at_level 1) None
-let tiff    = fvar PC.iff_lid (Delta_constant_at_level 2) None
+let timp    = fvar PC.imp_lid (Delta_constant_at_level 1) None //NS delta: wrong? level 2
+let tiff    = fvar PC.iff_lid (Delta_constant_at_level 2) None //NS delta: wrong? level 3
 let t_bool  = fvar_const PC.bool_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
 // These are `True` and `False`, not the booleans
-let t_false = fvar_const PC.false_lid
-let t_true  = fvar_const PC.true_lid
+let t_false = fvar_const PC.false_lid //NS delta: wrong? should be Delta_constant_at_level 2
+let t_true  = fvar_const PC.true_lid  //NS delta: wrong? should be Delta_constant_at_level 2
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 let tcdecltime_attr = fvar_const PC.tcdecltime_attr
+let inline_let_attr = fvar_const PC.inline_let_attr
 
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 
@@ -1142,7 +1150,7 @@ let mk_binop op_t phi1 phi2 = mk (Tm_app(op_t, [as_arg phi1; as_arg phi2])) None
 let mk_neg phi = mk (Tm_app(t_not, [as_arg phi])) None phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
-    | [] -> fvar PC.true_lid delta_constant None
+    | [] -> fvar PC.true_lid delta_constant None //NS delta: wrong, see a t_true
     | hd::tl -> List.fold_right mk_conj tl hd
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
@@ -1151,6 +1159,11 @@ let mk_disj_l phi = match phi with
 let mk_imp phi1 phi2 : term = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2 : term = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
+let unb2t (e:term) : option<term> =
+    let hd, args = head_and_args e in
+    match (compress hd).n, args with
+    | Tm_fvar fv, [(e, _)] when fv_eq_lid fv PC.b2t_lid -> Some e
+    | _ -> None
 
 let is_t_true t =
      match (unmeta t).n with
@@ -1182,10 +1195,10 @@ let mk_with_type u t e =
     mk (Tm_app(t_with_type, [iarg t; as_arg e])) None dummyRange
 
 let lex_t    = fvar_const PC.lex_t_lid
-let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid delta_constant (Some Data_ctor), [U_zero])) None dummyRange
-let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor)
-let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None
-let t_haseq   = fvar PC.haseq_lid delta_constant None
+let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid delta_constant (Some Data_ctor), [U_zero])) None dummyRange //NS delta: ok
+let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor) //NS delta: ok
+let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
+let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
 
 let lcomp_of_comp c0 =
     let eff_name, flags =
@@ -1245,16 +1258,18 @@ let if_then_else b t1 t2 =
 // Operations on squashed and other irrelevant/sub-singleton types
 //////////////////////////////////////////////////////////////////////////////////////
 let mk_squash u p =
-    let sq = fvar PC.squash_lid (Delta_constant_at_level 1) None in
+    let sq = fvar PC.squash_lid (Delta_constant_at_level 1) None in //NS delta: ok
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let mk_auto_squash u p =
-    let sq = fvar PC.auto_squash_lid (Delta_constant_at_level 2) None in
+    let sq = fvar PC.auto_squash_lid (Delta_constant_at_level 2) None in //NS delta: ok
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
     let head, args = head_and_args t in
-    match (un_uinst head).n, args with
+    let head = unascribe head in
+    let head = un_uinst head in
+    match (compress head).n, args with
     | Tm_fvar fv, [(p, _)]
         when fv_eq_lid fv PC.squash_lid ->
       Some p
@@ -1382,7 +1397,7 @@ let destruct_typ_as_formula f : option<connective> =
     let patterns t =
         let t = compress t in
         match t.n with
-            | Tm_meta(t, Meta_pattern pats) -> pats, compress t
+            | Tm_meta(t, Meta_pattern (_, pats)) -> pats, compress t
             | _ -> [], t in
 
     let destruct_q_conn t =
@@ -1439,18 +1454,18 @@ let destruct_typ_as_formula f : option<connective> =
         // eq2 can have 2 args or 3
         | Tm_fvar fv, 2
             when fv_eq_lid fv PC.c_eq2_lid ->
-                Some (BaseConn (PC.eq2_lid, args))
+                Some (BaseConn (PC.c_eq2_lid, args))
         | Tm_fvar fv, 3
             when fv_eq_lid fv PC.c_eq2_lid ->
-                Some (BaseConn (PC.eq2_lid, args))
+                Some (BaseConn (PC.c_eq2_lid, args))
 
         // eq3 can have 2 args or 4
         | Tm_fvar fv, 2
             when fv_eq_lid fv PC.c_eq3_lid ->
-                Some (BaseConn (PC.eq3_lid, args))
+                Some (BaseConn (PC.c_eq3_lid, args))
         | Tm_fvar fv, 4
             when fv_eq_lid fv PC.c_eq3_lid ->
-                Some (BaseConn (PC.eq3_lid, args))
+                Some (BaseConn (PC.c_eq3_lid, args))
 
         | Tm_fvar fv, 0
             when fv_eq_lid fv PC.c_true_lid ->
@@ -1522,17 +1537,6 @@ let destruct_typ_as_formula f : option<connective> =
         catch_opt (destruct_sq_exists phi) (fun () ->
                    None)))))
 
-let unthunk_lemma_post t =
-    match (compress t).n with
-    | Tm_abs ([b], e, _) ->
-        let bs, e = open_term [b] e in
-        let b = List.hd bs in
-        if is_free_in (fst b) e
-        then mk_app t [as_arg exp_unit]
-        else e
-    | _ ->
-        mk_app t [as_arg exp_unit]
-
 let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
@@ -1596,17 +1600,6 @@ let incr_delta_qualifier t =
     incr_delta_depth (delta_qualifier t)
 
 let is_unknown t = match (Subst.compress t).n with | Tm_unknown -> true | _ -> false
-
-let rec list_elements (e:term) : option<list<term>> =
-  let head, args = head_and_args (unmeta e) in
-  match (un_uinst head).n, args with
-  | Tm_fvar fv, _ when fv_eq_lid fv PC.nil_lid ->
-      Some []
-  | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv PC.cons_lid ->
-      Some (hd::must (list_elements tl))
-  | _ ->
-      None
-
 
 let rec apply_last f l = match l with
    | [] -> failwith "apply_last: got empty list"
@@ -1787,7 +1780,7 @@ and comp_eq_dbg (dbg : bool) c1 c2 =
     (check "comp result typ"  (term_eq_dbg dbg c1.result_typ c2.result_typ)) &&
     (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
     true //eq_flags c1.flags c2.flags
-and eq_flags_dbg (dbg : bool) (f1 : cflags) (f2 : cflags) = true // TODO? Or just ignore?
+and eq_flags_dbg (dbg : bool) (f1 : cflag) (f2 : cflag) = true // TODO? Or just ignore?
 and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
     (check "branch pat"  (eq_pat p1 p2)) &&
     (check "branch body"  (term_eq_dbg dbg t1 t2))
@@ -1958,7 +1951,7 @@ let rec unbound_variables tm :  list<bv> =
       | Tm_meta(t, m) ->
         unbound_variables t
         @ (match m with
-           | Meta_pattern args ->
+           | Meta_pattern (_, args) ->
              List.collect (List.collect (fun (a, _) -> unbound_variables a)) args
 
            | Meta_monadic_lift(_, _, t')
@@ -1979,3 +1972,132 @@ and unbound_variables_comp c =
     | Comp ct ->
       unbound_variables ct.result_typ
       @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args
+
+let extract_attr' (attr_lid:lid) (attrs:list<term>) : option<(list<term> * args)> =
+    let rec aux acc attrs =
+        match attrs with
+        | [] -> None
+        | h::t ->
+            let head, args = head_and_args h in
+            begin match (compress head).n with
+            | Tm_fvar fv when fv_eq_lid fv attr_lid ->
+                let attrs' = List.rev_acc acc t in
+                Some (attrs', args)
+            | _ ->
+                aux (h::acc) t
+            end
+    in
+    aux [] attrs
+
+let extract_attr (attr_lid:lid) (se:sigelt) : option<(sigelt * args)> =
+    match extract_attr' attr_lid se.sigattrs with
+    | None -> None
+    | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
+
+
+(* Utilities for working with Lemma's decorated with SMTPat *)
+let is_smt_lemma t = match (compress t).n with
+    | Tm_arrow(_, c) ->
+      begin match c.n with
+        | Comp ct when lid_equals ct.effect_name PC.effect_Lemma_lid ->
+            begin match ct.effect_args with
+                | _req::_ens::(pats, _)::_ ->
+                  let pats' = unmeta pats in
+                  let head, _ = head_and_args pats' in
+                  begin match (un_uinst head).n with
+                    | Tm_fvar fv -> fv_eq_lid fv PC.cons_lid
+                    | _ -> false
+                  end
+                | _ -> false
+            end
+        | _ -> false
+      end
+    | _ -> false
+
+let rec list_elements (e:term) : option<list<term>> =
+  let head, args = head_and_args (unmeta e) in
+  match (un_uinst head).n, args with
+  | Tm_fvar fv, _ when fv_eq_lid fv PC.nil_lid ->
+      Some []
+  | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv PC.cons_lid ->
+      Some (hd::must (list_elements tl))
+  | _ ->
+      None
+
+let unthunk_lemma_post t =
+    match (compress t).n with
+    | Tm_abs ([b], e, _) ->
+        let bs, e = open_term [b] e in
+        let b = List.hd bs in
+        if is_free_in (fst b) e
+        then mk_app t [as_arg exp_unit]
+        else e
+    | _ ->
+        mk_app t [as_arg exp_unit]
+
+let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>)
+   : term
+   =
+    let list_elements (e:term) : list<term> =
+      match list_elements e with
+      | Some l -> l
+      | None ->
+        Errors.log_issue e.pos
+          (Errors.Warning_NonListLiteralSMTPattern,
+            "SMT pattern is not a list literal; ignoring the pattern");
+        []
+    in
+
+    let one_pat p =
+        let head, args = unmeta p |> head_and_args in
+        match (un_uinst head).n, args with
+        | Tm_fvar fv, [(_, _); arg]
+            when fv_eq_lid fv PC.smtpat_lid ->
+          arg
+        | _ -> failwith "Unexpected pattern term"
+    in
+
+    let lemma_pats p =
+        let elts = list_elements p in
+        let smt_pat_or t =
+            let head, args = unmeta t |> head_and_args in
+            match (un_uinst head).n, args with
+                | Tm_fvar fv, [(e, _)]
+                    when fv_eq_lid fv PC.smtpatOr_lid ->
+                  Some e
+                | _ -> None in
+        match elts with
+            | [t] ->
+             begin match smt_pat_or t with
+                | Some e ->
+                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map one_pat)
+                | _ -> [elts |> List.map one_pat]
+              end
+            | _ -> [elts |> List.map one_pat]
+    in
+
+    let binders, pre, post, patterns =
+        match (Subst.compress t).n with
+        | Tm_arrow(binders, c) ->
+          let binders, c = Subst.open_comp binders c in
+          begin match c.n with
+            | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
+              binders, pre, post, lemma_pats pats
+            | _ -> failwith "impos"
+          end
+
+        | _ -> failwith "Impos"
+    in
+    (* Postcondition is thunked, c.f. #57 *)
+    let post = unthunk_lemma_post post in
+    let body = mk (Tm_meta (mk_imp pre post, Meta_pattern (binders_to_names binders, patterns))) None t.pos in
+    let quant =
+      List.fold_right2
+        (fun b u out -> mk_forall u (fst b) out)
+        binders
+        (universe_of_binders binders)
+        body
+    in
+    quant
+
+(* End SMT Lemma utilities *)

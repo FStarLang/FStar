@@ -1,0 +1,34 @@
+[
+  "\u0017í”9Æ%_\u0018ˆ_,‰[·Ç!",
+  [
+    [
+      "InjectiveTypeFormers.SMT.false_of_pq",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_InjectiveTypeFormers.SMT.p",
+        "equation_InjectiveTypeFormers.SMT.q",
+        "function_token_typing_InjectiveTypeFormers.SMT.p",
+        "lemma_InjectiveTypeFormers.SMT.isInj_admit"
+      ],
+      0,
+      "fbfa899df7dfba06f36ce1e84c089b44"
+    ],
+    [
+      "InjectiveTypeFormers.SMT.pq",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_InjectiveTypeFormers.SMT.p",
+        "equation_InjectiveTypeFormers.SMT.q",
+        "function_token_typing_InjectiveTypeFormers.SMT.p",
+        "lemma_InjectiveTypeFormers.SMT.isInj_admit",
+        "token_correspondence_InjectiveTypeFormers.SMT.p"
+      ],
+      0,
+      "181dabf192fe195bdb78a69eb207a7ea"
+    ]
+  ]
+]

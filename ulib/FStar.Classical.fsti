@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Classical
 
 val give_witness (#a:Type) (_:a) :Lemma (ensures a)
@@ -53,6 +68,12 @@ val forall_intro_3_with_pat (#a:Type) (#b:(a -> Type)) (#c: (x:a -> y:b x -> Typ
   ($pat: (x:a -> y:b x -> z:c x y -> Tot (d x y z)))
   ($_: (x:a -> y:b x -> z:c x y -> Lemma (p x y z)))
   :Lemma (forall (x:a) (y:b x) (z:c x y).{:pattern (pat x y z)} p x y z)
+
+val forall_intro_4
+  (#a:Type) (#b:(a -> Type)) (#c:(x:a -> y:b x -> Type)) (#d:(x:a -> y:b x -> z:c x y -> Type))
+  (#p:(x:a -> y:b x -> z:c x y -> w:d x y z -> Type0))
+  ($_: (x:a -> y:b x -> z:c x y -> w:d x y z -> Lemma (p x y z w)))
+  : Lemma (forall (x:a) (y:b x) (z:c x y) (w:d x y z). p x y z w)
 
 val exists_intro (#a:Type) (p:(a -> Type)) (witness:a)
   :Lemma (requires (p witness)) (ensures (exists (x:a). p x))

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Pointer.Base
 
 module DM = FStar.DependentMap
@@ -164,7 +179,7 @@ let buffer (t: typ): Tot Type0 = _buffer t
 *)
 
 let gtdata (* ghostly-tagged data *)
-  (key: eqtype u#0)
+  (key: eqtype)
   (value: (key -> Tot Type0))
 : Tot Type0
 = ( k: key & value k )
@@ -4035,39 +4050,49 @@ let owrite
     HS.lemma_sel_same_addr h1 r gref
   in
   e ();
-  let f
-    (t: typ)
-    (p: pointer t)
+  let prf_alocs
+    (r': HS.rid)
+    (a': nat)
+    (b' : aloc r' a')
   : Lemma
-    (requires (
-      frameOf p == frameOf b /\
-      as_addr p == as_addr b /\
-      live h0 p /\
-      disjoint b p
-    ))
-    (ensures (
-      equal_values h0 p h1 p
-    ))
-  = let grefp = greference_of p in
-    HS.lemma_sel_same_addr h0 r grefp;
-    HS.lemma_sel_same_addr h1 r grefp;
-    path_sel_upd_other' (Pointer?.p b) c0 z (Pointer?.p p)
+    (requires (MG.loc_disjoint (MG.loc_of_aloc b') (loc_pointer b)))
+    (ensures (cls.MG.aloc_preserved b' h0 h1))
+  =
+    let f
+      (t: typ)
+      (p: pointer t)
+    : Lemma
+      (requires (
+        live h0 p /\
+        disjoint b p
+      ))
+      (ensures (
+        equal_values h0 p h1 p
+      ))
+    = let grefp = greference_of p in
+      if frameOf p = frameOf b && as_addr p = as_addr b
+      then begin
+        HS.lemma_sel_same_addr h0 r grefp;
+        HS.lemma_sel_same_addr h1 r grefp;
+        path_sel_upd_other' (Pointer?.p b) c0 z (Pointer?.p p)
+      end
+      else ()
+    in
+    let f'
+      (t: typ)
+      (p: pointer t)
+    : Lemma
+      ( (
+        live h0 p /\
+        disjoint b p
+      ) ==> (
+        equal_values h0 p h1 p
+      ))
+    = Classical.move_requires (f t) p
+    in
+    MG.loc_disjoint_aloc_elim #_ #cls #r' #a' #(frameOf b) #(as_addr b) b' (LocPointer b);
+    Classical.forall_intro_2 f'
   in
-  let f'
-    (t: typ)
-    (p: pointer t)
-  : Lemma
-    ( (
-      frameOf p == frameOf b /\
-      as_addr p == as_addr b /\
-      live h0 p /\
-      disjoint b p
-    ) ==> (
-      equal_values h0 p h1 p
-    ))
-  = Classical.move_requires (f t) p
-  in
-  Classical.forall_intro_2 f';
   MG.modifies_intro (loc_pointer b) h0 h1
     (fun _ -> ())
     (fun t' pre' p' ->
@@ -4076,9 +4101,7 @@ let owrite
     )
     (fun _ _ _ -> ())
     (fun _ _ -> ())
-    (fun r' a' b' ->
-      MG.loc_disjoint_aloc_elim #_ #cls #r' #a' #(frameOf b) #(as_addr b) b' (LocPointer b)
-    )
+    prf_alocs
 
 let write #a b z =
   owrite b (ovalue_of_value a z)

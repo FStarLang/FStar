@@ -1,5 +1,5 @@
 [
-  "Xr\u0005ØQ§ˇùΩ»≈…\u0004\u0019˚°",
+  "ÛËóºníáe∂ÖM\u0019È\u0004Iê",
   [
     [
       "Bug077.ok2",
@@ -10,10 +10,10 @@
         "@MaxIFuel_assumption", "@query",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Bug077_Tm_refine_89761103e61acc2f14aca90db784842d"
+        "refinement_interpretation_Tm_refine_89761103e61acc2f14aca90db784842d"
       ],
       0,
-      "28c42a7f042da67f6ddbcd5577a1ef92"
+      "cbbf5735c1509e3a3ecaccb73f9d3c86"
     ],
     [
       "Bug077.ok4",
@@ -28,10 +28,10 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
+        "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "e3d9582c21ba38b208f0eb531a657e5b"
+      "f7bb3c9b1015ddef2371ad5f677f5726"
     ],
     [
       "Bug077.ok5",
@@ -40,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "ab1bfa8d0b4201fc0995f87ed523ec15"
+      "39d26bb71d5c1cdb28676d1d266ba3b8"
     ],
     [
       "Bug077.ok5",
@@ -57,10 +57,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
+        "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "94bff9215e08b54f6b64ffa091d22c50"
+      "bee257324921507993da4172e45ce813"
     ],
     [
       "Bug077.bug",
@@ -75,10 +75,10 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Bug077_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
+        "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "708ba149e1fdf7940ee36164e2842967"
+      "a259ed925c37f5ecf637f9dab0a0b462"
     ]
   ]
 ]

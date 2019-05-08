@@ -1,5 +1,5 @@
 [
-  "‰õdFCÃ±\u001eó\u0004XÖÖ8÷Š",
+  "$\u00070ð<;©Í”î\u0001}¦\u001ft\r",
   [
     [
       "FStar.Reflection.Types.name",
@@ -7,12 +7,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list__uu___haseq",
-        "function_token_typing_Prims.string"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.string",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5696c85892daf80d19b73b5d103914fa"
+      "45fb17dc52ef79622a54fc6f17964d46"
     ]
   ]
 ]

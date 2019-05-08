@@ -1,8 +1,6 @@
 .PHONY: all
 
 FSTAR_HOME=..
-include gmake/z3.mk
-include gmake/fstar.mk
 
 # Makefile.verify has been split off because it is the actual
 # Makefile that is distributed in the binary package. This
@@ -22,16 +20,12 @@ FSTARLIB_MODULES=$(filter-out $(REALIZED) FStar.Crypto.fst FStar.Tcp.fst FStar.R
 
 FSTAR_TAC_LIB_MODULES=$(filter-out $(REALIZED),$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar.Tactics.*.fst FStar.Tactics.*.fsti))
 
-FSTAR_TAC_LIB_DROPPED_FST=$(FSTAR_TAC_LIB_MODULES:.fst=)
-FSTAR_TAC_LIB_DROPPED_EXTENSIONS=$(FSTAR_TAC_LIB_DROPPED_FST:.fsti=)
-FSTAR_TAC_LIB_EXTRACT=$(addprefix --extract_module ,$(sort $(FSTAR_TAC_LIB_DROPPED_EXTENSIONS)))
-
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
 	rm -f .depend.extract
 	FSTAR_FILES='$(FSTARLIB_MODULES)' \
 	OUTPUT_DIRECTORY=ml/extracted \
-	EXTRACT_MODULES='$(FSTAR_DEFAULT_ARGS)' \
+	EXTRACT_MODULES="--extract '-Prims +FStar +LowStar -FStar.Tactics -FStar.Reflection $(NOEXTRACT_MODULES)'" \
 	$(MAKE) -f Makefile.extract all-ml
 	# the next cp is done because FStar_Pervasives.ml is needed to bootstrap the compiler
 	# we could follow this style for other files too, e.g., FStar_Option.ml
@@ -46,7 +40,7 @@ fstartaclib.mgen: fstarlib.mgen
 	FSTAR_FILES='$(FSTAR_TAC_LIB_MODULES)' \
 	OUTPUT_DIRECTORY=tactics_ml/extracted \
 	CODEGEN=Plugin \
-	EXTRACT_MODULES='$(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_DEFAULT_ARGS)' \
+	EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
 	$(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
@@ -56,11 +50,17 @@ fstartaclib.mgen: fstarlib.mgen
 # OCaml extraction of fstarlib and fstar-tactics-lib #
 ######################################################
 
+ifeq ($(OS),Windows_NT)
+  OCAMLPATH_SEP=;
+else
+  OCAMLPATH_SEP=:
+endif
+
 # relative path to build directory, which is ulib/ml/_build
-OCAMLPATH=../../../bin/
+OCAMLPATH:="../../../bin/$(OCAMLPATH_SEP)$(OCAMLPATH)"
 
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
-OCAMLBUILD=cd ../ && OCAMLPATH="$(OCAMLPATH)" ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
+OCAMLBUILD=cd ../ && OCAMLPATH=$(OCAMLPATH) ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
 
 FSTARLIB_OCAMLBUILD=$(OCAMLBUILD) -build-dir ulib/ml/_build \
   -I ulib/ml \

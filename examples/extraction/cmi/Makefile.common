@@ -1,0 +1,25 @@
+FSTAR_HOME?=../../..
+ROOTS?=
+EXTRACT?=
+include $(FSTAR_HOME)/examples/Makefile.include
+include .depend
+
+OTHERFLAGS+=--cache_dir .cache
+
+%.fst.checked:
+	$(FSTAR) $< --cache_checked_modules
+
+%.fsti.checked:
+	$(FSTAR) $< --cache_checked_modules
+
+%.ml:
+	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen OCaml --extract_module $(basename $(notdir $(subst .checked,,$<))) --cmi
+
+.depend:
+	mkdir -p .cache
+	$(FSTAR) --dep full $(ROOTS) $(addprefix --extract ,$(ROOTS)) --cmi > .depend
+
+depend: .depend
+
+clean:
+	rm -rf .depend *.ml *.checked *~ .cache

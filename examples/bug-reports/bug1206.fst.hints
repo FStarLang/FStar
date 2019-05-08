@@ -1,5 +1,5 @@
 [
-  "\u0019!zSü{\u0015ÙwÆ¡T\u000fSD\n",
+  "¤#úÒU‡j‡¬Wb$\u000e>\u0015³",
   [
     [
       "Bug1206.bslice",
@@ -7,11 +7,13 @@
       1,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b0ee485c8460acc371ef19d424f96c94"
+      "5775349fa86c82fdcfd366cd814a8b6c"
     ],
     [
       "Bug1206.ser_id",
@@ -26,7 +28,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option"
       ],
       0,
-      "f5c5e3ff404791b13e17b00b7f336bb4"
+      "0438d419098b1062d636d4a9671f37ca"
     ]
   ]
 ]

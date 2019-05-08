@@ -11,7 +11,10 @@ inline_let:
 	$(FSTAR) --codegen OCaml InlineLet.fst
 	egrep -A 10 test InlineLet.ml | grep -qs "17"
 
-all: eta_expand inline_let
+all: eta_expand inline_let all_cmi
+
+all_cmi:
+	$(MAKE) -C cmi all
 
 out:
 	mkdir -p out

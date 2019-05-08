@@ -1,0 +1,32 @@
+[
+  "\u000fÏtª\u0003›0¶úä\u0000è|î¾S",
+  [
+    [
+      "Bug1571.t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "441a450686286eaf1ed161d729623448"
+    ],
+    [
+      "Bug1571.__proj__V__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1571.V",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_4efce2107be5fc6d34ea56c6f3b06057"
+      ],
+      0,
+      "a83868b7d6ef9f357445b0038a50efe7"
+    ]
+  ]
+]

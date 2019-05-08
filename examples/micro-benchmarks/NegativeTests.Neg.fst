@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module NegativeTests.Neg
 
 irreducible val x:nat
@@ -37,3 +52,11 @@ assume val f1: (x:int -> Tot unit) -> Tot unit
 assume val g1: nat -> Tot unit
 [@(expect_failure [19])]
 let h1 = f1 (fun x -> g1 x) //should fail; x is not nat
+
+assume type phi_1510 :Type0
+[@(expect_failure [309])]
+type t (a:Type) :(_:Type0{phi_1510})=
+  | C: x:a -> t a
+
+[@(expect_failure [309])]
+type t2 : (_:Type{False}) = | C2

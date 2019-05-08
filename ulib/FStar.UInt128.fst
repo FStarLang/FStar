@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.UInt128
 
 open FStar.Mul
@@ -19,6 +34,9 @@ module Math = FStar.Math.Lemmas
 type uint128: Type0 = { low: U64.t; high: U64.t }
 
 let t = uint128
+
+let _ = intro_ambient n
+let _ = intro_ambient t
 
 noextract
 let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
@@ -948,6 +966,9 @@ val u64_32_product (xl xh yl yh:UInt.uint_t 32) :
   Lemma ((xl + xh * pow2 32) * (yl + yh * pow2 32) ==
   xl * yl + (xl * yh) * pow2 32 + (xh * yl) * pow2 32 + (xh * yh) * pow2 64)
 let u64_32_product xl xh yl yh =
+  assert (xh >= 0); //flakiness; without this, can't prove that (xh * pow2 32) >= 0
+  assert (pow2 32 >= 0); //flakiness; without this, can't prove that (xh * pow2 32) >= 0
+  assert (xh*pow2 32 >= 0);
   product_sums xl (xh*pow2 32) yl (yh*pow2 32);
   mul_abc_to_acb xh (pow2 32) yl;
   assert (xl * (yh * pow2 32) == (xl * yh) * pow2 32);
@@ -1046,6 +1067,7 @@ let n_minus_mod_exact (n:nat) (k:pos) :
 let sub_mod_gt_0 (n:nat) (k:pos) :
   Lemma (0 <= n - n % k) = ()
 
+#set-options "--z3rlimit 20"
 val sum_rounded_mod_exact : n:nat -> m:nat -> k:pos ->
   Lemma (((n - n%k) + (m - m%k)) / k * k == (n - n%k) + (m - m%k))
 let sum_rounded_mod_exact n m k =
@@ -1056,7 +1078,6 @@ let sum_rounded_mod_exact n m k =
   mod_add (n - n%k) (m - m%k) k;
   Math.div_exact_r ((n - n%k) + (m - m % k)) k
 
-#set-options "--z3rlimit 20"
 val div_sum_combine : n:nat -> m:nat -> k:pos ->
   Lemma (n / k + m / k == (n + (m - n % k) - m % k) / k)
 let div_sum_combine n m k =

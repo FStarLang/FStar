@@ -1,5 +1,6 @@
 open Prims
 open FStar_Pervasives_Native
+open FStar_Pervasives
 open FStar_Tactics_Result
 open FStar_Tactics_Types
 open FStar_Tactics_Effect
@@ -65,11 +66,11 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
 let get                     = from_tac_1 (fun () -> B.get) (* silly.. *)
 let set_goals               = from_tac_1 B.set_goals
 let set_smt_goals           = from_tac_1 B.set_smt_goals
-let fail                    = from_tac_1 B.fail
 let top_env                 = from_tac_1 B.top_env
 let fresh                   = from_tac_1 B.fresh
 let refine_intro            = from_tac_1 B.refine_intro
 let tc                      = from_tac_1 B.tc
+let tcc                     = from_tac_1 B.tcc
 let unshelve                = from_tac_1 B.unshelve
 let unquote                 = fun t -> failwith "Sorry, unquote does not work in compiled tactics"
 let trivial                 = from_tac_1 B.trivial
@@ -90,12 +91,10 @@ let apply_lemma             = from_tac_1 B.apply_lemma
 let print                   = from_tac_1 B.print
 let debugging               = from_tac_1 B.debugging
 let dump                    = from_tac_1 B.print_proof_state
-let dump1                   = from_tac_1 B.print_proof_state1
 let trefl                   = from_tac_1 B.trefl
 let dup                     = from_tac_1 B.dup
 let prune                   = from_tac_1 B.prune
 let addns                   = from_tac_1 B.addns
-let cases                   = from_tac_1 B.cases
 let t_destruct              = from_tac_1 B.t_destruct
 let set_options             = from_tac_1 B.set_options
 let uvar_env                = from_tac_2 B.uvar_env
@@ -106,7 +105,8 @@ let change                  = from_tac_1 B.change
 let get_guard_policy        = from_tac_1 B.get_guard_policy
 let set_guard_policy        = from_tac_1 B.set_guard_policy
 let lax_on                  = from_tac_1 B.lax_on
-let tadmit                  = from_tac_1 B.tadmit
+let tadmit_t                = from_tac_1 B.tadmit_t
+let join                    = from_tac_1 B.join
 let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
 
@@ -124,8 +124,10 @@ let fmap f r =
 
 (* Those that need some translations. Maybe we can do this somewhere else
  * or automatically, but keep it for now *)
-let catch (t: unit -> 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
+let catch (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
         fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 (t ())) ps)
+let recover (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
+        fun ps -> fmap fix_either (from_tac_1 B.recover (to_tac_0 (t ())) ps)
 
 let t_pointwise (d : direction) (t: unit -> unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 (t ()))
 

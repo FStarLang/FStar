@@ -47,7 +47,7 @@ MY_FSTAR=$(FSTAR) --cache_checked_modules                   \
 # Include the .depend before any other target
 # since we rely on the dependences it computes in other rules
 #--------------------------------------------------------------------------------
-.depend:
+.depend: $(FSTAR_FILES)
 	$(MY_FSTAR) --dep full $(FSTAR_FILES) > .depend
 
 depend: .depend
@@ -58,12 +58,12 @@ include .depend
 # a.fst.checked is the binary, checked version of a.fst
 %.fst.checked:
 	$(MY_FSTAR) $<
-	touch -ac $@
+	touch -c $@
 
 # a.fsti.checked is the binary, checked version of a.fsti
 %.fsti.checked:
 	$(MY_FSTAR) $<
-	touch -ac $@
+	touch -c $@
 
 clean:
 	rm -rf $(CACHE_DIR)

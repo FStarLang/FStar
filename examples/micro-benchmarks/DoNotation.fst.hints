@@ -1,5 +1,5 @@
 [
-  "\u001a²Ô7ÀHI4x\bQ÷\u001f D",
+  "u\u001a¿û6ï¡o\u001b\u001ah¨J-b>",
   [
     [
       "DoNotation.add",
@@ -7,28 +7,32 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9d81f8ef8364f44ea7e2a38ac04b2a2f"
+      "6a552cabd1ab286f2189e2d933a42b5d"
     ],
     [
-      "DoNotation.uu___8",
+      "DoNotation.uu___23",
       1,
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Prims.HasEq_int", "assumption_Prims.HasEq_unit",
-        "function_token_typing_Prims.int", "function_token_typing_Prims.unit"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "function_token_typing_Prims.unit",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a260c58ad38f3472bcd0dc9015c5de85"
+      "bed76e3adbf003318e88547addc89a90"
     ],
     [
       "DoNotation.add",
@@ -36,15 +40,32 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4815d3c1a643086ebc58cd1377e22843"
+      "c4993b73f607872147ccc1ad2d1eec25"
+    ],
+    [
+      "DoNotation.uu___23",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "function_token_typing_Prims.unit",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "88d3562a03fa46ba0a58968c21cabc50"
     ]
   ]
 ]

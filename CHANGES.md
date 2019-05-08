@@ -11,6 +11,172 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+# Version 0.9.7.0
+
+## Module system
+
+  * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
+
+## Core typechecker
+
+  * Revised typechecking of nested patterns and ascriptions on
+    patterns, fixing unsoundnesses (issue #238, for example)
+
+## Libraries
+
+   * Two core axioms were discovered by Aseem Rastogi to be formulated
+     in an unsound manner.
+
+     FStar.FunctionalExtensionality has been reformulated to prevent
+     equivalence proofs of a function on a given domain to be
+     improperly extended to equivalence on a larger domain. The
+     library was fixed to ensure that domain type used to prove the
+     equivalence was recorded in the axiom. See
+     examples/micro-benchmarks/Test.FunctionalExtensionality.fst for
+     example uses.
+
+     FStar.PropositionalExtensionality was found to be incompatible
+     with the representation of `prop` as the type of all
+     sub-singletons. `prop` has been reformulated as the type of all
+     sub-types of `unit`.
+
+     See issue #1542 for more discussion.
+
+## Syntax
+
+   * We now overload `&` to construct both dependent and non-dependent
+     tuple types. `t1 & t2` is equivalent to `tuple2 t1 t2` whereas
+     `x:t1 & t2` is `dtuple2 t1 (fun x -> t2)`. See
+     examples/micro-benchmarks/TupleSyntax.fst. The main value
+     proposition here is that in contrast to `*`, which clashes with
+     the multiplication on integers, the `&` symbol can be used for
+     tuples while reserving `*` for multiplication.
+
+## Extraction
+
+   * Cross-module inlining: Declarations in interfaces marked with the
+     `inline_for_extraction` qualifier have their definitions inlined
+     in client code. Currently guarded by the --cmi flag, this will
+     soon be the default behavior. Also see:
+     https://github.com/FStarLang/FStar/wiki/Cross-module-Inlining
+     and https://github.com/FStarLang/FStar/tree/master/examples/extraction/cmi.
+
+## SMT Encoding
+
+   * A soundness bug was fixed in the encoding of recursive functions
+     to SMT. The flaw resulted from omitting typing guards in the
+     axioms corresponding to the equational behavior of pure and ghost
+     recursive functions. The fix makes reasoning about recursive
+     functions with SMT slightly more demanding: if the typing of an
+     application of a recursive functions requires some non-trivial
+     proof, the SMT solver may require some assistance with that proof
+     before it can unfold the definition of the recursive
+     function. For an example of the kind of additional proof that may
+     be needed, see these commits:
+     https://github.com/FStarLang/FStar/commit/936ce47f2479af52f3c3001bd87bed810dbf6e1f
+     and https://github.com/project-everest/hacl-star/commit/2220ab81bbae735495a42ced6485665d9facdb0b.
+     We need to call lemmas
+     to prove that the recursive function that appears in the
+     inductive hypothesis is well-typed
+     (e.g. calling `wp_monotone` lemma for well-typedness of `wp_compute` in the second commit) .
+     In some cases, it may also be possible to use the normalizer to
+     do the unfolding:
+     https://github.com/project-everest/hacl-star/commit/6e9175e607e591faa5b6a0d6052fc4a336f7bf41#diff-127ee9d47350eff0fa0d79847257d493R290.
+     Another kind of change required hoisting some type declarations:
+     https://github.com/FStarLang/FStar/commit/819ad64065f1e70aec3665f5df6b58a7d43cdce1
+     to get around imprecision in the SMT encoding. This can be handled in F*
+     with an additional SMT axiom on type constructors like `list`, but
+     we only found a couple of instances of this. So, for now, we are going with the
+     hoisting workaround.
+
+   * The encoding of nullary constants changed. See the documentation
+     in https://github.com/FStarLang/FStar/pull/1645
+
+   * An optimization of the SMT encoding removes, by default,
+     expensive axioms about validity from the prelude.
+
+     The axiom in question is the following:
+
+     ```
+       (assert (forall ((t Term))
+                       (! (iff (exists ((e Term)) (HasType e t))
+                               (Valid t))
+                        :pattern ((Valid t)))))
+     ```
+
+     The axiom is justified by our model of squash types and
+     effectively capture the monadic structure of squash: the forward
+     implication is related to `return_squash` and the backwards
+     direction to `bind_squash`.
+
+     However, this axiom is now excluded by default, for two reasons:
+
+     1. The axiom is very expensive for the SMT solver, showing up a
+        lot on most SMT profiles. Every occurrence of `Valid t`
+        introduces a quantifier in scope (and a skolemized occurrence
+        of `HasType e t`).
+
+     2. Most code doesn't actually need these axioms.
+
+     Instead, we now provide two flags to add versions of this axiom
+     on demand.
+
+     The option `--smtencoding.valid_intro true` adds the following
+     axiom to the prelude:
+
+      ```
+        (assert (forall ((e Term) (t Term))
+                      (! (implies (HasType e t)
+                                  (Valid t))
+                       :pattern ((HasType e t)
+                                 (Valid t))
+                       :qid __prelude_valid_intro)))
+      ```
+
+     The option `--smtencoding.valid_elim true` adds the following
+     axiom to the prelude:
+
+     ```
+       (assert (forall ((t Term))
+                      (! (implies (Valid t)
+                                  (exists ((e Term)) (HasType e t)))
+                       :pattern ((Valid t))
+                       :qid __prelude_valid_elim)))
+     ```
+
+     Currently, in the F* tree, these axioms are enabled in our
+     makefiles (see ulib/gmake/fstar.mk), since a few core libraries
+     (FStar.Squash, e.g.) rely on it. But we are working on more
+     tightly scoping the use of these axioms in the F* tree.
+
+     Meanwhile, other projects using F* in project-everest no longer
+     use these axioms by default.
+
+## Calculational proofs
+
+   * F\* now supports proofs in calculational style, i.e. where an
+     equality between two expressions is expressed via a sequence of
+     equalities each of which is proven individually. In fact, these
+     proofs can be done for any relation, provided that steps compose
+     properly (e.g., `a < b == c` implies `a < c`, but `a <= b == c`
+     does not imply `a < c`). For some examples, see `examples/calc/`.
+
+## Miscellaneous
+
+   * Development builds of F\* no longer report the date of the build
+     in `fstar --version`. This is to prevent needlessly rebuilding
+     F\* even when the code does not change.
+
+## Dependence analysis and build
+
+   * --already_cached provides a way to assert that some modules, and
+     only those modules, have already been verified, i.e, valid
+     .checked files exist for them. In case a module that is marked
+     `--already_cached` does not have a valid .checked file, Error 317
+     is raised. Otherwise, if we find a checked file for a module that
+     is not already_cached in a location that is not the same as its
+     expected output location, we raise Warning 321.
+
 # Version 0.9.6.0
 
 ## Command line options
@@ -32,6 +198,17 @@ Guidelines for the changelog:
    leak. See
    https://github.com/FStarLang/FStar/wiki/Revised-checking-of-a-module's-interface
    for more information.
+
+   `--keep_query_captions true|false` (default `true`) when set to `true`,
+   and when `--log_queries` is enabled, causes .smt2 files to be logged with
+   comments; otherwise comments are not printed. Note, the comments
+   can be quite verbose.
+
+   `--already_cached "(* | [+|-]namespace)*"`, insists that .checked files be
+   present or absent for modules that match the namespace pattern provided.
+
+   `--smtencoding.valid_intro` and `--smtencoding.valid_elim`: See PR
+   #1710 and the discussion above in the SMT encoding section.
 
 ## Type inference
 
@@ -182,7 +359,7 @@ Date:   Mon Apr 30 16:57:21 2018 -0700
   3. The head symbol of `e1` is not marked `irreducible` and it is not an `assume val`
   4. `e1` is not a `let rec`
 
-  This is breaking change. Consider the following example (adapted
+  This is a breaking change. Consider the following example (adapted
   from `ulib/FStar.Algebra.Monoid.fst`):
 
   ```

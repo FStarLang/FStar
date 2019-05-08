@@ -1,5 +1,5 @@
 [
-  "ú\u0019¸ú{Ìü‘Ó{Ò§É\u001fÃS",
+  "\u0010JVAc¡ÓIq\fÛ4%vÍö",
   [
     [
       "Bug1270.test",
@@ -16,7 +16,58 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "ba34319ab31a4d3921b1f0d1f0f6e5a6"
+      "36f8733b4ff2dc073c2f97c2c44423f2"
+    ],
+    [
+      "Bug1270.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list", "true_interp",
+        "typing_FStar.Reflection.Basic.binders_of_env"
+      ],
+      0,
+      "5a9739e22ee40a58f24d8b605988e0a4"
+    ],
+    [
+      "Bug1270.test",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list",
+        "typing_FStar.Reflection.Basic.binders_of_env"
+      ],
+      0,
+      "06e9eedc9b1f0bfe348b3f8936d46148"
+    ],
+    [
+      "Bug1270.test",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list", "true_interp",
+        "typing_FStar.Reflection.Basic.binders_of_env"
+      ],
+      0,
+      "e86e213b8ef986d0bcdd9bc7ab6ba7a0"
     ]
   ]
 ]

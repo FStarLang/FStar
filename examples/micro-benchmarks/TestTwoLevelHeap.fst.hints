@@ -1,5 +1,5 @@
 [
-  ")◊Ô]¨VÚ‡•:2Q˜¡˝\u0011",
+  "ô\u0001g'hI\u0017œ(\u0011ù‘Áy≈\u000b",
   [
     [
       "TestTwoLevelHeap.test0",
@@ -7,21 +7,8 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0,
-      "3550442da390a0d60421c9ab06250b5e"
-    ],
-    [
-      "TestTwoLevelHeap.test0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "bool_inversion", "bool_typing", "equation_FStar.Heap.ref",
-        "equation_FStar.Heap.trivial_preorder", "equation_FStar.Set.eqtype",
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "equation_FStar.Heap.ref", "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.TwoLevelHeap.as_ref",
         "equation_FStar.TwoLevelHeap.modifies",
         "equation_FStar.TwoLevelHeap.rid",
@@ -45,8 +32,8 @@
         "lemma_FStar.Set.mem_union", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_TestTwoLevelHeap_Tm_refine_bdd7cf97d4b17c7b65136fc13b914970",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_bdd7cf97d4b17c7b65136fc13b914970",
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.Map.concat",
         "typing_FStar.Map.contains", "typing_FStar.Map.domain",
         "typing_FStar.Map.restrict", "typing_FStar.Map.sel",
@@ -55,19 +42,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "d24baac579dde7a615040655bc1dd3ae"
-    ],
-    [
-      "TestTwoLevelHeap.test0",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0,
-      "f765dcd62ffe13312d781909b0a4acf0"
+      "58bf2fa816dee7369bead12b47ece2a6"
     ]
   ]
 ]

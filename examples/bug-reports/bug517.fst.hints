@@ -1,15 +1,6 @@
 [
-  "`°7z Œ≤Ãÿ:çæ÷X\u0007\u0016",
+  ";Ê®\u0017=Gê˝\u0005⁄\u001b{X/Û",
   [
-    [
-      "Bug517.new_int",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "72eace427411c51a691487256c146a14"
-    ],
     [
       "Bug517.add",
       1,
@@ -18,10 +9,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
+        "refinement_interpretation_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
       ],
       0,
-      "fb785b1cec3a9ed5175dbebb9747ff94"
+      "7a4a85b097d1aa91fe8801995d645bf3"
     ],
     [
       "Bug517.add'",
@@ -31,10 +22,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
+        "refinement_interpretation_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
       ],
       0,
-      "ac0b067d535a4980d45ed64c468778b8"
+      "0a0f2923fec09323d0c8f254825cfe10"
     ]
   ]
 ]

@@ -250,7 +250,7 @@ and subst_comp_typ' s t =
             comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
             result_typ=subst' s t.result_typ;
             flags=subst_flags' s t.flags;
-            effect_args=List.map (fun (t, imp) -> subst' s t, imp) t.effect_args}
+            effect_args=List.map (fun (t, imp) -> subst' s t, subst_imp' s imp) t.effect_args}
 
 and subst_comp' s t =
   match s with
@@ -438,8 +438,8 @@ let rec push_subst s t =
         {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd}) in
         mk (Tm_let((is_rec, lbs), body))
 
-    | Tm_meta(t0, Meta_pattern ps) ->
-        mk (Tm_meta(subst' s t0, Meta_pattern (ps |> List.map (subst_args' s))))
+    | Tm_meta(t0, Meta_pattern (bs, ps)) ->
+        mk (Tm_meta(subst' s t0, Meta_pattern (List.map (subst' s) bs, ps |> List.map (subst_args' s))))
 
     | Tm_meta(t0, Meta_monadic (m, t)) ->
         mk (Tm_meta(subst' s t0, Meta_monadic(m, subst' s t)))

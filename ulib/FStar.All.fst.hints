@@ -1,1 +1,31 @@
-[ "\r16W E¹Ÿ‘^÷XÏùË~", [] ]
+[
+  "\u0016“(NR¢•>\\L‡ƒØ—óJ",
+  [
+    [
+      "FStar.All.__proj__Failure__item__uu___",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.All.Failure",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_940bc9679c05df1008a4833b9817f1c1"
+      ],
+      0,
+      "0dac02a6b94cf7c574ccb5ec9fb78d97"
+    ],
+    [
+      "FStar.All.__proj__Failure__item__uu___",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.All.Failure",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_940bc9679c05df1008a4833b9817f1c1"
+      ],
+      0,
+      "c27af602c59191a61eebda127e12a682"
+    ]
+  ]
+]

@@ -1,24 +1,6 @@
 [
-  "ıÏcπ≤œ\u0014À;+€ç„–Ü‹",
+  "òÁÍ ”Œ\u0015úˇí\u0019äm,XK",
   [
-    [
-      "Bug399.fail1",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_unit" ],
-      0,
-      "f2acfa277080bba111f3cc2a6c25805a"
-    ],
-    [
-      "Bug399.fail2",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_unit" ],
-      0,
-      "637307863af0893fad7ea7351a17a32d"
-    ],
     [
       "Bug399.works",
       1,
@@ -29,7 +11,7 @@
         "unit_inversion"
       ],
       0,
-      "243f02565dd9efded004f83d18b66db7"
+      "14ecd8feb3ccaf3960244efae95a00e2"
     ]
   ]
 ]

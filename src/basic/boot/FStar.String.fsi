@@ -19,6 +19,8 @@ open FStar.ST
 open FStar.All
 open Prims
 open FStar.Char
+open FStar.BigInt
+
 (* The name of this file is misleading: most string functions are to be found in
    util.fsi *)
 val make:    int -> char -> string
@@ -30,11 +32,15 @@ val strlen:  string -> Tot<nat>
 val length:  string -> Tot<nat>
 val lowercase: string -> Tot<string>
 val uppercase: string -> Tot<string>
+val escaped: string -> Tot<string>
 
 (* may fail with index out of bounds *)
 val substring: string -> start:int -> len:int -> string
 val get: string -> int -> char
 val collect: (char -> string) -> string -> string
+val index_of: string -> char -> bigint
+val index: string -> bigint -> char
 
 val list_of_string : string -> list<char>
 val string_of_list: list<char> -> string
+val (^) : string -> string -> string

@@ -1,1 +1,19 @@
-[ "\u0018aœ¤>jðû”\u0003ª\u000e–\u001f\u0001b", [] ]
+[
+  "4FyËÝÀr\u0019»CÈƒªzéÛ",
+  [
+    [
+      "FStar.Tactics.Types.__proj__TacticFailure__item__uu___",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Types.TacticFailure",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_f49633c0c264cfe426b78eef812b39f3"
+      ],
+      0,
+      "1df22c9482f03d5b2f9671aec7fbbfe4"
+    ]
+  ]
+]

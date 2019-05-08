@@ -1,5 +1,5 @@
 [
-  "Œt\u007f'Ÿ\u0014\u0014‡„˜ÎqoçÙ\u0013",
+  "Ë\u001dL\u0015¬LË\u0007#\u0001\\P}•X\t",
   [
     [
       "Unit1.TopLevelPats.uu___7",
@@ -7,12 +7,15 @@
       2,
       1,
       [
-        "@query", "equation_Unit1.TopLevelPats.uu___6",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Unit1.TopLevelPats.uu___0",
         "equation_Unit1.TopLevelPats.x",
+        "function_token_typing_Prims.__cache_version_number__",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "3895e4c837e14a4b85a82c79c4bc6591"
+      "194de631c83d165b1da1b2a4ebad1d7c"
     ],
     [
       "Unit1.TopLevelPats.uu___8",
@@ -20,49 +23,127 @@
       2,
       1,
       [
-        "@query", "equation_Unit1.TopLevelPats.uu___6",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Unit1.TopLevelPats.uu___0",
         "equation_Unit1.TopLevelPats.y",
+        "function_token_typing_Prims.__cache_version_number__",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "8078a3e8db9950766e3a3c88869623ee"
+      "af4c26cf4e7f2401584fc4905291028d"
     ],
     [
-      "Unit1.TopLevelPats.uu___10",
+      "Unit1.TopLevelPats.uu___17",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Unit1.TopLevelPats.make",
-        "equation_Unit1.TopLevelPats.uu___6",
-        "equation_Unit1.TopLevelPats.uu___9",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Unit1.TopLevelPats.make",
+        "equation_Unit1.TopLevelPats.uu___10",
         "equation_Unit1.TopLevelPats.z",
-        "function_token_typing_Unit1.TopLevelPats.z", "int_inversion",
-        "primitive_Prims.op_Division", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
-      ],
-      0,
-      "813bc33881cd6f2465d93f63d4c94b0c"
-    ],
-    [
-      "Unit1.TopLevelPats.uu___11",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Unit1.TopLevelPats.make",
-        "equation_Unit1.TopLevelPats.uu___6",
-        "equation_Unit1.TopLevelPats.uu___9",
-        "equation_Unit1.TopLevelPats.w",
-        "function_token_typing_Unit1.TopLevelPats.w", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Division",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "typing_Unit1.TopLevelPats.z"
+      ],
+      0,
+      "1f1fcbf454fc900dd65efd3ec67834a2"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___18",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Unit1.TopLevelPats.make",
+        "equation_Unit1.TopLevelPats.uu___10",
+        "equation_Unit1.TopLevelPats.w",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "typing_Unit1.TopLevelPats.w"
+      ],
+      0,
+      "7cf4648b7be690c2f0f043542728186f"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___7",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Unit1.TopLevelPats.uu___0",
+        "equation_Unit1.TopLevelPats.x",
+        "function_token_typing_Prims.__cache_version_number__",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
+      ],
+      0,
+      "2e028f4ea29810a110f929e048dd4099"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___8",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Unit1.TopLevelPats.uu___0",
+        "equation_Unit1.TopLevelPats.y",
+        "function_token_typing_Prims.__cache_version_number__",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "45e419ae392bf72cc3eb4e31d42dc094"
+      "f49a5f08ff3d674e67f65e19d6dda86b"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___17",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Unit1.TopLevelPats.make",
+        "equation_Unit1.TopLevelPats.uu___10",
+        "equation_Unit1.TopLevelPats.z",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Division",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "typing_Unit1.TopLevelPats.z"
+      ],
+      0,
+      "20492c352979f2cda2ded45a086edbd8"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___18",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Unit1.TopLevelPats.make",
+        "equation_Unit1.TopLevelPats.uu___10",
+        "equation_Unit1.TopLevelPats.w",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "typing_Unit1.TopLevelPats.w"
+      ],
+      0,
+      "f1e80d7281f63d48b1c31bb890ce02c7"
     ]
   ]
 ]

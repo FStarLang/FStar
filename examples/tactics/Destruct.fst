@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Destruct
 
 open FStar.Tactics
@@ -116,7 +131,7 @@ let decr1 (#b:nat) (n : fin (b + 1)) : fin b =
 
 (* we can however *cut* by it, rewrite, and leave the trivial proof to SMT *)
 let decr2 (#s:nat) (m : fin (s + 1)) : fin s =
-    synth_by_tactic (fun () -> destruct (quote m);
+    _ by (assume_safe (fun () -> destruct (quote m);
                                dump "71"; let [b1;_] = intros () in apply (`Z);
                                dump "72"; let [b1;b2;_] = intros () in
                                           // TODO: Ugh! We need the squash because z3 cannot
@@ -124,4 +139,4 @@ let decr2 (#s:nat) (m : fin (s + 1)) : fin s =
                                           let beq = tcut (`squash (`@s == `#(binder_to_term b1))) in
                                           rewrite beq;
                                           exact_guard (binder_to_term b2);
-                               dump "73")
+                               dump "73"))

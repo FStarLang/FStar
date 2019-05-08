@@ -4,6 +4,7 @@ module FStar.Tactics.Types
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
+module Env = FStar.TypeChecker.Env
 module Options = FStar.Options
 module SS = FStar.Syntax.Subst
 module Cfg = FStar.TypeChecker.Cfg
@@ -27,6 +28,7 @@ type goal = {
     opts    : FStar.Options.optionstate; // option state for this particular goal
     is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
+    label : string; // A user-defined description
 }
 let goal_env g = { g.goal_main_env with gamma = g.goal_ctx_uvar.ctx_uvar_gamma }
 let goal_witness g =
@@ -38,19 +40,21 @@ let goal_with_type g t =
     { g with goal_ctx_uvar = c' }
 let goal_with_env g env =
     let c = g.goal_ctx_uvar in
-    let c' = {c with ctx_uvar_gamma = env.gamma} in
+    let c' = {c with ctx_uvar_gamma = env.gamma ; ctx_uvar_binders = Env.all_binders env } in
     { g with goal_main_env=env; goal_ctx_uvar = c' }
 
-let mk_goal env u o b = {
+let mk_goal env u o b l = {
     goal_main_env=env;
     goal_ctx_uvar=u;
     opts=o;
-    is_guard=b
+    is_guard=b;
+    label=l;
 }
+
 let subst_goal subst goal =
     let g = goal.goal_ctx_uvar in
     let ctx_uvar = {
-        g with ctx_uvar_gamma=FStar.TypeChecker.Env.rename_gamma subst g.ctx_uvar_gamma;
+        g with ctx_uvar_gamma=Env.rename_gamma subst g.ctx_uvar_gamma;
                ctx_uvar_typ=SS.subst subst g.ctx_uvar_typ
     } in
     { goal with goal_ctx_uvar = ctx_uvar }
@@ -115,6 +119,12 @@ let smt_goals_of ps : list<goal> = ps.smt_goals
 
 let is_guard g = g.is_guard
 
+let get_label g = g.label
+let set_label l g = { g with label = l }
+
 type direction =
     | TopDown
     | BottomUp
+
+exception TacticFailure of string
+exception EExn of term

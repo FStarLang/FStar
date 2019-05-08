@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module MetaCoq
 
 open FStar.Exn
@@ -10,16 +25,9 @@ https://www.mpi-sws.org/~beta/papers/metacoq-paper.pdf
 https://github.com/MetaCoq/MetaCoq/
 *)
 
-#reset-options "--__temp_no_proj MetaCoq"
-
 noeq type goal : Type =
 | Goal : #a:Type -> a -> goal
 | AHyp : #a:Type -> option a -> (a -> Tot goal) -> goal
-
-(* Without --__temp_no_proj hitting bug (#736)
-./MetaCoq.fst(12,2-12,6) : Error
-Expected expression of type "(uu___:(MetaCoq.AHyp.a projectee) -> Tot MetaCoq.goal)";
-got expression "_2" of type "(uu___:a -> Tot MetaCoq.goal)" *)
 
 let tactic : Type = goal -> ML (list goal)
 

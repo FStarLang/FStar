@@ -20,16 +20,16 @@ assume new type attribute : Type0
 (* An attribute indicating that some effect must be processed by dmff *)
 assume val cps : attribute
 
+
 (* A predicate to express when a type supports decidable equality
    The type-checker emits axioms for hasEq for each inductive type *)
 assume type hasEq: Type -> GTot Type0
 
-type eqtype = a:Type{hasEq a}
+type eqtype = a:Type0{hasEq a}
 
 (* bool is a two element type with elements {'true', 'false'}
     we assume it is primitive, for convenient interop with other languages *)
-assume new type bool : Type0
-assume HasEq_bool: hasEq bool
+assume new type bool : eqtype
 
 (* False is the empty inductive type *)
 type c_False =
@@ -40,8 +40,7 @@ type c_True =
 
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
-assume new type unit : Type0
-assume HasEq_unit: hasEq unit
+assume new type unit : eqtype
 
 (* A coercion down to universe 0 *)
 [@ "tac_opaque"]
@@ -64,11 +63,20 @@ let auto_squash (p:Type) = squash p
 private type logical = Type0
 
 (*
+ * An attribute indicating that a symbol is an smt theory symbol
+ *   and hence may not be used in smt patterns
+ *
+ * The typechecker warns if such symbols are used in patterns
+ *)
+assume val smt_theory_symbol : attribute
+
+(*
  * Squashed versions of truth and falsehood
  *)
-[@ "tac_opaque"]
+[@"tac_opaque" smt_theory_symbol]
 let l_True :logical = squash c_True
-[@ "tac_opaque"]
+
+[@ "tac_opaque" smt_theory_symbol]
 let l_False :logical = squash c_False
 
 (* The usual equality defined as an inductive type *)
@@ -80,7 +88,8 @@ type equals (#a:Type) (x:a) : a -> Type =
 *)
 //TODO: instead of hard-wiring the == syntax,
 //       we should just rename eq2 to op_Equals_Equals
-[@ "tac_opaque"]
+
+[@ "tac_opaque" smt_theory_symbol]
 type eq2 (#a:Type) (x:a) (y:a) :logical = squash (equals x y)
 
 (* Heterogeneous equality *)
@@ -88,7 +97,7 @@ type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
   | HRefl : h_equals x x
 
 (* A proof-irrelevant version of h_equals *)
-[@ "tac_opaque"]
+[@ "tac_opaque" smt_theory_symbol]
 type eq3 (#a:Type) (#b:Type) (x:a) (y:b) :logical = squash (h_equals x y)
 
 unfold
@@ -102,7 +111,7 @@ type c_and  (p:Type) (q:Type) =
   | And   : p -> q -> c_and p q
 
 (* '/\'  : specialized to Type#0 *)
-[@ "tac_opaque"]
+[@ "tac_opaque" smt_theory_symbol]
 type l_and (p q:logical) :logical = squash (c_and p q)
 
 (* constructive disjunction *)
@@ -111,18 +120,20 @@ type c_or   (p:Type) (q:Type) =
   | Right : q -> c_or p q
 
 (* '\/'  : specialized to Type#0 *)
-[@ "tac_opaque"]
+[@ "tac_opaque" smt_theory_symbol]
 type l_or (p q:logical) :logical = squash (c_or p q)
 
 (* '==>' : specialized to Type#0 *)
-[@ "tac_opaque"]
+[@ "tac_opaque" smt_theory_symbol]
 type l_imp (p q:logical) :logical = squash (p -> GTot q)
                                          (* ^^^ NB: The GTot effect is primitive;            *)
                                          (*         elaborated using GHOST a few lines below *)
 (* infix binary '<==>' *)
+[@smt_theory_symbol]
 type l_iff (p q:logical) :logical = (p ==> q) /\ (q ==> p)
 
 (* prefix unary '~' *)
+[@smt_theory_symbol]
 type l_not (p:logical) :logical = l_imp p False
 
 unfold
@@ -137,23 +148,13 @@ assume
 type has_type : #a:Type -> a -> Type -> Type0
 
 (* forall (x:a). p x : specialized to Type#0 *)
-[@ "tac_opaque"]
+[@ "tac_opaque" smt_theory_symbol]
 type l_Forall (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a -> GTot (p x))
 
+let subtype_of (p1:Type) (p2:Type) = forall (x:p1). has_type x p2
+
 (* The type of squashed types *)
-type prop = a:Type0{ forall (x:a). x === () }
-
-(* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
-unopteq
-type dtuple2 (a:Type)
-             (b:(a -> GTot Type)) =
-  | Mkdtuple2: _1:a
-            -> _2:b _1
-            -> dtuple2 a b
-
-(* exists (x:a). p x : specialized to Type#0 *)
-[@ "tac_opaque"]
-type l_Exists (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a & p x)
+type prop = a:Type0{ a `subtype_of` unit }
 
 (* range is a type for the internal representations of source ranges
          The functions that follow below allow manipulating ranges
@@ -165,9 +166,7 @@ assume new
 type range : Type0
 
 assume new
-type string : Type0
-
-assume HasEq_string: hasEq string
+type string : eqtype
 
 (* PURE effect *)
 let pure_pre = Type0
@@ -256,10 +255,20 @@ effect GTot (a:Type) = GHOST a (pure_null_wp a)
 effect Ghost (a:Type) (pre:Type) (post:pure_post' a pre) =
        GHOST a (fun (p:pure_post a) -> pre /\ (forall (ghost_result:a). post ghost_result ==> p ghost_result))
 
-assume new
-type int : Type0
+(* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
+unopteq
+type dtuple2 (a:Type)
+             (b:(a -> GTot Type)) =
+  | Mkdtuple2: _1:a
+            -> _2:b _1
+            -> dtuple2 a b
 
-assume HasEq_int: hasEq int
+(* exists (x:a). p x : specialized to Type#0 *)
+[@ "tac_opaque" smt_theory_symbol]
+type l_Exists (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a & p x)
+
+assume new
+type int : eqtype
 
 assume
 val range_0 : range
@@ -273,42 +282,55 @@ val mk_range : file:string -> from_line:int -> from_col:int -> to_line:int -> to
 (* Tagging a term x with the range r *)
 (* let set_range_of (#a:Type) (x:a) (r:range) = x *)
 
+[@smt_theory_symbol]
 assume
 val op_AmpAmp             : bool -> bool -> Tot bool
 
+[@smt_theory_symbol]
 assume
 val op_BarBar             : bool -> bool -> Tot bool
 
+[@smt_theory_symbol]
 assume
 val op_Negation           : bool -> Tot bool
 
+[@smt_theory_symbol]
 assume
 val op_Multiply           : int -> int -> Tot int
 
+[@smt_theory_symbol]
 assume
 val op_Subtraction        : int -> int -> Tot int
 
+[@smt_theory_symbol]
 assume
 val op_Addition           : int -> int -> Tot int
 
+[@smt_theory_symbol]
 assume
 val op_Minus              : int -> Tot int
 
+[@smt_theory_symbol]
 assume
 val op_LessThanOrEqual    : int -> int -> Tot bool
 
+[@smt_theory_symbol]
 assume
 val op_GreaterThan        : int -> int -> Tot bool
 
+[@smt_theory_symbol]
 assume
 val op_GreaterThanOrEqual : int -> int -> Tot bool
 
+[@smt_theory_symbol]
 assume
 val op_LessThan           : int -> int -> Tot bool
 
+[@smt_theory_symbol]
 assume
 val op_Equality :    #a:eqtype -> a -> a -> Tot bool
 
+[@smt_theory_symbol]
 assume
 val op_disEquality : #a:eqtype -> a -> a -> Tot bool
 
@@ -318,8 +340,17 @@ type exn : Type0
 assume new
 type array : Type -> Type0
 
-assume
-val strcat : string -> string -> Tot string
+
+(*
+ * to be used in attributes
+ * s is the altertive function that should be printed in the warning
+ * it can be omitted if the use case has no such function
+ *)
+irreducible
+let deprecated (s:string) : unit = ()
+
+assume val strcat : string -> string -> Tot string
+inline_for_extraction unfold let (^) s1 s2 = strcat s1 s2
 
 type list (a:Type) =
   | Nil  : list a
@@ -372,7 +403,9 @@ type lex_t =
   | LexTop  : lex_t
   | LexCons : #a:Type -> a -> lex_t -> lex_t
 
+unfold
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
+unfold
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
 assume
@@ -413,9 +446,11 @@ type nonzero = i:int{i<>0}
 (*    in OCaml and to .NET BigInteger in F#. Both these operations are *)
 (*    Euclidean and are mapped to the corresponding theory symbols in  *)
 (*    the SMT encoding *)
+[@smt_theory_symbol]
 assume
 val op_Modulus            : int -> nonzero -> Tot int
 
+[@smt_theory_symbol]
 assume
 val op_Division           : int -> nonzero -> Tot int
 
@@ -436,3 +471,9 @@ val string_of_int: int -> Tot string
 
 irreducible
 let labeled (r:range) (msg:string) (b:Type) :Type = b
+
+(* THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
+   Incrementing this forces all .checked files to be invalidated *)
+private
+abstract
+let __cache_version_number__ = 11

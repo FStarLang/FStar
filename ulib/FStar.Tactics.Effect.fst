@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Tactics.Effect
 
 open FStar.Tactics.Types
@@ -6,13 +21,17 @@ open FStar.Tactics.Result
 (* This module is extracted, don't add any `assume val`s or extraction
  * will break. (`synth_by_tactic` is fine) *)
 
+private
 let __tac (a:Type) = proofstate -> M (__result a)
 
 (* monadic return *)
+private
 val __ret : a:Type -> x:a -> __tac a
+private
 let __ret a x = fun (s:proofstate) -> Success x s
 
 (* monadic bind *)
+private
 let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __tac b =
     fun ps ->
         let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range r1) in
@@ -25,13 +44,16 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
             begin match tracepoint ps' with
             | () -> t2 a (decr_depth ps')
             end
-        | Failed msg ps' -> Failed msg ps'
+        | Failed e ps' -> Failed e ps'
 
 (* Actions *)
+private
 let __get () : __tac proofstate = fun s0 -> Success s0 s0
 
-let __fail (a:Type0) (msg:string) : __tac a = fun (ps:proofstate) -> Failed #a msg ps
+private
+let __raise (a:Type0) (e:exn) : __tac a = fun (ps:proofstate) -> Failed #a e ps
 
+private
 let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 
 (*
@@ -43,14 +65,17 @@ let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
  *
  * So, override `bind_wp` for the effect with an efficient one.
  *)
+private
 unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
     wp ps (fun m' -> match m' with
                      | Success a q -> f a q post
-                     | Failed msg q -> post (Failed msg q))
+                     | Failed e q -> post (Failed e q))
 
+private
 unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
     fun ps post -> forall k. (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
 
+private
 unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) =
     g_compact b (g_bind a b wp f)
 
@@ -60,7 +85,7 @@ new_effect {
   with repr     = __tac
      ; bind     = __bind
      ; return   = __ret
-     ; __fail   = __fail
+     ; __raise  = __raise
      ; __get    = __get
 }
 
@@ -84,7 +109,7 @@ let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
 sub_effect DIV ~> TAC = lift_div_tac
 
 let get = TAC?.__get
-let fail_act (#a:Type) (msg:string) = TAC?.__fail a msg
+let raise (#a:Type) (e:exn) = TAC?.__raise a e
 
 abstract
 let with_tactic (t : unit -> Tac 'a) (p:Type) : Type = p
@@ -106,4 +131,26 @@ val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (with_t
                                                                          [SMTPat (with_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
 
-private let tactic a = unit -> TacF a // we don't care if the tactic is satisfiable before running it
+(* One can always bypass the well-formedness of metaprograms. It does not matter
+ * as they are only run at typechecking time, and if they get stuck, the compiler
+ * will simply raise an error. *)
+val assume_safe : (#a:Type) -> (unit -> TacF a) -> Tac a
+let assume_safe #a tau = admit (); tau ()
+
+private let tactic a = unit -> Tac a
+
+(* A hook to postprocess a definition, after typechecking, and rewrite it
+ * into a (provably equal) shape chosen by the user. This can be used to implement
+ * custom transformations previous to extraction, such as selective inlining.
+ * When ran added to a definition [let x = E], the [tau] metaprogram
+ * is presented with a goal of the shape [E = ?u] for a fresh uvar [?u].
+ * The metaprogram should then both instantiate [?u] and prove the equivalence
+ * to [E]. *)
+irreducible
+let postprocess_with (tau : unit -> Tac unit) = ()
+
+(* Similar semantics to [postprocess_with], but the metaprogram only runs before
+ * extraction, and hence typechecking and the logical environment should not be
+ * affected at all. *)
+irreducible
+let postprocess_for_extraction_with (tau : unit -> Tac unit) = ()

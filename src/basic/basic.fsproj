@@ -10,7 +10,6 @@
     <RootNamespace>basic</RootNamespace>
     <AssemblyName>basic</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.3.0</TargetFSharpCoreVersion>
     <Name>basic</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\VS\</SolutionDir>
@@ -70,6 +69,8 @@
     <Compile Include="mul-fake.fs" />
     <Compile Include="fs/char.fsi" />
     <Compile Include="fs/char.fs" />
+    <Compile Include="boot/FStar.BigInt.fsi" />
+    <Compile Include="boot/NotFStar.BigInt.fs" />
     <Compile Include="boot/FStar.String.fsi" />
     <Compile Include="boot/FStar.String.fs" />
     <Compile Include="boot/FStar.List.fsi" />
@@ -80,8 +81,8 @@
     <Compile Include="boot/NotFStar.Compiler.Bytes.fs" />
     <Compile Include="boot/FStar.Dyn.fsi" />
     <Compile Include="boot/NotFStar.Dyn.fs" />
-    <Compile Include="boot/FStar.BigInt.fsi" />
-    <Compile Include="boot/NotFStar.BigInt.fs" />
+    <Compile Include="boot/FStar.StringBuffer.fsi" />
+    <Compile Include="boot/FStar.StringBuffer.fs" />
     <Compile Include="profiling.fs" />
     <Compile Include="FStar.Platform.fsi" />
     <Compile Include="NotFStar.Platform.fs" />
@@ -108,16 +109,16 @@
       <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="FSharp.Core">
-      <HintPath>..\VS\packages\FSharp.Core.4.2.3/lib/net45/FSharp.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="FSharp.PPrint">
       <HintPath>..\VS\packages\PPrintForFSharp.0.0.2\lib\net40\FSharp.PPrint.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FsLexYacc.Runtime">
       <HintPath>..\VS\packages\FsLexYacc.Runtime.6.1.0\lib\net40\FsLexYacc.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\VS\packages\FSharp.Core.4.1.18\lib\net45\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Tactics.Canon
 
 open FStar.Tactics
@@ -6,78 +21,117 @@ open FStar.Reflection.Arith
 open FStar.Mul
 module O = FStar.Order
 
+private
 val distr : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x * (y + z) == x * y + x * z)
+private
 let distr #x #y #z = ()
 
+private
 val distl : (#x : int) -> (#y : int) -> (#z : int) -> Lemma ((x + y) * z == x * z + y * z)
+private
 let distl #x #y #z = ()
 
+private
 val ass_plus_l : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x + (y + z) == (x + y) + z)
+private
 let ass_plus_l #x #y #z = ()
 
+private
 val ass_mult_l : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x * (y * z) == (x * y) * z)
+private
 let ass_mult_l #x #y #z = ()
 
+private
 val comm_plus : (#x : int) -> (#y : int) -> Lemma (x + y == y + x)
+private
 let comm_plus #x #y = ()
 
+private
 val sw_plus : (#x : int) -> (#y : int) -> (#z : int) -> Lemma ((x + y) + z == (x + z) + y)
+private
 let sw_plus #x #y #z = ()
 
+private
 val sw_mult : (#x : int) -> (#y : int) -> (#z : int) -> Lemma ((x * y) * z == (x * z) * y)
+private
 let sw_mult #x #y #z = ()
 
+private
 val comm_mult : (#x : int) -> (#y : int) -> Lemma (x * y == y * x)
+private
 let comm_mult #x #y = ()
 
+private
 val trans : (#a:Type) -> (#x:a) -> (#z:a) -> (#y:a) ->
                     squash (x == y) -> squash (y == z) -> Lemma (x == z)
+private
 let trans #a #x #z #y e1 e2 = ()
 
+private
 val cong_plus : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
                 squash (w == y) -> squash (x == z) ->
                 Lemma (w + x == y + z)
+private
 let cong_plus #w #x #y #z p q = ()
 
+private
 val cong_mult : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
                 squash (w == y) -> squash (x == z) ->
                 Lemma (w * x == y * z)
+private
 let cong_mult #w #x #y #z p q = ()
 
+private
 val neg_minus_one : (#x:int) -> Lemma (-x == (-1) * x)
+private
 let neg_minus_one #x = ()
 
+private
 val x_plus_zero : (#x:int) -> Lemma (x + 0 == x)
+private
 let x_plus_zero #x = ()
 
+private
 val zero_plus_x : (#x:int) -> Lemma (0 + x == x)
+private
 let zero_plus_x #x = ()
 
+private
 val x_mult_zero : (#x:int) -> Lemma (x * 0 == 0)
+private
 let x_mult_zero #x = ()
 
+private
 val zero_mult_x : (#x:int) -> Lemma (0 * x == 0)
+private
 let zero_mult_x #x = ()
 
+private
 val x_mult_one : (#x:int) -> Lemma (x * 1 == x)
+private
 let x_mult_one #x = ()
 
+private
 val one_mult_x : (#x:int) -> Lemma (1 * x == x)
+private
 let one_mult_x #x = ()
 
+private
 val minus_is_plus : (#x : int) -> (#y : int) -> Lemma (x - y == x + (-y))
+private
 let minus_is_plus #x #y = ()
 
-// These two cannot be top-levels if we want to compile
+private
 let step (t : unit -> Tac unit) : Tac unit =
     apply_lemma (`trans);
     t ()
 
+private
 let step_lemma (lem : term) : Tac unit =
     step (fun () -> apply_lemma lem)
 
-val canon_point : expr -> Tac expr
-let rec canon_point e =
+private val canon_point : expr -> Tac expr
+private let rec canon_point e =
     let skip () : Tac expr = 
         trefl (); e
     in

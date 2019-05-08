@@ -1,5 +1,5 @@
 [
-  "- #€é˘›\r|öÁΩ≥x@_",
+  "¥\u0007yr⁄√oæç’˜\f\"”XŒ",
   [
     [
       "LemmaArgs.lemma_example1",
@@ -7,23 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "refinement_interpretation_LemmaArgs_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01"
       ],
       0,
-      "80378253df61fbbe85c678a23073afaf"
-    ],
-    [
-      "LemmaArgs.lemma_example1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "refinement_interpretation_LemmaArgs_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01"
-      ],
-      0,
-      "3e5177085994e797377cd6cf92271678"
+      "fdac0aefc27b5a37ee8a885dbefbe63f"
     ],
     [
       "LemmaArgs.example0",
@@ -32,7 +20,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
       0,
-      "f09475380a36ea08ce4b0a7a1bd0bc48"
+      "12f4ea1f54e54b068e16df9b6677bc32"
     ],
     [
       "LemmaArgs.example0",
@@ -40,14 +28,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.l_and",
-        "equation_Prims.squash", "l_and-interp",
-        "primitive_Prims.op_disEquality",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_842655952076029599c9f4d30d10e96e"
       ],
       0,
-      "f863ed649cfab7fde826f133b0370280"
+      "ce52633c1289f6fc7a55f69385d47b43"
     ],
     [
       "LemmaArgs.example1",
@@ -56,25 +41,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
       0,
-      "376b6c3eb0e40ca69bd9536871a93ca8"
-    ],
-    [
-      "LemmaArgs.lemma_example1",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "c974b496ff95a727eba7122c80c14dbb"
-    ],
-    [
-      "LemmaArgs.example0",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "69fd760ea93ad7efe61584ef97651afd"
+      "ba951c4ec3f196c70ea3fed071903b66"
     ]
   ]
 ]

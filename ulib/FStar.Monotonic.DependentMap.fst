@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Monotonic.DependentMap
 (** A library for mutable partial, dependent maps,
     that grow monotonically,
@@ -64,9 +79,10 @@ let lookup #a #b #inv #r t x =
 let rec mmap_f #a #b #c m f =
   match m with
   | [] ->
-    assert (DM.equal (empty_partial_dependent_map #a #c)
-                     (DM.map (f_opt f) (empty_partial_dependent_map #a #b)));
-    []
+   assert (DM.equal (empty_partial_dependent_map #a #c)
+                    (DM.map (f_opt f) (empty_partial_dependent_map #a #b)));
+   assert_norm (repr #a #c [] == empty_partial_dependent_map #a #c);
+   []
   | (| x, y |)::tl -> (| x, f x y |)::(mmap_f #a #b #c tl f)  //AR: doesn't work without these implicits
 
 let map_f #a #b #c #inv #inv' #r #r' t f

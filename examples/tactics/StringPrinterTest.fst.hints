@@ -1,5 +1,5 @@
 [
-  "º\u0017=â\u001f÷Ì¥\u00127x[5•º≤",
+  "'Dö)∏‘«\u007f?gZ\u0000K]†T",
   [
     [
       "StringPrinterTest.test3",
@@ -17,7 +17,7 @@
         "typing_FStar.Buffer.buffer"
       ],
       0,
-      "473cbeb7a5690d3d5bb89c7d4162132b"
+      "80f9f8aa9062875256565d8c43cc9146"
     ],
     [
       "StringPrinterTest.print_list_cipher_suite",
@@ -35,7 +35,7 @@
         "typing_FStar.Buffer.buffer"
       ],
       0,
-      "5a78e612b1491ba1a93877a6d24301be"
+      "f8deadb4ef6c7d76d72f15cb07aff363"
     ],
     [
       "StringPrinterTest.test3",
@@ -43,17 +43,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Prims.eqtype", "function_token_typing_FStar.UInt8.t",
+        "function_token_typing_FStar.UInt8.t",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Buffer.buffer"
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Buffer.buffer",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "02d8531d706fd368f01e5ce264834a88"
+      "427cf74ed1fae3852b74130497a7d989"
     ],
     [
       "StringPrinterTest.print_list_cipher_suite",
@@ -61,17 +60,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Prims.eqtype", "function_token_typing_FStar.UInt8.t",
+        "function_token_typing_FStar.UInt8.t",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Buffer.buffer"
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Buffer.buffer",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "98e4933d82a5796ccd975542568fd167"
+      "d5c8610f35c856c010418ee8d69f9eb3"
     ]
   ]
 ]

@@ -1,6 +1,22 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module SL.Heap
 
 module OS = FStar.OrdSet
+module F = FStar.FunctionalExtensionality
 
 let addrs = OS.ordset nat (fun n m -> n <= m)
 
@@ -9,7 +25,7 @@ unfold let disjoint_addrs (s0 s1:addrs) = OS.intersect s0 s1 = OS.empty
 private noeq type heap_rec = {
   next_addr : nat;
   hdomain   : addrs;
-  memory    : nat -> Tot (option (a:Type0 & a))
+  memory    : F.restricted_t nat (fun _ -> option (a:Type0 & a))
 }
 
 let heap = h:heap_rec
@@ -26,7 +42,7 @@ private let equal_heaps (h0 h1:heap) =
   
 private noeq type memory_rec = {
   domain   : addrs; 
-  contents : nat -> Tot (option (a:Type0 & a))
+  contents : F.restricted_t nat (fun _ -> option (a:Type0 & a))
 }
 
 let memory = m:(option memory_rec)
@@ -46,8 +62,10 @@ let defined m = Some? m
 
 let emp = 
   let domain = OS.empty in
-  let contents = fun _ -> None in
+  let contents = F.on_dom nat (fun _ -> None) in
   Some ({ domain = domain; contents = contents })
+
+let _ = intro_ambient emp
   
 let ref a = nat
 
@@ -62,19 +80,19 @@ let disjoint_heaps (h0 h1:heap) =
 
 let join h0 h1 =
   let domain = OS.union h0.hdomain h1.hdomain in 
-  let memory = (fun r ->  match (h0.memory r, h1.memory r) with
-                          | (Some v1, None) -> Some v1
-			  | (None, Some v2) -> Some v2
-			  | (None, None)    -> None) in
+  let memory = F.on_dom nat (fun r ->  match (h0.memory r, h1.memory r) with
+                                  | (Some v1, None) -> Some v1
+			          | (None, Some v2) -> Some v2
+			          | (None, None)    -> None) in
   if (h0.next_addr < h1.next_addr)
   then { next_addr = h1.next_addr; hdomain = domain; memory = memory }
   else { next_addr = h0.next_addr; hdomain = domain; memory = memory }
 
 let ( |> ) #a r x = 
   let domain = OS.singleton r in
-  let contents : nat -> Tot (option (a:Type0 & a)) = 
-    (fun r' -> if r = r' then Some (| a , x |)
-                         else None) in
+  let contents =
+    (F.on_dom nat (fun r' -> if r = r' then Some (| a , x |)
+                         else (None <: option (a:Type0 & a)))) in
   Some ({ domain = domain; contents = contents })
 
 let ( <*> ) m0 m1 = 
@@ -82,10 +100,10 @@ let ( <*> ) m0 m1 =
   | (Some m0', Some m1') ->
       (if (disjoint_addrs m0'.domain m1'.domain)
        then (let domain = OS.union m0'.domain m1'.domain in
-             let contents = (fun r -> match (m0'.contents r, m1'.contents r) with
-                                     | (Some v1, None) -> Some v1
-                                     | (None, Some v2) -> Some v2
-                                     | (None, None)    -> None) in
+             let contents = F.on_dom nat (fun r -> match (m0'.contents r, m1'.contents r) with
+                                              | (Some v1, None) -> Some v1
+                                              | (None, Some v2) -> Some v2
+                                              | (None, None)    -> None) in
              Some ({ domain = domain; contents = contents }))
        else None)
   | _ -> None
@@ -115,8 +133,8 @@ let sel #a h r =
   x
 
 let upd' (#a:Type0) (h:heap) (r:ref a) (x:a) =
-  { h with memory = (fun r' -> if r = r' then Some (| a, x |)
-                                         else h.memory r') }
+  { h with memory = F.on_dom nat (fun r' -> if r = r' then Some (| a, x |)
+                                        else h.memory r') }
 
 let upd #a h r x = upd' h r x
   
@@ -144,6 +162,16 @@ let lemma_sep_unit m =
       let (Some m'') = m <*> emp in 
       assert (OS.equal m''.domain m'.domain);
       assert (equal_memories (m <*> emp) m)
+
+let lemma_sep_unit' m =
+  match m with
+  | None    -> ()
+  | Some m' ->
+      let (Some e) = emp in
+      assert (OS.equal (OS.intersect m'.domain e.domain) OS.empty);
+      let (Some m'') = emp <*> m in
+      assert (OS.equal m''.domain m'.domain);
+      assert (equal_memories (emp <*> m) m)
 
 let lemma_sep_comm m0 m1 =
   match (m0,m1) with

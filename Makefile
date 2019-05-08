@@ -2,6 +2,8 @@
 
 all:
 	$(MAKE) -C src/ocaml-output
+	$(MAKE) -C ulib
+	$(MAKE) -C ulib/ml
 
 package:
 	git clean -ffdx .
@@ -11,15 +13,21 @@ clean:
 	$(MAKE) -C ulib clean
 	$(MAKE) -C src/ocaml-output clean
 
-# Shortcuts
+# Shortcuts for developers
 
 # Build the F# version
 0:
 	$(MAKE) -C src/
 
-# Build the OCaml snapshot
+# Build the OCaml snapshot. NOTE: This will not build the standard library, and native tactics will not run
 1:
 	$(MAKE) -C src/ocaml-output
+
+# Bootstrap just the compiler, not the library and tests;
+# fastest way to incrementally build a patch to the compiler
+boot:
+	$(MAKE) -C src/ ocaml
+	$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
 
 # Generate a new OCaml snapshot
 2:
@@ -29,6 +37,8 @@ clean:
 3:
 	$(MAKE) -C src ocaml-fstar-ocaml
 
-# Regenerate all hints for the regression test suite
+# Regenerate all hints for the standard library and regression test suite
 hints:
+	OTHERFLAGS=--record_hints $(MAKE) -C ulib/
+	OTHERFLAGS=--record_hints $(MAKE) -C ulib/ml
 	OTHERFLAGS=--record_hints $(MAKE) -C src/ uregressions

@@ -194,11 +194,14 @@ let e_env =
 let e_const =
     let embed_const cb (c:vconst) : t =
         match c with
-        | C_Unit     -> mkConstruct ref_C_Unit.fv    [] []
-        | C_True     -> mkConstruct ref_C_True.fv    [] []
-        | C_False    -> mkConstruct ref_C_False.fv   [] []
-        | C_Int i    -> mkConstruct ref_C_Int.fv     [] [as_arg (Constant (Int i))]
-        | C_String s -> mkConstruct ref_C_String.fv  [] [as_arg (embed e_string cb s)]
+        | C_Unit         -> mkConstruct ref_C_Unit.fv    [] []
+        | C_True         -> mkConstruct ref_C_True.fv    [] []
+        | C_False        -> mkConstruct ref_C_False.fv   [] []
+        | C_Int i        -> mkConstruct ref_C_Int.fv     [] [as_arg (Constant (Int i))]
+        | C_String s     -> mkConstruct ref_C_String.fv  [] [as_arg (embed e_string cb s)]
+        | C_Range r      -> mkConstruct ref_C_Range.fv   [] [as_arg (embed e_range cb r)]
+        | C_Reify        -> mkConstruct ref_C_Reify.fv   [] []
+        | C_Reflect ns   -> mkConstruct ref_C_Reflect.fv [] [as_arg (embed e_string_list cb ns)]
     in
     let unembed_const cb (t:t) : option<vconst> =
         match t with
@@ -218,6 +221,17 @@ let e_const =
         | Construct (fv, [], [(s, _)]) when S.fv_eq_lid fv ref_C_String.lid ->
             BU.bind_opt (unembed e_string cb s) (fun s ->
             Some <| C_String s)
+
+        | Construct (fv, [], [(r, _)]) when S.fv_eq_lid fv ref_C_Range.lid ->
+            BU.bind_opt (unembed e_range cb r) (fun r ->
+            Some <| C_Range r)
+
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_C_Reify.lid ->
+            Some C_Reify
+
+        | Construct (fv, [], [(ns, _)]) when S.fv_eq_lid fv ref_C_Reflect.lid ->
+            BU.bind_opt (unembed e_string_list cb ns) (fun ns ->
+            Some <| C_Reflect ns)
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded vconst: %s" (t_to_string t)));

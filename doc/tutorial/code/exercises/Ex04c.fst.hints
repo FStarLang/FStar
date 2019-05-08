@@ -1,5 +1,5 @@
 [
-  "ü;²Aš*öGÔü{\nÌÃYf",
+  "»G/DÚ\u0017Mp±¤ŸÓã°ÝÚ",
   [
     [
       "Ex04c.append",
@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0388df46f12e858b6aecb45740a552f7"
+      "436473dd688dad33d5332f436520503d"
     ],
     [
       "Ex04c.mem",
@@ -22,13 +22,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
+        "binder_x_a7fb6faea5d851896150f3c74abbb25a_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
-        "subterm_ordering_Prims.Cons"
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "567dce77caa79b88c4bafefb185d60e6"
+      "340021601d2c0884c31883769969b34a"
     ],
     [
       "Ex04c.append",
@@ -42,7 +42,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4637aaf0ee5b5e2688284b669c3c3566"
+      "107ce29997420ad002d76731c4324970"
     ],
     [
       "Ex04c.mem",
@@ -51,13 +51,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
+        "binder_x_a7fb6faea5d851896150f3c74abbb25a_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
-        "subterm_ordering_Prims.Cons"
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d02ee1b69e0a240ccd8521fee0ff2e0d"
+      "782476e7a8503dd0e9d4eaadc0e3157b"
     ]
   ]
 ]

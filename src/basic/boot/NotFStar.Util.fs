@@ -712,6 +712,8 @@ let write_file (fn:string) s =
   close_file fh
 let copy_file source_fn dest_fn = System.IO.File.Copy(source_fn, dest_fn)
 let flush_file (fh:file_handle) = fh.Flush()
+let delete_file (fn:string) =
+  System.IO.File.Delete fn
 let file_get_contents f =
   File.ReadAllText f
 let mkdir clean dname =
@@ -819,8 +821,16 @@ let getcwd () =
 let readdir d =
   List.ofArray (System.IO.Directory.GetFiles d)
 
+let paths_to_same_file f g =
+    let path1 = Path.GetFullPath f in
+    let path2 = Path.GetFullPath g in
+    path1=path2
+
 let file_exists f =
   System.IO.File.Exists f || System.IO.Directory.Exists f
+
+let is_directory f =
+  System.IO.Directory.Exists f (* does not raise exceptions *)
 
 let basename f =
   System.IO.Path.GetFileName f

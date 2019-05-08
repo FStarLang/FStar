@@ -1,15 +1,6 @@
 [
-  "™,‘kŽLã\u0000DóÉÅp&Á#",
+  "êýS[YÝÅG\u000bæ\u007f²\u0012áÂ‚",
   [
-    [
-      "Cert.ACLs.canRead",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "e8f0985dc1a6d9f757c294e1a872479e"
-    ],
     [
       "Cert.ACLs.test",
       1,
@@ -22,7 +13,7 @@
         "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "319eebe28fd20ce9824cc340c6b7a786"
+      "2d405ba292e4ef40658d4c271a81a206"
     ],
     [
       "Cert.ACLs.rc",
@@ -31,7 +22,21 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "b42ba5d6ecfab08da12a99ed47176f30"
+      "01d4c81a6da23b353319112e308d89f8"
+    ],
+    [
+      "Cert.ACLs.test",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Cert.ACLs.canRead",
+        "equation_Cert.ACLs.canWrite", "equation_Cert.ACLs.publicFile",
+        "equation_Cert.ACLs.readme", "equation_Cert.ACLs.tmp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "a361de92fc486740819729d7c21129c1"
     ]
   ]
 ]

@@ -7,11 +7,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_GC.mem_addr",
-        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27"
+        "@MaxIFuel_assumption", "@query", "equation_GC.mem_addr",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "haseqTm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d1762d1873e27b502f2e8ea76be3a732"
+      "aa860e6aa5684c5f94070340b6337025"
     ],
     [
       "GC.inv",
@@ -20,7 +22,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "8bcf3b800cec9cd59e1dfee877796e04"
+      "867cab8c156849b77261c1094a622be2"
     ],
     [
       "GC.gc_inv",
@@ -29,7 +31,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "4bc55114425253fe16426df545792b59"
+      "fad1154cf6995763cbbf8d2564f8cc0f"
     ],
     [
       "GC.mutator_inv",
@@ -38,7 +40,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "eb6fef5174719912d42bfa674480b783"
+      "948b176e5d57749f7b6b54e8dbc500b9"
     ],
     [
       "GC.init_invariant",
@@ -55,7 +57,7 @@
         "typing_GC.mem_hi", "typing_GC.mem_lo"
       ],
       0,
-      "5563fb4cd4efe118574020e97f600ca6"
+      "f5e7a0b37c710d5223c633bfc8f92af9"
     ],
     [
       "GC.upd_map2",
@@ -66,10 +68,10 @@
         "@MaxIFuel_assumption", "@query",
         "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "equation_Prims.eqtype",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a59a4b1e387b61e4ce19642434ef98ec"
+      "af9e9a5a73d83e30ba44e7b5636a73ab"
     ],
     [
       "GC.initialize",
@@ -79,22 +81,22 @@
       [
         "@MaxIFuel_assumption", "@query",
         "GC_pretyping_27e56dec3f0cf9a6af115223c7bb363f",
-        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "bool_inversion", "bool_typing",
-        "data_typing_intro_GC.White@tok", "equality_tok_GC.Unalloc@tok",
-        "equation_GC.init_invariant", "equation_GC.is_mem_addr",
-        "equation_GC.mem_addr", "equation_GC.mutator_inv",
-        "equation_GC.obj_inv", "equation_GC.to_abs_inj",
-        "equation_GC.upd_map", "equation_GC.valid",
-        "fuel_guarded_inversion_GC.gc_state",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
+        "bool_typing", "data_typing_intro_GC.Gray@tok",
+        "equality_tok_GC.Unalloc@tok", "equation_GC.init_invariant",
+        "equation_GC.is_mem_addr", "equation_GC.mem_addr",
+        "equation_GC.mutator_inv", "equation_GC.obj_inv",
+        "equation_GC.to_abs_inj", "equation_GC.upd_map", "equation_GC.valid",
+        "equation_Prims.eqtype", "fuel_guarded_inversion_GC.gc_state",
         "function_token_typing_GC.__proj__Mkgc_state__item__color",
         "function_token_typing_GC.__proj__Mkgc_state__item__to_abs",
         "function_token_typing_GC.mem_hi",
-        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_e46d229b93cb6c2384a9a7b31bf0aa27", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_disEquality",
         "proj_equation_GC.Mkgc_state_color",
         "proj_equation_GC.Mkgc_state_to_abs",
@@ -102,16 +104,17 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_GC.Mkgc_state_color",
         "projection_inverse_GC.Mkgc_state_to_abs",
-        "refinement_interpretation_GC_Tm_refine_5841fc9672dd1288ebebd15c041dda75",
-        "refinement_interpretation_GC_Tm_refine_85e9bb54d06cdc6388e1f9b9ed33ad11",
-        "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_5841fc9672dd1288ebebd15c041dda75",
+        "refinement_interpretation_Tm_refine_85e9bb54d06cdc6388e1f9b9ed33ad11",
+        "refinement_interpretation_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
         "token_correspondence_GC.__proj__Mkgc_state__item__color",
         "token_correspondence_GC.__proj__Mkgc_state__item__to_abs",
         "token_correspondence_GC.upd_map", "typing_GC.is_mem_addr",
-        "typing_GC.mem_hi", "typing_GC.mem_lo", "typing_GC.valid"
+        "typing_GC.mem_hi", "typing_GC.mem_lo"
       ],
       0,
-      "b4e432b800bdd7d7a88ffb057f183bba"
+      "940ebf3a887640ba7f45ed215feeb0c6"
     ],
     [
       "GC.read_field",
@@ -128,7 +131,7 @@
         "true_interp"
       ],
       0,
-      "3e8af7519ef7d0b89290a0272115deb1"
+      "5fa14724b46adc3e887279470bb2c913"
     ],
     [
       "GC.write_field",
@@ -140,19 +143,23 @@
         "GC_pretyping_ab0ffb7fae1c8ce581a4f6505251cb9c",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_GC.field__uu___haseq", "assumption_Prims.HasEq_int",
-        "b2t_def", "data_typing_intro_GC.F2@tok", "equation_GC.mem_addr",
+        "assumption_GC.field__uu___haseq", "b2t_def",
+        "data_typing_intro_GC.F2@tok", "equation_GC.mem_addr",
         "equation_GC.mutator_inv", "equation_GC.obj_inv",
         "equation_GC.ptr_lifts", "equation_GC.ptr_lifts_to",
         "equation_GC.to_abs_inj", "equation_GC.trigger",
-        "equation_GC.upd_map", "equation_GC.valid",
+        "equation_GC.upd_map", "equation_GC.valid", "equation_Prims.eqtype",
         "fuel_guarded_inversion_GC.field",
         "fuel_guarded_inversion_GC.gc_state",
+        "function_token_typing_GC.__proj__Mkgc_state__item__color",
+        "function_token_typing_GC.__proj__Mkgc_state__item__to_abs",
         "function_token_typing_GC.abs_node",
         "function_token_typing_GC.mem_addr",
-        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
-        "int_inversion", "kinding_GC.field@tok",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_disEquality",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_e46d229b93cb6c2384a9a7b31bf0aa27", "int_inversion",
+        "kinding_GC.field@tok", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_disEquality",
         "proj_equation_GC.Mkgc_state_abs_fields",
         "proj_equation_GC.Mkgc_state_color",
         "proj_equation_GC.Mkgc_state_fields",
@@ -164,17 +171,16 @@
         "projection_inverse_GC.Mkgc_state_color",
         "projection_inverse_GC.Mkgc_state_fields",
         "projection_inverse_GC.Mkgc_state_to_abs",
-        "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
         "token_correspondence_GC.__proj__Mkgc_state__item__abs_fields",
         "token_correspondence_GC.__proj__Mkgc_state__item__color",
         "token_correspondence_GC.__proj__Mkgc_state__item__fields",
         "token_correspondence_GC.__proj__Mkgc_state__item__to_abs",
-        "token_correspondence_GC.upd_map", "true_interp",
-        "typing_GC.abs_node", "typing_GC.mem_lo"
+        "token_correspondence_GC.upd_map", "typing_GC.abs_node"
       ],
       0,
-      "39c9b983d03d45bacd70f5345c46d47c"
+      "97c82e01d3406b1fc2477796fbdc1f76"
     ],
     [
       "GC.mark",
@@ -183,7 +189,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "3e269aeeb158df108321198c2bfd0a8e"
+      "63bcf17e36533d5341e0787082456877"
     ],
     [
       "GC.mark",
@@ -196,10 +202,10 @@
         "GC_interpretation_Tm_arrow_85d77e7f1044a636ddfec65bfc9637ca",
         "GC_pretyping_ab0ffb7fae1c8ce581a4f6505251cb9c",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_GC.color__uu___haseq", "assumption_Prims.HasEq_int",
-        "b2t_def", "bool_inversion", "constructor_distinct_GC.Black",
-        "constructor_distinct_GC.Gray", "constructor_distinct_GC.Unalloc",
-        "constructor_distinct_GC.White", "data_elim_GC.Mkgc_state",
+        "assumption_GC.color__uu___haseq", "b2t_def", "bool_inversion",
+        "constructor_distinct_GC.Black", "constructor_distinct_GC.Gray",
+        "constructor_distinct_GC.Unalloc", "constructor_distinct_GC.White",
+        "data_elim_GC.Mkgc_state",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_GC.F2@tok", "equality_tok_GC.Black@tok",
         "equality_tok_GC.F1@tok", "equality_tok_GC.F2@tok",
@@ -209,16 +215,18 @@
         "equation_GC.is_mem_addr", "equation_GC.mem_addr",
         "equation_GC.obj_inv", "equation_GC.ptr_lifts",
         "equation_GC.ptr_lifts_to", "equation_GC.trigger",
-        "equation_GC.upd_map", "equation_GC.valid",
+        "equation_GC.upd_map", "equation_GC.valid", "equation_Prims.eqtype",
         "fuel_guarded_inversion_GC.color", "fuel_guarded_inversion_GC.field",
         "fuel_guarded_inversion_GC.gc_state",
         "function_token_typing_GC.__proj__Mkgc_state__item__abs_fields",
         "function_token_typing_GC.__proj__Mkgc_state__item__fields",
         "function_token_typing_GC.__proj__Mkgc_state__item__to_abs",
         "function_token_typing_GC.mem_addr",
-        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
-        "int_inversion", "kinding_GC.field@tok",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_disEquality",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_e46d229b93cb6c2384a9a7b31bf0aa27", "int_inversion",
+        "kinding_GC.field@tok", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_disEquality",
         "proj_equation_GC.Mkgc_state_abs_fields",
         "proj_equation_GC.Mkgc_state_color",
         "proj_equation_GC.Mkgc_state_fields",
@@ -228,17 +236,18 @@
         "projection_inverse_GC.Mkgc_state_color",
         "projection_inverse_GC.Mkgc_state_fields",
         "projection_inverse_GC.Mkgc_state_to_abs",
-        "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
         "token_correspondence_GC.__proj__Mkgc_state__item__abs_fields",
         "token_correspondence_GC.__proj__Mkgc_state__item__color",
         "token_correspondence_GC.__proj__Mkgc_state__item__fields",
         "token_correspondence_GC.__proj__Mkgc_state__item__to_abs",
-        "token_correspondence_GC.upd_map", "true_interp",
+        "token_correspondence_GC.upd_map",
         "typing_GC.__proj__Mkgc_state__item__color", "typing_GC.is_mem_addr",
-        "typing_GC.mem_lo", "typing_tok_GC.F1@tok", "typing_tok_GC.F2@tok"
+        "typing_tok_GC.F1@tok", "typing_tok_GC.F2@tok"
       ],
       0,
-      "39cc08fa3a1c0dc1349c963cf10eaa4f"
+      "3e531c1ebffc435919fd4b8d1f6e23f0"
     ],
     [
       "GC.sweep_aux_inv",
@@ -247,7 +256,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "0c3d98ab662b23ff890412f56830e03e"
+      "3610bc528b026da7962ff0bc88ca27f8"
     ],
     [
       "GC.test1",
@@ -262,11 +271,11 @@
         "fuel_guarded_inversion_GC.gc_state", "int_inversion",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "refinement_interpretation_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
         "typing_GC.mem_hi"
       ],
       0,
-      "ef608eac60d484305b256701ac942fd5"
+      "e3cafae0a6379c0c47412202e7573435"
     ],
     [
       "GC.test2",
@@ -274,27 +283,22 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "GC_pretyping_27e56dec3f0cf9a6af115223c7bb363f",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_GC.color__uu___haseq", "b2t_def", "bool_inversion",
-        "bool_typing", "constructor_distinct_GC.Black",
-        "constructor_distinct_GC.Unalloc", "data_typing_intro_GC.White@tok",
-        "equality_tok_GC.Black@tok", "equality_tok_GC.Gray@tok",
-        "equality_tok_GC.Unalloc@tok", "equation_GC.gc_inv",
-        "equation_GC.is_mem_addr", "equation_GC.mem_addr",
-        "equation_GC.ptr_lifts", "equation_GC.sweep_aux_inv",
-        "equation_GC.valid", "forall-interp",
-        "fuel_guarded_inversion_GC.gc_state", "int_inversion", "int_typing",
-        "interpretation_GC_Tm_abs_4624a7a6212bdbb79b19a1e1da9fc243",
+        "@MaxIFuel_assumption", "@query", "assumption_GC.color__uu___haseq",
+        "b2t_def", "bool_inversion", "bool_typing",
+        "constructor_distinct_GC.Black", "constructor_distinct_GC.Unalloc",
+        "equality_tok_GC.Black@tok", "equality_tok_GC.Unalloc@tok",
+        "equation_GC.gc_inv", "equation_GC.is_mem_addr",
+        "equation_GC.mem_addr", "equation_GC.ptr_lifts",
+        "equation_GC.sweep_aux_inv", "equation_GC.valid",
+        "fuel_guarded_inversion_GC.gc_state", "int_inversion",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_disEquality",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
-        "typing_GC.mem_lo"
+        "refinement_interpretation_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "typing_GC.is_mem_addr", "typing_GC.mem_lo"
       ],
       0,
-      "89627bc97668a2e64018375b4a7a6a82"
+      "6b9a68d9d0fc18ae896896b15a0b43e5"
     ],
     [
       "GC.sweep",
@@ -303,7 +307,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "abb37e70dce0e36c50cfdd03f939e8c0"
+      "8f22e4da150d9a6c729e09c89388f8e9"
     ],
     [
       "GC.sweep",
@@ -317,29 +321,31 @@
         "GC_pretyping_a533f368358fdb323ab3d296484acc80",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_GC.color__uu___haseq", "assumption_Prims.HasEq_int",
-        "b2t_def", "bool_inversion", "bool_typing",
-        "constructor_distinct_GC.Black", "constructor_distinct_GC.Gray",
-        "constructor_distinct_GC.Unalloc", "constructor_distinct_GC.White",
-        "data_elim_GC.Mkgc_state", "data_typing_intro_GC.White@tok",
-        "equality_tok_GC.Black@tok", "equality_tok_GC.Gray@tok",
-        "equality_tok_GC.Unalloc@tok", "equality_tok_GC.White@tok",
-        "equation_GC.abs_map", "equation_GC.color_map", "equation_GC.gc_inv",
+        "assumption_GC.color__uu___haseq", "b2t_def", "bool_inversion",
+        "bool_typing", "constructor_distinct_GC.Black",
+        "constructor_distinct_GC.Gray", "constructor_distinct_GC.Unalloc",
+        "constructor_distinct_GC.White", "data_elim_GC.Mkgc_state",
+        "data_typing_intro_GC.Gray@tok", "equality_tok_GC.Black@tok",
+        "equality_tok_GC.Gray@tok", "equality_tok_GC.Unalloc@tok",
+        "equality_tok_GC.White@tok", "equation_GC.abs_map",
+        "equation_GC.color_map", "equation_GC.gc_inv",
         "equation_GC.is_mem_addr", "equation_GC.mem_addr",
         "equation_GC.mutator_inv", "equation_GC.obj_inv",
         "equation_GC.ptr_lifts", "equation_GC.ptr_lifts_to",
         "equation_GC.sweep_aux_inv", "equation_GC.to_abs_inj",
         "equation_GC.trigger", "equation_GC.upd_map", "equation_GC.valid",
-        "fuel_guarded_inversion_GC.color",
+        "equation_Prims.eqtype", "fuel_guarded_inversion_GC.color",
         "fuel_guarded_inversion_GC.gc_state",
         "function_token_typing_GC.__proj__Mkgc_state__item__abs_fields",
         "function_token_typing_GC.__proj__Mkgc_state__item__fields",
         "function_token_typing_GC.__proj__Mkgc_state__item__to_abs",
         "function_token_typing_GC.mem_hi",
-        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_e46d229b93cb6c2384a9a7b31bf0aa27", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_disEquality",
         "proj_equation_GC.Mkgc_state_abs_fields",
         "proj_equation_GC.Mkgc_state_color",
@@ -351,38 +357,29 @@
         "projection_inverse_GC.Mkgc_state_color",
         "projection_inverse_GC.Mkgc_state_fields",
         "projection_inverse_GC.Mkgc_state_to_abs",
-        "refinement_interpretation_GC_Tm_refine_85e9bb54d06cdc6388e1f9b9ed33ad11",
-        "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_85e9bb54d06cdc6388e1f9b9ed33ad11",
+        "refinement_interpretation_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
         "token_correspondence_GC.__proj__Mkgc_state__item__abs_fields",
         "token_correspondence_GC.__proj__Mkgc_state__item__color",
         "token_correspondence_GC.__proj__Mkgc_state__item__fields",
         "token_correspondence_GC.__proj__Mkgc_state__item__to_abs",
-        "token_correspondence_GC.upd_map", "true_interp",
+        "token_correspondence_GC.upd_map",
         "typing_GC.__proj__Mkgc_state__item__to_abs",
         "typing_GC.is_mem_addr", "typing_GC.mem_hi", "typing_GC.mem_lo",
         "typing_GC.valid", "unit_inversion", "unit_typing"
       ],
       0,
-      "6e4b5f412deae4f69fd3e1a4c0d368a8"
+      "91413ad569512e61706d4ae0b58014ba"
     ],
     [
       "GC.gc",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "d1d8c6ecef625c9cfda19978d92b3270"
-    ],
-    [
-      "GC.gc",
-      2,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "b2t_def",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
         "constructor_distinct_GC.Black", "constructor_distinct_GC.Gray",
         "constructor_distinct_GC.Unalloc", "constructor_distinct_GC.White",
         "equality_tok_GC.Black@tok", "equality_tok_GC.Gray@tok",
@@ -404,61 +401,46 @@
         "projection_inverse_GC.Mkgc_state_to_abs",
         "refinement_interpretation_GC_Tm_refine_bca617b1b2ea961e009f31145da5d056",
         "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
-        "true_interp", "typing_GC.mem_lo"
+        "typing_GC.mem_lo"
       ],
       0,
-      "10699dadacfba9eb59778729d966b280"
-    ],
-    [
-      "GC.try_alloc_invariant",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "a19d11bcabf8c8c3a67b4424b9239834"
+      "71bbc0f60dd048c1ba5a3b685f2d3513"
     ],
     [
       "GC.alloc",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "8b82570edc2ce0692bb864008dd04385"
-    ],
-    [
-      "GC.alloc",
-      2,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "GC_pretyping_27e56dec3f0cf9a6af115223c7bb363f",
         "GC_pretyping_ab0ffb7fae1c8ce581a4f6505251cb9c",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_GC.color__uu___haseq", "assumption_GC.field__uu___haseq",
-        "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
-        "bool_typing", "constructor_distinct_GC.Unalloc",
-        "constructor_distinct_GC.White", "data_typing_intro_GC.F2@tok",
-        "data_typing_intro_GC.White@tok", "equality_tok_GC.F1@tok",
-        "equality_tok_GC.F2@tok", "equality_tok_GC.Unalloc@tok",
-        "equality_tok_GC.White@tok", "equation_GC.is_mem_addr",
-        "equation_GC.mem_addr", "equation_GC.mutator_inv",
-        "equation_GC.obj_inv", "equation_GC.ptr_lifts",
-        "equation_GC.ptr_lifts_to", "equation_GC.to_abs_inj",
-        "equation_GC.trigger", "equation_GC.try_alloc_invariant",
-        "equation_GC.upd_map", "equation_GC.valid",
+        "b2t_def", "bool_inversion", "bool_typing",
+        "constructor_distinct_GC.Unalloc", "constructor_distinct_GC.White",
+        "data_typing_intro_GC.F2@tok", "data_typing_intro_GC.Gray@tok",
+        "equality_tok_GC.F1@tok", "equality_tok_GC.F2@tok",
+        "equality_tok_GC.Unalloc@tok", "equality_tok_GC.White@tok",
+        "equation_GC.is_mem_addr", "equation_GC.mem_addr",
+        "equation_GC.mutator_inv", "equation_GC.obj_inv",
+        "equation_GC.ptr_lifts", "equation_GC.ptr_lifts_to",
+        "equation_GC.to_abs_inj", "equation_GC.trigger",
+        "equation_GC.try_alloc_invariant", "equation_GC.upd_map",
+        "equation_GC.valid", "equation_Prims.eqtype",
         "fuel_guarded_inversion_GC.field",
         "fuel_guarded_inversion_GC.gc_state",
+        "function_token_typing_GC.__proj__Mkgc_state__item__to_abs",
         "function_token_typing_GC.mem_addr",
         "function_token_typing_GC.mem_hi", "function_token_typing_GC.mem_lo",
-        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
-        "int_inversion", "int_typing", "kinding_GC.field@tok",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_LessThanOrEqual",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_e46d229b93cb6c2384a9a7b31bf0aa27", "int_inversion",
+        "int_typing", "kinding_GC.field@tok", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_disEquality",
         "proj_equation_GC.Mkgc_state_abs_fields",
         "proj_equation_GC.Mkgc_state_color",
@@ -471,18 +453,19 @@
         "projection_inverse_GC.Mkgc_state_color",
         "projection_inverse_GC.Mkgc_state_fields",
         "projection_inverse_GC.Mkgc_state_to_abs",
-        "refinement_interpretation_GC_Tm_refine_85e9bb54d06cdc6388e1f9b9ed33ad11",
-        "refinement_interpretation_GC_Tm_refine_bca617b1b2ea961e009f31145da5d056",
-        "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_85e9bb54d06cdc6388e1f9b9ed33ad11",
+        "refinement_interpretation_Tm_refine_bca617b1b2ea961e009f31145da5d056",
+        "refinement_interpretation_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
         "token_correspondence_GC.__proj__Mkgc_state__item__abs_fields",
         "token_correspondence_GC.__proj__Mkgc_state__item__color",
         "token_correspondence_GC.__proj__Mkgc_state__item__fields",
         "token_correspondence_GC.__proj__Mkgc_state__item__to_abs",
-        "token_correspondence_GC.upd_map", "true_interp",
-        "typing_GC.is_mem_addr", "typing_GC.mem_hi", "typing_GC.mem_lo"
+        "token_correspondence_GC.upd_map", "typing_GC.is_mem_addr",
+        "typing_GC.mem_hi", "typing_GC.mem_lo", "typing_GC.valid"
       ],
       0,
-      "c35ed30776d39490ecff4534a3f042b1"
+      "112028060b96e7bd04e2e38777e8ce0d"
     ],
     [
       "GC.to_abs_inj",
@@ -490,11 +473,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_GC.mem_addr",
-        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27"
+        "@MaxIFuel_assumption", "@query", "equation_GC.mem_addr",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "haseqTm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e91111d54e56977c5b26bd382b396e78"
+      "15cc3bda1ffebd29023d33d2b7ccd784"
     ],
     [
       "GC.inv",
@@ -503,7 +488,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "d667e7d653705d3d3cc42453e396a3c7"
+      "445f745f051eca83f686402e0c982ee7"
     ],
     [
       "GC.gc_inv",
@@ -512,7 +497,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "65f19e08f8d2bdc9a187238925c077cf"
+      "3b5765d531e762a1d5991a96b4992d15"
     ],
     [
       "GC.mutator_inv",
@@ -521,7 +506,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "a49a7cd5ab742d7eb9a1c9089b67ef26"
+      "7680f99cc95da1aa206e668a3c5ad157"
     ],
     [
       "GC.init_invariant",
@@ -538,7 +523,7 @@
         "typing_GC.mem_hi", "typing_GC.mem_lo"
       ],
       0,
-      "4c191d316882c2de33d39a3c17457a1b"
+      "877b00b2c17d6554ca232dd477440fe0"
     ],
     [
       "GC.upd_map2",
@@ -549,10 +534,10 @@
         "@MaxIFuel_assumption", "@query",
         "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "equation_Prims.eqtype",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5e352a8774d3d31ca62ab556669bc9ae"
+      "23893afcbbfb374fffc335eff228719e"
     ],
     [
       "GC.mark",
@@ -561,7 +546,7 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "98b63dfe5925b506dca0fdf4bf1fbe39"
+      "60a2dbfc369f61372072e21a99a7353d"
     ],
     [
       "GC.sweep_aux_inv",
@@ -570,7 +555,49 @@
       1,
       [ "@query", "assumption_GC.color__uu___haseq" ],
       0,
-      "891e64822a7277035365f85cf71e7a10"
+      "9d57f9195e95ef39520c307fce3a6276"
+    ],
+    [
+      "GC.test1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_GC.is_mem_addr", "equation_GC.mem_addr",
+        "equation_GC.mutator_inv", "equation_GC.obj_inv",
+        "equation_GC.ptr_lifts", "equation_GC.sweep_aux_inv",
+        "fuel_guarded_inversion_GC.gc_state", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "typing_GC.mem_hi"
+      ],
+      0,
+      "6264d8a02e06dcc6afe76889055ac70a"
+    ],
+    [
+      "GC.test2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_GC.color__uu___haseq",
+        "b2t_def", "bool_inversion", "bool_typing",
+        "constructor_distinct_GC.Black", "constructor_distinct_GC.Unalloc",
+        "equality_tok_GC.Black@tok", "equality_tok_GC.Unalloc@tok",
+        "equation_GC.gc_inv", "equation_GC.is_mem_addr",
+        "equation_GC.mem_addr", "equation_GC.ptr_lifts",
+        "equation_GC.sweep_aux_inv", "equation_GC.valid",
+        "fuel_guarded_inversion_GC.gc_state", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "typing_GC.is_mem_addr", "typing_GC.mem_lo"
+      ],
+      0,
+      "4f30e0bd0132202743dd40fd306ccd5f"
     ],
     [
       "GC.sweep",
@@ -629,34 +656,7 @@
         "typing_GC.valid"
       ],
       0,
-      "c330bca349461d056c60a6ccd19a53f3"
-    ],
-    [
-      "GC.gc",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "420fdfd04816f8fe7f6f377e3d9228ec"
-    ],
-    [
-      "GC.try_alloc_invariant",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "d0270698de21cf03c500d8840e40bcc5"
-    ],
-    [
-      "GC.alloc",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "3b583796afe48907a173098471a2df98"
+      "61be6cd2e64ee9015ff25b0372370887"
     ]
   ]
 ]

@@ -1,0 +1,18 @@
+[
+  "\u0005é¨˘V&>\u001b*πƒ»Æè;7",
+  [
+    [
+      "Bug1694.f",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.HyperStack.ST.equal_stack_domains",
+        "equation_FStar.Monotonic.Heap.equal_dom",
+        "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro"
+      ],
+      0,
+      "285c87a7dfa3d73a7cbae826269c010c"
+    ]
+  ]
+]

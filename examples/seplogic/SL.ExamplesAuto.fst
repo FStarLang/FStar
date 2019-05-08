@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module SL.ExamplesAuto
 
 (* cf. #1323, #1465 *)
@@ -8,7 +23,7 @@ open SL.Effect
 open FStar.Algebra.CommMonoid
 open FStar.Tactics
 open FStar.Tactics.PatternMatching
-open CanonCommMonoid
+open FStar.Tactics.CanonCommMonoid
 open FStar.Reflection
 open FStar.List
 
@@ -16,7 +31,7 @@ open FStar.List
 #reset-options "--__temp_fast_implicits"
 
 let memory_cm : cm memory =
-  CM emp (<*>) (fun x -> admit()) (fun x y z -> ()) (fun x y -> ())
+  CM emp (<*>) (fun x -> lemma_sep_unit' x) (fun x y z -> ()) (fun x y -> ())
 
 // Fails when called
 // (Error) user tactic failed: norm_term: Cannot type fun _ -> idtac () <: FStar.Tactics.Effect.TAC unit in context ((r1:SepLogic.Heap.ref Prims.int), (r2:SepLogic.Heap.ref Prims.int), (x:Prims.int), (y:Prims.int), (x:SL.Effect.post Prims.int), (x:SepLogic.Heap.memory), (uu___326511:SepLogic.Heap.defined (r1 |> x <*> r2 |> y) /\ x y (r1 |> 2 <*> r2 |> y))). Error = (Variable "a#327038" not found)
@@ -100,9 +115,12 @@ let sort_sl (a:Type) (vm:vmap a string) (xs:list var) : Tot (list var) =
     (fun x y -> FStar.String.compare (select_extra y vm)
                                      (select_extra x vm)) xs
 
+let sort_sl_correct : permute_correct sort_sl =
+  fun #a m vm xs -> sortWith_correct (fun x y -> FStar.String.compare (select_extra y vm) (select_extra x vm)) #a m vm xs
+
 let canon_monoid_sl (fp:list term) : Tac unit =
   canon_monoid_with string (pointsto_to_string fp) ""
-                            sort_sl (fun #a m vm xs -> admit()) memory_cm
+                            sort_sl (fun #a -> sort_sl_correct #a) memory_cm
 
 let binder_to_term (b : binder) : Tac term =
   let bv, _ = inspect_binder b in pack (Tv_Var bv)

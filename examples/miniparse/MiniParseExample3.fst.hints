@@ -1,18 +1,30 @@
 [
-  "\u0014˘ü9≥ï£ÂÑx\u00193)E]¯",
+  "Q]≈\u001fÀc¡\u000e›≈é»“¡·'",
   [
     [
-      "MiniParseExample3.ps",
+      "MiniParseExample3.s",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
-        "equation_Prims.squash", "l_and-interp",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "@query", "equation_MiniParse.Tac.Spec.mk_package",
+        "equation_MiniParse.Tac.Spec.package_parser",
+        "equation_MiniParseExample3.palette",
+        "equation_MiniParseExample3.ps",
+        "proj_equation_MiniParse.Tac.Spec.Package_p",
+        "projection_inverse_MiniParse.Tac.Spec.Package_p"
       ],
       0,
-      "e0b99001023b9f4611f79ea8e59879c7"
+      "2b8f6878553829d0161c2e785a2b957f"
+    ],
+    [
+      "MiniParseExample3.s",
+      2,
+      2,
+      1,
+      [ "@query", "equation_MiniParseExample3.ps" ],
+      0,
+      "7981cc2cefecf3585945f66e7a9de42d"
     ]
   ]
 ]

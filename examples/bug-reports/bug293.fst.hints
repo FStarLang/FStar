@@ -1,38 +1,17 @@
 [
-  "\u000f\u000e¦îÍôv\r\u001cn\u0016‹µº\u007f˜",
+  "ãu$s)\u0000¡¾Ú0¥)\u0018Ý' ",
   [
     [
       "Bug293.test",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "f36afe14e2c287087c21fa2cc9205f91"
-    ],
-    [
-      "Bug293.test",
-      2,
-      2,
-      1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_24a102650c3561bc6be37068de08feda"
       ],
       0,
-      "ec58d0efe93a95c9c1970330ad059290"
-    ],
-    [
-      "Bug293.test",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
-      ],
-      0,
-      "bb0429ac27554443de39e2a3501234b0"
+      "7b942c5796745108e8b6e9e9a5462889"
     ]
   ]
 ]

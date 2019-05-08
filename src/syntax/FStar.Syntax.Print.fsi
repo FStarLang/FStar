@@ -36,6 +36,7 @@ val term_to_string'       : DsEnv.env -> term -> string
 val uvar_to_string        : uvar -> string
 val comp_to_string        : comp -> string
 val comp_to_string'       : DsEnv.env -> comp -> string
+val lbs_to_string         : list<qualifier> -> letbindings -> string
 val tag_of_term           : term -> string
 val lbname_to_string      : lbname -> string
 val pat_to_string         : pat -> string
@@ -58,7 +59,8 @@ val const_to_string       : sconst -> string
 val qual_to_string        : qualifier -> string
 val quals_to_string       : list<qualifier> -> string
 val tscheme_to_string     : tscheme -> string
-val cflags_to_string      : cflags -> string
+val cflag_to_string       : cflag -> string
+val cflags_to_string      : list<cflag> -> string
 val set_to_string         : ('a -> string) -> set<'a> -> string
 val list_to_string        : ('a -> string) -> list<'a> -> string
 val delta_depth_to_string : delta_depth -> string

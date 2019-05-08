@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2019 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.UInt8
 (* This module generated automatically using [mk_int.sh] *)
 
@@ -15,7 +30,7 @@ open FStar.Mul
  * - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
  *)
 
-abstract type t : eqtype =
+abstract type t :Type0 =
   | Mk: v:uint_t n -> t
 
 abstract
@@ -164,21 +179,70 @@ let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
 let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
 let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
-abstract
-let eq_mask (a:t) (b:t) : Pure t
-  (requires True)
-  (ensures (fun c -> (v a = v b ==> v c = pow2 n - 1) /\
-                  (v a <> v b ==> v c = 0)))
-  = if v a = v b then Mk (pow2 n - 1)
-    else Mk 0
+inline_for_extraction
+let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 
-abstract
-let gte_mask (a:t) (b:t) : Pure t
-  (requires True)
-  (ensures (fun c -> (v a >= v b ==> v c = pow2 n - 1) /\
-                  (v a < v b ==> v c = 0)))
-  = if v a >= v b then Mk (pow2 n - 1)
-    else Mk 0
+inline_for_extraction
+let n_minus_one = UInt32.uint_to_t (n - 1)
+
+#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1"
+// With inspiration from https://git.zx2c4.com/WireGuard/commit/src/crypto/curve25519-hacl64.h?id=2e60bb395c1f589a398ec606d611132ef9ef764b
+let eq_mask (a:t) (b:t)
+  : Pure t
+    (requires True)
+    (ensures (fun c -> (v a = v b ==> v c = pow2 n - 1) /\
+                       (v a <> v b ==> v c = 0)))
+  = let x = logxor a b in
+    let minus_x = minus x in
+    let x_or_minus_x = logor x minus_x in
+    let xnx = shift_right x_or_minus_x n_minus_one in
+    let c = sub_mod xnx (uint_to_t 1) in
+    if a = b then
+    begin
+      logxor_self (v a);
+      lognot_lemma_1 #n;
+      logor_lemma_1 (v x);
+      assert (v x = 0 /\ v minus_x = 0 /\
+              v x_or_minus_x = 0 /\ v xnx = 0);
+      assert (v c = ones n)
+    end
+    else
+    begin
+      logxor_neq_nonzero (v a) (v b);
+      lemma_msb_pow2 #n (v (lognot x));
+      lemma_msb_pow2 #n (v minus_x);
+      lemma_minus_zero #n (v x);
+      assert (v c = zero n)
+    end;
+    c
+
+private
+let lemma_sub_msbs (a:t) (b:t)
+  : Lemma ((msb (v a) = msb (v b)) ==> (v a < v b <==> msb (v (sub_mod a b))))
+  = from_vec_propriety (to_vec (v a)) 1;
+    from_vec_propriety (to_vec (v b)) 1;
+    from_vec_propriety (to_vec (v (sub_mod a b))) 1
+
+// With inspiration from https://git.zx2c4.com/WireGuard/commit/src/crypto/curve25519-hacl64.h?id=0a483a9b431d87eca1b275463c632f8d5551978a
+let gte_mask (a:t) (b:t)
+  : Pure t
+    (requires True)
+    (ensures (fun c -> (v a >= v b ==> v c = pow2 n - 1) /\
+                       (v a < v b ==> v c = 0)))
+  = let x = a in
+    let y = b in
+    let x_xor_y = logxor x y in
+    let x_sub_y = sub_mod x y in
+    let x_sub_y_xor_y = logxor x_sub_y y in
+    let q = logor x_xor_y x_sub_y_xor_y in
+    let x_xor_q = logxor x q in
+    let x_xor_q_ = shift_right x_xor_q n_minus_one in
+    let c = sub_mod x_xor_q_ (uint_to_t 1) in
+    lemma_sub_msbs x y;
+    lemma_msb_gte (v x) (v y);
+    lemma_msb_gte (v y) (v x);
+    c
+#reset-options
 
 (* Infix notations *)
 unfold let op_Plus_Hat = add
@@ -206,14 +270,13 @@ unfold let op_Less_Equals_Hat = lte
 
 (* To input / output constants *)
 assume val to_string: t -> Tot string
-assume val to_string_hex: t -> Tot string
 assume val of_string: string -> Tot t
 
 #set-options "--lax"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
-//rather than an expensive verifiation check.
+//rather than an expensive verification check.
 //Since it is marked private, client programs cannot call it directly
 //Since it is marked unfold, it eagerly reduces,
 //eliminating the verification overhead of the wrapper

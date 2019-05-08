@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Reflection.Derived
 
 open FStar.Reflection.Types
@@ -98,10 +113,16 @@ let collect_abs t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.rev bs, t')
 
-let fv_to_string (fv:fv) : string = String.concat "." (inspect_fv fv)
+let explode_qn : string -> list string = String.split ['.']
+let implode_qn : list string -> string = String.concat "."
+
+let fv_to_string (fv:fv) : string = implode_qn (inspect_fv fv)
+
+let compare_name (n1 n2 : name) : order =
+    compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) n1 n2
 
 let compare_fv (f1 f2 : fv) : order =
-    compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) (inspect_fv f1) (inspect_fv f2)
+    compare_name (inspect_fv f1) (inspect_fv f2)
 
 let rec compare_const (c1 c2 : vconst) : order =
     match c1, c2 with
@@ -110,11 +131,17 @@ let rec compare_const (c1 c2 : vconst) : order =
     | C_True, C_True -> Eq
     | C_False, C_False -> Eq
     | C_String s1, C_String s2 -> order_from_int (String.compare s1 s2)
-    | C_Unit,  _ -> Lt    | _, C_Unit  -> Gt
-    | C_Int _, _ -> Lt    | _, C_Int _ -> Gt
-    | C_True,  _ -> Lt    | _, C_True  -> Gt
-    | C_False, _ -> Lt    | _, C_False -> Gt
-    | C_String _, _ -> Lt | _, C_String _ -> Gt
+    | C_Range r1, C_Range r2 -> Eq
+    | C_Reify, C_Reify -> Eq
+    | C_Reflect l1, C_Reflect l2 -> compare_name l1 l2
+    | C_Unit,  _ -> Lt       | _, C_Unit  -> Gt
+    | C_Int _, _ -> Lt       | _, C_Int _ -> Gt
+    | C_True,  _ -> Lt       | _, C_True  -> Gt
+    | C_False, _ -> Lt       | _, C_False -> Gt
+    | C_String _, _ -> Lt    | _, C_String _ -> Gt
+    | C_Range _, _ -> Lt     | _, C_Range _ -> Gt
+    | C_Reify, _ -> Lt       | _, C_Reify -> Gt
+    | C_Reflect _, _ -> Lt   | _, C_Reflect _ -> Gt
 
 let compare_binder (b1 b2 : binder) : order =
     let bv1, _ = inspect_binder b1 in

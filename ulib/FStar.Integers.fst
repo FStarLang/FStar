@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Integers
 
 #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
@@ -431,11 +446,12 @@ let ( / ) (#sw:signed_width{sw <> Unsigned W128})
 unfold
 let ( % ) (#sw:signed_width{sw <> Unsigned W128})
           (x:int_t sw)
-          (y:int_t sw{0 <> (v y <: Prims.int)  /\
+          (y:int_t sw{0 <> (v y <: Prims.int) /\
                       (match sw with
                        | Unsigned _ -> within_bounds sw (FStar.UInt.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y))
                        | Signed Winfinite -> True
-                       | Signed _ -> within_bounds sw (FStar.Int.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y)))})
+                       | Signed _ -> within_bounds sw (FStar.Int.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y))) /\
+                       within_bounds sw (FStar.Int.op_Slash (v x) (v y))})
    : Tot (int_t sw)
    = match sw with
      | Signed Winfinite -> x % y
@@ -515,7 +531,7 @@ let ( |^ ) #sw (x:int_t sw) (y:int_t sw{width_of_sw sw <> Winfinite})
 
 [@mark_for_norm]
 unfold
-let ( <<^ ) #sw (x:int_t sw)
+let ( <<^ ) #sw (x:int_t sw{0 <= (v x <: Prims.int)}) 
                 (y:int_t (Unsigned W32){width_of_sw sw <> Winfinite /\ v y < nat_of_fixed_width (width_of_sw sw)})
     : Tot (int_t sw)
     = match sw with
@@ -536,7 +552,7 @@ let ( <<^ ) #sw (x:int_t sw)
 
 [@mark_for_norm]
 unfold
-let ( >>^ ) #sw (x:int_t sw)
+let ( >>^ ) #sw (x:int_t sw{0 <= (v x <: Prims.int)})
                 (y:int_t (Unsigned W32){width_of_sw sw <> Winfinite /\ v y < nat_of_fixed_width (width_of_sw sw)})
     : Tot (int_t sw)
     = match sw with

@@ -1,0 +1,131 @@
+[
+  "Ÿ†À²èe*28I ˜Yœ,q",
+  [
+    [
+      "IEXN.__proj__V__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IEXN.V",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_7238506d51a0bcd660adb39c15951fa1"
+      ],
+      0,
+      "f3e1aa61d451f01734565f181bc63dbb"
+    ],
+    [
+      "IEXN.__proj__E__item__e",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IEXN.E",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_c4a45b085cc780dedd2505084f3c2549"
+      ],
+      0,
+      "b16f98be621a29f6d9ca56e1733cab65"
+    ],
+    [
+      "IEXN.iex_bind_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IEXN.E",
+        "disc_equation_IEXN.V", "fuel_guarded_inversion_IEXN.result"
+      ],
+      0,
+      "8792db7e6bf1be9c5d75b01f3776d9da"
+    ],
+    [
+      "IEXN.f",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
+      0,
+      "2842df8631a357325cc0c78d534c4c3e"
+    ],
+    [
+      "IEXN.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a", "bool_inversion",
+        "equation_FStar.GSet.subset", "equation_IEXN.exns",
+        "function_token_typing_Prims.exn", "lemma_FStar.GSet.mem_singleton",
+        "lemma_FStar.GSet.mem_subset", "lemma_FStar.GSet.mem_union",
+        "primitive_Prims.op_BarBar", "typing_FStar.GSet.mem",
+        "typing_FStar.GSet.singleton", "typing_IEXN.exception1",
+        "typing_IEXN.exception2"
+      ],
+      0,
+      "f3cfa5f05a445fb420439df821adbbb5"
+    ],
+    [
+      "IEXN.h",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "data_typing_intro_IEXN.E@tok", "data_typing_intro_IEXN.V@tok",
+        "equation_FStar.GSet.subset", "equation_IEXN.exns",
+        "equation_Prims.eqtype", "function_token_typing_Prims.exn",
+        "function_token_typing_Prims.unit", "lemma_FStar.GSet.mem_singleton",
+        "lemma_FStar.GSet.mem_subset", "lemma_FStar.GSet.mem_union",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.GSet.mem", "typing_FStar.GSet.singleton",
+        "typing_IEXN.exception1", "typing_IEXN.exception2", "unit_inversion",
+        "unit_typing"
+      ],
+      0,
+      "82122ac6f54ac061f96556835cc21e2c"
+    ],
+    [
+      "IEXN.__proj__V__item__v",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IEXN.V",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_7238506d51a0bcd660adb39c15951fa1"
+      ],
+      0,
+      "96a5832c7904d7ced7e106649c414251"
+    ],
+    [
+      "IEXN.__proj__E__item__e",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IEXN.E",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_c4a45b085cc780dedd2505084f3c2549"
+      ],
+      0,
+      "e413bc09549324d0fe5f0183a5a69f8f"
+    ],
+    [
+      "IEXN.iex_bind_wp",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_IEXN.E",
+        "disc_equation_IEXN.V", "fuel_guarded_inversion_IEXN.result"
+      ],
+      0,
+      "d67afc1974de23cf890ac5ecd698862e"
+    ]
+  ]
+]

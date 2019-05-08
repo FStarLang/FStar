@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module HSL
 
 (*
@@ -137,11 +152,8 @@ let lemma_frame_hsl_invariant (st:hsl_state) (l:loc) (h0 h1:mem)
 	 (ensures  (hsl_invariant st h1 /\ hsl_footprint st h1 == hsl_footprint st h0))
   = ()
 
-assume val fresh_loc: Mods.loc -> mem -> mem -> Type0
-
 (*
  * Creating of HSL state
- * Assuming freshness and disjointness for now
  *)
 let hsl_create (len:u32{len >^ 0ul})
   :ST hsl_state (requires (fun h0       -> True))
@@ -154,21 +166,12 @@ let hsl_create (len:u32{len >^ 0ul})
 		                        Mods.modifies loc_none h0 h1))
   = let h0 = ST.get () in
     let buf = Buffer.gcmalloc root 0ul len in
+    let h00 = ST.get () in
     let p0 = ralloc root 0ul in
     let p1 = ralloc root 0ul in
     let msgs = ralloc root [] in
     let h2 = ST.get () in
     let st = Mk_state len buf p0 p1 msgs in
-    assume (fresh_loc (loc_buffer (hsl_get_buf st)) h0 h2);
-    assume (fresh_loc (loc_mreference (hsl_get_p0 st)) h0 h2);
-    assume (fresh_loc (loc_mreference (hsl_get_p1 st)) h0 h2);
-    assume (fresh_loc (loc_mreference (hsl_get_msgs st)) h0 h2);
-    assume (loc_pairwise_disjoint [
-      Mods.loc_mreference p0;
-      Mods.loc_mreference p1;
-      Mods.loc_buffer buf;
-      Mods.loc_mreference msgs;
-    ]);
     st
 
 (*

@@ -1,5 +1,5 @@
 [
-  "\u001b\u00144T\u001b.\u0004\u0013hñ²cîZšœ",
+  ".\u001dE^9^\u0011U”ë‰!½ÌóR",
   [
     [
       "Bug433.num",
@@ -7,11 +7,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.pos",
-        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.pos", "function_token_typing_Prims.int",
+        "haseqTm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "abcd97fc81540dead068de3657267890"
+      "dcadc1cd32561060f62fe6ea39b6cb63"
     ]
   ]
 ]

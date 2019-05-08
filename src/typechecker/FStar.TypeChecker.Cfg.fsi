@@ -52,6 +52,7 @@ type fsteps = {
      in_full_norm_request: bool;
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
+     for_extraction:bool;
 }
 
 val default_steps : fsteps
@@ -101,6 +102,11 @@ type cfg = {
      normalize_pure_lets: bool;
      reifying : bool;
 }
+
+(* Profiling primitive operators *)
+val primop_time_reset : unit -> unit
+val primop_time_count : string -> int -> unit
+val primop_time_report : unit -> string
 
 val cfg_env: cfg -> Env.env
 

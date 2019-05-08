@@ -1,0 +1,321 @@
+[
+  "\u0010\u0010¯≤ø\u0012Ù\u0015Ãª@–]ê@\u0012",
+  [
+    [
+      "FStar.Real.n_over_n2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "real_inversion",
+        "refinement_interpretation_Tm_refine_972456029d8e35d2ef4bbcaa71138b9a"
+      ],
+      0,
+      "91426539be885c68624fa45e51e0db0e"
+    ],
+    [
+      "FStar.Real.test",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Real.one", "equation_FStar.Real.two",
+        "primitive_FStar.Real.of_int", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_BoxReal_proj_0"
+      ],
+      0,
+      "7dc16c2c4654047820f98b5b479cd518"
+    ],
+    [
+      "FStar.Real.test1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Real.one", "primitive_FStar.Real.of_int",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "ace94dda2428fcb28ab3254850cc4254"
+    ],
+    [
+      "FStar.Real.test_lt1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "65ddcfc23ad440430e51d76ac28a8258"
+    ],
+    [
+      "FStar.Real.test_lt2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "99dce80ddaed10a8f6a03590cc8c9013"
+    ],
+    [
+      "FStar.Real.test_lt3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "59f01e703ce64bfa136a09b7c7404c8a"
+    ],
+    [
+      "FStar.Real.test_le1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7fbb83af1da89988285b795d58015570"
+    ],
+    [
+      "FStar.Real.test_le2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b0301dbec214f3e3e54825b112a9c226"
+    ],
+    [
+      "FStar.Real.test_le3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3b7becf4e58cb3ef95d1a7a65e162caa"
+    ],
+    [
+      "FStar.Real.test_gt1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2f98f6fa5c14149850b3fc66b0b2ee6d"
+    ],
+    [
+      "FStar.Real.test_gt2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "40074ed02caad59cc9321bf92afca3b6"
+    ],
+    [
+      "FStar.Real.test_gt3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "90dd3c9ba78d42ace892979e5ffbdd2c"
+    ],
+    [
+      "FStar.Real.test_ge1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b1afa29aeeec3791ccd3fcef863da3ae"
+    ],
+    [
+      "FStar.Real.test_ge2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "52fa70d980be1b239c6402e0d7f3d9ac"
+    ],
+    [
+      "FStar.Real.test_ge3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5242bf738e23afb47b5587f433e52330"
+    ],
+    [
+      "FStar.Real.test_add_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "59b4a5b44acdfe3b893a5d3775cc2a98"
+    ],
+    [
+      "FStar.Real.test_add_eq'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b161e4979ed999a051dbe041b747cf0e"
+    ],
+    [
+      "FStar.Real.test_add_lt",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "741230635b6dffe31788304a4b36c874"
+    ],
+    [
+      "FStar.Real.test_mul_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "95c52fea9d62ce67daab9f4c62a657f3"
+    ],
+    [
+      "FStar.Real.test_mul_lt",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7b2cb8dd98d9a7021b707d124ae05f30"
+    ],
+    [
+      "FStar.Real.test_div_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8fd04e7875ac0d8c32d9da9ead105235"
+    ],
+    [
+      "FStar.Real.test_div_lt",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7342d901c6b41d2e4e045d9d7de3a1cf"
+    ],
+    [
+      "FStar.Real.test_sqrt_2_mul",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.two",
+        "projection_inverse_BoxReal_proj_0",
+        "refinement_interpretation_Tm_refine_8a6e053c413a767b430102b0711640b7",
+        "typing_FStar.Real.sqrt_2"
+      ],
+      0,
+      "865f17f2871c795ca9a6815abdb6ab6f"
+    ],
+    [
+      "FStar.Real.test_sqrt_2_scale",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.two",
+        "projection_inverse_BoxReal_proj_0",
+        "refinement_interpretation_Tm_refine_8a6e053c413a767b430102b0711640b7"
+      ],
+      0,
+      "5b13beab5e3d0e0dffd35487b72655f7"
+    ],
+    [
+      "FStar.Real.add_id_l",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "real_inversion" ],
+      0,
+      "de0397d4bfacfe03a5cd7c15b50384f0"
+    ],
+    [
+      "FStar.Real.add_id_r",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "real_inversion" ],
+      0,
+      "d865e7d1240aa23662e7ade9c16b654e"
+    ],
+    [
+      "FStar.Real.mul_nil_l",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8052b724b90e6458472e2d0f4f439dd6"
+    ],
+    [
+      "FStar.Real.mul_nil_r",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "af7c7c983d131956a6cbd22f05226525"
+    ],
+    [
+      "FStar.Real.mul_id_l",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "real_inversion" ],
+      0,
+      "3356bd2159cd239c8cf76a3412dab656"
+    ],
+    [
+      "FStar.Real.mul_id_r",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "real_inversion" ],
+      0,
+      "af2ad49d6d4e90db37de94132280d188"
+    ],
+    [
+      "FStar.Real.add_comm",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "19bc8f94e27cf173ddecff03b5519bfa"
+    ],
+    [
+      "FStar.Real.mul_comm",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "af376c0bb412cf7ddc84bcd75b07d19f"
+    ],
+    [
+      "FStar.Real.mul_dist",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ca616674a93f3a7aa51fa7259d9ee8d1"
+    ]
+  ]
+]

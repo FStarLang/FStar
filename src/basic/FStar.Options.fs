@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.String
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -56,10 +57,19 @@ let mk_int    : int -> option_val = Int
 let mk_list   : list<option_val> -> option_val = List
 
 type options =
-    | Set
-    | Reset
-    | Restore
+  | Set
+  | Reset
+  | Restore
 
+type error_flag =
+  | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
+  | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
+                    //the compiler can progress after reporting them
+  | CError          //CError: these are reported as errors using log_issue
+                    //        but they can be turned into warnings or silenced
+  | CWarning        //CWarning: reported using log_issue as warnings by default;
+                    //          then can be silenced or escalated to errors
+  | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
 
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
@@ -91,7 +101,7 @@ let as_comma_string_list = function
   | _ -> failwith "Impos: expected String (comma list)"
 
 type optionstate = Util.smap<option_val>
-
+let copy_optionstate m = Util.smap_copy m
 
 (* The option state is a stack of stacks. Why? First, we need to
  * support #push-options and #pop-options, which provide the user with
@@ -121,14 +131,15 @@ type optionstate = Util.smap<option_val>
  *)
 let fstar_options : ref<list<list<optionstate>>> = Util.mk_ref []
 
-let peek () = List.hd (List.hd !fstar_options)
+let internal_peek () = List.hd (List.hd !fstar_options)
+let peek () = internal_peek()
 let pop  () = // already signal-atomic
     match !fstar_options with
     | []
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
 let push () = // already signal-atomic
-    fstar_options := List.map Util.smap_copy (List.hd !fstar_options) :: !fstar_options
+    fstar_options := List.map copy_optionstate (List.hd !fstar_options) :: !fstar_options
 
 let internal_pop () =
     let curstack = List.hd !fstar_options in
@@ -139,7 +150,7 @@ let internal_pop () =
 
 let internal_push () =
     let curstack = List.hd !fstar_options in
-    let stack' = Util.smap_copy (List.hd curstack) :: curstack in
+    let stack' = copy_optionstate (List.hd curstack) :: curstack in
     fstar_options := stack' :: List.tl !fstar_options
 
 let set o =
@@ -164,9 +175,11 @@ let defaults =
       ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
+      ("already_cached"               , Unset);
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
+      ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -192,9 +205,12 @@ let defaults =
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
       ("include"                      , List []);
-      ("indent"                       , Bool false);
+      ("print"                        , Bool false);
+      ("print_in_place"               , Bool false);
+      ("profile"                      , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
+      ("keep_query_captions"          , Bool true);
       ("lax"                          , Bool false);
       ("load"                         , List []);
       ("log_queries"                  , Bool false);
@@ -231,6 +247,8 @@ let defaults =
       ("smtencoding.elim_box"         , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
+      ("smtencoding.valid_intro"      , Bool true);
+      ("smtencoding.valid_elim"       , Bool false);
       ("tactics_failhard"             , Bool false);
       ("tactics_info"                 , Bool false);
       ("tactic_raw_binders"           , Bool false);
@@ -260,8 +278,27 @@ let defaults =
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
-      ("warn_error"                   , String "");
-      ("use_extracted_interfaces"     , Bool false)]
+      ("warn_error"                   , List []);
+      ("use_extracted_interfaces"     , Bool false);
+      ("use_nbe"                      , Bool false)]
+
+let parse_warn_error_set_get =
+    let r = Util.mk_ref None in
+    let set (f:(string -> list<error_flag>)) =
+        match !r with
+        | None -> r := Some f
+        | _ -> failwith "Multiple initialization of FStar.Options"
+    in
+    let get () =
+        match !r with
+        | Some f -> f
+        | None ->
+          failwith "FStar.Options is improperly initialized"
+    in
+    set, get
+
+let initialize_parse_warn_error f = fst (parse_warn_error_set_get) f
+let parse_warn_error s = snd (parse_warn_error_set_get) () s
 
 let init () =
    let o = peek () in
@@ -287,9 +324,11 @@ let lookup_opt s c =
 let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
+let get_already_cached          ()      = lookup_opt "already_cached"           (as_option (as_list as_string))
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
+let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -312,9 +351,12 @@ let get_hint_file               ()      = lookup_opt "hint_file"                
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
-let get_indent                  ()      = lookup_opt "indent"                   as_bool
+let get_print                   ()      = lookup_opt "print"                    as_bool
+let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
+let get_profile                 ()      = lookup_opt "profile"                  as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
+let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
@@ -349,6 +391,8 @@ let get_smt                     ()      = lookup_opt "smt"                      
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
+let get_smtencoding_valid_intro ()      = lookup_opt "smtencoding.valid_intro"  as_bool
+let get_smtencoding_valid_elim  ()      = lookup_opt "smtencoding.valid_elim"  as_bool
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactics_failhard        ()      = lookup_opt "tactics_failhard"         as_bool
 let get_tactics_info            ()      = lookup_opt "tactics_info"             as_bool
@@ -379,8 +423,9 @@ let get_z3seed                  ()      = lookup_opt "z3seed"                   
 let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
-let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
+let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
+let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -405,7 +450,7 @@ let universe_include_path_base_dirs =
 let _version = FStar.Util.mk_ref ""
 let _platform = FStar.Util.mk_ref ""
 let _compiler = FStar.Util.mk_ref ""
-let _date = FStar.Util.mk_ref ""
+let _date = FStar.Util.mk_ref "<not set>"
 let _commit = FStar.Util.mk_ref ""
 
 let display_version () =
@@ -443,7 +488,8 @@ let accumulated_option name value =
     mk_list (value :: prev_values)
 
 let reverse_accumulated_option name value =
-    mk_list ((lookup_opt name as_list') @ [value])
+    let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
+    mk_list (prev_values @ [value])
 
 let accumulate_string name post_processor value =
     set_option name (accumulated_option name (mk_string (post_processor value)))
@@ -566,6 +612,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         SimpleStr "[symbol|(symbol, id)]",
         "Admit all queries, except those with label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
 
+       ( noshort,
+         "already_cached",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+        "\n\t\tExpects all modules whose names or namespaces match the provided options \n\t\t\t\
+         to already have valid .checked files in the include path");
+
       ( noshort,
         "cache_checked_modules",
         Const (mk_bool true),
@@ -580,6 +632,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "cache_off",
         Const (mk_bool true),
         "Do not read or write any .checked files");
+
+      ( noshort,
+        "cmi",
+        Const (mk_bool true),
+        "Inline across module interfaces during extraction (aka. cross-module inlining)");
 
       ( noshort,
         "codegen",
@@ -612,7 +669,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "dep",
-        EnumStr ["make"; "graph"; "full"],
+        EnumStr ["make"; "graph"; "full"; "raw"],
         "Output the transitive closure of the full dependency graph in three formats:\n\t \
          'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t \
          'full': a format suitable for 'make', including dependences for producing .ml and .krml files\n\t \
@@ -709,9 +766,19 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "A directory in which to search for files included on the command line");
 
        ( noshort,
-        "indent",
+        "print",
         Const (mk_bool true),
-        "Parses and outputs the files on the command line");
+        "Parses and prettyprints the files included on the command line");
+
+       ( noshort,
+        "print_in_place",
+        Const (mk_bool true),
+        "Parses and prettyprints in place the files included on the command line");
+
+       ( noshort,
+        "profile",
+        Const (mk_bool true),
+        "Prints timing information for various operations in the compiler");
 
        ( noshort,
         "initial_fuel",
@@ -722,6 +789,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "initial_ifuel",
         IntStr "non-negative integer",
         "Number of unrolling of inductive datatypes to try at first (default 1)");
+
+       ( noshort,
+        "keep_query_captions",
+        BoolStr,
+        "Retain comments in the logged SMT queries (requires --log_queries; default true)");
 
        ( noshort,
         "lax",
@@ -831,7 +903,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "print_z3_statistics",
         Const (mk_bool true),
-        "Print Z3 statistics for each SMT query (deprecated; use --query_stats instead)");
+        "Print Z3 statistics for each SMT query (details such as relevant modules, facts, etc. for each proof)");
 
        ( noshort,
         "prn",
@@ -856,7 +928,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "silent",
         Const (mk_bool true),
-        " ");
+        "Disable all non-critical output");
 
        ( noshort,
         "smt",
@@ -884,6 +956,16 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          i.e., if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'; \n\t\t\
                if 'native', use '+, -, -'; \n\t\t\
                (default 'boxwrap')");
+
+       (noshort,
+        "smtencoding.valid_intro",
+        BoolStr,
+        "Include an axiom in the SMT encoding to introduce proof-irrelevance from a constructive proof");
+
+       (noshort,
+        "smtencoding.valid_elim",
+        BoolStr,
+        "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
 
        ( noshort,
         "tactic_raw_binders",
@@ -978,7 +1060,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
          "using_facts_from",
-         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
+         ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
         "\n\t\tPrunes the context to include only the facts from the given namespace or fact id. \n\t\t\t\
          Facts can be include or excluded using the [+|-] qualifier. \n\t\t\t\
          For example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
@@ -1064,7 +1146,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
         ( noshort,
         "warn_error",
-        SimpleStr (""),
+        Accumulated (SimpleStr ("")),
         "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t\
          - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
          - [-r] silences range [r]\n\t\t\
@@ -1075,6 +1157,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          "use_extracted_interfaces",
           BoolStr,
          "Extract interfaces from the dependencies and use them for verification (default 'false')");
+
+        ( noshort,
+         "use_nbe",
+          BoolStr,
+         "Use normalization by evaluation as the default normalization srategy (default 'false')");
+
 
         ( noshort,
           "__debug_embedding",
@@ -1167,7 +1255,7 @@ let settable = function
 // command-line arguments;
 // using_facts_from requires pruning the Z3 context.
 // All of these can only be used with #reset_options, with re-starts the z3 process
-let resettable s = settable s || s="z3seed" || s="z3cliopt" || s="using_facts_from"
+let resettable s = settable s || s="z3seed" || s="z3cliopt" || s="using_facts_from" || s="smtencoding.valid_intro" || s="smtencoding.valid_elim"
 let all_specs = specs ()
 let all_specs_with_types = specs_with_types ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
@@ -1226,7 +1314,9 @@ let should_verify m =
 
 let should_verify_file fn = should_verify (module_name_of_file_name fn)
 
-let dont_gen_projectors m = List.contains m (get___temp_no_proj())
+let module_name_eq m1 m2 = String.lowercase m1 = String.lowercase m2
+
+let dont_gen_projectors m = get___temp_no_proj() |> List.existsb (module_name_eq m)
 
 let should_print_message m =
     if should_verify m
@@ -1234,8 +1324,13 @@ let should_print_message m =
     else false
 
 let include_path () =
+  let cache_dir =
+    match get_cache_dir() with
+    | None -> []
+    | Some c -> [c]
+  in
   if get_no_default_includes() then
-    get_include()
+    cache_dir @ get_include()
   else
     let lib_paths =
         match FStar.Util.expand_environment_variable "FSTAR_LIB" with
@@ -1245,13 +1340,13 @@ let include_path () =
           defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists
         | Some s -> [s]
     in
-    lib_paths @ get_include() @ [ "." ]
+    cache_dir @ lib_paths @ get_include() @ [ "." ]
 
 let find_file =
   let file_map = FStar.Util.smap_create 100 in
   fun filename ->
      match Util.smap_try_find file_map filename with
-     | Some f -> Some f
+     | Some f -> f
      | None ->
        let result =
           (try
@@ -1273,11 +1368,9 @@ let find_file =
            with | _ -> //to deal with issues like passing bogus strings as paths like "<input>"
                   None)
        in
-       match result with
-       | None -> result
-       | Some f ->
-         Util.smap_add file_map filename f;
-         result
+       if Option.isSome result
+       then Util.smap_add file_map filename result;
+       result
 
 let prims () =
   match get_prims() with
@@ -1323,8 +1416,18 @@ let prepend_cache_dir fpath =
 let path_of_text text = String.split ['.'] text
 
 let parse_settings ns : list<(list<string> * bool)> =
+    let cache = Util.smap_create 31 in
+    let with_cache f s =
+      match Util.smap_try_find cache s with
+      | Some s -> s
+      | None ->
+        let res = f s in
+        Util.smap_add cache s res;
+        res
+    in
     let parse_one_setting s =
         if s = "*" then ([], true)
+        else if s = "-*" then ([], false)
         else if FStar.Util.starts_with s "-"
         then let path = path_of_text (FStar.Util.substring_from s 1) in
              (path, false)
@@ -1334,9 +1437,14 @@ let parse_settings ns : list<(list<string> * bool)> =
              (path_of_text s, true)
     in
     ns |> List.collect (fun s ->
-          FStar.Util.split s " "
-          |> List.map parse_one_setting)
-       |> List.rev
+      let s = FStar.Util.trim_string s in
+      if s = "" then []
+      else with_cache (fun s ->
+             FStar.Util.splitlines s
+             |> List.concatMap (fun s -> FStar.Util.split s " ")
+             |> List.filter (fun s -> s <> "")
+             |> List.map parse_one_setting) s)
+             |> List.rev
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
@@ -1344,6 +1452,7 @@ let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
+let cmi                          () = get_cmi                         ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
 let codegen                      () =
     Util.map_opt
@@ -1354,27 +1463,37 @@ let codegen                      () =
             | "Kremlin" -> Kremlin
             | "Plugin" -> Plugin
             | _ -> failwith "Impossible")
+
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
-let debug_module        modul       = (get_debug () |> List.contains modul)
-let debug_at_level      modul level = (get_debug () |> List.contains modul) && debug_level_geq level
+let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
+let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
-let dump_module                  s  = get_dump_module() |> List.contains s
+let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
 let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
-                                    || get_query_stats                 ()
+                                    || get_query_stats                ()
 let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
-let indent                       () = get_indent                      ()
+let print                        () = get_print                       ()
+let print_in_place               () = get_print_in_place              ()
+let profile (f:unit -> 'a) (msg:'a -> string) : 'a =
+    if get_profile()
+    then let a, time = Util.record_time f in
+         Util.print2 "Elapsed time %s ms: %s\n"
+                     (Util.string_of_int time)
+                     (msg a);
+         a
+    else f ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
@@ -1382,6 +1501,8 @@ let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
+let keep_query_captions          () = log_queries                     ()
+                                    && get_keep_query_captions        ()
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
@@ -1390,8 +1511,7 @@ let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
 let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
-let no_extract                   s  = let s = String.lowercase s in
-    get_no_extract() |> FStar.Util.for_some (fun f -> String.lowercase f = s)
+let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
 let no_location_info             () = get_no_location_info            ()
@@ -1405,7 +1525,6 @@ let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
-                                    || get_query_stats                ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
@@ -1416,6 +1535,8 @@ let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrappe
 let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwrap"
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
+let smtencoding_valid_intro      () = get_smtencoding_valid_intro     ()
+let smtencoding_valid_elim       () = get_smtencoding_valid_elim      ()
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactics_failhard             () = get_tactics_failhard            ()
 let tactics_info                 () = get_tactics_info                ()
@@ -1453,18 +1574,21 @@ let use_two_phase_tc             () = get_use_two_phase_tc            ()
                                     && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
-let warn_error                   () = get_warn_error                  ()
+let warn_error                   () = String.concat "" (get_warn_error ())
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
+let use_nbe                      () = get_use_nbe                     ()
 
 let with_saved_options f =
   // take some care to not mess up the stack on errors
   // (unless we're trying to track down an error)
+  // TODO: This assumes `f` does not mess with the stack!
   if not (trace_error ()) then begin
       push ();
-      try let retv = f () in
-          pop ();
-          retv
-      with | ex -> pop (); raise ex
+      let r = try Inr (f ()) with | ex -> Inl ex in
+      pop ();
+      match r with
+      | Inr v  -> v
+      | Inl ex -> raise ex
   end else begin
       push ();
       let retv = f () in
@@ -1472,27 +1596,39 @@ let with_saved_options f =
       retv
   end
 
+let module_matches_namespace_filter m filter =
+    let m = String.lowercase m in
+    let setting = parse_settings filter in
+    let m_components = path_of_text m in
+    let rec matches_path m_components path =
+        match m_components, path with
+        | _, [] -> true
+        | m::ms, p::ps -> m=String.lowercase p && matches_path ms ps
+        | _ -> false
+    in
+    match setting
+          |> Util.try_find
+              (fun (path, _) -> matches_path m_components path)
+    with
+    | None -> false
+    | Some (_, flag) -> flag
+
+
 let should_extract m =
     let m = String.lowercase m in
     match get_extract() with
     | Some extract_setting -> //new option, using --extract '* -FStar' etc.
-      let _ = match get_no_extract(), get_extract_namespace(), get_extract_module () with
-              | [], [], [] -> ()
-              | _ -> failwith "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module"
+      let _ =
+        match get_no_extract(),
+              get_extract_namespace(),
+              get_extract_module ()
+        with
+        | [], [], [] -> ()
+        | _ -> failwith "Incompatible options: \
+                        --extract cannot be used with \
+                        --no_extract, --extract_namespace or --extract_module"
       in
-      let setting = parse_settings extract_setting in
-      let m_components = path_of_text m in
-      let rec matches_path m_components path =
-          match m_components, path with
-          | _, [] -> true
-          | m::ms, p::ps -> m=String.lowercase p && matches_path ms ps
-          | _ -> false
-      in
-      begin
-      match setting |> Util.try_find (fun (path, _) -> matches_path m_components path) with
-      | None -> false
-      | Some (_, flag) -> flag
-      end
+      module_matches_namespace_filter m extract_setting
     | None -> //old
         let should_extract_namespace m =
             match get_extract_namespace () with
@@ -1508,3 +1644,20 @@ let should_extract m =
         (match get_extract_namespace (), get_extract_module() with
         | [], [] -> true //neither is set
         | _ -> should_extract_namespace m || should_extract_module m)
+
+let should_be_already_cached m =
+  match get_already_cached() with
+  | None -> false
+  | Some already_cached_setting ->
+    module_matches_namespace_filter m already_cached_setting
+
+let error_flags =
+    let cache : Util.smap<list<error_flag>> = Util.smap_create 10 in
+    fun () ->
+        let we = warn_error() in
+        match Util.smap_try_find cache we with
+        | None ->
+          let r = parse_warn_error we in
+          Util.smap_add cache we r;
+          r
+        | Some r -> r

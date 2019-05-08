@@ -1,5 +1,5 @@
 [
-  "\nD^˜”¢ƒñèŽMëˆ\u0001)§",
+  "nÄ¾\u000b\u0019øŒêôÓÜŽ¶¡éò",
   [
     [
       "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE___proj__INT_STORE__item__get_elab",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "2939f0a272ddad1b16ed2b7af9c2ac31"
+      "8566e55ba2ebde0a276749a5bed87344"
     ],
     [
       "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE___proj__INT_STORE__item__put_elab",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "b9ff647e77fe4881d3536936e2511dfc"
+      "c0710213feebd9a6ec4b10f8dcd6f29b"
     ],
     [
       "FStar.DM4F.IntStoreFixed.INT_STORE",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "53a4766951487c7d17a69cfad41d842e"
+      "da76daf4636023d7422f678c1bc70783"
     ],
     [
       "FStar.DM4F.IntStoreFixed.INT_STORE",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "a29901c8127876359cf04177b2233e3e"
+      "8569af6ae8db3c71b6722adc48489e63"
     ],
     [
       "FStar.DM4F.IntStoreFixed.read",
@@ -44,16 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "685fc887b7da7740b8f7c35d1fb88583"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixed.write",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "33e2948378d3f32d37bee9b88bc246ba"
+      "083b0dd10968b1f5ceddbeb8b96f37a6"
     ],
     [
       "FStar.DM4F.IntStoreFixed.refine_st",
@@ -68,7 +59,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "c1e0e8db0fc072b9215685fc1d11cb5c"
+      "7d989fefe52069d0597aa8198c034c0f"
     ],
     [
       "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE___proj__INT_STORE__item__get_elab",
@@ -77,7 +68,7 @@
       1,
       [ "@query" ],
       0,
-      "9be9c2909ddaaae40c375ad16123eb0c"
+      "5c4497e1ef072e0f84a3da20660d6475"
     ],
     [
       "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE___proj__INT_STORE__item__put_elab",
@@ -86,7 +77,7 @@
       1,
       [ "@query" ],
       0,
-      "2ee03cb339d00fdaf3f411fda4c25acc"
+      "9ca65532430b3a5250bf3022364fe3a8"
     ],
     [
       "FStar.DM4F.IntStoreFixed.INT_STORE",
@@ -95,7 +86,7 @@
       1,
       [ "@query" ],
       0,
-      "364aa05c98c3e7deb55f4cccad7a6e18"
+      "e213a30c21d8eee26e8d42a8b5f53df6"
     ],
     [
       "FStar.DM4F.IntStoreFixed.INT_STORE",
@@ -104,7 +95,7 @@
       1,
       [ "@query" ],
       0,
-      "3e6fac1bb8d6630f25ae663a37874a13"
+      "da0f421f10baf4efdb9866900da48038"
     ],
     [
       "FStar.DM4F.IntStoreFixed.read",
@@ -113,16 +104,7 @@
       1,
       [ "@query" ],
       0,
-      "ac6b4ecda7d181e1338199487731a4c2"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixed.write",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "265832e20e00d7af49daa964a525869a"
+      "b986e9122d4feb5032a626c808da6bad"
     ],
     [
       "FStar.DM4F.IntStoreFixed.refine_st",
@@ -137,7 +119,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "72383e39793526d71a734f57c56e6d80"
+      "4ad3358157cb71b1d336dfda4c4807ce"
     ]
   ]
 ]

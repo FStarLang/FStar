@@ -1,10 +1,12 @@
 #light "off"
 module FStar.Errors
+open FStar.String
 open FStar.ST
 open FStar.Exn
 open FStar.All
 open FStar.Util
 open FStar.Range
+open FStar.Options
 
 type raw_error =
   | Error_DependencyAnalysisFailed
@@ -273,11 +275,12 @@ type raw_error =
   | Warning_NormalizationFailure
   | Warning_NotDependentArrow
   | Warning_NotEmbedded
-  | Warning_PatternMissingBoundVar
+  | Warning_PatternMissingBoundVar  //AR: this is deprecated, use Warning_SMTPatternIllFormed instead
+                                    //    not removing it so as not to mess up the error numbers
   | Warning_RecursiveDependency
   | Warning_RedundantExplicitCurrying
   | Warning_SMTPatTDeprecated
-  | Warning_SMTPatternMissingBoundVar
+  | Warning_SMTPatternIllFormed
   | Warning_TopLevelEffect
   | Warning_UnboundModuleReference
   | Warning_UnexpectedFile
@@ -317,22 +320,27 @@ type raw_error =
   | Warning_logicqualifier
   | Fatal_CyclicDependence
   | Error_InductiveAnnotNotAType
+  | Fatal_FriendInterface
+  | Error_CannotRedefineConst
+  | Error_BadClassDecl
+  | Error_BadInductiveParam
+  | Error_FieldShadow
+  | Error_UnexpectedDM4FType
+  | Fatal_EffectAbbreviationResultTypeMismatch
+  | Error_AlreadyCachedAssertionFailure
+  | Error_MustEraseMissing
+  | Warning_EffectfulArgumentToErasedFunction
+  | Fatal_EmptySurfaceLet
+  | Warning_UnexpectedCheckedFile
+  | Fatal_ExtractionUnsupported
 
-type flag =
-  | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
-  | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
-                    //the compiler can progress after reporting them
-  | CError          //CError: these are reported as errors using log_issue
-                    //        but they can be turned into warnings or silenced
-  | CWarning        //CWarning: reported using log_issue as warnings by default;
-                    //          then can be silenced or escalated to errors
-  | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
+type flag = error_flag
 
 // This list should be considered STABLE
 // Which means, if you need to add an error, APPEND it, to keep old error numbers the same
 // If an error is deprecated, do not remove it! Change its name (if needed)
 let default_flags =
- [(Error_DependencyAnalysisFailed                    , CAlwaysError);
+ [(Error_DependencyAnalysisFailed                    , CAlwaysError); //0
   (Error_IDETooManyPops                              , CAlwaysError);
   (Error_IDEUnrecognized                             , CAlwaysError);
   (Error_InductiveTypeNotSatisfyPositivityCondition  , CAlwaysError);
@@ -341,17 +349,17 @@ let default_flags =
   (Error_ModuleFileNameMismatch                      , CAlwaysError);
   (Error_OpPlusInUniverse                            , CAlwaysError);
   (Error_OutOfRange                                  , CAlwaysError);
-  (Error_ProofObligationFailed                       , CAlwaysError);
+  (Error_ProofObligationFailed                       , CError);//9
   (Error_TooManyFiles                                , CAlwaysError);
   (Error_TypeCheckerFailToProve                      , CAlwaysError);
   (Error_TypeError                                   , CAlwaysError);
   (Error_UncontrainedUnificationVar                  , CAlwaysError);
   (Error_UnexpectedGTotComputation                   , CAlwaysError);
   (Error_UnexpectedInstance                          , CAlwaysError);
-  (Error_UnknownFatal_AssertionFailure               , CAlwaysError);
+  (Error_UnknownFatal_AssertionFailure               , CError); //16
   (Error_Z3InvocationError                           , CAlwaysError);
   (Error_IDEAssertionFailure                         , CAlwaysError);
-  (Error_Z3SolverError                               , CAlwaysError);
+  (Error_Z3SolverError                               , CError); //19
   (Fatal_AbstractTypeDeclarationInInterface          , CFatal);
   (Fatal_ActionMustHaveFunctionType                  , CFatal);
   (Fatal_AlreadyDefinedTopLevelDeclaration           , CFatal);
@@ -603,7 +611,7 @@ let default_flags =
   (Warning_RecursiveDependency                       , CWarning);
   (Warning_RedundantExplicitCurrying                 , CWarning);
   (Warning_SMTPatTDeprecated                         , CWarning);
-  (Warning_SMTPatternMissingBoundVar                 , CWarning);
+  (Warning_SMTPatternIllFormed                       , CWarning);
   (Warning_TopLevelEffect                            , CWarning);
   (Warning_UnboundModuleReference                    , CWarning);
   (Warning_UnexpectedFile                            , CWarning);
@@ -642,12 +650,25 @@ let default_flags =
   (Warning_logicqualifier                            , CWarning);
   (Fatal_CyclicDependence                            , CFatal);
   (Error_InductiveAnnotNotAType                      , CError);
+  (Fatal_FriendInterface                             , CFatal);
+  (Error_CannotRedefineConst                         , CError);
+  (Error_BadClassDecl                                , CError);
+  (Error_BadInductiveParam                           , CFatal);
+  (Error_FieldShadow                                 , CFatal);
+  (Error_UnexpectedDM4FType                          , CFatal);
+  (Fatal_EffectAbbreviationResultTypeMismatch        , CFatal);
+  (Error_AlreadyCachedAssertionFailure               , CFatal);
+  (Error_MustEraseMissing                            , CWarning);
+  (Warning_EffectfulArgumentToErasedFunction         , CWarning);
+  (Fatal_EmptySurfaceLet                             , CFatal);
+  (Warning_UnexpectedCheckedFile                     , CWarning); //321
+  (Fatal_ExtractionUnsupported                       , CFatal);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]
 
-exception Err of raw_error* string
-exception Error of raw_error * string * Range.range
+exception Err     of raw_error * string
+exception Error   of raw_error * string * Range.range
 exception Warning of raw_error * string * Range.range
 exception Stop
 
@@ -787,15 +808,8 @@ let message_prefix =
 
 let findIndex l v = l |> List.index (function (e, _) when e=v -> true | _ -> false)
 let errno_of_error e = findIndex default_flags e
-let flags: ref<list<flag>> = mk_ref []
 
-let init_warn_error_flags =
-  let rec aux r l =
-    match l with
-    | [] -> r
-    | (e, f)::tl -> aux (r@[f]) tl
-  in
-  flags := aux [] default_flags
+let init_warn_error_flags = List.map snd default_flags
 
 let diag r msg =
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg None)
@@ -808,7 +822,7 @@ let lookup flags errno =
 
 let log_issue r (e, msg) =
   let errno = errno_of_error (e) in
-  match lookup !flags errno with
+  match lookup (Options.error_flags()) errno with
   | CAlwaysError
   | CError ->
      add_one (mk_issue EError (Some r) msg (Some errno))
@@ -860,7 +874,8 @@ let raise_error (e, msg) r =
 let raise_err (e, msg) =
   raise (Err (e, msg))
 
-let update_flags l =
+let update_flags (l:list<(error_flag * string)>) : list<error_flag> =
+  let flags = init_warn_error_flags in
   let compare (_, (a, _)) (_, (b, _)) =
     if a > b then 1
     else if a < b then -1
@@ -875,7 +890,7 @@ let update_flags l =
     | _ -> f
   in
   let rec set_flag i l=
-    let d = List.nth !flags i in
+    let d = List.nth flags i in
     match l with
     | [] -> d
     | (f, (l, h))::tl ->
@@ -903,7 +918,7 @@ let update_flags l =
   in
   let range = compute_range [] l in
   let sorted = List.sortWith compare range in
-  flags := aux [] 0 !flags sorted
+  aux [] 0 init_warn_error_flags sorted
 
 let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
     let newh = mk_default_handler false in

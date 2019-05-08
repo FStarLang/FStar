@@ -1,5 +1,5 @@
 [
-  "\u0001'C¤ÍÝ\u001a‘Û€\u0011o\u00041^ã",
+  "ÚêÌOx„0²–jîY\u000bê»‚",
   [
     [
       "Bug623.null",
@@ -8,11 +8,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.V@tok",
-        "function_token_typing_Prims.unit"
+        "data_typing_intro_FStar.Pervasives.V@tok", "equation_Prims.eqtype",
+        "function_token_typing_Prims.unit",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "edf704e5e1f3eaa3a159c93ac1f36549"
+      "fda3a03f909d958cd60c5a7adbb3457d"
     ]
   ]
 ]

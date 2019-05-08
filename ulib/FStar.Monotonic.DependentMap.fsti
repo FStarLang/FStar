@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Monotonic.DependentMap
 (** A library for mutable partial, dependent maps,
     that grow monotonically,
@@ -25,9 +40,9 @@ let empty_partial_dependent_map (#a:_) (#b:_)
 ///    Which are proven to be in correspondence with the operations on DM.t
 ///    via the homomorphism `repr` below
 val map
-    (a:eqtype u#a)
+    (a:eqtype)
     (b:(a -> Type u#b))
-  : Type u#(max a b)
+  : Type u#b
 
 /// `repr m`: A ghost function that reveals the internal `map` as a `DM.t`
 val repr (#a:_) (#b:_)

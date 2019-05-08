@@ -69,16 +69,16 @@ and comp_typ = {
   effect_name:lident;
   result_typ:t;
   effect_args:args;
-  flags:list<cflags>
+  flags:list<cflag>
 }
 
 and residual_comp = {
   residual_effect:lident;
   residual_typ   :option<t>;
-  residual_flags :list<cflags>
+  residual_flags :list<cflag>
 }
 
-and cflags =
+and cflag =
   | TOTAL
   | MLEFFECT
   | RETURN
@@ -224,11 +224,16 @@ val string_compare' : string -> string -> t
 val string_concat' : args -> option<t>
 val string_substring' : args -> option<t>
 val string_split' : args -> option<t>
+val string_lowercase : string -> t
+val string_uppercase : string -> t
+val string_index : args -> option<t>
+val string_index_of : args -> option<t>
 
 val list_of_string' : (string -> t)
 
 val decidable_eq : bool -> args -> option<t>
-val interp_prop : args -> option<t>
+val interp_prop_eq2 : args -> option<t>
+val interp_prop_eq3 : args -> option<t>
 
 val mixed_binary_op : (arg -> option<'a>) -> (arg -> option<'b>) -> ('c -> t) ->
                       ('a -> 'b -> 'c) -> args -> option<t>

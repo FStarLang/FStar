@@ -143,7 +143,8 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_typ:typ;                                            (* t *)
     ctx_uvar_reason:string;
     ctx_uvar_should_check:should_check_uvar;
-    ctx_uvar_range:Range.range
+    ctx_uvar_range:Range.range;
+    ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
 }
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version
@@ -175,7 +176,7 @@ and comp_typ = {
   effect_name:lident;
   result_typ:typ;
   effect_args:args;
-  flags:list<cflags>
+  flags:list<cflag>
 }
 and comp' =
   | Total  of typ * option<universe>
@@ -189,19 +190,19 @@ and arg = term * aqual                                           (* marks an exp
 and args = list<arg>
 and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
-and cflags =
-  | TOTAL
-  | MLEFFECT
-  | RETURN
-  | PARTIAL_RETURN
-  | SOMETRIVIAL
-  | TRIVIAL_POSTCONDITION
-  | SHOULD_NOT_INLINE
-  | LEMMA
-  | CPS
+and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
+  | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
+  | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
+  | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
+  | RETURN                                                         (* the WP is return_wp of something *)
+  | PARTIAL_RETURN                                                 (* the WP is return_wp of something, possibly strengthened with some precondition *)
+  | SOMETRIVIAL                                                    (* the WP is the null wp *)
+  | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
+  | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
+  | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of term
 and metadata =
-  | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
+  | Meta_pattern       of list<term> * list<args>                (* Patterns for SMT quantifier instantiation; the first arg is the list of names of the binders of the enclosing forall/exists *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
@@ -214,8 +215,6 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
-  | Mutable_alloc
-  | Mutable_rval
 and fv_qual =
   | Data_ctor
   | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
@@ -257,7 +256,7 @@ and free_vars = {
 and residual_comp = {
     residual_effect:lident;                (* first component is the effect name *)
     residual_typ   :option<typ>;           (* second component: result type *)
-    residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
+    residual_flags :list<cflag>            (* third component: contains (an approximation of) the cflags *)
 }
 
 and attribute = term
@@ -300,7 +299,7 @@ and aqual = option<arg_qualifier>
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
-    cflags: list<cflags>;
+    cflags: list<cflag>;
     comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
@@ -373,7 +372,7 @@ type action = {
     action_typ: typ
 }
 type eff_decl = {
-    cattributes :list<cflags>;
+    cattributes :list<cflag>;
     mname       :lident;
     univs       :univ_names;
     binders     :binders;
@@ -418,9 +417,9 @@ type sigelt' =
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
                        * list<lident>               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon        of lident
+  | Sig_datacon        of lident                    //name of the datacon
                        * univ_names                 //universe variables of the inductive type it belongs to
-                       * typ
+                       * typ                        //the constructor's type as an arrow
                        * lident                     //the inductive type of the value this constructs
                        * int                        //and the number of parameters of the inductive
                        * list<lident>               //mutually defined types
@@ -440,7 +439,7 @@ type sigelt' =
                        * univ_names
                        * binders
                        * comp
-                       * list<cflags>
+                       * list<cflag>
   | Sig_pragma         of pragma
   | Sig_splice         of list<lident> * term
 and sigelt = {
@@ -483,6 +482,7 @@ let order_bv x y =
   then x.index - y.index
   else i
 
+let order_ident x y = String.compare x.idText y.idText
 let order_fv x y = String.compare x.str y.str
 
 let range_of_lbname (l:lbname) = match l with
@@ -511,6 +511,7 @@ let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv
+let new_id_set () : set<ident> = Util.new_set order_ident
 let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
 let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
@@ -538,6 +539,7 @@ let mk (t:'a) = fun (_:option<unit>) r -> {
 }
 let bv_to_tm   bv :term = mk (Tm_bvar bv) None (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) None (range_of_bv bv)
+let binders_to_names (bs:binders) : list<term> = bs |> List.map (fun (x, _) -> bv_to_name x)
 let mk_Tm_app (t1:typ) (args:list<arg>) (k:option<unit>) p =
     match args with
     | [] -> t1
@@ -559,13 +561,13 @@ let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
 let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
-let mk_lb (x, univs, eff, t, e, pos) = {
+let mk_lb (x, univs, eff, t, e, attrs, pos) = {
     lbname=x;
     lbunivs=univs;
     lbtyp=t;
     lbeff=eff;
     lbdef=e;
-    lbattrs=[];
+    lbattrs=attrs;
     lbpos=pos;
   }
 
@@ -616,30 +618,23 @@ let pat_bvs (p:pat) : list<bv> =
   List.rev <| aux [] p
 
 (* Gen sym *)
-let gen_reset =
-    let x = Util.mk_ref 0 in
-    let gen () = incr x; !x in
-    let reset () = x := 0 in
-    gen, reset
-let next_id = fst gen_reset
-let reset_gensym = snd gen_reset
 let range_of_ropt = function
     | None -> dummyRange
     | Some r -> r
 let gen_bv : string -> option<Range.range> -> typ -> bv = fun s r t ->
   let id = mk_ident(s, range_of_ropt r) in
-  {ppname=id; index=next_id(); sort=t}
+  {ppname=id; index=Ident.next_id(); sort=t}
 let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
 
 let freshen_bv bv =
     if is_null_bv bv
     then new_bv (Some (range_of_bv bv)) bv.sort
-    else {bv with index=next_id()}
+    else {bv with index=Ident.next_id()}
 
 let freshen_binder (b:binder) = let (bv, aq) = b in (freshen_bv bv, aq)
 
 let new_univ_name ropt =
-    let id = next_id() in
+    let id = Ident.next_id() in
     mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
 let mkbv x y t  = {ppname=x;index=y;sort=t}
 let lbname_eq l1 l2 = match l1, l2 with
@@ -697,6 +692,8 @@ let t_unit      = tconst PC.unit_lid
 let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid
 let t_string    = tconst PC.string_lid
+let t_exn       = tconst PC.exn_lid
+let t_real      = tconst PC.real_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid

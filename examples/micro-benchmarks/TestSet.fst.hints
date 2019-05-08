@@ -1,5 +1,5 @@
 [
-  "(ÿ1BËv\u0011∞|,\u001a\u0012ÆõaG",
+  "IkŸÅ≤/`x{Mo?˘k“\u0003",
   [
     [
       "TestSet.should_succeed",
@@ -7,15 +7,31 @@
       2,
       1,
       [
-        "@query", "equation_FStar.TSet.subset",
-        "function_token_typing_TestSet.a", "function_token_typing_TestSet.b",
-        "function_token_typing_TestSet.elt", "l_or-interp",
+        "@query", "function_token_typing_TestSet.elt", "l_or-interp",
         "lemma_FStar.TSet.lemma_equal_intro",
-        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_union",
-        "typing_FStar.TSet.singleton", "typing_FStar.TSet.union"
+        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
+        "lemma_FStar.TSet.mem_union", "lemma_FStar.TSet.subset_mem",
+        "typing_FStar.TSet.singleton", "typing_FStar.TSet.union",
+        "typing_TestSet.a", "typing_TestSet.b"
       ],
       0,
-      "1053880263e08ff0c1a716e0e6ca625d"
+      "1f86c6f062201d58d57ef731733e7f48"
+    ],
+    [
+      "TestSet.should_succeed",
+      2,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_TestSet.elt", "l_or-interp",
+        "lemma_FStar.TSet.lemma_equal_intro",
+        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
+        "lemma_FStar.TSet.mem_union", "lemma_FStar.TSet.subset_mem",
+        "typing_FStar.TSet.singleton", "typing_FStar.TSet.union",
+        "typing_TestSet.a", "typing_TestSet.b"
+      ],
+      0,
+      "57c60a12c9d133bf526b712d17993792"
     ]
   ]
 ]

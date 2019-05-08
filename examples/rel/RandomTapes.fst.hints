@@ -1,27 +1,21 @@
 [
-  "Ž¹‡Êâù‚\u0019\t'ý4ç\u0007¢",
+  "\u007fß£$­>&Ãí\u007f¦ªJÏ›",
   [
-    [
-      "RandomTapes.rel_random_tape",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "449162a35a43c946fbf0de8a7cebb705"
-    ],
     [
       "RandomTapes.id",
       1,
       2,
       1,
       [
-        "@query", "equation_Bijection.bijection",
-        "equation_Bijection.injection", "equation_Bijection.surjection",
-        "interpretation_RandomTapes_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Bijection.bijection", "equation_Bijection.injection",
+        "equation_Bijection.surjection",
+        "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_fbc917fea8bd0ead0e80e947ccbfabdc"
       ],
       0,
-      "ff41d43f726300c3c449587ee58605a3"
+      "85731d1c40f81cd9984166433d96a319"
     ],
     [
       "RandomTapes.add",
@@ -43,16 +37,7 @@
         "token_correspondence_RandomTapes.minus"
       ],
       0,
-      "33a2c93b7b69bce83d1ef03571253268"
-    ],
-    [
-      "RandomTapes.otp_rand",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "9fba0d60867aae8964d4ded30750a04c"
+      "056cc61f1067a1b26eece7a3d2949428"
     ],
     [
       "RandomTapes.otp_eq",
@@ -72,7 +57,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
         "projection_inverse_Rel.R_l", "projection_inverse_Rel.R_r",
-        "refinement_interpretation_RandomTapes_Tm_refine_a4d58150162363e254d4badae476cf49",
+        "refinement_interpretation_Tm_refine_a4d58150162363e254d4badae476cf49",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_RandomTapes.otp",
         "token_correspondence_RandomTapes.otp_rand",
@@ -80,7 +65,7 @@
         "token_correspondence_Rel.__proj__R__item__r"
       ],
       0,
-      "eee40a861fed2b628121475660602dff"
+      "ccb599c331fe1bd4186dafbd04d541a3"
     ],
     [
       "RandomTapes.otp2_eq",
@@ -102,7 +87,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple5__4",
         "projection_inverse_FStar.Pervasives.Native.Mktuple5__5",
         "projection_inverse_Rel.R_l", "projection_inverse_Rel.R_r",
-        "refinement_interpretation_RandomTapes_Tm_refine_a4d58150162363e254d4badae476cf49",
+        "refinement_interpretation_Tm_refine_a4d58150162363e254d4badae476cf49",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_RandomTapes.otp2",
         "token_correspondence_RandomTapes.otp2_rand",
@@ -110,16 +95,7 @@
         "token_correspondence_Rel.__proj__R__item__r"
       ],
       0,
-      "c75113830b18d87a522c091019eb0255"
-    ],
-    [
-      "RandomTapes.rel_random_tape",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2733980578d52ef0b212b432b58897f7"
+      "507cbdb6456c049224839f31f54146b0"
     ],
     [
       "RandomTapes.id",
@@ -127,12 +103,15 @@
       2,
       1,
       [
-        "@query", "equation_Bijection.bijection",
-        "equation_Bijection.injection", "equation_Bijection.surjection",
-        "interpretation_RandomTapes_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Bijection.bijection", "equation_Bijection.injection",
+        "equation_Bijection.surjection",
+        "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_fbc917fea8bd0ead0e80e947ccbfabdc"
       ],
       0,
-      "a073374d0897424e7c971110bbd6fced"
+      "5ad9f58de3bbcb1f586e79cc058e0572"
     ],
     [
       "RandomTapes.add",
@@ -154,16 +133,7 @@
         "token_correspondence_RandomTapes.minus"
       ],
       0,
-      "013bb73c15aa07dc17977364ef8378be"
-    ],
-    [
-      "RandomTapes.otp_rand",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "2b30d512b4fc5fd598aba2278e1b75bc"
+      "bc3d287c67a091621a73e8d8fca9e3fd"
     ]
   ]
 ]

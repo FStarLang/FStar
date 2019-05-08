@@ -1,15 +1,6 @@
 [
-  "Çc!ë-Ü´\tèVîô≈8«ﬁ",
+  "9\u0001Öπ#˘7â†HY⁄ˆ°Æ\u0003",
   [
-    [
-      "Clear.tau2",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "9b417fa93db197d1db321c2bf3b1df8a"
-    ],
     [
       "Clear.l2",
       1,
@@ -18,10 +9,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
         "function_token_typing_Clear.p",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "9938fd9cdff65bf6df3db4df0ab960c0"
+      "60d75ba97969bfcf536b787db63f53e7"
     ]
   ]
 ]

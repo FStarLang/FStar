@@ -1,5 +1,5 @@
 [
-  "­E\u0016âÊ“0<”÷.Ëô´j\u0018",
+  "+ž[™Ô\fõr)j>c\u001bêª—",
   [
     [
       "Cap.capRead",
@@ -11,7 +11,7 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "751921b97fee9a88805f0e6d6caee84d"
+      "64298c4a2c53280f27cd1fbaa27f5470"
     ],
     [
       "Cap.main",
@@ -35,13 +35,34 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2",
-        "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
+        "refinement_interpretation_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2",
+        "refinement_interpretation_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
         "token_correspondence_Cap.capRead", "typing_Cert.ACLs.canRead",
         "typing_Platform.Bytes.equalBytes", "unit_typing"
       ],
       0,
-      "2231b1415118e0a581584726633ef8c2"
+      "20a20de2497205da686f22007e4864de"
+    ],
+    [
+      "Cap.capRead",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_Cap.byte", "equation_Platform.Bytes.bytes"
+      ],
+      0,
+      "aeca755aa0e81d3cb5a68305f0c3e2d8"
+    ],
+    [
+      "Cap.issue",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "386287e422d7881b8111f67c5ed84417"
     ]
   ]
 ]

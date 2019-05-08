@@ -30,6 +30,7 @@ let __proj__Mktuple3__item___2 projectee =
   match projectee with | (_1,_2,_3) -> _2
 let __proj__Mktuple3__item___3 projectee =
   match projectee with | (_1,_2,_3) -> _3
+
 type ('a,'b,'c,'d) tuple4 =
  'a* 'b* 'c* 'd
 [@@deriving yojson,show]
@@ -42,6 +43,7 @@ let __proj__Mktuple4__item___3 projectee =
   match projectee with | (_1,_2,_3,_4) -> _3
 let __proj__Mktuple4__item___4 projectee =
   match projectee with | (_1,_2,_3,_4) -> _4
+
 type ('a,'b,'c,'d,'e) tuple5 =
  'a* 'b* 'c* 'd* 'e
 [@@deriving yojson,show]
@@ -56,6 +58,7 @@ let __proj__Mktuple5__item___4 projectee =
   match projectee with | (_1,_2,_3,_4,_5) -> _4
 let __proj__Mktuple5__item___5 projectee =
   match projectee with | (_1,_2,_3,_4,_5) -> _5
+
 type ('a,'b,'c,'d,'e,'f) tuple6 =
  'a* 'b* 'c* 'd* 'e* 'f
 [@@deriving yojson,show]
@@ -72,6 +75,7 @@ let __proj__Mktuple6__item___5 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6) -> _5
 let __proj__Mktuple6__item___6 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6) -> _6
+
 type ('a,'b,'c,'d,'e,'f,'g) tuple7 =
  'a* 'b* 'c* 'd* 'e* 'f* 'g
 [@@deriving yojson,show]
@@ -90,6 +94,7 @@ let __proj__Mktuple7__item___6 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7) -> _6
 let __proj__Mktuple7__item___7 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7) -> _7
+
 type ('a,'b,'c,'d,'e,'f,'g,'h) tuple8 =
  'a* 'b* 'c* 'd* 'e* 'f* 'g* 'h
 [@@deriving yojson,show]
@@ -110,6 +115,142 @@ let __proj__Mktuple8__item___7 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8) -> _7
 let __proj__Mktuple8__item___8 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8) -> _8
+
+type ('a,'b,'c,'d,'e,'f,'g,'h,'i) tuple9 =
+ 'a *'b *'c *'d *'e *'f *'g *'h *'i
+[@@deriving yojson,show]
+let uu___is_Mktuple9 projectee = true
+let __proj__Mktuple9__item___1 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9) -> _1
+let __proj__Mktuple9__item___2 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9) -> _2
+let __proj__Mktuple9__item___3 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9) -> _3
+let __proj__Mktuple9__item___4 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9) -> _4
+let __proj__Mktuple9__item___5 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9) -> _5
+let __proj__Mktuple9__item___6 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9) -> _6
+let __proj__Mktuple9__item___7 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9) -> _7
+let __proj__Mktuple9__item___8 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9) -> _8
+let __proj__Mktuple9__item___9 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9) -> _9
+
+type ('a,'b,'c,'d,'e,'f,'g,'h,'i,'j) tuple10 =
+ 'a *'b *'c *'d *'e *'f *'g *'h *'i *'j
+[@@deriving yojson,show]
+let uu___is_Mktuple10 projectee = true
+let __proj__Mktuple10__item___1 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) -> _1
+let __proj__Mktuple10__item___2 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) -> _2
+let __proj__Mktuple10__item___3 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) -> _3
+let __proj__Mktuple10__item___4 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) -> _4
+let __proj__Mktuple10__item___5 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) -> _5
+let __proj__Mktuple10__item___6 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) -> _6
+let __proj__Mktuple10__item___7 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) -> _7
+let __proj__Mktuple10__item___8 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) -> _8
+let __proj__Mktuple10__item___9 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) -> _9
+let __proj__Mktuple10__item___10 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10) -> _10
+
+type ('a,'b,'c,'d,'e,'f,'g,'h,'i,'j,'k) tuple11 =
+ 'a *'b *'c *'d *'e *'f *'g *'h *'i *'j *'k
+[@@deriving yojson,show]
+let uu___is_Mktuple11 projectee = true
+let __proj__Mktuple11__item___1 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _1
+let __proj__Mktuple11__item___2 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _2
+let __proj__Mktuple11__item___3 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _3
+let __proj__Mktuple11__item___4 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _4
+let __proj__Mktuple11__item___5 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _5
+let __proj__Mktuple11__item___6 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _6
+let __proj__Mktuple11__item___7 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _7
+let __proj__Mktuple11__item___8 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _8
+let __proj__Mktuple11__item___9 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _9
+let __proj__Mktuple11__item___10 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _10
+let __proj__Mktuple11__item___11 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11) -> _11
+
+type ('a,'b,'c,'d,'e,'f,'g,'h,'i,'j,'k,'l) tuple12 =
+ 'a *'b *'c *'d *'e *'f *'g *'h *'i *'j *'k *'l
+[@@deriving yojson,show]
+let uu___is_Mktuple12 projectee = true
+let __proj__Mktuple12__item___1 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _1
+let __proj__Mktuple12__item___2 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _2
+let __proj__Mktuple12__item___3 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _3
+let __proj__Mktuple12__item___4 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _4
+let __proj__Mktuple12__item___5 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _5
+let __proj__Mktuple12__item___6 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _6
+let __proj__Mktuple12__item___7 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _7
+let __proj__Mktuple12__item___8 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _8
+let __proj__Mktuple12__item___9 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _9
+let __proj__Mktuple12__item___10 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _10
+let __proj__Mktuple12__item___11 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _11
+let __proj__Mktuple12__item___12 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12) -> _12
+
+type ('a,'b,'c,'d,'e,'f,'g,'h,'i,'j,'k,'l,'m) tuple13 =
+ 'a *'b *'c *'d *'e *'f *'g *'h *'i *'j *'k *'l *'m
+[@@deriving yojson,show]
+let uu___is_Mktuple13 projectee = true
+let __proj__Mktuple13__item___1 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _1
+let __proj__Mktuple13__item___2 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _2
+let __proj__Mktuple13__item___3 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _3
+let __proj__Mktuple13__item___4 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _4
+let __proj__Mktuple13__item___5 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _5
+let __proj__Mktuple13__item___6 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _6
+let __proj__Mktuple13__item___7 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _7
+let __proj__Mktuple13__item___8 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _8
+let __proj__Mktuple13__item___9 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _9
+let __proj__Mktuple13__item___10 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _10
+let __proj__Mktuple13__item___11 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _11
+let __proj__Mktuple13__item___12 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _12
+let __proj__Mktuple13__item___13 projectee =
+  match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13) -> _13
+
 type ('a,'b,'c,'d,'e,'f,'g,'h,'i,'j,'k,'l,'m,'n) tuple14 =
  'a *'b *'c *'d *'e *'f *'g *'h *'i *'j *'k *'l *'m *'n
 [@@deriving yojson,show]
@@ -142,33 +283,3 @@ let __proj__Mktuple14__item___13 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14) -> _13
 let __proj__Mktuple14__item___14 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14) -> _14
-
-
-type norm_step =
-    | Simpl
-    | Weak
-    | HNF
-    | Primops
-    | Delta
-    | Zeta
-    | Iota
-    | Reify
-    | NBE
-    | UnfoldOnly  : string list -> norm_step
-    | UnfoldFully : string list -> norm_step
-    | UnfoldAttr  : string list -> norm_step
-
-let simplify : norm_step = Simpl
-let weak    : norm_step = Weak
-let hnf     : norm_step = HNF
-let primops : norm_step = Primops
-let delta   : norm_step = Delta
-let zeta    : norm_step = Zeta
-let iota    : norm_step = Iota
-let delta_only  (s : string list) : norm_step = UnfoldOnly  s
-let delta_fully (s : string list) : norm_step = UnfoldFully s
-let delta_attr  (s : string list) : norm_step = UnfoldAttr  s
-let reify   : norm_step = Reify
-let nbe     : norm_step = NBE
-
-let singleton x = x

@@ -1,3 +1,18 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module SL.Examples
 
 (* cf. #1323, #1465 *)
@@ -549,7 +564,8 @@ let rec append (l1 l2:listptr)
 				           (Some? l1 ==> l1 == l)                                             /\
 				           (valid l (List.Tot.append fl1 fl2) mf)) ==> p l mf))
 
-     by (split (); smt (); 
+     by (assume_safe (fun () -> // assume_safe due to all the List.Tot.hd calls
+         split (); smt ();
                 ignore (forall_intros ());
                 let h = implies_intro () in
 		let l = __elim_exists_return_binders2 h in
@@ -584,7 +600,10 @@ let rec append (l1 l2:listptr)
                 ignore (implies_intro ());
 		apply_lemma (`lemma_frame_out_empty_left);
 		split_and_smt ();
-		ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ());
+		ignore (implies_intro ());
+		ignore (forall_intro ());
+		ignore (implies_intro ());
+
 		split_and_smt ();
 		apply_lemma (`lemma_frame_out_empty_left);
 		smt ();
@@ -690,12 +709,13 @@ let rec append (l1 l2:listptr)
 		split_and_smt ();
 		ignore (implies_intro ());
 		apply_lemma (`lemma_rw);
+		//AR: can't prove definedness hereon
 		ignore (repeatn 2 split_and_smt);
 		apply_lemma (`lemma_frame_out_empty_left);
 		split_and_smt ();
 		ignore (forall_intro ());
 		let h = implies_intro () in rewrite h;
-		process_trivial_tail ())
+		process_trivial_tail ()))
 
 let lemma_apply_rewrite_assoc_mem1 (m1 m2 m3 m4:memory)
   :Lemma (requires ((m2 <*> (m1 <*> m3)) == m4))
@@ -718,7 +738,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
 				(forall mf l. ((Set.equal (dom mf) (Set.union (dom m1) (dom m2))) /\
 				          (valid l (List.Tot.rev_acc fl1 fl2) mf)) ==> p l mf))
 
-    by (split (); smt (); 
+    by (assume_safe (fun () -> split (); smt ();
                ignore (forall_intros ());
                let h = implies_intro () in let l = __elim_exists_return_binders2 h in
 	       let fl1 = List.Tot.hd l in let fl2 = List.Tot.hd (List.Tot.tl l) in
@@ -746,7 +766,9 @@ let rec rev_append (l1:listptr) (l2:listptr)
                ignore (implies_intro ());
 	       apply_lemma (`lemma_frame_out_empty_left);
 	       split_and_smt ();
-	       ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ()); ignore (forall_intro ()); ignore (implies_intro ());
+	       ignore (implies_intro ());
+	       ignore (forall_intro ());
+	       ignore (implies_intro ());
 	       split_and_smt ();
 	       apply_lemma (`lemma_frame_out_empty_left);
 	       smt ();
@@ -811,7 +833,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
 	       ignore (repeatn 3 smt);
 
 	       ignore (forall_intros ()); ignore (implies_intros ());
-	       process_trivial_tail ())
+	       process_trivial_tail ()))
 
 unfold let equal_dom (m0 m1:memory) =
   Set.equal (dom m0) (dom m1)
@@ -823,7 +845,7 @@ let rev (l:listptr)
                                     (forall mf l. ((equal_dom m mf) /\
 				              (valid l (List.Tot.rev fl) mf)) ==> p l mf))
 
-    by (ignore (forall_intro ());
+    by (assume_safe (fun () -> ignore (forall_intro ());
                let m = forall_intro () in
 	       let h = implies_intro () in let l = __elim_exists_return_binders1 h in
 	       let fl = List.Tot.hd l in
@@ -834,4 +856,4 @@ let rev (l:listptr)
 	       witness (binder_to_term fl);
 	       witness (`(Prims.Nil #int));
 	       witness (binder_to_term m);
-	       witness (`SLHeap.emp))
+	       witness (`SLHeap.emp)))
