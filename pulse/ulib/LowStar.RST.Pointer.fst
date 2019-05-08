@@ -44,9 +44,9 @@ let r_ptr_read (#a:Type)
                (_:unit)
              : RST a (r_ptr ptr) 
                      (fun _ -> True)
-                     (fun h1 x h2 -> 
-                        sel (r_ptr ptr) h1 == x /\ 
-                        x == sel (r_ptr ptr) h2) =
+                     (fun h0 x h1 -> 
+                        sel (r_ptr ptr) h0 == x /\ 
+                        x == sel (r_ptr ptr) h1) =
   !* ptr
 
 let r_ptr_write (#a:Type)
@@ -54,5 +54,5 @@ let r_ptr_write (#a:Type)
                 (x:a)
               : RST unit (r_ptr ptr)
                          (fun _ -> True)
-                         (fun _ _ h2 -> sel (r_ptr ptr) h2 == x) =
+                         (fun _ _ h1 -> sel (r_ptr ptr) h1 == x) =
   ptr *= x
