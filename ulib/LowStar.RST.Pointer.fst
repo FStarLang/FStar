@@ -46,12 +46,13 @@ let reveal_ptr ()
            (forall a (ptr:B.pointer a) h . sel (r_ptr ptr) h == Seq.index (B.as_seq h ptr) 0)) =
   reveal ()
 
+let trivial = True
 abstract
 let r_ptr_read (#a:Type)
-               (#ptr:B.pointer a)
+               (ptr:B.pointer a)
                (_:unit)
              : RST a (r_ptr ptr) 
-                     (fun _ -> True)
+                     (fun _ -> trivial)
                      (fun h0 x h1 -> 
                         sel (r_ptr ptr) h0 == x /\ 
                         x == sel (r_ptr ptr) h1) =
@@ -60,10 +61,11 @@ let r_ptr_read (#a:Type)
 
 abstract
 let r_ptr_write (#a:Type)
-                (#ptr:B.pointer a)
+                (ptr:B.pointer a)
                 (x:a)
+                (_:unit)
               : RST unit (r_ptr ptr)
-                         (fun _ -> True)
+                         (fun _ -> trivial)
                          (fun _ _ h1 -> sel (r_ptr ptr) h1 == x) =
   reveal ();
   ptr *= x
