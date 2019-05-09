@@ -25,7 +25,7 @@ open LowStar.RST
 open LowStar.BufferOps
 
 abstract
-let r_ptr (#a:Type) (ptr:B.pointer a) : resource = 
+let r_ptr (#a:Type) (ptr:B.pointer a) : res:resource{res.view.t == a} = 
   let fp = Ghost.hide (B.loc_buffer ptr) in 
   let inv h = B.live h ptr in
   let view = (
@@ -39,11 +39,6 @@ let r_ptr (#a:Type) (ptr:B.pointer a) : resource =
     inv = inv;
     view = view
   }
-
-let reveal_ptr_sel_t (#a:Type) (ptr:B.pointer a)
-  : Lemma (sel_t (r_ptr ptr) == a) 
-          [SMTPat (sel_t (r_ptr ptr))] = 
-  reveal ()
 
 let reveal_ptr ()
   : Lemma ((forall a (ptr:B.pointer a) . as_loc (fp (r_ptr ptr)) == B.loc_buffer ptr) /\
