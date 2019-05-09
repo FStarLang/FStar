@@ -283,7 +283,8 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         let a = U.unlazy_emb a in
         match (SS.compress hd).n, args with
         | Tm_fvar fv1, [(arg, _)]
-            when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
+            when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t"
+               || BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "Mk" ->
             let arg = U.unlazy_emb arg in
             begin match (SS.compress arg).n with
             | Tm_constant (FC.Const_int (i, None)) ->
@@ -703,10 +704,12 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     let bounded_arith_ops
         =
         let bounded_signed_int_types =
-           [ "Int8"; "Int16"; "Int32"; "Int64" ]
+           [ // "Int8"; "Int16"; "Int32"; "Int64"
+   ]
         in
         let bounded_unsigned_int_types =
-           [ "UInt8"; "UInt16"; "UInt32"; "UInt64"; "UInt128"]
+           [ // "UInt8"; "UInt16"; "UInt32"; "UInt64";
+   "UInt128"]
         in
         let int_as_bounded r int_to_t n =
             let c = embed_simple EMB.e_int r n in
