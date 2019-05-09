@@ -193,6 +193,7 @@ let defaults =
       ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
+      ("lsp"                          , Bool false);
       ("include"                      , List []);
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
@@ -339,6 +340,7 @@ let get_hint_info               ()      = lookup_opt "hint_info"                
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
+let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
@@ -743,6 +745,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "ide",
         Const (Bool true),
         "JSON-based interactive mode for IDEs");
+
+       ( noshort,
+        "lsp",
+        Const (Bool true),
+        "Language Server Protocol-based interactive mode for IDEs");
 
        ( noshort,
         "include",
@@ -1483,6 +1490,7 @@ let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()
+let lsp_server                   () = get_lsp                         ()
 let log_queries                  () = get_log_queries                 ()
 let keep_query_captions          () = log_queries                     ()
                                     && get_keep_query_captions        ()
