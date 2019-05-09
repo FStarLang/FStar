@@ -649,7 +649,6 @@ let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
 private val to_vec_mod_pow2: #n:nat -> a:uint_t n -> m:pos -> i:nat{n - m <= i /\ i < n} ->
   Lemma (requires (a % pow2 m == 0))
         (ensures  (index (to_vec a) i == false))
-        [SMTPat (index (to_vec #n a) i); SMTPat (a % pow2 m == 0)]
 let rec to_vec_mod_pow2 #n a m i =
   if i = n - 1 then
     begin
@@ -668,7 +667,6 @@ let rec to_vec_mod_pow2 #n a m i =
 private val to_vec_lt_pow2: #n:nat -> a:uint_t n -> m:nat -> i:nat{i < n - m} ->
   Lemma (requires (a < pow2 m))
         (ensures  (index (to_vec a) i == false))
-        [SMTPat (index (to_vec #n a) i); SMTPat (a < pow2 m)]
 let rec to_vec_lt_pow2 #n a m i =
   if n = 0 then ()
   else
@@ -688,7 +686,6 @@ private val index_to_vec_ones: #n:pos -> m:nat{m <= n} -> i:nat{i < n} ->
         (ensures (pow2 m <= pow2 n /\
           (i < n - m ==> index (to_vec #n (pow2 m - 1)) i == false) /\
           (n - m <= i ==> index (to_vec #n (pow2 m - 1)) i == true)))
-        [SMTPat (index (to_vec #n (pow2 m - 1)) i)]
 let rec index_to_vec_ones #n m i =
    let a = pow2 m - 1 in
    pow2_le_compat n m;
@@ -703,12 +700,16 @@ val logor_disjoint: #n:pos -> a:uint_t n -> b:uint_t n -> m:pos{m < n} ->
   Lemma (requires (a % pow2 m == 0 /\ b < pow2 m))
         (ensures  (logor #n a b == a + b))
 let logor_disjoint #n a b m =
-  assert (a % pow2 m == 0); // To trigger pattern above
-  assert (forall (i:nat{n - m <= i /\ i < n}).{:pattern (index (to_vec a) i)}
-    index (to_vec a) i == false);
-  assert (b < pow2 m); // To trigger pattern above
-  assert (forall (i:nat{i < n - m}).{:pattern (index (to_vec b) i)}
-    index (to_vec b) i == false);
+  let aux1 (i:nat{n - m <= i /\ i < n})
+    : Lemma (index (to_vec a) i == false)
+            [SMTPat (index (to_vec a) i)]
+    = to_vec_mod_pow2 a m i
+  in
+  let aux2 (i:nat{i < n - m})
+    : Lemma (index (to_vec b) i == false)
+            [SMTPat (index (to_vec b) i)]
+    = to_vec_lt_pow2 b m i
+  in
   Seq.lemma_split (logor_vec (to_vec a) (to_vec b)) (n - m);
   Seq.lemma_eq_intro
     (logor_vec (to_vec a) (to_vec b))
@@ -726,6 +727,14 @@ val logand_mask: #n:pos -> a:uint_t n -> m:pos{m < n} ->
 let logand_mask #n a m =
   pow2_lt_compat n m;
   Seq.lemma_split (logand_vec (to_vec a) (to_vec (pow2 m - 1))) (n - m);
+  let v = to_vec #n (pow2 m - 1) in
+  let aux (i:nat{i < n})
+    : Lemma (pow2 m <= pow2 n /\
+            (i < n - m ==> index v i == false) /\
+            (n - m <= i ==> index v i == true))
+            [SMTPat (index v i)]
+    = index_to_vec_ones #n m i
+  in
   Seq.lemma_eq_intro
     (logand_vec (to_vec a) (to_vec (pow2 m - 1)))
     (append (zero_vec #(n - m)) (slice (to_vec a) (n - m) n));
