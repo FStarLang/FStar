@@ -30,6 +30,7 @@ open FStar.Mul
  * - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
  *)
 
+[@unfold_for_smt]
 private
 type t' =
   | Mk: v:uint_t n -> t'
