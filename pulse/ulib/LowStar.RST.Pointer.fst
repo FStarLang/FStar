@@ -24,48 +24,37 @@ module Seq = FStar.Seq
 open LowStar.RST
 open LowStar.BufferOps
 
-abstract
-let r_ptr (#a:Type) (ptr:B.pointer a) : res:resource{res.view.t == a} = 
+let ptr_view (#a:Type) (ptr:B.pointer a) : view a = 
   let fp = Ghost.hide (B.loc_buffer ptr) in 
   let inv h = B.live h ptr in
-  let view = (
-    let sel (h:imem inv) = Seq.index (B.as_seq h ptr) 0 in 
-    {
-      t = a;
-      sel = sel
-    }) in 
+  let sel (h:imem inv) = Seq.index (B.as_seq h ptr) 0 in
   {
     fp = fp;
     inv = inv;
-    view = view
+    sel = sel
   }
 
-let reveal_ptr ()
-  : Lemma ((forall a (ptr:B.pointer a) . as_loc (fp (r_ptr ptr)) == B.loc_buffer ptr) /\
-           (forall a (ptr:B.pointer a) h . inv (r_ptr ptr) h <==> B.live h ptr) /\
-           (forall a (ptr:B.pointer a) h . sel (r_ptr ptr) h == Seq.index (B.as_seq h ptr) 0)) =
-  reveal ()
-
-let trivial = True
-abstract
-let r_ptr_read (#a:Type)
-               (ptr:B.pointer a)
-               (_:unit)
-             : RST a (r_ptr ptr) 
-                     (fun _ -> trivial)
-                     (fun h0 x h1 -> 
-                        sel (r_ptr ptr) h0 == x /\ 
-                        x == sel (r_ptr ptr) h1) =
+let ptr_resource (#a:Type) (ptr:B.pointer a) = 
+  as_resource (ptr_view ptr)
+  
+let ptr_read (#a:Type)
+             (ptr:B.pointer a)
+             (_:unit)
+           : RST a (ptr_resource ptr) 
+                   (fun _ -> True)
+                   (fun h0 x h1 -> 
+                      sel (ptr_view ptr) h0 == x /\ 
+                      x == sel (ptr_view ptr) h1) =
   reveal ();
   !* ptr
 
-abstract
-let r_ptr_write (#a:Type)
-                (ptr:B.pointer a)
-                (x:a)
-                (_:unit)
-              : RST unit (r_ptr ptr)
-                         (fun _ -> trivial)
-                         (fun _ _ h1 -> sel (r_ptr ptr) h1 == x) =
+let ptr_write (#a:Type)
+              (ptr:B.pointer a)
+              (x:a)
+              (_:unit)
+            : RST unit (ptr_resource ptr)
+                       (fun _ -> True)
+                       (fun _ _ h1 -> 
+                          sel (ptr_view ptr) h1 == x) =
   reveal ();
   ptr *= x
