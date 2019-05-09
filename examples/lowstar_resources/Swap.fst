@@ -29,8 +29,8 @@ open FStar.Tactics
 let swap (#a:Type) (ptr1 ptr2:B.pointer a)
   : RST unit (r_ptr ptr1 <*> r_ptr ptr2)
              (fun _ -> True)
-             (fun h0 x h1 -> sel (r_ptr ptr1) h0 === sel (r_ptr ptr2) h1 /\
-                             sel (r_ptr ptr2) h0 === sel (r_ptr ptr1) h1) =
+             (fun h0 x h1 -> sel (r_ptr ptr1) h0 == sel (r_ptr ptr2) h1 /\
+                             sel (r_ptr ptr2) h0 == sel (r_ptr ptr1) h1) =
   let x = frame_left #_ #_ #(r_ptr ptr2) (fun _ -> r_ptr_read #_ #ptr1 ()) in
   let y = frame_right #_ #(r_ptr ptr1) (fun _ -> r_ptr_read #_ #ptr2 ()) in
   frame_left #_ #_ #(r_ptr ptr2) (fun _ -> r_ptr_write #_ #ptr1 y);
