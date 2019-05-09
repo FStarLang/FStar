@@ -835,6 +835,7 @@ and translate_expr env e: expr =
       mk_op_app env Bool (must (mk_bool_op op)) args
 
   // Fixed-width literals are represented as calls to [FStar.Int32.uint_to_t]
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "Mk") }, [ { expr = MLE_Const (MLC_Int (c, None)) }])
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "int_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }])
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "uint_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when is_machine_int m ->
       EConstant (must (mk_width m), c)
