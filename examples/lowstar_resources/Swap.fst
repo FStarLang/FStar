@@ -31,22 +31,34 @@ let swap (#a:Type) (ptr1 ptr2:B.pointer a)
              (fun _ -> True)
              (fun h0 x h1 -> sel (r_ptr ptr1) h0 == sel (r_ptr ptr2) h1 /\
                              sel (r_ptr ptr2) h0 == sel (r_ptr ptr1) h1) =
-  let x = frame_left #_ #_ #(r_ptr ptr2) (fun _ -> r_ptr_read #_ #ptr1 ()) in
-  let y = frame_right #_ #(r_ptr ptr1) (fun _ -> r_ptr_read #_ #ptr2 ()) in
-  frame_left #_ #_ #(r_ptr ptr2) (fun _ -> r_ptr_write #_ #ptr1 y);
-  frame_right #_ #(r_ptr ptr1) (fun _ -> r_ptr_write #_ #ptr2 x)
+  let x = frame_left #(r_ptr ptr2) (r_ptr_read ptr1) in
+  let y = frame_right #(r_ptr ptr1) (r_ptr_read ptr2) in
+  frame_left #(r_ptr ptr2) (r_ptr_write ptr1 y);
+  frame_right #(r_ptr ptr1) (r_ptr_write ptr2 x)
 
-let n_swap (#a:Type) (ptr1 ptr2:B.pointer a)
+val n_swap (#a:Type) (ptr1 ptr2:B.pointer a)
   : RST unit (r_ptr ptr1 <*> r_ptr ptr2)
              (fun _ -> True)
              (fun h0 x h1 -> sel (r_ptr ptr1) h0 == sel (r_ptr ptr1) h1 /\
-                             sel (r_ptr ptr2) h0 == sel (r_ptr ptr2) h1) = 
-                             
+                          sel (r_ptr ptr2) h0 == sel (r_ptr ptr2) h1)
+
+// --log_queries
+#reset-options "--max_fuel 0 --max_ifuel 0 --use_two_phase_tc false --__temp_fast_implicits --using_facts_from '* -LowStar.Monotonic -FStar.Monotonic.HyperHeap -FStar.Monotonic.HyperStack -FStar.Reflection -FStar.Tactics -FStar.ModifiesGen -FStar.HyperStack -FStar.Monotonic.Heap -LowStar.Buffer -FStar.Calc -LowStar.RST.reveal_star_inv' --query_stats --print_z3_statistics --z3cliopt smt.qi.eager_threshold=100 --log_queries --z3refresh"
+let n_swap #a ptr1 ptr2 =                      
+  swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;  
+  swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
+  swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
+  swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
+  swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
+  swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
+
+  swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;  
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2
+
 
 
 (*
