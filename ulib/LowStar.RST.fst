@@ -72,15 +72,44 @@ let inv (res:resource) (h:HS.mem) =
 abstract
 let fp (res:resource) = 
   res.fp
-  
+
+type view a = {
+  fp:loc;
+  inv:mem -> prop;
+  sel:imem -> a
+}
+
+resource = (a:Type * view a)
+
+sel (v:view a) (h:imem (singleton v)) : a
+
 abstract
 let sel (res:resource) (h:imem (inv res)) =
   res.view.sel h
 
+abstract
+let modifies (res:resource) (h0 h1: HS.mem) =
+    B.modifies (as_loc (fp res)) h0 h1 /\
+    HST.equal_domains h0 h1
+
+let modifies_trans (res:resource) (h0 h1 h2:HS.mem) 
+  : Lemma (requires 
+             modifies res h0 h1 /\
+             modifies res h1 h2)
+           (ensures
+             modifies res h0 h2)
+           [SMTPat (modifies res h0 h2);
+            SMTPat (modifies res h0 h1)]
+  = ()            
+
 let reveal ()
   : Lemma ((forall res h .{:pattern inv res h} inv res h <==> res.inv h) /\ 
            (forall res .{:pattern fp res} fp res == res.fp) /\ 
-           (forall res h .{:pattern sel res h} sel res h == res.view.sel h)) =
+           (forall res h .{:pattern sel res h} sel res h == res.view.sel h) /\
+           (forall res h0 h1.{:pattern modifies res h0 h1}
+             modifies res h0 h1 <==>
+             B.modifies (as_loc (fp res)) h0 h1 /\
+             HST.equal_domains h0 h1)) =
   ()
 
 (* Separating conjunction on views and resources *)
@@ -181,8 +210,7 @@ effect RST (a:Type)
                pre h0 /\                   //Require the pre-condition
                (forall (x:a) (h1:HS.mem).
                  inv res h1 /\                          //Ensure the resource invariant
-                 B.modifies (as_loc (fp res)) h0 h1 /\  //Ensure that only resource's footprint is modified
-                 HST.equal_domains h0 h1 /\
+                 modifies res h0 h1 /\                  //Ensure that only resource's footprint is modified
                  post h0 x h1 ==>                       //Ensure the post-condition
                  k x h1))                               //prove the continuation under this hypothesis
 
@@ -196,12 +224,14 @@ type resource_w_rw = {
 
 (* Framing for RST computations *)
 
+unfold
 let frame_left_pre (#res1:resource)
               (#res2:resource)
               (pre:r_pre res1)
               (h:imem (inv (res1 <*> res2))) = 
   pre h
 
+unfold
 let frame_left_post (#res1:resource)
                (#res2:resource)
                (#a:Type)
@@ -212,23 +242,26 @@ let frame_left_post (#res1:resource)
   post h0 x h1 /\
   sel res2 h0 == sel res2 h1
 
-let frame_left (#a:Type)
-          (#res1:resource)
-          (#res2:resource)
-          (#pre:r_pre res1)
-          (#post:r_post res1 a)
-          ($f:unit -> RST a res1 pre post)
-        : RST a (res1 <*> res2) 
+let frame_left 
+          (#frame:resource)
+          (#a:Type)
+          (#fp:resource)
+          (#pre:r_pre fp)
+          (#post:r_post fp a)
+          ($f:unit -> RST a fp pre post)
+        : RST a (fp <*> frame)
                 (frame_left_pre pre) 
                 (frame_left_post post) =
   f ()
 
+unfold
 let frame_right_pre (#res1:resource)
                (#res2:resource)
                (pre:r_pre res2)
                (h:imem (inv (res1 <*> res2))) = 
   pre h
 
+unfold
 let frame_right_post (#res1:resource)
                 (#res2:resource)
                 (#a:Type)
@@ -239,19 +272,20 @@ let frame_right_post (#res1:resource)
   post h0 x h1 /\
   sel res1 h0 == sel res1 h1
 
-let frame_right (#a:Type)
-           (#res1:resource)
-           (#res2:resource)
-           (#pre:r_pre res2)
-           (#post:r_post res2 a)
-           ($f:unit -> RST a res2 pre post)
-         : RST a (res1 <*> res2) 
+let frame_right 
+           (#frame:resource)
+           (#a:Type)           
+           (#fp:resource)
+           (#pre:r_pre fp)
+           (#post:r_post fp a)
+           ($f:unit -> RST a fp pre post)
+         : RST a (frame <*> fp) 
                  (frame_right_pre pre) 
                  (frame_right_post post) =
   f ()
 
 (* Resource inclusion for RST computations *)
-
+unfold
 let include_pre (#res1:resource)
                 (#res2:resource)
                 (inc:r_includes res1 res2)
@@ -259,6 +293,7 @@ let include_pre (#res1:resource)
                 (h:imem (inv res1)) =
   pre h
 
+unfold
 let include_post (#res1:resource)
                  (#res2:resource)
                  (inc:r_includes res1 res2)
