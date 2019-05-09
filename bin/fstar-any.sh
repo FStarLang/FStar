@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-FSTAR=$(cd "$(dirname "$0")" && pwd -P)/fstar.exe
+if which greadlink >/dev/null 2>&1; then
+  READLINK=greadlink
+else
+  READLINK=readlink
+fi
+FSTAR=$(dirname $($READLINK -f $0))/fstar.exe
 if [ ! -f "$FSTAR" ]; then
   echo "fstar.exe not found"
   exit 1
