@@ -72,19 +72,14 @@ let inv (res:resource) (h:HS.mem) =
 abstract
 let fp (res:resource) = 
   res.fp
-
-abstract 
-let sel_t (res:resource) =
-  res.view.t
   
 abstract
-let sel (res:resource) (h:imem (inv res)) : GTot (sel_t res) =
+let sel (res:resource) (h:imem (inv res)) =
   res.view.sel h
 
 let reveal ()
   : Lemma ((forall res h .{:pattern inv res h} inv res h <==> res.inv h) /\ 
            (forall res .{:pattern fp res} fp res == res.fp) /\ 
-           (forall res .{:pattern sel_t res} sel_t res == res.view.t) /\
            (forall res h .{:pattern sel res h} sel res h == res.view.sel h)) =
   ()
 
@@ -95,11 +90,11 @@ let r_disjoint (res1 res2:resource) =
   B.loc_disjoint (as_loc (fp res1)) (as_loc (fp res2))
 
 abstract
-let ( <*> ) (res1 res2:resource) : resource = 
+let ( <*> ) (res1 res2:resource) : res:resource{res.view.t == res1.view.t & res2.view.t} = 
   let fp = Ghost.hide (B.loc_union (as_loc (fp res1)) (as_loc (fp res2))) in 
   let inv h = inv res1 h /\ inv res2 h /\ r_disjoint res1 res2 in
   let view = (
-    let t = sel_t res1 & sel_t res2 in 
+    let t = res1.view.t & res2.view.t in 
     let sel h = (sel res1 h,sel res2 h) in 
     {
       t = t;
@@ -121,14 +116,14 @@ let reveal_star_fp (res1 res2:resource)
   ()
 
 let reveal_star_view_t (res1 res2:resource)
-  : Lemma (sel_t (res1 <*> res2) == sel_t res1 & sel_t res2) = 
+  : Lemma ((res1 <*> res2).view.t == res1.view.t & res2.view.t) = 
   ()
 
 (* (Constructive) view and resource inclusion *)
 
 noeq
 type r_includes_t (res1 res2:resource) = {
-    view_inc: sel_t res1 -> sel_t res2;
+    view_inc: res1.view.t -> res2.view.t;
     fp_delta: eloc
   }
 
@@ -153,7 +148,7 @@ let r_includes res1 res2 =
 let star_includes_left (res1:resource) 
                        (res2:resource{B.loc_disjoint (as_loc (fp res1)) (as_loc (fp res2))})
                      : r_includes (res1 <*> res2) res1 = 
-  let view_inc (xy:sel_t (res1 <*> res2)) = fst xy in 
+  let view_inc (xy:(res1 <*> res2).view.t) = fst xy in 
   let fp_delta = fp res2 in
   {
     view_inc = view_inc;
@@ -163,7 +158,7 @@ let star_includes_left (res1:resource)
 let star_includes_right (res1:resource) 
                         (res2:resource{B.loc_disjoint (as_loc (fp res1)) (as_loc (fp res2))})
                       : r_includes (res1 <*> res2) res2 = 
-  let view_inc (xy:sel_t (res1 <*> res2)) = snd xy in 
+  let view_inc (xy:(res1 <*> res2).view.t) = snd xy in 
   let fp_delta = fp res1 in
   {
     view_inc = view_inc;
