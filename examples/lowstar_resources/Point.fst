@@ -79,18 +79,15 @@ let point_inclusion (p:point)
   reveal_view ();
   reveal_ptr ();
   reveal_star ();
-  let delta = {
-      t = unit;
-      view = {
-        fp = Ghost.hide B.loc_none;
-        inv = (fun h -> True);
-        sel = (fun _ -> ())
-      }
-    } in 
   {
-    delta = delta
+    t = unit;
+    view = {
+      fp = Ghost.hide B.loc_none;
+      inv = (fun h -> True);
+      sel = (fun _ -> ())
+    }
   }
-
+  
 private
 let move_up_aux (x:B.pointer int) (y:B.pointer int)
   : RST unit (ptr_resource x <*> ptr_resource y)
