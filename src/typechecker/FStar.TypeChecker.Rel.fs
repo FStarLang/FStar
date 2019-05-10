@@ -948,8 +948,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
         | Tm_fvar fv ->
           begin
           match Env.lookup_definition
-                    [Env.Unfold delta_constant;
-                     Env.Eager_unfolding_only]
+                    [Env.Unfold delta_constant]
                     env
                     fv.fv_name.v
           with
@@ -964,7 +963,6 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                  Env.HNF;
                  Env.Primops;
                  Env.Beta;
-                 Env.Eager_unfolding;
                  Env.Iota]
             in
             let steps =
@@ -2832,8 +2830,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          in
          let no_free_uvars t = BU.set_is_empty (Free.uvars t) && BU.set_is_empty (Free.univs t) in
          let equal t1 t2 =
-            let t1 = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t1 in
-            let t2 = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t2 in
+            let t1 = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Iota] env t1 in
+            let t2 = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Iota] env t2 in
             U.eq_tm t1 t2 = U.Equal
          in
          if (Env.is_interpreted env head1 || Env.is_interpreted env head2) //we have something like (+ x1 x2) =?= (- y1 y2)

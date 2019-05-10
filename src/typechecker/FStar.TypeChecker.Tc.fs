@@ -413,7 +413,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
 
           let act_defn = N.normalize [ Env.UnfoldUntil S.delta_constant ] env act_defn in
-          let act_typ = N.normalize [ Env.UnfoldUntil S.delta_constant; Env.Eager_unfolding; Env.Beta ] env act_typ in
+          let act_typ = N.normalize [ Env.UnfoldUntil S.delta_constant; Env.Beta ] env act_typ in
           // 2) This implies that [action_typ] has Type(k): good for us!
 
           // 3) Unify [action_typ] against [expected_k], because we also need
@@ -2215,7 +2215,7 @@ let check_module env m b =
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with
         | Sig_let ((b, lbs), ids) ->
-            let n = N.normalize [Env.Beta ; Env.Eager_unfolding; Env.Reify ; Env.Inlining ; Env.Primops ; Env.UnfoldUntil S.delta_constant ; Env.AllowUnboundUniverses ] in
+            let n = N.normalize [Env.Beta ; Env.Reify ; Env.Inlining ; Env.Primops ; Env.UnfoldUntil S.delta_constant ; Env.AllowUnboundUniverses ] in
             let update lb =
                 let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
                 { lb with lbdef = n (Env.push_univ_vars env univnames) e }

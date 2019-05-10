@@ -2516,8 +2516,7 @@ let ghost_to_pure env c =
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
      let cfg =
-        config [Eager_unfolding;
-                UnfoldUntil delta_constant;
+        config [UnfoldUntil delta_constant;
                 EraseUniverses;
                 AllowUnboundUniverses;
                 Unascribe;   //remove ascriptions

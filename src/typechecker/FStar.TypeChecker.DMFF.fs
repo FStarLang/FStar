@@ -371,7 +371,7 @@ let gen_wps_for_free
   in
   let rec mk_rel rel t x y =
     let mk_rel = mk_rel rel in
-    let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
+    let t = N.normalize [ Env.Beta; Env.UnfoldUntil S.delta_constant ] env t in
     match (SS.compress t).n with
     | Tm_type _ ->
         (* BU.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
@@ -410,7 +410,7 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let rec mk_stronger t x y =
-        let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
+        let t = N.normalize [ Env.Beta; Env.UnfoldUntil S.delta_constant ] env t in
         match (SS.compress t).n with
         | Tm_type _ -> U.mk_imp x y
         | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
@@ -905,7 +905,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 and infer (env: env) (e: term): nm * term * term =
   // BU.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
-  let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.tcenv in
+  let normalize = N.normalize [ Env.Beta; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.tcenv in
   match (SS.compress e).n with
   | Tm_bvar bv ->
       failwith "I failed to open a binder... boo"
@@ -1351,7 +1351,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 // A helper --------------------------------------------------------------------
 
 (* KM : why is there both NoDeltaSteps and UnfoldUntil Delta_constant ? *)
-let n = N.normalize [ Env.Beta; Env.UnfoldUntil delta_constant; Env.DoNotUnfoldPureLets; Env.Eager_unfolding; Env.EraseUniverses ]
+let n = N.normalize [ Env.Beta; Env.UnfoldUntil delta_constant; Env.DoNotUnfoldPureLets; Env.EraseUniverses ]
 
 // Exported definitions -------------------------------------------------------
 
