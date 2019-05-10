@@ -25,30 +25,29 @@ open LowStar.Resource
 open LowStar.RST
 open LowStar.RST.Pointer
 
-(* Swapping values of pointers using the separate left and right framing operations *)
+(* Swapping values of pointers using the generic frame operation *)
 
-(*
 let swap (#a:Type) (ptr1 ptr2:B.pointer a)
   : RST unit (ptr_resource ptr1 <*> ptr_resource ptr2)
              (fun _ -> True)
              (fun h0 x h1 -> 
                 sel (ptr_view ptr1) h0 == sel (ptr_view ptr2) h1 /\
                 sel (ptr_view ptr2) h0 == sel (ptr_view ptr1) h1) =
-  let x = frame_left #(ptr_resource ptr2) (ptr_read ptr1) in
-  let y = frame_right #(ptr_resource ptr1) (ptr_read ptr2) in
-  frame_left #(ptr_resource ptr2) (ptr_write ptr1 y);
-  frame_right #(ptr_resource ptr1) (ptr_write ptr2 x)
+  let x = frame (star_includes_left (ptr_resource ptr2)) (ptr_read ptr1) in 
+  let y = frame (star_includes_right (ptr_resource ptr1)) (ptr_read ptr2) in 
+  frame (star_includes_left (ptr_resource ptr2)) (ptr_write ptr1 y);
+  frame (star_includes_right (ptr_resource ptr1)) (ptr_write ptr2 x)
 
 val n_swap (#a:Type) (ptr1 ptr2:B.pointer a)
   : RST unit (ptr_resource ptr1 <*> ptr_resource ptr2)
              (fun _ -> True)
              (fun h0 x h1 -> 
                 sel (ptr_view ptr1) h0 == sel (ptr_view ptr1) h1 /\
-                sel (ptr_view ptr2) h0 == sel (ptr_view ptr2) h1)
+                sel (ptr_view ptr2) h0 == sel (ptr_view ptr2) h1) 
 
 #reset-options "--max_fuel 0 --max_ifuel 0 --using_facts_from '* -LowStar.Monotonic -FStar.Monotonic.HyperHeap -FStar.Monotonic.HyperStack -FStar.Reflection -FStar.Tactics -FStar.ModifiesGen -FStar.HyperStack -FStar.Monotonic.Heap -LowStar.Buffer -FStar.Calc -LowStar.RST.reveal_star_inv'--z3cliopt smt.qi.eager_threshold=100"
-// --log_queries --query_stats --print_z3_statistics  --z3refresh
-let n_swap #a ptr1 ptr2 =                      
+let n_swap' #a ptr1 ptr2 =
+                             
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;  
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
@@ -78,59 +77,4 @@ let n_swap #a ptr1 ptr2 =
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2   // 100
-#reset-options
-*)
-
-(* Swapping values of pointers using the generic frame operation *)
-
-let swap' (#a:Type) (ptr1 ptr2:B.pointer a)
-  : RST unit (ptr_resource ptr1 <*> ptr_resource ptr2)
-             (fun _ -> True)
-             (fun h0 x h1 -> 
-                sel (ptr_view ptr1) h0 == sel (ptr_view ptr2) h1 /\
-                sel (ptr_view ptr2) h0 == sel (ptr_view ptr1) h1) =
-  let x = frame (star_includes_left (ptr_resource ptr2)) (ptr_read ptr1) in 
-  let y = frame (star_includes_right (ptr_resource ptr1)) (ptr_read ptr2) in 
-  frame (star_includes_left (ptr_resource ptr2)) (ptr_write ptr1 y);
-  frame (star_includes_right (ptr_resource ptr1)) (ptr_write ptr2 x)
-
-val n_swap' (#a:Type) (ptr1 ptr2:B.pointer a)
-  : RST unit (ptr_resource ptr1 <*> ptr_resource ptr2)
-             (fun _ -> True)
-             (fun h0 x h1 -> 
-                sel (ptr_view ptr1) h0 == sel (ptr_view ptr1) h1 /\
-                sel (ptr_view ptr2) h0 == sel (ptr_view ptr2) h1) 
-
-#reset-options "--max_fuel 0 --max_ifuel 0 --using_facts_from '* -LowStar.Monotonic -FStar.Monotonic.HyperHeap -FStar.Monotonic.HyperStack -FStar.Reflection -FStar.Tactics -FStar.ModifiesGen -FStar.HyperStack -FStar.Monotonic.Heap -LowStar.Buffer -FStar.Calc -LowStar.RST.reveal_star_inv'--z3cliopt smt.qi.eager_threshold=100"
-let n_swap' #a ptr1 ptr2 =
-                             
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;  // 20
-
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;  // 40
-
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;  // 60
-
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;  // 80
-
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
-  swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2   // 100
 #reset-options
