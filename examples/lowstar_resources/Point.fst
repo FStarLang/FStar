@@ -43,13 +43,15 @@ type point_view_t = {
 abstract
 let point_view (p:point) : view point_view_t = 
   let fp = Ghost.hide (B.loc_union (B.loc_buffer p.x) (B.loc_buffer p.y)) in
-  let inv h = B.live h p.x /\ B.live h p.y /\ 
-              Seq.index (B.as_seq h p.x) 0 == Seq.index (B.as_seq h p.y) 0 in
+  let inv h = 
+    B.live h p.x /\ B.live h p.y /\ 
+    Seq.index (B.as_seq h p.x) 0 == Seq.index (B.as_seq h p.y) 0 in
   let sel (h:imem inv) = 
     { 
       x_view = Seq.index (B.as_seq h p.x) 0; 
       y_view = Seq.index (B.as_seq h p.y) 0
     } in
+  reveal_view ();
   {
     fp = fp;
     inv = inv;
@@ -74,12 +76,9 @@ private
 let point_inclusion (p:point) 
   : r_weakly_includes (as_resource (point_view p)) 
                       (ptr_resource p.x <*> ptr_resource p.y) = 
-  reveal ();
+  reveal_view ();
   reveal_ptr ();
   reveal_star ();
-  let inc (xy:(as_resource (point_view p)).t) 
-    : GTot ((ptr_resource p.x).t & (ptr_resource p.y).t) = 
-    (xy.x_view,xy.y_view) in 
   let delta = {
       t = unit;
       view = {
@@ -89,7 +88,6 @@ let point_inclusion (p:point)
       }
     } in 
   {
-    inc = inc;
     delta = delta
   }
 
@@ -108,9 +106,9 @@ let move_up_aux (x:B.pointer int) (y:B.pointer int)
 let move_up (p:point)
   : RST unit (as_resource (point_view p))
              (fun _ -> True)
-             (fun h0 _ h1 -> (sel (point_view p) h1).x_view = (sel (point_view p) h0).x_view + 1 /\
-                             (sel (point_view p) h1).y_view = (sel (point_view p) h0).y_view + 1) = 
-  reveal ();
+             (fun h0 _ h1 -> sel_x p h1 = sel_x p h0 + 1 /\
+                             sel_y p h1 = sel_y p h0 + 1) = 
+  reveal_ptr ();
   weak_frame (point_inclusion p) (fun _ -> move_up_aux p.x p.y)
 
 private
@@ -128,7 +126,7 @@ let move_down_aux (x:B.pointer int) (y:B.pointer int)
 let move_down (p:point)
   : RST unit (as_resource (point_view p))
              (fun _ -> True)
-             (fun h0 _ h1 -> (sel (point_view p) h1).x_view = (sel (point_view p) h0).x_view - 1 /\
-                             (sel (point_view p) h1).y_view = (sel (point_view p) h0).y_view - 1) = 
-  reveal ();
+             (fun h0 _ h1 -> sel_x p h1 = sel_x p h0 - 1 /\
+                             sel_y p h1 = sel_y p h0 - 1) = 
+  reveal_ptr ();
   weak_frame (point_inclusion p) (fun _ -> move_down_aux p.x p.y)
