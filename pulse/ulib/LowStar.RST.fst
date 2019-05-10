@@ -27,13 +27,14 @@ let imem inv = m:HS.mem{inv m}
 let eloc = Ghost.erased B.loc
 let as_loc (x:eloc) : GTot B.loc = Ghost.reveal x
 
-
+abstract
 let sel_reads_fp #b fp #inv (sel:(imem inv) -> GTot b) =
   forall (h0 h1:imem inv) loc. {:pattern  (B.modifies loc h0 h1); (sel h1)}
     B.loc_disjoint (as_loc fp) loc /\
     B.modifies loc h0 h1 ==>
     sel h0 == sel h1
 
+abstract
 let inv_reads_fp fp inv =
   forall h0 h1 loc.{:pattern (B.modifies loc h0 h1); (inv h1)}
     inv h0 /\
@@ -57,6 +58,24 @@ let view a =
     inv_reads_fp view.fp view.inv
   }
 
+let reveal_view ()
+  : Lemma ((forall #b fp #inv (sel:(imem inv) -> GTot b) .{:pattern sel_reads_fp fp sel}
+              sel_reads_fp fp sel
+              <==>
+              (forall (h0 h1:imem inv) loc. {:pattern  (B.modifies loc h0 h1); (sel h1)}
+                 B.loc_disjoint (as_loc fp) loc /\
+                 B.modifies loc h0 h1 ==>
+                 sel h0 == sel h1)) /\
+            (forall fp inv .{:pattern inv_reads_fp fp inv}
+               inv_reads_fp fp inv
+               <==>
+               (forall h0 h1 loc.{:pattern (B.modifies loc h0 h1); (inv h1)}
+                  inv h0 /\
+                  B.loc_disjoint (as_loc fp) loc /\
+                  B.modifies loc h0 h1 ==>
+                  inv h1)))
+  = ()
+
 noeq 
 type resource : Type u#1 = {
     t: Type u#0;
@@ -71,15 +90,12 @@ let as_resource (#a:Type) (view:view a) : resource = {
 let view_of (res:resource) = 
   res.view
 
-abstract
 let fp (res:resource) = 
   res.view.fp
 
-abstract
 let inv (res:resource) (h:HS.mem) =
   res.view.inv h
 
-abstract
 let sel (#a:Type) (view:view a) (h:imem (inv (as_resource view))) =
   view.sel h
 
@@ -103,16 +119,12 @@ let modifies_trans (res:resource) (h0 h1 h2:HS.mem)
             SMTPat (modifies res h0 h1)]
   = ()
 
-let reveal ()
-  : Lemma ((forall res.{:pattern view_of res} view_of res == res.view) /\
-           (forall res h .{:pattern inv res h} inv res h <==> res.view.inv h) /\ 
-           (forall res .{:pattern fp res} fp res == res.view.fp) /\ 
-           (forall a (view:view a) h .{:pattern sel view h} sel view h == view.sel h) /\
-           (forall res h0 h1.{:pattern modifies res h0 h1}
+let reveal_modifies ()
+  : Lemma (forall res h0 h1.{:pattern modifies res h0 h1}
              modifies res h0 h1 <==>
              B.modifies (as_loc (fp res)) h0 h1 /\
-             HST.equal_domains h0 h1)) =
-  ()
+             HST.equal_domains h0 h1)
+  = ()
 
 (* Separating conjunction on views and resources *)
 
@@ -157,24 +169,18 @@ let reveal_star ()
 (* Constructive resource inclusion *)
 
 noeq
-type r_includes_t (res1 res2:resource) = {
-    inc: view_t res1.t res2.t;   // viewing larger resource as a smaller one
+type r_includes_t (outer inner:resource) = {
     delta: resource              // delta separating the two resources
   }
 
-let r_includes res1 res2 = 
-  inc:r_includes_t res1 res2 {
-    // Views are mapped to views
-    (forall (h:imem (fun h -> inv res1 h /\ inv res2 h)) .{:pattern (inc.inc (sel (view_of res1) h))} 
-               inc.inc (sel (view_of res1) h) == sel (view_of res2) h) /\
+let r_includes outer inner = 
+  inc:r_includes_t outer inner {
     // Delta is disjoint from the smaller resource
-    r_disjoint inc.delta res2 /\
+    r_disjoint inc.delta inner /\
     // Footprint of the larger resource is union of delta and the smaller resource
-    as_loc (fp res1) == B.loc_union (as_loc (fp inc.delta)) (as_loc (fp res2)) /\
-    // Larger resource's invariant implies the smaller resource's invariant (e.g., liveness)
-    (forall h .{:pattern (inv res1 h); (inv res2 h)} inv res1 h ==> inv res2 h) /\
+    as_loc (fp outer) == B.loc_union (as_loc (fp inc.delta)) (as_loc (fp inner)) /\
     // Larger invariant is equivalent to delta and the smaller invariant
-    (forall h . inv res1 h <==> inv res2 h /\ inv inc.delta h)
+    (forall h . inv outer h <==> inv inner h /\ inv inc.delta h)
   }
 
 (* Left and right inclusions for separating conjunction *)
@@ -182,9 +188,7 @@ let r_includes res1 res2 =
 let star_includes_left (#fp:resource) 
                        (frame:resource{r_disjoint fp frame})
                      : r_includes (fp <*> frame) fp = 
-  let inc (xy:(fp <*> frame).t) = fst xy in 
   {
-    inc = inc;
     delta = frame
   }
 
@@ -193,7 +197,6 @@ let star_includes_right (#fp:resource)
                       : r_includes (frame <*> fp) fp = 
   let inc (xy:(frame <*> fp).t) = snd xy in 
   {
-    inc = inc;
     delta = frame
   }
 
@@ -314,25 +317,18 @@ let frame (#a:Type)
 (* Weaker form of resource inclusion (with invariant inclusion instead of equivalence) *)
 
 noeq
-type r_weakly_includes_t (res1 res2:resource) = {
-    inc: view_t res1.t res2.t;   // viewing larger resource as a smaller one
+type r_weakly_includes_t (outer inner:resource) = {
     delta: resource              // delta separating the two resources
   }
 
-let r_weakly_includes res1 res2 = 
-  inc:r_weakly_includes_t res1 res2 {
-    // Views are mapped to views
-    (forall (h:imem (fun h -> inv res1 h /\ inv res2 h)) .
-            {:pattern (inc.inc (sel (view_of res1) h))} 
-              inc.inc (sel (view_of res1) h) == sel (view_of res2) h) /\
+let r_weakly_includes outer inner = 
+  inc:r_weakly_includes_t outer inner {
     // Delta is disjoint from the smaller resource
-    r_disjoint inc.delta res2 /\
+    r_disjoint inc.delta outer /\
     // Footprint of the larger resource is union of delta and the smaller resource
-    as_loc (fp res1) == B.loc_union (as_loc (fp inc.delta)) (as_loc (fp res2)) /\
-    // Larger resource's invariant implies the smaller resource's invariant (e.g., liveness)
-    (forall h .{:pattern (inv res1 h); (inv res2 h)} inv res1 h ==> inv res2 h) /\
-    // Larger invariant is equivalent to delta and the smaller invariant
-    (forall h . inv res1 h ==> inv res2 h /\ inv inc.delta h)
+    as_loc (fp outer) == B.loc_union (as_loc (fp inc.delta)) (as_loc (fp inner)) /\
+    // Larger invariant (only) implies the delta and the smaller invariant
+    (forall h . inv outer h ==> inv inner h /\ inv inc.delta h)
   }
 
 (* Weaker form of framing, a bit similar to snapshot restoration in monotonic state *)
