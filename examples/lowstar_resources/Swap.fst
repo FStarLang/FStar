@@ -27,6 +27,7 @@ open LowStar.RST.Pointer
 
 (* Swapping values of pointers using the separate left and right framing operations *)
 
+(*
 let swap (#a:Type) (ptr1 ptr2:B.pointer a)
   : RST unit (ptr_resource ptr1 <*> ptr_resource ptr2)
              (fun _ -> True)
@@ -78,6 +79,7 @@ let n_swap #a ptr1 ptr2 =
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2   // 100
 #reset-options
+*)
 
 (* Swapping values of pointers using the generic frame operation *)
 
