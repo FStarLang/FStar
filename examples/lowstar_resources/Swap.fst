@@ -44,7 +44,7 @@ val n_swap (#a:Type) (ptr1 ptr2:B.pointer a)
                 sel (ptr_view ptr1) h0 == sel (ptr_view ptr1) h1 /\
                 sel (ptr_view ptr2) h0 == sel (ptr_view ptr2) h1)
 
-#reset-options "--max_fuel 0 --max_ifuel 0 --use_two_phase_tc false --__temp_fast_implicits --using_facts_from '* -LowStar.Monotonic -FStar.Monotonic.HyperHeap -FStar.Monotonic.HyperStack -FStar.Reflection -FStar.Tactics -FStar.ModifiesGen -FStar.HyperStack -FStar.Monotonic.Heap -LowStar.Buffer -FStar.Calc -LowStar.RST.reveal_star_inv'--z3cliopt smt.qi.eager_threshold=100"
+#reset-options "--max_fuel 0 --max_ifuel 0 --using_facts_from '* -LowStar.Monotonic -FStar.Monotonic.HyperHeap -FStar.Monotonic.HyperStack -FStar.Reflection -FStar.Tactics -FStar.ModifiesGen -FStar.HyperStack -FStar.Monotonic.Heap -LowStar.Buffer -FStar.Calc -LowStar.RST.reveal_star_inv'--z3cliopt smt.qi.eager_threshold=100"
 // --log_queries --query_stats --print_z3_statistics  --z3refresh
 let n_swap #a ptr1 ptr2 =                      
   swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2; swap ptr1 ptr2;  
@@ -98,7 +98,7 @@ val n_swap' (#a:Type) (ptr1 ptr2:B.pointer a)
                 sel (ptr_view ptr1) h0 == sel (ptr_view ptr1) h1 /\
                 sel (ptr_view ptr2) h0 == sel (ptr_view ptr2) h1) 
 
-#reset-options "--max_fuel 0 --max_ifuel 0 --use_two_phase_tc false --__temp_fast_implicits --using_facts_from '* -LowStar.Monotonic -FStar.Monotonic.HyperHeap -FStar.Monotonic.HyperStack -FStar.Reflection -FStar.Tactics -FStar.ModifiesGen -FStar.HyperStack -FStar.Monotonic.Heap -LowStar.Buffer -FStar.Calc -LowStar.RST.reveal_star_inv'--z3cliopt smt.qi.eager_threshold=100"
+#reset-options "--max_fuel 0 --max_ifuel 0 --using_facts_from '* -LowStar.Monotonic -FStar.Monotonic.HyperHeap -FStar.Monotonic.HyperStack -FStar.Reflection -FStar.Tactics -FStar.ModifiesGen -FStar.HyperStack -FStar.Monotonic.Heap -LowStar.Buffer -FStar.Calc -LowStar.RST.reveal_star_inv'--z3cliopt smt.qi.eager_threshold=100"
 let n_swap' #a ptr1 ptr2 =
                              
   swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2; swap' ptr1 ptr2;
