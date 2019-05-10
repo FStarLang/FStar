@@ -759,10 +759,6 @@ let alist_of_fstar_option opt =
 let json_of_fstar_option opt =
   JsonAssoc (alist_of_fstar_option opt)
 
-let write_json json =
-  Util.print_raw (Util.string_of_json json);
-  Util.print_raw "\n"
-
 let json_of_response qid status response =
   let qid = JsonStr qid in
   let status = match status with
@@ -1169,12 +1165,6 @@ let run_autocomplete st search_term context =
     run_option_autocomplete st search_term is_reset
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
-
-// let string_of_sigmap sigmap =
-//   Util.smap_fold sigmap
-//     (fun k (v, _) acc ->
-//        (k ^ ": " ^ (sigelt_to_string v)) :: acc) []
-//   |> Util.concat_l "\n"
 
 let run_and_rewind st sigint_default task =
   let st = push_repl "run_and_rewind" FullCheck Noop st in

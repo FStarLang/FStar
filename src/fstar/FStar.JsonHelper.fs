@@ -30,6 +30,10 @@ let assoc key a =
 // All exceptions are guaranteed to be caught in the LSP server implementation
 exception UnexpectedJsonType of string * json
 
+let write_json (js: json) =
+  Util.print_raw (Util.string_of_json js);
+  Util.print_raw "\n"
+
 let js_fail expected got =
   raise (UnexpectedJsonType (expected, got))
 
@@ -125,3 +129,29 @@ let wrap_jsfail qid expected got : lsp_query =
   { query_id = qid;
     q = BadProtocolMsg (Util.format2 "JSON decoding failed: expected %s, got %s"
                         expected (json_debug got)) }
+
+type error_code =
+| ParseError
+| InvalidRequest
+| MethodNotFound
+| InvalidParams
+| InternalError
+| ServerErrorStart
+| ServerErrorEnd
+| ServerNotInitialized
+| UnknownErrorCode
+| RequestCancelled
+| ContentModified
+
+let errorcode_to_int : error_code -> int = function
+| ParseError -> -32700
+| InvalidRequest -> -32600
+| MethodNotFound -> -32601
+| InvalidParams -> -32602
+| InternalError -> -32603
+| ServerErrorStart -> -32099
+| ServerErrorEnd -> -32000
+| ServerNotInitialized -> -32002
+| UnknownErrorCode -> -32001
+| RequestCancelled -> -32800
+| ContentModified -> -32801

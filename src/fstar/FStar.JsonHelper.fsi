@@ -14,6 +14,7 @@ val assoc : string -> list <(string * 'b)> -> 'b
 exception InvalidQuery of string
 exception UnexpectedJsonType of string * json
 
+val write_json : json -> unit
 val js_fail : string -> json -> 'a
 
 val js_int : json -> int
@@ -73,3 +74,18 @@ type lquery =
 type lsp_query = { query_id: string; q: lquery }
 
 val wrap_jsfail : string -> string -> json -> lsp_query
+
+type error_code =
+| ParseError
+| InvalidRequest
+| MethodNotFound
+| InvalidParams
+| InternalError
+| ServerErrorStart
+| ServerErrorEnd
+| ServerNotInitialized
+| UnknownErrorCode
+| RequestCancelled
+| ContentModified
+
+val errorcode_to_int : error_code -> int

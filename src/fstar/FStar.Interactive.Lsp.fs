@@ -7,6 +7,10 @@ open FStar.Errors
 open FStar.Util
 open FStar.JsonHelper
 
+module CTable = FStar.Interactive.CompletionTable
+
+(* Request *)
+
 let unpack_lsp_query json : lsp_query =
   // Exceptions for these two are caught at `deserialize_lsp_query`
   let request = json |> js_assoc in
@@ -78,4 +82,73 @@ let parse_lsp_query query_str : lsp_query =
   | None -> { query_id = "?"; q = BadProtocolMsg "Json parsing failed" }
   | Some request -> deserialize_lsp_query request
 
-let start_server () : unit = exit 0
+(* Repl and response *)
+
+type repl_state = { repl_line: int; repl_column: int;
+                    repl_stdin: stream_reader;
+                    repl_names: CTable.table }
+
+let run_query (st: repl_state) (q: lquery) : either<json, json> * either<repl_state, int> =
+  match q with
+  | Initialize (pid, rootUri) -> (Inl JsonNull, Inr 0)
+  | Initialized -> (Inl JsonNull, Inr 0)
+  | Shutdown -> (Inl JsonNull, Inr 0)
+  | Exit -> (Inl JsonNull, Inr 0)
+  | Cancel id -> (Inl JsonNull, Inr 0)
+  | FolderChange evt -> (Inl JsonNull, Inr 0)
+  | ChangeConfig -> (Inl JsonNull, Inr 0)
+  | ChangeWatch -> (Inl JsonNull, Inr 0)
+  | Symbol sym -> (Inl JsonNull, Inr 0)
+  | ExecCommand cmd -> (Inl JsonNull, Inr 0)
+  | DidOpen item -> (Inl JsonNull, Inr 0)
+  | DidChange -> (Inl JsonNull, Inr 0)
+  | WillSave txid -> (Inl JsonNull, Inr 0)
+  | DidSave txid -> (Inl JsonNull, Inr 0)
+  | DidClose txid -> (Inl JsonNull, Inr 0)
+  | Completion ctx -> (Inl JsonNull, Inr 0)
+  | Resolve -> (Inl JsonNull, Inr 0)
+  | Hover -> (Inl JsonNull, Inr 0)
+  | SignatureHelp -> (Inl JsonNull, Inr 0)
+  | Declaration -> (Inl JsonNull, Inr 0)
+  | Definition -> (Inl JsonNull, Inr 0)
+  | Implementation -> (Inl JsonNull, Inr 0)
+  | References -> (Inl JsonNull, Inr 0)
+  | DocumentHighlight -> (Inl JsonNull, Inr 0)
+  | DocumentSymbol -> (Inl JsonNull, Inr 0)
+  | CodeAction -> (Inl JsonNull, Inr 0)
+  | CodeLens -> (Inl JsonNull, Inr 0)
+  | DocumentLink -> (Inl JsonNull, Inr 0)
+  | DocumentColor -> (Inl JsonNull, Inr 0)
+  | ColorPresentation -> (Inl JsonNull, Inr 0)
+  | Formatting -> (Inl JsonNull, Inr 0)
+  | RangeFormatting -> (Inl JsonNull, Inr 0)
+  | TypeFormatting -> (Inl JsonNull, Inr 0)
+  | Rename -> (Inl JsonNull, Inr 0)
+  | PrepareRename -> (Inl JsonNull, Inr 0)
+  | FoldingRange -> (Inl JsonNull, Inr 0)
+  | BadProtocolMsg msg -> (Inl JsonNull, Inr 0)
+
+let json_of_response qid response =
+  let qid = JsonStr qid in
+  match response with
+  | Inl result -> JsonAssoc [("id", qid); ("result", result)]
+  | Inr err -> JsonAssoc [("id", qid); ("error", err)]
+
+let read_lsp_query (stream: stream_reader) : lsp_query =
+  match Util.read_line stream with
+  | None -> exit 0
+  | Some line -> parse_lsp_query line
+
+let rec go (st: repl_state) : int =
+  let query = read_lsp_query st.repl_stdin in
+  let response, state_opt = run_query st query.q in
+  write_json (json_of_response query.query_id response);
+  match state_opt with
+  | Inl st' -> go st'
+  | Inr exitcode -> exitcode
+
+let initial_repl_state : repl_state =
+  { repl_line = 1; repl_column = 0; repl_stdin = open_stdin ();
+    repl_names = CompletionTable.empty }
+
+let start_server () : unit = exit (go initial_repl_state)
