@@ -168,19 +168,14 @@ let reveal_star ()
 
 (* Constructive resource inclusion *)
 
-noeq
-type r_includes_t (outer inner:resource) = {
-    delta: resource              // delta separating the two resources
-  }
-
 let r_includes outer inner = 
-  inc:r_includes_t outer inner {
+  delta:resource {
     // Delta is disjoint from the smaller resource
-    r_disjoint inc.delta inner /\
+    r_disjoint delta inner /\
     // Footprint of the larger resource is union of delta and the smaller resource
-    as_loc (fp outer) == B.loc_union (as_loc (fp inc.delta)) (as_loc (fp inner)) /\
+    as_loc (fp outer) == B.loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
     // Larger invariant is equivalent to delta and the smaller invariant
-    (forall h . inv outer h <==> inv inner h /\ inv inc.delta h)
+    (forall h . inv outer h <==> inv inner h /\ inv delta h)
   }
 
 (* Left and right inclusions for separating conjunction *)
@@ -188,17 +183,12 @@ let r_includes outer inner =
 let star_includes_left (#fp:resource) 
                        (frame:resource{r_disjoint fp frame})
                      : r_includes (fp <*> frame) fp = 
-  {
-    delta = frame
-  }
+  frame
 
 let star_includes_right (#fp:resource) 
                         (frame:resource{r_disjoint frame fp})
                       : r_includes (frame <*> fp) fp = 
-  let inc (xy:(frame <*> fp).t) = snd xy in 
-  {
-    delta = frame
-  }
+  frame
 
 (* State effect indexed by a resource *)
 
@@ -224,111 +214,105 @@ effect RST (a:Type)
 
 unfold
 let frame_left_pre (#fp:resource)
-              (#frame:resource)
-              (pre:r_pre fp)
-              (h:imem (inv (fp <*> frame))) = 
+                   (#frame:resource)
+                   (pre:r_pre fp)
+                   (h:imem (inv (fp <*> frame))) = 
   pre h
 
 unfold
 let frame_left_post (#fp:resource)
-               (#frame:resource)
-               (#a:Type)
-               (post:r_post fp a)
-               (h0:imem (inv (fp <*> frame)))
-               (x:a)
-               (h1:imem (inv (fp <*> frame))) =
+                    (#frame:resource)
+                    (#a:Type)
+                    (post:r_post fp a)
+                    (h0:imem (inv (fp <*> frame)))
+                    (x:a)
+                    (h1:imem (inv (fp <*> frame))) =
   post h0 x h1 /\
   sel (view_of frame) h0 == sel (view_of frame) h1
 
-let frame_left 
-          (#frame:resource)
-          (#a:Type)
-          (#fp:resource)
-          (#pre:r_pre fp)
-          (#post:r_post fp a)
-          ($f:unit -> RST a fp pre post)
-        : RST a (fp <*> frame)
-                (frame_left_pre pre) 
-                (frame_left_post post) =
+let frame_left (#frame:resource)
+               (#a:Type)
+               (#fp:resource)
+               (#pre:r_pre fp)
+               (#post:r_post fp a)
+               ($f:unit -> RST a fp pre post)
+             : RST a (fp <*> frame)
+                     (frame_left_pre pre) 
+                     (frame_left_post post) =
   f ()
 
 unfold
 let frame_right_pre (#frame:resource)
-               (#fp:resource)
-               (pre:r_pre fp)
-               (h:imem (inv (frame <*> fp))) = 
+                    (#fp:resource)
+                    (pre:r_pre fp)
+                    (h:imem (inv (frame <*> fp))) = 
   pre h
 
 unfold
 let frame_right_post (#frame:resource)
-                (#fp:resource)
-                (#a:Type)
-                (post:r_post fp a)
-                (h0:imem (inv (frame <*> fp)))
-                (x:a)
-                (h1:imem (inv (frame <*> fp))) =
+                     (#fp:resource)
+                     (#a:Type)
+                     (post:r_post fp a)
+                     (h0:imem (inv (frame <*> fp)))
+                     (x:a)
+                     (h1:imem (inv (frame <*> fp))) =
   post h0 x h1 /\
   sel (view_of frame) h0 == sel (view_of frame) h1
 
-let frame_right 
-           (#frame:resource)
-           (#a:Type)           
-           (#fp:resource)
-           (#pre:r_pre fp)
-           (#post:r_post fp a)
-           ($f:unit -> RST a fp pre post)
-         : RST a (frame <*> fp) 
-                 (frame_right_pre pre) 
-                 (frame_right_post post) =
+let frame_right (#frame:resource)
+                (#a:Type)           
+                (#fp:resource)
+                (#pre:r_pre fp)
+                (#post:r_post fp a)
+                ($f:unit -> RST a fp pre post)
+              : RST a (frame <*> fp) 
+                      (frame_right_pre pre) 
+                      (frame_right_post post) =
   f ()
 
 (* Generic frame operation for RST computations (through resource inclusion) *)
 
 unfold
 let frame_pre (#outer:resource)
-                (#inner:resource)
-                (inc:r_includes outer inner)
-                (pre:r_pre inner)
-                (h:imem (inv outer)) =
+              (#inner:resource)
+              (delta:r_includes outer inner)
+              (pre:r_pre inner)
+              (h:imem (inv outer)) =
   pre h
 
 unfold
 let frame_post (#outer:resource)
-                 (#inner:resource)
-                 (inc:r_includes outer inner)
-                 (#a:Type)
-                 (post:r_post inner a)
-                 (h0:imem (inv outer))
-                 (x:a)
-                 (h1:imem (inv outer)) = 
+               (#inner:resource)
+               (delta:r_includes outer inner)
+               (#a:Type)
+               (post:r_post inner a)
+               (h0:imem (inv outer))
+               (x:a)
+               (h1:imem (inv outer)) = 
   post h0 x h1 /\
-  sel (view_of inc.delta) h0 == sel (view_of inc.delta) h1
+  sel (view_of delta) h0 == sel (view_of delta) h1
   
 let frame (#a:Type)
-              (#outer:resource)
-              (#inner:resource)
-              (inc:r_includes outer inner)  // eventually we will want to infer this argument through metaprogramming
-              (#pre:r_pre inner)
-              (#post:r_post inner a)
-              ($f:unit -> RST a inner pre post)
-            : RST a outer (frame_pre inc pre) (frame_post inc post) =
+          (#outer:resource)
+          (#inner:resource)
+          (delta:r_includes outer inner)  // eventually we will want to infer this argument through metaprogramming
+          (#pre:r_pre inner)
+          (#post:r_post inner a)
+          ($f:unit -> RST a inner pre post)
+        : RST a outer (frame_pre delta pre) 
+                      (frame_post delta post) =
   f ()
 
 (* Weaker form of resource inclusion (with invariant inclusion instead of equivalence) *)
 
-noeq
-type r_weakly_includes_t (outer inner:resource) = {
-    delta: resource              // delta separating the two resources
-  }
-
 let r_weakly_includes outer inner = 
-  inc:r_weakly_includes_t outer inner {
+  delta:resource {
     // Delta is disjoint from the smaller resource
-    r_disjoint inc.delta outer /\
+    r_disjoint delta outer /\
     // Footprint of the larger resource is union of delta and the smaller resource
-    as_loc (fp outer) == B.loc_union (as_loc (fp inc.delta)) (as_loc (fp inner)) /\
+    as_loc (fp outer) == B.loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
     // Larger invariant (only) implies the delta and the smaller invariant
-    (forall h . inv outer h ==> inv inner h /\ inv inc.delta h)
+    (forall h . inv outer h ==> inv inner h /\ inv delta h)
   }
 
 (* Weaker form of framing, a bit similar to snapshot restoration in monotonic state *)
@@ -336,34 +320,34 @@ let r_weakly_includes outer inner =
 unfold
 let weak_frame_pre (#outer:resource)
                    (#inner:resource)
-                   (inc:r_weakly_includes outer inner)
+                   (delta:r_weakly_includes outer inner)
                    (pre:r_pre inner)
                    (h:imem (inv outer)) =
   pre h
 
 // The postcondition of the inner computation has to allow us to restore the outer invariant
-let inner_post #outer #inner (inc:r_weakly_includes outer inner) a = 
+let inner_post inner outer a = 
   post:r_post inner a{forall h0 x h1 . inv outer h0 /\ post h0 x h1 ==> inv outer h1}
 
 unfold
 let weak_frame_post (#outer:resource)
                     (#inner:resource)
-                    (inc:r_weakly_includes outer inner)
+                    (delta:r_weakly_includes outer inner)
                     (#a:Type)
                     (post:r_post inner a)
                     (h0:imem (inv outer))
                     (x:a)
                     (h1:imem (inv outer)) = 
   post h0 x h1 /\
-  sel (view_of inc.delta) h0 == sel (view_of inc.delta) h1
+  sel (view_of delta) h0 == sel (view_of delta) h1
   
 let weak_frame (#a:Type)
                (#outer:resource)
                (#inner:resource)
-               (inc:r_weakly_includes outer inner)  // eventually we will want to infer this argument through metaprogramming
+               (delta:r_weakly_includes outer inner)  // eventually we will want to infer this argument through metaprogramming
                (#pre:r_pre inner)
-               (#post:inner_post inc a)
+               (#post:inner_post inner outer a)
                ($f:unit -> RST a inner pre post)
-             : RST a outer (weak_frame_pre inc pre) 
-                           (weak_frame_post inc post) =
+             : RST a outer (weak_frame_pre delta pre) 
+                           (weak_frame_post delta post) =
   f ()
