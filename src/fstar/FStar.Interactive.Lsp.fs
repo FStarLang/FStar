@@ -17,7 +17,7 @@ let arg k r = assoc k (assoc "params" r |> js_assoc)
 let unpack_lsp_query json : lsp_query =
   // Exceptions for these two are caught at `deserialize_lsp_query`
   let r = json |> js_assoc in
-  let qid = assoc "id" r |> js_str in
+  let qid = Some (assoc "id" r |> js_str_int) in
 
   // If we make it this far, exceptions will come with qid info.
   // Wrap in `try` because all `js_*` functions and `assoc` throw
@@ -75,12 +75,12 @@ let deserialize_lsp_query js_query : lsp_query =
     unpack_lsp_query js_query
   with
   // If `unpack_lsp_query` throws, it does so without qid
-  | InvalidQuery msg -> { query_id = "?"; q = BadProtocolMsg msg }
-  | UnexpectedJsonType (expected, got) -> wrap_jsfail "?" expected got
+  | InvalidQuery msg -> { query_id = None; q = BadProtocolMsg msg }
+  | UnexpectedJsonType (expected, got) -> wrap_jsfail None expected got
 
 let parse_lsp_query query_str : lsp_query =
   match Util.json_of_string query_str with
-  | None -> { query_id = "?"; q = BadProtocolMsg "Json parsing failed" }
+  | None -> { query_id = None; q = BadProtocolMsg "Json parsing failed" }
   | Some request -> deserialize_lsp_query request
 
 (* Repl and response *)
@@ -130,8 +130,10 @@ let run_query (st: repl_state) (q: lquery) : either<json, json> * either<repl_st
   | FoldingRange -> (Inl JsonNull, Inl st)
   | BadProtocolMsg msg -> (Inr (js_resperr MethodNotFound msg), Inl st)
 
-let json_of_response (qid: string) response =
-  let qid = JsonStr qid in
+let json_of_response (qid: option<int>) (response: either<json, json>) =
+  let qid = match qid with
+  | Some i -> JsonInt i
+  | None -> JsonNull in
   match response with
   | Inl result -> JsonAssoc [("id", qid); ("result", result)]
   | Inr err -> JsonAssoc [("id", qid); ("error", err)]

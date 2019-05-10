@@ -8,14 +8,6 @@ open FStar.Util
 open FStar.Errors
 open FStar.Exn
 
-let json_debug = function
-  | JsonNull -> "null"
-  | JsonBool b -> Util.format1 "bool (%s)" (if b then "true" else "false")
-  | JsonInt i -> Util.format1 "int (%s)" (Util.string_of_int i)
-  | JsonStr s -> Util.format1 "string (%s)" s
-  | JsonList _ -> "list (...)"
-  | JsonAssoc _ -> "dictionary (...)"
-
 let try_assoc (key: string) (d: 'a) =
   Util.map_option snd (Util.try_find (fun (k, _) -> k = key) d)
 
@@ -49,6 +41,10 @@ let js_list k = function
 let js_assoc : json -> list<(string * json)> = function
   | JsonAssoc a -> a
   | other -> js_fail "dictionary" other
+let js_str_int : json -> int = function
+  | JsonInt i -> i
+  | JsonStr s -> Util.int_of_string s
+  | other -> js_fail "string or int" other
 
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
 
@@ -121,7 +117,7 @@ type lquery =
 | FoldingRange
 | BadProtocolMsg of string
 
-type lsp_query = { query_id: string; q: lquery }
+type lsp_query = { query_id: option<int>; q: lquery }
 
 type error_code =
 | ParseError
@@ -149,9 +145,17 @@ let errorcode_to_int : error_code -> int = function
 | RequestCancelled -> -32800
 | ContentModified -> -32801
 
+let json_debug = function
+  | JsonNull -> "null"
+  | JsonBool b -> Util.format1 "bool (%s)" (if b then "true" else "false")
+  | JsonInt i -> Util.format1 "int (%s)" (Util.string_of_int i)
+  | JsonStr s -> Util.format1 "string (%s)" s
+  | JsonList _ -> "list (...)"
+  | JsonAssoc _ -> "dictionary (...)"
+
 // The IDE uses a slightly different variant (wrap_js_failure)
 // because types differ (query' versus lsp_query)
-let wrap_jsfail qid expected got : lsp_query =
+let wrap_jsfail (qid : option<int>) expected got : lsp_query =
   { query_id = qid;
     q = BadProtocolMsg (Util.format2 "JSON decoding failed: expected %s, got %s"
                         expected (json_debug got)) }

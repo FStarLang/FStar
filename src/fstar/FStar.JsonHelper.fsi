@@ -6,8 +6,6 @@ open FStar.Util
 open FStar.Errors
 open FStar.Exn
 
-val json_debug : json -> string
-
 val try_assoc : string -> list<(string * 'a)> -> option<'a>
 val assoc : string -> list <(string * 'b)> -> 'b
 
@@ -23,6 +21,7 @@ val js_int : json -> int
 val js_str : json -> string
 val js_list : (json -> 'a) -> json -> list<'a>
 val js_assoc : json -> list<(string * json)>
+val js_str_int : json -> int
 
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
 val js_compl_context : json -> completion_context
@@ -73,7 +72,7 @@ type lquery =
 | FoldingRange
 | BadProtocolMsg of string
 
-type lsp_query = { query_id: string; q: lquery }
+type lsp_query = { query_id: option<int>; q: lquery }
 
 type error_code =
 | ParseError
@@ -89,5 +88,6 @@ type error_code =
 | ContentModified
 
 val errorcode_to_int : error_code -> int
-val wrap_jsfail : string -> string -> json -> lsp_query
+val json_debug : json -> string
+val wrap_jsfail : option<int> -> string -> json -> lsp_query
 val js_resperr : error_code -> string -> json
