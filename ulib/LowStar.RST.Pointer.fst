@@ -58,6 +58,7 @@ let ptr_read (#a:Type)
                    (fun h0 x h1 -> 
                       sel (ptr_view ptr) h0 == x /\ 
                       x == sel (ptr_view ptr) h1) =
+  reveal_rst_inv ();
   !* ptr
 
 let ptr_write (#a:Type)
@@ -68,5 +69,40 @@ let ptr_write (#a:Type)
                        (fun _ -> True)
                        (fun _ _ h1 -> 
                           sel (ptr_view ptr) h1 == x) =
+  reveal_rst_inv ();
   reveal_modifies ();
   ptr *= x
+
+//let with_new_ptr_pre (res:resource)
+
+(*
+let with_new_ptr (#res:resource)
+                 (#a:Type)
+                 (init:a)
+                 (#b:Type)
+                 (#pre:r_pre res)
+                 (#post:r_post res b)
+                 (f:(ptr:B.pointer a -> RST b (res <*> (ptr_resource ptr)) pre post)) 
+               : RST b res pre post = 
+  reveal_rst_inv ();
+  reveal_view ();
+  reveal_star ();
+  reveal_ptr ();
+  HST.push_frame ();
+  
+  let ptr = B.alloca init 1ul in
+  let h0 = get () in
+  
+  assert (inv res h0);
+  assert (inv (ptr_resource ptr) h0);
+
+  assert (r_disjoint res (ptr_resource ptr));
+  
+  assert (inv (res <*> (ptr_resource ptr)) h0);
+
+  assert (pre h0);
+  admit ();
+  let (x:b) = f ptr in
+  HST.pop_frame ();
+  admit ()
+*)
