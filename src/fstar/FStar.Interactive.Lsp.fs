@@ -92,7 +92,7 @@ let run_exit (st: repl_state) : int = if st.repl_last <> Shutdown then 1 else 0
 
 let run_query (st: repl_state) (q: lquery) : either<json, json> * either<repl_state, int> =
   match q with
-  | Initialize (pid, rootUri) -> (Inl JsonNull, Inl st)
+  | Initialize (pid, rootUri) -> (Inl js_servcap, Inl st)
   | Initialized -> (Inl JsonNull, Inl st)
   | Shutdown -> (Inl JsonNull, Inl st)
   | Exit -> (Inl JsonNull, Inr (run_exit st))
@@ -135,18 +135,39 @@ let json_of_response (qid: option<int>) (response: either<json, json>) =
   | Some i -> JsonInt i
   | None -> JsonNull in
   match response with
-  | Inl result -> JsonAssoc [("id", qid); ("result", result)]
-  | Inr err -> JsonAssoc [("id", qid); ("error", err)]
+  | Inl result -> JsonAssoc [("jsonrpc", JsonStr "2.0"); ("id", qid); ("result", result)]
+  | Inr err -> JsonAssoc [("jsonrpc", JsonStr "2.0"); ("id", qid); ("error", err)]
 
-let read_lsp_query (stream: stream_reader) : lsp_query =
+// Raises exceptions, but all of them are caught
+let rec parse_header_len (stream: stream_reader) (len: int): int =
+  // Non-blocking read
   match Util.read_line stream with
-  | None -> exit 0
-  | Some line -> parse_lsp_query line
+  | Some s ->
+    if Util.starts_with s "Content-Length: " then
+      parse_header_len stream (Util.int_of_string (Util.substring_from s 16))
+    else if Util.starts_with s "Content-Type: " then
+      parse_header_len stream len
+    else if s = "" then
+      len
+    else
+      raise MalformedHeader
+  | None -> raise InputExhausted
+
+let rec read_lsp_query (stream: stream_reader) : lsp_query =
+  try
+    let n = parse_header_len stream 0 in
+    match Util.nread stream n with
+    | Some s -> parse_lsp_query s
+    | None -> wrap_content_szerr (Util.format1 "Could not read %s bytes" (Util.string_of_int n))
+  with
+  // At no cost should the server go down
+  | MalformedHeader
+  | InputExhausted -> read_lsp_query stream
 
 let rec go (st: repl_state) : int =
   let query = read_lsp_query st.repl_stdin in
   let response, state_opt = run_query st query.q in
-  write_json (json_of_response query.query_id response);
+  write_jsonrpc (json_of_response query.query_id response);
   match state_opt with
   | Inl st' -> go st'
   | Inr exitcode -> exitcode

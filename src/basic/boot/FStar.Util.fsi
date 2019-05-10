@@ -17,7 +17,6 @@
 module FStar.Util
 open FStar.ST
 open FStar.All
-(* open System.IO *)
 
 open FStar.BaseTypes
 
@@ -208,6 +207,7 @@ type stream_reader
   = System.IO.StreamReader// JUST FSHARP
 val open_stdin : unit -> stream_reader
 val read_line: stream_reader -> option<string>
+val nread : stream_reader -> int -> option<string>
 
 (* not relying on representation *)
 type string_builder

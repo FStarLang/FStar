@@ -201,6 +201,17 @@ let read_line (s:stream_reader) =
     if is_end_of_stream s
     then None
     else Some <| s.ReadLine()
+
+open FStar.String
+
+let nread (s:stream_reader) (count:int) =
+    if is_end_of_stream s
+    then None
+    else
+      let b = Array.create count 'a' in
+      s.Read(b, 0, count) |> ignore;
+      Some <| string_of_list (List.of_array b)
+
 type string_builder = System.Text.StringBuilder (* not relying on representation *)
 let new_string_builder () = new System.Text.StringBuilder()
 let clear_string_builder (s:string_builder) = s.Clear() |> ignore

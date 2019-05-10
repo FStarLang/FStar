@@ -280,6 +280,11 @@ let read_line s =
     Some (BatIO.read_line s)
   with
     _ -> None
+let nread (s:stream_reader) (n:Z.t) =
+  try
+    Some (BatIO.nread s (Z.to_int n))
+  with
+    _ -> None
 
 type string_builder = BatBuffer.t
 let new_string_builder () = BatBuffer.create 256

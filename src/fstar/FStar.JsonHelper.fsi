@@ -13,8 +13,11 @@ val assoc : string -> list <(string * 'b)> -> 'b
 exception MissingKey of string // Only in LSP
 exception InvalidQuery of string // Only in IDE
 exception UnexpectedJsonType of string * json
+exception MalformedHeader
+exception InputExhausted
 
-val write_json : json -> unit
+val write_json : json -> unit // Only used in IDE
+val write_jsonrpc : json -> unit // Only used in LSP
 val js_fail : string -> json -> 'a
 
 val js_int : json -> int
@@ -90,4 +93,8 @@ type error_code =
 val errorcode_to_int : error_code -> int
 val json_debug : json -> string
 val wrap_jsfail : option<int> -> string -> json -> lsp_query
+
+(* Helpers for constructing the response *)
 val js_resperr : error_code -> string -> json
+val wrap_content_szerr : string -> lsp_query
+val js_servcap : json

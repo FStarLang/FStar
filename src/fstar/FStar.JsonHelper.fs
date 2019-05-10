@@ -15,6 +15,8 @@ let try_assoc (key: string) (d: 'a) =
 exception MissingKey of string // Only in LSP
 exception InvalidQuery of string // Only in IDE
 exception UnexpectedJsonType of string * json
+exception MalformedHeader
+exception InputExhausted
 
 // The definition in IDE is nested; this differs in not providing loc
 let assoc key a =
@@ -26,6 +28,13 @@ let write_json (js: json) =
   Util.print_raw (Util.string_of_json js);
   Util.print_raw "\n"
 
+let write_jsonrpc (js: json) : unit =
+  // TODO: utf-8 strings: byte buffers?
+  let js_str = Util.string_of_json js in
+  let len = Util.string_of_int (String.length js_str) in
+  Util.print_raw (Util.format2 "Content-Length: %s\r\n\r\n%s" len js_str)
+
+// Only used in IDE
 let js_fail expected got =
   raise (UnexpectedJsonType (expected, got))
 
@@ -160,5 +169,17 @@ let wrap_jsfail (qid : option<int>) expected got : lsp_query =
     q = BadProtocolMsg (Util.format2 "JSON decoding failed: expected %s, got %s"
                         expected (json_debug got)) }
 
-let js_resperr (err: error_code) (msg: string) =
+(* Helpers for constructing the response *)
+
+let js_resperr (err: error_code) (msg: string) : json =
   JsonAssoc [("code", JsonInt (errorcode_to_int err)); ("message", JsonStr msg)]
+
+let wrap_content_szerr (m: string): lsp_query = { query_id = None; q = BadProtocolMsg m }
+
+let js_servcap : json =
+  JsonAssoc [("capabilities",
+              JsonAssoc [("hoverProvider", JsonBool false); ("definitionProvider", JsonBool false);
+              ("typeDefinitionProvider", JsonBool false);
+              ("implementationProvider", JsonBool false);
+              ("referencesProvider", JsonBool false); ("documentSymbolProvider", JsonBool false);
+              ("workspaceSymbolProvider", JsonBool false); ("codeActionProvider", JsonBool false)])]
