@@ -67,6 +67,35 @@ type step =
   | ForExtraction //marking an invocation of the normalizer for extraction
 and steps = list<step>
 
+let rec print_step = function
+  | Beta -> "Beta"
+  | Iota -> "Iota"
+  | Zeta -> "Zeta"
+  | Exclude s -> "(Exclude "  ^ print_step s ^ ")"
+  | Weak -> "Weak"
+  | HNF -> "HNF"
+  | Primops -> "Primops"
+  | Eager_unfolding -> "Eager_unfolding"
+  | Inlining -> "Inlining"
+  | DoNotUnfoldPureLets -> "DoNotUnfoldPureLets"
+  | UnfoldUntil dd -> "(UnfoldUntil " ^ Print.delta_depth_to_string dd ^ ")"
+  | UnfoldOnly lids -> "(UnfoldOnly " ^ (List.map Ident.string_of_lid lids |> String.concat ", ") ^")"
+  | UnfoldFully lids -> "(UnfoldFully " ^ (List.map Ident.string_of_lid lids |> String.concat ", ") ^")"
+  | UnfoldAttr lids -> "(UnfoldAttr " ^ (List.map Ident.string_of_lid lids |> String.concat ", ") ^")"
+  | UnfoldTac -> "UnfoldTac"
+  | PureSubtermsWithinComputations -> "PureSubtermsWithinComputations"
+  | Simplify -> "Simplify"
+  | EraseUniverses -> "EraseUniverses"
+  | AllowUnboundUniverses -> "AllowUnboundUniverses"
+  | Reify -> "Reify"
+  | CompressUvars -> "CompressUvars"
+  | NoFullNorm -> "NoFullNorm"
+  | CheckNoUvars -> "CheckNoUvars"
+  | Unmeta -> "Unmeta"
+  | Unascribe -> "Unascribe"
+  | NBE -> "NBE"
+  | ForExtraction -> "ForExtraction"
+
 let rec eq_step s1 s2 =
   match s1, s2 with
   | Beta, Beta

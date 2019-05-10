@@ -1124,7 +1124,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                *)
             | Some (s, tm) ->
               if cfg.debug.print_normalized
-              then BU.print1 "Starting norm request on %s ... \n" (Print.term_to_string tm);
+              then BU.print2 "Starting norm request on %s with steps = %s ... \n"
+                             (Print.term_to_string tm)
+                             (List.map Env.print_step s |> String.concat ", ");
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold delta_constant]

@@ -54,6 +54,7 @@ type step =
   | ForExtraction   //marking an invocation of the normalizer for extraction
 and steps = list<step>
 
+val print_step : step -> string
 val eq_step : step -> step -> bool
 
 type sig_binding = list<lident> * sigelt
