@@ -14,8 +14,6 @@ val assoc : string -> list <(string * 'b)> -> 'b
 exception InvalidQuery of string
 exception UnexpectedJsonType of string * json
 
-type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
-
 val js_fail : string -> json -> 'a
 
 val js_int : json -> int

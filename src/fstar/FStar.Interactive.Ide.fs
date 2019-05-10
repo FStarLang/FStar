@@ -569,6 +569,8 @@ let interactive_protocol_features =
    "peek"; "pop"; "push"; "search"; "segment";
    "vfs-add"; "tactic-ranges"; "interrupt"; "progress"]
 
+type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
+
 let wrap_js_failure qid expected got =
   { qid = qid;
     qq = ProtocolViolation (Util.format2 "JSON decoding failed: expected %s, got %s"

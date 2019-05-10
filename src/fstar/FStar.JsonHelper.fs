@@ -20,7 +20,6 @@ let try_assoc (key: string) (d: 'a) =
   Util.map_option snd (Util.try_find (fun (k, _) -> k = key) d)
 
 exception InvalidQuery of string
-type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
 
 // The definition in IDE is nested; this differs in not providing loc
 let assoc key a =
