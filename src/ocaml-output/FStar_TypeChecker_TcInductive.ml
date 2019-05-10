@@ -1060,7 +1060,6 @@ let rec (ty_strictly_positive_in_type :
           (let btype1 =
              FStar_TypeChecker_Normalize.normalize
                [FStar_TypeChecker_Env.Beta;
-               FStar_TypeChecker_Env.Eager_unfolding;
                FStar_TypeChecker_Env.UnfoldUntil
                  FStar_Syntax_Syntax.delta_constant;
                FStar_TypeChecker_Env.Iota;
@@ -1356,7 +1355,6 @@ and (ty_nested_positive_in_dlid :
                         (let dt1 =
                            FStar_TypeChecker_Normalize.normalize
                              [FStar_TypeChecker_Env.Beta;
-                             FStar_TypeChecker_Env.Eager_unfolding;
                              FStar_TypeChecker_Env.UnfoldUntil
                                FStar_Syntax_Syntax.delta_constant;
                              FStar_TypeChecker_Env.Iota;

@@ -7737,9 +7737,8 @@ let (ghost_to_pure_lcomp :
     fun lc  ->
       let cfg =
         FStar_TypeChecker_Cfg.config
-          [FStar_TypeChecker_Env.Eager_unfolding;
-          FStar_TypeChecker_Env.UnfoldUntil
-            FStar_Syntax_Syntax.delta_constant;
+          [FStar_TypeChecker_Env.UnfoldUntil
+             FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Env.EraseUniverses;
           FStar_TypeChecker_Env.AllowUnboundUniverses;
           FStar_TypeChecker_Env.Unascribe;

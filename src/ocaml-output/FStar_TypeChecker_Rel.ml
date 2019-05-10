@@ -2534,8 +2534,7 @@ let (head_matches_delta :
                  let uu____7825 =
                    FStar_TypeChecker_Env.lookup_definition
                      [FStar_TypeChecker_Env.Unfold
-                        FStar_Syntax_Syntax.delta_constant;
-                     FStar_TypeChecker_Env.Eager_unfolding_only] env
+                        FStar_Syntax_Syntax.delta_constant] env
                      (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                     in
                  (match uu____7825 with
@@ -2561,7 +2560,6 @@ let (head_matches_delta :
                         FStar_TypeChecker_Env.HNF;
                         FStar_TypeChecker_Env.Primops;
                         FStar_TypeChecker_Env.Beta;
-                        FStar_TypeChecker_Env.Eager_unfolding;
                         FStar_TypeChecker_Env.Iota]  in
                       let steps =
                         if wl.smt_ok
@@ -8403,7 +8401,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -8412,7 +8409,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____23861 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -8500,7 +8496,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -8509,7 +8504,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____24062 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -8597,7 +8591,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -8606,7 +8599,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____24257 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -8694,7 +8686,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -8703,7 +8694,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____24452 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -8791,7 +8781,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -8800,7 +8789,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____24647 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -8888,7 +8876,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -8897,7 +8884,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____24858 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -8985,7 +8971,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -8994,7 +8979,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____25075 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -9082,7 +9066,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -9091,7 +9074,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____25264 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -9179,7 +9161,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -9188,7 +9169,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____25447 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -9276,7 +9256,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -9285,7 +9264,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____25630 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -9373,7 +9351,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -9382,7 +9359,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____25813 = FStar_Syntax_Util.eq_tm t12 t22  in
@@ -9470,7 +9446,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t11
                          in
                       let t22 =
@@ -9479,7 +9454,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              FStar_Syntax_Syntax.delta_constant;
                           FStar_TypeChecker_Env.Primops;
                           FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.Iota] env t21
                          in
                       let uu____26012 = FStar_Syntax_Util.eq_tm t12 t22  in

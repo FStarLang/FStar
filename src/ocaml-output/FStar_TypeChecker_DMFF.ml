@@ -891,7 +891,6 @@ let (gen_wps_for_free :
                     let t1 =
                       FStar_TypeChecker_Normalize.normalize
                         [FStar_TypeChecker_Env.Beta;
-                        FStar_TypeChecker_Env.Eager_unfolding;
                         FStar_TypeChecker_Env.UnfoldUntil
                           FStar_Syntax_Syntax.delta_constant] env1 t
                        in
@@ -1091,7 +1090,6 @@ let (gen_wps_for_free :
                       let t1 =
                         FStar_TypeChecker_Normalize.normalize
                           [FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
                           FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant] env1 t
                          in
@@ -2319,7 +2317,6 @@ and (infer :
       let normalize1 =
         FStar_TypeChecker_Normalize.normalize
           [FStar_TypeChecker_Env.Beta;
-          FStar_TypeChecker_Env.Eager_unfolding;
           FStar_TypeChecker_Env.UnfoldUntil
             FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Env.EraseUniverses] env.tcenv
@@ -3760,7 +3757,6 @@ let (n :
     [FStar_TypeChecker_Env.Beta;
     FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
     FStar_TypeChecker_Env.DoNotUnfoldPureLets;
-    FStar_TypeChecker_Env.Eager_unfolding;
     FStar_TypeChecker_Env.EraseUniverses]
   
 let (star_type : env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) =
