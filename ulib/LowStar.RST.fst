@@ -88,6 +88,11 @@ let modifies (res:resource) (h0 h1:HS.mem) =
     B.modifies (as_loc (fp res)) h0 h1 /\
     HST.equal_domains h0 h1
 
+let modifies_refl (res:resource) (h:HS.mem) 
+  : Lemma (modifies res h h)
+           [SMTPat (modifies res h h)]
+  = ()
+
 let modifies_trans (res:resource) (h0 h1 h2:HS.mem) 
   : Lemma (requires 
              modifies res h0 h1 /\
@@ -144,7 +149,9 @@ let reveal_star ()
   : Lemma ((forall res1 res2 .{:pattern as_loc (fp (res1 <*> res2))} 
               as_loc (fp (res1 <*> res2)) == B.loc_union (as_loc (fp res1)) (as_loc (fp res2))) /\
            (forall res1 res2 .{:pattern (res1 <*> res2).t} 
-              (res1 <*> res2).t == res1.t & res2.t)) = 
+              (res1 <*> res2).t == res1.t & res2.t) /\
+           (forall res1 res2 h .{:pattern (res1 <*> res2).view.sel h} 
+              (res1 <*> res2).view.sel h == (sel res1.view h,sel res2.view h))) = 
   ()
 
 (* Constructive resource inclusion *)
@@ -302,4 +309,65 @@ let frame (#a:Type)
               (#post:r_post inner a)
               ($f:unit -> RST a inner pre post)
             : RST a outer (frame_pre inc pre) (frame_post inc post) =
+  f ()
+
+(* Weaker form of resource inclusion (with invariant inclusion instead of equivalence) *)
+
+noeq
+type r_weakly_includes_t (res1 res2:resource) = {
+    inc: view_t res1.t res2.t;   // viewing larger resource as a smaller one
+    delta: resource              // delta separating the two resources
+  }
+
+let r_weakly_includes res1 res2 = 
+  inc:r_weakly_includes_t res1 res2 {
+    // Views are mapped to views
+    (forall (h:imem (fun h -> inv res1 h /\ inv res2 h)) .
+            {:pattern (inc.inc (sel (view_of res1) h))} 
+              inc.inc (sel (view_of res1) h) == sel (view_of res2) h) /\
+    // Delta is disjoint from the smaller resource
+    r_disjoint inc.delta res2 /\
+    // Footprint of the larger resource is union of delta and the smaller resource
+    as_loc (fp res1) == B.loc_union (as_loc (fp inc.delta)) (as_loc (fp res2)) /\
+    // Larger resource's invariant implies the smaller resource's invariant (e.g., liveness)
+    (forall h .{:pattern (inv res1 h); (inv res2 h)} inv res1 h ==> inv res2 h) /\
+    // Larger invariant is equivalent to delta and the smaller invariant
+    (forall h . inv res1 h ==> inv res2 h /\ inv inc.delta h)
+  }
+
+(* Weaker form of framing, a bit similar to snapshot restoration in monotonic state *)
+
+unfold
+let weak_frame_pre (#outer:resource)
+                   (#inner:resource)
+                   (inc:r_weakly_includes outer inner)
+                   (pre:r_pre inner)
+                   (h:imem (inv outer)) =
+  pre h
+
+// The postcondition of the inner computation has to allow us to restore the outer invariant
+let inner_post #outer #inner (inc:r_weakly_includes outer inner) a = 
+  post:r_post inner a{forall h0 x h1 . inv outer h0 /\ post h0 x h1 ==> inv outer h1}
+
+unfold
+let weak_frame_post (#outer:resource)
+                    (#inner:resource)
+                    (inc:r_weakly_includes outer inner)
+                    (#a:Type)
+                    (post:r_post inner a)
+                    (h0:imem (inv outer))
+                    (x:a)
+                    (h1:imem (inv outer)) = 
+  post h0 x h1 /\
+  sel (view_of inc.delta) h0 == sel (view_of inc.delta) h1
+  
+let weak_frame (#a:Type)
+               (#outer:resource)
+               (#inner:resource)
+               (inc:r_weakly_includes outer inner)  // eventually we will want to infer this argument through metaprogramming
+               (#pre:r_pre inner)
+               (#post:inner_post inc a)
+               ($f:unit -> RST a inner pre post)
+             : RST a outer (weak_frame_pre inc pre) 
+                           (weak_frame_post inc post) =
   f ()
