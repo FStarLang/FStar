@@ -21,7 +21,9 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module Seq = FStar.Seq
 
+open LowStar.Resource
 open LowStar.RST
+
 open LowStar.BufferOps
 
 abstract
