@@ -695,6 +695,12 @@ let extract_bundle env se =
 
     | Sig_bundle(ses, _), quals ->
         let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
+        let ifams =
+          ifams |> List.filter
+          (fun fam ->
+            let t = S.fv_to_tm fam.ifv in
+            not (FStar.TypeChecker.Util.must_erase_for_extraction env.env_tcenv t))
+        in
         let env, td = BU.fold_map extract_one_family env ifams in
         env, [MLM_Ty td]
 

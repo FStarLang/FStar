@@ -1806,7 +1806,20 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         then err' ()
       | _ -> ()
 
+
 let must_erase_for_extraction (g:env) (t:typ) =
+    let norm env t =
+        N.normalize [Env.Primops;
+                     Env.Weak;
+                     Env.HNF;
+                     Env.UnfoldUntil delta_constant;
+                     Env.Beta;
+                     Env.AllowUnboundUniverses;
+                     Env.Zeta;
+                     Env.Iota]
+                    env
+                    t
+    in
     let has_erased_for_extraction_attr (fv:fv) :bool =
       fv |> lid_of_fv |> Env.lookup_attrs_of_lid g |> (fun l_opt -> is_some l_opt && l_opt |> must |> List.existsb (fun t ->
             match (SS.compress t).n with
@@ -1816,7 +1829,22 @@ let must_erase_for_extraction (g:env) (t:typ) =
     let rec aux_whnf env t = //t is expected to b in WHNF
         match (SS.compress t).n with
         | Tm_type _ -> true
-        | Tm_fvar fv -> fv_eq_lid fv C.unit_lid || has_erased_for_extraction_attr fv
+        | Tm_fvar fv ->
+          let is_sub_singleton datacons =
+            match datacons with
+            | [] -> true
+            | [d] ->
+              let _, t = Env.lookup_datacon env d in
+              let t = norm env t in
+              let bs, _ = U.arrow_formals_comp t in
+              bs |> List.for_all (fun (x, _) ->  aux env x.sort)
+            | _ -> false
+          in
+          fv_eq_lid fv C.unit_lid ||
+          has_erased_for_extraction_attr fv ||
+          (let is_inductive, datacons = Env.datacons_of_typ env fv.fv_name.v in
+           is_inductive &&
+           is_sub_singleton datacons)
         | Tm_arrow _ ->
           let bs, c = U.arrow_formals_comp t in
           let env = FStar.TypeChecker.Env.push_binders env bs in
@@ -1829,19 +1857,13 @@ let must_erase_for_extraction (g:env) (t:typ) =
           aux env t
         | Tm_app(head, [_]) ->
           (match (U.un_uinst head).n with
-           | Tm_fvar fv -> fv_eq_lid fv C.erased_lid || has_erased_for_extraction_attr fv  //may be we should just call aux on head?
+           | Tm_fvar fv ->
+             aux env head  //may be we should just call aux on head?
            | _ -> false)
         | _ ->
           false
     and aux env t =
-        let t = N.normalize [Env.Primops;
-                             Env.Weak;
-                             Env.HNF;
-                             Env.UnfoldUntil delta_constant;
-                             Env.Beta;
-                             Env.AllowUnboundUniverses;
-                             Env.Zeta;
-                             Env.Iota] env t in
+        let t = norm env t in
 //        debug g (fun () -> BU.print1 "aux %s\n" (Print.term_to_string t));
         let res = aux_whnf env t in
         if Env.debug env <| Options.Other "Extraction"
