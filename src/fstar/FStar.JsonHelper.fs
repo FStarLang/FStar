@@ -19,16 +19,16 @@ let json_debug = function
 let try_assoc (key: string) (d: 'a) =
   Util.map_option snd (Util.try_find (fun (k, _) -> k = key) d)
 
-exception InvalidQuery of string
+// All exceptions are guaranteed to be caught in the LSP server implementation
+exception MissingKey of string // Only in LSP
+exception InvalidQuery of string // Only in IDE
+exception UnexpectedJsonType of string * json
 
 // The definition in IDE is nested; this differs in not providing loc
 let assoc key a =
   match try_assoc key a with
   | Some v -> v
-  | None -> raise (InvalidQuery (Util.format1 "Missing key [%s]" key))
-
-// All exceptions are guaranteed to be caught in the LSP server implementation
-exception UnexpectedJsonType of string * json
+  | None -> raise (MissingKey (Util.format1 "Missing key [%s]" key))
 
 let write_json (js: json) =
   Util.print_raw (Util.string_of_json js);
@@ -123,13 +123,6 @@ type lquery =
 
 type lsp_query = { query_id: string; q: lquery }
 
-// The IDE uses a slightly different variant (wrap_js_failure)
-// because types differ (query' versus lsp_query)
-let wrap_jsfail qid expected got : lsp_query =
-  { query_id = qid;
-    q = BadProtocolMsg (Util.format2 "JSON decoding failed: expected %s, got %s"
-                        expected (json_debug got)) }
-
 type error_code =
 | ParseError
 | InvalidRequest
@@ -155,3 +148,13 @@ let errorcode_to_int : error_code -> int = function
 | UnknownErrorCode -> -32001
 | RequestCancelled -> -32800
 | ContentModified -> -32801
+
+// The IDE uses a slightly different variant (wrap_js_failure)
+// because types differ (query' versus lsp_query)
+let wrap_jsfail qid expected got : lsp_query =
+  { query_id = qid;
+    q = BadProtocolMsg (Util.format2 "JSON decoding failed: expected %s, got %s"
+                        expected (json_debug got)) }
+
+let js_resperr (err: error_code) (msg: string) =
+  JsonAssoc [("code", JsonInt (errorcode_to_int err)); ("message", JsonStr msg)]

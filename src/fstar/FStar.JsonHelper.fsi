@@ -11,7 +11,9 @@ val json_debug : json -> string
 val try_assoc : string -> list<(string * 'a)> -> option<'a>
 val assoc : string -> list <(string * 'b)> -> 'b
 
-exception InvalidQuery of string
+// All exceptions are guaranteed to be caught in the LSP server implementation
+exception MissingKey of string // Only in LSP
+exception InvalidQuery of string // Only in IDE
 exception UnexpectedJsonType of string * json
 
 val write_json : json -> unit
@@ -73,8 +75,6 @@ type lquery =
 
 type lsp_query = { query_id: string; q: lquery }
 
-val wrap_jsfail : string -> string -> json -> lsp_query
-
 type error_code =
 | ParseError
 | InvalidRequest
@@ -89,3 +89,5 @@ type error_code =
 | ContentModified
 
 val errorcode_to_int : error_code -> int
+val wrap_jsfail : string -> string -> json -> lsp_query
+val js_resperr : error_code -> string -> json
