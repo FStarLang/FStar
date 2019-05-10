@@ -26,6 +26,8 @@ open LowStar.RST
 
 open LowStar.BufferOps
 
+(* Pointer view and resource *)
+
 abstract
 let ptr_view (#a:Type) (ptr:B.pointer a) : view a = 
   reveal_view ();
@@ -50,6 +52,8 @@ let reveal_ptr ()
              sel (ptr_view ptr) h == Seq.index (B.as_seq h ptr) 0)) = 
   ()
 
+(* Reading and writing using a pointer resource *)
+
 let ptr_read (#a:Type)
              (ptr:B.pointer a)
              (_:unit)
@@ -73,36 +77,55 @@ let ptr_write (#a:Type)
   reveal_modifies ();
   ptr *= x
 
-//let with_new_ptr_pre (res:resource)
+(* Scoped allocation of pointer resources *)
 
-(*
+(* Another (currently assumed) lemmas about loc_not_unused_in *)
+assume val lemma_loc_not_unused_in_fresh_frame (l:B.loc) (h0 h1:HS.mem) 
+  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ HS.fresh_frame h0 h1))
+          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l)) 
+
+assume val lemma_loc_not_unused_in_popped (l:B.loc) (h0 h1:HS.mem) 
+  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ HS.popped h0 h1))
+          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l)) 
+
+let with_new_ptr_pre (res:resource) =
+  pre:r_pre res{(forall h0 h1.{:pattern pre h0; HS.fresh_frame h0 h1} 
+                   pre h0 /\ HS.fresh_frame h0 h1 ==> pre h1) /\
+                (forall h0 h1.{:pattern pre h0; B.modifies B.loc_none h0 h1} 
+                   pre h0 /\ B.modifies B.loc_none h0 h1 ==> pre h1)}
+
+let with_new_ptr_post (res:resource) (a:Type) =
+  post:r_post res a{(forall h0 h1 x h2.{:pattern B.modifies B.loc_none h0 h1; post h1 x h2} 
+                       B.modifies B.loc_none h0 h1 /\ post h1 x h2 ==> post h0 x h2) /\
+                    (forall h0 h1 x h2.{:pattern HS.fresh_frame h0 h1; post h1 x h2}
+                       inv res h0 /\ HS.fresh_frame h0 h1 /\ post h1 x h2 ==> post h0 x h2) /\ 
+                    (forall h0 x h1 h2.{:pattern post h0 x h1; HS.popped h1 h2}
+                       post h0 x h1 /\ HS.popped h1 h2 /\ inv res h2 ==> post h0 x h2)}
+
 let with_new_ptr (#res:resource)
                  (#a:Type)
                  (init:a)
                  (#b:Type)
-                 (#pre:r_pre res)
-                 (#post:r_post res b)
+                 (#pre:with_new_ptr_pre res)
+                 (#post:with_new_ptr_post res b)
                  (f:(ptr:B.pointer a -> RST b (res <*> (ptr_resource ptr)) pre post)) 
                : RST b res pre post = 
   reveal_rst_inv ();
+  reveal_modifies ();
   reveal_view ();
   reveal_star ();
   reveal_ptr ();
-  HST.push_frame ();
-  
-  let ptr = B.alloca init 1ul in
   let h0 = get () in
-  
-  assert (inv res h0);
-  assert (inv (ptr_resource ptr) h0);
-
-  assert (r_disjoint res (ptr_resource ptr));
-  
-  assert (inv (res <*> (ptr_resource ptr)) h0);
-
-  assert (pre h0);
-  admit ();
-  let (x:b) = f ptr in
+  HST.push_frame ();
+  let h1 = get () in
+  lemma_loc_not_unused_in_fresh_frame (as_loc (fp res)) h0 h1;
+  let ptr = B.alloca init 1ul in
+  let h2 = get () in
+  lemma_loc_not_unused_in_modifies (as_loc (fp res)) h1 h2;
+  let x = f ptr in
+  let h3 = get () in
   HST.pop_frame ();
-  admit ()
-*)
+  let h4 = get () in
+  B.modifies_fresh_frame_popped h0 h1 (as_loc (fp (res <*> (ptr_resource ptr)))) h3 h4;
+  lemma_loc_not_unused_in_popped (as_loc (fp res)) h3 h4;
+  x
