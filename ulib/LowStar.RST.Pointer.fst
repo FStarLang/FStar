@@ -27,7 +27,7 @@ open LowStar.BufferOps
 let ptr_view (#a:Type) (ptr:B.pointer a) : view a = 
   let fp = Ghost.hide (B.loc_buffer ptr) in 
   let inv h = B.live h ptr in
-  let sel (h:imem inv) = Seq.index (B.as_seq h ptr) 0 in
+  let sel h = Seq.index (B.as_seq h ptr) 0 in
   {
     fp = fp;
     inv = inv;
@@ -36,7 +36,16 @@ let ptr_view (#a:Type) (ptr:B.pointer a) : view a =
 
 let ptr_resource (#a:Type) (ptr:B.pointer a) = 
   as_resource (ptr_view ptr)
-  
+
+let reveal_ptr ()
+  : Lemma ((forall a (ptr:B.pointer a) .{:pattern as_loc (fp (ptr_resource ptr))} 
+             as_loc (fp (ptr_resource ptr)) == B.loc_buffer ptr) /\
+           (forall a (ptr:B.pointer a) h .{:pattern inv (ptr_resource ptr) h} 
+             inv (ptr_resource ptr) h <==> B.live h ptr) /\
+           (forall a (ptr:B.pointer a) h .{:pattern sel (ptr_view ptr) h} 
+             sel (ptr_view ptr) h == Seq.index (B.as_seq h ptr) 0)) = 
+  reveal ()
+
 let ptr_read (#a:Type)
              (ptr:B.pointer a)
              (_:unit)

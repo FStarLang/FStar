@@ -140,9 +140,11 @@ let reveal_star_inv (res1 res2:resource) (h:HS.mem)
                                                                 //      call reveals in specs involving <*>]
   ()
 
-let reveal_star (res1 res2:resource) 
-  : Lemma (as_loc (fp (res1 <*> res2)) == B.loc_union (as_loc (fp res1)) (as_loc (fp res2)) /\
-           (res1 <*> res2).t == res1.t & res2.t) = 
+let reveal_star () 
+  : Lemma ((forall res1 res2 .{:pattern as_loc (fp (res1 <*> res2))} 
+              as_loc (fp (res1 <*> res2)) == B.loc_union (as_loc (fp res1)) (as_loc (fp res2))) /\
+           (forall res1 res2 .{:pattern (res1 <*> res2).t} 
+              (res1 <*> res2).t == res1.t & res2.t)) = 
   ()
 
 (* Constructive resource inclusion *)
@@ -156,7 +158,7 @@ type r_includes_t (res1 res2:resource) = {
 let r_includes res1 res2 = 
   inc:r_includes_t res1 res2 {
     // Views are mapped to views
-    (forall h .{:pattern (inc.inc (sel (view_of res1) h))} 
+    (forall (h:imem (fun h -> inv res1 h /\ inv res2 h)) .{:pattern (inc.inc (sel (view_of res1) h))} 
                inc.inc (sel (view_of res1) h) == sel (view_of res2) h) /\
     // Delta is disjoint from the smaller resource
     r_disjoint inc.delta res2 /\
@@ -301,4 +303,3 @@ let frame (#a:Type)
               ($f:unit -> RST a inner pre post)
             : RST a outer (frame_pre inc pre) (frame_post inc post) =
   f ()
-
