@@ -41,7 +41,8 @@ doublylinkedlist \
 regional \
 generic \
 calc \
-lowstar_lenses
+lowstar_lenses \
+lowstar_resources
 
 # low-level \  ... NS: removing from CI for this branch
 
