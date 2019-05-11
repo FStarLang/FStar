@@ -110,7 +110,9 @@ let with_new_ptr (#res:resource)
                  (#b:Type)
                  (#pre:with_new_ptr_pre res)
                  (#post:with_new_ptr_post res b)
-                 (f:(ptr:B.pointer a -> RST b (res <*> (ptr_resource ptr)) pre post)) 
+                 (f:(ptr:B.pointer a -> RST b (res <*> (ptr_resource ptr)) 
+                                              (fun h -> pre h /\ sel (ptr_view ptr) h == init) 
+                                              post)) 
                : RST b res pre post = 
   reveal_rst_inv ();
   reveal_modifies ();
