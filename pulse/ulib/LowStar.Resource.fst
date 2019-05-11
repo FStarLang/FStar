@@ -207,11 +207,11 @@ let star_includes_right (#res1:resource)
 (* Left and right inclusions for the empty resource *)
 
 let star_includes_empty_left (#res:resource)
-                           : r_includes res (res <*> empty_resource) =
+                           : r_includes res (empty_resource <*> res) =
   empty_resource
 
 let star_includes_empty_right (#res:resource)
-                           : r_includes res (empty_resource <*> res) =
+                           : r_includes res (res <*> empty_resource) =
   empty_resource
 
 (* Weaker form of resource inclusion (with invariant inclusion instead of equivalence) *)
