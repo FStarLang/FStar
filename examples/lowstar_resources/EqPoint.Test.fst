@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Point.Test
+module EqPoint.Test
 
 open FStar.HyperStack.ST
 module B = LowStar.Buffer
@@ -25,7 +25,7 @@ open LowStar.Resource
 open LowStar.RST
 open LowStar.RST.Pointer
 
-open Point
+open EqPoint
 
 let move_test (p:point)
   : RST unit (as_resource (point_view p))
