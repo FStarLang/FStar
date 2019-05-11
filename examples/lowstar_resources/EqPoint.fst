@@ -29,30 +29,30 @@ open LowStar.BufferOps
 
 abstract
 noeq
-type point_t = {
+type point = {
     x: B.pointer int;
     y: B.pointer int
   }
 
-let point =
-  p:point_t{B.loc_disjoint (B.loc_buffer p.x) (B.loc_buffer p.y)}
-
-type point_view_t = {
+type eq_point_view_t = {
     x_view: int;
     y_view: y_view:int{x_view = y_view}
   }
 
 abstract
-let point_view (p:point) : view point_view_t = 
+let eq_point_view (p:point) : view eq_point_view_t = 
   let fp = Ghost.hide (B.loc_union (B.loc_buffer p.x) (B.loc_buffer p.y)) in
   let inv h = 
     B.live h p.x /\ B.live h p.y /\ 
-    Seq.index (B.as_seq h p.x) 0 == Seq.index (B.as_seq h p.y) 0 in
+    B.loc_disjoint (B.loc_buffer p.x) (B.loc_buffer p.y) /\
+    Seq.index (B.as_seq h p.x) 0 == Seq.index (B.as_seq h p.y) 0 
+  in
   let sel (h:imem inv) = 
     { 
       x_view = Seq.index (B.as_seq h p.x) 0; 
       y_view = Seq.index (B.as_seq h p.y) 0
-    } in
+    } 
+  in
   reveal_view ();
   {
     fp = fp;
@@ -60,11 +60,14 @@ let point_view (p:point) : view point_view_t =
     sel = sel
   }
 
-let sel_x (p:point) (h:imem (inv (as_resource (point_view p)))) : GTot int = 
-  (sel (point_view p) h).x_view
+let eq_point_resource (p:point) = 
+  as_resource (eq_point_view p)
+
+let sel_x (p:point) (h:imem (inv (eq_point_resource p))) : GTot int = 
+  (sel (eq_point_view p) h).x_view
   
-let sel_y (p:point) (h:imem (inv (as_resource (point_view p)))) : GTot int = 
-  (sel (point_view p) h).y_view
+let sel_y (p:point) (h:imem (inv (eq_point_resource p))) : GTot int = 
+  (sel (eq_point_view p) h).y_view
 
 let mk_point (x:B.pointer int) (y:B.pointer int) 
   : Pure point (requires (B.loc_disjoint (B.loc_buffer x) (B.loc_buffer y)))
@@ -74,17 +77,16 @@ let mk_point (x:B.pointer int) (y:B.pointer int)
     y = y
   }
 
-private
-let unpack_point (p:point) 
-  : r_weakly_includes (as_resource (point_view p)) 
+let unpack_eq_point (p:point) 
+  : r_weakly_includes (eq_point_resource p) 
                       (ptr_resource p.x <*> ptr_resource p.y) = 
   reveal_view ();
   reveal_ptr ();
   reveal_star ();
   empty_resource
-  
+
 private
-let move_up_aux (x:B.pointer int) (y:B.pointer int)
+let move_up_aux (x y:B.pointer int)
   : RST unit (ptr_resource x <*> ptr_resource y)
              (fun _ -> True)
              (fun h0 _ h1 -> 
@@ -96,15 +98,15 @@ let move_up_aux (x:B.pointer int) (y:B.pointer int)
   frame (star_includes_right (ptr_resource x)) (ptr_write y (y' + 1))
 
 let move_up (p:point)
-  : RST unit (as_resource (point_view p))
+  : RST unit (eq_point_resource p)
              (fun _ -> True)
              (fun h0 _ h1 -> sel_x p h1 = sel_x p h0 + 1 /\
                              sel_y p h1 = sel_y p h0 + 1) = 
   reveal_ptr ();
-  weak_frame (unpack_point p) (fun _ -> move_up_aux p.x p.y)
+  weak_frame (unpack_eq_point p) (fun _ -> move_up_aux p.x p.y)
 
 private
-let move_down_aux (x:B.pointer int) (y:B.pointer int)
+let move_down_aux (x y:B.pointer int)
   : RST unit (ptr_resource x <*> ptr_resource y)
              (fun _ -> True)
              (fun h0 _ h1 -> 
@@ -116,9 +118,9 @@ let move_down_aux (x:B.pointer int) (y:B.pointer int)
   frame (star_includes_right (ptr_resource x)) (ptr_write y (y' - 1))
 
 let move_down (p:point)
-  : RST unit (as_resource (point_view p))
+  : RST unit (eq_point_resource p)
              (fun _ -> True)
              (fun h0 _ h1 -> sel_x p h1 = sel_x p h0 - 1 /\
                              sel_y p h1 = sel_y p h0 - 1) = 
   reveal_ptr ();
-  weak_frame (unpack_point p) (fun _ -> move_down_aux p.x p.y)
+  weak_frame (unpack_eq_point p) (fun _ -> move_down_aux p.x p.y)

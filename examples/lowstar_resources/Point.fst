@@ -43,7 +43,9 @@ abstract
 let point_view (p:point) : view point_view_t = 
   let fp = Ghost.hide (B.loc_union (B.loc_buffer p.x) (B.loc_buffer p.y)) in
   let inv h = 
-    B.live h p.x /\ B.live h p.y /\ B.loc_disjoint (B.loc_buffer p.x) (B.loc_buffer p.y) in
+    B.live h p.x /\ B.live h p.y /\ 
+    B.loc_disjoint (B.loc_buffer p.x) (B.loc_buffer p.y) 
+  in
   let sel (h:imem inv) = 
     { 
       x_view = Seq.index (B.as_seq h p.x) 0; 
@@ -57,10 +59,13 @@ let point_view (p:point) : view point_view_t =
     sel = sel
   }
 
-let sel_x (p:point) (h:imem (inv (as_resource (point_view p)))) : GTot int = 
+let point_resource (p:point) = 
+  as_resource (point_view p)
+
+let sel_x (p:point) (h:imem (inv (point_resource p))) : GTot int = 
   (sel (point_view p) h).x_view
   
-let sel_y (p:point) (h:imem (inv (as_resource (point_view p)))) : GTot int = 
+let sel_y (p:point) (h:imem (inv (point_resource p))) : GTot int = 
   (sel (point_view p) h).y_view
 
 let mk_point (x:B.pointer int) (y:B.pointer int) : point = 
@@ -71,7 +76,7 @@ let mk_point (x:B.pointer int) (y:B.pointer int) : point =
 
 private
 let unpack_point (p:point) 
-  : r_includes (as_resource (point_view p)) 
+  : r_includes (point_resource p) 
                (ptr_resource p.x <*> ptr_resource p.y) = 
   reveal_view ();
   reveal_ptr ();
@@ -89,7 +94,7 @@ let move_up_aux (x:B.pointer int) (y:B.pointer int)
   frame (star_includes_right (ptr_resource x)) (ptr_write y (y' + 1))
 
 let move_up (p:point)
-  : RST unit (as_resource (point_view p))
+  : RST unit (point_resource p)
              (fun _ -> True)
              (fun h0 _ h1 -> sel_x p h1 = sel_x p h0 /\
                              sel_y p h1 = sel_y p h0 + 1) = 
@@ -107,7 +112,7 @@ let move_down_aux (x:B.pointer int) (y:B.pointer int)
   frame (star_includes_right (ptr_resource x)) (ptr_write y (y' - 1))
 
 let move_down (p:point)
-  : RST unit (as_resource (point_view p))
+  : RST unit (point_resource p)
              (fun _ -> True)
              (fun h0 _ h1 -> sel_x p h1 = sel_x p h0 /\
                              sel_y p h1 = sel_y p h0 - 1) = 
@@ -115,7 +120,7 @@ let move_down (p:point)
   frame (unpack_point p) (fun _ -> move_down_aux p.x p.y)
 
 private
-let move_right_aux (x:B.pointer int) (y:B.pointer int)
+let move_right_aux (x y:B.pointer int)
   : RST unit (ptr_resource x <*> ptr_resource y)
              (fun _ -> True)
              (fun h0 _ h1 -> 
@@ -125,7 +130,7 @@ let move_right_aux (x:B.pointer int) (y:B.pointer int)
   frame (star_includes_left (ptr_resource y)) (ptr_write x (x' + 1))
 
 let move_right (p:point)
-  : RST unit (as_resource (point_view p))
+  : RST unit (point_resource p)
              (fun _ -> True)
              (fun h0 _ h1 -> sel_x p h1 = sel_x p h0 + 1 /\
                              sel_y p h1 = sel_y p h0) = 
@@ -133,7 +138,7 @@ let move_right (p:point)
   frame (unpack_point p) (fun _ -> move_right_aux p.x p.y)
 
 private
-let move_left_aux (x:B.pointer int) (y:B.pointer int)
+let move_left_aux (x y:B.pointer int)
   : RST unit (ptr_resource x <*> ptr_resource y)
              (fun _ -> True)
              (fun h0 _ h1 -> 
@@ -143,7 +148,7 @@ let move_left_aux (x:B.pointer int) (y:B.pointer int)
   frame (star_includes_left (ptr_resource y)) (ptr_write x (x' - 1))
 
 let move_left (p:point)
-  : RST unit (as_resource (point_view p))
+  : RST unit (point_resource p)
              (fun _ -> True)
              (fun h0 _ h1 -> sel_x p h1 = sel_x p h0 - 1 /\
                              sel_y p h1 = sel_y p h0) = 
