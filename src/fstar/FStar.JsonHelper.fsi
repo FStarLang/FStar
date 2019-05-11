@@ -52,6 +52,7 @@ type lquery =
 | DidOpen of txdoc_item
 | DidChange
 | WillSave of string
+| WillSaveWait of string * int
 | DidSave of string
 | DidClose of string
 | Completion of completion_context
@@ -66,7 +67,9 @@ type lquery =
 | DocumentSymbol
 | CodeAction
 | CodeLens
+| CodeLensResolve
 | DocumentLink
+| DocumentLinkResolve
 | DocumentColor
 | ColorPresentation
 | Formatting

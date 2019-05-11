@@ -38,6 +38,8 @@ let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
           | "textDocument/didOpen" -> DidOpen (arg "textDocument" r |> js_txdoc_item)
           | "textDocument/didChange" -> DidChange
           | "textDocument/willSave" -> WillSave (arg "textDocument" r |> js_str)
+          | "textDocument/willSaveWaitUntil" -> WillSaveWait (arg "textDocument" r |> js_str,
+                                                              arg "reason" r |> js_int)
           | "textDocument/didSave" -> DidSave (arg "textDocument" r |> js_str)
           | "textDocument/didClose" -> DidClose (arg "textDocument" r |> js_str)
           | "textDocument/completion" -> Completion (arg "context" r |>
@@ -53,7 +55,9 @@ let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
           | "textDocument/documentSymbol" -> DocumentSymbol
           | "textDocument/codeAction" -> CodeAction
           | "textDocument/codeLens" -> CodeLens
+          | "codeLens/resolve" -> CodeLensResolve
           | "textDocument/documentLink" -> DocumentLink
+          | "documentLink/resolve" -> DocumentLinkResolve
           | "textDocument/documentColor" -> DocumentColor
           | "textDocument/colorPresentation" -> ColorPresentation
           | "textDocument/formatting" -> Formatting
@@ -90,17 +94,18 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | Initialized -> (None, Inl st)
   | Shutdown -> (Some (Inl JsonNull), Inl st)
   | Exit -> (None, Inr (run_exit st))
-  | Cancel id -> (Some (Inl JsonNull), Inl st)
+  | Cancel id -> (None, Inl st)
   | FolderChange evt -> (Some (Inl JsonNull), Inl st)
   | ChangeConfig -> (Some (Inl JsonNull), Inl st)
   | ChangeWatch -> (Some (Inl JsonNull), Inl st)
   | Symbol sym -> (Some (Inl JsonNull), Inl st)
   | ExecCommand cmd -> (Some (Inl JsonNull), Inl st)
-  | DidOpen item -> (Some (Inl JsonNull), Inl st)
-  | DidChange -> (Some (Inl JsonNull), Inl st)
-  | WillSave txid -> (Some (Inl JsonNull), Inl st)
-  | DidSave txid -> (Some (Inl JsonNull), Inl st)
-  | DidClose txid -> (Some (Inl JsonNull), Inl st)
+  | DidOpen item -> (None, Inl st)
+  | DidChange -> (None, Inl st)
+  | WillSave txid -> (None, Inl st)
+  | WillSaveWait (txid, reason) -> (Some (Inl JsonNull), Inl st)
+  | DidSave txid -> (None, Inl st)
+  | DidClose txid -> (None, Inl st)
   | Completion ctx -> (Some (Inl JsonNull), Inl st)
   | Resolve -> (Some (Inl JsonNull), Inl st)
   | Hover -> (Some (Inl JsonNull), Inl st)
@@ -113,7 +118,9 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | DocumentSymbol -> (Some (Inl JsonNull), Inl st)
   | CodeAction -> (Some (Inl JsonNull), Inl st)
   | CodeLens -> (Some (Inl JsonNull), Inl st)
+  | CodeLensResolve -> (Some (Inl JsonNull), Inl st)
   | DocumentLink -> (Some (Inl JsonNull), Inl st)
+  | DocumentLinkResolve -> (Some (Inl JsonNull), Inl st)
   | DocumentColor -> (Some (Inl JsonNull), Inl st)
   | ColorPresentation -> (Some (Inl JsonNull), Inl st)
   | Formatting -> (Some (Inl JsonNull), Inl st)
