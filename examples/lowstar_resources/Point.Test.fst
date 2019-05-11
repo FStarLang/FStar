@@ -27,6 +27,8 @@ open LowStar.RST.Pointer
 
 open Point
 
+(* Moving a point up-down-left-right *)
+
 let move_test (p:point)
   : RST unit (as_resource (point_view p))
              (fun _ -> True)
@@ -49,3 +51,23 @@ let move_test (p:point)
   move_down p;
   move_left p;
   move_up p
+
+(* Allocating two pointers, packing them up as a point, and calling move *)
+
+let move_test_alloc ()
+  : RST unit empty_resource (fun _ -> True) (fun _ _ _ -> True) =
+  with_new_ptr #empty_resource 4 #_ #(fun _ -> True) #(fun _ _ _ -> True) 
+  (fun x -> 
+    frame (star_includes_right empty_resource) 
+    (fun _ -> 
+      (
+        with_new_ptr #(ptr_resource x) 2 #_ #(fun _ -> True) #(fun _ _ _ -> True) 
+        (fun y -> 
+          reveal_ptr ();
+          reveal_star ();
+          let p = mk_point x y in
+          frame (pack_point x y) (fun _ -> move_test p)
+        )
+      ) <: RST unit (ptr_resource x) (fun _ -> True) (fun _ _ _ -> True)
+    )
+  )
