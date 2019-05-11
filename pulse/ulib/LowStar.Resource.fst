@@ -87,6 +87,18 @@ let as_resource (#a:Type) (view:view a) : resource = {
     view = view
   }
 
+let empty_resource : resource =
+  let t = unit in
+  let view = {
+      fp = Ghost.hide B.loc_none;
+      inv = (fun _ -> True);
+      sel = (fun _ -> ())
+    } in
+  {
+    t = t;
+    view = view
+  }
+
 let view_of (res:resource) = 
   res.view
 

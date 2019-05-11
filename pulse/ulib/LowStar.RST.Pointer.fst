@@ -88,19 +88,21 @@ assume val lemma_loc_not_unused_in_popped (l:B.loc) (h0 h1:HS.mem)
   : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ HS.popped h0 h1))
           (ensures  (B.loc_includes (B.loc_not_unused_in h1) l)) 
 
+unfold
 let with_new_ptr_pre (res:resource) =
   pre:r_pre res{(forall h0 h1.{:pattern pre h0; HS.fresh_frame h0 h1} 
                    pre h0 /\ HS.fresh_frame h0 h1 ==> pre h1) /\
                 (forall h0 h1.{:pattern pre h0; B.modifies B.loc_none h0 h1} 
                    pre h0 /\ B.modifies B.loc_none h0 h1 ==> pre h1)}
 
+unfold
 let with_new_ptr_post (res:resource) (a:Type) =
   post:r_post res a{(forall h0 h1 x h2.{:pattern B.modifies B.loc_none h0 h1; post h1 x h2} 
                        B.modifies B.loc_none h0 h1 /\ post h1 x h2 ==> post h0 x h2) /\
                     (forall h0 h1 x h2.{:pattern HS.fresh_frame h0 h1; post h1 x h2}
-                       inv res h0 /\ HS.fresh_frame h0 h1 /\ post h1 x h2 ==> post h0 x h2) /\ 
+                       rst_inv res h0 /\ HS.fresh_frame h0 h1 /\ post h1 x h2 ==> post h0 x h2) /\ 
                     (forall h0 x h1 h2.{:pattern post h0 x h1; HS.popped h1 h2}
-                       post h0 x h1 /\ HS.popped h1 h2 /\ inv res h2 ==> post h0 x h2)}
+                       post h0 x h1 /\ HS.popped h1 h2 /\ rst_inv res h2 ==> post h0 x h2)}
 
 let with_new_ptr (#res:resource)
                  (#a:Type)
