@@ -74,10 +74,17 @@ let mk_point (x:B.pointer int) (y:B.pointer int) : point =
     y = y
   }
 
-private
 let unpack_point (p:point) 
   : r_includes (point_resource p) 
                (ptr_resource p.x <*> ptr_resource p.y) = 
+  reveal_view ();
+  reveal_ptr ();
+  reveal_star ();
+  empty_resource
+
+let pack_point (x:B.pointer int) (y:B.pointer int{B.loc_disjoint (B.loc_buffer x) (B.loc_buffer y)})
+  : r_includes (ptr_resource x <*> ptr_resource y)
+               (point_resource (mk_point x y)) = 
   reveal_view ();
   reveal_ptr ();
   reveal_star ();

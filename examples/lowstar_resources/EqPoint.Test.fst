@@ -27,6 +27,8 @@ open LowStar.RST.Pointer
 
 open EqPoint
 
+(* Moving the point up-down along the diagonal *)
+
 let move_test (p:point)
   : RST unit (as_resource (eq_point_view p))
              (fun _ -> True)
@@ -43,27 +45,3 @@ let move_test (p:point)
   move_down p;
   move_down p;
   move_up p
-
-(*
-// WIP
-let move_test_alloc_aux (x:B.pointer int) 
-  : RST unit (ptr_resource x) (fun _ -> True) (fun _ _ _ -> True) =
-      with_new_ptr #(ptr_resource x) 0 #_ #(fun _ -> True) #(fun _ _ _ -> True) 
-      (fun y -> 
-        reveal_ptr ();
-        reveal_star ();
-        assert (r_disjoint (ptr_resource x) (ptr_resource y));
-        let p = mk_point x y in
-        ()
-      )
-
-let move_test_alloc ()
-  : RST unit empty_resource (fun _ -> True) (fun _ _ _ -> True) =
-  with_new_ptr #empty_resource 0 #_ #(fun _ -> True) #(fun _ _ _ -> True) 
-  (fun x -> 
-    frame (star_includes_right empty_resource) 
-    (fun _ -> 
-      move_test_alloc_aux x
-    )
-  )
-*)
