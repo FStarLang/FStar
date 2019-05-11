@@ -52,7 +52,7 @@ type lquery =
 | DidOpen of txdoc_item
 | DidChange
 | WillSave of string
-| WillSaveWait of string * int
+| WillSaveWait of string
 | DidSave of string
 | DidClose of string
 | Completion of completion_context

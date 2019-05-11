@@ -104,7 +104,7 @@ type lquery =
 | DidOpen of txdoc_item
 | DidChange
 | WillSave of string
-| WillSaveWait of string * int
+| WillSaveWait of string
 | DidSave of string
 | DidClose of string
 | Completion of completion_context
@@ -198,8 +198,17 @@ let wrap_content_szerr (m: string): lsp_query = { query_id = None; q = BadProtoc
 
 let js_servcap : json =
   JsonAssoc [("capabilities",
-              JsonAssoc [("hoverProvider", JsonBool false); ("definitionProvider", JsonBool false);
+              JsonAssoc [("textDocumentSync", JsonAssoc [("openClose", JsonBool true);
+                                                         ("change", JsonInt 1);
+                                                         ("willSave", JsonBool true);
+                                                         ("willSaveWaitUntil", JsonBool false)]);
+              ("hoverProvider", JsonBool false);
+              ("completionProvider", JsonAssoc [("resolveProvider", JsonBool false)]);
+              ("signatureHelpProvider", JsonAssoc []);
+              ("definitionProvider", JsonBool true);
               ("typeDefinitionProvider", JsonBool false);
               ("implementationProvider", JsonBool false);
-              ("referencesProvider", JsonBool false); ("documentSymbolProvider", JsonBool false);
-              ("workspaceSymbolProvider", JsonBool false); ("codeActionProvider", JsonBool false)])]
+              ("referencesProvider", JsonBool false);
+              ("documentSymbolProvider", JsonBool false);
+              ("workspaceSymbolProvider", JsonBool false);
+              ("codeActionProvider", JsonBool false)])]

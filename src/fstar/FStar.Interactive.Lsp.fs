@@ -12,6 +12,9 @@ open FStar.JsonHelper
 // May throw, but is only called by branches that have a "params"
 let arg k r = assoc k (assoc "params" r |> js_assoc)
 
+// May throw, but is only called by branches that have { "textDocument" : {"uri" : ... } }
+let txdoc_id r = assoc "uri" (arg "textDocument" r |> js_assoc) |> js_str
+
 // nothrow
 let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
   let qid = try_assoc "id" r |> Util.map_option js_str_int in // noexcept
@@ -37,11 +40,10 @@ let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
                                           (arg "command" r |> js_str)
           | "textDocument/didOpen" -> DidOpen (arg "textDocument" r |> js_txdoc_item)
           | "textDocument/didChange" -> DidChange
-          | "textDocument/willSave" -> WillSave (arg "textDocument" r |> js_str)
-          | "textDocument/willSaveWaitUntil" -> WillSaveWait (arg "textDocument" r |> js_str,
-                                                              arg "reason" r |> js_int)
-          | "textDocument/didSave" -> DidSave (arg "textDocument" r |> js_str)
-          | "textDocument/didClose" -> DidClose (arg "textDocument" r |> js_str)
+          | "textDocument/willSave" -> WillSave (txdoc_id r)
+          | "textDocument/willSaveWaitUntil" -> WillSaveWait (txdoc_id r)
+          | "textDocument/didSave" -> DidSave (txdoc_id r)
+          | "textDocument/didClose" -> DidClose (txdoc_id r)
           | "textDocument/completion" -> Completion (arg "context" r |>
                                                      js_compl_context)
           | "completionItem/resolve" -> Resolve
@@ -97,13 +99,13 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | Cancel id -> (None, Inl st)
   | FolderChange evt -> (Some (Inl JsonNull), Inl st)
   | ChangeConfig -> (Some (Inl JsonNull), Inl st)
-  | ChangeWatch -> (Some (Inl JsonNull), Inl st)
+  | ChangeWatch -> (None, Inl st)
   | Symbol sym -> (Some (Inl JsonNull), Inl st)
   | ExecCommand cmd -> (Some (Inl JsonNull), Inl st)
   | DidOpen item -> (None, Inl st)
   | DidChange -> (None, Inl st)
   | WillSave txid -> (None, Inl st)
-  | WillSaveWait (txid, reason) -> (Some (Inl JsonNull), Inl st)
+  | WillSaveWait txid -> (Some (Inl JsonNull), Inl st)
   | DidSave txid -> (None, Inl st)
   | DidClose txid -> (None, Inl st)
   | Completion ctx -> (Some (Inl JsonNull), Inl st)
