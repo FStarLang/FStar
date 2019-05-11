@@ -75,20 +75,13 @@ let mk_point (x:B.pointer int) (y:B.pointer int)
   }
 
 private
-let point_inclusion (p:point) 
+let unpack_point (p:point) 
   : r_weakly_includes (as_resource (point_view p)) 
                       (ptr_resource p.x <*> ptr_resource p.y) = 
   reveal_view ();
   reveal_ptr ();
   reveal_star ();
-  {
-    t = unit;
-    view = {
-      fp = Ghost.hide B.loc_none;
-      inv = (fun h -> True);
-      sel = (fun _ -> ())
-    }
-  }
+  empty_resource
   
 private
 let move_up_aux (x:B.pointer int) (y:B.pointer int)
@@ -108,7 +101,7 @@ let move_up (p:point)
              (fun h0 _ h1 -> sel_x p h1 = sel_x p h0 + 1 /\
                              sel_y p h1 = sel_y p h0 + 1) = 
   reveal_ptr ();
-  weak_frame (point_inclusion p) (fun _ -> move_up_aux p.x p.y)
+  weak_frame (unpack_point p) (fun _ -> move_up_aux p.x p.y)
 
 private
 let move_down_aux (x:B.pointer int) (y:B.pointer int)
@@ -128,4 +121,4 @@ let move_down (p:point)
              (fun h0 _ h1 -> sel_x p h1 = sel_x p h0 - 1 /\
                              sel_y p h1 = sel_y p h0 - 1) = 
   reveal_ptr ();
-  weak_frame (point_inclusion p) (fun _ -> move_down_aux p.x p.y)
+  weak_frame (unpack_point p) (fun _ -> move_down_aux p.x p.y)
