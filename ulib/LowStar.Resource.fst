@@ -87,18 +87,6 @@ let as_resource (#a:Type) (view:view a) : resource = {
     view = view
   }
 
-let empty_resource : resource =
-  let t = unit in
-  let view = {
-      fp = Ghost.hide B.loc_none;
-      inv = (fun _ -> True);
-      sel = (fun _ -> ())
-    } in
-  {
-    t = t;
-    view = view
-  }
-
 let view_of (res:resource) = 
   res.view
 
@@ -178,6 +166,20 @@ let reveal_star ()
               (res1 <*> res2).view.sel h == (sel res1.view h,sel res2.view h))) = 
   ()
 
+(* Empty resource *)
+
+let empty_resource : resource =
+  let t = unit in
+  let view = {
+      fp = Ghost.hide B.loc_none;
+      inv = (fun _ -> True);
+      sel = (fun _ -> ())
+    } in
+  {
+    t = t;
+    view = view
+  }
+
 (* Constructive resource inclusion *)
 
 let r_includes outer inner = 
@@ -192,15 +194,25 @@ let r_includes outer inner =
 
 (* Left and right inclusions for separating conjunction *)
 
-let star_includes_left (#fp:resource) 
-                       (frame:resource{r_disjoint fp frame})
-                     : r_includes (fp <*> frame) fp = 
-  frame
+let star_includes_left (#res1:resource) 
+                       (res2:resource{r_disjoint res1 res2})
+                     : r_includes (res1 <*> res2) res1 = 
+  res2
 
-let star_includes_right (#fp:resource) 
-                        (frame:resource{r_disjoint frame fp})
-                      : r_includes (frame <*> fp) fp = 
-  frame
+let star_includes_right (#res1:resource) 
+                        (res2:resource{r_disjoint res2 res1})
+                      : r_includes (res2 <*> res1) res1 = 
+  res2
+
+(* Left and right inclusions for the empty resource *)
+
+let star_includes_empty_left (#res:resource)
+                           : r_includes res (res <*> empty_resource) =
+  empty_resource
+
+let star_includes_empty_right (#res:resource)
+                           : r_includes res (empty_resource <*> res) =
+  empty_resource
 
 (* Weaker form of resource inclusion (with invariant inclusion instead of equivalence) *)
 
