@@ -6,6 +6,8 @@ open FStar.Util
 open FStar.Errors
 open FStar.Exn
 
+module CTable = FStar.Interactive.CompletionTable
+
 val try_assoc : string -> list<(string * 'a)> -> option<'a>
 val assoc : string -> list <(string * 'b)> -> 'b
 
@@ -77,6 +79,12 @@ type lquery =
 
 type lsp_query = { query_id: option<int>; q: lquery }
 
+(* Types concerning repl *)
+type repl_state = { repl_line: int; repl_column: int; repl_stdin: stream_reader;
+                    repl_last: lquery; repl_names: CTable.table }
+type optresponse = option<either<json, json>> // Used to indicate (no|success|failure) response
+type either_st_exit = either<repl_state, int> // repl_state is independent of exit_code
+
 type error_code =
 | ParseError
 | InvalidRequest
@@ -95,6 +103,7 @@ val json_debug : json -> string
 val wrap_jsfail : option<int> -> string -> json -> lsp_query
 
 (* Helpers for constructing the response *)
+val json_of_response : option<int> -> either<json, json> -> json
 val js_resperr : error_code -> string -> json
 val wrap_content_szerr : string -> lsp_query
 val js_servcap : json

@@ -7,17 +7,14 @@ open FStar.Errors
 open FStar.Util
 open FStar.JsonHelper
 
-module CTable = FStar.Interactive.CompletionTable
-
 (* Request *)
 
 // May throw, but is only called by branches that have a "params"
 let arg k r = assoc k (assoc "params" r |> js_assoc)
 
-let unpack_lsp_query json : lsp_query =
-  // Exceptions for these two are caught at `deserialize_lsp_query`
-  let r = json |> js_assoc in
-  let qid = Some (assoc "id" r |> js_str_int) in
+// nothrow
+let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
+  let qid = try_assoc "id" r |> Util.map_option js_str_int in // noexcept
 
   // If we make it this far, exceptions will come with qid info.
   // Wrap in `try` because all `js_*` functions and `assoc` throw
@@ -72,71 +69,60 @@ let unpack_lsp_query json : lsp_query =
 
 let deserialize_lsp_query js_query : lsp_query =
   try
-    unpack_lsp_query js_query
+    unpack_lsp_query (js_query |> js_assoc)
   with
-  // If `unpack_lsp_query` throws, it does so without qid
-  | InvalidQuery msg -> { query_id = None; q = BadProtocolMsg msg }
+  // This is the only excpetion that js_assoc is allowed to throw
   | UnexpectedJsonType (expected, got) -> wrap_jsfail None expected got
 
 let parse_lsp_query query_str : lsp_query =
+  Util.print1_error ">>> %s\n" query_str;
   match Util.json_of_string query_str with
   | None -> { query_id = None; q = BadProtocolMsg "Json parsing failed" }
   | Some request -> deserialize_lsp_query request
 
 (* Repl and response *)
 
-type repl_state = { repl_line: int; repl_column: int; repl_stdin: stream_reader;
-                    repl_last: lquery; repl_names: CTable.table }
-
 let run_exit (st: repl_state) : int = if st.repl_last <> Shutdown then 1 else 0
 
-let run_query (st: repl_state) (q: lquery) : either<json, json> * either<repl_state, int> =
+let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   match q with
-  | Initialize (pid, rootUri) -> (Inl js_servcap, Inl st)
-  | Initialized -> (Inl JsonNull, Inl st)
-  | Shutdown -> (Inl JsonNull, Inl st)
-  | Exit -> (Inl JsonNull, Inr (run_exit st))
-  | Cancel id -> (Inl JsonNull, Inl st)
-  | FolderChange evt -> (Inl JsonNull, Inl st)
-  | ChangeConfig -> (Inl JsonNull, Inl st)
-  | ChangeWatch -> (Inl JsonNull, Inl st)
-  | Symbol sym -> (Inl JsonNull, Inl st)
-  | ExecCommand cmd -> (Inl JsonNull, Inl st)
-  | DidOpen item -> (Inl JsonNull, Inl st)
-  | DidChange -> (Inl JsonNull, Inl st)
-  | WillSave txid -> (Inl JsonNull, Inl st)
-  | DidSave txid -> (Inl JsonNull, Inl st)
-  | DidClose txid -> (Inl JsonNull, Inl st)
-  | Completion ctx -> (Inl JsonNull, Inl st)
-  | Resolve -> (Inl JsonNull, Inl st)
-  | Hover -> (Inl JsonNull, Inl st)
-  | SignatureHelp -> (Inl JsonNull, Inl st)
-  | Declaration -> (Inl JsonNull, Inl st)
-  | Definition -> (Inl JsonNull, Inl st)
-  | Implementation -> (Inl JsonNull, Inl st)
-  | References -> (Inl JsonNull, Inl st)
-  | DocumentHighlight -> (Inl JsonNull, Inl st)
-  | DocumentSymbol -> (Inl JsonNull, Inl st)
-  | CodeAction -> (Inl JsonNull, Inl st)
-  | CodeLens -> (Inl JsonNull, Inl st)
-  | DocumentLink -> (Inl JsonNull, Inl st)
-  | DocumentColor -> (Inl JsonNull, Inl st)
-  | ColorPresentation -> (Inl JsonNull, Inl st)
-  | Formatting -> (Inl JsonNull, Inl st)
-  | RangeFormatting -> (Inl JsonNull, Inl st)
-  | TypeFormatting -> (Inl JsonNull, Inl st)
-  | Rename -> (Inl JsonNull, Inl st)
-  | PrepareRename -> (Inl JsonNull, Inl st)
-  | FoldingRange -> (Inl JsonNull, Inl st)
-  | BadProtocolMsg msg -> (Inr (js_resperr MethodNotFound msg), Inl st)
-
-let json_of_response (qid: option<int>) (response: either<json, json>) =
-  let qid = match qid with
-  | Some i -> JsonInt i
-  | None -> JsonNull in
-  match response with
-  | Inl result -> JsonAssoc [("jsonrpc", JsonStr "2.0"); ("id", qid); ("result", result)]
-  | Inr err -> JsonAssoc [("jsonrpc", JsonStr "2.0"); ("id", qid); ("error", err)]
+  | Initialize (pid, rootUri) -> (Some (Inl js_servcap), Inl st)
+  | Initialized -> (None, Inl st)
+  | Shutdown -> (Some (Inl JsonNull), Inl st)
+  | Exit -> (None, Inr (run_exit st))
+  | Cancel id -> (Some (Inl JsonNull), Inl st)
+  | FolderChange evt -> (Some (Inl JsonNull), Inl st)
+  | ChangeConfig -> (Some (Inl JsonNull), Inl st)
+  | ChangeWatch -> (Some (Inl JsonNull), Inl st)
+  | Symbol sym -> (Some (Inl JsonNull), Inl st)
+  | ExecCommand cmd -> (Some (Inl JsonNull), Inl st)
+  | DidOpen item -> (Some (Inl JsonNull), Inl st)
+  | DidChange -> (Some (Inl JsonNull), Inl st)
+  | WillSave txid -> (Some (Inl JsonNull), Inl st)
+  | DidSave txid -> (Some (Inl JsonNull), Inl st)
+  | DidClose txid -> (Some (Inl JsonNull), Inl st)
+  | Completion ctx -> (Some (Inl JsonNull), Inl st)
+  | Resolve -> (Some (Inl JsonNull), Inl st)
+  | Hover -> (Some (Inl JsonNull), Inl st)
+  | SignatureHelp -> (Some (Inl JsonNull), Inl st)
+  | Declaration -> (Some (Inl JsonNull), Inl st)
+  | Definition -> (Some (Inl JsonNull), Inl st)
+  | Implementation -> (Some (Inl JsonNull), Inl st)
+  | References -> (Some (Inl JsonNull), Inl st)
+  | DocumentHighlight -> (Some (Inl JsonNull), Inl st)
+  | DocumentSymbol -> (Some (Inl JsonNull), Inl st)
+  | CodeAction -> (Some (Inl JsonNull), Inl st)
+  | CodeLens -> (Some (Inl JsonNull), Inl st)
+  | DocumentLink -> (Some (Inl JsonNull), Inl st)
+  | DocumentColor -> (Some (Inl JsonNull), Inl st)
+  | ColorPresentation -> (Some (Inl JsonNull), Inl st)
+  | Formatting -> (Some (Inl JsonNull), Inl st)
+  | RangeFormatting -> (Some (Inl JsonNull), Inl st)
+  | TypeFormatting -> (Some (Inl JsonNull), Inl st)
+  | Rename -> (Some (Inl JsonNull), Inl st)
+  | PrepareRename -> (Some (Inl JsonNull), Inl st)
+  | FoldingRange -> (Some (Inl JsonNull), Inl st)
+  | BadProtocolMsg msg -> (Some (Inr (js_resperr MethodNotFound msg)), Inl st)
 
 // Raises exceptions, but all of them are caught
 let rec parse_header_len (stream: stream_reader) (len: int): int =
@@ -161,13 +147,17 @@ let rec read_lsp_query (stream: stream_reader) : lsp_query =
     | None -> wrap_content_szerr (Util.format1 "Could not read %s bytes" (Util.string_of_int n))
   with
   // At no cost should the server go down
-  | MalformedHeader
+  | MalformedHeader -> Util.print_error "[E] Malformed Content Header\n"; read_lsp_query stream
   | InputExhausted -> read_lsp_query stream
 
 let rec go (st: repl_state) : int =
   let query = read_lsp_query st.repl_stdin in
-  let response, state_opt = run_query st query.q in
-  write_jsonrpc (json_of_response query.query_id response);
+  let r, state_opt = run_query st query.q in
+  (match r with
+   | Some response -> (let response' = json_of_response query.query_id response in
+                       Util.print1_error "<<< %s\n" (Util.string_of_json response');
+                       write_jsonrpc response')
+   | None -> (Util.print_error "<<< ()\n")); // Don't respond
   match state_opt with
   | Inl st' -> go st'
   | Inr exitcode -> exitcode

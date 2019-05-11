@@ -8,6 +8,8 @@ open FStar.Util
 open FStar.Errors
 open FStar.Exn
 
+module CTable = FStar.Interactive.CompletionTable
+
 let try_assoc (key: string) (d: 'a) =
   Util.map_option snd (Util.try_find (fun (k, _) -> k = key) d)
 
@@ -87,6 +89,7 @@ let js_wsch_event : json -> wsch_event = function
                     name = assoc "name" removed' |> js_str } }
   | other -> js_fail "dictionary" other
 
+(* Types of main query *)
 type lquery =
 | Initialize of int * string
 | Initialized
@@ -127,6 +130,12 @@ type lquery =
 | BadProtocolMsg of string
 
 type lsp_query = { query_id: option<int>; q: lquery }
+
+(* Tpyes concerning repl *)
+type repl_state = { repl_line: int; repl_column: int; repl_stdin: stream_reader;
+                    repl_last: lquery; repl_names: CTable.table }
+type optresponse = option<either<json, json>>
+type either_st_exit = either<repl_state, int>
 
 type error_code =
 | ParseError
@@ -170,6 +179,14 @@ let wrap_jsfail (qid : option<int>) expected got : lsp_query =
                         expected (json_debug got)) }
 
 (* Helpers for constructing the response *)
+
+let json_of_response (qid: option<int>) (response: either<json, json>) =
+  let qid = match qid with
+  | Some i -> JsonInt i
+  | None -> JsonNull in
+  match response with
+  | Inl result -> JsonAssoc [("jsonrpc", JsonStr "2.0"); ("id", qid); ("result", result)]
+  | Inr err -> JsonAssoc [("jsonrpc", JsonStr "2.0"); ("id", qid); ("error", err)]
 
 let js_resperr (err: error_code) (msg: string) : json =
   JsonAssoc [("code", JsonInt (errorcode_to_int err)); ("message", JsonStr msg)]
