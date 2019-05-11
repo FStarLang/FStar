@@ -23,6 +23,7 @@ module Seq = FStar.Seq
 
 open LowStar.Resource
 open LowStar.RST
+open LowStar.RST.Pointer
 
 open Point
 
@@ -42,3 +43,11 @@ let move_test (p:point)
   move_down p;
   move_down p;
   move_up p
+
+
+(*
+// WIP
+let move_test_alloc ()
+  : RST unit empty_resource (fun _ -> True) (fun _ _ _ -> True) =
+  with_new_ptr #empty_resource #int 0 #unit #(fun _ -> True) #(fun _ _ _ -> True) (fun ptr -> ())
+*)
