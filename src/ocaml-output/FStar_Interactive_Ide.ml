@@ -1153,7 +1153,7 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
              let args =
                let uu____3847 = assoc1 "query" "args" request in
                FStar_All.pipe_right uu____3847 FStar_JsonHelper.js_assoc in
-             let arg k = assoc1 "[args]" k args in
+             let arg1 k = assoc1 "[args]" k args in
              let try_arg k =
                let uu____3876 = FStar_JsonHelper.try_assoc k args in
                match uu____3876 with
@@ -1168,24 +1168,24 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                | "describe-repl" -> DescribeRepl
                | "segment" ->
                    let uu____3890 =
-                     let uu____3892 = arg "code" in
+                     let uu____3892 = arg1 "code" in
                      FStar_All.pipe_right uu____3892 FStar_JsonHelper.js_str in
                    Segment uu____3890
                | "peek" ->
                    let uu____3896 =
                      let uu____3897 =
-                       let uu____3898 = arg "kind" in
+                       let uu____3898 = arg1 "kind" in
                        FStar_All.pipe_right uu____3898 js_pushkind in
                      let uu____3900 =
-                       let uu____3902 = arg "code" in
+                       let uu____3902 = arg1 "code" in
                        FStar_All.pipe_right uu____3902
                          FStar_JsonHelper.js_str in
                      let uu____3905 =
-                       let uu____3907 = arg "line" in
+                       let uu____3907 = arg1 "line" in
                        FStar_All.pipe_right uu____3907
                          FStar_JsonHelper.js_int in
                      let uu____3910 =
-                       let uu____3912 = arg "column" in
+                       let uu____3912 = arg1 "column" in
                        FStar_All.pipe_right uu____3912
                          FStar_JsonHelper.js_int in
                      {
@@ -1199,18 +1199,18 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                | "push" ->
                    let uu____3918 =
                      let uu____3919 =
-                       let uu____3920 = arg "kind" in
+                       let uu____3920 = arg1 "kind" in
                        FStar_All.pipe_right uu____3920 js_pushkind in
                      let uu____3922 =
-                       let uu____3924 = arg "code" in
+                       let uu____3924 = arg1 "code" in
                        FStar_All.pipe_right uu____3924
                          FStar_JsonHelper.js_str in
                      let uu____3927 =
-                       let uu____3929 = arg "line" in
+                       let uu____3929 = arg1 "line" in
                        FStar_All.pipe_right uu____3929
                          FStar_JsonHelper.js_int in
                      let uu____3932 =
-                       let uu____3934 = arg "column" in
+                       let uu____3934 = arg1 "column" in
                        FStar_All.pipe_right uu____3934
                          FStar_JsonHelper.js_int in
                      {
@@ -1224,7 +1224,7 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                | "autocomplete" ->
                    let uu____3940 =
                      let uu____3946 =
-                       let uu____3948 = arg "partial-symbol" in
+                       let uu____3948 = arg1 "partial-symbol" in
                        FStar_All.pipe_right uu____3948
                          FStar_JsonHelper.js_str in
                      let uu____3951 =
@@ -1236,7 +1236,7 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                | "lookup" ->
                    let uu____3960 =
                      let uu____3975 =
-                       let uu____3977 = arg "symbol" in
+                       let uu____3977 = arg1 "symbol" in
                        FStar_All.pipe_right uu____3977
                          FStar_JsonHelper.js_str in
                      let uu____3980 =
@@ -1268,7 +1268,7 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                                    FStar_JsonHelper.js_int in
                                (uu____4061, uu____4067, uu____4073))) in
                      let uu____4082 =
-                       let uu____4086 = arg "requested-info" in
+                       let uu____4086 = arg1 "requested-info" in
                        FStar_All.pipe_right uu____4086
                          (FStar_JsonHelper.js_list FStar_JsonHelper.js_str) in
                      (uu____3975, uu____3980, uu____3987, uu____4082) in
@@ -1276,7 +1276,7 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                | "compute" ->
                    let uu____4099 =
                      let uu____4109 =
-                       let uu____4111 = arg "term" in
+                       let uu____4111 = arg1 "term" in
                        FStar_All.pipe_right uu____4111
                          FStar_JsonHelper.js_str in
                      let uu____4114 =
@@ -1288,7 +1288,7 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                    Compute uu____4099
                | "search" ->
                    let uu____4137 =
-                     let uu____4139 = arg "terms" in
+                     let uu____4139 = arg1 "terms" in
                      FStar_All.pipe_right uu____4139 FStar_JsonHelper.js_str in
                    Search uu____4137
                | "vfs-add" ->
@@ -1298,7 +1298,7 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                        FStar_All.pipe_right uu____4156
                          (FStar_Util.map_option FStar_JsonHelper.js_str) in
                      let uu____4166 =
-                       let uu____4168 = arg "contents" in
+                       let uu____4168 = arg1 "contents" in
                        FStar_All.pipe_right uu____4168
                          FStar_JsonHelper.js_str in
                      (uu____4152, uu____4166) in

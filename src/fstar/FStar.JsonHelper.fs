@@ -1,5 +1,5 @@
-(* Helpers mainly for FStar.Interactive.Lsp; some sharing with
- * FStar.Interactive.Ide *)
+(* Json helpers mainly for FStar.Interactive.Lsp; some sharing with *
+ * FStar.Interactive.Ide                                            *)
 #light "off"
 
 module FStar.JsonHelper
@@ -57,6 +57,9 @@ let js_str_int : json -> int = function
   | JsonStr s -> Util.int_of_string s
   | other -> js_fail "string or int" other
 
+// May throw
+let arg k r = assoc k (assoc "params" r |> js_assoc)
+
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
 
 let js_compl_context : json -> completion_context = function
@@ -67,6 +70,7 @@ let js_compl_context : json -> completion_context = function
 
 type txdoc_item = { uri: string; langId: string; version: int; text: string }
 
+// May throw
 let js_txdoc_item : json -> txdoc_item = function
   | JsonAssoc a ->
     let arg k = assoc k a in
@@ -75,6 +79,20 @@ let js_txdoc_item : json -> txdoc_item = function
       version = arg "version" |> js_int;
       text = arg "text" |> js_str }
   | other -> js_fail "dictionary" other
+
+type txdoc_pos = { uri: string; line: int; col: int }
+
+// May throw, argument is of the form { "textDocument" : {"uri" : ... } }
+let js_txdoc_id (r: list<(string * 'a)>) : string =
+  assoc "uri" (arg "textDocument" r |> js_assoc) |> js_str
+
+// May throw; argument is of the form { "textDocument" : ...,
+//                                      "position" : { "line" : ..., "character" : ... } }
+let js_txdoc_pos (r: list<(string * 'a)>) : txdoc_pos =
+  let pos = arg "position" r |> js_assoc in
+  { uri = js_txdoc_id r;
+    line = assoc "line" pos |> js_int;
+    col = assoc "character" pos |> js_int }
 
 type workspace_folder = { uri: string; name: string }
 type wsch_event = { added: workspace_folder; removed: workspace_folder }
@@ -109,13 +127,14 @@ type lquery =
 | DidClose of string
 | Completion of completion_context
 | Resolve
-| Hover
-| SignatureHelp
-| Declaration
-| Definition
-| Implementation
+| Hover of txdoc_pos
+| SignatureHelp of txdoc_pos
+| Declaration of txdoc_pos
+| Definition of txdoc_pos
+| TypeDefinition of txdoc_pos
+| Implementation of txdoc_pos
 | References
-| DocumentHighlight
+| DocumentHighlight of txdoc_pos
 | DocumentSymbol
 | CodeAction
 | CodeLens
@@ -128,7 +147,7 @@ type lquery =
 | RangeFormatting
 | TypeFormatting
 | Rename
-| PrepareRename
+| PrepareRename of txdoc_pos
 | FoldingRange
 | BadProtocolMsg of string
 

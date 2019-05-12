@@ -9,12 +9,6 @@ open FStar.JsonHelper
 
 (* Request *)
 
-// May throw, but is only called by branches that have a "params"
-let arg k r = assoc k (assoc "params" r |> js_assoc)
-
-// May throw, but is only called by branches that have { "textDocument" : {"uri" : ... } }
-let txdoc_id r = assoc "uri" (arg "textDocument" r |> js_assoc) |> js_str
-
 // nothrow
 let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
   let qid = try_assoc "id" r |> Util.map_option js_str_int in // noexcept
@@ -40,20 +34,21 @@ let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
                                           (arg "command" r |> js_str)
           | "textDocument/didOpen" -> DidOpen (arg "textDocument" r |> js_txdoc_item)
           | "textDocument/didChange" -> DidChange
-          | "textDocument/willSave" -> WillSave (txdoc_id r)
-          | "textDocument/willSaveWaitUntil" -> WillSaveWait (txdoc_id r)
-          | "textDocument/didSave" -> DidSave (txdoc_id r)
-          | "textDocument/didClose" -> DidClose (txdoc_id r)
+          | "textDocument/willSave" -> WillSave (js_txdoc_id r)
+          | "textDocument/willSaveWaitUntil" -> WillSaveWait (js_txdoc_id r)
+          | "textDocument/didSave" -> DidSave (js_txdoc_id r)
+          | "textDocument/didClose" -> DidClose (js_txdoc_id r)
           | "textDocument/completion" -> Completion (arg "context" r |>
                                                      js_compl_context)
           | "completionItem/resolve" -> Resolve
-          | "textDocument/hover" -> Hover
-          | "textDocument/signatureHelp" -> SignatureHelp
-          | "textDocument/declaration" -> Declaration
-          | "textDocument/definition" -> Definition
-          | "textDocument/implementation" -> Implementation
+          | "textDocument/hover" -> Hover (js_txdoc_pos r)
+          | "textDocument/signatureHelp" -> SignatureHelp (js_txdoc_pos r)
+          | "textDocument/declaration" -> Declaration (js_txdoc_pos r)
+          | "textDocument/definition" -> Definition (js_txdoc_pos r)
+          | "textDocument/typeDefinition" -> TypeDefinition (js_txdoc_pos r)
+          | "textDocument/implementation" -> Implementation (js_txdoc_pos r)
           | "textDocument/references" -> References
-          | "textDocument/documentHighlight" -> DocumentHighlight
+          | "textDocument/documentHighlight" -> DocumentHighlight (js_txdoc_pos r)
           | "textDocument/documentSymbol" -> DocumentSymbol
           | "textDocument/codeAction" -> CodeAction
           | "textDocument/codeLens" -> CodeLens
@@ -66,7 +61,7 @@ let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
           | "textDocument/rangeFormatting" -> RangeFormatting
           | "textDocument/onTypeFormatting" -> TypeFormatting
           | "textDocument/rename" -> Rename
-          | "textDocument/prepareRename" -> PrepareRename
+          | "textDocument/prepareRename" -> PrepareRename (js_txdoc_pos r)
           | "textDocument/foldingRange" -> FoldingRange
           | m -> BadProtocolMsg (Util.format1 "Unknown method '%s'" m) }
   with
@@ -110,13 +105,14 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | DidClose txid -> (None, Inl st)
   | Completion ctx -> (Some (Inl JsonNull), Inl st)
   | Resolve -> (Some (Inl JsonNull), Inl st)
-  | Hover -> (Some (Inl JsonNull), Inl st)
-  | SignatureHelp -> (Some (Inl JsonNull), Inl st)
-  | Declaration -> (Some (Inl JsonNull), Inl st)
-  | Definition -> (Some (Inl JsonNull), Inl st)
-  | Implementation -> (Some (Inl JsonNull), Inl st)
+  | Hover txpos -> (Some (Inl JsonNull), Inl st)
+  | SignatureHelp txpos -> (Some (Inl JsonNull), Inl st)
+  | Declaration txpos -> (Some (Inl JsonNull), Inl st)
+  | Definition txpos -> (Some (Inl JsonNull), Inl st)
+  | TypeDefinition txpos -> (Some (Inl JsonNull), Inl st)
+  | Implementation txpos -> (Some (Inl JsonNull), Inl st)
   | References -> (Some (Inl JsonNull), Inl st)
-  | DocumentHighlight -> (Some (Inl JsonNull), Inl st)
+  | DocumentHighlight txpos -> (Some (Inl JsonNull), Inl st)
   | DocumentSymbol -> (Some (Inl JsonNull), Inl st)
   | CodeAction -> (Some (Inl JsonNull), Inl st)
   | CodeLens -> (Some (Inl JsonNull), Inl st)
@@ -129,7 +125,7 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | RangeFormatting -> (Some (Inl JsonNull), Inl st)
   | TypeFormatting -> (Some (Inl JsonNull), Inl st)
   | Rename -> (Some (Inl JsonNull), Inl st)
-  | PrepareRename -> (Some (Inl JsonNull), Inl st)
+  | PrepareRename txpos -> (Some (Inl JsonNull), Inl st)
   | FoldingRange -> (Some (Inl JsonNull), Inl st)
   | BadProtocolMsg msg -> (Some (Inr (js_resperr MethodNotFound msg)), Inl st)
 

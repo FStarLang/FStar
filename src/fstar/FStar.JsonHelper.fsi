@@ -1,3 +1,5 @@
+(* Json helpers mainly for FStar.Interactive.Lsp; some sharing with *
+ * FStar.Interactive.Ide                                            *)
 #light "off"
 
 module FStar.JsonHelper
@@ -8,8 +10,8 @@ open FStar.Exn
 
 module CTable = FStar.Interactive.CompletionTable
 
-val try_assoc : string -> list<(string * 'a)> -> option<'a>
-val assoc : string -> list <(string * 'b)> -> 'b
+val try_assoc : string -> list<(string * 'a)> -> option<'a> // nothrow
+val assoc : string -> list <(string * 'a)> -> 'a // throw
 
 // All exceptions are guaranteed to be caught in the LSP server implementation
 exception MissingKey of string // Only in LSP
@@ -28,11 +30,17 @@ val js_list : (json -> 'a) -> json -> list<'a>
 val js_assoc : json -> list<(string * json)>
 val js_str_int : json -> int
 
+val arg : string -> list <(string * 'a)> -> 'a
+
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
 val js_compl_context : json -> completion_context
 
 type txdoc_item = { uri: string; langId: string; version: int; text: string }
 val js_txdoc_item : json -> txdoc_item
+
+type txdoc_pos = { uri: string; line: int; col: int }
+val js_txdoc_id : list<(string * 'a)> -> string
+val js_txdoc_pos : list<(string * 'a)> -> txdoc_pos
 
 type workspace_folder = { uri: string; name: string }
 type wsch_event = { added: workspace_folder; removed: workspace_folder }
@@ -57,13 +65,14 @@ type lquery =
 | DidClose of string
 | Completion of completion_context
 | Resolve
-| Hover
-| SignatureHelp
-| Declaration
-| Definition
-| Implementation
+| Hover of txdoc_pos
+| SignatureHelp of txdoc_pos
+| Declaration of txdoc_pos
+| Definition of txdoc_pos
+| TypeDefinition of txdoc_pos
+| Implementation of txdoc_pos
 | References
-| DocumentHighlight
+| DocumentHighlight of txdoc_pos
 | DocumentSymbol
 | CodeAction
 | CodeLens
@@ -76,7 +85,7 @@ type lquery =
 | RangeFormatting
 | TypeFormatting
 | Rename
-| PrepareRename
+| PrepareRename of txdoc_pos
 | FoldingRange
 | BadProtocolMsg of string
 
