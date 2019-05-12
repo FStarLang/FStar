@@ -157,7 +157,13 @@ See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Ru
 
 ## Building F\* from sources ##
 
-Short version: Simply run `make -C src -j6 ocaml-fstar-ocaml` from the `master` branch of the clone.
+Short version: Simply run `make -C src -j6 ocaml-fstar-ocaml` from the `master` branch of the clone. If you're developing a part of F\* that changes the OCaml output, you could get stuck due to a dirty worktree; in that case, run:
+
+```
+$ git clean -dfx
+$ git checkout -- src/ocaml-output
+$ make -C src -j6 ocaml-fstar-ocaml
+```
 
 If you have a serious interest in F\* or want to report bugs then we recommend that you build F\* from the sources on GitHub (the `master` branch).
 
@@ -253,7 +259,7 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 2. Once you satisfy the prerequisites for your platform,
    translate the F\* sources to OCaml using F\* by running:
 
-        $ make ocaml -C src
+        $ make ocaml -C src -j6
 
 ## Runtime dependency: Z3 SMT solver ##
 
