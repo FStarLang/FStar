@@ -642,6 +642,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_arrow(binders, c) ->
         let module_name = env.current_module_name in
         let binders, res = SS.open_comp binders c in
+        let res =
+            if Env.is_reifiable_effect env.tcenv (U.comp_effect_name res)
+            then S.mk_Total
+                 <| Env.reify_comp env.tcenv res (env.tcenv.universe_of env.tcenv (U.comp_result res))
+            else res
+        in
         if  (env.encode_non_total_function_typ
              && U.is_pure_or_ghost_comp res)
              || U.is_tot_or_gtot_comp res
