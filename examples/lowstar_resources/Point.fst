@@ -161,3 +161,33 @@ let move_left (p:point)
                              sel_y p h1 = sel_y p h0) = 
   reveal_ptr ();
   frame (unpack_point p) (fun _ -> move_left_aux p.x p.y)
+
+private
+let read_coord (coord:B.pointer int)
+  : RST int (ptr_resource coord)
+            (fun _ -> True)
+            (fun h0 xy h1 -> h0 == h1 /\ xy == sel (ptr_view coord) h1) = 
+  reveal_ptr ();
+  !* coord
+
+let read_x (p:point)
+  : RST int (point_resource p)
+            (fun _ -> True)
+            (fun h0 x h1 -> h0 == h1 /\ x = sel_x p h1) =
+  reveal_ptr ();
+  frame (unpack_point p) (fun _ -> 
+    frame (star_includes_left (ptr_resource p.y)) (fun _ -> 
+      read_coord p.x <: RST int (ptr_resource p.x) (fun _ -> True) (fun h0 x h1 -> h0 == h1 /\ x = sel (ptr_view p.x) h1)
+    ) <: RST int (ptr_resource p.x <*> ptr_resource p.y) (fun _ -> True) (fun h0 x h1 -> h0 == h1 /\ x = sel (ptr_view p.x) h1)
+  )
+
+let read_y (p:point)
+  : RST int (point_resource p)
+            (fun _ -> True)
+            (fun h0 y h1 -> h0 == h1 /\ y = sel_y p h1) =
+  reveal_ptr ();
+  frame (unpack_point p) (fun _ -> 
+    frame (star_includes_right (ptr_resource p.x)) (fun _ -> 
+      read_coord p.y <: RST int (ptr_resource p.y) (fun _ -> True) (fun h0 y h1 -> h0 == h1 /\ y = sel (ptr_view p.y) h1)
+    ) <: RST int (ptr_resource p.x <*> ptr_resource p.y) (fun _ -> True) (fun h0 y h1 -> h0 == h1 /\ y = sel (ptr_view p.y) h1)
+  )
