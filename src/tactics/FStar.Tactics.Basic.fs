@@ -106,6 +106,31 @@ let goal_to_string_verbose (g:goal) : string =
          | None -> ""
          | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (Print.term_to_string t))
 
+let unshadow (bs : binders) (t : term) : binders * term =
+    (* string name of a bv *)
+    let s b = b.ppname.idText in
+    let sset bv s = S.gen_bv s (Some bv.ppname.idRange) bv.sort in
+    let fresh_until b f =
+        let rec aux i =
+            let t = b ^ "'" ^ string_of_int i in
+            if f t then t else aux (i+1)
+        in
+        if f b then b else aux 0
+    in
+    let rec go seen subst bs bs' t =
+        match bs with
+        | [] -> List.rev bs', SS.subst subst t
+        | b::bs -> begin
+            let [b] = SS.subst_binders subst [b] in
+            let (bv0, q) = b in
+            let nbs = fresh_until (s bv0) (fun s -> not (List.mem s seen)) in
+            let bv = sset bv0 nbs in
+            let b = (bv, q) in
+            go (nbs::seen) (subst @ [NT (bv0, S.bv_to_name bv)]) bs (b :: bs') t
+            end
+    in
+    go [] [] bs [] t
+
 let goal_to_string (kind : string) (maybe_num : option<(int * int)>) (ps:proofstate) (g:goal) : string =
     let w =
         if Options.print_implicits ()
@@ -123,12 +148,15 @@ let goal_to_string (kind : string) (maybe_num : option<(int * int)>) (ps:proofst
         | "" -> ""
         | l -> " (" ^ l ^ ")"
     in
+    let goal_binders = g.goal_ctx_uvar.ctx_uvar_binders in
+    let goal_ty = g.goal_ctx_uvar.ctx_uvar_typ in
+    let goal_binders, goal_ty = unshadow goal_binders goal_ty in
     let actual_goal =
         if ps.tac_verb_dbg
         then goal_to_string_verbose g
-        else BU.format3 "%s |- %s : %s\n" (Print.binders_to_string ", " g.goal_ctx_uvar.ctx_uvar_binders)
+        else BU.format3 "%s |- %s : %s\n" (Print.binders_to_string ", " goal_binders)
                                           w
-                                          (tts (goal_env g) g.goal_ctx_uvar.ctx_uvar_typ)
+                                          (tts (goal_env g) goal_ty)
     in
     BU.format4 "%s%s%s:\n%s\n" kind num maybe_label actual_goal
 
@@ -172,10 +200,13 @@ let ps_to_string (msg, ps) =
                  @ (List.mapi (fun i g -> goal_to_string "SMT Goal" (Some (1 + n_active + i, n)) ps g) ps.smt_goals))
 
 let goal_to_json g =
-    let g_binders = Env.all_binders (goal_env g) |> Print.binders_to_json (Env.dsenv (goal_env g)) in
-    JsonAssoc [("hyps", g_binders);
+    let g_binders = g.goal_ctx_uvar.ctx_uvar_binders in
+    let g_type = goal_type g in
+    let g_binders, g_type = unshadow g_binders g_type in
+    let j_binders = Print.binders_to_json (Env.dsenv (goal_env g)) g_binders in
+    JsonAssoc [("hyps", j_binders);
                ("goal", JsonAssoc [("witness", JsonStr (tts (goal_env g) (goal_witness g)));
-                                   ("type", JsonStr (tts (goal_env g) (goal_type g)));
+                                   ("type", JsonStr (tts (goal_env g) g_type));
                                    ("label", JsonStr g.label)
                                   ])]
 
