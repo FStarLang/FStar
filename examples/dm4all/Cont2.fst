@@ -57,7 +57,7 @@ let test2 () : CONT int (fun kwp post -> kwp 1 post) =
   //CONT?.reflect #(fun kwp post -> kwp 1 post) f
 
 let call_cc (#a:Type) (f : (a -> repr ans) -> repr ans) : repr a =
-  fun k -> f (fun (r:a) -> return _ (k r)) (fun x -> x)
+  fun k -> f (fun (r:a) k' -> k' (k r)) (fun x -> x)
 
 let call_cc_wp (#a:Type) (wpf : (a -> wpty ans) -> wpty ans) : wpty a =
   fun (k : a -> pure_wp ans) (post : ans -> Type)
@@ -86,13 +86,26 @@ let call_cc_related #a (f : (a -> repr ans) -> repr ans) (wpf : (a -> wpty ans) 
 
 let callcc (#a:Type0) (#wpf:((a -> wpty ans) -> wpty ans))
            (f : (#wpg:(a -> wpty ans) -> (x:a -> CONT ans (wpg x)) -> CONT ans (wpf wpg)))
-           : CONT a (fun kwp post -> call_cc_wp wpf kwp post)
-             by (compute (); explode (); dump "")
+           : CONT a (call_cc_wp wpf)
+             //by (compute (); explode (); dump "")
            =
-  let rf : (a -> repr ans) -> repr ans = fun g k ->
+  (* We need to turn `f`, of type roughly `(a -> CONT ans) -> CONT ans`
+   * into a computational-monad variant of it, roughly of type
+   * `(a -> repr ans) -> repr ans`.
+   *
+   * If we could turn a `repr ans` into a `CONT ans` via
+   * some function R (some kind of `reflect`), then we could easily
+   * do this by `fun c -> reify (f (fun x -> R (c x)))`, but we don't
+   * have such a thing, since we require a WP for `c x` in order to
+   * reflect it.
+   *
+   * We do not have a WP for the `repr ans` and there is
+   * no monad morphism we can use to compute it.
+   *)
+  let rf : (a -> repr ans) -> repr ans = fun c ->
     // Need a wp for g here... what to do?
     let wpg x : wpty ans = fun kwp post -> False in
-    reify (f #wpg (fun x -> CONT?.reflect #(wpg x) (g x))) k
+    reify (f #wpg (fun x -> CONT?.reflect #(wpg x) (c x)))
   in
   admit ();
   CONT?.reflect #(call_cc_wp wpf) (call_cc rf)
@@ -101,8 +114,8 @@ assume val callcc' : #a:Type -> (#wpf:((a -> wpty ans) -> wpty ans)) ->
                     (f : (#wpg:(a -> wpty ans) -> (x:a -> CONT ans (wpg x)) -> CONT ans (wpf wpg))) ->
                     CONT a (call_cc_wp wpf)
 
-let em (#a:Type) : CONT (c_or a (a -> CONT ans (fun kwp post -> forall x. kwp x post))) (fun kwp post -> forall x. kwp x post) =
-  admit ();
-  callcc #_ #(fun _ kwp post -> forall x. kwp x post)
-             (fun #_ (f : (x : c_or a (a -> CONT ans (fun kwp post -> forall x. kwp x post))) -> CONT ans (fun kwp post -> forall x. kwp x post)) ->
+let em0 (#a:Type) () : CONT (c_or a (a -> CONT ans (fun kwp post -> False))) (fun kwp post -> False)
+=
+  callcc #_ #(fun _ kwp post -> False)
+             (fun #_ (f : (c_or a (a -> CONT ans (fun kwp post -> False))) -> CONT ans (fun kwp post -> False)) ->
                         f (Right (fun (x:a) -> f (Left x))))
