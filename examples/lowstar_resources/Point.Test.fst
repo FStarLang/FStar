@@ -66,7 +66,9 @@ let move_test_alloc ()
           reveal_ptr ();
           reveal_star ();
           let p = mk_point x y in
-          frame (pack_point x y) (fun _ -> move_test p)
+          frame (pack_point x y) (fun _ -> 
+            move_test p
+          )
         )
       ) <: RST unit (ptr_resource x) (fun _ -> True) (fun _ _ _ -> True)
     )
