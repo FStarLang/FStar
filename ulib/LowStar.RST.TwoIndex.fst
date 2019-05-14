@@ -100,36 +100,26 @@ effect RST (a:Type)
                (forall (x:a) (h1:HS.mem).
                  inv (res1 x) h1 /\                              //Ensure the post-resource invariant
                  rst_inv (res1 x) h1 /\                          //Ensure the additional footprints invariant
-                 modifies res0 (res1 x) h0 h1 /\       //Ensure that at most resources' footprints are modified
+                 modifies res0 (res1 x) h0 h1 /\                 //Ensure that at most resources' footprints are modified
                  post h0 x h1 ==>                                //Ensure the post-condition
                  k x h1))                                        //Prove the continuation under this hypothesis
 
 (* Bind operation for RST *)
 
-(*
-let lemma_ret_resource (#a #b:Type)
-                       (res0:resource)
-                       (res1:(a -> res1:resource{(forall frame . r_disjoint frame res0 ==> r_disjoint frame res1)}))
-                       (res2:resource{forall frame x . r_disjoint frame (res1 x) ==> r_disjoint frame res2})
-                       (frame:resource)
- : Lemma (requires (r_disjoint frame res0))
-         (ensures  (r_disjoint frame res2)) = 
-  assert (forall x . r_disjoint frame (res1 x));
-  assert (forall x . r_disjoint frame (res1 x) ==> r_disjoint frame res2);
-  admit ()
-*)
-
 let bind (#a #b:Type)
          (#res0:resource)
          (#res1:post_resource res0 a)
          (#res2:(b -> res2:resource{(forall frame x . r_disjoint frame (res1 x) ==> r_disjoint frame res2) /\
-                                    (forall frame . r_disjoint frame res0 ==> r_disjoint frame res2)}))       // TODO: this ought to be provable from other assumptions
+                                    // only provable from other refinements if we know that a is inhabited
+                                    (forall frame . r_disjoint frame res0 ==> r_disjoint frame res2)}))
          (#pre0:r_pre res0)
          (#post0:r_post res0 a res1)
+         (#pre1:(x:a -> r_pre (res1 x)))
          (#post1:(x:a -> r_post (res1 x) b res2))
          (f:unit -> RST a res0 res1 pre0 post0)
-         (g:(x:a -> RST b (res1 x) res2 (fun h1 -> exists h0 . post0 h0 x h1) (post1 x)))
-       : RST b res0 res2 pre0 (fun h0 y h2 -> exists x h1 . post0 h0 x h1 /\ post1 x h1 y h2) = 
+         (g:(x:a -> RST b (res1 x) res2 (pre1 x) (post1 x)))
+       : RST b res0 res2 (fun h0 -> pre0 h0 /\ (forall x h1 . post0 h0 x h1 ==> pre1 x h1)) 
+                         (fun h0 y h2 -> exists x h1 . post0 h0 x h1 /\ post1 x h1 y h2) = 
   g (f ())
 
 
@@ -190,57 +180,3 @@ let frame (#outer0:resource)
     (as_loc (fp (r_union outer0 (outer1 x)))) 
     h0 h1;
   x
-
-
-
-
-
-
-
-(*
-
-(* Concrete framing operation for RST computations *)
-
-unfold
-let frame_pre (frame:resource)
-              (#fp:resource)
-              (pre:r_pre fp)
-              (h:imem (inv (frame <*> fp))) =
-  pre h
-
-unfold
-let frame_post (frame:resource)
-               (#fp0:resource)
-               (#a:Type)
-               (#fp1:a -> prov_resource fp0)
-               (post:r_post fp0 a fp1)
-               (h0:imem (inv (frame <*> fp0)))
-               (x:a)
-               (h1:imem (inv (frame <*> fp1 x))) = 
-  post h0 x h1 /\
-  sel (view_of frame) h0 == sel (view_of frame) h1
-
-let frame (#frame:resource)
-          (#fp0:resource)
-          (#a:Type)
-          (#fp1:a -> prov_resource fp0)
-          (#pre:r_pre fp0)
-          (#post:r_post fp0 a fp1)
-          ($f:unit -> RST a fp0 fp1 pre post)
-        : RST a (frame <*> fp0) 
-                (fun x -> reveal_star (); frame <*> fp1 x) 
-                (frame_pre frame pre) 
-                (frame_post frame post) =
-  reveal_view ();
-  reveal_star ();
-  let h0 = get () in 
-  let x = f () in 
-  let h1 = get () in 
-  lemma_loc_not_unused_in_modifies_includes 
-    (as_loc (fp (frame <*> fp0))) 
-    (as_loc (fp (r_union (frame <*> fp0) (frame <*> fp1 x)))) 
-    h0 h1;
-  x
-
-
-*)
