@@ -8,6 +8,8 @@ open FStar.Util
 open FStar.Errors
 open FStar.Exn
 
+open FStar.TypeChecker.Env
+module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
 val try_assoc : string -> list<(string * 'a)> -> option<'a> // nothrow
@@ -93,7 +95,7 @@ type lsp_query = { query_id: option<int>; q: lquery }
 
 (* Types concerning repl *)
 type repl_state = { repl_line: int; repl_column: int; repl_stdin: stream_reader;
-                    repl_last: lquery; repl_names: CTable.table }
+                    repl_last: lquery; repl_names: CTable.table; repl_env: TcEnv.env }
 type optresponse = option<either<json, json>> // Used to indicate (no|success|failure) response
 type either_st_exit = either<repl_state, int> // repl_state is independent of exit_code
 

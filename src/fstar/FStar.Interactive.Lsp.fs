@@ -6,6 +6,10 @@ open FStar.All
 open FStar.Errors
 open FStar.Util
 open FStar.JsonHelper
+open FStar.Universal
+open FStar.Range
+
+module QH = FStar.QueryHelper
 
 (* Request *)
 
@@ -162,15 +166,19 @@ let rec go (st: repl_state) : int =
    | Some response -> (let response' = json_of_response query.query_id response in
                        Util.print1_error "<<< %s\n" (Util.string_of_json response');
                        write_jsonrpc response')
-   | None -> (Util.print_error "<<< ()\n")); // Don't respond
+   | None -> ()); // Don't respond
   match state_opt with
   | Inl st' -> go st'
   | Inr exitcode -> exitcode
 
 // The initial REPL state specifies Exit as the last message received,
 // without loss of generality
-let initial_repl_state : repl_state =
-  { repl_line = 1; repl_column = 0; repl_stdin = open_stdin ();
-    repl_last = Exit; repl_names = CompletionTable.empty }
+let initial_repl_state () : repl_state =
+  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+  let env = init_env FStar.Parser.Dep.empty_deps in
+  let env = FStar.TypeChecker.Env.set_range env initial_range in
 
-let start_server () : unit = exit (go initial_repl_state)
+  { repl_line = 1; repl_column = 0; repl_stdin = open_stdin ();
+    repl_last = Exit; repl_names = CompletionTable.empty; repl_env = env }
+
+let start_server () : unit = exit (go (initial_repl_state ()))

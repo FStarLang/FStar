@@ -77,6 +77,8 @@
     <Compile Include="FStar.Interactive.CompletionTable.fs" />
     <Compile Include="FStar.JsonHelper.fsi" />
     <Compile Include="FStar.JsonHelper.fs" />
+    <Compile Include="FStar.QueryHelper.fsi" />
+    <Compile Include="FStar.QueryHelper.fs" />
     <Compile Include="FStar.Interactive.Lsp.fs" />
     <Compile Include="FStar.Interactive.Ide.fs" />
     <Compile Include="FStar.Interactive.Legacy.fs" />

@@ -356,19 +356,30 @@ let rec (go : FStar_JsonHelper.repl_state -> Prims.int) =
               ((let uu____594 = FStar_Util.string_of_json response' in
                 FStar_Util.print1_error "<<< %s\n" uu____594);
                FStar_JsonHelper.write_jsonrpc response')
-          | FStar_Pervasives_Native.None -> FStar_Util.print_error "<<< ()\n");
+          | FStar_Pervasives_Native.None -> ());
          (match state_opt with
           | FStar_Util.Inl st' -> go st'
           | FStar_Util.Inr exitcode -> exitcode))
-let (initial_repl_state : FStar_JsonHelper.repl_state) =
-  let uu____609 = FStar_Util.open_stdin () in
-  {
-    FStar_JsonHelper.repl_line = (Prims.parse_int "1");
-    FStar_JsonHelper.repl_column = (Prims.parse_int "0");
-    FStar_JsonHelper.repl_stdin = uu____609;
-    FStar_JsonHelper.repl_last = FStar_JsonHelper.Exit;
-    FStar_JsonHelper.repl_names = FStar_Interactive_CompletionTable.empty
-  }
+let (initial_repl_state : unit -> FStar_JsonHelper.repl_state) =
+  fun uu____612 ->
+    let initial_range =
+      let uu____614 =
+        FStar_Range.mk_pos (Prims.parse_int "1") (Prims.parse_int "0") in
+      let uu____617 =
+        FStar_Range.mk_pos (Prims.parse_int "1") (Prims.parse_int "0") in
+      FStar_Range.mk_range "<input>" uu____614 uu____617 in
+    let env = FStar_Universal.init_env FStar_Parser_Dep.empty_deps in
+    let env1 = FStar_TypeChecker_Env.set_range env initial_range in
+    let uu____623 = FStar_Util.open_stdin () in
+    {
+      FStar_JsonHelper.repl_line = (Prims.parse_int "1");
+      FStar_JsonHelper.repl_column = (Prims.parse_int "0");
+      FStar_JsonHelper.repl_stdin = uu____623;
+      FStar_JsonHelper.repl_last = FStar_JsonHelper.Exit;
+      FStar_JsonHelper.repl_names = FStar_Interactive_CompletionTable.empty;
+      FStar_JsonHelper.repl_env = env1
+    }
 let (start_server : unit -> unit) =
-  fun uu____617 ->
-    let uu____618 = go initial_repl_state in FStar_All.exit uu____618
+  fun uu____631 ->
+    let uu____632 = let uu____634 = initial_repl_state () in go uu____634 in
+    FStar_All.exit uu____632
