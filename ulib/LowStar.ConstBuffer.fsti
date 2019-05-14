@@ -161,6 +161,22 @@ val cast (c:const_buffer 'a)
     (ensures fun x ->
       x == as_mbuf c)
 
+val to_buffer (c:const_buffer 'a)
+  : Pure (B.buffer 'a)
+    (requires (
+      let c = as_qbuf c in
+      qbuf_qual c == MUTABLE))
+    (ensures fun x ->
+      x == as_mbuf c)
+
+val to_ibuffer (c:const_buffer 'a)
+  : Pure (I.ibuffer 'a)
+    (requires (
+      let c = as_qbuf c in
+      qbuf_qual c == IMMUTABLE))
+    (ensures fun x ->
+      x == as_mbuf c)
+
 ////////////////////////////////////////////////////////////////////////////////
 let test (x:B.buffer U32.t) (y:I.ibuffer U32.t)
   : Stack U32.t
