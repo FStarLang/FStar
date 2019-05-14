@@ -55,7 +55,7 @@ let mk_lex_list vs =
 let is_eq = function
     | Some Equality -> true
     | _ -> false
-let steps env = [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm]
+let steps env = [Env.Beta; Env.Eager_unfolding false; Env.NoFullNorm]
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
 let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =

@@ -79,7 +79,7 @@ let head_normal env t =
     | Tm_abs _
     | Tm_constant _ -> true
     | Tm_fvar fv
-    | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isNone
+    | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition [Env.Eager_unfolding_only true] env.tcenv fv.fv_name.v |> Option.isNone
     | _ -> false
 
 let head_redex env t =
@@ -90,16 +90,16 @@ let head_redex env t =
       || List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags
 
     | Tm_fvar fv ->
-      Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isSome
+      Env.lookup_definition [Env.Eager_unfolding_only true] env.tcenv fv.fv_name.v |> Option.isSome
 
     | _ -> false
 
 let whnf env t =
     if head_normal env t then t
     else N.normalize [Env.Beta; Env.Weak; Env.HNF; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
-                      Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
+                      Env.Eager_unfolding true; Env.EraseUniverses] env.tcenv t
 let norm env t = N.normalize [Env.Beta; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
-                              Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
+                              Env.Eager_unfolding true; Env.EraseUniverses] env.tcenv t
 
 let trivial_post t : Syntax.term =
     U.abs [null_binder t]

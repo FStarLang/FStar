@@ -32,7 +32,7 @@ type step =
   | Weak            //Do not descend into binders
   | HNF             //Only produce a head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
-  | Eager_unfolding
+  | Eager_unfolding of bool //the bool indicates whether to also unfold `unfold_for_smt` symbols
   | Inlining
   | DoNotUnfoldPureLets
   | UnfoldUntil of delta_depth
@@ -61,7 +61,7 @@ type sig_binding = list<lident> * sigelt
 type delta_level =
   | NoDelta
   | InliningDelta // ZP : Trying to resolve name clash
-  | Eager_unfolding_only
+  | Eager_unfolding_only of bool  //the bool indicates whether to also unfold `unfold_for_smt` symbols
   | Unfold of delta_depth
 
 (* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)

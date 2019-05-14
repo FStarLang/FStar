@@ -48,7 +48,7 @@ open FStar.Parser
 module Env = FStar.TypeChecker.Env
 
 let norm_before_encoding env t =
-    let steps = [Env.Eager_unfolding;
+    let steps = [Env.Eager_unfolding true;
                  Env.Simplify;
                  Env.Primops;
                  Env.AllowUnboundUniverses;
@@ -1693,7 +1693,7 @@ let encode_query use_env_msg tcenv q
                       //if the assumption is of the form x:(forall y. P) etc.
                     | _ ->
                       x.sort in
-                let t = N.normalize [Env.Eager_unfolding; Env.Beta; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv t in
+                let t = N.normalize [Env.Eager_unfolding true; Env.Beta; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv t in
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
         let closing, bindings = aux tcenv.gamma in

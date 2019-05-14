@@ -928,7 +928,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         yesno <| (cfg.delta_level |> BU.for_some (function
              | NoDelta -> false
              | InliningDelta
-             | Eager_unfolding_only -> true
+             | Eager_unfolding_only _ -> true
              | Unfold l -> Common.delta_depth_greater_than (Env.delta_depth_of_fv cfg.tcenv fv) l))
     in
     log_unfolding cfg (fun () -> BU.print3 "should_unfold: For %s (%s), unfolding res = %s\n"
@@ -1503,7 +1503,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                          Inlining]
         in { cfg with
                steps = List.fold_right fstep_add_one new_steps cfg.steps;
-               delta_level = [Env.InliningDelta; Env.Eager_unfolding_only]
+               delta_level = [Env.InliningDelta; Env.Eager_unfolding_only false]
            }
       else cfg
     in
@@ -2318,7 +2318,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
              let new_delta =
                cfg.delta_level |> List.filter (function
                  | Env.InliningDelta
-                 | Env.Eager_unfolding_only -> true
+                 | Env.Eager_unfolding_only _ -> true
                  | _ -> false)
              in
              let steps = {

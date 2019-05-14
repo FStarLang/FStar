@@ -151,7 +151,7 @@ let fstep_add_one s fs =
     | Weak -> { fs with weak = true }
     | HNF -> { fs with hnf = true }
     | Primops -> { fs with primops = true }
-    | Eager_unfolding -> fs // eager_unfolding is not a step
+    | Eager_unfolding _ -> fs // eager_unfolding is not a step
     | Inlining -> fs // not a step // ZP : Adding qualification because of name clash
     | DoNotUnfoldPureLets ->  { fs with do_not_unfold_pure_lets = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
@@ -943,7 +943,7 @@ let add_nbe s = // ZP : Turns nbe flag on, to be used as the default norm strate
 let config' psteps s e =
     let d = s |> List.collect (function
         | UnfoldUntil k -> [Env.Unfold k]
-        | Eager_unfolding -> [Env.Eager_unfolding_only]
+        | Eager_unfolding b -> [Env.Eager_unfolding_only b]
         | Inlining -> [Env.InliningDelta]
         | _ -> []) in
     let d = match d with

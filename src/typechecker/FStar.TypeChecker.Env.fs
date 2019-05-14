@@ -45,7 +45,7 @@ type step =
   | Weak            //Do not descend into binders
   | HNF             //Only produce a head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
-  | Eager_unfolding
+  | Eager_unfolding of bool
   | Inlining
   | DoNotUnfoldPureLets
   | UnfoldUntil of S.delta_depth
@@ -75,7 +75,8 @@ let rec eq_step s1 s2 =
   | Weak, Weak            //Do not descend into binders
   | HNF, HNF             //Only produce a head normal form
   | Primops, Primops         //reduce primitive operators like +, -, *, /, etc.
-  | Eager_unfolding, Eager_unfolding
+  | Eager_unfolding true, Eager_unfolding true
+  | Eager_unfolding false, Eager_unfolding false
   | Inlining, Inlining
   | DoNotUnfoldPureLets, DoNotUnfoldPureLets
   | UnfoldTac, UnfoldTac
@@ -103,7 +104,7 @@ type sig_binding = list<lident> * sigelt
 type delta_level =
   | NoDelta
   | InliningDelta
-  | Eager_unfolding_only
+  | Eager_unfolding_only of bool
   | Unfold of delta_depth
 
 type mlift = {
@@ -240,7 +241,7 @@ let should_verify env =
 
 let visible_at d q = match d, q with
   | NoDelta,    _
-  | Eager_unfolding_only, Unfold_for_unification_and_vcgen
+  | Eager_unfolding_only _, Unfold_for_unification_and_vcgen
   | Unfold _,   Unfold_for_unification_and_vcgen
   | Unfold _,   Visible_default -> true
   | InliningDelta, Inline_for_extraction -> true
@@ -743,14 +744,23 @@ let typ_of_datacon env lid =
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
 let lookup_definition_qninfo_aux rec_ok delta_levels lid (qninfo : qninfo) =
-  let visible quals =
-      delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
+  let visible quals attrs =
+      delta_levels
+        |> BU.for_some
+          (fun dl -> quals |> BU.for_some (visible_at dl))
+      ||
+      delta_levels
+        |> BU.for_some
+          (function
+            | Eager_unfolding_only true ->
+              attrs |> BU.for_some (fun at -> U.is_fvar FStar.Parser.Const.unfold_for_smt_attr at)
+            | _ -> false)
   in
   match qninfo with
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
       | Sig_let((is_rec, lbs), _)
-        when visible se.sigquals
+        when visible se.sigquals se.sigattrs
           && (not is_rec || rec_ok) ->
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
@@ -1457,7 +1467,8 @@ let print_gamma gamma =
 let string_of_delta_level = function
   | NoDelta -> "NoDelta"
   | InliningDelta -> "Inlining"
-  | Eager_unfolding_only -> "Eager_unfolding_only"
+  | Eager_unfolding_only true -> "Eager_unfolding_only true"
+  | Eager_unfolding_only _ -> "Eager_unfolding_only false"
   | Unfold d -> "Unfold " ^ Print.delta_depth_to_string d
 
 let lidents env : list<lident> =

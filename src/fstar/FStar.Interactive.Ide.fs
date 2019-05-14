@@ -1271,7 +1271,7 @@ let run_compute st term rules =
                FStar.TypeChecker.Env.Zeta;
                FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant])
     @ [FStar.TypeChecker.Env.Inlining;
-       FStar.TypeChecker.Env.Eager_unfolding;
+       FStar.TypeChecker.Env.Eager_unfolding false;
        FStar.TypeChecker.Env.UnfoldTac;
        FStar.TypeChecker.Env.Primops] in
 

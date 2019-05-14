@@ -286,6 +286,7 @@ let steps_nbe           = psconst "nbe"
 
 (* attributes *)
 let deprecated_attr = pconst "deprecated"
+let unfold_for_smt_attr = p2l ["FStar"; "Pervasives"; "unfold_for_smt"]
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
 let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
 let tcnorm_attr    =  p2l ["FStar"; "Pervasives"; "tcnorm"]

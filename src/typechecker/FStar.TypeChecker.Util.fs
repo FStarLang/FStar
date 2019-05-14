@@ -1038,7 +1038,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                 lcomp_comp lc
               else begin
                   //try to normalize one more time, since more unification variables may be resolved now
-                  let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
+                  let f = N.normalize [Env.Beta; Env.Eager_unfolding true; Env.Simplify; Env.Primops] env f in
                   match (SS.compress f).n with
                       | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv C.true_lid ->
                         //it's trivial
@@ -1090,7 +1090,7 @@ let pure_or_ghost_pre_and_post env comp =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in
         U.refine x (S.mk_Tm_app ens [S.as_arg (S.bv_to_name x)] None res_t.pos) in
-    let norm t = Normalize.normalize [Env.Beta;Env.Eager_unfolding;Env.EraseUniverses] env t in
+    let norm t = Normalize.normalize [Env.Beta;Env.Eager_unfolding false;Env.EraseUniverses] env t in
     if U.is_tot_or_gtot_comp comp
     then None, U.comp_result comp
     else begin match comp.n with
@@ -1126,7 +1126,7 @@ let pure_or_ghost_pre_and_post env comp =
 (* and returns the result of reifying t *)
 let reify_body (env:Env.env) (t:S.term) : S.term =
     let tm = U.mk_reify t in
-    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses] env tm in
+    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding false; Env.EraseUniverses; Env.AllowUnboundUniverses] env tm in
     if Env.debug env <| Options.Other "SMTEncodingReify"
     then BU.print2 "Reified body %s \nto %s\n"
         (Print.term_to_string tm)
@@ -1135,7 +1135,7 @@ let reify_body (env:Env.env) (t:S.term) : S.term =
 
 let reify_body_with_arg (env:Env.env) (head:S.term) (arg:S.arg): S.term =
     let tm = S.mk (S.Tm_app(head, [arg])) None head.pos in
-    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses] env tm in
+    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding false; Env.EraseUniverses; Env.AllowUnboundUniverses] env tm in
     if Env.debug env <| Options.Other "SMTEncodingReify"
     then BU.print2 "Reified body %s \nto %s\n"
         (Print.term_to_string tm)

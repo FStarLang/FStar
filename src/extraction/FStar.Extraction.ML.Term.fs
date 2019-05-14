@@ -593,7 +593,7 @@ let extraction_norm_steps =
     [Env.AllowUnboundUniverses;
      Env.EraseUniverses;
      Env.Inlining;
-     Env.Eager_unfolding;
+     Env.Eager_unfolding false;
      Env.Exclude Env.Zeta;
      Env.Primops;
      Env.Unascribe;

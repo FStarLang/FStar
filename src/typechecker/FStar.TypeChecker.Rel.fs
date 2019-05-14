@@ -2966,7 +2966,9 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                            as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
                                    None r in
                       if debug env <| Options.Other "Rel" then
-                          BU.print1 "WP guard (simplifed) is (%s)\n" (Print.term_to_string (N.normalize [Env.Iota; Env.Eager_unfolding; Env.Primops; Env.Simplify] env g));
+                          BU.print1 "WP guard (simplifed) is (%s)\n"
+                            (Print.term_to_string
+                              (N.normalize [Env.Iota; Env.Eager_unfolding true; Env.Primops; Env.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
                       let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob) g) [] wl in
                       solve env (attempt [base_prob] wl)
@@ -3109,7 +3111,7 @@ let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
+      let f = N.normalize [Env.Beta; Env.Eager_unfolding true; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (U.unmeta f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
@@ -3311,7 +3313,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-      let vc = N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env vc in
+      let vc = N.normalize [Env.Eager_unfolding true; Env.Simplify; Env.Primops] env vc in
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "After normalization VC=\n%s\n" (Print.term_to_string vc));

@@ -69,7 +69,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
           *)
          let (indices, t), guard =
            let k, _, g = tc_tot_or_gtot_term env_tps k in
-           let k = N.normalize [Exclude Iota; Exclude Zeta; Eager_unfolding; NoFullNorm; Exclude Beta] env_tps k in
+           let k = N.normalize [Exclude Iota; Exclude Zeta; Eager_unfolding false; NoFullNorm; Exclude Beta] env_tps k in
            U.arrow_formals k, Rel.discharge_guard env_tps (Env.conj_guard guard_params g)
          in
 
