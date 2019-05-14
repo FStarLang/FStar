@@ -26,22 +26,17 @@ open LowStar.Resource
      Reasonable when addresses are not reused after deallocation, 
      but currently not provided by the LowStar.Buffer library
      (Nik and/or Tahina will look into adding it to ulib) *)
-(*assume val lemma_loc_not_unused_in_modifies (l:B.loc) (h0 h1:HS.mem)
-  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ B.modifies l h0 h1))
-          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l))*)
-
 assume val lemma_loc_not_unused_in_modifies_includes (l0 l1:B.loc) (h0 h1:HS.mem)
   : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l0 /\ 
-                     B.loc_includes l1 l0 /\
-                     B.modifies l1 h0 h1))
+                     B.loc_includes l1 l0 /\ B.modifies l1 h0 h1))
           (ensures  (B.loc_includes (B.loc_not_unused_in h1) l1))
 
 (* Abstract modifies clause for the resource-indexed state effect *)
 
 abstract
 let modifies (res:resource) (h0 h1:HS.mem) =
-    B.modifies (as_loc (fp res)) h0 h1 // /\
-    //HST.equal_domains h0 h1
+    B.modifies (as_loc (fp res)) h0 h1 /\
+    HST.equal_domains h0 h1
 
 let modifies_refl (res:resource) (h:HS.mem) 
   : Lemma (modifies res h h)
@@ -61,8 +56,8 @@ let modifies_trans (res0 res1:resource) (h0 h1 h2:HS.mem)
 let reveal_modifies ()
   : Lemma (forall res h0 h1.{:pattern modifies res h0 h1}
              modifies res h0 h1 <==>
-             B.modifies (as_loc (fp res)) h0 h1) // /\
-             //HST.equal_domains h0 h1)
+             B.modifies (as_loc (fp res)) h0 h1 /\
+             HST.equal_domains h0 h1)
   = ()
 
 (* State effect indexed by resources *)
@@ -81,28 +76,93 @@ let reveal_rst_inv ()
              B.loc_includes (B.loc_not_unused_in h) (as_loc (fp res)))
   = ()
 
-let prov_resource res0 =
-  res1:resource{(forall frame . r_disjoint frame res0 ==> r_disjoint frame res1)}
+let ret_resource res0 a =
+  a -> res1:resource{(forall frame . r_disjoint frame res0 ==> r_disjoint frame res1)}
 
 effect RST (a:Type)
-           (res0:resource)                                      //Resources expected
-           (res1:a -> prov_resource res0)                       //Resources provided
+           (res0:resource)                                      //Pre-resource (expected from the caller)
+           (res1:ret_resource res0 a)                           //Post-resource (returned back to the caller)
            (pre:r_pre res0)
            (post:r_post res0 a res1) = 
        STATE a
             (fun (k:a -> HS.mem -> Type)
                (h0:HS.mem) ->
-               inv res0 h0 /\                                    //Require the resource invariant
+               inv res0 h0 /\                                    //Require the pre-resource invariant
                rst_inv res0 h0 /\                                //Require the additional footprints invariant
                pre h0 /\                                         //Require the pre-condition
                (forall (x:a) (h1:HS.mem).
-                 inv (res1 x) h1 /\                              //Ensure the resource invariant
+                 inv (res1 x) h1 /\                              //Ensure the post-resource invariant
                  rst_inv (res1 x) h1 /\                          //Ensure the additional footprints invariant
-                 modifies (r_union res0 (res1 x)) h0 h1 /\       //Ensure that only resource's footprint is modified
+                 modifies (r_union res0 (res1 x)) h0 h1 /\       //Ensure that at most resources' footprints are modified
                  post h0 x h1 ==>                                //Ensure the post-condition
-                 k x h1))                                         //Prove the continuation under this hypothesis
+                 k x h1))                                        //Prove the continuation under this hypothesis
 
-(* Generic frame operation for RST computations (through resource inclusion) *)
+(* Generic framing operation for RST (through resource inclusion) *)
+
+unfold
+let frame_pre (#outer0:resource)
+              (#inner0:resource)
+              (delta0:r_includes outer0 inner0)
+              (pre:r_pre inner0)
+              (h:imem (inv outer0)) =
+  pre h
+
+let frame_post_delta (#outer0:resource)
+                     (#inner0:resource)
+                     (delta0:r_includes outer0 inner0)
+                     (a:Type)
+                     (outer1:ret_resource outer0 a)
+                     (inner1:ret_resource inner0 a) =
+  x:a -> delta1:r_includes (outer1 x) (inner1 x){delta0 == delta1}
+
+unfold
+let frame_post (#outer0:resource)
+               (#inner0:resource)
+               (#a:Type)
+               (#outer1:ret_resource outer0 a)
+               (#inner1:ret_resource inner0 a)
+               (delta0:r_includes outer0 inner0)
+               (delta1:frame_post_delta delta0 a outer1 inner1)
+               (post:r_post inner0 a inner1)
+               (h0:imem (inv outer0))
+               (x:a)
+               (h1:imem (inv (outer1 x))) = 
+  delta0 == delta1 x /\ // to trigger the refinement on (delta1 x)
+  post h0 x h1 /\
+  sel (view_of delta0) h0 == sel (view_of (delta1 x)) h1
+
+let frame (#outer0:resource)
+          (#inner0:resource)
+          (#a:Type)
+          (#outer1:ret_resource outer0 a)
+          (#inner1:ret_resource inner0 a)
+          (delta0:r_includes outer0 inner0)
+          (delta1:frame_post_delta delta0 a outer1 inner1)
+          (#pre:r_pre inner0)
+          (#post:r_post inner0 a inner1)
+          ($f:unit -> RST a inner0 inner1 pre post)
+        : RST a outer0 outer1 (frame_pre delta0 pre) 
+                              (frame_post delta0 delta1 post) =
+  reveal_view ();
+  let h0 = get () in 
+  let x = f () in 
+  let h1 = get () in 
+  assert (delta0 == delta1 x); // to trigger the refinement on (delta1 x)
+  lemma_loc_not_unused_in_modifies_includes 
+    (as_loc (fp outer0)) 
+    (as_loc (fp (r_union outer0 (outer1 x)))) 
+    h0 h1;
+  x
+
+
+
+
+
+
+
+(*
+
+(* Concrete framing operation for RST computations *)
 
 unfold
 let frame_pre (frame:resource)
@@ -146,45 +206,4 @@ let frame (#frame:resource)
   x
 
 
-unfold
-let weaken_pre (#outer0:resource)
-               (#inner0:resource)
-               (delta0:r_includes outer0 inner0)
-               (pre:r_pre inner0)
-               (h:imem (inv outer0)) =
-  pre h
-
-unfold
-let weaken_post (#outer0:resource)
-                (#inner0:resource)
-                (#a:Type)
-                (#outer1:a -> prov_resource outer0)
-                (#inner1:a -> prov_resource inner0)
-                (delta0:r_includes outer0 inner0)
-                (delta1:(x:a -> r_includes (outer1 x) (inner1 x)))
-                (post:r_post inner0 a inner1)
-                (h0:imem (inv outer0))
-                (x:a)
-                (h1:imem (inv (outer1 x))) = 
-  assert (inv (outer1 x) h1 ==> inv (delta1 x) h1); // needed to trigger (inv (outer1 x) h1 ==> inv (inner1 x) h1) from (delta1 x)
-  post h0 x h1 /\
-  sel (view_of delta0) h0 === sel (view_of (delta1 x)) h1 // only makes sense if the deltas have the views with same types
-
-let weaken (#outer0:resource)
-           (#inner0:resource)
-           (#a:Type)
-           (#outer1:a -> prov_resource outer0)
-           (#inner1:a -> prov_resource inner0)
-           (delta0:r_includes outer0 inner0)
-           (delta1:(x:a -> r_includes (outer1 x) (inner1 x)))
-           (#pre:r_pre inner0)
-           (#post:r_post inner0 a inner1)
-           ($f:unit -> RST a inner0 inner1 pre post)
-         : RST a outer0 outer1 (weaken_pre delta0 pre) 
-                               (weaken_post delta0 delta1 post) =
-  reveal_view ();
-  let h0 = get () in 
-  let x = f () in 
-  let h1 = get () in 
-  assert (inv (inner1 x) h1);
-  admit ()
+*)
