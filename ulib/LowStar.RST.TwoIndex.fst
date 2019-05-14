@@ -84,44 +84,99 @@ let reveal_rst_inv ()
   = ()
 
 let post_resource res0 a =
-  a -> res1:resource{(forall frame . r_disjoint frame res0 ==> r_disjoint frame res1)}
+  a -> res1:resource{(forall frame . B.loc_disjoint frame (as_loc (fp res0)) ==> B.loc_disjoint frame (as_loc (fp res1)))}
+
+let rst_wp (a:Type) (res0:resource) (res1:post_resource res0 a) = 
+  wp:((x:a -> imem (inv (res1 x)) -> Type0) -> imem (inv res0) -> Type0){
+      forall (p q:(x:a -> imem (inv (res1 x)) -> Type0)) h0 . (forall x h1 . p x h1 ==> q x h1) ==> wp p h0 ==> wp q h0
+    }
+
+effect RSTATE (a:Type)
+              (res0:resource)                                   //Pre-resource (expected from the caller)
+              (res1:post_resource res0 a)                       //Post-resource (returned back to the caller)
+              (wp:rst_wp a res0 res1) =
+       STATE a 
+           (fun (p:a -> HS.mem -> Type)
+              (h0:HS.mem) -> 
+                inv res0 h0 /\                                  //Require the pre-resource invariant
+                rst_inv res0 h0 /\                              //Require the additional footprints invariant
+                wp (fun x h1 -> 
+                     inv (res1 x) h1 /\                         //Ensure the post-resource invariant
+                     rst_inv (res1 x) h1 /\                     //Ensure the additional footprints invariant
+                     modifies res0 (res1 x) h0 h1 ==>           //Ensure that at most resources' footprints are modified
+                     p x h1) h0)                                //Prove the continuation under this hypothesis
+
+(* Pre- and postcondition style effect RST *)
 
 effect RST (a:Type)
-           (res0:resource)                                      //Pre-resource (expected from the caller)
-           (res1:post_resource res0 a)                          //Post-resource (returned back to the caller)
+           (res0:resource)
+           (res1:post_resource res0 a)
            (pre:r_pre res0)
            (post:r_post res0 a res1) = 
-       STATE a
-            (fun (k:a -> HS.mem -> Type)
-               (h0:HS.mem) ->
-               inv res0 h0 /\                                    //Require the pre-resource invariant
-               rst_inv res0 h0 /\                                //Require the additional footprints invariant
-               pre h0 /\                                         //Require the pre-condition
-               (forall (x:a) (h1:HS.mem).
-                 inv (res1 x) h1 /\                              //Ensure the post-resource invariant
-                 rst_inv (res1 x) h1 /\                          //Ensure the additional footprints invariant
-                 modifies res0 (res1 x) h0 h1 /\                 //Ensure that at most resources' footprints are modified
-                 post h0 x h1 ==>                                //Ensure the post-condition
-                 k x h1))                                        //Prove the continuation under this hypothesis
+       RSTATE a res0 res1 (fun p h0 -> 
+         pre h0 /\ (forall x h1 . post h0 x h1 ==> p x h1))
 
-(* Bind operation for RST *)
+(* Bind operation for RSTATE *)
 
 let bind (#a #b:Type)
          (#res0:resource)
          (#res1:post_resource res0 a)
-         (#res2:(b -> res2:resource{(forall frame x . r_disjoint frame (res1 x) ==> r_disjoint frame res2) /\
+         (#res2:(b -> res2:resource{(forall frame x . B.loc_disjoint frame (as_loc (fp (res1 x))) ==> B.loc_disjoint frame (as_loc (fp (res2)))) /\
                                     // only provable from other refinements if we know that a is inhabited
-                                    (forall frame . r_disjoint frame res0 ==> r_disjoint frame res2)}))
-         (#pre0:r_pre res0)
-         (#post0:r_post res0 a res1)
-         (#pre1:(x:a -> r_pre (res1 x)))
-         (#post1:(x:a -> r_post (res1 x) b res2))
-         (f:unit -> RST a res0 res1 pre0 post0)
-         (g:(x:a -> RST b (res1 x) res2 (pre1 x) (post1 x)))
-       : RST b res0 res2 (fun h0 -> pre0 h0 /\ (forall x h1 . post0 h0 x h1 ==> pre1 x h1)) 
-                         (fun h0 y h2 -> exists x h1 . post0 h0 x h1 /\ post1 x h1 y h2) = 
+                                    (forall frame . B.loc_disjoint frame (as_loc (fp res0)) ==> B.loc_disjoint frame (as_loc (fp res2)))}))
+         (#wp0:rst_wp a res0 res1)
+         (#wp1:(x:a -> rst_wp b (res1 x) res2))
+         (f:unit -> RSTATE a res0 res1 wp0)
+         (g:(x:a -> RSTATE b (res1 x) res2 (wp1 x)))
+       : RSTATE b res0 res2 (fun p h0 -> wp0 (fun x h1 -> wp1 x p h1) h0) = 
   g (f ())
 
+(* Generic framing operation for RSTATE (through resource inclusion) *)
+
+// The pre- and post deltas are the same
+let frame_post_delta (#outer0:resource)
+                     (#inner0:resource)
+                     (delta0:r_includes outer0 inner0)
+                     (a:Type)
+                     (outer1:post_resource outer0 a)
+                     (inner1:post_resource inner0 a) =
+  x:a -> delta1:r_includes (outer1 x) (inner1 x){delta0 == delta1}
+
+let frame_wp (#outer0:resource)
+          (#inner0:resource)
+          (#a:Type)
+          (#outer1:post_resource outer0 a)
+          (#inner1:post_resource inner0 a)
+          (delta0:r_includes outer0 inner0)
+          (delta1:frame_post_delta delta0 a outer1 inner1)
+          (wp:rst_wp a inner0 inner1)
+        : rst_wp a outer0 outer1 =
+  fun p h0 -> 
+    wp (fun x (h1:imem (inv (inner1 x))) -> 
+          inv (delta1 x) h1 /\ 
+          sel (view_of delta0) h0 == sel (view_of (delta1 x)) h1 
+          ==>
+          p x h1) h0
+
+let frame (#outer0:resource)
+          (#inner0:resource)
+          (#a:Type)
+          (#outer1:post_resource outer0 a)
+          (#inner1:post_resource inner0 a)
+          (delta0:r_includes outer0 inner0)
+          (delta1:frame_post_delta delta0 a outer1 inner1)
+          (#wp:rst_wp a inner0 inner1)
+          ($f:unit -> RSTATE a inner0 inner1 wp)
+        : RSTATE a outer0 outer1 (frame_wp delta0 delta1 wp) =
+  reveal_view ();
+  let h0 = get () in 
+  let x = f () in 
+  let h1 = get () in 
+  lemma_loc_not_unused_in_modifies_includes 
+    (as_loc (fp outer0)) 
+    (as_loc (fp (r_union outer0 (outer1 x)))) 
+    h0 h1;
+  x
 
 (* Generic framing operation for RST (through resource inclusion) *)
 
@@ -132,15 +187,6 @@ let frame_pre (#outer0:resource)
               (pre:r_pre inner0)
               (h:imem (inv outer0)) =
   pre h
-
-// The pre- and post deltas are the same
-let frame_post_delta (#outer0:resource)
-                     (#inner0:resource)
-                     (delta0:r_includes outer0 inner0)
-                     (a:Type)
-                     (outer1:post_resource outer0 a)
-                     (inner1:post_resource inner0 a) =
-  x:a -> delta1:r_includes (outer1 x) (inner1 x){delta0 == delta1}
 
 unfold
 let frame_post (#outer0:resource)
@@ -158,18 +204,21 @@ let frame_post (#outer0:resource)
   post h0 x h1 /\
   sel (view_of delta0) h0 == sel (view_of (delta1 x)) h1
 
-let frame (#outer0:resource)
-          (#inner0:resource)
-          (#a:Type)
-          (#outer1:post_resource outer0 a)
-          (#inner1:post_resource inner0 a)
-          (delta0:r_includes outer0 inner0)
-          (delta1:frame_post_delta delta0 a outer1 inner1)
-          (#pre:r_pre inner0)
-          (#post:r_post inner0 a inner1)
-          ($f:unit -> RST a inner0 inner1 pre post)
-        : RST a outer0 outer1 (frame_pre delta0 pre) 
-                              (frame_post delta0 delta1 post) =
+// [DA: should be definable directly using RSTATE frame, but get 
+//      an error about unexpected unification variable remaining]
+let rst_frame (#outer0:resource)
+              (#inner0:resource)
+              (#a:Type)
+              (#outer1:post_resource outer0 a)
+              (#inner1:post_resource inner0 a)
+              (delta0:r_includes outer0 inner0)
+              (delta1:frame_post_delta delta0 a outer1 inner1)
+              (#pre:r_pre inner0)
+              (#post:r_post inner0 a inner1)
+              ($f:unit -> RST a inner0 inner1 pre post)
+            : RST a outer0 outer1 
+                    (frame_pre delta0 pre) 
+                    (frame_post delta0 delta1 post) =
   reveal_view ();
   let h0 = get () in 
   let x = f () in 
@@ -180,3 +229,4 @@ let frame (#outer0:resource)
     (as_loc (fp (r_union outer0 (outer1 x)))) 
     h0 h1;
   x
+
