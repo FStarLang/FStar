@@ -9,35 +9,35 @@ let unembed :
   fun ea  ->
     fun a  ->
       fun norm_cb  ->
-        let uu____32 = FStar_Syntax_Embeddings.unembed ea a  in
-        uu____32 true norm_cb
+        let uu____40 = FStar_Syntax_Embeddings.unembed ea a  in
+        uu____40 true norm_cb
   
 let try_unembed :
-  'Auu____49 .
-    'Auu____49 FStar_Syntax_Embeddings.embedding ->
+  'Auu____57 .
+    'Auu____57 FStar_Syntax_Embeddings.embedding ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Embeddings.norm_cb ->
-          'Auu____49 FStar_Pervasives_Native.option
+          'Auu____57 FStar_Pervasives_Native.option
   =
   fun ea  ->
     fun a  ->
       fun norm_cb  ->
-        let uu____73 = FStar_Syntax_Embeddings.unembed ea a  in
-        uu____73 false norm_cb
+        let uu____89 = FStar_Syntax_Embeddings.unembed ea a  in
+        uu____89 false norm_cb
   
 let embed :
-  'Auu____92 .
-    'Auu____92 FStar_Syntax_Embeddings.embedding ->
+  'Auu____108 .
+    'Auu____108 FStar_Syntax_Embeddings.embedding ->
       FStar_Range.range ->
-        'Auu____92 ->
+        'Auu____108 ->
           FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun ea  ->
     fun r  ->
       fun x  ->
         fun norm_cb  ->
-          let uu____119 = FStar_Syntax_Embeddings.embed ea x  in
-          uu____119 r FStar_Pervasives_Native.None norm_cb
+          let uu____139 = FStar_Syntax_Embeddings.embed ea x  in
+          uu____139 r FStar_Pervasives_Native.None norm_cb
   
 let int1 :
   'a 'r .
@@ -58,17 +58,17 @@ let int1 :
             fun n1  ->
               fun args  ->
                 match args with
-                | (a,uu____202)::[] ->
-                    let uu____227 = try_unembed ea a n1  in
-                    FStar_Util.bind_opt uu____227
+                | (a,uu____242)::[] ->
+                    let uu____283 = try_unembed ea a n1  in
+                    FStar_Util.bind_opt uu____283
                       (fun a1  ->
-                         let uu____233 =
-                           let uu____234 =
+                         let uu____293 =
+                           let uu____302 =
                              FStar_TypeChecker_Cfg.psc_range psc  in
-                           let uu____235 = f a1  in
-                           embed er uu____234 uu____235 n1  in
-                         FStar_Pervasives_Native.Some uu____233)
-                | uu____236 -> FStar_Pervasives_Native.None
+                           let uu____303 = f a1  in
+                           embed er uu____302 uu____303 n1  in
+                         FStar_Pervasives_Native.Some uu____293)
+                | uu____308 -> FStar_Pervasives_Native.None
   
 let int2 :
   'a 'b 'r .
@@ -91,20 +91,20 @@ let int2 :
               fun n1  ->
                 fun args  ->
                   match args with
-                  | (a,uu____330)::(b,uu____332)::[] ->
-                      let uu____373 = try_unembed ea a n1  in
-                      FStar_Util.bind_opt uu____373
+                  | (a,uu____422)::(b,uu____424)::[] ->
+                      let uu____493 = try_unembed ea a n1  in
+                      FStar_Util.bind_opt uu____493
                         (fun a1  ->
-                           let uu____379 = try_unembed eb b n1  in
-                           FStar_Util.bind_opt uu____379
+                           let uu____503 = try_unembed eb b n1  in
+                           FStar_Util.bind_opt uu____503
                              (fun b1  ->
-                                let uu____385 =
-                                  let uu____386 =
+                                let uu____513 =
+                                  let uu____522 =
                                     FStar_TypeChecker_Cfg.psc_range psc  in
-                                  let uu____387 = f a1 b1  in
-                                  embed er uu____386 uu____387 n1  in
-                                FStar_Pervasives_Native.Some uu____385))
-                  | uu____388 -> FStar_Pervasives_Native.None
+                                  let uu____523 = f a1 b1  in
+                                  embed er uu____522 uu____523 n1  in
+                                FStar_Pervasives_Native.Some uu____513))
+                  | uu____528 -> FStar_Pervasives_Native.None
   
 let nbe_int1 :
   'a 'r .
@@ -123,16 +123,16 @@ let nbe_int1 :
           fun cb  ->
             fun args  ->
               match args with
-              | (a,uu____454)::[] ->
-                  let uu____463 = FStar_TypeChecker_NBETerm.unembed ea cb a
+              | (a,uu____628)::[] ->
+                  let uu____637 = FStar_TypeChecker_NBETerm.unembed ea cb a
                      in
-                  FStar_Util.bind_opt uu____463
+                  FStar_Util.bind_opt uu____637
                     (fun a1  ->
-                       let uu____469 =
-                         let uu____470 = f a1  in
-                         FStar_TypeChecker_NBETerm.embed er cb uu____470  in
-                       FStar_Pervasives_Native.Some uu____469)
-              | uu____471 -> FStar_Pervasives_Native.None
+                       let uu____643 =
+                         let uu____644 = f a1  in
+                         FStar_TypeChecker_NBETerm.embed er cb uu____644  in
+                       FStar_Pervasives_Native.Some uu____643)
+              | uu____645 -> FStar_Pervasives_Native.None
   
 let nbe_int2 :
   'a 'b 'r .
@@ -153,22 +153,22 @@ let nbe_int2 :
             fun cb  ->
               fun args  ->
                 match args with
-                | (a,uu____556)::(b,uu____558)::[] ->
-                    let uu____571 = FStar_TypeChecker_NBETerm.unembed ea cb a
+                | (a,uu____767)::(b,uu____769)::[] ->
+                    let uu____782 = FStar_TypeChecker_NBETerm.unembed ea cb a
                        in
-                    FStar_Util.bind_opt uu____571
+                    FStar_Util.bind_opt uu____782
                       (fun a1  ->
-                         let uu____577 =
+                         let uu____788 =
                            FStar_TypeChecker_NBETerm.unembed eb cb b  in
-                         FStar_Util.bind_opt uu____577
+                         FStar_Util.bind_opt uu____788
                            (fun b1  ->
-                              let uu____583 =
-                                let uu____584 = f a1 b1  in
+                              let uu____794 =
+                                let uu____795 = f a1 b1  in
                                 FStar_TypeChecker_NBETerm.embed er cb
-                                  uu____584
+                                  uu____795
                                  in
-                              FStar_Pervasives_Native.Some uu____583))
-                | uu____585 -> FStar_Pervasives_Native.None
+                              FStar_Pervasives_Native.Some uu____794))
+                | uu____796 -> FStar_Pervasives_Native.None
   
 let (mklid : Prims.string -> FStar_Ident.lid) =
   fun nm  -> FStar_Reflection_Data.fstar_refl_basic_lid nm 
@@ -249,23 +249,23 @@ let mk2 :
                       (nbe_int2 l nf ena enb enr)
   
 let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
-  let uu____881 =
+  let uu____1239 =
     mk1 "inspect_ln" FStar_Reflection_Basic.inspect_ln
       FStar_Reflection_Embeddings.e_term
       FStar_Reflection_Embeddings.e_term_view
       FStar_Reflection_Basic.inspect_ln FStar_Reflection_NBEEmbeddings.e_term
       FStar_Reflection_NBEEmbeddings.e_term_view
      in
-  let uu____883 =
-    let uu____886 =
+  let uu____1273 =
+    let uu____1288 =
       mk1 "pack_ln" FStar_Reflection_Basic.pack_ln
         FStar_Reflection_Embeddings.e_term_view
         FStar_Reflection_Embeddings.e_term FStar_Reflection_Basic.pack_ln
         FStar_Reflection_NBEEmbeddings.e_term_view
         FStar_Reflection_NBEEmbeddings.e_term
        in
-    let uu____888 =
-      let uu____891 =
+    let uu____1322 =
+      let uu____1337 =
         mk1 "inspect_fv" FStar_Reflection_Basic.inspect_fv
           FStar_Reflection_Embeddings.e_fv
           FStar_Syntax_Embeddings.e_string_list
@@ -273,16 +273,16 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
           FStar_Reflection_NBEEmbeddings.e_fv
           FStar_TypeChecker_NBETerm.e_string_list
          in
-      let uu____899 =
-        let uu____902 =
+      let uu____1375 =
+        let uu____1390 =
           mk1 "pack_fv" FStar_Reflection_Basic.pack_fv
             FStar_Syntax_Embeddings.e_string_list
             FStar_Reflection_Embeddings.e_fv FStar_Reflection_Basic.pack_fv
             FStar_TypeChecker_NBETerm.e_string_list
             FStar_Reflection_NBEEmbeddings.e_fv
            in
-        let uu____910 =
-          let uu____913 =
+        let uu____1428 =
+          let uu____1443 =
             mk1 "inspect_comp" FStar_Reflection_Basic.inspect_comp
               FStar_Reflection_Embeddings.e_comp
               FStar_Reflection_Embeddings.e_comp_view
@@ -290,8 +290,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
               FStar_Reflection_NBEEmbeddings.e_comp
               FStar_Reflection_NBEEmbeddings.e_comp_view
              in
-          let uu____915 =
-            let uu____918 =
+          let uu____1477 =
+            let uu____1492 =
               mk1 "pack_comp" FStar_Reflection_Basic.pack_comp
                 FStar_Reflection_Embeddings.e_comp_view
                 FStar_Reflection_Embeddings.e_comp
@@ -299,8 +299,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                 FStar_Reflection_NBEEmbeddings.e_comp_view
                 FStar_Reflection_NBEEmbeddings.e_comp
                in
-            let uu____920 =
-              let uu____923 =
+            let uu____1526 =
+              let uu____1541 =
                 mk1 "inspect_sigelt" FStar_Reflection_Basic.inspect_sigelt
                   FStar_Reflection_Embeddings.e_sigelt
                   FStar_Reflection_Embeddings.e_sigelt_view
@@ -308,8 +308,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                   FStar_Reflection_NBEEmbeddings.e_sigelt
                   FStar_Reflection_NBEEmbeddings.e_sigelt_view
                  in
-              let uu____925 =
-                let uu____928 =
+              let uu____1577 =
+                let uu____1592 =
                   mk1 "pack_sigelt" FStar_Reflection_Basic.pack_sigelt
                     FStar_Reflection_Embeddings.e_sigelt_view
                     FStar_Reflection_Embeddings.e_sigelt
@@ -317,8 +317,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                     FStar_Reflection_NBEEmbeddings.e_sigelt_view
                     FStar_Reflection_NBEEmbeddings.e_sigelt
                    in
-                let uu____930 =
-                  let uu____933 =
+                let uu____1628 =
+                  let uu____1643 =
                     mk1 "inspect_bv" FStar_Reflection_Basic.inspect_bv
                       FStar_Reflection_Embeddings.e_bv
                       FStar_Reflection_Embeddings.e_bv_view
@@ -326,8 +326,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                       FStar_Reflection_NBEEmbeddings.e_bv
                       FStar_Reflection_NBEEmbeddings.e_bv_view
                      in
-                  let uu____935 =
-                    let uu____938 =
+                  let uu____1685 =
+                    let uu____1700 =
                       mk1 "pack_bv" FStar_Reflection_Basic.pack_bv
                         FStar_Reflection_Embeddings.e_bv_view
                         FStar_Reflection_Embeddings.e_bv
@@ -335,8 +335,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                         FStar_Reflection_NBEEmbeddings.e_bv_view
                         FStar_Reflection_NBEEmbeddings.e_bv
                        in
-                    let uu____940 =
-                      let uu____943 =
+                    let uu____1742 =
+                      let uu____1757 =
                         mk1 "sigelt_attrs"
                           FStar_Reflection_Basic.sigelt_attrs
                           FStar_Reflection_Embeddings.e_sigelt
@@ -345,8 +345,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                           FStar_Reflection_NBEEmbeddings.e_sigelt
                           FStar_Reflection_NBEEmbeddings.e_attributes
                          in
-                      let uu____949 =
-                        let uu____952 =
+                      let uu____1805 =
+                        let uu____1820 =
                           mk2 "set_sigelt_attrs"
                             FStar_Reflection_Basic.set_sigelt_attrs
                             FStar_Reflection_Embeddings.e_attributes
@@ -357,8 +357,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                             FStar_Reflection_NBEEmbeddings.e_sigelt
                             FStar_Reflection_NBEEmbeddings.e_sigelt
                            in
-                        let uu____958 =
-                          let uu____961 =
+                        let uu____1878 =
+                          let uu____1893 =
                             mk1 "inspect_binder"
                               FStar_Reflection_Basic.inspect_binder
                               FStar_Reflection_Embeddings.e_binder
@@ -367,8 +367,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                               FStar_Reflection_NBEEmbeddings.e_binder
                               FStar_Reflection_NBEEmbeddings.e_binder_view
                              in
-                          let uu____963 =
-                            let uu____966 =
+                          let uu____1919 =
+                            let uu____1934 =
                               mk2 "pack_binder"
                                 FStar_Reflection_Basic.pack_binder
                                 FStar_Reflection_Embeddings.e_bv
@@ -379,8 +379,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                 FStar_Reflection_NBEEmbeddings.e_aqualv
                                 FStar_Reflection_NBEEmbeddings.e_binder
                                in
-                            let uu____968 =
-                              let uu____971 =
+                            let uu____1970 =
+                              let uu____1985 =
                                 mk2 "compare_bv"
                                   FStar_Reflection_Basic.compare_bv
                                   FStar_Reflection_Embeddings.e_bv
@@ -391,8 +391,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                   FStar_Reflection_NBEEmbeddings.e_bv
                                   FStar_Reflection_NBEEmbeddings.e_order
                                  in
-                              let uu____973 =
-                                let uu____976 =
+                              let uu____2031 =
+                                let uu____2046 =
                                   mk2 "is_free"
                                     FStar_Reflection_Basic.is_free
                                     FStar_Reflection_Embeddings.e_bv
@@ -403,13 +403,13 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                     FStar_Reflection_NBEEmbeddings.e_term
                                     FStar_TypeChecker_NBETerm.e_bool
                                    in
-                                let uu____980 =
-                                  let uu____983 =
-                                    let uu____984 =
+                                let uu____2092 =
+                                  let uu____2107 =
+                                    let uu____2132 =
                                       FStar_Syntax_Embeddings.e_list
                                         FStar_Reflection_Embeddings.e_fv
                                        in
-                                    let uu____989 =
+                                    let uu____2143 =
                                       FStar_TypeChecker_NBETerm.e_list
                                         FStar_Reflection_NBEEmbeddings.e_fv
                                        in
@@ -417,14 +417,14 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                       FStar_Reflection_Basic.lookup_attr
                                       FStar_Reflection_Embeddings.e_term
                                       FStar_Reflection_Embeddings.e_env
-                                      uu____984
+                                      uu____2132
                                       FStar_Reflection_Basic.lookup_attr
                                       FStar_Reflection_NBEEmbeddings.e_term
                                       FStar_Reflection_NBEEmbeddings.e_env
-                                      uu____989
+                                      uu____2143
                                      in
-                                  let uu____999 =
-                                    let uu____1002 =
+                                  let uu____2288 =
+                                    let uu____2303 =
                                       mk2 "term_eq"
                                         FStar_Reflection_Basic.term_eq
                                         FStar_Reflection_Embeddings.e_term
@@ -435,8 +435,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                         FStar_Reflection_NBEEmbeddings.e_term
                                         FStar_TypeChecker_NBETerm.e_bool
                                        in
-                                    let uu____1006 =
-                                      let uu____1009 =
+                                    let uu____2347 =
+                                      let uu____2362 =
                                         mk1 "moduleof"
                                           FStar_Reflection_Basic.moduleof
                                           FStar_Reflection_Embeddings.e_env
@@ -445,8 +445,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                           FStar_Reflection_NBEEmbeddings.e_env
                                           FStar_TypeChecker_NBETerm.e_string_list
                                          in
-                                      let uu____1017 =
-                                        let uu____1020 =
+                                      let uu____2502 =
+                                        let uu____2517 =
                                           mk1 "term_to_string"
                                             FStar_Reflection_Basic.term_to_string
                                             FStar_Reflection_Embeddings.e_term
@@ -455,8 +455,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                             FStar_Reflection_NBEEmbeddings.e_term
                                             FStar_TypeChecker_NBETerm.e_string
                                            in
-                                        let uu____1024 =
-                                          let uu____1027 =
+                                        let uu____2553 =
+                                          let uu____2568 =
                                             mk1 "comp_to_string"
                                               FStar_Reflection_Basic.comp_to_string
                                               FStar_Reflection_Embeddings.e_comp
@@ -465,8 +465,8 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                               FStar_Reflection_NBEEmbeddings.e_comp
                                               FStar_TypeChecker_NBETerm.e_string
                                              in
-                                          let uu____1031 =
-                                            let uu____1034 =
+                                          let uu____2604 =
+                                            let uu____2619 =
                                               mk1 "binders_of_env"
                                                 FStar_Reflection_Basic.binders_of_env
                                                 FStar_Reflection_Embeddings.e_env
@@ -475,13 +475,13 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                 FStar_Reflection_NBEEmbeddings.e_env
                                                 FStar_Reflection_NBEEmbeddings.e_binders
                                                in
-                                            let uu____1036 =
-                                              let uu____1039 =
-                                                let uu____1040 =
+                                            let uu____2753 =
+                                              let uu____2768 =
+                                                let uu____2793 =
                                                   FStar_Syntax_Embeddings.e_option
                                                     FStar_Reflection_Embeddings.e_sigelt
                                                    in
-                                                let uu____1045 =
+                                                let uu____2808 =
                                                   FStar_TypeChecker_NBETerm.e_option
                                                     FStar_Reflection_NBEEmbeddings.e_sigelt
                                                    in
@@ -489,51 +489,51 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                   FStar_Reflection_Basic.lookup_typ
                                                   FStar_Reflection_Embeddings.e_env
                                                   FStar_Syntax_Embeddings.e_string_list
-                                                  uu____1040
+                                                  uu____2793
                                                   FStar_Reflection_Basic.lookup_typ
                                                   FStar_Reflection_NBEEmbeddings.e_env
                                                   FStar_TypeChecker_NBETerm.e_string_list
-                                                  uu____1045
+                                                  uu____2808
                                                  in
-                                              let uu____1061 =
-                                                let uu____1064 =
-                                                  let uu____1065 =
+                                              let uu____2959 =
+                                                let uu____2974 =
+                                                  let uu____2999 =
                                                     FStar_Syntax_Embeddings.e_list
                                                       FStar_Syntax_Embeddings.e_string_list
                                                      in
-                                                  let uu____1076 =
+                                                  let uu____3010 =
                                                     FStar_TypeChecker_NBETerm.e_list
                                                       FStar_TypeChecker_NBETerm.e_string_list
                                                      in
                                                   mk1 "env_open_modules"
                                                     FStar_Reflection_Basic.env_open_modules
                                                     FStar_Reflection_Embeddings.e_env
-                                                    uu____1065
+                                                    uu____2999
                                                     FStar_Reflection_Basic.env_open_modules
                                                     FStar_Reflection_NBEEmbeddings.e_env
-                                                    uu____1076
+                                                    uu____3010
                                                    in
-                                                [uu____1064]  in
-                                              uu____1039 :: uu____1061  in
-                                            uu____1034 :: uu____1036  in
-                                          uu____1027 :: uu____1031  in
-                                        uu____1020 :: uu____1024  in
-                                      uu____1009 :: uu____1017  in
-                                    uu____1002 :: uu____1006  in
-                                  uu____983 :: uu____999  in
-                                uu____976 :: uu____980  in
-                              uu____971 :: uu____973  in
-                            uu____966 :: uu____968  in
-                          uu____961 :: uu____963  in
-                        uu____952 :: uu____958  in
-                      uu____943 :: uu____949  in
-                    uu____938 :: uu____940  in
-                  uu____933 :: uu____935  in
-                uu____928 :: uu____930  in
-              uu____923 :: uu____925  in
-            uu____918 :: uu____920  in
-          uu____913 :: uu____915  in
-        uu____902 :: uu____910  in
-      uu____891 :: uu____899  in
-    uu____886 :: uu____888  in
-  uu____881 :: uu____883 
+                                                [uu____2974]  in
+                                              uu____2768 :: uu____2959  in
+                                            uu____2619 :: uu____2753  in
+                                          uu____2568 :: uu____2604  in
+                                        uu____2517 :: uu____2553  in
+                                      uu____2362 :: uu____2502  in
+                                    uu____2303 :: uu____2347  in
+                                  uu____2107 :: uu____2288  in
+                                uu____2046 :: uu____2092  in
+                              uu____1985 :: uu____2031  in
+                            uu____1934 :: uu____1970  in
+                          uu____1893 :: uu____1919  in
+                        uu____1820 :: uu____1878  in
+                      uu____1757 :: uu____1805  in
+                    uu____1700 :: uu____1742  in
+                  uu____1643 :: uu____1685  in
+                uu____1592 :: uu____1628  in
+              uu____1541 :: uu____1577  in
+            uu____1492 :: uu____1526  in
+          uu____1443 :: uu____1477  in
+        uu____1390 :: uu____1428  in
+      uu____1337 :: uu____1375  in
+    uu____1288 :: uu____1322  in
+  uu____1239 :: uu____1273 
