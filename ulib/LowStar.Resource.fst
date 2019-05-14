@@ -99,32 +99,22 @@ let inv (res:resource) (h:HS.mem) =
 let sel (#a:Type) (view:view a) (h:imem (inv (as_resource view))) =
   view.sel h
 
-abstract
-let modifies (res:resource) (h0 h1:HS.mem) =
-    B.modifies (as_loc (fp res)) h0 h1 /\
-    HST.equal_domains h0 h1
+(* (Non-separating) conjunction on views and resources *)
 
-let modifies_refl (res:resource) (h:HS.mem) 
-  : Lemma (modifies res h h)
-           [SMTPat (modifies res h h)]
-  = ()
-
-let modifies_trans (res:resource) (h0 h1 h2:HS.mem) 
-  : Lemma (requires 
-             modifies res h0 h1 /\
-             modifies res h1 h2)
-           (ensures
-             modifies res h0 h2)
-           [SMTPat (modifies res h0 h2);
-            SMTPat (modifies res h0 h1)]
-  = ()
-
-let reveal_modifies ()
-  : Lemma (forall res h0 h1.{:pattern modifies res h0 h1}
-             modifies res h0 h1 <==>
-             B.modifies (as_loc (fp res)) h0 h1 /\
-             HST.equal_domains h0 h1)
-  = ()
+let r_union (res1 res2:resource) : res:resource = 
+  let fp = Ghost.hide (B.loc_union (as_loc (fp res1)) (as_loc (fp res2))) in 
+  let inv h = inv res1 h /\ inv res2 h in
+  let sel h = (sel res1.view h,sel res2.view h) in
+  let t = res1.t & res2.t in 
+  let view = {
+      fp = fp;
+      inv = inv;
+      sel = sel
+    } in 
+  {
+    t = t;
+    view = view
+  }
 
 (* Separating conjunction on views and resources *)
 

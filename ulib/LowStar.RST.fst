@@ -22,6 +22,44 @@ module HST = FStar.HyperStack.ST
 
 open LowStar.Resource
 
+(* Additional (currently assumed) lemma: 
+     Reasonable when abstract locs are not reused after deallocation, 
+     but currently not provided by the LowStar.Buffer library
+     (Nik and/or Tahina will look into adding it to ulib) *)
+assume val lemma_loc_not_unused_in_modifies (l:B.loc) (h0 h1:HS.mem)
+  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ B.modifies l h0 h1))
+          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l))
+
+(* Abstract modifies clause for the resource-indexed state effect *)
+
+abstract
+let modifies (res:resource) (h0 h1:HS.mem) =
+    B.modifies (as_loc (fp res)) h0 h1 /\
+    HST.equal_domains h0 h1
+
+let modifies_refl (res:resource) (h:HS.mem) 
+  : Lemma (modifies res h h)
+           [SMTPat (modifies res h h)]
+  = ()
+
+let modifies_trans (res:resource) (h0 h1 h2:HS.mem) 
+  : Lemma (requires 
+             modifies res h0 h1 /\
+             modifies res h1 h2)
+           (ensures
+             modifies res h0 h2)
+           [SMTPat (modifies res h0 h2);
+            SMTPat (modifies res h0 h1)]
+  = ()
+
+let reveal_modifies ()
+  : Lemma (forall res h0 h1.{:pattern modifies res h0 h1}
+             modifies res h0 h1 <==>
+             B.modifies (as_loc (fp res)) h0 h1 /\
+             HST.equal_domains h0 h1)
+  = ()
+
+
 (* State effect indexed by a resource *)
 
 let r_pre (res:resource) = imem (inv res) -> Type0
@@ -37,14 +75,6 @@ let reveal_rst_inv ()
              <==>
              B.loc_includes (B.loc_not_unused_in h) (as_loc (fp res)))
   = ()
-
-(* Additional (currently assumed) lemma: 
-     Reasonable when addresses are not reused after deallocation, 
-     but currently not provided by the LowStar.Buffer library
-     (Nik and/or Tahina will look into adding it to ulib) *)
-assume val lemma_loc_not_unused_in_modifies (l:B.loc) (h0 h1:HS.mem)
-  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ B.modifies l h0 h1))
-          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l))
 
 effect RST (a:Type)
            (res:resource)
