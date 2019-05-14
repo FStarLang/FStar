@@ -455,7 +455,8 @@ let gen_wps_for_free
           let k_app = U.mk_app k_tm (args_of_binders binders) in
           let guard_free =  S.fv_to_tm (S.lid_as_fv PC.guard_free delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
-          let pattern_guarded_body = mk (Tm_meta (body, Meta_pattern [[as_arg pat]])) in
+          let pattern_guarded_body =
+            mk (Tm_meta (body, Meta_pattern(binders_to_names binders, [[as_arg pat]]))) in
           U.close_forall_no_univs binders pattern_guarded_body
         | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula"
     in

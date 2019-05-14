@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.parse_int "10") 
+let (cache_version_number : Prims.int) = (Prims.parse_int "11") 
 type tc_result =
   {
   checked_module: FStar_Syntax_Syntax.modul ;

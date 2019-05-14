@@ -56,10 +56,8 @@ private val split_lem : (#a:Type) -> (#b:Type) ->
 let split_lem #a #b sa sb = ()
 
 let split () : Tac unit =
-    let g = cur_goal () in
-    match term_as_formula g with
-    | And _ _ -> apply_lemma (`split_lem)
-    | _       -> fail "not a conjunction"
+    try apply_lemma (`split_lem)
+    with | _ -> fail "Could not split goal"
 
 private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
                             (a -> squash b) ->
@@ -75,6 +73,23 @@ let implies_intros () : Tac binders = repeat1 implies_intro
 
 let l_intro () = forall_intro `or_else` implies_intro
 let l_intros () = repeat l_intro
+
+private
+let __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens =
+  h ()
+
+let pose_lemma (t : term) : Tac binder =
+  let c = tcc t in
+  let pre, post =
+    match inspect_comp c with
+    | C_Lemma pre post -> pre, post
+    | _ -> fail ""
+  in
+  let reqb = tcut (`squash (`#pre)) in
+  let b = pose (`(__lemma_to_squash #(`#pre) #(`#post) (`#(binder_to_term reqb)) (fun () -> (`#t)))) in
+  flip ();
+  ignore (trytac trivial);
+  b
 
 let explode () : Tac unit =
     ignore (
@@ -187,6 +202,34 @@ let __and_elim #p #q #phi p_and_q f = ()
 let and_elim (t : term) : Tac unit =
     let ae = `__and_elim in
     apply_lemma (mk_e_app ae [t])
+
+private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
+private let __witness #a x #p _ =
+  let x : squash (exists x. p x) = () in
+  x
+
+let witness (t : term) : Tac unit =
+    apply_raw (`__witness);
+    exact t
+
+private
+let __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x. pred x))
+                          (k : (x:t -> pred x -> squash goal)) : squash goal =
+  FStar.Squash.bind_squash h (fun (|x, pf|) -> k x pf)
+
+(* returns witness and proof as binders *)
+let elim_exists (t : term) : Tac (binder & binder) =
+  apply_lemma (`(__elim_exists' (`#(t))));
+  let x = intro () in
+  let pf = intro () in
+  (x, pf)
+
+private
+let __forall_inst #t (#pred : t -> Type0) (h : (forall x. pred x)) (x : t) : squash (pred x) =
+    ()
+
+let instantiate (fa : term) (x : term) : Tac binder =
+    pose (`__forall_inst (`#fa) (`#x))
 
 private
 let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :

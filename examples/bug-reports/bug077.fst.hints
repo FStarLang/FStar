@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_89761103e61acc2f14aca90db784842d"
       ],
       0,
-      "cbbf5735c1509e3a3ecaccb73f9d3c86"
+      "76c541b8d5d86a8fb6af11623732dd82"
     ],
     [
       "Bug077.ok4",
@@ -31,7 +31,7 @@
         "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "f7bb3c9b1015ddef2371ad5f677f5726"
+      "cc1d547ddf22893b439357ee3a28b3c8"
     ],
     [
       "Bug077.ok5",
@@ -40,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "39d26bb71d5c1cdb28676d1d266ba3b8"
+      "9fa1deb380fdddf9227dadd451af1c7a"
     ],
     [
       "Bug077.ok5",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "bee257324921507993da4172e45ce813"
+      "476a1b6831ad1b3cb3bba7dad98c2e88"
     ],
     [
       "Bug077.bug",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
       ],
       0,
-      "a259ed925c37f5ecf637f9dab0a0b462"
+      "480aa2feea124fa37a55d9257e8cb478"
     ]
   ]
 ]
