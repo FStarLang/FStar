@@ -63,6 +63,8 @@ let js_str_int : json -> int = function
 // May throw
 let arg k r = assoc k (assoc "params" r |> js_assoc)
 
+let uri_to_path u = substring_from u 7
+
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
 
 let js_compl_context : json -> completion_context = function
@@ -71,13 +73,13 @@ let js_compl_context : json -> completion_context = function
       trigger_char = try_assoc "triggerChar" a |> Util.map_option js_str; }
   | other -> js_fail "dictionary" other
 
-type txdoc_item = { uri: string; langId: string; version: int; text: string }
+type txdoc_item = { fname: string; langId: string; version: int; text: string }
 
 // May throw
 let js_txdoc_item : json -> txdoc_item = function
   | JsonAssoc a ->
     let arg k = assoc k a in
-    { uri = arg "uri" |> js_str;
+    { fname = arg "uri" |> js_str;
       langId = arg "languageId" |> js_str;
       version = arg "version" |> js_int;
       text = arg "text" |> js_str }

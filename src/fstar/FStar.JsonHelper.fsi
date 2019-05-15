@@ -34,11 +34,12 @@ val js_assoc : json -> list<(string * json)>
 val js_str_int : json -> int
 
 val arg : string -> list<(string * json)> -> json
+val uri_to_path : string -> string
 
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
 val js_compl_context : json -> completion_context
 
-type txdoc_item = { uri: string; langId: string; version: int; text: string }
+type txdoc_item = { fname: string; langId: string; version: int; text: string }
 val js_txdoc_item : json -> txdoc_item
 
 type txdoc_pos = { uri: string; line: int; col: int }

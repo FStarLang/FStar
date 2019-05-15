@@ -101,7 +101,9 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | ChangeWatch -> (None, Inl st)
   | Symbol sym -> (Some (Inl JsonNull), Inl st)
   | ExecCommand cmd -> (Some (Inl JsonNull), Inl st)
-  | DidOpen item -> (None, Inl st)
+  | DidOpen { fname = f; langId = _; version = _; text = t } ->
+      Parser.ParseIt.add_vfs_entry (uri_to_path f) t; // Cache contents in F*'s VFS
+      (None, Inl st)
   | DidChange -> (None, Inl st)
   | WillSave txid -> (None, Inl st)
   | WillSaveWait txid -> (Some (Inl JsonNull), Inl st)

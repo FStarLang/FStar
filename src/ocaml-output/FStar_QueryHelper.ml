@@ -98,13 +98,12 @@ let (symlookup :
               (fun uu____620 ->
                  match uu____620 with
                  | (file, row, col) ->
-                     let uu____643 =
-                       FStar_Util.substring_from file (Prims.parse_int "7") in
+                     let uu____643 = FStar_JsonHelper.uri_to_path file in
                      FStar_TypeChecker_Err.info_at_pos tcenv uu____643 row
                        col) in
           let info_opt =
             match info_at_pos_opt with
-            | FStar_Pervasives_Native.Some uu____673 -> info_at_pos_opt
+            | FStar_Pervasives_Native.Some uu____672 -> info_at_pos_opt
             | FStar_Pervasives_Native.None ->
                 if symbol = ""
                 then FStar_Pervasives_Native.None
@@ -119,21 +118,21 @@ let (symlookup :
               let typ_str =
                 if FStar_List.mem "type" requested_info
                 then
-                  let uu____791 = term_to_string tcenv typ in
-                  FStar_Pervasives_Native.Some uu____791
+                  let uu____790 = term_to_string tcenv typ in
+                  FStar_Pervasives_Native.Some uu____790
                 else FStar_Pervasives_Native.None in
               let doc_str =
                 match name_or_lid with
                 | FStar_Util.Inr lid when
                     FStar_List.mem "documentation" requested_info ->
                     docs_of_lid lid
-                | uu____808 -> FStar_Pervasives_Native.None in
+                | uu____807 -> FStar_Pervasives_Native.None in
               let def_str =
                 match name_or_lid with
                 | FStar_Util.Inr lid when
                     FStar_List.mem "definition" requested_info ->
                     def_of_lid lid
-                | uu____826 -> FStar_Pervasives_Native.None in
+                | uu____825 -> FStar_Pervasives_Native.None in
               let def_range1 =
                 if FStar_List.mem "defined-at" requested_info
                 then FStar_Pervasives_Native.Some rng
@@ -153,27 +152,27 @@ let (deflookup :
   =
   fun st ->
     fun pos ->
-      let uu____862 =
+      let uu____861 =
         symlookup st ""
           (FStar_Pervasives_Native.Some
              ((pos.FStar_JsonHelper.uri), (pos.FStar_JsonHelper.line),
-               (pos.FStar_JsonHelper.col))) ["definition"] in
-      match uu____862 with
+               (pos.FStar_JsonHelper.col))) ["defined-at"] in
+      match uu____861 with
       | FStar_Pervasives_Native.Some
-          { slr_name = uu____876;
+          { slr_name = uu____875;
             slr_def_range = FStar_Pervasives_Native.Some r;
-            slr_typ = uu____878; slr_doc = uu____879; slr_def = uu____880;_}
+            slr_typ = uu____877; slr_doc = uu____878; slr_def = uu____879;_}
           ->
-          let uu____891 =
-            let uu____892 =
-              let uu____900 =
-                let uu____906 = FStar_JsonHelper.js_range r in
-                ("result", uu____906) in
-              [uu____900] in
-            FStar_Util.JsonAssoc uu____892 in
-          FStar_Util.Inl uu____891
+          let uu____890 =
+            let uu____891 =
+              let uu____899 =
+                let uu____905 = FStar_JsonHelper.js_range r in
+                ("result", uu____905) in
+              [uu____899] in
+            FStar_Util.JsonAssoc uu____891 in
+          FStar_Util.Inl uu____890
       | FStar_Pervasives_Native.None ->
-          let uu____919 =
+          let uu____918 =
             FStar_JsonHelper.js_resperr FStar_JsonHelper.InternalError
               "symlookup failed" in
-          FStar_Util.Inr uu____919
+          FStar_Util.Inr uu____918
