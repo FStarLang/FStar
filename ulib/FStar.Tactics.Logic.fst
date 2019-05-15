@@ -228,8 +228,15 @@ private
 let __forall_inst #t (#pred : t -> Type0) (h : (forall x. pred x)) (x : t) : squash (pred x) =
     ()
 
+(* GM: annoying that this doesn't just work by SMT *)
+private
+let __forall_inst_sq #t (#pred : t -> Type0) (h : squash (forall x. pred x)) (x : t) : squash (pred x) =
+    FStar.Squash.bind_squash h (fun (f : (forall x. pred x)) -> __forall_inst f x)
+
 let instantiate (fa : term) (x : term) : Tac binder =
-    pose (`__forall_inst (`#fa) (`#x))
+    try pose (`__forall_inst_sq (`#fa) (`#x)) with | _ ->
+    try pose (`__forall_inst (`#fa) (`#x)) with | _ ->
+    fail "could not instantiate"
 
 private
 let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :
