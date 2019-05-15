@@ -1,7 +1,7 @@
 open Prims
 type ident = {
   idText: Prims.string ;
-  idRange: FStar_Range.range }[@@deriving yojson,show]
+  idRange: FStar_Range.range }
 let (__proj__Mkident__item__idText : ident -> Prims.string) =
   fun projectee  -> match projectee with | { idText; idRange;_} -> idText 
 let (__proj__Mkident__item__idRange : ident -> FStar_Range.range) =
@@ -12,7 +12,7 @@ type lident =
   ns: ident Prims.list ;
   ident: ident ;
   nsstr: Prims.string ;
-  str: Prims.string }[@@deriving yojson,show]
+  str: Prims.string }
 let (__proj__Mklident__item__ns : lident -> ident Prims.list) =
   fun projectee  -> match projectee with | { ns; ident; nsstr; str;_} -> ns 
 let (__proj__Mklident__item__ident : lident -> ident) =
@@ -25,7 +25,7 @@ let (__proj__Mklident__item__nsstr : lident -> Prims.string) =
   
 let (__proj__Mklident__item__str : lident -> Prims.string) =
   fun projectee  -> match projectee with | { ns; ident; nsstr; str;_} -> str 
-type lid = lident[@@deriving yojson,show]
+type lid = lident
 let (mk_ident : (Prims.string * FStar_Range.range) -> ident) =
   fun uu____137  ->
     match uu____137 with | (text,range) -> { idText = text; idRange = range }
