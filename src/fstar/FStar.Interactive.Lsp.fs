@@ -87,7 +87,7 @@ let parse_lsp_query query_str : lsp_query =
 
 (* Repl and response *)
 
-let run_exit (st: repl_state) : int = if st.repl_last <> Shutdown then 1 else 0
+let run_exit (st: repl_state) : int = 0
 
 let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   match q with
@@ -178,7 +178,9 @@ let initial_repl_state () : repl_state =
   let env = init_env FStar.Parser.Dep.empty_deps in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
 
-  { repl_line = 1; repl_column = 0; repl_stdin = open_stdin ();
-    repl_last = Exit; repl_names = CompletionTable.empty; repl_env = env }
+  { repl_line = 1; repl_column = 0; repl_fname = "<input>";
+    repl_curmod = None; repl_env = env; repl_deps_stack = [];
+    repl_stdin = open_stdin ();
+    repl_names = CompletionTable.empty }
 
 let start_server () : unit = exit (go (initial_repl_state ()))

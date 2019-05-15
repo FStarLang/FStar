@@ -41,8 +41,6 @@ module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 module QH = FStar.QueryHelper
 
-type repl_depth_t = TcEnv.tcenv_depth_t * int
-
 (** Checkpoint the current (typechecking and desugaring) environment **)
 let snapshot_env env msg : repl_depth_t * env_t =
   let ctx_depth, env = TypeChecker.Tc.snapshot_context env msg in
@@ -118,10 +116,6 @@ let with_captured_errors env sigint_handler f =
 (* REPL tasks and states *)
 (*************************)
 
-type timed_fname =
-  { tf_fname: string;
-    tf_modtime: time }
-
 let t0 = Util.now ()
 
 let tf_of_fname fname =
@@ -143,31 +137,9 @@ type push_query =
     push_line: int; push_column: int;
     push_peek_only: bool }
 
-type optmod_t = option<Syntax.Syntax.modul>
-
-(** Tasks describing each snapshot of the REPL state.
-
-Every snapshot pushed in the repl stack is annotated with one of these.  The
-``LD``-prefixed (“Load Dependency”) onces are useful when loading or updating
-dependencies, as they carry enough information to determine whether a dependency
-is stale. **)
-type repl_task =
-  | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
-  | LDSingle of timed_fname (* interface or implementation *)
-  | LDInterfaceOfCurrentFile of timed_fname (* interface *)
-  | PushFragment of input_frag (* code fragment *)
-  | Noop (* Used by compute *)
+(** Tasks describing each snapshot of the REPL state. **)
 
 type env_t = TcEnv.env
-
-type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
-                    repl_deps_stack: repl_stack_t;
-                    repl_curmod: optmod_t;
-                    repl_env: env_t;
-                    repl_stdin: stream_reader;
-                    repl_names: CTable.table }
-and repl_stack_t = list<repl_stack_entry_t>
-and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
 
 let repl_current_qid : ref<option<string>> = Util.mk_ref None // For messages
 let repl_stack: ref<repl_stack_t> = Util.mk_ref []

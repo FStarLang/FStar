@@ -4,8 +4,8 @@
 
 module FStar.JsonHelper
 open FStar
-open FStar.Util
 open FStar.Errors
+open FStar.Util
 open FStar.Exn
 open FStar.Range
 
@@ -95,8 +95,33 @@ type lquery =
 type lsp_query = { query_id: option<int>; q: lquery }
 
 (* Types concerning repl *)
-type repl_state = { repl_line: int; repl_column: int; repl_stdin: stream_reader;
-                    repl_last: lquery; repl_names: CTable.table; repl_env: TcEnv.env }
+type repl_depth_t = TcEnv.tcenv_depth_t * int
+type optmod_t = option<Syntax.Syntax.modul>
+
+type timed_fname =
+  { tf_fname: string;
+    tf_modtime: time }
+
+(** Every snapshot pushed in the repl stack is annotated with one of these.  The
+``LD``-prefixed (“Load Dependency”) onces are useful when loading or updating
+dependencies, as they carry enough information to determine whether a dependency
+is stale. **)
+type repl_task =
+  | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
+  | LDSingle of timed_fname (* interface or implementation *)
+  | LDInterfaceOfCurrentFile of timed_fname (* interface *)
+  | PushFragment of Parser.ParseIt.input_frag (* code fragment *)
+  | Noop (* Used by compute *)
+
+type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
+                    repl_deps_stack: repl_stack_t;
+                    repl_curmod: optmod_t;
+                    repl_env: TcEnv.env;
+                    repl_stdin: stream_reader;
+                    repl_names: CTable.table }
+and repl_stack_t = list<repl_stack_entry_t>
+and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
+
 type optresponse = option<either<json, json>> // Used to indicate (no|success|failure) response
 type either_st_exit = either<repl_state, int> // repl_state is independent of exit_code
 

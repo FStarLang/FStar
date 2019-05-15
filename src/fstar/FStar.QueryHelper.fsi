@@ -11,7 +11,7 @@ open FStar.TypeChecker.Env
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 
-type loc = string * int * int
+type position = string * int * int
 type sl_reponse = { slr_name: string;
                     slr_def_range: option<Range.range>;
                     slr_typ: option<string>;
@@ -21,5 +21,5 @@ type sl_reponse = { slr_name: string;
 // Parametrized, because we don't want to open modules unnecessarily
 val term_to_string : TcEnv.env -> Syntax.Syntax.term -> string
 
-val symlookup : TcEnv.env -> string -> option<loc> -> list<string> -> option<sl_reponse>
+val symlookup : TcEnv.env -> string -> option<position> -> list<string> -> option<sl_reponse>
 val deflookup : TcEnv.env -> txdoc_pos -> either<json, json>

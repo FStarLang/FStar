@@ -12,7 +12,7 @@ module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 
-type loc = string * int * int
+type position = string * int * int
 type sl_reponse = { slr_name: string;
                     slr_def_range: option<Range.range>;
                     slr_typ: option<string>;
@@ -53,7 +53,7 @@ let symlookup tcenv symbol pos_opt requested_info =
     | None -> if symbol = "" then None else info_of_lid_str symbol in
 
     match info_opt with
-    | None -> Util.print_error "[E] Blank info_opt\n"; None
+    | None -> None
     | Some (name_or_lid, typ, rng) ->
       let name =
         match name_or_lid with
