@@ -33,7 +33,7 @@ val js_list : (json -> 'a) -> json -> list<'a>
 val js_assoc : json -> list<(string * json)>
 val js_str_int : json -> int
 
-val arg : string -> list <(string * 'a)> -> 'a
+val arg : string -> list<(string * json)> -> json
 
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
 val js_compl_context : json -> completion_context
@@ -42,8 +42,8 @@ type txdoc_item = { uri: string; langId: string; version: int; text: string }
 val js_txdoc_item : json -> txdoc_item
 
 type txdoc_pos = { uri: string; line: int; col: int }
-val js_txdoc_id : list<(string * 'a)> -> string
-val js_txdoc_pos : list<(string * 'a)> -> txdoc_pos
+val js_txdoc_id : list<(string * json)> -> string
+val js_txdoc_pos : list<(string * json)> -> txdoc_pos
 
 type workspace_folder = { wk_uri: string; wk_name: string }
 type wsch_event = { added: workspace_folder; removed: workspace_folder }

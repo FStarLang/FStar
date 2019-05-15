@@ -86,12 +86,12 @@ let js_txdoc_item : json -> txdoc_item = function
 type txdoc_pos = { uri: string; line: int; col: int }
 
 // May throw, argument is of the form { "textDocument" : {"uri" : ... } }
-let js_txdoc_id (r: list<(string * 'a)>) : string =
+let js_txdoc_id (r: list<(string * json)>) : string =
   assoc "uri" (arg "textDocument" r |> js_assoc) |> js_str
 
 // May throw; argument is of the form { "textDocument" : ...,
 //                                      "position" : { "line" : ..., "character" : ... } }
-let js_txdoc_pos (r: list<(string * 'a)>) : txdoc_pos =
+let js_txdoc_pos (r: list<(string * json)>) : txdoc_pos =
   let pos = arg "position" r |> js_assoc in
   { uri = js_txdoc_id r;
     line = assoc "line" pos |> js_int;

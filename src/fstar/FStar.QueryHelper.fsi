@@ -19,7 +19,7 @@ type sl_reponse = { slr_name: string;
                     slr_def: option<string> }
 
 // Parametrized, because we don't want to open modules unnecessarily
-val term_to_string : TcEnv.env -> 'a -> string
+val term_to_string : TcEnv.env -> Syntax.Syntax.term -> string
 
 val symlookup : TcEnv.env -> string -> option<loc> -> list<string> -> option<sl_reponse>
 val deflookup : TcEnv.env -> txdoc_pos -> either<json, json>
