@@ -210,14 +210,14 @@ let js_txdoc_pos : 'a . (Prims.string * 'a) Prims.list -> txdoc_pos =
       FStar_All.pipe_right uu____854 js_int in
     { uri = uu____845; line = uu____847; col = uu____852 }
 type workspace_folder = {
-  uri: Prims.string ;
-  name: Prims.string }
-let (__proj__Mkworkspace_folder__item__uri :
+  wk_uri: Prims.string ;
+  wk_name: Prims.string }
+let (__proj__Mkworkspace_folder__item__wk_uri :
   workspace_folder -> Prims.string) =
-  fun projectee -> match projectee with | { uri; name;_} -> uri
-let (__proj__Mkworkspace_folder__item__name :
+  fun projectee -> match projectee with | { wk_uri; wk_name;_} -> wk_uri
+let (__proj__Mkworkspace_folder__item__wk_name :
   workspace_folder -> Prims.string) =
-  fun projectee -> match projectee with | { uri; name;_} -> name
+  fun projectee -> match projectee with | { wk_uri; wk_name;_} -> wk_name
 type wsch_event = {
   added: workspace_folder ;
   removed: workspace_folder }
@@ -242,7 +242,7 @@ let (js_wsch_event : FStar_Util.json -> wsch_event) =
           let uu____976 =
             let uu____978 = assoc "name" added' in
             FStar_All.pipe_right uu____978 js_str in
-          { uri = uu____971; name = uu____976 } in
+          { wk_uri = uu____971; wk_name = uu____976 } in
         let uu____981 =
           let uu____982 =
             let uu____984 = assoc "uri" removed' in
@@ -250,7 +250,7 @@ let (js_wsch_event : FStar_Util.json -> wsch_event) =
           let uu____987 =
             let uu____989 = assoc "name" removed' in
             FStar_All.pipe_right uu____989 js_str in
-          { uri = uu____982; name = uu____987 } in
+          { wk_uri = uu____982; wk_name = uu____987 } in
         { added = uu____970; removed = uu____981 }
     | other -> js_fail "dictionary" other
 type lquery =
@@ -653,3 +653,50 @@ let (js_servcap : FStar_Util.json) =
           ("documentSymbolProvider", (FStar_Util.JsonBool false));
           ("workspaceSymbolProvider", (FStar_Util.JsonBool false));
           ("codeActionProvider", (FStar_Util.JsonBool false))]))]
+let (js_pos : FStar_Range.pos -> FStar_Util.json) =
+  fun p ->
+    let uu____2468 =
+      let uu____2476 =
+        let uu____2482 =
+          let uu____2483 = FStar_Range.line_of_pos p in
+          FStar_Util.JsonInt uu____2483 in
+        ("line", uu____2482) in
+      let uu____2487 =
+        let uu____2495 =
+          let uu____2501 =
+            let uu____2502 = FStar_Range.col_of_pos p in
+            FStar_Util.JsonInt uu____2502 in
+          ("column", uu____2501) in
+        [uu____2495] in
+      uu____2476 :: uu____2487 in
+    FStar_Util.JsonAssoc uu____2468
+let (js_range : FStar_Range.range -> FStar_Util.json) =
+  fun r ->
+    let uu____2527 =
+      let uu____2535 =
+        let uu____2541 =
+          let uu____2542 = FStar_Range.file_of_range r in
+          FStar_Util.JsonStr uu____2542 in
+        ("uri", uu____2541) in
+      let uu____2546 =
+        let uu____2554 =
+          let uu____2560 =
+            let uu____2561 =
+              let uu____2569 =
+                let uu____2575 =
+                  let uu____2576 = FStar_Range.start_of_range r in
+                  js_pos uu____2576 in
+                ("start", uu____2575) in
+              let uu____2579 =
+                let uu____2587 =
+                  let uu____2593 =
+                    let uu____2594 = FStar_Range.end_of_range r in
+                    js_pos uu____2594 in
+                  ("end", uu____2593) in
+                [uu____2587] in
+              uu____2569 :: uu____2579 in
+            FStar_Util.JsonAssoc uu____2561 in
+          ("range", uu____2560) in
+        [uu____2554] in
+      uu____2535 :: uu____2546 in
+    FStar_Util.JsonAssoc uu____2527

@@ -13,7 +13,6 @@ module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 
 type loc = string * int * int
-type env_t = TcEnv.env
 type sl_reponse = { slr_name: string;
                     slr_def_range: option<Range.range>;
                     slr_typ: option<string>;
@@ -30,9 +29,7 @@ let term_to_string tcenv t =
 let sigelt_to_string se =
   with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string se)
 
-let run_symbol_lookup st symbol pos_opt requested_info =
-  let tcenv = st.repl_env in
-
+let symlookup tcenv symbol pos_opt requested_info =
   let info_of_lid_str lid_str =
     let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split lid_str ".")) in
     let lid = Util.dflt lid <| DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid in
@@ -56,7 +53,7 @@ let run_symbol_lookup st symbol pos_opt requested_info =
     | None -> if symbol = "" then None else info_of_lid_str symbol in
 
     match info_opt with
-    | None -> None
+    | None -> Util.print_error "[E] Blank info_opt\n"; None
     | Some (name_or_lid, typ, rng) ->
       let name =
         match name_or_lid with
@@ -79,3 +76,9 @@ let run_symbol_lookup st symbol pos_opt requested_info =
 
       Some ({ slr_name = name; slr_def_range = def_range;
              slr_typ = typ_str; slr_doc = doc_str; slr_def = def_str })
+
+let deflookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
+  match symlookup st "" (Some (pos.uri, pos.line, pos.col)) ["definition"] with
+  | Some { slr_name = _; slr_def_range = (Some r); slr_typ = _; slr_doc = _; slr_def = _ } ->
+      Inl (JsonAssoc [("result", js_range r)])
+  | None -> Inr (js_resperr InternalError "symlookup failed")

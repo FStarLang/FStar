@@ -18,4 +18,8 @@ type sl_reponse = { slr_name: string;
                     slr_doc: option<string>;
                     slr_def: option<string> }
 
-val run_symbol_lookup : repl_state -> string -> option<loc> -> list<string> -> option<sl_reponse>
+// Parametrized, because we don't want to open modules unnecessarily
+val term_to_string : TcEnv.env -> 'a -> string
+
+val symlookup : TcEnv.env -> string -> option<loc> -> list<string> -> option<sl_reponse>
+val deflookup : TcEnv.env -> txdoc_pos -> either<json, json>

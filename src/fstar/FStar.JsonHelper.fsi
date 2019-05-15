@@ -7,6 +7,7 @@ open FStar
 open FStar.Util
 open FStar.Errors
 open FStar.Exn
+open FStar.Range
 
 open FStar.TypeChecker.Env
 module TcEnv = FStar.TypeChecker.Env
@@ -44,7 +45,7 @@ type txdoc_pos = { uri: string; line: int; col: int }
 val js_txdoc_id : list<(string * 'a)> -> string
 val js_txdoc_pos : list<(string * 'a)> -> txdoc_pos
 
-type workspace_folder = { uri: string; name: string }
+type workspace_folder = { wk_uri: string; wk_name: string }
 type wsch_event = { added: workspace_folder; removed: workspace_folder }
 val js_wsch_event : json -> wsch_event
 
@@ -121,3 +122,4 @@ val json_of_response : option<int> -> either<json, json> -> json
 val js_resperr : error_code -> string -> json
 val wrap_content_szerr : string -> lsp_query
 val js_servcap : json
+val js_range : Range.range -> json

@@ -7,6 +7,7 @@ open FStar
 open FStar.Util
 open FStar.Errors
 open FStar.Exn
+open FStar.Range
 
 open FStar.TypeChecker.Env
 module TcEnv = FStar.TypeChecker.Env
@@ -96,17 +97,17 @@ let js_txdoc_pos (r: list<(string * 'a)>) : txdoc_pos =
     line = assoc "line" pos |> js_int;
     col = assoc "character" pos |> js_int }
 
-type workspace_folder = { uri: string; name: string }
+type workspace_folder = { wk_uri: string; wk_name: string }
 type wsch_event = { added: workspace_folder; removed: workspace_folder }
 
 let js_wsch_event : json -> wsch_event = function
   | JsonAssoc a ->
       let added' = assoc "added" a |> js_assoc in
       let removed' = assoc "removed" a |> js_assoc in
-      { added = { uri = assoc "uri" added' |> js_str;
-                  name = assoc "name" added' |> js_str };
-        removed = { uri = assoc "uri" removed' |> js_str;
-                    name = assoc "name" removed' |> js_str } }
+      { added = { wk_uri = assoc "uri" added' |> js_str;
+                  wk_name = assoc "name" added' |> js_str };
+        removed = { wk_uri = assoc "uri" removed' |> js_str;
+                    wk_name = assoc "name" removed' |> js_str } }
   | other -> js_fail "dictionary" other
 
 (* Types of main query *)
@@ -233,3 +234,10 @@ let js_servcap : json =
               ("documentSymbolProvider", JsonBool false);
               ("workspaceSymbolProvider", JsonBool false);
               ("codeActionProvider", JsonBool false)])]
+
+let js_pos (p: pos) : json = JsonAssoc [("line", JsonInt (line_of_pos p));
+                                        ("column", JsonInt (col_of_pos p))]
+
+let js_range r = JsonAssoc [("uri", JsonStr (file_of_range r));
+                            ("range", JsonAssoc [("start", js_pos (start_of_range r));
+                                                 ("end", js_pos (end_of_range r))])]
