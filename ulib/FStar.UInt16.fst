@@ -37,6 +37,9 @@ type t' =
 
 let t : eqtype = t'
 
+let _ : squash (inversion t) =
+  allow_inversion t
+
 unfold
 let tt (_:t) = True
 
