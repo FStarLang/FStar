@@ -681,7 +681,7 @@ typ:
           raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
         | _ ->
           let idents = idents_of_binders bs (rhs2 parseState 1 3) in
-          mk_term (q (bs, (idents, trigger), e)) (rhs2 parseState 1 5) Formula
+          mk_term (q (bs, nopattern, (idents, trigger), e)) (rhs2 parseState 1 5) Formula
       }
 
 %inline quantifier:

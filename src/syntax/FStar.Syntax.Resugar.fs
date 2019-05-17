@@ -506,8 +506,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | Some (op, _) when op = "forall" || op = "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
           let rec uncurry xs pat (t:A.term) = match t.tm with
-            | A.QExists(x, (_, p) , body)
-            | A.QForall(x, (_, p), body)
+            | A.QExists(x, _, (_, p) , body)
+            | A.QForall(x, _, (_, p), body)  // TODO: check the consistency of {:nopattern}?
               -> uncurry (x@xs) (p@pat) body
             | _ -> xs, pat, t
           in
@@ -534,14 +534,14 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                 let xs, pats, body = uncurry xs pats body in
                 let xs = xs |> List.rev in
                 if op = "forall"
-                then mk (A.QForall(xs, (A.idents_of_binders xs t.pos, pats), body))
-                else mk (A.QExists(xs, (A.idents_of_binders xs t.pos, pats), body))
+                then mk (A.QForall(xs, false, (A.idents_of_binders xs t.pos, pats), body)) // TODO
+                else mk (A.QExists(xs, false, (A.idents_of_binders xs t.pos, pats), body)) // TODO
 
             | _ ->
             (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
             (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
-            if op = "forall" then mk (A.QForall([], ([], []), resugar_term' env body))
-            else mk (A.QExists([], ([], []), resugar_term' env body))
+            if op = "forall" then mk (A.QForall([], false, ([], []), resugar_term' env body))
+            else mk (A.QExists([], false, ([], []), resugar_term' env body))
           in
           (* only the last arg is from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
