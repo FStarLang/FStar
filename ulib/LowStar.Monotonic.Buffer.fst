@@ -1464,7 +1464,7 @@ let mgcmalloc_of_list #a #rrel r init =
   let b = Buffer len content 0ul len in
   b
 
-#push-options "--z3rlimit 128 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#reset-options "--z3rlimit 64 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1 --using_facts_from '* -FStar.Seq.Properties.slice_slice'"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
   if len = 0ul then ()
@@ -1497,7 +1497,6 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
                       (Seq.slice s2 (U32.v idx_dst + U32.v len) (length dst)));
     content2 := s_full2';
     g_upd_seq_as_seq dst s2' h  //for modifies clause
-#pop-options
 
 #push-options "--z3rlimit 64 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1"
 let fill' (#t:Type) (#rrel #rel: srel t)
