@@ -89,6 +89,7 @@ type token =
   | LBRACK_AT
   | LBRACK
   | LBRACE_COLON_PATTERN
+  | LBRACE_COLON_NOPATTERN_RBRACE
   | LBRACE
   | LARROW
   | IRREDUCIBLE
@@ -243,6 +244,7 @@ type tokenId =
     | TOKEN_LBRACK_AT
     | TOKEN_LBRACK
     | TOKEN_LBRACE_COLON_PATTERN
+    | TOKEN_LBRACE_COLON_NOPATTERN_RBRACE
     | TOKEN_LBRACE
     | TOKEN_LARROW
     | TOKEN_IRREDUCIBLE
@@ -422,6 +424,7 @@ type nonTerminalId =
     | NONTERM_calcStep
     | NONTERM_typ
     | NONTERM_trigger
+    | NONTERM_nopattern
     | NONTERM_disjunctivePats
     | NONTERM_conjunctivePat
     | NONTERM_simpleTerm
