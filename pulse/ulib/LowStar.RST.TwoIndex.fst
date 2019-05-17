@@ -43,6 +43,26 @@ assume val lemma_modifies_loc_disjoint (l0 l1:B.loc) (h0 h1 h2:HS.mem)
                        B.loc_disjoint l l1)))
           (ensures  (B.modifies l0 h0 h2))
 
+assume val lemma_loc_disjoint_not_unused_in_modifies (h0 h1:HS.mem) (l l':B.loc)
+  : Lemma (requires (B.loc_disjoint l' l /\ 
+                     B.loc_includes (B.loc_not_unused_in h0) l' /\
+                     B.modifies l h0 h1))
+          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l'))
+          [SMTPat (B.loc_disjoint l' l);
+           SMTPat (B.loc_includes (B.loc_not_unused_in h0) l');
+           SMTPat (B.loc_includes (B.loc_not_unused_in h1) l')]
+
+(*
+// [DA: would be needed for scoped allocation of stack-allocated pointers]
+assume val lemma_loc_not_unused_in_fresh_frame (l:B.loc) (h0 h1:HS.mem) 
+  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ HS.fresh_frame h0 h1))
+          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l)) 
+
+assume val lemma_loc_not_unused_in_popped (l:B.loc) (h0 h1:HS.mem) 
+  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ HS.popped h0 h1))
+          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l)) 
+*)
+
 (* Abstract modifies clause for the resource-indexed state effect *)
 
 abstract
@@ -164,7 +184,8 @@ let frame_wp (#outer0:resource)
         : rstate_wp a outer0 outer1 =
   fun p h0 -> 
     wp (fun x (h1:imem (inv (inner1 x))) -> 
-          inv (delta1 x) h1 /\ 
+          inv (outer1 x) h1 /\
+          //inv (delta1 x) h1 /\ 
           sel (view_of delta0) h0 == sel (view_of (delta1 x)) h1 
           ==>
           p x h1) h0
