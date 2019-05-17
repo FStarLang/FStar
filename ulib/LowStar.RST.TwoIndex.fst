@@ -164,15 +164,6 @@ let bind (#a #b:Type)
 
 (* Generic framing operation for RSTATE (through resource inclusion) *)
 
-// The pre- and post deltas are the same
-(*let frame_post_delta (#outer0:resource)
-                     (#inner0:resource)
-                     (delta0:r_includes outer0 inner0)
-                     (a:Type)
-                     (outer1:a -> resource)
-                     (inner1:a -> resource) =
-  x:a -> delta1:r_includes (outer1 x) (inner1 x){delta0 == delta1}*)
-
 let frame_delta_pre (outer0 inner0 delta:resource) =
   outer0 `can_be_split_into` (inner0,delta)
 
