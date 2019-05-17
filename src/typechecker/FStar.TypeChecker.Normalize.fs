@@ -1112,9 +1112,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                ; normalize_pure_lets = true } in
               let stack' =
                 let tail = (Cfg cfg)::stack in
-                if cfg.debug.print_normalized
-                then (Debug(t, BU.now())::tail)
-                else tail in
+                Debug(t, BU.now())::tail
+              in
               norm cfg' env stack' tm
             end
 
@@ -1448,8 +1447,13 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          begin
          log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
-         // preserve the range info on the returned term
-         let t = Subst.set_use_range t0.pos t in
+         let t =
+           if cfg.steps.unfold_until = Some delta_constant
+           //we're really trying to compute here; no point propagating range information
+           //which can be expensive
+           then t
+           else Subst.set_use_range t0.pos t
+         in
          let n = List.length us in
          if n > 0
          then match stack with //universe beta reduction
@@ -2190,6 +2194,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                        (Print.term_to_string tm)
                        (Print.term_to_string t)
         end;
+        let t = {t with pos=tm.pos} in
         rebuild cfg env stack t
 
       | Cfg cfg :: stack ->
