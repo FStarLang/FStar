@@ -185,7 +185,6 @@ let frame_wp (#outer0:resource)
   fun p h0 -> 
     wp (fun x (h1:imem (inv (inner1 x))) -> 
           inv (outer1 x) h1 /\
-          //inv (delta1 x) h1 /\ 
           sel (view_of delta0) h0 == sel (view_of (delta1 x)) h1 
           ==>
           p x h1) h0
