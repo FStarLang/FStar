@@ -142,16 +142,12 @@ let with_new_ptr (#res:resource)
   let (ptr:B.pointer a) = 
     rst_frame 
       #res #_ #_ #(fun ptr -> res <*> ptr_resource ptr)
-      res (fun ptr -> res) 
+      res (fun _ -> res) 
       (ptr_alloc init) 
     in
   let x = f ptr in 
   rst_frame
-    #(res <*> ptr_resource ptr)
-    #(ptr_resource ptr)
-    #_
-    #(fun _ -> res)
-    #(fun _ -> empty_resource)
+    #(res <*> ptr_resource ptr) #_ #_ #(fun _ -> res) #_
     res (fun _ -> res)
     (ptr_free ptr);
   x
