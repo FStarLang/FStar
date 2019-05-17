@@ -1464,7 +1464,7 @@ let mgcmalloc_of_list #a #rrel r init =
   let b = Buffer len content 0ul len in
   b
 
-#push-options "--z3rlimit 64 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#push-options "--z3rlimit 128 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
   if len = 0ul then ()
