@@ -200,6 +200,35 @@ let star_includes_empty_right (#res:resource)
                            : r_includes res (res <*> empty_resource) =
   empty_resource
 
+(* Constructive resource inclusion v2 *)
+
+let can_be_split_into (outer:resource) ((inner,delta):resource & resource) = 
+    // Footprint of the outer resource is union of delta and the inner resource
+    as_loc (fp outer) == B.loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
+    // Outer invariant is equivalent to delta and the inner invariant (when they are disjoint)
+    (forall h . inv outer h <==> inv inner h /\ inv delta h /\ r_disjoint delta inner)
+
+(* Left and right inclusions for separating conjunction v2 *)
+
+let star_can_be_split_into_parts (res1 res2:resource)
+  : Lemma ((res1 <*> res2) `can_be_split_into` (res1,res2))
+          [SMTPat (can_be_split_into (res1 <*> res2) (res1,res2))]= 
+  ()
+
+let star_can_be_split_into_parts' (res1 res2:resource)
+  : Lemma (can_be_split_into (res1 <*> res2) (res2,res1))
+          [SMTPat ((res1 <*> res2) `can_be_split_into` (res2,res1))]= 
+  ()
+
+
+
+
+
+
+
+
+//WIP: Will disappear soon
+
 (* Weaker form of resource inclusion (with invariant inclusion instead of equivalence) *)
 
 let r_weakly_includes outer inner = 
