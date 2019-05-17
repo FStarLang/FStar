@@ -33,11 +33,14 @@ open FStar.Const
 open FStar.Dyn
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
+open FStar.TypeChecker.PatternInference
+
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
+module PI = FStar.TypeChecker.PatternInference
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
@@ -506,12 +509,28 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_meta(e, Meta_pattern(names, pats)) ->
     let t, u = U.type_u () in
     let e, c, g = tc_check_tot_or_gtot_term env e t in
-    //NS: PATTERN INFERENCE
-    //if `pats` is empty (that means the user did not annotate a pattern).
-    //In that case try to infer a pattern by
-    //analyzing `e` for the smallest terms that contain all the variables
-    //in `names`.
-    //If not pattern can be inferred, raise a warning
+    let pats = match pats with
+      | [] -> 
+        //if `pats` is empty (that means the user did not annotate a pattern).
+        //In that case try to infer a pattern by
+        //analyzing `e` for the smallest terms that contain all the variables
+        //in `names`.
+        //If not pattern can be inferred, raise a warning
+        if Options.auto_patterns () then 
+          begin match (PI.infer_pattern env names e) with
+          | [] -> 
+            Errors.log_issue e.pos
+              (Errors.Warning_NoPatternInferred,
+              (BU.format3 "no pattern can be inferred : %s (%s) with names: (%s)\n" 
+                  (Print.term_to_string e) 
+                  (Print.tag_of_term (SS.compress e))
+                  (names |> List.map Print.term_to_string |> String.concat ", ")));
+            []                                 
+          | pats -> pats
+          end
+        else pats 
+      | _ -> pats
+      in
     let pats, g' =
         let env, _ = Env.clear_expected_typ env in
         tc_smt_pats env pats in

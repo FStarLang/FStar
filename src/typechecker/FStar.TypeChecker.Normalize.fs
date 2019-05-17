@@ -32,6 +32,7 @@ open FStar.Syntax.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
+open FStar.TypeChecker.PatternInference
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -43,6 +44,7 @@ module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
+module PI = FStar.TypeChecker.PatternInference
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -1400,6 +1402,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       | Meta_pattern (names, args) ->
                           let args = norm_pattern_args cfg env args in
                           let names =  names |> List.map (norm cfg env []) in
+                          // normalization might remove bv from args if the bv is
+                          // not referenced in args, thus cause args to become
+                          // invalid patterns
+                          let args = PI.remove_invalid_pattern names args in
                           norm cfg env (Meta(env, Meta_pattern(names, args), t.pos)::stack) head
                           //meta doesn't block reduction, but we need to put the label back
 
