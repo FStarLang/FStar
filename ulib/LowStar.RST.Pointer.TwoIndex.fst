@@ -26,7 +26,7 @@ open LowStar.RST.TwoIndex
 
 open LowStar.BufferOps
 
-(* View and resource for (heap-allocated, freeable) pointers *)
+(* View and resource for (heap-allocated, freeable) pointer resources *)
 
 abstract
 let ptr_view (#a:Type) (ptr:B.pointer a) : view a = 
@@ -65,16 +65,6 @@ let ptr_read (#a:Type)
                       x == sel (ptr_view ptr) h1) =
   reveal_rst_inv ();
   !* ptr
-
-// Another (currently assumed) lemma about loc_not_unused_in
-assume val lemma_loc_disjoint_not_unused_in_modifies (h0 h1:HS.mem) (l l':B.loc)
-  : Lemma (requires (B.loc_disjoint l' l /\ 
-                     B.loc_includes (B.loc_not_unused_in h0) l' /\
-                     B.modifies l h0 h1))
-          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l'))
-          [SMTPat (B.loc_disjoint l' l);
-           SMTPat (B.loc_includes (B.loc_not_unused_in h0) l');
-           SMTPat (B.loc_includes (B.loc_not_unused_in h1) l')]
 
 let ptr_write (#a:Type)
               (ptr:B.pointer a)
@@ -118,38 +108,24 @@ let ptr_free (#a:Type)
   reveal_modifies ();
   B.free ptr
 
-
-
-
-(*
-//WIP [DA: we should probably have a separate resource for stack-allocated pointers]
-
-(* Scoped, stack allocation of pointer resources *)
-
-(* Another (currently assumed) lemmas about loc_not_unused_in *)
-assume val lemma_loc_not_unused_in_fresh_frame (l:B.loc) (h0 h1:HS.mem) 
-  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ HS.fresh_frame h0 h1))
-          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l)) 
-
-assume val lemma_loc_not_unused_in_popped (l:B.loc) (h0 h1:HS.mem) 
-  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ HS.popped h0 h1))
-          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l)) 
+(* Scoped allocation of (heap-allocated, freeable) pointer resources *)
 
 unfold
 let with_new_ptr_pre (res:resource) =
-  pre:r_pre res{(forall h0 h1.{:pattern pre h0; HS.fresh_frame h0 h1} 
-                   pre h0 /\ HS.fresh_frame h0 h1 ==> pre h1) /\
-                (forall h0 h1.{:pattern pre h0; B.modifies B.loc_none h0 h1} 
-                   pre h0 /\ B.modifies B.loc_none h0 h1 ==> pre h1)}
+  pre:r_pre res{forall h0 h1 . 
+                  pre h0 /\ 
+                  sel (view_of res) h0 == sel (view_of res) h1 
+                  ==> 
+                  pre h1}
 
 unfold
 let with_new_ptr_post (res0:resource) (a:Type) (res1:a -> resource) =
-  post:r_post res0 a res1{(forall h0 h1 x h2.{:pattern B.modifies B.loc_none h0 h1; post h1 x h2} 
-                           B.modifies B.loc_none h0 h1 /\ post h1 x h2 ==> post h0 x h2) /\
-                          (forall h0 h1 x h2.{:pattern HS.fresh_frame h0 h1; post h1 x h2}
-                           rst_inv res0 h0 /\ HS.fresh_frame h0 h1 /\ post h1 x h2 ==> post h0 x h2) /\ 
-                          (forall h0 x h1 h2.{:pattern post h0 x h1; HS.popped h1 h2}
-                           post h0 x h1 /\ HS.popped h1 h2 /\ rst_inv (res1 x) h2 ==> post h0 x h2)}
+  post:r_post res0 a res1{forall h0 h1 x h2 h3 . 
+                            sel (view_of res0) h0 == sel (view_of res0) h1 /\
+                            post h1 x h2 /\
+                            sel (view_of (res1 x)) h2 == sel (view_of (res1 x)) h3 
+                            ==>
+                            post h0 x h3}
 
 let with_new_ptr (#res:resource)
                  (#a:Type)
@@ -160,29 +136,22 @@ let with_new_ptr (#res:resource)
                  (f:(ptr:B.pointer a -> RST b (res <*> (ptr_resource ptr))
                                               (fun _ -> res <*> (ptr_resource ptr))
                                               (fun h -> pre h /\ sel (ptr_view ptr) h == init) 
-                                              post)) 
+                                              (post))) 
                : RST b res (fun _ -> res) pre post = 
-  reveal_rst_inv ();
-  reveal_modifies ();
-  reveal_view ();
   reveal_star ();
-  reveal_ptr ();
-  let h0 = get () in
-  HST.push_frame ();
-  let h1 = get () in
-  lemma_loc_not_unused_in_fresh_frame (as_loc (fp res)) h0 h1;
-  let ptr = B.alloca init 1ul in
-  let h2 = get () in
-  //admit ();
-  //lemma_loc_not_unused_in_modifies (as_loc (fp res)) (as_loc (fp res)) h1 h2;
-  assert (inv res h2);
-  assert (inv (ptr_resource ptr) h2);
-  assert (inv (res <*> (ptr_resource ptr)) h2);
-  let x = f ptr in
-  let h3 = get () in
-  HST.pop_frame ();
-  let h4 = get () in
-  B.modifies_fresh_frame_popped h0 h1 (as_loc (fp (res <*> (ptr_resource ptr)))) h3 h4;
-  lemma_loc_not_unused_in_popped (as_loc (fp res)) h3 h4;
+  let (ptr:B.pointer a) = 
+    rst_frame 
+      #res #_ #_ #(fun ptr -> res <*> ptr_resource ptr)
+      res (fun ptr -> res) 
+      (ptr_alloc init) 
+    in
+  let x = f ptr in 
+  rst_frame
+    #(res <*> ptr_resource ptr)
+    #(ptr_resource ptr)
+    #_
+    #(fun _ -> res)
+    #(fun _ -> empty_resource)
+    res (fun _ -> res)
+    (ptr_free ptr);
   x
-*)
