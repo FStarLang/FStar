@@ -56,7 +56,6 @@ let reveal_ptr ()
 
 let ptr_read (#a:Type)
              (ptr:B.pointer a)
-             (_:unit)
            : RST a (ptr_resource ptr)
                    (fun _ -> ptr_resource ptr)
                    (fun _ -> True)
@@ -69,7 +68,6 @@ let ptr_read (#a:Type)
 let ptr_write (#a:Type)
               (ptr:B.pointer a)
               (x:a)
-              (_:unit)
             : RST unit (ptr_resource ptr)
                        (fun _ -> ptr_resource ptr)
                        (fun _ -> True)
@@ -77,9 +75,7 @@ let ptr_write (#a:Type)
                           sel (ptr_view ptr) h1 == x) =
   reveal_rst_inv ();
   reveal_modifies ();
-  ptr *= x              // [DA: Implicitly this definition uses the lemma 
-                        //      lemma_loc_disjoint_not_unused_in_modifies
-                        //      assumed in LowStar.RST.TwoIndex]
+  ptr *= x
 
 
 
@@ -87,7 +83,6 @@ let ptr_write (#a:Type)
 
 let ptr_alloc (#a:Type)
               (init:a)
-              (_:unit)
             : RST (B.pointer a) (empty_resource)
                                 (fun ptr -> ptr_resource ptr)
                                 (fun _ -> True)
@@ -99,7 +94,6 @@ let ptr_alloc (#a:Type)
 
 let ptr_free (#a:Type)
              (ptr:B.pointer a)
-             (_:unit)
            : RST unit (ptr_resource ptr)
                       (fun ptr -> empty_resource)
                       (fun _ -> True)
@@ -139,15 +133,16 @@ let with_new_ptr (#res:resource)
                                               (post))) 
                : RST b res (fun _ -> res) pre post = 
   reveal_star ();
-  let (ptr:B.pointer a) = 
+  let ptr = 
     rst_frame 
       #res #_ #_ #(fun ptr -> res <*> ptr_resource ptr)
-      res (fun _ -> res) 
-      (ptr_alloc init) 
-    in
+      res 
+      (fun _ -> res) 
+      (fun _ -> ptr_alloc init) in
   let x = f ptr in 
   rst_frame
     #(res <*> ptr_resource ptr) #_ #_ #(fun _ -> res) #_
-    res (fun _ -> res)
-    (ptr_free ptr);
+    res 
+    (fun _ -> res)
+    (fun _ -> ptr_free ptr);
   x
