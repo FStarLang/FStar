@@ -26,7 +26,7 @@ open LowStar.RST.TwoIndex
 
 open LowStar.BufferOps
 
-(* Pointer view and resource *)
+(* View and resource for (heap-allocated, freeable) pointers *)
 
 abstract
 let ptr_view (#a:Type) (ptr:B.pointer a) : view a = 
@@ -56,6 +56,7 @@ let reveal_ptr ()
 
 let ptr_read (#a:Type)
              (ptr:B.pointer a)
+             (_:unit)
            : RST a (ptr_resource ptr)
                    (fun _ -> ptr_resource ptr)
                    (fun _ -> True)
@@ -78,6 +79,7 @@ assume val lemma_loc_disjoint_not_unused_in_modifies (h0 h1:HS.mem) (l l':B.loc)
 let ptr_write (#a:Type)
               (ptr:B.pointer a)
               (x:a)
+              (_:unit)
             : RST unit (ptr_resource ptr)
                        (fun _ -> ptr_resource ptr)
                        (fun _ -> True)
@@ -95,6 +97,7 @@ let ptr_write (#a:Type)
 
 let ptr_alloc (#a:Type)
               (init:a)
+              (_:unit)
             : RST (B.pointer a) (empty_resource)
                                 (fun ptr -> ptr_resource ptr)
                                 (fun _ -> True)
@@ -106,6 +109,7 @@ let ptr_alloc (#a:Type)
 
 let ptr_free (#a:Type)
              (ptr:B.pointer a)
+             (_:unit)
            : RST unit (ptr_resource ptr)
                       (fun ptr -> empty_resource)
                       (fun _ -> True)
@@ -115,8 +119,11 @@ let ptr_free (#a:Type)
   B.free ptr
 
 
+
+
 (*
-//WIP
+//WIP [DA: we should probably have a separate resource for stack-allocated pointers]
+
 (* Scoped, stack allocation of pointer resources *)
 
 (* Another (currently assumed) lemmas about loc_not_unused_in *)
@@ -168,6 +175,8 @@ let with_new_ptr (#res:resource)
   let h2 = get () in
   //admit ();
   //lemma_loc_not_unused_in_modifies (as_loc (fp res)) (as_loc (fp res)) h1 h2;
+  assert (inv res h2);
+  assert (inv (ptr_resource ptr) h2);
   assert (inv (res <*> (ptr_resource ptr)) h2);
   let x = f ptr in
   let h3 = get () in
