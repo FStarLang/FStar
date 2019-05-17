@@ -174,11 +174,9 @@ let empty_resource : resource =
 
 let r_includes outer inner = 
   delta:resource {
-    // Delta is disjoint from the inner resource
-    //r_disjoint delta inner /\
     // Footprint of the outer resource is union of delta and the inner resource
     as_loc (fp outer) == B.loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
-    // Outer invariant is equivalent to delta and the inner invariant
+    // Outer invariant is equivalent to delta and the inner invariant (when they are disjoint)
     (forall h . inv outer h <==> inv inner h /\ inv delta h /\ r_disjoint delta inner)
   }
 
