@@ -165,27 +165,42 @@ let bind (#a #b:Type)
 (* Generic framing operation for RSTATE (through resource inclusion) *)
 
 // The pre- and post deltas are the same
-let frame_post_delta (#outer0:resource)
+(*let frame_post_delta (#outer0:resource)
                      (#inner0:resource)
                      (delta0:r_includes outer0 inner0)
                      (a:Type)
                      (outer1:a -> resource)
                      (inner1:a -> resource) =
-  x:a -> delta1:r_includes (outer1 x) (inner1 x){delta0 == delta1}
+  x:a -> delta1:r_includes (outer1 x) (inner1 x){delta0 == delta1}*)
+
+let frame_delta_pre (outer0 inner0 delta:resource) =
+  outer0 `can_be_split_into` (inner0,delta)
+
+let frame_delta_post (#a:Type) (outer1 inner1:a -> resource) (delta:resource) =
+  forall x. (outer1 x) `can_be_split_into` (inner1 x,delta)
+
+let frame_delta (outer0:resource)
+                (inner0:resource)
+                (#a:Type)
+                (outer1:a -> resource)
+                (inner1:a -> resource) = 
+  delta:resource{
+    frame_delta_pre outer0 inner0 delta /\
+    frame_delta_post outer1 inner1 delta
+  }
 
 let frame_wp (#outer0:resource)
-          (#inner0:resource)
-          (#a:Type)
-          (#outer1:a -> resource)
-          (#inner1:a -> resource)
-          (delta0:r_includes outer0 inner0)
-          (delta1:frame_post_delta delta0 a outer1 inner1)
-          (wp:rstate_wp a inner0 inner1)
-        : rstate_wp a outer0 outer1 =
+             (#inner0:resource)
+             (#a:Type)
+             (#outer1:a -> resource)
+             (#inner1:a -> resource)
+             (delta:frame_delta outer0 inner0 outer1 inner1)
+             (wp:rstate_wp a inner0 inner1)
+           : rstate_wp a outer0 outer1 =
   fun p h0 -> 
     wp (fun x (h1:imem (inv (inner1 x))) -> 
           inv (outer1 x) h1 /\
-          sel (view_of delta0) h0 == sel (view_of (delta1 x)) h1 
+          sel (view_of delta) h0 == sel (view_of delta) h1 
           ==>
           p x h1) h0
 
@@ -194,11 +209,10 @@ let frame (#outer0:resource)
           (#a:Type)
           (#outer1:a -> resource)
           (#inner1:a -> resource)
-          (delta0:r_includes outer0 inner0)
-          (delta1:frame_post_delta delta0 a outer1 inner1)
+          (delta:frame_delta outer0 inner0 outer1 inner1)
           (#wp:rstate_wp a inner0 inner1)
           ($f:unit -> RSTATE a inner0 inner1 wp)
-        : RSTATE a outer0 outer1 (frame_wp delta0 delta1 wp) =
+        : RSTATE a outer0 outer1 (frame_wp delta wp) =
   reveal_view ();
   f ()
   
@@ -207,7 +221,7 @@ let frame (#outer0:resource)
 unfold
 let frame_pre (#outer0:resource)
               (#inner0:resource)
-              (delta0:r_includes outer0 inner0)
+              (delta:resource{frame_delta_pre outer0 inner0 delta})
               (pre:r_pre inner0)
               (h:imem (inv outer0)) =
   pre h
@@ -218,15 +232,13 @@ let frame_post (#outer0:resource)
                (#a:Type)
                (#outer1:a -> resource)
                (#inner1:a -> resource)
-               (delta0:r_includes outer0 inner0)
-               (delta1:frame_post_delta delta0 a outer1 inner1)
+               (delta:frame_delta outer0 inner0 outer1 inner1)
                (post:r_post inner0 a inner1)
                (h0:imem (inv outer0))
                (x:a)
                (h1:imem (inv (outer1 x))) = 
-  delta0 == delta1 x /\ // here to trigger the refinement on (delta1 x)
   post h0 x h1 /\
-  sel (view_of delta0) h0 == sel (view_of (delta1 x)) h1
+  sel (view_of delta) h0 == sel (view_of delta) h1
 
 // [DA: should be definable directly using RSTATE frame, but get 
 //      an error about unexpected unification variable remaining]
@@ -235,15 +247,13 @@ let rst_frame (#outer0:resource)
               (#a:Type)
               (#outer1:a -> resource)
               (#inner1:a -> resource)
-              (delta0:r_includes outer0 inner0)
-              (delta1:frame_post_delta delta0 a outer1 inner1)
+              (delta:frame_delta outer0 inner0 outer1 inner1)
               (#pre:r_pre inner0)
               (#post:r_post inner0 a inner1)
               ($f:unit -> RST a inner0 inner1 pre post)
             : RST a outer0 outer1 
-                    (frame_pre delta0 pre) 
-                    (frame_post delta0 delta1 post) =
+                    (frame_pre delta pre) 
+                    (frame_post delta post) =
   reveal_view ();
   let x = f () in 
-  assert (delta0 == delta1 x); // here to trigger the refinement on (delta1 x)
   x
