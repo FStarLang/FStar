@@ -7849,78 +7849,76 @@ let (encode_query :
                     match uu____18959 with
                     | (phi,qdecls) ->
                         let uu____18980 =
-                          let uu____18985 =
-                            FStar_TypeChecker_Env.get_range tcenv  in
                           FStar_SMTEncoding_ErrorReporting.label_goals
-                            use_env_msg uu____18985 phi
+                            use_env_msg phi.FStar_SMTEncoding_Term.rng phi
                            in
                         (match uu____18980 with
                          | (labels,phi1) ->
-                             let uu____19002 = encode_labels labels  in
-                             (match uu____19002 with
+                             let uu____19001 = encode_labels labels  in
+                             (match uu____19001 with
                               | (label_prefix,label_suffix) ->
                                   let caption =
-                                    let uu____19038 =
+                                    let uu____19037 =
                                       FStar_Options.log_queries ()  in
-                                    if uu____19038
+                                    if uu____19037
                                     then
-                                      let uu____19043 =
-                                        let uu____19044 =
-                                          let uu____19046 =
+                                      let uu____19042 =
+                                        let uu____19043 =
+                                          let uu____19045 =
                                             FStar_Syntax_Print.term_to_string
                                               q1
                                              in
                                           Prims.op_Hat
                                             "Encoding query formula: "
-                                            uu____19046
+                                            uu____19045
                                            in
                                         FStar_SMTEncoding_Term.Caption
-                                          uu____19044
+                                          uu____19043
                                          in
-                                      [uu____19043]
+                                      [uu____19042]
                                     else []  in
                                   let query_prelude =
-                                    let uu____19054 =
-                                      let uu____19055 =
-                                        let uu____19056 =
-                                          let uu____19059 =
+                                    let uu____19053 =
+                                      let uu____19054 =
+                                        let uu____19055 =
+                                          let uu____19058 =
                                             FStar_All.pipe_right label_prefix
                                               FStar_SMTEncoding_Term.mk_decls_trivial
                                              in
-                                          let uu____19066 =
-                                            let uu____19069 =
+                                          let uu____19065 =
+                                            let uu____19068 =
                                               FStar_All.pipe_right caption
                                                 FStar_SMTEncoding_Term.mk_decls_trivial
                                                in
                                             FStar_List.append qdecls
-                                              uu____19069
+                                              uu____19068
                                              in
-                                          FStar_List.append uu____19059
-                                            uu____19066
+                                          FStar_List.append uu____19058
+                                            uu____19065
                                            in
                                         FStar_List.append env_decls
-                                          uu____19056
+                                          uu____19055
                                          in
-                                      FStar_All.pipe_right uu____19055
+                                      FStar_All.pipe_right uu____19054
                                         (recover_caching_and_update_env env1)
                                        in
-                                    FStar_All.pipe_right uu____19054
+                                    FStar_All.pipe_right uu____19053
                                       FStar_SMTEncoding_Term.decls_list_of
                                      in
                                   let qry =
-                                    let uu____19079 =
-                                      let uu____19087 =
+                                    let uu____19078 =
+                                      let uu____19086 =
                                         FStar_SMTEncoding_Util.mkNot phi1  in
-                                      let uu____19088 =
+                                      let uu____19087 =
                                         FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
                                           "@query"
                                          in
-                                      (uu____19087,
+                                      (uu____19086,
                                         (FStar_Pervasives_Native.Some "query"),
-                                        uu____19088)
+                                        uu____19087)
                                        in
                                     FStar_SMTEncoding_Util.mkAssume
-                                      uu____19079
+                                      uu____19078
                                      in
                                   let suffix =
                                     FStar_List.append

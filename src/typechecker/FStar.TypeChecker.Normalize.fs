@@ -1123,6 +1123,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack (mk (Tm_type u) t.pos)
 
           | Tm_uinst(t', us) ->
+            // preserve the range info
+            let t' = Subst.set_use_range t.pos t' in
             if cfg.steps.erase_universes
             then norm cfg env stack t'
             else let us = UnivArgs(List.map (norm_universe cfg env) us, t.pos) in
@@ -1447,13 +1449,7 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
          // preserve the range info on the returned term
-         let t =
-           if cfg.steps.unfold_until = Some delta_constant
-           //we're really trying to compute here; no point propagating range information
-           //which can be expensive
-           then t
-           else Subst.set_use_range t0.pos t
-         in
+         let t = Subst.set_use_range t0.pos t in
          let n = List.length us in
          if n > 0
          then match stack with //universe beta reduction

@@ -1275,9 +1275,10 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     ] in
 
     let rec fallback phi =  match phi.n with
-        | Tm_meta(phi', Meta_labeled(msg, r, b)) ->
+        | Tm_meta(phi', Meta_labeled(msg, r', b)) ->
+          let r = phi.pos in
           let phi, decls = encode_formula phi' env in
-          mk (Term.Labeled(phi, msg, r)) r, decls
+          mk (Term.Labeled(phi, msg, r')) r, decls
 
         | Tm_meta _ ->
           encode_formula (U.unmeta phi) env
@@ -1355,13 +1356,13 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | Some (U.QAll(vars, pats, body)) ->
           pats |> List.iter (check_pattern_vars env vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
-          let tm = mkForall phi.pos (pats, vars, mkImp(guard, body)) in
+          let tm = mkForall body.rng (pats, vars, mkImp(guard, body)) in
           tm, decls
 
         | Some (U.QEx(vars, pats, body)) ->
           pats |> List.iter (check_pattern_vars env vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
-          mkExists phi.pos (pats, vars, mkAnd(guard, body)), decls
+          mkExists body.rng (pats, vars, mkAnd(guard, body)), decls
 
 (***************************************************************************************************)
 (* end main encoding of kinds/types/exps/formulae *)
