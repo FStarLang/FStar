@@ -81,4 +81,4 @@ let deflookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
   match symlookup st "" (Some (uri_to_path pos.uri, pos.line, pos.col)) ["defined-at"] with
   | Some { slr_name = _; slr_def_range = (Some r); slr_typ = _; slr_doc = _; slr_def = _ } ->
       Inl (JsonAssoc [("result", js_range r)])
-  | None -> Inr (js_resperr InternalError "symlookup failed")
+  | _ -> Inr (js_resperr InternalError "symlookup failed")

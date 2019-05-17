@@ -13,8 +13,8 @@ open FStar.TypeChecker.Env
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
-val try_assoc : string -> list<(string * 'a)> -> option<'a> // nothrow
-val assoc : string -> list <(string * 'a)> -> 'a // throw
+val try_assoc : string -> list<(string * json)> -> option<json> // nothrow
+val assoc : string -> list<(string * json)> -> json // throw
 
 // All exceptions are guaranteed to be caught in the LSP server implementation
 exception MissingKey of string // Only in LSP

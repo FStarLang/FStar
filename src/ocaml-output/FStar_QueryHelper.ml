@@ -171,8 +171,8 @@ let (deflookup :
               [uu____899] in
             FStar_Util.JsonAssoc uu____891 in
           FStar_Util.Inl uu____890
-      | FStar_Pervasives_Native.None ->
-          let uu____918 =
+      | uu____918 ->
+          let uu____921 =
             FStar_JsonHelper.js_resperr FStar_JsonHelper.InternalError
               "symlookup failed" in
-          FStar_Util.Inr uu____918
+          FStar_Util.Inr uu____921
