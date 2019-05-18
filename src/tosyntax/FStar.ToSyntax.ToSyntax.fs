@@ -1826,7 +1826,7 @@ and desugar_formula env (f:term) : S.term =
           (fun es -> es |> List.map
                   (fun e -> arg_withimp_t Nothing <| desugar_term env e))
         in
-        mk (Tm_meta (body, Meta_pattern (names, pats)))  // TODO
+        mk (Tm_meta (body, Meta_pattern (names, pats, np)))
     in
     match tk with
       | Some a, k ->

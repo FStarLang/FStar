@@ -451,12 +451,12 @@ let gen_wps_for_free
                           k_tm
                           (S.bv_to_name (fst post)) in
         match U.destruct_typ_as_formula eq with
-        | Some (QAll (binders, [], body)) ->
+        | Some (QAll (binders, np, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
           let guard_free =  S.fv_to_tm (S.lid_as_fv PC.guard_free delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body =
-            mk (Tm_meta (body, Meta_pattern(binders_to_names binders, [[as_arg pat]]))) in
+            mk (Tm_meta (body, Meta_pattern(binders_to_names binders, [[as_arg pat]], np))) in
           U.close_forall_no_univs binders pattern_guarded_body
         | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula"
     in

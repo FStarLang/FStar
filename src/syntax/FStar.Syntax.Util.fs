@@ -1358,8 +1358,8 @@ let is_free_in (bv:bv) (t:term) : bool =
 (**************************************************************************************)
 type qpats = list<args>
 type connective =
-    | QAll of binders * qpats * typ
-    | QEx of binders * qpats * typ
+    | QAll of binders * bool * qpats * typ
+    | QEx of binders * bool * qpats * typ
     | BaseConn of lident * args
 
 let destruct_typ_as_formula f : option<connective> =
@@ -1397,8 +1397,8 @@ let destruct_typ_as_formula f : option<connective> =
     let patterns t =
         let t = compress t in
         match t.n with
-            | Tm_meta(t, Meta_pattern (_, pats)) -> pats, compress t
-            | _ -> [], t in
+            | Tm_meta(t, Meta_pattern (_, pats, np)) -> pats, compress t, np
+            | _ -> [], t, false in
 
     let destruct_q_conn t =
         let is_q (fa:bool) (fv:fv) : bool =
@@ -1424,10 +1424,10 @@ let destruct_typ_as_formula f : option<connective> =
             | Some b, _ ->
               let bs = List.rev out in
               let bs, t = Subst.open_term bs t in
-              let pats, body = patterns t in
+              let pats, body, np = patterns t in
               if b
-              then Some (QAll(bs, pats, body))
-              else Some  (QEx(bs, pats, body))
+              then Some (QAll(bs, np, pats, body))
+              else Some  (QEx(bs, np, pats, body))
 
             | _ -> None in
         aux None [] t in
@@ -1488,8 +1488,8 @@ let destruct_typ_as_formula f : option<connective> =
                 let q = (comp_to_comp_typ_nouniv c).result_typ in
                 if is_free_in (fst b) q
                 then (
-                    let pats, q = patterns q in
-                    maybe_collect <| Some (QAll([b], pats, q))
+                    let pats, q, np = patterns q in
+                    maybe_collect <| Some (QAll([b], np, pats, q))
                 ) else (
                     // Since we know it's not free, we can just open and discard the binder
                     Some (BaseConn (PC.imp_lid, [as_arg (fst b).sort; as_arg q]))
@@ -1508,21 +1508,21 @@ let destruct_typ_as_formula f : option<connective> =
                             | [b] -> b
                             | _ -> failwith "impossible"
                     in
-                    let pats, q = patterns q in
-                    maybe_collect <| Some (QEx ([b], pats, q))
+                    let pats, q, np = patterns q in
+                    maybe_collect <| Some (QEx ([b], np, pats, q))
                 | _ -> None
                 end
         | _ -> None)
     and maybe_collect f =
         match f with
-        | Some (QAll (bs, pats, phi)) ->
+        | Some (QAll (bs, np, pats, phi)) ->
             begin match destruct_sq_forall phi with
-            | Some (QAll (bs', pats', psi)) -> Some <| QAll(bs@bs', pats@pats', psi)
+            | Some (QAll (bs', _, pats', psi)) -> Some <| QAll(bs@bs', np, pats@pats', psi) // To review: Do we need to check nopattern consistency?
             | _ -> f
             end
-        | Some (QEx (bs, pats, phi)) ->
+        | Some (QEx (bs, np, pats, phi)) ->
             begin match destruct_sq_exists phi with
-            | Some (QEx (bs', pats', psi)) -> Some <| QEx(bs@bs', pats@pats', psi)
+            | Some (QEx (bs', _, pats', psi)) -> Some <| QEx(bs@bs', np, pats@pats', psi) // To review: Do we need to check nopattern consistency?
             | _ -> f
             end
         | _ -> f
@@ -1951,7 +1951,7 @@ let rec unbound_variables tm :  list<bv> =
       | Tm_meta(t, m) ->
         unbound_variables t
         @ (match m with
-           | Meta_pattern (_, args) ->
+           | Meta_pattern (_, args, _) ->
              List.collect (List.collect (fun (a, _) -> unbound_variables a)) args
 
            | Meta_monadic_lift(_, _, t')
@@ -2090,7 +2090,7 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>
     in
     (* Postcondition is thunked, c.f. #57 *)
     let post = unthunk_lemma_post post in
-    let body = mk (Tm_meta (mk_imp pre post, Meta_pattern (binders_to_names binders, patterns))) None t.pos in
+    let body = mk (Tm_meta (mk_imp pre post, Meta_pattern (binders_to_names binders, patterns, false))) None t.pos in
     let quant =
       List.fold_right2
         (fun b u out -> mk_forall u (fst b) out)
