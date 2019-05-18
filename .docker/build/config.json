@@ -27,7 +27,7 @@
     "FolderToCompress" : "FStar",
     "FoldersToExclude" : [ ],
 
-    "TrackPerformance" : false,
+    "TrackPerformance" : true,
 
     "RepoVersions" : {
         "hacl_version" : "origin/fstar-master",

@@ -1,0 +1,53 @@
+[
+  "¡\u0018Ž}\t»s¬Eð%ë0d8©",
+  [
+    [
+      "PoseLemma.test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "aa40f05eef4617fd944fc31330c030f1"
+    ],
+    [
+      "PoseLemma.test2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "bc1f77601d253999597c8eb4e5e90d3c"
+    ],
+    [
+      "PoseLemma.test1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "2a87f65dfc250b85dc07877c0594c1ca"
+    ],
+    [
+      "PoseLemma.test2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "6ac371a20aacc7c66e89f7b24b8a6d92"
+    ]
+  ]
+]
