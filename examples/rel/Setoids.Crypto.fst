@@ -121,7 +121,7 @@ let key_gen (h:handle) : eff (key_state 1) handle =
     | false,false ->
       k <-- sample ;
       let s':key_state 1 = (Map.upd h_map h true, Map.upd k_map h (Seq.create 1 k <: Seq.lseq byte 1)) in
-      //set s' ;
+      set s' ;;
       return h
     | _,_ ->
       raise
@@ -132,7 +132,7 @@ let key_set (h:handle) (k_in:Seq.lseq byte 1) : eff (key_state 1) handle =
     match Map.contains h_map h,Map.contains k_map h with
     | false,false ->
       let s':key_state 1 = (Map.upd h_map h true, Map.upd k_map h k_in) in
-      //set s' ;
+      set s' ;;
       return h
     | _,_ ->
       raise
@@ -143,11 +143,12 @@ let key_cset (h:handle) (k_in:Seq.lseq byte 1) : eff (key_state 1) handle =
     match Map.contains h_map h,Map.contains k_map h with
     | false,false ->
       let s':key_state 1 = (Map.upd h_map h false, Map.upd k_map h k_in) in
-      //set s' ;
+      set s' ;;
       return h
     | _,_ ->
       raise
 
+let key_get_t = handle -> eff (key_state 1) (key 1)
 let key_get (h:handle) : eff (key_state 1) (key 1) =
     s <-- get ;
     let (h_map,k_map) = s in
@@ -158,6 +159,7 @@ let key_get (h:handle) : eff (key_state 1) (key 1) =
     | _,_ ->
       raise
 
+let key_hon_t = handle -> eff (key_state 1) bool
 let key_hon (h:handle) : eff (key_state 1) bool =
     s <-- get ;
     let (h_map,k_map) = s in
@@ -167,6 +169,24 @@ let key_hon (h:handle) : eff (key_state 1) bool =
       return honest
     | _,_ ->
       raise
+
+type key_labels =
+    | GET
+    | HON
+
+let key_field_types: key_labels -> Type =
+    function  GET -> key_get_t
+            | HON -> key_hon_t
+
+open Setoids
+
+#set-options "--z3rlimit 100"
+let field_rels : (k:key_labels -> erel (key_field_types k)) =
+  function
+    | GET -> arrow (lo handle) (st_rel state_rel (lo key))
+    | HON -> arrow (lo handle) (st_rel state_rel (lo bool))
+
+//let key_module
 
 ////////////////////////////////////////////////////////////////////////////////
 //AE package
