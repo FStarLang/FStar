@@ -121,7 +121,8 @@ let reveal_rst_inv ()
 // Monotonic WPs for RSTATE
 let rstate_wp (a:Type) (res0:resource) (res1:a -> resource) = 
   wp:((x:a -> imem (inv (res1 x)) -> Type0) -> imem (inv res0) -> Type0){
-      forall (p q:(x:a -> imem (inv (res1 x)) -> Type0)) h0 . (forall x h1 . p x h1 ==> q x h1) ==> wp p h0 ==> wp q h0
+      forall (p q:(x:a -> imem (inv (res1 x)) -> Type0)) h0 . 
+        (forall x h1 . p x h1 ==> q x h1) ==> wp p h0 ==> wp q h0
     }
 
 effect RSTATE (a:Type)
@@ -206,7 +207,7 @@ let frame (#outer0:resource)
         : RSTATE a outer0 outer1 (frame_wp delta wp) =
   reveal_view ();
   f ()
-  
+
 (* Generic framing operation for RST (through resource inclusion) *)
 
 unfold
