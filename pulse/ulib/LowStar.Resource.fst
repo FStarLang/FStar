@@ -204,3 +204,17 @@ let can_be_split_into_empty_right (res:resource)
   : Lemma (res `can_be_split_into` (res,empty_resource))
           [SMTPat (res `can_be_split_into` (res,empty_resource))] =
   ()
+
+(* Equivalence relation (extensional equality) on resources *)
+
+let equal (res1 res2:resource) =
+    res1 `can_be_split_into` (res2,empty_resource)
+
+let equal_refl (res:resource) 
+  : Lemma (equal res res) =
+  ()
+
+let equal_trans (res1 res2 res3:resource) 
+  : Lemma (requires (equal res1 res2 /\ equal res2 res3))
+          (ensures  (equal res1 res3)) = 
+  ()
