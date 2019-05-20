@@ -170,37 +170,14 @@ let empty_resource : resource =
     view = view
   }
 
-(* Constructive resource inclusion *)
+(* Splitting resources into smaller constituents. Its main use 
+   case is for stating resource inclusion for framing, where by 
+   
+     res1 `can_be_split_into` (res2,res3)
 
-let r_includes outer inner = 
-  delta:resource {
-    // Footprint of the outer resource is union of delta and the inner resource
-    as_loc (fp outer) == B.loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
-    // Outer invariant is equivalent to delta and the inner invariant (when they are disjoint)
-    (forall h . inv outer h <==> inv inner h /\ inv delta h /\ r_disjoint delta inner)
-  }
-
-(* Left and right inclusions for separating conjunction *)
-
-let star_includes_left (#res1:resource) (res2:resource)
-                     : r_includes (res1 <*> res2) res1 = 
-  res2
-
-let star_includes_right (#res1:resource) (res2:resource)
-                      : r_includes (res2 <*> res1) res1 = 
-  res2
-
-(* Left and right inclusions for the empty resource *)
-
-let star_includes_empty_left (#res:resource)
-                           : r_includes res (empty_resource <*> res) =
-  empty_resource
-
-let star_includes_empty_right (#res:resource)
-                           : r_includes res (res <*> empty_resource) =
-  empty_resource
-
-(* Constructive resource inclusion v2 *)
+   we intuitively mean that the inner (re framing) resource res2 
+   is included in the outer (re framing) resource res1, as 
+   witnessed by res3 that is the formal delta-resource res3. *)
 
 let can_be_split_into (outer:resource) ((inner,delta):resource & resource) = 
     // Footprint of the outer resource is union of delta and the inner resource
@@ -208,35 +185,23 @@ let can_be_split_into (outer:resource) ((inner,delta):resource & resource) =
     // Outer invariant is equivalent to delta and the inner invariant (when they are disjoint)
     (forall h . inv outer h <==> inv inner h /\ inv delta h /\ r_disjoint delta inner)
 
-(* Left and right inclusions for separating conjunction v2 *)
-
 let star_can_be_split_into_parts (res1 res2:resource)
   : Lemma ((res1 <*> res2) `can_be_split_into` (res1,res2))
-          [SMTPat (can_be_split_into (res1 <*> res2) (res1,res2))]= 
+          [SMTPat (can_be_split_into (res1 <*> res2) (res1,res2))] = 
   ()
 
 let star_can_be_split_into_parts' (res1 res2:resource)
   : Lemma (can_be_split_into (res1 <*> res2) (res2,res1))
-          [SMTPat ((res1 <*> res2) `can_be_split_into` (res2,res1))]= 
+          [SMTPat ((res1 <*> res2) `can_be_split_into` (res2,res1))] = 
   ()
 
+let can_be_split_into_empty_left (res:resource)
+  : Lemma (res `can_be_split_into` (empty_resource,res)) 
+          [SMTPat (res `can_be_split_into` (empty_resource,res))] =
+  ()
 
+let can_be_split_into_empty_right (res:resource)
+  : Lemma (res `can_be_split_into` (res,empty_resource))
+          [SMTPat (res `can_be_split_into` (res,empty_resource))] =
+  ()
 
-
-
-
-
-
-//WIP: Will disappear soon
-
-(* Weaker form of resource inclusion (with invariant inclusion instead of equivalence) *)
-
-let r_weakly_includes outer inner = 
-  delta:resource {
-    // Delta is disjoint from the inner resource
-    r_disjoint delta outer /\
-    // Footprint of the outer resource is union of delta and the inner resource
-    as_loc (fp outer) == B.loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
-    // Outer invariant (only) implies the delta and the inner invariant
-    (forall h . inv outer h ==> inv inner h /\ inv delta h)
-  }
