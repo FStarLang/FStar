@@ -1405,7 +1405,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           // normalization might remove bv from args if the bv is
                           // not referenced in args, thus cause args to become
                           // invalid patterns
-                          let args = PI.remove_invalid_pattern names args in
+                          let args = if Options.auto_patterns() then PI.remove_invalid_pattern names args else args in
                           norm cfg env (Meta(env, Meta_pattern(names, args, np), t.pos)::stack) head
                           //meta doesn't block reduction, but we need to put the label back
 
