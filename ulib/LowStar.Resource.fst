@@ -204,4 +204,3 @@ let can_be_split_into_empty_right (res:resource)
   : Lemma (res `can_be_split_into` (res,empty_resource))
           [SMTPat (res `can_be_split_into` (res,empty_resource))] =
   ()
-
