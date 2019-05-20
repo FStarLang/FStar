@@ -31,6 +31,7 @@ open Point
 
 let move_test (p:point)
   : RST unit (as_resource (point_view p))
+             (fun _ -> as_resource (point_view p))
              (fun _ -> True)
              (fun h0 _ h1 -> 
                 sel_x p h0 == sel_x p h1 /\
@@ -54,22 +55,43 @@ let move_test (p:point)
 
 (* Allocating two pointers, packing them up as a point, and calling move *)
 
-let move_test_alloc ()
-  : RST unit empty_resource (fun _ -> True) (fun _ _ _ -> True) =
-  with_new_ptr #empty_resource 4 #_ #(fun _ -> True) #(fun _ _ _ -> True) 
-  (fun x -> 
-    frame (star_includes_right empty_resource) 
-    (fun _ -> 
-      (
-        with_new_ptr #(ptr_resource x) 2 #_ #(fun _ -> True) #(fun _ _ _ -> True) 
-        (fun y -> 
-          reveal_ptr ();
-          reveal_star ();
-          let p = mk_point x y in
-          frame (pack_point x y) (fun _ -> 
-            move_test p
-          )
-        )
-      ) <: RST unit (ptr_resource x) (fun _ -> True) (fun _ _ _ -> True)
-    )
-  )
+let alloc_move_test ()
+  : RST unit empty_resource
+             (fun _ -> empty_resource)
+             (fun _ -> True)
+             (fun _ _ _ -> True) = 
+  // allocate two pointers (with values 4 and 2)
+  let ptr1 = rst_frame 
+               #empty_resource #_ #_ #(fun ptr1 -> ptr_resource ptr1)
+               empty_resource 
+               (fun _ -> ptr_alloc 4) in
+  let ptr2 = rst_frame 
+               #(ptr_resource ptr1) #_ #_ #(fun ptr2 -> ptr_resource ptr1 <*> ptr_resource ptr2)
+               (ptr_resource ptr1) 
+               (fun _ -> ptr_alloc 2) in
+  // pack the pointers up as a point
+  let p = pack ptr1 ptr2 in 
+  // call the test function on the point
+  move_test p;
+  // unpack the point as two pointers
+  let (ptr1,ptr2) = unpack p in 
+  // read the values of the two pointers
+  let x = rst_frame #(ptr_resource ptr1 <*> ptr_resource ptr2) #_ #_
+                    #(fun _ -> ptr_resource ptr1 <*> ptr_resource ptr2)
+                    (ptr_resource ptr2) 
+                    (fun _ -> ptr_read ptr1) in 
+  let y = rst_frame #(ptr_resource ptr1 <*> ptr_resource ptr2) #_ #_
+                    #(fun _ -> ptr_resource ptr1 <*> ptr_resource ptr2)
+                    (ptr_resource ptr1) 
+                    (fun _ -> ptr_read ptr2) in 
+  // check that the values of the unpacked pointers are also 4 and 2
+  assert (x = 4 /\ y = 2);
+  // deallocate the two pointers
+  rst_frame #(ptr_resource ptr1 <*> ptr_resource ptr2) #_ #_ 
+            #(fun _ -> ptr_resource ptr1)
+            (ptr_resource ptr1) 
+            (fun _ -> ptr_free ptr2);
+  rst_frame #(ptr_resource ptr1) #_ #_ 
+            #(fun _ -> empty_resource)
+            (empty_resource) 
+            (fun _ -> ptr_free ptr1)
