@@ -69,7 +69,6 @@ various F* announcements are made to the general public (e.g. for
 releases, new papers, etc) and where users can ask questions, ask for
 help, discuss, provide feedback, announce jobs requiring at least 10
 years of F* experience, etc.
-
 [List archives] are public and [searchable], but only members can post.
 [Join here][fstar-club mailing list]!
 
@@ -99,27 +98,11 @@ that your problem still exists on the `master` branch.
 
 ### Contributing
 
-See [CONTRIBUTIONS.md](https://github.com/FStarLang/FStar/blob/master/CONTRIBUTIONS.md)
+See [CONTRIBUTING.md](https://github.com/FStarLang/FStar/blob/master/CONTRIBUTING.md)
 
 ### License
 
-This new variant of F* is released under the [Apache 2.0 license];
-see `LICENSE` for more details.
+F* is released under the [Apache 2.0 license]; for more details
+see [LICENSE](https://github.com/FStarLang/FStar/blob/master/LICENSE)
 
 [Apache 2.0 license]: https://www.apache.org/licenses/LICENSE-2.0
-
-### Towards F* version 1.0
-
-This is a new variant of F* (carrying version 0.9.x) that is still in
-development and we hope will eventually lead to a 1.0 release. This
-new variant is incompatible and quite different compared to the
-previously released [0.7 versions and earlier].
-
-[0.7 versions and earlier]: https://github.com/FStarLang/FStar#old-f-versions-v071-and-earlier
-
-### Old F* versions (v0.7.1 and earlier) ###
-
-[F\* v0.7.1] and earlier are no longer maintained, so please do not
-create any issues here about those versions.
-
-[F\* v0.7.1]: https://github.com/FStarLang/FStar/blob/stratified_last/.old/fstar-0.7.1-alpha.zip?raw=true
