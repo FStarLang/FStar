@@ -28,11 +28,6 @@ open LowStar.Resource
         library (Nik and/or Tahina will look into adding it to buffers library). 
         There are some other such assumed dotter around the RST development.] *)
 
-assume val lemma_loc_not_unused_in_modifies (l0 l1:B.loc) (h0 h1:HS.mem)
-  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l0 /\ 
-                     B.loc_includes l1 l0 /\ B.modifies l1 h0 h1))
-          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l1))
-
 assume val lemma_modifies_loc_disjoint (l0 l1:B.loc) (h0 h1 h2:HS.mem) 
   : Lemma (requires (B.modifies l0 h0 h1 /\
                      B.modifies l1 h1 h2 /\ 
@@ -53,7 +48,15 @@ assume val lemma_loc_disjoint_not_unused_in_modifies (h0 h1:HS.mem) (l l':B.loc)
            SMTPat (B.loc_includes (B.loc_not_unused_in h1) l')]
 
 (*
-// [DA: would be needed for scoped allocation of stack-allocated pointers]
+// [DA: other extra lemmas that were assumed at various states of 
+        development; the last two might still be needed for scoped 
+        allocation of stack-allocated pointers/buffers/etc]
+        
+assume val lemma_loc_not_unused_in_modifies (l0 l1:B.loc) (h0 h1:HS.mem)
+  : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l0 /\ 
+                     B.loc_includes l1 l0 /\ B.modifies l1 h0 h1))
+          (ensures  (B.loc_includes (B.loc_not_unused_in h1) l1))
+
 assume val lemma_loc_not_unused_in_fresh_frame (l:B.loc) (h0 h1:HS.mem) 
   : Lemma (requires (B.loc_includes (B.loc_not_unused_in h0) l /\ HS.fresh_frame h0 h1))
           (ensures  (B.loc_includes (B.loc_not_unused_in h1) l)) 
