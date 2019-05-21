@@ -577,9 +577,13 @@ let __tc_lax (e : env) (t : term) : tac<(term * lcomp * guard_t)> =
            end))
 
 let istrivial (e:env) (t:term) : bool =
-    let steps = [Env.Reify; Env.UnfoldUntil delta_constant; Env.Primops; Env.Simplify; Env.UnfoldTac; Env.Unmeta] in
-    let t = normalize steps e t in
-    is_true t
+    let steps = [Env.Eager_unfolding true;
+                 Env.Simplify;
+                 Env.Primops;
+                 Env.Unmeta;
+                 Env.Exclude Env.Zeta] in
+    let t1 = N.normalize steps e t in
+    is_true t1
 
 let get_guard_policy () : tac<guard_policy> =
     bind get (fun ps -> ret ps.guard_policy)
@@ -983,7 +987,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     | _ -> false
     in
     bind (cur_goal ()) (fun goal ->
+    mlog (fun () -> BU.print1 "apply_lemma: goal = %s\n" (goal_to_string_verbose goal)) (fun _ ->
     bind (__tc (goal_env goal) tm) (fun (tm, t, guard) ->
+    mlog (fun () -> BU.print2 "apply_lemma: tc_goal = %s, %s\n" (Print.term_to_string tm) (Print.term_to_string t)) (fun _ ->
     let bs, comp = U.arrow_formals_comp t in
     match lemma_or_sq comp with
     | None -> fail "not a lemma or squashed function"
@@ -1002,6 +1008,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
        ([], [], [])
        bs)
     (fun (uvs, implicits, subst) ->
+    mlog (fun () -> BU.print1 "apply_lemma: subst = %s" (Print.subst_to_string subst)) (fun _ ->
     let implicits = List.rev implicits in
     let uvs = List.rev uvs in
     let pre  = SS.subst subst pre in
@@ -1065,11 +1072,12 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         in
         let sub_goals = filter' (fun g goals -> not (checkone (goal_witness g) goals)) sub_goals in
         bind (proc_guard "apply_lemma guard" (goal_env goal) guard) (fun _ ->
+        mlog (fun () -> BU.print1 ">>>apply_lemma proc_guard done ... guard = %s\n" (Print.term_to_string pre)) (fun _ ->
         bind (if not (istrivial (goal_env goal) (U.mk_squash U_zero pre)) //lemma preconditions are in U_zero
               then add_irrelevant_goal "apply_lemma precondition" (goal_env goal) pre goal.opts goal.label
               else ret ()) (fun _ ->
         add_goals sub_goals))))
-    )))))))
+    )))))))))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
