@@ -1,0 +1,54 @@
+(*
+   Copyright 2008-2018 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+module FStar.Algebra.CommMonoid.Equiv
+
+open FStar.Mul
+
+unopteq
+type equiv (a:Type) =
+  | EQ :
+    eq:(a -> a -> Type0) -> 
+    reflexivity:(x:a -> Lemma (x `eq` x)) ->
+    symmetry:(x:a -> y:a -> Lemma (requires (x `eq` y)) (ensures (y `eq` x))) ->
+    transitivity:(x:a -> y:a -> z:a -> Lemma (requires (x `eq` y /\ y `eq` z)) (ensures (x `eq` z))) ->
+    equiv a
+
+let equality_equiv (a:Type) : equiv a =
+  EQ (fun x y -> x == y) (fun x -> ()) (fun x y -> ()) (fun x y z -> ())
+
+unopteq
+type cm (a:Type) (eq:equiv a) =
+  | CM :
+    unit:a ->
+    mult:(a -> a -> a) ->
+    identity : (x:a -> Lemma ((unit `mult` x) `EQ?.eq eq` x)) ->
+    associativity : (x:a -> y:a -> z:a ->
+                      Lemma ((x `mult` y `mult` z) `EQ?.eq eq` (x `mult` (y `mult` z)))) ->
+    commutativity:(x:a -> y:a -> Lemma ((x `mult` y) `EQ?.eq eq` (y `mult` x))) ->
+    congruence:(x:a -> y:a -> z:a -> w:a -> Lemma (requires (x `EQ?.eq eq` z /\ y `EQ?.eq eq` w)) (ensures ((mult x y) `EQ?.eq eq` (mult z w)))) ->
+    cm a eq
+
+let right_identity (#a:Type) (eq:equiv a) (m:cm a eq) (x:a) 
+  : Lemma (x `CM?.mult m` (CM?.unit m) `EQ?.eq eq` x) = 
+  CM?.commutativity m x (CM?.unit m); 
+  CM?.identity m x;
+  EQ?.transitivity eq (x `CM?.mult m` (CM?.unit m)) ((CM?.unit m) `CM?.mult m` x) x
+
+let int_plus_cm : cm int (equality_equiv int) =
+  CM 0 (+) (fun x -> ()) (fun x y z -> ()) (fun x y -> ()) (fun x y z w -> ())
+
+let int_multiply_cm : cm int (equality_equiv int) =
+  CM 1 ( * ) (fun x -> ()) (fun x y z -> ()) (fun x y -> ()) (fun x y z w -> ())
