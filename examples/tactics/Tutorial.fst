@@ -55,12 +55,13 @@ open FStar.List
 /// F*.
 ///
 /// So, enough talk, **what's the hello world of tactics?**
-/// The entry point for *proving* in tactics is `assert_by_tactic`,
+/// The entry point for *proving* in tactics is the `assert _ by _` form,
 /// which takes a tactic to be run on the goal to prove.
 
 val ex1 : unit -> Lemma True
 let ex1 () =
-    assert_by_tactic True idtac
+    assert True
+    by idtac()
 
 /// Here, ``idtac`` is the identity tactic, which does nothing. Certainly,
 /// ``True`` is a simple enough goal so this example succeeds. In between, the
@@ -71,7 +72,8 @@ let ex1 () =
 
 val ex2 : unit -> Lemma True
 let ex2 () =
-    assert_by_tactic True (fun () -> dump "Example 2")
+    assert True
+    by dump "Example 2"
 
 /// This yields the following::
 ///
@@ -109,10 +111,12 @@ let ex2 () =
 let tau3 () : Tac unit =
   Tactics.split ();
   smt ();
+  norm [delta; zeta; primops];
   trivial ()
 
 let ex3 (x : nat) =
-  assert_by_tactic (x + x >= 0 /\ List.length [4;5;1] == 3) tau3
+  assert (x + x >= 0 /\ List.length [4;5;1] == 3)
+      by tau3()
 
 /// First, we defined tau3 as a custom tactic, composed by applying ``split``,
 /// ``smt`` and ``trivial`` in that order. The ``tactic 'a`` type is a monad, and
@@ -186,14 +190,14 @@ let rec split_all () : Tac unit =
 /// We can use it for our previous example, or to break down bigger formulas.
 
 let ex3' (x : nat) =
-  assert_by_tactic (x + x >= 0 /\ List.length [4;5;1] == 3)
-                   split_all
+  assert (x + x >= 0 /\ List.length [4;5;1] == 3)
+      by split_all()
 
 let ex4 (x : nat) =
-  assert_by_tactic
+  assert
     ((1 + 1 == 2) /\
      ((-x <= 0 /\ x + x >= 0) /\
       List.length [4;5;1] == 3))
-    split_all
+     by split_all()
 
 /// Here, all of the conjuncts that remain are sent off separetely to the SMT solver.

@@ -65,9 +65,9 @@ which takes a tactic to be run on the goal to prove.
 
 *)
 
-val ex1 : unit -> Lemma True
-let ex1 () =
-    assert_by_tactic True idtac
+let ex1 () : Lemma True =
+    assert True
+       by idtac()
 
 (*
 Here, `idtac` is the identity tactic, which does nothing. Certainly,
@@ -78,9 +78,9 @@ the exact ``proofstate'' where the tactic runs to be printed in the
 standard output.
 *)
 
-val ex2 : unit -> Lemma True
-let ex2 () =
-    assert_by_tactic True (fun () -> dump "Example 2")
+let ex2 () : Lemma True =
+    assert True
+        by dump "Example 2"
 
 (* Gives:
 
@@ -121,10 +121,12 @@ and solve one of its subformulas.
 let tau3 () : Tac unit =
   Tactics.split ();
   smt ();
+  norm [delta; zeta; primops];
   trivial ()
 
 let ex3 (x : nat) =
-  assert_by_tactic (x + x >= 0 /\ List.length [4;5;1] == 3) tau3
+  assert (x + x >= 0 /\ List.length [4;5;1] == 3)
+      by tau3()
 
 (*
 First, we defined tau3 as a custom tactic, composed by applying `split`,
@@ -209,11 +211,11 @@ We can use it for our previous example, or to break down bigger formulas.
 *)
 
 let ex3' (x : nat) =
-  assert_by_tactic (x + x >= 0 /\ List.length [4;5;1] == 3)
-                   split_all
+  assert (x + x >= 0 /\ List.length [4;5;1] == 3)
+      by split_all()
 
 let ex4 (x : nat) =
-  assert_by_tactic ((1 + 1 == 2) /\ ((-x <= 0 /\ x + x >= 0) /\ List.length [4;5;1] == 3))
-                   split_all
+  assert ((1 + 1 == 2) /\ ((-x <= 0 /\ x + x >= 0) /\ List.length [4;5;1] == 3))
+      by split_all()
 
 (* Here, all of the conjuncts that remain are sent off separetely to the SMT solver. *)

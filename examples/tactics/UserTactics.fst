@@ -17,17 +17,19 @@ module UserTactics
 open FStar.Tactics
 
 let test_print_goal =
-  assert_by_tactic (forall (y:int). y==0 ==> 0==y)
-                   (fun () -> debug "User debug:") //Some auto-thunking or at least some light notation for it
+  assert (forall (y:int). y==0 ==> 0==y)
+      by debug "User debug:"
 
 let test_or_else =
-    assert_by_tactic True (fun () -> or_else (fun () -> fail "failed") idtac)
+    assert True
+       by or_else (fun () -> fail "failed") idtac
 
 type t = | A | B | C | D
 let f x = match x with | A -> 0 | B -> 1 | C -> 2 | D -> 3
 
 let test_trivial =
-    assert_by_tactic ((f A == 0) /\ (f B == 1) /\ (f C == 2) /\ (f D == 3)) trivial
+    assert ((f A == 0) /\ (f B == 1) /\ (f C == 2) /\ (f D == 3))
+        by (norm [delta; primops; simplify]; trivial())
 
 (* let simple_equality_assertions = *)
   (* assert_by_tactic (forall (y:int). y==0 ==> 0==y) *)
@@ -39,13 +41,13 @@ let test_trivial =
 
 let visible_boolean (x:int) = true
 let explicitly_trigger_normalizer =
-  assert_by_tactic (visible_boolean 0 /\ visible_boolean 1)
-                   (fun () -> seq split trivial) //without the "trivial", the visible_boolean will go to Z3
+  assert (visible_boolean 0 /\ visible_boolean 1)
+      by (seq split (fun () -> norm [delta]; trivial())) //without the "trivial", the visible_boolean will go to Z3
 
 unfold let unfoldable_predicate (x:int) = True
 let implicitly_unfolfed_before_preprocessing =
-  assert_by_tactic (unfoldable_predicate 0 /\ visible_boolean 2)
-                   smt //only "b2t (visible_boolean 2)" goes to SMT
+  assert (unfoldable_predicate 0 /\ visible_boolean 2)
+      by smt() //only "b2t (visible_boolean 2)" goes to SMT
 
 let visible_predicate (x:int) = True
 (* let simple_equality_assertions_within_a_function () = *)
@@ -57,7 +59,8 @@ let visible_predicate (x:int) = True
 (*                    (visit (unfold_definition_and_simplify_eq (quote visible_predicate))) *)
 
 let local_let_bindings =
-  assert_by_tactic (let x = 10 in x + 0 == 10) trivial
+  assert (let x = 10 in x + 0 == 10)
+      by trivial()
 
 assume type pred_1 : int -> Type0
 assume Pred1_saturated: forall x. pred_1 x
@@ -83,12 +86,12 @@ let lemma_mul_comm x y = ()
 let sqintro (x:'a) : squash 'a = ()
 
 let test_exact (x:nat) (y:nat) =
-  assert_by_tactic (op_Multiply x y == op_Multiply y x)
-                   (fun () -> exact (quote (sqintro (mul_comm x y))))
+  assert (op_Multiply x y == op_Multiply y x)
+      by exact (quote (sqintro (mul_comm x y)))
 
 let test_apply (x:nat) (y:nat) =
-  assert_by_tactic (op_Multiply x y == op_Multiply y x)
-                   (fun () -> apply_lemma (quote lemma_mul_comm))
+  assert (op_Multiply x y == op_Multiply y x)
+      by apply_lemma (quote lemma_mul_comm)
 
 let mul_commute_ascription () : Tac unit =
     let g = cur_goal () in
@@ -99,7 +102,8 @@ let mul_commute_ascription () : Tac unit =
         fail "Not an equality"
 
 let test_apply_ascription' (x:nat) (y:nat) =
-  assert_by_tactic (op_Multiply x y == op_Multiply y x) (fun () -> visit idtac)
+  assert (op_Multiply x y == op_Multiply y x)
+      by visit idtac
 
 let test_apply_ascription (x:nat) (y:nat) =
   (assert (op_Multiply x y == op_Multiply y x))
@@ -113,31 +117,29 @@ let test_apply_ascription (x:nat) (y:nat) =
 (*   by (apply_lemma (quote lemma_mul_comm)) *)
 
 let test_inspect =
-  assert_by_tactic True
-                   (fun () ->
-                    let x = `8 in
-                    match inspect x with
-                    | Tv_App hd a -> debug "application"
-                    | Tv_Abs bv t -> debug "abstraction"
-                    | Tv_Arrow bv t -> debug "arrow"
-                    | Tv_Type _ -> debug "type"
-                    | Tv_Var _ -> debug "var"
-                    | Tv_FVar _ -> debug "fvar"
-                    | Tv_Refine _ _ -> debug "refinement"
-                    | Tv_Const C_Unit -> debug "unit"
-                    | Tv_Const (C_Int i) -> debug ("int: " ^ string_of_int i)
-                    | _ -> fail "unknown"
-                   )
+  assert True
+     by (let x = `8 in
+         match inspect x with
+         | Tv_App hd a -> debug "application"
+         | Tv_Abs bv t -> debug "abstraction"
+         | Tv_Arrow bv t -> debug "arrow"
+         | Tv_Type _ -> debug "type"
+         | Tv_Var _ -> debug "var"
+         | Tv_FVar _ -> debug "fvar"
+         | Tv_Refine _ _ -> debug "refinement"
+         | Tv_Const C_Unit -> debug "unit"
+         | Tv_Const (C_Int i) -> debug ("int: " ^ string_of_int i)
+         | _ -> fail "unknown")
+
 
 let test_simpl =
-    assert_by_tactic (True /\ 1 == 1)
-                     (fun () ->
-                      let g = cur_goal () in
-                      (match term_as_formula g with
-                      | And _ _ -> ()
-                      | _ -> dump "not a conjunction?");
-                      simpl ();
-                      let g = cur_goal () in
-                      (match term_as_formula g with
-                      | True_ -> ()
-                      | _ -> dump ("not true after simpl? " ^ term_to_string g)))
+    assert (True /\ 1 == 1)
+        by (let g = cur_goal () in
+            (match term_as_formula g with
+             | And _ _ -> ()
+             | _ -> dump "not a conjunction?");
+            simpl ();
+            let g = cur_goal () in
+            (match term_as_formula g with
+             | True_ -> ()
+             | _ -> dump ("not true after simpl? " ^ term_to_string g)))
