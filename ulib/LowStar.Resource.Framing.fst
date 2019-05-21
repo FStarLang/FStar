@@ -37,33 +37,11 @@ let rm : cm resource re =
 
 let sorted_atoms = List.sorted (fun (x y:atom) -> x <= y)
 
-let rec split_outer_resource_atoms (am:amap resource)
-                                   (xs:list atom{sorted_atoms xs}) 
-                                   (ys:list atom{sorted_atoms ys}) 
-  : Tac (delta:list atom{
-           xsdenote rm am xs `equal` (xsdenote rm am ys <*> xsdenote rm am delta)
-         }) = 
-  reveal_star ();
-  match xs,ys with
-  | xs' , [] -> xs'
-  | [] , ys' -> 
-      //TODO: fine-tuning needed to account for empty_resources' in ys
-      fail "inner resource shouldn't be larger than the outer resource"
-  | (x :: xs') , (y :: ys') -> 
-      if x = y
-      then (
-        let delta = split_outer_resource_atoms am xs' ys' in 
-        equal_comm_monoid_associativity (select y am) 
-                                        (xsdenote rm am ys') 
-                                        (xsdenote rm am delta);
-        delta
-      )
-      else (
-        if x > y 
-        then (
-          admit ()
-        )
-        else (
-          admit ()
-        )
-      )
+// TODO: this is an inefficient prototype, we ought to be able to do better later
+let split_outer_resource_atoms (outer:list atom) (inner:list atom) : list atom =
+  List.Tot.filter (fun x -> not (List.Tot.mem x inner)) outer
+
+let split_outer_resource_atoms_correct (am:amap resource) (outer:list atom) (inner:list atom)
+  : Lemma (let delta = split_outer_resource_atoms outer inner in
+           xsdenote rm am outer `equal` (xsdenote rm am inner <*> xsdenote rm am delta)) = 
+  admit ()
