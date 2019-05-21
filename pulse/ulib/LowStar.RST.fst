@@ -250,5 +250,4 @@ let rst_frame (#outer0:resource)
                     (frame_pre delta pre) 
                     (frame_post delta post) =
   reveal_view ();
-  let x = f () in 
-  x
+  f ()
