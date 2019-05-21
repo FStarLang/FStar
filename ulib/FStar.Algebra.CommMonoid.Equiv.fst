@@ -48,7 +48,7 @@ let right_identity (#a:Type) (eq:equiv a) (m:cm a eq) (x:a)
   EQ?.transitivity eq (x `CM?.mult m` (CM?.unit m)) ((CM?.unit m) `CM?.mult m` x) x
 
 let int_plus_cm : cm int (equality_equiv int) =
-  CM 0 (+) (fun x -> ()) (fun x y z -> ()) (fun x y -> ()) (fun x y z w -> ())
+  CM 0 (+) (fun _ -> ()) (fun _ _ _ -> ()) (fun _ _ -> ()) (fun _ _ _ _ -> ())
 
 let int_multiply_cm : cm int (equality_equiv int) =
-  CM 1 ( * ) (fun x -> ()) (fun x y z -> ()) (fun x y -> ()) (fun x y z w -> ())
+  CM 1 ( * ) (fun _ -> ()) (fun _ _ _ -> ()) (fun _ _ -> ()) (fun _ _ _ _ -> ())
