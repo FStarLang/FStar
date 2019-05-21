@@ -214,6 +214,11 @@ let equal_refl (res:resource)
   : Lemma (res `equal` res) =
   ()
 
+let equal_symm (res1 res2:resource)
+  : Lemma (requires (res1 `equal` res2))
+          (ensures  (res2 `equal` res1)) =
+  ()
+
 let equal_trans (res1 res2 res3:resource) 
   : Lemma (requires (res1 `equal` res2 /\ res2 `equal` res3))
           (ensures  (res1 `equal` res3)) =
@@ -236,3 +241,10 @@ let comm_monoid_commutativity (res1 res2:resource)
 let comm_monoid_associativity (res1 res2 res3:resource)
   : Lemma ((res1 <*> (res2 <*> res3)) `equal` ((res1 <*> res2) <*> res3)) =
   B.loc_union_assoc (as_loc (fp res1)) (as_loc (fp res2)) (as_loc (fp res3))
+
+(* `equal` is also a congruence wrt (empty_resource,<*>) *)
+
+let equal_cong (res1 res2 res3 res4:resource)
+  : Lemma (requires (res1 `equal` res3 /\ res2 `equal` res4))
+          (ensures  ((res1 <*> res2) `equal` (res3 <*> res4))) =
+  ()
