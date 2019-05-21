@@ -41,18 +41,19 @@ type point_view_t = {
 
 abstract
 let point_view (p:point) : view point_view_t = 
-  let fp = Ghost.hide (B.loc_union (B.loc_addr_of_buffer p.x) (B.loc_addr_of_buffer p.y)) in
+  let fp = fp ((ptr_resource p.x) <*> (ptr_resource p.y)) in
   let inv h = 
-    B.live h p.x /\ B.live h p.y /\ B.freeable p.x /\ B.freeable p.y /\ 
-    B.loc_disjoint (B.loc_addr_of_buffer p.x) (B.loc_addr_of_buffer p.y) 
+    inv (ptr_resource p.x) h /\ inv (ptr_resource p.y) h /\
+    r_disjoint (ptr_resource p.x) (ptr_resource p.y)
   in
   let sel (h:imem inv) = 
     { 
-      x_view = Seq.index (B.as_seq h p.x) 0; 
-      y_view = Seq.index (B.as_seq h p.y) 0
+      x_view = sel (ptr_view p.x) h; 
+      y_view = sel (ptr_view p.y) h
     } 
   in
   reveal_view ();
+  reveal_star ();
   {
     fp = fp;
     inv = inv;
@@ -82,10 +83,8 @@ let unpack (p:point)
         (fun h0 (x,y) h1 -> 
           sel_x p h0 = sel (ptr_view x) h1 /\ 
           sel_y p h0 = sel (ptr_view y) h1) = 
-  reveal_star ();
-  reveal_ptr ();
-  reveal_rst_inv ();
-  reveal_modifies ();
+  reveal_rst_inv ();  // should go away with abstract effects / effect layering
+  reveal_modifies (); // should go away with abstract effects / effect layering
   (p.x,p.y)
 
 let pack (x y:B.pointer int)
@@ -96,10 +95,8 @@ let pack (x y:B.pointer int)
         (fun h0 p h1 -> 
           sel_x p h1 = sel (ptr_view x) h0 /\ 
           sel_y p h1 = sel (ptr_view y) h0) = 
-  reveal_star ();
-  reveal_ptr ();
-  reveal_rst_inv ();
-  reveal_modifies ();
+  reveal_rst_inv ();  // should go away with abstract effects / effect layering
+  reveal_modifies (); // should go away with abstract effects / effect layering
   mk_point x y
 
 let get_x (p:point)
@@ -110,10 +107,8 @@ let get_x (p:point)
                sel_x p h1 = x /\
                sel_x p h1 = sel_x p h0 /\
                sel_y p h1 = sel_y p h0) = 
-  reveal_star ();
-  reveal_ptr ();
-  reveal_rst_inv ();
-  reveal_modifies ();
+  reveal_rst_inv ();  // should go away with abstract effects / effect layering
+  reveal_modifies (); // should go away with abstract effects / effect layering
   rst_frame #(ptr_resource p.x <*> ptr_resource p.y) #_ #_
             #(fun _ -> ptr_resource p.x <*> ptr_resource p.y)
             (ptr_resource p.y) 
@@ -127,10 +122,8 @@ let get_y (p:point)
                sel_x p h1 = sel_x p h0 /\
                sel_y p h1 = sel_y p h0 /\
                sel_y p h1 = y) = 
-  reveal_star ();
-  reveal_ptr ();
-  reveal_rst_inv ();
-  reveal_modifies ();
+  reveal_rst_inv ();  // should go away with abstract effects / effect layering
+  reveal_modifies (); // should go away with abstract effects / effect layering
   rst_frame #(ptr_resource p.x <*> ptr_resource p.y) #_ #_
             #(fun _ -> ptr_resource p.x <*> ptr_resource p.y)
             (ptr_resource p.x) 
@@ -143,10 +136,8 @@ let set_x (p:point) (x:int)
              (fun h0 _ h1 -> 
                 sel_x p h1 = x /\
                 sel_y p h1 = sel_y p h0) = 
-  reveal_star ();
-  reveal_ptr ();
-  reveal_rst_inv ();
-  reveal_modifies ();
+  reveal_rst_inv ();  // should go away with abstract effects / effect layering
+  reveal_modifies (); // should go away with abstract effects / effect layering
   rst_frame #(ptr_resource p.x <*> ptr_resource p.y) #_ #_
             #(fun _ -> ptr_resource p.x <*> ptr_resource p.y)
             (ptr_resource p.y) 
@@ -159,10 +150,8 @@ let set_y (p:point) (y:int)
              (fun h0 _ h1 -> 
                 sel_x p h1 = sel_x p h0 /\
                 sel_y p h1 = y) = 
-  reveal_star ();
-  reveal_ptr ();
-  reveal_rst_inv ();
-  reveal_modifies ();
+  reveal_rst_inv ();  // should go away with abstract effects / effect layering
+  reveal_modifies (); // should go away with abstract effects / effect layering
   rst_frame #(ptr_resource p.x <*> ptr_resource p.y) #_ #_
             #(fun _ -> ptr_resource p.x <*> ptr_resource p.y)
             (ptr_resource p.x) 
