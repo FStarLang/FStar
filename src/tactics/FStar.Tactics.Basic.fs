@@ -664,6 +664,15 @@ let add_irrelevant_goal reason env phi opts label : tac<unit> =
     add_goals [goal])
 
 let trivial () : tac<unit> =
+    let istrivial (e:env) (t:term) : bool =
+      let steps = [Env.UnfoldUntil delta_constant;
+                   Env.Simplify;
+                   Env.Primops;
+                   Env.Unmeta;
+                   Env.UnfoldTac] in
+      let t1 = N.normalize steps e t in
+      is_true t1
+    in
     bind (cur_goal ()) (fun goal ->
     if istrivial (goal_env goal) (goal_type goal)
     then solve' goal U.exp_unit

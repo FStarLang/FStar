@@ -29,7 +29,7 @@ let f x = match x with | A -> 0 | B -> 1 | C -> 2 | D -> 3
 
 let test_trivial =
     assert ((f A == 0) /\ (f B == 1) /\ (f C == 2) /\ (f D == 3))
-        by (norm [delta; primops; simplify]; trivial())
+        by trivial()
 
 (* let simple_equality_assertions = *)
   (* assert_by_tactic (forall (y:int). y==0 ==> 0==y) *)
@@ -42,7 +42,7 @@ let test_trivial =
 let visible_boolean (x:int) = true
 let explicitly_trigger_normalizer =
   assert (visible_boolean 0 /\ visible_boolean 1)
-      by (seq split (fun () -> norm [delta]; trivial())) //without the "trivial", the visible_boolean will go to Z3
+      by seq split trivial //without the "trivial", the visible_boolean will go to Z3
 
 unfold let unfoldable_predicate (x:int) = True
 let implicitly_unfolfed_before_preprocessing =

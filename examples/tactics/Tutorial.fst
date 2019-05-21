@@ -111,7 +111,6 @@ let ex2 () =
 let tau3 () : Tac unit =
   Tactics.split ();
   smt ();
-  norm [delta; zeta; primops];
   trivial ()
 
 let ex3 (x : nat) =

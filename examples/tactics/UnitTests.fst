@@ -31,7 +31,7 @@ let _ = assert_by_tactic ("a" ^ "b" == "ab")
 let phi = True
 
 let _ = assert phi
-            by norm [delta]
+            by trivial()
 
 let rec fib n =
     if n < 2
@@ -42,6 +42,11 @@ let _ = assert (fib 5 = 5)
             by norm [delta;zeta;primops]
 let _ = assert (fib 5 == 5)
             by norm [delta;zeta;primops]
+
+let _ = assert (fib 5 = 5)
+            by trivial()
+let _ = assert (fib 5 == 5)
+            by trivial()
 
 let _ =
     let x = 1 in
@@ -72,6 +77,13 @@ let _ = assert (f B == B) by norm [delta;iota;primops]
 let _ = assert (A? A == true) by norm [delta; primops]
 let _ = assert (D? (D 5) == true) by norm [delta; primops]
 let _ = assert (D?.x (D 5) == 5) by norm [delta; primops]
+
+let _ = assert (g A == (f (g A))) by trivial()
+let _ = assert (f B == B) by trivial()
+
+let _ = assert (A? A == true) by trivial()
+let _ = assert (D? (D 5) == true) by trivial()
+let _ = assert (D?.x (D 5) == 5) by trivial()
 
 assume val p1 : Type
 assume val p2 : Type
@@ -107,6 +119,9 @@ let xx : r = {x = 4}
 let _ = assert (xx.x = 4) by norm [delta;primops]
 let _ = assert (xx.x == 4) by norm [delta;primops]
 
+let _ = assert (xx.x = 4) by trivial()
+let _ = assert (xx.x == 4) by trivial()
+
 assume val dlem : squash True -> squash True -> squash True
 
 let _ = assert True
@@ -135,6 +150,13 @@ let _ = assert (le Lt) by norm [delta; primops; simplify]
 let _ = assert (le Eq) by norm [delta; primops; simplify]
 let _ = assert (ne Lt) by norm [delta; primops; simplify]
 let _ = assert (ne Gt) by norm [delta; primops; simplify]
+
+let _ = assert (ge Gt) by trivial()
+let _ = assert (ge Eq) by trivial()
+let _ = assert (le Lt) by trivial()
+let _ = assert (le Eq) by trivial()
+let _ = assert (ne Lt) by trivial()
+let _ = assert (ne Gt) by trivial()
 
 let _ = assert (exists (n:int). n == 5)
             by (witness (quote 5); norm []; trefl (); qed ())
