@@ -41,7 +41,7 @@
         "typing_IntSort.sorted"
       ],
       0,
-      "fb10a85422535ece37c79595aa678d51"
+      "b734a70ff7035cf3ad4fdd01c5ca4603"
     ],
     [
       "InsertionSort.insert_implicit",
@@ -84,7 +84,7 @@
         "typing_IntSort.sorted"
       ],
       0,
-      "b489e47f68f847098d30ea50004d8515"
+      "1217de38fd9bfb2edb49a71403b84e15"
     ],
     [
       "InsertionSort.sort",
@@ -120,7 +120,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bae7238576d6f4c8a33d793ee5bdf59f"
+      "8713a3b8f20156476eea197dcf107d99"
     ],
     [
       "InsertionSort.insert",
@@ -162,7 +162,7 @@
         "typing_IntSort.sorted"
       ],
       0,
-      "3fe35d809450c5fee5bbbe2344dff65f"
+      "f690ea2a6aefbfffd37642c1a58fe795"
     ],
     [
       "InsertionSort.insert_implicit",
@@ -205,7 +205,7 @@
         "typing_IntSort.sorted"
       ],
       0,
-      "af415ee67aee8464fcc0b670fa12f670"
+      "dcc4895ae13edb9fc8c631ac717c9bb8"
     ],
     [
       "InsertionSort.sort",
@@ -241,7 +241,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7af0c28fc7d2e4243241a480f19539cd"
+      "ab4d0316f8cf26ac2ada1eb32ff50281"
     ]
   ]
 ]

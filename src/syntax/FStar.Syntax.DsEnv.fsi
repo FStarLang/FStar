@@ -123,6 +123,7 @@ val set_expect_typ: env -> bool -> env
 val empty_env: FStar.Parser.Dep.deps -> env
 val current_module: env -> lident
 val set_current_module: env -> lident -> env
+val open_modules: env -> list<(lident * modul)>
 val open_modules_and_namespaces: env -> list<lident>
 val iface_decls : env -> lident -> option<(list<Parser.AST.decl>)>
 val set_iface_decls: env -> lident -> list<Parser.AST.decl> -> env

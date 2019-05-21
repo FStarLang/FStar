@@ -1067,7 +1067,7 @@ let list_of_option = function
 
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2) *)
 (* Precondition: lists are sorted *)
-let check_multi_contained (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
+let check_multi_eq (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
     let rec collect (l : list<'a>) : list<('a * int)> =
         match l with
         | [] -> []
@@ -1096,11 +1096,12 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) : option<(int * int 
             Some (e, 0, n)
 
         | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 <> hd2 ->
-            Some (hd1, n1, 0)
-
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 (* when hd1 = hd2 *) ->
-            if n1 <> n2
-            then Some (hd1, n1, n2)
+            if hd1 < hd2 then
+                Some (hd1, n1, 0)
+            else if hd1 > hd2 then
+                Some (hd2, 0, n2)
+            else if n1 <> n2 then
+                Some (hd1, n1, n2)
             else aux tl1 tl2
     in
     aux l1 l2
@@ -1667,7 +1668,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
         Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
     | _ ->
         if errnos <> [] && errnos <> actual then
-            let (e, n1, n2) = match check_multi_contained errnos actual with
+            let (e, n1, n2) = match check_multi_eq errnos actual with
                               | Some r -> r
                               | None -> (-1, -1, -1) // should be impossible
             in
