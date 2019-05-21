@@ -28,6 +28,12 @@ let v (a:t)
   : Tot (uint_t n)
   = a.v
 
+[@(deprecated "v_inj is no longer necessary")]
+let v_inj (x1 x2: t): Lemma
+  (requires (v x1 == v x2))
+  (ensures (x1 == x2))
+  = ()
+
 [@unfold_for_smt]
 let uint_to_t (a:uint_t n)
   : Tot t
