@@ -377,16 +377,16 @@ val ones_nth_lemma: #n:pos -> i:nat{i < n} ->
 let rec ones_nth_lemma #n i = ()
 
 (* Bitwise operators *)
-val logand: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)
+abstract val logand: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)
 let logand #n a b = from_vec #n (logand_vec #n (to_vec #n a) (to_vec #n b))
 
-val logxor: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)
+abstract val logxor: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)
 let logxor #n a b = from_vec #n (logxor_vec #n (to_vec #n a) (to_vec #n b))
 
-val logor: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)
+abstract val logor: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)
 let logor #n a b = from_vec #n (logor_vec #n (to_vec #n a) (to_vec #n b))
 
-val lognot: #n:pos -> a:int_t n  -> Tot (int_t n)
+abstract val lognot: #n:pos -> a:int_t n  -> Tot (int_t n)
 let lognot #n a = from_vec #n (lognot_vec #n (to_vec #n a))
 
 (* Bitwise operators definitions *)
@@ -508,11 +508,11 @@ let logxor_neq_nonzero #n a b =
 (* Shift operators *)
 
 (** If a is negative the result is undefined behaviour *)
-val shift_left: #n:pos -> a:int_t n{0 <= a} -> s:nat -> Tot (int_t n)
+abstract val shift_left: #n:pos -> a:int_t n{0 <= a} -> s:nat -> Tot (int_t n)
 let shift_left #n a s = from_vec (shift_left_vec #n (to_vec #n a) s)
 
 (** If a is negative the result is implementation defined *)
-val shift_right: #n:pos -> a:int_t n{0 <= a} -> s:nat -> Tot (int_t n)
+abstract val shift_right: #n:pos -> a:int_t n{0 <= a} -> s:nat -> Tot (int_t n)
 let shift_right #n a s = from_vec (shift_right_vec #n (to_vec #n a) s)
 
 (* Shift operators lemmas *)
