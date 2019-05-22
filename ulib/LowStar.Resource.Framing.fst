@@ -21,13 +21,14 @@ open FStar.Tactics.CanonCommMonoidSimple.Equiv
 
 open LowStar.Resource
 
-let re : equiv resource = 
+(*
+let req : equiv resource = 
   EQ equal 
      equal_refl 
      equal_symm 
      equal_trans
 
-let rm : cm resource re =
+let rm : cm resource req =
   CM empty_resource 
      (<*>) 
      equal_comm_monoid_left_unit 
@@ -35,13 +36,26 @@ let rm : cm resource re =
      equal_comm_monoid_commutativity 
      equal_comm_monoid_cong
 
-let sorted_atoms = List.sorted (fun (x y:atom) -> x <= y)
+let compute_delta (outer inner:term) : Tac unit =
 
-// TODO: this is an inefficient prototype, we ought to be able to do better later
-let split_outer_resource_atoms (outer:list atom) (inner:list atom) : list atom =
-  List.Tot.filter (fun x -> not (List.Tot.mem x inner)) outer
+  //introducing the refinement
+  refine_intro ();
 
-let split_outer_resource_atoms_correct (am:amap resource) (outer:list atom) (inner:list atom)
-  : Lemma (let delta = split_outer_resource_atoms outer inner in
-           xsdenote rm am outer `equal` (xsdenote rm am inner <*> xsdenote rm am delta)) = 
-  admit ()
+  dump "after refine_intro";
+
+  flip ();
+
+  dump "after flip";
+
+  canon_monoid req rm;
+
+  dump "after canon_monoid";
+
+  admit1 ()
+
+
+let test (outer inner:resource) 
+         (#[compute_delta (quote outer) (quote inner)] delta:resource{outer `equal` (inner <*> delta)})
+  : resource = delta
+let _ = assert (test (empty_resource <*> empty_resource) (empty_resource) == empty_resource)
+*)
