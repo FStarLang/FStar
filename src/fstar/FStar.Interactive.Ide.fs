@@ -27,6 +27,7 @@ open FStar.Ident
 open FStar.Errors
 open FStar.JsonHelper
 open FStar.QueryHelper
+open FStar.PushHelper
 
 open FStar.Universal
 open FStar.TypeChecker.Env
@@ -40,45 +41,6 @@ module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 module QH = FStar.QueryHelper
-
-(** Checkpoint the current (typechecking and desugaring) environment **)
-let snapshot_env env msg : repl_depth_t * env_t =
-  let ctx_depth, env = TypeChecker.Tc.snapshot_context env msg in
-  let opt_depth, () = Options.snapshot () in
-  (ctx_depth, opt_depth), env
-
-(** Revert to a previous checkpoint.
-
-Usage note: A proper push/pop pair looks like this:
-
-  let noop =
-    let env', depth = snapshot_env env in
-    // [Do stuff with env']
-    let env'' = rollback_env env'.solver depth in
-    env''
-
-In most cases, the invariant should hold that ``env'' === env`` (look for
-assertions of the form ``physical_equality _ _`` in the sources).
-
-You may be wondering why we need ``snapshot`` and ``rollback``.  Aren't ``push``
-and ``pop`` sufficient?  They are not.  The issue is that the typechecker's code
-can encounter (fatal) errors at essentially any point, and was not written to
-clean up after itself in these cases.  Fatal errors are handled by raising an
-exception, skipping all code that would ``pop`` previously pushed state.
-
-That's why we need ``rollback``: all that rollback does is call ``pop``
-sufficiently many times to get back into the state we were before the
-corresponding ``pop``. **)
-let rollback_env solver msg (ctx_depth, opt_depth) =
-  let env = TypeChecker.Tc.rollback_context solver msg (Some ctx_depth) in
-  Options.rollback (Some opt_depth);
-  env
-
-type push_kind = | SyntaxCheck | LaxCheck | FullCheck
-
-let set_check_kind env check_kind =
-  { env with lax = (check_kind = LaxCheck);
-             dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
 
 let with_captured_errors' env sigint_handler f =
   try
@@ -142,25 +104,6 @@ type push_query =
 type env_t = TcEnv.env
 
 let repl_current_qid : ref<option<string>> = Util.mk_ref None // For messages
-let repl_stack: ref<repl_stack_t> = Util.mk_ref []
-
-let pop_repl msg st =
-  match !repl_stack with
-  | [] -> failwith "Too many pops"
-  | (depth, (_, st')) :: stack_tl ->
-    let env = rollback_env st.repl_env.solver msg depth in
-    repl_stack := stack_tl;
-    // Because of the way ``snapshot`` is implemented, the `st'` and `env`
-    // that we rollback to should be consistent:
-    FStar.Common.runtime_assert
-      (Util.physical_equality env st'.repl_env)
-      "Inconsistent stack state";
-    st'
-
-let push_repl msg push_kind task st =
-  let depth, env = snapshot_env st.repl_env msg in
-  repl_stack := (depth, (task, st)) :: !repl_stack;
-  { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
 
 (** Check whether users can issue further ``pop`` commands. **)
 let nothing_left_to_pop st =
@@ -267,27 +210,6 @@ let string_of_repl_task = function
   | PushFragment frag ->
     Util.format1 "PushFragment { code = %s }" frag.frag_text
   | Noop -> "Noop {}"
-
-(** Like ``tc_one_file``, but only return the new environment **)
-let tc_one (env:env_t) intf_opt modf =
-  let _, env = tc_one_file_for_ide env intf_opt modf (modf |> FStar.Parser.Dep.parsing_data_of (FStar.TypeChecker.Env.dep_graph env)) in
-  env
-
-(** Load the file or files described by `task`.
-
-``task`` should not be a push fragment. **)
-let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t * env_t =
-  match task with
-  | LDInterleaved (intf, impl) ->
-    curmod, tc_one env (Some intf.tf_fname) impl.tf_fname
-  | LDSingle intf_or_impl ->
-    curmod, tc_one env None intf_or_impl.tf_fname
-  | LDInterfaceOfCurrentFile intf ->
-    curmod, Universal.load_interface_decls env intf.tf_fname
-  | PushFragment frag ->
-    tc_one_fragment curmod env frag
-  | Noop ->
-    curmod, env
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
 let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =

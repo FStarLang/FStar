@@ -44,7 +44,8 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
 		FStar.Options FStar.Ident FStar.Errors FStar.Const	\
 		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
-		FStar.JsonHelper FStar.QueryHelper FStar.Interactive.Lsp	\
+		FStar.JsonHelper FStar.QueryHelper FStar.PushHelper \
+		FStar.Interactive.Lsp	\
 		FStar.Interactive.Ide FStar.Interactive.Legacy		\
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
 		FStar.Main

@@ -9,13 +9,15 @@ open FStar.JsonHelper
 open FStar.Universal
 open FStar.Range
 
+module U = FStar.Util
 module QH = FStar.QueryHelper
+module PI = FStar.Parser.ParseIt
 
 (* Request *)
 
 // nothrow
 let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
-  let qid = try_assoc "id" r |> Util.map_option js_str_int in // noexcept
+  let qid = try_assoc "id" r |> U.map_option js_str_int in // noexcept
 
   // If we make it this far, exceptions will come with qid info.
   // Wrap in `try` because all `js_*` functions and `assoc` throw
@@ -67,7 +69,7 @@ let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
           | "textDocument/rename" -> Rename
           | "textDocument/prepareRename" -> PrepareRename (js_txdoc_pos r)
           | "textDocument/foldingRange" -> FoldingRange
-          | m -> BadProtocolMsg (Util.format1 "Unknown method '%s'" m) }
+          | m -> BadProtocolMsg (U.format1 "Unknown method '%s'" m) }
   with
   | MissingKey msg -> { query_id = qid; q = BadProtocolMsg msg }
   | UnexpectedJsonType (expected, got) -> wrap_jsfail qid expected got
@@ -80,8 +82,8 @@ let deserialize_lsp_query js_query : lsp_query =
   | UnexpectedJsonType (expected, got) -> wrap_jsfail None expected got
 
 let parse_lsp_query query_str : lsp_query =
-  Util.print1_error ">>> %s\n" query_str;
-  match Util.json_of_string query_str with
+  U.print1_error ">>> %s\n" query_str;
+  match U.json_of_string query_str with
   | None -> { query_id = None; q = BadProtocolMsg "Json parsing failed" }
   | Some request -> deserialize_lsp_query request
 
@@ -102,7 +104,7 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | Symbol sym -> (Some (Inl JsonNull), Inl st)
   | ExecCommand cmd -> (Some (Inl JsonNull), Inl st)
   | DidOpen { fname = f; langId = _; version = _; text = t } ->
-      Parser.ParseIt.add_vfs_entry (uri_to_path f) t; // Cache contents in F*'s VFS
+      PI.add_vfs_entry (uri_to_path f) t; // Cache contents in F*'s VFS
       (None, Inl st)
   | DidChange -> (None, Inl st)
   | WillSave txid -> (None, Inl st)
@@ -138,11 +140,11 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
 // Raises exceptions, but all of them are caught
 let rec parse_header_len (stream: stream_reader) (len: int): int =
   // Non-blocking read
-  match Util.read_line stream with
+  match U.read_line stream with
   | Some s ->
-    if Util.starts_with s "Content-Length: " then
-      parse_header_len stream (Util.int_of_string (Util.substring_from s 16))
-    else if Util.starts_with s "Content-Type: " then
+    if U.starts_with s "Content-Length: " then
+      parse_header_len stream (U.int_of_string (U.substring_from s 16))
+    else if U.starts_with s "Content-Type: " then
       parse_header_len stream len
     else if s = "" then
       len
@@ -153,12 +155,12 @@ let rec parse_header_len (stream: stream_reader) (len: int): int =
 let rec read_lsp_query (stream: stream_reader) : lsp_query =
   try
     let n = parse_header_len stream 0 in
-    match Util.nread stream n with
+    match U.nread stream n with
     | Some s -> parse_lsp_query s
-    | None -> wrap_content_szerr (Util.format1 "Could not read %s bytes" (Util.string_of_int n))
+    | None -> wrap_content_szerr (U.format1 "Could not read %s bytes" (U.string_of_int n))
   with
   // At no cost should the server go down
-  | MalformedHeader -> Util.print_error "[E] Malformed Content Header\n"; read_lsp_query stream
+  | MalformedHeader -> U.print_error "[E] Malformed Content Header\n"; read_lsp_query stream
   | InputExhausted -> read_lsp_query stream
 
 let rec go (st: repl_state) : int =
@@ -166,7 +168,7 @@ let rec go (st: repl_state) : int =
   let r, state_opt = run_query st query.q in
   (match r with
    | Some response -> (let response' = json_of_response query.query_id response in
-                       Util.print1_error "<<< %s\n" (Util.string_of_json response');
+                       U.print1_error "<<< %s\n" (U.string_of_json response');
                        write_jsonrpc response')
    | None -> ()); // Don't respond
   match state_opt with

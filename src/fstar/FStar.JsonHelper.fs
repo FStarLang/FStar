@@ -186,6 +186,8 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
 and repl_stack_t = list<repl_stack_entry_t>
 and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
 
+type grepl_state = smap<repl_state>
+
 type optresponse = option<either<json, json>>
 type either_st_exit = either<repl_state, int>
 

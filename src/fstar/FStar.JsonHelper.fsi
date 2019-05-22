@@ -123,6 +123,9 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
 and repl_stack_t = list<repl_stack_entry_t>
 and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
 
+// Global repl_state, keeping state of different buffers
+type grepl_state = smap<repl_state>
+
 type optresponse = option<either<json, json>> // Used to indicate (no|success|failure) response
 type either_st_exit = either<repl_state, int> // repl_state is independent of exit_code
 

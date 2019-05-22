@@ -567,6 +567,7 @@ let (__proj__Mkrepl_state__item__repl_names :
         repl_env; repl_stdin; repl_names;_} -> repl_names
 type repl_stack_entry_t = (repl_depth_t * (repl_task * repl_state))
 type repl_stack_t = (repl_depth_t * (repl_task * repl_state)) Prims.list
+type grepl_state = repl_state FStar_Util.smap
 type optresponse =
   (FStar_Util.json, FStar_Util.json) FStar_Util.either
     FStar_Pervasives_Native.option
@@ -585,40 +586,40 @@ type error_code =
   | ContentModified 
 let (uu___is_ParseError : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | ParseError -> true | uu____2305 -> false
+    match projectee with | ParseError -> true | uu____2307 -> false
 let (uu___is_InvalidRequest : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | InvalidRequest -> true | uu____2316 -> false
+    match projectee with | InvalidRequest -> true | uu____2318 -> false
 let (uu___is_MethodNotFound : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | MethodNotFound -> true | uu____2327 -> false
+    match projectee with | MethodNotFound -> true | uu____2329 -> false
 let (uu___is_InvalidParams : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | InvalidParams -> true | uu____2338 -> false
+    match projectee with | InvalidParams -> true | uu____2340 -> false
 let (uu___is_InternalError : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | InternalError -> true | uu____2349 -> false
+    match projectee with | InternalError -> true | uu____2351 -> false
 let (uu___is_ServerErrorStart : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | ServerErrorStart -> true | uu____2360 -> false
+    match projectee with | ServerErrorStart -> true | uu____2362 -> false
 let (uu___is_ServerErrorEnd : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | ServerErrorEnd -> true | uu____2371 -> false
+    match projectee with | ServerErrorEnd -> true | uu____2373 -> false
 let (uu___is_ServerNotInitialized : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | ServerNotInitialized -> true | uu____2382 -> false
+    match projectee with | ServerNotInitialized -> true | uu____2384 -> false
 let (uu___is_UnknownErrorCode : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | UnknownErrorCode -> true | uu____2393 -> false
+    match projectee with | UnknownErrorCode -> true | uu____2395 -> false
 let (uu___is_RequestCancelled : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | RequestCancelled -> true | uu____2404 -> false
+    match projectee with | RequestCancelled -> true | uu____2406 -> false
 let (uu___is_ContentModified : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | ContentModified -> true | uu____2415 -> false
+    match projectee with | ContentModified -> true | uu____2417 -> false
 let (errorcode_to_int : error_code -> Prims.int) =
-  fun uu___8_2427 ->
-    match uu___8_2427 with
+  fun uu___8_2429 ->
+    match uu___8_2429 with
     | ParseError -> ~- (Prims.parse_int "32700")
     | InvalidRequest -> ~- (Prims.parse_int "32600")
     | MethodNotFound -> ~- (Prims.parse_int "32601")
@@ -631,17 +632,17 @@ let (errorcode_to_int : error_code -> Prims.int) =
     | RequestCancelled -> ~- (Prims.parse_int "32800")
     | ContentModified -> ~- (Prims.parse_int "32801")
 let (json_debug : FStar_Util.json -> Prims.string) =
-  fun uu___9_2446 ->
-    match uu___9_2446 with
+  fun uu___9_2448 ->
+    match uu___9_2448 with
     | FStar_Util.JsonNull -> "null"
     | FStar_Util.JsonBool b ->
         FStar_Util.format1 "bool (%s)" (if b then "true" else "false")
     | FStar_Util.JsonInt i ->
-        let uu____2460 = FStar_Util.string_of_int i in
-        FStar_Util.format1 "int (%s)" uu____2460
+        let uu____2462 = FStar_Util.string_of_int i in
+        FStar_Util.format1 "int (%s)" uu____2462
     | FStar_Util.JsonStr s -> FStar_Util.format1 "string (%s)" s
-    | FStar_Util.JsonList uu____2466 -> "list (...)"
-    | FStar_Util.JsonAssoc uu____2470 -> "dictionary (...)"
+    | FStar_Util.JsonList uu____2468 -> "list (...)"
+    | FStar_Util.JsonAssoc uu____2472 -> "dictionary (...)"
 let (wrap_jsfail :
   Prims.int FStar_Pervasives_Native.option ->
     Prims.string -> FStar_Util.json -> lsp_query)
@@ -649,13 +650,13 @@ let (wrap_jsfail :
   fun qid ->
     fun expected ->
       fun got ->
-        let uu____2503 =
-          let uu____2504 =
-            let uu____2506 = json_debug got in
+        let uu____2505 =
+          let uu____2506 =
+            let uu____2508 = json_debug got in
             FStar_Util.format2 "JSON decoding failed: expected %s, got %s"
-              expected uu____2506 in
-          BadProtocolMsg uu____2504 in
-        { query_id = qid; q = uu____2503 }
+              expected uu____2508 in
+          BadProtocolMsg uu____2506 in
+        { query_id = qid; q = uu____2505 }
 let (json_of_response :
   Prims.int FStar_Pervasives_Native.option ->
     (FStar_Util.json, FStar_Util.json) FStar_Util.either -> FStar_Util.json)
@@ -680,14 +681,14 @@ let (json_of_response :
 let (js_resperr : error_code -> Prims.string -> FStar_Util.json) =
   fun err ->
     fun msg ->
-      let uu____2608 =
-        let uu____2616 =
-          let uu____2622 =
-            let uu____2623 = errorcode_to_int err in
-            FStar_Util.JsonInt uu____2623 in
-          ("code", uu____2622) in
-        [uu____2616; ("message", (FStar_Util.JsonStr msg))] in
-      FStar_Util.JsonAssoc uu____2608
+      let uu____2610 =
+        let uu____2618 =
+          let uu____2624 =
+            let uu____2625 = errorcode_to_int err in
+            FStar_Util.JsonInt uu____2625 in
+          ("code", uu____2624) in
+        [uu____2618; ("message", (FStar_Util.JsonStr msg))] in
+      FStar_Util.JsonAssoc uu____2610
 let (wrap_content_szerr : Prims.string -> lsp_query) =
   fun m ->
     { query_id = FStar_Pervasives_Native.None; q = (BadProtocolMsg m) }
@@ -715,48 +716,48 @@ let (js_servcap : FStar_Util.json) =
           ("codeActionProvider", (FStar_Util.JsonBool false))]))]
 let (js_pos : FStar_Range.pos -> FStar_Util.json) =
   fun p ->
-    let uu____2817 =
-      let uu____2825 =
-        let uu____2831 =
-          let uu____2832 = FStar_Range.line_of_pos p in
-          FStar_Util.JsonInt uu____2832 in
-        ("line", uu____2831) in
-      let uu____2836 =
-        let uu____2844 =
-          let uu____2850 =
-            let uu____2851 = FStar_Range.col_of_pos p in
-            FStar_Util.JsonInt uu____2851 in
-          ("column", uu____2850) in
-        [uu____2844] in
-      uu____2825 :: uu____2836 in
-    FStar_Util.JsonAssoc uu____2817
+    let uu____2819 =
+      let uu____2827 =
+        let uu____2833 =
+          let uu____2834 = FStar_Range.line_of_pos p in
+          FStar_Util.JsonInt uu____2834 in
+        ("line", uu____2833) in
+      let uu____2838 =
+        let uu____2846 =
+          let uu____2852 =
+            let uu____2853 = FStar_Range.col_of_pos p in
+            FStar_Util.JsonInt uu____2853 in
+          ("column", uu____2852) in
+        [uu____2846] in
+      uu____2827 :: uu____2838 in
+    FStar_Util.JsonAssoc uu____2819
 let (js_range : FStar_Range.range -> FStar_Util.json) =
   fun r ->
-    let uu____2876 =
-      let uu____2884 =
-        let uu____2890 =
-          let uu____2891 = FStar_Range.file_of_range r in
-          FStar_Util.JsonStr uu____2891 in
-        ("uri", uu____2890) in
-      let uu____2895 =
-        let uu____2903 =
-          let uu____2909 =
-            let uu____2910 =
-              let uu____2918 =
-                let uu____2924 =
-                  let uu____2925 = FStar_Range.start_of_range r in
-                  js_pos uu____2925 in
-                ("start", uu____2924) in
-              let uu____2928 =
-                let uu____2936 =
-                  let uu____2942 =
-                    let uu____2943 = FStar_Range.end_of_range r in
-                    js_pos uu____2943 in
-                  ("end", uu____2942) in
-                [uu____2936] in
-              uu____2918 :: uu____2928 in
-            FStar_Util.JsonAssoc uu____2910 in
-          ("range", uu____2909) in
-        [uu____2903] in
-      uu____2884 :: uu____2895 in
-    FStar_Util.JsonAssoc uu____2876
+    let uu____2878 =
+      let uu____2886 =
+        let uu____2892 =
+          let uu____2893 = FStar_Range.file_of_range r in
+          FStar_Util.JsonStr uu____2893 in
+        ("uri", uu____2892) in
+      let uu____2897 =
+        let uu____2905 =
+          let uu____2911 =
+            let uu____2912 =
+              let uu____2920 =
+                let uu____2926 =
+                  let uu____2927 = FStar_Range.start_of_range r in
+                  js_pos uu____2927 in
+                ("start", uu____2926) in
+              let uu____2930 =
+                let uu____2938 =
+                  let uu____2944 =
+                    let uu____2945 = FStar_Range.end_of_range r in
+                    js_pos uu____2945 in
+                  ("end", uu____2944) in
+                [uu____2938] in
+              uu____2920 :: uu____2930 in
+            FStar_Util.JsonAssoc uu____2912 in
+          ("range", uu____2911) in
+        [uu____2905] in
+      uu____2886 :: uu____2897 in
+    FStar_Util.JsonAssoc uu____2878
