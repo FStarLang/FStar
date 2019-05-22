@@ -446,16 +446,16 @@ val ones_nth_lemma: #n:pos -> i:nat{i < n} ->
 let rec ones_nth_lemma #n i = ()
 
 (* Bitwise operators *)
-abstract val logand: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
+val logand: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let logand #n a b = from_vec #n (logand_vec #n (to_vec #n a) (to_vec #n b))
 
-abstract val logxor: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
+val logxor: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let logxor #n a b = from_vec #n (logxor_vec #n (to_vec #n a) (to_vec #n b))
 
-abstract val logor: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
+val logor: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let logor #n a b = from_vec #n (logor_vec #n (to_vec #n a) (to_vec #n b))
 
-abstract val lognot: #n:pos -> a:uint_t n  -> Tot (uint_t n)
+val lognot: #n:pos -> a:uint_t n  -> Tot (uint_t n)
 let lognot #n a = from_vec #n (lognot_vec #n (to_vec #n a))
 
 (* Bitwise operators definitions *)
@@ -738,10 +738,10 @@ let logand_mask #n a m =
 
 (* Shift operators *)
 
-abstract val shift_left: #n:pos -> a:uint_t n -> s:nat -> Tot (uint_t n)
+val shift_left: #n:pos -> a:uint_t n -> s:nat -> Tot (uint_t n)
 let shift_left #n a s = from_vec (shift_left_vec #n (to_vec #n a) s)
 
-abstract val shift_right: #n:pos -> a:uint_t n -> s:nat -> Tot (uint_t n)
+val shift_right: #n:pos -> a:uint_t n -> s:nat -> Tot (uint_t n)
 let shift_right #n a s = from_vec (shift_right_vec #n (to_vec #n a) s)
 
 (* Shift operators lemmas *)
