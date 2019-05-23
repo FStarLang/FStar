@@ -95,3 +95,22 @@ let alloc_move_test ()
             #(fun _ -> empty_resource)
             (empty_resource) 
             (fun _ -> ptr_free ptr1)
+
+(* Testing a loop over move *)
+
+open LowStar.RST.Loops
+
+val while_move_test (p:point)
+  : RST unit (as_resource (point_view p))
+             (fun _ -> as_resource (point_view p))
+             (fun _ -> True)
+             (fun h0 _ h1 -> sel_x p h1 == 3)
+
+let while_move_test p =
+  while (as_resource (point_view p))
+        (fun _ -> True)
+        (fun h -> sel_x p h <> 3)
+        (fun () -> let x = get_x p in x <> 3)
+        (fun () -> let x = get_x p in
+          if x < 3 then move_right p
+          else if x >= 3 then move_left p)
