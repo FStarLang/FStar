@@ -69,6 +69,7 @@ let sel_x (p:point) (h:imem (inv (point_resource p))) : GTot int =
 let sel_y (p:point) (h:imem (inv (point_resource p))) : GTot int = 
   (sel (point_view p) h).y_view
 
+abstract
 let mk_point (x y:B.pointer int) : point = 
   {
     x = x;
