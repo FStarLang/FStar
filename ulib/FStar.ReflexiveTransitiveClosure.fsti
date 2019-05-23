@@ -2,21 +2,15 @@ module FStar.ReflexiveTransitiveClosure
 
 open FStar.Preorder
 
-noeq
-type closure (#a:Type0) (r:relation a) : a -> a -> Type0 =
-| Refl: x:a -> closure r x x
-| Step: x:a -> y:a -> r x y -> closure r x y
-| Closure: x:a -> y:a -> z:a -> closure r x y -> closure r y z -> closure r x z
+val closure (#a:Type0) (r:relation a) : preorder a
 
-val closure_reflexive: #a:Type0 -> r:relation a -> Lemma (reflexive (closure r))
+val closure_step: #a:Type0 -> r:relation a -> x:a -> y:a
+  -> Lemma (requires r x y) (ensures closure r x y)
 
-val closure_transitive: #a:Type0 -> r:relation a -> Lemma (transitive (closure r))
+val closure_inversion: #a:Type0 -> r:relation a -> x:a -> y:a
+  -> Lemma (requires closure r x y)
+          (ensures  x == y \/ r x y \/ (exists z. closure r x z /\ closure r z y))
 
-let reflexive_transitive_closure (#a:Type0) (r:relation a) : preorder a =
-  closure_reflexive r;
-  closure_transitive r;
-  closure r
-
-val stable_on_closure: #a:Type0 -> r:relation a -> p:(a -> Type0) 
-  -> p_stable_on_r: (squash (forall x y. p x /\ r x y ==> p y)) 
+val stable_on_closure: #a:Type0 -> r:relation a -> p:(a -> Type0)
+  -> p_stable_on_r: (squash (forall x y. p x /\ r x y ==> p y))
   -> Lemma (forall x y. p x /\ closure r x y ==> p y)

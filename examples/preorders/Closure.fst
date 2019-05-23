@@ -6,6 +6,27 @@ module B = LowStar.Buffer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
+/// Simple Test
+
+type state = | A | B | C
+
+let r x y =
+  match x, y with
+  | A, B | B, C | C, B -> True
+  | _ -> False
+
+let q = function
+  | A -> False
+  | B | C -> True
+
+let cl = closure r
+
+let reachable_from_B (x:state{ cl B x }) : Lemma (x = B \/ x = C) =
+  stable_on_closure r q ()
+
+
+/// More complex test based on TLS Handshake
+
 assume val handshake_message : Type
 
 assume val is_client_hello (hs:handshake_message) : Type0
@@ -16,7 +37,7 @@ let hs_ch = m:handshake_message{is_client_hello m}
 
 let hs_sh = m:handshake_message{is_server_hello m}
 
-let offer = hs_ch 
+let offer = hs_ch
 
 type retry = hs_ch & hs_sh
 
@@ -62,21 +83,21 @@ assume val mode : Type
 noeq
 type client_state =
   | C_init : client_state
-  
+
   | C_truncated_ClientHello:
-    transcript: Ghost.erased (trans 0) -> 
-    offer: offer{ Ghost.reveal transcript == Hello None offer } -> 
+    transcript: Ghost.erased (trans 0) ->
+    offer: offer{ Ghost.reveal transcript == Hello None offer } ->
     client_state
-    
-  | C_wait_ServerHello: 
-    transcript: Ghost.erased (trans 0) -> 
-    offer: offer{ Ghost.reveal transcript == Hello None offer } -> 
+
+  | C_wait_ServerHello:
+    transcript: Ghost.erased (trans 0) ->
+    offer: offer{ Ghost.reveal transcript == Hello None offer } ->
     client_state
-    
-  | C13_wait_Finished1: 
+
+  | C13_wait_Finished1:
     transcript: Ghost.erased (trans 1) ->
     mode: mode {exists offer sh. Ghost.reveal transcript == Transcript13 None offer sh [] } ->
-    client_state 
+    client_state
 
 /// We define an update condition on the state that encodes the state
 /// machine and ensures stability on selected properties of
@@ -87,36 +108,36 @@ assume val transition_hsm: transcript_t -> handshake_message -> option transcrip
 
 assume val mode_offer : mode -> offer
 
-let step (st0 st1: client_state) = 
-  match st0, st1 with 
+let step (st0 st1: client_state) =
+  match st0, st1 with
   | C_init,
     C_truncated_ClientHello transcript0 offer0 -> True
 
   | C_truncated_ClientHello transcript0 offer0,
     C_wait_ServerHello      transcript1 offer1 ->
-    let transcript0 = Ghost.reveal transcript0 in 
-    let transcript1 = Ghost.reveal transcript1 in 
+    let transcript0 = Ghost.reveal transcript0 in
+    let transcript1 = Ghost.reveal transcript1 in
     exists binders. Some transcript1 == transition_hsm transcript0 binders
-    // /\ offer1 == transcript_offer transcript1 
+    // /\ offer1 == transcript_offer transcript1
 
   | C_wait_ServerHello transcript0 offer0,
     C13_wait_Finished1 transcript1 mode0 ->
-    let transcript0 = Ghost.reveal transcript0 in 
+    let transcript0 = Ghost.reveal transcript0 in
     let transcript1 = Ghost.reveal transcript1 in
     offer0 == mode_offer mode0 /\
     (exists sh. Some transcript1 == transition_hsm transcript0 sh )
 
-  | _, _ -> False 
+  | _, _ -> False
 
 /// Sample lemma: the offer is SSA
 
-let st_offer (st0: client_state) : option offer = 
-  match st0 with 
-  | C_wait_ServerHello transcript0 offer0 -> Some offer0 
+let st_offer (st0: client_state) : option offer =
+  match st0 with
+  | C_wait_ServerHello transcript0 offer0 -> Some offer0
   | C13_wait_Finished1 transcript0 mode0 -> Some (mode_offer mode0)
-  | _ -> None 
+  | _ -> None
 
-let mrel = reflexive_transitive_closure step
+let mrel = closure step
 
 /// Main type for the connection handshake
 noeq type t = | C_State: HST.mreference client_state mrel -> t
@@ -125,18 +146,18 @@ noeq type t = | C_State: HST.mreference client_state mrel -> t
 
 open HST
 
-let p (r:mreference client_state mrel) (o:offer) : mem_predicate = 
-  fun h0 -> st_offer (HS.sel h0 r) == Some o 
+let p (r:mreference client_state mrel) (o:offer) h0 =
+  st_offer (HS.sel h0 r) == Some o
 
-val witness_offer (st:t) : 
+val witness_offer (st:t) :
   ST (o: offer { let C_State r = st in token_p r (p r o) } )
-    (requires fun h0 -> 
-       let C_State r = st in 
+    (requires fun h0 ->
+       let C_State r = st in
        h0 `HS.contains` r /\
        ~(C_init? (HS.sel h0 r)) /\
        ~(C_truncated_ClientHello? (HS.sel h0 r)))
     (ensures fun h0 o h1 -> h0 == h1)
-let witness_offer st = 
+let witness_offer st =
   let C_State r = st in
   let Some o = st_offer !r in
   stable_on_closure step (fun st -> st_offer st == Some o) ();
