@@ -209,6 +209,7 @@ let frame (#outer0:resource)
           ($f:unit -> RSTATE a inner0 inner1 wp)
         : RSTATE a outer0 outer1 (frame_wp delta wp) =
   reveal_view ();
+  reveal_can_be_split_into ();
   f ()
 
 (* Generic framing operation for RST (through resource inclusion) *)
@@ -250,4 +251,5 @@ let rst_frame (#outer0:resource)
                     (frame_pre delta pre) 
                     (frame_post delta post) =
   reveal_view ();
+  reveal_can_be_split_into ();
   f ()

@@ -141,6 +141,7 @@ let reveal_star ()
 
 (* Empty resource *)
 
+abstract
 let empty_resource : resource =
   reveal_view ();
   let fp = Ghost.hide B.loc_none in
@@ -158,6 +159,12 @@ let empty_resource : resource =
     view = view
   }
 
+let reveal_empty_resource ()
+  : Lemma ((fp empty_resource == Ghost.hide B.loc_none) /\
+           (forall h .{:pattern inv empty_resource h} inv empty_resource h <==> True) /\
+           (forall h .{:pattern sel empty_resource.view h} sel empty_resource.view h == ())) =
+  ()
+
 (* Splitting resources into smaller constituents. Its main use 
    case is for stating resource inclusion for framing, where by 
    
@@ -167,6 +174,7 @@ let empty_resource : resource =
    is included in the outer (re framing) resource res1, as 
    witnessed by res3 that is the formal delta-resource res3. *)
 
+abstract
 let can_be_split_into (outer:resource) ((inner,delta):resource & resource) = 
     // Footprint of the outer resource is union of delta and the inner resource
     as_loc (fp outer) == B.loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
@@ -193,8 +201,34 @@ let can_be_split_into_empty_right (res:resource)
           [SMTPat (res `can_be_split_into` (res,empty_resource))] =
   ()
 
+let reveal_can_be_split_into () 
+  : Lemma (forall outer inner delta .
+             outer `can_be_split_into` (inner,delta) <==>
+             (as_loc (fp outer) == B.loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
+              (forall h . inv outer h <==> inv inner h /\ inv delta h /\ r_disjoint delta inner))) =
+  ()
+
+(* SMT-patterns to reveal some of the properties of abstract can_be_split_into in specs *)
+
+let reveal_can_be_split_into_inner_inv (outer inner delta:resource) (h:HS.mem)
+  : Lemma (requires (outer `can_be_split_into` (inner,delta) /\
+                     inv outer h))
+          (ensures  (inv inner h)) 
+          [SMTPat (outer `can_be_split_into` (inner,delta));
+           SMTPat (inv inner h)] =
+  ()
+
+let reveal_can_be_split_into_delta_inv (outer inner delta:resource) (h:HS.mem)
+  : Lemma (requires (outer `can_be_split_into` (inner,delta) /\
+                     inv outer h))
+          (ensures  (inv delta h)) 
+          [SMTPat (outer `can_be_split_into` (inner,delta));
+           SMTPat (inv delta h)] =
+  ()
+
 (* Equivalence relation (extensional equality) on resources *)
 
+abstract
 let equal (res1 res2:resource) =
     res1 `can_be_split_into` (res2,empty_resource)
 

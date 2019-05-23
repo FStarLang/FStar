@@ -100,6 +100,7 @@ let ptr_free (#a:Type)
                       (fun _ ptr h1 -> True) =
   reveal_rst_inv ();
   reveal_modifies ();
+  reveal_empty_resource ();
   B.free ptr
 
 (* Scoped allocation of (heap-allocated, freeable) pointer resources *)
