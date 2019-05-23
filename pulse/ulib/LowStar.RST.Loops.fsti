@@ -7,20 +7,21 @@ module HS = FStar.HyperStack
 inline_for_extraction
 val while:
     res:resource
-  -> inv: (imem (res.view.inv) -> Type0)
-  -> guard: (imem (res.view.inv) -> GTot bool)
+  -> inv: (res.t -> Type0)
+  -> guard: (res.t -> GTot bool)
   -> test: (unit -> RST bool
                       (res)
                       (fun _ -> res)
-                      (requires inv)
-                      (ensures fun h0 b h1 -> b == guard h0 /\ h0 == h1))
+                      (requires fun h -> inv (sel (view_of res) h))
+                      (ensures fun h0 b h1 -> b == guard (sel (view_of res) h0) /\ 
+                               sel (view_of res) h0 == sel (view_of res) h1))
   -> body: (unit -> RST unit
                       (res)
                       (fun _ -> res)
-                      (requires fun h -> guard h)
-                      (ensures fun _ _ h -> inv h))
+                      (requires fun h -> guard (sel (view_of res) h))
+                      (ensures fun _ _ h -> inv (sel (view_of res) h)))
   -> RST unit
         (res)
         (fun _ -> res)
-        (requires inv)
-        (ensures fun _ _ h -> inv h /\ ~(guard h))
+        (requires fun h -> inv (sel (view_of res) h))
+        (ensures fun _ _ h -> inv (sel (view_of res) h) /\ ~(guard (sel (view_of res) h)))
