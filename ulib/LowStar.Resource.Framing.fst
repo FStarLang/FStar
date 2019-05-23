@@ -21,7 +21,6 @@ open FStar.Tactics.CanonCommMonoidSimple.Equiv
 
 open LowStar.Resource
 
-(*
 let req : equiv resource = 
   EQ equal 
      equal_refl 
@@ -36,26 +35,23 @@ let rm : cm resource req =
      equal_comm_monoid_commutativity 
      equal_comm_monoid_cong
 
-let compute_delta (outer inner:term) : Tac unit =
-
-  //introducing the refinement
+let resolve_delta (outer inner:term) : Tac unit =
+  dump "initial goal";
   refine_intro ();
-
   dump "after refine_intro";
-
   flip ();
-
   dump "after flip";
-
   canon_monoid req rm;
+  dump "after canon_monoid"
 
-  dump "after canon_monoid";
-
-  admit1 ()
-
-
-let test (outer inner:resource) 
-         (#[compute_delta (quote outer) (quote inner)] delta:resource{outer `equal` (inner <*> delta)})
+#set-options "--__temp_fast_implicits"
+let test_res1 (outer inner:resource) 
+         (#[resolve_delta (quote outer) (quote inner)] 
+             delta:resource{(inner <*> delta) `equal` outer})
   : resource = delta
-let _ = assert (test (empty_resource <*> empty_resource) (empty_resource) == empty_resource)
-*)
+let test_res2 (r1 r2 r3:resource) = 
+  //admit (); // resolve_delta solves (all) the two goals (finding the 
+            // delta and showing that it and inner amount to outer)
+            // but in the end F* still reports an error that the
+            // (computed) r2 does not satisfy its refinement
+  assert (test_res1 (r3 <*> r2 <*> r1) (r1 <*> r3) == r2)
