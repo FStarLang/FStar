@@ -357,7 +357,9 @@ let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
                              `%List.Tot.Base.partition; `%bool_of_compare; 
                              `%compare_of_bool; //`%EQ?.eq;
                 ]; primops];
+           // dump "before refl";                
            apply_lemma (quote (EQ?.reflexivity eq))
+           // dump "done"                           
            //;dump "after norm in canon_monoid"
          )
        // when the relation takes one implicit argument
