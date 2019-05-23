@@ -1,4 +1,3 @@
-# For simplified Makefiles, define FSTAR_HOME, then include the file below.
 FSTAR_HOME=../..
 
 include ../Makefile.include
