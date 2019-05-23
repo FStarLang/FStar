@@ -325,6 +325,10 @@ let reification (#a:Type) (eq:equiv a) (m:cm a eq) (ts:list term) (am:amap a) (t
   let t    = norm_term [delta] t in
   reification_aux ts am mult unit t
 
+let eq_refl (#a:Type) (eq:equiv a) (x:a) 
+  : (_:squash (x `EQ?.eq eq` x)) =
+  EQ?.reflexivity eq x
+
 let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
   norm [];
   let t = cur_goal () in 
@@ -350,15 +354,15 @@ let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
            //   (quote (xsdenote eq m am (canon r1) `EQ?.eq eq`
            //           xsdenote eq m am (canon r2)))));
            apply (`monoid_reflect);
-           //dump ("after apply");
+           //dump ("after apply monoid_reflect");
            norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
                              `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
                              `%(@); `%append; `%List.Tot.Base.sortWith;
                              `%List.Tot.Base.partition; `%bool_of_compare; 
                              `%compare_of_bool; //`%EQ?.eq;
-                ]; primops]
-           //;apply_lemma (quote EQ?.reflexivity eq)
-           //;dump "after norm"
+                ]; primops];
+           apply (quote eq_refl)
+           //;dump "after norm in canon_monoid"
          )
        // when the relation takes one implicit argument
        | [_ ; (lhs, Q_Explicit) ; (rhs, Q_Explicit)] -> (
@@ -372,15 +376,15 @@ let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
            //   (quote (xsdenote eq m am (canon r1) `EQ?.eq eq`
            //           xsdenote eq m am (canon r2)))));
            apply (`monoid_reflect);
-           //dump ("after apply");
+           //dump ("after apply monoid_reflect");
            norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
                              `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
                              `%(@); `%append; `%List.Tot.Base.sortWith;
                              `%List.Tot.Base.partition; `%bool_of_compare; 
                              `%compare_of_bool; //`%EQ?.eq;
-                ]; primops]
-           //;apply_lemma (quote EQ?.reflexivity eq)
-           //;dump "after norm"
+                ]; primops];
+           apply (quote eq_refl)
+           //;dump "after norm in canon_monoid"
          )
        | _ -> fail "Goal should be a binary relation"
      )
@@ -403,7 +407,7 @@ let test2 =
 
 /////////////////////////////////////////////
 
-(*
+
 open LowStar.Resource
 
 let req : equiv resource = 
@@ -420,7 +424,7 @@ let rm : cm resource req =
      equal_comm_monoid_commutativity 
      equal_comm_monoid_cong
 
-let compute_delta (outer inner:term) : Tac unit =
+let resolve_delta (outer inner:term) : Tac unit =
 
   dump "initial goal";
 
@@ -434,19 +438,20 @@ let compute_delta (outer inner:term) : Tac unit =
 
   canon_monoid req rm;
 
-  dump "after canon_monoid";
-
-  apply_lemma (quote equal_refl);
-
-  dump "after apply_lemma"
-
-  //;admit1 ()
+  dump "after canon_monoid"
+  
 
 let test_res1 (outer inner:resource) 
-         (#[compute_delta (quote outer) (quote inner)] delta:resource{outer `equal` (inner <*> delta)})
+         (#[resolve_delta (quote outer) (quote inner)] 
+             delta:resource{(inner <*> delta) `equal` outer})
   : resource = delta
-let test_res2 = assert (test_res1 (empty_resource <*> empty_resource) empty_resource == empty_resource)
-*)
+let test_res2 (r1 r2 r3:resource) = 
+  admit (); // resolve_delta solves (all) the two goals (finding the 
+            // delta and showing that it and inner amount to outer)
+            // but in the end F* still reports an error that the
+            // (computed) r2 does not satisfy its refinement
+  assert (test_res1 (r3 <*> r2 <*> r1) (r1 <*> r3) == r2)
+
 
 /////////////////////////////////////////////
 
