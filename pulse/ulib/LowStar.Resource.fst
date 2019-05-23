@@ -99,23 +99,6 @@ let inv (res:resource) (h:HS.mem) =
 let sel (#a:Type) (view:view a) (h:imem (inv (as_resource view))) =
   view.sel h
 
-(* (Non-separating) conjunction on views and resources *)
-
-let r_union (res1 res2:resource) : res:resource = 
-  let fp = Ghost.hide (B.loc_union (as_loc (fp res1)) (as_loc (fp res2))) in 
-  let inv h = inv res1 h /\ inv res2 h in
-  let sel h = (sel res1.view h,sel res2.view h) in
-  let t = res1.t & res2.t in 
-  let view = {
-      fp = fp;
-      inv = inv;
-      sel = sel
-    } in 
-  {
-    t = t;
-    view = view
-  }
-
 (* Separating conjunction on views and resources *)
 
 unfold
@@ -159,12 +142,17 @@ let reveal_star ()
 (* Empty resource *)
 
 let empty_resource : resource =
+  reveal_view ();
+  let fp = Ghost.hide B.loc_none in
+  let inv h = True in
+  let sel h = () in
   let t = unit in
-  let view = {
-      fp = Ghost.hide B.loc_none;
-      inv = (fun _ -> True);
-      sel = (fun _ -> ())
-    } in
+  let (view:view t) = {
+      fp = fp;
+      inv = inv;
+      sel = sel
+    } 
+  in
   {
     t = t;
     view = view
