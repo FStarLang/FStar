@@ -325,10 +325,6 @@ let reification (#a:Type) (eq:equiv a) (m:cm a eq) (ts:list term) (am:amap a) (t
   let t    = norm_term [delta] t in
   reification_aux ts am mult unit t
 
-let eq_refl (#a:Type) (eq:equiv a) (x:a) 
-  : (_:squash (x `EQ?.eq eq` x)) =
-  EQ?.reflexivity eq x
-
 let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
   norm [];
   let t = cur_goal () in 
@@ -361,7 +357,7 @@ let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
                              `%List.Tot.Base.partition; `%bool_of_compare; 
                              `%compare_of_bool; //`%EQ?.eq;
                 ]; primops];
-           apply (quote eq_refl)
+           apply_lemma (quote (EQ?.reflexivity eq))
            //;dump "after norm in canon_monoid"
          )
        // when the relation takes one implicit argument
@@ -383,7 +379,7 @@ let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
                              `%List.Tot.Base.partition; `%bool_of_compare; 
                              `%compare_of_bool; //`%EQ?.eq;
                 ]; primops];
-           apply (quote eq_refl)
+           apply_lemma (quote (EQ?.reflexivity eq))
            //;dump "after norm in canon_monoid"
          )
        | _ -> fail "Goal should be a binary relation"
@@ -392,7 +388,6 @@ let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
 
 (***** Example *)
 
-(*
 let test1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid (equality_equiv int) int_plus_cm)
@@ -402,89 +397,3 @@ open FStar.Mul
 let test2 =
   assert_by_tactic (forall (a b c d : int). ((b + 1) * 1) * 2 * a * (c * a) * 1 == a * (b + 1) * c * a * 2)
   (fun _ -> ignore (forall_intros()); canon_monoid (equality_equiv int) int_multiply_cm)
-*)
-
-
-/////////////////////////////////////////////
-
-
-open LowStar.Resource
-
-let req : equiv resource = 
-  EQ equal 
-     equal_refl 
-     equal_symm 
-     equal_trans
-
-let rm : cm resource req =
-  CM empty_resource 
-     (<*>) 
-     equal_comm_monoid_left_unit 
-     equal_comm_monoid_associativity 
-     equal_comm_monoid_commutativity 
-     equal_comm_monoid_cong
-
-let resolve_delta (outer inner:term) : Tac unit =
-
-  dump "initial goal";
-
-  refine_intro ();
-
-  dump "after refine_intro";
-
-  flip ();
-
-  dump "after flip";
-
-  canon_monoid req rm;
-
-  dump "after canon_monoid"
-  
-
-let test_res1 (outer inner:resource) 
-         (#[resolve_delta (quote outer) (quote inner)] 
-             delta:resource{(inner <*> delta) `equal` outer})
-  : resource = delta
-let test_res2 (r1 r2 r3:resource) = 
-  admit (); // resolve_delta solves (all) the two goals (finding the 
-            // delta and showing that it and inner amount to outer)
-            // but in the end F* still reports an error that the
-            // (computed) r2 does not satisfy its refinement
-  assert (test_res1 (r3 <*> r2 <*> r1) (r1 <*> r3) == r2)
-
-
-/////////////////////////////////////////////
-
-
-
-
-
-
-
-(*
-  match term_as_formula (cur_goal ()) with
-  | Comp (Eq (Some t)) t1 t2 ->
-      // dump ("t1 =" ^ term_to_string t1 ^
-      //     "; t2 =" ^ term_to_string t2);
-      if term_eq t (quote a) then
-        let (r1, ts, am) = reification eq m [] (const (CM?.unit m)) t1 in
-        let (r2, _, am) = reification eq m ts am t2 in
-        // dump ("am =" ^ term_to_string (quote am));
-        change_sq (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2));
-        // dump ("before =" ^ term_to_string (norm_term [delta;primops]
-        //   (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2)))); 
-        // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
-        //   (quote (xsdenote eq m am (canon r1) `EQ?.eq eq`
-        //           xsdenote eq m am (canon r2)))));
-        apply (`monoid_reflect);
-        // dump ("after apply");
-        norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
-                `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
-                `%(@); `%append; `%List.Tot.Base.sortWith;
-                `%List.Tot.Base.partition; `%bool_of_compare; `%compare_of_bool;
-                `%EQ?.eq;
-           ]; primops]
-        //;dump "done"
-      else fail "Goal should be an equality at the right monoid type"
-  | _ -> fail "Goal should be an equality"
-*)
