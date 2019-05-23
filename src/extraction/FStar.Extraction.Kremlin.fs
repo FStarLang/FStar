@@ -25,7 +25,6 @@ open FStar.Util
 open FStar.Extraction
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
-open FStar.Format
 open FStar.Const
 open FStar.BaseTypes
 
@@ -50,9 +49,10 @@ and decl =
   | DFunction of option<cc> * list<flag> * int * typ * lident * list<binder> * expr
   | DTypeAlias of lident * list<flag> * int * typ
   | DTypeFlat of lident * list<flag> * int * fields_t
-  | DExternal of option<cc> * list<flag> * lident * typ
+  | DUnusedRetainedForBackwardsCompat of option<cc> * list<flag> * lident * typ
   | DTypeVariant of lident * list<flag> * int * branches_t
   | DTypeAbstractStruct of lident
+  | DExternal of option<cc> * list<flag> * lident * typ * list<ident>
 
 and cc =
   | StdCall
@@ -78,6 +78,7 @@ and flag =
   | Epilogue of string
   | Abstract
   | IfDef
+  | Macro
 
 and fsdoc = string
 
@@ -375,6 +376,7 @@ and translate_flags flags =
     | Syntax.CEpilogue s -> Some (Epilogue s)
     | Syntax.CAbstract -> Some Abstract
     | Syntax.CIfDef -> Some IfDef
+    | Syntax.CMacro -> Some Macro
     | _ -> None // is this all of them?
   ) flags
 
@@ -417,8 +419,12 @@ and translate_let env flavor lb: option<decl> =
       mllb_meta = meta
     } when BU.for_some (function Syntax.Assumed -> true | _ -> false) meta ->
       let name = env.module_name, name in
+      let arg_names = match e.expr with
+        | MLE_Fun (args, _) -> List.map fst args
+        | _ -> []
+      in
       if List.length tvars = 0 then
-        Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0))
+        Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0, arg_names))
       else begin
         BU.print1_warning "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
         None
@@ -717,7 +723,7 @@ and translate_expr env e: expr =
           string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca" ||
           string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca") ->
       EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
-  
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ elen ])
     when string_of_mlpath p = "LowStar.UninitializedBuffer.ualloca" ->
       EBufCreateNoInit (Stack, translate_expr env elen)

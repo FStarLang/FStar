@@ -166,6 +166,7 @@ FStar_Version.ml:
 	echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
 	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
+	# We deliberately leave out date, so that rebuilds are no-ops
 	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
 
 

@@ -107,6 +107,7 @@ let rec extract_meta x =
       | "FStar.Pervasives.Gc" -> Some GCType
       | "FStar.Pervasives.CAbstractStruct" -> Some CAbstract
       | "FStar.Pervasives.CIfDef" -> Some CIfDef
+      | "FStar.Pervasives.CMacro" -> Some CMacro
       | _ -> None
       end
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } ->
