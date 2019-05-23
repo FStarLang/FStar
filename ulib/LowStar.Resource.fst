@@ -159,9 +159,11 @@ let empty_resource : resource =
     view = view
   }
 
+abstract
 let reveal_empty_resource ()
   : Lemma ((fp empty_resource == Ghost.hide B.loc_none) /\
            (forall h .{:pattern inv empty_resource h} inv empty_resource h <==> True) /\
+           (empty_resource.t == unit) /\
            (forall h .{:pattern sel empty_resource.view h} sel empty_resource.view h == ())) =
   ()
 
