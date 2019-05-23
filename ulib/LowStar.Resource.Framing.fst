@@ -36,22 +36,54 @@ let rm : cm resource req =
      equal_comm_monoid_cong
 
 let resolve_delta (outer inner:term) : Tac unit =
-  dump "initial goal";
+  // dump "initial goal";
   refine_intro ();
-  dump "after refine_intro";
+  // dump "after refine_intro";
   flip ();
-  dump "after flip";
-  canon_monoid req rm;
-  dump "after canon_monoid"
+  // dump "after flip";
+  canon_monoid req rm
+  // dump "after canon_monoid"
 
-#set-options "--__temp_fast_implicits"
+
 let test_res1 (outer inner:resource) 
          (#[resolve_delta (quote outer) (quote inner)] 
              delta:resource{(inner <*> delta) `equal` outer})
   : resource = delta
-let test_res2 (r1 r2 r3:resource) = 
+#set-options "--log_queries --query_stats --use_two_phase_tc false --__temp_fast_implicits"
+
+let test_res2 (r1 r2 r3
+               r4 r5 r6
+               r7 r8 r9 :resource) =  
   //admit (); // resolve_delta solves (all) the two goals (finding the 
             // delta and showing that it and inner amount to outer)
             // but in the end F* still reports an error that the
             // (computed) r2 does not satisfy its refinement
-  assert (test_res1 (r3 <*> r2 <*> r1) (r1 <*> r3) == r2)
+  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                    (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                    (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                    (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                    (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                    (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                    (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                    (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                    (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                    (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                    (r1 <*> r3 <*> (r4 <*> r6)) in
+  ()
+  
+  
+#set-options "--print_implicits"
+
+
+  // assert (eq2 #resource (test_res1 (r3 <*> r2 <*> r1) (r1 <*> r3)) r2)
+  //     by (norm [delta_only [`%test_res1]];
+  //         trefl())
