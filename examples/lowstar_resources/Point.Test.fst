@@ -109,7 +109,7 @@ val while_move_test (p:point)
 let while_move_test p =
   while (as_resource (point_view p))
         (fun _ -> True)
-        (fun h -> sel_x p h <> 3)
+        (fun p -> p.x_view <> 3)
         (fun () -> let x = get_x p in x <> 3)
         (fun () -> let x = get_x p in
           if x < 3 then move_right p
