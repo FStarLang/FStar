@@ -60,6 +60,7 @@ let ptr_read (#a:Type)
                    (fun _ -> ptr_resource ptr)
                    (fun _ -> True)
                    (fun h0 x h1 -> 
+                      h0 == h1 /\
                       sel (ptr_view ptr) h0 == x /\ 
                       x == sel (ptr_view ptr) h1) =
   reveal_rst_inv ();

@@ -105,6 +105,7 @@ let get_x (p:point)
             (fun _ -> point_resource p)
             (fun _ -> True)
             (fun h0 x h1 -> 
+               h0 == h1 /\
                sel_x p h1 = x /\
                sel_x p h1 = sel_x p h0 /\
                sel_y p h1 = sel_y p h0) = 
@@ -120,6 +121,7 @@ let get_y (p:point)
             (fun _ -> point_resource p)
             (fun _ -> True)
             (fun h0 y h1 -> 
+               h0 == h1 /\
                sel_x p h1 = sel_x p h0 /\
                sel_y p h1 = sel_y p h0 /\
                sel_y p h1 = y) = 
