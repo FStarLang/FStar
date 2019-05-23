@@ -3428,7 +3428,7 @@ let resolve_implicits' env must_total forcelax g =
                     in
                     let ctx_u = { ctx_u with ctx_uvar_meta = None } in
                     let hd = { hd with imp_uvar = ctx_u } in
-                    until_fixpoint (out, true) (hd :: (extra @ tl))
+                    until_fixpoint (out, true) (extra @ tl)
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl
