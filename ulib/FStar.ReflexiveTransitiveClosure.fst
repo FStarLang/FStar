@@ -6,7 +6,7 @@ open FStar.Tactics
 
 let closure_reflexive #a r =
   assert (forall x. closure r x x) by
-    (let x = forall_intro () in mapply (quote Refl))
+    (let x = forall_intro () in mapply (`Refl))
 
 let closure_transitive #a r =
   assert (transitive (closure r)) by
@@ -15,46 +15,37 @@ let closure_transitive #a r =
      let z = forall_intro () in
      let h = implies_intro () in
      and_elim (binder_to_term h);
-     let h1 = implies_intro () in
-     let h2 = implies_intro () in
-     mapply (quote (Closure #a #r));
-     assumption ();
-     assumption ())
+     let _ = implies_intros () in
+     seq (fun _ -> mapply (`Closure)) assumption)
 
-val _inv_closure: #a:Type0 -> r:relation a -> p:(a -> Type0) 
-  -> hr: (x:a -> y:a -> Lemma (requires p x /\ r x y) (ensures p y)) 
-  -> x:a 
-  -> y:a
-  -> h:closure r x y
-  -> Lemma (requires p x) (ensures p y) (decreases h)
-let rec _inv_closure #a r p hr x y h =
-  match h with
+val _stable_on_closure: #a:Type0 -> r:relation a -> p:(a -> Type0) 
+  -> p_stable_on_r: squash (forall x y. p x /\ r x y ==> p y) 
+  -> x: a 
+  -> y: a
+  -> xy: closure r x y
+  -> px: squash (p x)
+  -> GTot (squash (p y)) (decreases xy)
+let rec _stable_on_closure #a r p p_stable_on_r x y xy px =
+  match xy with
   | Refl _ -> ()
-  | Step _ _ _ -> hr x y
+  | Step _ _ _ -> ()
   | Closure x a y xa ay ->
-    _inv_closure r p hr x a xa;
-    _inv_closure r p hr a y ay
+    let hi = _stable_on_closure r p p_stable_on_r in
+    let pa = hi x a xa px in
+    hi a y ay pa
 
-val inv_closure: #a:Type0 -> r:relation a -> p:(a -> Type0) 
-  -> hr: (x:a -> y:a -> Lemma (requires p x /\ r x y) (ensures p y)) 
-  -> x:a 
-  -> y:a
-  -> Lemma (requires p x /\ closure r x y) (ensures p y)
-let inv_closure #a r p hr x y =
-  let rxy = Squash.get_proof (closure r x y) in
-  let l = Classical.move_requires (_inv_closure r p hr x y) in
-  let l = Classical.lemma_to_squash_gtot l in
-  Squash.bind_squash rxy l
-
-let stable_on_closure #a r p p_stable_on_r =
+let stable_on_closure #a r p hr =
   assert (forall x y. p x /\ closure r x y ==> p y) by
-    (let x = forall_intros () in
-     match x with
-     | [x;_;_] ->
-       let x = binder_to_term x in
-       let x: a = unquote x in
-       mapply (quote (inv_closure r p p_stable_on_r x))
-     | _ -> ())
+    (let x = forall_intro () in
+     let y = forall_intro () in
+     let x : a = unquote (binder_to_term x) in
+     let y : a = unquote (binder_to_term y) in
+     let h = implies_intro () in
+     and_elim (binder_to_term h);
+     let px = implies_intro () in
+     let xy = implies_intro () in
+     let xy : closure r x y = unquote (binder_to_term xy) in
+     exact (quote (_stable_on_closure r p hr x y xy (Squash.get_proof _))))     
 
 /// Test
 
@@ -69,9 +60,7 @@ let p = function
   | A -> False 
   | B | C -> True 
 
-let hp x y : Lemma (requires p x /\ r x y) (ensures p y) = ()
-
 let cl = reflexive_transitive_closure r
 
 let reachable_from_B (x:state{ cl B x }) : Lemma (x = B \/ x = C) =
-  stable_on_closure r p hp
+  stable_on_closure r p ()

@@ -1,4 +1,4 @@
-module FStar.ReflexiveTransitiveClosure.Test
+module Closure
 
 open FStar.ReflexiveTransitiveClosure
 
@@ -116,21 +116,10 @@ let st_offer (st0: client_state) : option offer =
   | C13_wait_Finished1 transcript0 mode0 -> Some (mode_offer mode0)
   | _ -> None 
 
-val m_offer (st0 st1: client_state):
-  Lemma (requires
-    (let o0 = st_offer st0 in
-     let o1 = st_offer st1 in
-     step st0 st1 /\ Some? o0))
-    (ensures 
-      (let o0 = st_offer st0 in
-       let o1 = st_offer st1 in
-       o1 == o0))
-let m_offer st0 st1 = ()
-
 let mrel = reflexive_transitive_closure step
 
 /// Main type for the connection handshake
-noeq abstract type t = | C_State: HST.mreference client_state mrel -> t 
+noeq type t = | C_State: HST.mreference client_state mrel -> t
 
 /// Testing monotonicity
 
@@ -150,6 +139,6 @@ val witness_offer (st:t) :
 let witness_offer st = 
   let C_State r = st in
   let Some o = st_offer !r in
-  stable_on_closure step (fun st -> st_offer st == Some o) m_offer;
+  stable_on_closure step (fun st -> st_offer st == Some o) ();
   witness_p r (p r o);
   o

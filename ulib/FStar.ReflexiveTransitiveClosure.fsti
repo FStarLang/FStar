@@ -18,5 +18,5 @@ let reflexive_transitive_closure (#a:Type0) (r:relation a) : preorder a =
   closure r
 
 val stable_on_closure: #a:Type0 -> r:relation a -> p:(a -> Type0) 
-  -> p_stable_on_r: (x:a -> y:a -> Lemma (requires p x /\ r x y) (ensures p y)) 
+  -> p_stable_on_r: (squash (forall x y. p x /\ r x y ==> p y)) 
   -> Lemma (forall x y. p x /\ closure r x y ==> p y)
