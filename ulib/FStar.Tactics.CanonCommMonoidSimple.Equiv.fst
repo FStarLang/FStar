@@ -354,7 +354,8 @@ let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
                              `%(@); `%append; `%List.Tot.Base.sortWith;
                              `%List.Tot.Base.partition; `%bool_of_compare; 
                              `%compare_of_bool; //`%EQ?.eq;
-                ]; primops]
+                ]; primops];
+           apply_lemma (quote EQ?.reflexivity eq)
            //;dump "after norm"
          )
        // when the relation takes one implicit argument
@@ -375,7 +376,8 @@ let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
                              `%(@); `%append; `%List.Tot.Base.sortWith;
                              `%List.Tot.Base.partition; `%bool_of_compare; 
                              `%compare_of_bool; //`%EQ?.eq;
-                ]; primops]
+                ]; primops];
+           apply_lemma (quote EQ?.reflexivity eq)
            //;dump "after norm"
          )
        | _ -> fail "Goal should be a binary relation"
@@ -384,7 +386,6 @@ let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
 
 (***** Example *)
 
-(*
 let test1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid (equality_equiv int) int_plus_cm)
@@ -394,13 +395,12 @@ open FStar.Mul
 let test2 =
   assert_by_tactic (forall (a b c d : int). ((b + 1) * 1) * 2 * a * (c * a) * 1 == a * (b + 1) * c * a * 2)
   (fun _ -> ignore (forall_intros()); canon_monoid (equality_equiv int) int_multiply_cm)
-*)
 
 
 
 /////////////////////////////////////////////
 
-(*
+
 open LowStar.Resource
 
 let req : equiv resource = 
@@ -428,18 +428,22 @@ let compute_delta (outer inner:term) : Tac unit =
 
   dump "after flip";
 
-  canon_monoid req rm;
+  //canon_monoid req rm;
 
   dump "after canon_monoid";
 
-  admit1 ()
+  apply_lemma (quote equal_refl);
+
+  dump "after apply"
+
+  //;admit1 ()
 
 
-let test (outer inner:resource) 
+let test_res1 (outer inner:resource) 
          (#[compute_delta (quote outer) (quote inner)] delta:resource{outer `equal` (inner <*> delta)})
   : resource = delta
-let _ = assert (test (empty_resource <*> empty_resource) (empty_resource) == empty_resource)
-*)
+let test_res2 (r1 r2:resource) = assert (test_res1 (r1 <*> r2) r1 == r2)
+
 
 /////////////////////////////////////////////
 
