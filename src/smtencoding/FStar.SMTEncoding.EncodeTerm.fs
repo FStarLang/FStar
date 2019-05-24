@@ -663,9 +663,26 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                 mkImp(guards, res_pred)) in
 
              let cvars = Term.free_variables t_interp |> List.filter (fun x -> fv_name x <> fv_name fsym) in
-             let tkey = mkForall t.pos ([], fsym::cvars, t_interp) in
-             let tkey_hash = hash_of_term tkey in
-             let tsym = "Tm_arrow_" ^ (BU.digest_of_string tkey_hash) in
+             let tkey =
+               mkForall t.pos ([], fsym::cvars, t_interp)
+             in
+             let is_pure = U.is_pure_comp res in
+             //cf. Bug #1750
+             //We need to distinguish pure and ghost functions in the encoding
+             //both in hash consing, producing different type constructors for them
+             //And, below, when providing and interpretation of the arrow type
+             //for pure functions we only include an elimination rule
+             //whereas for ghost functions we include both intro and elimination
+             let prefix =
+               if is_pure
+               then "Tm_arrow_"
+               else "Tm_ghost_arrow_"
+             in
+             let tkey_hash =
+               prefix ^ hash_of_term tkey in
+             let tsym =
+               prefix ^ BU.digest_of_string tkey_hash
+             in
              let cvar_sorts = List.map fv_sort cvars in
              let caption =
                  if Options.log_queries()
@@ -693,10 +710,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  let a_name = "interpretation_"^tsym in
                  Util.mkAssume(mkForall t0.pos ([[f_has_t_z]],
                                                 fsym::cvars,
-                                                mkIff(f_has_t_z, t_interp)),
+                                                (let f = if is_pure //cf. Bug #1750 and comment above
+                                                         then mkImp
+                                                         else mkIff
+                                                 in
+                                                 f (f_has_t_z, t_interp))),
                                Some a_name,
-                               module_name ^ "_" ^ a_name) in
-
+                               module_name ^ "_" ^ a_name)
+             in
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
              t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
