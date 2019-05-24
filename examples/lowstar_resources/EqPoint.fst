@@ -113,9 +113,8 @@ let get (p:eq_point)
                sel_y p h1 = sel_y p h0) = 
   reveal_rst_inv ();  // should go away with abstract effects / effect layering
   reveal_modifies (); // should go away with abstract effects / effect layering
-  rst_frame #(ptr_resource p.x <*> ptr_resource p.y) #_ #_
-            #(fun _ -> ptr_resource p.x <*> ptr_resource p.y)
-            (ptr_resource p.y) 
+  rst_frame (ptr_resource p.x <*> ptr_resource p.y)
+            (fun _ -> ptr_resource p.x <*> ptr_resource p.y)
             (fun _ -> ptr_read p.x)
 
 let move_up (p:eq_point)
@@ -128,13 +127,11 @@ let move_up (p:eq_point)
   reveal_rst_inv ();  // should go away with abstract effects / effect layering
   reveal_modifies (); // should go away with abstract effects / effect layering
   let xy = get p in 
-  rst_frame #(ptr_resource p.x <*> ptr_resource p.y) #_ #_
-            #(fun _ -> ptr_resource p.x <*> ptr_resource p.y)
-            (ptr_resource p.y) 
+  rst_frame (ptr_resource p.x <*> ptr_resource p.y)
+            (fun _ -> ptr_resource p.x <*> ptr_resource p.y)
             (fun _ -> ptr_write p.x (xy + 1));
-  rst_frame #(ptr_resource p.x <*> ptr_resource p.y) #_ #_
-            #(fun _ -> ptr_resource p.x <*> ptr_resource p.y)
-            (ptr_resource p.x) 
+  rst_frame (ptr_resource p.x <*> ptr_resource p.y)
+            (fun _ -> ptr_resource p.x <*> ptr_resource p.y)
             (fun _ -> ptr_write p.y (xy + 1))
 
 let move_down (p:eq_point)
@@ -147,11 +144,9 @@ let move_down (p:eq_point)
   reveal_rst_inv ();  // should go away with abstract effects / effect layering
   reveal_modifies (); // should go away with abstract effects / effect layering
   let xy = get p in 
-  rst_frame #(ptr_resource p.x <*> ptr_resource p.y) #_ #_
-            #(fun _ -> ptr_resource p.x <*> ptr_resource p.y)
-            (ptr_resource p.y) 
+  rst_frame (ptr_resource p.x <*> ptr_resource p.y)
+            (fun _ -> ptr_resource p.x <*> ptr_resource p.y)
             (fun _ -> ptr_write p.x (xy - 1));
-  rst_frame #(ptr_resource p.x <*> ptr_resource p.y) #_ #_
-            #(fun _ -> ptr_resource p.x <*> ptr_resource p.y)
-            (ptr_resource p.x) 
+  rst_frame (ptr_resource p.x <*> ptr_resource p.y)
+            (fun _ -> ptr_resource p.x <*> ptr_resource p.y)
             (fun _ -> ptr_write p.y (xy - 1))
