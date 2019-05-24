@@ -11458,8 +11458,8 @@ let (resolve_implicits' :
                                          FStar_TypeChecker_Env.imp_range =
                                            (uu___4024_29651.FStar_TypeChecker_Env.imp_range)
                                        }  in
-                                     until_fixpoint (out, true) (hd2 ::
-                                       (FStar_List.append extra tl1))))
+                                     until_fixpoint (out, true)
+                                       (FStar_List.append extra tl1)))
                              else
                                if
                                  ctx_u.FStar_Syntax_Syntax.ctx_uvar_should_check

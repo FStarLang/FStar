@@ -273,8 +273,9 @@ let equal_comm_monoid_cong (res1 res2 res3 res4:resource)
           (ensures  ((res1 <*> res2) `equal` (res3 <*> res4))) =
   ()
 
-(* `can_be_split_into` and equality to `<*>` are equivalent *)
+(* `can_be_split_into` follows from equality to `<*>` (called in frame resolution) *)
 
 let can_be_split_into_star (res1 res2 res3:resource)
-  : Lemma ((res1 `can_be_split_into` (res2,res3)) <==> (res1 `equal` (res2 <*> res3))) = 
+  : Lemma (requires ((res2 <*> res3) `equal` res1))
+          (ensures  (res1 `can_be_split_into` (res2,res3))) =
   ()

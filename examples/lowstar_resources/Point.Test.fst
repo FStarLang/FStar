@@ -62,12 +62,12 @@ let alloc_move_test ()
              (fun _ _ _ -> True) = 
   // allocate two pointers (with values 4 and 2)
   let ptr1 = rst_frame 
-               #empty_resource #_ #_ #(fun ptr1 -> ptr_resource ptr1)
                empty_resource 
+               (fun ptr1 -> ptr_resource ptr1)
                (fun _ -> ptr_alloc 4) in
   let ptr2 = rst_frame 
-               #(ptr_resource ptr1) #_ #_ #(fun ptr2 -> ptr_resource ptr1 <*> ptr_resource ptr2)
                (ptr_resource ptr1) 
+               (fun ptr2 -> ptr_resource ptr1 <*> ptr_resource ptr2)
                (fun _ -> ptr_alloc 2) in
   // pack the pointers up as a point
   let p = pack ptr1 ptr2 in 
@@ -76,24 +76,20 @@ let alloc_move_test ()
   // unpack the point as two pointers
   let (ptr1,ptr2) = unpack p in 
   // read the values of the two pointers
-  let x = rst_frame #(ptr_resource ptr1 <*> ptr_resource ptr2) #_ #_
-                    #(fun _ -> ptr_resource ptr1 <*> ptr_resource ptr2)
-                    (ptr_resource ptr2) 
+  let x = rst_frame (ptr_resource ptr1 <*> ptr_resource ptr2)
+                    (fun _ -> ptr_resource ptr1 <*> ptr_resource ptr2)
                     (fun _ -> ptr_read ptr1) in 
-  let y = rst_frame #(ptr_resource ptr1 <*> ptr_resource ptr2) #_ #_
-                    #(fun _ -> ptr_resource ptr1 <*> ptr_resource ptr2)
-                    (ptr_resource ptr1) 
+  let y = rst_frame (ptr_resource ptr1 <*> ptr_resource ptr2)
+                    (fun _ -> ptr_resource ptr1 <*> ptr_resource ptr2)
                     (fun _ -> ptr_read ptr2) in 
   // check that the values of the unpacked pointers are also 4 and 2
   assert (x = 4 /\ y = 2);
   // deallocate the two pointers
-  rst_frame #(ptr_resource ptr1 <*> ptr_resource ptr2) #_ #_ 
-            #(fun _ -> ptr_resource ptr1)
-            (ptr_resource ptr1) 
+  rst_frame (ptr_resource ptr1 <*> ptr_resource ptr2)
+            (fun _ -> ptr_resource ptr1)
             (fun _ -> ptr_free ptr2);
-  rst_frame #(ptr_resource ptr1) #_ #_ 
-            #(fun _ -> empty_resource)
-            (empty_resource) 
+  rst_frame (ptr_resource ptr1)
+            (fun _ -> empty_resource)
             (fun _ -> ptr_free ptr1)
 
 (* Testing a loop over move *)
