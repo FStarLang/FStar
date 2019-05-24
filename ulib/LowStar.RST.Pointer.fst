@@ -136,14 +136,12 @@ let with_new_ptr (#res:resource)
   reveal_star ();
   let ptr = 
     rst_frame 
-      #res #_ #_ 
-      #(fun ptr -> res <*> ptr_resource ptr)
       res 
+      (fun ptr -> res <*> ptr_resource ptr)
       (fun _ -> ptr_alloc init) in
   let x = f ptr in 
   rst_frame
-    #(res <*> ptr_resource ptr) #_ #_ 
-    #(fun _ -> res)
-    res 
+    (res <*> ptr_resource ptr)
+    (fun _ -> res)
     (fun _ -> ptr_free ptr);
   x
