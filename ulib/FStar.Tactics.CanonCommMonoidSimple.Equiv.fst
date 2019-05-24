@@ -325,66 +325,56 @@ let reification (#a:Type) (eq:equiv a) (m:cm a eq) (ts:list term) (am:amap a) (t
   let t    = norm_term [delta] t in
   reification_aux ts am mult unit t
 
+let rec repeat_cong_right_identity (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
+  apply_lemma (quote (CM?.congruence m));
+  split ();
+  apply_lemma (quote (EQ?.reflexivity eq));
+  or_else (fun _ -> apply_lemma (quote (right_identity)))
+          (fun _ -> repeat_cong_right_identity eq m)
+
+let canon_lhs_rhs (#a:Type) (eq:equiv a) (m:cm a eq) (lhs rhs:term) : Tac unit =
+  let (r1, ts, am) = reification eq m [] (const (CM?.unit m)) lhs in
+  let (r2, _, am) = reification eq m ts am rhs in
+  //dump ("am = " ^ term_to_string (quote am));
+  //dump ("r1 = " ^ term_to_string (norm_term [delta;primops] (quote (mdenote eq m am r1))));
+  //dump ("r2 = " ^ term_to_string (norm_term [delta;primops] (quote (mdenote eq m am r2))));
+  //dump ("before = " ^ term_to_string (norm_term [hnf;delta;primops]
+  //   (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2)))); 
+  //dump ("current goal" ^ term_to_string (cur_goal ()));
+  change_sq (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2));
+  //dump ("expected after = " ^ term_to_string (norm_term [delta;primops]
+  //   (quote (xsdenote eq m am (canon r1) `EQ?.eq eq`
+  //           xsdenote eq m am (canon r2)))));
+  apply (`monoid_reflect);
+  //dump ("after apply monoid_reflect");
+  norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
+                    `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
+                    `%(@); `%append; `%List.Tot.Base.sortWith;
+                    `%List.Tot.Base.partition; `%bool_of_compare; 
+                    `%compare_of_bool;
+       ]; primops];
+  // dump "before refl";
+  or_else (fun _ -> apply_lemma (quote (EQ?.reflexivity eq)))
+          (fun _ -> repeat_cong_right_identity eq m)
+
 let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
   norm [];
   let t = cur_goal () in 
   // removing top-level squash application
   let sq, rel_xy = collect_app_ref t in
   // unpacking the application of the equivalence relation (lhs `EQ?.eq eq` rhs)
-  (match list_unref rel_xy with
+  (match rel_xy with
    | [(rel_xy,_)] -> (
        let rel, xy = collect_app_ref rel_xy in
-       match list_unref xy with 
-       // when the relation takes zero implicit arguments
-       | [(lhs, Q_Explicit) ; (rhs, Q_Explicit)] -> (
-           let (r1, ts, am) = reification eq m [] (const (CM?.unit m)) lhs in
-           let (r2, _, am) = reification eq m ts am rhs in
-           //dump ("am = " ^ term_to_string (quote am));
-           //dump ("r1 = " ^ term_to_string (norm_term [delta;primops] (quote (mdenote eq m am r1))));
-           //dump ("r2 = " ^ term_to_string (norm_term [delta;primops] (quote (mdenote eq m am r2))));
-           //dump ("before = " ^ term_to_string (norm_term [hnf;delta;primops]
-           //   (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2)))); 
-           //dump ("current goal" ^ term_to_string (cur_goal ()));
-           change_sq (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2));
-           //dump ("expected after = " ^ term_to_string (norm_term [delta;primops]
-           //   (quote (xsdenote eq m am (canon r1) `EQ?.eq eq`
-           //           xsdenote eq m am (canon r2)))));
-           apply (`monoid_reflect);
-           //dump ("after apply monoid_reflect");
-           norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
-                             `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
-                             `%(@); `%append; `%List.Tot.Base.sortWith;
-                             `%List.Tot.Base.partition; `%bool_of_compare; 
-                             `%compare_of_bool; //`%EQ?.eq;
-                ]; primops];
-           // dump "before refl";                
-           apply_lemma (quote (EQ?.reflexivity eq))
-           // dump "done"                           
-           //;dump "after norm in canon_monoid"
-         )
-       // when the relation takes one implicit argument
-       | [_ ; (lhs, Q_Explicit) ; (rhs, Q_Explicit)] -> (
-           let (r1, ts, am) = reification eq m [] (const (CM?.unit m)) lhs in
-           let (r2, _, am) = reification eq m ts am rhs in
-           //dump ("am = " ^ term_to_string (quote am));
-           change_sq (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2));
-           //dump ("before = " ^ term_to_string (norm_term [delta;primops]
-           //   (quote (mdenote eq m am r1 `EQ?.eq eq` mdenote eq m am r2)))); 
-           //dump ("expected after = " ^ term_to_string (norm_term [delta;primops]
-           //   (quote (xsdenote eq m am (canon r1) `EQ?.eq eq`
-           //           xsdenote eq m am (canon r2)))));
-           apply (`monoid_reflect);
-           //dump ("after apply monoid_reflect");
-           norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
-                             `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
-                             `%(@); `%append; `%List.Tot.Base.sortWith;
-                             `%List.Tot.Base.partition; `%bool_of_compare; 
-                             `%compare_of_bool; //`%EQ?.eq;
-                ]; primops];
-           apply_lemma (quote (EQ?.reflexivity eq))
-           //;dump "after norm in canon_monoid"
-         )
-       | _ -> fail "Goal should be a binary relation"
+       if (length xy >= 2)
+       then (
+         match FStar.List.Tot.index xy (length xy - 2) , FStar.List.Tot.index xy (length xy - 1) with
+         | (lhs, Q_Explicit) , (rhs, Q_Explicit) -> canon_lhs_rhs eq m lhs rhs
+         | _ -> fail "Goal should have been an application of a binary relation to 2 explicit arguments"
+       )
+       else (
+         fail "Goal should have been an application of a binary relation to n implicit and 2 explicit arguments"
+       )
      )
    | _ -> fail "Goal should be squash applied to a binary relation")
 
