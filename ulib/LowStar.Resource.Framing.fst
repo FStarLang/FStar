@@ -45,39 +45,55 @@ let resolve_delta (outer inner:term) : Tac unit =
   // dump "after canon_monoid"
 
 
-let test_res1 (outer inner:resource) 
+let resolve_test (outer inner:resource) 
          (#[resolve_delta (quote outer) (quote inner)] 
              delta:resource{(inner <*> delta) `equal` outer})
   : resource = delta
-#set-options "--log_queries --query_stats --use_two_phase_tc false --__temp_fast_implicits"
+  
+#set-options "--use_two_phase_tc false --__temp_fast_implicits"
 
-let test_res2 (r1 r2 r3
-               r4 r5 r6
-               r7 r8 r9 :resource) =  
-  //admit (); // resolve_delta solves (all) the two goals (finding the 
-            // delta and showing that it and inner amount to outer)
-            // but in the end F* still reports an error that the
-            // (computed) r2 does not satisfy its refinement
-  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                    (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                    (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                    (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                    (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                    (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                    (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                    (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                    (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                    (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = test_res1 (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                    (r1 <*> r3 <*> (r4 <*> r6)) in
+let test1 (r1 r2 r3 r4:resource) =
+  resolve_test (r1 <*> r2 <*> r3 <*> r4) (r1 <*> r2 <*> r3 <*> r4)
+
+let test2 (r1 r2:resource) =
+  resolve_test (r1 <*> r2) empty_resource
+
+let test3 (r1 r2:resource) =
+  resolve_test (r1 <*> r2) (r1 <*> r2)
+
+let test4 (r1 r2 r3 r4 r5 r6 :resource) =  
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                       (r1 <*> r3 <*> (r4 <*> r6)) in
   ()
   
   
