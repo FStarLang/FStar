@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2019 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -405,6 +405,17 @@ let fragment_valid (#t:Type) (h0:heap) (f:fragment t) : GTot Type0 =
   fragment_aa f /\
   fragment_conn h0 f
 
+/// Talk about payloads of nodes remaining constant
+
+let unchanged_node_val h0 h1 n =
+  (h0 `contains` n ==>
+   ((n@h0).p == (n@h1).p /\ h1 `contains` n))
+
+let rec unchanged_node_vals (h0 h1:HS.mem) (ns:nodelist 'a) : GTot prop =
+  match ns with
+  | [] -> True
+  | n :: ns' -> unchanged_node_val h0 h1 n /\ unchanged_node_vals h0 h1 ns'
+
 /// Useful operations on nodes
 
 let ( =|> ) (#t:Type) (a:pointer (node t)) (b:pointer (node t)) : StackInline unit
@@ -413,8 +424,7 @@ let ( =|> ) (#t:Type) (a:pointer (node t)) (b:pointer (node t)) : StackInline un
          Mod.loc_disjoint (Mod.loc_buffer a) (Mod.loc_buffer b)))
     (ensures (fun h0 _ h1 ->
          Mod.modifies (Mod.loc_buffer a) h0 h1 /\
-         h1 `contains` a /\
-         (a@h0).p == (a@h1).p /\
+         unchanged_node_val h0 h1 a /\
          (a@h0).blink == (a@h1).blink /\
          b@h0 == b@h1 /\
          (a@h1) |> b)) =
@@ -426,9 +436,8 @@ let ( <|= ) (#t:Type) (a:pointer (node t)) (b:pointer (node t)) : StackInline un
          Mod.loc_disjoint (Mod.loc_buffer a) (Mod.loc_buffer b)))
     (ensures (fun h0 _ h1 ->
          Mod.modifies (Mod.loc_buffer b) h0 h1 /\
-         h1 `contains` b /\
          a@h0 == a@h1 /\
-         (b@h0).p == (b@h1).p /\
+         unchanged_node_val h0 h1 b /\
          (b@h0).flink == (b@h1).flink /\
          a <| (b@h1))) =
   b *= { !*b with blink = a }
@@ -437,8 +446,7 @@ let ( !=|> ) (#t:Type) (a:pointer (node t)) : StackInline unit
     (requires (fun h0 -> h0 `contains` a))
     (ensures (fun h0 _ h1 ->
          Mod.modifies (Mod.loc_buffer a) h0 h1 /\
-         h1 `contains` a /\
-         (a@h0).p == (a@h1).p /\
+         unchanged_node_val h0 h1 a /\
          (a@h0).blink == (a@h1).blink /\
          (a@h1).flink == null)) =
   a *= { !*a with flink = null }
@@ -447,8 +455,7 @@ let ( !<|= ) (#t:Type) (a:pointer (node t)) : StackInline unit
     (requires (fun h0 -> h0 `contains` a))
     (ensures (fun h0 _ h1 ->
          Mod.modifies (Mod.loc_buffer a) h0 h1 /\
-         h1 `contains` a /\
-         (a@h0).p == (a@h1).p /\
+         unchanged_node_val h0 h1 a /\
          (a@h0).flink == (a@h1).flink /\
          (a@h1).blink == null)) =
   a *= { !*a with blink = null }
@@ -803,7 +810,8 @@ let piece_merge (#t:Type) (h0:heap)
                (a@h0 |> b) /\
                (a <| b@h0) /\
                Mod.loc_disjoint (piece_fp0 p1) (piece_fp0 p2)))
-    (ensures (fun p -> piece_valid h0 p)) =
+    (ensures (fun p -> (piece_valid h0 p) /\
+                       (reveal p.pnodes == reveal p1.pnodes `append` reveal p2.pnodes))) =
   let p = { phead = p1.phead ; ptail = p2.ptail ; pnodes = p1.pnodes ^@^ p2.pnodes } in
   lemma_append_last (reveal p1.pnodes) (reveal p2.pnodes);
   nodelist_append_valid h0 (reveal p1.pnodes) (reveal p2.pnodes);
@@ -881,7 +889,7 @@ let single_piece_fragment_valid (#t:Type) (h0:heap) (p:piece t) :
     (requires (piece_valid h0 p))
     (ensures (fragment_valid h0 (Frag1 p))) = ()
 
-#set-options "--z3rlimit 5 --initial_ifuel 2"
+#set-options "--z3rlimit 10 --initial_ifuel 2"
 
 let tot_defragmentable_fragment_to_dll (#t:Type) (h0:heap) (f:fragment t{
     fragment_valid h0 f /\
@@ -894,14 +902,25 @@ let tot_defragmentable_fragment_to_dll (#t:Type) (h0:heap) (f:fragment t{
       ((a.phead@h0).blink == null) /\
       ((b.ptail@h0).flink == null)))
   }) :
-  Tot (d:dll t{dll_valid h0 d}) =
+  Tot (d:dll t{dll_valid h0 d /\ dll_fp0 d `loc_equiv` fragment_fp0 f /\
+               (reveal d.nodes == (
+                   match f with
+                   | Frag0 -> []
+                   | Frag1 p1 -> reveal p1.pnodes
+                   | Frag2 p1 p2 -> reveal p1.pnodes `append` reveal p2.pnodes
+                   | Frag3 p1 p2 p3 ->
+                     reveal p1.pnodes `append` reveal p2.pnodes `append` reveal p3.pnodes))
+              }) =
   match f with
   | Frag0 -> empty_list
   | Frag1 p1 -> tot_piece_to_dll h0 p1
-  | Frag2 p1 p2 -> tot_piece_to_dll h0 (piece_merge h0 p1 p2)
-  | Frag3 p1 p2 p3 ->
-    let p' = piece_merge h0 p1 p2 in
+  | Frag2 p1 p2 ->
     piece_merge_fp0 h0 p1 p2;
+    tot_piece_to_dll h0 (piece_merge h0 p1 p2)
+  | Frag3 p1 p2 p3 ->
+    piece_merge_fp0 h0 p1 p2;
+    let p' = piece_merge h0 p1 p2 in
+    piece_merge_fp0 h0 p' p3;
     tot_piece_to_dll h0 (piece_merge h0 p' p3)
 
 #reset-options
@@ -1074,7 +1093,9 @@ let tot_dll_to_fragment_split (#t:Type) (h0:heap) (d:dll t{dll_valid h0 d})
     (ensures (fun f ->
          fragment_valid h0 f /\
          fragment_length f = 2 /\
-         loc_equiv (dll_fp0 d) (fragment_fp0 f))) =
+         loc_equiv (dll_fp0 d) (fragment_fp0 f) /\
+         (let Frag2 p1 p2 = f in
+          reveal d.nodes == reveal p1.pnodes `append` reveal p2.pnodes))) =
   let split_nodes = elift2_p split_using d.nodes (hide n2) in
   lemma_split_using (reveal d.nodes) n2;
   let l1, l2 = (elift1 fst split_nodes), (elift1 snd split_nodes) in
@@ -1143,7 +1164,9 @@ let singleton_dll (#t:Type) (n:pointer (node t)) :
         (h0 `contains` n)))
     (ensures (fun h0 d h1 ->
          Mod.modifies (Mod.loc_buffer n) h0 h1 /\
-         dll_valid h1 d)) =
+         dll_valid h1 d /\
+         unchanged_node_vals h0 h1 (reveal d.nodes) /\
+         reveal d.nodes == [n])) =
   !=|> n;
   !<|= n;
   tot_node_to_dll (ST.get ()) n
@@ -1193,7 +1216,7 @@ let lemma_dll_links_contained (#t:Type) (h0:heap) (d:dll t) (i:nat) :
     (if i = length nl - 1 then () else extract_nodelist_contained h0 nl (i + 1));
     lemma_unsnoc_is_last nl
 
-#reset-options "--initial_ifuel 2 --max_ifuel 2 --max_fuel 2 --initial_fuel 2 --z3rlimit 20"
+#set-options "--z3rlimit 10 --initial_ifuel 2"
 
 let lemma_dll_links_disjoint (#t:Type) (h0:heap) (d:dll t) (i:nat) :
   Lemma
@@ -1335,15 +1358,75 @@ let piece_remains_valid_f (#t:Type) (h0 h1:heap) (p:piece t) :
 /// Testing is a node is within a dll or not
 
 let node_not_in_dll (#t:Type) (h0:heap) (n:pointer (node t)) (d:dll t) =
-  let m1 = Mod.loc_union (Mod.loc_buffer n)
-      (Mod.loc_union (node_fp_b (n@h0)) (node_fp_f (n@h0))) in
-  let m2 = Mod.loc_union (dll_fp0 d) (Mod.loc_union
-                                        (dll_fp_f h0 d) (dll_fp_b h0 d)) in
+  let m1 = Mod.loc_buffer n in
+  let m2 = dll_fp0 d in
   Mod.loc_disjoint m1 m2
+
+/// An empty dll has no nodes
+
+let _auto_empty_dll (#t:Type) (h0:heap) (d:dll t) :
+  Lemma
+    (requires (dll_valid h0 d /\ (d.lhead == null \/ d.ltail == null)))
+    (ensures (reveal d.nodes == []))
+    [SMTPat (dll_valid h0 d);
+     SMTPat (reveal d.nodes)] = ()
+
+/// Be able to easily reason about unchanged payloads
+
+let rec aux_unchanged_payload #t h0 h1 n0 (nl:nodelist t) :
+  Lemma
+    (requires (Mod.modifies (Mod.loc_buffer n0) h0 h1 /\
+               (n0@h0).p == (n0@h1).p /\
+               (nodelist_aa_r nl) /\
+               (n0 `memP` nl \/ Mod.loc_disjoint (Mod.loc_buffer n0) (nodelist_fp0 nl))
+              ))
+    (ensures (unchanged_node_vals h0 h1 nl))
+    (decreases (length nl)) =
+  match nl with
+  | [] -> ()
+  | n :: nl' ->
+    aux_unchanged_payload h0 h1 n0 nl';
+    assert (n0 `memP` nl ==> (n == n0 \/ n0 `memP` nl'));
+    let goal () = unchanged_node_val h0 h1 n in
+    FStar.Classical.or_elim #_ #_ #goal
+      (fun (_:unit{n0 `memP` nl}) ->
+         FStar.Classical.or_elim #_ #_ #goal
+           (fun (_:unit{n == n0}) -> ())
+           (fun (_:unit{n0 `memP` nl'}) ->
+              let i = nl' `index_of` n0 in
+              extract_nodelist_fp0 nl' i))
+      (fun (_:unit{Mod.loc_disjoint (Mod.loc_buffer n0) (nodelist_fp0 nl)}) -> ())
+
+let rec aux_unchanged_payload_nomod #t h0 h1 (nl:nodelist t) :
+  Lemma
+    (requires (Mod.modifies Mod.loc_none h0 h1))
+    (ensures (unchanged_node_vals h0 h1 nl)) =
+  match nl with
+  | [] -> ()
+  | n :: nl' ->
+    aux_unchanged_payload_nomod h0 h1 nl'
+
+let rec aux_unchanged_payload_transitive #t h0 h1 h2 (nl:nodelist t) :
+  Lemma
+    (requires (unchanged_node_vals h0 h1 nl /\
+               unchanged_node_vals h1 h2 nl))
+    (ensures (unchanged_node_vals h0 h2 nl)) =
+  match nl with
+  | [] -> ()
+  | _ :: nl' -> aux_unchanged_payload_transitive h0 h1 h2 nl'
+
+let rec aux_unchanged_payload_append #t h0 h1 (nl1 nl2:nodelist t) :
+  Lemma
+    (requires (unchanged_node_vals h0 h1 nl1 /\
+               unchanged_node_vals h0 h1 nl2))
+    (ensures (unchanged_node_vals h0 h1 (nl1 `append` nl2))) =
+  match nl1 with
+  | [] -> ()
+  | n :: nl' -> aux_unchanged_payload_append h0 h1 nl' nl2
 
 /// Now for the actual ST operations that will be exposed :)
 
-#set-options "--z3rlimit 500 --max_fuel 2 --max_ifuel 0"
+#set-options "--z3rlimit 500 --max_fuel 2 --max_ifuel 1"
 
 let dll_insert_at_head (#t:Type) (d:dll t) (n:pointer (node t)) :
   StackInline (dll t)
@@ -1355,7 +1438,9 @@ let dll_insert_at_head (#t:Type) (d:dll t) (n:pointer (node t)) :
          Mod.modifies (Mod.loc_union
                          (Mod.loc_buffer n)
                          (Mod.loc_buffer d.lhead)) h0 h1 /\
-         dll_valid h1 y)) =
+         dll_valid h1 y /\
+         unchanged_node_vals h0 h1 (reveal y.nodes) /\
+         reveal y.nodes == n :: reveal d.nodes)) =
   if is_null d.lhead then (
     singleton_dll n
   ) else (
@@ -1367,6 +1452,10 @@ let dll_insert_at_head (#t:Type) (d:dll t) (n:pointer (node t)) :
     let h0' = ST.get () in
     n <|= h;
     let h1 = ST.get () in
+    //
+    aux_unchanged_payload h0 h0' n (reveal d.nodes);
+    aux_unchanged_payload h0' h1 h (reveal d.nodes);
+    aux_unchanged_payload_transitive h0 h0' h1 (reveal d.nodes);
     //
     let Frag1 p1 = tot_dll_to_fragment h0 d in
     let p = tot_node_to_piece h0 n in
@@ -1394,15 +1483,13 @@ let dll_insert_at_head (#t:Type) (d:dll t) (n:pointer (node t)) :
     // assert (is_null ((last f').ptail@h0').flink);
     // assert (is_null ((last f').ptail@h1).flink);
     let y = tot_defragmentable_fragment_to_dll h1 f' in
-    // admit (); // Instead of StackInline, if we use ST everywhere in
-    //           // this file, it is unable to prove things
     // assert (dll_valid h1 y);
     y
   )
 
 #reset-options
 
-#set-options "--z3rlimit 500 --max_fuel 2 --max_ifuel 0"
+#set-options "--z3rlimit 500 --max_fuel 2 --max_ifuel 1"
 
 let dll_insert_at_tail (#t:Type) (d:dll t) (n:pointer (node t)) :
   StackInline (dll t)
@@ -1414,7 +1501,10 @@ let dll_insert_at_tail (#t:Type) (d:dll t) (n:pointer (node t)) :
          Mod.modifies (Mod.loc_union
                          (Mod.loc_buffer n)
                          (Mod.loc_buffer d.ltail)) h0 h1 /\
-         dll_valid h1 y)) =
+         (dll_fp0 y `loc_equiv` B.loc_union (dll_fp0 d) (Mod.loc_buffer n)) /\
+         dll_valid h1 y /\
+         unchanged_node_vals h0 h1 (reveal y.nodes) /\
+         reveal y.nodes == snoc (reveal d.nodes, n))) =
   if is_null d.lhead then (
     singleton_dll n
   ) else (
@@ -1436,12 +1526,24 @@ let dll_insert_at_tail (#t:Type) (d:dll t) (n:pointer (node t)) :
     piece_remains_valid h0 h0' (Mod.loc_buffer n) p1;
     piece_remains_valid_f h0' h1 p1;
     let y = tot_defragmentable_fragment_to_dll h1 f' in
+    lemma_unsnoc_is_last (reveal y.nodes);
+    lemma_snoc_unsnoc (reveal d.nodes, n);
+    lemma_unsnoc_index (reveal y.nodes) (length (reveal y.nodes) - 2);
+    lemma_unsnoc_length (reveal y.nodes);
+    aux_unchanged_payload h0 h0' n (reveal y.nodes);
+    aux_unchanged_payload h0' h1 t (reveal y.nodes);
+    aux_unchanged_payload_transitive h0 h0' h1 (reveal y.nodes);
     y
   )
 
 #reset-options
 
-#set-options "--z3rlimit 1000 --initial_fuel 2 --initial_ifuel 2"
+let _l_insert_after (x0:'a) (l:list 'a{x0 `memP` l}) (x:'a) : GTot (list 'a) =
+  let l1, x1 :: l2 = lemma_split_using l x0; split_using l x0 in
+  assert (x0 == x1);
+  l1 `append` (x0 :: (x :: l2))
+
+#set-options "--z3rlimit 1000 --initial_fuel 2 --initial_ifuel 1"
 
 let dll_insert_after (#t:Type) (d:dll t) (e:pointer (node t)) (n:pointer (node t)) :
   StackInline (dll t)
@@ -1458,7 +1560,10 @@ let dll_insert_after (#t:Type) (d:dll t) (e:pointer (node t)) (n:pointer (node t
                          (Mod.loc_union
                             (Mod.loc_buffer e)
                             (Mod.loc_buffer (e@h0).flink))) h0 h1 /\
-         dll_valid h1 y)) =
+         (dll_fp0 y `loc_equiv` B.loc_union (dll_fp0 d) (Mod.loc_buffer n)) /\
+         dll_valid h1 y /\
+         unchanged_node_vals h0 h1 (reveal y.nodes) /\
+         reveal y.nodes == _l_insert_after e (reveal d.nodes) n)) =
   let h0 = ST.get () in
   // assert (length (reveal d.nodes) > 0);
   lemma_dll_links_contained h0 d (reveal d.nodes `index_of` e);
@@ -1466,7 +1571,9 @@ let dll_insert_after (#t:Type) (d:dll t) (e:pointer (node t)) (n:pointer (node t
   let e1 = (!*e).blink in
   let e2 = (!*e).flink in
   if is_null e2 then (
-    dll_insert_at_tail d n
+    let y = dll_insert_at_tail d n in
+    assume (reveal y.nodes == _l_insert_after e (reveal d.nodes) n);
+    y
   ) else (
     extract_nodelist_fp0 (reveal d.nodes) (reveal d.nodes `index_of` e);
     lemma_unsnoc_is_last (reveal d.nodes);
@@ -1544,10 +1651,23 @@ let dll_insert_after (#t:Type) (d:dll t) (e:pointer (node t)) (n:pointer (node t
     // assert (last f' == p3);
     // assert (is_null ((last f').ptail@h1).flink);
     let y = tot_defragmentable_fragment_to_dll h1 f' in
+    assume (n `memP` reveal y.nodes);
+    assume (e `memP` reveal y.nodes);
+    assume (e2 `memP` reveal y.nodes);
+    aux_unchanged_payload h0 h0' n (reveal y.nodes);
+    aux_unchanged_payload h0' h0'' e (reveal y.nodes);
+    aux_unchanged_payload h0'' h1 e2 (reveal y.nodes);
+    aux_unchanged_payload_transitive h0 h0' h0'' (reveal y.nodes);
+    aux_unchanged_payload_transitive h0 h0'' h1 (reveal y.nodes);
+    assume (reveal y.nodes == _l_insert_after e (reveal d.nodes) n);
     y
   )
 
 #reset-options
+
+let _l_insert_before (x0:'a) (l:list 'a{x0 `memP` l}) (x:'a) : GTot (list 'a) =
+  let l1, l2 = split_using l x0 in
+  l1 `append` (x :: l2)
 
 #set-options "--z3rlimit 50"
 
@@ -1569,19 +1689,31 @@ let dll_insert_before (#t:Type) (d:dll t) (e:pointer (node t)) (n:pointer (node 
                             (Mod.loc_union
                                (Mod.loc_buffer (e@h0).blink)
                                (Mod.loc_buffer e)))) h0 h1 /\
-         dll_valid h1 y)) =
+         (dll_fp0 y `loc_equiv` B.loc_union (dll_fp0 d) (Mod.loc_buffer n)) /\
+         dll_valid h1 y /\
+         unchanged_node_vals h0 h1 (reveal y.nodes) /\
+         reveal y.nodes == _l_insert_before e (reveal d.nodes) n)) =
   let h0 = ST.get () in
   extract_nodelist_contained h0 (reveal d.nodes) (reveal d.nodes `index_of` e);
   let e1 = (!*e).blink in
   lemma_dll_links_contained h0 d (reveal d.nodes `index_of` e);
   if is_null e1 then (
-    dll_insert_at_head d n
+    let y = dll_insert_at_head d n in
+    assume (reveal y.nodes == _l_insert_before e (reveal d.nodes) n);
+    y
   ) else (
     extract_nodelist_conn h0 (reveal d.nodes) (reveal d.nodes `index_of` e - 1);
-    dll_insert_after d e1 n
+    let y = dll_insert_after d e1 n in
+    assume (reveal y.nodes == _l_insert_before e (reveal d.nodes) n);
+    y
   )
 
 #reset-options
+
+unfold
+let _aux_fp_split_by_node (d0 d1:dll 'a) (n:pointer (node 'a)) =
+  dll_fp0 d0 `loc_equiv` B.loc_union (dll_fp0 d1) (Mod.loc_buffer n) /\
+  dll_fp0 d1 `B.loc_disjoint` Mod.loc_buffer n
 
 #set-options "--z3rlimit 20"
 
@@ -1592,7 +1724,10 @@ let dll_remove_head (#t:Type) (d:dll t) :
          (length (reveal d.nodes) > 0)))
     (ensures (fun h0 y h1 ->
          Mod.modifies (Mod.loc_buffer (d.lhead@h0).flink) h0 h1 /\
-         dll_valid h1 y)) =
+         _aux_fp_split_by_node d y d.lhead /\
+         dll_valid h1 y /\
+         unchanged_node_vals h0 h1 (reveal d.nodes) /\
+         reveal y.nodes == tl (reveal d.nodes))) =
   let h0 = ST.get () in
   let e = d.lhead in
   let e2 = (!*e).flink in
@@ -1608,10 +1743,50 @@ let dll_remove_head (#t:Type) (d:dll t) :
     let f' = Frag1 p2 in
     piece_remains_valid_b h0 h1 p2;
     let y = tot_defragmentable_fragment_to_dll h1 f' in
+    aux_unchanged_payload h0 h1 e2 (reveal d.nodes);
     y
   )
 
 #reset-options
+
+let rec _lemma_only_head_can_point_left_to_null (#t:Type) (h0:heap) (e:pointer (node t)) (l:nodelist t) :
+  Lemma
+    (requires (e `memP` l /\ (e@h0).blink == null /\ nodelist_conn h0 l))
+    (ensures (e == hd l)) =
+  match l with
+  | [_] -> ()
+  | _ ->
+    FStar.Classical.or_elim #(e == hd l) #(e =!= hd l) #(fun () -> e == hd l)
+      (fun _ -> ())
+      (fun _ ->
+         _lemma_only_head_can_point_left_to_null h0 e (tl l);
+         extract_nodelist_conn h0 l 0)
+
+let rec _lemma_only_tail_can_point_right_to_null (#t:Type) (h0:heap) (e:pointer (node t)) (l:nodelist t) :
+  Lemma
+    (requires (e `memP` l /\ (e@h0).flink == null /\ nodelist_conn h0 l))
+    (ensures (e == last l)) =
+  match l with
+  | [_] -> ()
+  | _ -> _lemma_only_tail_can_point_right_to_null h0 e (tl l)
+
+let rec _lemma_all_nodes_are_unique (#t:Type) (h0:heap) (l:nodelist t) (i j:nat) :
+  Lemma
+    (requires (
+        (nodelist_conn h0 l) /\
+        (i < length l) /\
+        (j < length l) /\
+        (((hd l)@h0).blink == null) /\
+        (index l i == index l j)))
+    (ensures (i = j)) =
+  match i, j with
+  | 0, 0 -> ()
+  | 0, _ -> extract_nodelist_conn h0 l (j - 1)
+  | _, 0 -> extract_nodelist_conn h0 l (i - 1)
+  | _ ->
+    extract_nodelist_conn h0 l (i - 1);
+    extract_nodelist_conn h0 l (j - 1);
+    _lemma_all_nodes_are_unique h0 l (i - 1) (j - 1)
 
 #set-options "--z3rlimit 50"
 
@@ -1622,13 +1797,17 @@ let dll_remove_tail (#t:Type) (d:dll t) :
          (length (reveal d.nodes) > 0)))
     (ensures (fun h0 y h1 ->
          Mod.modifies (Mod.loc_buffer (d.ltail@h0).blink) h0 h1 /\
-         dll_valid h1 y)) =
+         _aux_fp_split_by_node d y d.ltail /\
+         dll_valid h1 y /\
+         unchanged_node_vals h0 h1 (reveal d.nodes) /\
+         reveal y.nodes == fst (unsnoc (reveal d.nodes)))) =
   let h0 = ST.get () in
   let e = d.ltail in
   let e1 = (!*e).blink in
   lemma_dll_links_contained h0 d (length (reveal d.nodes) - 1);
   lemma_unsnoc_is_last (reveal d.nodes);
   if is_null e1 then (
+    _lemma_only_head_can_point_left_to_null h0 e (reveal d.nodes);
     empty_list
   ) else (
     extract_nodelist_contained h0 (reveal d.nodes) (length (reveal d.nodes) - 2);
@@ -1639,17 +1818,24 @@ let dll_remove_tail (#t:Type) (d:dll t) :
     let h1 = ST.get () in
     let f = tot_dll_to_fragment_split h0 d e1 e in
     let Frag2 p1 p2 = f in
-    // assert (p2.phead == e);
-    // assert (p2.ptail == e);
+    lemma_snoc_length (reveal p1.pnodes, e);
+    // assert (reveal p1.pnodes == fst (unsnoc (reveal d.nodes)));
     let f' = Frag1 p1 in
     piece_remains_valid_f h0 h1 p1;
     let y = tot_defragmentable_fragment_to_dll h1 f' in
+    aux_unchanged_payload h0 h1 e1 (reveal d.nodes);
+    // assert (reveal y.nodes == reveal p1.pnodes);
     y
   )
 
 #reset-options
 
-#set-options "--z3rlimit 400"
+let _l_remove_mid (l:list 'a{length l > 0}) (x:'a {x `memP` l}) : GTot (list 'a) =
+  let l1, x0 :: l2 = lemma_split_using l x; split_using l x in
+  assert (x == x0);
+  l1 `append` l2
+
+#set-options "--z3rlimit 400 --initial_fuel 2 --initial_ifuel 2 --query_stats"
 
 let dll_remove_node (#t:Type) (d:dll t) (e:pointer (node t)) :
   StackInline (dll t)
@@ -1664,17 +1850,27 @@ let dll_remove_node (#t:Type) (d:dll t) (e:pointer (node t)) :
                          (Mod.loc_union
                             (Mod.loc_buffer (e@h0).blink)
                             (Mod.loc_buffer (e@h0).flink))) h0 h1 /\
-         dll_valid h1 y)) =
+         _aux_fp_split_by_node d y e /\
+         dll_valid h1 y /\
+         unchanged_node_vals h0 h1 (reveal d.nodes) /\
+         reveal y.nodes == _l_remove_mid (reveal d.nodes) e)) =
   let h0 = ST.get () in
   extract_nodelist_contained h0 (reveal d.nodes) (reveal d.nodes `index_of` e);
   let e1 = (!*e).blink in
   let e2 = (!*e).flink in
   lemma_dll_links_contained h0 d (reveal d.nodes `index_of` e);
   if is_null e1 then (
+    _lemma_only_head_can_point_left_to_null h0 e (reveal d.nodes);
     dll_remove_head d
   ) else if is_null e2 then (
-    dll_remove_tail d
+    _lemma_only_tail_can_point_right_to_null h0 e (reveal d.nodes);
+    let y = dll_remove_tail d in
+    let h1 = ST.get () in
+    // assume (unchanged_node_vals h0 h1 (reveal d.nodes));
+    assume (reveal y.nodes == _l_remove_mid (reveal d.nodes) e);
+    y
   ) else (
+    admit ();
     lemma_dll_links_contained h0 d (reveal d.nodes `index_of` e);
     extract_nodelist_conn h0 (reveal d.nodes) (reveal d.nodes `index_of` e - 1);
     extract_nodelist_aa_r (reveal d.nodes) (reveal d.nodes `index_of` e - 1);
@@ -1697,5 +1893,124 @@ let dll_remove_node (#t:Type) (d:dll t) (e:pointer (node t)) :
     piece_remains_valid_b h0' h1 p2';
     let y = tot_defragmentable_fragment_to_dll h1 f' in
     // assert (dll_valid h1 y);
+    assume (_aux_fp_split_by_node d y e);
+    assume (unchanged_node_vals h0 h1 (reveal d.nodes));
+    assume (reveal y.nodes == _l_remove_mid (reveal d.nodes) e);
     y
   )
+
+#reset-options
+
+#set-options "--z3rlimit 10 --max_fuel 2 --max_ifuel 1"
+
+let dll_append (#t:Type) (d1 d2:dll t) :
+  StackInline (dll t)
+    (requires (fun h0 ->
+         (dll_valid h0 d1) /\
+         (dll_valid h0 d2) /\
+         (dll_fp0 d1 `Mod.loc_disjoint` dll_fp0 d2)))
+    (ensures (fun h0 y h1 ->
+         Mod.modifies (Mod.loc_union
+                            (Mod.loc_buffer d1.ltail)
+                            (Mod.loc_buffer d2.lhead)) h0 h1 /\
+         dll_fp0 y `loc_equiv` (dll_fp0 d1 `B.loc_union` dll_fp0 d2) /\
+         dll_valid h1 y /\
+         unchanged_node_vals h0 h1 (reveal y.nodes) /\
+         reveal y.nodes == reveal d1.nodes `append` reveal d2.nodes)) =
+  let h0 = ST.get () in
+  if is_null d1.lhead then (
+    let y = d2 in
+    let h1 = ST.get () in
+    aux_unchanged_payload_nomod h0 h1 (reveal y.nodes);
+    y
+  ) else (
+    if is_null d2.lhead then (
+      let y = d1 in
+      let h1 = ST.get () in
+      aux_unchanged_payload_nomod h0 h1 (reveal y.nodes);
+      append_l_nil (reveal y.nodes);
+      y
+    ) else (
+      let n1 = d1.ltail in
+      let n2 = d2.lhead in
+      n1 =|> n2;
+      let h0' = ST.get () in
+      n1 <|= n2;
+      let h1 = ST.get () in
+      //
+      let p1 = tot_dll_to_piece h0 d1 in
+      let p2 = tot_dll_to_piece h0 d2 in
+      let f' = Frag2 p1 p2 in
+      piece_remains_valid_f h0 h0' p1;
+      piece_remains_valid h0 h0' (Mod.loc_buffer n1) p2;
+      piece_remains_valid h0' h1 (Mod.loc_buffer n2) p1;
+      piece_remains_valid_b h0' h1 p2;
+      let y = tot_defragmentable_fragment_to_dll h1 f' in
+      lemma_unsnoc_is_last (reveal d1.nodes);
+      aux_unchanged_payload h0 h0' n1 (reveal d1.nodes);
+      aux_unchanged_payload h0 h0' n1 (reveal d2.nodes);
+      aux_unchanged_payload h0' h1 n2 (reveal d1.nodes);
+      aux_unchanged_payload h0' h1 n2 (reveal d2.nodes);
+      aux_unchanged_payload_transitive h0 h0' h1 (reveal d1.nodes);
+      aux_unchanged_payload_transitive h0 h0' h1 (reveal d2.nodes);
+      aux_unchanged_payload_append h0 h1 (reveal d1.nodes) (reveal d2.nodes);
+      y
+    )
+  )
+
+#reset-options
+
+#set-options "--z3rlimit 40 --max_fuel 2 --max_ifuel 1"
+
+let dll_split_using (#t:Type) (d:dll t) (e:pointer (node t)) :
+  StackInline (dll t * dll t)
+    (requires (fun h0 ->
+         (dll_valid h0 d) /\
+         (e `memP` reveal d.nodes)))
+    (ensures (fun h0 (y1, y2) h1 ->
+         Mod.modifies (Mod.loc_union
+                         (Mod.loc_union
+                            (Mod.loc_buffer (d.lhead@h0).flink)
+                            (Mod.loc_buffer (d.ltail@h0).blink))
+                         (Mod.loc_union
+                            (Mod.loc_buffer (e@h0).blink)
+                            (Mod.loc_buffer e))) h0 h1 /\
+         dll_valid h1 y1 /\
+         dll_valid h1 y2 /\
+         dll_fp0 d `loc_equiv` (dll_fp0 y1 `Mod.loc_union` dll_fp0 y2) /\
+         dll_fp0 y1 `Mod.loc_disjoint` dll_fp0 y2 /\
+         unchanged_node_vals h0 h1 (reveal d.nodes) /\
+         (reveal y1.nodes, reveal y2.nodes) == split_using (reveal d.nodes) e)) =
+  let h0 = ST.get () in
+  extract_nodelist_contained h0 (reveal d.nodes) (reveal d.nodes `index_of` e);
+  let e1 = (!*e).blink in
+  lemma_dll_links_contained h0 d (reveal d.nodes `index_of` e);
+  if is_null e1 then (
+    let d1, d2 = empty_list, d in
+    let h1 = ST.get () in
+    aux_unchanged_payload_nomod h0 h1 (reveal d.nodes);
+    _lemma_only_head_can_point_left_to_null h0 e (reveal d.nodes);
+    d1, d2
+  ) else (
+    lemma_dll_links_contained h0 d (reveal d.nodes `index_of` e);
+    extract_nodelist_conn h0 (reveal d.nodes) (reveal d.nodes `index_of` e - 1);
+    !=|> e1;
+    let h0' = ST.get () in
+    !<|= e;
+    let h1 = ST.get () in
+    //
+    let Frag2 p1 p2 = tot_dll_to_fragment_split h0 d e1 e in
+    lemma_unsnoc_is_last (reveal p1.pnodes);
+    piece_remains_valid_f h0 h0' p1;
+    piece_remains_valid h0 h0' (Mod.loc_buffer e1) p2;
+    piece_remains_valid h0' h1 (Mod.loc_buffer e) p1;
+    piece_remains_valid_b h0' h1 p2;
+    let d1 = tot_piece_to_dll h1 p1 in
+    let d2 = tot_piece_to_dll h1 p2 in
+    aux_unchanged_payload h0 h0' e1 (reveal d.nodes);
+    aux_unchanged_payload h0' h1 e (reveal d.nodes);
+    aux_unchanged_payload_transitive h0 h0' h1 (reveal d.nodes);
+    d1, d2
+  )
+
+#reset-options
