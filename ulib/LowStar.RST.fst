@@ -184,6 +184,38 @@ let frame_delta (outer0:resource)
     frame_delta_post outer1 inner1 delta
   }
 
+open FStar.Algebra.CommMonoid.Equiv
+open FStar.Tactics
+open FStar.Tactics.CanonCommMonoidSimple.Equiv
+
+let req : equiv resource = 
+  EQ equal 
+     equal_refl 
+     equal_symm 
+     equal_trans
+
+let rm : cm resource req =
+  CM empty_resource 
+     (<*>) 
+     equal_comm_monoid_left_unit 
+     equal_comm_monoid_associativity 
+     equal_comm_monoid_commutativity 
+     equal_comm_monoid_cong
+
+let resolve_delta (outer inner:term) : Tac unit =
+  norm [delta_only [`%frame_delta]];
+  refine_intro ();
+  flip ();
+  split ();
+  norm [delta_only [`%frame_delta_pre]];
+  apply_lemma (quote can_be_split_into_star);
+  flip ();
+  canon_monoid req rm;
+  norm [delta_only [`%frame_delta_post]];
+  ignore (forall_intro ());
+  apply_lemma (quote can_be_split_into_star);
+  canon_monoid req rm
+
 let frame_wp (#outer0:resource)
              (#inner0:resource)
              (#a:Type)
@@ -199,12 +231,13 @@ let frame_wp (#outer0:resource)
           ==>
           p x h1) h0
 
-let frame (#outer0:resource)
+let frame (outer0:resource)
           (#inner0:resource)
           (#a:Type)
-          (#outer1:a -> resource)
+          (outer1:a -> resource)
           (#inner1:a -> resource)
-          (delta:frame_delta outer0 inner0 outer1 inner1)
+          (#[resolve_delta (quote outer0) (quote inner0)] 
+                   delta:frame_delta outer0 inner0 outer1 inner1)
           (#wp:rstate_wp a inner0 inner1)
           ($f:unit -> RSTATE a inner0 inner1 wp)
         : RSTATE a outer0 outer1 (frame_wp delta wp) =
@@ -238,12 +271,13 @@ let frame_post (#outer0:resource)
 
 // [DA: should be definable directly using RSTATE frame, but get 
 //      an error about unexpected unification variable remaining]
-let rst_frame (#outer0:resource)
+let rst_frame (outer0:resource)
               (#inner0:resource)
               (#a:Type)
-              (#outer1:a -> resource)
+              (outer1:a -> resource)
               (#inner1:a -> resource)
-              (delta:frame_delta outer0 inner0 outer1 inner1)
+              (#[resolve_delta (quote outer0) (quote inner0)] 
+                   delta:frame_delta outer0 inner0 outer1 inner1)
               (#pre:r_pre inner0)
               (#post:r_post inner0 a inner1)
               ($f:unit -> RST a inner0 inner1 pre post)
@@ -253,3 +287,15 @@ let rst_frame (#outer0:resource)
   reveal_view ();
   reveal_can_be_split_into ();
   f ()
+
+(*
+let frame_resolve_test1 (r1 r2:resource)
+        (f:unit -> RST unit r2 (fun _ -> r2) (fun _ -> True) (fun _ _ _ -> True))
+      : RST unit (r2 <*> r1) (fun _ -> r1 <*> r2) (fun _ -> True) (fun _ _ _ -> True) =
+  rst_frame (r2 <*> r1) (fun _ -> r1 <*> r2) f
+
+let frame_resolve_test2 (r1 r2:resource)
+        (f:unit -> RST unit r1 (fun _ -> r2) (fun _ -> True) (fun _ _ _ -> True))
+      : RST unit r1 (fun _ -> r2) (fun _ -> True) (fun _ _ _ -> True) =
+  rst_frame r1 (fun _ -> r2) f
+*)

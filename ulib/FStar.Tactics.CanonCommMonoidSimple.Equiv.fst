@@ -326,11 +326,14 @@ let reification (#a:Type) (eq:equiv a) (m:cm a eq) (ts:list term) (am:amap a) (t
   reification_aux ts am mult unit t
 
 let rec repeat_cong_right_identity (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
-  apply_lemma (quote (CM?.congruence m));
-  split ();
-  apply_lemma (quote (EQ?.reflexivity eq));
-  or_else (fun _ -> apply_lemma (quote (right_identity)))
-          (fun _ -> repeat_cong_right_identity eq m)
+  or_else (fun _ -> apply_lemma (quote (right_identity))) // WARNING: right_identity is currently fixed to types at u#1 
+                                                          // because otherwise Meta-F* picks up a universe level u#0 for 
+                                                          // types that are in u#1, such as, LowStar.Resource.resource
+          (fun _ -> apply_lemma (quote (CM?.congruence m));
+                    split ();
+                    apply_lemma (quote (EQ?.reflexivity eq));
+                    repeat_cong_right_identity eq m
+                    )
 
 let canon_lhs_rhs (#a:Type) (eq:equiv a) (m:cm a eq) (lhs rhs:term) : Tac unit =
   let (r1, ts, am) = reification eq m [] (const (CM?.unit m)) lhs in
@@ -353,7 +356,7 @@ let canon_lhs_rhs (#a:Type) (eq:equiv a) (m:cm a eq) (lhs rhs:term) : Tac unit =
                     `%List.Tot.Base.partition; `%bool_of_compare; 
                     `%compare_of_bool;
        ]; primops];
-  // dump "before refl";
+  //dump "before refl";
   or_else (fun _ -> apply_lemma (quote (EQ?.reflexivity eq)))
           (fun _ -> repeat_cong_right_identity eq m)
 
@@ -380,6 +383,7 @@ let canon_monoid (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
 
 (***** Example *)
 
+(*
 let test1 (a b c d : int) =
   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   (fun _ -> canon_monoid (equality_equiv int) int_plus_cm)
@@ -389,3 +393,4 @@ open FStar.Mul
 let test2 =
   assert_by_tactic (forall (a b c d : int). ((b + 1) * 1) * 2 * a * (c * a) * 1 == a * (b + 1) * c * a * 2)
   (fun _ -> ignore (forall_intros()); canon_monoid (equality_equiv int) int_multiply_cm)
+*)
