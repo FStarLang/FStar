@@ -326,9 +326,10 @@ let reification (#a:Type) (eq:equiv a) (m:cm a eq) (ts:list term) (am:amap a) (t
   reification_aux ts am mult unit t
 
 let rec repeat_cong_right_identity (#a:Type) (eq:equiv a) (m:cm a eq) : Tac unit =
-  or_else (fun _ -> apply_lemma (quote (right_identity))) // WARNING: right_identity is currently fixed to types at u#1 
-                                                          // because otherwise Meta-F* picks up a universe level u#0 for 
-                                                          // types that are in u#1, such as, LowStar.Resource.resource
+  or_else (fun _ -> apply_lemma (quote (right_identity))) 
+                    // WARNING: right_identity is currently fixed to types at u#1 
+                    // because otherwise Meta-F* picks up a universe level u#0 for 
+                    // types that are in u#1, such as, LowStar.Resource.resource
           (fun _ -> apply_lemma (quote (CM?.congruence m));
                     split ();
                     apply_lemma (quote (EQ?.reflexivity eq));
