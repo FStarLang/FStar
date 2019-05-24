@@ -21,6 +21,7 @@ open FStar.Tactics.CanonCommMonoidSimple.Equiv
 
 open LowStar.Resource
 
+(*
 let req : equiv resource = 
   EQ equal 
      equal_refl 
@@ -36,6 +37,22 @@ let rm : cm resource req =
      equal_comm_monoid_cong
 
 let resolve_delta (outer inner:term) : Tac unit =
+  norm [delta_only [`%frame_delta]];
+  refine_intro ();
+  flip ();
+  split ();
+  norm [delta_only [`%frame_delta_pre]];
+  apply_lemma (quote can_be_split_into_star);
+  flip ();
+  canon_monoid req rm;
+  norm [delta_only [`%frame_delta_post]];
+  ignore (forall_intro ());
+  apply_lemma (quote can_be_split_into_star);
+  canon_monoid req rm
+*)
+
+(*
+let resolve_delta_simple (outer inner:term) : Tac unit =
   // dump "initial goal";
   refine_intro ();
   // dump "after refine_intro";
@@ -44,62 +61,53 @@ let resolve_delta (outer inner:term) : Tac unit =
   canon_monoid req rm
   // dump "after canon_monoid"
 
-
-let resolve_test (outer inner:resource) 
-         (#[resolve_delta (quote outer) (quote inner)] 
+let resolve_simple_test (outer inner:resource) 
+         (#[resolve_delta_simple (quote outer) (quote inner)] 
              delta:resource{(inner <*> delta) `equal` outer})
   : resource = delta
   
 #set-options "--use_two_phase_tc false --__temp_fast_implicits"
 
 let test1 (r1 r2 r3 r4:resource) =
-  resolve_test (r1 <*> r2 <*> r3 <*> r4) (r1 <*> r2 <*> r3 <*> r4)
+  resolve_simple_test (r1 <*> r2 <*> r3 <*> r4) (r1 <*> r2 <*> r3 <*> r4)
 
 let test2 (r1 r2:resource) =
-  resolve_test (r1 <*> r2) empty_resource
+  resolve_simple_test (r1 <*> r2) empty_resource
 
-let test3 (r1 r2:resource) =
-  resolve_test (r1 <*> r2) (r1 <*> r2)
-
-let test4 (r1 r2 r3 r4 r5 r6 :resource) =  
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
-  let _ = resolve_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
-                       (r1 <*> r3 <*> (r4 <*> r6)) in
+let test3 (r1 r2 r3 r4 r5 r6 :resource) =  
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
+  let _ = resolve_simple_test (r6 <*> (r4 <*> r5) <*> r3 <*> r2 <*> r1)
+                              (r1 <*> r3 <*> (r4 <*> r6)) in
   ()
-  
-  
-#set-options "--print_implicits"
-
-
-  // assert (eq2 #resource (test_res1 (r3 <*> r2 <*> r1) (r1 <*> r3)) r2)
-  //     by (norm [delta_only [`%test_res1]];
-  //         trefl())
+*)
