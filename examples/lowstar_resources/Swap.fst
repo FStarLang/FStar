@@ -36,19 +36,15 @@ let swap (#a:Type) (ptr1 ptr2:B.pointer a)
                 sel (ptr_view ptr2) h0 == sel (ptr_view ptr1) h1) = 
   let x = rst_frame (ptr_resource ptr1 <*> ptr_resource ptr2)
                     (fun _ -> ptr_resource ptr1 <*> ptr_resource ptr2)
-                    //(ptr_resource ptr2) 
                     (fun _ -> ptr_read ptr1) in 
   let y = rst_frame (ptr_resource ptr1 <*> ptr_resource ptr2)
                     (fun _ -> ptr_resource ptr1 <*> ptr_resource ptr2)
-                    //(ptr_resource ptr1) 
                     (fun _ -> ptr_read ptr2) in 
   rst_frame (ptr_resource ptr1 <*> ptr_resource ptr2)
             (fun _ -> ptr_resource ptr1 <*> ptr_resource ptr2)
-            //(ptr_resource ptr2) 
             (fun _ -> ptr_write ptr1 y);
   rst_frame (ptr_resource ptr1 <*> ptr_resource ptr2)
             (fun _ -> ptr_resource ptr1 <*> ptr_resource ptr2)
-            //(ptr_resource ptr1) 
             (fun _ -> ptr_write ptr2 x)
 
 (* Doing a large even number of swaps *)
@@ -105,10 +101,12 @@ let alloc_swap_free (#a:Type) (x:a) (y:a)
   reveal_star ();
   // allocating two pointers
   let ptr1 = rst_frame 
-               empty_resource (fun ptr1 -> ptr_resource ptr1)
+               empty_resource 
+               (fun ptr1 -> ptr_resource ptr1)
                (fun _ -> ptr_alloc x) in
   let ptr2 = rst_frame 
-               (ptr_resource ptr1) (fun ptr2 -> ptr_resource ptr1 <*> ptr_resource ptr2)
+               (ptr_resource ptr1) 
+               (fun ptr2 -> ptr_resource ptr1 <*> ptr_resource ptr2)
                (fun _ -> ptr_alloc y) in
   // running the swap function
   swap ptr1 ptr2;
