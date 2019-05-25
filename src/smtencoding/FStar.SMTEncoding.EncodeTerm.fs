@@ -656,23 +656,26 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Some pre ->
                   let guard, decls0 = encode_formula pre env' in
                   mk_and_l (guard::guards), decls0  in
+             let is_pure = U.is_pure_comp res in
+             //cf. Bug #1750
+             //We need to distinguish pure and ghost functions in the encoding
+             //both in hash consing, producing different type constructors for them.
+             //Tot functions get an additional predicate IsTotFun in their intepretation
              let t_interp =
-                       mkForall t.pos
-                               ([[app]],
-                                vars,
-                                mkImp(guards, res_pred)) in
-
+                 mkForall t.pos
+                          ([[app]],
+                            vars,
+                              mkImp(guards, res_pred))
+             in
+             let t_interp =
+               if is_pure
+               then mkAnd (t_interp, mk_IsTotFun f)
+               else t_interp
+             in
              let cvars = Term.free_variables t_interp |> List.filter (fun x -> fv_name x <> fv_name fsym) in
              let tkey =
                mkForall t.pos ([], fsym::cvars, t_interp)
              in
-             let is_pure = U.is_pure_comp res in
-             //cf. Bug #1750
-             //We need to distinguish pure and ghost functions in the encoding
-             //both in hash consing, producing different type constructors for them
-             //And, below, when providing and interpretation of the arrow type
-             //for pure functions we only include an elimination rule
-             //whereas for ghost functions we include both intro and elimination
              let prefix =
                if is_pure
                then "Tm_arrow_"
@@ -710,11 +713,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  let a_name = "interpretation_"^tsym in
                  Util.mkAssume(mkForall t0.pos ([[f_has_t_z]],
                                                 fsym::cvars,
-                                                (let f = if is_pure //cf. Bug #1750 and comment above
-                                                         then mkImp
-                                                         else mkIff
-                                                 in
-                                                 f (f_has_t_z, t_interp))),
+                                                 mkIff (f_has_t_z, t_interp)),
                                Some a_name,
                                module_name ^ "_" ^ a_name)
              in

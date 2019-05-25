@@ -942,6 +942,7 @@ and mkPrelude z3options =
                     (HasTypeFuel ZFuel x t))\n\
                 (define-fun HasType ((x Term) (t Term)) Bool\n\
                     (HasTypeFuel MaxIFuel x t))\n\
+                (declare-fun IsTotFun (Term) Bool)\n
                 ;;fuel irrelevance\n\
                 (assert (forall ((f Fuel) (x Term) (t Term))\n\
                                 (! (= (HasTypeFuel (SFuel f) x t)\n\
@@ -1114,6 +1115,7 @@ let mk_Valid t        = match t.tm with
         mkApp("Valid",  [t]) t.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
+let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng
 let mk_IsTyped v      = mkApp("IsTyped", [v]) norng
 let mk_HasTypeFuel f v t =
    if Options.unthrottle_inductives()

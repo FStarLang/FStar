@@ -1095,7 +1095,7 @@ let check_multi_eq (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)>
         | [], (e, n) :: _ ->
             Some (e, 0, n)
 
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 <> hd2 ->
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2  ->
             if hd1 < hd2 then
                 Some (hd1, n1, 0)
             else if hd1 > hd2 then
