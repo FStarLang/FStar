@@ -11,6 +11,7 @@ open FStar.Range
 
 module U = FStar.Util
 module QH = FStar.QueryHelper
+module PH = FStar.PushHelper
 module PI = FStar.Parser.ParseIt
 
 (* Request *)
@@ -103,9 +104,8 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | ChangeWatch -> (None, Inl st)
   | Symbol sym -> (Some (Inl JsonNull), Inl st)
   | ExecCommand cmd -> (Some (Inl JsonNull), Inl st)
-  | DidOpen { fname = f; langId = _; version = _; text = t } ->
-      PI.add_vfs_entry (uri_to_path f) t; // Cache contents in F*'s VFS
-      (None, Inl st)
+  | DidOpen { fname = _; langId = _; version = _; text = t } ->
+      (None, Inl (PH.full_lax t st))
   | DidChange -> (None, Inl st)
   | WillSave txid -> (None, Inl st)
   | WillSaveWait txid -> (Some (Inl JsonNull), Inl st)

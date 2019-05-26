@@ -351,104 +351,22 @@ let (string_of_repl_task : FStar_JsonHelper.repl_task -> Prims.string) =
         FStar_Util.format1 "PushFragment { code = %s }"
           frag.FStar_Parser_ParseIt.frag_text
     | FStar_JsonHelper.Noop -> "Noop {}"
-let (repl_ld_tasks_of_deps :
-  Prims.string Prims.list ->
-    FStar_JsonHelper.repl_task Prims.list ->
-      FStar_JsonHelper.repl_task Prims.list)
-  =
-  fun deps ->
-    fun final_tasks ->
-      let wrap = dummy_tf_of_fname in
-      let rec aux deps1 final_tasks1 =
-        match deps1 with
-        | intf::impl::deps' when FStar_Universal.needs_interleaving intf impl
-            ->
-            let uu____1155 = aux deps' final_tasks1 in
-            (FStar_JsonHelper.LDInterleaved ((wrap intf), (wrap impl))) ::
-              uu____1155
-        | intf_or_impl::deps' ->
-            let uu____1165 = aux deps' final_tasks1 in
-            (FStar_JsonHelper.LDSingle (wrap intf_or_impl)) :: uu____1165
-        | [] -> final_tasks1 in
-      aux deps final_tasks
-let (deps_and_repl_ld_tasks_of_our_file :
-  Prims.string ->
-    (Prims.string Prims.list * FStar_JsonHelper.repl_task Prims.list *
-      FStar_Parser_Dep.deps))
-  =
-  fun filename ->
-    let get_mod_name fname = FStar_Parser_Dep.lowercase_module_name fname in
-    let our_mod_name = get_mod_name filename in
-    let has_our_mod_name f =
-      let uu____1219 = get_mod_name f in uu____1219 = our_mod_name in
-    let uu____1222 =
-      FStar_Dependencies.find_deps_if_needed [filename]
-        FStar_CheckedFiles.load_parsing_data_from_cache in
-    match uu____1222 with
-    | (deps, dep_graph1) ->
-        let uu____1251 = FStar_List.partition has_our_mod_name deps in
-        (match uu____1251 with
-         | (same_name, real_deps) ->
-             let intf_tasks =
-               match same_name with
-               | intf::impl::[] ->
-                   ((let uu____1301 =
-                       let uu____1303 = FStar_Parser_Dep.is_interface intf in
-                       Prims.op_Negation uu____1303 in
-                     if uu____1301
-                     then
-                       let uu____1306 =
-                         let uu____1312 =
-                           FStar_Util.format1
-                             "Expecting an interface, got %s" intf in
-                         (FStar_Errors.Fatal_MissingInterface, uu____1312) in
-                       FStar_Errors.raise_err uu____1306
-                     else ());
-                    (let uu____1319 =
-                       let uu____1321 =
-                         FStar_Parser_Dep.is_implementation impl in
-                       Prims.op_Negation uu____1321 in
-                     if uu____1319
-                     then
-                       let uu____1324 =
-                         let uu____1330 =
-                           FStar_Util.format1
-                             "Expecting an implementation, got %s" impl in
-                         (FStar_Errors.Fatal_MissingImplementation,
-                           uu____1330) in
-                       FStar_Errors.raise_err uu____1324
-                     else ());
-                    [FStar_JsonHelper.LDInterfaceOfCurrentFile
-                       (dummy_tf_of_fname intf)])
-               | impl::[] -> []
-               | uu____1340 ->
-                   let mods_str = FStar_String.concat " " same_name in
-                   let message = "Too many or too few files matching %s: %s" in
-                   ((let uu____1351 =
-                       let uu____1357 =
-                         FStar_Util.format message [our_mod_name; mods_str] in
-                       (FStar_Errors.Fatal_TooManyOrTooFewFileMatch,
-                         uu____1357) in
-                     FStar_Errors.raise_err uu____1351);
-                    []) in
-             let tasks = repl_ld_tasks_of_deps real_deps intf_tasks in
-             (real_deps, tasks, dep_graph1))
 let (update_task_timestamps :
   FStar_JsonHelper.repl_task -> FStar_JsonHelper.repl_task) =
-  fun uu___1_1376 ->
-    match uu___1_1376 with
+  fun uu___1_1096 ->
+    match uu___1_1096 with
     | FStar_JsonHelper.LDInterleaved (intf, impl) ->
-        let uu____1379 =
-          let uu____1384 = tf_of_fname intf.FStar_JsonHelper.tf_fname in
-          let uu____1385 = tf_of_fname impl.FStar_JsonHelper.tf_fname in
-          (uu____1384, uu____1385) in
-        FStar_JsonHelper.LDInterleaved uu____1379
+        let uu____1099 =
+          let uu____1104 = tf_of_fname intf.FStar_JsonHelper.tf_fname in
+          let uu____1105 = tf_of_fname impl.FStar_JsonHelper.tf_fname in
+          (uu____1104, uu____1105) in
+        FStar_JsonHelper.LDInterleaved uu____1099
     | FStar_JsonHelper.LDSingle intf_or_impl ->
-        let uu____1387 = tf_of_fname intf_or_impl.FStar_JsonHelper.tf_fname in
-        FStar_JsonHelper.LDSingle uu____1387
+        let uu____1107 = tf_of_fname intf_or_impl.FStar_JsonHelper.tf_fname in
+        FStar_JsonHelper.LDSingle uu____1107
     | FStar_JsonHelper.LDInterfaceOfCurrentFile intf ->
-        let uu____1389 = tf_of_fname intf.FStar_JsonHelper.tf_fname in
-        FStar_JsonHelper.LDInterfaceOfCurrentFile uu____1389
+        let uu____1109 = tf_of_fname intf.FStar_JsonHelper.tf_fname in
+        FStar_JsonHelper.LDInterfaceOfCurrentFile uu____1109
     | other -> other
 let (run_repl_transaction :
   FStar_JsonHelper.repl_state ->
@@ -464,53 +382,53 @@ let (run_repl_transaction :
           let st1 =
             FStar_PushHelper.push_repl "run_repl_transaction" push_kind task
               st in
-          let uu____1421 = track_name_changes st1.FStar_JsonHelper.repl_env in
-          match uu____1421 with
+          let uu____1141 = track_name_changes st1.FStar_JsonHelper.repl_env in
+          match uu____1141 with
           | (env, finish_name_tracking) ->
-              let check_success uu____1466 =
-                (let uu____1469 = FStar_Errors.get_err_count () in
-                 uu____1469 = (Prims.parse_int "0")) &&
+              let check_success uu____1186 =
+                (let uu____1189 = FStar_Errors.get_err_count () in
+                 uu____1189 = (Prims.parse_int "0")) &&
                   (Prims.op_Negation must_rollback) in
-              let uu____1473 =
-                let uu____1481 =
+              let uu____1193 =
+                let uu____1201 =
                   with_captured_errors env FStar_Util.sigint_raise
                     (fun env1 ->
-                       let uu____1495 =
+                       let uu____1215 =
                          FStar_PushHelper.run_repl_task
                            st1.FStar_JsonHelper.repl_curmod env1 task in
                        FStar_All.pipe_left
-                         (fun _1514 -> FStar_Pervasives_Native.Some _1514)
-                         uu____1495) in
-                match uu____1481 with
+                         (fun _1234 -> FStar_Pervasives_Native.Some _1234)
+                         uu____1215) in
+                match uu____1201 with
                 | FStar_Pervasives_Native.Some (curmod, env1) when
                     check_success () -> (curmod, env1, true)
-                | uu____1530 ->
+                | uu____1250 ->
                     ((st1.FStar_JsonHelper.repl_curmod), env, false) in
-              (match uu____1473 with
+              (match uu____1193 with
                | (curmod, env1, success) ->
-                   let uu____1549 = finish_name_tracking env1 in
-                   (match uu____1549 with
+                   let uu____1269 = finish_name_tracking env1 in
+                   (match uu____1269 with
                     | (env2, name_events) ->
                         let st2 =
                           if success
                           then
                             let st2 =
-                              let uu___239_1570 = st1 in
+                              let uu___197_1290 = st1 in
                               {
                                 FStar_JsonHelper.repl_line =
-                                  (uu___239_1570.FStar_JsonHelper.repl_line);
+                                  (uu___197_1290.FStar_JsonHelper.repl_line);
                                 FStar_JsonHelper.repl_column =
-                                  (uu___239_1570.FStar_JsonHelper.repl_column);
+                                  (uu___197_1290.FStar_JsonHelper.repl_column);
                                 FStar_JsonHelper.repl_fname =
-                                  (uu___239_1570.FStar_JsonHelper.repl_fname);
+                                  (uu___197_1290.FStar_JsonHelper.repl_fname);
                                 FStar_JsonHelper.repl_deps_stack =
-                                  (uu___239_1570.FStar_JsonHelper.repl_deps_stack);
+                                  (uu___197_1290.FStar_JsonHelper.repl_deps_stack);
                                 FStar_JsonHelper.repl_curmod = curmod;
                                 FStar_JsonHelper.repl_env = env2;
                                 FStar_JsonHelper.repl_stdin =
-                                  (uu___239_1570.FStar_JsonHelper.repl_stdin);
+                                  (uu___197_1290.FStar_JsonHelper.repl_stdin);
                                 FStar_JsonHelper.repl_names =
-                                  (uu___239_1570.FStar_JsonHelper.repl_names)
+                                  (uu___197_1290.FStar_JsonHelper.repl_names)
                               } in
                             commit_name_tracking st2 name_events
                           else
@@ -528,14 +446,14 @@ let (run_repl_ld_transactions :
     fun tasks ->
       fun progress_callback ->
         let debug1 verb task =
-          let uu____1617 = FStar_Options.debug_any () in
-          if uu____1617
+          let uu____1337 = FStar_Options.debug_any () in
+          if uu____1337
           then
-            let uu____1620 = string_of_repl_task task in
-            FStar_Util.print2 "%s %s" verb uu____1620
+            let uu____1340 = string_of_repl_task task in
+            FStar_Util.print2 "%s %s" verb uu____1340
           else () in
-        let rec revert_many st1 uu___2_1645 =
-          match uu___2_1645 with
+        let rec revert_many st1 uu___2_1365 =
+          match uu___2_1365 with
           | [] -> st1
           | (_id, (task, _st'))::entries ->
               (debug1 "Reverting" task;
@@ -545,26 +463,26 @@ let (run_repl_ld_transactions :
                   FStar_TypeChecker_Env.dep_graph
                     st1.FStar_JsonHelper.repl_env in
                 let st'1 =
-                  let uu___265_1698 = st' in
-                  let uu____1699 =
+                  let uu___223_1418 = st' in
+                  let uu____1419 =
                     FStar_TypeChecker_Env.set_dep_graph
                       st'.FStar_JsonHelper.repl_env dep_graph1 in
                   {
                     FStar_JsonHelper.repl_line =
-                      (uu___265_1698.FStar_JsonHelper.repl_line);
+                      (uu___223_1418.FStar_JsonHelper.repl_line);
                     FStar_JsonHelper.repl_column =
-                      (uu___265_1698.FStar_JsonHelper.repl_column);
+                      (uu___223_1418.FStar_JsonHelper.repl_column);
                     FStar_JsonHelper.repl_fname =
-                      (uu___265_1698.FStar_JsonHelper.repl_fname);
+                      (uu___223_1418.FStar_JsonHelper.repl_fname);
                     FStar_JsonHelper.repl_deps_stack =
-                      (uu___265_1698.FStar_JsonHelper.repl_deps_stack);
+                      (uu___223_1418.FStar_JsonHelper.repl_deps_stack);
                     FStar_JsonHelper.repl_curmod =
-                      (uu___265_1698.FStar_JsonHelper.repl_curmod);
-                    FStar_JsonHelper.repl_env = uu____1699;
+                      (uu___223_1418.FStar_JsonHelper.repl_curmod);
+                    FStar_JsonHelper.repl_env = uu____1419;
                     FStar_JsonHelper.repl_stdin =
-                      (uu___265_1698.FStar_JsonHelper.repl_stdin);
+                      (uu___223_1418.FStar_JsonHelper.repl_stdin);
                     FStar_JsonHelper.repl_names =
-                      (uu___265_1698.FStar_JsonHelper.repl_names)
+                      (uu___223_1418.FStar_JsonHelper.repl_names)
                   } in
                 revert_many st'1 entries)) in
         let rec aux st1 tasks1 previous =
@@ -573,64 +491,64 @@ let (run_repl_ld_transactions :
           | (task::tasks2, []) ->
               (debug1 "Loading" task;
                progress_callback task;
-               (let uu____1752 = FStar_Options.restore_cmd_line_options false in
-                FStar_All.pipe_right uu____1752 (fun a1 -> ()));
+               (let uu____1472 = FStar_Options.restore_cmd_line_options false in
+                FStar_All.pipe_right uu____1472 (fun a1 -> ()));
                (let timestamped_task = update_task_timestamps task in
                 let push_kind =
-                  let uu____1756 = FStar_Options.lax () in
-                  if uu____1756
+                  let uu____1476 = FStar_Options.lax () in
+                  if uu____1476
                   then FStar_PushHelper.LaxCheck
                   else FStar_PushHelper.FullCheck in
-                let uu____1761 =
+                let uu____1481 =
                   run_repl_transaction st1 push_kind false timestamped_task in
-                match uu____1761 with
+                match uu____1481 with
                 | (success, st2) ->
                     if success
                     then
-                      let uu____1781 =
-                        let uu___290_1782 = st2 in
-                        let uu____1783 =
+                      let uu____1501 =
+                        let uu___248_1502 = st2 in
+                        let uu____1503 =
                           FStar_ST.op_Bang FStar_PushHelper.repl_stack in
                         {
                           FStar_JsonHelper.repl_line =
-                            (uu___290_1782.FStar_JsonHelper.repl_line);
+                            (uu___248_1502.FStar_JsonHelper.repl_line);
                           FStar_JsonHelper.repl_column =
-                            (uu___290_1782.FStar_JsonHelper.repl_column);
+                            (uu___248_1502.FStar_JsonHelper.repl_column);
                           FStar_JsonHelper.repl_fname =
-                            (uu___290_1782.FStar_JsonHelper.repl_fname);
-                          FStar_JsonHelper.repl_deps_stack = uu____1783;
+                            (uu___248_1502.FStar_JsonHelper.repl_fname);
+                          FStar_JsonHelper.repl_deps_stack = uu____1503;
                           FStar_JsonHelper.repl_curmod =
-                            (uu___290_1782.FStar_JsonHelper.repl_curmod);
+                            (uu___248_1502.FStar_JsonHelper.repl_curmod);
                           FStar_JsonHelper.repl_env =
-                            (uu___290_1782.FStar_JsonHelper.repl_env);
+                            (uu___248_1502.FStar_JsonHelper.repl_env);
                           FStar_JsonHelper.repl_stdin =
-                            (uu___290_1782.FStar_JsonHelper.repl_stdin);
+                            (uu___248_1502.FStar_JsonHelper.repl_stdin);
                           FStar_JsonHelper.repl_names =
-                            (uu___290_1782.FStar_JsonHelper.repl_names)
+                            (uu___248_1502.FStar_JsonHelper.repl_names)
                         } in
-                      aux uu____1781 tasks2 []
+                      aux uu____1501 tasks2 []
                     else FStar_Util.Inr st2))
           | (task::tasks2, prev::previous1) when
-              let uu____1827 = update_task_timestamps task in
+              let uu____1547 = update_task_timestamps task in
               (FStar_Pervasives_Native.fst (FStar_Pervasives_Native.snd prev))
-                = uu____1827
+                = uu____1547
               -> (debug1 "Skipping" task; aux st1 tasks2 previous1)
           | (tasks2, previous1) ->
-              let uu____1844 = revert_many st1 previous1 in
-              aux uu____1844 tasks2 [] in
+              let uu____1564 = revert_many st1 previous1 in
+              aux uu____1564 tasks2 [] in
         aux st tasks (FStar_List.rev st.FStar_JsonHelper.repl_deps_stack)
 let (js_pushkind : FStar_Util.json -> FStar_PushHelper.push_kind) =
   fun s ->
-    let uu____1859 = FStar_JsonHelper.js_str s in
-    match uu____1859 with
+    let uu____1579 = FStar_JsonHelper.js_str s in
+    match uu____1579 with
     | "syntax" -> FStar_PushHelper.SyntaxCheck
     | "lax" -> FStar_PushHelper.LaxCheck
     | "full" -> FStar_PushHelper.FullCheck
-    | uu____1864 -> FStar_JsonHelper.js_fail "push_kind" s
+    | uu____1584 -> FStar_JsonHelper.js_fail "push_kind" s
 let (js_reductionrule : FStar_Util.json -> FStar_TypeChecker_Env.step) =
   fun s ->
-    let uu____1873 = FStar_JsonHelper.js_str s in
-    match uu____1873 with
+    let uu____1593 = FStar_JsonHelper.js_str s in
+    match uu____1593 with
     | "beta" -> FStar_TypeChecker_Env.Beta
     | "delta" ->
         FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant
@@ -638,24 +556,24 @@ let (js_reductionrule : FStar_Util.json -> FStar_TypeChecker_Env.step) =
     | "zeta" -> FStar_TypeChecker_Env.Zeta
     | "reify" -> FStar_TypeChecker_Env.Reify
     | "pure-subterms" -> FStar_TypeChecker_Env.PureSubtermsWithinComputations
-    | uu____1881 -> FStar_JsonHelper.js_fail "reduction rule" s
+    | uu____1601 -> FStar_JsonHelper.js_fail "reduction rule" s
 type completion_context =
   | CKCode 
   | CKOption of Prims.bool 
   | CKModuleOrNamespace of (Prims.bool * Prims.bool) 
 let (uu___is_CKCode : completion_context -> Prims.bool) =
   fun projectee ->
-    match projectee with | CKCode -> true | uu____1910 -> false
+    match projectee with | CKCode -> true | uu____1630 -> false
 let (uu___is_CKOption : completion_context -> Prims.bool) =
   fun projectee ->
-    match projectee with | CKOption _0 -> true | uu____1923 -> false
+    match projectee with | CKOption _0 -> true | uu____1643 -> false
 let (__proj__CKOption__item___0 : completion_context -> Prims.bool) =
   fun projectee -> match projectee with | CKOption _0 -> _0
 let (uu___is_CKModuleOrNamespace : completion_context -> Prims.bool) =
   fun projectee ->
     match projectee with
     | CKModuleOrNamespace _0 -> true
-    | uu____1951 -> false
+    | uu____1671 -> false
 let (__proj__CKModuleOrNamespace__item___0 :
   completion_context -> (Prims.bool * Prims.bool)) =
   fun projectee -> match projectee with | CKModuleOrNamespace _0 -> _0
@@ -665,8 +583,8 @@ let (js_optional_completion_context :
     match k with
     | FStar_Pervasives_Native.None -> CKCode
     | FStar_Pervasives_Native.Some k1 ->
-        let uu____1989 = FStar_JsonHelper.js_str k1 in
-        (match uu____1989 with
+        let uu____1709 = FStar_JsonHelper.js_str k1 in
+        (match uu____1709 with
          | "symbol" -> CKCode
          | "code" -> CKCode
          | "set-options" -> CKOption false
@@ -675,7 +593,7 @@ let (js_optional_completion_context :
          | "let-open" -> CKModuleOrNamespace (true, true)
          | "include" -> CKModuleOrNamespace (true, false)
          | "module-alias" -> CKModuleOrNamespace (true, false)
-         | uu____2017 ->
+         | uu____1737 ->
              FStar_JsonHelper.js_fail
                "completion context (code, set-options, reset-options, open, let-open, include, module-alias)"
                k1)
@@ -686,24 +604,24 @@ type lookup_context =
   | LKCode 
 let (uu___is_LKSymbolOnly : lookup_context -> Prims.bool) =
   fun projectee ->
-    match projectee with | LKSymbolOnly -> true | uu____2029 -> false
+    match projectee with | LKSymbolOnly -> true | uu____1749 -> false
 let (uu___is_LKModule : lookup_context -> Prims.bool) =
   fun projectee ->
-    match projectee with | LKModule -> true | uu____2040 -> false
+    match projectee with | LKModule -> true | uu____1760 -> false
 let (uu___is_LKOption : lookup_context -> Prims.bool) =
   fun projectee ->
-    match projectee with | LKOption -> true | uu____2051 -> false
+    match projectee with | LKOption -> true | uu____1771 -> false
 let (uu___is_LKCode : lookup_context -> Prims.bool) =
   fun projectee ->
-    match projectee with | LKCode -> true | uu____2062 -> false
+    match projectee with | LKCode -> true | uu____1782 -> false
 let (js_optional_lookup_context :
   FStar_Util.json FStar_Pervasives_Native.option -> lookup_context) =
   fun k ->
     match k with
     | FStar_Pervasives_Native.None -> LKSymbolOnly
     | FStar_Pervasives_Native.Some k1 ->
-        let uu____2075 = FStar_JsonHelper.js_str k1 in
-        (match uu____2075 with
+        let uu____1795 = FStar_JsonHelper.js_str k1 in
+        (match uu____1795 with
          | "symbol-only" -> LKSymbolOnly
          | "code" -> LKCode
          | "set-options" -> LKOption
@@ -712,7 +630,7 @@ let (js_optional_lookup_context :
          | "let-open" -> LKModule
          | "include" -> LKModule
          | "module-alias" -> LKModule
-         | uu____2085 ->
+         | uu____1805 ->
              FStar_JsonHelper.js_fail
                "lookup context (symbol-only, code, set-options, reset-options, open, let-open, include, module-alias)"
                k1)
@@ -737,40 +655,40 @@ and query = {
   qq: query' ;
   qid: Prims.string }
 let (uu___is_Exit : query' -> Prims.bool) =
-  fun projectee -> match projectee with | Exit -> true | uu____2202 -> false
+  fun projectee -> match projectee with | Exit -> true | uu____1922 -> false
 let (uu___is_DescribeProtocol : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | DescribeProtocol -> true | uu____2213 -> false
+    match projectee with | DescribeProtocol -> true | uu____1933 -> false
 let (uu___is_DescribeRepl : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | DescribeRepl -> true | uu____2224 -> false
+    match projectee with | DescribeRepl -> true | uu____1944 -> false
 let (uu___is_Segment : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | Segment _0 -> true | uu____2237 -> false
+    match projectee with | Segment _0 -> true | uu____1957 -> false
 let (__proj__Segment__item___0 : query' -> Prims.string) =
   fun projectee -> match projectee with | Segment _0 -> _0
 let (uu___is_Pop : query' -> Prims.bool) =
-  fun projectee -> match projectee with | Pop -> true | uu____2258 -> false
+  fun projectee -> match projectee with | Pop -> true | uu____1978 -> false
 let (uu___is_Push : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | Push _0 -> true | uu____2270 -> false
+    match projectee with | Push _0 -> true | uu____1990 -> false
 let (__proj__Push__item___0 : query' -> push_query) =
   fun projectee -> match projectee with | Push _0 -> _0
 let (uu___is_VfsAdd : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | VfsAdd _0 -> true | uu____2297 -> false
+    match projectee with | VfsAdd _0 -> true | uu____2017 -> false
 let (__proj__VfsAdd__item___0 :
   query' -> (Prims.string FStar_Pervasives_Native.option * Prims.string)) =
   fun projectee -> match projectee with | VfsAdd _0 -> _0
 let (uu___is_AutoComplete : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | AutoComplete _0 -> true | uu____2345 -> false
+    match projectee with | AutoComplete _0 -> true | uu____2065 -> false
 let (__proj__AutoComplete__item___0 :
   query' -> (Prims.string * completion_context)) =
   fun projectee -> match projectee with | AutoComplete _0 -> _0
 let (uu___is_Lookup : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | Lookup _0 -> true | uu____2393 -> false
+    match projectee with | Lookup _0 -> true | uu____2113 -> false
 let (__proj__Lookup__item___0 :
   query' ->
     (Prims.string * lookup_context * position FStar_Pervasives_Native.option
@@ -778,7 +696,7 @@ let (__proj__Lookup__item___0 :
   = fun projectee -> match projectee with | Lookup _0 -> _0
 let (uu___is_Compute : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | Compute _0 -> true | uu____2463 -> false
+    match projectee with | Compute _0 -> true | uu____2183 -> false
 let (__proj__Compute__item___0 :
   query' ->
     (Prims.string * FStar_TypeChecker_Env.step Prims.list
@@ -786,17 +704,17 @@ let (__proj__Compute__item___0 :
   = fun projectee -> match projectee with | Compute _0 -> _0
 let (uu___is_Search : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | Search _0 -> true | uu____2510 -> false
+    match projectee with | Search _0 -> true | uu____2230 -> false
 let (__proj__Search__item___0 : query' -> Prims.string) =
   fun projectee -> match projectee with | Search _0 -> _0
 let (uu___is_GenericError : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | GenericError _0 -> true | uu____2533 -> false
+    match projectee with | GenericError _0 -> true | uu____2253 -> false
 let (__proj__GenericError__item___0 : query' -> Prims.string) =
   fun projectee -> match projectee with | GenericError _0 -> _0
 let (uu___is_ProtocolViolation : query' -> Prims.bool) =
   fun projectee ->
-    match projectee with | ProtocolViolation _0 -> true | uu____2556 -> false
+    match projectee with | ProtocolViolation _0 -> true | uu____2276 -> false
 let (__proj__ProtocolViolation__item___0 : query' -> Prims.string) =
   fun projectee -> match projectee with | ProtocolViolation _0 -> _0
 let (__proj__Mkquery__item__qq : query -> query') =
@@ -804,26 +722,26 @@ let (__proj__Mkquery__item__qq : query -> query') =
 let (__proj__Mkquery__item__qid : query -> Prims.string) =
   fun projectee -> match projectee with | { qq; qid;_} -> qid
 let (query_needs_current_module : query' -> Prims.bool) =
-  fun uu___3_2594 ->
-    match uu___3_2594 with
+  fun uu___3_2314 ->
+    match uu___3_2314 with
     | Exit -> false
     | DescribeProtocol -> false
     | DescribeRepl -> false
-    | Segment uu____2599 -> false
+    | Segment uu____2319 -> false
     | Pop -> false
     | Push
-        { push_kind = uu____2603; push_code = uu____2604;
-          push_line = uu____2605; push_column = uu____2606;
+        { push_kind = uu____2323; push_code = uu____2324;
+          push_line = uu____2325; push_column = uu____2326;
           push_peek_only = false;_}
         -> false
-    | VfsAdd uu____2612 -> false
-    | GenericError uu____2622 -> false
-    | ProtocolViolation uu____2625 -> false
-    | Push uu____2628 -> true
-    | AutoComplete uu____2630 -> true
-    | Lookup uu____2637 -> true
-    | Compute uu____2653 -> true
-    | Search uu____2664 -> true
+    | VfsAdd uu____2332 -> false
+    | GenericError uu____2342 -> false
+    | ProtocolViolation uu____2345 -> false
+    | Push uu____2348 -> true
+    | AutoComplete uu____2350 -> true
+    | Lookup uu____2357 -> true
+    | Compute uu____2373 -> true
+    | Search uu____2384 -> true
 let (interactive_protocol_vernum : Prims.int) = (Prims.parse_int "2")
 let (interactive_protocol_features : Prims.string Prims.list) =
   ["autocomplete";
@@ -853,208 +771,208 @@ type query_status =
   | QueryViolatesProtocol 
 let (uu___is_QueryOK : query_status -> Prims.bool) =
   fun projectee ->
-    match projectee with | QueryOK -> true | uu____2726 -> false
+    match projectee with | QueryOK -> true | uu____2446 -> false
 let (uu___is_QueryNOK : query_status -> Prims.bool) =
   fun projectee ->
-    match projectee with | QueryNOK -> true | uu____2737 -> false
+    match projectee with | QueryNOK -> true | uu____2457 -> false
 let (uu___is_QueryViolatesProtocol : query_status -> Prims.bool) =
   fun projectee ->
     match projectee with
     | QueryViolatesProtocol -> true
-    | uu____2748 -> false
+    | uu____2468 -> false
 let (wrap_js_failure :
   Prims.string -> Prims.string -> FStar_Util.json -> query) =
   fun qid ->
     fun expected ->
       fun got ->
-        let uu____2770 =
-          let uu____2771 =
-            let uu____2773 = FStar_JsonHelper.json_debug got in
+        let uu____2490 =
+          let uu____2491 =
+            let uu____2493 = FStar_JsonHelper.json_debug got in
             FStar_Util.format2 "JSON decoding failed: expected %s, got %s"
-              expected uu____2773 in
-          ProtocolViolation uu____2771 in
-        { qq = uu____2770; qid }
+              expected uu____2493 in
+          ProtocolViolation uu____2491 in
+        { qq = uu____2490; qid }
 let (unpack_interactive_query : FStar_Util.json -> query) =
   fun json ->
     let assoc1 errloc key a =
-      let uu____2816 = FStar_JsonHelper.try_assoc key a in
-      match uu____2816 with
+      let uu____2536 = FStar_JsonHelper.try_assoc key a in
+      match uu____2536 with
       | FStar_Pervasives_Native.Some v1 -> v1
       | FStar_Pervasives_Native.None ->
-          let uu____2820 =
-            let uu____2821 =
+          let uu____2540 =
+            let uu____2541 =
               FStar_Util.format2 "Missing key [%s] in %s." key errloc in
-            FStar_JsonHelper.InvalidQuery uu____2821 in
-          FStar_Exn.raise uu____2820 in
+            FStar_JsonHelper.InvalidQuery uu____2541 in
+          FStar_Exn.raise uu____2540 in
     let request = FStar_All.pipe_right json FStar_JsonHelper.js_assoc in
     let qid =
-      let uu____2841 = assoc1 "query" "query-id" request in
-      FStar_All.pipe_right uu____2841 FStar_JsonHelper.js_str in
+      let uu____2561 = assoc1 "query" "query-id" request in
+      FStar_All.pipe_right uu____2561 FStar_JsonHelper.js_str in
     try
-      (fun uu___403_2851 ->
+      (fun uu___361_2571 ->
          match () with
          | () ->
              let query =
-               let uu____2854 = assoc1 "query" "query" request in
-               FStar_All.pipe_right uu____2854 FStar_JsonHelper.js_str in
+               let uu____2574 = assoc1 "query" "query" request in
+               FStar_All.pipe_right uu____2574 FStar_JsonHelper.js_str in
              let args =
-               let uu____2866 = assoc1 "query" "args" request in
-               FStar_All.pipe_right uu____2866 FStar_JsonHelper.js_assoc in
+               let uu____2586 = assoc1 "query" "args" request in
+               FStar_All.pipe_right uu____2586 FStar_JsonHelper.js_assoc in
              let arg1 k = assoc1 "[args]" k args in
              let try_arg k =
-               let uu____2895 = FStar_JsonHelper.try_assoc k args in
-               match uu____2895 with
+               let uu____2615 = FStar_JsonHelper.try_assoc k args in
+               match uu____2615 with
                | FStar_Pervasives_Native.Some (FStar_Util.JsonNull) ->
                    FStar_Pervasives_Native.None
                | other -> other in
-             let uu____2903 =
+             let uu____2623 =
                match query with
                | "exit" -> Exit
                | "pop" -> Pop
                | "describe-protocol" -> DescribeProtocol
                | "describe-repl" -> DescribeRepl
                | "segment" ->
-                   let uu____2909 =
-                     let uu____2911 = arg1 "code" in
-                     FStar_All.pipe_right uu____2911 FStar_JsonHelper.js_str in
-                   Segment uu____2909
+                   let uu____2629 =
+                     let uu____2631 = arg1 "code" in
+                     FStar_All.pipe_right uu____2631 FStar_JsonHelper.js_str in
+                   Segment uu____2629
                | "peek" ->
-                   let uu____2915 =
-                     let uu____2916 =
-                       let uu____2917 = arg1 "kind" in
-                       FStar_All.pipe_right uu____2917 js_pushkind in
-                     let uu____2919 =
-                       let uu____2921 = arg1 "code" in
-                       FStar_All.pipe_right uu____2921
+                   let uu____2635 =
+                     let uu____2636 =
+                       let uu____2637 = arg1 "kind" in
+                       FStar_All.pipe_right uu____2637 js_pushkind in
+                     let uu____2639 =
+                       let uu____2641 = arg1 "code" in
+                       FStar_All.pipe_right uu____2641
                          FStar_JsonHelper.js_str in
-                     let uu____2924 =
-                       let uu____2926 = arg1 "line" in
-                       FStar_All.pipe_right uu____2926
+                     let uu____2644 =
+                       let uu____2646 = arg1 "line" in
+                       FStar_All.pipe_right uu____2646
                          FStar_JsonHelper.js_int in
-                     let uu____2929 =
-                       let uu____2931 = arg1 "column" in
-                       FStar_All.pipe_right uu____2931
+                     let uu____2649 =
+                       let uu____2651 = arg1 "column" in
+                       FStar_All.pipe_right uu____2651
                          FStar_JsonHelper.js_int in
                      {
-                       push_kind = uu____2916;
-                       push_code = uu____2919;
-                       push_line = uu____2924;
-                       push_column = uu____2929;
+                       push_kind = uu____2636;
+                       push_code = uu____2639;
+                       push_line = uu____2644;
+                       push_column = uu____2649;
                        push_peek_only = (query = "peek")
                      } in
-                   Push uu____2915
+                   Push uu____2635
                | "push" ->
-                   let uu____2937 =
-                     let uu____2938 =
-                       let uu____2939 = arg1 "kind" in
-                       FStar_All.pipe_right uu____2939 js_pushkind in
-                     let uu____2941 =
-                       let uu____2943 = arg1 "code" in
-                       FStar_All.pipe_right uu____2943
+                   let uu____2657 =
+                     let uu____2658 =
+                       let uu____2659 = arg1 "kind" in
+                       FStar_All.pipe_right uu____2659 js_pushkind in
+                     let uu____2661 =
+                       let uu____2663 = arg1 "code" in
+                       FStar_All.pipe_right uu____2663
                          FStar_JsonHelper.js_str in
-                     let uu____2946 =
-                       let uu____2948 = arg1 "line" in
-                       FStar_All.pipe_right uu____2948
+                     let uu____2666 =
+                       let uu____2668 = arg1 "line" in
+                       FStar_All.pipe_right uu____2668
                          FStar_JsonHelper.js_int in
-                     let uu____2951 =
-                       let uu____2953 = arg1 "column" in
-                       FStar_All.pipe_right uu____2953
+                     let uu____2671 =
+                       let uu____2673 = arg1 "column" in
+                       FStar_All.pipe_right uu____2673
                          FStar_JsonHelper.js_int in
                      {
-                       push_kind = uu____2938;
-                       push_code = uu____2941;
-                       push_line = uu____2946;
-                       push_column = uu____2951;
+                       push_kind = uu____2658;
+                       push_code = uu____2661;
+                       push_line = uu____2666;
+                       push_column = uu____2671;
                        push_peek_only = (query = "peek")
                      } in
-                   Push uu____2937
+                   Push uu____2657
                | "autocomplete" ->
-                   let uu____2959 =
-                     let uu____2965 =
-                       let uu____2967 = arg1 "partial-symbol" in
-                       FStar_All.pipe_right uu____2967
+                   let uu____2679 =
+                     let uu____2685 =
+                       let uu____2687 = arg1 "partial-symbol" in
+                       FStar_All.pipe_right uu____2687
                          FStar_JsonHelper.js_str in
-                     let uu____2970 =
-                       let uu____2971 = try_arg "context" in
-                       FStar_All.pipe_right uu____2971
+                     let uu____2690 =
+                       let uu____2691 = try_arg "context" in
+                       FStar_All.pipe_right uu____2691
                          js_optional_completion_context in
-                     (uu____2965, uu____2970) in
-                   AutoComplete uu____2959
+                     (uu____2685, uu____2690) in
+                   AutoComplete uu____2679
                | "lookup" ->
-                   let uu____2979 =
-                     let uu____2994 =
-                       let uu____2996 = arg1 "symbol" in
-                       FStar_All.pipe_right uu____2996
+                   let uu____2699 =
+                     let uu____2714 =
+                       let uu____2716 = arg1 "symbol" in
+                       FStar_All.pipe_right uu____2716
                          FStar_JsonHelper.js_str in
-                     let uu____2999 =
-                       let uu____3000 = try_arg "context" in
-                       FStar_All.pipe_right uu____3000
+                     let uu____2719 =
+                       let uu____2720 = try_arg "context" in
+                       FStar_All.pipe_right uu____2720
                          js_optional_lookup_context in
-                     let uu____3006 =
-                       let uu____3009 =
-                         let uu____3019 = try_arg "location" in
-                         FStar_All.pipe_right uu____3019
+                     let uu____2726 =
+                       let uu____2729 =
+                         let uu____2739 = try_arg "location" in
+                         FStar_All.pipe_right uu____2739
                            (FStar_Util.map_option FStar_JsonHelper.js_assoc) in
-                       FStar_All.pipe_right uu____3009
+                       FStar_All.pipe_right uu____2729
                          (FStar_Util.map_option
                             (fun loc ->
-                               let uu____3080 =
-                                 let uu____3082 =
+                               let uu____2800 =
+                                 let uu____2802 =
                                    assoc1 "[location]" "filename" loc in
-                                 FStar_All.pipe_right uu____3082
+                                 FStar_All.pipe_right uu____2802
                                    FStar_JsonHelper.js_str in
-                               let uu____3086 =
-                                 let uu____3088 =
+                               let uu____2806 =
+                                 let uu____2808 =
                                    assoc1 "[location]" "line" loc in
-                                 FStar_All.pipe_right uu____3088
+                                 FStar_All.pipe_right uu____2808
                                    FStar_JsonHelper.js_int in
-                               let uu____3092 =
-                                 let uu____3094 =
+                               let uu____2812 =
+                                 let uu____2814 =
                                    assoc1 "[location]" "column" loc in
-                                 FStar_All.pipe_right uu____3094
+                                 FStar_All.pipe_right uu____2814
                                    FStar_JsonHelper.js_int in
-                               (uu____3080, uu____3086, uu____3092))) in
-                     let uu____3101 =
-                       let uu____3105 = arg1 "requested-info" in
-                       FStar_All.pipe_right uu____3105
+                               (uu____2800, uu____2806, uu____2812))) in
+                     let uu____2821 =
+                       let uu____2825 = arg1 "requested-info" in
+                       FStar_All.pipe_right uu____2825
                          (FStar_JsonHelper.js_list FStar_JsonHelper.js_str) in
-                     (uu____2994, uu____2999, uu____3006, uu____3101) in
-                   Lookup uu____2979
+                     (uu____2714, uu____2719, uu____2726, uu____2821) in
+                   Lookup uu____2699
                | "compute" ->
-                   let uu____3118 =
-                     let uu____3128 =
-                       let uu____3130 = arg1 "term" in
-                       FStar_All.pipe_right uu____3130
+                   let uu____2838 =
+                     let uu____2848 =
+                       let uu____2850 = arg1 "term" in
+                       FStar_All.pipe_right uu____2850
                          FStar_JsonHelper.js_str in
-                     let uu____3133 =
-                       let uu____3138 = try_arg "rules" in
-                       FStar_All.pipe_right uu____3138
+                     let uu____2853 =
+                       let uu____2858 = try_arg "rules" in
+                       FStar_All.pipe_right uu____2858
                          (FStar_Util.map_option
                             (FStar_JsonHelper.js_list js_reductionrule)) in
-                     (uu____3128, uu____3133) in
-                   Compute uu____3118
+                     (uu____2848, uu____2853) in
+                   Compute uu____2838
                | "search" ->
-                   let uu____3156 =
-                     let uu____3158 = arg1 "terms" in
-                     FStar_All.pipe_right uu____3158 FStar_JsonHelper.js_str in
-                   Search uu____3156
+                   let uu____2876 =
+                     let uu____2878 = arg1 "terms" in
+                     FStar_All.pipe_right uu____2878 FStar_JsonHelper.js_str in
+                   Search uu____2876
                | "vfs-add" ->
-                   let uu____3162 =
-                     let uu____3171 =
-                       let uu____3175 = try_arg "filename" in
-                       FStar_All.pipe_right uu____3175
+                   let uu____2882 =
+                     let uu____2891 =
+                       let uu____2895 = try_arg "filename" in
+                       FStar_All.pipe_right uu____2895
                          (FStar_Util.map_option FStar_JsonHelper.js_str) in
-                     let uu____3185 =
-                       let uu____3187 = arg1 "contents" in
-                       FStar_All.pipe_right uu____3187
+                     let uu____2905 =
+                       let uu____2907 = arg1 "contents" in
+                       FStar_All.pipe_right uu____2907
                          FStar_JsonHelper.js_str in
-                     (uu____3171, uu____3185) in
-                   VfsAdd uu____3162
-               | uu____3194 ->
-                   let uu____3196 =
+                     (uu____2891, uu____2905) in
+                   VfsAdd uu____2882
+               | uu____2914 ->
+                   let uu____2916 =
                      FStar_Util.format1 "Unknown query '%s'" query in
-                   ProtocolViolation uu____3196 in
-             { qq = uu____2903; qid }) ()
+                   ProtocolViolation uu____2916 in
+             { qq = uu____2623; qid }) ()
     with
     | FStar_JsonHelper.InvalidQuery msg ->
         { qq = (ProtocolViolation msg); qid }
@@ -1063,7 +981,7 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
 let (deserialize_interactive_query : FStar_Util.json -> query) =
   fun js_query ->
     try
-      (fun uu___438_3215 ->
+      (fun uu___396_2935 ->
          match () with | () -> unpack_interactive_query js_query) ()
     with
     | FStar_JsonHelper.InvalidQuery msg ->
@@ -1072,27 +990,27 @@ let (deserialize_interactive_query : FStar_Util.json -> query) =
         wrap_js_failure "?" expected got
 let (parse_interactive_query : Prims.string -> query) =
   fun query_str ->
-    let uu____3235 = FStar_Util.json_of_string query_str in
-    match uu____3235 with
+    let uu____2955 = FStar_Util.json_of_string query_str in
+    match uu____2955 with
     | FStar_Pervasives_Native.None ->
         { qq = (ProtocolViolation "Json parsing failed."); qid = "?" }
     | FStar_Pervasives_Native.Some request ->
         deserialize_interactive_query request
 let (read_interactive_query : FStar_Util.stream_reader -> query) =
   fun stream ->
-    let uu____3247 = FStar_Util.read_line stream in
-    match uu____3247 with
+    let uu____2967 = FStar_Util.read_line stream in
+    match uu____2967 with
     | FStar_Pervasives_Native.None -> FStar_All.exit (Prims.parse_int "0")
     | FStar_Pervasives_Native.Some line -> parse_interactive_query line
 let json_of_opt :
-  'Auu____3263 .
-    ('Auu____3263 -> FStar_Util.json) ->
-      'Auu____3263 FStar_Pervasives_Native.option -> FStar_Util.json
+  'Auu____2983 .
+    ('Auu____2983 -> FStar_Util.json) ->
+      'Auu____2983 FStar_Pervasives_Native.option -> FStar_Util.json
   =
   fun json_of_a ->
     fun opt_a ->
-      let uu____3283 = FStar_Util.map_option json_of_a opt_a in
-      FStar_Util.dflt FStar_Util.JsonNull uu____3283
+      let uu____3003 = FStar_Util.map_option json_of_a opt_a in
+      FStar_Util.dflt FStar_Util.JsonNull uu____3003
 let (json_of_issue_level : FStar_Errors.issue_level -> FStar_Util.json) =
   fun i ->
     FStar_Util.JsonStr
@@ -1103,77 +1021,77 @@ let (json_of_issue_level : FStar_Errors.issue_level -> FStar_Util.json) =
        | FStar_Errors.EError -> "error")
 let (json_of_issue : FStar_Errors.issue -> FStar_Util.json) =
   fun issue ->
-    let uu____3303 =
-      let uu____3311 =
-        let uu____3319 =
-          let uu____3327 =
-            let uu____3333 =
-              let uu____3334 =
-                let uu____3337 =
+    let uu____3023 =
+      let uu____3031 =
+        let uu____3039 =
+          let uu____3047 =
+            let uu____3053 =
+              let uu____3054 =
+                let uu____3057 =
                   match issue.FStar_Errors.issue_range with
                   | FStar_Pervasives_Native.None -> []
                   | FStar_Pervasives_Native.Some r ->
-                      let uu____3343 = FStar_Range.json_of_use_range r in
-                      [uu____3343] in
-                let uu____3344 =
+                      let uu____3063 = FStar_Range.json_of_use_range r in
+                      [uu____3063] in
+                let uu____3064 =
                   match issue.FStar_Errors.issue_range with
                   | FStar_Pervasives_Native.Some r when
-                      let uu____3350 = FStar_Range.def_range r in
-                      let uu____3351 = FStar_Range.use_range r in
-                      uu____3350 <> uu____3351 ->
-                      let uu____3352 = FStar_Range.json_of_def_range r in
-                      [uu____3352]
-                  | uu____3353 -> [] in
-                FStar_List.append uu____3337 uu____3344 in
-              FStar_Util.JsonList uu____3334 in
-            ("ranges", uu____3333) in
-          [uu____3327] in
+                      let uu____3070 = FStar_Range.def_range r in
+                      let uu____3071 = FStar_Range.use_range r in
+                      uu____3070 <> uu____3071 ->
+                      let uu____3072 = FStar_Range.json_of_def_range r in
+                      [uu____3072]
+                  | uu____3073 -> [] in
+                FStar_List.append uu____3057 uu____3064 in
+              FStar_Util.JsonList uu____3054 in
+            ("ranges", uu____3053) in
+          [uu____3047] in
         ("message", (FStar_Util.JsonStr (issue.FStar_Errors.issue_message)))
-          :: uu____3319 in
+          :: uu____3039 in
       ("level", (json_of_issue_level issue.FStar_Errors.issue_level)) ::
-        uu____3311 in
-    FStar_Util.JsonAssoc uu____3303
+        uu____3031 in
+    FStar_Util.JsonAssoc uu____3023
 let (alist_of_symbol_lookup_result :
   FStar_QueryHelper.sl_reponse -> (Prims.string * FStar_Util.json) Prims.list)
   =
   fun lr ->
-    let uu____3395 =
-      let uu____3403 =
-        let uu____3409 =
+    let uu____3115 =
+      let uu____3123 =
+        let uu____3129 =
           json_of_opt FStar_Range.json_of_def_range
             lr.FStar_QueryHelper.slr_def_range in
-        ("defined-at", uu____3409) in
-      let uu____3412 =
-        let uu____3420 =
-          let uu____3426 =
-            json_of_opt (fun _3428 -> FStar_Util.JsonStr _3428)
+        ("defined-at", uu____3129) in
+      let uu____3132 =
+        let uu____3140 =
+          let uu____3146 =
+            json_of_opt (fun _3148 -> FStar_Util.JsonStr _3148)
               lr.FStar_QueryHelper.slr_typ in
-          ("type", uu____3426) in
-        let uu____3431 =
-          let uu____3439 =
-            let uu____3445 =
-              json_of_opt (fun _3447 -> FStar_Util.JsonStr _3447)
+          ("type", uu____3146) in
+        let uu____3151 =
+          let uu____3159 =
+            let uu____3165 =
+              json_of_opt (fun _3167 -> FStar_Util.JsonStr _3167)
                 lr.FStar_QueryHelper.slr_doc in
-            ("documentation", uu____3445) in
-          let uu____3450 =
-            let uu____3458 =
-              let uu____3464 =
-                json_of_opt (fun _3466 -> FStar_Util.JsonStr _3466)
+            ("documentation", uu____3165) in
+          let uu____3170 =
+            let uu____3178 =
+              let uu____3184 =
+                json_of_opt (fun _3186 -> FStar_Util.JsonStr _3186)
                   lr.FStar_QueryHelper.slr_def in
-              ("definition", uu____3464) in
-            [uu____3458] in
-          uu____3439 :: uu____3450 in
-        uu____3420 :: uu____3431 in
-      uu____3403 :: uu____3412 in
+              ("definition", uu____3184) in
+            [uu____3178] in
+          uu____3159 :: uu____3170 in
+        uu____3140 :: uu____3151 in
+      uu____3123 :: uu____3132 in
     ("name", (FStar_Util.JsonStr (lr.FStar_QueryHelper.slr_name))) ::
-      uu____3395
+      uu____3115
 let (alist_of_protocol_info : (Prims.string * FStar_Util.json) Prims.list) =
   let js_version = FStar_Util.JsonInt interactive_protocol_vernum in
   let js_features =
-    let uu____3511 =
-      FStar_List.map (fun _3515 -> FStar_Util.JsonStr _3515)
+    let uu____3231 =
+      FStar_List.map (fun _3235 -> FStar_Util.JsonStr _3235)
         interactive_protocol_features in
-    FStar_All.pipe_left (fun _3518 -> FStar_Util.JsonList _3518) uu____3511 in
+    FStar_All.pipe_left (fun _3238 -> FStar_Util.JsonList _3238) uu____3231 in
   [("version", js_version); ("features", js_features)]
 type fstar_option_permission_level =
   | OptSet 
@@ -1181,17 +1099,17 @@ type fstar_option_permission_level =
   | OptReadOnly 
 let (uu___is_OptSet : fstar_option_permission_level -> Prims.bool) =
   fun projectee ->
-    match projectee with | OptSet -> true | uu____3547 -> false
+    match projectee with | OptSet -> true | uu____3267 -> false
 let (uu___is_OptReset : fstar_option_permission_level -> Prims.bool) =
   fun projectee ->
-    match projectee with | OptReset -> true | uu____3558 -> false
+    match projectee with | OptReset -> true | uu____3278 -> false
 let (uu___is_OptReadOnly : fstar_option_permission_level -> Prims.bool) =
   fun projectee ->
-    match projectee with | OptReadOnly -> true | uu____3569 -> false
+    match projectee with | OptReadOnly -> true | uu____3289 -> false
 let (string_of_option_permission_level :
   fstar_option_permission_level -> Prims.string) =
-  fun uu___4_3577 ->
-    match uu___4_3577 with
+  fun uu___4_3297 ->
+    match uu___4_3297 with
     | OptSet -> ""
     | OptReset -> "requires #reset-options"
     | OptReadOnly -> "read-only"
@@ -1253,20 +1171,20 @@ let (__proj__Mkfstar_option__item__opt_permission_level :
         opt_documentation; opt_permission_level;_} -> opt_permission_level
 let rec (kind_of_fstar_option_type : FStar_Options.opt_type -> Prims.string)
   =
-  fun uu___5_3828 ->
-    match uu___5_3828 with
-    | FStar_Options.Const uu____3830 -> "flag"
-    | FStar_Options.IntStr uu____3832 -> "int"
+  fun uu___5_3548 ->
+    match uu___5_3548 with
+    | FStar_Options.Const uu____3550 -> "flag"
+    | FStar_Options.IntStr uu____3552 -> "int"
     | FStar_Options.BoolStr -> "bool"
-    | FStar_Options.PathStr uu____3836 -> "path"
-    | FStar_Options.SimpleStr uu____3839 -> "string"
-    | FStar_Options.EnumStr uu____3842 -> "enum"
-    | FStar_Options.OpenEnumStr uu____3847 -> "open enum"
-    | FStar_Options.PostProcessed (uu____3857, typ) ->
+    | FStar_Options.PathStr uu____3556 -> "path"
+    | FStar_Options.SimpleStr uu____3559 -> "string"
+    | FStar_Options.EnumStr uu____3562 -> "enum"
+    | FStar_Options.OpenEnumStr uu____3567 -> "open enum"
+    | FStar_Options.PostProcessed (uu____3577, typ) ->
         kind_of_fstar_option_type typ
     | FStar_Options.Accumulated typ -> kind_of_fstar_option_type typ
     | FStar_Options.ReverseAccumulated typ -> kind_of_fstar_option_type typ
-    | FStar_Options.WithSideEffect (uu____3867, typ) ->
+    | FStar_Options.WithSideEffect (uu____3587, typ) ->
         kind_of_fstar_option_type typ
 let rec (snippets_of_fstar_option :
   Prims.string -> FStar_Options.opt_type -> Prims.string Prims.list) =
@@ -1280,7 +1198,7 @@ let rec (snippets_of_fstar_option :
              (if argstring <> "" then Prims.op_Hat " " argstring else "")) in
       let rec arg_snippets_of_type typ1 =
         match typ1 with
-        | FStar_Options.Const uu____3939 -> [""]
+        | FStar_Options.Const uu____3659 -> [""]
         | FStar_Options.BoolStr -> ["true"; "false"]
         | FStar_Options.IntStr desc -> [mk_field desc]
         | FStar_Options.PathStr desc -> [mk_field desc]
@@ -1288,66 +1206,66 @@ let rec (snippets_of_fstar_option :
         | FStar_Options.EnumStr strs -> strs
         | FStar_Options.OpenEnumStr (strs, desc) ->
             FStar_List.append strs [mk_field desc]
-        | FStar_Options.PostProcessed (uu____3977, elem_spec) ->
+        | FStar_Options.PostProcessed (uu____3697, elem_spec) ->
             arg_snippets_of_type elem_spec
         | FStar_Options.Accumulated elem_spec ->
             arg_snippets_of_type elem_spec
         | FStar_Options.ReverseAccumulated elem_spec ->
             arg_snippets_of_type elem_spec
-        | FStar_Options.WithSideEffect (uu____3987, elem_spec) ->
+        | FStar_Options.WithSideEffect (uu____3707, elem_spec) ->
             arg_snippets_of_type elem_spec in
-      let uu____3995 = arg_snippets_of_type typ in
-      FStar_List.map (mk_snippet name) uu____3995
+      let uu____3715 = arg_snippets_of_type typ in
+      FStar_List.map (mk_snippet name) uu____3715
 let rec (json_of_fstar_option_value :
   FStar_Options.option_val -> FStar_Util.json) =
-  fun uu___6_4006 ->
-    match uu___6_4006 with
+  fun uu___6_3726 ->
+    match uu___6_3726 with
     | FStar_Options.Bool b -> FStar_Util.JsonBool b
     | FStar_Options.String s -> FStar_Util.JsonStr s
     | FStar_Options.Path s -> FStar_Util.JsonStr s
     | FStar_Options.Int n1 -> FStar_Util.JsonInt n1
     | FStar_Options.List vs ->
-        let uu____4018 = FStar_List.map json_of_fstar_option_value vs in
-        FStar_Util.JsonList uu____4018
+        let uu____3738 = FStar_List.map json_of_fstar_option_value vs in
+        FStar_Util.JsonList uu____3738
     | FStar_Options.Unset -> FStar_Util.JsonNull
 let (alist_of_fstar_option :
   fstar_option -> (Prims.string * FStar_Util.json) Prims.list) =
   fun opt ->
-    let uu____4034 =
-      let uu____4042 =
-        let uu____4050 =
-          let uu____4056 = json_of_fstar_option_value opt.opt_value in
-          ("value", uu____4056) in
-        let uu____4059 =
-          let uu____4067 =
-            let uu____4073 = json_of_fstar_option_value opt.opt_default in
-            ("default", uu____4073) in
-          let uu____4076 =
-            let uu____4084 =
-              let uu____4090 =
-                json_of_opt (fun _4092 -> FStar_Util.JsonStr _4092)
+    let uu____3754 =
+      let uu____3762 =
+        let uu____3770 =
+          let uu____3776 = json_of_fstar_option_value opt.opt_value in
+          ("value", uu____3776) in
+        let uu____3779 =
+          let uu____3787 =
+            let uu____3793 = json_of_fstar_option_value opt.opt_default in
+            ("default", uu____3793) in
+          let uu____3796 =
+            let uu____3804 =
+              let uu____3810 =
+                json_of_opt (fun _3812 -> FStar_Util.JsonStr _3812)
                   opt.opt_documentation in
-              ("documentation", uu____4090) in
-            let uu____4095 =
-              let uu____4103 =
-                let uu____4109 =
-                  let uu____4110 = kind_of_fstar_option_type opt.opt_type in
-                  FStar_Util.JsonStr uu____4110 in
-                ("type", uu____4109) in
-              [uu____4103;
+              ("documentation", uu____3810) in
+            let uu____3815 =
+              let uu____3823 =
+                let uu____3829 =
+                  let uu____3830 = kind_of_fstar_option_type opt.opt_type in
+                  FStar_Util.JsonStr uu____3830 in
+                ("type", uu____3829) in
+              [uu____3823;
               ("permission-level",
                 (FStar_Util.JsonStr
                    (string_of_option_permission_level
                       opt.opt_permission_level)))] in
-            uu____4084 :: uu____4095 in
-          uu____4067 :: uu____4076 in
-        uu____4050 :: uu____4059 in
-      ("signature", (FStar_Util.JsonStr (opt.opt_sig))) :: uu____4042 in
-    ("name", (FStar_Util.JsonStr (opt.opt_name))) :: uu____4034
+            uu____3804 :: uu____3815 in
+          uu____3787 :: uu____3796 in
+        uu____3770 :: uu____3779 in
+      ("signature", (FStar_Util.JsonStr (opt.opt_sig))) :: uu____3762 in
+    ("name", (FStar_Util.JsonStr (opt.opt_name))) :: uu____3754
 let (json_of_fstar_option : fstar_option -> FStar_Util.json) =
   fun opt ->
-    let uu____4166 = alist_of_fstar_option opt in
-    FStar_Util.JsonAssoc uu____4166
+    let uu____3886 = alist_of_fstar_option opt in
+    FStar_Util.JsonAssoc uu____3886
 let (json_of_response :
   Prims.string -> query_status -> FStar_Util.json -> FStar_Util.json) =
   fun qid ->
@@ -1373,84 +1291,84 @@ let (write_response :
 let (json_of_message : Prims.string -> FStar_Util.json -> FStar_Util.json) =
   fun level ->
     fun js_contents ->
-      let uu____4262 =
-        let uu____4270 =
-          let uu____4278 =
-            let uu____4284 =
-              let uu____4285 = FStar_ST.op_Bang repl_current_qid in
-              json_of_opt (fun _4315 -> FStar_Util.JsonStr _4315) uu____4285 in
-            ("query-id", uu____4284) in
-          [uu____4278;
+      let uu____3982 =
+        let uu____3990 =
+          let uu____3998 =
+            let uu____4004 =
+              let uu____4005 = FStar_ST.op_Bang repl_current_qid in
+              json_of_opt (fun _4035 -> FStar_Util.JsonStr _4035) uu____4005 in
+            ("query-id", uu____4004) in
+          [uu____3998;
           ("level", (FStar_Util.JsonStr level));
           ("contents", js_contents)] in
-        ("kind", (FStar_Util.JsonStr "message")) :: uu____4270 in
-      FStar_Util.JsonAssoc uu____4262
+        ("kind", (FStar_Util.JsonStr "message")) :: uu____3990 in
+      FStar_Util.JsonAssoc uu____3982
 let forward_message :
-  'Auu____4359 .
-    (FStar_Util.json -> 'Auu____4359) ->
-      Prims.string -> FStar_Util.json -> 'Auu____4359
+  'Auu____4079 .
+    (FStar_Util.json -> 'Auu____4079) ->
+      Prims.string -> FStar_Util.json -> 'Auu____4079
   =
   fun callback ->
     fun level ->
       fun contents ->
-        let uu____4382 = json_of_message level contents in
-        callback uu____4382
+        let uu____4102 = json_of_message level contents in
+        callback uu____4102
 let (json_of_hello : FStar_Util.json) =
   let js_version = FStar_Util.JsonInt interactive_protocol_vernum in
   let js_features =
-    let uu____4386 =
-      FStar_List.map (fun _4390 -> FStar_Util.JsonStr _4390)
+    let uu____4106 =
+      FStar_List.map (fun _4110 -> FStar_Util.JsonStr _4110)
         interactive_protocol_features in
-    FStar_Util.JsonList uu____4386 in
+    FStar_Util.JsonList uu____4106 in
   FStar_Util.JsonAssoc (("kind", (FStar_Util.JsonStr "protocol-info")) ::
     alist_of_protocol_info)
 let (write_hello : unit -> unit) =
-  fun uu____4404 -> FStar_JsonHelper.write_json json_of_hello
+  fun uu____4124 -> FStar_JsonHelper.write_json json_of_hello
 let (sig_of_fstar_option :
   Prims.string -> FStar_Options.opt_type -> Prims.string) =
   fun name ->
     fun typ ->
       let flag = Prims.op_Hat "--" name in
-      let uu____4422 = FStar_Options.desc_of_opt_type typ in
-      match uu____4422 with
+      let uu____4142 = FStar_Options.desc_of_opt_type typ in
+      match uu____4142 with
       | FStar_Pervasives_Native.None -> flag
       | FStar_Pervasives_Native.Some arg_sig ->
           Prims.op_Hat flag (Prims.op_Hat " " arg_sig)
 let (fstar_options_list_cache : fstar_option Prims.list) =
   let defaults1 = FStar_Util.smap_of_list FStar_Options.defaults in
-  let uu____4438 =
+  let uu____4158 =
     FStar_All.pipe_right FStar_Options.all_specs_with_types
       (FStar_List.filter_map
-         (fun uu____4473 ->
-            match uu____4473 with
+         (fun uu____4193 ->
+            match uu____4193 with
             | (_shortname, name, typ, doc1) ->
-                let uu____4497 = FStar_Util.smap_try_find defaults1 name in
-                FStar_All.pipe_right uu____4497
+                let uu____4217 = FStar_Util.smap_try_find defaults1 name in
+                FStar_All.pipe_right uu____4217
                   (FStar_Util.map_option
                      (fun default_value ->
-                        let uu____4509 = sig_of_fstar_option name typ in
-                        let uu____4511 = snippets_of_fstar_option name typ in
-                        let uu____4515 =
-                          let uu____4516 = FStar_Options.settable name in
-                          if uu____4516
+                        let uu____4229 = sig_of_fstar_option name typ in
+                        let uu____4231 = snippets_of_fstar_option name typ in
+                        let uu____4235 =
+                          let uu____4236 = FStar_Options.settable name in
+                          if uu____4236
                           then OptSet
                           else
-                            (let uu____4521 = FStar_Options.resettable name in
-                             if uu____4521 then OptReset else OptReadOnly) in
+                            (let uu____4241 = FStar_Options.resettable name in
+                             if uu____4241 then OptReset else OptReadOnly) in
                         {
                           opt_name = name;
-                          opt_sig = uu____4509;
+                          opt_sig = uu____4229;
                           opt_value = FStar_Options.Unset;
                           opt_default = default_value;
                           opt_type = typ;
-                          opt_snippets = uu____4511;
+                          opt_snippets = uu____4231;
                           opt_documentation =
                             (if doc1 = ""
                              then FStar_Pervasives_Native.None
                              else FStar_Pervasives_Native.Some doc1);
-                          opt_permission_level = uu____4515
+                          opt_permission_level = uu____4235
                         })))) in
-  FStar_All.pipe_right uu____4438
+  FStar_All.pipe_right uu____4158
     (FStar_List.sortWith
        (fun o1 ->
           fun o2 ->
@@ -1463,37 +1381,37 @@ let (fstar_options_map_cache : fstar_option FStar_Util.smap) =
   cache
 let (update_option : fstar_option -> fstar_option) =
   fun opt ->
-    let uu___610_4560 = opt in
-    let uu____4561 = FStar_Options.get_option opt.opt_name in
+    let uu___568_4280 = opt in
+    let uu____4281 = FStar_Options.get_option opt.opt_name in
     {
-      opt_name = (uu___610_4560.opt_name);
-      opt_sig = (uu___610_4560.opt_sig);
-      opt_value = uu____4561;
-      opt_default = (uu___610_4560.opt_default);
-      opt_type = (uu___610_4560.opt_type);
-      opt_snippets = (uu___610_4560.opt_snippets);
-      opt_documentation = (uu___610_4560.opt_documentation);
-      opt_permission_level = (uu___610_4560.opt_permission_level)
+      opt_name = (uu___568_4280.opt_name);
+      opt_sig = (uu___568_4280.opt_sig);
+      opt_value = uu____4281;
+      opt_default = (uu___568_4280.opt_default);
+      opt_type = (uu___568_4280.opt_type);
+      opt_snippets = (uu___568_4280.opt_snippets);
+      opt_documentation = (uu___568_4280.opt_documentation);
+      opt_permission_level = (uu___568_4280.opt_permission_level)
     }
 let (current_fstar_options :
   (fstar_option -> Prims.bool) -> fstar_option Prims.list) =
   fun filter1 ->
-    let uu____4577 = FStar_List.filter filter1 fstar_options_list_cache in
-    FStar_List.map update_option uu____4577
+    let uu____4297 = FStar_List.filter filter1 fstar_options_list_cache in
+    FStar_List.map update_option uu____4297
 let (trim_option_name : Prims.string -> (Prims.string * Prims.string)) =
   fun opt_name ->
     let opt_prefix = "--" in
     if FStar_Util.starts_with opt_name opt_prefix
     then
-      let uu____4604 =
+      let uu____4324 =
         FStar_Util.substring_from opt_name (FStar_String.length opt_prefix) in
-      (opt_prefix, uu____4604)
+      (opt_prefix, uu____4324)
     else ("", opt_name)
 let (json_of_repl_state : FStar_JsonHelper.repl_state -> FStar_Util.json) =
   fun st ->
-    let filenames uu____4635 =
-      match uu____4635 with
-      | (uu____4647, (task, uu____4649)) ->
+    let filenames uu____4355 =
+      match uu____4355 with
+      | (uu____4367, (task, uu____4369)) ->
           (match task with
            | FStar_JsonHelper.LDInterleaved (intf, impl) ->
                [intf.FStar_JsonHelper.tf_fname;
@@ -1502,60 +1420,60 @@ let (json_of_repl_state : FStar_JsonHelper.repl_state -> FStar_Util.json) =
                [intf_or_impl.FStar_JsonHelper.tf_fname]
            | FStar_JsonHelper.LDInterfaceOfCurrentFile intf ->
                [intf.FStar_JsonHelper.tf_fname]
-           | uu____4668 -> []) in
-    let uu____4670 =
-      let uu____4678 =
-        let uu____4684 =
-          let uu____4685 =
-            let uu____4688 =
+           | uu____4388 -> []) in
+    let uu____4390 =
+      let uu____4398 =
+        let uu____4404 =
+          let uu____4405 =
+            let uu____4408 =
               FStar_List.concatMap filenames
                 st.FStar_JsonHelper.repl_deps_stack in
-            FStar_List.map (fun _4702 -> FStar_Util.JsonStr _4702) uu____4688 in
-          FStar_Util.JsonList uu____4685 in
-        ("loaded-dependencies", uu____4684) in
-      let uu____4705 =
-        let uu____4713 =
-          let uu____4719 =
-            let uu____4720 =
-              let uu____4723 = current_fstar_options (fun uu____4728 -> true) in
-              FStar_List.map json_of_fstar_option uu____4723 in
-            FStar_Util.JsonList uu____4720 in
-          ("options", uu____4719) in
-        [uu____4713] in
-      uu____4678 :: uu____4705 in
-    FStar_Util.JsonAssoc uu____4670
+            FStar_List.map (fun _4422 -> FStar_Util.JsonStr _4422) uu____4408 in
+          FStar_Util.JsonList uu____4405 in
+        ("loaded-dependencies", uu____4404) in
+      let uu____4425 =
+        let uu____4433 =
+          let uu____4439 =
+            let uu____4440 =
+              let uu____4443 = current_fstar_options (fun uu____4448 -> true) in
+              FStar_List.map json_of_fstar_option uu____4443 in
+            FStar_Util.JsonList uu____4440 in
+          ("options", uu____4439) in
+        [uu____4433] in
+      uu____4398 :: uu____4425 in
+    FStar_Util.JsonAssoc uu____4390
 let run_exit :
-  'Auu____4754 'Auu____4755 .
-    'Auu____4754 ->
-      ((query_status * FStar_Util.json) * ('Auu____4755, Prims.int)
+  'Auu____4474 'Auu____4475 .
+    'Auu____4474 ->
+      ((query_status * FStar_Util.json) * ('Auu____4475, Prims.int)
         FStar_Util.either)
   =
   fun st ->
     ((QueryOK, FStar_Util.JsonNull), (FStar_Util.Inr (Prims.parse_int "0")))
 let run_describe_protocol :
-  'Auu____4792 'Auu____4793 .
-    'Auu____4792 ->
-      ((query_status * FStar_Util.json) * ('Auu____4792, 'Auu____4793)
+  'Auu____4512 'Auu____4513 .
+    'Auu____4512 ->
+      ((query_status * FStar_Util.json) * ('Auu____4512, 'Auu____4513)
         FStar_Util.either)
   =
   fun st ->
     ((QueryOK, (FStar_Util.JsonAssoc alist_of_protocol_info)),
       (FStar_Util.Inl st))
 let run_describe_repl :
-  'Auu____4824 .
+  'Auu____4544 .
     FStar_JsonHelper.repl_state ->
       ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-        'Auu____4824) FStar_Util.either)
+        'Auu____4544) FStar_Util.either)
   =
   fun st ->
-    let uu____4842 =
-      let uu____4847 = json_of_repl_state st in (QueryOK, uu____4847) in
-    (uu____4842, (FStar_Util.Inl st))
+    let uu____4562 =
+      let uu____4567 = json_of_repl_state st in (QueryOK, uu____4567) in
+    (uu____4562, (FStar_Util.Inl st))
 let run_protocol_violation :
-  'Auu____4865 'Auu____4866 .
-    'Auu____4865 ->
+  'Auu____4585 'Auu____4586 .
+    'Auu____4585 ->
       Prims.string ->
-        ((query_status * FStar_Util.json) * ('Auu____4865, 'Auu____4866)
+        ((query_status * FStar_Util.json) * ('Auu____4585, 'Auu____4586)
           FStar_Util.either)
   =
   fun st ->
@@ -1563,24 +1481,24 @@ let run_protocol_violation :
       ((QueryViolatesProtocol, (FStar_Util.JsonStr message)),
         (FStar_Util.Inl st))
 let run_generic_error :
-  'Auu____4908 'Auu____4909 .
-    'Auu____4908 ->
+  'Auu____4628 'Auu____4629 .
+    'Auu____4628 ->
       Prims.string ->
-        ((query_status * FStar_Util.json) * ('Auu____4908, 'Auu____4909)
+        ((query_status * FStar_Util.json) * ('Auu____4628, 'Auu____4629)
           FStar_Util.either)
   =
   fun st ->
     fun message ->
       ((QueryNOK, (FStar_Util.JsonStr message)), (FStar_Util.Inl st))
 let (collect_errors : unit -> FStar_Errors.issue Prims.list) =
-  fun uu____4949 ->
+  fun uu____4669 ->
     let errors = FStar_Errors.report_all () in FStar_Errors.clear (); errors
 let run_segment :
-  'Auu____4961 .
+  'Auu____4681 .
     FStar_JsonHelper.repl_state ->
       Prims.string ->
         ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-          'Auu____4961) FStar_Util.either)
+          'Auu____4681) FStar_Util.either)
   =
   fun st ->
     fun code ->
@@ -1590,51 +1508,51 @@ let run_segment :
           FStar_Parser_ParseIt.frag_line = (Prims.parse_int "1");
           FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
         } in
-      let collect_decls uu____4996 =
-        let uu____4997 = FStar_Parser_Driver.parse_fragment frag in
-        match uu____4997 with
+      let collect_decls uu____4716 =
+        let uu____4717 = FStar_Parser_Driver.parse_fragment frag in
+        match uu____4717 with
         | FStar_Parser_Driver.Empty -> []
         | FStar_Parser_Driver.Decls decls -> decls
         | FStar_Parser_Driver.Modul (FStar_Parser_AST.Module
-            (uu____5003, decls)) -> decls
+            (uu____4723, decls)) -> decls
         | FStar_Parser_Driver.Modul (FStar_Parser_AST.Interface
-            (uu____5009, decls, uu____5011)) -> decls in
-      let uu____5018 =
+            (uu____4729, decls, uu____4731)) -> decls in
+      let uu____4738 =
         with_captured_errors st.FStar_JsonHelper.repl_env
           FStar_Util.sigint_ignore
-          (fun uu____5027 ->
-             let uu____5028 = collect_decls () in
+          (fun uu____4747 ->
+             let uu____4748 = collect_decls () in
              FStar_All.pipe_left
-               (fun _5039 -> FStar_Pervasives_Native.Some _5039) uu____5028) in
-      match uu____5018 with
+               (fun _4759 -> FStar_Pervasives_Native.Some _4759) uu____4748) in
+      match uu____4738 with
       | FStar_Pervasives_Native.None ->
           let errors =
-            let uu____5057 = collect_errors () in
-            FStar_All.pipe_right uu____5057 (FStar_List.map json_of_issue) in
+            let uu____4777 = collect_errors () in
+            FStar_All.pipe_right uu____4777 (FStar_List.map json_of_issue) in
           ((QueryNOK, (FStar_Util.JsonList errors)), (FStar_Util.Inl st))
       | FStar_Pervasives_Native.Some decls ->
           let json_of_decl decl =
-            let uu____5083 =
-              let uu____5091 =
-                let uu____5097 =
+            let uu____4803 =
+              let uu____4811 =
+                let uu____4817 =
                   FStar_Range.json_of_def_range
                     (FStar_Parser_AST.decl_drange decl) in
-                ("def_range", uu____5097) in
-              [uu____5091] in
-            FStar_Util.JsonAssoc uu____5083 in
+                ("def_range", uu____4817) in
+              [uu____4811] in
+            FStar_Util.JsonAssoc uu____4803 in
           let js_decls =
-            let uu____5111 = FStar_List.map json_of_decl decls in
-            FStar_All.pipe_left (fun _5116 -> FStar_Util.JsonList _5116)
-              uu____5111 in
+            let uu____4831 = FStar_List.map json_of_decl decls in
+            FStar_All.pipe_left (fun _4836 -> FStar_Util.JsonList _4836)
+              uu____4831 in
           ((QueryOK, (FStar_Util.JsonAssoc [("decls", js_decls)])),
             (FStar_Util.Inl st))
 let run_vfs_add :
-  'Auu____5146 .
+  'Auu____4866 .
     FStar_JsonHelper.repl_state ->
       Prims.string FStar_Pervasives_Native.option ->
         Prims.string ->
           ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-            'Auu____5146) FStar_Util.either)
+            'Auu____4866) FStar_Util.either)
   =
   fun st ->
     fun opt_fname ->
@@ -1643,14 +1561,14 @@ let run_vfs_add :
         FStar_Parser_ParseIt.add_vfs_entry fname contents;
         ((QueryOK, FStar_Util.JsonNull), (FStar_Util.Inl st))
 let run_pop :
-  'Auu____5199 .
+  'Auu____4919 .
     FStar_JsonHelper.repl_state ->
       ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-        'Auu____5199) FStar_Util.either)
+        'Auu____4919) FStar_Util.either)
   =
   fun st ->
-    let uu____5217 = nothing_left_to_pop st in
-    if uu____5217
+    let uu____4937 = nothing_left_to_pop st in
+    if uu____4937
     then
       ((QueryNOK, (FStar_Util.JsonStr "Too many pops")), (FStar_Util.Inl st))
     else
@@ -1667,13 +1585,13 @@ let (write_progress :
         | FStar_Pervasives_Native.Some s -> FStar_Util.JsonStr s
         | FStar_Pervasives_Native.None -> FStar_Util.JsonNull in
       let js_contents = ("stage", stage1) :: contents_alist in
-      let uu____5304 =
+      let uu____5024 =
         json_of_message "progress" (FStar_Util.JsonAssoc js_contents) in
-      FStar_JsonHelper.write_json uu____5304
+      FStar_JsonHelper.write_json uu____5024
 let (write_repl_ld_task_progress : FStar_JsonHelper.repl_task -> unit) =
   fun task ->
     match task with
-    | FStar_JsonHelper.LDInterleaved (uu____5312, tf) ->
+    | FStar_JsonHelper.LDInterleaved (uu____5032, tf) ->
         let modname =
           FStar_Parser_Dep.module_name_of_file tf.FStar_JsonHelper.tf_fname in
         write_progress (FStar_Pervasives_Native.Some "loading-dependency")
@@ -1688,50 +1606,50 @@ let (write_repl_ld_task_progress : FStar_JsonHelper.repl_task -> unit) =
           FStar_Parser_Dep.module_name_of_file tf.FStar_JsonHelper.tf_fname in
         write_progress (FStar_Pervasives_Native.Some "loading-dependency")
           [("modname", (FStar_Util.JsonStr modname))]
-    | uu____5364 -> ()
+    | uu____5084 -> ()
 let (load_deps :
   FStar_JsonHelper.repl_state ->
     ((FStar_JsonHelper.repl_state * Prims.string Prims.list),
       FStar_JsonHelper.repl_state) FStar_Util.either)
   =
   fun st ->
-    let uu____5382 =
+    let uu____5102 =
       with_captured_errors st.FStar_JsonHelper.repl_env
         FStar_Util.sigint_ignore
         (fun _env ->
-           let uu____5410 =
-             deps_and_repl_ld_tasks_of_our_file
+           let uu____5130 =
+             FStar_PushHelper.deps_and_repl_ld_tasks_of_our_file
                st.FStar_JsonHelper.repl_fname in
            FStar_All.pipe_left
-             (fun _5457 -> FStar_Pervasives_Native.Some _5457) uu____5410) in
-    match uu____5382 with
+             (fun _5177 -> FStar_Pervasives_Native.Some _5177) uu____5130) in
+    match uu____5102 with
     | FStar_Pervasives_Native.None -> FStar_Util.Inr st
     | FStar_Pervasives_Native.Some (deps, tasks, dep_graph1) ->
         let st1 =
-          let uu___700_5512 = st in
-          let uu____5513 =
+          let uu___658_5232 = st in
+          let uu____5233 =
             FStar_TypeChecker_Env.set_dep_graph st.FStar_JsonHelper.repl_env
               dep_graph1 in
           {
             FStar_JsonHelper.repl_line =
-              (uu___700_5512.FStar_JsonHelper.repl_line);
+              (uu___658_5232.FStar_JsonHelper.repl_line);
             FStar_JsonHelper.repl_column =
-              (uu___700_5512.FStar_JsonHelper.repl_column);
+              (uu___658_5232.FStar_JsonHelper.repl_column);
             FStar_JsonHelper.repl_fname =
-              (uu___700_5512.FStar_JsonHelper.repl_fname);
+              (uu___658_5232.FStar_JsonHelper.repl_fname);
             FStar_JsonHelper.repl_deps_stack =
-              (uu___700_5512.FStar_JsonHelper.repl_deps_stack);
+              (uu___658_5232.FStar_JsonHelper.repl_deps_stack);
             FStar_JsonHelper.repl_curmod =
-              (uu___700_5512.FStar_JsonHelper.repl_curmod);
-            FStar_JsonHelper.repl_env = uu____5513;
+              (uu___658_5232.FStar_JsonHelper.repl_curmod);
+            FStar_JsonHelper.repl_env = uu____5233;
             FStar_JsonHelper.repl_stdin =
-              (uu___700_5512.FStar_JsonHelper.repl_stdin);
+              (uu___658_5232.FStar_JsonHelper.repl_stdin);
             FStar_JsonHelper.repl_names =
-              (uu___700_5512.FStar_JsonHelper.repl_names)
+              (uu___658_5232.FStar_JsonHelper.repl_names)
           } in
-        let uu____5514 =
+        let uu____5234 =
           run_repl_ld_transactions st1 tasks write_repl_ld_task_progress in
-        (match uu____5514 with
+        (match uu____5234 with
          | FStar_Util.Inr st2 ->
              (write_progress FStar_Pervasives_Native.None [];
               FStar_Util.Inr st2)
@@ -1740,134 +1658,134 @@ let (load_deps :
               FStar_Util.Inl (st2, deps)))
 let (rephrase_dependency_error : FStar_Errors.issue -> FStar_Errors.issue) =
   fun issue ->
-    let uu___710_5569 = issue in
-    let uu____5570 =
+    let uu___668_5289 = issue in
+    let uu____5290 =
       FStar_Util.format1 "Error while computing or loading dependencies:\n%s"
         issue.FStar_Errors.issue_message in
     {
-      FStar_Errors.issue_message = uu____5570;
-      FStar_Errors.issue_level = (uu___710_5569.FStar_Errors.issue_level);
-      FStar_Errors.issue_range = (uu___710_5569.FStar_Errors.issue_range);
-      FStar_Errors.issue_number = (uu___710_5569.FStar_Errors.issue_number)
+      FStar_Errors.issue_message = uu____5290;
+      FStar_Errors.issue_level = (uu___668_5289.FStar_Errors.issue_level);
+      FStar_Errors.issue_range = (uu___668_5289.FStar_Errors.issue_range);
+      FStar_Errors.issue_number = (uu___668_5289.FStar_Errors.issue_number)
     }
 let run_push_without_deps :
-  'Auu____5580 .
+  'Auu____5300 .
     FStar_JsonHelper.repl_state ->
       push_query ->
         ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-          'Auu____5580) FStar_Util.either)
+          'Auu____5300) FStar_Util.either)
   =
   fun st ->
     fun query ->
       let set_nosynth_flag st1 flag =
-        let uu___717_5616 = st1 in
+        let uu___675_5336 = st1 in
         {
           FStar_JsonHelper.repl_line =
-            (uu___717_5616.FStar_JsonHelper.repl_line);
+            (uu___675_5336.FStar_JsonHelper.repl_line);
           FStar_JsonHelper.repl_column =
-            (uu___717_5616.FStar_JsonHelper.repl_column);
+            (uu___675_5336.FStar_JsonHelper.repl_column);
           FStar_JsonHelper.repl_fname =
-            (uu___717_5616.FStar_JsonHelper.repl_fname);
+            (uu___675_5336.FStar_JsonHelper.repl_fname);
           FStar_JsonHelper.repl_deps_stack =
-            (uu___717_5616.FStar_JsonHelper.repl_deps_stack);
+            (uu___675_5336.FStar_JsonHelper.repl_deps_stack);
           FStar_JsonHelper.repl_curmod =
-            (uu___717_5616.FStar_JsonHelper.repl_curmod);
+            (uu___675_5336.FStar_JsonHelper.repl_curmod);
           FStar_JsonHelper.repl_env =
-            (let uu___719_5618 = st1.FStar_JsonHelper.repl_env in
+            (let uu___677_5338 = st1.FStar_JsonHelper.repl_env in
              {
                FStar_TypeChecker_Env.solver =
-                 (uu___719_5618.FStar_TypeChecker_Env.solver);
+                 (uu___677_5338.FStar_TypeChecker_Env.solver);
                FStar_TypeChecker_Env.range =
-                 (uu___719_5618.FStar_TypeChecker_Env.range);
+                 (uu___677_5338.FStar_TypeChecker_Env.range);
                FStar_TypeChecker_Env.curmodule =
-                 (uu___719_5618.FStar_TypeChecker_Env.curmodule);
+                 (uu___677_5338.FStar_TypeChecker_Env.curmodule);
                FStar_TypeChecker_Env.gamma =
-                 (uu___719_5618.FStar_TypeChecker_Env.gamma);
+                 (uu___677_5338.FStar_TypeChecker_Env.gamma);
                FStar_TypeChecker_Env.gamma_sig =
-                 (uu___719_5618.FStar_TypeChecker_Env.gamma_sig);
+                 (uu___677_5338.FStar_TypeChecker_Env.gamma_sig);
                FStar_TypeChecker_Env.gamma_cache =
-                 (uu___719_5618.FStar_TypeChecker_Env.gamma_cache);
+                 (uu___677_5338.FStar_TypeChecker_Env.gamma_cache);
                FStar_TypeChecker_Env.modules =
-                 (uu___719_5618.FStar_TypeChecker_Env.modules);
+                 (uu___677_5338.FStar_TypeChecker_Env.modules);
                FStar_TypeChecker_Env.expected_typ =
-                 (uu___719_5618.FStar_TypeChecker_Env.expected_typ);
+                 (uu___677_5338.FStar_TypeChecker_Env.expected_typ);
                FStar_TypeChecker_Env.sigtab =
-                 (uu___719_5618.FStar_TypeChecker_Env.sigtab);
+                 (uu___677_5338.FStar_TypeChecker_Env.sigtab);
                FStar_TypeChecker_Env.attrtab =
-                 (uu___719_5618.FStar_TypeChecker_Env.attrtab);
+                 (uu___677_5338.FStar_TypeChecker_Env.attrtab);
                FStar_TypeChecker_Env.is_pattern =
-                 (uu___719_5618.FStar_TypeChecker_Env.is_pattern);
+                 (uu___677_5338.FStar_TypeChecker_Env.is_pattern);
                FStar_TypeChecker_Env.instantiate_imp =
-                 (uu___719_5618.FStar_TypeChecker_Env.instantiate_imp);
+                 (uu___677_5338.FStar_TypeChecker_Env.instantiate_imp);
                FStar_TypeChecker_Env.effects =
-                 (uu___719_5618.FStar_TypeChecker_Env.effects);
+                 (uu___677_5338.FStar_TypeChecker_Env.effects);
                FStar_TypeChecker_Env.generalize =
-                 (uu___719_5618.FStar_TypeChecker_Env.generalize);
+                 (uu___677_5338.FStar_TypeChecker_Env.generalize);
                FStar_TypeChecker_Env.letrecs =
-                 (uu___719_5618.FStar_TypeChecker_Env.letrecs);
+                 (uu___677_5338.FStar_TypeChecker_Env.letrecs);
                FStar_TypeChecker_Env.top_level =
-                 (uu___719_5618.FStar_TypeChecker_Env.top_level);
+                 (uu___677_5338.FStar_TypeChecker_Env.top_level);
                FStar_TypeChecker_Env.check_uvars =
-                 (uu___719_5618.FStar_TypeChecker_Env.check_uvars);
+                 (uu___677_5338.FStar_TypeChecker_Env.check_uvars);
                FStar_TypeChecker_Env.use_eq =
-                 (uu___719_5618.FStar_TypeChecker_Env.use_eq);
+                 (uu___677_5338.FStar_TypeChecker_Env.use_eq);
                FStar_TypeChecker_Env.is_iface =
-                 (uu___719_5618.FStar_TypeChecker_Env.is_iface);
+                 (uu___677_5338.FStar_TypeChecker_Env.is_iface);
                FStar_TypeChecker_Env.admit =
-                 (uu___719_5618.FStar_TypeChecker_Env.admit);
+                 (uu___677_5338.FStar_TypeChecker_Env.admit);
                FStar_TypeChecker_Env.lax =
-                 (uu___719_5618.FStar_TypeChecker_Env.lax);
+                 (uu___677_5338.FStar_TypeChecker_Env.lax);
                FStar_TypeChecker_Env.lax_universes =
-                 (uu___719_5618.FStar_TypeChecker_Env.lax_universes);
+                 (uu___677_5338.FStar_TypeChecker_Env.lax_universes);
                FStar_TypeChecker_Env.phase1 =
-                 (uu___719_5618.FStar_TypeChecker_Env.phase1);
+                 (uu___677_5338.FStar_TypeChecker_Env.phase1);
                FStar_TypeChecker_Env.failhard =
-                 (uu___719_5618.FStar_TypeChecker_Env.failhard);
+                 (uu___677_5338.FStar_TypeChecker_Env.failhard);
                FStar_TypeChecker_Env.nosynth = flag;
                FStar_TypeChecker_Env.uvar_subtyping =
-                 (uu___719_5618.FStar_TypeChecker_Env.uvar_subtyping);
+                 (uu___677_5338.FStar_TypeChecker_Env.uvar_subtyping);
                FStar_TypeChecker_Env.tc_term =
-                 (uu___719_5618.FStar_TypeChecker_Env.tc_term);
+                 (uu___677_5338.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.type_of =
-                 (uu___719_5618.FStar_TypeChecker_Env.type_of);
+                 (uu___677_5338.FStar_TypeChecker_Env.type_of);
                FStar_TypeChecker_Env.universe_of =
-                 (uu___719_5618.FStar_TypeChecker_Env.universe_of);
+                 (uu___677_5338.FStar_TypeChecker_Env.universe_of);
                FStar_TypeChecker_Env.check_type_of =
-                 (uu___719_5618.FStar_TypeChecker_Env.check_type_of);
+                 (uu___677_5338.FStar_TypeChecker_Env.check_type_of);
                FStar_TypeChecker_Env.use_bv_sorts =
-                 (uu___719_5618.FStar_TypeChecker_Env.use_bv_sorts);
+                 (uu___677_5338.FStar_TypeChecker_Env.use_bv_sorts);
                FStar_TypeChecker_Env.qtbl_name_and_index =
-                 (uu___719_5618.FStar_TypeChecker_Env.qtbl_name_and_index);
+                 (uu___677_5338.FStar_TypeChecker_Env.qtbl_name_and_index);
                FStar_TypeChecker_Env.normalized_eff_names =
-                 (uu___719_5618.FStar_TypeChecker_Env.normalized_eff_names);
+                 (uu___677_5338.FStar_TypeChecker_Env.normalized_eff_names);
                FStar_TypeChecker_Env.fv_delta_depths =
-                 (uu___719_5618.FStar_TypeChecker_Env.fv_delta_depths);
+                 (uu___677_5338.FStar_TypeChecker_Env.fv_delta_depths);
                FStar_TypeChecker_Env.proof_ns =
-                 (uu___719_5618.FStar_TypeChecker_Env.proof_ns);
+                 (uu___677_5338.FStar_TypeChecker_Env.proof_ns);
                FStar_TypeChecker_Env.synth_hook =
-                 (uu___719_5618.FStar_TypeChecker_Env.synth_hook);
+                 (uu___677_5338.FStar_TypeChecker_Env.synth_hook);
                FStar_TypeChecker_Env.splice =
-                 (uu___719_5618.FStar_TypeChecker_Env.splice);
+                 (uu___677_5338.FStar_TypeChecker_Env.splice);
                FStar_TypeChecker_Env.postprocess =
-                 (uu___719_5618.FStar_TypeChecker_Env.postprocess);
+                 (uu___677_5338.FStar_TypeChecker_Env.postprocess);
                FStar_TypeChecker_Env.is_native_tactic =
-                 (uu___719_5618.FStar_TypeChecker_Env.is_native_tactic);
+                 (uu___677_5338.FStar_TypeChecker_Env.is_native_tactic);
                FStar_TypeChecker_Env.identifier_info =
-                 (uu___719_5618.FStar_TypeChecker_Env.identifier_info);
+                 (uu___677_5338.FStar_TypeChecker_Env.identifier_info);
                FStar_TypeChecker_Env.tc_hooks =
-                 (uu___719_5618.FStar_TypeChecker_Env.tc_hooks);
+                 (uu___677_5338.FStar_TypeChecker_Env.tc_hooks);
                FStar_TypeChecker_Env.dsenv =
-                 (uu___719_5618.FStar_TypeChecker_Env.dsenv);
+                 (uu___677_5338.FStar_TypeChecker_Env.dsenv);
                FStar_TypeChecker_Env.nbe =
-                 (uu___719_5618.FStar_TypeChecker_Env.nbe)
+                 (uu___677_5338.FStar_TypeChecker_Env.nbe)
              });
           FStar_JsonHelper.repl_stdin =
-            (uu___717_5616.FStar_JsonHelper.repl_stdin);
+            (uu___675_5336.FStar_JsonHelper.repl_stdin);
           FStar_JsonHelper.repl_names =
-            (uu___717_5616.FStar_JsonHelper.repl_names)
+            (uu___675_5336.FStar_JsonHelper.repl_names)
         } in
-      let uu____5619 = query in
-      match uu____5619 with
+      let uu____5339 = query in
+      match uu____5339 with
       | { push_kind; push_code = text; push_line = line;
           push_column = column; push_peek_only = peek_only;_} ->
           let frag =
@@ -1879,39 +1797,39 @@ let run_push_without_deps :
           (FStar_TypeChecker_Env.toggle_id_info st.FStar_JsonHelper.repl_env
              true;
            (let st1 = set_nosynth_flag st peek_only in
-            let uu____5645 =
+            let uu____5365 =
               run_repl_transaction st1 push_kind peek_only
                 (FStar_JsonHelper.PushFragment frag) in
-            match uu____5645 with
+            match uu____5365 with
             | (success, st2) ->
                 let st3 = set_nosynth_flag st2 false in
                 let status =
                   if success || peek_only then QueryOK else QueryNOK in
                 let json_errors =
-                  let uu____5674 =
-                    let uu____5677 = collect_errors () in
-                    FStar_All.pipe_right uu____5677
+                  let uu____5394 =
+                    let uu____5397 = collect_errors () in
+                    FStar_All.pipe_right uu____5397
                       (FStar_List.map json_of_issue) in
-                  FStar_Util.JsonList uu____5674 in
+                  FStar_Util.JsonList uu____5394 in
                 let st4 =
                   if success
                   then
-                    let uu___738_5686 = st3 in
+                    let uu___696_5406 = st3 in
                     {
                       FStar_JsonHelper.repl_line = line;
                       FStar_JsonHelper.repl_column = column;
                       FStar_JsonHelper.repl_fname =
-                        (uu___738_5686.FStar_JsonHelper.repl_fname);
+                        (uu___696_5406.FStar_JsonHelper.repl_fname);
                       FStar_JsonHelper.repl_deps_stack =
-                        (uu___738_5686.FStar_JsonHelper.repl_deps_stack);
+                        (uu___696_5406.FStar_JsonHelper.repl_deps_stack);
                       FStar_JsonHelper.repl_curmod =
-                        (uu___738_5686.FStar_JsonHelper.repl_curmod);
+                        (uu___696_5406.FStar_JsonHelper.repl_curmod);
                       FStar_JsonHelper.repl_env =
-                        (uu___738_5686.FStar_JsonHelper.repl_env);
+                        (uu___696_5406.FStar_JsonHelper.repl_env);
                       FStar_JsonHelper.repl_stdin =
-                        (uu___738_5686.FStar_JsonHelper.repl_stdin);
+                        (uu___696_5406.FStar_JsonHelper.repl_stdin);
                       FStar_JsonHelper.repl_names =
-                        (uu___738_5686.FStar_JsonHelper.repl_names)
+                        (uu___696_5406.FStar_JsonHelper.repl_names)
                     }
                   else st3 in
                 ((status, json_errors), (FStar_Util.Inl st4))))
@@ -1923,10 +1841,10 @@ let (capitalize : Prims.string -> Prims.string) =
       (let first =
          FStar_String.substring str (Prims.parse_int "0")
            (Prims.parse_int "1") in
-       let uu____5716 =
+       let uu____5436 =
          FStar_String.substring str (Prims.parse_int "1")
            ((FStar_String.length str) - (Prims.parse_int "1")) in
-       Prims.op_Hat (FStar_String.uppercase first) uu____5716)
+       Prims.op_Hat (FStar_String.uppercase first) uu____5436)
 let (add_module_completions :
   Prims.string ->
     Prims.string Prims.list ->
@@ -1938,94 +1856,94 @@ let (add_module_completions :
       fun table ->
         let mods = FStar_Parser_Dep.build_inclusion_candidates_list () in
         let loaded_mods_set =
-          let uu____5757 = FStar_Util.psmap_empty () in
-          let uu____5762 =
-            let uu____5766 = FStar_Options.prims () in uu____5766 :: deps in
+          let uu____5477 = FStar_Util.psmap_empty () in
+          let uu____5482 =
+            let uu____5486 = FStar_Options.prims () in uu____5486 :: deps in
           FStar_List.fold_left
             (fun acc ->
                fun dep1 ->
-                 let uu____5782 = FStar_Parser_Dep.lowercase_module_name dep1 in
-                 FStar_Util.psmap_add acc uu____5782 true) uu____5757
-            uu____5762 in
+                 let uu____5502 = FStar_Parser_Dep.lowercase_module_name dep1 in
+                 FStar_Util.psmap_add acc uu____5502 true) uu____5477
+            uu____5482 in
         let loaded modname =
           FStar_Util.psmap_find_default loaded_mods_set modname false in
         let this_mod_key = FStar_Parser_Dep.lowercase_module_name this_fname in
         FStar_List.fold_left
           (fun table1 ->
-             fun uu____5811 ->
-               match uu____5811 with
+             fun uu____5531 ->
+               match uu____5531 with
                | (modname, mod_path) ->
                    let mod_key = FStar_String.lowercase modname in
                    if this_mod_key = mod_key
                    then table1
                    else
                      (let ns_query =
-                        let uu____5834 = capitalize modname in
-                        FStar_Util.split uu____5834 "." in
-                      let uu____5837 = loaded mod_key in
+                        let uu____5554 = capitalize modname in
+                        FStar_Util.split uu____5554 "." in
+                      let uu____5557 = loaded mod_key in
                       FStar_Interactive_CompletionTable.register_module_path
-                        table1 uu____5837 mod_path ns_query)) table
+                        table1 uu____5557 mod_path ns_query)) table
           (FStar_List.rev mods)
 let run_push_with_deps :
-  'Auu____5852 .
+  'Auu____5572 .
     FStar_JsonHelper.repl_state ->
       push_query ->
         ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-          'Auu____5852) FStar_Util.either)
+          'Auu____5572) FStar_Util.either)
   =
   fun st ->
     fun query ->
-      (let uu____5876 = FStar_Options.debug_any () in
-       if uu____5876
+      (let uu____5596 = FStar_Options.debug_any () in
+       if uu____5596
        then FStar_Util.print_string "Reloading dependencies"
        else ());
       FStar_TypeChecker_Env.toggle_id_info st.FStar_JsonHelper.repl_env false;
-      (let uu____5884 = load_deps st in
-       match uu____5884 with
+      (let uu____5604 = load_deps st in
+       match uu____5604 with
        | FStar_Util.Inr st1 ->
            let errors =
-             let uu____5919 = collect_errors () in
-             FStar_List.map rephrase_dependency_error uu____5919 in
+             let uu____5639 = collect_errors () in
+             FStar_List.map rephrase_dependency_error uu____5639 in
            let js_errors =
              FStar_All.pipe_right errors (FStar_List.map json_of_issue) in
            ((QueryNOK, (FStar_Util.JsonList js_errors)),
              (FStar_Util.Inl st1))
        | FStar_Util.Inl (st1, deps) ->
-           ((let uu____5953 = FStar_Options.restore_cmd_line_options false in
-             FStar_All.pipe_right uu____5953 (fun a2 -> ()));
+           ((let uu____5673 = FStar_Options.restore_cmd_line_options false in
+             FStar_All.pipe_right uu____5673 (fun a2 -> ()));
             (let names1 =
                add_module_completions st1.FStar_JsonHelper.repl_fname deps
                  st1.FStar_JsonHelper.repl_names in
              run_push_without_deps
-               (let uu___776_5957 = st1 in
+               (let uu___734_5677 = st1 in
                 {
                   FStar_JsonHelper.repl_line =
-                    (uu___776_5957.FStar_JsonHelper.repl_line);
+                    (uu___734_5677.FStar_JsonHelper.repl_line);
                   FStar_JsonHelper.repl_column =
-                    (uu___776_5957.FStar_JsonHelper.repl_column);
+                    (uu___734_5677.FStar_JsonHelper.repl_column);
                   FStar_JsonHelper.repl_fname =
-                    (uu___776_5957.FStar_JsonHelper.repl_fname);
+                    (uu___734_5677.FStar_JsonHelper.repl_fname);
                   FStar_JsonHelper.repl_deps_stack =
-                    (uu___776_5957.FStar_JsonHelper.repl_deps_stack);
+                    (uu___734_5677.FStar_JsonHelper.repl_deps_stack);
                   FStar_JsonHelper.repl_curmod =
-                    (uu___776_5957.FStar_JsonHelper.repl_curmod);
+                    (uu___734_5677.FStar_JsonHelper.repl_curmod);
                   FStar_JsonHelper.repl_env =
-                    (uu___776_5957.FStar_JsonHelper.repl_env);
+                    (uu___734_5677.FStar_JsonHelper.repl_env);
                   FStar_JsonHelper.repl_stdin =
-                    (uu___776_5957.FStar_JsonHelper.repl_stdin);
+                    (uu___734_5677.FStar_JsonHelper.repl_stdin);
                   FStar_JsonHelper.repl_names = names1
                 }) query)))
 let run_push :
-  'Auu____5965 .
+  'Auu____5685 .
     FStar_JsonHelper.repl_state ->
       push_query ->
         ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-          'Auu____5965) FStar_Util.either)
+          'Auu____5685) FStar_Util.either)
   =
   fun st ->
     fun query ->
-      let uu____5988 = nothing_left_to_pop st in
-      if uu____5988
+      let uu____5708 = nothing_left_to_pop st in
+      if uu____5708
       then run_push_with_deps st query
       else run_push_without_deps st query
 let (run_symbol_lookup :
@@ -2041,16 +1959,16 @@ let (run_symbol_lookup :
     fun symbol ->
       fun pos_opt ->
         fun requested_info ->
-          let uu____6055 =
+          let uu____5775 =
             FStar_QueryHelper.symlookup st.FStar_JsonHelper.repl_env symbol
               pos_opt requested_info in
-          match uu____6055 with
+          match uu____5775 with
           | FStar_Pervasives_Native.None -> FStar_Util.Inl "Symbol not found"
           | FStar_Pervasives_Native.Some result ->
-              let uu____6090 =
-                let uu____6103 = alist_of_symbol_lookup_result result in
-                ("symbol", uu____6103) in
-              FStar_Util.Inr uu____6090
+              let uu____5810 =
+                let uu____5823 = alist_of_symbol_lookup_result result in
+                ("symbol", uu____5823) in
+              FStar_Util.Inr uu____5810
 let (run_option_lookup :
   Prims.string ->
     (Prims.string,
@@ -2058,21 +1976,21 @@ let (run_option_lookup :
       FStar_Util.either)
   =
   fun opt_name ->
-    let uu____6158 = trim_option_name opt_name in
-    match uu____6158 with
-    | (uu____6182, trimmed_name) ->
-        let uu____6188 =
+    let uu____5878 = trim_option_name opt_name in
+    match uu____5878 with
+    | (uu____5902, trimmed_name) ->
+        let uu____5908 =
           FStar_Util.smap_try_find fstar_options_map_cache trimmed_name in
-        (match uu____6188 with
+        (match uu____5908 with
          | FStar_Pervasives_Native.None ->
              FStar_Util.Inl (Prims.op_Hat "Unknown option:" opt_name)
          | FStar_Pervasives_Native.Some opt ->
-             let uu____6223 =
-               let uu____6236 =
-                 let uu____6244 = update_option opt in
-                 alist_of_fstar_option uu____6244 in
-               ("option", uu____6236) in
-             FStar_Util.Inr uu____6223)
+             let uu____5943 =
+               let uu____5956 =
+                 let uu____5964 = update_option opt in
+                 alist_of_fstar_option uu____5964 in
+               ("option", uu____5956) in
+             FStar_Util.Inr uu____5943)
 let (run_module_lookup :
   FStar_JsonHelper.repl_state ->
     Prims.string ->
@@ -2083,26 +2001,26 @@ let (run_module_lookup :
   fun st ->
     fun symbol ->
       let query = FStar_Util.split symbol "." in
-      let uu____6302 =
+      let uu____6022 =
         FStar_Interactive_CompletionTable.find_module_or_ns
           st.FStar_JsonHelper.repl_names query in
-      match uu____6302 with
+      match uu____6022 with
       | FStar_Pervasives_Native.None ->
           FStar_Util.Inl "No such module or namespace"
       | FStar_Pervasives_Native.Some
           (FStar_Interactive_CompletionTable.Module mod_info) ->
-          let uu____6337 =
-            let uu____6350 =
+          let uu____6057 =
+            let uu____6070 =
               FStar_Interactive_CompletionTable.alist_of_mod_info mod_info in
-            ("module", uu____6350) in
-          FStar_Util.Inr uu____6337
+            ("module", uu____6070) in
+          FStar_Util.Inr uu____6057
       | FStar_Pervasives_Native.Some
           (FStar_Interactive_CompletionTable.Namespace ns_info) ->
-          let uu____6381 =
-            let uu____6394 =
+          let uu____6101 =
+            let uu____6114 =
               FStar_Interactive_CompletionTable.alist_of_ns_info ns_info in
-            ("namespace", uu____6394) in
-          FStar_Util.Inr uu____6381
+            ("namespace", uu____6114) in
+          FStar_Util.Inr uu____6101
 let (run_code_lookup :
   FStar_JsonHelper.repl_state ->
     Prims.string ->
@@ -2116,12 +2034,12 @@ let (run_code_lookup :
     fun symbol ->
       fun pos_opt ->
         fun requested_info ->
-          let uu____6474 = run_symbol_lookup st symbol pos_opt requested_info in
-          match uu____6474 with
+          let uu____6194 = run_symbol_lookup st symbol pos_opt requested_info in
+          match uu____6194 with
           | FStar_Util.Inr alist -> FStar_Util.Inr alist
-          | FStar_Util.Inl uu____6548 ->
-              let uu____6563 = run_module_lookup st symbol in
-              (match uu____6563 with
+          | FStar_Util.Inl uu____6268 ->
+              let uu____6283 = run_module_lookup st symbol in
+              (match uu____6283 with
                | FStar_Util.Inr alist -> FStar_Util.Inr alist
                | FStar_Util.Inl err_msg ->
                    FStar_Util.Inl "No such symbol, module, or namespace.")
@@ -2147,14 +2065,14 @@ let (run_lookup' :
             | LKOption -> run_option_lookup symbol
             | LKCode -> run_code_lookup st symbol pos_opt requested_info
 let run_lookup :
-  'Auu____6751 .
+  'Auu____6471 .
     FStar_JsonHelper.repl_state ->
       Prims.string ->
         lookup_context ->
           FStar_QueryHelper.position FStar_Pervasives_Native.option ->
             Prims.string Prims.list ->
               ((query_status * FStar_Util.json) *
-                (FStar_JsonHelper.repl_state, 'Auu____6751)
+                (FStar_JsonHelper.repl_state, 'Auu____6471)
                 FStar_Util.either)
   =
   fun st ->
@@ -2162,9 +2080,9 @@ let run_lookup :
       fun context ->
         fun pos_opt ->
           fun requested_info ->
-            let uu____6801 =
+            let uu____6521 =
               run_lookup' st symbol context pos_opt requested_info in
-            match uu____6801 with
+            match uu____6521 with
             | FStar_Util.Inl err_msg ->
                 ((QueryNOK, (FStar_Util.JsonStr err_msg)),
                   (FStar_Util.Inl st))
@@ -2173,45 +2091,45 @@ let run_lookup :
                    (FStar_Util.JsonAssoc (("kind", (FStar_Util.JsonStr kind))
                       :: info))), (FStar_Util.Inl st))
 let code_autocomplete_mod_filter :
-  'Auu____6905 .
-    ('Auu____6905 * FStar_Interactive_CompletionTable.mod_symbol) ->
-      ('Auu____6905 * FStar_Interactive_CompletionTable.mod_symbol)
+  'Auu____6625 .
+    ('Auu____6625 * FStar_Interactive_CompletionTable.mod_symbol) ->
+      ('Auu____6625 * FStar_Interactive_CompletionTable.mod_symbol)
         FStar_Pervasives_Native.option
   =
-  fun uu___7_6920 ->
-    match uu___7_6920 with
-    | (uu____6925, FStar_Interactive_CompletionTable.Namespace uu____6926) ->
+  fun uu___7_6640 ->
+    match uu___7_6640 with
+    | (uu____6645, FStar_Interactive_CompletionTable.Namespace uu____6646) ->
         FStar_Pervasives_Native.None
-    | (uu____6931, FStar_Interactive_CompletionTable.Module
-       { FStar_Interactive_CompletionTable.mod_name = uu____6932;
-         FStar_Interactive_CompletionTable.mod_path = uu____6933;
+    | (uu____6651, FStar_Interactive_CompletionTable.Module
+       { FStar_Interactive_CompletionTable.mod_name = uu____6652;
+         FStar_Interactive_CompletionTable.mod_path = uu____6653;
          FStar_Interactive_CompletionTable.mod_loaded = true;_})
         -> FStar_Pervasives_Native.None
     | (pth, FStar_Interactive_CompletionTable.Module md) ->
-        let uu____6943 =
-          let uu____6948 =
-            let uu____6949 =
-              let uu___853_6950 = md in
-              let uu____6951 =
-                let uu____6953 =
+        let uu____6663 =
+          let uu____6668 =
+            let uu____6669 =
+              let uu___811_6670 = md in
+              let uu____6671 =
+                let uu____6673 =
                   FStar_Interactive_CompletionTable.mod_name md in
-                Prims.op_Hat uu____6953 "." in
+                Prims.op_Hat uu____6673 "." in
               {
-                FStar_Interactive_CompletionTable.mod_name = uu____6951;
+                FStar_Interactive_CompletionTable.mod_name = uu____6671;
                 FStar_Interactive_CompletionTable.mod_path =
-                  (uu___853_6950.FStar_Interactive_CompletionTable.mod_path);
+                  (uu___811_6670.FStar_Interactive_CompletionTable.mod_path);
                 FStar_Interactive_CompletionTable.mod_loaded =
-                  (uu___853_6950.FStar_Interactive_CompletionTable.mod_loaded)
+                  (uu___811_6670.FStar_Interactive_CompletionTable.mod_loaded)
               } in
-            FStar_Interactive_CompletionTable.Module uu____6949 in
-          (pth, uu____6948) in
-        FStar_Pervasives_Native.Some uu____6943
+            FStar_Interactive_CompletionTable.Module uu____6669 in
+          (pth, uu____6668) in
+        FStar_Pervasives_Native.Some uu____6663
 let run_code_autocomplete :
-  'Auu____6967 .
+  'Auu____6687 .
     FStar_JsonHelper.repl_state ->
       Prims.string ->
         ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-          'Auu____6967) FStar_Util.either)
+          'Auu____6687) FStar_Util.either)
   =
   fun st ->
     fun search_term ->
@@ -2228,13 +2146,13 @@ let run_code_autocomplete :
           (FStar_List.append lids mods_and_nss) in
       ((QueryOK, (FStar_Util.JsonList json)), (FStar_Util.Inl st))
 let run_module_autocomplete :
-  'Auu____7029 'Auu____7030 'Auu____7031 .
+  'Auu____6749 'Auu____6750 'Auu____6751 .
     FStar_JsonHelper.repl_state ->
       Prims.string ->
-        'Auu____7029 ->
-          'Auu____7030 ->
+        'Auu____6749 ->
+          'Auu____6750 ->
             ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-              'Auu____7031) FStar_Util.either)
+              'Auu____6751) FStar_Util.either)
   =
   fun st ->
     fun search_term ->
@@ -2244,7 +2162,7 @@ let run_module_autocomplete :
           let mods_and_nss =
             FStar_Interactive_CompletionTable.autocomplete_mod_or_ns
               st.FStar_JsonHelper.repl_names needle
-              (fun _7078 -> FStar_Pervasives_Native.Some _7078) in
+              (fun _6798 -> FStar_Pervasives_Native.Some _6798) in
           let json =
             FStar_List.map
               FStar_Interactive_CompletionTable.json_of_completion_result
@@ -2259,12 +2177,12 @@ let (candidates_of_fstar_option :
   fun match_len ->
     fun is_reset ->
       fun opt ->
-        let uu____7112 =
+        let uu____6832 =
           match opt.opt_permission_level with
           | OptSet -> (true, "")
           | OptReset -> (is_reset, "#reset-only")
           | OptReadOnly -> (false, "read-only") in
-        match uu____7112 with
+        match uu____6832 with
         | (may_set, explanation) ->
             let opt_type = kind_of_fstar_option_type opt.opt_type in
             let annot =
@@ -2286,18 +2204,18 @@ let (candidates_of_fstar_option :
                         = annot
                     }))
 let run_option_autocomplete :
-  'Auu____7175 'Auu____7176 .
-    'Auu____7175 ->
+  'Auu____6895 'Auu____6896 .
+    'Auu____6895 ->
       Prims.string ->
         Prims.bool ->
-          ((query_status * FStar_Util.json) * ('Auu____7175, 'Auu____7176)
+          ((query_status * FStar_Util.json) * ('Auu____6895, 'Auu____6896)
             FStar_Util.either)
   =
   fun st ->
     fun search_term ->
       fun is_reset ->
-        let uu____7208 = trim_option_name search_term in
-        match uu____7208 with
+        let uu____6928 = trim_option_name search_term in
+        match uu____6928 with
         | ("--", trimmed_name) ->
             let matcher opt =
               FStar_Util.starts_with opt.opt_name trimmed_name in
@@ -2311,17 +2229,17 @@ let run_option_autocomplete :
                 FStar_Interactive_CompletionTable.json_of_completion_result
                 results in
             ((QueryOK, (FStar_Util.JsonList json)), (FStar_Util.Inl st))
-        | (uu____7264, uu____7265) ->
+        | (uu____6984, uu____6985) ->
             ((QueryNOK,
                (FStar_Util.JsonStr "Options should start with '--'")),
               (FStar_Util.Inl st))
 let run_autocomplete :
-  'Auu____7288 .
+  'Auu____7008 .
     FStar_JsonHelper.repl_state ->
       Prims.string ->
         completion_context ->
           ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-            'Auu____7288) FStar_Util.either)
+            'Auu____7008) FStar_Util.either)
   =
   fun st ->
     fun search_term ->
@@ -2333,11 +2251,11 @@ let run_autocomplete :
         | CKModuleOrNamespace (modules1, namespaces) ->
             run_module_autocomplete st search_term modules1 namespaces
 let run_and_rewind :
-  'Auu____7339 'Auu____7340 .
+  'Auu____7059 'Auu____7060 .
     FStar_JsonHelper.repl_state ->
-      'Auu____7339 ->
-        (FStar_JsonHelper.repl_state -> 'Auu____7339) ->
-          ('Auu____7339 * (FStar_JsonHelper.repl_state, 'Auu____7340)
+      'Auu____7059 ->
+        (FStar_JsonHelper.repl_state -> 'Auu____7059) ->
+          ('Auu____7059 * (FStar_JsonHelper.repl_state, 'Auu____7060)
             FStar_Util.either)
   =
   fun st ->
@@ -2348,14 +2266,14 @@ let run_and_rewind :
             FStar_PushHelper.FullCheck FStar_JsonHelper.Noop st in
         let results =
           try
-            (fun uu___912_7381 ->
+            (fun uu___870_7101 ->
                match () with
                | () ->
                    FStar_Util.with_sigint_handler FStar_Util.sigint_raise
-                     (fun uu____7392 ->
-                        let uu____7393 = task st1 in
+                     (fun uu____7112 ->
+                        let uu____7113 = task st1 in
                         FStar_All.pipe_left
-                          (fun _7398 -> FStar_Util.Inl _7398) uu____7393)) ()
+                          (fun _7118 -> FStar_Util.Inl _7118) uu____7113)) ()
           with | FStar_Util.SigInt -> FStar_Util.Inl sigint_default
           | e -> FStar_Util.Inr e in
         let st2 = FStar_PushHelper.pop_repl "run_and_rewind" st1 in
@@ -2363,16 +2281,16 @@ let run_and_rewind :
         | FStar_Util.Inl results1 -> (results1, (FStar_Util.Inl st2))
         | FStar_Util.Inr e -> FStar_Exn.raise e
 let run_with_parsed_and_tc_term :
-  'Auu____7447 'Auu____7448 'Auu____7449 .
+  'Auu____7167 'Auu____7168 'Auu____7169 .
     FStar_JsonHelper.repl_state ->
       Prims.string ->
-        'Auu____7447 ->
-          'Auu____7448 ->
+        'Auu____7167 ->
+          'Auu____7168 ->
             (FStar_TypeChecker_Env.env ->
                FStar_Syntax_Syntax.term -> (query_status * FStar_Util.json))
               ->
               ((query_status * FStar_Util.json) *
-                (FStar_JsonHelper.repl_state, 'Auu____7449)
+                (FStar_JsonHelper.repl_state, 'Auu____7169)
                 FStar_Util.either)
   =
   fun st ->
@@ -2392,51 +2310,51 @@ let run_with_parsed_and_tc_term :
               match ses with
               | {
                   FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_let
-                    ((uu____7550,
-                      { FStar_Syntax_Syntax.lbname = uu____7551;
+                    ((uu____7270,
+                      { FStar_Syntax_Syntax.lbname = uu____7271;
                         FStar_Syntax_Syntax.lbunivs = univs1;
-                        FStar_Syntax_Syntax.lbtyp = uu____7553;
-                        FStar_Syntax_Syntax.lbeff = uu____7554;
+                        FStar_Syntax_Syntax.lbtyp = uu____7273;
+                        FStar_Syntax_Syntax.lbeff = uu____7274;
                         FStar_Syntax_Syntax.lbdef = def;
-                        FStar_Syntax_Syntax.lbattrs = uu____7556;
-                        FStar_Syntax_Syntax.lbpos = uu____7557;_}::[]),
-                     uu____7558);
-                  FStar_Syntax_Syntax.sigrng = uu____7559;
-                  FStar_Syntax_Syntax.sigquals = uu____7560;
-                  FStar_Syntax_Syntax.sigmeta = uu____7561;
-                  FStar_Syntax_Syntax.sigattrs = uu____7562;_}::[] ->
+                        FStar_Syntax_Syntax.lbattrs = uu____7276;
+                        FStar_Syntax_Syntax.lbpos = uu____7277;_}::[]),
+                     uu____7278);
+                  FStar_Syntax_Syntax.sigrng = uu____7279;
+                  FStar_Syntax_Syntax.sigquals = uu____7280;
+                  FStar_Syntax_Syntax.sigmeta = uu____7281;
+                  FStar_Syntax_Syntax.sigattrs = uu____7282;_}::[] ->
                   FStar_Pervasives_Native.Some (univs1, def)
-              | uu____7601 -> FStar_Pervasives_Native.None in
+              | uu____7321 -> FStar_Pervasives_Native.None in
             let parse1 frag =
-              let uu____7622 =
+              let uu____7342 =
                 FStar_Parser_ParseIt.parse
                   (FStar_Parser_ParseIt.Toplevel frag) in
-              match uu____7622 with
+              match uu____7342 with
               | FStar_Parser_ParseIt.ASTFragment
-                  (FStar_Util.Inr decls, uu____7628) ->
+                  (FStar_Util.Inr decls, uu____7348) ->
                   FStar_Pervasives_Native.Some decls
-              | uu____7649 -> FStar_Pervasives_Native.None in
+              | uu____7369 -> FStar_Pervasives_Native.None in
             let desugar env decls =
-              let uu____7667 =
-                let uu____7672 =
+              let uu____7387 =
+                let uu____7392 =
                   FStar_ToSyntax_ToSyntax.decls_to_sigelts decls in
-                uu____7672 env.FStar_TypeChecker_Env.dsenv in
-              FStar_Pervasives_Native.fst uu____7667 in
+                uu____7392 env.FStar_TypeChecker_Env.dsenv in
+              FStar_Pervasives_Native.fst uu____7387 in
             let typecheck tcenv decls =
-              let uu____7694 = FStar_TypeChecker_Tc.tc_decls tcenv decls in
-              match uu____7694 with | (ses, uu____7708, uu____7709) -> ses in
+              let uu____7414 = FStar_TypeChecker_Tc.tc_decls tcenv decls in
+              match uu____7414 with | (ses, uu____7428, uu____7429) -> ses in
             run_and_rewind st
               (QueryNOK, (FStar_Util.JsonStr "Computation interrupted"))
               (fun st1 ->
                  let tcenv = st1.FStar_JsonHelper.repl_env in
                  let frag = dummy_let_fragment term in
-                 let uu____7730 = parse1 frag in
-                 match uu____7730 with
+                 let uu____7450 = parse1 frag in
+                 match uu____7450 with
                  | FStar_Pervasives_Native.None ->
                      (QueryNOK,
                        (FStar_Util.JsonStr "Could not parse this term"))
                  | FStar_Pervasives_Native.Some decls ->
-                     let aux uu____7756 =
+                     let aux uu____7476 =
                        let decls1 = desugar tcenv decls in
                        let ses = typecheck tcenv decls1 in
                        match find_let_body ses with
@@ -2445,42 +2363,42 @@ let run_with_parsed_and_tc_term :
                              (FStar_Util.JsonStr
                                 "Typechecking yielded an unexpected term"))
                        | FStar_Pervasives_Native.Some (univs1, def) ->
-                           let uu____7792 =
+                           let uu____7512 =
                              FStar_Syntax_Subst.open_univ_vars univs1 def in
-                           (match uu____7792 with
+                           (match uu____7512 with
                             | (univs2, def1) ->
                                 let tcenv1 =
                                   FStar_TypeChecker_Env.push_univ_vars tcenv
                                     univs2 in
                                 continuation tcenv1 def1) in
-                     let uu____7804 = FStar_Options.trace_error () in
-                     if uu____7804
+                     let uu____7524 = FStar_Options.trace_error () in
+                     if uu____7524
                      then aux ()
                      else
                        (try
-                          (fun uu___995_7818 -> match () with | () -> aux ())
+                          (fun uu___953_7538 -> match () with | () -> aux ())
                             ()
                         with
-                        | uu___994_7827 ->
-                            let uu____7832 =
-                              FStar_Errors.issue_of_exn uu___994_7827 in
-                            (match uu____7832 with
+                        | uu___952_7547 ->
+                            let uu____7552 =
+                              FStar_Errors.issue_of_exn uu___952_7547 in
+                            (match uu____7552 with
                              | FStar_Pervasives_Native.Some issue ->
-                                 let uu____7840 =
-                                   let uu____7841 =
+                                 let uu____7560 =
+                                   let uu____7561 =
                                      FStar_Errors.format_issue issue in
-                                   FStar_Util.JsonStr uu____7841 in
-                                 (QueryNOK, uu____7840)
+                                   FStar_Util.JsonStr uu____7561 in
+                                 (QueryNOK, uu____7560)
                              | FStar_Pervasives_Native.None ->
-                                 FStar_Exn.raise uu___994_7827)))
+                                 FStar_Exn.raise uu___952_7547)))
 let run_compute :
-  'Auu____7856 .
+  'Auu____7576 .
     FStar_JsonHelper.repl_state ->
       Prims.string ->
         FStar_TypeChecker_Env.step Prims.list FStar_Pervasives_Native.option
           ->
           ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-            'Auu____7856) FStar_Util.either)
+            'Auu____7576) FStar_Util.either)
   =
   fun st ->
     fun term ->
@@ -2506,11 +2424,11 @@ let run_compute :
           (fun tcenv ->
              fun def ->
                let normalized = normalize_term1 tcenv rules1 def in
-               let uu____7934 =
-                 let uu____7935 =
+               let uu____7654 =
+                 let uu____7655 =
                    FStar_QueryHelper.term_to_string tcenv normalized in
-                 FStar_Util.JsonStr uu____7935 in
-               (QueryOK, uu____7934))
+                 FStar_Util.JsonStr uu____7655 in
+               (QueryOK, uu____7654))
 type search_term' =
   | NameContainsStr of Prims.string 
   | TypeContainsLid of FStar_Ident.lid 
@@ -2519,12 +2437,12 @@ and search_term = {
   st_term: search_term' }
 let (uu___is_NameContainsStr : search_term' -> Prims.bool) =
   fun projectee ->
-    match projectee with | NameContainsStr _0 -> true | uu____7970 -> false
+    match projectee with | NameContainsStr _0 -> true | uu____7690 -> false
 let (__proj__NameContainsStr__item___0 : search_term' -> Prims.string) =
   fun projectee -> match projectee with | NameContainsStr _0 -> _0
 let (uu___is_TypeContainsLid : search_term' -> Prims.bool) =
   fun projectee ->
-    match projectee with | TypeContainsLid _0 -> true | uu____7992 -> false
+    match projectee with | TypeContainsLid _0 -> true | uu____7712 -> false
 let (__proj__TypeContainsLid__item___0 : search_term' -> FStar_Ident.lid) =
   fun projectee -> match projectee with | TypeContainsLid _0 -> _0
 let (__proj__Mksearch_term__item__st_negate : search_term -> Prims.bool) =
@@ -2533,8 +2451,8 @@ let (__proj__Mksearch_term__item__st_negate : search_term -> Prims.bool) =
 let (__proj__Mksearch_term__item__st_term : search_term -> search_term') =
   fun projectee -> match projectee with | { st_negate; st_term;_} -> st_term
 let (st_cost : search_term' -> Prims.int) =
-  fun uu___8_8027 ->
-    match uu___8_8027 with
+  fun uu___8_7747 ->
+    match uu___8_7747 with
     | NameContainsStr str -> - (FStar_String.length str)
     | TypeContainsLid lid -> (Prims.parse_int "1")
 type search_candidate =
@@ -2564,25 +2482,25 @@ let (__proj__Mksearch_candidate__item__sc_fvars :
     match projectee with | { sc_lid; sc_typ; sc_fvars;_} -> sc_fvars
 let (sc_of_lid : FStar_Ident.lid -> search_candidate) =
   fun lid ->
-    let uu____8161 = FStar_Util.mk_ref FStar_Pervasives_Native.None in
-    let uu____8168 = FStar_Util.mk_ref FStar_Pervasives_Native.None in
-    { sc_lid = lid; sc_typ = uu____8161; sc_fvars = uu____8168 }
+    let uu____7881 = FStar_Util.mk_ref FStar_Pervasives_Native.None in
+    let uu____7888 = FStar_Util.mk_ref FStar_Pervasives_Native.None in
+    { sc_lid = lid; sc_typ = uu____7881; sc_fvars = uu____7888 }
 let (sc_typ :
   FStar_TypeChecker_Env.env -> search_candidate -> FStar_Syntax_Syntax.typ) =
   fun tcenv ->
     fun sc ->
-      let uu____8192 = FStar_ST.op_Bang sc.sc_typ in
-      match uu____8192 with
+      let uu____7912 = FStar_ST.op_Bang sc.sc_typ in
+      match uu____7912 with
       | FStar_Pervasives_Native.Some t -> t
       | FStar_Pervasives_Native.None ->
           let typ =
-            let uu____8220 =
+            let uu____7940 =
               FStar_TypeChecker_Env.try_lookup_lid tcenv sc.sc_lid in
-            match uu____8220 with
+            match uu____7940 with
             | FStar_Pervasives_Native.None ->
                 FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
                   FStar_Pervasives_Native.None FStar_Range.dummyRange
-            | FStar_Pervasives_Native.Some ((uu____8239, typ), uu____8241) ->
+            | FStar_Pervasives_Native.Some ((uu____7959, typ), uu____7961) ->
                 typ in
           (FStar_ST.op_Colon_Equals sc.sc_typ
              (FStar_Pervasives_Native.Some typ);
@@ -2593,13 +2511,13 @@ let (sc_fvars :
   =
   fun tcenv ->
     fun sc ->
-      let uu____8291 = FStar_ST.op_Bang sc.sc_fvars in
-      match uu____8291 with
+      let uu____8011 = FStar_ST.op_Bang sc.sc_fvars in
+      match uu____8011 with
       | FStar_Pervasives_Native.Some fv -> fv
       | FStar_Pervasives_Native.None ->
           let fv =
-            let uu____8335 = sc_typ tcenv sc in
-            FStar_Syntax_Free.fvars uu____8335 in
+            let uu____8055 = sc_typ tcenv sc in
+            FStar_Syntax_Free.fvars uu____8055 in
           (FStar_ST.op_Colon_Equals sc.sc_fvars
              (FStar_Pervasives_Native.Some fv);
            fv)
@@ -2608,35 +2526,35 @@ let (json_of_search_result :
   fun tcenv ->
     fun sc ->
       let typ_str =
-        let uu____8379 = sc_typ tcenv sc in
-        FStar_QueryHelper.term_to_string tcenv uu____8379 in
-      let uu____8380 =
-        let uu____8388 =
-          let uu____8394 =
-            let uu____8395 =
-              let uu____8397 =
+        let uu____8099 = sc_typ tcenv sc in
+        FStar_QueryHelper.term_to_string tcenv uu____8099 in
+      let uu____8100 =
+        let uu____8108 =
+          let uu____8114 =
+            let uu____8115 =
+              let uu____8117 =
                 FStar_Syntax_DsEnv.shorten_lid
                   tcenv.FStar_TypeChecker_Env.dsenv sc.sc_lid in
-              uu____8397.FStar_Ident.str in
-            FStar_Util.JsonStr uu____8395 in
-          ("lid", uu____8394) in
-        [uu____8388; ("type", (FStar_Util.JsonStr typ_str))] in
-      FStar_Util.JsonAssoc uu____8380
+              uu____8117.FStar_Ident.str in
+            FStar_Util.JsonStr uu____8115 in
+          ("lid", uu____8114) in
+        [uu____8108; ("type", (FStar_Util.JsonStr typ_str))] in
+      FStar_Util.JsonAssoc uu____8100
 exception InvalidSearch of Prims.string 
 let (uu___is_InvalidSearch : Prims.exn -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | InvalidSearch uu____8430 -> true
-    | uu____8433 -> false
+    | InvalidSearch uu____8150 -> true
+    | uu____8153 -> false
 let (__proj__InvalidSearch__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee ->
-    match projectee with | InvalidSearch uu____8443 -> uu____8443
+    match projectee with | InvalidSearch uu____8163 -> uu____8163
 let run_search :
-  'Auu____8452 .
+  'Auu____8172 .
     FStar_JsonHelper.repl_state ->
       Prims.string ->
         ((query_status * FStar_Util.json) * (FStar_JsonHelper.repl_state,
-          'Auu____8452) FStar_Util.either)
+          'Auu____8172) FStar_Util.either)
   =
   fun st ->
     fun search_str ->
@@ -2648,8 +2566,8 @@ let run_search :
           | NameContainsStr str ->
               FStar_Util.contains (candidate.sc_lid).FStar_Ident.str str
           | TypeContainsLid lid ->
-              let uu____8499 = sc_fvars tcenv candidate in
-              FStar_Util.set_mem lid uu____8499 in
+              let uu____8219 = sc_fvars tcenv candidate in
+              FStar_Util.set_mem lid uu____8219 in
         found <> term.st_negate in
       let parse1 search_str1 =
         let parse_one term =
@@ -2669,29 +2587,29 @@ let run_search :
           let parsed =
             if beg_quote <> end_quote
             then
-              let uu____8558 =
-                let uu____8559 =
+              let uu____8278 =
+                let uu____8279 =
                   FStar_Util.format1 "Improperly quoted search term: %s"
                     term1 in
-                InvalidSearch uu____8559 in
-              FStar_Exn.raise uu____8558
+                InvalidSearch uu____8279 in
+              FStar_Exn.raise uu____8278
             else
               if beg_quote
               then
-                (let uu____8565 = strip_quotes term1 in
-                 NameContainsStr uu____8565)
+                (let uu____8285 = strip_quotes term1 in
+                 NameContainsStr uu____8285)
               else
                 (let lid = FStar_Ident.lid_of_str term1 in
-                 let uu____8570 =
+                 let uu____8290 =
                    FStar_Syntax_DsEnv.resolve_to_fully_qualified_name
                      tcenv.FStar_TypeChecker_Env.dsenv lid in
-                 match uu____8570 with
+                 match uu____8290 with
                  | FStar_Pervasives_Native.None ->
-                     let uu____8573 =
-                       let uu____8574 =
+                     let uu____8293 =
+                       let uu____8294 =
                          FStar_Util.format1 "Unknown identifier: %s" term1 in
-                       InvalidSearch uu____8574 in
-                     FStar_Exn.raise uu____8573
+                       InvalidSearch uu____8294 in
+                     FStar_Exn.raise uu____8293
                  | FStar_Pervasives_Native.Some lid1 -> TypeContainsLid lid1) in
           { st_negate = negate; st_term = parsed } in
         let terms =
@@ -2699,14 +2617,14 @@ let run_search :
         let cmp x y = (st_cost x.st_term) - (st_cost y.st_term) in
         FStar_Util.sort_with cmp terms in
       let pprint_one term =
-        let uu____8602 =
+        let uu____8322 =
           match term.st_term with
           | NameContainsStr s -> FStar_Util.format1 "\"%s\"" s
           | TypeContainsLid l -> FStar_Util.format1 "%s" l.FStar_Ident.str in
-        Prims.op_Hat (if term.st_negate then "-" else "") uu____8602 in
+        Prims.op_Hat (if term.st_negate then "-" else "") uu____8322 in
       let results =
         try
-          (fun uu___1108_8636 ->
+          (fun uu___1066_8356 ->
              match () with
              | () ->
                  let terms = parse1 search_str in
@@ -2724,15 +2642,15 @@ let run_search :
                  (match results with
                   | [] ->
                       let kwds =
-                        let uu____8684 = FStar_List.map pprint_one terms in
-                        FStar_Util.concat_l " " uu____8684 in
-                      let uu____8690 =
-                        let uu____8691 =
+                        let uu____8404 = FStar_List.map pprint_one terms in
+                        FStar_Util.concat_l " " uu____8404 in
+                      let uu____8410 =
+                        let uu____8411 =
                           FStar_Util.format1
                             "No results found for query [%s]" kwds in
-                        InvalidSearch uu____8691 in
-                      FStar_Exn.raise uu____8690
-                  | uu____8698 -> (QueryOK, (FStar_Util.JsonList js)))) ()
+                        InvalidSearch uu____8411 in
+                      FStar_Exn.raise uu____8410
+                  | uu____8418 -> (QueryOK, (FStar_Util.JsonList js)))) ()
         with | InvalidSearch s -> (QueryNOK, (FStar_Util.JsonStr s)) in
       (results, (FStar_Util.Inl st))
 let (run_query :
@@ -2764,8 +2682,8 @@ let (validate_query : FStar_JsonHelper.repl_state -> query -> query) =
     fun q ->
       match q.qq with
       | Push
-          { push_kind = FStar_PushHelper.SyntaxCheck; push_code = uu____8829;
-            push_line = uu____8830; push_column = uu____8831;
+          { push_kind = FStar_PushHelper.SyntaxCheck; push_code = uu____8549;
+            push_line = uu____8550; push_column = uu____8551;
             push_peek_only = false;_}
           ->
           {
@@ -2774,12 +2692,12 @@ let (validate_query : FStar_JsonHelper.repl_state -> query -> query) =
                  "Cannot use 'kind': 'syntax' with 'query': 'push'");
             qid = (q.qid)
           }
-      | uu____8837 ->
+      | uu____8557 ->
           (match st.FStar_JsonHelper.repl_curmod with
            | FStar_Pervasives_Native.None when
                query_needs_current_module q.qq ->
                { qq = (GenericError "Current module unset"); qid = (q.qid) }
-           | uu____8839 -> q)
+           | uu____8559 -> q)
 let (validate_and_run_query :
   FStar_JsonHelper.repl_state ->
     query ->
@@ -2800,8 +2718,8 @@ let (js_repl_eval :
   =
   fun st ->
     fun query ->
-      let uu____8912 = validate_and_run_query st query in
-      match uu____8912 with
+      let uu____8632 = validate_and_run_query st query in
+      match uu____8632 with
       | ((status, response), st_opt) ->
           let js_response = json_of_response query.qid status response in
           (js_response, st_opt)
@@ -2813,8 +2731,8 @@ let (js_repl_eval_js :
   =
   fun st ->
     fun query_js ->
-      let uu____8978 = deserialize_interactive_query query_js in
-      js_repl_eval st uu____8978
+      let uu____8698 = deserialize_interactive_query query_js in
+      js_repl_eval st uu____8698
 let (js_repl_eval_str :
   FStar_JsonHelper.repl_state ->
     Prims.string ->
@@ -2823,17 +2741,17 @@ let (js_repl_eval_str :
   =
   fun st ->
     fun query_str ->
-      let uu____9002 =
-        let uu____9012 = parse_interactive_query query_str in
-        js_repl_eval st uu____9012 in
-      match uu____9002 with
+      let uu____8722 =
+        let uu____8732 = parse_interactive_query query_str in
+        js_repl_eval st uu____8732 in
+      match uu____8722 with
       | (js_response, st_opt) ->
-          let uu____9035 = FStar_Util.string_of_json js_response in
-          (uu____9035, st_opt)
+          let uu____8755 = FStar_Util.string_of_json js_response in
+          (uu____8755, st_opt)
 let (js_repl_init_opts : unit -> unit) =
-  fun uu____9048 ->
-    let uu____9049 = FStar_Options.parse_cmd_line () in
-    match uu____9049 with
+  fun uu____8768 ->
+    let uu____8769 = FStar_Options.parse_cmd_line () in
+    match uu____8769 with
     | (res, fnames) ->
         (match res with
          | FStar_Getopt.Error msg ->
@@ -2844,15 +2762,15 @@ let (js_repl_init_opts : unit -> unit) =
               | [] ->
                   failwith
                     "repl_init: No file name given in --ide invocation"
-              | h::uu____9072::uu____9073 ->
+              | h::uu____8792::uu____8793 ->
                   failwith
                     "repl_init: Too many file names given in --ide invocation"
-              | uu____9082 -> ()))
+              | uu____8802 -> ()))
 let rec (go : FStar_JsonHelper.repl_state -> Prims.int) =
   fun st ->
     let query = read_interactive_query st.FStar_JsonHelper.repl_stdin in
-    let uu____9095 = validate_and_run_query st query in
-    match uu____9095 with
+    let uu____8815 = validate_and_run_query st query in
+    match uu____8815 with
     | ((status, response), state_opt) ->
         (write_response query.qid status response;
          (match state_opt with
@@ -2861,20 +2779,20 @@ let rec (go : FStar_JsonHelper.repl_state -> Prims.int) =
 let (interactive_error_handler : FStar_Errors.error_handler) =
   let issues = FStar_Util.mk_ref [] in
   let add_one1 e =
-    let uu____9148 =
-      let uu____9151 = FStar_ST.op_Bang issues in e :: uu____9151 in
-    FStar_ST.op_Colon_Equals issues uu____9148 in
-  let count_errors uu____9205 =
-    let uu____9206 =
-      let uu____9209 = FStar_ST.op_Bang issues in
+    let uu____8868 =
+      let uu____8871 = FStar_ST.op_Bang issues in e :: uu____8871 in
+    FStar_ST.op_Colon_Equals issues uu____8868 in
+  let count_errors uu____8925 =
+    let uu____8926 =
+      let uu____8929 = FStar_ST.op_Bang issues in
       FStar_List.filter
         (fun e -> e.FStar_Errors.issue_level = FStar_Errors.EError)
-        uu____9209 in
-    FStar_List.length uu____9206 in
-  let report uu____9244 =
-    let uu____9245 = FStar_ST.op_Bang issues in
-    FStar_List.sortWith FStar_Errors.compare_issues uu____9245 in
-  let clear1 uu____9276 = FStar_ST.op_Colon_Equals issues [] in
+        uu____8929 in
+    FStar_List.length uu____8926 in
+  let report uu____8964 =
+    let uu____8965 = FStar_ST.op_Bang issues in
+    FStar_List.sortWith FStar_Errors.compare_issues uu____8965 in
+  let clear1 uu____8996 = FStar_ST.op_Colon_Equals issues [] in
   {
     FStar_Errors.eh_add_one = add_one1;
     FStar_Errors.eh_count_errors = count_errors;
@@ -2894,25 +2812,25 @@ let (interactive_printer : (FStar_Util.json -> unit) -> FStar_Util.printer) =
         (fun label ->
            fun get_string ->
              fun get_json ->
-               let uu____9337 = get_json () in
-               forward_message printer label uu____9337)
+               let uu____9057 = get_json () in
+               forward_message printer label uu____9057)
     }
 let (install_ide_mode_hooks : (FStar_Util.json -> unit) -> unit) =
   fun printer ->
     FStar_Util.set_printer (interactive_printer printer);
     FStar_Errors.set_handler interactive_error_handler
 let (initial_range : FStar_Range.range) =
-  let uu____9351 =
+  let uu____9071 =
     FStar_Range.mk_pos (Prims.parse_int "1") (Prims.parse_int "0") in
-  let uu____9354 =
+  let uu____9074 =
     FStar_Range.mk_pos (Prims.parse_int "1") (Prims.parse_int "0") in
-  FStar_Range.mk_range "<input>" uu____9351 uu____9354
+  FStar_Range.mk_range "<input>" uu____9071 uu____9074
 let (build_initial_repl_state : Prims.string -> FStar_JsonHelper.repl_state)
   =
   fun filename ->
     let env = FStar_Universal.init_env FStar_Parser_Dep.empty_deps in
     let env1 = FStar_TypeChecker_Env.set_range env initial_range in
-    let uu____9368 = FStar_Util.open_stdin () in
+    let uu____9088 = FStar_Util.open_stdin () in
     {
       FStar_JsonHelper.repl_line = (Prims.parse_int "1");
       FStar_JsonHelper.repl_column = (Prims.parse_int "0");
@@ -2920,46 +2838,46 @@ let (build_initial_repl_state : Prims.string -> FStar_JsonHelper.repl_state)
       FStar_JsonHelper.repl_deps_stack = [];
       FStar_JsonHelper.repl_curmod = FStar_Pervasives_Native.None;
       FStar_JsonHelper.repl_env = env1;
-      FStar_JsonHelper.repl_stdin = uu____9368;
+      FStar_JsonHelper.repl_stdin = uu____9088;
       FStar_JsonHelper.repl_names = FStar_Interactive_CompletionTable.empty
     }
 let interactive_mode' :
-  'Auu____9384 . FStar_JsonHelper.repl_state -> 'Auu____9384 =
+  'Auu____9104 . FStar_JsonHelper.repl_state -> 'Auu____9104 =
   fun init_st ->
     write_hello ();
     (let exit_code =
-       let uu____9393 =
+       let uu____9113 =
          (FStar_Options.record_hints ()) || (FStar_Options.use_hints ()) in
-       if uu____9393
+       if uu____9113
        then
-         let uu____9397 =
-           let uu____9399 = FStar_Options.file_list () in
-           FStar_List.hd uu____9399 in
-         FStar_SMTEncoding_Solver.with_hints_db uu____9397
-           (fun uu____9406 -> go init_st)
+         let uu____9117 =
+           let uu____9119 = FStar_Options.file_list () in
+           FStar_List.hd uu____9119 in
+         FStar_SMTEncoding_Solver.with_hints_db uu____9117
+           (fun uu____9126 -> go init_st)
        else go init_st in
      FStar_All.exit exit_code)
 let (interactive_mode : Prims.string -> unit) =
   fun filename ->
     install_ide_mode_hooks FStar_JsonHelper.write_json;
     FStar_Util.set_sigint_handler FStar_Util.sigint_ignore;
-    (let uu____9420 =
-       let uu____9422 = FStar_Options.codegen () in
-       FStar_Option.isSome uu____9422 in
-     if uu____9420
+    (let uu____9140 =
+       let uu____9142 = FStar_Options.codegen () in
+       FStar_Option.isSome uu____9142 in
+     if uu____9140
      then
        FStar_Errors.log_issue FStar_Range.dummyRange
          (FStar_Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen")
      else ());
     (let init1 = build_initial_repl_state filename in
-     let uu____9431 = FStar_Options.trace_error () in
-     if uu____9431
+     let uu____9151 = FStar_Options.trace_error () in
+     if uu____9151
      then interactive_mode' init1
      else
        (try
-          (fun uu___1256_9437 ->
+          (fun uu___1214_9157 ->
              match () with | () -> interactive_mode' init1) ()
         with
-        | uu___1255_9440 ->
+        | uu___1213_9160 ->
             (FStar_Errors.set_handler FStar_Errors.default_handler;
-             FStar_Exn.raise uu___1255_9440)))
+             FStar_Exn.raise uu___1213_9160)))

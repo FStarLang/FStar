@@ -211,57 +211,6 @@ let string_of_repl_task = function
     Util.format1 "PushFragment { code = %s }" frag.frag_text
   | Noop -> "Noop {}"
 
-(** Build a list of dependency loading tasks from a list of dependencies **)
-let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
-  let wrap = dummy_tf_of_fname in
-  let rec aux deps final_tasks =
-    match deps with
-    | intf :: impl :: deps' when needs_interleaving intf impl ->
-      LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
-    | intf_or_impl :: deps' ->
-      LDSingle (wrap intf_or_impl) :: aux deps' final_tasks
-    | [] -> final_tasks in
-  aux deps final_tasks
-
-(** Compute dependencies of `filename` and steps needed to load them.
-
-The dependencies are a list of file name.  The steps are a list of
-``repl_task`` elements, to be executed by ``run_repl_task``. **)
-let deps_and_repl_ld_tasks_of_our_file filename
-    : list<string>
-    * list<repl_task>
-    * FStar.Parser.Dep.deps =
-  let get_mod_name fname =
-    Parser.Dep.lowercase_module_name fname in
-  let our_mod_name =
-    get_mod_name filename in
-  let has_our_mod_name f =
-    (get_mod_name f = our_mod_name) in
-
-  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [filename] FStar.CheckedFiles.load_parsing_data_from_cache in
-  let same_name, real_deps =
-    List.partition has_our_mod_name deps in
-
-  let intf_tasks =
-    match same_name with
-    | [intf; impl] ->
-      if not (Parser.Dep.is_interface intf) then
-         raise_err (Errors.Fatal_MissingInterface, Util.format1 "Expecting an interface, got %s" intf);
-      if not (Parser.Dep.is_implementation impl) then
-         raise_err (Errors.Fatal_MissingImplementation, Util.format1 "Expecting an implementation, got %s" impl);
-      [LDInterfaceOfCurrentFile (dummy_tf_of_fname intf)]
-    | [impl] ->
-      []
-    | _ ->
-      let mods_str = String.concat " " same_name in
-      let message = "Too many or too few files matching %s: %s" in
-      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format message [our_mod_name; mods_str]));
-      [] in
-
-  let tasks =
-    repl_ld_tasks_of_deps real_deps intf_tasks in
-  real_deps, tasks, dep_graph
-
 (** Update timestamps in argument task to last modification times. **)
 let update_task_timestamps = function
   | LDInterleaved (intf, impl) ->

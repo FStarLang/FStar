@@ -9,19 +9,84 @@ open FStar.Universal
 open FStar.Errors
 open FStar.JsonHelper
 open FStar.TypeChecker.Env
+open FStar.Parser.ParseIt
 
+module U = FStar.Util
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module DsEnv = FStar.Syntax.DsEnv
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 type ctx_depth_t = int * int * solver_depth_t * int
+type deps_t = FStar.Parser.Dep.deps
 
-let repl_stack: ref<repl_stack_t> = Util.mk_ref []
+let repl_stack: ref<repl_stack_t> = U.mk_ref []
 
 let set_check_kind env check_kind =
   { env with lax = (check_kind = LaxCheck);
              dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
+
+(** Build a list of dependency loading tasks from a list of dependencies **)
+let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
+  let wrap fname = { tf_fname = fname; tf_modtime = U.now () } in
+  let rec aux deps final_tasks =
+    match deps with
+    | intf :: impl :: deps' when needs_interleaving intf impl ->
+      LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
+    | intf_or_impl :: deps' ->
+      LDSingle (wrap intf_or_impl) :: aux deps' final_tasks
+    | [] -> final_tasks in
+  aux deps final_tasks
+
+(** Compute dependencies of `filename` and steps needed to load them.
+
+The dependencies are a list of file name.  The steps are a list of
+``repl_task`` elements, to be executed by ``run_repl_task``. **)
+let deps_and_repl_ld_tasks_of_our_file filename
+    : list<string>
+    * list<repl_task>
+    * FStar.Parser.Dep.deps =
+  let get_mod_name fname =
+    Parser.Dep.lowercase_module_name fname in
+  let our_mod_name =
+    get_mod_name filename in
+  let has_our_mod_name f =
+    (get_mod_name f = our_mod_name) in
+
+  let parse_data_cache = FStar.CheckedFiles.load_parsing_data_from_cache in
+  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [filename] parse_data_cache in
+  let same_name, real_deps =
+    List.partition has_our_mod_name deps in
+
+  let intf_tasks =
+    match same_name with
+    | [intf; impl] ->
+      if not (Parser.Dep.is_interface intf) then
+         raise_err (Errors.Fatal_MissingInterface, U.format1 "Expecting an interface, got %s" intf);
+      if not (Parser.Dep.is_implementation impl) then
+         raise_err (Errors.Fatal_MissingImplementation,
+                    U.format1 "Expecting an implementation, got %s" impl);
+      [LDInterfaceOfCurrentFile ({ tf_fname = intf; tf_modtime = U.now () }) ]
+    | [impl] ->
+      []
+    | _ ->
+      let mods_str = String.concat " " same_name in
+      let message = "Too many or too few files matching %s: %s" in
+      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch,
+                 (U.format message [our_mod_name; mods_str]));
+      [] in
+
+  let tasks =
+    repl_ld_tasks_of_deps real_deps intf_tasks in
+  real_deps, tasks, dep_graph
+
+// Variant of load_deps in IDE; used exclusively by LSP
+let ld_deps st =
+  try
+    let (deps, _, _) = deps_and_repl_ld_tasks_of_our_file st.repl_fname in
+    deps
+  with
+  | _ -> U.print_error "[E] Failed to load deps"; []
 
 (** Checkpoint the current (typechecking and desugaring) environment **)
 let snapshot_env env msg : repl_depth_t * env_t =
@@ -70,7 +135,7 @@ let pop_repl msg st =
     // Because of the way ``snapshot`` is implemented, the `st'` and `env`
     // that we rollback to should be consistent:
     FStar.Common.runtime_assert
-      (Util.physical_equality env st'.repl_env)
+      (U.physical_equality env st'.repl_env)
       "Inconsistent stack state";
     st'
 
@@ -94,14 +159,28 @@ let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t *
   | Noop ->
     curmod, env
 
+// A REPL transaction without name-tracking; used exclusively by LSP;
+// variant of run_repl_transaction in IDE
 let repl_tx st push_kind task =
   let st = push_repl "repl_tx" push_kind task st in
-  let check_success () = get_err_count () = 0 in
 
-  // Run the task (and capture errors)
   try
     let curmod, env = run_repl_task st.repl_curmod st.repl_env task in
     let st = { st with repl_curmod = curmod; repl_env = env } in
-    (true, st)
+    true, st
   with
-    | _ -> (false, pop_repl "run_tx" st)
+  | Failure (msg) ->
+    U.print1_error "[F] %s" msg; false, pop_repl "run_tx" st
+  | U.SigInt ->
+    U.print_error "[E] Interrupt"; false, pop_repl "run_tx" st
+  | Error (e, msg, r) ->
+    U.print1_error "[E] %s" msg; false, pop_repl "run_tx" st
+  | Err (e, msg) ->
+    U.print1_error "[E] %s" msg; false, pop_repl "run_tx" st
+  | Stop ->
+    U.print_error "[E] Stop"; false, pop_repl "run_tx" st
+
+let full_lax text st =
+  let frag = { frag_text = text; frag_line = 1; frag_col = 0 } in
+  let _, st = repl_tx st LaxCheck (PushFragment frag) in
+  st
