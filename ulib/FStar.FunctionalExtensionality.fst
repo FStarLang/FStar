@@ -36,7 +36,7 @@ let extensionality a b f g
 let on_domain_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
   = f
 
-let feq_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow a b)
+let feq_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow_g a b)
   = ()
 
 let idempotence_on_domain_g #a #b f
