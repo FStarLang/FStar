@@ -282,14 +282,13 @@ let report_errors settings : unit =
         | Some err ->
           settings.query_errors |> List.iter (fun e ->
           FStar.Errors.diag settings.query_range ("SMT solver says: " ^ error_to_short_string e));
-          FStar.TypeChecker.Err.add_errors settings.query_env err.error_messages
+          FStar.Errors.add_errors err.error_messages
         | None ->
           let err_detail =
             settings.query_errors |>
             List.map (fun e -> "SMT solver says: " ^ error_to_short_string e) |>
             String.concat "; " in
-          FStar.TypeChecker.Err.add_errors
-                   settings.query_env
+          FStar.Errors.add_errors
                    [(Errors.Error_UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
                      settings.query_range)]
     in
@@ -635,8 +634,7 @@ let solve use_env_msg tcenv q : unit =
     Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
     if Options.no_smt ()
     then
-        FStar.TypeChecker.Err.add_errors
-                 tcenv
+        FStar.Errors.add_errors
                  [(Errors.Error_NoSMTButNeeded,
                     BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
                         tcenv.range)]

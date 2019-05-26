@@ -75,11 +75,11 @@ let check_frag (env:TcEnv.env) curmod frag =
         Some (m, env, FStar.Errors.get_err_count())
     with
         | FStar.Errors.Error(e, msg, r) when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(e, msg, r)];
+          FStar.Errors.add_errors [(e, msg, r)];
           None
 
         | FStar.Errors.Err (e, msg) when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(e, msg, FStar.TypeChecker.Env.get_range env)];
+          FStar.Errors.add_errors [(e, msg, FStar.TypeChecker.Env.get_range env)];
           None
 
 let report_fail () =
@@ -563,7 +563,7 @@ let interactive_mode (filename:string): unit =
   let filenames, maybe_intf, dep_graph = deps_of_our_file filename in
   let env = init_env dep_graph in
   let stack, env, ts = tc_deps None [] env filenames [] in
-  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+  let initial_range = Range.mk_range filename (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
   let env =
     match maybe_intf with

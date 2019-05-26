@@ -190,9 +190,8 @@ let update_task_timestamps = function
     LDInterfaceOfCurrentFile (tf_of_fname intf.tf_fname)
   | other -> other
 
-// Load dependencies described by `tasks`
 // Variant of run_repl_ld_transactions in IDE; used exclusively by LSP.
-//  The first dependencies (prims, ...) come first; the current file's
+// The first dependencies (prims, ...) come first; the current file's
 // interface comes last. The original value of the `repl_deps_stack` field
 // in ``st`` is used to skip already completed tasks.
 let repl_ldtx (st: repl_state) (tasks: list<repl_task>) : either_replst =

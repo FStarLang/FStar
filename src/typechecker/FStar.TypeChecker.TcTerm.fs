@@ -661,9 +661,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let e, g =
           let e, c, g = tc_tot_or_gtot_term env_no_ex e in
           if not <| U.is_total_lcomp c
-          then Err.add_errors env [Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
+          then Errors.add_errors [Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
           match Rel.try_teq true env_no_ex c.res_typ expected_repr_typ with
-          | None -> Err.add_errors env [Errors.Error_UnexpectedInstance, BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
+          | None -> Errors.add_errors [Errors.Error_UnexpectedInstance, BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
                     e, Env.conj_guard g g0
           | Some g' -> e, Env.conj_guard g' (Env.conj_guard g g0)
         in

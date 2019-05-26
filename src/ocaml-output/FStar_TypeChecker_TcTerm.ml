@@ -2205,8 +2205,7 @@ and (tc_maybe_toplevel_term :
                                             Prims.op_Negation uu____6939 in
                                         if uu____6937
                                         then
-                                          FStar_TypeChecker_Err.add_errors
-                                            env1
+                                          FStar_Errors.add_errors
                                             [(FStar_Errors.Error_UnexpectedGTotComputation,
                                                "Expected Tot, got a GTot computation",
                                                (e2.FStar_Syntax_Syntax.pos))]
@@ -2234,8 +2233,8 @@ and (tc_maybe_toplevel_term :
                                                     uu____6991,
                                                     (e2.FStar_Syntax_Syntax.pos)) in
                                                 [uu____6983] in
-                                              FStar_TypeChecker_Err.add_errors
-                                                env1 uu____6973);
+                                              FStar_Errors.add_errors
+                                                uu____6973);
                                              (let uu____7013 =
                                                 FStar_TypeChecker_Env.conj_guard
                                                   g g0 in

@@ -558,8 +558,7 @@ let (report_errors : query_settings -> unit) =
                     let uu____2147 = error_to_short_string e in
                     Prims.op_Hat "SMT solver says: " uu____2147 in
                   FStar_Errors.diag settings.query_range uu____2145));
-          FStar_TypeChecker_Err.add_errors settings.query_env
-            err.error_messages)
+          FStar_Errors.add_errors err.error_messages)
      | FStar_Pervasives_Native.None ->
          let err_detail =
            let uu____2152 =
@@ -576,7 +575,7 @@ let (report_errors : query_settings -> unit) =
              (FStar_Errors.Error_UnknownFatal_AssertionFailure, uu____2191,
                (settings.query_range)) in
            [uu____2183] in
-         FStar_TypeChecker_Err.add_errors settings.query_env uu____2173);
+         FStar_Errors.add_errors uu____2173);
     (let uu____2209 =
        (FStar_Options.detail_errors ()) &&
          (let uu____2212 = FStar_Options.n_cores () in
@@ -1207,7 +1206,7 @@ let (solve :
                (FStar_Errors.Error_NoSMTButNeeded, uu____3779,
                  (tcenv.FStar_TypeChecker_Env.range)) in
              [uu____3771] in
-           FStar_TypeChecker_Err.add_errors tcenv uu____3761
+           FStar_Errors.add_errors uu____3761
          else
            (let tcenv1 = FStar_TypeChecker_Env.incr_query_index tcenv in
             let uu____3802 =

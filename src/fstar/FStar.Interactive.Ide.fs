@@ -60,11 +60,11 @@ let with_captured_errors' env sigint_handler f =
     Util.print_string "Interrupted"; None
 
   | Error (e, msg, r) ->
-    TcErr.add_errors env [(e, msg, r)];
+    Errors.add_errors [(e, msg, r)];
     None
 
   | Err (e, msg) ->
-    TcErr.add_errors env [(e, msg, TcEnv.get_range env)];
+    Errors.add_errors [(e, msg, TcEnv.get_range env)];
     None
 
   | Stop ->
@@ -1171,12 +1171,12 @@ let install_ide_mode_hooks printer =
   FStar.Util.set_printer (interactive_printer printer);
   FStar.Errors.set_handler interactive_error_handler
 
-let initial_range =
-  Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
+let initial_range fname =
+  Range.mk_range fname (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
 let build_initial_repl_state (filename: string) =
   let env = init_env FStar.Parser.Dep.empty_deps in
-  let env = FStar.TypeChecker.Env.set_range env initial_range in
+  let env = FStar.TypeChecker.Env.set_range env (initial_range filename) in
 
   { repl_line = 1; repl_column = 0; repl_fname = filename;
     repl_curmod = None; repl_env = env; repl_deps_stack = [];

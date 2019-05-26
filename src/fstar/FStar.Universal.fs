@@ -139,9 +139,10 @@ let init_env deps : TcEnv.env =
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
 let tc_one_fragment curmod (env:TcEnv.env_t) frag =
+  let file_from_env env = Range.file_of_range (TcEnv.get_range env) in
   let acceptable_mod_name modul =
     (* Interface is sent as the first chunk, so we must allow repeating the same module. *)
-    Parser.Dep.lowercase_module_name (List.hd (Options.file_list ())) =
+    Parser.Dep.lowercase_module_name (file_from_env env) =
     String.lowercase (string_of_lid modul.name) in
 
   let range_of_first_mod_decl modul =
@@ -168,7 +169,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
     begin
        let msg : string =
            BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
-                       (Parser.Dep.module_name_of_file (List.hd (Options.file_list ())))
+                       (Parser.Dep.module_name_of_file (file_from_env env))
        in
        Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
                              (range_of_first_mod_decl ast_modul)

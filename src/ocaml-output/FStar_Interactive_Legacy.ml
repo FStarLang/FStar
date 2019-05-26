@@ -149,7 +149,7 @@ let (check_frag :
     FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
       FStar_Parser_ParseIt.input_frag ->
         (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option *
-          FStar_TypeChecker_Env.env_t * Prims.int)
+          FStar_TypeChecker_Env.env * Prims.int)
           FStar_Pervasives_Native.option)
   =
   fun env ->
@@ -171,7 +171,7 @@ let (check_frag :
         | FStar_Errors.Error (e, msg, r) when
             let uu____437 = FStar_Options.trace_error () in
             Prims.op_Negation uu____437 ->
-            (FStar_TypeChecker_Err.add_errors env [(e, msg, r)];
+            (FStar_Errors.add_errors [(e, msg, r)];
              FStar_Pervasives_Native.None)
         | FStar_Errors.Err (e, msg) when
             let uu____468 = FStar_Options.trace_error () in
@@ -181,7 +181,7 @@ let (check_frag :
                   let uu____489 = FStar_TypeChecker_Env.get_range env in
                   (e, msg, uu____489) in
                 [uu____481] in
-              FStar_TypeChecker_Err.add_errors env uu____471);
+              FStar_Errors.add_errors uu____471);
              FStar_Pervasives_Native.None)
 let (report_fail : unit -> unit) =
   fun uu____519 ->
@@ -930,23 +930,23 @@ let (interactive_mode : Prims.string -> unit) =
                 let uu____4915 =
                   FStar_Range.mk_pos (Prims.parse_int "1")
                     (Prims.parse_int "0") in
-                FStar_Range.mk_range "<input>" uu____4912 uu____4915 in
+                FStar_Range.mk_range filename uu____4912 uu____4915 in
               let env2 = FStar_TypeChecker_Env.set_range env1 initial_range in
               let env3 =
                 match maybe_intf with
                 | FStar_Pervasives_Native.Some intf ->
                     FStar_Universal.load_interface_decls env2 intf
                 | FStar_Pervasives_Native.None -> env2 in
-              let uu____4925 =
+              let uu____4924 =
                 (FStar_Options.record_hints ()) ||
                   (FStar_Options.use_hints ()) in
-              if uu____4925
+              if uu____4924
               then
-                let uu____4928 =
-                  let uu____4930 = FStar_Options.file_list () in
-                  FStar_List.hd uu____4930 in
-                FStar_SMTEncoding_Solver.with_hints_db uu____4928
-                  (fun uu____4936 ->
+                let uu____4927 =
+                  let uu____4929 = FStar_Options.file_list () in
+                  FStar_List.hd uu____4929 in
+                FStar_SMTEncoding_Solver.with_hints_db uu____4927
+                  (fun uu____4935 ->
                      go ((Prims.parse_int "1"), (Prims.parse_int "0"))
                        filename stack FStar_Pervasives_Native.None env3 ts)
               else

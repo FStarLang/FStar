@@ -8,13 +8,14 @@ open FStar.Util
 open FStar.Errors
 open FStar.Exn
 open FStar.Range
-
 open FStar.TypeChecker.Env
+
+module U = FStar.Util
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
 let try_assoc (key: string) (d: list<(string * json)>) =
-  Util.map_option snd (Util.try_find (fun (k, _) -> k = key) d)
+  U.map_option snd (U.try_find (fun (k, _) -> k = key) d)
 
 // All exceptions are guaranteed to be caught in the LSP server implementation
 exception MissingKey of string // Only in LSP
@@ -27,17 +28,17 @@ exception InputExhausted
 let assoc key a =
   match try_assoc key a with
   | Some v -> v
-  | None -> raise (MissingKey (Util.format1 "Missing key [%s]" key))
+  | None -> raise (MissingKey (U.format1 "Missing key [%s]" key))
 
 let write_json (js: json) =
-  Util.print_raw (Util.string_of_json js);
-  Util.print_raw "\n"
+  U.print_raw (U.string_of_json js);
+  U.print_raw "\n"
 
 let write_jsonrpc (js: json) : unit =
   // TODO: utf-8 strings: byte buffers?
-  let js_str = Util.string_of_json js in
-  let len = Util.string_of_int (String.length js_str) in
-  Util.print_raw (Util.format2 "Content-Length: %s\r\n\r\n%s" len js_str)
+  let js_str = U.string_of_json js in
+  let len = U.string_of_int (String.length js_str) in
+  U.print_raw (U.format2 "Content-Length: %s\r\n\r\n%s" len js_str)
 
 // Only used in IDE
 let js_fail expected got =
@@ -57,20 +58,20 @@ let js_assoc : json -> list<(string * json)> = function
   | other -> js_fail "dictionary" other
 let js_str_int : json -> int = function
   | JsonInt i -> i
-  | JsonStr s -> Util.int_of_string s
+  | JsonStr s -> U.int_of_string s
   | other -> js_fail "string or int" other
 
 // May throw
 let arg k r = assoc k (assoc "params" r |> js_assoc)
 
-let uri_to_path u = substring_from u 7
+let uri_to_path u = if U.starts_with u "file://" then substring_from u 7 else u
 
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
 
 let js_compl_context : json -> completion_context = function
   | JsonAssoc a ->
     { trigger_kind = assoc "triggerKind" a |> js_int;
-      trigger_char = try_assoc "triggerChar" a |> Util.map_option js_str; }
+      trigger_char = try_assoc "triggerChar" a |> U.map_option js_str; }
   | other -> js_fail "dictionary" other
 
 type txdoc_item = { fname: string; langId: string; version: int; text: string }
@@ -219,9 +220,9 @@ let errorcode_to_int : error_code -> int = function
 
 let json_debug = function
   | JsonNull -> "null"
-  | JsonBool b -> Util.format1 "bool (%s)" (if b then "true" else "false")
-  | JsonInt i -> Util.format1 "int (%s)" (Util.string_of_int i)
-  | JsonStr s -> Util.format1 "string (%s)" s
+  | JsonBool b -> U.format1 "bool (%s)" (if b then "true" else "false")
+  | JsonInt i -> U.format1 "int (%s)" (U.string_of_int i)
+  | JsonStr s -> U.format1 "string (%s)" s
   | JsonList _ -> "list (...)"
   | JsonAssoc _ -> "dictionary (...)"
 
@@ -229,7 +230,7 @@ let json_debug = function
 // because types differ (query' versus lsp_query)
 let wrap_jsfail (qid : option<int>) expected got : lsp_query =
   { query_id = qid;
-    q = BadProtocolMsg (Util.format2 "JSON decoding failed: expected %s, got %s"
+    q = BadProtocolMsg (U.format2 "JSON decoding failed: expected %s, got %s"
                         expected (json_debug got)) }
 
 (* Helpers for constructing the response *)

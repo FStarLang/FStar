@@ -13,6 +13,7 @@ module U = FStar.Util
 module QH = FStar.QueryHelper
 module PH = FStar.PushHelper
 module PI = FStar.Parser.ParseIt
+module TcEnv = FStar.TypeChecker.Env
 
 (* Request *)
 
@@ -105,7 +106,11 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | Symbol sym -> (Some (Inl JsonNull), Inl st)
   | ExecCommand cmd -> (Some (Inl JsonNull), Inl st)
   | DidOpen { fname = f; langId = _; version = _; text = t } ->
-      (None, Inl (PH.full_lax t ({ st with repl_fname = f; repl_line = 1; repl_column = 0 })))
+    let p = uri_to_path f in
+    let r = Range.mk_range p (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+    let env = TcEnv.set_range st.repl_env r in
+    let st = { st with repl_fname = p; repl_line = 1; repl_column = 0; repl_env = env } in
+    None, Inl (PH.full_lax t st)
   | DidChange -> (None, Inl st)
   | WillSave txid -> (None, Inl st)
   | WillSaveWait txid -> (Some (Inl JsonNull), Inl st)
@@ -180,7 +185,7 @@ let rec go (st: repl_state) : int =
 let initial_repl_state () : repl_state =
   let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
   let env = init_env FStar.Parser.Dep.empty_deps in
-  let env = FStar.TypeChecker.Env.set_range env initial_range in
+  let env = TcEnv.set_range env initial_range in
 
   { repl_line = 1; repl_column = 0; repl_fname = "<input>";
     repl_curmod = None; repl_env = env; repl_deps_stack = [];
