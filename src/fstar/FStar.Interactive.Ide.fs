@@ -80,10 +80,6 @@ let with_captured_errors env sigint_handler f =
 
 let t0 = Util.now ()
 
-let tf_of_fname fname =
-  { tf_fname = fname;
-    tf_modtime = Parser.ParseIt.get_file_last_modification_time fname }
-
 (** Create a timed_fname with a dummy modtime **)
 let dummy_tf_of_fname fname =
   { tf_fname = fname;
@@ -210,16 +206,6 @@ let string_of_repl_task = function
   | PushFragment frag ->
     Util.format1 "PushFragment { code = %s }" frag.frag_text
   | Noop -> "Noop {}"
-
-(** Update timestamps in argument task to last modification times. **)
-let update_task_timestamps = function
-  | LDInterleaved (intf, impl) ->
-    LDInterleaved (tf_of_fname intf.tf_fname, tf_of_fname impl.tf_fname)
-  | LDSingle intf_or_impl ->
-    LDSingle (tf_of_fname intf_or_impl.tf_fname)
-  | LDInterfaceOfCurrentFile intf ->
-    LDInterfaceOfCurrentFile (tf_of_fname intf.tf_fname)
-  | other -> other
 
 (** Push, run `task`, and pop if it fails.
 
@@ -798,32 +784,6 @@ let run_push_without_deps st query =
   let json_errors = JsonList (collect_errors () |> List.map json_of_issue) in
   let st = if success then { st with repl_line = line; repl_column = column } else st in
   ((status, json_errors), Inl st)
-
-let capitalize str =
-  if str = "" then str
-  else let first = String.substring str 0 1 in
-       String.uppercase first ^ String.substring str 1 (String.length str - 1)
-
-let add_module_completions this_fname deps table =
-  let mods =
-    FStar.Parser.Dep.build_inclusion_candidates_list () in
-  let loaded_mods_set =
-    List.fold_left
-      (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
-      (psmap_empty ()) (Options.prims () :: deps) in // Prims is an implicit dependency
-  let loaded modname =
-    psmap_find_default loaded_mods_set modname false in
-  let this_mod_key =
-    Parser.Dep.lowercase_module_name this_fname in
-  List.fold_left (fun table (modname, mod_path) ->
-      // modname is the filename part of mod_path
-      let mod_key = String.lowercase modname in
-      if this_mod_key = mod_key then
-        table // Exclude current module from completion
-      else
-        let ns_query = Util.split (capitalize modname) "." in
-        CTable.register_module_path table (loaded mod_key) mod_path ns_query)
-    table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
 let run_push_with_deps st query =
   if Options.debug_any () then

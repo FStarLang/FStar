@@ -104,8 +104,8 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | ChangeWatch -> (None, Inl st)
   | Symbol sym -> (Some (Inl JsonNull), Inl st)
   | ExecCommand cmd -> (Some (Inl JsonNull), Inl st)
-  | DidOpen { fname = _; langId = _; version = _; text = t } ->
-      (None, Inl (PH.full_lax t st))
+  | DidOpen { fname = f; langId = _; version = _; text = t } ->
+      (None, Inl (PH.full_lax t ({ st with repl_fname = f; repl_line = 1; repl_column = 0 })))
   | DidChange -> (None, Inl st)
   | WillSave txid -> (None, Inl st)
   | WillSaveWait txid -> (Some (Inl JsonNull), Inl st)

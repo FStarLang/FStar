@@ -5,6 +5,7 @@
 module FStar.PushHelper
 open FStar.ST
 open FStar.All
+open FStar.Util
 open FStar.Universal
 open FStar.Errors
 open FStar.JsonHelper
@@ -15,10 +16,12 @@ module U = FStar.Util
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module DsEnv = FStar.Syntax.DsEnv
+module CTable = FStar.Interactive.CompletionTable
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 type ctx_depth_t = int * int * solver_depth_t * int
 type deps_t = FStar.Parser.Dep.deps
+type either_replst = either<repl_state, repl_state>
 
 let repl_stack: ref<repl_stack_t> = U.mk_ref []
 
@@ -79,14 +82,6 @@ let deps_and_repl_ld_tasks_of_our_file filename
   let tasks =
     repl_ld_tasks_of_deps real_deps intf_tasks in
   real_deps, tasks, dep_graph
-
-// Variant of load_deps in IDE; used exclusively by LSP
-let ld_deps st =
-  try
-    let (deps, _, _) = deps_and_repl_ld_tasks_of_our_file st.repl_fname in
-    deps
-  with
-  | _ -> U.print_error "[E] Failed to load deps"; []
 
 (** Checkpoint the current (typechecking and desugaring) environment **)
 let snapshot_env env msg : repl_depth_t * env_t =
@@ -180,7 +175,106 @@ let repl_tx st push_kind task =
   | Stop ->
     U.print_error "[E] Stop"; false, pop_repl "run_tx" st
 
+// Little helper
+let tf_of_fname fname =
+  { tf_fname = fname;
+    tf_modtime = Parser.ParseIt.get_file_last_modification_time fname }
+
+// Little helper: update timestamps in argument task to last modification times.
+let update_task_timestamps = function
+  | LDInterleaved (intf, impl) ->
+    LDInterleaved (tf_of_fname intf.tf_fname, tf_of_fname impl.tf_fname)
+  | LDSingle intf_or_impl ->
+    LDSingle (tf_of_fname intf_or_impl.tf_fname)
+  | LDInterfaceOfCurrentFile intf ->
+    LDInterfaceOfCurrentFile (tf_of_fname intf.tf_fname)
+  | other -> other
+
+// Load dependencies described by `tasks`
+// Variant of run_repl_ld_transactions in IDE; used exclusively by LSP.
+//  The first dependencies (prims, ...) come first; the current file's
+// interface comes last. The original value of the `repl_deps_stack` field
+// in ``st`` is used to skip already completed tasks.
+let repl_ldtx (st: repl_state) (tasks: list<repl_task>) : either_replst =
+
+  (* Run as many ``pop_repl`` as there are entries in the input stack.
+  Elements of the input stack are expected to match the topmost ones of
+  ``!repl_stack`` *)
+  let rec revert_many st = function
+    | [] -> st
+    | (_id, (task, _st')) :: entries ->
+      let st' = pop_repl "repl_ldtx" st in
+      let dep_graph = TcEnv.dep_graph st.repl_env in
+      let st' = { st' with repl_env = TcEnv.set_dep_graph st'.repl_env dep_graph } in
+      revert_many st' entries in
+
+  let rec aux (st: repl_state)
+              (tasks: list<repl_task>)
+              (previous: list<repl_stack_entry_t>) =
+    match tasks, previous with
+    // All done: return the final state.
+    | [], [] -> Inl st
+
+    // We have more dependencies to load, and no previously loaded dependencies:
+    // run ``task`` and record the updated dependency stack in ``st``.
+    | task :: tasks, [] ->
+      let timestamped_task = update_task_timestamps task in
+      let success, st = repl_tx st LaxCheck timestamped_task in
+      if success then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
+      else Inr st
+
+    // We've already run ``task`` previously, and no update is needed: skip.
+    | task :: tasks, prev :: previous
+        when fst (snd prev) = update_task_timestamps task ->
+      aux st tasks previous
+
+    // We have a timestamp mismatch or a new dependency:
+    // revert now-obsolete dependencies and resume loading.
+    | tasks, previous ->
+      aux (revert_many st previous) tasks [] in
+
+  aux st tasks (List.rev st.repl_deps_stack)
+
+// Variant of load_deps in IDE; used exclusively by LSP
+let ld_deps st =
+  try
+    let (deps, tasks, dep_graph) = deps_and_repl_ld_tasks_of_our_file st.repl_fname in
+    let st = { st with repl_env = TcEnv.set_dep_graph st.repl_env dep_graph } in
+    match repl_ldtx st tasks with
+    | Inr st -> Inr st
+    | Inl st -> Inl (st, deps)
+  with
+  | _ -> U.print_error "[E] Failed to load deps"; Inr st
+
+let add_module_completions this_fname deps table =
+  let capitalize str = if str = "" then str
+                       else let first = String.substring str 0 1 in
+                       String.uppercase first ^ String.substring str 1 (String.length str - 1) in
+  let mods =
+    FStar.Parser.Dep.build_inclusion_candidates_list () in
+  let loaded_mods_set =
+    List.fold_left
+      (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
+      (psmap_empty ()) (Options.prims () :: deps) in // Prims is an implicit dependency
+  let loaded modname =
+    psmap_find_default loaded_mods_set modname false in
+  let this_mod_key =
+    Parser.Dep.lowercase_module_name this_fname in
+  List.fold_left (fun table (modname, mod_path) ->
+      // modname is the filename part of mod_path
+      let mod_key = String.lowercase modname in
+      if this_mod_key = mod_key then
+        table // Exclude current module from completion
+      else
+        let ns_query = Util.split (capitalize modname) "." in
+        CTable.register_module_path table (loaded mod_key) mod_path ns_query)
+    table (List.rev mods) // List.rev to process files in order or *increasing* precedence
+
+// Variant of run_push_with_deps in IDE; used exclusively by LSP
 let full_lax text st =
   let frag = { frag_text = text; frag_line = 1; frag_col = 0 } in
-  let _, st = repl_tx st LaxCheck (PushFragment frag) in
-  st
+  match ld_deps st with
+  | Inl (st, deps) ->
+      let names = add_module_completions st.repl_fname deps st.repl_names in
+      snd (repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment frag))
+  | Inr st -> st
