@@ -2990,9 +2990,13 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
             giveup env "incompatible monad ordering: GTot </: Tot"  orig
 
          | Total  (t1, _), Total  (t2, _)
-         | GTotal (t1, _), GTotal (t2, _)
-         | Total  (t1, _), GTotal (t2, _) -> //rigid-rigid 1
+         | GTotal (t1, _), GTotal (t2, _) -> //rigid-rigid 1
             solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+
+         | Total  (t1, _), GTotal (t2, _) ->
+            if problem.relation = SUB
+            then solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+            else giveup env "GTot =/= Tot" orig
 
          | GTotal _, Comp _
          | Total _,  Comp _ ->
