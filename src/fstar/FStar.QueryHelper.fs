@@ -8,6 +8,7 @@ open FStar.Util
 open FStar.JsonHelper
 open FStar.TypeChecker.Env
 
+module U = FStar.Util
 module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
@@ -31,20 +32,20 @@ let sigelt_to_string se =
 
 let symlookup tcenv symbol pos_opt requested_info =
   let info_of_lid_str lid_str =
-    let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split lid_str ".")) in
-    let lid = Util.dflt lid <| DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid in
-    try_lookup_lid tcenv lid |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
+    let lid = Ident.lid_of_ids (List.map Ident.id_of_text (U.split lid_str ".")) in
+    let lid = U.dflt lid <| DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid in
+    try_lookup_lid tcenv lid |> U.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
 
   let docs_of_lid lid =
-    DsEnv.try_lookup_doc tcenv.dsenv lid |> Util.map_option fst in
+    DsEnv.try_lookup_doc tcenv.dsenv lid |> U.map_option fst in
 
   let def_of_lid lid =
-    Util.bind_opt (TcEnv.lookup_qname tcenv lid) (function
+    U.bind_opt (TcEnv.lookup_qname tcenv lid) (function
       | (Inr (se, _), _) -> Some (sigelt_to_string se)
       | _ -> None) in
 
   let info_at_pos_opt =
-    Util.bind_opt pos_opt (fun (file, row, col) ->
+    U.bind_opt pos_opt (fun (file, row, col) ->
       TcErr.info_at_pos tcenv file row col) in
 
   let info_opt =
@@ -78,7 +79,8 @@ let symlookup tcenv symbol pos_opt requested_info =
              slr_typ = typ_str; slr_doc = doc_str; slr_def = def_str })
 
 let deflookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
-  match symlookup st "" (Some (uri_to_path pos.uri, pos.line, pos.col)) ["defined-at"] with
+  // Lines are 0-indexed in LSP, but 1-indexed in the F* Typechecker
+  match symlookup st "" (Some (uri_to_path pos.uri, pos.line + 1, pos.col)) ["defined-at"] with
   | Some { slr_name = _; slr_def_range = (Some r); slr_typ = _; slr_doc = _; slr_def = _ } ->
       Inl (JsonAssoc [("result", js_range r)])
   | _ -> Inr (js_resperr InternalError "symlookup failed")

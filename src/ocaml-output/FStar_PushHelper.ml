@@ -593,37 +593,38 @@ let (full_lax :
   =
   fun text ->
     fun st ->
-      let frag =
-        {
-          FStar_Parser_ParseIt.frag_text = text;
-          FStar_Parser_ParseIt.frag_line = (Prims.parse_int "1");
-          FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
-        } in
-      let uu____1472 = ld_deps st in
-      match uu____1472 with
-      | FStar_Util.Inl (st1, deps) ->
-          let names1 =
-            add_module_completions st1.FStar_JsonHelper.repl_fname deps
-              st1.FStar_JsonHelper.repl_names in
-          let uu____1500 =
-            repl_tx
-              (let uu___248_1508 = st1 in
-               {
-                 FStar_JsonHelper.repl_line =
-                   (uu___248_1508.FStar_JsonHelper.repl_line);
-                 FStar_JsonHelper.repl_column =
-                   (uu___248_1508.FStar_JsonHelper.repl_column);
-                 FStar_JsonHelper.repl_fname =
-                   (uu___248_1508.FStar_JsonHelper.repl_fname);
-                 FStar_JsonHelper.repl_deps_stack =
-                   (uu___248_1508.FStar_JsonHelper.repl_deps_stack);
-                 FStar_JsonHelper.repl_curmod =
-                   (uu___248_1508.FStar_JsonHelper.repl_curmod);
-                 FStar_JsonHelper.repl_env =
-                   (uu___248_1508.FStar_JsonHelper.repl_env);
-                 FStar_JsonHelper.repl_stdin =
-                   (uu___248_1508.FStar_JsonHelper.repl_stdin);
-                 FStar_JsonHelper.repl_names = names1
-               }) LaxCheck (FStar_JsonHelper.PushFragment frag) in
-          FStar_Pervasives_Native.snd uu____1500
-      | FStar_Util.Inr st1 -> st1
+      FStar_TypeChecker_Env.toggle_id_info st.FStar_JsonHelper.repl_env true;
+      (let frag =
+         {
+           FStar_Parser_ParseIt.frag_text = text;
+           FStar_Parser_ParseIt.frag_line = (Prims.parse_int "1");
+           FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
+         } in
+       let uu____1474 = ld_deps st in
+       match uu____1474 with
+       | FStar_Util.Inl (st1, deps) ->
+           let names1 =
+             add_module_completions st1.FStar_JsonHelper.repl_fname deps
+               st1.FStar_JsonHelper.repl_names in
+           let uu____1502 =
+             repl_tx
+               (let uu___249_1510 = st1 in
+                {
+                  FStar_JsonHelper.repl_line =
+                    (uu___249_1510.FStar_JsonHelper.repl_line);
+                  FStar_JsonHelper.repl_column =
+                    (uu___249_1510.FStar_JsonHelper.repl_column);
+                  FStar_JsonHelper.repl_fname =
+                    (uu___249_1510.FStar_JsonHelper.repl_fname);
+                  FStar_JsonHelper.repl_deps_stack =
+                    (uu___249_1510.FStar_JsonHelper.repl_deps_stack);
+                  FStar_JsonHelper.repl_curmod =
+                    (uu___249_1510.FStar_JsonHelper.repl_curmod);
+                  FStar_JsonHelper.repl_env =
+                    (uu___249_1510.FStar_JsonHelper.repl_env);
+                  FStar_JsonHelper.repl_stdin =
+                    (uu___249_1510.FStar_JsonHelper.repl_stdin);
+                  FStar_JsonHelper.repl_names = names1
+                }) LaxCheck (FStar_JsonHelper.PushFragment frag) in
+           FStar_Pervasives_Native.snd uu____1502
+       | FStar_Util.Inr st1 -> st1)

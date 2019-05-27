@@ -155,26 +155,26 @@ let (deflookup :
           let uu____864 =
             let uu____865 =
               FStar_JsonHelper.uri_to_path pos.FStar_JsonHelper.uri in
-            (uu____865, (pos.FStar_JsonHelper.line),
+            (uu____865, (pos.FStar_JsonHelper.line + (Prims.parse_int "1")),
               (pos.FStar_JsonHelper.col)) in
           FStar_Pervasives_Native.Some uu____864 in
         symlookup st "" uu____861 ["defined-at"] in
       match uu____858 with
       | FStar_Pervasives_Native.Some
-          { slr_name = uu____878;
+          { slr_name = uu____879;
             slr_def_range = FStar_Pervasives_Native.Some r;
-            slr_typ = uu____880; slr_doc = uu____881; slr_def = uu____882;_}
+            slr_typ = uu____881; slr_doc = uu____882; slr_def = uu____883;_}
           ->
-          let uu____893 =
-            let uu____894 =
-              let uu____902 =
-                let uu____908 = FStar_JsonHelper.js_range r in
-                ("result", uu____908) in
-              [uu____902] in
-            FStar_Util.JsonAssoc uu____894 in
-          FStar_Util.Inl uu____893
-      | uu____921 ->
-          let uu____924 =
+          let uu____894 =
+            let uu____895 =
+              let uu____903 =
+                let uu____909 = FStar_JsonHelper.js_range r in
+                ("result", uu____909) in
+              [uu____903] in
+            FStar_Util.JsonAssoc uu____895 in
+          FStar_Util.Inl uu____894
+      | uu____922 ->
+          let uu____925 =
             FStar_JsonHelper.js_resperr FStar_JsonHelper.InternalError
               "symlookup failed" in
-          FStar_Util.Inr uu____924
+          FStar_Util.Inr uu____925

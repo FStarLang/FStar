@@ -21,5 +21,8 @@ type sl_reponse = { slr_name: string;
 // Parametrized, because we don't want to open modules unnecessarily
 val term_to_string : TcEnv.env -> Syntax.Syntax.term -> string
 
+// Shared by IDE and LSP
 val symlookup : TcEnv.env -> string -> option<position> -> list<string> -> option<sl_reponse>
+
+// Used exclusively by LSP
 val deflookup : TcEnv.env -> txdoc_pos -> either<json, json>
