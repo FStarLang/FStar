@@ -889,6 +889,7 @@ let rec (go :
                     go line_col filename stack curmod1 tcenv ts in
                   let frag =
                     {
+                      FStar_Parser_ParseIt.frag_fname = "<input>";
                       FStar_Parser_ParseIt.frag_text = text;
                       FStar_Parser_ParseIt.frag_line =
                         (FStar_Pervasives_Native.fst line_col);
@@ -903,50 +904,50 @@ let rec (go :
                          (FStar_Util.print1 "\n%s\n" ok;
                           go line_col filename stack curmod1 env1 ts)
                        else fail2 curmod1 env1
-                   | uu____4823 -> fail2 curmod env)
+                   | uu____4824 -> fail2 curmod env)
 let (interactive_mode : Prims.string -> unit) =
   fun filename ->
-    (let uu____4844 =
-       let uu____4846 = FStar_Options.codegen () in
-       FStar_Option.isSome uu____4846 in
-     if uu____4844
+    (let uu____4845 =
+       let uu____4847 = FStar_Options.codegen () in
+       FStar_Option.isSome uu____4847 in
+     if uu____4845
      then
        FStar_Errors.log_issue FStar_Range.dummyRange
          (FStar_Errors.Warning_IDEIgnoreCodeGen,
            "code-generation is not supported in interactive mode, ignoring the codegen flag")
      else ());
-    (let uu____4854 = deps_of_our_file filename in
-     match uu____4854 with
+    (let uu____4855 = deps_of_our_file filename in
+     match uu____4855 with
      | (filenames, maybe_intf, dep_graph1) ->
          let env = FStar_Universal.init_env dep_graph1 in
-         let uu____4883 =
+         let uu____4884 =
            tc_deps FStar_Pervasives_Native.None [] env filenames [] in
-         (match uu____4883 with
+         (match uu____4884 with
           | (stack, env1, ts) ->
               let initial_range =
-                let uu____4912 =
+                let uu____4913 =
                   FStar_Range.mk_pos (Prims.parse_int "1")
                     (Prims.parse_int "0") in
-                let uu____4915 =
+                let uu____4916 =
                   FStar_Range.mk_pos (Prims.parse_int "1")
                     (Prims.parse_int "0") in
-                FStar_Range.mk_range filename uu____4912 uu____4915 in
+                FStar_Range.mk_range filename uu____4913 uu____4916 in
               let env2 = FStar_TypeChecker_Env.set_range env1 initial_range in
               let env3 =
                 match maybe_intf with
                 | FStar_Pervasives_Native.Some intf ->
                     FStar_Universal.load_interface_decls env2 intf
                 | FStar_Pervasives_Native.None -> env2 in
-              let uu____4924 =
+              let uu____4925 =
                 (FStar_Options.record_hints ()) ||
                   (FStar_Options.use_hints ()) in
-              if uu____4924
+              if uu____4925
               then
-                let uu____4927 =
-                  let uu____4929 = FStar_Options.file_list () in
-                  FStar_List.hd uu____4929 in
-                FStar_SMTEncoding_Solver.with_hints_db uu____4927
-                  (fun uu____4935 ->
+                let uu____4928 =
+                  let uu____4930 = FStar_Options.file_list () in
+                  FStar_List.hd uu____4930 in
+                FStar_SMTEncoding_Solver.with_hints_db uu____4928
+                  (fun uu____4936 ->
                      go ((Prims.parse_int "1"), (Prims.parse_int "0"))
                        filename stack FStar_Pervasives_Native.None env3 ts)
               else

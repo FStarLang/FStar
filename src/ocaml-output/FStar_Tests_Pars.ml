@@ -286,6 +286,7 @@ let (init : unit -> FStar_TypeChecker_Env.env) =
 let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
   fun s ->
     {
+      FStar_Parser_ParseIt.frag_fname = "<input>";
       FStar_Parser_ParseIt.frag_text = s;
       FStar_Parser_ParseIt.frag_line = (Prims.parse_int "1");
       FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
@@ -293,32 +294,32 @@ let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
 let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s ->
     try
-      (fun uu___65_331 ->
+      (fun uu___65_332 ->
          match () with
          | () ->
              let tcenv = init () in
-             let uu____333 =
-               let uu____334 =
+             let uu____334 =
+               let uu____335 =
                  FStar_All.pipe_left
-                   (fun _335 -> FStar_Parser_ParseIt.Fragment _335)
+                   (fun _336 -> FStar_Parser_ParseIt.Fragment _336)
                    (frag_of_text s) in
-               FStar_Parser_ParseIt.parse uu____334 in
-             (match uu____333 with
+               FStar_Parser_ParseIt.parse uu____335 in
+             (match uu____334 with
               | FStar_Parser_ParseIt.Term t ->
                   FStar_ToSyntax_ToSyntax.desugar_term
                     tcenv.FStar_TypeChecker_Env.dsenv t
               | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
                   FStar_Errors.raise_error (e, msg) r
-              | FStar_Parser_ParseIt.ASTFragment uu____343 ->
+              | FStar_Parser_ParseIt.ASTFragment uu____344 ->
                   failwith
                     "Impossible: parsing a Fragment always results in a Term"))
         ()
     with
-    | uu___64_357 ->
+    | uu___64_358 ->
         if
-          let uu____358 = FStar_Options.trace_error () in
-          Prims.op_Negation uu____358
-        then Obj.magic (Obj.repr (FStar_Exn.raise uu___64_357))
+          let uu____359 = FStar_Options.trace_error () in
+          Prims.op_Negation uu____359
+        then Obj.magic (Obj.repr (FStar_Exn.raise uu___64_358))
         else Obj.magic (Obj.repr (failwith "unreachable"))
 let (tc' :
   Prims.string ->
@@ -329,219 +330,219 @@ let (tc' :
     let tm = pars s in
     let tcenv = init () in
     let tcenv1 =
-      let uu___83_377 = tcenv in
+      let uu___83_378 = tcenv in
       {
         FStar_TypeChecker_Env.solver =
-          (uu___83_377.FStar_TypeChecker_Env.solver);
+          (uu___83_378.FStar_TypeChecker_Env.solver);
         FStar_TypeChecker_Env.range =
-          (uu___83_377.FStar_TypeChecker_Env.range);
+          (uu___83_378.FStar_TypeChecker_Env.range);
         FStar_TypeChecker_Env.curmodule =
-          (uu___83_377.FStar_TypeChecker_Env.curmodule);
+          (uu___83_378.FStar_TypeChecker_Env.curmodule);
         FStar_TypeChecker_Env.gamma =
-          (uu___83_377.FStar_TypeChecker_Env.gamma);
+          (uu___83_378.FStar_TypeChecker_Env.gamma);
         FStar_TypeChecker_Env.gamma_sig =
-          (uu___83_377.FStar_TypeChecker_Env.gamma_sig);
+          (uu___83_378.FStar_TypeChecker_Env.gamma_sig);
         FStar_TypeChecker_Env.gamma_cache =
-          (uu___83_377.FStar_TypeChecker_Env.gamma_cache);
+          (uu___83_378.FStar_TypeChecker_Env.gamma_cache);
         FStar_TypeChecker_Env.modules =
-          (uu___83_377.FStar_TypeChecker_Env.modules);
+          (uu___83_378.FStar_TypeChecker_Env.modules);
         FStar_TypeChecker_Env.expected_typ =
-          (uu___83_377.FStar_TypeChecker_Env.expected_typ);
+          (uu___83_378.FStar_TypeChecker_Env.expected_typ);
         FStar_TypeChecker_Env.sigtab =
-          (uu___83_377.FStar_TypeChecker_Env.sigtab);
+          (uu___83_378.FStar_TypeChecker_Env.sigtab);
         FStar_TypeChecker_Env.attrtab =
-          (uu___83_377.FStar_TypeChecker_Env.attrtab);
+          (uu___83_378.FStar_TypeChecker_Env.attrtab);
         FStar_TypeChecker_Env.is_pattern =
-          (uu___83_377.FStar_TypeChecker_Env.is_pattern);
+          (uu___83_378.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
-          (uu___83_377.FStar_TypeChecker_Env.instantiate_imp);
+          (uu___83_378.FStar_TypeChecker_Env.instantiate_imp);
         FStar_TypeChecker_Env.effects =
-          (uu___83_377.FStar_TypeChecker_Env.effects);
+          (uu___83_378.FStar_TypeChecker_Env.effects);
         FStar_TypeChecker_Env.generalize =
-          (uu___83_377.FStar_TypeChecker_Env.generalize);
+          (uu___83_378.FStar_TypeChecker_Env.generalize);
         FStar_TypeChecker_Env.letrecs =
-          (uu___83_377.FStar_TypeChecker_Env.letrecs);
+          (uu___83_378.FStar_TypeChecker_Env.letrecs);
         FStar_TypeChecker_Env.top_level = false;
         FStar_TypeChecker_Env.check_uvars =
-          (uu___83_377.FStar_TypeChecker_Env.check_uvars);
+          (uu___83_378.FStar_TypeChecker_Env.check_uvars);
         FStar_TypeChecker_Env.use_eq =
-          (uu___83_377.FStar_TypeChecker_Env.use_eq);
+          (uu___83_378.FStar_TypeChecker_Env.use_eq);
         FStar_TypeChecker_Env.is_iface =
-          (uu___83_377.FStar_TypeChecker_Env.is_iface);
+          (uu___83_378.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit =
-          (uu___83_377.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (uu___83_377.FStar_TypeChecker_Env.lax);
+          (uu___83_378.FStar_TypeChecker_Env.admit);
+        FStar_TypeChecker_Env.lax = (uu___83_378.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
-          (uu___83_377.FStar_TypeChecker_Env.lax_universes);
+          (uu___83_378.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 =
-          (uu___83_377.FStar_TypeChecker_Env.phase1);
+          (uu___83_378.FStar_TypeChecker_Env.phase1);
         FStar_TypeChecker_Env.failhard =
-          (uu___83_377.FStar_TypeChecker_Env.failhard);
+          (uu___83_378.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =
-          (uu___83_377.FStar_TypeChecker_Env.nosynth);
+          (uu___83_378.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
-          (uu___83_377.FStar_TypeChecker_Env.uvar_subtyping);
+          (uu___83_378.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term =
-          (uu___83_377.FStar_TypeChecker_Env.tc_term);
+          (uu___83_378.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of =
-          (uu___83_377.FStar_TypeChecker_Env.type_of);
+          (uu___83_378.FStar_TypeChecker_Env.type_of);
         FStar_TypeChecker_Env.universe_of =
-          (uu___83_377.FStar_TypeChecker_Env.universe_of);
+          (uu___83_378.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
-          (uu___83_377.FStar_TypeChecker_Env.check_type_of);
+          (uu___83_378.FStar_TypeChecker_Env.check_type_of);
         FStar_TypeChecker_Env.use_bv_sorts =
-          (uu___83_377.FStar_TypeChecker_Env.use_bv_sorts);
+          (uu___83_378.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qtbl_name_and_index =
-          (uu___83_377.FStar_TypeChecker_Env.qtbl_name_and_index);
+          (uu___83_378.FStar_TypeChecker_Env.qtbl_name_and_index);
         FStar_TypeChecker_Env.normalized_eff_names =
-          (uu___83_377.FStar_TypeChecker_Env.normalized_eff_names);
+          (uu___83_378.FStar_TypeChecker_Env.normalized_eff_names);
         FStar_TypeChecker_Env.fv_delta_depths =
-          (uu___83_377.FStar_TypeChecker_Env.fv_delta_depths);
+          (uu___83_378.FStar_TypeChecker_Env.fv_delta_depths);
         FStar_TypeChecker_Env.proof_ns =
-          (uu___83_377.FStar_TypeChecker_Env.proof_ns);
+          (uu___83_378.FStar_TypeChecker_Env.proof_ns);
         FStar_TypeChecker_Env.synth_hook =
-          (uu___83_377.FStar_TypeChecker_Env.synth_hook);
+          (uu___83_378.FStar_TypeChecker_Env.synth_hook);
         FStar_TypeChecker_Env.splice =
-          (uu___83_377.FStar_TypeChecker_Env.splice);
+          (uu___83_378.FStar_TypeChecker_Env.splice);
         FStar_TypeChecker_Env.postprocess =
-          (uu___83_377.FStar_TypeChecker_Env.postprocess);
+          (uu___83_378.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
-          (uu___83_377.FStar_TypeChecker_Env.is_native_tactic);
+          (uu___83_378.FStar_TypeChecker_Env.is_native_tactic);
         FStar_TypeChecker_Env.identifier_info =
-          (uu___83_377.FStar_TypeChecker_Env.identifier_info);
+          (uu___83_378.FStar_TypeChecker_Env.identifier_info);
         FStar_TypeChecker_Env.tc_hooks =
-          (uu___83_377.FStar_TypeChecker_Env.tc_hooks);
+          (uu___83_378.FStar_TypeChecker_Env.tc_hooks);
         FStar_TypeChecker_Env.dsenv =
-          (uu___83_377.FStar_TypeChecker_Env.dsenv);
-        FStar_TypeChecker_Env.nbe = (uu___83_377.FStar_TypeChecker_Env.nbe)
+          (uu___83_378.FStar_TypeChecker_Env.dsenv);
+        FStar_TypeChecker_Env.nbe = (uu___83_378.FStar_TypeChecker_Env.nbe)
       } in
-    let uu____379 = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
-    match uu____379 with | (tm1, uu____393, g) -> (tm1, g, tcenv1)
+    let uu____380 = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
+    match uu____380 with | (tm1, uu____394, g) -> (tm1, g, tcenv1)
 let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s ->
-    let uu____403 = tc' s in
-    match uu____403 with | (tm, uu____411, uu____412) -> tm
+    let uu____404 = tc' s in
+    match uu____404 with | (tm, uu____412, uu____413) -> tm
 let (tc_nbe : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s ->
-    let uu____421 = tc' s in
-    match uu____421 with
+    let uu____422 = tc' s in
+    match uu____422 with
     | (tm, g, tcenv) ->
         (FStar_TypeChecker_Rel.force_trivial_guard tcenv g; tm)
 let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun tm ->
     let tcenv = init () in
     let tcenv1 =
-      let uu___103_440 = tcenv in
+      let uu___103_441 = tcenv in
       {
         FStar_TypeChecker_Env.solver =
-          (uu___103_440.FStar_TypeChecker_Env.solver);
+          (uu___103_441.FStar_TypeChecker_Env.solver);
         FStar_TypeChecker_Env.range =
-          (uu___103_440.FStar_TypeChecker_Env.range);
+          (uu___103_441.FStar_TypeChecker_Env.range);
         FStar_TypeChecker_Env.curmodule =
-          (uu___103_440.FStar_TypeChecker_Env.curmodule);
+          (uu___103_441.FStar_TypeChecker_Env.curmodule);
         FStar_TypeChecker_Env.gamma =
-          (uu___103_440.FStar_TypeChecker_Env.gamma);
+          (uu___103_441.FStar_TypeChecker_Env.gamma);
         FStar_TypeChecker_Env.gamma_sig =
-          (uu___103_440.FStar_TypeChecker_Env.gamma_sig);
+          (uu___103_441.FStar_TypeChecker_Env.gamma_sig);
         FStar_TypeChecker_Env.gamma_cache =
-          (uu___103_440.FStar_TypeChecker_Env.gamma_cache);
+          (uu___103_441.FStar_TypeChecker_Env.gamma_cache);
         FStar_TypeChecker_Env.modules =
-          (uu___103_440.FStar_TypeChecker_Env.modules);
+          (uu___103_441.FStar_TypeChecker_Env.modules);
         FStar_TypeChecker_Env.expected_typ =
-          (uu___103_440.FStar_TypeChecker_Env.expected_typ);
+          (uu___103_441.FStar_TypeChecker_Env.expected_typ);
         FStar_TypeChecker_Env.sigtab =
-          (uu___103_440.FStar_TypeChecker_Env.sigtab);
+          (uu___103_441.FStar_TypeChecker_Env.sigtab);
         FStar_TypeChecker_Env.attrtab =
-          (uu___103_440.FStar_TypeChecker_Env.attrtab);
+          (uu___103_441.FStar_TypeChecker_Env.attrtab);
         FStar_TypeChecker_Env.is_pattern =
-          (uu___103_440.FStar_TypeChecker_Env.is_pattern);
+          (uu___103_441.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
-          (uu___103_440.FStar_TypeChecker_Env.instantiate_imp);
+          (uu___103_441.FStar_TypeChecker_Env.instantiate_imp);
         FStar_TypeChecker_Env.effects =
-          (uu___103_440.FStar_TypeChecker_Env.effects);
+          (uu___103_441.FStar_TypeChecker_Env.effects);
         FStar_TypeChecker_Env.generalize =
-          (uu___103_440.FStar_TypeChecker_Env.generalize);
+          (uu___103_441.FStar_TypeChecker_Env.generalize);
         FStar_TypeChecker_Env.letrecs =
-          (uu___103_440.FStar_TypeChecker_Env.letrecs);
+          (uu___103_441.FStar_TypeChecker_Env.letrecs);
         FStar_TypeChecker_Env.top_level = false;
         FStar_TypeChecker_Env.check_uvars =
-          (uu___103_440.FStar_TypeChecker_Env.check_uvars);
+          (uu___103_441.FStar_TypeChecker_Env.check_uvars);
         FStar_TypeChecker_Env.use_eq =
-          (uu___103_440.FStar_TypeChecker_Env.use_eq);
+          (uu___103_441.FStar_TypeChecker_Env.use_eq);
         FStar_TypeChecker_Env.is_iface =
-          (uu___103_440.FStar_TypeChecker_Env.is_iface);
+          (uu___103_441.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit =
-          (uu___103_440.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (uu___103_440.FStar_TypeChecker_Env.lax);
+          (uu___103_441.FStar_TypeChecker_Env.admit);
+        FStar_TypeChecker_Env.lax = (uu___103_441.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
-          (uu___103_440.FStar_TypeChecker_Env.lax_universes);
+          (uu___103_441.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 =
-          (uu___103_440.FStar_TypeChecker_Env.phase1);
+          (uu___103_441.FStar_TypeChecker_Env.phase1);
         FStar_TypeChecker_Env.failhard =
-          (uu___103_440.FStar_TypeChecker_Env.failhard);
+          (uu___103_441.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =
-          (uu___103_440.FStar_TypeChecker_Env.nosynth);
+          (uu___103_441.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
-          (uu___103_440.FStar_TypeChecker_Env.uvar_subtyping);
+          (uu___103_441.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term =
-          (uu___103_440.FStar_TypeChecker_Env.tc_term);
+          (uu___103_441.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of =
-          (uu___103_440.FStar_TypeChecker_Env.type_of);
+          (uu___103_441.FStar_TypeChecker_Env.type_of);
         FStar_TypeChecker_Env.universe_of =
-          (uu___103_440.FStar_TypeChecker_Env.universe_of);
+          (uu___103_441.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
-          (uu___103_440.FStar_TypeChecker_Env.check_type_of);
+          (uu___103_441.FStar_TypeChecker_Env.check_type_of);
         FStar_TypeChecker_Env.use_bv_sorts =
-          (uu___103_440.FStar_TypeChecker_Env.use_bv_sorts);
+          (uu___103_441.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qtbl_name_and_index =
-          (uu___103_440.FStar_TypeChecker_Env.qtbl_name_and_index);
+          (uu___103_441.FStar_TypeChecker_Env.qtbl_name_and_index);
         FStar_TypeChecker_Env.normalized_eff_names =
-          (uu___103_440.FStar_TypeChecker_Env.normalized_eff_names);
+          (uu___103_441.FStar_TypeChecker_Env.normalized_eff_names);
         FStar_TypeChecker_Env.fv_delta_depths =
-          (uu___103_440.FStar_TypeChecker_Env.fv_delta_depths);
+          (uu___103_441.FStar_TypeChecker_Env.fv_delta_depths);
         FStar_TypeChecker_Env.proof_ns =
-          (uu___103_440.FStar_TypeChecker_Env.proof_ns);
+          (uu___103_441.FStar_TypeChecker_Env.proof_ns);
         FStar_TypeChecker_Env.synth_hook =
-          (uu___103_440.FStar_TypeChecker_Env.synth_hook);
+          (uu___103_441.FStar_TypeChecker_Env.synth_hook);
         FStar_TypeChecker_Env.splice =
-          (uu___103_440.FStar_TypeChecker_Env.splice);
+          (uu___103_441.FStar_TypeChecker_Env.splice);
         FStar_TypeChecker_Env.postprocess =
-          (uu___103_440.FStar_TypeChecker_Env.postprocess);
+          (uu___103_441.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
-          (uu___103_440.FStar_TypeChecker_Env.is_native_tactic);
+          (uu___103_441.FStar_TypeChecker_Env.is_native_tactic);
         FStar_TypeChecker_Env.identifier_info =
-          (uu___103_440.FStar_TypeChecker_Env.identifier_info);
+          (uu___103_441.FStar_TypeChecker_Env.identifier_info);
         FStar_TypeChecker_Env.tc_hooks =
-          (uu___103_440.FStar_TypeChecker_Env.tc_hooks);
+          (uu___103_441.FStar_TypeChecker_Env.tc_hooks);
         FStar_TypeChecker_Env.dsenv =
-          (uu___103_440.FStar_TypeChecker_Env.dsenv);
-        FStar_TypeChecker_Env.nbe = (uu___103_440.FStar_TypeChecker_Env.nbe)
+          (uu___103_441.FStar_TypeChecker_Env.dsenv);
+        FStar_TypeChecker_Env.nbe = (uu___103_441.FStar_TypeChecker_Env.nbe)
       } in
-    let uu____442 = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
-    match uu____442 with
-    | (tm1, uu____450, g) ->
+    let uu____443 = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
+    match uu____443 with
+    | (tm1, uu____451, g) ->
         (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g; tm1)
 let (pars_and_tc_fragment : Prims.string -> unit) =
   fun s ->
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
-    (let report uu____469 =
-       let uu____470 = FStar_Errors.report_all () in
-       FStar_All.pipe_right uu____470 (fun a1 -> ()) in
+    (let report uu____470 =
+       let uu____471 = FStar_Errors.report_all () in
+       FStar_All.pipe_right uu____471 (fun a1 -> ()) in
      try
-       (fun uu___116_478 ->
+       (fun uu___116_479 ->
           match () with
           | () ->
               let tcenv = init () in
               let frag = frag_of_text s in
               (try
-                 (fun uu___124_490 ->
+                 (fun uu___124_491 ->
                     match () with
                     | () ->
-                        let uu____491 =
-                          let uu____498 = FStar_ST.op_Bang test_mod_ref in
-                          FStar_Universal.tc_one_fragment uu____498 tcenv
+                        let uu____492 =
+                          let uu____499 = FStar_ST.op_Bang test_mod_ref in
+                          FStar_Universal.tc_one_fragment uu____499 tcenv
                             frag in
-                        (match uu____491 with
+                        (match uu____492 with
                          | (test_mod', tcenv') ->
                              (FStar_ST.op_Colon_Equals test_mod_ref test_mod';
                               FStar_ST.op_Colon_Equals tcenv_ref
@@ -550,26 +551,26 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                                if n1 <> (Prims.parse_int "0")
                                then
                                  (report ();
-                                  (let uu____584 =
-                                     let uu____590 =
-                                       let uu____592 =
+                                  (let uu____585 =
+                                     let uu____591 =
+                                       let uu____593 =
                                          FStar_Util.string_of_int n1 in
                                        FStar_Util.format1
-                                         "%s errors were reported" uu____592 in
+                                         "%s errors were reported" uu____593 in
                                      (FStar_Errors.Fatal_ErrorsReported,
-                                       uu____590) in
-                                   FStar_Errors.raise_err uu____584))
+                                       uu____591) in
+                                   FStar_Errors.raise_err uu____585))
                                else ())))) ()
                with
-               | uu___123_600 ->
+               | uu___123_601 ->
                    (report ();
                     FStar_Errors.raise_err
                       (FStar_Errors.Fatal_TcOneFragmentFailed,
                         (Prims.op_Hat "tc_one_fragment failed: " s))))) ()
      with
-     | uu___115_605 ->
+     | uu___115_606 ->
          if
-           let uu____606 = FStar_Options.trace_error () in
-           Prims.op_Negation uu____606
-         then Obj.magic (Obj.repr (FStar_Exn.raise uu___115_605))
+           let uu____607 = FStar_Options.trace_error () in
+           Prims.op_Negation uu____607
+         then Obj.magic (Obj.repr (FStar_Exn.raise uu___115_606))
          else Obj.magic (Obj.repr (failwith "unreachable")))

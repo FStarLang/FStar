@@ -596,6 +596,7 @@ let (full_lax :
       FStar_TypeChecker_Env.toggle_id_info st.FStar_JsonHelper.repl_env true;
       (let frag =
          {
+           FStar_Parser_ParseIt.frag_fname = (st.FStar_JsonHelper.repl_fname);
            FStar_Parser_ParseIt.frag_text = text;
            FStar_Parser_ParseIt.frag_line = (Prims.parse_int "1");
            FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")

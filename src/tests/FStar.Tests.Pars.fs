@@ -97,7 +97,7 @@ let init () =
     | _ ->
       failwith "Should have already been initialized by the top-level effect"
 
-let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
+let frag_of_text s = {frag_fname="<input>"; frag_text=s; frag_line=1; frag_col=0}
 
 let pars s =
     try

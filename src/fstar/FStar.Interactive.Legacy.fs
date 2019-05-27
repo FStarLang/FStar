@@ -538,7 +538,8 @@ let rec go (line_col:(int*int))
         go line_col filename stack curmod tcenv ts
       in
 
-      let frag = {frag_text=text;
+      let frag = {frag_fname="<input>";
+                  frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
       let res = check_frag env curmod frag in begin

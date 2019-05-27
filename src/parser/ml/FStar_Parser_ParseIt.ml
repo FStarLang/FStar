@@ -7,6 +7,7 @@ open FStar_Ulexing
 type filename = string
 
 type input_frag = {
+    frag_fname:filename;
     frag_text:string;
     frag_line:Prims.int;
     frag_col:Prims.int
@@ -110,7 +111,7 @@ let parse fn =
          with _ -> raise_err (Fatal_InvalidUTF8Encoding, FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f'))
     | Toplevel s
     | Fragment s ->
-      create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
+      create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
   in
 
   let lexer () =

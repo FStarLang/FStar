@@ -272,7 +272,7 @@ let add_module_completions this_fname deps table =
 // Variant of run_push_with_deps in IDE; used exclusively by LSP
 let full_lax text st =
   TcEnv.toggle_id_info st.repl_env true;
-  let frag = { frag_text = text; frag_line = 1; frag_col = 0 } in
+  let frag = { frag_fname = st.repl_fname; frag_text = text; frag_line = 1; frag_col = 0 } in
   match ld_deps st with
   | Inl (st, deps) ->
       let names = add_module_completions st.repl_fname deps st.repl_names in

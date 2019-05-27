@@ -25,6 +25,7 @@ open FStar.Errors
 type filename = string
 
 type input_frag = {
+    frag_fname:filename;
     frag_text:string;
     frag_line:int;
     frag_col:int

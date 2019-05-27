@@ -702,7 +702,7 @@ let collect_errors () =
   errors
 
 let run_segment (st: repl_state) (code: string) =
-  let frag = { frag_text = code; frag_line = 1; frag_col = 0 } in
+  let frag = { frag_fname = "<input>"; frag_text = code; frag_line = 1; frag_col = 0 } in
 
   let collect_decls () =
     match Parser.Driver.parse_fragment frag with
@@ -773,7 +773,7 @@ let run_push_without_deps st query =
   let { push_code = text; push_line = line; push_column = column;
         push_peek_only = peek_only; push_kind = push_kind } = query in
 
-  let frag = { frag_text = text; frag_line = line; frag_col = column } in
+  let frag = { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column } in
 
   TcEnv.toggle_id_info st.repl_env true;
   let st = set_nosynth_flag st peek_only in
@@ -919,7 +919,7 @@ let run_and_rewind st sigint_default task =
 let run_with_parsed_and_tc_term st term line column continuation =
   let dummy_let_fragment term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
-    { frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
+    { frag_fname = "<input>"; frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
 
   let find_let_body ses =
     match ses with
