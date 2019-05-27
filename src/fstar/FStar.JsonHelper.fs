@@ -65,6 +65,7 @@ let js_str_int : json -> int = function
 let arg k r = assoc k (assoc "params" r |> js_assoc)
 
 let uri_to_path u = if U.starts_with u "file://" then substring_from u 7 else u
+let path_to_uri u = if U.starts_with u "file://" then u else U.format1 "file://%s" u
 
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
 
@@ -265,9 +266,10 @@ let js_servcap : json =
               ("workspaceSymbolProvider", JsonBool false);
               ("codeActionProvider", JsonBool false)])]
 
-let js_pos (p: pos) : json = JsonAssoc [("line", JsonInt (line_of_pos p));
+// LSP uses zero-indexed line numbers while the F* typechecker uses 1-indexed ones
+let js_pos (p: pos) : json = JsonAssoc [("line", JsonInt (line_of_pos p - 1));
                                         ("column", JsonInt (col_of_pos p))]
 
-let js_range r = JsonAssoc [("uri", JsonStr (file_of_range r));
+let js_range r = JsonAssoc [("uri", JsonStr (path_to_uri (file_of_range r)));
                             ("range", JsonAssoc [("start", js_pos (start_of_range r));
                                                  ("end", js_pos (end_of_range r))])]

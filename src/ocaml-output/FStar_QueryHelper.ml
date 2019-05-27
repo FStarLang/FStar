@@ -165,16 +165,10 @@ let (deflookup :
             slr_def_range = FStar_Pervasives_Native.Some r;
             slr_typ = uu____881; slr_doc = uu____882; slr_def = uu____883;_}
           ->
-          let uu____894 =
-            let uu____895 =
-              let uu____903 =
-                let uu____909 = FStar_JsonHelper.js_range r in
-                ("result", uu____909) in
-              [uu____903] in
-            FStar_Util.JsonAssoc uu____895 in
+          let uu____894 = FStar_JsonHelper.js_range r in
           FStar_Util.Inl uu____894
-      | uu____922 ->
-          let uu____925 =
+      | uu____895 ->
+          let uu____898 =
             FStar_JsonHelper.js_resperr FStar_JsonHelper.InternalError
               "symlookup failed" in
-          FStar_Util.Inr uu____925
+          FStar_Util.Inr uu____898
