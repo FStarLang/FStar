@@ -82,5 +82,5 @@ let deflookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
   // Lines are 0-indexed in LSP, but 1-indexed in the F* Typechecker
   match symlookup st "" (Some (uri_to_path pos.uri, pos.line + 1, pos.col)) ["defined-at"] with
   | Some { slr_name = _; slr_def_range = (Some r); slr_typ = _; slr_doc = _; slr_def = _ } ->
-      Inl (js_range r)
+      Inl (js_loclink r)
   | _ -> Inr (js_resperr InternalError "symlookup failed")

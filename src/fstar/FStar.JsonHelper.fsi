@@ -151,4 +151,4 @@ val json_of_response : option<int> -> either<json, json> -> json
 val js_resperr : error_code -> string -> json
 val wrap_content_szerr : string -> lsp_query
 val js_servcap : json
-val js_range : Range.range -> json
+val js_loclink : Range.range -> json

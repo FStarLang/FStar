@@ -266,10 +266,12 @@ let js_servcap : json =
               ("workspaceSymbolProvider", JsonBool false);
               ("codeActionProvider", JsonBool false)])]
 
-// LSP uses zero-indexed line numbers while the F* typechecker uses 1-indexed ones
+// LSP uses zero-indexed line numbers while the F* typechecker uses 1-indexed ones;
+// column numbers are zero-indexed in both
 let js_pos (p: pos) : json = JsonAssoc [("line", JsonInt (line_of_pos p - 1));
-                                        ("column", JsonInt (col_of_pos p))]
+                                        ("character", JsonInt (col_of_pos p))]
 
-let js_range r = JsonAssoc [("uri", JsonStr (path_to_uri (file_of_range r)));
-                            ("range", JsonAssoc [("start", js_pos (start_of_range r));
-                                                 ("end", js_pos (end_of_range r))])]
+let js_loclink r =
+  let s = JsonAssoc [("start", js_pos (start_of_range r)); ("end", js_pos (end_of_range r))] in
+  JsonList [JsonAssoc [("targetUri", JsonStr (path_to_uri (file_of_range r)));
+                       ("targetRange", s); ("targetSelectionRange", s)]]

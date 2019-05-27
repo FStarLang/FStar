@@ -165,7 +165,7 @@ let (deflookup :
             slr_def_range = FStar_Pervasives_Native.Some r;
             slr_typ = uu____881; slr_doc = uu____882; slr_def = uu____883;_}
           ->
-          let uu____894 = FStar_JsonHelper.js_range r in
+          let uu____894 = FStar_JsonHelper.js_loclink r in
           FStar_Util.Inl uu____894
       | uu____895 ->
           let uu____898 =

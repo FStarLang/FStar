@@ -737,39 +737,39 @@ let (js_pos : FStar_Range.pos -> FStar_Util.json) =
           let uu____2875 =
             let uu____2876 = FStar_Range.col_of_pos p in
             FStar_Util.JsonInt uu____2876 in
-          ("column", uu____2875) in
+          ("character", uu____2875) in
         [uu____2869] in
       uu____2847 :: uu____2861 in
     FStar_Util.JsonAssoc uu____2839
-let (js_range : FStar_Range.range -> FStar_Util.json) =
+let (js_loclink : FStar_Range.range -> FStar_Util.json) =
   fun r ->
-    let uu____2901 =
-      let uu____2909 =
-        let uu____2915 =
+    let s =
+      let uu____2902 =
+        let uu____2910 =
           let uu____2916 =
-            let uu____2918 = FStar_Range.file_of_range r in
-            path_to_uri uu____2918 in
-          FStar_Util.JsonStr uu____2916 in
-        ("uri", uu____2915) in
-      let uu____2922 =
-        let uu____2930 =
-          let uu____2936 =
-            let uu____2937 =
-              let uu____2945 =
-                let uu____2951 =
-                  let uu____2952 = FStar_Range.start_of_range r in
-                  js_pos uu____2952 in
-                ("start", uu____2951) in
-              let uu____2955 =
-                let uu____2963 =
-                  let uu____2969 =
-                    let uu____2970 = FStar_Range.end_of_range r in
-                    js_pos uu____2970 in
-                  ("end", uu____2969) in
-                [uu____2963] in
-              uu____2945 :: uu____2955 in
-            FStar_Util.JsonAssoc uu____2937 in
-          ("range", uu____2936) in
-        [uu____2930] in
-      uu____2909 :: uu____2922 in
-    FStar_Util.JsonAssoc uu____2901
+            let uu____2917 = FStar_Range.start_of_range r in
+            js_pos uu____2917 in
+          ("start", uu____2916) in
+        let uu____2920 =
+          let uu____2928 =
+            let uu____2934 =
+              let uu____2935 = FStar_Range.end_of_range r in
+              js_pos uu____2935 in
+            ("end", uu____2934) in
+          [uu____2928] in
+        uu____2910 :: uu____2920 in
+      FStar_Util.JsonAssoc uu____2902 in
+    let uu____2953 =
+      let uu____2956 =
+        let uu____2957 =
+          let uu____2965 =
+            let uu____2971 =
+              let uu____2972 =
+                let uu____2974 = FStar_Range.file_of_range r in
+                path_to_uri uu____2974 in
+              FStar_Util.JsonStr uu____2972 in
+            ("targetUri", uu____2971) in
+          [uu____2965; ("targetRange", s); ("targetSelectionRange", s)] in
+        FStar_Util.JsonAssoc uu____2957 in
+      [uu____2956] in
+    FStar_Util.JsonList uu____2953
