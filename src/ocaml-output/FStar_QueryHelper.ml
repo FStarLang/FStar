@@ -170,5 +170,37 @@ let (deflookup :
       | uu____895 ->
           let uu____898 =
             FStar_JsonHelper.js_resperr FStar_JsonHelper.InternalError
-              "symlookup failed" in
+              "symlookup for def failed" in
           FStar_Util.Inr uu____898
+let (hoverlookup :
+  FStar_TypeChecker_Env.env ->
+    FStar_JsonHelper.txdoc_pos ->
+      (FStar_Util.json, FStar_Util.json) FStar_Util.either)
+  =
+  fun st ->
+    fun pos ->
+      let pos1 =
+        let uu____929 = FStar_JsonHelper.uri_to_path pos.FStar_JsonHelper.uri in
+        (uu____929, (pos.FStar_JsonHelper.line + (Prims.parse_int "1")),
+          (pos.FStar_JsonHelper.col)) in
+      let uu____935 =
+        symlookup st "" (FStar_Pervasives_Native.Some pos1)
+          ["type"; "definition"] in
+      match uu____935 with
+      | FStar_Pervasives_Native.Some
+          { slr_name = n1; slr_def_range = uu____949;
+            slr_typ = FStar_Pervasives_Native.Some t; slr_doc = uu____951;
+            slr_def = FStar_Pervasives_Native.Some d;_}
+          ->
+          let hovertxt = FStar_Util.format2 "%s\n---\n```fstar\n%s\n```" t d in
+          FStar_Util.Inl
+            (FStar_Util.JsonAssoc
+               [("contents",
+                  (FStar_Util.JsonAssoc
+                     [("kind", (FStar_Util.JsonStr "markdown"));
+                     ("value", (FStar_Util.JsonStr hovertxt))]))])
+      | uu____998 ->
+          let uu____1001 =
+            FStar_JsonHelper.js_resperr FStar_JsonHelper.InternalError
+              "symlookup for hover failed" in
+          FStar_Util.Inr uu____1001

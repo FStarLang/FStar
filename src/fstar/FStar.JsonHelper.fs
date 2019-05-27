@@ -255,7 +255,7 @@ let js_servcap : json =
                                                          ("change", JsonInt 1);
                                                          ("willSave", JsonBool true);
                                                          ("willSaveWaitUntil", JsonBool false)]);
-              ("hoverProvider", JsonBool false);
+              ("hoverProvider", JsonBool true);
               ("completionProvider", JsonAssoc [("resolveProvider", JsonBool false)]);
               ("signatureHelpProvider", JsonAssoc []);
               ("definitionProvider", JsonBool true);

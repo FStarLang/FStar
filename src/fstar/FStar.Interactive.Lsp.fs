@@ -118,7 +118,7 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | DidClose txid -> (None, Inl st)
   | Completion ctx -> (Some (Inl JsonNull), Inl st)
   | Resolve -> (Some (Inl JsonNull), Inl st)
-  | Hover txpos -> (Some (Inl JsonNull), Inl st)
+  | Hover txpos -> (Some (QH.hoverlookup st.repl_env txpos), Inl st)
   | SignatureHelp txpos -> (Some (Inl JsonNull), Inl st)
   | Declaration txpos -> (Some (Inl JsonNull), Inl st)
   | Definition txpos -> (Some (QH.deflookup st.repl_env txpos), Inl st)

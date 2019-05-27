@@ -83,4 +83,14 @@ let deflookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
   match symlookup st "" (Some (uri_to_path pos.uri, pos.line + 1, pos.col)) ["defined-at"] with
   | Some { slr_name = _; slr_def_range = (Some r); slr_typ = _; slr_doc = _; slr_def = _ } ->
       Inl (js_loclink r)
-  | _ -> Inr (js_resperr InternalError "symlookup failed")
+  | _ -> Inr (js_resperr InternalError "symlookup for def failed")
+
+// A hover-provider provides both the type and the definition of a given symbol
+let hoverlookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
+  let pos = (uri_to_path pos.uri, pos.line + 1, pos.col) in
+  match symlookup st "" (Some pos) ["type"; "definition"] with
+  | Some { slr_name = n; slr_def_range = _; slr_typ = (Some t); slr_doc = _; slr_def = (Some d) } ->
+    let hovertxt = U.format2 "%s\n---\n```fstar\n%s\n```" t d in
+    Inl (JsonAssoc [("contents", JsonAssoc [("kind", JsonStr "markdown");
+                                            ("value", JsonStr hovertxt)])])
+  | _ -> Inr (js_resperr InternalError "symlookup for hover failed")

@@ -26,3 +26,4 @@ val symlookup : TcEnv.env -> string -> option<position> -> list<string> -> optio
 
 // Used exclusively by LSP
 val deflookup : TcEnv.env -> txdoc_pos -> either<json, json>
+val hoverlookup : TcEnv.env -> txdoc_pos -> either<json, json>

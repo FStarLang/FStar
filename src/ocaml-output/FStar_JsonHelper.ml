@@ -710,7 +710,7 @@ let (js_servcap : FStar_Util.json) =
                 ("change", (FStar_Util.JsonInt (Prims.parse_int "1")));
                 ("willSave", (FStar_Util.JsonBool true));
                 ("willSaveWaitUntil", (FStar_Util.JsonBool false))]));
-          ("hoverProvider", (FStar_Util.JsonBool false));
+          ("hoverProvider", (FStar_Util.JsonBool true));
           ("completionProvider",
             (FStar_Util.JsonAssoc
                [("resolveProvider", (FStar_Util.JsonBool false))]));
