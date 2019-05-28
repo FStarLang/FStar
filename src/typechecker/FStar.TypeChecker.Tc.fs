@@ -33,6 +33,7 @@ open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.TcTerm
+open FStar.Profiling
 module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
 module SS = FStar.Syntax.Subst
@@ -45,6 +46,7 @@ module TcInductive = FStar.TypeChecker.TcInductive
 module PC = FStar.Parser.Const
 module EMB = FStar.Syntax.Embeddings
 module ToSyntax = FStar.ToSyntax.ToSyntax
+module P = FStar.Profiling
 
 
 //set the name of the query so that we can correlate hints to source program fragments
@@ -1815,7 +1817,7 @@ let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
     if Env.debug env Options.Low
     then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
-
+    
     let ses', ses_elaborated, env = tc_decl env se in
     let ses' = ses' |> List.map (fun se ->
         if Env.debug env (Options.Other "UF")
@@ -1865,14 +1867,20 @@ let tc_decls env ses =
   // A wrapper to (maybe) print the time taken for each sigelt
   let process_one_decl_timed acc se =
     let (_, _, env, _) = acc in
-    let r, ms_elapsed = BU.record_time (fun () -> process_one_decl acc se) in
+    let r, ms_elapsed = 
+      if (Options.profile_at_level Options.Decl) then
+        P.profile (fun() -> process_one_decl acc se) 
+            (Print.sigelt_to_string se) "decl" 
+            (Options.profile_at_level  Options.Decl)
+    else
+      BU.record_time (fun () -> process_one_decl acc se) 
+    in
     if Env.debug env (Options.Other "TCDeclTime")
      || BU.for_some (U.attr_eq U.tcdecltime_attr) se.sigattrs
      || Options.timing ()
     then BU.print2 "Checked %s in %s milliseconds\n" (Print.sigelt_to_string_short se) (string_of_int ms_elapsed);
     r
   in
-
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 
@@ -2205,7 +2213,7 @@ let check_module env m b =
   if Options.dump_module m.name.str
   then BU.print1 "Module before type checking:\n%s\n" (Print.modul_to_string m);
 
-  let env = {env with lax=not (Options.should_verify m.name.str)} in
+  let env = {env with lax=not (Options.should_verify m.name.str)} in 
   let m, env = tc_modul env m b in
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)

@@ -923,127 +923,150 @@ let (tc_one_file :
                      fmod.FStar_Syntax_Syntax.name
                     in
                  let check_mod uu____1237 =
-                   let uu____1238 =
-                     FStar_Util.record_time
-                       (fun uu____1273  ->
-                          with_tcenv_of_env env1
-                            (fun tcenv  ->
-                               (match tcenv.FStar_TypeChecker_Env.gamma with
-                                | [] -> ()
-                                | uu____1293 ->
-                                    failwith
-                                      "Impossible: gamma contains leaked names");
-                               (let uu____1297 =
-                                  FStar_TypeChecker_Tc.check_module tcenv
-                                    fmod (FStar_Util.is_some pre_fn)
-                                   in
-                                match uu____1297 with
-                                | (modul,env2) ->
-                                    (maybe_restore_opts ();
-                                     (let smt_decls =
-                                        let uu____1327 =
-                                          let uu____1329 =
-                                            FStar_Options.lax ()  in
-                                          Prims.op_Negation uu____1329  in
-                                        if uu____1327
-                                        then
-                                          let smt_decls =
-                                            FStar_SMTEncoding_Encode.encode_modul
-                                              env2 modul
-                                             in
-                                          (post_smt_encoding (); smt_decls)
-                                        else ([], [])  in
-                                      ((modul, smt_decls), env2))))))
-                      in
-                   match uu____1238 with
-                   | (((tcmod,smt_decls),env2),tc_time) ->
-                       let uu____1416 =
-                         with_env env2 (maybe_extract_mldefs tcmod)  in
-                       (match uu____1416 with
-                        | (extracted_defs,extract_time) ->
-                            let uu____1447 =
-                              with_env env2 (maybe_extract_ml_iface tcmod)
+                   (let uu____1239 =
+                      FStar_Options.profile_module
+                        (fmod.FStar_Syntax_Syntax.name).FStar_Ident.str
+                       in
+                    if uu____1239
+                    then FStar_Profiling.init_profiler ()
+                    else FStar_Profiling.disable_profiler ());
+                   (let check1 env2 =
+                      with_tcenv_of_env env2
+                        (fun tcenv  ->
+                           (match tcenv.FStar_TypeChecker_Env.gamma with
+                            | [] -> ()
+                            | uu____1283 ->
+                                failwith
+                                  "Impossible: gamma contains leaked names");
+                           (let uu____1287 =
+                              FStar_TypeChecker_Tc.check_module tcenv fmod
+                                (FStar_Util.is_some pre_fn)
                                in
-                            (match uu____1447 with
-                             | (env3,iface_extraction_time) ->
-                                 ({
-                                    FStar_CheckedFiles.checked_module = tcmod;
-                                    FStar_CheckedFiles.mii = mii;
-                                    FStar_CheckedFiles.smt_decls = smt_decls;
-                                    FStar_CheckedFiles.tc_time = tc_time;
-                                    FStar_CheckedFiles.extraction_time =
-                                      (extract_time + iface_extraction_time)
-                                  }, extracted_defs, env3)))
+                            match uu____1287 with
+                            | (modul,env3) ->
+                                (maybe_restore_opts ();
+                                 (let smt_decls =
+                                    let uu____1317 =
+                                      let uu____1319 = FStar_Options.lax ()
+                                         in
+                                      Prims.op_Negation uu____1319  in
+                                    if uu____1317
+                                    then
+                                      let smt_decls =
+                                        FStar_SMTEncoding_Encode.encode_modul
+                                          env3 modul
+                                         in
+                                      (post_smt_encoding (); smt_decls)
+                                    else ([], [])  in
+                                  ((modul, smt_decls), env3)))))
+                       in
+                    let uu____1356 =
+                      let uu____1376 =
+                        FStar_Options.profile_at_level FStar_Options.Module
+                         in
+                      if uu____1376
+                      then
+                        let uu____1398 =
+                          FStar_Options.profile_at_level FStar_Options.Module
+                           in
+                        FStar_Profiling.profile
+                          (fun uu____1415  -> check1 env1)
+                          (fmod.FStar_Syntax_Syntax.name).FStar_Ident.str
+                          "module" uu____1398
+                      else
+                        FStar_Util.record_time
+                          (fun uu____1434  -> check1 env1)
+                       in
+                    match uu____1356 with
+                    | (((tcmod,smt_decls),env2),tc_time) ->
+                        let uu____1485 =
+                          with_env env2 (maybe_extract_mldefs tcmod)  in
+                        (match uu____1485 with
+                         | (extracted_defs,extract_time) ->
+                             let uu____1516 =
+                               with_env env2 (maybe_extract_ml_iface tcmod)
+                                in
+                             (match uu____1516 with
+                              | (env3,iface_extraction_time) ->
+                                  ({
+                                     FStar_CheckedFiles.checked_module =
+                                       tcmod;
+                                     FStar_CheckedFiles.mii = mii;
+                                     FStar_CheckedFiles.smt_decls = smt_decls;
+                                     FStar_CheckedFiles.tc_time = tc_time;
+                                     FStar_CheckedFiles.extraction_time =
+                                       (extract_time + iface_extraction_time)
+                                   }, extracted_defs, env3))))
                     in
-                 let uu____1472 =
+                 let uu____1541 =
                    (FStar_Options.should_verify
                       (fmod.FStar_Syntax_Syntax.name).FStar_Ident.str)
                      &&
                      ((FStar_Options.record_hints ()) ||
                         (FStar_Options.use_hints ()))
                     in
-                 if uu____1472
+                 if uu____1541
                  then
-                   let uu____1483 = FStar_Parser_ParseIt.find_file fn  in
-                   FStar_SMTEncoding_Solver.with_hints_db uu____1483
+                   let uu____1552 = FStar_Parser_ParseIt.find_file fn  in
+                   FStar_SMTEncoding_Solver.with_hints_db uu____1552
                      check_mod
                  else check_mod ()
               in
-           let uu____1495 =
-             let uu____1497 = FStar_Options.cache_off ()  in
-             Prims.op_Negation uu____1497  in
-           if uu____1495
+           let uu____1564 =
+             let uu____1566 = FStar_Options.cache_off ()  in
+             Prims.op_Negation uu____1566  in
+           if uu____1564
            then
-             let uu____1508 =
+             let uu____1577 =
                FStar_CheckedFiles.load_module_from_cache env fn  in
-             match uu____1508 with
+             match uu____1577 with
              | FStar_Pervasives_Native.None  ->
-                 ((let uu____1520 =
-                     let uu____1522 = FStar_Parser_Dep.module_name_of_file fn
+                 ((let uu____1589 =
+                     let uu____1591 = FStar_Parser_Dep.module_name_of_file fn
                         in
-                     FStar_Options.should_be_already_cached uu____1522  in
-                   if uu____1520
+                     FStar_Options.should_be_already_cached uu____1591  in
+                   if uu____1589
                    then
-                     let uu____1525 =
-                       let uu____1531 =
+                     let uu____1594 =
+                       let uu____1600 =
                          FStar_Util.format1
                            "Expected %s to already be checked" fn
                           in
                        (FStar_Errors.Error_AlreadyCachedAssertionFailure,
-                         uu____1531)
+                         uu____1600)
                         in
-                     FStar_Errors.raise_err uu____1525
+                     FStar_Errors.raise_err uu____1594
                    else ());
-                  (let uu____1538 =
-                     (let uu____1542 = FStar_Options.codegen ()  in
-                      FStar_Option.isSome uu____1542) &&
+                  (let uu____1607 =
+                     (let uu____1611 = FStar_Options.codegen ()  in
+                      FStar_Option.isSome uu____1611) &&
                        (FStar_Options.cmi ())
                       in
-                   if uu____1538
+                   if uu____1607
                    then
-                     let uu____1546 =
-                       let uu____1552 =
+                     let uu____1615 =
+                       let uu____1621 =
                          FStar_Util.format1
                            "Cross-module inlining expects all modules to be checked first; %s was not checked"
                            fn
                           in
                        (FStar_Errors.Error_AlreadyCachedAssertionFailure,
-                         uu____1552)
+                         uu____1621)
                         in
-                     FStar_Errors.raise_err uu____1546
+                     FStar_Errors.raise_err uu____1615
                    else ());
-                  (let uu____1558 = tc_source_file ()  in
-                   match uu____1558 with
+                  (let uu____1627 = tc_source_file ()  in
+                   match uu____1627 with
                    | (tc_result,mllib,env1) ->
-                       ((let uu____1583 =
-                           (let uu____1587 = FStar_Errors.get_err_count ()
+                       ((let uu____1652 =
+                           (let uu____1656 = FStar_Errors.get_err_count ()
                                in
-                            uu____1587 = (Prims.parse_int "0")) &&
+                            uu____1656 = (Prims.parse_int "0")) &&
                              ((FStar_Options.lax ()) ||
                                 (FStar_Options.should_verify
                                    ((tc_result.FStar_CheckedFiles.checked_module).FStar_Syntax_Syntax.name).FStar_Ident.str))
                             in
-                         if uu____1583
+                         if uu____1652
                          then
                            FStar_CheckedFiles.store_module_to_cache env1 fn
                              parsing_data tc_result
@@ -1052,38 +1075,38 @@ let (tc_one_file :
              | FStar_Pervasives_Native.Some tc_result ->
                  let tcmod = tc_result.FStar_CheckedFiles.checked_module  in
                  let smt_decls = tc_result.FStar_CheckedFiles.smt_decls  in
-                 ((let uu____1606 =
+                 ((let uu____1675 =
                      FStar_Options.dump_module
                        (tcmod.FStar_Syntax_Syntax.name).FStar_Ident.str
                       in
-                   if uu____1606
+                   if uu____1675
                    then
-                     let uu____1609 =
+                     let uu____1678 =
                        FStar_Syntax_Print.modul_to_string tcmod  in
                      FStar_Util.print1 "Module after type checking:\n%s\n"
-                       uu____1609
+                       uu____1678
                    else ());
                   (let extend_tcenv tcmod1 tcenv =
-                     let uu____1629 =
-                       let uu____1634 =
+                     let uu____1698 =
+                       let uu____1703 =
                          FStar_ToSyntax_ToSyntax.add_modul_to_env tcmod1
                            tc_result.FStar_CheckedFiles.mii
                            (FStar_TypeChecker_Normalize.erase_universes tcenv)
                           in
                        FStar_All.pipe_left (with_dsenv_of_tcenv tcenv)
-                         uu____1634
+                         uu____1703
                         in
-                     match uu____1629 with
-                     | (uu____1650,tcenv1) ->
+                     match uu____1698 with
+                     | (uu____1719,tcenv1) ->
                          let env1 =
                            FStar_TypeChecker_Tc.load_checked_module tcenv1
                              tcmod1
                             in
                          (maybe_restore_opts ();
-                          (let uu____1655 =
-                             let uu____1657 = FStar_Options.lax ()  in
-                             Prims.op_Negation uu____1657  in
-                           if uu____1655
+                          (let uu____1724 =
+                             let uu____1726 = FStar_Options.lax ()  in
+                             Prims.op_Negation uu____1726  in
+                           if uu____1724
                            then
                              (FStar_SMTEncoding_Encode.encode_modul_from_cache
                                 env1 tcmod1.FStar_Syntax_Syntax.name
@@ -1094,48 +1117,48 @@ let (tc_one_file :
                       in
                    let env1 =
                      FStar_Options.profile
-                       (fun uu____1666  ->
-                          let uu____1667 =
+                       (fun uu____1735  ->
+                          let uu____1736 =
                             with_tcenv_of_env env (extend_tcenv tcmod)  in
-                          FStar_All.pipe_right uu____1667
+                          FStar_All.pipe_right uu____1736
                             FStar_Pervasives_Native.snd)
-                       (fun uu____1677  ->
+                       (fun uu____1746  ->
                           FStar_Util.format1
                             "Extending environment with module %s"
                             (tcmod.FStar_Syntax_Syntax.name).FStar_Ident.str)
                       in
                    let mllib =
-                     let uu____1682 =
-                       ((let uu____1686 = FStar_Options.codegen ()  in
-                         uu____1686 <> FStar_Pervasives_Native.None) &&
+                     let uu____1751 =
+                       ((let uu____1755 = FStar_Options.codegen ()  in
+                         uu____1755 <> FStar_Pervasives_Native.None) &&
                           (FStar_Options.should_extract
                              (tcmod.FStar_Syntax_Syntax.name).FStar_Ident.str))
                          &&
                          ((Prims.op_Negation
                              tcmod.FStar_Syntax_Syntax.is_interface)
                             ||
-                            (let uu____1692 = FStar_Options.codegen ()  in
-                             uu____1692 =
+                            (let uu____1761 = FStar_Options.codegen ()  in
+                             uu____1761 =
                                (FStar_Pervasives_Native.Some
                                   FStar_Options.Kremlin)))
                         in
-                     if uu____1682
+                     if uu____1751
                      then
                        with_env env1
                          (fun env2  ->
-                            let uu____1707 = maybe_extract_mldefs tcmod env2
+                            let uu____1776 = maybe_extract_mldefs tcmod env2
                                in
-                            match uu____1707 with
+                            match uu____1776 with
                             | (extracted_defs,_extraction_time) ->
                                 extracted_defs)
                      else FStar_Pervasives_Native.None  in
-                   let uu____1727 =
+                   let uu____1796 =
                      with_env env1 (maybe_extract_ml_iface tcmod)  in
-                   match uu____1727 with
+                   match uu____1796 with
                    | (env2,_time) -> (tc_result, mllib, env2)))
            else
-             (let uu____1754 = tc_source_file ()  in
-              match uu____1754 with
+             (let uu____1823 = tc_source_file ()  in
+              match uu____1823 with
               | (tc_result,mllib,env1) -> (tc_result, mllib, env1)))
   
 let (tc_one_file_for_ide :
@@ -1150,9 +1173,9 @@ let (tc_one_file_for_ide :
       fun fn  ->
         fun parsing_data  ->
           let env1 = env_of_tcenv env  in
-          let uu____1818 = tc_one_file env1 pre_fn fn parsing_data  in
-          match uu____1818 with
-          | (tc_result,uu____1832,env2) ->
+          let uu____1887 = tc_one_file env1 pre_fn fn parsing_data  in
+          match uu____1887 with
+          | (tc_result,uu____1901,env2) ->
               (tc_result, (env2.FStar_Extraction_ML_UEnv.env_tcenv))
   
 let (needs_interleaving : Prims.string -> Prims.string -> Prims.bool) =
@@ -1161,11 +1184,11 @@ let (needs_interleaving : Prims.string -> Prims.string -> Prims.bool) =
       let m1 = FStar_Parser_Dep.lowercase_module_name intf  in
       let m2 = FStar_Parser_Dep.lowercase_module_name impl  in
       ((m1 = m2) &&
-         (let uu____1860 = FStar_Util.get_file_extension intf  in
-          FStar_List.mem uu____1860 ["fsti"; "fsi"]))
+         (let uu____1929 = FStar_Util.get_file_extension intf  in
+          FStar_List.mem uu____1929 ["fsti"; "fsi"]))
         &&
-        (let uu____1869 = FStar_Util.get_file_extension impl  in
-         FStar_List.mem uu____1869 ["fst"; "fs"])
+        (let uu____1938 = FStar_Util.get_file_extension impl  in
+         FStar_List.mem uu____1938 ["fst"; "fs"])
   
 let (tc_one_file_from_remaining :
   Prims.string Prims.list ->
@@ -1178,32 +1201,32 @@ let (tc_one_file_from_remaining :
   fun remaining  ->
     fun env  ->
       fun deps  ->
-        let uu____1914 =
+        let uu____1983 =
           match remaining with
           | intf::impl::remaining1 when needs_interleaving intf impl ->
-              let uu____1959 =
-                let uu____1968 =
+              let uu____2028 =
+                let uu____2037 =
                   FStar_All.pipe_right impl
                     (FStar_Parser_Dep.parsing_data_of deps)
                    in
                 tc_one_file env (FStar_Pervasives_Native.Some intf) impl
-                  uu____1968
+                  uu____2037
                  in
-              (match uu____1959 with
+              (match uu____2028 with
                | (m,mllib,env1) -> (remaining1, ([m], mllib, env1)))
           | intf_or_impl::remaining1 ->
-              let uu____2019 =
-                let uu____2028 =
+              let uu____2088 =
+                let uu____2097 =
                   FStar_All.pipe_right intf_or_impl
                     (FStar_Parser_Dep.parsing_data_of deps)
                    in
                 tc_one_file env FStar_Pervasives_Native.None intf_or_impl
-                  uu____2028
+                  uu____2097
                  in
-              (match uu____2019 with
+              (match uu____2088 with
                | (m,mllib,env1) -> (remaining1, ([m], mllib, env1)))
           | [] -> ([], ([], FStar_Pervasives_Native.None, env))  in
-        match uu____1914 with
+        match uu____1983 with
         | (remaining1,(nmods,mllib,env1)) -> (remaining1, nmods, mllib, env1)
   
 let rec (tc_fold_interleave :
@@ -1217,19 +1240,19 @@ let rec (tc_fold_interleave :
   fun deps  ->
     fun acc  ->
       fun remaining  ->
-        let as_list uu___0_2202 =
-          match uu___0_2202 with
+        let as_list uu___0_2271 =
+          match uu___0_2271 with
           | FStar_Pervasives_Native.None  -> []
           | FStar_Pervasives_Native.Some l -> [l]  in
         match remaining with
         | [] -> acc
-        | uu____2219 ->
-            let uu____2223 = acc  in
-            (match uu____2223 with
+        | uu____2288 ->
+            let uu____2292 = acc  in
+            (match uu____2292 with
              | (mods,mllibs,env) ->
-                 let uu____2255 =
+                 let uu____2324 =
                    tc_one_file_from_remaining remaining env deps  in
-                 (match uu____2255 with
+                 (match uu____2324 with
                   | (remaining1,nmods,mllib,env1) ->
                       tc_fold_interleave deps
                         ((FStar_List.append mods nmods),
@@ -1243,41 +1266,41 @@ let (batch_mode_tc :
   =
   fun filenames  ->
     fun dep_graph1  ->
-      (let uu____2332 = FStar_Options.debug_any ()  in
-       if uu____2332
+      (let uu____2401 = FStar_Options.debug_any ()  in
+       if uu____2401
        then
          (FStar_Util.print_endline "Auto-deps kicked in; here's some info.";
           FStar_Util.print1
             "Here's the list of filenames we will process: %s\n"
             (FStar_String.concat " " filenames);
-          (let uu____2340 =
-             let uu____2342 =
+          (let uu____2409 =
+             let uu____2411 =
                FStar_All.pipe_right filenames
                  (FStar_List.filter FStar_Options.should_verify_file)
                 in
-             FStar_String.concat " " uu____2342  in
+             FStar_String.concat " " uu____2411  in
            FStar_Util.print1
-             "Here's the list of modules we will verify: %s\n" uu____2340))
+             "Here's the list of modules we will verify: %s\n" uu____2409))
        else ());
       (let env =
-         let uu____2358 = init_env dep_graph1  in
-         FStar_Extraction_ML_UEnv.mkContext uu____2358  in
-       let uu____2359 = tc_fold_interleave dep_graph1 ([], [], env) filenames
+         let uu____2427 = init_env dep_graph1  in
+         FStar_Extraction_ML_UEnv.mkContext uu____2427  in
+       let uu____2428 = tc_fold_interleave dep_graph1 ([], [], env) filenames
           in
-       match uu____2359 with
+       match uu____2428 with
        | (all_mods,mllibs,env1) ->
            (emit mllibs;
             (let solver_refresh env2 =
-               let uu____2403 =
+               let uu____2472 =
                  with_tcenv_of_env env2
                    (fun tcenv  ->
-                      (let uu____2412 =
+                      (let uu____2481 =
                          (FStar_Options.interactive ()) &&
-                           (let uu____2415 = FStar_Errors.get_err_count ()
+                           (let uu____2484 = FStar_Errors.get_err_count ()
                                in
-                            uu____2415 = (Prims.parse_int "0"))
+                            uu____2484 = (Prims.parse_int "0"))
                           in
-                       if uu____2412
+                       if uu____2481
                        then
                          (tcenv.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
                            ()
@@ -1286,6 +1309,6 @@ let (batch_mode_tc :
                            ());
                       ((), tcenv))
                   in
-               FStar_All.pipe_left FStar_Pervasives_Native.snd uu____2403  in
+               FStar_All.pipe_left FStar_Pervasives_Native.snd uu____2472  in
              (all_mods, env1, solver_refresh))))
   

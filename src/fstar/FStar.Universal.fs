@@ -33,6 +33,7 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
 open FStar.TypeChecker
 open FStar.CheckedFiles
+open FStar.Profiling
 
 (* Module abbreviations for the universal type-checker  *)
 module DsEnv   = FStar.Syntax.DsEnv
@@ -49,7 +50,7 @@ module BU      = FStar.Util
 module Dep     = FStar.Parser.Dep
 module NBE     = FStar.TypeChecker.NBE
 module Ch      = FStar.CheckedFiles
-
+module P       = FStar.Profiling
 let module_or_interface_name m = m.is_interface, m.name
 
 type uenv = FStar.Extraction.ML.UEnv.uenv
@@ -290,9 +291,9 @@ let tc_one_file
       let fmod, env = parse env pre_fn fn in
       let mii = FStar.Syntax.DsEnv.inclusion_info env.env_tcenv.dsenv fmod.name in
       let check_mod () =
-          let ((tcmod, smt_decls), env), tc_time =
-            FStar.Util.record_time (fun () ->
-               with_tcenv_of_env env (fun tcenv ->
+          let _ = if (Options.profile_module fmod.name.str) then P.init_profiler () else P.disable_profiler () in
+          let check env =
+              with_tcenv_of_env env (fun tcenv ->
                  let _ = match tcenv.gamma with
                          | [] -> ()
                          | _ -> failwith "Impossible: gamma contains leaked names"
@@ -307,9 +308,18 @@ let tc_one_file
                         smt_decls
                    else [], []
                  in
-                 ((modul, smt_decls), env)
-            ))
+                 ((modul, smt_decls), env))
+            in
+          
+          let ((tcmod, smt_decls), env), tc_time =
+            if (Options.profile_at_level Options.Module) then
+              P.profile (fun() -> check env) 
+                     fmod.name.str "module" 
+                     (Options.profile_at_level Options.Module)
+            else 
+              FStar.Util.record_time (fun () -> check env) 
           in
+          
           let extracted_defs, extract_time = with_env env (maybe_extract_mldefs tcmod) in
           let env, iface_extraction_time = with_env env (maybe_extract_ml_iface tcmod) in
           {
