@@ -224,12 +224,13 @@ let rec map #a f ptr l =
       (pts_to ptr node <*> slist next l_tl)
       (fun _ -> pts_to ptr ({node with data = f node.data}) <*> slist next l_tl)
       (fun _ -> set_cell ptr node (f node.data));
+    // otherwise resolve_delta in rst_frame below fails with a
+    // universe mismatch error (TODO: debug the situation more)
+    let r = pts_to ptr ({node with data = f node.data}) in 
     rst_frame
-      (pts_to ptr ({node with data = f node.data}) <*> slist next l_tl)
-      (fun _ -> pts_to ptr ({node with data = f node.data}) <*> 
+      (r <*> slist next l_tl)
+      (fun _ -> r <*> 
              slist next (L.map (fun x -> ({x with data = f x.data})) l_tl))
-      #(_)
-      #(pts_to ptr ({node with data = f node.data}))
       (fun _ -> map f next l_tl)
   )
 
