@@ -86,6 +86,22 @@ let rec slist (#a:Type) (ptr:t a) (l: list (cell a)) : Tot resource
   | [] -> empty_list ptr
   | hd::tl -> pts_to ptr hd <*> slist hd.next tl
 
+abstract
+let dummy_cell (#a:Type) (ptr:t a) : resource =
+  reveal_view();
+  let fp = Ghost.hide (B.loc_addr_of_buffer ptr) in
+  let inv h = B.live h ptr /\ B.freeable ptr in
+  let sel (h:imem inv) = () in
+  let view = {
+    fp = fp;
+    inv = inv;
+    sel = sel
+  } in
+  {
+    t = unit;
+    view = view
+  }
+
 let cell_alloc (#a:Type)
               (init:cell a)
             : RST (t a) (empty_resource)
@@ -108,25 +124,44 @@ let cell_free (#a:Type)
   reveal_empty_resource ();
   B.free ptr
 
+let set_dummy_cell (#a:Type) (ptr:t a) (c:cell a)
+  : RST unit
+    (dummy_cell ptr)
+    (fun _ -> pts_to ptr c)
+    (fun _ -> True)
+    (fun _ _ _ -> True)
+  = reveal_rst_inv();
+    reveal_modifies();
+    ptr *= c
+
+let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
+  : RST unit
+    (pts_to ptr c)
+    (fun _ -> pts_to ptr ({c with data = v}))
+    (fun _ -> True)
+    (fun _ _ _ -> True)
+  = reveal_rst_inv();
+    reveal_modifies();
+    let node = !* ptr in
+    let node' = {node with data = v} in
+    ptr *= node'
+
 (* We provide two versions of cons.
    The first one assumes there is an unused (dummy) node, that we can just set to be the head.
    The second performs an allocation *)
 
-(* TODO: Needs dummy resources
 let cons (#a:Type) (ptr:t a) (l:list (cell a)) (hd:t a) (v:a)
   : RST (t a)
   (dummy_cell hd <*> slist ptr l)
-  (fun (ptr') -> slist ptr' ({data = v; next = ptr} :: l))
+  (fun ptr' -> slist ptr' ({data = v; next = ptr} :: l))
   (fun _ -> True)
   (fun _ _ _ -> True) =
   let new_cell = {data = v; next = ptr} in
-  let new_head = rst_frame 
-    (slist ptr l)
-    (fun ret -> pts_to ret new_cell <*> slist ptr l)
-    (fun _ -> cell_alloc new_cell)
-  in
-  new_head
-*)
+  rst_frame 
+    (dummy_cell hd <*> slist ptr l)
+    (fun _ -> pts_to hd new_cell <*> slist ptr l)
+    (fun _ -> set_dummy_cell hd new_cell);
+  hd
 
 let cons_alloc (#a:Type) (ptr:t a) (l:list (cell a)) (v:a)
   : RST (t a)
@@ -146,7 +181,6 @@ let cons_alloc (#a:Type) (ptr:t a) (l:list (cell a)) (v:a)
    The second deallocates the node currently in head position, while the first
    returns the head and the tail *)
 
-(* TODO: Should return a dummy resource *)
 let uncons (#a:Type) (ptr:t a) (l:list (cell a){Cons? l})
   : RST (t a * t a)
         (slist ptr l)
@@ -172,18 +206,6 @@ let uncons_dealloc (#a:Type) (ptr:t a) (l:list (cell a){Cons? l})
     (fun _ -> slist next (L.tl l))
     (fun _ -> cell_free ptr (L.hd l));
   next
-
-let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
-  : RST unit
-    (pts_to ptr c)
-    (fun _ -> pts_to ptr ({c with data = v}))
-    (fun _ -> True)
-    (fun _ _ _ -> True)
-  = reveal_rst_inv();
-    reveal_modifies();
-    let node = !* ptr in
-    let node' = {node with data = v} in
-    ptr *= node'
 
 val map (#a:Type) (f:a -> a) (ptr:t a) (l:list (cell a))
   : RST unit
