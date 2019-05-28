@@ -45,6 +45,7 @@ and cell (a: Type0) = {
 (* Ideally, this would be bootstrapped for clients to use a "t' a".
    The hidden (abstract) type definition would be a (t a) & list (cell a) *)
 
+abstract
 let empty_list (#a:Type) (ptr:t a) : resource =
   reveal_view();
   let fp = Ghost.hide (B.loc_buffer ptr) in
@@ -60,6 +61,7 @@ let empty_list (#a:Type) (ptr:t a) : resource =
     view = view
   }
 
+abstract
 let pts_to (#a:Type) (ptr:t a) (v:cell a) : resource =
   reveal_view();
   let fp = Ghost.hide (B.loc_addr_of_buffer ptr) in
@@ -76,6 +78,7 @@ let pts_to (#a:Type) (ptr:t a) (v:cell a) : resource =
     view = view
   }
 
+abstract
 let rec slist (#a:Type) (ptr:t a) (l: list (cell a)) : Tot resource
   (decreases l) 
   =
@@ -192,18 +195,18 @@ val map (#a:Type) (f:a -> a) (ptr:t a) (l:list (cell a))
 let rec map #a f ptr l =
   if B.is_null ptr then ()
   else (
-    let node = !* ptr in
+    let node = L.hd l in
     let next = node.next in
+    let l_tl = L.tl l in
     rst_frame 
-      (pts_to ptr node <*> slist next (L.tl l))
-      (fun _ -> pts_to ptr ({node with data = f node.data}) <*> slist next (L.tl l))
+      (pts_to ptr node <*> slist next l_tl)
+      (fun _ -> pts_to ptr ({node with data = f node.data}) <*> slist next l_tl)
       (fun _ -> set_cell ptr node (f node.data));
-    admit();
-    // rst_frame
-    //   (pts_to ptr ({node with data = f node.data}) <*> slist next (L.tl l))
-    //   (fun _ -> pts_to ptr ({node with data = f node.data}) <*> 
-    //          slist next (L.map (fun x -> ({x with data = f x.data})) (L.tl l)))
-    //   (fun _ -> map f next (L.tl l));
-    admit()
-    
+    rst_frame
+      (pts_to ptr ({node with data = f node.data}) <*> slist next l_tl)
+      (fun _ -> pts_to ptr ({node with data = f node.data}) <*> 
+             slist next (L.map (fun x -> ({x with data = f x.data})) l_tl))
+      #(_)
+      #(pts_to ptr ({node with data = f node.data}))
+      (fun _ -> map f next l_tl)
   )
