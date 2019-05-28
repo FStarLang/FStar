@@ -908,7 +908,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "report_qi",
-        Const (mk_bool true),
+        Const (Bool true),
         "Generates a quantifier instantiation report every time Z3 is closed");
 
        ( noshort,
