@@ -49,6 +49,22 @@ Building F\* from sources section below) or at least in the latest
 [F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
 [automatic weekly builds]: https://github.com/FStarLang/binaries/tree/master/weekly
 
+Binary builds come with binary builds of F* standard library. 
+These can only be linked against code compiled in **exactly the same OCaml environment**.
+A common symptom of a mismatch is a message of the form 
+
+       Error: Files bin/fstarlib/fstarlib.cmxa
+              and ...
+              make inconsistent assumptions over interface ...
+
+Rather, if you intend to extract and compile OCaml code against the F* library, please 
+rebuild it with:
+
+        $ make -C ulib/ml
+
+See [here](https://github.com/FStarLang/FStar/wiki/Executing-F*-code) for further 
+documentation on extracting and executing F* code.
+
 ### Testing a binary package ###
 
 Test that the binary is good by expanding the archive and running the
