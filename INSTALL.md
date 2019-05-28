@@ -49,6 +49,8 @@ Building F\* from sources section below) or at least in the latest
 [F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
 [automatic weekly builds]: https://github.com/FStarLang/binaries/tree/master/weekly
 
+### Extracting F* programs to OCaml using binary releases
+
 Binary builds come with binary builds of F* standard library. 
 These can only be linked against code compiled in **exactly the same OCaml environment**.
 A common symptom of a mismatch is a message of the form 
