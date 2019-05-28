@@ -232,3 +232,46 @@ let rec map #a f ptr l =
       #(pts_to ptr ({node with data = f node.data}))
       (fun _ -> map f next l_tl)
   )
+
+type llist (a: Type0) = t a & list (cell a)
+
+let llist_resource (#a:Type0) (x:llist a) =
+  slist (fst x) (snd x)
+
+let rec llist_view_aux (#a:Type0) (x:list (cell a)) : list a =
+  match x with
+  | [] -> []
+  | hd::tl -> hd.data :: llist_view_aux tl
+
+let llist_view (#a:Type0) (x:llist a) : list a =
+  llist_view_aux (snd x)
+
+let llist_cons #a x v =
+  let init_ptr = fst x in
+  let init_l = snd x in
+  let ptr = cons_alloc init_ptr init_l v in
+  (ptr, ({data = v; next = init_ptr} :: init_l))
+
+let llist_head #a x =
+  let init_ptr = fst x in
+  let node = !*init_ptr in
+  node.data
+
+let llist_tail #a x =
+  let init_ptr = fst x in
+  let init_l = snd x in
+  (uncons_dealloc init_ptr init_l, L.tl init_l)
+
+let rec lemma_map_view_aux (#a:Type0) (f:a -> a) (init_l:list (cell a))
+  : Lemma (llist_view_aux (L.map (fun x -> ({x with data = f x.data})) init_l) ==
+          L.map f (llist_view_aux init_l))
+   = match init_l with
+  | [] -> ()
+  | hd :: tl -> lemma_map_view_aux f tl
+
+let llist_map #a f x =
+  let init_ptr = fst x in
+  let init_l = snd x in
+  map f init_ptr init_l;
+  lemma_map_view_aux f init_l;
+  (init_ptr, L.map (fun x -> ({x with data = f x.data})) init_l)
