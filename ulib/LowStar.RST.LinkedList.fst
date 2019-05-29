@@ -151,17 +151,16 @@ let set_cell (#a:Type) (ptr:t a) (c:cell a) (v:a)
    The second performs an allocation *)
 
 let cons (#a:Type) (ptr:t a) (l:list (cell a)) (hd:t a) (v:a)
-  : RST (t a)
+  : RST unit
   (dummy_cell hd <*> slist ptr l)
-  (fun ptr' -> slist ptr' ({data = v; next = ptr} :: l))
+  (fun _ -> slist hd ({data = v; next = ptr} :: l))
   (fun _ -> True)
   (fun _ _ _ -> True) =
   let new_cell = {data = v; next = ptr} in
   rst_frame 
     (dummy_cell hd <*> slist ptr l)
     (fun _ -> pts_to hd new_cell <*> slist ptr l)
-    (fun _ -> set_dummy_cell hd new_cell);
-  hd
+    (fun _ -> set_dummy_cell hd new_cell)
 
 let cons_alloc (#a:Type) (ptr:t a) (l:list (cell a)) (v:a)
   : RST (t a)
@@ -217,7 +216,7 @@ val map (#a:Type) (f:a -> a) (ptr:t a) (l:list (cell a))
 let rec map #a f ptr l =
   if B.is_null ptr then ()
   else (
-    let node = L.hd l in
+    let node = !*ptr in
     let next = node.next in
     let l_tl = L.tl l in
     rst_frame 
