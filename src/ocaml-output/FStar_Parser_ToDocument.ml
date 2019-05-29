@@ -3118,7 +3118,7 @@ and (p_typ' :
                          FStar_Pprint.dot
                         in
                      let uu____8020 = p_nopattern nopattern  in
-                     prefix2 uu____8015 uu____8020  in
+                     prefix2_nonempty uu____8015 uu____8020  in
                    FStar_Pprint.group uu____8014  in
                  prefix2 uu____8013 term_doc
              | pats ->
@@ -3156,7 +3156,7 @@ and (p_typ' :
                          FStar_Pprint.dot
                         in
                      let uu____8079 = p_nopattern nopattern  in
-                     prefix2 uu____8074 uu____8079  in
+                     prefix2_nonempty uu____8074 uu____8079  in
                    FStar_Pprint.group uu____8073  in
                  prefix2 uu____8072 term_doc
              | pats ->

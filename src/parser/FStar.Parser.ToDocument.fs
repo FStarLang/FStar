@@ -1387,7 +1387,7 @@ and p_typ' ps pb e = match e.tm with
       //VD: We could dispense with this pattern matching if we removed trailing whitespace after the fact
       (match trigger with
        | [] ->
-         prefix2 (group (prefix2
+         prefix2 (group (prefix2_nonempty
            (soft_surround 2 0 (p_quantifier e ^^ space) binders_doc dot)
             (p_nopattern nopattern))) term_doc
 
