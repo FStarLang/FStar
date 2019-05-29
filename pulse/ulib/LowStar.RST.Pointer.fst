@@ -62,7 +62,6 @@ let ptr_read (#a:Type)
                    (fun h0 x h1 -> 
                       sel (ptr_view ptr) h0 == x /\ 
                       x == sel (ptr_view ptr) h1) =
-  reveal_rst_inv ();
   !* ptr
 
 let ptr_write (#a:Type)
