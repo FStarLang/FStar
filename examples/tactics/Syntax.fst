@@ -75,6 +75,13 @@ let _ = assert_by_tactic True
                               then ()
                               else fail "blah not an identity?")
 
+let _ = assert True
+            by (let t = `(x:int{x > 0}) in
+                let s = `(x:int{x > 0}) in
+                if term_eq s t
+                then ()
+                else fail "wat")
+
 let _ = assert_by_tactic True
                          (fun () ->
                               let t = quote blah in
