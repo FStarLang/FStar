@@ -1689,7 +1689,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     (check "arrow comp"    (comp_eq_dbg dbg c1 c2))
 
   | Tm_refine (b1,t1), Tm_refine (b2,t2) ->
-    (check "refine bv"      (b1.index = b2.index)) &&
+    (check "refine bv sort" (term_eq_dbg dbg b1.sort b2.sort)) &&
     (check "refine formula" (term_eq_dbg dbg t1 t2))
 
   | Tm_app (f1, a1), Tm_app (f2, a2) ->
