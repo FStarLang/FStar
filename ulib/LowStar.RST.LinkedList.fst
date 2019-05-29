@@ -225,7 +225,11 @@ let rec map #a f ptr l =
       (fun _ -> pts_to ptr ({node with data = f node.data}) <*> slist next l_tl)
       (fun _ -> set_cell ptr node (f node.data));
     // otherwise resolve_delta in rst_frame below fails with a
-    // universe mismatch error (TODO: debug the situation more)
+    // universe mismatch error; the error seems to be stemming
+    // from the canonicalizer identifying three distinct 
+    // resource-terms between the outer and inner resources 
+    // instead of the expected two (which is what happens when 
+    // one gives an explicit name r to pts_to ptr ... below)
     let r = pts_to ptr ({node with data = f node.data}) in 
     rst_frame
       (r <*> slist next l_tl)
