@@ -70,7 +70,7 @@ let logic_qualifier_deprecation_warning =
 %token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
-%token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
+%token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN LBRACE_COLON_NOPATTERN_RBRACE PIPE_RIGHT
 %token NEW_EFFECT SUB_EFFECT SPLICE SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
@@ -674,14 +674,14 @@ calcStep:
 typ:
   | t=simpleTerm { t }
 
-  | q=quantifier bs=binders DOT trigger=trigger e=noSeqTerm
+  | q=quantifier bs=binders DOT nopattern=nopattern trigger=trigger e=noSeqTerm
       {
         match bs with
         | [] ->
           raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
         | _ ->
           let idents = idents_of_binders bs (rhs2 parseState 1 3) in
-          mk_term (q (bs, (idents, trigger), e)) (rhs2 parseState 1 5) Formula
+          mk_term (q (bs, nopattern, (idents, trigger), e)) (rhs2 parseState 1 5) Formula
       }
 
 %inline quantifier:
@@ -691,6 +691,10 @@ typ:
 trigger:
   |   { [] }
   | LBRACE_COLON_PATTERN pats=disjunctivePats RBRACE { pats }
+
+nopattern:
+  |   { false }
+  | LBRACE_COLON_NOPATTERN_RBRACE { true }
 
 disjunctivePats:
   | pats=separated_nonempty_list(DISJUNCTION, conjunctivePat) { pats }

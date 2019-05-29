@@ -449,7 +449,8 @@ let rec token = lexer
  | "#pop-options" -> PRAGMA_POP_OPTIONS
  | "__SOURCE_FILE__" -> STRING (L.source_file lexbuf)
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
-
+ | "{:nopattern}" -> LBRACE_COLON_NOPATTERN_RBRACE
+   
  | anywhite+ -> token lexbuf
  | newline -> L.new_line lexbuf; token lexbuf
 

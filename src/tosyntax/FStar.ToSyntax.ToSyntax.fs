@@ -1807,7 +1807,7 @@ and desugar_formula env (f:term) : S.term =
     | _ -> None in
   let mk t = S.mk t None f.range in
   let setpos t = {t with pos=f.range} in
-  let desugar_quant (q:lident) b pats body =
+  let desugar_quant (q:lident) b np pats body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
     let with_pats env (names, pats) body =
       match names, pats with
@@ -1826,7 +1826,7 @@ and desugar_formula env (f:term) : S.term =
           (fun es -> es |> List.map
                   (fun e -> arg_withimp_t Nothing <| desugar_term env e))
         in
-        mk (Tm_meta (body, Meta_pattern (names, pats)))
+        mk (Tm_meta (body, Meta_pattern (names, pats, np)))
     in
     match tk with
       | Some a, k ->
@@ -1841,14 +1841,14 @@ and desugar_formula env (f:term) : S.term =
       | _ -> failwith "impossible" in
 
  let push_quant
-      (q:(list<AST.binder> * AST.patterns * AST.term) -> AST.term')
+      (q:(list<AST.binder> * bool * AST.patterns * AST.term) -> AST.term')
       (binders:list<AST.binder>)
-      pats (body:term) =
+      np pats (body:term) =
     match binders with
     | b::(b'::_rest) ->
       let rest = b'::_rest in
-      let body = mk_term (q(rest, pats, body)) (Range.union_ranges b'.brange body.range) Formula in
-      mk_term (q([b], ([], []), body)) f.range Formula
+      let body = mk_term (q(rest, np, pats, body)) (Range.union_ranges b'.brange body.range) Formula in
+      mk_term (q([b], np, ([], []), body)) f.range Formula
     | _ -> failwith "impossible" in
 
   match (unparen f).tm with
@@ -1856,22 +1856,22 @@ and desugar_formula env (f:term) : S.term =
       let f = desugar_formula env f in
       mk <| Tm_meta(f, Meta_labeled(l, f.pos, p))
 
-    | QForall([], _, _)
-    | QExists([], _, _) -> failwith "Impossible: Quantifier without binders"
+    | QForall([], _, _, _)
+    | QExists([], _, _, _) -> failwith "Impossible: Quantifier without binders"
 
-    | QForall((_1::_2::_3), pats, body) ->
+    | QForall((_1::_2::_3), np, pats, body) ->
       let binders = _1::_2::_3 in
-      desugar_formula env (push_quant (fun x -> QForall x) binders pats body)
+      desugar_formula env (push_quant (fun x -> QForall x) binders np pats body)
 
-    | QExists((_1::_2::_3), pats, body) ->
+    | QExists((_1::_2::_3), np, pats, body) ->
       let binders = _1::_2::_3 in
-      desugar_formula env (push_quant (fun x -> QExists x) binders pats body)
+      desugar_formula env (push_quant (fun x -> QExists x) binders np pats body)
 
-    | QForall([b], pats, body) ->
-      desugar_quant C.forall_lid b pats body
+    | QForall([b], np, pats, body) ->
+      desugar_quant C.forall_lid b np pats body
 
-    | QExists([b], pats, body) ->
-      desugar_quant C.exists_lid b pats body
+    | QExists([b], np, pats, body) ->
+      desugar_quant C.exists_lid b np pats body
 
     | Paren f -> failwith "impossible"
 

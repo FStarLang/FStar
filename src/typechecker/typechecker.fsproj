@@ -61,6 +61,8 @@
     <Compile Include="FStar.TypeChecker.Cfg.fs" />
     <Compile Include="FStar.TypeChecker.PatternUtils.fsi" />
     <Compile Include="FStar.TypeChecker.PatternUtils.fs" />
+    <Compile Include="FStar.TypeChecker.PatternInference.fsi" />
+    <Compile Include="FStar.TypeChecker.PatternInference.fs" />
     <Compile Include="FStar.TypeChecker.Normalize.fsi" />
     <Compile Include="FStar.TypeChecker.Normalize.fs" />
     <Compile Include="FStar.TypeChecker.NBE.fsi" />

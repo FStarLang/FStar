@@ -505,43 +505,43 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
 
         | Some (op, _) when op = "forall" || op = "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
-          let rec uncurry xs pat (t:A.term) = match t.tm with
-            | A.QExists(x, (_, p) , body)
-            | A.QForall(x, (_, p), body)
-              -> uncurry (x@xs) (p@pat) body
-            | _ -> xs, pat, t
+          let rec uncurry xs pat (t:A.term) np = match t.tm with
+            | A.QExists(x, _, (_, p) , body)
+            | A.QForall(x, _, (_, p), body)  // To review: do we need to check the consistency of {:nopattern}?
+              -> uncurry (x@xs) (p@pat) body np
+            | _ -> xs, pat, t, np
           in
           let resugar body = match (SS.compress body).n with
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
                 let xs = if (Options.print_implicits()) then xs else filter_imp xs in
                 let xs = xs |> map_opt (fun b -> resugar_binder' env b t.pos) in
-                let pats, body = match (SS.compress body).n with
+                let pats, body, np = match (SS.compress body).n with
                   | Tm_meta(e, m) ->
                     let body = resugar_term' env e in
-                    let pats, body = match m with
-                      | Meta_pattern (_, pats) ->
+                    let pats, body, np = match m with
+                      | Meta_pattern (_, pats, np) ->
                         List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term' env e)) pats,
-                        body
+                        body, np
                       | Meta_labeled (s, r, p) ->
                         // this case can occur in typechecker when a failure is wrapped in meta_labeled
-                        [], mk (A.Labeled (body, s, p))
+                        [], mk (A.Labeled (body, s, p)), false
                       | _ -> failwith "wrong pattern format for QForall/QExists"
                     in
-                    pats, body
-                  | _ -> [], resugar_term' env body
+                    pats, body, np
+                  | _ -> [], resugar_term' env body, false
                 in
-                let xs, pats, body = uncurry xs pats body in
+                let xs, pats, body, np = uncurry xs pats body np in
                 let xs = xs |> List.rev in
                 if op = "forall"
-                then mk (A.QForall(xs, (A.idents_of_binders xs t.pos, pats), body))
-                else mk (A.QExists(xs, (A.idents_of_binders xs t.pos, pats), body))
+                then mk (A.QForall(xs, np, (A.idents_of_binders xs t.pos, pats), body))
+                else mk (A.QExists(xs, np, (A.idents_of_binders xs t.pos, pats), body))
 
             | _ ->
             (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
             (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
-            if op = "forall" then mk (A.QForall([], ([], []), resugar_term' env body))
-            else mk (A.QExists([], ([], []), resugar_term' env body))
+            if op = "forall" then mk (A.QForall([], false, ([], []), resugar_term' env body))
+            else mk (A.QExists([], false, ([], []), resugar_term' env body))
           in
           (* only the last arg is from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
@@ -700,7 +700,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               resugar_term' env e
       in
       begin match m with
-      | Meta_pattern (_, pats) ->
+      | Meta_pattern (_, pats, _) ->
         // This case is possible in TypeChecker when creating "haseq" for Sig_inductive_typ whose Sig_datacon has no binders.
         let pats = List.flatten pats |> List.map (fun (x, _) -> resugar_term' env x) in
         // Is it correct to resugar it to Attributes.

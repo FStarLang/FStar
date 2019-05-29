@@ -32,6 +32,7 @@ open FStar.Syntax.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
+open FStar.TypeChecker.PatternInference
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -43,6 +44,7 @@ module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
+module PI = FStar.TypeChecker.PatternInference
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -464,11 +466,11 @@ and rebuild_closure cfg env stack t =
     | Meta(env_m, m, r)::stack ->
       let m =
           match m with
-          | Meta_pattern (names, args) ->
+          | Meta_pattern (names, args, np) ->
             Meta_pattern (names |> List.map (non_tail_inline_closure_env cfg env_m),
                           args |> List.map (fun args ->
                                             args |> List.map (fun (a, q) ->
-                                            non_tail_inline_closure_env cfg env_m a, q)))
+                                            non_tail_inline_closure_env cfg env_m a, q)), np)
 
           | Meta_monadic(m, tbody) ->
             Meta_monadic(m, non_tail_inline_closure_env cfg env_m tbody)
@@ -830,7 +832,7 @@ let rec maybe_weakly_reduced tm :  bool =
       | Tm_meta(t, m) ->
         maybe_weakly_reduced t
         || (match m with
-           | Meta_pattern (_, args) ->
+           | Meta_pattern (_, args, _) ->
              BU.for_some (BU.for_some (fun (a, _) -> maybe_weakly_reduced a)) args
 
            | Meta_monadic_lift(_, _, t')
@@ -1397,10 +1399,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         (* meta doesn't block reduction, but we need to put the label back *)
                         norm cfg env (Meta(env,m,r)::stack) head
 
-                      | Meta_pattern (names, args) ->
+                      | Meta_pattern (names, args, np) ->
                           let args = norm_pattern_args cfg env args in
                           let names =  names |> List.map (norm cfg env []) in
-                          norm cfg env (Meta(env, Meta_pattern(names, args), t.pos)::stack) head
+                          // normalization might remove bv from args if the bv is
+                          // not referenced in args, thus cause args to become
+                          // invalid patterns
+                          let args = if Options.auto_patterns() then PI.remove_invalid_pattern names args else args in
+                          norm cfg env (Meta(env, Meta_pattern(names, args, np), t.pos)::stack) head
                           //meta doesn't block reduction, but we need to put the label back
 
                       | _ ->
@@ -1409,9 +1415,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | [] ->
                     let head = norm cfg env [] head in
                     let m = match m with
-                        | Meta_pattern (names, args) ->
+                        | Meta_pattern (names, args, np) ->
                           let names =  names |> List.map (norm cfg env []) in
-                          Meta_pattern (names, norm_pattern_args cfg env args)
+                          Meta_pattern (names, norm_pattern_args cfg env args, np)
                         | _ -> m in
                     let t = mk (Tm_meta(head, m)) t.pos in
                     rebuild cfg env stack t
@@ -1903,7 +1909,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
                 | _ -> None
                 end
 
-            | Some (QAll (bs, pats, phi)) ->
+            | Some (QAll (bs, np, pats, phi)) ->
                 begin match U.destruct_typ_as_formula phi with
                 | None ->
                     begin match is_applied_maybe_squashed bs phi with
@@ -1937,7 +1943,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
     in
     let is_forall_const (phi : term) : option<term> =
         match U.destruct_typ_as_formula phi with
-        | Some (QAll ([(bv, _)], _, phi')) ->
+        | Some (QAll ([(bv, _)], _, _, phi')) ->
             if cfg.debug.wpe then
                 BU.print2 "WPE> QAll [%s] %s\n" (Print.bv_to_string bv) (Print.term_to_string phi');
             is_quantified_const bv phi'
@@ -2722,7 +2728,7 @@ and elim_delayed_subst_comp (c:comp) : comp =
       mk (Comp ct)
 
 and elim_delayed_subst_meta = function
-  | Meta_pattern (names, args) -> Meta_pattern(List.map elim_delayed_subst_term names, List.map elim_delayed_subst_args args)
+  | Meta_pattern (names, args, np) -> Meta_pattern(List.map elim_delayed_subst_term names, List.map elim_delayed_subst_args args, np)
   | Meta_monadic(m, t) -> Meta_monadic(m, elim_delayed_subst_term t)
   | Meta_monadic_lift(m1, m2, t) -> Meta_monadic_lift(m1, m2, elim_delayed_subst_term t)
   | m -> m

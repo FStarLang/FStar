@@ -1352,13 +1352,13 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
              | None -> fallback phi
              | Some (_, f) -> f phi.pos arms)
 
-        | Some (U.QAll(vars, pats, body)) ->
+        | Some (U.QAll(vars, np, pats, body)) ->
           pats |> List.iter (check_pattern_vars env vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           let tm = mkForall phi.pos (pats, vars, mkImp(guard, body)) in
           tm, decls
 
-        | Some (U.QEx(vars, pats, body)) ->
+        | Some (U.QEx(vars, np, pats, body)) ->
           pats |> List.iter (check_pattern_vars env vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           mkExists phi.pos (pats, vars, mkAnd(guard, body)), decls

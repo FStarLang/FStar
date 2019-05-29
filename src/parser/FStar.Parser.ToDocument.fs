@@ -1380,15 +1380,17 @@ and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range
 and p_typ_sep ps pb e = with_comment_sep (p_typ' ps pb) e e.range
 
 and p_typ' ps pb e = match e.tm with
-  | QForall (bs, (_, trigger), e1)
-  | QExists (bs, (_, trigger), e1) ->
+  | QForall (bs, nopattern, (_, trigger), e1)
+  | QExists (bs, nopattern, (_, trigger), e1) ->
       let binders_doc = p_binders true bs in
       let term_doc = p_noSeqTermAndComment ps pb e1 in
       //VD: We could dispense with this pattern matching if we removed trailing whitespace after the fact
       (match trigger with
        | [] ->
-         prefix2
-          (soft_surround 2 0 (p_quantifier e ^^ space) binders_doc dot) term_doc
+         prefix2 (group (prefix2_nonempty
+           (soft_surround 2 0 (p_quantifier e ^^ space) binders_doc dot)
+            (p_nopattern nopattern))) term_doc
+
        | pats ->
          prefix2 (group (prefix2
            (soft_surround 2 0 (p_quantifier e ^^ space) binders_doc dot)
@@ -1459,6 +1461,9 @@ and p_trigger = function
     | [] -> empty
     | pats ->
         group (lbrace ^^ colon ^^ str "pattern" ^/^ jump 2 0 (p_disjunctivePats pats) ^^ rbrace)
+
+and p_nopattern p =
+    if p then group (lbrace ^^ colon ^^ str "nopattern"^^ rbrace) else empty
 
 and p_disjunctivePats pats =
     separate_map (str "\\/") p_conjunctivePats pats
