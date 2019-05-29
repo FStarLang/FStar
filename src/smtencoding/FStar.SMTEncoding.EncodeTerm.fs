@@ -879,18 +879,37 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let args, decls = encode_args args_e env in
 
             let encode_partial_app ht_opt =
-                let head, decls' = encode_term head env in
-                let app_tm = mk_Apply_args head args in
+                let smt_head, decls' = encode_term head env in
+                let app_tm = mk_Apply_args smt_head args in
                 match ht_opt with
                 | None -> app_tm, decls@decls'
-                | Some (formals, c) ->
+                | Some (head_type, formals, c) ->
+                    if Env.debug env.tcenv (Options.Other "PartialApp")
+                    then BU.print5 "Encoding partial application:\n\thead=%s\n\thead_type=%s\n\tformals=%s\n\tcomp=%s\n\tactual args=%s\n"
+                             (Print.term_to_string head)
+                             (Print.term_to_string head_type)
+                             (Print.binders_to_string ", " formals)
+                             (Print.comp_to_string c)
+                             (Print.args_to_string args_e);
                     let formals, rest = BU.first_N (List.length args_e) formals in
                     let subst = List.map2 (fun (bv, _) (a, _) -> Syntax.NT(bv, a)) formals args_e in
                     let ty = U.arrow rest c |> SS.subst subst in
+                    if Env.debug env.tcenv (Options.Other "PartialApp")
+                    then BU.print1 "Encoding partial application, after subst:\n\tty=%s\n"
+                            (Print.term_to_string ty);
                     let has_type, decls'' = encode_term_pred None ty env app_tm in
+                    if Env.debug env.tcenv (Options.Other "PartialApp")
+                    then BU.print1 "Encoding partial application, after SMT encoded predicate:\n\t=%s\n"
+                            (Term.print_smt_term has_type);
                     let cvars = Term.free_variables has_type in
+                    let app_tm_vars = Term.free_variables app_tm in
+                    let pattern, vars =
+                      if Term.fvs_subset_of cvars app_tm_vars
+                      then app_tm, app_tm_vars
+                      else has_type, cvars
+                    in
                     let tkey_hash = Term.hash_of_term app_tm in
-                    let e_typing = Util.mkAssume(mkForall t0.pos ([[has_type]], cvars, has_type),
+                    let e_typing = Util.mkAssume(mkForall t0.pos ([[pattern]], vars, has_type),
                                                 Some "Partial app typing",
                                                 ("partial_app_typing_" ^
                                                  (BU.digest_of_string (Term.hash_of_term app_tm)))) in
@@ -927,7 +946,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_fvar fv when (List.length formals = List.length args) -> encode_full_app fv.fv_name
                 | _ ->
                     if List.length formals > List.length args
-                    then encode_partial_app (Some (formals, c))
+                    then encode_partial_app (Some (head_type, formals, c))
                     else encode_partial_app None
                 end
 

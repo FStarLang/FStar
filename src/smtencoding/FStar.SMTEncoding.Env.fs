@@ -132,13 +132,29 @@ type fvar_binding = {
     smt_fuel_partial_app:option<term>;
     fvb_thunked: bool
 }
+let fvb_to_string fvb =
+  let term_opt_to_string = function
+    | None -> "None"
+    | Some s -> Term.print_smt_term s
+  in
+  BU.format5 "{ lid = %s;\n  smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
+    (Ident.string_of_lid fvb.fvar_lid)
+    fvb.smt_id
+    (term_opt_to_string fvb.smt_token)
+    (term_opt_to_string fvb.smt_fuel_partial_app)
+    (BU.string_of_bool fvb.fvb_thunked)
+
 let check_valid_fvb fvb =
     if (Option.isSome fvb.smt_token
      || Option.isSome fvb.smt_fuel_partial_app)
     && fvb.fvb_thunked
     then failwith (BU.format1 "Unexpected thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid))
     else if fvb.fvb_thunked && fvb.smt_arity <> 0
-    then failwith (BU.format1 "Unexpected arity of thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid))
+    then failwith (BU.format1 "Unexpected arity of thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid));
+    match fvb.smt_token with
+    | Some ({tm=FreeV _}) ->
+      failwith (BU.format1 "bad fvb\n%s" (fvb_to_string fvb))
+    | _ -> ()
 
 
 let binder_of_eithervar v = (v, None)
@@ -264,10 +280,15 @@ let force_thunk fvb =
     if not (fvb.fvb_thunked) || fvb.smt_arity <> 0
     then failwith "Forcing a non-thunk in the SMT encoding";
     mkFreeV <| (fvb.smt_id, Term_sort, true)
+module TcEnv = FStar.TypeChecker.Env
 let try_lookup_free_var env l =
     match lookup_fvar_binding env l with
     | None -> None
     | Some fvb ->
+      if TcEnv.debug env.tcenv <| Options.Other "PartialApp"
+      then BU.print2 "Looked up %s found\n%s\n"
+             (Ident.string_of_lid l)
+             (fvb_to_string fvb);
       if fvb.fvb_thunked
       then Some (force_thunk fvb)
       else

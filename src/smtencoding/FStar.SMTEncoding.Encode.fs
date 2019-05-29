@@ -467,7 +467,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
               let get_vtok () = Option.get vtok_opt in
               let vtok_tm =
                     match formals with
-                    | [] when not thunked -> mkFreeV <| mk_fv (vname, Term_sort)
+                    | [] when not thunked -> mkApp(vname, []) //mkFreeV <| mk_fv (vname, Term_sort)
                     | [] when thunked -> mkApp(vname, [dummy_tm])
                     | _ -> mkApp(get_vtok(), []) //not thunked
               in
@@ -487,7 +487,8 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
                       let tok_typing =
                         Util.mkAssume(tok_typing, Some "function token typing", ("function_token_typing_"^vname))
                       in
-                      decls2@([tok_typing] |> mk_decls_trivial), push_free_var env lid arity vname (Some <| mkFreeV (mk_fv (vname, Term_sort)))
+                      decls2@([tok_typing] |> mk_decls_trivial),
+                      push_free_var env lid arity vname (Some <| mkApp(vname, [])) //mkFreeV (mk_fv (vname, Term_sort)))
 
                     | _ when thunked -> decls2, env
 
@@ -1675,7 +1676,7 @@ let encode_modul_from_cache tcenv name (decls, fvbs) =
 
 open FStar.SMTEncoding.Z3
 let encode_query use_env_msg tcenv q
-  : list<decl>  //prelude, translation of tcenv
+  : list<decl>  //prelude, translation of  tcenv
   * list<ErrorReporting.label> //labels in the query
   * decl        //the query itself
   * list<decl>  //suffix, evaluating labels in the model, etc.

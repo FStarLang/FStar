@@ -195,6 +195,7 @@ val boxStringFun : string * string
 val boxRealFun: string * string
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
+val fvs_subset_of: fvs -> fvs -> bool
 val free_variables: term -> fvs
 val mkTrue :  (Range.range -> term)
 val mkFalse : (Range.range -> term)
