@@ -387,7 +387,7 @@
         "typing_FStar.Math.Lib.powx", "well-founded-ordering-on-nat"
       ],
       0,
-      "cb464de81a5ae4f834eec1490309a9e9"
+      "7daeb9605e77a8c0b188281a275ea8d9"
     ],
     [
       "FStar.Math.Lib.abs_mul_lemma",
