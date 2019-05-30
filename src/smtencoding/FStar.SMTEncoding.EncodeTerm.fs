@@ -169,7 +169,15 @@ let is_an_eta_expansion env vars body =
              args (List.rev xs)
           then //t is of the form (f vars) for all the lambda bound variables vars
                //In this case, the term is an eta-expansion of f; so we just return f@tok, if there is one
-               tok_of_name env f
+               let n = tok_of_name env f in
+               let _ =
+                 if Env.debug env.tcenv <| Options.Other "PartialApp"
+                 then BU.print2 "is_eta_expansion %s  ... tok_of_name = %s\n"
+                                (print_smt_term t)
+                                (match n with | None -> "None" | Some x -> print_smt_term x)
+               in
+               n
+
           else None
 
         | _, [] ->
@@ -1037,8 +1045,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 in
                 let tkey = mkForall t0.pos ([], cvars, key_body) in
                 let tkey_hash = Term.hash_of_term tkey in
+                if Env.debug env.tcenv <| Options.Other "PartialApp"
+                then BU.print2 "Checking eta expansion of\n\tvars={%s}\n\tbody=%s\n"
+                       (List.map fv_name vars |> String.concat ", ")
+                       (print_smt_term body);
                 match is_an_eta_expansion env vars body with
                 | Some t ->
+                  if Env.debug env.tcenv <| Options.Other "PartialApp"
+                  then BU.print1 "Yes, is an eta expansion of\n\tcore=%s\n"
+                                 (print_smt_term t);
                   let decls = decls@decls'@decls'' in
                   t, decls
                 | None ->

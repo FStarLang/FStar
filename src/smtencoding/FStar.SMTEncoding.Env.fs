@@ -339,9 +339,20 @@ let lookup_free_var_sym env a =
         end
 
 let tok_of_name env nm =
-  BU.psmap_find_map (env.fvar_bindings |> fst) (fun _ fvb ->
+  match
+    BU.psmap_find_map (env.fvar_bindings |> fst) (fun _ fvb ->
       check_valid_fvb fvb;
       if fvb.smt_id = nm then fvb.smt_token else None)
+  with
+  | Some b -> Some b
+  | None -> //this must be a bvar
+    BU.psmap_find_map env.bvar_bindings (fun _ pi ->
+    BU.pimap_fold pi (fun _ y res ->
+      match res, y with
+      | Some _, _ -> res
+      | None, (_, {tm=App(Var sym, [])}) when sym=nm ->
+        Some (snd y)
+      | _ -> None) None)
 
 let reset_current_module_fvbs env = { env with fvar_bindings = (env.fvar_bindings |> fst, []) }
 let get_current_module_fvbs env = env.fvar_bindings |> snd
