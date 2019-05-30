@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "d63e83dc825a548361190fb5f651053a"
+      "157274131f43390aa961b720805e6437"
     ],
     [
       "FStar.Classical.give_witness_from_squash",
@@ -38,7 +38,7 @@
         "unit_typing"
       ],
       0,
-      "77a5ced6c5f9c842f4003eaa9e1b4592"
+      "d042639da83690811c5c57522048c896"
     ],
     [
       "FStar.Classical.get_equality",
@@ -74,7 +74,7 @@
       1,
       [ "@query" ],
       0,
-      "88d0bde468abc60460af881f6c94e746"
+      "273ffae81ff2647cae98890698b90d69"
     ],
     [
       "FStar.Classical.gtot_to_lemma",
@@ -83,7 +83,7 @@
       1,
       [ "@query" ],
       0,
-      "479f3e4f755aa43f1bcf858052dd7167"
+      "472c4cf60105f7cf9b900ac54224cb8d"
     ],
     [
       "FStar.Classical.forall_intro",
@@ -92,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "6ab7e8dccc028b169150d36af0091164"
+      "8989dd158f37fcb65dfb7ab021d1ce36"
     ],
     [
       "FStar.Classical.exists_intro",
@@ -128,7 +128,7 @@
       1,
       [ "@query" ],
       0,
-      "87bbe5f91e802b40d11ad3466f761537"
+      "47fb0dd77372cfdec31ab6aabd4a9b5d"
     ],
     [
       "FStar.Classical.exists_elim",
@@ -143,7 +143,7 @@
         "unit_typing"
       ],
       0,
-      "64abe13211383a40b9c74ab595c3ccc8"
+      "aebd2f03f3c73442464b4f690a724d56"
     ],
     [
       "FStar.Classical.move_requires",
@@ -156,7 +156,7 @@
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "35c064ac005d7ff0e54c010dd289702e"
+      "19df5c29197d3d190facafcfcd7b362d"
     ],
     [
       "FStar.Classical.forall_impl_intro",
@@ -165,7 +165,7 @@
       1,
       [ "@query" ],
       0,
-      "a352abb34b8ced0bcfef4a5d5ee355ae"
+      "70d91cc1c70293df84725810ba857a05"
     ],
     [
       "FStar.Classical.impl_intro_gen",
@@ -198,7 +198,7 @@
       1,
       [ "@query" ],
       0,
-      "c463c55d06743ee34780ceaf7b631275"
+      "68d548b8e341ca51a79cd03d0ff5617c"
     ],
     [
       "FStar.Classical.ghost_lemma",
@@ -211,7 +211,7 @@
         "fuel_guarded_inversion_Prims.c_or", "unit_inversion"
       ],
       0,
-      "abba46f328cad1b69ff464dd137f7e4f"
+      "2865c838740aaaf2e81b20a43965b5f0"
     ],
     [
       "FStar.Classical.or_elim",
