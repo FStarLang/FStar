@@ -159,7 +159,7 @@ unfold let op_Greater_Equals_Hat = gte
 unfold let op_Less_Hat = lt
 unfold let op_Less_Equals_Hat = lte
 
-abstract inline_for_extraction
+inline_for_extraction
 let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
   let mask = a >>>^ UInt32.uint_to_t (n - 1) in
   if 0 <= v a then
