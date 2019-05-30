@@ -42,7 +42,7 @@ let write_ok (h:heap) (r:addr) (n:t) =
   let c = (Write r n) in
   let p = fun _ h -> sel h r == n in
   let post = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (h `contains` r ==> post) solve
+  assert (h `contains` r ==> post) by solve ()
 
 (*
  * Read r into n, Write n + 1 to r, then sel h r = n + 1
@@ -51,7 +51,7 @@ let increment_ok (h:heap) (r:addr) (n:t) =
   let c = Bind (Read r) (fun n -> Write r (n +?^ 1uL)) in
   let p = fun _ h -> (sel h r == n +?^ 1uL) in
   let post = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (h `contains` r /\ sel h r == n ==> post) solve
+  assert (h `contains` r /\ sel h r == n ==> post) by solve ()
 
 (*
  * Swapping two refs
@@ -60,14 +60,14 @@ let swap_ok (r1:addr) (r2:addr) (h:heap) (a:t) (b:t) =
   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
   let p = fun _ h -> (sel h r1 == b /\ sel h r2 == a) in
   let post = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (h `contains` r1 /\  h `contains` r2 /\ addr_of r1 <> addr_of r2 /\ sel h r1 == a /\ sel h r2 == b ==> post) solve
+  assert (h `contains` r1 /\  h `contains` r2 /\ addr_of r1 <> addr_of r2 /\ sel h r1 == a /\ sel h r2 == b ==> post) by solve ()
 
 #reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 let double_increment_ok (r:addr) (h:heap) (n:t{size (v n + 2) FStar.UInt64.n}) =
   let c = Bind (Bind (Read r) (fun y -> Write r (y +?^ 1uL))) (fun _ -> (Bind (Read r) (fun y -> Write r (y +?^ 1uL))))  in
   let p = fun _ h -> sel h r == (n +?^ 2uL) in
   let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (h `contains` r /\ sel h r == n ==> t) solve
+  assert (h `contains` r /\ sel h r == n ==> t) by solve ()
 
 (*
  * This example also goes through but takes a lot of time.
@@ -77,18 +77,18 @@ let double_increment_ok (r:addr) (h:heap) (n:t{size (v n + 2) FStar.UInt64.n}) =
 //   let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in
 //   let p = fun _ h -> (sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i) in
 //   let t = (lift_wpsep (wpsep_command c)) p h in
-//   assert_by_tactic (h `contains` r1 /\ h `contains` r2 /\ h `contains` r3 /\ 
+//   assert (h `contains` r1 /\ h `contains` r2 /\ h `contains` r3 /\ 
 //                     addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\
-// 		    sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve
+// 		    sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) by solve ()
 
 let init_ok (h:heap) =
   let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7uL) (fun _ -> Return r1)) in
   let p = fun r h -> sel h r == 7uL in
   let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic t solve
+  assert t by solve ()
 
 let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
   let c = Bind (Read r1) (fun n1 -> Write r2 (n1)) in
   let p = fun _ h -> (sel h r1 == i /\ sel h r2 == i /\ sel h r3 == k) in
   let post = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (h `contains` r1 /\ h `contains` r2 /\ h `contains` r3 /\ addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\ sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> post) solve
+  assert (h `contains` r1 /\ h `contains` r2 /\ h `contains` r3 /\ addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\ sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> post) by solve ()

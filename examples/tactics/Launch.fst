@@ -22,16 +22,16 @@ open FStar.Tactics
  *)
 
 let _ =
-    assert_by_tactic True
-        (fun () -> let s = launch_process "date" "" "" in
-                   debug ("The date is: <" ^ s ^ ">"))
+    assert True
+        by (let s = launch_process "date" "" "" in
+            debug ("The date is: <" ^ s ^ ">"))
 
 let _ =
-    assert_by_tactic True
-        (fun () -> let s = launch_process "echo" "Hello F*!" "" in
-                   debug ("Greeting: <" ^ s ^ ">"))
+    assert True
+        by (let s = launch_process "echo" "Hello F*!" "" in
+            debug ("Greeting: <" ^ s ^ ">"))
 
 let _ =
-    assert_by_tactic True
-        (fun () -> let s = launch_process "cat" "" "input" in
-                   debug ("Testing input: <" ^ s ^ ">"))
+    assert True
+        by (let s = launch_process "cat" "" "input" in
+            debug ("Testing input: <" ^ s ^ ">"))
