@@ -502,9 +502,6 @@ let collect_one
         match resolve_module_name original_or_working_map key with
         | Some module_name ->
           add_dep deps (dep_edge module_name);
-          if has_interface original_or_working_map module_name
-          && has_implementation original_or_working_map module_name
-          then add_dep mo_roots (UseImplementation module_name);
           true
         | _ ->
           false
