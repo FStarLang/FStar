@@ -24,4 +24,6 @@ let badtm () : Tac term =
                               bv_sort   = (`int);
                               bv_ppname = "ouch"; })))
 let _ =
-    assert_by_tactic True (fun () -> let _ = trytac (fun () -> exact (badtm ())) in trivial ())
+    assert True 
+        by (let _ = trytac (fun () -> exact (badtm ())) in
+             trivial ())

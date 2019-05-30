@@ -22,4 +22,4 @@ let h x = ()
 
 [@(expect_failure [228])]
 let _ =
-    assert_by_tactic False (fun () -> apply (quote h))
+    assert False by (apply (quote h))

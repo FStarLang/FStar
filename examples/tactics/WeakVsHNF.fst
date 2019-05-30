@@ -25,9 +25,8 @@ let guard b =
     then ()
     else fail ("guard failed: " ^ term_to_string (quote b))
 
-let _ = assert_by_tactic True
-        (fun () ->
-             let t0 = `(1 + 1) in
+let _ = assert True
+         by (let t0 = `(1 + 1) in
              debug "";
              debug ("Term  :  " ^ term_to_string t0);
 
@@ -48,9 +47,8 @@ let _ = assert_by_tactic True
              guard (term_eq t (`2))
         )
 
-let _ = assert_by_tactic True
-        (fun () ->
-             let t0 = `(fun () -> 1 + 1) in
+let _ = assert True
+         by (let t0 = `(fun () -> 1 + 1) in
              debug "";
              debug ("Term  :  " ^ term_to_string t0);
 
@@ -73,9 +71,8 @@ let _ = assert_by_tactic True
 
 type wint = | W of int
 
-let _ = assert_by_tactic True
-        (fun () ->
-             let t0 = `(W (1 + 1)) in
+let _ = assert True
+         by (let t0 = `(W (1 + 1)) in
              debug "";
              debug ("Term  :  " ^ term_to_string t0);
 
@@ -96,9 +93,8 @@ let _ = assert_by_tactic True
              guard (term_eq t (`(W (1 + 1))))
         )
 
-let _ = assert_by_tactic True
-        (fun () ->
-             let t0 = `(fun () -> W (1 + 1)) in
+let _ = assert True
+         by (let t0 = `(fun () -> W (1 + 1)) in
              debug "";
              debug ("Term  :  " ^ term_to_string t0);
 

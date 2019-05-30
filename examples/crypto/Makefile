@@ -85,20 +85,20 @@ CONTRIB_LIBS=$(FSTAR_HOME)/ucontrib/CoreCrypto/ml/CoreCrypto.cmxa
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
-#OCAMLC automatically contains fstarlib
+#OCAMLOPT automatically contains fstarlib
 SUPPORT_LIBS=$(FSTARLIB_DIR)/fstarlib.cmxa
 
 $(CONTRIB_LIBS):
 	$(MAKE) -C $(FSTAR_HOME)/ucontrib/
 
 RPC.exe: RPC.ml $(CONTRIB_LIBS)
-	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(CONTRIB_LIBS) SHA1.ml MAC.ml Formatting.ml RPC.ml
+	$(OCAMLOPT) -thread -o $@ $(OCAML_INCLUDE_PATHS) $(CONTRIB_LIBS) SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 rpc-test: RPC.exe
 	$(EXTRA_PATH) ./RPC.exe
 
 CntProtocol.exe: CntProtocol.ml $(CONTRIB_LIBS)
-	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(CONTRIB_LIBS) SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
+	$(OCAMLOPT) -thread -o $@ $(OCAML_INCLUDE_PATHS) $(CONTRIB_LIBS) SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
 
 cnt-test: CntProtocol.exe
 	$(EXTRA_PATH) ./CntProtocol.exe
