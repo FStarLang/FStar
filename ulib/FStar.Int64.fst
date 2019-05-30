@@ -21,6 +21,8 @@ unfold let n = 64
 open FStar.Int
 open FStar.Mul
 
+#set-options "--max_fuel 0 --max_ifuel 0"
+
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
 
@@ -126,6 +128,12 @@ let shift_left (a:t) (s:UInt32.t) : Pure t
   (ensures (fun c -> FStar.Int.shift_left (v a) (UInt32.v s) = v c))
   = Mk (shift_left (v a) (UInt32.v s))
 
+abstract
+let shift_arithmetic_right (a:t) (s:UInt32.t) : Pure t
+  (requires (UInt32.v s < n))
+  (ensures (fun c -> FStar.Int.shift_arithmetic_right (v a) (UInt32.v s) = v c))
+  = Mk (shift_arithmetic_right (v a) (UInt32.v s))
+
 (* Comparison operators *)
 let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
 let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
@@ -144,11 +152,32 @@ unfold let op_Amp_Hat = logand
 unfold let op_Bar_Hat = logor
 unfold let op_Less_Less_Hat = shift_left
 unfold let op_Greater_Greater_Hat = shift_right
+unfold let op_Greater_Greater_Greater_Hat = shift_arithmetic_right
 unfold let op_Equals_Hat = eq
 unfold let op_Greater_Hat = gt
 unfold let op_Greater_Equals_Hat = gte
 unfold let op_Less_Hat = lt
 unfold let op_Less_Equals_Hat = lte
+
+abstract inline_for_extraction
+val ct_abs: a:t{min_int n < v a} -> b:t{v b = abs (v a)}
+let ct_abs a =
+  let mask = a >>>^ UInt32.uint_to_t (n - 1) in
+  if 0 <= v a then
+    begin
+    sign_bit_positive (v a);
+    nth_lemma (v mask) (zero _);
+    logxor_lemma_1 (v a)
+    end
+  else
+    begin
+    sign_bit_negative (v a);
+    nth_lemma (v mask) (ones _);
+    logxor_lemma_2 (v a);
+    lognot_negative (v a);
+    UInt.lemma_lognot_value #n (to_uint (v a))
+    end;
+  (a ^^ mask) -^ mask
 
 (* To input / output constants *)
 assume val to_string: t -> Tot string
