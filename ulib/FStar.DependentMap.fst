@@ -47,7 +47,7 @@ abstract let sel_create
 : Lemma
   (requires True)
   (ensures (sel #key #value (create f) k == f k))
-  [SMTPat (sel (create f) k)]
+  [SMTPat (sel #key #value (create f) k)]
 = ()
 
 abstract let upd
@@ -249,7 +249,7 @@ abstract let sel_map
 : Lemma
   (requires True)
   (ensures (sel (map f m) k == f k (sel m k)))
-  [SMTPat (sel (map f m) k)]
+  [SMTPat (sel #key #value2 (map #key #value1 #value2 f m) k)]
 = ()
 
 abstract let map_upd
@@ -262,5 +262,5 @@ abstract let map_upd
 : Lemma
   (requires True)
   (ensures (map f (upd m k v) == upd (map f m) k (f k v)))
-  [SMTPat (map f (upd m k v))]  //AR: wanted to write an SMTPatOr, but gives some error
+  [SMTPat (map #key #value1 #value2 f (upd #key #value1 m k v))]  //AR: wanted to write an SMTPatOr, but gives some error
 = equal_elim #key #value2 (map f (upd m k v)) (upd (map f m) k (f k v))
