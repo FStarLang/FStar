@@ -133,13 +133,12 @@ type dependence_graph = //maps file names to the modules it depends on
  *)
 type parsing_data = {
   direct_deps              : list<dependence>;  //direct dependences of the file
-  additional_roots         : list<dependence>;  //additional "roots" that should be scanned
-                                                //i.e. implementations of interfaces in the first list
+                                                //we no longer stote the additional roots, i.e. implementations of interfaces in the first list
+                                                //in the cache, see #1657
   has_inline_for_extraction: bool;              //if it is an interface that contains an `inline_for_extraction`
 }
 let empty_parsing_data = {
   direct_deps = [];
-  additional_roots = [];
   has_inline_for_extraction = false
 }
 
@@ -471,13 +470,23 @@ let collect_one
   (original_map: files_for_module_name)
   (filename: string)
   (get_parsing_data_from_cache:string -> option<parsing_data>)
-  : parsing_data
+  : parsing_data * list<dependence>  //the second return value is additional roots
+                                     //that used to be part of parsing_data earlier
+                                     //removing it from the cache (#1657)
+                                     //this always returns a single element, remove the list?
 =
+  let mo_roots =
+    let mname = lowercase_module_name filename in
+    if is_interface filename
+    && has_implementation original_map mname
+    then [ UseImplementation mname ]
+    else [] in
+
   let data_from_cache = filename |> get_parsing_data_from_cache in
   if data_from_cache |> is_some then begin
     if Options.debug_any ()
     then BU.print1 "Reading parsing data for %s from its checked file\n" filename;
-    data_from_cache |> must
+    data_from_cache |> must, mo_roots
   end
   else
       let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
@@ -848,17 +857,11 @@ let collect_one
 
       in
       let ast, _ = Driver.parse_file filename in
-      let mname = lowercase_module_name filename in
-      let mo_roots =
-        if is_interface filename
-        && has_implementation original_map mname
-        then [ UseImplementation mname ]
-        else [] in
       collect_module ast;
       (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
       { direct_deps = !deps;
-        additional_roots = mo_roots;
-        has_inline_for_extraction = !has_inline_for_extraction }
+        has_inline_for_extraction = !has_inline_for_extraction },
+      mo_roots
 
 
 (* JP: it looks like the code was changed but the comments were never updated.
@@ -1095,13 +1098,12 @@ let collect (all_cmd_line_files: list<file_name>)
         match BU.smap_try_find !collect_one_cache file_name with
         | Some cached -> cached
         | None ->
-          let r = collect_one file_system_map file_name get_parsing_data_from_cache in
-          r.direct_deps, r.additional_roots, r.has_inline_for_extraction in
+          let r, additional_roots = collect_one file_system_map file_name get_parsing_data_from_cache in
+          r.direct_deps, additional_roots, r.has_inline_for_extraction in
       if needs_interface_inlining
       then add_interface_for_inlining file_name;
       BU.smap_add parse_results file_name ({
         direct_deps = deps;
-        additional_roots = mo_roots;
         has_inline_for_extraction = needs_interface_inlining });
       let deps =
           let module_name = lowercase_module_name file_name in
