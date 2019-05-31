@@ -821,7 +821,7 @@ let u32_32 : x:U32.t{U32.v x == 32} = U32.uint_to_t 32
 let u32_combine (hi lo: U64.t) : Pure U64.t
   (requires (U64.v lo < pow2 32))
   (ensures (fun r -> U64.v r = U64.v hi % pow2 32 * pow2 32 + U64.v lo)) =
-  U64.add lo (U64.shift_left hi u32_32)
+  admit(); U64.add lo (U64.shift_left hi u32_32)
 
 // generalization of Math.lemma_mult_le_left (relaxed bounds on arguments)
 val lemma_mult_le_left: a:nat -> b:int -> c:int -> Lemma
