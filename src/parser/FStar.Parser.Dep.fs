@@ -481,7 +481,6 @@ let collect_one
   end
   else
       let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
-      let mo_roots : ref<(list<dependence>)> = BU.mk_ref [] in
       let has_inline_for_extraction = BU.mk_ref false in
       let set_interface_inlining () =
           if is_interface filename
@@ -850,13 +849,15 @@ let collect_one
       in
       let ast, _ = Driver.parse_file filename in
       let mname = lowercase_module_name filename in
-      if is_interface filename
-      && has_implementation original_map mname
-      then add_dep mo_roots (UseImplementation mname);
+      let mo_roots =
+        if is_interface filename
+        && has_implementation original_map mname
+        then [ UseImplementation mname ]
+        else [] in
       collect_module ast;
       (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
       { direct_deps = !deps;
-        additional_roots = !mo_roots;
+        additional_roots = mo_roots;
         has_inline_for_extraction = !has_inline_for_extraction }
 
 
@@ -1136,8 +1137,30 @@ let collect (all_cmd_line_files: list<file_name>)
      boundaries that can otherwise be exploited to
      build cross-module recursive loops, as in issue #1391
   *)
-  let full_cycle_detection all_command_line_files =
+  let full_cycle_detection all_command_line_files file_system_map =
     let dep_graph = dep_graph_copy dep_graph in
+
+    (*
+     * The cycle detection code considers all_command_line_files
+     *   as roots to perform full cycle detection. As a result,
+     *   all command line files, and their transitive dependences
+     *   are considered. However, this misses the cycles through .fst
+     *   as in the issue #1391, IF only .fsti is given on the command
+     *   line. This is even more a problem in invocations like:
+     *   fstar A.fsti --dep full, which dumps the .depend, while not
+     *   noticing the cycle.
+     *
+     * A fix for this issue is to record in mo_files the implementations
+     *   of command line interfaces whose implementations are not on the
+     *   command line, and consider them also for cycle detection.
+     *
+     * Right now this is done even in the case of fstar A.fsti
+     *   we can consider using mo_files only in the case of
+     *   --dep invocations.
+     *)
+    let mo_files : ref<list<string> > = BU.mk_ref [] in
+
+
     let rec aux (cycle:list<file_name>) filename =
         let node =
             match deps_try_find dep_graph filename with
@@ -1178,11 +1201,25 @@ let collect (all_cmd_line_files: list<file_name>)
                                       all_command_line_files
                                       filename);
             (* Mutate the graph (to mark the node as visited) *)
-            deps_add_dep dep_graph filename ({node with edges=direct_deps; color=Black})
+            deps_add_dep dep_graph filename ({node with edges=direct_deps; color=Black});
+
+            (*
+             * If the file is an interface, and its implementation exists, and the implementation
+             *   is not on the command line, add it to mo_files
+             *)
+            if is_interface filename
+            then iter_opt
+                  (implementation_of_internal file_system_map (lowercase_module_name filename))
+                  (fun impl -> if not (List.contains impl all_command_line_files)
+                               then mo_files := impl::!mo_files
+                               else ())
+            else ()
       in
-      List.iter (aux []) all_command_line_files
+      List.iter (aux []) all_command_line_files;
+      (* Detect cycles via mo_files *)
+      List.iter (aux []) !mo_files
   in
-  full_cycle_detection all_cmd_line_files;
+  full_cycle_detection all_cmd_line_files file_system_map;
 
   //only verify those files on the command line
   all_cmd_line_files |>
