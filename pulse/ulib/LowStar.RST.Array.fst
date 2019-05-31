@@ -50,19 +50,21 @@ let reveal_array ()
              sel (array_view ptr) h == B.as_seq h ptr)) = 
   ()
 
-let index (#a:Type) (ptr:B.buffer a) (i:UInt32.t{UInt32.v i < B.length ptr})
+let index (#a:Type) (ptr:B.buffer a) (i:UInt32.t)
   : RST a (array_resource ptr)
           (fun _ -> array_resource ptr)
-          (fun _ -> True)
-          (fun h0 x h1 -> Seq.index (sel (array_view ptr) h0) (UInt32.v i) == x /\
+          (fun _ -> UInt32.v i < B.length ptr)
+          (fun h0 x h1 ->
+             UInt32.v i < B.length ptr /\
+             Seq.index (sel (array_view ptr) h0) (UInt32.v i) == x /\
                      sel (array_view ptr) h0 == sel (array_view ptr) h1)
   = B.index ptr i
 
-let upd (#a:Type) (ptr:B.buffer a) (i:UInt32.t{UInt32.v i < B.length ptr}) (v:a)
+let upd (#a:Type) (ptr:B.buffer a) (i:UInt32.t) (v:a)
   : RST unit (array_resource ptr)
              (fun _ -> array_resource ptr)
-             (fun _ -> True)
-             (fun h0 _ h1 ->
+             (fun _ -> UInt32.v i < B.length ptr)
+             (fun h0 _ h1 -> UInt32.v i < B.length ptr /\
                sel (array_view ptr) h1 == 
                  Seq.upd (sel (array_view ptr) h0) (UInt32.v i) v)
   =
@@ -70,10 +72,10 @@ let upd (#a:Type) (ptr:B.buffer a) (i:UInt32.t{UInt32.v i < B.length ptr}) (v:a)
   reveal_modifies();
   B.upd ptr i v
 
-let malloc (#a:Type) (init:a) (len:UInt32.t{UInt32.v len > 0})
+let malloc (#a:Type) (init:a) (len:UInt32.t)
   : RST (B.buffer a) (empty_resource)
                      (fun ptr -> array_resource ptr)
-                     (fun _ -> True)
+                     (fun _ -> UInt32.v len > 0)
                      (fun _ ptr h1 -> sel (array_view ptr) h1 == Seq.create (UInt32.v len) init)
   = 
   reveal_rst_inv();
