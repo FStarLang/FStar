@@ -120,7 +120,7 @@ type lquery =
 | Initialized
 | Shutdown
 | Exit
-| Cancel of string
+| Cancel of int
 | FolderChange of wsch_event
 | ChangeConfig
 | ChangeWatch
@@ -275,3 +275,7 @@ let js_loclink r =
   let s = JsonAssoc [("start", js_pos (start_of_range r)); ("end", js_pos (end_of_range r))] in
   JsonList [JsonAssoc [("targetUri", JsonStr (path_to_uri (file_of_range r)));
                        ("targetRange", s); ("targetSelectionRange", s)]]
+
+// Lines are 0-indexed in LSP, but 1-indexed in the F* Typechecker;
+// further, LSP uses uris while the F* Typechecker uses paths
+let pos_munge (pos : txdoc_pos) = (uri_to_path pos.uri, pos.line + 1, pos.col)

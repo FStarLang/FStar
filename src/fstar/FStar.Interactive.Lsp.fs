@@ -32,7 +32,7 @@ let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
           | "initialized" -> Initialized
           | "shutdown" -> Shutdown
           | "exit" -> Exit
-          | "$/cancelRequest" -> Cancel (arg "id" r |> js_str)
+          | "$/cancelRequest" -> Cancel (arg "id" r |> js_str_int)
           | "workspace/didChangeWorkspaceFolders" -> FolderChange
                                                      (arg "event" r |> js_wsch_event)
           | "workspace/didChangeConfiguration" -> ChangeConfig

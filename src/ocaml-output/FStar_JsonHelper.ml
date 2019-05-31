@@ -267,7 +267,7 @@ type lquery =
   | Initialized 
   | Shutdown 
   | Exit 
-  | Cancel of Prims.string 
+  | Cancel of Prims.int 
   | FolderChange of wsch_event 
   | ChangeConfig 
   | ChangeWatch 
@@ -320,7 +320,7 @@ let (uu___is_Exit : lquery -> Prims.bool) =
 let (uu___is_Cancel : lquery -> Prims.bool) =
   fun projectee ->
     match projectee with | Cancel _0 -> true | uu____1206 -> false
-let (__proj__Cancel__item___0 : lquery -> Prims.string) =
+let (__proj__Cancel__item___0 : lquery -> Prims.int) =
   fun projectee -> match projectee with | Cancel _0 -> _0
 let (uu___is_FolderChange : lquery -> Prims.bool) =
   fun projectee ->
@@ -773,3 +773,7 @@ let (js_loclink : FStar_Range.range -> FStar_Util.json) =
         FStar_Util.JsonAssoc uu____2957 in
       [uu____2956] in
     FStar_Util.JsonList uu____2953
+let (pos_munge : txdoc_pos -> (Prims.string * Prims.int * Prims.int)) =
+  fun pos ->
+    let uu____3017 = uri_to_path pos.uri in
+    (uu____3017, (pos.line + (Prims.parse_int "1")), (pos.col))

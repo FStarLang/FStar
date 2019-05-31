@@ -847,18 +847,8 @@ let run_lookup st symbol context pos_opt requested_info =
   | Inr (kind, info) ->
     ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
 
-let code_autocomplete_mod_filter = function
-  | _, CTable.Namespace _
-  | _, CTable.Module { CTable.mod_loaded = true } -> None
-  | pth, CTable.Module md ->
-    Some (pth, CTable.Module ({ md with CTable.mod_name = CTable.mod_name md ^ "." }))
-
 let run_code_autocomplete st search_term =
-  let needle = Util.split search_term "." in
-  let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle code_autocomplete_mod_filter in
-  let lids = CTable.autocomplete_lid st.repl_names needle in
-  let json = List.map CTable.json_of_completion_result (lids @ mods_and_nss) in
-  ((QueryOK, JsonList json), Inl st)
+  ((QueryOK, QH.ck_completion st search_term), Inl st)
 
 let run_module_autocomplete st search_term modules namespaces =
   let needle = Util.split search_term "." in

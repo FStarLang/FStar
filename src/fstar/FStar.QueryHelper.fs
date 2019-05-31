@@ -12,6 +12,7 @@ module U = FStar.Util
 module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
+module CTable = FStar.Interactive.CompletionTable
 
 type position = string * int * int
 type sl_reponse = { slr_name: string;
@@ -78,19 +79,32 @@ let symlookup tcenv symbol pos_opt requested_info =
       Some ({ slr_name = name; slr_def_range = def_range;
              slr_typ = typ_str; slr_doc = doc_str; slr_def = def_str })
 
+let mod_filter = function
+  | _, CTable.Namespace _
+  | _, CTable.Module { CTable.mod_loaded = true } -> None
+  | pth, CTable.Module md ->
+    Some (pth, CTable.Module ({ md with CTable.mod_name = CTable.mod_name md ^ "." }))
+
+let ck_completion st search_term =
+  let needle = U.split search_term "." in
+  let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle mod_filter in
+  let lids = CTable.autocomplete_lid st.repl_names needle in
+  let json = List.map CTable.json_of_completion_result (lids @ mods_and_nss) in
+  JsonList json
+
 let deflookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
-  // Lines are 0-indexed in LSP, but 1-indexed in the F* Typechecker
-  match symlookup st "" (Some (uri_to_path pos.uri, pos.line + 1, pos.col)) ["defined-at"] with
+  match symlookup st "" (Some (pos_munge pos)) ["defined-at"] with
   | Some { slr_name = _; slr_def_range = (Some r); slr_typ = _; slr_doc = _; slr_def = _ } ->
       Inl (js_loclink r)
-  | _ -> Inr (js_resperr InternalError "symlookup for def failed")
+  | _ -> Inl JsonNull
 
 // A hover-provider provides both the type and the definition of a given symbol
 let hoverlookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
-  let pos = (uri_to_path pos.uri, pos.line + 1, pos.col) in
-  match symlookup st "" (Some pos) ["type"; "definition"] with
+  match symlookup st "" (Some (pos_munge pos)) ["type"; "definition"] with
   | Some { slr_name = n; slr_def_range = _; slr_typ = (Some t); slr_doc = _; slr_def = (Some d) } ->
-    let hovertxt = U.format2 "%s\n---\n```fstar\n%s\n```" t d in
+    let hovertxt = U.format2 "```fstar\n%s\n````\n---\n```fstar\n%s\n```" t d in
     Inl (JsonAssoc [("contents", JsonAssoc [("kind", JsonStr "markdown");
                                             ("value", JsonStr hovertxt)])])
-  | _ -> Inr (js_resperr InternalError "symlookup for hover failed")
+  | _ -> Inl JsonNull
+
+let complookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> = Inl JsonNull

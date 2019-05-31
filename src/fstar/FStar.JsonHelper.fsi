@@ -55,7 +55,7 @@ type lquery =
 | Initialized
 | Shutdown
 | Exit
-| Cancel of string
+| Cancel of int
 | FolderChange of wsch_event
 | ChangeConfig
 | ChangeWatch
@@ -152,3 +152,4 @@ val js_resperr : error_code -> string -> json
 val wrap_content_szerr : string -> lsp_query
 val js_servcap : json
 val js_loclink : Range.range -> json
+val pos_munge : txdoc_pos -> string * int * int

@@ -32,7 +32,8 @@ let (unpack_lsp_query :
                | "$/cancelRequest" ->
                    let uu____67 =
                      let uu____69 = FStar_JsonHelper.arg "id" r in
-                     FStar_All.pipe_right uu____69 FStar_JsonHelper.js_str in
+                     FStar_All.pipe_right uu____69
+                       FStar_JsonHelper.js_str_int in
                    FStar_JsonHelper.Cancel uu____67
                | "workspace/didChangeWorkspaceFolders" ->
                    let uu____73 =
