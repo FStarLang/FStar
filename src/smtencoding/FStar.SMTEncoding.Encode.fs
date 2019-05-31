@@ -79,6 +79,7 @@ let prims =
         [xname_decl;
          xtok_decl;
          Util.mkAssume(mkForall rng ([[xapp]], vars, mkEq(xapp, body)), None, "primitive_" ^x);
+         Util.mkAssume(mk_IsTotFun xtok, None, "primitive_tot_fun_" ^x);
          Util.mkAssume(mkForall rng ([[xtok_app]],
                      vars,
                      mkEq(xtok_app, xapp)),
