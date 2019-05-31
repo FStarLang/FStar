@@ -415,6 +415,11 @@ open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list<string> =
     Ident.path_of_lid e.curmodule
 
+let env_open_modules (e : Env.env) : list<name> =
+    List.map (fun (l, m) -> List.map Ident.text_of_id (Ident.ids_of_lid l))
+             (DsEnv.open_modules e.dsenv)
+
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
 let term_to_string t = Print.term_to_string t
+let comp_to_string c = Print.comp_to_string c

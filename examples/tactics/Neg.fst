@@ -30,7 +30,7 @@ assume val c1 : unit -> ST unit (requires (fun h0 -> phi)) (ensures (fun h0 () h
 assume val c2 : unit -> ST unit (requires (fun h0 -> psi)) (ensures (fun h0 () h1 ->  xi))
 
 val c3 : unit -> ST unit (requires (fun h0 -> phi)) (ensures (fun h0 () h1 -> xi))
-let c3 () = c1 (); c2 (); assert_by_tactic xi idtac
+let c3 () = c1 (); c2 (); assert xi by idtac ()
 
 // with_tactic is in negative position, should be peeled off!
 val c4 : unit -> ST unit (requires (fun h0 -> phi)) (ensures (fun h0 () h1 -> xi))

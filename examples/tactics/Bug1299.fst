@@ -35,9 +35,9 @@ let make_term () : Tac term =
   pack (Tv_Abs binder (mk_app id_tm [(mk_app failing_tm [(tt_tm, Q_Explicit)], Q_Explicit)]))
 
 let test : unit =
-  assert_by_tactic True
-    (fun () -> should_fail (fun () -> let tm = make_term () in
-                                      let normalized_tm = norm_term [delta] tm in
-                                      debug ("n = " ^ term_to_string normalized_tm);
-                                      let t = unquote #(unit -> Tac unit) normalized_tm in
-                                      t ()))
+  assert True
+      by (should_fail (fun () -> let tm = make_term () in
+                                 let normalized_tm = norm_term [delta] tm in
+                                 debug ("n = " ^ term_to_string normalized_tm);
+                                 let t = unquote #(unit -> Tac unit) normalized_tm in
+                                 t ()))

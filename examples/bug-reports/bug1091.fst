@@ -94,10 +94,10 @@ let rec apr19_2017_mem #a x xs =
 
 [@ (expect_failure [19;19;19;19])]
 let apr19_2017_mem_sanity_fail #a x xs =
-        assert_by_tactic (apr19_2017_mem x xs <==> apr19_2017_mem x xs) idtac
+        assert (apr19_2017_mem x xs <==> apr19_2017_mem x xs) by idtac ()
 
 let apr19_2017_mem_sanity (#a:eqtype) (x:a) xs =
-        assert_by_tactic (apr19_2017_mem x xs <==> apr19_2017_mem x xs) idtac
+        assert (apr19_2017_mem x xs <==> apr19_2017_mem x xs) by idtac ()
 
 ////////////////////////////////////////////////////////////////////////////////
 //April 21, 2017
