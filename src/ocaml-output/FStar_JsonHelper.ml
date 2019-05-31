@@ -279,7 +279,7 @@ type lquery =
   | WillSaveWait of Prims.string 
   | DidSave of Prims.string 
   | DidClose of Prims.string 
-  | Completion of completion_context 
+  | Completion of (txdoc_pos * completion_context) 
   | Resolve 
   | Hover of txdoc_pos 
   | SignatureHelp of txdoc_pos 
@@ -306,164 +306,165 @@ type lquery =
   | BadProtocolMsg of Prims.string 
 let (uu___is_Initialize : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Initialize _0 -> true | uu____1135 -> false
+    match projectee with | Initialize _0 -> true | uu____1139 -> false
 let (__proj__Initialize__item___0 : lquery -> (Prims.int * Prims.string)) =
   fun projectee -> match projectee with | Initialize _0 -> _0
 let (uu___is_Initialized : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Initialized -> true | uu____1171 -> false
+    match projectee with | Initialized -> true | uu____1175 -> false
 let (uu___is_Shutdown : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Shutdown -> true | uu____1182 -> false
+    match projectee with | Shutdown -> true | uu____1186 -> false
 let (uu___is_Exit : lquery -> Prims.bool) =
-  fun projectee -> match projectee with | Exit -> true | uu____1193 -> false
+  fun projectee -> match projectee with | Exit -> true | uu____1197 -> false
 let (uu___is_Cancel : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Cancel _0 -> true | uu____1206 -> false
+    match projectee with | Cancel _0 -> true | uu____1210 -> false
 let (__proj__Cancel__item___0 : lquery -> Prims.int) =
   fun projectee -> match projectee with | Cancel _0 -> _0
 let (uu___is_FolderChange : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | FolderChange _0 -> true | uu____1228 -> false
+    match projectee with | FolderChange _0 -> true | uu____1232 -> false
 let (__proj__FolderChange__item___0 : lquery -> wsch_event) =
   fun projectee -> match projectee with | FolderChange _0 -> _0
 let (uu___is_ChangeConfig : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | ChangeConfig -> true | uu____1246 -> false
+    match projectee with | ChangeConfig -> true | uu____1250 -> false
 let (uu___is_ChangeWatch : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | ChangeWatch -> true | uu____1257 -> false
+    match projectee with | ChangeWatch -> true | uu____1261 -> false
 let (uu___is_Symbol : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Symbol _0 -> true | uu____1270 -> false
+    match projectee with | Symbol _0 -> true | uu____1274 -> false
 let (__proj__Symbol__item___0 : lquery -> Prims.string) =
   fun projectee -> match projectee with | Symbol _0 -> _0
 let (uu___is_ExecCommand : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | ExecCommand _0 -> true | uu____1293 -> false
+    match projectee with | ExecCommand _0 -> true | uu____1297 -> false
 let (__proj__ExecCommand__item___0 : lquery -> Prims.string) =
   fun projectee -> match projectee with | ExecCommand _0 -> _0
 let (uu___is_DidOpen : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | DidOpen _0 -> true | uu____1315 -> false
+    match projectee with | DidOpen _0 -> true | uu____1319 -> false
 let (__proj__DidOpen__item___0 : lquery -> txdoc_item) =
   fun projectee -> match projectee with | DidOpen _0 -> _0
 let (uu___is_DidChange : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | DidChange -> true | uu____1333 -> false
+    match projectee with | DidChange -> true | uu____1337 -> false
 let (uu___is_WillSave : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | WillSave _0 -> true | uu____1346 -> false
+    match projectee with | WillSave _0 -> true | uu____1350 -> false
 let (__proj__WillSave__item___0 : lquery -> Prims.string) =
   fun projectee -> match projectee with | WillSave _0 -> _0
 let (uu___is_WillSaveWait : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | WillSaveWait _0 -> true | uu____1369 -> false
+    match projectee with | WillSaveWait _0 -> true | uu____1373 -> false
 let (__proj__WillSaveWait__item___0 : lquery -> Prims.string) =
   fun projectee -> match projectee with | WillSaveWait _0 -> _0
 let (uu___is_DidSave : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | DidSave _0 -> true | uu____1392 -> false
+    match projectee with | DidSave _0 -> true | uu____1396 -> false
 let (__proj__DidSave__item___0 : lquery -> Prims.string) =
   fun projectee -> match projectee with | DidSave _0 -> _0
 let (uu___is_DidClose : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | DidClose _0 -> true | uu____1415 -> false
+    match projectee with | DidClose _0 -> true | uu____1419 -> false
 let (__proj__DidClose__item___0 : lquery -> Prims.string) =
   fun projectee -> match projectee with | DidClose _0 -> _0
 let (uu___is_Completion : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Completion _0 -> true | uu____1437 -> false
-let (__proj__Completion__item___0 : lquery -> completion_context) =
+    match projectee with | Completion _0 -> true | uu____1445 -> false
+let (__proj__Completion__item___0 :
+  lquery -> (txdoc_pos * completion_context)) =
   fun projectee -> match projectee with | Completion _0 -> _0
 let (uu___is_Resolve : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Resolve -> true | uu____1455 -> false
+    match projectee with | Resolve -> true | uu____1475 -> false
 let (uu___is_Hover : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Hover _0 -> true | uu____1467 -> false
+    match projectee with | Hover _0 -> true | uu____1487 -> false
 let (__proj__Hover__item___0 : lquery -> txdoc_pos) =
   fun projectee -> match projectee with | Hover _0 -> _0
 let (uu___is_SignatureHelp : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | SignatureHelp _0 -> true | uu____1486 -> false
+    match projectee with | SignatureHelp _0 -> true | uu____1506 -> false
 let (__proj__SignatureHelp__item___0 : lquery -> txdoc_pos) =
   fun projectee -> match projectee with | SignatureHelp _0 -> _0
 let (uu___is_Declaration : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Declaration _0 -> true | uu____1505 -> false
+    match projectee with | Declaration _0 -> true | uu____1525 -> false
 let (__proj__Declaration__item___0 : lquery -> txdoc_pos) =
   fun projectee -> match projectee with | Declaration _0 -> _0
 let (uu___is_Definition : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Definition _0 -> true | uu____1524 -> false
+    match projectee with | Definition _0 -> true | uu____1544 -> false
 let (__proj__Definition__item___0 : lquery -> txdoc_pos) =
   fun projectee -> match projectee with | Definition _0 -> _0
 let (uu___is_TypeDefinition : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | TypeDefinition _0 -> true | uu____1543 -> false
+    match projectee with | TypeDefinition _0 -> true | uu____1563 -> false
 let (__proj__TypeDefinition__item___0 : lquery -> txdoc_pos) =
   fun projectee -> match projectee with | TypeDefinition _0 -> _0
 let (uu___is_Implementation : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Implementation _0 -> true | uu____1562 -> false
+    match projectee with | Implementation _0 -> true | uu____1582 -> false
 let (__proj__Implementation__item___0 : lquery -> txdoc_pos) =
   fun projectee -> match projectee with | Implementation _0 -> _0
 let (uu___is_References : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | References -> true | uu____1580 -> false
+    match projectee with | References -> true | uu____1600 -> false
 let (uu___is_DocumentHighlight : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | DocumentHighlight _0 -> true | uu____1592 -> false
+    match projectee with | DocumentHighlight _0 -> true | uu____1612 -> false
 let (__proj__DocumentHighlight__item___0 : lquery -> txdoc_pos) =
   fun projectee -> match projectee with | DocumentHighlight _0 -> _0
 let (uu___is_DocumentSymbol : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | DocumentSymbol -> true | uu____1610 -> false
+    match projectee with | DocumentSymbol -> true | uu____1630 -> false
 let (uu___is_CodeAction : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | CodeAction -> true | uu____1621 -> false
+    match projectee with | CodeAction -> true | uu____1641 -> false
 let (uu___is_CodeLens : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | CodeLens -> true | uu____1632 -> false
+    match projectee with | CodeLens -> true | uu____1652 -> false
 let (uu___is_CodeLensResolve : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | CodeLensResolve -> true | uu____1643 -> false
+    match projectee with | CodeLensResolve -> true | uu____1663 -> false
 let (uu___is_DocumentLink : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | DocumentLink -> true | uu____1654 -> false
+    match projectee with | DocumentLink -> true | uu____1674 -> false
 let (uu___is_DocumentLinkResolve : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | DocumentLinkResolve -> true | uu____1665 -> false
+    match projectee with | DocumentLinkResolve -> true | uu____1685 -> false
 let (uu___is_DocumentColor : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | DocumentColor -> true | uu____1676 -> false
+    match projectee with | DocumentColor -> true | uu____1696 -> false
 let (uu___is_ColorPresentation : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | ColorPresentation -> true | uu____1687 -> false
+    match projectee with | ColorPresentation -> true | uu____1707 -> false
 let (uu___is_Formatting : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Formatting -> true | uu____1698 -> false
+    match projectee with | Formatting -> true | uu____1718 -> false
 let (uu___is_RangeFormatting : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | RangeFormatting -> true | uu____1709 -> false
+    match projectee with | RangeFormatting -> true | uu____1729 -> false
 let (uu___is_TypeFormatting : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | TypeFormatting -> true | uu____1720 -> false
+    match projectee with | TypeFormatting -> true | uu____1740 -> false
 let (uu___is_Rename : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | Rename -> true | uu____1731 -> false
+    match projectee with | Rename -> true | uu____1751 -> false
 let (uu___is_PrepareRename : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | PrepareRename _0 -> true | uu____1743 -> false
+    match projectee with | PrepareRename _0 -> true | uu____1763 -> false
 let (__proj__PrepareRename__item___0 : lquery -> txdoc_pos) =
   fun projectee -> match projectee with | PrepareRename _0 -> _0
 let (uu___is_FoldingRange : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | FoldingRange -> true | uu____1761 -> false
+    match projectee with | FoldingRange -> true | uu____1781 -> false
 let (uu___is_BadProtocolMsg : lquery -> Prims.bool) =
   fun projectee ->
-    match projectee with | BadProtocolMsg _0 -> true | uu____1774 -> false
+    match projectee with | BadProtocolMsg _0 -> true | uu____1794 -> false
 let (__proj__BadProtocolMsg__item___0 : lquery -> Prims.string) =
   fun projectee -> match projectee with | BadProtocolMsg _0 -> _0
 type lsp_query =
@@ -495,30 +496,30 @@ type repl_task =
   | Noop 
 let (uu___is_LDInterleaved : repl_task -> Prims.bool) =
   fun projectee ->
-    match projectee with | LDInterleaved _0 -> true | uu____1903 -> false
+    match projectee with | LDInterleaved _0 -> true | uu____1923 -> false
 let (__proj__LDInterleaved__item___0 :
   repl_task -> (timed_fname * timed_fname)) =
   fun projectee -> match projectee with | LDInterleaved _0 -> _0
 let (uu___is_LDSingle : repl_task -> Prims.bool) =
   fun projectee ->
-    match projectee with | LDSingle _0 -> true | uu____1934 -> false
+    match projectee with | LDSingle _0 -> true | uu____1954 -> false
 let (__proj__LDSingle__item___0 : repl_task -> timed_fname) =
   fun projectee -> match projectee with | LDSingle _0 -> _0
 let (uu___is_LDInterfaceOfCurrentFile : repl_task -> Prims.bool) =
   fun projectee ->
     match projectee with
     | LDInterfaceOfCurrentFile _0 -> true
-    | uu____1953 -> false
+    | uu____1973 -> false
 let (__proj__LDInterfaceOfCurrentFile__item___0 : repl_task -> timed_fname) =
   fun projectee -> match projectee with | LDInterfaceOfCurrentFile _0 -> _0
 let (uu___is_PushFragment : repl_task -> Prims.bool) =
   fun projectee ->
-    match projectee with | PushFragment _0 -> true | uu____1972 -> false
+    match projectee with | PushFragment _0 -> true | uu____1992 -> false
 let (__proj__PushFragment__item___0 :
   repl_task -> FStar_Parser_ParseIt.input_frag) =
   fun projectee -> match projectee with | PushFragment _0 -> _0
 let (uu___is_Noop : repl_task -> Prims.bool) =
-  fun projectee -> match projectee with | Noop -> true | uu____1990 -> false
+  fun projectee -> match projectee with | Noop -> true | uu____2010 -> false
 type repl_state =
   {
   repl_line: Prims.int ;
@@ -594,40 +595,40 @@ type error_code =
   | ContentModified 
 let (uu___is_ParseError : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | ParseError -> true | uu____2327 -> false
+    match projectee with | ParseError -> true | uu____2347 -> false
 let (uu___is_InvalidRequest : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | InvalidRequest -> true | uu____2338 -> false
+    match projectee with | InvalidRequest -> true | uu____2358 -> false
 let (uu___is_MethodNotFound : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | MethodNotFound -> true | uu____2349 -> false
+    match projectee with | MethodNotFound -> true | uu____2369 -> false
 let (uu___is_InvalidParams : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | InvalidParams -> true | uu____2360 -> false
+    match projectee with | InvalidParams -> true | uu____2380 -> false
 let (uu___is_InternalError : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | InternalError -> true | uu____2371 -> false
+    match projectee with | InternalError -> true | uu____2391 -> false
 let (uu___is_ServerErrorStart : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | ServerErrorStart -> true | uu____2382 -> false
+    match projectee with | ServerErrorStart -> true | uu____2402 -> false
 let (uu___is_ServerErrorEnd : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | ServerErrorEnd -> true | uu____2393 -> false
+    match projectee with | ServerErrorEnd -> true | uu____2413 -> false
 let (uu___is_ServerNotInitialized : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | ServerNotInitialized -> true | uu____2404 -> false
+    match projectee with | ServerNotInitialized -> true | uu____2424 -> false
 let (uu___is_UnknownErrorCode : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | UnknownErrorCode -> true | uu____2415 -> false
+    match projectee with | UnknownErrorCode -> true | uu____2435 -> false
 let (uu___is_RequestCancelled : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | RequestCancelled -> true | uu____2426 -> false
+    match projectee with | RequestCancelled -> true | uu____2446 -> false
 let (uu___is_ContentModified : error_code -> Prims.bool) =
   fun projectee ->
-    match projectee with | ContentModified -> true | uu____2437 -> false
+    match projectee with | ContentModified -> true | uu____2457 -> false
 let (errorcode_to_int : error_code -> Prims.int) =
-  fun uu___8_2449 ->
-    match uu___8_2449 with
+  fun uu___8_2469 ->
+    match uu___8_2469 with
     | ParseError -> ~- (Prims.parse_int "32700")
     | InvalidRequest -> ~- (Prims.parse_int "32600")
     | MethodNotFound -> ~- (Prims.parse_int "32601")
@@ -640,17 +641,17 @@ let (errorcode_to_int : error_code -> Prims.int) =
     | RequestCancelled -> ~- (Prims.parse_int "32800")
     | ContentModified -> ~- (Prims.parse_int "32801")
 let (json_debug : FStar_Util.json -> Prims.string) =
-  fun uu___9_2468 ->
-    match uu___9_2468 with
+  fun uu___9_2488 ->
+    match uu___9_2488 with
     | FStar_Util.JsonNull -> "null"
     | FStar_Util.JsonBool b ->
         FStar_Util.format1 "bool (%s)" (if b then "true" else "false")
     | FStar_Util.JsonInt i ->
-        let uu____2482 = FStar_Util.string_of_int i in
-        FStar_Util.format1 "int (%s)" uu____2482
+        let uu____2502 = FStar_Util.string_of_int i in
+        FStar_Util.format1 "int (%s)" uu____2502
     | FStar_Util.JsonStr s -> FStar_Util.format1 "string (%s)" s
-    | FStar_Util.JsonList uu____2488 -> "list (...)"
-    | FStar_Util.JsonAssoc uu____2492 -> "dictionary (...)"
+    | FStar_Util.JsonList uu____2508 -> "list (...)"
+    | FStar_Util.JsonAssoc uu____2512 -> "dictionary (...)"
 let (wrap_jsfail :
   Prims.int FStar_Pervasives_Native.option ->
     Prims.string -> FStar_Util.json -> lsp_query)
@@ -658,13 +659,13 @@ let (wrap_jsfail :
   fun qid ->
     fun expected ->
       fun got ->
-        let uu____2525 =
-          let uu____2526 =
-            let uu____2528 = json_debug got in
+        let uu____2545 =
+          let uu____2546 =
+            let uu____2548 = json_debug got in
             FStar_Util.format2 "JSON decoding failed: expected %s, got %s"
-              expected uu____2528 in
-          BadProtocolMsg uu____2526 in
-        { query_id = qid; q = uu____2525 }
+              expected uu____2548 in
+          BadProtocolMsg uu____2546 in
+        { query_id = qid; q = uu____2545 }
 let (json_of_response :
   Prims.int FStar_Pervasives_Native.option ->
     (FStar_Util.json, FStar_Util.json) FStar_Util.either -> FStar_Util.json)
@@ -689,14 +690,14 @@ let (json_of_response :
 let (js_resperr : error_code -> Prims.string -> FStar_Util.json) =
   fun err ->
     fun msg ->
-      let uu____2630 =
-        let uu____2638 =
-          let uu____2644 =
-            let uu____2645 = errorcode_to_int err in
-            FStar_Util.JsonInt uu____2645 in
-          ("code", uu____2644) in
-        [uu____2638; ("message", (FStar_Util.JsonStr msg))] in
-      FStar_Util.JsonAssoc uu____2630
+      let uu____2650 =
+        let uu____2658 =
+          let uu____2664 =
+            let uu____2665 = errorcode_to_int err in
+            FStar_Util.JsonInt uu____2665 in
+          ("code", uu____2664) in
+        [uu____2658; ("message", (FStar_Util.JsonStr msg))] in
+      FStar_Util.JsonAssoc uu____2650
 let (wrap_content_szerr : Prims.string -> lsp_query) =
   fun m ->
     { query_id = FStar_Pervasives_Native.None; q = (BadProtocolMsg m) }
@@ -713,7 +714,7 @@ let (js_servcap : FStar_Util.json) =
           ("hoverProvider", (FStar_Util.JsonBool true));
           ("completionProvider",
             (FStar_Util.JsonAssoc
-               [("resolveProvider", (FStar_Util.JsonBool false))]));
+               [("resolveProvider", (FStar_Util.JsonBool true))]));
           ("signatureHelpProvider", (FStar_Util.JsonAssoc []));
           ("definitionProvider", (FStar_Util.JsonBool true));
           ("typeDefinitionProvider", (FStar_Util.JsonBool false));
@@ -724,56 +725,56 @@ let (js_servcap : FStar_Util.json) =
           ("codeActionProvider", (FStar_Util.JsonBool false))]))]
 let (js_pos : FStar_Range.pos -> FStar_Util.json) =
   fun p ->
-    let uu____2839 =
-      let uu____2847 =
-        let uu____2853 =
-          let uu____2854 =
-            let uu____2856 = FStar_Range.line_of_pos p in
-            uu____2856 - (Prims.parse_int "1") in
-          FStar_Util.JsonInt uu____2854 in
-        ("line", uu____2853) in
-      let uu____2861 =
-        let uu____2869 =
-          let uu____2875 =
-            let uu____2876 = FStar_Range.col_of_pos p in
-            FStar_Util.JsonInt uu____2876 in
-          ("character", uu____2875) in
-        [uu____2869] in
-      uu____2847 :: uu____2861 in
-    FStar_Util.JsonAssoc uu____2839
+    let uu____2859 =
+      let uu____2867 =
+        let uu____2873 =
+          let uu____2874 =
+            let uu____2876 = FStar_Range.line_of_pos p in
+            uu____2876 - (Prims.parse_int "1") in
+          FStar_Util.JsonInt uu____2874 in
+        ("line", uu____2873) in
+      let uu____2881 =
+        let uu____2889 =
+          let uu____2895 =
+            let uu____2896 = FStar_Range.col_of_pos p in
+            FStar_Util.JsonInt uu____2896 in
+          ("character", uu____2895) in
+        [uu____2889] in
+      uu____2867 :: uu____2881 in
+    FStar_Util.JsonAssoc uu____2859
 let (js_loclink : FStar_Range.range -> FStar_Util.json) =
   fun r ->
     let s =
-      let uu____2902 =
-        let uu____2910 =
-          let uu____2916 =
-            let uu____2917 = FStar_Range.start_of_range r in
-            js_pos uu____2917 in
-          ("start", uu____2916) in
-        let uu____2920 =
-          let uu____2928 =
-            let uu____2934 =
-              let uu____2935 = FStar_Range.end_of_range r in
-              js_pos uu____2935 in
-            ("end", uu____2934) in
-          [uu____2928] in
-        uu____2910 :: uu____2920 in
-      FStar_Util.JsonAssoc uu____2902 in
-    let uu____2953 =
-      let uu____2956 =
-        let uu____2957 =
-          let uu____2965 =
-            let uu____2971 =
-              let uu____2972 =
-                let uu____2974 = FStar_Range.file_of_range r in
-                path_to_uri uu____2974 in
-              FStar_Util.JsonStr uu____2972 in
-            ("targetUri", uu____2971) in
-          [uu____2965; ("targetRange", s); ("targetSelectionRange", s)] in
-        FStar_Util.JsonAssoc uu____2957 in
-      [uu____2956] in
-    FStar_Util.JsonList uu____2953
+      let uu____2922 =
+        let uu____2930 =
+          let uu____2936 =
+            let uu____2937 = FStar_Range.start_of_range r in
+            js_pos uu____2937 in
+          ("start", uu____2936) in
+        let uu____2940 =
+          let uu____2948 =
+            let uu____2954 =
+              let uu____2955 = FStar_Range.end_of_range r in
+              js_pos uu____2955 in
+            ("end", uu____2954) in
+          [uu____2948] in
+        uu____2930 :: uu____2940 in
+      FStar_Util.JsonAssoc uu____2922 in
+    let uu____2973 =
+      let uu____2976 =
+        let uu____2977 =
+          let uu____2985 =
+            let uu____2991 =
+              let uu____2992 =
+                let uu____2994 = FStar_Range.file_of_range r in
+                path_to_uri uu____2994 in
+              FStar_Util.JsonStr uu____2992 in
+            ("targetUri", uu____2991) in
+          [uu____2985; ("targetRange", s); ("targetSelectionRange", s)] in
+        FStar_Util.JsonAssoc uu____2977 in
+      [uu____2976] in
+    FStar_Util.JsonList uu____2973
 let (pos_munge : txdoc_pos -> (Prims.string * Prims.int * Prims.int)) =
   fun pos ->
-    let uu____3017 = uri_to_path pos.uri in
-    (uu____3017, (pos.line + (Prims.parse_int "1")), (pos.col))
+    let uu____3037 = uri_to_path pos.uri in
+    (uu____3037, (pos.line + (Prims.parse_int "1")), (pos.col))

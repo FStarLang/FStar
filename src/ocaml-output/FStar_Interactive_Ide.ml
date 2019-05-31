@@ -2027,10 +2027,11 @@ let run_code_autocomplete :
   =
   fun st ->
     fun search_term ->
-      let uu____6477 =
-        let uu____6482 = FStar_QueryHelper.ck_completion st search_term in
-        (QueryOK, uu____6482) in
-      (uu____6477, (FStar_Util.Inl st))
+      let result = FStar_QueryHelper.ck_completion st search_term in
+      let js =
+        FStar_List.map
+          FStar_Interactive_CompletionTable.json_of_completion_result result in
+      ((QueryOK, (FStar_Util.JsonList js)), (FStar_Util.Inl st))
 let run_module_autocomplete :
   'Auu____6506 'Auu____6507 'Auu____6508 .
     FStar_JsonHelper.repl_state ->
@@ -2152,7 +2153,7 @@ let run_and_rewind :
             FStar_PushHelper.FullCheck FStar_JsonHelper.Noop st in
         let results =
           try
-            (fun uu___815_6858 ->
+            (fun uu___817_6858 ->
                match () with
                | () ->
                    FStar_Util.with_sigint_handler FStar_Util.sigint_raise
@@ -2263,12 +2264,12 @@ let run_with_parsed_and_tc_term :
                      then aux ()
                      else
                        (try
-                          (fun uu___898_7296 -> match () with | () -> aux ())
+                          (fun uu___900_7296 -> match () with | () -> aux ())
                             ()
                         with
-                        | uu___897_7305 ->
+                        | uu___899_7305 ->
                             let uu____7310 =
-                              FStar_Errors.issue_of_exn uu___897_7305 in
+                              FStar_Errors.issue_of_exn uu___899_7305 in
                             (match uu____7310 with
                              | FStar_Pervasives_Native.Some issue ->
                                  let uu____7318 =
@@ -2277,7 +2278,7 @@ let run_with_parsed_and_tc_term :
                                    FStar_Util.JsonStr uu____7319 in
                                  (QueryNOK, uu____7318)
                              | FStar_Pervasives_Native.None ->
-                                 FStar_Exn.raise uu___897_7305)))
+                                 FStar_Exn.raise uu___899_7305)))
 let run_compute :
   'Auu____7334 .
     FStar_JsonHelper.repl_state ->
@@ -2511,7 +2512,7 @@ let run_search :
         Prims.op_Hat (if term.st_negate then "-" else "") uu____8080 in
       let results =
         try
-          (fun uu___1011_8114 ->
+          (fun uu___1013_8114 ->
              match () with
              | () ->
                  let terms = parse1 search_str in
@@ -2765,9 +2766,9 @@ let (interactive_mode : Prims.string -> unit) =
      then interactive_mode' init1
      else
        (try
-          (fun uu___1160_8922 ->
+          (fun uu___1162_8922 ->
              match () with | () -> interactive_mode' init1) ()
         with
-        | uu___1159_8925 ->
+        | uu___1161_8925 ->
             (FStar_Errors.set_handler FStar_Errors.default_handler;
-             FStar_Exn.raise uu___1159_8925)))
+             FStar_Exn.raise uu___1161_8925)))

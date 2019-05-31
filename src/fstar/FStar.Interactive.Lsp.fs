@@ -46,8 +46,8 @@ let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
           | "textDocument/willSaveWaitUntil" -> WillSaveWait (js_txdoc_id r)
           | "textDocument/didSave" -> DidSave (js_txdoc_id r)
           | "textDocument/didClose" -> DidClose (js_txdoc_id r)
-          | "textDocument/completion" -> Completion (arg "context" r |>
-                                                     js_compl_context)
+          | "textDocument/completion" -> Completion (js_txdoc_pos r,
+                                                     arg "context" r |> js_compl_context)
           | "completionItem/resolve" -> Resolve
           | "textDocument/hover" -> Hover (js_txdoc_pos r)
           | "textDocument/signatureHelp" -> SignatureHelp (js_txdoc_pos r)
@@ -116,7 +116,7 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
   | WillSaveWait txid -> (Some (Inl JsonNull), Inl st)
   | DidSave txid -> (None, Inl st)
   | DidClose txid -> (None, Inl st)
-  | Completion ctx -> (Some (Inl JsonNull), Inl st)
+  | Completion (txpos, ctx) -> (Some (QH.complookup st txpos), Inl st)
   | Resolve -> (Some (Inl JsonNull), Inl st)
   | Hover txpos -> (Some (QH.hoverlookup st.repl_env txpos), Inl st)
   | SignatureHelp txpos -> (Some (Inl JsonNull), Inl st)

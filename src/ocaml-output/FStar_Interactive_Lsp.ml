@@ -76,33 +76,36 @@ let (unpack_lsp_query :
                    FStar_JsonHelper.DidClose uu____105
                | "textDocument/completion" ->
                    let uu____108 =
-                     let uu____109 = FStar_JsonHelper.arg "context" r in
-                     FStar_All.pipe_right uu____109
-                       FStar_JsonHelper.js_compl_context in
+                     let uu____113 = FStar_JsonHelper.js_txdoc_pos r in
+                     let uu____114 =
+                       let uu____115 = FStar_JsonHelper.arg "context" r in
+                       FStar_All.pipe_right uu____115
+                         FStar_JsonHelper.js_compl_context in
+                     (uu____113, uu____114) in
                    FStar_JsonHelper.Completion uu____108
                | "completionItem/resolve" -> FStar_JsonHelper.Resolve
                | "textDocument/hover" ->
-                   let uu____113 = FStar_JsonHelper.js_txdoc_pos r in
-                   FStar_JsonHelper.Hover uu____113
-               | "textDocument/signatureHelp" ->
-                   let uu____115 = FStar_JsonHelper.js_txdoc_pos r in
-                   FStar_JsonHelper.SignatureHelp uu____115
-               | "textDocument/declaration" ->
-                   let uu____117 = FStar_JsonHelper.js_txdoc_pos r in
-                   FStar_JsonHelper.Declaration uu____117
-               | "textDocument/definition" ->
                    let uu____119 = FStar_JsonHelper.js_txdoc_pos r in
-                   FStar_JsonHelper.Definition uu____119
-               | "textDocument/typeDefinition" ->
+                   FStar_JsonHelper.Hover uu____119
+               | "textDocument/signatureHelp" ->
                    let uu____121 = FStar_JsonHelper.js_txdoc_pos r in
-                   FStar_JsonHelper.TypeDefinition uu____121
-               | "textDocument/implementation" ->
+                   FStar_JsonHelper.SignatureHelp uu____121
+               | "textDocument/declaration" ->
                    let uu____123 = FStar_JsonHelper.js_txdoc_pos r in
-                   FStar_JsonHelper.Implementation uu____123
+                   FStar_JsonHelper.Declaration uu____123
+               | "textDocument/definition" ->
+                   let uu____125 = FStar_JsonHelper.js_txdoc_pos r in
+                   FStar_JsonHelper.Definition uu____125
+               | "textDocument/typeDefinition" ->
+                   let uu____127 = FStar_JsonHelper.js_txdoc_pos r in
+                   FStar_JsonHelper.TypeDefinition uu____127
+               | "textDocument/implementation" ->
+                   let uu____129 = FStar_JsonHelper.js_txdoc_pos r in
+                   FStar_JsonHelper.Implementation uu____129
                | "textDocument/references" -> FStar_JsonHelper.References
                | "textDocument/documentHighlight" ->
-                   let uu____126 = FStar_JsonHelper.js_txdoc_pos r in
-                   FStar_JsonHelper.DocumentHighlight uu____126
+                   let uu____132 = FStar_JsonHelper.js_txdoc_pos r in
+                   FStar_JsonHelper.DocumentHighlight uu____132
                | "textDocument/documentSymbol" ->
                    FStar_JsonHelper.DocumentSymbol
                | "textDocument/codeAction" -> FStar_JsonHelper.CodeAction
@@ -122,12 +125,12 @@ let (unpack_lsp_query :
                    FStar_JsonHelper.TypeFormatting
                | "textDocument/rename" -> FStar_JsonHelper.Rename
                | "textDocument/prepareRename" ->
-                   let uu____140 = FStar_JsonHelper.js_txdoc_pos r in
-                   FStar_JsonHelper.PrepareRename uu____140
+                   let uu____146 = FStar_JsonHelper.js_txdoc_pos r in
+                   FStar_JsonHelper.PrepareRename uu____146
                | "textDocument/foldingRange" -> FStar_JsonHelper.FoldingRange
                | m ->
-                   let uu____144 = FStar_Util.format1 "Unknown method '%s'" m in
-                   FStar_JsonHelper.BadProtocolMsg uu____144 in
+                   let uu____150 = FStar_Util.format1 "Unknown method '%s'" m in
+                   FStar_JsonHelper.BadProtocolMsg uu____150 in
              { FStar_JsonHelper.query_id = qid; FStar_JsonHelper.q = uu____42
              }) ()
     with
@@ -141,12 +144,12 @@ let (unpack_lsp_query :
 let (deserialize_lsp_query : FStar_Util.json -> FStar_JsonHelper.lsp_query) =
   fun js_query ->
     try
-      (fun uu___57_164 ->
+      (fun uu___57_170 ->
          match () with
          | () ->
-             let uu____165 =
+             let uu____171 =
                FStar_All.pipe_right js_query FStar_JsonHelper.js_assoc in
-             unpack_lsp_query uu____165) ()
+             unpack_lsp_query uu____171) ()
     with
     | FStar_JsonHelper.UnexpectedJsonType (expected, got) ->
         FStar_JsonHelper.wrap_jsfail FStar_Pervasives_Native.None expected
@@ -154,8 +157,8 @@ let (deserialize_lsp_query : FStar_Util.json -> FStar_JsonHelper.lsp_query) =
 let (parse_lsp_query : Prims.string -> FStar_JsonHelper.lsp_query) =
   fun query_str ->
     FStar_Util.print1_error ">>> %s\n" query_str;
-    (let uu____199 = FStar_Util.json_of_string query_str in
-     match uu____199 with
+    (let uu____205 = FStar_Util.json_of_string query_str in
+     match uu____205 with
      | FStar_Pervasives_Native.None ->
          {
            FStar_JsonHelper.query_id = FStar_Pervasives_Native.None;
@@ -183,9 +186,9 @@ let (run_query :
           ((FStar_Pervasives_Native.Some (FStar_Util.Inl FStar_Util.JsonNull)),
             (FStar_Util.Inl st))
       | FStar_JsonHelper.Exit ->
-          let uu____254 =
-            let uu____255 = run_exit st in FStar_Util.Inr uu____255 in
-          (FStar_Pervasives_Native.None, uu____254)
+          let uu____260 =
+            let uu____261 = run_exit st in FStar_Util.Inr uu____261 in
+          (FStar_Pervasives_Native.None, uu____260)
       | FStar_JsonHelper.Cancel id1 ->
           (FStar_Pervasives_Native.None, (FStar_Util.Inl st))
       | FStar_JsonHelper.FolderChange evt ->
@@ -203,39 +206,39 @@ let (run_query :
           ((FStar_Pervasives_Native.Some (FStar_Util.Inl FStar_Util.JsonNull)),
             (FStar_Util.Inl st))
       | FStar_JsonHelper.DidOpen
-          { FStar_JsonHelper.fname = f; FStar_JsonHelper.langId = uu____300;
-            FStar_JsonHelper.version = uu____301;
+          { FStar_JsonHelper.fname = f; FStar_JsonHelper.langId = uu____306;
+            FStar_JsonHelper.version = uu____307;
             FStar_JsonHelper.text = t;_}
           ->
           let p = FStar_JsonHelper.uri_to_path f in
           let r =
-            let uu____310 =
+            let uu____316 =
               FStar_Range.mk_pos (Prims.parse_int "1") (Prims.parse_int "0") in
-            let uu____313 =
+            let uu____319 =
               FStar_Range.mk_pos (Prims.parse_int "1") (Prims.parse_int "0") in
-            FStar_Range.mk_range p uu____310 uu____313 in
+            FStar_Range.mk_range p uu____316 uu____319 in
           let env =
             FStar_TypeChecker_Env.set_range st.FStar_JsonHelper.repl_env r in
           let st1 =
-            let uu___99_318 = st in
+            let uu___99_324 = st in
             {
               FStar_JsonHelper.repl_line = (Prims.parse_int "1");
               FStar_JsonHelper.repl_column = (Prims.parse_int "0");
               FStar_JsonHelper.repl_fname = p;
               FStar_JsonHelper.repl_deps_stack =
-                (uu___99_318.FStar_JsonHelper.repl_deps_stack);
+                (uu___99_324.FStar_JsonHelper.repl_deps_stack);
               FStar_JsonHelper.repl_curmod =
-                (uu___99_318.FStar_JsonHelper.repl_curmod);
+                (uu___99_324.FStar_JsonHelper.repl_curmod);
               FStar_JsonHelper.repl_env = env;
               FStar_JsonHelper.repl_stdin =
-                (uu___99_318.FStar_JsonHelper.repl_stdin);
+                (uu___99_324.FStar_JsonHelper.repl_stdin);
               FStar_JsonHelper.repl_names =
-                (uu___99_318.FStar_JsonHelper.repl_names)
+                (uu___99_324.FStar_JsonHelper.repl_names)
             } in
-          let uu____321 =
-            let uu____322 = FStar_PushHelper.full_lax t st1 in
-            FStar_Util.Inl uu____322 in
-          (FStar_Pervasives_Native.None, uu____321)
+          let uu____327 =
+            let uu____328 = FStar_PushHelper.full_lax t st1 in
+            FStar_Util.Inl uu____328 in
+          (FStar_Pervasives_Native.None, uu____327)
       | FStar_JsonHelper.DidChange ->
           (FStar_Pervasives_Native.None, (FStar_Util.Inl st))
       | FStar_JsonHelper.WillSave txid ->
@@ -247,19 +250,21 @@ let (run_query :
           (FStar_Pervasives_Native.None, (FStar_Util.Inl st))
       | FStar_JsonHelper.DidClose txid ->
           (FStar_Pervasives_Native.None, (FStar_Util.Inl st))
-      | FStar_JsonHelper.Completion ctx ->
-          ((FStar_Pervasives_Native.Some (FStar_Util.Inl FStar_Util.JsonNull)),
-            (FStar_Util.Inl st))
+      | FStar_JsonHelper.Completion (txpos, ctx) ->
+          let uu____369 =
+            let uu____370 = FStar_QueryHelper.complookup st txpos in
+            FStar_Pervasives_Native.Some uu____370 in
+          (uu____369, (FStar_Util.Inl st))
       | FStar_JsonHelper.Resolve ->
           ((FStar_Pervasives_Native.Some (FStar_Util.Inl FStar_Util.JsonNull)),
             (FStar_Util.Inl st))
       | FStar_JsonHelper.Hover txpos ->
-          let uu____373 =
-            let uu____374 =
+          let uu____386 =
+            let uu____387 =
               FStar_QueryHelper.hoverlookup st.FStar_JsonHelper.repl_env
                 txpos in
-            FStar_Pervasives_Native.Some uu____374 in
-          (uu____373, (FStar_Util.Inl st))
+            FStar_Pervasives_Native.Some uu____387 in
+          (uu____386, (FStar_Util.Inl st))
       | FStar_JsonHelper.SignatureHelp txpos ->
           ((FStar_Pervasives_Native.Some (FStar_Util.Inl FStar_Util.JsonNull)),
             (FStar_Util.Inl st))
@@ -267,11 +272,11 @@ let (run_query :
           ((FStar_Pervasives_Native.Some (FStar_Util.Inl FStar_Util.JsonNull)),
             (FStar_Util.Inl st))
       | FStar_JsonHelper.Definition txpos ->
-          let uu____397 =
-            let uu____398 =
+          let uu____410 =
+            let uu____411 =
               FStar_QueryHelper.deflookup st.FStar_JsonHelper.repl_env txpos in
-            FStar_Pervasives_Native.Some uu____398 in
-          (uu____397, (FStar_Util.Inl st))
+            FStar_Pervasives_Native.Some uu____411 in
+          (uu____410, (FStar_Util.Inl st))
       | FStar_JsonHelper.TypeDefinition txpos ->
           ((FStar_Pervasives_Native.Some (FStar_Util.Inl FStar_Util.JsonNull)),
             (FStar_Util.Inl st))
@@ -327,28 +332,28 @@ let (run_query :
           ((FStar_Pervasives_Native.Some (FStar_Util.Inl FStar_Util.JsonNull)),
             (FStar_Util.Inl st))
       | FStar_JsonHelper.BadProtocolMsg msg ->
-          let uu____504 =
-            let uu____505 =
-              let uu____510 =
+          let uu____517 =
+            let uu____518 =
+              let uu____523 =
                 FStar_JsonHelper.js_resperr FStar_JsonHelper.MethodNotFound
                   msg in
-              FStar_Util.Inr uu____510 in
-            FStar_Pervasives_Native.Some uu____505 in
-          (uu____504, (FStar_Util.Inl st))
+              FStar_Util.Inr uu____523 in
+            FStar_Pervasives_Native.Some uu____518 in
+          (uu____517, (FStar_Util.Inl st))
 let rec (parse_header_len :
   FStar_Util.stream_reader -> Prims.int -> Prims.int) =
   fun stream ->
     fun len ->
-      let uu____531 = FStar_Util.read_line stream in
-      match uu____531 with
+      let uu____544 = FStar_Util.read_line stream in
+      match uu____544 with
       | FStar_Pervasives_Native.Some s ->
           if FStar_Util.starts_with s "Content-Length: "
           then
-            let uu____542 =
-              let uu____544 =
+            let uu____555 =
+              let uu____557 =
                 FStar_Util.substring_from s (Prims.parse_int "16") in
-              FStar_Util.int_of_string uu____544 in
-            parse_header_len stream uu____542
+              FStar_Util.int_of_string uu____557 in
+            parse_header_len stream uu____555
           else
             if FStar_Util.starts_with s "Content-Type: "
             then parse_header_len stream len
@@ -362,18 +367,18 @@ let rec (read_lsp_query :
   FStar_Util.stream_reader -> FStar_JsonHelper.lsp_query) =
   fun stream ->
     try
-      (fun uu___156_573 ->
+      (fun uu___158_586 ->
          match () with
          | () ->
              let n1 = parse_header_len stream (Prims.parse_int "0") in
-             let uu____577 = FStar_Util.nread stream n1 in
-             (match uu____577 with
+             let uu____590 = FStar_Util.nread stream n1 in
+             (match uu____590 with
               | FStar_Pervasives_Native.Some s -> parse_lsp_query s
               | FStar_Pervasives_Native.None ->
-                  let uu____585 =
-                    let uu____587 = FStar_Util.string_of_int n1 in
-                    FStar_Util.format1 "Could not read %s bytes" uu____587 in
-                  FStar_JsonHelper.wrap_content_szerr uu____585)) ()
+                  let uu____598 =
+                    let uu____600 = FStar_Util.string_of_int n1 in
+                    FStar_Util.format1 "Could not read %s bytes" uu____600 in
+                  FStar_JsonHelper.wrap_content_szerr uu____598)) ()
     with
     | FStar_JsonHelper.MalformedHeader ->
         (FStar_Util.print_error "[E] Malformed Content Header\n";
@@ -382,32 +387,32 @@ let rec (read_lsp_query :
 let rec (go : FStar_JsonHelper.repl_state -> Prims.int) =
   fun st ->
     let query = read_lsp_query st.FStar_JsonHelper.repl_stdin in
-    let uu____604 = run_query st query.FStar_JsonHelper.q in
-    match uu____604 with
+    let uu____617 = run_query st query.FStar_JsonHelper.q in
+    match uu____617 with
     | (r, state_opt) ->
         ((match r with
           | FStar_Pervasives_Native.Some response ->
               let response' =
                 FStar_JsonHelper.json_of_response
                   query.FStar_JsonHelper.query_id response in
-              ((let uu____624 = FStar_Util.string_of_json response' in
-                FStar_Util.print1_error "<<< %s\n" uu____624);
+              ((let uu____637 = FStar_Util.string_of_json response' in
+                FStar_Util.print1_error "<<< %s\n" uu____637);
                FStar_JsonHelper.write_jsonrpc response')
           | FStar_Pervasives_Native.None -> ());
          (match state_opt with
           | FStar_Util.Inl st' -> go st'
           | FStar_Util.Inr exitcode -> exitcode))
 let (initial_repl_state : unit -> FStar_JsonHelper.repl_state) =
-  fun uu____642 ->
+  fun uu____655 ->
     let initial_range =
-      let uu____644 =
+      let uu____657 =
         FStar_Range.mk_pos (Prims.parse_int "1") (Prims.parse_int "0") in
-      let uu____647 =
+      let uu____660 =
         FStar_Range.mk_pos (Prims.parse_int "1") (Prims.parse_int "0") in
-      FStar_Range.mk_range "<input>" uu____644 uu____647 in
+      FStar_Range.mk_range "<input>" uu____657 uu____660 in
     let env = FStar_Universal.init_env FStar_Parser_Dep.empty_deps in
     let env1 = FStar_TypeChecker_Env.set_range env initial_range in
-    let uu____653 = FStar_Util.open_stdin () in
+    let uu____666 = FStar_Util.open_stdin () in
     {
       FStar_JsonHelper.repl_line = (Prims.parse_int "1");
       FStar_JsonHelper.repl_column = (Prims.parse_int "0");
@@ -415,10 +420,10 @@ let (initial_repl_state : unit -> FStar_JsonHelper.repl_state) =
       FStar_JsonHelper.repl_deps_stack = [];
       FStar_JsonHelper.repl_curmod = FStar_Pervasives_Native.None;
       FStar_JsonHelper.repl_env = env1;
-      FStar_JsonHelper.repl_stdin = uu____653;
+      FStar_JsonHelper.repl_stdin = uu____666;
       FStar_JsonHelper.repl_names = FStar_Interactive_CompletionTable.empty
     }
 let (start_server : unit -> unit) =
-  fun uu____670 ->
-    let uu____671 = let uu____673 = initial_repl_state () in go uu____673 in
-    FStar_All.exit uu____671
+  fun uu____683 ->
+    let uu____684 = let uu____686 = initial_repl_state () in go uu____686 in
+    FStar_All.exit uu____684

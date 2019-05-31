@@ -7,6 +7,8 @@ open FStar.Range
 open FStar.Util
 open FStar.JsonHelper
 open FStar.TypeChecker.Env
+open FStar.TypeChecker.Common
+open FStar.Interactive.CompletionTable
 
 module U = FStar.Util
 module DsEnv = FStar.Syntax.DsEnv
@@ -89,22 +91,30 @@ let ck_completion st search_term =
   let needle = U.split search_term "." in
   let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle mod_filter in
   let lids = CTable.autocomplete_lid st.repl_names needle in
-  let json = List.map CTable.json_of_completion_result (lids @ mods_and_nss) in
-  JsonList json
+  lids @ mods_and_nss
 
-let deflookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
-  match symlookup st "" (Some (pos_munge pos)) ["defined-at"] with
+let deflookup (env: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
+  match symlookup env "" (Some (pos_munge pos)) ["defined-at"] with
   | Some { slr_name = _; slr_def_range = (Some r); slr_typ = _; slr_doc = _; slr_def = _ } ->
       Inl (js_loclink r)
   | _ -> Inl JsonNull
 
 // A hover-provider provides both the type and the definition of a given symbol
-let hoverlookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
-  match symlookup st "" (Some (pos_munge pos)) ["type"; "definition"] with
+let hoverlookup (env: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
+  match symlookup env "" (Some (pos_munge pos)) ["type"; "definition"] with
   | Some { slr_name = n; slr_def_range = _; slr_typ = (Some t); slr_doc = _; slr_def = (Some d) } ->
     let hovertxt = U.format2 "```fstar\n%s\n````\n---\n```fstar\n%s\n```" t d in
     Inl (JsonAssoc [("contents", JsonAssoc [("kind", JsonStr "markdown");
                                             ("value", JsonStr hovertxt)])])
   | _ -> Inl JsonNull
 
-let complookup (st: TcEnv.env) (pos: txdoc_pos) : either<json, json> = Inl JsonNull
+let complookup (st: repl_state) (pos: txdoc_pos) : either<json, json> =
+  let (file, row, col) = pos_munge pos in
+  let info_at_pos_opt = match TcErr.info_at_pos st.repl_env file row col with
+                        | Some (Inl id, _, _) -> Some id
+                        | _ -> None in
+  match U.map_option (ck_completion st) info_at_pos_opt with
+  | Some items ->
+    let l = List.map (fun res -> JsonAssoc [("label", JsonStr res.completion_candidate)]) items in
+    Inl (JsonList l)
+  | None -> Inl JsonNull

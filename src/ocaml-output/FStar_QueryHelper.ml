@@ -177,7 +177,10 @@ let mod_filter :
           (pth, uu____887) in
         FStar_Pervasives_Native.Some uu____882
 let (ck_completion :
-  FStar_JsonHelper.repl_state -> Prims.string -> FStar_Util.json) =
+  FStar_JsonHelper.repl_state ->
+    Prims.string ->
+      FStar_Interactive_CompletionTable.completion_result Prims.list)
+  =
   fun st ->
     fun search_term ->
       let needle = FStar_Util.split search_term "." in
@@ -187,48 +190,44 @@ let (ck_completion :
       let lids =
         FStar_Interactive_CompletionTable.autocomplete_lid
           st.FStar_JsonHelper.repl_names needle in
-      let json =
-        FStar_List.map
-          FStar_Interactive_CompletionTable.json_of_completion_result
-          (FStar_List.append lids mods_and_nss) in
-      FStar_Util.JsonList json
+      FStar_List.append lids mods_and_nss
 let (deflookup :
   FStar_TypeChecker_Env.env ->
     FStar_JsonHelper.txdoc_pos ->
       (FStar_Util.json, FStar_Util.json) FStar_Util.either)
   =
-  fun st ->
+  fun env ->
     fun pos ->
-      let uu____945 =
-        let uu____948 =
-          let uu____951 = FStar_JsonHelper.pos_munge pos in
-          FStar_Pervasives_Native.Some uu____951 in
-        symlookup st "" uu____948 ["defined-at"] in
-      match uu____945 with
+      let uu____944 =
+        let uu____947 =
+          let uu____950 = FStar_JsonHelper.pos_munge pos in
+          FStar_Pervasives_Native.Some uu____950 in
+        symlookup env "" uu____947 ["defined-at"] in
+      match uu____944 with
       | FStar_Pervasives_Native.Some
-          { slr_name = uu____960;
+          { slr_name = uu____959;
             slr_def_range = FStar_Pervasives_Native.Some r;
-            slr_typ = uu____962; slr_doc = uu____963; slr_def = uu____964;_}
+            slr_typ = uu____961; slr_doc = uu____962; slr_def = uu____963;_}
           ->
-          let uu____975 = FStar_JsonHelper.js_loclink r in
-          FStar_Util.Inl uu____975
-      | uu____976 -> FStar_Util.Inl FStar_Util.JsonNull
+          let uu____974 = FStar_JsonHelper.js_loclink r in
+          FStar_Util.Inl uu____974
+      | uu____975 -> FStar_Util.Inl FStar_Util.JsonNull
 let (hoverlookup :
   FStar_TypeChecker_Env.env ->
     FStar_JsonHelper.txdoc_pos ->
       (FStar_Util.json, FStar_Util.json) FStar_Util.either)
   =
-  fun st ->
+  fun env ->
     fun pos ->
-      let uu____998 =
-        let uu____1001 =
-          let uu____1004 = FStar_JsonHelper.pos_munge pos in
-          FStar_Pervasives_Native.Some uu____1004 in
-        symlookup st "" uu____1001 ["type"; "definition"] in
-      match uu____998 with
+      let uu____997 =
+        let uu____1000 =
+          let uu____1003 = FStar_JsonHelper.pos_munge pos in
+          FStar_Pervasives_Native.Some uu____1003 in
+        symlookup env "" uu____1000 ["type"; "definition"] in
+      match uu____997 with
       | FStar_Pervasives_Native.Some
-          { slr_name = n1; slr_def_range = uu____1016;
-            slr_typ = FStar_Pervasives_Native.Some t; slr_doc = uu____1018;
+          { slr_name = n1; slr_def_range = uu____1015;
+            slr_typ = FStar_Pervasives_Native.Some t; slr_doc = uu____1017;
             slr_def = FStar_Pervasives_Native.Some d;_}
           ->
           let hovertxt =
@@ -240,9 +239,38 @@ let (hoverlookup :
                   (FStar_Util.JsonAssoc
                      [("kind", (FStar_Util.JsonStr "markdown"));
                      ("value", (FStar_Util.JsonStr hovertxt))]))])
-      | uu____1065 -> FStar_Util.Inl FStar_Util.JsonNull
+      | uu____1064 -> FStar_Util.Inl FStar_Util.JsonNull
 let (complookup :
-  FStar_TypeChecker_Env.env ->
+  FStar_JsonHelper.repl_state ->
     FStar_JsonHelper.txdoc_pos ->
       (FStar_Util.json, FStar_Util.json) FStar_Util.either)
-  = fun st -> fun pos -> FStar_Util.Inl FStar_Util.JsonNull
+  =
+  fun st ->
+    fun pos ->
+      let uu____1086 = FStar_JsonHelper.pos_munge pos in
+      match uu____1086 with
+      | (file, row, col) ->
+          let info_at_pos_opt =
+            let uu____1113 =
+              FStar_TypeChecker_Err.info_at_pos st.FStar_JsonHelper.repl_env
+                file row col in
+            match uu____1113 with
+            | FStar_Pervasives_Native.Some
+                (FStar_Util.Inl id1, uu____1131, uu____1132) ->
+                FStar_Pervasives_Native.Some id1
+            | uu____1152 -> FStar_Pervasives_Native.None in
+          let uu____1167 =
+            FStar_Util.map_option (ck_completion st) info_at_pos_opt in
+          (match uu____1167 with
+           | FStar_Pervasives_Native.Some items ->
+               let l =
+                 FStar_List.map
+                   (fun res ->
+                      FStar_Util.JsonAssoc
+                        [("label",
+                           (FStar_Util.JsonStr
+                              (res.FStar_Interactive_CompletionTable.completion_candidate)))])
+                   items in
+               FStar_Util.Inl (FStar_Util.JsonList l)
+           | FStar_Pervasives_Native.None ->
+               FStar_Util.Inl FStar_Util.JsonNull)

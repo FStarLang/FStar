@@ -10,6 +10,7 @@ open FStar.TypeChecker.Env
 
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
+module CTable = FStar.Interactive.CompletionTable
 
 type position = string * int * int
 type sl_reponse = { slr_name: string;
@@ -25,9 +26,9 @@ val term_to_string : TcEnv.env -> Syntax.Syntax.term -> string
 val symlookup : TcEnv.env -> string -> option<position> -> list<string> -> option<sl_reponse>
 
 // Shared by IDE and LSP
-val ck_completion : repl_state -> string -> json
+val ck_completion : repl_state -> string -> list<CTable.completion_result>
 
 // Used exclusively by LSP
 val deflookup : TcEnv.env -> txdoc_pos -> either<json, json>
 val hoverlookup : TcEnv.env -> txdoc_pos -> either<json, json>
-val complookup : TcEnv.env -> txdoc_pos -> either<json, json>
+val complookup : repl_state -> txdoc_pos -> either<json, json>

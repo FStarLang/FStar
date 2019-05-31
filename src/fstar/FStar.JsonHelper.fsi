@@ -67,7 +67,7 @@ type lquery =
 | WillSaveWait of string
 | DidSave of string
 | DidClose of string
-| Completion of completion_context
+| Completion of txdoc_pos * completion_context
 | Resolve
 | Hover of txdoc_pos
 | SignatureHelp of txdoc_pos

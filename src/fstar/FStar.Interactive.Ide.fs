@@ -848,7 +848,9 @@ let run_lookup st symbol context pos_opt requested_info =
     ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
 
 let run_code_autocomplete st search_term =
-  ((QueryOK, QH.ck_completion st search_term), Inl st)
+  let result = QH.ck_completion st search_term in
+  let js = List.map CTable.json_of_completion_result result in
+  ((QueryOK, JsonList js), Inl st)
 
 let run_module_autocomplete st search_term modules namespaces =
   let needle = Util.split search_term "." in

@@ -132,7 +132,7 @@ type lquery =
 | WillSaveWait of string
 | DidSave of string
 | DidClose of string
-| Completion of completion_context
+| Completion of txdoc_pos * completion_context
 | Resolve
 | Hover of txdoc_pos
 | SignatureHelp of txdoc_pos
@@ -256,7 +256,7 @@ let js_servcap : json =
                                                          ("willSave", JsonBool true);
                                                          ("willSaveWaitUntil", JsonBool false)]);
               ("hoverProvider", JsonBool true);
-              ("completionProvider", JsonAssoc [("resolveProvider", JsonBool false)]);
+              ("completionProvider", JsonAssoc [("resolveProvider", JsonBool true)]);
               ("signatureHelpProvider", JsonAssoc []);
               ("definitionProvider", JsonBool true);
               ("typeDefinitionProvider", JsonBool false);
