@@ -3092,10 +3092,9 @@ let solve_and_commit env probs err =
     BU.print1 "solving problems %s {\n"
       (FStar.Common.string_of_list (fun p -> string_of_int (p_pid p)) probs.attempting);
   let (sol, ms)  = 
-    if (Options.profile_phase Options.SMT) then
-      P.profile (fun () -> solve env probs) "" "SMT" false
-    else 
-      BU.record_time (fun () -> solve env probs) in
+    P.profile (fun () -> solve env probs)
+      (fun() -> FStar.Common.string_of_list (fun p -> string_of_int (p_pid p)) probs.attempting)
+      Options.ProfileSMT in
   if Env.debug env <| Options.Other "RelBench" then
      BU.print1 "} solved in %s ms\n" (string_of_int ms);
 

@@ -38,15 +38,13 @@ type debug_level_t =
   | Extreme
   | Other of string
 
-type profile_level_t =
-  | Module
-  | Decl
+type profile_t = 
+  | ProfileModule
+  | ProfileDecl
+  | ProfileNormalize
+  | ProfileSMT
   | Profile of string
 
-type profile_phase_t =
-  | Normalize
-  | SMT
-  | Phase of string
 
 type option_val =
   | Bool of bool
@@ -446,17 +444,15 @@ let one_debug_level_geq l1 l2 = match l1 with
    | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
 let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
 
-let plevel = function
-   | "Module" -> Module
-   | "Decl" -> Decl
-   | s -> Profile s
-let pphase = function
-   | "Normalize" -> Normalize
-   | "SMT" -> SMT
-   | s -> Phase s
+let profile_name = function
+   | ProfileModule -> "Module"
+   | ProfileDecl -> "Decl"
+   | ProfileNormalize -> "Normalize"
+   | ProfileSMT -> "SMT"
+   | Profile s -> s
    
-let profile_level_eq l2 = get_profile_level() |> Util.for_some (fun l1 -> (plevel l1) = l2)
-let profile_phase_eq p2 = get_profile_phase() |> Util.for_some (fun p1 -> (pphase p1) = p2)
+let profile_level_eq l2 = get_profile_level() |> Util.for_some (fun l1 -> String.lowercase l1 = String.lowercase (profile_name l2))
+let profile_phase_eq p2 = get_profile_phase() |> Util.for_some (fun p1 -> String.lowercase p1 = String.lowercase (profile_name p2))
 
 // Note: the "ulib/fstar" is for the case where package is installed in the
 // standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar

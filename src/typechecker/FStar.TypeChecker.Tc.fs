@@ -1868,12 +1868,8 @@ let tc_decls env ses =
   let process_one_decl_timed acc se =
     let (_, _, env, _) = acc in
     let r, ms_elapsed = 
-      if (Options.profile_at_level Options.Decl) then
-        P.profile (fun() -> process_one_decl acc se) 
-            (Print.sigelt_to_string se) "decl" 
-            (Options.profile_at_level  Options.Decl)
-    else
-      BU.record_time (fun () -> process_one_decl acc se) 
+      P.profile (fun() -> process_one_decl acc se) 
+            (fun() -> Print.sigelt_to_string se) Options.ProfileDecl
     in
     if Env.debug env (Options.Other "TCDeclTime")
      || BU.for_some (U.attr_eq U.tcdecltime_attr) se.sigattrs

@@ -312,12 +312,8 @@ let tc_one_file
             in
           
           let ((tcmod, smt_decls), env), tc_time =
-            if (Options.profile_at_level Options.Module) then
-              P.profile (fun() -> check env) 
-                     fmod.name.str "module" 
-                     (Options.profile_at_level Options.Module)
-            else 
-              FStar.Util.record_time (fun () -> check env) 
+            P.profile (fun() -> check env) 
+                      (fun() -> fmod.name.str) Options.ProfileModule
           in
           
           let extracted_defs, extract_time = with_env env (maybe_extract_mldefs tcmod) in

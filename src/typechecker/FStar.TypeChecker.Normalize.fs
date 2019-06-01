@@ -2484,10 +2484,9 @@ let normalize_with_primitive_steps ps s e t =
     end
 
 let normalize s e t = 
-  if (Options.profile_phase Options.Normalize) then 
+  if (Options.profile_phase (Options.ProfileNormalize)) then 
       let (r, _) = P.profile (fun() -> normalize_with_primitive_steps [] s e t) 
-            (Print.term_to_string t) "Normalize"
-            (Options.profile_at_level  (Options.Profile "Normalize")) in
+            (fun() -> Print.term_to_string t) (Options.ProfileNormalize) in
       r
   else
       normalize_with_primitive_steps [] s e t
