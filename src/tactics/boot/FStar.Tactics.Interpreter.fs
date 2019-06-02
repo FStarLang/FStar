@@ -324,11 +324,11 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
                  then NBE.normalize
                  else N.normalize_with_primitive_steps
     in
-    if proof_state.tac_verb_dbg then
-        BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
+    (* if proof_state.tac_verb_dbg then *)
+    (*     BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm); *)
     let result = norm_f (primitive_steps ()) steps proof_state.main_context tm in
-    if proof_state.tac_verb_dbg then
-        BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
+    (* if proof_state.tac_verb_dbg then *)
+    (*     BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result); *)
 
     // F* requires more annotations.
     // IN F*: let res : option<__result<b>> = unembed (E.e_result eb) result ncb in
