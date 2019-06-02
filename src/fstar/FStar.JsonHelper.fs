@@ -71,8 +71,8 @@ type completion_context = { trigger_kind: int; trigger_char: option<string> }
 
 let js_compl_context : json -> completion_context = function
   | JsonAssoc a ->
-    { trigger_kind = assoc "triggerKind" a |> js_int;
-      trigger_char = try_assoc "triggerChar" a |> U.map_option js_str; }
+  { trigger_kind = assoc "triggerKind" a |> js_int;
+    trigger_char = try_assoc "triggerChar" a |> U.map_option js_str; }
   | other -> js_fail "dictionary" other
 
 type txdoc_item = { fname: string; langId: string; version: int; text: string }
@@ -80,11 +80,11 @@ type txdoc_item = { fname: string; langId: string; version: int; text: string }
 // May throw
 let js_txdoc_item : json -> txdoc_item = function
   | JsonAssoc a ->
-    let arg k = assoc k a in
-    { fname = arg "uri" |> js_str;
-      langId = arg "languageId" |> js_str;
-      version = arg "version" |> js_int;
-      text = arg "text" |> js_str }
+  let arg k = assoc k a in
+  { fname = arg "uri" |> js_str;
+    langId = arg "languageId" |> js_str;
+    version = arg "version" |> js_int;
+    text = arg "text" |> js_str }
   | other -> js_fail "dictionary" other
 
 type txdoc_pos = { uri: string; line: int; col: int }
@@ -104,14 +104,36 @@ let js_txdoc_pos (r: list<(string * json)>) : txdoc_pos =
 type workspace_folder = { wk_uri: string; wk_name: string }
 type wsch_event = { added: workspace_folder; removed: workspace_folder }
 
+// May throw
 let js_wsch_event : json -> wsch_event = function
   | JsonAssoc a ->
-      let added' = assoc "added" a |> js_assoc in
-      let removed' = assoc "removed" a |> js_assoc in
-      { added = { wk_uri = assoc "uri" added' |> js_str;
-                  wk_name = assoc "name" added' |> js_str };
-        removed = { wk_uri = assoc "uri" removed' |> js_str;
-                    wk_name = assoc "name" removed' |> js_str } }
+  let added' = assoc "added" a |> js_assoc in
+  let removed' = assoc "removed" a |> js_assoc in
+  { added = { wk_uri = assoc "uri" added' |> js_str;
+              wk_name = assoc "name" added' |> js_str };
+    removed = { wk_uri = assoc "uri" removed' |> js_str;
+                wk_name = assoc "name" removed' |> js_str } }
+  | other -> js_fail "dictionary" other
+
+// May throw
+let js_contentch : json -> string = function
+  // List will have one item, and List.hd is guaranteed to work,
+  // since we've specified that full text should be sent on change
+  // in the capabilities
+  | JsonList l -> List.hd (List.map (fun (JsonAssoc a) -> assoc "text" a |> js_str) l)
+  | other -> js_fail "dictionary" other
+
+type rng = { rng_start: int * int; rng_end: int * int }
+
+// May throw
+let js_rng : json -> rng = function
+  | JsonAssoc a ->
+  let st = assoc "start" a in
+  let fin = assoc "end" a in
+  let l = assoc "line" in
+  let c = assoc "character" in
+  { rng_start = l (st |> js_assoc) |> js_int, c (st |> js_assoc) |> js_int;
+    rng_end = l (fin |> js_assoc) |> js_int, c (st |> js_assoc) |> js_int }
   | other -> js_fail "dictionary" other
 
 (* Types of main query *)
@@ -127,10 +149,10 @@ type lquery =
 | Symbol of string
 | ExecCommand of string
 | DidOpen of txdoc_item
-| DidChange
+| DidChange of string * string
 | WillSave of string
 | WillSaveWait of string
-| DidSave of string
+| DidSave of string * string
 | DidClose of string
 | Completion of txdoc_pos * completion_context
 | Resolve
@@ -251,12 +273,16 @@ let wrap_content_szerr (m: string): lsp_query = { query_id = None; q = BadProtoc
 
 let js_servcap : json =
   JsonAssoc [("capabilities",
-              JsonAssoc [("textDocumentSync", JsonAssoc [("openClose", JsonBool true);
-                                                         ("change", JsonInt 1);
-                                                         ("willSave", JsonBool true);
-                                                         ("willSaveWaitUntil", JsonBool false)]);
+              // Open, close, change, and save events will happen with full text sent;
+              // change is required for auto-completions
+              JsonAssoc [("textDocumentSync", JsonAssoc [
+                ("openClose", JsonBool true);
+                ("change", JsonInt 1);
+                ("willSave", JsonBool false);
+                ("willSaveWaitUntil", JsonBool false);
+                ("save", JsonAssoc [("includeText", JsonBool true)])]);
               ("hoverProvider", JsonBool true);
-              ("completionProvider", JsonAssoc [("resolveProvider", JsonBool true)]);
+              ("completionProvider", JsonAssoc []);
               ("signatureHelpProvider", JsonAssoc []);
               ("definitionProvider", JsonBool true);
               ("typeDefinitionProvider", JsonBool false);

@@ -12,6 +12,7 @@ open FStar.Range
 open FStar.TypeChecker.Env
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
+module PI = FStar.Parser.ParseIt
 
 val try_assoc : string -> list<(string * json)> -> option<json> // nothrow
 val assoc : string -> list<(string * json)> -> json // throw
@@ -49,6 +50,7 @@ val js_txdoc_pos : list<(string * json)> -> txdoc_pos
 type workspace_folder = { wk_uri: string; wk_name: string }
 type wsch_event = { added: workspace_folder; removed: workspace_folder }
 val js_wsch_event : json -> wsch_event
+val js_contentch : json -> string
 
 type lquery =
 | Initialize of int * string
@@ -62,10 +64,10 @@ type lquery =
 | Symbol of string
 | ExecCommand of string
 | DidOpen of txdoc_item
-| DidChange
+| DidChange of string * string
 | WillSave of string
 | WillSaveWait of string
-| DidSave of string
+| DidSave of string * string
 | DidClose of string
 | Completion of txdoc_pos * completion_context
 | Resolve
@@ -111,7 +113,7 @@ type repl_task =
   | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
   | LDSingle of timed_fname (* interface or implementation *)
   | LDInterfaceOfCurrentFile of timed_fname (* interface *)
-  | PushFragment of Parser.ParseIt.input_frag (* code fragment *)
+  | PushFragment of PI.input_frag (* code fragment *)
   | Noop (* Used by compute *)
 
 type repl_state = { repl_line: int; repl_column: int; repl_fname: string;

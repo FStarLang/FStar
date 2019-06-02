@@ -41,10 +41,11 @@ let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
           | "workspace/executeCommand" -> ExecCommand
                                           (arg "command" r |> js_str)
           | "textDocument/didOpen" -> DidOpen (arg "textDocument" r |> js_txdoc_item)
-          | "textDocument/didChange" -> DidChange
+          | "textDocument/didChange" -> DidChange (js_txdoc_id r,
+                                                   arg "contentChanges" r |> js_contentch)
           | "textDocument/willSave" -> WillSave (js_txdoc_id r)
           | "textDocument/willSaveWaitUntil" -> WillSaveWait (js_txdoc_id r)
-          | "textDocument/didSave" -> DidSave (js_txdoc_id r)
+          | "textDocument/didSave" -> DidSave (js_txdoc_id r, arg "text" r |> js_str)
           | "textDocument/didClose" -> DidClose (js_txdoc_id r)
           | "textDocument/completion" -> Completion (js_txdoc_pos r,
                                                      arg "context" r |> js_compl_context)
@@ -110,11 +111,12 @@ let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
     let r = Range.mk_range p (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
     let env = TcEnv.set_range st.repl_env r in
     let st = { st with repl_fname = p; repl_line = 1; repl_column = 0; repl_env = env } in
+    PI.add_vfs_entry f t;
     None, Inl (PH.full_lax t st)
-  | DidChange -> (None, Inl st)
+  | DidChange (txid, content) -> PI.add_vfs_entry (uri_to_path txid) content; (None, Inl st)
   | WillSave txid -> (None, Inl st)
   | WillSaveWait txid -> (Some (Inl JsonNull), Inl st)
-  | DidSave txid -> (None, Inl st)
+  | DidSave (txid, content) -> PI.add_vfs_entry (uri_to_path txid) content; (None, Inl st)
   | DidClose txid -> (None, Inl st)
   | Completion (txpos, ctx) -> (Some (QH.complookup st txpos), Inl st)
   | Resolve -> (Some (Inl JsonNull), Inl st)

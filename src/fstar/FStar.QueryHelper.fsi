@@ -19,13 +19,9 @@ type sl_reponse = { slr_name: string;
                     slr_doc: option<string>;
                     slr_def: option<string> }
 
-// Parametrized, because we don't want to open modules unnecessarily
+// Shared by IDE and LSP
 val term_to_string : TcEnv.env -> Syntax.Syntax.term -> string
-
-// Shared by IDE and LSP
 val symlookup : TcEnv.env -> string -> option<position> -> list<string> -> option<sl_reponse>
-
-// Shared by IDE and LSP
 val ck_completion : repl_state -> string -> list<CTable.completion_result>
 
 // Used exclusively by LSP
