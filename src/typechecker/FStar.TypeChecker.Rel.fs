@@ -2483,8 +2483,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             solve_t env ({problem with lhs=t1; rhs=t2}) wl
 
         (* Need to maybe reunify the heads *)
-        | (HeadMatch unif, None) ->
-            rigid_heads_match env unif torig wl t1 t2
+        | (HeadMatch need_unif, None) ->
+            rigid_heads_match env need_unif torig wl t1 t2
 
         | (FullMatch, None) ->
             rigid_heads_match env false torig wl t1 t2
