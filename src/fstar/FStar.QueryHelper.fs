@@ -11,6 +11,7 @@ open FStar.TypeChecker.Common
 open FStar.Interactive.CompletionTable
 
 module U = FStar.Util
+module PI = FStar.Parser.ParseIt
 module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
@@ -87,7 +88,7 @@ let mod_filter = function
   | pth, CTable.Module md ->
     Some (pth, CTable.Module ({ md with CTable.mod_name = CTable.mod_name md ^ "." }))
 
-let ck_completion st search_term =
+let ck_completion (st: repl_state) (search_term: string) : list<CTable.completion_result> =
   let needle = U.split search_term "." in
   let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle mod_filter in
   let lids = CTable.autocomplete_lid st.repl_names needle in
@@ -109,12 +110,22 @@ let hoverlookup (env: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
   | _ -> Inl JsonNull
 
 let complookup (st: repl_state) (pos: txdoc_pos) : either<json, json> =
-  let (file, row, col) = pos_munge pos in
-  let info_at_pos_opt = match TcErr.info_at_pos st.repl_env file row col with
-                        | Some (Inl id, _, _) -> Some id
-                        | _ -> None in
-  match U.map_option (ck_completion st) info_at_pos_opt with
-  | Some items ->
-    let l = List.map (fun res -> JsonAssoc [("label", JsonStr res.completion_candidate)]) items in
-    Inl (JsonList l)
-  | None -> Inl JsonNull
+  // current_col corresponds to the current cursor position of the incomplete identifier
+  let (file, row, current_col) = pos_munge pos in
+  let (Some (_, text)) = PI.read_vfs_entry file in
+  // Find the column that begins a partial identifier
+  let rec find_col l =
+    match l with
+    | [] -> 0
+    | h::t -> if h = ' ' && List.length t < current_col then (List.length t + 1) else find_col t in
+  let str = List.nth (U.splitlines text) (row - 1) in
+  let explode s =
+    let rec exp i l =
+      if i < 0 then l else exp (i - 1) (String.get s i :: l) in
+    exp (String.length s - 1) [] in
+  let begin_col = find_col (List.rev (explode str)) in
+  let term = U.substring str begin_col (current_col - begin_col) in
+  U.print1_error "[I] term = >%s<\n" term;
+  let items = ck_completion st term in
+  let l = List.map (fun r -> JsonAssoc [("label", JsonStr r.completion_candidate)]) items in
+  Inl (JsonList l)
