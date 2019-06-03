@@ -23,15 +23,15 @@ open FStar.Tactics
 
 let _ =
     assert True
-        by (let s = launch_process "date" "" "" in
+        by (let s = launch_process "date" [] "" in
             debug ("The date is: <" ^ s ^ ">"))
 
 let _ =
     assert True
-        by (let s = launch_process "echo" "Hello F*!" "" in
+        by (let s = launch_process "echo" ["Hello F*!"] "" in
             debug ("Greeting: <" ^ s ^ ">"))
 
 let _ =
     assert True
-        by (let s = launch_process "cat" "" "input" in
+        by (let s = launch_process "cat" [] "input" in
             debug ("Testing input: <" ^ s ^ ">"))

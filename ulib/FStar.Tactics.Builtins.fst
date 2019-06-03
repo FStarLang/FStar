@@ -263,7 +263,7 @@ assume val unify_env : env -> term -> term -> Tac bool
 [input] and returns the output. For security reasons, this can only be
 performed when the `--unsafe_tactic_exec` options was provided for the
 current F* invocation. The tactic will fail if this is not so. *)
-assume val launch_process : string -> string -> string -> Tac string
+assume val launch_process : string -> list string -> string -> Tac string
 
 (** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh unaccessible integer within
