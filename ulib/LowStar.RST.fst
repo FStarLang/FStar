@@ -121,6 +121,14 @@ let reveal_rst_inv ()
              B.loc_includes (B.loc_not_unused_in h) (as_loc (fp res)))
   = ()
 
+let lemma_can_be_split_into_rst_inv (res0 res1 res2:resource) (h:HS.mem)
+  : Lemma (requires (rst_inv res0 h /\ res0 `can_be_split_into` (res1,res2)))
+          (ensures  (rst_inv res1 h /\ rst_inv res2 h)) 
+          [SMTPat (rst_inv res0 h); SMTPat (res0 `can_be_split_into` (res1,res2))] =
+  reveal_star ();
+  reveal_can_be_split_into ();
+  ()
+
 // Monotonic WPs for RSTATE
 let rstate_wp (a:Type) (res0:resource) (res1:a -> resource) = 
   wp:((x:a -> imem (inv (res1 x)) -> Type0) -> imem (inv res0) -> Type0){
@@ -237,7 +245,7 @@ let frame (outer0:resource)
           (outer1:a -> resource)
           (#inner1:a -> resource)
           (#[resolve_delta ()] 
-                   delta:frame_delta outer0 inner0 outer1 inner1)
+            delta:frame_delta outer0 inner0 outer1 inner1)
           (#wp:rstate_wp a inner0 inner1)
           ($f:unit -> RSTATE a inner0 inner1 wp)
         : RSTATE a outer0 outer1 (frame_wp delta wp) =
@@ -277,7 +285,7 @@ let rst_frame (outer0:resource)
               (outer1:a -> resource)
               (#inner1:a -> resource)
               (#[resolve_delta ()] 
-                   delta:frame_delta outer0 inner0 outer1 inner1)
+                delta:frame_delta outer0 inner0 outer1 inner1)
               (#pre:r_pre inner0)
               (#post:r_post inner0 a inner1)
               ($f:unit -> RST a inner0 inner1 pre post)
@@ -288,27 +296,28 @@ let rst_frame (outer0:resource)
   reveal_can_be_split_into ();
   f ()
 
-(* A variant of RST that states the resources consumed instead of returned *)
+(* An expects-consumes-provides variant of the RST effect *)
 
-let consume_returns (expects:resource)
-                    (consumes:resource) = 
-  returns:resource{
-    expects `can_be_split_into` (consumes,returns)
+let cpr_retains (expects:resource)
+                (consumes:resource) = 
+  retains:resource{
+    expects `can_be_split_into` (consumes,retains)
   }
 
-let resolve_consume_returns () : Tac unit =
-  norm [delta_only [`%consume_returns]];
+let resolve_retains () : Tac unit =
+  norm [delta_only [`%cpr_retains]];
   refine_intro ();
   flip ();
   apply_lemma (quote can_be_split_into_star);
   flip ();
   canon_monoid req rm
-
-effect ConsumeRST (a:Type)
-                  (expects:resource)                                       (* expects *)
-                  (consumes:resource)                                      (* consumes *)
-                  (#[resolve_consume_returns ()]
-                      returns:consume_returns expects consumes)            (* expects - consumes *)
-                  (pre:r_pre expects)
-                  (post:r_post expects a (fun _ -> returns)) = 
-       RST a expects (fun _ -> returns) pre post
+  
+effect CPRST (a:Type)
+             (expects:resource)                                       (* expects *)
+             (consumes:resource)                                      (* consumes *)
+             (#[resolve_retains ()]
+               retains:cpr_retains expects consumes)                  (* retains = expects - consumes *)
+             (provides:a -> resource)                                 (* provides *)
+             (pre:r_pre expects)
+             (post:r_post expects a (fun x -> retains <*> (provides x))) = 
+  RST a expects (fun x -> retains <*> (provides x)) pre post
