@@ -1,5 +1,5 @@
 [
-  "\u0010JVAc°”Iq\f€4%vÕˆ",
+  "Bà\u0003\u001a…≈S\u0011√u\u0002\u0011\u0000\u001eÚ)",
   [
     [
       "Bug1270.test",
@@ -16,7 +16,7 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "b6e9100c8d52c92c10a7bf76c41c4439"
+      "f616b862667178e4e3ca466ac769d5e4"
     ],
     [
       "Bug1270.test",
@@ -33,7 +33,7 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "e10205d28c381e7df84161b5025b86e6"
+      "ad366b0a9800788a3d16ef7c59f1ddf2"
     ],
     [
       "Bug1270.test",
@@ -50,7 +50,7 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "d8cfaf73239d5d156971bf3678502335"
+      "d2ce4a77b32b4712bc8606296b525e1c"
     ],
     [
       "Bug1270.test",
@@ -67,7 +67,7 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "6f45b438b2545a4b6fea436efd6c4c99"
+      "0dd7cab34db0b58286a0a04a570281cc"
     ]
   ]
 ]

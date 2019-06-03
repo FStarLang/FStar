@@ -141,9 +141,15 @@ let rec waitpid_ignore_signals pid =
 let kill_process (p: proc) =
   if not p.killed then begin
       (* Close the fds directly: close_in and close_out both call `flush`,
-         potentially forcing us to wait until p starts reading again *)
-      Unix.close (Unix.descr_of_in_channel p.inc);
-      Unix.close (Unix.descr_of_out_channel p.outc);
+         potentially forcing us to wait until p starts reading again. They
+         might have been closed already (e.g. `run_process`), so we
+         just `attempt` it. *)
+      let attempt f =
+          try f ()
+          with | Unix.Unix_error (Unix.EBADF, _, _) -> ()
+      in
+      attempt (fun () -> Unix.close (Unix.descr_of_in_channel p.inc));
+      attempt (fun () -> Unix.close (Unix.descr_of_out_channel p.outc));
       (try Unix.kill p.pid Sys.sigkill
        with Unix.Unix_error (Unix.ESRCH, _, _) -> ());
       (* Avoid zombie processes (Unix.close_process does the same thing. *)
@@ -170,19 +176,19 @@ let process_read_all_output (p: proc) =
     waiting in input_line at that point, and input_line polls for signals fairly
     frequently.  If the signal reaches the writer (main) thread, on the other
     hand, we're toast: `Thread.join` isn't interruptible, so Caml will save the
-    signal until the child tread exits and `join` returns, and at that point the
+    signal until the child thread exits and `join` returns, and at that point the
     Z3 query is complete and the signal is useless.
 
     There are three possible solutions to this problem:
     1. Use an interruptible version of Thread.join written in C
     2. Ensure that signals are always delivered to the reader thread
-    3. Use a different synchronization mechanism between th reader and the writer.
+    3. Use a different synchronization mechanism between the reader and the writer.
 
     Option 1 is bad because building F* doesn't currently require a C compiler.
     Option 2 is easy to implement with `Unix.sigprocmask`, but that isn't
     available on Windows.  Option 3 is what the code below does: it uses a pipe
     and a 1-byte write as a way for the writer thread to wait on the reader
-    thread.  That's what `reader_fn` is passed a `signal_exit` function.
+    thread. That's why `reader_fn` is passed a `signal_exit` function.
 
     If a SIGINT reaches the reader, it should still call `signal_exit`.  If
     a SIGINT reaches the writer, it should make sure that the reader exits.
@@ -212,12 +218,12 @@ let process_read_async p stdin reader_fn =
 
 let run_process (id: string) (prog: string) (args: string list) (stdin: string option): string =
   let p = start_process' id prog args None in
-  let output = ref "" in
-  let reader_fn signal_fn =
-    output := process_read_all_output p; signal_fn () in
-  BatPervasives.finally (fun () -> kill_process p)
-    (fun () -> process_read_async p stdin reader_fn) ();
-  !output
+  (match stdin with
+   | None -> ()
+   | Some str -> output_string p.outc str);
+  flush p.outc;
+  close_out p.outc;
+  process_read_all_output p
 
 type read_result = EOF | SIGINT
 

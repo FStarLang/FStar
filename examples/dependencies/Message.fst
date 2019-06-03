@@ -13,11 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Hello
+module Message
 
-open FStar.IO
-
-let main = print_string "Hello F*!\n"
-
-let foo (x:(x:int & (y:int{y > x}) & int)) :int = match x with
-  | Mkdtuple3 x _ _ -> x
+let message = "Hello World!\n"
