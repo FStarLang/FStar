@@ -44,13 +44,17 @@ let cur_goal () : Tac typ = goal_type (_cur_goal ())
 (** [cur_witness] returns the current goal's witness *)
 let cur_witness () : Tac term = goal_witness (_cur_goal ())
 
-(* [cur_goal_safe] will always return the current goal, without failing.
+(** [cur_goal_safe] will always return the current goal, without failing.
 It must be statically verified that there indeed is a goal in order to
 call it. *)
 let cur_goal_safe () : TacH goal (requires (fun ps -> ~(goals_of ps == [])))
                                  (ensures (fun ps0 r -> exists g. r == Success g ps0))
  = match goals_of (get ()) with
    | g :: _ -> g
+
+(** [cur_binders] returns the list of binders in the current goal. *)
+let cur_binders () : Tac binders =
+    binders_of_env (cur_env ())
 
 (** Set the guard policy only locally, without affecting calling code *)
 let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
@@ -134,8 +138,11 @@ let exact_guard (t : term) : Tac unit =
 let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp tau
 let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  tau
 
-let cur_module () : Tac (list string) =
-    moduleof (cur_env ())
+let cur_module () : Tac name =
+    moduleof (top_env ())
+
+let open_modules () : Tac (list name) =
+    env_open_modules (top_env ())
 
 let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
     if n = 0
@@ -357,7 +364,6 @@ let pose (t:term) : Tac binder =
     apply (`__cut);
     flip ();
     exact t;
-    let _ = trytac flip in // maybe we have less than 2 goals now
     intro ()
 
 let intro_as (s:string) : Tac binder =
@@ -490,15 +496,6 @@ let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     match ts with
     | t::ts -> let _ = divide 1 t (fun () -> iseq ts) in ()
     | []    -> ()
-
-private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
-private let __witness #a x #p _ =
-  let x : squash (exists x. p x) = () in
-  x
-
-let witness (t : term) : Tac unit =
-    apply_raw (`__witness);
-    exact t
 
 private val push1 : (#p:Type) -> (#q:Type) ->
                         squash (p ==> q) ->

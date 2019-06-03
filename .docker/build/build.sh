@@ -201,6 +201,13 @@ function refresh_hints() {
     # Silent, always-successful merge
     export GIT_MERGE_AUTOEDIT=no
     git merge $commit -Xtheirs
+
+    # Check if build hints branch exist on remote and remove it if it exists
+    exist=$(git branch -a | egrep 'remotes/origin/BuildHints-master' | wc -l)
+    if [ $exist == 1 ]; then
+        git push $remote :BuildHints-$CI_BRANCH
+    fi
+
     # Push.
     git checkout -b BuildHints-$CI_BRANCH
     git push $remote BuildHints-$CI_BRANCH
@@ -285,14 +292,6 @@ function build_fstar() {
                     {
                         echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
                         echo " - min-test (HACL*)" >>$ORANGE_FILE
-                    }
-            } &
-
-            {
-                OTHERFLAGS='--use_hint_hashes' make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
-                    {
-                        echo "Error - Crypto.AEAD.Encrypt.fst-ver (HACL*)"
-                        echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >>$ORANGE_FILE
                     }
             } &
 

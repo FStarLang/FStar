@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "af3d24978e6cfd8360ab433a2bd26790"
+      "38f68c1052183bddb3220b43e3cdcd92"
     ],
     [
       "InjectiveTypeFormers.Explicit.lemma_of_squash",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "22f9087e8ccb200e0b838ef0d420b810"
+      "d8556485155e2961d1be8ae5e895572b"
     ],
     [
       "InjectiveTypeFormers.Explicit.false_of_pq",
@@ -40,7 +40,7 @@
         "refinement_interpretation_Tm_refine_0a9dd668d96098fcd9f12df1b6843b10"
       ],
       0,
-      "cadbc700f2eb5aaa8702d99f0136cd9d"
+      "9e4c63809861d1a5789a89fb0557e9f0"
     ],
     [
       "InjectiveTypeFormers.Explicit.not_pq",
@@ -49,7 +49,7 @@
       1,
       [ "@query" ],
       0,
-      "421ece1fa1ec062f1215659a918cf7a9"
+      "3057328527512a5a5b6d64468b7dc6a4"
     ],
     [
       "InjectiveTypeFormers.Explicit.pq",
@@ -57,22 +57,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_InjectiveTypeFormers.Explicit.not_pq",
         "equation_InjectiveTypeFormers.Explicit.p",
         "equation_InjectiveTypeFormers.Explicit.pa",
-        "equation_InjectiveTypeFormers.Explicit.q", "equation_Prims.l_False",
-        "equation_Prims.l_imp", "equation_Prims.l_not",
-        "equation_Prims.squash",
+        "equation_InjectiveTypeFormers.Explicit.q", "equation_Prims.l_not",
         "function_token_typing_InjectiveTypeFormers.Explicit.p",
-        "l_not-interp",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "typing_InjectiveTypeFormers.Explicit.not_pq", "unit_inversion",
-        "unit_typing"
+        "l_not-interp", "typing_InjectiveTypeFormers.Explicit.not_pq"
       ],
       0,
-      "db9e91d363725810776362827a11f65c"
+      "73c8eda6e05c6030b45adb06fe774832"
     ]
   ]
 ]

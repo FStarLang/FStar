@@ -1390,7 +1390,7 @@ strengthen the induction hypothesis, and possibly to prove that `append` is
 associative)
 ~~ ExerciseFragment {exname=Ex04f}
 val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
-      Lemma (fold_left Cons l l' = append (reverse l) l')
+      Lemma (fold_left Cons l l' == append (reverse l) l')
 ~~
 ~~ AnswerFragment {exname=Ex04f}
 [INCLUDE=code/solutions/Ex04f.fst:FoldLeftInteresting]

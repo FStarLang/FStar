@@ -1,14 +1,10 @@
 include Makefile.config
 
-# FSTAR_C: This is the way in which we invoke F* for boostrapping
-#   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
-#   -- eager_inference, MLish, lax: all tune type-inference for use with unverified ML programs
 INCLUDE_PATHS = \
 	../ulib \
 	boot \
 	basic \
 	extraction \
-	format \
 	fsdoc \
 	fstar \
 	parser \
@@ -24,6 +20,10 @@ INCLUDE_PATHS = \
 CACHE_DIR?=./.cache.boot
 
 FSTAR_BOOT ?= $(FSTAR)
+
+# FSTAR_C: This is the way in which we invoke F* for boostrapping
+#   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
+#   -- MLish and lax tune type-inference for use with unverified ML programs
 FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
 	--use_extracted_interfaces false                                \
 	--lax --MLish --no_location_info				\
@@ -42,10 +42,11 @@ EXTRACT_NAMESPACES=FStar.Extraction FStar.Fsdoc FStar.Parser		\
 # specific namespace. So, we mention extracting those explicitly.
 EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
 		FStar.Options FStar.Ident FStar.Errors FStar.Const	\
-		FStar.Format FStar.Order FStar.Dependencies		\
+		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
 		FStar.Interactive.Ide FStar.Interactive.Legacy		\
-		FStar.Universal FStar.Prettyprint FStar.Main
+		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
+		FStar.Main
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES

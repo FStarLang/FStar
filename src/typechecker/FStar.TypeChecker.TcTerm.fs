@@ -243,14 +243,68 @@ let check_pat_fvs rng env pats bs =
     let pat_vars = get_pat_vars (List.map fst bs) (N.normalize [Env.Beta] env pats) in
     begin match bs |> BU.find_opt (fun (b, _) -> not(BU.set_mem b pat_vars)) with
         | None -> ()
-        | Some (x,_) -> Errors.log_issue rng (Errors.Warning_PatternMissingBoundVar, (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
+        | Some (x,_) ->
+          Errors.log_issue rng
+            (Errors.Warning_SMTPatternIllFormed,
+             (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
     end
+
+(*
+ * Check that term t (an smt pattern) does not contain theory symbols
+ * These symbols are fvs with attribute smt_theory_symbol from Prims
+ *   and other terms such as abs, arrows etc.
+ *)
+let check_no_smt_theory_symbols (en:env) (t:term) :unit =
+  let rec pat_terms (t:term) :list<term> =
+    let t = unmeta t in
+    let head, args = head_and_args t in
+    match (un_uinst head).n, args with
+    | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid -> []
+    | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv Const.cons_lid ->
+      pat_terms hd @ pat_terms tl
+    | Tm_fvar fv, [_; (pat, _)] when fv_eq_lid fv Const.smtpat_lid -> [pat]
+    | Tm_fvar fv, [(subpats, None)] when fv_eq_lid fv Const.smtpatOr_lid ->
+      pat_terms subpats
+    | _ -> []  //TODO: should this be a hard error?
+  in
+  let rec aux (t:term) :list<term> =
+    match (SS.compress t).n with
+    //these cases are fine
+    | Tm_bvar _ | Tm_name _ | Tm_type _ | Tm_uvar _
+    | Tm_lazy _ | Tm_unknown -> []
+
+    //these should not be allowed in patterns
+    | Tm_constant _ | Tm_abs _ | Tm_arrow _ | Tm_refine _
+    | Tm_match _ | Tm_let _ | Tm_delayed _ | Tm_quoted _ -> [t]
+
+    //these descend more in the term
+    | Tm_fvar fv ->
+      if Env.fv_has_attr en fv Const.smt_theory_symbol_attr_lid then [t]
+      else []
+
+    | Tm_app (t, args) ->
+      List.fold_left (fun acc (t, _) ->
+        acc @ aux t) (aux t) args
+
+    | Tm_ascribed (t, _, _)
+    | Tm_uinst (t, _)
+    | Tm_meta (t, _) -> aux t
+  in
+  let tlist = t |> pat_terms |> List.collect aux in
+  if List.length tlist = 0 then ()  //did not find any offending term
+  else
+    //string to be displayed in the warning
+    let msg = List.fold_left (fun s t -> s ^ " " ^ (Print.term_to_string t)) "" tlist in
+    Errors.log_issue t.pos (Errors.Warning_SMTPatternIllFormed,
+      BU.format1 "Pattern uses these theory symbols or terms that should not be in an smt pattern: %s"
+                 msg)
 
 let check_smt_pat env t bs c =
     if U.is_smt_lemma t //check patterns cover the bound vars
     then match c.n with
         | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
-            check_pat_fvs t.pos env pats bs
+            check_pat_fvs t.pos env pats bs;
+            check_no_smt_theory_symbols env pats
         | _ -> failwith "Impossible"
 
 (************************************************************************************************************)
@@ -449,14 +503,20 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let g = {g with guard_f=Trivial} in //VC's in SMT patterns are irrelevant
     mk (Tm_meta (e, Meta_desugared Meta_smt_pat)) None top.pos, c, g  //AR: keeping the pats as meta for the second phase. smtencoding does an unmeta.
 
-  | Tm_meta(e, Meta_pattern pats) ->
+  | Tm_meta(e, Meta_pattern(names, pats)) ->
     let t, u = U.type_u () in
     let e, c, g = tc_check_tot_or_gtot_term env e t in
+    //NS: PATTERN INFERENCE
+    //if `pats` is empty (that means the user did not annotate a pattern).
+    //In that case try to infer a pattern by
+    //analyzing `e` for the smallest terms that contain all the variables
+    //in `names`.
+    //If not pattern can be inferred, raise a warning
     let pats, g' =
         let env, _ = Env.clear_expected_typ env in
         tc_smt_pats env pats in
     let g' = {g' with guard_f=Trivial} in //The pattern may have some VCs associated with it, but these are irrelevant.
-    mk (Tm_meta(e, Meta_pattern pats)) None top.pos,
+    mk (Tm_meta(e, Meta_pattern(names, pats))) None top.pos,
     c,
     Env.conj_guard g g' //but don't drop g' altogether, since it also contains unification constraints
 
@@ -2340,6 +2400,24 @@ and check_top_level_let env e =
 
      | _ -> failwith "Impossible"
 
+and maybe_intro_smt_lemma env lem_typ c2 =
+    if U.is_smt_lemma lem_typ
+    then let universe_of_binders bs =
+             let _, us =
+               List.fold_left
+                 (fun (env, us) b ->
+                   let u = env.universe_of env (fst b).sort in
+                   let env = Env.push_binders env [b] in
+                   env, u::us)
+                 (env, [])
+                 bs
+             in
+             List.rev us
+         in
+         let quant = U.smt_lemma_as_forall lem_typ universe_of_binders in
+         TcUtil.weaken_precondition env c2 (NonTrivial quant)
+    else c2
+
 (******************************************************************************)
 (* Checking an inner non-recursive let-binding:                               *)
 (* inner let's are never implicitly generalized                               *)
@@ -2378,8 +2456,16 @@ and check_inner_let env e =
        let x = fst xbinder in
        let env_x = Env.push_bv env x in
        let e2, c2, g2 = tc_term env_x e2 in
+       let c2 = maybe_intro_smt_lemma env_x c1.res_typ c2 in
        let cres =
-         TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (Some x, c2) in
+         TcUtil.maybe_return_e2_and_bind
+           e1.pos
+           env
+           (Some e1)
+           c1
+           e2
+           (Some x, c2)
+       in
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
        let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
@@ -2488,6 +2574,12 @@ and check_inner_let_rec env top =
           let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
+          let cres =
+            List.fold_right
+              (fun lb cres -> maybe_intro_smt_lemma env lb.lbtyp cres)
+              lbs
+              cres
+          in
           let cres = TcUtil.maybe_assume_result_eq_pure_term env e2 cres in
           let cres = Util.lcomp_set_flags cres [SHOULD_NOT_INLINE] in //cf. issue #1362
           let guard = Env.conj_guard g_lbs (Env.close_guard env (List.map S.mk_binder bvs) g2) in
@@ -2714,15 +2806,18 @@ and tc_binders env bs =
           b::bs, env', Env.conj_guard g (Env.close_guard_univs [u] [b] g'), u::us in
     aux env bs
 
-and tc_smt_pats env pats =
-    let tc_args env args : Syntax.args * guard_t =
+and tc_smt_pats en pats =
+    let tc_args en args : Syntax.args * guard_t =
        //an optimization for checking arguments in cases where we know that their types match the types of the corresponding formal parameters
        //notably, this is used when checking the application  (?u x1 ... xn). NS: which we do not currently do!
        List.fold_right (fun (t, imp) (args, g) ->
-                             let t, _, g' = tc_term env t in
+                             t |> check_no_smt_theory_symbols en;
+                             let t, _, g' = tc_term en t in
                              (t, imp)::args, Env.conj_guard g g')
           args ([], Env.trivial_guard) in
-    List.fold_right (fun p (pats, g) -> let args, g' = tc_args env p in (args::pats, Env.conj_guard g g')) pats ([], Env.trivial_guard)
+    List.fold_right (fun p (pats, g) ->
+      let args, g' = tc_args en p in
+      (args::pats, Env.conj_guard g g')) pats ([], Env.trivial_guard)
 
 and tc_tot_or_gtot_term env e : term
                                 * lcomp

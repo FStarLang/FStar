@@ -70,6 +70,7 @@ val revert : unit -> tac<unit>
 val clear : binder -> tac<unit>
 val clear_top : unit -> tac<unit>
 val tc : term -> tac<typ>
+val tcc : term -> tac<comp>
 
 val is_irrelevant : goal -> bool
 
@@ -87,7 +88,6 @@ val trefl : unit -> tac<unit>
 val dup      : unit -> tac<unit>
 val tadmit_t : term -> tac<unit>
 
-val cases : term -> tac<(term * term)>
 val t_destruct : term -> tac<list<(fv * Z.t)>>
 
 val top_env : unit -> tac<env>

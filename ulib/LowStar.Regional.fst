@@ -48,6 +48,9 @@ noeq type regional a =
     // The target type should have a region where it belongs.
     region_of: (a -> GTot HS.rid) ->
 
+    //loc_of for the underlying a
+    loc_of: (a -> GTot loc) ->
+
     // A stateless value of type `a`.
     // It does not have to satisfy the invariant `r_inv` described below.
     dummy: a ->
@@ -91,6 +94,7 @@ noeq type regional a =
           Set.subset (Map.domain (HS.get_hmap h0))
                      (Map.domain (HS.get_hmap h1)) /\
           modifies loc_none h0 h1 /\
+          fresh_loc (loc_of v) h0 h1 /\  //the underlying loc is fresh
           r_alloc_p v /\ r_inv h1 v /\ region_of v == r /\
           r_repr h1 v == Ghost.reveal irepr))) ->
 

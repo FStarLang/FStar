@@ -941,7 +941,7 @@ let rec head_matches env t1 t2 : match_result =
 (* Does t1 head-match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let maybe_inline t =
-        let head = U.head_of t in
+        let head = U.head_of (unrefine env t) in
         if Env.debug env <| Options.Other "RelDelta" then
             BU.print2 "Head of %s is %s\n" (Print.term_to_string t) (Print.term_to_string head);
         match (U.un_uinst head).n with
@@ -3428,7 +3428,7 @@ let resolve_implicits' env must_total forcelax g =
                     in
                     let ctx_u = { ctx_u with ctx_uvar_meta = None } in
                     let hd = { hd with imp_uvar = ctx_u } in
-                    until_fixpoint (out, true) (hd :: (extra @ tl))
+                    until_fixpoint (out, true) (extra @ tl)
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl

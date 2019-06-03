@@ -464,8 +464,9 @@ and rebuild_closure cfg env stack t =
     | Meta(env_m, m, r)::stack ->
       let m =
           match m with
-          | Meta_pattern args ->
-            Meta_pattern (args |> List.map (fun args ->
+          | Meta_pattern (names, args) ->
+            Meta_pattern (names |> List.map (non_tail_inline_closure_env cfg env_m),
+                          args |> List.map (fun args ->
                                             args |> List.map (fun (a, q) ->
                                             non_tail_inline_closure_env cfg env_m a, q)))
 
@@ -829,7 +830,7 @@ let rec maybe_weakly_reduced tm :  bool =
       | Tm_meta(t, m) ->
         maybe_weakly_reduced t
         || (match m with
-           | Meta_pattern args ->
+           | Meta_pattern (_, args) ->
              BU.for_some (BU.for_some (fun (a, _) -> maybe_weakly_reduced a)) args
 
            | Meta_monadic_lift(_, _, t')
@@ -1396,9 +1397,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         (* meta doesn't block reduction, but we need to put the label back *)
                         norm cfg env (Meta(env,m,r)::stack) head
 
-                      | Meta_pattern args ->
+                      | Meta_pattern (names, args) ->
                           let args = norm_pattern_args cfg env args in
-                          norm cfg env (Meta(env,Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                          let names =  names |> List.map (norm cfg env []) in
+                          norm cfg env (Meta(env, Meta_pattern(names, args), t.pos)::stack) head
+                          //meta doesn't block reduction, but we need to put the label back
 
                       | _ ->
                           norm cfg env stack head //meta doesn't block reduction
@@ -1406,8 +1409,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | [] ->
                     let head = norm cfg env [] head in
                     let m = match m with
-                        | Meta_pattern args ->
-                            Meta_pattern (norm_pattern_args cfg env args)
+                        | Meta_pattern (names, args) ->
+                          let names =  names |> List.map (norm cfg env []) in
+                          Meta_pattern (names, norm_pattern_args cfg env args)
                         | _ -> m in
                     let t = mk (Tm_meta(head, m)) t.pos in
                     rebuild cfg env stack t
@@ -2485,7 +2489,11 @@ let normalize_universe env u = norm_universe (config [] env) [] u
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
 *)
 let ghost_to_pure env c =
-    let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses] env in
+    let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses;
+                      Unascribe;   //remove ascriptions
+                      ForExtraction //and refinement types
+                     ]
+              env in
     let non_info t = non_informative (norm cfg [] [] t) in
     match c.n with
     | Total _ -> c
@@ -2507,7 +2515,15 @@ let ghost_to_pure env c =
     | _ -> c
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
-    let cfg = config [Eager_unfolding; UnfoldUntil delta_constant; EraseUniverses; AllowUnboundUniverses] env in
+     let cfg =
+        config [Eager_unfolding;
+                UnfoldUntil delta_constant;
+                EraseUniverses;
+                AllowUnboundUniverses;
+                Unascribe;   //remove ascriptions
+                ForExtraction //and refinement types
+                ]
+        env in
     let non_info t = non_informative (norm cfg [] [] t) in
     if U.is_ghost_effect lc.eff_name
     && non_info lc.res_typ
@@ -2706,7 +2722,7 @@ and elim_delayed_subst_comp (c:comp) : comp =
       mk (Comp ct)
 
 and elim_delayed_subst_meta = function
-  | Meta_pattern args -> Meta_pattern(List.map elim_delayed_subst_args args)
+  | Meta_pattern (names, args) -> Meta_pattern(List.map elim_delayed_subst_term names, List.map elim_delayed_subst_args args)
   | Meta_monadic(m, t) -> Meta_monadic(m, elim_delayed_subst_term t)
   | Meta_monadic_lift(m1, m2, t) -> Meta_monadic_lift(m1, m2, elim_delayed_subst_term t)
   | m -> m

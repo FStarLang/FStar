@@ -58,6 +58,12 @@ val contains: #key:eqtype -> #value:Type -> t key value -> key -> Tot bool
 *)
 val concat: #key:eqtype -> #value:Type -> t key value -> t key value -> Tot (t key value)
 
+(* map_val f m:
+      A map whose domain is the same as `m` but all values have
+      `f` applied to them.
+*)
+val map_val: #val1:Type -> #val2:Type -> f:(val1 -> val2) -> #key:eqtype -> t key val1 -> Tot (t key val2)
+
 (* restrict s m:
       Restricts the domain of `m` to (domain m `intersect` s)
 *)
@@ -105,6 +111,10 @@ val lemma_SelConcat2: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key v
                       Lemma (requires True) (ensures (not(contains m2 k) ==> sel (concat m1 m2) k==sel m1 k))
                       [SMTPat (sel (concat m1 m2) k)]
 
+val lemma_SelMapVal: #val1:Type -> #val2:Type -> f:(val1 -> val2) -> #key:eqtype -> m:t key val1 -> k:key ->
+                     Lemma (requires True) (ensures (sel (map_val f m) k == f (sel m k)))
+                     [SMTPat (sel (map_val f m) k)]
+
 val lemma_InDomUpd1: #key:eqtype -> #value:Type -> m:t key value -> k1:key -> k2:key -> v:value ->
                      Lemma (requires True) (ensures (contains (upd m k1 v) k2 == (k1=k2 || contains m k2)))
                      [SMTPat (contains (upd m k1 v) k2)]
@@ -120,6 +130,10 @@ val lemma_InDomConstMap: #key:eqtype -> #value:Type -> v:value -> k:key ->
 val lemma_InDomConcat: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value -> k:key ->
                  Lemma (requires True) (ensures (contains (concat m1 m2) k==(contains m1 k || contains m2 k)))
                  [SMTPat (contains (concat m1 m2) k)]
+
+val lemma_InMapVal: #val1:Type -> #val2:Type -> f:(val1 -> val2) -> #key:eqtype -> m:t key val1 -> k:key ->
+                    Lemma (requires True) (ensures (contains (map_val f m) k == contains m k))
+                    [SMTPat (contains (map_val f m) k)]
 
 val lemma_InDomRestrict: #key:eqtype -> #value:Type -> m:t key value -> ks:S.set key -> k:key ->
                          Lemma (requires True) (ensures (contains (restrict ks m) k == (S.mem k ks && contains m k)))

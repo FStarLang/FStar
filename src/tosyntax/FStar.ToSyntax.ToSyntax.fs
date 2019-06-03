@@ -1529,14 +1529,24 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
       let wild r = mk_term Wild r Expr in
       let init   = mk_term (Var C.calc_init_lid) init_expr.range Expr in
+      let last_expr = match List.last steps with
+                      | Some (CalcStep (_, _, last_expr)) -> last_expr
+                      | _ -> failwith "impossible: no last_expr on calc"
+      in
       let step r = mk_term (Var C.calc_step_lid) r Expr in
       let finish = mkApp (mk_term (Var C.calc_finish_lid) top.range Expr) [(rel, Nothing)] top.range in
 
       let e = mkApp init [(init_expr, Nothing)] init_expr.range in
-      let e = List.fold_left (fun e (CalcStep (rel, just, next_expr)) ->
-                                  mkApp (step rel.range)
-                                        [(eta_and_annot rel, Nothing); (next_expr, Nothing); (thunk e, Nothing); (thunk just, Nothing)] just.range) e steps in
-      let e = mkApp finish [(thunk e, Nothing)] init_expr.range in
+      let (e, _) = List.fold_left (fun (e, prev) (CalcStep (rel, just, next_expr)) ->
+                          let pf = mkApp (step rel.range)
+                                          [(wild rel.range, Hash);
+                                           (init_expr, Hash);
+                                           (prev, Hash);
+                                           (eta_and_annot rel, Nothing); (next_expr, Nothing);
+                                           (thunk e, Nothing); (thunk just, Nothing)] just.range in
+                          (pf, next_expr))
+                   (e, init_expr) steps in
+      let e = mkApp finish [(init_expr, Hash); (last_expr, Hash); (thunk e, Nothing)] init_expr.range in
       desugar_term_maybe_top top_level env e
 
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
@@ -1799,28 +1809,46 @@ and desugar_formula env (f:term) : S.term =
   let setpos t = {t with pos=f.range} in
   let desugar_quant (q:lident) b pats body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
-    let desugar_pats env pats = List.map (fun es -> es |> List.map (fun e -> arg_withimp_t Nothing <| desugar_term env e)) pats in
+    let with_pats env (names, pats) body =
+      match names, pats with
+      | [], [] -> body
+      | [], _::_ ->
+        //violates an internal invariant
+        failwith "Impossible: Annotated pattern without binders in scope"
+      | _ ->
+        let names =
+          names |> List.map
+          (fun i ->
+          { fail_or2 (try_lookup_id env) i with pos=i.idRange })
+        in
+        let pats =
+          pats |> List.map
+          (fun es -> es |> List.map
+                  (fun e -> arg_withimp_t Nothing <| desugar_term env e))
+        in
+        mk (Tm_meta (body, Meta_pattern (names, pats)))
+    in
     match tk with
       | Some a, k ->
         let env, a = push_bv env a in
         let a = {a with sort=k} in
-        let pats = desugar_pats env pats in
         let body = desugar_formula env body in
-        let body = match pats with
-          | [] -> body
-          | _ -> mk (Tm_meta (body, Meta_pattern pats)) in
+        let body = with_pats env pats body in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
         mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_constant_at_level 1) None, //NS delta: wrong?  Delta_constant_at_level 2?
                       [as_arg body])
 
       | _ -> failwith "impossible" in
 
- let push_quant (q:(list<AST.binder> * list<(list<AST.term>)> * AST.term) -> AST.term') (binders:list<AST.binder>) pats (body:term) =
+ let push_quant
+      (q:(list<AST.binder> * AST.patterns * AST.term) -> AST.term')
+      (binders:list<AST.binder>)
+      pats (body:term) =
     match binders with
     | b::(b'::_rest) ->
       let rest = b'::_rest in
       let body = mk_term (q(rest, pats, body)) (Range.union_ranges b'.brange body.range) Formula in
-      mk_term (q([b], [], body)) f.range Formula
+      mk_term (q([b], ([], []), body)) f.range Formula
     | _ -> failwith "impossible" in
 
   match (unparen f).tm with

@@ -4,12 +4,13 @@
 # By default it always look for the latest container available
 # In case you would like to reference a specific commit,
 # replace latest with the commit id from github using 12 characters.
+ARG DOCKERHUBPROJECT
 ARG COMMITID
-FROM everest-ci-windows-nt:${COMMITID}
+FROM ${DOCKERHUBPROJECT}everest-ci-windows-nt:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
-ARG TARGET
+ARG BUILDTARGET
 ARG BRANCHNAME
 
 # Add ssh key
@@ -36,7 +37,7 @@ WORKDIR ".."
 COPY build.sh build.sh
 COPY build_helper.sh build_helper.sh
 
-RUN Invoke-BashCmd ./build_helper.sh $Env:TARGET $Env:BUILDLOGFILE $Env:MAXTHREADS $Env:BRANCHNAME '||' true
+RUN Invoke-BashCmd ./build_helper.sh $Env:BUILDTARGET $Env:BUILDLOGFILE $Env:MAXTHREADS $Env:BRANCHNAME '||' true
 
 # Remove ssh key.
 RUN Invoke-BashCmd rm .ssh/id_rsa

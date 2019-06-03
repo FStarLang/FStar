@@ -241,7 +241,7 @@ let mk_decls name key decls aux_decls = [{
   decls       = decls;
   a_names     =  //AR: collect the names of aux_decls and decls to be retained in case of a cache hit
     let sm = BU.smap_create 20 in
-    List.iter (fun elt -> 
+    List.iter (fun elt ->
       List.iter (fun s -> BU.smap_add sm s "0") elt.a_names
     ) aux_decls;
     List.iter (fun d -> match d with
@@ -259,7 +259,7 @@ let mk_decls_trivial decls = [{
               | _ -> []) decls;
 }]
 
-let decls_list_of l = l |> List.collect (fun elt -> elt.decls) 
+let decls_list_of l = l |> List.collect (fun elt -> elt.decls)
 
 type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
@@ -560,7 +560,7 @@ let mkQuant r check_pats (qop, pats, wopt, vars, body) =
           begin
             Errors.log_issue
                     r
-                    (Errors.Warning_SMTPatternMissingBoundVar,
+                    (Errors.Warning_SMTPatternIllFormed,
                      BU.format1 "Pattern (%s) contains illegal symbols; dropping it" (print_smt_term p));
             []
            end
@@ -963,10 +963,6 @@ and mkPrelude z3options =
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
-                (assert (forall ((t Term))\n\
-                            (! (iff (exists ((e Term)) (HasType e t))\n\
-                                    (Valid t))\n\
-                                :pattern ((Valid t)))))\n\
                 (declare-fun Prims.precedes (Term Term Term Term) Term)\n\
                 (declare-fun Range_const (Int) Term)\n\
                 (declare-fun _mul (Int Int) Int)\n\
@@ -1008,8 +1004,30 @@ and mkPrelude z3options =
                                       (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
                                       (< (Rank t1) (Rank t2)))\n\
                                       :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
-
-   basic ^ bcons ^ lex_ordering
+   let valid_intro =
+     "(assert (forall ((e Term) (t Term))\n\
+                      (! (implies (HasType e t)\n\
+                                  (Valid t))\n\
+                       :pattern ((HasType e t)\n\
+                                 (Valid t))\n\
+                       :qid __prelude_valid_intro)))\n"
+   in
+   let valid_elim =
+     "(assert (forall ((t Term))\n\
+                      (! (implies (Valid t)\n\
+                                  (exists ((e Term)) (HasType e t)))\n\
+                       :pattern ((Valid t))\n\
+                       :qid __prelude_valid_elim)))\n"
+   in
+   basic
+   ^ bcons
+   ^ lex_ordering
+   ^ (if FStar.Options.smtencoding_valid_intro()
+      then valid_intro
+      else "")
+   ^ (if FStar.Options.smtencoding_valid_elim()
+      then valid_elim
+      else "")
 
 
 (* Generate boxing/unboxing functions for bitvectors of various sizes. *)

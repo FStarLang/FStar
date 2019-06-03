@@ -7,12 +7,13 @@
       2,
       1,
       [
-        "equation_InjectiveTypeFormers.SMT.p",
+        "@query", "equation_InjectiveTypeFormers.SMT.p",
+        "equation_InjectiveTypeFormers.SMT.q",
         "function_token_typing_InjectiveTypeFormers.SMT.p",
         "lemma_InjectiveTypeFormers.SMT.isInj_admit"
       ],
       0,
-      "cbb01d59344938adf0809c64faca66dd"
+      "5111ea0523de980022ac2aa1cb710b1d"
     ],
     [
       "InjectiveTypeFormers.SMT.pq",
@@ -27,7 +28,7 @@
         "token_correspondence_InjectiveTypeFormers.SMT.p"
       ],
       0,
-      "ad8d35af9270f2e0d5acd79d7b27e743"
+      "b84ae226cd4c074a4213f9bf2de3b855"
     ]
   ]
 ]

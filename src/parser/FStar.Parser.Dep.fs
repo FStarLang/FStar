@@ -131,7 +131,7 @@ type dependence_graph = //maps file names to the modules it depends on
  * AR: Parsing data for a file (also cached in the checked files)
  *     It is exactly same as what collect_one function below returns
  *)
-type parsing_data = {            
+type parsing_data = {
   direct_deps              : list<dependence>;  //direct dependences of the file
   additional_roots         : list<dependence>;  //additional "roots" that should be scanned
                                                 //i.e. implementations of interfaces in the first list
@@ -180,43 +180,77 @@ let resolve_module_name (file_system_map:files_for_module_name) (key:module_name
       | Some (_, Some fn) -> Some (lowercase_module_name fn)
       | _ -> None
 
-let interface_of (file_system_map:files_for_module_name) (key:module_name)
+let interface_of_internal (file_system_map:files_for_module_name) (key:module_name)
     : option<file_name> =
     match BU.smap_try_find file_system_map key with
     | Some (Some iface, _) -> Some iface
     | _ -> None
 
-let implementation_of (file_system_map:files_for_module_name) (key:module_name)
+let implementation_of_internal (file_system_map:files_for_module_name) (key:module_name)
     : option<file_name> =
     match BU.smap_try_find file_system_map key with
     | Some (_, Some impl) -> Some impl
     | _ -> None
 
+let interface_of deps key = interface_of_internal deps.file_system_map key
+let implementation_of deps key = implementation_of_internal deps.file_system_map key
+
 let has_interface (file_system_map:files_for_module_name) (key:module_name)
     : bool =
-    Option.isSome (interface_of file_system_map key)
+    Option.isSome (interface_of_internal file_system_map key)
 
 let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
-    Option.isSome (implementation_of file_system_map key)
+    Option.isSome (implementation_of_internal file_system_map key)
 
-
-let cache_file_name_internal (fn:string) : string * bool =  //bool indicates if the cache file exists
-  let cache_fn = fn ^ (if Options.lax () then ".checked.lax" else ".checked") in
-
-  match Options.find_file (cache_fn |> Util.basename) with
-  | Some path -> path, true
-  | None      ->
-    let mname = fn |> module_name_of_file in
-    if mname |> Options.should_be_already_cached then
-      FStar.Errors.raise_err (FStar.Errors.Error_AlreadyCachedAssertionFailure,
-                              BU.format1 "Expected %s to be already checked but could not find it" mname)
-    else FStar.Options.prepend_cache_dir cache_fn, false
 
 (*
  * Public interface
  *)
-let cache_file_name fn = fn |> cache_file_name_internal |> fst
+let cache_file_name =
+    let checked_file_and_exists_flag fn =
+      let lax = Options.lax () in
+      let cache_fn =
+        if lax then fn ^".checked.lax"
+        else fn ^".checked"
+      in
+      let mname = fn |> module_name_of_file in
+      match Options.find_file (cache_fn |> Util.basename) with
+      | Some path ->
+        let expected_cache_file = Options.prepend_cache_dir cache_fn in
+        if Option.isSome (Options.dep()) //if we're in the dependence analysis
+        && not (Options.should_be_already_cached mname) //and checked file is in the
+        && (not (BU.file_exists expected_cache_file) //wrong spot ... complain
+            || not (BU.paths_to_same_file path expected_cache_file))
+        then
+            FStar.Errors.log_issue
+                Range.dummyRange
+                (FStar.Errors.Warning_UnexpectedCheckedFile,
+                    BU.format3 "Did not expected %s to be already checked, \
+                                but found it in an unexpected location %s \
+                                instead of %s"
+                                mname
+                                path
+                                (Options.prepend_cache_dir cache_fn));
+        path
+      | None ->
+          if mname |> Options.should_be_already_cached
+          then
+            FStar.Errors.raise_err
+              (FStar.Errors.Error_AlreadyCachedAssertionFailure,
+               BU.format1 "Expected %s to be already checked but could not find it" mname)
+          else FStar.Options.prepend_cache_dir cache_fn
+    in
+    let memo = Util.smap_create 100 in
+    let memo f x =
+      match Util.smap_try_find memo x with
+      | Some res -> res
+      | None ->
+        let res = f x in
+        Util.smap_add memo x res;
+        res
+    in
+    memo checked_file_and_exists_flag
 
 let parsing_data_of deps fn = BU.smap_try_find deps.parse_results fn |> must
 
@@ -238,7 +272,7 @@ let file_of_dep_aux
     match d with
     | UseInterface key ->
       //This key always resolves to an interface source file
-      (match interface_of file_system_map key with
+      (match interface_of_internal file_system_map key with
        | None ->
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
          raise_err (Errors.Fatal_MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
@@ -250,21 +284,21 @@ let file_of_dep_aux
       if cmd_line_has_impl key //unless the cmd line contains 'a.fst'
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
-           then maybe_use_cache_of (Option.get (implementation_of file_system_map key))
+           then maybe_use_cache_of (Option.get (implementation_of_internal file_system_map key))
            else raise_err (Errors.Fatal_MissingExposeInterfacesOption,
                            BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
                                        Alternatively, invoking fstar with %s on the command line breaks \
                                        the abstraction imposed by its interface %s; \
                                        if you really want this behavior add the option '--expose_interfaces'"
                                        key
-                                       (Option.get (implementation_of file_system_map key))
-                                       (Option.get (interface_of file_system_map key)))
-      else maybe_use_cache_of (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
+                                       (Option.get (implementation_of_internal file_system_map key))
+                                       (Option.get (interface_of_internal file_system_map key)))
+      else maybe_use_cache_of (Option.get (interface_of_internal file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
     | UseImplementation key
     | FriendImplementation key ->
-        match implementation_of file_system_map key with
+        match implementation_of_internal file_system_map key with
         | None ->
           //if d is actually an edge in the dep_graph computed by discover
           //then d is only present if either an interface or an implementation exist
@@ -440,7 +474,11 @@ let collect_one
   : parsing_data
 =
   let data_from_cache = filename |> get_parsing_data_from_cache in
-  if data_from_cache |> is_some then data_from_cache |> must
+  if data_from_cache |> is_some then begin
+    if Options.debug_any ()
+    then BU.print1 "Reading parsing data for %s from its checked file\n" filename;
+    data_from_cache |> must
+  end
   else
       let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
       let mo_roots : ref<(list<dependence>)> = BU.mk_ref [] in
@@ -685,8 +723,7 @@ let collect_one
         | Name lid ->
             record_lid lid
         | Construct (lid, termimps) ->
-            if List.length termimps = 1 then
-              record_lid lid;
+            record_lid lid;
             List.iter (fun (t, _) -> collect_term t) termimps
         | Abs (pats, t) ->
             collect_patterns pats;
@@ -737,8 +774,8 @@ let collect_one
               | Inr t -> collect_term t)
               binders;
             collect_term t
-        | QForall (binders, ts, t)
-        | QExists (binders, ts, t) ->
+        | QForall (binders, (_, ts), t)
+        | QExists (binders, (_, ts), t) ->
             collect_binders binders;
             List.iter (List.iter collect_term) ts;
             collect_term t
@@ -1001,7 +1038,9 @@ let topological_dependences_of
                    (String.concat ", " all_files_0)
                    (String.concat ", " (remove_dups (fun x y -> x=y) friends))
                    (String.concat ", " (interfaces_needing_inlining));
-    let dep_graph = widen_deps friends dep_graph in
+    let dep_graph =
+        widen_deps friends dep_graph
+    in
     let _, all_files =
         if Options.debug_any()
         then BU.print_string "==============Phase2==================\n";
@@ -1084,7 +1123,9 @@ let collect (all_cmd_line_files: list<file_name>)
                       (deps @ mo_roots))
     end
   in
-  List.iter discover_one all_cmd_line_files;
+  FStar.Options.profile
+    (fun () -> List.iter discover_one all_cmd_line_files)
+    (fun _ -> "Dependence analysis: Initial scan");
 
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
   let cycle_detected dep_graph cycle filename =
@@ -1112,7 +1153,7 @@ let collect (all_cmd_line_files: list<file_name>)
             | UseInterface f
             | PreferInterface f ->
               begin
-              match implementation_of file_system_map f with
+              match implementation_of_internal file_system_map f with
               | None -> [x]
               | Some fn when fn=filename ->
                 //don't add trivial self-loops
@@ -1154,12 +1195,16 @@ let collect (all_cmd_line_files: list<file_name>)
 
   let inlining_ifaces = !interfaces_needing_inlining in
   let all_files, _ =
-    topological_dependences_of
-      file_system_map
-      dep_graph
-      inlining_ifaces
-      all_cmd_line_files
-      (Options.codegen()<>None)
+    FStar.Options.profile
+      (fun () ->
+         topological_dependences_of
+           file_system_map
+           dep_graph
+           inlining_ifaces
+           all_cmd_line_files
+           (Options.codegen()<>None))
+      (fun _ ->
+        "Dependence analysis: topological sort for full file list")
   in
   if Options.debug_any()
   then BU.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
@@ -1170,54 +1215,6 @@ let collect (all_cmd_line_files: list<file_name>)
 let deps_of deps (f:file_name)
     : list<file_name> =
     dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
-
-(* In public interface *)
-let hash_dependences deps fn cache_file =
-    let file_system_map = deps.file_system_map in
-    let all_cmd_line_files = deps.cmd_line_files in
-    let deps = deps.dep_graph in
-    let fn =
-        match FStar.Options.find_file fn with
-        | Some fn -> fn
-        | _ -> fn
-    in
-    let digest_of_file fn =
-        if Options.debug_any()
-        then BU.print2 "%s: contains digest of %s\n" cache_file fn;
-        BU.digest_of_file fn
-    in
-    let module_name = lowercase_module_name fn in
-    let source_hash = digest_of_file fn in
-    let interface_hash =
-        if is_implementation fn
-        && has_interface file_system_map module_name
-        then ["interface", digest_of_file (Option.get (interface_of file_system_map module_name))]
-        else []
-    in
-    let binary_deps = dependences_of file_system_map deps all_cmd_line_files fn
-                |> List.filter (fun fn ->
-                not (is_interface fn &&
-                    lowercase_module_name fn = module_name)) in
-    let binary_deps =
-        FStar.List.sortWith
-          (fun fn1 fn2 ->
-             String.compare (lowercase_module_name fn1)
-                            (lowercase_module_name fn2))
-        binary_deps in
-    let rec hash_deps out = function
-        | [] -> Some (("source", source_hash)::interface_hash@out)
-        | fn::deps ->
-          let cache_fn = cache_file_name fn in
-          let digest = if Util.file_exists cache_fn then Some (digest_of_file fn) else None in
-          match digest with
-          | None ->
-            if Options.debug_any()
-            then BU.print2 "%s: missed digest of file %s\n" cache_file (FStar.Util.basename cache_fn);
-            None
-          | Some dig ->
-            hash_deps ((lowercase_module_name fn, dig) :: out) deps
-    in
-    hash_deps [] binary_deps
 
 (* In public interface *)
 let print_digest (dig:list<(string * string)>) : string =
@@ -1299,8 +1296,8 @@ let print_full (deps:deps) : unit =
               if should_visit lc_module_name then begin
                  let ml_file_opt = mark_visiting lc_module_name in
                  //visit all its dependences
-                 visit_file (implementation_of deps.file_system_map lc_module_name);
-                 visit_file (interface_of deps.file_system_map lc_module_name);
+                 visit_file (implementation_of deps lc_module_name);
+                 visit_file (interface_of deps lc_module_name);
                  //and then emit this one's ML file
                  emit_output_file_opt ml_file_opt
               end;
@@ -1309,6 +1306,16 @@ let print_full (deps:deps) : unit =
         let all_extracted_modules = BU.smap_keys orig_output_file_map in
         aux all_extracted_modules;
         List.rev !order
+    in
+    let sb = FStar.StringBuffer.create (FStar.BigInt.of_int_fs 10000) in
+    let pr str = ignore <| FStar.StringBuffer.add str sb in
+    let print_entry target first_dep all_deps =
+        pr target;
+        pr ": ";
+        pr first_dep;
+        pr "\\\n\t";
+        pr all_deps;
+        pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
     let output_file ext fst_file =
@@ -1319,132 +1326,172 @@ let print_full (deps:deps) : unit =
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
-    let cache_file f = f |> cache_file_name_internal |> (fun (f, b) -> norm_path f, b) in
-    let set_of_unchecked_files = keys |> List.fold_left
-        (fun set_of_unchecked_files file_name ->
-          let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
-          let iface_deps =
-              if is_interface file_name
-              then None
-              else match interface_of deps.file_system_map (lowercase_module_name file_name) with
-                   | None ->
-                     None
-                   | Some iface ->
-                     Some ((Option.get (deps_try_find deps.dep_graph iface)).edges)
-          in
-          let iface_deps =
-              BU.map_opt iface_deps
-                         (List.filter (fun iface_dep ->
-                             not (BU.for_some (dep_subsumed_by iface_dep) dep_node.edges)))
-          in
-          let norm_f = norm_path file_name in
-          let files = List.map (file_of_dep_aux true deps.file_system_map deps.cmd_line_files) dep_node.edges in
-          let files =
-              match iface_deps with
-              | None -> files
-              | Some iface_deps ->
-                let iface_files =
-                    List.map (file_of_dep_aux true deps.file_system_map deps.cmd_line_files) iface_deps
-                in
-                BU.remove_dups (fun x y -> x = y) (files @ iface_files)
-          in
-          let files = List.map norm_path files in
-          let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
-          let files = String.concat "\\\n\t" files in
-          let cache_file_name, b = cache_file file_name in
-          let set_of_unchecked_files = if b then set_of_unchecked_files
-                                       else BU.set_add file_name set_of_unchecked_files
-          in
-
-          //this one prints:
-          //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-          Util.print3 "%s: %s \\\n\t%s\n\n"
-                      cache_file_name
-                      norm_f
-                      files;
-
-          //And, if this is not an interface, we also print out the dependences among the .ml files
-          // excluding files in ulib, since these are packaged in fstarlib.cmxa
-        let all_fst_files_dep, widened =
-            if Options.cmi()
-            then topological_dependences_of
-                    deps.file_system_map
-                    deps.dep_graph
-                    deps.interfaces_with_inlining
-                    [file_name]
-                    true
-            else
-                let maybe_widen_deps (f_deps:dependences) =
-                    List.map
-                        (fun dep ->
-                         file_of_dep_aux false deps.file_system_map deps.cmd_line_files dep)
-                    f_deps
-                in
-                let fst_files = maybe_widen_deps dep_node.edges in
-                let fst_files_from_iface =
-                    match iface_deps with
-                    | None -> []
-                    | Some iface_deps -> maybe_widen_deps iface_deps
-                in
-                BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface),
-                false
-        in
-        let all_checked_fst_dep_files = all_fst_files_dep |> List.map (fun f -> f |> cache_file |> fst) in
-        let _ = 
-          if is_implementation file_name then (
-            if Options.cmi()
-            && widened
-            then begin
-                Util.print3 "%s: %s \\\n\t%s\n\n"
-                            (output_ml_file file_name)
-                            (cache_file_name)
-                            (String.concat " \\\n\t" all_checked_fst_dep_files);
-                Util.print3 "%s: %s \\\n\t%s\n\n"
-                            (output_krml_file file_name)
-                            (cache_file_name)
-                            (String.concat " \\\n\t" all_checked_fst_dep_files)
-            end
-            else begin
-                Util.print2 "%s: %s \n\n"
-                            (output_ml_file file_name)
-                            (cache_file_name);
-                Util.print2 "%s: %s\n\n"
-                            (output_krml_file file_name)
-                            (cache_file_name)
-            end;
-            let cmx_files =
-                let extracted_fst_files =
-                    all_fst_files_dep |> List.filter (fun df ->
-                        lowercase_module_name df <> lowercase_module_name file_name //avoid circular deps on f's own cmx
-                        && Options.should_extract (lowercase_module_name df))
-                in
-                extracted_fst_files |> List.map output_cmx_file
+    let cache_file f = norm_path (cache_file_name f) in
+    let all_checked_files =
+        keys |>
+        List.fold_left
+        (fun all_checked_files file_name ->
+          let process_one_key () =
+            let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
+            let iface_deps =
+                if is_interface file_name
+                then None
+                else match interface_of deps (lowercase_module_name file_name) with
+                     | None ->
+                       None
+                     | Some iface ->
+                       Some ((Option.get (deps_try_find deps.dep_graph iface)).edges)
             in
-            if Options.should_extract (lowercase_module_name file_name)
-            then Util.print3 "%s: %s \\\n\t%s\n\n"
-                        (output_cmx_file file_name)
+            let iface_deps =
+                BU.map_opt iface_deps
+                           (List.filter
+                             (fun iface_dep ->
+                                not (BU.for_some (dep_subsumed_by iface_dep) dep_node.edges)))
+            in
+            let norm_f = norm_path file_name in
+            let files =
+              List.map
+                (file_of_dep_aux true deps.file_system_map deps.cmd_line_files)
+                dep_node.edges
+            in
+            let files =
+                match iface_deps with
+                | None -> files
+                | Some iface_deps ->
+                  let iface_files =
+                      List.map (file_of_dep_aux true deps.file_system_map deps.cmd_line_files) iface_deps
+                  in
+                  BU.remove_dups (fun x y -> x = y) (files @ iface_files)
+            in
+            let files = List.map norm_path files in
+            let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
+            let files =
+                Options.profile
+                  (fun () -> String.concat "\\\n\t" files)
+                  (fun _ -> "Dependence analysis: concat files")
+            in
+            let cache_file_name = cache_file file_name in
+
+            let all_checked_files =
+                if not (Options.should_be_already_cached (module_name_of_file file_name))
+                then //this one prints:
+                     //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
+                     (print_entry cache_file_name norm_f files;
+                      cache_file_name::all_checked_files)
+                else all_checked_files
+            in
+
+            //And, if this is not an interface, we also print out the dependences among the .ml files
+            // excluding files in ulib, since these are packaged in fstarlib.cmxa
+          let all_fst_files_dep, widened =
+              if Options.cmi()
+              then Options.profile
+                   (fun () ->
+                     topological_dependences_of
+                     deps.file_system_map
+                     deps.dep_graph
+                     deps.interfaces_with_inlining
+                     [file_name]
+                     true)
+                   (fun _ ->
+                     //would be nice to eliminate this; it adds up to about
+                     //6 seconds in the miTLS dependence analysis
+                     "Dependence analysis: cmi, second topological sort")
+              else
+                   let maybe_widen_deps (f_deps:dependences) =
+                      List.map
+                        (fun dep ->
+                          file_of_dep_aux false deps.file_system_map deps.cmd_line_files dep)
+                        f_deps
+                   in
+                   let fst_files = maybe_widen_deps dep_node.edges in
+                   let fst_files_from_iface =
+                        match iface_deps with
+                        | None -> []
+                        | Some iface_deps -> maybe_widen_deps iface_deps
+                   in
+                   BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface),
+                   false
+          in
+          let all_checked_fst_dep_files = all_fst_files_dep |> List.map cache_file in
+          let all_checked_fst_dep_files_string =
+                 String.concat " \\\n\t" all_checked_fst_dep_files
+          in
+          let _ =
+            if is_implementation file_name
+            then begin
+              if Options.cmi()
+              && widened
+              then begin
+                     print_entry
                         (output_ml_file file_name)
-                        (String.concat "\\\n\t" cmx_files)
-          ) else if not(has_implementation deps.file_system_map (lowercase_module_name file_name))
-                 && is_interface file_name then (
-            // .krml files can be produced using just an interface, unlike .ml files
-            if Options.cmi()
-            && widened
-            then
-                Util.print3 "%s: %s \\\n\t%s\n\n"
-                            (output_krml_file file_name)
-                            (cache_file_name)
-                            (String.concat " \\\n\t" all_checked_fst_dep_files)
-            else
-                Util.print2 "%s: %s \n\n"
+                        cache_file_name
+                        all_checked_fst_dep_files_string;
+
+                     print_entry
+                        (output_krml_file file_name)
+                        cache_file_name
+                        all_checked_fst_dep_files_string
+              end
+              else begin
+                     print_entry
+                        (output_ml_file file_name)
+                        cache_file_name
+                        "";
+
+                     print_entry
+                        (output_krml_file file_name)
+                        cache_file_name
+                        ""
+              end;
+              let cmx_files =
+                  let extracted_fst_files =
+                      all_fst_files_dep |>
+                      List.filter
+                        (fun df ->
+                           lowercase_module_name df <> lowercase_module_name file_name //avoid circular deps on f's own cmx
+                           && Options.should_extract (lowercase_module_name df))
+                  in
+                  extracted_fst_files |> List.map output_cmx_file
+              in
+              if Options.should_extract (lowercase_module_name file_name)
+              then
+                let cmx_files = String.concat "\\\n\t" cmx_files in
+                print_entry
+                    (output_cmx_file file_name)
+                    (output_ml_file file_name)
+                    cmx_files
+
+            end
+            else if not(has_implementation deps.file_system_map (lowercase_module_name file_name))
+                 && is_interface file_name
+            then begin
+                // .krml files can be produced using just an interface, unlike .ml files
+                if Options.cmi()
+                && (widened || true)
+                then
+                    print_entry
+                        (output_krml_file file_name)
+                        cache_file_name
+                        all_checked_fst_dep_files_string
+                else
+                   print_entry
                     (output_krml_file file_name)
-                    (cache_file_name))
+                    (cache_file_name)
+                    ""
+            end
+          in
+          all_checked_files
         in
-        set_of_unchecked_files) (BU.new_set BU.compare) in
-    let all_fst_files, all_unchecked_fst_files =
+        Options.profile
+          process_one_key
+          (fun _ -> BU.format1 "Dependence analysis: output key %s" file_name))
+        []
+    in
+    let all_fst_files =
       keys |> List.filter is_implementation
            |> Util.sort_with String.compare
-           |> (fun l -> l, l |> List.filter (fun f -> BU.set_mem f set_of_unchecked_files)) in
+    in
     let all_ml_files =
         let ml_file_map = BU.smap_create 41 in
         all_fst_files
@@ -1462,10 +1509,18 @@ let print_full (deps:deps) : unit =
                        BU.smap_add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
     in
-    Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"            (all_fst_files           |> List.map norm_path |> String.concat " \\\n\t");
-    Util.print1 "ALL_UNCHECKED_FST_FILES=\\\n\t%s\n\n"  (all_unchecked_fst_files |> List.map norm_path |> String.concat " \\\n\t");
-    Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"             (all_ml_files            |> List.map norm_path |> String.concat " \\\n\t");
-    Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"             (all_krml_files          |> List.map norm_path |> String.concat " \\\n\t")
+    let print_all tag files =
+        pr tag;
+        pr "=\\\n\t";
+        List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files;
+        pr "\n"
+    in
+    print_all "ALL_FST_FILES" all_fst_files;
+    print_all "ALL_CHECKED_FILES" all_checked_files;
+    print_all "ALL_ML_FILES" all_ml_files;
+    print_all "ALL_KRML_FILES" all_krml_files;
+
+    FStar.StringBuffer.output_channel BU.stdout sb
 
 (* In public interface *)
 let print deps =
@@ -1473,7 +1528,9 @@ let print deps =
   | Some "make" ->
       print_make deps
   | Some "full" ->
-      print_full deps
+      FStar.Options.profile
+        (fun () -> print_full deps)
+        (fun _ -> "Dependence analysis: printing")
   | Some "graph" ->
       print_graph deps.dep_graph
   | Some "raw" ->
