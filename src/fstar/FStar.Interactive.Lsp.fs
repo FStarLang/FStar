@@ -102,8 +102,6 @@ let repl_state_init (fname: string) : repl_state =
 
 type either_gst_exit = either<grepl_state, int> // grepl_state is independent of exit_code
 
-let txpos_path txpos = uri_to_path txpos.uri
-
 let run_query (gst: grepl_state) (q: lquery) : optresponse * either_gst_exit =
   match q with
   | Initialize (pid, rootUri) -> (Some (Inl js_servcap), Inl gst)
@@ -116,33 +114,32 @@ let run_query (gst: grepl_state) (q: lquery) : optresponse * either_gst_exit =
   | ChangeWatch -> (None, Inl gst)
   | Symbol sym -> Some (Inl JsonNull), Inl gst
   | ExecCommand cmd -> Some (Inl JsonNull), Inl gst
-  | DidOpen { fname = f; langId = _; version = _; text = t } ->
-    (let p = uri_to_path f in
-     match U.psmap_try_find gst.grepl_repls p with
+  | DidOpen { fname = p; langId = _; version = _; text = t } ->
+    (match U.psmap_try_find gst.grepl_repls p with
      | Some _ -> None, Inl gst
      | None ->
        PI.add_vfs_entry p t;
        let st' = PH.full_lax t (repl_state_init p) in
        let repls = U.psmap_add gst.grepl_repls p st' in
        None, Inl ({ gst with grepl_repls = repls }))
-  | DidChange (txid, content) -> PI.add_vfs_entry (uri_to_path txid) content; (None, Inl gst)
+  | DidChange (txid, content) -> PI.add_vfs_entry txid content; (None, Inl gst)
   | WillSave txid -> (None, Inl gst)
   | WillSaveWait txid -> Some (Inl JsonNull), Inl gst
-  | DidSave (txid, content) -> PI.add_vfs_entry (uri_to_path txid) content; (None, Inl gst)
+  | DidSave (txid, content) -> PI.add_vfs_entry txid content; (None, Inl gst)
   | DidClose txid -> (None, Inl gst)
   | Completion (txpos, ctx) ->
-    (match U.psmap_try_find gst.grepl_repls (txpos_path txpos) with
+    (match U.psmap_try_find gst.grepl_repls txpos.path with
      | Some st -> Some (QH.complookup st txpos), Inl gst
      | None -> Some (Inl JsonNull), Inl gst)
   | Resolve -> Some (Inl JsonNull), Inl gst
   | Hover txpos ->
-    (match U.psmap_try_find gst.grepl_repls (txpos_path txpos) with
+    (match U.psmap_try_find gst.grepl_repls txpos.path with
      | Some st -> Some (QH.hoverlookup st.repl_env txpos), Inl gst
      | None -> Some (Inl JsonNull), Inl gst)
   | SignatureHelp txpos -> Some (Inl JsonNull), Inl gst
   | Declaration txpos -> Some (Inl JsonNull), Inl gst
   | Definition txpos ->
-    (match U.psmap_try_find gst.grepl_repls (txpos_path txpos) with
+    (match U.psmap_try_find gst.grepl_repls txpos.path with
      | Some st -> Some (QH.deflookup st.repl_env txpos), Inl gst
      | None -> Some (Inl JsonNull), Inl gst)
   | TypeDefinition txpos -> Some (Inl JsonNull), Inl gst

@@ -81,23 +81,23 @@ type txdoc_item = { fname: string; langId: string; version: int; text: string }
 let js_txdoc_item : json -> txdoc_item = function
   | JsonAssoc a ->
   let arg k = assoc k a in
-  { fname = arg "uri" |> js_str;
+  { fname = uri_to_path (arg "uri" |> js_str);
     langId = arg "languageId" |> js_str;
     version = arg "version" |> js_int;
     text = arg "text" |> js_str }
   | other -> js_fail "dictionary" other
 
-type txdoc_pos = { uri: string; line: int; col: int }
+type txdoc_pos = { path: string; line: int; col: int }
 
 // May throw, argument is of the form { "textDocument" : {"uri" : ... } }
 let js_txdoc_id (r: list<(string * json)>) : string =
-  assoc "uri" (arg "textDocument" r |> js_assoc) |> js_str
+  uri_to_path (assoc "uri" (arg "textDocument" r |> js_assoc) |> js_str)
 
 // May throw; argument is of the form { "textDocument" : ...,
 //                                      "position" : { "line" : ..., "character" : ... } }
 let js_txdoc_pos (r: list<(string * json)>) : txdoc_pos =
   let pos = arg "position" r |> js_assoc in
-  { uri = js_txdoc_id r;
+  { path = js_txdoc_id r;
     line = assoc "line" pos |> js_int;
     col = assoc "character" pos |> js_int }
 
@@ -302,5 +302,4 @@ let js_loclink r =
                        ("targetRange", s); ("targetSelectionRange", s)]]
 
 // Lines are 0-indexed in LSP, but 1-indexed in the F* Typechecker;
-// further, LSP uses uris while the F* Typechecker uses paths
-let pos_munge (pos : txdoc_pos) = (uri_to_path pos.uri, pos.line + 1, pos.col)
+let pos_munge (pos : txdoc_pos) = (pos.path, pos.line + 1, pos.col)

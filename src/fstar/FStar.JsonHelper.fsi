@@ -44,7 +44,7 @@ val js_compl_context : json -> completion_context
 type txdoc_item = { fname: string; langId: string; version: int; text: string }
 val js_txdoc_item : json -> txdoc_item
 
-type txdoc_pos = { uri: string; line: int; col: int }
+type txdoc_pos = { path: string; line: int; col: int }
 val js_txdoc_id : list<(string * json)> -> string
 val js_txdoc_pos : list<(string * json)> -> txdoc_pos
 
