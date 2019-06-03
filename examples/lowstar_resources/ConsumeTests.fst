@@ -17,3 +17,14 @@ let test3 (r1 r2:resource)
           (g:unit -> ConsumeRST unit r2 r2 (fun _ -> True) (fun _ _ _ -> True))
   : ConsumeRST unit (r1 <*> r2) (r1 <*> r2) (fun _ -> True) (fun _ _ _ -> True) =
   g (f ())
+
+(*
+let test4 (r1 r2:resource)
+          (f:unit -> ConsumeRST unit r1 r1 (fun _ -> True) (fun _ _ _ -> True))
+          (g:unit -> ConsumeRST unit r2 r2 (fun _ -> True) (fun _ _ _ -> True))
+  : ConsumeRST unit (r1 <*> r2) (r1 <*> r2) (fun _ -> True) (fun _ _ _ -> True) =
+  rst_frame (r1 <*> r2)
+            (fun _ -> r2)
+            f;
+  admit ()
+*)

@@ -202,7 +202,7 @@ let rm : cm resource req =
      equal_comm_monoid_commutativity 
      equal_comm_monoid_cong
 
-let resolve_delta (outer inner:term) : Tac unit =
+let resolve_delta () : Tac unit =
   norm [delta_only [`%frame_delta]];
   refine_intro ();
   flip ();
@@ -236,7 +236,7 @@ let frame (outer0:resource)
           (#a:Type)
           (outer1:a -> resource)
           (#inner1:a -> resource)
-          (#[resolve_delta (quote outer0) (quote inner0)] 
+          (#[resolve_delta ()] 
                    delta:frame_delta outer0 inner0 outer1 inner1)
           (#wp:rstate_wp a inner0 inner1)
           ($f:unit -> RSTATE a inner0 inner1 wp)
@@ -276,7 +276,7 @@ let rst_frame (outer0:resource)
               (#a:Type)
               (outer1:a -> resource)
               (#inner1:a -> resource)
-              (#[resolve_delta (quote outer0) (quote inner0)] 
+              (#[resolve_delta ()] 
                    delta:frame_delta outer0 inner0 outer1 inner1)
               (#pre:r_pre inner0)
               (#post:r_post inner0 a inner1)
@@ -288,13 +288,15 @@ let rst_frame (outer0:resource)
   reveal_can_be_split_into ();
   f ()
 
+(* A variant of RST that states the resources consumed instead of returned *)
+
 let consume_returns (expects:resource)
                     (consumes:resource) = 
   returns:resource{
     expects `can_be_split_into` (consumes,returns)
   }
 
-let resolve_consume_returns (expects consumes:term) : Tac unit =
+let resolve_consume_returns () : Tac unit =
   norm [delta_only [`%consume_returns]];
   refine_intro ();
   flip ();
@@ -303,10 +305,10 @@ let resolve_consume_returns (expects consumes:term) : Tac unit =
   canon_monoid req rm
 
 effect ConsumeRST (a:Type)
-                  (expects:resource)                                            (* expects *)
-                  (consumes:resource)                                           (* consumes *)
-                  (#[resolve_consume_returns (quote expects) (quote consumes)]
-                      returns:consume_returns expects consumes)                 (* expects - consumes *)
+                  (expects:resource)                                       (* expects *)
+                  (consumes:resource)                                      (* consumes *)
+                  (#[resolve_consume_returns ()]
+                      returns:consume_returns expects consumes)            (* expects - consumes *)
                   (pre:r_pre expects)
                   (post:r_post expects a (fun _ -> returns)) = 
        RST a expects (fun _ -> returns) pre post
