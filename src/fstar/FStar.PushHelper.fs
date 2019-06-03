@@ -6,16 +6,18 @@ module FStar.PushHelper
 open FStar.ST
 open FStar.All
 open FStar.Util
-open FStar.Universal
+open FStar.Ident
 open FStar.Errors
+open FStar.Universal
 open FStar.JsonHelper
-open FStar.TypeChecker.Env
 open FStar.Parser.ParseIt
+open FStar.TypeChecker.Env
 
 module U = FStar.Util
+module SS = FStar.Syntax.Syntax
+module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
-module DsEnv = FStar.Syntax.DsEnv
 module CTable = FStar.Interactive.CompletionTable
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
@@ -154,26 +156,111 @@ let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t *
   | Noop ->
     curmod, env
 
-// A REPL transaction without name-tracking; used exclusively by LSP;
+(*******************************************)
+(* Name tracking: required for completions *)
+(*******************************************)
+
+type name_tracking_event =
+| NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
+| NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
+| NTInclude of lid (* host *) * lid (* included *)
+| NTBinding of either<FStar.Syntax.Syntax.binding, TcEnv.sig_binding>
+
+let query_of_ids (ids: list<ident>) : CTable.query =
+  List.map text_of_id ids
+
+let query_of_lid (lid: lident) : CTable.query =
+  query_of_ids (lid.ns @ [lid.ident])
+
+let update_names_from_event cur_mod_str table evt =
+  let is_cur_mod lid = lid.str = cur_mod_str in
+  match evt with
+  | NTAlias (host, id, included) ->
+    if is_cur_mod host then
+      CTable.register_alias
+        table (text_of_id id) [] (query_of_lid included)
+    else
+      table
+  | NTOpen (host, (included, kind)) ->
+    if is_cur_mod host then
+      CTable.register_open
+        table (kind = DsEnv.Open_module) [] (query_of_lid included)
+    else
+      table
+  | NTInclude (host, included) ->
+    CTable.register_include
+      table (if is_cur_mod host then [] else query_of_lid host) (query_of_lid included)
+  | NTBinding binding ->
+    let lids =
+      match binding with
+      | Inl (SS.Binding_lid (lid, _)) -> [lid]
+      | Inr (lids, _) -> lids
+      | _ -> [] in
+    List.fold_left
+      (fun tbl lid ->
+         let ns_query = if lid.nsstr = cur_mod_str then []
+                        else query_of_ids lid.ns in
+         CTable.insert
+           tbl ns_query (text_of_id lid.ident) lid)
+      table lids
+
+let commit_name_tracking' cur_mod names name_events =
+  let cur_mod_str = match cur_mod with
+                    | None -> "" | Some md -> (SS.mod_name md).str in
+  let updater = update_names_from_event cur_mod_str in
+  List.fold_left updater names name_events
+
+let commit_name_tracking st name_events =
+  let names = commit_name_tracking' st.repl_curmod st.repl_names name_events in
+  { st with repl_names = names }
+
+let fresh_name_tracking_hooks () =
+  let events = Util.mk_ref [] in
+  let push_event evt = events := evt :: !events in
+  events,
+  { DsEnv.ds_push_module_abbrev_hook =
+      (fun dsenv x l -> push_event (NTAlias (DsEnv.current_module dsenv, x, l)));
+    DsEnv.ds_push_include_hook =
+      (fun dsenv ns -> push_event (NTInclude (DsEnv.current_module dsenv, ns)));
+    DsEnv.ds_push_open_hook =
+      (fun dsenv op -> push_event (NTOpen (DsEnv.current_module dsenv, op))) },
+  { TcEnv.tc_push_in_gamma_hook =
+      (fun _ s -> push_event (NTBinding s)) }
+
+let track_name_changes (env: env_t)
+    : env_t * (env_t -> env_t * list<name_tracking_event>) =
+  let set_hooks dshooks tchooks env =
+    let (), tcenv' = with_dsenv_of_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
+    TcEnv.set_tc_hooks tcenv' tchooks in
+
+  let old_dshooks, old_tchooks = DsEnv.ds_hooks env.dsenv, TcEnv.tc_hooks env in
+  let events, new_dshooks, new_tchooks = fresh_name_tracking_hooks () in
+
+  set_hooks new_dshooks new_tchooks env,
+  (fun env -> set_hooks old_dshooks old_tchooks env,
+           List.rev !events)
+
+// A REPL transaction with different error handling; used exclusively by LSP;
 // variant of run_repl_transaction in IDE
 let repl_tx st push_kind task =
-  let st = push_repl "repl_tx" push_kind task st in
-
   try
-    let curmod, env = run_repl_task st.repl_curmod st.repl_env task in
+    let st = push_repl "repl_tx" push_kind task st in
+    let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking
+    let curmod, env = run_repl_task st.repl_curmod env task in
     let st = { st with repl_curmod = curmod; repl_env = env } in
-    true, st
+    let env, name_events = finish_name_tracking env in // end name tracking
+    true, commit_name_tracking st name_events
   with
   | Failure (msg) ->
-    U.print1_error "[F] %s" msg; false, pop_repl "run_tx" st
+    U.print1_error "[F] %s" msg; false, st
   | U.SigInt ->
-    U.print_error "[E] Interrupt"; false, pop_repl "run_tx" st
+    U.print_error "[E] Interrupt"; false, st
   | Error (e, msg, r) ->
-    U.print1_error "[E] %s" msg; false, pop_repl "run_tx" st
+    U.print1_error "[E] %s" msg; false, st
   | Err (e, msg) ->
-    U.print1_error "[E] %s" msg; false, pop_repl "run_tx" st
+    U.print1_error "[E] %s" msg; false, st
   | Stop ->
-    U.print_error "[E] Stop"; false, pop_repl "run_tx" st
+    U.print_error "[E] Stop"; false, st
 
 // Little helper
 let tf_of_fname fname =
