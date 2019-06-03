@@ -129,28 +129,28 @@ let rstate_wp (a:Type) (res0:resource) (res1:a -> resource) =
     }
 
 effect RSTATE (a:Type)
-              (res0:resource)                                   // Pre-resource (expected from the caller)
-              (res1:a -> resource)                              // Post-resource (returned back to the caller)
-              (wp:rstate_wp a res0 res1) =
+              (expects:resource)                                   // Pre-resource (expected from the caller)
+              (returns:a -> resource)                              // Post-resource (returned back to the caller)
+              (wp:rstate_wp a expects returns) =
        STATE a 
            (fun (p:a -> HS.mem -> Type)
               (h0:HS.mem) -> 
-                inv res0 h0 /\                                  // Require the pre-resource invariant
-                rst_inv res0 h0 /\                              // Require the additional footprints invariant
+                inv expects h0 /\                                  // Require the pre-resource invariant
+                rst_inv expects h0 /\                              // Require the additional footprints invariant
                 wp (fun x h1 -> 
-                     inv (res1 x) h1 /\                         // Ensure the post-resource invariant
-                     rst_inv (res1 x) h1 /\                     // Ensure the additional footprints invariant
-                     modifies res0 (res1 x) h0 h1 ==>           // Ensure that at most resources' footprints are modified
-                     p x h1) h0)                                // Prove the continuation under this hypothesis
+                     inv (returns x) h1 /\                         // Ensure the post-resource invariant
+                     rst_inv (returns x) h1 /\                     // Ensure the additional footprints invariant
+                     modifies expects (returns x) h0 h1 ==>        // Ensure that at most resources' footprints are modified
+                     p x h1) h0)                                   // Prove the continuation under this hypothesis
 
 (* Pre- and postcondition style effect RST *)
 
 effect RST (a:Type)
-           (res0:resource)
-           (res1:a -> resource)
-           (pre:r_pre res0)
-           (post:r_post res0 a res1) = 
-       RSTATE a res0 res1 (fun p h0 -> 
+           (expects:resource)
+           (returns:a -> resource)
+           (pre:r_pre expects)
+           (post:r_post expects a returns) = 
+       RSTATE a expects returns (fun p h0 -> 
          pre h0 /\ (forall x h1 . post h0 x h1 ==> p x h1))
 
 (* Bind operation for RSTATE *)
@@ -287,3 +287,26 @@ let rst_frame (outer0:resource)
   reveal_view ();
   reveal_can_be_split_into ();
   f ()
+
+let consume_returns (expects:resource)
+                    (consumes:resource) = 
+  returns:resource{
+    expects `can_be_split_into` (consumes,returns)
+  }
+
+let resolve_consume_returns (expects consumes:term) : Tac unit =
+  norm [delta_only [`%consume_returns]];
+  refine_intro ();
+  flip ();
+  apply_lemma (quote can_be_split_into_star);
+  flip ();
+  canon_monoid req rm
+
+effect ConsumeRST (a:Type)
+                  (expects:resource)                                            (* expects *)
+                  (consumes:resource)                                           (* consumes *)
+                  (#[resolve_consume_returns (quote expects) (quote consumes)]
+                      returns:consume_returns expects consumes)                 (* expects - consumes *)
+                  (pre:r_pre expects)
+                  (post:r_post expects a (fun _ -> returns)) = 
+       RST a expects (fun _ -> returns) pre post
