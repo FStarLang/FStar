@@ -1493,9 +1493,9 @@ let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> U
 let debug_any                    () = get_debug () <> []
 let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
 let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
-let profile_module   modul       = (get_profile_module () |> (fun l -> match l with | [] -> true | _ -> List.existsb (module_name_eq modul) l))
+let profile_module   modul          = (get_profile_module () |> (fun l -> match l with | [] -> true | _ -> List.existsb (module_name_eq modul) l))
 let profile_at_level    level       = profile_level_eq level
-let profile_phase    phase       = profile_phase_eq phase
+let profile_phase    phase          = profile_phase_eq phase
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()

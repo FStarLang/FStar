@@ -92,7 +92,6 @@ let profile' f name phasename new_level new_phase =
 let profile f msg phasename =
   let new_level = FStar_Options.profile_at_level phasename in
   let new_phase = FStar_Options.profile_phase phasename in
-  (* Printf.printf "Profiling %s. name %s, phase: %s, new_profiler %s, new_phase %s\n" (string_of_bool !profiling) name (FStar_Options.profile_name phasename) (string_of_bool new_profiler) (string_of_bool new_phase); *)
   if (!profiling && (new_level || new_phase)) then 
     profile' f (msg()) phasename new_level new_phase
   else FStar_Util.record_time f

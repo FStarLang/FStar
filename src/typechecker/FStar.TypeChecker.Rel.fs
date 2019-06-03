@@ -3096,7 +3096,7 @@ let solve_and_commit env probs err =
       (fun() -> FStar.Common.string_of_list (fun p -> string_of_int (p_pid p)) probs.attempting)
       Options.ProfileSMT in
   if Env.debug env <| Options.Other "RelBench" then
-     BU.print1 "} solved in %s ms\n" (string_of_int ms);
+    BU.print1 "} solved in %s ms\n" (string_of_int ms);
 
   match sol with
     | Success (deferred, implicits) ->

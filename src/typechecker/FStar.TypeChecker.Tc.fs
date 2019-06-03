@@ -1817,7 +1817,7 @@ let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
     if Env.debug env Options.Low
     then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
-    
+
     let ses', ses_elaborated, env = tc_decl env se in
     let ses' = ses' |> List.map (fun se ->
         if Env.debug env (Options.Other "UF")
@@ -2209,7 +2209,7 @@ let check_module env m b =
   if Options.dump_module m.name.str
   then BU.print1 "Module before type checking:\n%s\n" (Print.modul_to_string m);
 
-  let env = {env with lax=not (Options.should_verify m.name.str)} in 
+  let env = {env with lax=not (Options.should_verify m.name.str)} in
   let m, env = tc_modul env m b in
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
