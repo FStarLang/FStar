@@ -92,57 +92,78 @@ let parse_lsp_query query_str : lsp_query =
 
 (* Repl and response *)
 
-let run_exit (st: repl_state) : int = 0
+let repl_state_init (fname: string) : repl_state =
+  let intial_range = Range.mk_range fname (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+  let env = init_env FStar.Parser.Dep.empty_deps in
+  let env = TcEnv.set_range env intial_range in
+  { repl_line = 1; repl_column = 0; repl_fname = fname;
+    repl_curmod = None; repl_env = env; repl_deps_stack = [];
+    repl_stdin = open_stdin (); repl_names = CompletionTable.empty }
 
-let run_query (st: repl_state) (q: lquery) : optresponse * either_st_exit =
+type either_gst_exit = either<grepl_state, int> // grepl_state is independent of exit_code
+
+let txpos_path txpos = uri_to_path txpos.uri
+
+let run_query (gst: grepl_state) (q: lquery) : optresponse * either_gst_exit =
   match q with
-  | Initialize (pid, rootUri) -> (Some (Inl js_servcap), Inl st)
-  | Initialized -> (None, Inl st)
-  | Shutdown -> (Some (Inl JsonNull), Inl st)
-  | Exit -> (None, Inr (run_exit st))
-  | Cancel id -> (None, Inl st)
-  | FolderChange evt -> (Some (Inl JsonNull), Inl st)
-  | ChangeConfig -> (Some (Inl JsonNull), Inl st)
-  | ChangeWatch -> (None, Inl st)
-  | Symbol sym -> (Some (Inl JsonNull), Inl st)
-  | ExecCommand cmd -> (Some (Inl JsonNull), Inl st)
+  | Initialize (pid, rootUri) -> (Some (Inl js_servcap), Inl gst)
+  | Initialized -> (None, Inl gst)
+  | Shutdown -> Some (Inl JsonNull), Inl gst
+  | Exit -> (None, Inr 0)
+  | Cancel id -> (None, Inl gst)
+  | FolderChange evt -> Some (Inl JsonNull), Inl gst
+  | ChangeConfig -> Some (Inl JsonNull), Inl gst
+  | ChangeWatch -> (None, Inl gst)
+  | Symbol sym -> Some (Inl JsonNull), Inl gst
+  | ExecCommand cmd -> Some (Inl JsonNull), Inl gst
   | DidOpen { fname = f; langId = _; version = _; text = t } ->
-    let p = uri_to_path f in
-    let r = Range.mk_range p (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
-    let env = TcEnv.set_range st.repl_env r in
-    let st = { st with repl_fname = p; repl_line = 1; repl_column = 0; repl_env = env } in
-    PI.add_vfs_entry f t;
-    None, Inl (PH.full_lax t st)
-  | DidChange (txid, content) -> PI.add_vfs_entry (uri_to_path txid) content; (None, Inl st)
-  | WillSave txid -> (None, Inl st)
-  | WillSaveWait txid -> (Some (Inl JsonNull), Inl st)
-  | DidSave (txid, content) -> PI.add_vfs_entry (uri_to_path txid) content; (None, Inl st)
-  | DidClose txid -> (None, Inl st)
-  | Completion (txpos, ctx) -> (Some (QH.complookup st txpos), Inl st)
-  | Resolve -> (Some (Inl JsonNull), Inl st)
-  | Hover txpos -> (Some (QH.hoverlookup st.repl_env txpos), Inl st)
-  | SignatureHelp txpos -> (Some (Inl JsonNull), Inl st)
-  | Declaration txpos -> (Some (Inl JsonNull), Inl st)
-  | Definition txpos -> (Some (QH.deflookup st.repl_env txpos), Inl st)
-  | TypeDefinition txpos -> (Some (Inl JsonNull), Inl st)
-  | Implementation txpos -> (Some (Inl JsonNull), Inl st)
-  | References -> (Some (Inl JsonNull), Inl st)
-  | DocumentHighlight txpos -> (Some (Inl JsonNull), Inl st)
-  | DocumentSymbol -> (Some (Inl JsonNull), Inl st)
-  | CodeAction -> (Some (Inl JsonNull), Inl st)
-  | CodeLens -> (Some (Inl JsonNull), Inl st)
-  | CodeLensResolve -> (Some (Inl JsonNull), Inl st)
-  | DocumentLink -> (Some (Inl JsonNull), Inl st)
-  | DocumentLinkResolve -> (Some (Inl JsonNull), Inl st)
-  | DocumentColor -> (Some (Inl JsonNull), Inl st)
-  | ColorPresentation -> (Some (Inl JsonNull), Inl st)
-  | Formatting -> (Some (Inl JsonNull), Inl st)
-  | RangeFormatting -> (Some (Inl JsonNull), Inl st)
-  | TypeFormatting -> (Some (Inl JsonNull), Inl st)
-  | Rename -> (Some (Inl JsonNull), Inl st)
-  | PrepareRename txpos -> (Some (Inl JsonNull), Inl st)
-  | FoldingRange -> (Some (Inl JsonNull), Inl st)
-  | BadProtocolMsg msg -> (Some (Inr (js_resperr MethodNotFound msg)), Inl st)
+    (let p = uri_to_path f in
+     match U.psmap_try_find gst.grepl_repls p with
+     | Some _ -> None, Inl gst
+     | None ->
+       PI.add_vfs_entry p t;
+       let st' = PH.full_lax t (repl_state_init p) in
+       let repls = U.psmap_add gst.grepl_repls p st' in
+       None, Inl ({ gst with grepl_repls = repls }))
+  | DidChange (txid, content) -> PI.add_vfs_entry (uri_to_path txid) content; (None, Inl gst)
+  | WillSave txid -> (None, Inl gst)
+  | WillSaveWait txid -> Some (Inl JsonNull), Inl gst
+  | DidSave (txid, content) -> PI.add_vfs_entry (uri_to_path txid) content; (None, Inl gst)
+  | DidClose txid -> (None, Inl gst)
+  | Completion (txpos, ctx) ->
+    (match U.psmap_try_find gst.grepl_repls (txpos_path txpos) with
+     | Some st -> Some (QH.complookup st txpos), Inl gst
+     | None -> Some (Inl JsonNull), Inl gst)
+  | Resolve -> Some (Inl JsonNull), Inl gst
+  | Hover txpos ->
+    (match U.psmap_try_find gst.grepl_repls (txpos_path txpos) with
+     | Some st -> Some (QH.hoverlookup st.repl_env txpos), Inl gst
+     | None -> Some (Inl JsonNull), Inl gst)
+  | SignatureHelp txpos -> Some (Inl JsonNull), Inl gst
+  | Declaration txpos -> Some (Inl JsonNull), Inl gst
+  | Definition txpos ->
+    (match U.psmap_try_find gst.grepl_repls (txpos_path txpos) with
+     | Some st -> Some (QH.deflookup st.repl_env txpos), Inl gst
+     | None -> Some (Inl JsonNull), Inl gst)
+  | TypeDefinition txpos -> Some (Inl JsonNull), Inl gst
+  | Implementation txpos -> Some (Inl JsonNull), Inl gst
+  | References -> Some (Inl JsonNull), Inl gst
+  | DocumentHighlight txpos -> Some (Inl JsonNull), Inl gst
+  | DocumentSymbol -> Some (Inl JsonNull), Inl gst
+  | CodeAction -> Some (Inl JsonNull), Inl gst
+  | CodeLens -> Some (Inl JsonNull), Inl gst
+  | CodeLensResolve -> Some (Inl JsonNull), Inl gst
+  | DocumentLink -> Some (Inl JsonNull), Inl gst
+  | DocumentLinkResolve -> Some (Inl JsonNull), Inl gst
+  | DocumentColor -> Some (Inl JsonNull), Inl gst
+  | ColorPresentation -> Some (Inl JsonNull), Inl gst
+  | Formatting -> Some (Inl JsonNull), Inl gst
+  | RangeFormatting -> Some (Inl JsonNull), Inl gst
+  | TypeFormatting -> Some (Inl JsonNull), Inl gst
+  | Rename -> Some (Inl JsonNull), Inl gst
+  | PrepareRename txpos -> Some (Inl JsonNull), Inl gst
+  | FoldingRange -> Some (Inl JsonNull), Inl gst
+  | BadProtocolMsg msg -> (Some (Inr (js_resperr MethodNotFound msg)), Inl gst)
 
 // Raises exceptions, but all of them are caught
 let rec parse_header_len (stream: stream_reader) (len: int): int =
@@ -170,28 +191,17 @@ let rec read_lsp_query (stream: stream_reader) : lsp_query =
   | MalformedHeader -> U.print_error "[E] Malformed Content Header\n"; read_lsp_query stream
   | InputExhausted -> read_lsp_query stream
 
-let rec go (st: repl_state) : int =
-  let query = read_lsp_query st.repl_stdin in
-  let r, state_opt = run_query st query.q in
+let rec go (gst: grepl_state) : int =
+  let query = read_lsp_query gst.grepl_stdin in
+  let r, state_opt = run_query gst query.q in
   (match r with
    | Some response -> (let response' = json_of_response query.query_id response in
                        U.print1_error "<<< %s\n" (U.string_of_json response');
                        write_jsonrpc response')
    | None -> ()); // Don't respond
   match state_opt with
-  | Inl st' -> go st'
+  | Inl gst' -> go gst'
   | Inr exitcode -> exitcode
 
-// The initial REPL state specifies Exit as the last message received,
-// without loss of generality
-let initial_repl_state () : repl_state =
-  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
-  let env = init_env FStar.Parser.Dep.empty_deps in
-  let env = TcEnv.set_range env initial_range in
-
-  { repl_line = 1; repl_column = 0; repl_fname = "<input>";
-    repl_curmod = None; repl_env = env; repl_deps_stack = [];
-    repl_stdin = open_stdin ();
-    repl_names = CompletionTable.empty }
-
-let start_server () : unit = exit (go (initial_repl_state ()))
+let start_server () : unit = exit (go ({ grepl_repls = U.psmap_empty ();
+                                         grepl_stdin = open_stdin () }))

@@ -205,15 +205,14 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_deps_stack: repl_stack_t;
                     repl_curmod: optmod_t;
                     repl_env: TcEnv.env;
-                    repl_stdin: stream_reader;
+                    repl_stdin: stream_reader; // unused in LSP
                     repl_names: CTable.table }
 and repl_stack_t = list<repl_stack_entry_t>
 and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
-
-type grepl_state = smap<repl_state>
+and grepl_state = { grepl_repls : U.psmap<repl_state>;
+                    grepl_stdin : stream_reader }
 
 type optresponse = option<either<json, json>>
-type either_st_exit = either<repl_state, int>
 
 type error_code =
 | ParseError

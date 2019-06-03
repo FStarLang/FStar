@@ -8,11 +8,12 @@ open FStar.Errors
 open FStar.Util
 open FStar.Exn
 open FStar.Range
-
 open FStar.TypeChecker.Env
+
+module U = FStar.Util
+module PI = FStar.Parser.ParseIt
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
-module PI = FStar.Parser.ParseIt
 
 val try_assoc : string -> list<(string * json)> -> option<json> // nothrow
 val assoc : string -> list<(string * json)> -> json // throw
@@ -126,10 +127,9 @@ and repl_stack_t = list<repl_stack_entry_t>
 and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
 
 // Global repl_state, keeping state of different buffers
-type grepl_state = smap<repl_state>
+type grepl_state = { grepl_repls: U.psmap<repl_state>; grepl_stdin: stream_reader }
 
 type optresponse = option<either<json, json>> // Used to indicate (no|success|failure) response
-type either_st_exit = either<repl_state, int> // repl_state is independent of exit_code
 
 type error_code =
 | ParseError
