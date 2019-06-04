@@ -145,8 +145,7 @@ let kill_process (p: proc) =
          might have been closed already (e.g. `run_process`), so we
          just `attempt` it. *)
       let attempt f =
-          try f ()
-          with | Unix.Unix_error (Unix.EBADF, _, _) -> ()
+          try f () with | _ -> ()
       in
       attempt (fun () -> Unix.close (Unix.descr_of_in_channel p.inc));
       attempt (fun () -> Unix.close (Unix.descr_of_out_channel p.outc));
