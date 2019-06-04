@@ -163,3 +163,4 @@ val js_servcap : json
 val js_loclink : Range.range -> json
 val pos_munge : txdoc_pos -> string * int * int
 val js_diag : string -> string -> option<Range.range> -> assoct
+val js_diag_clear : string -> assoct

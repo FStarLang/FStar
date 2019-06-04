@@ -879,3 +879,20 @@ let (js_diag :
           [uu____3357] in
         ("method", (FStar_Util.JsonStr "textDocument/publishDiagnostics")) ::
           uu____3349
+let (js_diag_clear : Prims.string -> assoct) =
+  fun fname ->
+    let uu____3426 =
+      let uu____3434 =
+        let uu____3440 =
+          let uu____3441 =
+            let uu____3449 =
+              let uu____3455 =
+                let uu____3456 = path_to_uri fname in
+                FStar_Util.JsonStr uu____3456 in
+              ("uri", uu____3455) in
+            [uu____3449; ("diagnostics", (FStar_Util.JsonList []))] in
+          FStar_Util.JsonAssoc uu____3441 in
+        ("params", uu____3440) in
+      [uu____3434] in
+    ("method", (FStar_Util.JsonStr "textDocument/publishDiagnostics")) ::
+      uu____3426

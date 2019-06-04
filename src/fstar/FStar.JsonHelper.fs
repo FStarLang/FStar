@@ -325,3 +325,7 @@ let js_diag (fname: string) (msg: string) (r: option<Range.range>) : assoct =
   let ds = ("diagnostics", JsonList [JsonAssoc [("range", r'); ("message", JsonStr msg)]]) in
   [("method", JsonStr "textDocument/publishDiagnostics");
    ("params", JsonAssoc [("uri", JsonStr (path_to_uri fname)); ds])]
+
+let js_diag_clear (fname: string) : assoct =
+  [("method", JsonStr "textDocument/publishDiagnostics");
+   ("params", JsonAssoc [("uri", JsonStr (path_to_uri fname)); ("diagnostics", JsonList [])])]
