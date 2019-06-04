@@ -5,8 +5,6 @@ module F = FStar.FunctionalExtensionality
 
 open FStar.Preorder
 
-let permission = nat
-
 private noeq
 type perms_rec = {
   current_max : pos;
@@ -26,59 +24,77 @@ let new_value_perms () : value_perms =
      F.on_dom pos (fun (x:pos) -> if x = 1 then (1 <: permission) else (0 <: permission)) in
    { current_max = 1; perm_map = f }
 
-val heap: Type u#1
 noeq
 type heap =
   { mheap : H.heap;
     perms : nat -> GTot value_perms } // For each memory address (given by addr_of), we have a map of permissions for this value
 
-val ref (a:Type0) (rel:preorder a) : Type0
+let emp =
+  { mheap = H.emp;
+    perms = fun n -> new_value_perms() }
+    
 noeq
 type ref a rel =
   { mref : H.mref a rel ;
     pid : pos}
 
-val addr_of (#a:Type0) (#rel:preorder a) (r:ref a rel) : GTot nat
 let addr_of #a #rel r = H.addr_of r.mref
 
-val contains: #a:Type0 -> #rel:preorder a -> heap -> ref a rel -> Type0
 let contains #a #rel h r =
   H.contains h.mheap r.mref /\                         // The ref is in the original heap
   (h.perms (H.addr_of r.mref)).perm_map (r.pid) > 0   // We have a non-empty permission: we can read
 
-val writeable: #a:Type0 -> #rel:preorder a -> heap -> ref a rel -> Type0
 let writeable #a #rel h r =
   let v_perms = h.perms (addr_of r) in
   H.contains h.mheap r.mref /\                             // The ref is in the original heap
   (v_perms).perm_map (r.pid) = v_perms.current_max       // We have the full permission: we can write
 
-val sel_tot: #a:Type0 -> #rel:preorder a -> h:heap -> r:ref a rel{h `contains` r} -> Tot a
 let sel_tot #a #rel h r = H.sel_tot h.mheap r.mref
 
-val upd_tot: #a:Type0 -> #rel:preorder a -> h:heap -> r:ref a rel{h `writeable` r} -> x:a -> Tot heap
 let upd_tot #a #rel h r x = 
   {h with mheap = H.upd_tot h.mheap r.mref x}
 
-val alloc: #a:Type0 -> rel:preorder a -> heap -> a -> mm:bool -> Tot (ref a rel * heap)
 let alloc #a rel h x mm =
   let new_r, mheap' = H.alloc rel h.mheap x mm in
   let perms' = (fun (n:nat) -> if n = H.addr_of new_r then new_value_perms () else h.perms n) in
   {mref = new_r; pid = 1}, {mheap = mheap'; perms = perms'}
 
-val distinct: #a:Type0 -> #rel:preorder a -> ref a rel -> ref a rel -> GTot bool
 let distinct #a #rel r1 r2 =
   addr_of r1 <> addr_of r2 || r1.pid <> r2.pid
 
-// Share the permissions between the given ref and a newly created ref. Both are contained, but not 
-// writeable anymore if the first one initially was
-// Only GTot because of H.addr_of being GTot. Could be solved with friend
-val share: #a:Type -> #rel:preorder a -> h:heap -> r:ref a rel{h `contains` r} -> GTot (heap * ref a rel * ref a rel)
+let rec same_prefix_same_sum_until (p1 p2:pos -> permission) (n:nat) : Lemma
+  (requires forall (x:pos). x <= n ==> p1 x = p2 x)
+  (ensures sum_until p1 n == sum_until p2 n)
+  = if n = 0 then () else same_prefix_same_sum_until p1 p2 (n-1)
+
 let share #a #rel h r =
   let v_perms = h.perms (addr_of r) in
   let current_max' = v_perms.current_max + 1 in
   let perm_map' = F.on_dom pos (fun (x:pos) ->
     if x = current_max' then (1 <: permission) else v_perms.perm_map x) in
-  let v_perms' = // :value_perms =
+  same_prefix_same_sum_until v_perms.perm_map perm_map' (current_max' - 1);
+  let v_perms' :value_perms =
     { current_max = current_max'; perm_map = perm_map' } in
-  admit()
-  
+  let heap' = {mheap = h.mheap; perms = fun n -> if n = addr_of r then v_perms' else h.perms n} in
+  heap', r, {r with pid = current_max'}
+
+let rec sum_until_change (p1 p2:pos -> permission) (n:nat) (i:pos) (v:permission) : Lemma
+  (requires (forall (x:pos). (x <= n /\ x <> i) ==> p1 x = p2 x) /\
+            i <= n /\
+            p2 i = v)
+  (ensures sum_until p2 n = sum_until p1 n + v - p1 i)
+  = if n = i then same_prefix_same_sum_until p1 p2 (n-1)
+    else sum_until_change p1 p2 (n-1) i v
+
+let merge #a #rel h r1 r2 =
+  let v_perms = h.perms (addr_of r1) in
+  let perm_map1' = F.on_dom pos (fun (x:pos) ->
+    if x = r1.pid then (v_perms.perm_map r1.pid + v_perms.perm_map r2.pid <: permission)
+    else v_perms.perm_map x) in
+  let perm_map2' = F.on_dom pos (fun (x:pos) -> if x = r2.pid then (0 <: permission) else perm_map1' x) in
+  sum_until_change v_perms.perm_map perm_map1' v_perms.current_max r1.pid (v_perms.perm_map r1.pid + v_perms.perm_map r2.pid);
+  sum_until_change perm_map1' perm_map2' v_perms.current_max r2.pid 0;
+  let v_perms' :value_perms =
+    { current_max = v_perms.current_max; perm_map = perm_map2' } in
+  let heap' = {mheap = h.mheap; perms = fun n -> if n = addr_of r1 then v_perms' else h.perms n} in
+  heap', r1
