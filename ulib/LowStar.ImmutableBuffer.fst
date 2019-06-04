@@ -45,7 +45,7 @@ inline_for_extraction let isub (#a:Type0) = msub #a #(immutable_preorder a) #(im
 
 inline_for_extraction let ioffset (#a:Type0) = moffset #a #(immutable_preorder a) #(immutable_preorder a) (immutable_preorder a)
 
-private let cpred (#a:Type0) (s:Seq.seq a) :spred a = fun s1 -> Seq.equal s s1
+let cpred (#a:Type0) (s:Seq.seq a) :spred a = fun s1 -> Seq.equal s s1
 
 unfold let libuffer (a:Type0) (len:nat) (s:Seq.seq a) =
   b:lmbuffer a (immutable_preorder a) (immutable_preorder a) len{witnessed b (cpred s)}
@@ -127,6 +127,23 @@ let recall_contents (#a:Type0) (b:ibuffer a) (s:Seq.seq a)
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ as_seq h0 b == s))
   = recall_p b (cpred s)
 
+let seq_eq (s:Ghost.erased (Seq.seq 'a)) (s':Seq.seq 'a) =
+  s' `Seq.equal` Ghost.reveal s
+  
+let value_is #a (b:ibuffer a) (s:Ghost.erased (Seq.seq a)) =
+  witnessed b (seq_eq s)
+
+let witness_value (#a:Type0) (b:ibuffer a)
+  :HST.ST unit (requires (fun h0        -> True))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ b `value_is` (Ghost.hide (as_seq h1 b))))
+  = let h = HST.get () in
+    let s = Ghost.hide (as_seq h b) in
+    witness_p b (seq_eq s)
+
+let recall_value (#a:Type0) (b:ibuffer a) (s:Ghost.erased (Seq.seq a))
+  :HST.ST unit (requires (fun h0        -> (recallable b \/ live h0 b) /\ b `value_is` s))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h1 b /\ as_seq h1 b == Ghost.reveal s))
+  = recall_p b (seq_eq s)
 
 (*
  * Immutable buffers are distinct from (trivial) buffers

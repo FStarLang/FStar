@@ -24,16 +24,10 @@ let by_red () : Tac unit =
     norm [primops; delta];
     trivial ()
 
-let _ = assert_by_tactic (0ul = 0ul)
-                         by_red
-let _ = assert_by_tactic (0ul == 0ul)
-                         by_red
-let _ = assert_by_tactic (0ul === 0ul)
-                         by_red
+let _ = assert (0ul = 0ul)      by by_red ()
+let _ = assert (0ul == 0ul)     by by_red ()
+let _ = assert (0ul === 0ul)    by by_red ()
 
-let _ = assert_by_tactic (0ul <> 1ul)
-                         by_red
-let _ = assert_by_tactic (~(0ul == 1ul))
-                         by_red
-let _ = assert_by_tactic (0ul =!= 1ul)
-                         by_red
+let _ = assert (0ul <> 1ul)     by by_red ()
+let _ = assert (~(0ul == 1ul))  by by_red ()
+let _ = assert (0ul =!= 1ul)    by by_red ()

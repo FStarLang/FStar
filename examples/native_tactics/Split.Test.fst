@@ -18,7 +18,4 @@ open FStar.Tactics
 open Split
 
 let test = 
-  assert_by_tactic (True /\ True) compiled_split
-
-
-
+  assert (True /\ True) by compiled_split ()
