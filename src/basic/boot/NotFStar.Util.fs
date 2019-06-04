@@ -185,6 +185,7 @@ let run_process (id: string) (prog: string) (args: list<string>) (stdin: option<
   proc.StartInfo <- pinfo;
   let result = proc.Start() in
   (match stdin with Some s -> proc.StandardInput.Write(s) | None -> ());
+  proc.StandardInput.Close();
   let stdout = proc.StandardOutput.ReadToEnd() in
   let stderr = proc.StandardError.ReadToEnd() in
   stdout ^ stderr
