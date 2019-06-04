@@ -249,18 +249,18 @@ let repl_tx st push_kind task =
     let curmod, env = run_repl_task st.repl_curmod env task in
     let st = { st with repl_curmod = curmod; repl_env = env } in
     let env, name_events = finish_name_tracking env in // end name tracking
-    true, commit_name_tracking st name_events
+    None, commit_name_tracking st name_events
   with
   | Failure (msg) ->
-    U.print1_error "[F] %s" msg; false, st
+    Some (js_diag st.repl_fname msg None), st
   | U.SigInt ->
-    U.print_error "[E] Interrupt"; false, st
+    U.print_error "[E] Interrupt"; None, st
   | Error (e, msg, r) ->
-    U.print1_error "[E] %s" msg; false, st
+    Some (js_diag st.repl_fname msg (Some r)), st
   | Err (e, msg) ->
-    U.print1_error "[E] %s" msg; false, st
+    Some (js_diag st.repl_fname msg None), st
   | Stop ->
-    U.print_error "[E] Stop"; false, st
+    U.print_error "[E] Stop"; None, st
 
 // Little helper
 let tf_of_fname fname =
@@ -305,8 +305,8 @@ let repl_ldtx (st: repl_state) (tasks: list<repl_task>) : either_replst =
     // run ``task`` and record the updated dependency stack in ``st``.
     | task :: tasks, [] ->
       let timestamped_task = update_task_timestamps task in
-      let success, st = repl_tx st LaxCheck timestamped_task in
-      if success then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
+      let diag, st = repl_tx st LaxCheck timestamped_task in
+      if not (U.is_some diag) then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
       else Inr st
 
     // We've already run ``task`` previously, and no update is needed: skip.
@@ -363,5 +363,5 @@ let full_lax text st =
   match ld_deps st with
   | Inl (st, deps) ->
       let names = add_module_completions st.repl_fname deps st.repl_names in
-      snd (repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment frag))
-  | Inr st -> st
+      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment frag)
+  | Inr st -> None, st

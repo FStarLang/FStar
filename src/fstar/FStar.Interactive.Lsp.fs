@@ -100,67 +100,69 @@ let repl_state_init (fname: string) : repl_state =
     repl_curmod = None; repl_env = env; repl_deps_stack = [];
     repl_stdin = open_stdin (); repl_names = CompletionTable.empty }
 
+type optresponse = option<assoct> // Contains [("result", ...)], [("error", ...)], but is not
+                                  // the full response; call json_of_response for that
 type either_gst_exit = either<grepl_state, int> // grepl_state is independent of exit_code
 
 let run_query (gst: grepl_state) (q: lquery) : optresponse * either_gst_exit =
   match q with
-  | Initialize (pid, rootUri) -> (Some (Inl js_servcap), Inl gst)
-  | Initialized -> (None, Inl gst)
-  | Shutdown -> Some (Inl JsonNull), Inl gst
-  | Exit -> (None, Inr 0)
-  | Cancel id -> (None, Inl gst)
-  | FolderChange evt -> Some (Inl JsonNull), Inl gst
-  | ChangeConfig -> Some (Inl JsonNull), Inl gst
-  | ChangeWatch -> (None, Inl gst)
-  | Symbol sym -> Some (Inl JsonNull), Inl gst
-  | ExecCommand cmd -> Some (Inl JsonNull), Inl gst
+  | Initialize (pid, rootUri) -> resultResponse (js_servcap), Inl gst
+  | Initialized -> None, Inl gst
+  | Shutdown -> nullResponse, Inl gst
+  | Exit -> None, Inr 0
+  | Cancel id -> None, Inl gst
+  | FolderChange evt -> nullResponse, Inl gst
+  | ChangeConfig -> nullResponse, Inl gst
+  | ChangeWatch -> None, Inl gst
+  | Symbol sym -> nullResponse, Inl gst
+  | ExecCommand cmd -> nullResponse, Inl gst
   | DidOpen { fname = p; langId = _; version = _; text = t } ->
     (match U.psmap_try_find gst.grepl_repls p with
      | Some _ -> None, Inl gst
      | None ->
        PI.add_vfs_entry p t;
-       let st' = PH.full_lax t (repl_state_init p) in
+       let diag, st' = PH.full_lax t (repl_state_init p) in
        let repls = U.psmap_add gst.grepl_repls p st' in
-       None, Inl ({ gst with grepl_repls = repls }))
-  | DidChange (txid, content) -> PI.add_vfs_entry txid content; (None, Inl gst)
-  | WillSave txid -> (None, Inl gst)
-  | WillSaveWait txid -> Some (Inl JsonNull), Inl gst
-  | DidSave (txid, content) -> PI.add_vfs_entry txid content; (None, Inl gst)
-  | DidClose txid -> (None, Inl gst)
+       diag, Inl ({ gst with grepl_repls = repls }))
+  | DidChange (txid, content) -> PI.add_vfs_entry txid content; None, Inl gst
+  | WillSave txid -> None, Inl gst
+  | WillSaveWait txid -> nullResponse, Inl gst
+  | DidSave (txid, content) -> PI.add_vfs_entry txid content; None, Inl gst
+  | DidClose txid -> None, Inl gst
   | Completion (txpos, ctx) ->
     (match U.psmap_try_find gst.grepl_repls txpos.path with
-     | Some st -> Some (QH.complookup st txpos), Inl gst
-     | None -> Some (Inl JsonNull), Inl gst)
-  | Resolve -> Some (Inl JsonNull), Inl gst
+     | Some st -> QH.complookup st txpos, Inl gst
+     | None -> nullResponse, Inl gst)
+  | Resolve -> nullResponse, Inl gst
   | Hover txpos ->
     (match U.psmap_try_find gst.grepl_repls txpos.path with
-     | Some st -> Some (QH.hoverlookup st.repl_env txpos), Inl gst
-     | None -> Some (Inl JsonNull), Inl gst)
-  | SignatureHelp txpos -> Some (Inl JsonNull), Inl gst
-  | Declaration txpos -> Some (Inl JsonNull), Inl gst
+     | Some st -> QH.hoverlookup st.repl_env txpos, Inl gst
+     | None -> nullResponse, Inl gst)
+  | SignatureHelp txpos -> nullResponse, Inl gst
+  | Declaration txpos -> nullResponse, Inl gst
   | Definition txpos ->
     (match U.psmap_try_find gst.grepl_repls txpos.path with
-     | Some st -> Some (QH.deflookup st.repl_env txpos), Inl gst
-     | None -> Some (Inl JsonNull), Inl gst)
-  | TypeDefinition txpos -> Some (Inl JsonNull), Inl gst
-  | Implementation txpos -> Some (Inl JsonNull), Inl gst
-  | References -> Some (Inl JsonNull), Inl gst
-  | DocumentHighlight txpos -> Some (Inl JsonNull), Inl gst
-  | DocumentSymbol -> Some (Inl JsonNull), Inl gst
-  | CodeAction -> Some (Inl JsonNull), Inl gst
-  | CodeLens -> Some (Inl JsonNull), Inl gst
-  | CodeLensResolve -> Some (Inl JsonNull), Inl gst
-  | DocumentLink -> Some (Inl JsonNull), Inl gst
-  | DocumentLinkResolve -> Some (Inl JsonNull), Inl gst
-  | DocumentColor -> Some (Inl JsonNull), Inl gst
-  | ColorPresentation -> Some (Inl JsonNull), Inl gst
-  | Formatting -> Some (Inl JsonNull), Inl gst
-  | RangeFormatting -> Some (Inl JsonNull), Inl gst
-  | TypeFormatting -> Some (Inl JsonNull), Inl gst
-  | Rename -> Some (Inl JsonNull), Inl gst
-  | PrepareRename txpos -> Some (Inl JsonNull), Inl gst
-  | FoldingRange -> Some (Inl JsonNull), Inl gst
-  | BadProtocolMsg msg -> (Some (Inr (js_resperr MethodNotFound msg)), Inl gst)
+     | Some st -> QH.deflookup st.repl_env txpos, Inl gst
+     | None -> nullResponse, Inl gst)
+  | TypeDefinition txpos -> nullResponse, Inl gst
+  | Implementation txpos -> nullResponse, Inl gst
+  | References -> nullResponse, Inl gst
+  | DocumentHighlight txpos -> nullResponse, Inl gst
+  | DocumentSymbol -> nullResponse, Inl gst
+  | CodeAction -> nullResponse, Inl gst
+  | CodeLens -> nullResponse, Inl gst
+  | CodeLensResolve -> nullResponse, Inl gst
+  | DocumentLink -> nullResponse, Inl gst
+  | DocumentLinkResolve -> nullResponse, Inl gst
+  | DocumentColor -> nullResponse, Inl gst
+  | ColorPresentation -> nullResponse, Inl gst
+  | Formatting -> nullResponse, Inl gst
+  | RangeFormatting -> nullResponse, Inl gst
+  | TypeFormatting -> nullResponse, Inl gst
+  | Rename -> nullResponse, Inl gst
+  | PrepareRename txpos -> nullResponse, Inl gst
+  | FoldingRange -> nullResponse, Inl gst
+  | BadProtocolMsg msg -> errorResponse (js_resperr MethodNotFound msg), Inl gst
 
 // Raises exceptions, but all of them are caught
 let rec parse_header_len (stream: stream_reader) (len: int): int =

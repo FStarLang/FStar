@@ -14,7 +14,9 @@ module U = FStar.Util
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
-let try_assoc (key: string) (d: list<(string * json)>) =
+type assoct = list<(string * json)>
+
+let try_assoc (key: string) (d: assoct) =
   U.map_option snd (U.try_find (fun (k, _) -> k = key) d)
 
 // All exceptions are guaranteed to be caught in the LSP server implementation
@@ -53,7 +55,7 @@ let js_str : json -> string = function
 let js_list k = function
   | JsonList l -> List.map k l
   | other -> js_fail "list" other
-let js_assoc : json -> list<(string * json)> = function
+let js_assoc : json -> assoct = function
   | JsonAssoc a -> a
   | other -> js_fail "dictionary" other
 let js_str_int : json -> int = function
@@ -212,8 +214,6 @@ and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
 and grepl_state = { grepl_repls : U.psmap<repl_state>;
                     grepl_stdin : stream_reader }
 
-type optresponse = option<either<json, json>>
-
 type error_code =
 | ParseError
 | InvalidRequest
@@ -257,13 +257,18 @@ let wrap_jsfail (qid : option<int>) expected got : lsp_query =
 
 (* Helpers for constructing the response *)
 
-let json_of_response (qid: option<int>) (response: either<json, json>) =
-  let qid = match qid with
-  | Some i -> JsonInt i
-  | None -> JsonNull in
-  match response with
-  | Inl result -> JsonAssoc [("jsonrpc", JsonStr "2.0"); ("id", qid); ("result", result)]
-  | Inr err -> JsonAssoc [("jsonrpc", JsonStr "2.0"); ("id", qid); ("error", err)]
+// Trivial helpers
+let resultResponse (r: json) : option<assoct> = Some [("result", r)]
+let errorResponse (r: json) : option<assoct> = Some [("error", r)]
+
+// When a response is expected, but we have nothing to say (used for unimplemented bits as well)
+let nullResponse : option<assoct> = resultResponse JsonNull
+
+let json_of_response (qid: option<int>) (response: assoct) : json =
+  match qid with
+  | Some i -> JsonAssoc ([("jsonrpc", JsonStr "2.0"); ("id", JsonInt i)] @ response)
+  // In the case of a notification response, there is no query_id associated
+  | None -> JsonAssoc ([("jsonrpc", JsonStr "2.0")] @ response)
 
 let js_resperr (err: error_code) (msg: string) : json =
   JsonAssoc [("code", JsonInt (errorcode_to_int err)); ("message", JsonStr msg)]
@@ -296,10 +301,27 @@ let js_servcap : json =
 let js_pos (p: pos) : json = JsonAssoc [("line", JsonInt (line_of_pos p - 1));
                                         ("character", JsonInt (col_of_pos p))]
 
-let js_loclink r =
-  let s = JsonAssoc [("start", js_pos (start_of_range r)); ("end", js_pos (end_of_range r))] in
+let js_range (r: Range.range) : json =
+  JsonAssoc [("start", js_pos (start_of_range r)); ("end", js_pos (end_of_range r))]
+
+// Used to report diagnostic, for example, when loading dependencies fails
+let js_dummyrange : json =
+  JsonAssoc [("start", JsonAssoc [("line", JsonInt 0); ("character", JsonInt 0);
+             ("end", JsonAssoc [("line", JsonInt 0); ("character", JsonInt 0)])])]
+
+let js_loclink (r: Range.range) : json =
+  let s = js_range r in
   JsonList [JsonAssoc [("targetUri", JsonStr (path_to_uri (file_of_range r)));
                        ("targetRange", s); ("targetSelectionRange", s)]]
 
 // Lines are 0-indexed in LSP, but 1-indexed in the F* Typechecker;
-let pos_munge (pos : txdoc_pos) = (pos.path, pos.line + 1, pos.col)
+let pos_munge (pos: txdoc_pos) = (pos.path, pos.line + 1, pos.col)
+
+let js_diag (fname: string) (msg: string) (r: option<Range.range>) : assoct =
+  let r' = match r with
+           | Some r -> js_range r
+           | None -> js_dummyrange in
+  // Unfortunately, the F* typechecker aborts on the very first diagnostic
+  let ds = ("diagnostics", JsonList [JsonAssoc [("range", r'); ("message", JsonStr msg)]]) in
+  [("method", JsonStr "textDocument/publishDiagnostics");
+   ("params", JsonAssoc [("uri", JsonStr (path_to_uri fname)); ds])]

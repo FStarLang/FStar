@@ -25,6 +25,6 @@ val symlookup : TcEnv.env -> string -> option<position> -> list<string> -> optio
 val ck_completion : repl_state -> string -> list<CTable.completion_result>
 
 // Used exclusively by LSP
-val deflookup : TcEnv.env -> txdoc_pos -> either<json, json>
-val hoverlookup : TcEnv.env -> txdoc_pos -> either<json, json>
-val complookup : repl_state -> txdoc_pos -> either<json, json>
+val deflookup : TcEnv.env -> txdoc_pos -> option<assoct>
+val hoverlookup : TcEnv.env -> txdoc_pos -> option<assoct>
+val complookup : repl_state -> txdoc_pos -> option<assoct>

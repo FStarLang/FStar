@@ -94,22 +94,22 @@ let ck_completion (st: repl_state) (search_term: string) : list<CTable.completio
   let lids = CTable.autocomplete_lid st.repl_names needle in
   lids @ mods_and_nss
 
-let deflookup (env: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
+let deflookup (env: TcEnv.env) (pos: txdoc_pos) : option<assoct> =
   match symlookup env "" (Some (pos_munge pos)) ["defined-at"] with
   | Some { slr_name = _; slr_def_range = (Some r); slr_typ = _; slr_doc = _; slr_def = _ } ->
-      Inl (js_loclink r)
-  | _ -> Inl JsonNull
+      resultResponse (js_loclink r)
+  | _ -> nullResponse
 
 // A hover-provider provides both the type and the definition of a given symbol
-let hoverlookup (env: TcEnv.env) (pos: txdoc_pos) : either<json, json> =
+let hoverlookup (env: TcEnv.env) (pos: txdoc_pos) : option<assoct> =
   match symlookup env "" (Some (pos_munge pos)) ["type"; "definition"] with
   | Some { slr_name = n; slr_def_range = _; slr_typ = (Some t); slr_doc = _; slr_def = (Some d) } ->
     let hovertxt = U.format2 "```fstar\n%s\n````\n---\n```fstar\n%s\n```" t d in
-    Inl (JsonAssoc [("contents", JsonAssoc [("kind", JsonStr "markdown");
-                                            ("value", JsonStr hovertxt)])])
-  | _ -> Inl JsonNull
+    resultResponse (JsonAssoc [("contents", JsonAssoc [("kind", JsonStr "markdown");
+                                                       ("value", JsonStr hovertxt)])])
+  | _ -> nullResponse
 
-let complookup (st: repl_state) (pos: txdoc_pos) : either<json, json> =
+let complookup (st: repl_state) (pos: txdoc_pos) : option<assoct> =
   // current_col corresponds to the current cursor position of the incomplete identifier
   let (file, row, current_col) = pos_munge pos in
   let (Some (_, text)) = PI.read_vfs_entry file in
@@ -125,7 +125,6 @@ let complookup (st: repl_state) (pos: txdoc_pos) : either<json, json> =
     exp (String.length s - 1) [] in
   let begin_col = find_col (List.rev (explode str)) in
   let term = U.substring str begin_col (current_col - begin_col) in
-  U.print1_error "[I] term = >%s<\n" term;
   let items = ck_completion st term in
   let l = List.map (fun r -> JsonAssoc [("label", JsonStr r.completion_candidate)]) items in
-  Inl (JsonList l)
+  resultResponse (JsonList l)

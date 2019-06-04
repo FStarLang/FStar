@@ -15,8 +15,11 @@ module PI = FStar.Parser.ParseIt
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
-val try_assoc : string -> list<(string * json)> -> option<json> // nothrow
-val assoc : string -> list<(string * json)> -> json // throw
+// Type of an associative array
+type assoct = list<(string * json)>
+
+val try_assoc : string -> assoct -> option<json> // nothrow
+val assoc : string -> assoct -> json // throw
 
 // All exceptions are guaranteed to be caught in the LSP server implementation
 exception MissingKey of string // Only in LSP
@@ -32,10 +35,10 @@ val js_fail : string -> json -> 'a
 val js_int : json -> int
 val js_str : json -> string
 val js_list : (json -> 'a) -> json -> list<'a>
-val js_assoc : json -> list<(string * json)>
+val js_assoc : json -> assoct
 val js_str_int : json -> int
 
-val arg : string -> list<(string * json)> -> json
+val arg : string -> assoct -> json
 val uri_to_path : string -> string
 
 type completion_context = { trigger_kind: int; trigger_char: option<string> }
@@ -45,8 +48,8 @@ type txdoc_item = { fname: string; langId: string; version: int; text: string }
 val js_txdoc_item : json -> txdoc_item
 
 type txdoc_pos = { path: string; line: int; col: int }
-val js_txdoc_id : list<(string * json)> -> string
-val js_txdoc_pos : list<(string * json)> -> txdoc_pos
+val js_txdoc_id : assoct -> string
+val js_txdoc_pos : assoct -> txdoc_pos
 
 type workspace_folder = { wk_uri: string; wk_name: string }
 type wsch_event = { added: workspace_folder; removed: workspace_folder }
@@ -129,8 +132,6 @@ and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
 // Global repl_state, keeping state of different buffers
 type grepl_state = { grepl_repls: U.psmap<repl_state>; grepl_stdin: stream_reader }
 
-type optresponse = option<either<json, json>> // Used to indicate (no|success|failure) response
-
 type error_code =
 | ParseError
 | InvalidRequest
@@ -149,9 +150,16 @@ val json_debug : json -> string
 val wrap_jsfail : option<int> -> string -> json -> lsp_query
 
 (* Helpers for constructing the response *)
-val json_of_response : option<int> -> either<json, json> -> json
+
+// Used by run_query heavily
+val resultResponse : json -> option<assoct>
+val errorResponse : json -> option<assoct>
+val nullResponse : option<assoct>
+
+val json_of_response : option<int> -> assoct -> json
 val js_resperr : error_code -> string -> json
 val wrap_content_szerr : string -> lsp_query
 val js_servcap : json
 val js_loclink : Range.range -> json
 val pos_munge : txdoc_pos -> string * int * int
+val js_diag : string -> string -> option<Range.range> -> assoct

@@ -46,4 +46,5 @@ val track_name_changes : env_t -> env_t * (env_t -> env_t * list<name_tracking_e
 val commit_name_tracking : repl_state -> list<name_tracking_event> -> repl_state
 
 // Lax-check the whole file; used on didOpen
-val full_lax : string -> repl_state -> repl_state
+// returns a diagnostic (only on error) along with the repl_state
+val full_lax : string -> repl_state -> option<assoct> * repl_state
