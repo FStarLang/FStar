@@ -21,10 +21,10 @@ module Setoids
 /// Markulf and Konrad do proofs of cryptographic security by
 /// reasoning about equivalences of cryptographic functionalities
 /// expressed as functors.
-/// 
+///
 /// Konrad's slides from a talk at Bertinoro provide a good overview
 /// https://github.com/kkohbrok/kkohbrok.github.io/raw/master/talks/skech2018.pdf
-/// 
+///
 /// For instance, they write things like:
 ///              PKAE⁰
 ///    =         MOD-PKAE⁰ . (ODH⁰ | AE⁰) . KEY
@@ -37,7 +37,7 @@ module Setoids
 /// cryptographic hypotheses
 ///      `.` is functor composition
 ///      `|` is functor product
-/// 
+///
 /// The equivalences are all contextual, i.e., an attacker functor
 /// when interacting cannot tell two sides of an equivalence apart,
 /// except with a probability ε
@@ -54,7 +54,7 @@ module Setoids
 /// It turns out that the techniques we use are related to setoids and
 /// partial equivalence relations. To learn more about those, you
 /// might want to read:
-/// 
+///
 ///   Setoids in type theory:
 ///       http://www.cs.nott.ac.uk/~pszvc/publications/Setoids_JFP_2003.pdf
 ///   PER model of secure information flow
@@ -141,7 +141,7 @@ let arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) : p
              f x0 `brel` g x1
 
 /// `arrow_rel` is a PER when its arguments are PERs
-/// 
+///
 ///  Note, `arrow_rel` is not an equivalence relation on `a -> b`
 ///  since it need not be reflexive.
 let arrow #a #b (ra:per a) (rb:per b) : per (a -> b) = arrow_rel ra rb
@@ -412,7 +412,7 @@ let equiv_module_bb : squash (module_b `sig_rel sig_x` module_b) = ()
 /// provides an "overlay"
 ///
 ///   overlay  : sig
-///     impl 
+///     impl
 ///   underlay : sig
 let functor_t (underlay:sig) (overlay:sig) =
   sig_rel underlay ^--> sig_rel overlay

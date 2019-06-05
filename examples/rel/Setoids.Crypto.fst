@@ -2,6 +2,7 @@ module Setoids.Crypto
 module L = Setoids
 open FStar.Integers
 open FStar.Map
+open Setoids
 
 let byte = uint_8
 
@@ -27,11 +28,30 @@ let truncate (t:tape) (n:nat) : tape =
 ///    1. random sampling
 ///    2. reading and writing state
 ///    3. raising exceptions
-let eff (st:Type) (a:Type) =
-  tape & st ->  //input tape and initial state
-  Tot (option a &  //normal return (Some _) or exception (None)
-       st &        //final state
-       nat)          //amount of tape consumed
+//let eff (st:Type) (a:Type) =
+//  tape & st ->  //input tape and initial state
+//  Tot (option a &  //normal return (Some _) or exception (None)
+//       st &        //final state
+//       nat)          //amount of tape consumed
+
+let option_rel (#a:Type) (arel:rel a) =
+  fun x y ->
+    match x with
+    | None -> b2t (None? y)
+    | Some some_x -> Some? y /\ Some?.v y == some_x
+
+let eff (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) =
+  srel ^--> ((option_rel #a arel) ** srel)
+
+//let option_arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) : prop =
+//    forall x0 x1. x0 `arel` x1 ==>
+//             f x0 `brel` g x1
+
+let eff_rel #s #a
+    (srel: erel s)
+    (arel: erel a)
+    : erel (eff srel arel)
+  = arrow_rel srel ((option_rel #a arel) ** srel)
 
 /// Note: F* provides syntactic sugar for monadic computations, as
 /// follows
@@ -52,26 +72,41 @@ let eff (st:Type) (a:Type) =
 
 
 /// returning a result into a computation
-let return #st #a (x:a) : eff st a =
-  fun (t, s) -> Some x, s, 0
+//let return #st #a (x:a) : eff st a =
+//  fun (t, s) -> Some x, s, 0
+
+let return #s #a (#srel:erel s) (#arel:erel a) (x:a)
+  : eff srel arel
+  = fun s0 -> Some x, s0
+
+let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
+         ($f:eff srel arel)
+         (g:arel ^--> st_rel srel brel)
+   : eff srel brel =
+   fun s0 ->
+     let x, s1 = f s0 in
+     match x with
+     | Some x ->
+       g x s1
+     | None -> None, s1
 
 /// sequential composition of `eff` computations
-let bind #st #a #b
-         (f:eff st a)
-         (g: a -> eff st b)
-  : eff st b
-  = fun (t, s) ->
-       match f (t, s) with
-       | None, s', n ->
-         // if f raises an exception, propagate it, while preserving
-         // the state (s') and #slots consumed on the tape (n)
-         None, s', n
-
-       | Some v, s', n ->
-         //otherwise, truncate the prefix of the tape that was already
-         //used (n) and call `g` with the result of `f`, the truncated
-         //tape and the state produced by `f` (s')
-         g v (truncate t n, s')
+//let bind #st #a #b
+//         (f:eff st a)
+//         (g: a -> eff st b)
+//  : eff st b
+//  = fun (t, s) ->
+//       match f (t, s) with
+//       | None, s', n ->
+//         // if f raises an exception, propagate it, while preserving
+//         // the state (s') and #slots consumed on the tape (n)
+//         None, s', n
+//
+//       | Some v, s', n ->
+//         //otherwise, truncate the prefix of the tape that was already
+//         //used (n) and call `g` with the result of `f`, the truncated
+//         //tape and the state produced by `f` (s')
+//         g v (truncate t n, s')
 
 /// reading the entire state
 let get #st : eff st st
@@ -85,9 +120,11 @@ let set #st (s:st) : eff st unit
 let sample #st : eff st byte
   = fun (t, s) -> Some (t 0), s, 1
 
+
 /// raising an exception
 let raise #st #a : eff st a
   = fun (t, s) -> None, s, 0
+
 
 /// state separation
 let lift_left #st1 #st2 #a (f:eff st1 a)
@@ -114,53 +151,57 @@ let handle = bytes&bytes
 let key (n:nat) = lbytes n
 let key_state (n:nat) = (Map.t handle bool & Map.t handle (key n))
 
-let key_gen (h:handle) : eff (key_state 1) handle =
-    s <-- get ;
-    let (h_map,k_map) = s in
-    match Map.contains h_map h,Map.contains k_map h with
-    | false,false ->
-      k <-- sample ;
-      let s':key_state 1 = (Map.upd h_map h true, Map.upd k_map h (Seq.create 1 k <: Seq.lseq byte 1)) in
-      set s' ;;
-      return h
-    | _,_ ->
-      raise
+let key_state_rel (n:nat) = hi (key_state n)
 
-let key_set (h:handle) (k_in:Seq.lseq byte 1) : eff (key_state 1) handle =
-    s <-- get ;
-    let (h_map,k_map) = s in
-    match Map.contains h_map h,Map.contains k_map h with
-    | false,false ->
-      let s':key_state 1 = (Map.upd h_map h true, Map.upd k_map h k_in) in
-      set s' ;;
-      return h
-    | _,_ ->
-      raise
+let key_eff (n:nat) = option_st (key_state_rel n)
 
-let key_cset (h:handle) (k_in:Seq.lseq byte 1) : eff (key_state 1) handle =
-    s <-- get ;
-    let (h_map,k_map) = s in
-    match Map.contains h_map h,Map.contains k_map h with
-    | false,false ->
-      let s':key_state 1 = (Map.upd h_map h false, Map.upd k_map h k_in) in
-      set s' ;;
-      return h
-    | _,_ ->
-      raise
+//let key_gen (h:handle) : eff (key_state 1) handle =
+//    s <-- get ;
+//    let (h_map,k_map) = s in
+//    match Map.contains h_map h,Map.contains k_map h with
+//    | false,false ->
+//      k <-- sample ;
+//      let s':key_state 1 = (Map.upd h_map h true, Map.upd k_map h (Seq.create 1 k <: Seq.lseq byte 1)) in
+//      set s' ;;
+//      return h
+//    | _,_ ->
+//      raise
+//
+//let key_set (h:handle) (k_in:Seq.lseq byte 1) : eff (key_state 1) handle =
+//    s <-- get ;
+//    let (h_map,k_map) = s in
+//    match Map.contains h_map h,Map.contains k_map h with
+//    | false,false ->
+//      let s':key_state 1 = (Map.upd h_map h true, Map.upd k_map h k_in) in
+//      set s' ;;
+//      return h
+//    | _,_ ->
+//      raise
+//
+//let key_cset (h:handle) (k_in:Seq.lseq byte 1) : eff (key_state 1) handle =
+//    s <-- get ;
+//    let (h_map,k_map) = s in
+//    match Map.contains h_map h,Map.contains k_map h with
+//    | false,false ->
+//      let s':key_state 1 = (Map.upd h_map h false, Map.upd k_map h k_in) in
+//      set s' ;;
+//      return h
+//    | _,_ ->
+//      raise
+//
+//let key_get_t = handle -> eff (key_state 1) (key 1)
+//let key_get (h:handle) : eff (key_state 1) (key 1) =
+//    s <-- get ;
+//    let (h_map,k_map) = s in
+//    match Map.contains h_map h,Map.contains k_map h with
+//    | true,true ->
+//      let k = Map.sel k_map h in
+//      return k
+//    | _,_ ->
+//      raise
 
-let key_get_t = handle -> eff (key_state 1) (key 1)
-let key_get (h:handle) : eff (key_state 1) (key 1) =
-    s <-- get ;
-    let (h_map,k_map) = s in
-    match Map.contains h_map h,Map.contains k_map h with
-    | true,true ->
-      let k = Map.sel k_map h in
-      return k
-    | _,_ ->
-      raise
-
-let key_hon_t = handle -> eff (key_state 1) bool
-let key_hon (h:handle) : eff (key_state 1) bool =
+let key_hon_t = lo handle ^--> (key_state_rel 1) (lo bool) //eeff (hi (key_state 1)) (lo bool)
+let key_hon : key_hon_t =
     s <-- get ;
     let (h_map,k_map) = s in
     match Map.contains h_map h,Map.contains k_map h with
@@ -171,20 +212,29 @@ let key_hon (h:handle) : eff (key_state 1) bool =
       raise
 
 type key_labels =
-    | GET
+    //| GET
     | HON
 
 let key_field_types: key_labels -> Type =
-    function  GET -> key_get_t
+    function  //GET -> key_get_t
             | HON -> key_hon_t
 
-open Setoids
+
+
+/// A couple of `st` types
+let t_one = lo int ^--> st_rel state_rel (lo int)
+let t_two = lo int ^--> st_rel state_rel (lo bool)
+
+let field_rels : (k:key -> erel (field_types k)) =
+  function
+    | ONE -> arrow (lo int) (st_rel state_rel (lo int))
+    | TWO -> arrow (lo int) (st_rel state_rel (lo bool))
 
 #set-options "--z3rlimit 100"
 let field_rels : (k:key_labels -> erel (key_field_types k)) =
   function
-    | GET -> arrow (lo handle) (st_rel state_rel (lo key))
-    | HON -> arrow (lo handle) (st_rel state_rel (lo bool))
+    //| GET -> arrow (lo handle) (st_rel state_rel (lo key))
+    | HON -> arrow (lo handle) (eff (key_state 1) (lo bool))
 
 //let key_module
 
