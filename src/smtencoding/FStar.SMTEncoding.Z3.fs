@@ -291,6 +291,14 @@ let smt_output_sections (log_file:option<string>) (r:Range.range) (lines:list<st
       match until "Done!" lines with
       | None -> lines
       | Some (prefix, suffix) -> prefix@suffix in
+    let remaining =
+      remaining |> List.filter
+        (fun line ->
+          if BU.starts_with line "(error "
+          && BU.ends_with line "max. resource limit exceeded\")"
+          then false //exclude these lines; spurious output in Z3 >= 4.8.4
+          else true)
+    in
     let _ =
         match remaining with
         | [] -> ()
