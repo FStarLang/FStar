@@ -79,17 +79,6 @@ let return #s #a (#srel:erel s) (#arel:erel a) (x:a)
   : eff srel arel
   = fun s0 -> Some x, s0
 
-let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
-         ($f:eff srel arel)
-         (g:arel ^--> st_rel srel brel)
-   : eff srel brel =
-   fun s0 ->
-     let x, s1 = f s0 in
-     match x with
-     | Some x ->
-       g x s1
-     | None -> None, s1
-
 /// sequential composition of `eff` computations
 //let bind #st #a #b
 //         (f:eff st a)
@@ -107,39 +96,66 @@ let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
 //         //used (n) and call `g` with the result of `f`, the truncated
 //         //tape and the state produced by `f` (s')
 //         g v (truncate t n, s')
+let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
+         ($f:eff srel arel)
+         (g:arel ^--> eff_rel srel brel)
+   : eff srel brel =
+   fun s0 ->
+     let x, s1 = f s0 in
+     match x with
+     | Some x ->
+       g x s1
+     | None -> None, s1
 
+#set-options "--max_ifuel 5"
+
+(* Old effect *)
 /// reading the entire state
-let get #st : eff st st
-  = fun (t, s) -> Some s, s, 0
+//let get #st : eff st st
+//  = fun (t, s) -> Some s, s, 0
 
+
+(* Here, F* runs out of steam *)
+//let get #s (#srel:erel s) : eff srel srel =
+//  fun s0 -> (Some s0), s0
+
+(* Old effect *)
 /// writing the entire state
-let set #st (s:st) : eff st unit
-  = fun (t, _) -> Some (), s, 0
+//let set #st (s:st) : eff st unit
+//  = fun (t, _) -> Some (), s, 0
 
+let put #s (#srel:erel s) : (srel ^--> eff_rel srel (lo unit)) =
+  fun s _ -> Some (), s
+
+(* Old effect, leaving out the tape for now. *)
 /// sampling from the head of the tape
-let sample #st : eff st byte
-  = fun (t, s) -> Some (t 0), s, 1
+//let sample #st : eff st byte
+//  = fun (t, s) -> Some (t 0), s, 1
 
 
+(* Old effect *)
 /// raising an exception
-let raise #st #a : eff st a
-  = fun (t, s) -> None, s, 0
+//let raise #st #a : eff st a
+//  = fun s -> (None, s)
 
+(* Here, F* runs out of steam *)
+//let raise #s (#srel:erel s) #a (#arel:erel a) : eff srel arel
+//  = fun s -> (None, s)
 
 /// state separation
-let lift_left #st1 #st2 #a (f:eff st1 a)
-  : eff (st1 & st2) a
-  = fun (t, (s1, s2)) ->
-      match f (t, s1) with
-      | None, s1', n -> None, (s1', s2), n
-      | Some x, s1', n -> Some x, (s1', s2), n
+let lift_left #s1 (#s1rel:erel s1) #s2 (#s2rel:erel s2) #a (#arel:erel a) (f:eff s1rel arel)
+  : eff (s1rel ** s2rel) arel
+  = fun (s1, s2) ->
+      match f s1 with
+      | None, s1' -> None, (s1', s2)
+      | Some x, s1' -> Some x, (s1', s2)
 
-let lift_right #st1 #st2 #a (f:eff st2 a)
-  : eff (st1 & st2) a
-  = fun (t, (s1, s2)) ->
-      match f (t, s2) with
-      | None, s2', n -> None, (s1, s2'), n
-      | Some x, s2', n -> Some x, (s1, s2'), n
+let lift_right #s1 (#s1rel:erel s1) #s2 (#s2rel:erel s2) #a (#arel:erel a) (f:eff s2rel arel)
+  : eff (s1rel ** s2rel) arel
+  = fun (s1, s2) ->
+      match f s2 with
+      | None, s2' -> None, (s1, s2')
+      | Some x, s2' -> Some x, (s1, s2')
 
 ////////////////////////////////////////////////////////////////////////////////
 //KEY package
