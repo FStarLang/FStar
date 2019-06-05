@@ -258,6 +258,7 @@ let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_
 
 
 let range_lid      = pconst "range"
+let mk_range_lid   = pconst "mk_range"
 let range_of_lid   = pconst "range_of"
 let labeled_lid    = pconst "labeled"
 let range_0        = pconst "range_0"

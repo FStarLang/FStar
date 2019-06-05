@@ -429,7 +429,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
               let vars, guards, env', decls1, _ = encode_binders None formals env in
               let guard, decls1 = match pre_opt with
                 | None -> mk_and_l guards, decls1
-                | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
+                | Some p -> let g, ds = encode_formula None p env' in mk_and_l (g::guards), decls1@ds in
               let dummy_var = mk_fv ("@dummy", dummy_sort) in
               let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
               let should_thunk () =
@@ -761,7 +761,7 @@ let encode_top_level_let :
                   in
                   let is_prims = lbn |> FStar.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids lid.ns) Const.prims_lid) in
                   if not is_prims && (quals |> List.contains Logic || is_logical)
-                  then app, mk_Valid app, encode_formula body env'
+                  then app, mk_Valid app, encode_formula None body env'
                   else app, app, encode_term body env'
                 in
 
@@ -837,7 +837,7 @@ let encode_top_level_let :
                 match pre_opt with
                 | None -> mk_and_l guards, []
                 | Some pre ->
-                  let guard, decls0 = encode_formula pre env' in
+                  let guard, decls0 = encode_formula None pre env' in
                   mk_and_l (guards@[guard]), decls0
             in
             let binder_decls = binder_decls @ guard_decls in
@@ -1055,7 +1055,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let uvs, f = SS.open_univ_vars us f in
         let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
         let f = norm_before_encoding env f in
-        let f, decls = encode_formula f env in
+        let f, decls = encode_formula None f env in
         let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^l.str)))]
                 |> mk_decls_trivial in
         decls@g, env
@@ -1704,7 +1704,7 @@ let encode_query use_env_msg tcenv q
     || debug tcenv <| Options.Other "SMTEncoding"
     || debug tcenv <| Options.Other "SMTQuery"
     then BU.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
-    let phi, qdecls = encode_formula q env in
+    let phi, qdecls = encode_formula None q env in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
     let caption =

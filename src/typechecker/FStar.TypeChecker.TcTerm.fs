@@ -1356,9 +1356,35 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         else body, lcomp_comp cbody, guard_body
     in
 
+    let label_msg = match (SS.compress body).n with
+        | Tm_app(head, args) ->
+          let head = U.un_uinst head in
+          begin match head.n, args with
+            | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t)
+              begin match (SS.compress r).n, (SS.compress msg).n with
+                | Tm_constant (Const_range r), Tm_constant (Const_string (s, _)) ->
+                  Some (fun () -> (Range.string_of_range r)  ^ " :: " ^ s)
+                | Tm_app(head, args), Tm_constant (Const_string (s, _)) ->
+                  let head = U.un_uinst head in
+                  begin match head.n, args with
+                  | Tm_fvar fv, [(f, _); (l1, c); (c1, _); (l2, _); (c2, _)] when S.fv_eq_lid fv Const.mk_range_lid -> //interpret mk_range f l1 c1 l2 c2
+                    begin match (SS.compress f).n, (SS.compress l1).n, (SS.compress c1).n, (SS.compress l2).n, (SS.compress c2).n with
+                    | Tm_constant(Const_string (f, _)), Tm_constant(Const_int (l1, _)), Tm_constant(Const_int (c1, _)), Tm_constant(Const_int (l2, _)), Tm_constant(Const_int (c2, _)) ->
+                      let range_str = BU.format5 "%s(%s,%s-%s,%s)" f l1 c1 l2 c2 in
+                      Some (fun () -> range_str ^ " :: " ^ s)
+                    | _ ->  None
+                    end
+                  | _ -> None
+                  end
+                | _ -> None
+              end
+            | _ -> None
+          end
+        | _ -> None in
+
     let guard = if env.top_level || not(Env.should_verify env)
-                then Env.conj_guard (Rel.discharge_guard env g_env)
-                                    (Rel.discharge_guard envbody guard_body)
+                then Env.conj_guard (Rel.discharge_guard_with_msg label_msg env g_env)
+                                    (Rel.discharge_guard_with_msg label_msg envbody guard_body)
                 else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
                      guard in
 

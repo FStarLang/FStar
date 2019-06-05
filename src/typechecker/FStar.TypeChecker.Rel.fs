@@ -3374,10 +3374,12 @@ let discharge_guard_no_smt env g =
   | Some g -> g
   | None  -> raise_error (Errors.Fatal_ExpectTrivialPreCondition, "Expected a trivial pre-condition") (Env.get_range env)
 
-let discharge_guard env g =
-  match discharge_guard' None env g true with
+let discharge_guard_with_msg msg env g =
+  match discharge_guard' msg env g true with
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
+
+let discharge_guard env g = discharge_guard_with_msg None env g
 
 let teq_nosmt (env:env) (t1:typ) (t2:typ) : option<guard_t> =
   match try_teq false env t1 t2 with
