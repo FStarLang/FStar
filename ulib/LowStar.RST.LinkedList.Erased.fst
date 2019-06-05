@@ -162,7 +162,7 @@ let cons (#a:Type) (ptr:t a) (l:erased (list (cell a))) (hd:t a) (v:a)
   (fun _ -> True)
   (fun _ _ _ -> True) =
   let new_cell = {data = v; next = ptr} in
-  let r = slist ptr l in                                        //TODO: due to tactics peculiarity
+  let r = slist ptr l in                                        //TODO: tactics vs GTot (erased a) <: Tot (erased a)
   rst_frame 
     (dummy_cell hd <*> r)
     (fun _ -> pts_to hd (hide new_cell) <*> r)
@@ -175,7 +175,7 @@ let cons_alloc (#a:Type) (ptr:t a) (l:erased (list (cell a))) (v:a)
   (fun _ -> True)
   (fun _ _ _ -> True) =
   let new_cell = {data = v; next = ptr} in
-  let r = slist ptr l in                                        //TODO: due to tactics peculiarity
+  let r = slist ptr l in                                        //TODO: tactics vs GTot (erased a) <: Tot (erased a)
   let new_head = rst_frame 
     r
     (fun ret -> pts_to ret (hide new_cell) <*> r)
@@ -209,8 +209,8 @@ let uncons_dealloc (#a:Type) (ptr:t a) (l:erased (list (cell a)){Cons? (reveal l
   reveal_view ();
   let node = !* ptr in
   let next = node.next in
-  let c = (hide (L.hd (reveal l))) in                  //TODO: due to tactics peculiarity
-  let r = slist next (hide (L.tl (reveal l))) in       //TODO: due to tactics peculiarity
+  let c = (hide (L.hd (reveal l))) in                  //TODO: tactics vs GTot (erased a) <: Tot (erased a)
+  let r = slist next (hide (L.tl (reveal l))) in       //TODO: tactics vs GTot (erased a) <: Tot (erased a)
   rst_frame 
     (pts_to ptr c <*> r)
     (fun _ -> r)
@@ -231,7 +231,7 @@ let rec map #a f ptr l =
     let node = !*ptr in
     let next = node.next in
     let l_tl = hide (L.tl (reveal l)) in
-    let r = slist next l_tl in                                        //TODO: due to tactics peculiarity
+    let r = slist next l_tl in                                        //TODO: tactics vs GTot (erased a) <: Tot (erased a)
     rst_frame 
       (pts_to ptr (hide node) <*> r)
       (fun _ -> pts_to ptr (hide ({node with data = f node.data})) <*> r)
@@ -242,7 +242,7 @@ let rec map #a f ptr l =
     // resource-terms between the outer and inner resources 
     // instead of the expected two (which is what happens when 
     // one gives an explicit name r to pts_to ptr ... below)
-    let r' = pts_to ptr (hide ({node with data = f node.data})) in    //TODO: due to tactics peculiarity
+    let r' = pts_to ptr (hide ({node with data = f node.data})) in    //TODO: tactics vs inferring Type0 for heap
     rst_frame
       (r' <*> slist next l_tl)
       (fun _ -> r' <*> 
