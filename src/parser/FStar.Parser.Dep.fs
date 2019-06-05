@@ -528,12 +528,8 @@ let collect_one
     let working_map = smap_copy original_map in
 
     let add_to_parsing_data elt =
-      if Options.debug_any () then
-        BU.print2 "Adding %s when existing is: %s\n\n" (str_of_parsing_data_elt elt) (str_of_parsing_data (Mk_pd !parsing_data));
       if not (List.existsML (fun e -> parsing_data_elt_eq e elt) !parsing_data) then
-      parsing_data := elt::!parsing_data;
-      if Options.debug_any () then
-        BU.print2 "After adding %s pd is: %s\n\n" (str_of_parsing_data_elt elt) (str_of_parsing_data (Mk_pd !parsing_data))
+      parsing_data := elt::!parsing_data
     in
 
     let set_interface_inlining () =
@@ -697,8 +693,8 @@ let collect_one
     then
       BU.print1 "Reading parsing data for %s from its checked file\n" filename;
       data_from_cache |> must |> read_parsing_data_from_cache;
-      BU.print1 "Dependences as read from the cache:%s\n" (print_dependence_list (record.get_deps ()));
-      BU.print1 "Parsing data as read from the cache:%s\n" (str_of_parsing_data (data_from_cache |> must));
+      BU.print2 "Dependences for %s as read from the cache:%s\n" filename (print_dependence_list (record.get_deps ()));
+      BU.print2 "Parsing data for %s as read from the cache:%s\n" filename (str_of_parsing_data (data_from_cache |> must));
       data_from_cache |> must,
       record.get_deps (),
       record.get_inline_for_extraction (),
@@ -971,8 +967,8 @@ let collect_one
       collect_module ast;
       (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
       if Options.debug_any () then begin
-        BU.print1 "Dependences as NOT read from the cache:%s\n" (print_dependence_list (record.get_deps ()));
-        BU.print1 "Parsing data as NOT read from the cache:%s\n" (str_of_parsing_data (record.get_parsing_data ()))
+        BU.print2 "For file %s Dependences as NOT read from the cache:%s\n" filename (print_dependence_list (record.get_deps ()));
+        BU.print2 "For file %s Parsing data as NOT read from the cache:%s\n" filename (str_of_parsing_data (record.get_parsing_data ()))
       end;
       record.get_parsing_data (),
       record.get_deps (),
