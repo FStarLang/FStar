@@ -3,8 +3,8 @@
 
     "BaseContainerIsEverestImage" : true,
     "BaseContainerImageName" : "everest-ci",
-    "BaseContainerImageTagOrCommitId": "c57e2f7b08c6859dd797238a6bb8e0f0ef9eb0ab",
-    "BranchName" : "z3-4.8.4",
+    "BaseContainerImageTagOrCommitId": "4d8ed9ade01423910c85474debb313087c6650ef",
+    "BranchName" : "z3-4.8.5",
     "GithubCommitUrl" : "https://github.com/project-everest/everest-ci/commit",
     "OnDemandBuildDefinition" : "Infrastructure\\Everest-Infrastructure-{agentOS}",
 
