@@ -103,8 +103,8 @@ let tau = fun () -> or_else sequence_pruning idtac
 let test (#a:Type0) (s:seq a) (x:a) (from:nat) (to:nat{from<=to /\ to<=length s}) (l:seq a) (y:nat) =
   assume (y == 17); //I would like to prune this out
   assume (l == snoc s x); //I would like to retain this fact from the local environment
-  assert_by_tactic (slice s from to == slice l from to) //would prefer to write this, and have the tactic switch to extensional equality
-                   (tau)
+  assert (slice s from to == slice l from to) //would prefer to write this, and have the tactic switch to extensional equality
+      by tau ()
 
 
 (* ////////////////// *)
