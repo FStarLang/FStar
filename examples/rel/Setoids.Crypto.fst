@@ -114,9 +114,24 @@ let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
 //let get #s (#srel:erel s) : st srel srel =
 //  fun s0 -> s0, s0
 
-#set-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 1"
+// TODO: Further inline these functions to get to figure out what is going on.
+
+let ( ^--> ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) =
+  f:(a -> b){ f `arrow_rel arel brel` f}
+
+let ( ** ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (p0 p1:(a & b)) : prop =
+  let (x0, y0) = p0 in
+  let (x1, y1) = p1 in
+  x0 `arel` x1 /\
+  y0 `brel` y1
+
+#set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 0"
 (* Here, F* runs out of steam *)
-let get #s (#srel:erel s) : st srel (option_rel #s srel) =
+let get #s (#srel:erel s) : f:(s -> p:((option s)*s)){
+  (forall x0 x1. x0 `srel` x1 ==>
+    f x0 `srel` f x1)
+  } =
+  // (srel ^--> (option_rel #s srel) ** srel) =
   fun s0 -> (Some s0), s0
 
 let eff (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) =
