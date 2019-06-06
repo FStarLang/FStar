@@ -56,9 +56,8 @@ let value_perms (a: Type0) = p:perms_rec a{
   (forall (n:perm_id). n > p.current_max ==> get_permission_from_pid p n = 0.R) /\
   // The sum of permissions is the number of splits up till now
   (sum_until p.perm_map p.current_max = 1.0R) /\ 
-  // Live permissions have the same snapshot
+  // All permissions have the same snapshot
   (forall (pid1 pid2: perm_id). let snap1 = get_snapshot_from_pid p pid1 in let snap2 = get_snapshot_from_pid p pid2 in
-    (is_live_pid p pid1 /\ is_live_pid p pid2) ==>
      snap1 == snap2
   )
 }
@@ -67,7 +66,7 @@ let value_perms (a: Type0) = p:perms_rec a{
 
 let new_value_perms (#a: Type0) (init: a) : Pure (value_perms a)
   (requires (True)) (ensures (fun v_perms -> 
-    (forall (pid:(live_pid v_perms)). get_snapshot_from_pid v_perms pid == init)
+    (forall (pid:perm_id). get_snapshot_from_pid v_perms pid == init)
   ))
   =
   let f:F.restricted_t perm_id (fun (x:perm_id) -> permission & a) = 
@@ -116,20 +115,23 @@ let rec sum_until_change
 
 let share_perms (#a: Type0) (v_perms: value_perms a) (pid: live_pid v_perms) : Pure (value_perms a & perm_id)  
   (requires (True)) (ensures (fun (new_v_perms, new_pid) -> 
+    new_pid <> pid /\
     get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /. 2.0R /\
-    get_permission_from_pid new_v_perms new_pid = get_permission_from_pid v_perms pid /. 2.0R 
+    get_permission_from_pid new_v_perms new_pid = get_permission_from_pid v_perms pid /. 2.0R /\
+    (forall (pid':perm_id{pid' <> pid /\ pid' <> new_pid}). get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid') /\
+    (forall (pid':perm_id). get_snapshot_from_pid v_perms pid' == get_snapshot_from_pid new_v_perms pid')    
   ))
   =
   let current_max' = v_perms.current_max + 1 in
-  let (p, snap) = v_perms.perm_map pid in
+  let (p, _) = v_perms.perm_map pid in
   let perm_map1' = F.on_dom perm_id (fun (x:perm_id) ->
     let (old_p, old_snap) = v_perms.perm_map x in
-    if x = pid then ((p /. 2.0R <: permission), snap) else (old_p, old_snap))
+    if x = pid then ((p /. 2.0R <: permission), old_snap) else (old_p, old_snap))
   in
   sum_until_change v_perms.perm_map perm_map1' v_perms.current_max pid (p /. 2.0R);
   let perm_map2' = F.on_dom perm_id (fun (x:perm_id) ->
     let (old_p, old_snap) = perm_map1' x in
-    if x = current_max' then ((p /. 2.0R <: permission), snap) else (old_p, old_snap))
+    if x = current_max' then ((p /. 2.0R <: permission), old_snap) else (old_p, old_snap))
   in
   sum_until_change perm_map1' perm_map2' current_max' current_max' (p /. 2.0R);
   let v_perms' : perms_rec a =
@@ -165,8 +167,12 @@ let merge_perms
   (pid2: live_pid v_perms{pid1 <> pid2}) 
   : Pure (value_perms a & perm_id) 
   (requires (True)) (ensures (fun (new_v_perms, new_pid) -> 
+    new_pid = pid1 /\
     get_permission_from_pid new_v_perms new_pid = 
-      get_permission_from_pid v_perms pid1 +. get_permission_from_pid v_perms pid2 
+      get_permission_from_pid v_perms pid1 +. get_permission_from_pid v_perms pid2 /\
+    get_permission_from_pid new_v_perms pid2 = 0.0R /\
+    (forall (pid':perm_id{pid' <> pid1 /\ pid' <> pid2}). get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid') /\
+    (forall (pid':(live_pid v_perms)). get_snapshot_from_pid v_perms pid' == get_snapshot_from_pid new_v_perms pid')
   ))
   = 
   let (p1, snap1) = v_perms.perm_map pid1 in
@@ -189,8 +195,9 @@ let merge_perms
 
 let change_snapshot (#a: Type0) (v_perms: value_perms a) (new_snapshot: a) 
   : Pure (value_perms a)
-  (requires (True)) (ensures (fun v_perms -> 
-    (forall (pid:(live_pid v_perms)). get_snapshot_from_pid v_perms pid == new_snapshot)
+  (requires (True)) (ensures (fun new_v_perms -> 
+    (forall (pid:perm_id). get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid) /\
+    (forall (pid:(live_pid v_perms)). get_snapshot_from_pid new_v_perms pid == new_snapshot)
   ))
   =
   let out = { v_perms with 
