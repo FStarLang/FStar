@@ -11,6 +11,8 @@ module Par
 
 *)
 
+// The computational monad (free monad for the signature of {get,put,or})
+
 noeq 
 type m a = 
   | Ret : a -> m a
@@ -72,10 +74,13 @@ let rec l_par' c0 c1 =
 let m_par c0 c1 : m unit = 
   Or (l_par' c0 c1) (r_par' c1 (l_par' c0))
 
+// Memory is simply a pair of booleans
 let mem = bool -> nat
 
+// The specification monad
 let w a = (a -> mem -> prop) -> mem -> prop
 
+// The effect observation (mem-valued state with demonic nondeterminism)
 let rec theta #a (c:m a) : w a = 
   match c with
   | Ret x -> 
@@ -90,9 +95,11 @@ let rec theta #a (c:m a) : w a =
   | Or c0 c1 -> 
       fun p h -> theta c0 p h /\ theta c1 p h                   // demonic nondeterminism
 
+// The Dijkstra monad derived from the effect observation above
 let d (a:Type) (wp:w a) =
   c:m a{forall p h . wp p h ==> theta c p h}
 
+// Simple notion of resources (TODO: resource fp need to be extended to properly capture empty_resource)
 noeq
 type view_t a = {
   fp : option bool;
@@ -106,6 +113,7 @@ type resource = {
     view:view_t t
   }
 
+// Resource for a single location
 let loc_resource b = 
   let fp = Some b in
   let inv h = True in
@@ -119,6 +127,7 @@ let loc_resource b =
     }
   }
 
+// Separating conjunction of two resources (TODO: resource fp need to be extended to properly capture empty_resource)
 let xor a b = (a || b) && ((not a) || (not b))
 
 let (<*>) (r0 r1:resource) : resource = 
@@ -138,6 +147,7 @@ let (<*>) (r0 r1:resource) : resource =
     }
   }
 
+// The (unary) RST effect is defined on top of the Dijkstra monad derived above.
 let imem inv = h:mem{inv h}
 
 let rst_w (a:Type) (r:resource) = (a -> imem r.view.inv -> prop) -> imem r.view.inv -> prop
@@ -147,8 +157,11 @@ let rst (a:Type) (r:resource) (wp:rst_w a r) =
          r.view.inv h /\ 
          wp (fun x h' -> r.view.inv h' ==> p x h') h)
 
+// The RST effect comes with expected operations.
 let return (#a:Type) (#r:resource) (x:a) : rst a r (fun p h -> p x h) =
   Ret x
+
+//TODO: implement bind, restrict WPs to monotonic ones
 
 let get b : rst nat (loc_resource b) (fun p h -> p (h b) h) =
   Get b (fun n -> Ret n)
@@ -157,6 +170,9 @@ let put b n : rst unit (loc_resource b) (fun p h -> p () (fun b' -> if b = b' th
   assert_norm (theta (Put b n (Ret ())) == (fun p h -> p () (fun b' -> if b = b' then n else h b')));
   Put b n (Ret ())
 
+// Parallel or splits resources up between the two threads.
+// It is implemented as considering all possible interleavings 
+// of the two threads (see the definition of m_par above).
 let par (#r0 #r1:resource) 
         (#wp0:rst_w unit r0)
         (#wp1:rst_w unit r1)
