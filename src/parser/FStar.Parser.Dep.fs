@@ -500,22 +500,6 @@ let dep_subsumed_by d d' =
     it depends on
  *)
 
-type record_t = {
-  begin_module : lid -> unit;
-  set_interface_inlining : unit -> unit;
-  record_open_module : bool -> lident -> bool;
-  record_open_namespace : lident -> unit;
-  record_open : bool -> lident -> unit;
-  record_open_module_or_namespace : lident * open_kind -> unit;
-  record_module_alias : ident -> lident -> bool;
-  add_dep_on_module : lident -> bool (* is_friend *) -> unit;
-  record_lid : lident -> unit;
-
-  get_deps : unit -> list<dependence>;
-  get_inline_for_extraction : unit -> bool;
-  get_parsing_data : unit -> parsing_data
-}
-
 let collect_one
   (original_map: files_for_module_name)
   (filename: string)
@@ -523,10 +507,10 @@ let collect_one
   : parsing_data *
     list<dependence> *  //direct dependence
     bool *  //has_inline_for_extraction
-    list<dependence>  //the second return value is additional roots
-                                     //that used to be part of parsing_data earlier
-                                     //removing it from the cache (#1657)
-                                     //this always returns a single element, remove the list?
+    list<dependence>  //additional roots
+                      //that used to be part of parsing_data earlier
+                      //removing it from the cache (#1657)
+                      //this always returns a single element, remove the list?
 =
   let from_parsing_data (pd:parsing_data) (original_map:files_for_module_name) (filename:string)
     : list<dependence> *
@@ -687,8 +671,8 @@ let collect_one
       let pd : ref<(list<parsing_data_elt>)> = BU.mk_ref [] in
 
       let add_to_parsing_data elt =
-        if not (List.existsML (fun e -> parsing_data_elt_eq e elt) !pd) then
-        pd := elt::!pd
+        if not (List.existsML (fun e -> parsing_data_elt_eq e elt) !pd)
+        then pd := elt::!pd
       in
 
       let rec collect_module = function
