@@ -28,12 +28,23 @@ private noeq
 type perms_rec (a: Type0) = {
   current_max : perm_id;
   owner: perm_id;
-  perm_map    : F.restricted_t perm_id (fun (x:perm_id) -> permission & option a)
+  perm_map    : F.restricted_t perm_id (fun (x:perm_id) -> permission & a)
 }
 
 let get_permission_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : permission =
   let (perm, _) = p.perm_map pid in
   perm
+
+let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) =
+  get_permission_from_pid v_perms pid >. 0.0R
+
+
+type live_pid (#a: Type0) (v_perms: perms_rec a) = pid:perm_id{is_live_pid v_perms pid}
+
+abstract let get_snapshot_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : a =
+  let (_, snap) = p.perm_map pid in snap
+
+
 
 let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : GTot real =
   if n = 0 then 0.0R
@@ -45,34 +56,18 @@ let value_perms (a: Type0) = p:perms_rec a{
   (forall (n:perm_id). n > p.current_max ==> get_permission_from_pid p n = 0.R) /\
   // The sum of permissions is the number of splits up till now
   (sum_until p.perm_map p.current_max = 1.0R) /\ 
-  // Only pid with permissions > 0 can have a snapshot
-  (forall (n:perm_id). n <= p.current_max ==> begin
-    let (permission, snap) = p.perm_map n in match snap with 
-    | None -> permission = 0.0R 
-    | Some _ -> permission >. 0.0R
-  end) /\
-  (forall (pid1 pid2: perm_id). let (_, snap1) = p.perm_map pid1 in let (_, snap2) = p.perm_map pid2 in
-    match (snap1, snap2) with 
-    | Some snap1, Some snap2 -> snap1 == snap2
-    | _ -> True
+  // Live permissions have the same snapshot
+  (forall (pid1 pid2: perm_id). let snap1 = get_snapshot_from_pid p pid1 in let snap2 = get_snapshot_from_pid p pid2 in
+    (is_live_pid p pid1 /\ is_live_pid p pid2) ==>
+     snap1 == snap2
   )
 }
 
 
-let get_snapshot_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id{get_permission_from_pid p pid >. 0.0R}) : a =
-  let (_, snap) = p.perm_map pid in
-  match snap with 
-  | None -> magic() (* does not happen *)
-  | Some v -> v
-
-let is_live_pid (#a: Type0) (v_perms: value_perms a) (pid:perm_id) =
-  get_permission_from_pid v_perms pid >. 0.0R
-
-type live_pid (#a: Type0) (v_perms: value_perms a) = pid:perm_id{is_live_pid v_perms pid}
 
 let new_value_perms (#a: Type0) (init: a) : value_perms a =
-   let f:F.restricted_t perm_id (fun (x:perm_id) -> permission & option a) = 
-     F.on_dom perm_id (fun (x:perm_id) -> if x = 1 then ((1.0R <: permission), Some init) else ((0.0R <: permission), None)) in
+   let f:F.restricted_t perm_id (fun (x:perm_id) -> permission & a) = 
+     F.on_dom perm_id (fun (x:perm_id) -> if x = 1 then ((1.0R <: permission), init) else ((0.0R <: permission), init)) in
    { current_max = 1; perm_map = f; owner = 1 }
 
 let get_perm_kind_from_pid (#a: Type0) (perms: value_perms a) (pid: perm_id) : permission_kind = 
@@ -96,7 +91,7 @@ let rec same_prefix_same_sum_until(#a: Type0) (p1 p2:perm_id -> permission & a) 
 
 let rec sum_until_change 
   (#a: Type0) 
-  (p1 p2:perm_id -> permission & option a)
+  (p1 p2:perm_id -> permission & a)
   (n:nat)
   (i:perm_id)
   (v:permission) 
@@ -110,7 +105,12 @@ let rec sum_until_change
     if n = i then same_prefix_same_sum_until p1 p2 (n-1)
     else sum_until_change p1 p2 (n-1) i v
 
-let share_perms (#a: Type0) (v_perms: value_perms a) (pid: live_pid v_perms) : (value_perms a & perm_id) =
+let share_perms (#a: Type0) (v_perms: value_perms a) (pid: live_pid v_perms) : Pure (value_perms a & perm_id)  
+  (requires (True)) (ensures (fun (new_v_perms, new_pid) -> 
+    get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /. 2.0R /\
+    get_permission_from_pid new_v_perms new_pid = get_permission_from_pid v_perms pid /. 2.0R 
+  ))
+  =
   let current_max' = v_perms.current_max + 1 in
   let (p, snap) = v_perms.perm_map pid in
   let perm_map1' = F.on_dom perm_id (fun (x:perm_id) ->
@@ -131,41 +131,47 @@ let share_perms (#a: Type0) (v_perms: value_perms a) (pid: live_pid v_perms) : (
   in
   (v_perms', current_max')
 
-let rec sum_until_greater_than_subterms (#a: Type0) (f:perm_id -> permission & a) (n:nat) (pid1 pid2:perm_id)
-  : Lemma ((requires pid1 <> pid2)) (ensures (
-    let (pid1, pid2) = if pid1 > pid2 then (pid1, pid2) else (pid2, pid1) in
-    if n <= pid1 then True else
-    if n <= pid2 then sum_until f n >=. (let (x, _) = f pid1 in x) else
-    sum_until f n >=. (let (x, _) = f pid1 in x) +. (let (x, _) = f pid2 in x) 
+
+let rec sum_greater_than_subterm (#a: Type0) (f:perm_id -> permission & a) (n:nat) (pid1:perm_id)
+  : Lemma (ensures (
+    if n < pid1 then sum_until f n >=. 0.0R else
+    sum_until f n >=. (let (x, _) = f pid1 in x)
   )) =
-  if n = 0 then () else
-  if n = pid1 then () else
-  if n = pid2 then () else
-  sum_until_greater_than_subterms f (n - 1) pid1 pid2
+  if n = 0 then () else sum_greater_than_subterm f (n-1) pid1
+
+let rec sum_greater_than_subterms (#a: Type0) (f:perm_id -> permission & a) (n:nat) (pid1: perm_id)
+  (pid2:perm_id{pid1 <> pid2})
+  : Lemma (ensures (
+    let (pid1, pid2) = if pid1 < pid2 then (pid1, pid2) else (pid2, pid1) in
+    if n < pid1 then sum_until f n >=. 0.0R else
+    if n < pid2 then sum_until f n >=. (let (x, _) = f pid1 in x) else
+    sum_until f n >=. (let (x, _) = f pid1 in x) +. (let (x, _) = f pid2 in x)
+  )) =
+  if n = 0 then () else sum_greater_than_subterms f (n-1) pid1 pid2
 
 let merge_perms
   (#a: Type0)
   (v_perms: value_perms a)
   (pid1: live_pid v_perms)
   (pid2: live_pid v_perms{pid1 <> pid2}) 
-  (merge_snapshots: a -> a -> a)
-  : (value_perms a & pos) = 
+  : Pure (value_perms a & perm_id) 
+  (requires (True)) (ensures (fun (new_v_perms, new_pid) -> 
+    get_permission_from_pid new_v_perms new_pid = 
+      get_permission_from_pid v_perms pid1 +. get_permission_from_pid v_perms pid2 
+  ))
+  = 
   let (p1, snap1) = v_perms.perm_map pid1 in
   let (p2, snap2) = v_perms.perm_map pid2 in
+  sum_greater_than_subterms v_perms.perm_map v_perms.current_max pid1 pid2;
+  let p_sum : permission = p1 +. p2 in
   let perm_map1' = F.on_dom pos (fun (x:perm_id) ->
-    let (snap1, snap2) = match (snap1, snap2) with 
-      | Some x, Some y -> (x,y)
-      | _ -> magic() (* Does not happen *)
-    in
     assert(sum_until v_perms.perm_map v_perms.current_max = 1.0R);
-    assert(p1 +. p2 <=. sum_until v_perms.perm_map v_perms.current_max);
-    admit();
-    if x = pid1 then ((p1 +. p2 <: permission), Some (merge_snapshots snap1 snap2))
+    if x = pid1 then ((p1 +. p2 <: permission), snap1)
     else v_perms.perm_map x
   ) in
-  sum_until_change v_perms.perm_map perm_map1' v_perms.current_max pid1 (p1 +. p2);
+  sum_until_change v_perms.perm_map perm_map1' v_perms.current_max pid1 p_sum;
   let perm_map2' = F.on_dom pos (fun (x:perm_id) -> 
-    if x = pid2 then ((0.0R <: permission), None) else perm_map1' x
+    if x = pid2 then ((0.0R <: permission), snap2) else perm_map1' x
   ) in
   sum_until_change perm_map1' perm_map2' v_perms.current_max pid2 0.0R;
   let v_perms': perms_rec a =
