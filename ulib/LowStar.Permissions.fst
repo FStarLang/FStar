@@ -1,7 +1,9 @@
 module LowStar.Permissions
 
 module F = FStar.FunctionalExtensionality
+
 open FStar.Real 
+
 
 let permission = r:real{r >=. 0.0R /\ r <=. 1.0R}
 
@@ -55,7 +57,7 @@ let value_perms (a: Type0) = p:perms_rec a{
     | _ -> True
   )
 }
-  
+
 
 let get_snapshot_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id{get_permission_from_pid p pid >. 0.0R}) : a =
   let (_, snap) = p.perm_map pid in
@@ -77,7 +79,7 @@ let get_perm_kind_from_pid (#a: Type0) (perms: value_perms a) (pid: perm_id) : p
   let permission = get_permission_from_pid perms pid in
   if permission = 0.0R then
     DEAD
-  else if permission <. 1.1R then 
+  else if permission <. 1.0R then 
     RO
   else if perms.owner <> pid then
     RW
