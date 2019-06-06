@@ -5,23 +5,15 @@ module F = FStar.FunctionalExtensionality
 open FStar.Real 
 
 
-let permission = r:real{r >=. 0.0R /\ r <=. 1.0R}
+type permission = r:real{r >=. 0.0R /\ r <=. 1.0R}
 
-let perm_id = pos
+type perm_id = pos
 
-type permission_kind = 
-  | DEAD
-  | RO
-  | RW
-  | FULL
+let allows_read (p:permission) : GTot bool =  
+  p >. 0.0R
 
-let allows_read (pk: permission_kind) : bool = match pk with 
-  | DEAD -> false 
-  | RO | RW | FULL -> true
-
-let allows_write (pk: permission_kind) : bool = match pk with 
-  | DEAD | RO -> false 
-  | RW | FULL -> true
+let allows_write (p: permission) : GTot bool =
+  p = 1.0R
 
 
 private noeq
@@ -31,17 +23,17 @@ type perms_rec (a: Type0) = {
   perm_map    : F.restricted_t perm_id (fun (x:perm_id) -> permission & a)
 }
 
-let get_permission_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : permission =
+let get_permission_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : GTot permission =
   let (perm, _) = p.perm_map pid in
   perm
 
-let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) =
+let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) : GTot bool =
   get_permission_from_pid v_perms pid >. 0.0R
 
 
 type live_pid (#a: Type0) (v_perms: perms_rec a) = pid:perm_id{is_live_pid v_perms pid}
 
-abstract let get_snapshot_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : a =
+abstract let get_snapshot_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : GTot a =
   let (_, snap) = p.perm_map pid in snap
 
 
@@ -64,7 +56,7 @@ let value_perms (a: Type0) = p:perms_rec a{
 
 
 
-let new_value_perms (#a: Type0) (init: a) : Pure (value_perms a)
+let new_value_perms (#a: Type0) (init: a) : Ghost (value_perms a)
   (requires (True)) (ensures (fun v_perms -> 
     (forall (pid:perm_id). get_snapshot_from_pid v_perms pid == init)
   ))
@@ -78,7 +70,13 @@ let new_value_perms (#a: Type0) (init: a) : Pure (value_perms a)
   in
   { current_max = 1; perm_map = f; owner = 1 }
 
-let get_perm_kind_from_pid (#a: Type0) (perms: value_perms a) (pid: perm_id) : permission_kind = 
+type permission_kind =
+  | DEAD 
+  | RO
+  | RW
+  | FULL
+
+let get_perm_kind_from_pid (#a: Type0) (perms: value_perms a) (pid: perm_id) : GTot permission_kind = 
   let permission = get_permission_from_pid perms pid in
   if permission = 0.0R then
     DEAD
@@ -113,7 +111,7 @@ let rec sum_until_change
     if n = i then same_prefix_same_sum_until p1 p2 (n-1)
     else sum_until_change p1 p2 (n-1) i v
 
-let share_perms (#a: Type0) (v_perms: value_perms a) (pid: live_pid v_perms) : Pure (value_perms a & perm_id)  
+let share_perms (#a: Type0) (v_perms: value_perms a) (pid: live_pid v_perms) : Ghost (value_perms a & perm_id)  
   (requires (True)) (ensures (fun (new_v_perms, new_pid) -> 
     new_pid <> pid /\
     get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /. 2.0R /\
@@ -165,7 +163,7 @@ let merge_perms
   (v_perms: value_perms a)
   (pid1: live_pid v_perms)
   (pid2: live_pid v_perms{pid1 <> pid2}) 
-  : Pure (value_perms a & perm_id) 
+  : Ghost (value_perms a & perm_id) 
   (requires (True)) (ensures (fun (new_v_perms, new_pid) -> 
     new_pid = pid1 /\
     get_permission_from_pid new_v_perms new_pid = 
@@ -194,7 +192,7 @@ let merge_perms
   (v_perms', pid1)
 
 let change_snapshot (#a: Type0) (v_perms: value_perms a) (new_snapshot: a) 
-  : Pure (value_perms a)
+  : Ghost (value_perms a)
   (requires (True)) (ensures (fun new_v_perms -> 
     (forall (pid:perm_id). get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid) /\
     (forall (pid:(live_pid v_perms)). get_snapshot_from_pid new_v_perms pid == new_snapshot)
