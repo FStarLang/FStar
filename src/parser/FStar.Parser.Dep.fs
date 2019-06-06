@@ -22,21 +22,18 @@
     (not module names).
 *)
 module FStar.Parser.Dep
-open FStar.ST
-open FStar.Exn
-open FStar.All
+
+open FStar.ST   //for ref
+open FStar.All  //for failwith
 
 open FStar
 open FStar.Parser
 open FStar.Parser.AST
-open FStar.Parser.Parse
 open FStar.Util
 open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
-open FStar.Parser
-open FStar.Parser
 
 module Const = FStar.Parser.Const
 module BU = FStar.Util
@@ -130,7 +127,13 @@ type dependence_graph = //maps file names to the modules it depends on
 
 (*
  * AR: Parsing data for a file (also cached in the checked files)
- *     It is exactly same as what collect_one function below returns
+ *     It is a summary of opens, includes, A.<id>, etc. in a module
+ *     Earlier we used to store the dependences in the checked file,
+ *       however that is an image of the file system, and so, when the checked
+ *       files were used in a slightly different file system, there were strange errors
+ *       see e.g. #1657 for a couple of cases
+ *     Now we store the following summary and construct the dependences from the current
+ *       file system
  *)
 type parsing_data_elt =
   | P_begin_module of lident  //begin_module
@@ -512,6 +515,11 @@ let collect_one
                       //removing it from the cache (#1657)
                       //this always returns a single element, remove the list?
 =
+  (*
+   * Construct dependences from the parsing data
+   * This is common function for when the parsing data is read from the checked files
+   *   or constructed after AST traversal of the module
+   *)
   let from_parsing_data (pd:parsing_data) (original_map:files_for_module_name) (filename:string)
     : list<dependence> *
       bool *
@@ -642,6 +650,9 @@ let collect_one
          ignore (enter_namespace original_map working_map (namespace_of_lid lid))
        in
 
+       (*
+        * Iterate over the parsing data elements
+        *)
        begin
          match pd with
          | Mk_pd l ->
@@ -655,6 +666,9 @@ let collect_one
              | P_lid lid -> record_lid lid
              | P_inline_for_extraction -> set_interface_inlining ())
        end;
+       (*
+        * And then return the dependences
+        *)
        !deps,
        !has_inline_for_extraction,
        mo_roots
@@ -662,11 +676,15 @@ let collect_one
 
   let data_from_cache = filename |> get_parsing_data_from_cache in
 
-  if data_from_cache |> is_some then
+  if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
+    if Options.debug_any () then
+      BU.print1 "Reading the parsing data for %s from its checked file\n" filename;
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
     data_from_cache |> must,
     deps, has_inline_for_extraction, mo_roots
+  end
   else
+      //parse the file and traverse the AST to collect parsing data
       let num_of_toplevelmods = BU.mk_ref 0 in
       let pd : ref<(list<parsing_data_elt>)> = BU.mk_ref [] in
 
