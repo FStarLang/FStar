@@ -65,10 +65,19 @@ let value_perms (a: Type0) = p:perms_rec a{
 
 
 
-let new_value_perms (#a: Type0) (init: a) : value_perms a =
-   let f:F.restricted_t perm_id (fun (x:perm_id) -> permission & a) = 
-     F.on_dom perm_id (fun (x:perm_id) -> if x = 1 then ((1.0R <: permission), init) else ((0.0R <: permission), init)) in
-   { current_max = 1; perm_map = f; owner = 1 }
+let new_value_perms (#a: Type0) (init: a) : Pure (value_perms a)
+  (requires (True)) (ensures (fun v_perms -> 
+    (forall (pid:(live_pid v_perms)). get_snapshot_from_pid v_perms pid == init)
+  ))
+  =
+  let f:F.restricted_t perm_id (fun (x:perm_id) -> permission & a) = 
+     F.on_dom perm_id (fun (x:perm_id) -> if x = 1 then 
+         ((1.0R <: permission), init) 
+       else 
+         ((0.0R <: permission), init)
+     )   
+  in
+  { current_max = 1; perm_map = f; owner = 1 }
 
 let get_perm_kind_from_pid (#a: Type0) (perms: value_perms a) (pid: perm_id) : permission_kind = 
   let permission = get_permission_from_pid perms pid in
@@ -95,7 +104,7 @@ let rec sum_until_change
   (n:nat)
   (i:perm_id)
   (v:permission) 
-  : Lemma (requires (forall (x:pos). 
+  : Lemma (requires (forall (x:perm_id). 
     let (v1, _) = p1 x in let (v2, _) = p2 x in
     (x <= n /\ x <> i) ==> v1 = v2) /\
     i <= n /\
@@ -164,16 +173,31 @@ let merge_perms
   let (p2, snap2) = v_perms.perm_map pid2 in
   sum_greater_than_subterms v_perms.perm_map v_perms.current_max pid1 pid2;
   let p_sum : permission = p1 +. p2 in
-  let perm_map1' = F.on_dom pos (fun (x:perm_id) ->
+  let perm_map1' = F.on_dom perm_id (fun (x:perm_id) ->
     assert(sum_until v_perms.perm_map v_perms.current_max = 1.0R);
     if x = pid1 then ((p1 +. p2 <: permission), snap1)
     else v_perms.perm_map x
   ) in
   sum_until_change v_perms.perm_map perm_map1' v_perms.current_max pid1 p_sum;
-  let perm_map2' = F.on_dom pos (fun (x:perm_id) -> 
+  let perm_map2' = F.on_dom perm_id (fun (x:perm_id) -> 
     if x = pid2 then ((0.0R <: permission), snap2) else perm_map1' x
   ) in
   sum_until_change perm_map1' perm_map2' v_perms.current_max pid2 0.0R;
   let v_perms': perms_rec a =
     {  v_perms with perm_map = perm_map2' } in
   (v_perms', pid1)
+
+let change_snapshot (#a: Type0) (v_perms: value_perms a) (new_snapshot: a) 
+  : Pure (value_perms a)
+  (requires (True)) (ensures (fun v_perms -> 
+    (forall (pid:(live_pid v_perms)). get_snapshot_from_pid v_perms pid == new_snapshot)
+  ))
+  =
+  let out = { v_perms with 
+    perm_map = F.on_dom perm_id (fun (x:perm_id) ->
+      let (p, _) = v_perms.perm_map x in (p, new_snapshot)
+    )
+  } in
+  same_prefix_same_sum_until v_perms.perm_map out.perm_map v_perms.current_max;
+  out
+
