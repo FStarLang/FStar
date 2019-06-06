@@ -36,12 +36,13 @@ let truncate (t:tape) (n:nat) : tape =
 
 let option_rel (#a:Type) (arel:rel a) =
   fun x y ->
-    match x with
-    | None -> b2t (None? y)
-    | Some some_x -> Some? y /\ Some?.v y == some_x
+    match x,y with
+    | None,None -> True <: prop
+    | Some some_x, Some some_y -> (some_y == some_x) <: prop
+    | _, _ -> False <: prop
 
 let eff (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) =
-  srel ^--> ((option_rel #a arel) ** srel)
+  st srel (option_rel #a arel)
 
 //let option_arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) : prop =
 //    forall x0 x1. x0 `arel` x1 ==>
@@ -51,7 +52,7 @@ let eff_rel #s #a
     (srel: erel s)
     (arel: erel a)
     : erel (eff srel arel)
-  = arrow_rel srel ((option_rel #a arel) ** srel)
+  = st_rel srel (option_rel #a arel)
 
 /// Note: F* provides syntactic sugar for monadic computations, as
 /// follows
@@ -74,10 +75,6 @@ let eff_rel #s #a
 /// returning a result into a computation
 //let return #st #a (x:a) : eff st a =
 //  fun (t, s) -> Some x, s, 0
-
-let return #s #a (#srel:erel s) (#arel:erel a) (x:a)
-  : eff srel arel
-  = fun s0 -> Some x, s0
 
 /// sequential composition of `eff` computations
 //let bind #st #a #b
@@ -114,10 +111,16 @@ let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
 //let get #st : eff st st
 //  = fun (t, s) -> Some s, s, 0
 
+//let get #s (#srel:erel s) : st srel srel =
+//  fun s0 -> s0, s0
 
+#set-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 1"
 (* Here, F* runs out of steam *)
-//let get #s (#srel:erel s) : eff srel srel =
-//  fun s0 -> (Some s0), s0
+let get #s (#srel:erel s) : st srel (option_rel #s srel) =
+  fun s0 -> (Some s0), s0
+
+let eff (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) =
+  st srel (option_rel #a arel)
 
 (* Old effect *)
 /// writing the entire state
@@ -138,24 +141,30 @@ let put #s (#srel:erel s) : (srel ^--> eff_rel srel (lo unit)) =
 //let raise #st #a : eff st a
 //  = fun s -> (None, s)
 
+let return #s #a (#srel:erel s) (#arel:erel a) (x:a)
+  : eff srel arel
+  = fun s0 -> Some x, s0
+
 (* Here, F* runs out of steam *)
-//let raise #s (#srel:erel s) #a (#arel:erel a) : eff srel arel
-//  = fun s -> (None, s)
+let raise #s (#srel:erel s) #a (#arel:erel a) : eff srel arel
+  = fun s -> (None, s)
+
 
 /// state separation
-let lift_left #s1 (#s1rel:erel s1) #s2 (#s2rel:erel s2) #a (#arel:erel a) (f:eff s1rel arel)
-  : eff (s1rel ** s2rel) arel
-  = fun (s1, s2) ->
-      match f s1 with
-      | None, s1' -> None, (s1', s2)
-      | Some x, s1' -> Some x, (s1', s2)
-
-let lift_right #s1 (#s1rel:erel s1) #s2 (#s2rel:erel s2) #a (#arel:erel a) (f:eff s2rel arel)
-  : eff (s1rel ** s2rel) arel
-  = fun (s1, s2) ->
-      match f s2 with
-      | None, s2' -> None, (s1, s2')
-      | Some x, s2' -> Some x, (s1, s2')
+//let lift_left #s1 (#s1rel:erel s1) #s2 (#s2rel:erel s2) #a (#arel:erel a) (f:eff s1rel arel)
+//  : eff (s1rel ** s2rel) arel
+//  = fun (s1, s2) ->
+//      match f s1 with
+//      | None, s1' ->
+//        None, (s1', s2)
+//      | Some x, s1' -> Some x, (s1', s2)
+//
+//let lift_right #s1 (#s1rel:erel s1) #s2 (#s2rel:erel s2) #a (#arel:erel a) (f:eff s2rel arel)
+//  : eff (s1rel ** s2rel) arel
+//  = fun (s1, s2) ->
+//      match f s2 with
+//      | None, s2' -> None, (s1, s2')
+//      | Some x, s2' -> Some x, (s1, s2')
 
 ////////////////////////////////////////////////////////////////////////////////
 //KEY package
@@ -169,7 +178,7 @@ let key_state (n:nat) = (Map.t handle bool & Map.t handle (key n))
 
 let key_state_rel (n:nat) = hi (key_state n)
 
-let key_eff (n:nat) = option_st (key_state_rel n)
+let key_eff (n:nat) = eff (key_state_rel n)
 
 //let key_gen (h:handle) : eff (key_state 1) handle =
 //    s <-- get ;
@@ -216,8 +225,21 @@ let key_eff (n:nat) = option_st (key_state_rel n)
 //    | _,_ ->
 //      raise
 
-let key_hon_t = lo handle ^--> (key_state_rel 1) (lo bool) //eeff (hi (key_state 1)) (lo bool)
+let key_hon_t = (lo handle) ^--> eff_rel (key_state_rel 1) (lo bool)
+
+#set-options "--z3rlimit 200 --max_fuel 1 --max_ifuel 1"
+let get_key_st : (eff #(key_state 1) #(key_state 1) (key_state_rel 1) (key_state_rel 1)) =
+  bind (get #(key_state 1) #(key_state_rel 1)) (fun x -> return #(key_state 1) #(key_state_rel 1) x)
+  //x <-- get #(key_state 1) #(key_state_rel 1);
+  //return x
+
+let get_snd : st state_rel (hi int) =
+  //bind get (fun x -> return (snd x))
+  x <-- get ;
+  return (snd x)
+
 let key_hon : key_hon_t =
+    fun h ->
     s <-- get ;
     let (h_map,k_map) = s in
     match Map.contains h_map h,Map.contains k_map h with
