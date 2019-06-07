@@ -106,29 +106,60 @@ let ptr_free
   reveal_modifies ();
   reveal_empty_resource ();
   B.free ptr.v
-(*
+
 let ptr_share
-  (#a:Type)
-  (#p:permission)
+  (#a: Type)
+  (#p: permission)
   (ptr: pointer a p)
   : RST (pointer a (p /. 2.0R) & pointer a (p /. 2.0R))
     (ptr_resource ptr)
-    (fun _ -> ptr_resource ptr)
+    (fun (ptr1, ptr2) -> ptr_resource ptr1)
     (fun _ -> allows_read p)
     (fun h0 (ptr1,ptr2) h1 -> 
       ptr1.pid == ptr.pid /\
-      (Ghost.reveal ptr1.pid) <> (Ghost.reveal ptr2.pid)
+      (Ghost.reveal ptr1.pid) <> (Ghost.reveal ptr2.pid) /\
+      inv (ptr_resource ptr2) h1
     )
   =
+  reveal_rst_inv ();
+  reveal_modifies ();
   let (v, perm_map) = !* ptr.v in
-  let (new_perm_map_new_pid) = share_perms (Ghost.reveal perm_map) (Ghost.reveal ptr.pid) in
+  let (new_perm_map_new_pid) = Ghost.hide (share_perms (Ghost.reveal perm_map) (Ghost.reveal ptr.pid)) in
+  ptr.v *= (v, Ghost.hide (fst (Ghost.reveal new_perm_map_new_pid)));
   let ptr1 : pointer a (p /. 2.0R) = {
     v = ptr.v;
     pid = ptr.pid
   } in
   let ptr2 : pointer a (p /. 2.0R) = {
     v = ptr.v;
-    pid = admit()
+    pid = Ghost.hide (snd (Ghost.reveal new_perm_map_new_pid))
   } in
   (ptr1, ptr2)
-*)
+
+let ptr_merge
+  (#a: Type)
+  (#p1 #p2: permission)
+  (ptr1: pointer a p1)
+  (ptr2: pointer a p2{p1 +. p2 <=. 1.0R})
+  : RST (pointer a (p1 +. p2))
+    (ptr_resource ptr1)
+    (fun ptr -> ptr_resource ptr)
+    (fun h -> 
+      allows_read p1 /\ allows_read p2 /\ 
+      ptr1.v == ptr2.v /\ 
+      Ghost.reveal ptr1.pid <> Ghost.reveal ptr2.pid /\
+      inv (ptr_resource ptr2) h
+    )
+    (fun h0 ptr h1 ->
+      ptr.pid == ptr1.pid
+    )
+  =
+  reveal_rst_inv ();
+  reveal_modifies ();
+  let (v, perm_map) = !* ptr1.v in
+  let (new_perm_map_new_pid) = Ghost.hide (merge_perms (Ghost.reveal perm_map) (Ghost.reveal ptr1.pid) (Ghost.reveal ptr2.pid)) in
+  ptr1.v *= (v, Ghost.hide (fst (Ghost.reveal new_perm_map_new_pid)));
+  {
+    v = ptr1.v;
+    pid = ptr1.pid
+  }
