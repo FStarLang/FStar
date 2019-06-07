@@ -14,21 +14,21 @@ open FStar.Real
 
 type value_with_perms (a: Type0) = vp : (a & Ghost.erased (value_perms a)){
   let (v, p) = vp in
-  forall (pid:live_pid (Ghost.reveal p)). get_snapshot_from_pid (Ghost.reveal p) pid == v
+  forall (pid:perm_id). get_snapshot_from_pid (Ghost.reveal p) pid == v
 }
 
-abstract noeq type pointer (a: Type0) (perm: permission) = {
+abstract noeq type pointer (a: Type0) (perm: Ghost.erased permission) = {
   v: B.pointer (value_with_perms a);
   pid: Ghost.erased perm_id
 }
 
-abstract let ptr_view (#a:Type) (#perm: permission) (ptr:pointer a perm) : view a =
+abstract let ptr_view (#a:Type) (#perm: Ghost.erased permission) (ptr:pointer a perm) : view a =
   reveal_view ();
   let fp = Ghost.hide (B.loc_addr_of_buffer ptr.v) in
   let inv h =
     let (_, perm_map) = Seq.index (B.as_seq h ptr.v) 0 in
     B.live h ptr.v /\ B.freeable ptr.v /\
-    get_permission_from_pid (Ghost.reveal perm_map) (Ghost.reveal ptr.pid) = perm
+    get_permission_from_pid (Ghost.reveal perm_map) (Ghost.reveal ptr.pid) = Ghost.reveal perm
   in
   let sel h =
     let (_, perm_map) = Seq.index (B.as_seq h ptr.v) 0 in
@@ -42,12 +42,12 @@ abstract let ptr_view (#a:Type) (#perm: permission) (ptr:pointer a perm) : view 
     sel = sel
   }
 
-let ptr_resource (#a:Type) (#perm: permission) (ptr:pointer a perm) =
+let ptr_resource (#a:Type) (#perm: Ghost.erased permission) (ptr:pointer a perm) =
   as_resource (ptr_view ptr)
 
-let ptr_read
+inline_for_extraction noextract let ptr_read
   (#a: Type)
-  (#perm: permission)
+  (#perm: Ghost.erased permission)
   (ptr: pointer a perm)
   : RST a
     (ptr_resource ptr)
@@ -61,9 +61,9 @@ let ptr_read
   let (x, _) = !* ptr.v in
   x
 
-let ptr_write
+inline_for_extraction noextract let ptr_write
   (#a: Type)
-  (#perm: permission)
+  (#perm: Ghost.erased permission)
   (ptr: pointer a perm)
   (x: a)
   : RST unit
@@ -75,12 +75,12 @@ let ptr_write
   reveal_rst_inv ();
   reveal_modifies ();
   let (_, perm_map) = !* ptr.v in
-  ptr.v *= (x, Ghost.hide (change_snapshot (Ghost.reveal perm_map) x))
+  ptr.v *= (x, Ghost.hide (change_snapshot (Ghost.reveal perm_map) (Ghost.reveal ptr.pid) x))
 
-let ptr_alloc
+inline_for_extraction noextract let ptr_alloc
   (#a:Type)
   (init:a)
-  : RST (pointer a 1.0R)
+  : RST (pointer a (Ghost.hide 1.0R))
     (empty_resource)
     (fun ptr -> ptr_resource ptr)
     (fun _ -> True)
@@ -88,13 +88,13 @@ let ptr_alloc
   =
   reveal_rst_inv ();
   reveal_modifies ();
-  let perm_map_pid = Ghost.hide (new_value_perms init) in
+  let perm_map_pid = Ghost.hide (new_value_perms init true) in
   let ptr_v = B.malloc HS.root (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) 1ul in
   { v = ptr_v; pid = Ghost.hide (snd (Ghost.reveal perm_map_pid)) }
 
-let ptr_free
+inline_for_extraction noextract let ptr_free
   (#a:Type)
-  (ptr:pointer a 1.0R)
+  (ptr:pointer a (Ghost.hide 1.0R))
   : RST unit
     (ptr_resource ptr)
     (fun ptr -> empty_resource)
@@ -106,18 +106,19 @@ let ptr_free
   reveal_empty_resource ();
   B.free ptr.v
 
-let ptr_share
+inline_for_extraction noextract let ptr_share
   (#a: Type)
-  (#p: permission)
+  (#p:Ghost.erased permission)
   (ptr: pointer a p)
-  : RST (pointer a (p /. 2.0R) & pointer a (p /. 2.0R))
+  : RST (pointer a (half_permission p) &
+    pointer a (half_permission p))
     (ptr_resource ptr)
     (fun (ptr1, ptr2) -> ptr_resource ptr1)
     (fun _ -> allows_read p)
     (fun h0 (ptr1,ptr2) h1 ->
-      ptr1.pid == ptr.pid /\
+      same_pid ptr1.pid ptr.pid /\
       ptr1.v == ptr2.v /\
-      (Ghost.reveal ptr1.pid) <> (Ghost.reveal ptr2.pid) /\
+      disjoint_pid ptr1.pid ptr2.pid /\
       inv (ptr_resource ptr2) h1
     )
   =
@@ -126,28 +127,28 @@ let ptr_share
   let (v, perm_map) = !* ptr.v in
   let (new_perm_map_new_pid) = Ghost.hide (share_perms (Ghost.reveal perm_map) (Ghost.reveal ptr.pid)) in
   ptr.v *= (v, Ghost.hide (fst (Ghost.reveal new_perm_map_new_pid)));
-  let ptr1 : pointer a (p /. 2.0R) = {
+  let ptr1 = {
     v = ptr.v;
     pid = ptr.pid
   } in
-  let ptr2 : pointer a (p /. 2.0R) = {
+  let ptr2 = {
     v = ptr.v;
     pid = Ghost.hide (snd (Ghost.reveal new_perm_map_new_pid))
   } in
   (ptr1, ptr2)
 
-let ptr_merge
+inline_for_extraction noextract let ptr_merge
   (#a: Type)
-  (#p1 #p2: permission)
+  (#p1 #p2: Ghost.erased permission)
   (ptr1: pointer a p1)
-  (ptr2: pointer a p2{p1 +. p2 <=. 1.0R})
-  : RST (pointer a (p1 +. p2))
+  (ptr2: pointer a p2{summable_permissions p1 p2})
+  : RST (pointer a (sum_permissions p1 p2))
     (ptr_resource ptr1)
     (fun ptr -> ptr_resource ptr)
     (fun h ->
       allows_read p1 /\ allows_read p2 /\
       ptr1.v == ptr2.v /\
-      Ghost.reveal ptr1.pid <> Ghost.reveal ptr2.pid /\
+      disjoint_pid ptr1.pid ptr2.pid /\
       inv (ptr_resource ptr2) h
     )
     (fun h0 ptr h1 ->
@@ -157,8 +158,8 @@ let ptr_merge
   reveal_rst_inv ();
   reveal_modifies ();
   let (v, perm_map) = !* ptr1.v in
-  let (new_perm_map_new_pid) = Ghost.hide (merge_perms (Ghost.reveal perm_map) (Ghost.reveal ptr1.pid) (Ghost.reveal ptr2.pid)) in
-  ptr1.v *= (v, Ghost.hide (fst (Ghost.reveal new_perm_map_new_pid)));
+  let new_perm_map = Ghost.hide (merge_perms (Ghost.reveal perm_map) (Ghost.reveal ptr1.pid) (Ghost.reveal ptr2.pid)) in
+  ptr1.v *= (v, new_perm_map);
   {
     v = ptr1.v;
     pid = ptr1.pid
