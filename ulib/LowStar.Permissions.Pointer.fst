@@ -116,6 +116,7 @@ let ptr_share
     (fun _ -> allows_read p)
     (fun h0 (ptr1,ptr2) h1 ->
       ptr1.pid == ptr.pid /\
+      ptr1.v == ptr2.v /\
       (Ghost.reveal ptr1.pid) <> (Ghost.reveal ptr2.pid) /\
       inv (ptr_resource ptr2) h1
     )
