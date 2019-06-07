@@ -33,11 +33,11 @@ let evenSSn (n: unary_nat) :
   Lemma (requires even n)
         (ensures even (US (US n))) =
  // What's the proper way to do this?
- assert_by_tactic (even n ==> even (US (US n)))
-                  (fun () -> ignore (implies_intro ());
-                          squash_intro ();
-                          apply (`Even_SSn);
-                          assumption ())
+ assert (even n ==> even (US (US n)))
+     by (ignore (implies_intro ());
+         squash_intro ();
+         apply (`Even_SSn);
+         assumption ())
 [@plugin]
 let prove_even () : Tac unit =
    ignore (repeat (fun () -> apply_lemma (`evenSSn)));

@@ -202,7 +202,7 @@ and cflag =                                                      (* flags applic
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of term
 and metadata =
-  | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
+  | Meta_pattern       of list<term> * list<args>                (* Patterns for SMT quantifier instantiation; the first arg is the list of names of the binders of the enclosing forall/exists *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
@@ -539,6 +539,7 @@ let mk (t:'a) = fun (_:option<unit>) r -> {
 }
 let bv_to_tm   bv :term = mk (Tm_bvar bv) None (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) None (range_of_bv bv)
+let binders_to_names (bs:binders) : list<term> = bs |> List.map (fun (x, _) -> bv_to_name x)
 let mk_Tm_app (t1:typ) (args:list<arg>) (k:option<unit>) p =
     match args with
     | [] -> t1

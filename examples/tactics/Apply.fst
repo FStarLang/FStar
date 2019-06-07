@@ -26,4 +26,4 @@ let refl a x = ()
 let tau () : Tac unit =
     apply_lemma (quote refl)
 
-let lem1 = assert_by_tactic (x == x) tau
+let lem1 = assert (x == x) by tau ()

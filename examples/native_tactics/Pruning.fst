@@ -80,7 +80,7 @@ let tau1 =
 
 
 // This one should be sent in a pruned context
-let _ = assert_by_tactic (rev [1;2] == [2;1]) tau1
+let _ = assert (rev [1;2] == [2;1]) by tau1 ()
 
 [@plugin]
 let tau2 =
@@ -96,4 +96,4 @@ let tau2 =
 
 
 // First one should go to the SMT, also in pruned context
-let _ = assert_by_tactic (rev [1;2] == [2;1] /\ 1 == 1) tau2
+let _ = assert (rev [1;2] == [2;1] /\ 1 == 1) by tau2 ()

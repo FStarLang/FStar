@@ -86,13 +86,12 @@ let apply_imp (h:binder) =
     mapply (mk_app (`elim_implies) [(pack (Tv_Var (bv_of_binder h)), Q_Explicit)])
 let refl (#a:Type) (x:a) : (x==x) = FStar.Squash.return_squash Refl
 let test (a b : int) (p:Type) =
-    assert_by_tactic ((((a + b + 0) == (a + b)) ==> p) ==> p)
-      (fun _ -> 
-        norm [];
-        rewrite_int true;
-        apply_imp (implies_intro());
-        norm [delta; zeta; primops];
-        apply (`refl))
+    assert ((((a + b + 0) == (a + b)) ==> p) ==> p)
+        by (norm [];
+            rewrite_int true;
+            apply_imp (implies_intro());
+            norm [delta; zeta; primops];
+            apply (`refl))
     
 (* TODO: should extend this to a commutative monoid and
          sort the list to prove things like a + b = b + a; *)

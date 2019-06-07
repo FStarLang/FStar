@@ -5,7 +5,7 @@ FROM ${DOCKERHUBPROJECT}fstar-linux:${COMMITID}
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
-ARG TARGET
+ARG BUILDTARGET
 ARG BRANCHNAME
 
 #BUILD FSTAR Docs
@@ -25,7 +25,7 @@ COPY --chown=everest id_rsa ${MYHOME}/.ssh/id_rsa
 RUN chmod 600 ${MYHOME}/.ssh/id_rsa
 
 # Build FStar docs
-RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
+RUN ./build_helper.sh ${BUILDTARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
 
 # Remove ssh identities.
 RUN rm ${MYHOME}/.ssh/id_rsa

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e1b065259ac4bb83819361229ad43593"
+      "f63f85862545b21786879ef0b74f51a6"
     ],
     [
       "Ex07a.__proj__TArrow__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_6d481b4efcb5fbee37d1d60c36959ad4"
       ],
       0,
-      "601ebf29dc747961d5e8bce4dfd12036"
+      "04f0ba48e642b09a2261fccae06f618a"
     ],
     [
       "Ex07a.__proj__TArrow__item___1",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Tm_refine_6d481b4efcb5fbee37d1d60c36959ad4"
       ],
       0,
-      "508532a66d586d1a0e7d88f852ecbe45"
+      "ec34c50f88a75f01178f9a64de998e3c"
     ],
     [
       "Ex07a.exp",
@@ -46,7 +46,7 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
-      "880507e72a6c2bfeafb40612892dcc7b"
+      "0f504aa3480da0d60d5a416bde07cb7e"
     ],
     [
       "Ex07a.__proj__EVar__item___0",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_f7bc5dc78a06806c9611435fda0e6d8d"
       ],
       0,
-      "a838969f0a260556e29a3eaa19fb33eb"
+      "a8a69a238c32b20523a3b179b535810f"
     ],
     [
       "Ex07a.__proj__EApp__item___0",
@@ -72,7 +72,7 @@
         "refinement_interpretation_Tm_refine_f136389a43dd0b6827ec1059c6da2367"
       ],
       0,
-      "aa5ca1eb721d69337b033d16a9df75d6"
+      "a2d4355eb5208f95930e6942ae0561f7"
     ],
     [
       "Ex07a.__proj__EApp__item___1",
@@ -85,7 +85,7 @@
         "refinement_interpretation_Tm_refine_f136389a43dd0b6827ec1059c6da2367"
       ],
       0,
-      "c52c57f95e81eed3caad2d0026bdeccf"
+      "134356f433604f7cc4b8169ca7cd89ef"
     ],
     [
       "Ex07a.__proj__EAbs__item___0",
@@ -98,7 +98,7 @@
         "refinement_interpretation_Tm_refine_2a951dab851bee4ccbd0b4c3ba1c9135"
       ],
       0,
-      "80cd1c19cee89a07b83ba493733d6bfe"
+      "844002491cf8a1ca84087178c8604685"
     ],
     [
       "Ex07a.__proj__EAbs__item___1",
@@ -111,7 +111,7 @@
         "refinement_interpretation_Tm_refine_2a951dab851bee4ccbd0b4c3ba1c9135"
       ],
       0,
-      "ddd3f8b049bee5cde1a541a8b6211e81"
+      "606fd1f7b0da73e042462da0668056ef"
     ],
     [
       "Ex07a.__proj__EAbs__item___2",
@@ -124,7 +124,7 @@
         "refinement_interpretation_Tm_refine_2a951dab851bee4ccbd0b4c3ba1c9135"
       ],
       0,
-      "04344bf5422e58a7e8342bbe16f27716"
+      "3e5df645b96c0be5fd97abc87d3fa3bf"
     ],
     [
       "Ex07a.__proj__EIf__item___0",
@@ -137,7 +137,7 @@
         "refinement_interpretation_Tm_refine_14ad78ec1d1ac0199d7bf98ab84ada10"
       ],
       0,
-      "0e23c82fc805a4c3ca8b40f594f7f03c"
+      "1f3da587ab7691facf8006ade9e45b2a"
     ],
     [
       "Ex07a.__proj__EIf__item___1",
@@ -150,7 +150,7 @@
         "refinement_interpretation_Tm_refine_14ad78ec1d1ac0199d7bf98ab84ada10"
       ],
       0,
-      "0a0ffeb81af8e90a17ff41be785f4ce1"
+      "ec3f8eb2cf5adb26745a5a96d72d8d54"
     ],
     [
       "Ex07a.__proj__EIf__item___2",
@@ -163,7 +163,7 @@
         "refinement_interpretation_Tm_refine_14ad78ec1d1ac0199d7bf98ab84ada10"
       ],
       0,
-      "380951edc77d0ebeb12d0ac4747d096d"
+      "3737236363f7ec7170bfd964673b104d"
     ],
     [
       "Ex07a.subst",
@@ -193,7 +193,7 @@
         "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "6c3cf4cefa15e940d1eb287e62cb127a"
+      "09cba8927ef822aeb7594d1560b52697"
     ],
     [
       "Ex07a.step",
@@ -213,7 +213,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "82afe205dcb2aba6e0246de48b7e078c"
+      "64d51dd34c519b390b6f3922ec012477"
     ],
     [
       "Ex07a.typing",
@@ -239,7 +239,7 @@
         "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "62e21706172232e20b2d786a12ac4916"
+      "a9dbb8189d56fe3b2ce59d1d2d472c94"
     ],
     [
       "Ex07a.progress",
@@ -298,7 +298,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "4ebb8360dabda6ac5e1068aa65c32ddb"
+      "4a08e46e752acf9f86da587a2444ea81"
     ],
     [
       "Ex07a.appears_free_in",
@@ -320,7 +320,7 @@
         "subterm_ordering_Ex07a.EApp", "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "3ccf73dd6eedbadcd9319870c0c63bad"
+      "64803f126881111692b594bfc1a2f541"
     ],
     [
       "Ex07a.free_in_context",
@@ -386,7 +386,7 @@
         "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "58e590c54e7d7ca9ef46f2c8a92db9a5"
+      "dec2954f88ff412d5fbabaff12152aba"
     ],
     [
       "Ex07a.typable_empty_closed",
@@ -402,7 +402,7 @@
         "projection_inverse_BoxBool_proj_0", "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "8b53b044127571923ebd1319b7bf1d13"
+      "d380b902d93a7842dbd5dde845c6762d"
     ],
     [
       "Ex07a.equal",
@@ -415,7 +415,7 @@
         "kinding_Ex07a.ty@tok"
       ],
       0,
-      "f9247d591c01f0a7839bbe4d1a06dc92"
+      "f14aa5d6a5d5f664b6bf581de8d88611"
     ],
     [
       "Ex07a.equalE",
@@ -428,7 +428,7 @@
         "kinding_Ex07a.ty@tok"
       ],
       0,
-      "b2d7aa86cbbad17b5bf03ae29d117f1b"
+      "fb49f2e0714ea24cc47657869cb3acf8"
     ],
     [
       "Ex07a.context_invariance",
@@ -490,7 +490,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_typing"
       ],
       0,
-      "94dfed9d9b94442f219b7fe5be1c2cb1"
+      "5d3613849610097fb65175afdb1dd2a0"
     ],
     [
       "Ex07a.typing_extensional",
@@ -499,7 +499,7 @@
       1,
       [ "@query", "equation_Ex07a.equal", "equation_Ex07a.equalE" ],
       0,
-      "ae2104a976661284abe96fd89ab9a99c"
+      "3021d59c342e2a6451adecf71fac0862"
     ],
     [
       "Ex07a.substitution_preserves_typing",
@@ -572,7 +572,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "9afcca7cc79c3248d11e5f481cd62b2b"
+      "a11a683ef8660ec2884443c4c6c99b5c"
     ],
     [
       "Ex07a.preservation",
@@ -633,7 +633,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "3da8780db76aa51834589fef569f8c6d"
+      "52929904a544fc4f38846f66cca1a3ce"
     ],
     [
       "Ex07a.typed_step",
@@ -646,7 +646,7 @@
         "kinding_Ex07a.ty@tok"
       ],
       0,
-      "307b42fc7c6b960cbb3507cb2e38b2aa"
+      "68ab21d543cbc3e1ead282c876fc949a"
     ],
     [
       "Ex07a.ty",
@@ -655,7 +655,7 @@
       1,
       [ "@query" ],
       0,
-      "573506b4b57ffabb77c630f246274e4c"
+      "f7ac6058110c174f2e68c8e7c68013a6"
     ],
     [
       "Ex07a.__proj__TArrow__item___0",
@@ -668,7 +668,7 @@
         "refinement_interpretation_Tm_refine_6d481b4efcb5fbee37d1d60c36959ad4"
       ],
       0,
-      "d05dc9f4baefe9b1ec47877b967a2918"
+      "0d2b87f56c0259455daf6693dfd073fc"
     ],
     [
       "Ex07a.__proj__TArrow__item___1",
@@ -681,7 +681,7 @@
         "refinement_interpretation_Tm_refine_6d481b4efcb5fbee37d1d60c36959ad4"
       ],
       0,
-      "c1952ba93671f81a65ec384591bab2a6"
+      "f30a475fb76942c6fa3121491e50e8ca"
     ],
     [
       "Ex07a.exp",
@@ -693,7 +693,7 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
-      "3542e29770e666c4d3c2c3eeed2dfde6"
+      "cb18413d3fb40c93b824fb3f1fe91029"
     ],
     [
       "Ex07a.__proj__EVar__item___0",
@@ -706,7 +706,7 @@
         "refinement_interpretation_Tm_refine_f7bc5dc78a06806c9611435fda0e6d8d"
       ],
       0,
-      "9988340c1d2e741c122378fda30d753b"
+      "d2702c2d15cb4dd952dd99ef607f942c"
     ],
     [
       "Ex07a.__proj__EApp__item___0",
@@ -719,7 +719,7 @@
         "refinement_interpretation_Tm_refine_f136389a43dd0b6827ec1059c6da2367"
       ],
       0,
-      "87b88900089b016b6a927e62109272e6"
+      "3299a5b12bb5b614522bfe1659a4905b"
     ],
     [
       "Ex07a.__proj__EApp__item___1",
@@ -732,7 +732,7 @@
         "refinement_interpretation_Tm_refine_f136389a43dd0b6827ec1059c6da2367"
       ],
       0,
-      "cfad8ce781dbf0502d3dd6ea3731eef8"
+      "4e8795ad0991e7a419de564b0dd2d7cb"
     ],
     [
       "Ex07a.__proj__EAbs__item___0",
@@ -745,7 +745,7 @@
         "refinement_interpretation_Tm_refine_2a951dab851bee4ccbd0b4c3ba1c9135"
       ],
       0,
-      "8fc1f81a3de2bfac088d36a3c7977c07"
+      "3ae08f3b393476225b8eb33a025aa690"
     ],
     [
       "Ex07a.__proj__EAbs__item___1",
@@ -758,7 +758,7 @@
         "refinement_interpretation_Tm_refine_2a951dab851bee4ccbd0b4c3ba1c9135"
       ],
       0,
-      "a67322dbd73d852a18fd9b52f5073fbd"
+      "573464988880f587eeb3fd3e4fe71649"
     ],
     [
       "Ex07a.__proj__EAbs__item___2",
@@ -771,7 +771,7 @@
         "refinement_interpretation_Tm_refine_2a951dab851bee4ccbd0b4c3ba1c9135"
       ],
       0,
-      "adc8d6ed85f6bae4806213ff803ea1aa"
+      "0dc568f1303043c99e73a2b498bc8327"
     ],
     [
       "Ex07a.__proj__EIf__item___0",
@@ -784,7 +784,7 @@
         "refinement_interpretation_Tm_refine_14ad78ec1d1ac0199d7bf98ab84ada10"
       ],
       0,
-      "c868cf19219624bdf6ccf54236aa2bca"
+      "89fdb93fd37a9be70bc8788370fdad39"
     ],
     [
       "Ex07a.__proj__EIf__item___1",
@@ -797,7 +797,7 @@
         "refinement_interpretation_Tm_refine_14ad78ec1d1ac0199d7bf98ab84ada10"
       ],
       0,
-      "f3da4b3f61b352c9161594b358d475fd"
+      "7b4393a2c0f6cd7c37059dbc871370b7"
     ],
     [
       "Ex07a.__proj__EIf__item___2",
@@ -810,7 +810,7 @@
         "refinement_interpretation_Tm_refine_14ad78ec1d1ac0199d7bf98ab84ada10"
       ],
       0,
-      "b284ca3988dc02a57aede9b9adfcd56a"
+      "65bdd8cde69a1eec89fec2654b98c856"
     ],
     [
       "Ex07a.subst",
@@ -829,7 +829,7 @@
         "subterm_ordering_Ex07a.EApp", "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "2d6e93f5c4bd41f214886b5653355981"
+      "e6c7887d2e2854e738f98347fd497eed"
     ],
     [
       "Ex07a.step",
@@ -849,7 +849,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "077dcbf608758fcea581c79a7e6d6172"
+      "075016f19365ddd734da3e342991d1f7"
     ],
     [
       "Ex07a.typing",
@@ -875,7 +875,7 @@
         "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "bb59b4ec5d66aceb97ddc60768690d8b"
+      "f9ef9a4c0e8f141ff59d8176f308ea86"
     ],
     [
       "Ex07a.appears_free_in",
@@ -894,7 +894,7 @@
         "subterm_ordering_Ex07a.EApp", "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "370feb4092a6c97fdba319a883c1db26"
+      "cf53ea49b8c02126ab77c9a5516beb1d"
     ],
     [
       "Ex07a.equal",
@@ -907,7 +907,7 @@
         "kinding_Ex07a.ty@tok"
       ],
       0,
-      "09615118b0ce5a915e2fdeb3f35b8ca3"
+      "b4649e68d61a34826b272146482448b2"
     ],
     [
       "Ex07a.equalE",
@@ -920,7 +920,7 @@
         "kinding_Ex07a.ty@tok"
       ],
       0,
-      "8c6467e24c5f77ebbbdceb6d24be9ef0"
+      "57544b7eb0deb28507a43ee2125d2803"
     ],
     [
       "Ex07a.typed_step",
@@ -933,7 +933,7 @@
         "kinding_Ex07a.ty@tok"
       ],
       0,
-      "71a5176e91059545e0279903fda60301"
+      "0b923c58e7db6ff8657e9013c8fe47f5"
     ]
   ]
 ]

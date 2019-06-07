@@ -1,0 +1,59 @@
+[
+  "—„\u0011ŒiNÙ/ËqÀXe\u000fƒ\u0000",
+  [
+    [
+      "CalcInference.test1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9bf1d6d150332f4852f84ef77e97e28e"
+    ],
+    [
+      "CalcInference.test2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1f3209080824eb65e7242cfe307e7b29"
+    ],
+    [
+      "CalcInference.test3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "baa76bd629c690e98e93ee0f2e009189"
+    ],
+    [
+      "CalcInference.test1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "92cd37e2de5d5320e649a92fe0ca2904"
+    ],
+    [
+      "CalcInference.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d40c76f7914a10fb76a98e3be5a15120"
+    ],
+    [
+      "CalcInference.test3",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c12f822f5fd73b82b67b01f68ff75a56"
+    ]
+  ]
+]

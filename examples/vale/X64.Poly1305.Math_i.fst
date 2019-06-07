@@ -35,7 +35,7 @@ lemma_BitwiseMul64()
 
 // private unfold let op_Star = op_Multiply
 
-#reset-options "--z3cliopt smt.QI.EAGER_THRESHOLD=100 --z3cliopt smt.CASE_SPLIT=3 --z3cliopt smt.arith.nl=false --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --eager_inference --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+#reset-options "--z3cliopt smt.QI.EAGER_THRESHOLD=100 --z3cliopt smt.CASE_SPLIT=3 --z3cliopt smt.arith.nl=false --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 
 (*
 let heapletTo128_preserved (m:mem) (m':mem) (i:int) (len:nat) =
@@ -116,7 +116,7 @@ let lemma_poly_multiply (n:int) (p:pos) (r:int) (h:int) (r0:int) (r1:nat) (h0:in
   (*   (ensures ((h2*n + h1)*((p+5)*x) + y + (h1*r0 + h0*r1)*n + h0*r0 == *)
   (*             y + (h0*r1 + h1*r0 + h2*(5*x))* n + *)
   (*             (h0*r0 + h1*(5*x)) + ((h2*n + h1)*x)*p)) = *)
-  (*    assert_by_tactic ((h2*n+h1)*((p+5)*x) == (h2*n+h1)*5*x + ((h2*n+h1)*x)*p) canon; *)
+  (*    assert ((h2*n+h1)*((p+5)*x) == (h2*n+h1)*5*x + ((h2*n+h1)*x)*p) by canon (); *)
   (*   tcalc ( *)
   (*     (h2*n + h1)*((p+5)*x) + (y + (h1*r0 + h0*r1)*n + h0*r0) *)
   (*     &= (h2*n + h1)*5*x + ((h2*n + h1)*x)*p + (y + (h1*r0 + h0*r1)*n + h0*r0) &| using z3 *)
@@ -209,7 +209,7 @@ let lemma_mod_factors(x0:nat) (x1:nat) (y:nat) (z:pos) :
   Lemma ((x0 + (y * z) * x1) % z == (x0 % z)) =
   nat_times_nat_is_nat y x1;
   lemma_mod_plus x0 (y*x1) z;
-  assert_by_tactic ((y*z)*x1 == (y*x1)*z) canon
+  assert ((y*z)*x1 == (y*x1)*z) by canon ()
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --smtencoding.elim_box true"
 let lemma_mul_pos_pos_is_pos_inverse (x:pos) (y:int) :

@@ -334,6 +334,19 @@ let lookup_attr (attr:term) (env:Env.env) : list<fv> =
                                   | Some l -> [S.lid_as_fv l (S.Delta_constant_at_level 999) None]) ses
     | _ -> []
 
+let all_defs_in_env (env:Env.env) : list<fv> =
+    List.map (fun l -> S.lid_as_fv l (S.Delta_constant_at_level 999) None) (Env.lidents env) // |> take 10
+
+let defs_in_module (env:Env.env) (modul:name) : list <fv> =
+    List.concatMap
+        (fun l ->
+                (* must succeed, ids_of_lid always returns a non-empty list *)
+                let ns = Ident.ids_of_lid l |> init |> List.map Ident.string_of_ident in
+                if ns = modul
+                then [S.lid_as_fv l (S.Delta_constant_at_level 999) None]
+                else [])
+        (Env.lidents env)
+
 let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
     let lid = PC.p2l ns in
     Env.lookup_sigelt env lid
@@ -415,6 +428,11 @@ open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list<string> =
     Ident.path_of_lid e.curmodule
 
+let env_open_modules (e : Env.env) : list<name> =
+    List.map (fun (l, m) -> List.map Ident.text_of_id (Ident.ids_of_lid l))
+             (DsEnv.open_modules e.dsenv)
+
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
 let term_to_string t = Print.term_to_string t
+let comp_to_string c = Print.comp_to_string c

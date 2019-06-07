@@ -292,7 +292,7 @@ and term_to_string x =
             U.format1 "quote (%s)" (term_to_string tm)
         end
 
-      | Tm_meta(t, Meta_pattern ps) ->
+      | Tm_meta(t, Meta_pattern (_, ps)) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format2 "{:pattern %s} %s" pats (term_to_string t)
 
@@ -558,7 +558,7 @@ and cflags_to_string fs = FStar.Common.string_of_list cflag_to_string fs
 and formula_to_string phi = term_to_string phi
 
 and metadata_to_string = function
-    | Meta_pattern ps ->
+    | Meta_pattern (_, ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format1 "{Meta_pattern %s}" pats
 

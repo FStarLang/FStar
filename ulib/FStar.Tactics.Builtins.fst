@@ -49,6 +49,10 @@ assume val refine_intro : unit -> Tac unit
 or fails if it is untypeable. *)
 assume val tc : term -> Tac term
 
+(** [tcc] like [tc], but returns the full computation type
+with the effect label and its arguments (WPs, etc) as well *)
+assume val tcc : term -> Tac comp
+
 (** [unshelve] creates a goal from a term for its given type.
 It can be used when the system decided not to present a goal, but
 you want one anyway. For example, if you request a uvar through
@@ -233,13 +237,6 @@ assume val prune : string -> Tac unit
 (** The opposite operation of [prune]. The latest one takes precedence. *)
 assume val addns : string -> Tac unit
 
-(** Given a disjunction [e], destruct it and generate two goals
-for each case. Return value is terms representing proofs for each case.
-The first one is only valid in the first goal, and likewise for
-the second (TODO: change this awful behaviour).
-*)
-assume val cases : term -> Tac (term * term)
-
 (** Destruct a value of an inductive type by matching on it. The generated
 match has one branch for each constructor and is therefore trivially
 exhaustive, no VC is generated for that purpose. It returns a list
@@ -266,7 +263,7 @@ assume val unify_env : env -> term -> term -> Tac bool
 [input] and returns the output. For security reasons, this can only be
 performed when the `--unsafe_tactic_exec` options was provided for the
 current F* invocation. The tactic will fail if this is not so. *)
-assume val launch_process : string -> string -> string -> Tac string
+assume val launch_process : string -> list string -> string -> Tac string
 
 (** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh unaccessible integer within

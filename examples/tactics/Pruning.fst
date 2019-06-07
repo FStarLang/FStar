@@ -73,19 +73,64 @@ open FStar.List
 let f (x:int) = assert (x + 1 == 1 + x)
 
 // This one should be sent in a pruned context
-let _ = assert_by_tactic (rev [1;2] == [2;1])
-                         (fun () -> prune "";
-                                    addns "FStar.List";
-                                    addns "Prims")
+let _ = assert (rev [1;2] == [2;1])
+            by (prune "";
+                addns "FStar.List";
+                addns "Prims")
 
-// First one should go to the SMT, also in pruned context
-let _ = assert_by_tactic (rev [1;2] == [2;1] /\ 1 == 1)
-                         (fun () ->
-                            prune "";
-                            FStar.Tactics.split ();
-                            (* rev [1;2] == [2;1] *)
-                                addns "FStar.List";
-                                addns "Prims";
-                                smt ();
-                            (* 1 == 1 *)
-                                smt ())
+// Both should go to the SMT, also in pruned context
+let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
+            by (prune "";
+                FStar.Tactics.split ();
+                (* rev [1;2] == [2;1] *)
+                    addns "FStar.List";
+                    addns "Prims";
+                    smt ();
+                (* 1 == 1 *)
+                    addns "Prims";
+                    smt ())
+
+let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
+            by (FStar.Tactics.split ();
+                (* rev [1;2] == [2;1] *)
+                    prune "";
+                    addns "FStar.List";
+                    addns "Prims";
+                    smt ();
+                (* 1 == 1 *)
+                    prune "";
+                    addns "Prims";
+                    smt ())
+
+[@expect_failure]
+let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
+            by (prune "";
+                FStar.Tactics.split ();
+                (* rev [1;2] == [2;1] *)
+                    addns "Prims";
+                    smt ();
+                (* 1 == 1 *)
+                    addns "Prims";
+                    smt ())
+
+[@expect_failure]
+let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
+            by (prune "";
+                FStar.Tactics.split ();
+                (* rev [1;2] == [2;1] *)
+                    addns "FStar.List";
+                    smt ();
+                (* 1 == 1 *)
+                    addns "Prims";
+                    smt ())
+
+[@expect_failure]
+let _ = assert (rev [1;2] == [2;1] /\ (forall x. x + 1 == 1 + x))
+            by (prune "";
+                FStar.Tactics.split ();
+                (* rev [1;2] == [2;1] *)
+                    addns "FStar.List";
+                    addns "Prims";
+                    smt ();
+                (* 1 == 1 *)
+                    smt ())

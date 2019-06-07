@@ -12,6 +12,7 @@ let rev_acc l r = BatList.rev_append l r
 let rev = BatList.rev
 let append = BatList.append
 let op_At = append
+let snoc (x, y) = append x [y]
 let flatten = BatList.flatten
 let map = BatList.map
 let mapi_init _ _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: mapi_init"
@@ -37,6 +38,7 @@ let noRepeats _ = failwith "FStar_List_Tot_Base.ml: Not implemented: noRepeats"
 let assoc x l = match List.assoc x l with exception Not_found -> None | x -> Some x
 let split = BatList.split
 let splitAt n l = BatList.split_at (Z.to_int n) l
+let unsnoc l = let l1, l2 = splitAt (Z.sub (length l) Z.one) l in l1, hd l2
 let unzip = split
 let rec unzip3 = function
   | [] -> ([],[],[])
