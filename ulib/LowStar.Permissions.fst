@@ -14,8 +14,7 @@ let allows_write (p: permission) : GTot bool =
   p = 1.0R
 
 
-private noeq
-type perms_rec (a: Type0) = {
+noeq type perms_rec (a: Type0) = {
   current_max : perm_id;
   owner: perm_id;
   perm_map    : F.restricted_t perm_id (fun (x:perm_id) -> permission & a)
@@ -31,7 +30,7 @@ let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) : GTot bool =
 
 type live_pid (#a: Type0) (v_perms: perms_rec a) = pid:perm_id{is_live_pid v_perms pid}
 
-abstract let get_snapshot_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : GTot a =
+let get_snapshot_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : GTot a =
   let (_, snap) = p.perm_map pid in snap
 
 
@@ -52,11 +51,11 @@ let value_perms (a: Type0) = p:perms_rec a{
   )
 }
 
-
-
 let new_value_perms (#a: Type0) (init: a) : Ghost (value_perms a)
   (requires (True)) (ensures (fun v_perms ->
-    (forall (pid:perm_id). get_snapshot_from_pid v_perms pid == init)
+    (forall (pid:perm_id).{:pattern get_snapshot_from_pid v_perms pid}
+      get_snapshot_from_pid v_perms pid == init
+    )
   ))
   =
   let f:F.restricted_t perm_id (fun (x:perm_id) -> permission & a) =
@@ -114,8 +113,12 @@ let share_perms (#a: Type0) (v_perms: value_perms a) (pid: live_pid v_perms) : G
     new_pid <> pid /\
     get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /. 2.0R /\
     get_permission_from_pid new_v_perms new_pid = get_permission_from_pid v_perms pid /. 2.0R /\
-    (forall (pid':perm_id{pid' <> pid /\ pid' <> new_pid}). get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid') /\
-    (forall (pid':perm_id). get_snapshot_from_pid v_perms pid' == get_snapshot_from_pid new_v_perms pid')
+    (forall (pid':perm_id{pid' <> pid /\ pid' <> new_pid}).{:pattern get_permission_from_pid new_v_perms pid'}
+      get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
+    ) /\
+    (forall (pid':perm_id).{:pattern get_snapshot_from_pid new_v_perms pid'}
+      get_snapshot_from_pid v_perms pid' == get_snapshot_from_pid new_v_perms pid'
+    )
   ))
   =
   let current_max' = v_perms.current_max + 1 in
@@ -167,8 +170,12 @@ let merge_perms
     get_permission_from_pid new_v_perms new_pid =
       get_permission_from_pid v_perms pid1 +. get_permission_from_pid v_perms pid2 /\
     get_permission_from_pid new_v_perms pid2 = 0.0R /\
-    (forall (pid':perm_id{pid' <> pid1 /\ pid' <> pid2}). get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid') /\
-    (forall (pid':(live_pid v_perms)). get_snapshot_from_pid v_perms pid' == get_snapshot_from_pid new_v_perms pid')
+    (forall (pid':perm_id{pid' <> pid1 /\ pid' <> pid2}).{:pattern get_permission_from_pid new_v_perms pid'}
+      get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
+    ) /\
+    (forall (pid':(live_pid v_perms)).{:pattern get_snapshot_from_pid new_v_perms pid'}
+      get_snapshot_from_pid v_perms pid' == get_snapshot_from_pid new_v_perms pid'
+    )
   ))
   =
   let (p1, snap1) = v_perms.perm_map pid1 in
@@ -192,8 +199,12 @@ let merge_perms
 let change_snapshot (#a: Type0) (v_perms: value_perms a) (new_snapshot: a)
   : Ghost (value_perms a)
   (requires (True)) (ensures (fun new_v_perms ->
-    (forall (pid:perm_id). get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid) /\
-    (forall (pid:(live_pid v_perms)). get_snapshot_from_pid new_v_perms pid == new_snapshot)
+    (forall (pid:perm_id).{:pattern get_permission_from_pid new_v_perms pid}
+      get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid
+    ) /\
+    (forall (pid:(live_pid v_perms)). {:pattern get_snapshot_from_pid new_v_perms pid}
+      get_snapshot_from_pid new_v_perms pid == new_snapshot
+    )
   ))
   =
   let out = { v_perms with
