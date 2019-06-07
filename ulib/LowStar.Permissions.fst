@@ -5,7 +5,7 @@ open FStar.Real
 
 type permission = r:real{r >=. 0.0R /\ r <=. 1.0R}
 
-type perm_id = pos
+abstract type perm_id : eqtype = pos
 
 let allows_read (p:permission) : GTot bool =
   p >. 0.0R
@@ -14,13 +14,13 @@ let allows_write (p: permission) : GTot bool =
   p = 1.0R
 
 
-noeq type perms_rec (a: Type0) = {
+abstract noeq type perms_rec (a: Type0) = {
   current_max : perm_id;
   owner: perm_id;
   perm_map    : F.restricted_t perm_id (fun (x:perm_id) -> permission & a)
 }
 
-let get_permission_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : GTot permission =
+abstract let get_permission_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : GTot permission =
   let (perm, _) = p.perm_map pid in
   perm
 
@@ -30,12 +30,13 @@ let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) : GTot bool =
 
 type live_pid (#a: Type0) (v_perms: perms_rec a) = pid:perm_id{is_live_pid v_perms pid}
 
-let get_snapshot_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : GTot a =
+abstract let get_snapshot_from_pid (#a: Type0) (p: perms_rec a) (pid: perm_id) : GTot a =
   let (_, snap) = p.perm_map pid in snap
 
+abstract let is_pid_owner (#a: Type0) (p: perms_rec a) (pid: perm_id) : GTot bool =
+  pid = p.owner
 
-
-let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : GTot real =
+private let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : GTot real =
   if n = 0 then 0.0R
   else
     let (x, _) = f n in x +. sum_until f (n - 1)
@@ -51,8 +52,10 @@ let value_perms (a: Type0) = p:perms_rec a{
   )
 }
 
-let new_value_perms (#a: Type0) (init: a) : Ghost (value_perms a)
-  (requires (True)) (ensures (fun v_perms ->
+abstract let new_value_perms (#a: Type0) (init: a) : Ghost (value_perms a & perm_id)
+  (requires (True)) (ensures (fun (v_perms, pid) ->
+    get_permission_from_pid v_perms pid = 1.0R /\
+    is_pid_owner v_perms pid /\
     (forall (pid:perm_id).{:pattern get_snapshot_from_pid v_perms pid}
       get_snapshot_from_pid v_perms pid == init
     )
@@ -65,7 +68,7 @@ let new_value_perms (#a: Type0) (init: a) : Ghost (value_perms a)
          ((0.0R <: permission), init)
      )
   in
-  { current_max = 1; perm_map = f; owner = 1 }
+  ({ current_max = 1; perm_map = f; owner = 1 }, 1)
 
 type permission_kind =
   | DEAD
@@ -79,12 +82,12 @@ let get_perm_kind_from_pid (#a: Type0) (perms: value_perms a) (pid: perm_id) : G
     DEAD
   else if permission <. 1.0R then
     RO
-  else if perms.owner <> pid then
+  else if is_pid_owner perms pid  then
     RW
   else
     FULL
 
-let rec same_prefix_same_sum_until(#a: Type0) (p1 p2:perm_id -> permission & a) (n:nat) : Lemma
+private let rec same_prefix_same_sum_until(#a: Type0) (p1 p2:perm_id -> permission & a) (n:nat) : Lemma
   (requires forall (x:perm_id). x <= n ==> begin
     let (perm1, _) = p1 x in let (perm2, _) = p2 x in
     perm1 = perm2
@@ -92,7 +95,11 @@ let rec same_prefix_same_sum_until(#a: Type0) (p1 p2:perm_id -> permission & a) 
   (ensures sum_until p1 n = sum_until p2 n)
   = if n = 0 then () else same_prefix_same_sum_until p1 p2 (n-1)
 
+<<<<<<< HEAD
 let rec sum_until_change
+=======
+private let rec sum_until_change
+>>>>>>> Abstracted away LowStar.Permissions
   (#a: Type0)
   (p1 p2:perm_id -> permission & a)
   (n:nat)
@@ -108,7 +115,7 @@ let rec sum_until_change
     if n = i then same_prefix_same_sum_until p1 p2 (n-1)
     else sum_until_change p1 p2 (n-1) i v
 
-let share_perms (#a: Type0) (v_perms: value_perms a) (pid: live_pid v_perms) : Ghost (value_perms a & perm_id)
+abstract let share_perms (#a: Type0) (v_perms: value_perms a) (pid: live_pid v_perms) : Ghost (value_perms a & perm_id)
   (requires (True)) (ensures (fun (new_v_perms, new_pid) ->
     new_pid <> pid /\
     get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /. 2.0R /\
@@ -142,14 +149,14 @@ let share_perms (#a: Type0) (v_perms: value_perms a) (pid: live_pid v_perms) : G
   (v_perms', current_max')
 
 
-let rec sum_greater_than_subterm (#a: Type0) (f:perm_id -> permission & a) (n:nat) (pid1:perm_id)
+private let rec sum_greater_than_subterm (#a: Type0) (f:perm_id -> permission & a) (n:nat) (pid1:perm_id)
   : Lemma (ensures (
     if n < pid1 then sum_until f n >=. 0.0R else
     sum_until f n >=. (let (x, _) = f pid1 in x)
   )) =
   if n = 0 then () else sum_greater_than_subterm f (n-1) pid1
 
-let rec sum_greater_than_subterms (#a: Type0) (f:perm_id -> permission & a) (n:nat) (pid1: perm_id)
+private let rec sum_greater_than_subterms (#a: Type0) (f:perm_id -> permission & a) (n:nat) (pid1: perm_id)
   (pid2:perm_id{pid1 <> pid2})
   : Lemma (ensures (
     let (pid1, pid2) = if pid1 < pid2 then (pid1, pid2) else (pid2, pid1) in
@@ -159,7 +166,7 @@ let rec sum_greater_than_subterms (#a: Type0) (f:perm_id -> permission & a) (n:n
   )) =
   if n = 0 then () else sum_greater_than_subterms f (n-1) pid1 pid2
 
-let merge_perms
+abstract let merge_perms
   (#a: Type0)
   (v_perms: value_perms a)
   (pid1: live_pid v_perms)
@@ -196,7 +203,7 @@ let merge_perms
     {  v_perms with perm_map = perm_map2' } in
   (v_perms', pid1)
 
-let change_snapshot (#a: Type0) (v_perms: value_perms a) (new_snapshot: a)
+abstract let change_snapshot (#a: Type0) (v_perms: value_perms a) (new_snapshot: a)
   : Ghost (value_perms a)
   (requires (True)) (ensures (fun new_v_perms ->
     (forall (pid:perm_id).{:pattern get_permission_from_pid new_v_perms pid}
