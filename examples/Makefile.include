@@ -15,7 +15,11 @@ else
 endif
 
 %.uver: %.fst
+ifdef ORUN_FSTAR
+	$(ORUN) -o $@.bench -- $(FSTAR) --use_extracted_interfaces true $^
+else
 	$(FSTAR) --use_extracted_interfaces true $^
+endif
 
 %.fail-uver: %.fst
 	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)

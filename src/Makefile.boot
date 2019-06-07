@@ -69,9 +69,16 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 ocaml-output/%.ml:
+ifdef ORUN_FSTAR
+	$(ORUN) -o $@.bench -- \
+                   $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
+                   --codegen OCaml \
+                   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+else
 	$(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+endif
 
 # --------------------------------------------------------------------
 # Dependency analysis for bootstrapping

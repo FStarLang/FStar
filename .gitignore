@@ -8,6 +8,7 @@
 *.sav
 *.hints.fsval
 *.hints.mlval
+*.bench
 dump*
 cache/
 /VS/packages

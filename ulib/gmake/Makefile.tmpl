@@ -26,12 +26,20 @@ KREMLIN_EXE=$(PROGRAM).exe
 
 # a.fst.checked is the binary, checked version of a.fst
 %.fst.checked: %.fst
+ifdef ORUN_FSTAR
+	$(ORUN) -o $@.bench -- $(MY_FSTAR) $*.fst
+else
 	$(MY_FSTAR) $*.fst
+endif
 	touch $@
 
 # a.fsti.checked is the binary, checked version of a.fsti
 %.fsti.checked: %.fsti
+ifdef ORUN_FSTAR
+	$(ORUN) -o $@.bench -- $(MY_FSTAR) $*.fsti
+else
 	$(MY_FSTAR) $*.fsti
+endif
 	touch $@
 
 # The _tags file is a directive to ocamlbuild
