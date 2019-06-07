@@ -16,38 +16,6 @@ let read_write_without_sharing () : RST unit
   let ptr = ptr_alloc 42ul in
   let x1 = ptr_read ptr in
   ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = ptr_read ptr in
-  ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
   ptr_free ptr;
   ()
 
