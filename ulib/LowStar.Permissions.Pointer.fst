@@ -88,10 +88,9 @@ let ptr_alloc
   =
   reveal_rst_inv ();
   reveal_modifies ();
-  let perm_map = Ghost.hide (new_value_perms init) in
-  let pid = Ghost.hide 1 in
-  let ptr_v = B.malloc HS.root (init, perm_map) 1ul in
-  { v = ptr_v; pid = pid }
+  let perm_map_pid = Ghost.hide (new_value_perms init) in
+  let ptr_v = B.malloc HS.root (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) 1ul in
+  { v = ptr_v; pid = Ghost.hide (snd (Ghost.reveal perm_map_pid)) }
 
 let ptr_free
   (#a:Type)
@@ -115,7 +114,7 @@ let ptr_share
     (ptr_resource ptr)
     (fun (ptr1, ptr2) -> ptr_resource ptr1)
     (fun _ -> allows_read p)
-    (fun h0 (ptr1,ptr2) h1 -> 
+    (fun h0 (ptr1,ptr2) h1 ->
       ptr1.pid == ptr.pid /\
       (Ghost.reveal ptr1.pid) <> (Ghost.reveal ptr2.pid) /\
       inv (ptr_resource ptr2) h1
@@ -144,9 +143,9 @@ let ptr_merge
   : RST (pointer a (p1 +. p2))
     (ptr_resource ptr1)
     (fun ptr -> ptr_resource ptr)
-    (fun h -> 
-      allows_read p1 /\ allows_read p2 /\ 
-      ptr1.v == ptr2.v /\ 
+    (fun h ->
+      allows_read p1 /\ allows_read p2 /\
+      ptr1.v == ptr2.v /\
       Ghost.reveal ptr1.pid <> Ghost.reveal ptr2.pid /\
       inv (ptr_resource ptr2) h
     )
