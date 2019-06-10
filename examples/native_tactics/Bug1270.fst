@@ -29,5 +29,5 @@ let mytac =
           | h :: _ -> ()) `or_else` trivial)
 
 let test =
-  assert_by_tactic (True ==> True) mytac
+  assert (True ==> True) by mytac ()
 

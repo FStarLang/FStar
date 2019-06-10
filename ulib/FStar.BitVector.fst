@@ -126,6 +126,14 @@ let shift_right_vec #n a s =
   else if s = 0 then a
   else append (zero_vec #s) (slice a 0 (n - s))
 
+val shift_arithmetic_right_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
+let shift_arithmetic_right_vec #n a s =
+  if index a 0 then
+    if s >= n then ones_vec #n
+    else if s = 0 then a
+    else append (ones_vec #s) (slice a 0 (n - s))
+  else shift_right_vec a s
+
 (* Shift operators lemmas *)
 val shift_left_vec_lemma_1: #n:pos -> a:bv_t n -> s:nat -> i:nat{i < n && i >= n - s} ->
   Lemma (requires True)
@@ -150,3 +158,15 @@ val shift_right_vec_lemma_2: #n:pos -> a:bv_t n -> s:nat -> i:nat{i < n && i >= 
         (ensures index (shift_right_vec #n a s) i = index a (i - s))
 	[SMTPat (index (shift_right_vec #n a s) i)]
 let shift_right_vec_lemma_2 #n a s i = ()
+
+val shift_arithmetic_right_vec_lemma_1: #n:pos -> a:bv_t n -> s:nat -> i:nat{i < n && i < s} ->
+  Lemma (requires True)
+        (ensures index (shift_arithmetic_right_vec #n a s) i = index a 0)
+	[SMTPat (index (shift_arithmetic_right_vec #n a s) i)]
+let shift_arithmetic_right_vec_lemma_1 #n a s i = ()
+
+val shift_arithmetic_right_vec_lemma_2: #n:pos -> a:bv_t n -> s:nat -> i:nat{i < n && i >= s} ->
+  Lemma (requires True)
+        (ensures index (shift_arithmetic_right_vec #n a s) i = index a (i - s))
+	[SMTPat (index (shift_arithmetic_right_vec #n a s) i)]
+let shift_arithmetic_right_vec_lemma_2 #n a s i = ()

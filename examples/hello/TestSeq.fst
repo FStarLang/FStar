@@ -14,16 +14,19 @@
    limitations under the License.
 *)
 module TestSeq
+
 open FStar
 open FStar.IO
 open FStar.All
 
-val print_seq : i:nat -> s:Seq.seq int {i <= Seq.length s} -> ML unit
-let rec print_seq i s = 
+val print_seq : s:Seq.seq int -> i:nat{i <= Seq.length s} -> ML unit
+let rec print_seq s i = 
   if i = Seq.length s then ()
   else (print_string (string_of_int (Seq.index s i)); 
-        print_seq (i + 1) s)
+        print_string "\n";
+        print_seq s (i + 1))
 
 let main =
-  let x = Seq.create 100 0 in
-  print_seq 0 x
+  let id i = i in
+  let s = Seq.init 10 id in
+  print_seq s 0
