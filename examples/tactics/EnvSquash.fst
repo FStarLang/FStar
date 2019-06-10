@@ -33,4 +33,4 @@ let test () =
       | _ -> fail ("unexpected type for last binder: " ^ term_to_string (type_of_binder b))
     in
     assume (exists x. p x);
-    assert_by_tactic True tau
+    assert True by tau ()
