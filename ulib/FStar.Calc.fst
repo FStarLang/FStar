@@ -71,13 +71,12 @@ let calc_step (#t:Type) (#x #y : t) (p : relation t)
 
 [@"opaque_to_smt"]
 let calc_finish (#t:Type) (p : relation t) (#x #y : t) (pf : unit -> GTot (calc_pack x y))
-  : Lemma (requires (labeled (range_of pf) "Could not prove calc-chain compatibility" (
-                     norm [delta_only [`%calc_chain_compatible; `%calc_chain_related;
+  : Lemma (requires (norm [delta_only [`%calc_chain_compatible; `%calc_chain_related;
                                        "FStar.Calc.__proj__Mkcalc_pack__item__rels";
                                        `%calc_step; `%_calc_step;
                                        `%calc_init; `%_calc_init; `%pk_rels];
                            iota;
-                           zeta] (calc_chain_compatible (pk_rels (pf ())) p))))
+                           zeta] (calc_chain_compatible (pk_rels (pf ())) p)))
           (ensures (p x y))
   = let pk = pf () in
     elim_calc_proof pk.rels pk.proof
