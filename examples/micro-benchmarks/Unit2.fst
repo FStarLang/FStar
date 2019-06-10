@@ -28,8 +28,17 @@ type geq (z:int) = x:int{x >= z}
 
 let test5 _ = assert (nat == zat)
 
+//SMT encoding does not encode delta equivalence
+//It used to work accidentally for types that are equivalent
+//for the unfolding of nullary constants
+//But, not anymore, since the fix to bug #1750
+//Instead of SMT, this fact can be proven by normalization
+[@(expect_failure [19])]
 let test6 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
                       (b:Type -> y:zat -> Tot (vector b y)))
+
+let test7 _ = assert_norm ((a:Type -> x:nat -> Tot (vector a x)) ==
+                          (b:Type -> y:zat -> Tot (vector b y)))
 
 (* let test7 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) == *)
 (*                       (b:Type -> y:int{y>=0} -> Tot (vector b y))) *)
