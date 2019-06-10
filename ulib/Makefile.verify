@@ -19,8 +19,9 @@ include gmake/fstar.mk
 include gmake/Makefile.tmpl
 
 FStar.UInt128.fst.checked: OTHERFLAGS+=--z3rlimit_factor 2
-FStar.Math.Lemmas.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4 --admit_smt_queries true
+FStar.Math.Lemmas.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
 FStar.ModifiesGen.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
+LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
 
 # Default rule is verify-all, defined in gmake/Makefile.tmpl
 
