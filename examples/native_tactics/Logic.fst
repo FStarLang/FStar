@@ -33,4 +33,4 @@ let tau () : Tac unit =
     qed ()
 
 let _ =
-    assert_by_tactic (phi /\ xi ==> psi \/ phi) tau
+    assert (phi /\ xi ==> psi \/ phi) by tau ()

@@ -98,7 +98,7 @@ following commands. (On Windows this requires Cygwin and `make`)
    `fstar.exe` binary (which you can see with `fstar.exe --version`,
     as illustrated above).
 
-        $ make -C examples/hello ocaml
+        $ make -C examples/hello hello
 
    Note: to have a working OCaml install, please first read the
    [Working OCaml

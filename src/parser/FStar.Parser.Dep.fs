@@ -22,20 +22,18 @@
     (not module names).
 *)
 module FStar.Parser.Dep
-open FStar.ST
-open FStar.Exn
-open FStar.All
+
+open FStar.ST   //for ref
+open FStar.All  //for failwith
 
 open FStar
 open FStar.Parser
 open FStar.Parser.AST
-open FStar.Parser.Parse
 open FStar.Util
 open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
-open FStar.Parser
 
 module Const = FStar.Parser.Const
 module BU = FStar.Util
@@ -129,19 +127,56 @@ type dependence_graph = //maps file names to the modules it depends on
 
 (*
  * AR: Parsing data for a file (also cached in the checked files)
- *     It is exactly same as what collect_one function below returns
+ *     It is a summary of opens, includes, A.<id>, etc. in a module
+ *     Earlier we used to store the dependences in the checked file,
+ *       however that is an image of the file system, and so, when the checked
+ *       files were used in a slightly different file system, there were strange errors
+ *       see e.g. #1657 for a couple of cases
+ *     Now we store the following summary and construct the dependences from the current
+ *       file system
  *)
-type parsing_data = {
-  direct_deps              : list<dependence>;  //direct dependences of the file
-  additional_roots         : list<dependence>;  //additional "roots" that should be scanned
-                                                //i.e. implementations of interfaces in the first list
-  has_inline_for_extraction: bool;              //if it is an interface that contains an `inline_for_extraction`
-}
-let empty_parsing_data = {
-  direct_deps = [];
-  additional_roots = [];
-  has_inline_for_extraction = false
-}
+type parsing_data_elt =
+  | P_begin_module of lident  //begin_module
+  | P_open of bool * lident  //record_open
+  | P_open_module_or_namespace of (open_kind * lid)  //record_open_module_or_namespace
+  | P_dep of bool * lident  //add_dep_on_module
+  | P_alias of ident * lident  //record_module_alias
+  | P_lid of lident  //record_lid
+  | P_inline_for_extraction
+
+type parsing_data =
+  | Mk_pd of list<parsing_data_elt>
+
+let str_of_parsing_data_elt elt =
+  let str_of_open_kind = function
+    | Open_module -> "P_open_module"
+    | Open_namespace -> "P_open_namespace"
+  in
+  match elt with
+  | P_begin_module lid -> "P_begin_module (" ^ (text_of_lid lid) ^ ")"
+  | P_open (b, lid) -> "P_open (" ^ (string_of_bool b) ^ ", " ^ (text_of_lid lid) ^ ")"
+  | P_open_module_or_namespace (k, lid) -> "P_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (text_of_lid lid) ^ ")"
+  | P_dep (b, lid) -> "P_dep (" ^ (text_of_lid lid) ^ ", " ^ (string_of_bool b) ^ ")"
+  | P_alias (id, lid) -> "P_alias (" ^ (text_of_id id) ^ ", " ^ (text_of_lid lid) ^ ")"
+  | P_lid lid -> "P_lid (" ^ (text_of_lid lid) ^ ")"
+  | P_inline_for_extraction -> "P_inline_for_extraction"
+
+let str_of_parsing_data = function
+  | Mk_pd l ->
+    l |> List.fold_left (fun s elt -> s ^ "; " ^ (elt |> str_of_parsing_data_elt)) ""
+
+let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
+  match e1, e2 with
+  | P_begin_module l1, P_begin_module l2 -> lid_equals l1 l2
+  | P_open (b1, l1), P_open (b2, l2) -> b1 = b2 && lid_equals l1 l2
+  | P_open_module_or_namespace (k1, l1), P_open_module_or_namespace (k2, l2) -> k1 = k2 && lid_equals l1 l2
+  | P_dep (b1, l1), P_dep (b2, l2) -> b1 = b2 && lid_equals l1 l2
+  | P_alias (i1, l1), P_alias (i2, l2) -> text_of_id i1 = text_of_id i2 && lid_equals l1 l2
+  | P_lid l1, P_lid l2 -> lid_equals l1 l2
+  | P_inline_for_extraction, P_inline_for_extraction -> true
+  | _, _ -> false
+
+let empty_parsing_data = Mk_pd []
 
 type deps = {
     dep_graph:dependence_graph;                 //dependences of the entire project, not just those reachable from the command line
@@ -467,156 +502,220 @@ let dep_subsumed_by d d' =
  * Else parse the file, walk its AST, return a list of FStar lowercased module names
     it depends on
  *)
+
 let collect_one
   (original_map: files_for_module_name)
   (filename: string)
   (get_parsing_data_from_cache:string -> option<parsing_data>)
-  : parsing_data
+  : parsing_data *
+    list<dependence> *  //direct dependence
+    bool *  //has_inline_for_extraction
+    list<dependence>  //additional roots
+                      //that used to be part of parsing_data earlier
+                      //removing it from the cache (#1657)
+                      //this always returns a single element, remove the list?
 =
+  (*
+   * Construct dependences from the parsing data
+   * This is common function for when the parsing data is read from the checked files
+   *   or constructed after AST traversal of the module
+   *)
+  let from_parsing_data (pd:parsing_data) (original_map:files_for_module_name) (filename:string)
+    : list<dependence> *
+      bool *
+      list<dependence>
+    =  let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
+       let has_inline_for_extraction = BU.mk_ref false in
+
+       let mo_roots =
+         let mname = lowercase_module_name filename in
+         if is_interface filename
+         && has_implementation original_map mname
+         then [ UseImplementation mname ]
+         else []
+       in
+
+       let auto_open = hard_coded_dependencies filename |> List.map (fun (lid, k) ->
+         P_open_module_or_namespace (k, lid))
+       in
+
+       let working_map = smap_copy original_map in
+
+       let set_interface_inlining () =
+         if is_interface filename
+         then has_inline_for_extraction := true
+       in
+      
+       let add_dep deps d =
+         if not (List.existsML (dep_subsumed_by d) !deps) then
+           deps := d :: !deps
+       in
+
+       let dep_edge module_name is_friend =
+         if is_friend then FriendImplementation module_name
+         else PreferInterface module_name
+       in
+
+       let add_dependence_edge original_or_working_map lid is_friend =
+         let key = lowercase_join_longident lid true in
+         match resolve_module_name original_or_working_map key with
+         | Some module_name ->
+           add_dep deps (dep_edge module_name is_friend);
+           true
+         | _ ->
+           false
+       in
+
+       let record_open_module let_open lid = 
+         //use the original_map here
+         //since the working_map will resolve lid while accounting
+         //for already opened namespaces
+         //if let_open, then this is the form `UInt64.( ... )`
+         //             where UInt64 can resolve to FStar.UInt64
+         //           So, use the working map, accounting for opened namespaces
+         //Otherwise, this is the form `open UInt64`,
+         //           where UInt64 must resolve to either
+         //           a module or a namespace for F# compatibility
+         //           So, use the original map, disregarding opened namespaces
+         if (let_open     && add_dependence_edge working_map lid false)
+         || (not let_open && add_dependence_edge original_map lid false)
+         then true
+         else begin
+           if let_open then
+             FStar.Errors.log_issue (range_of_lid lid)
+               (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "Module not found: %s" (string_of_lid lid true)));
+           false
+         end
+       in
+
+       let record_open_namespace lid =
+         let key = lowercase_join_longident lid true in
+         let r = enter_namespace original_map working_map key in
+         if not r then
+           FStar.Errors.log_issue (range_of_lid lid)
+             (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
+             that name either" (string_of_lid lid true)))
+       in
+
+       let record_open let_open lid =
+         if record_open_module let_open lid
+         then ()
+         else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
+         then record_open_namespace lid
+       in
+
+       let record_open_module_or_namespace (lid, kind) =
+         match kind with
+         | Open_namespace -> record_open_namespace lid
+         | Open_module -> let _ = record_open_module false lid in ()
+       in
+
+       let record_module_alias ident lid =
+         let key = String.lowercase (text_of_id ident) in
+         let alias = lowercase_join_longident lid true in
+         // Only fully qualified module aliases are allowed.
+         match smap_try_find original_map alias with
+         | Some deps_of_aliased_module ->
+           smap_add working_map key deps_of_aliased_module;
+           add_dep deps (dep_edge (lowercase_join_longident lid true) false);
+           true
+         | None ->
+           FStar.Errors.log_issue (range_of_lid lid)
+             (Errors.Warning_ModuleOrFileNotFoundWarning,  (Util.format1 "module not found in search path: %s\n" alias));
+           false
+       in
+
+       let add_dep_on_module (module_name : lid) (is_friend : bool) =
+         if add_dependence_edge working_map module_name is_friend
+         then ()
+         else if Options.debug_any () then
+           FStar.Errors.log_issue (range_of_lid module_name)
+             (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
+              (Ident.string_of_lid module_name)))
+       in
+    
+       let record_lid lid =
+         (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
+            module name itself, so only its namespace part is to be
+            recorded as a module dependency.  *)
+         match lid.ns with
+         | [] -> ()
+         | _ ->
+           let module_name = Ident.lid_of_ids lid.ns in
+           add_dep_on_module module_name false
+       in
+      
+       let begin_module lid =
+         if List.length lid.ns > 0 then
+         ignore (enter_namespace original_map working_map (namespace_of_lid lid))
+       in
+
+       (*
+        * Iterate over the parsing data elements
+        *)
+       begin
+         match pd with
+         | Mk_pd l ->
+           (auto_open @ l) |> List.iter (fun elt ->
+             match elt with
+             | P_begin_module lid -> begin_module lid
+             | P_open (b, lid) -> record_open b lid
+             | P_open_module_or_namespace (k, lid) -> record_open_module_or_namespace (lid, k)
+             | P_dep (b, lid) -> add_dep_on_module lid b
+             | P_alias (id, lid) -> ignore (record_module_alias id lid)
+             | P_lid lid -> record_lid lid
+             | P_inline_for_extraction -> set_interface_inlining ())
+       end;
+       (*
+        * And then return the dependences
+        *)
+       !deps,
+       !has_inline_for_extraction,
+       mo_roots
+  in
+
   let data_from_cache = filename |> get_parsing_data_from_cache in
-  if data_from_cache |> is_some then begin
-    if Options.debug_any ()
-    then BU.print1 "Reading parsing data for %s from its checked file\n" filename;
-    data_from_cache |> must
+
+  if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
+    if Options.debug_any () then
+      BU.print1 "Reading the parsing data for %s from its checked file\n" filename;
+    let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
+    data_from_cache |> must,
+    deps, has_inline_for_extraction, mo_roots
   end
   else
-      let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
-      let mo_roots : ref<(list<dependence>)> = BU.mk_ref [] in
-      let has_inline_for_extraction = BU.mk_ref false in
-      let set_interface_inlining () =
-          if is_interface filename
-          then has_inline_for_extraction := true
-      in
-      let add_dep deps d =
-        if not (List.existsML (dep_subsumed_by d) !deps) then
-          deps := d :: !deps
-      in
-      let working_map = smap_copy original_map in
-
-      let dep_edge module_name =
-          PreferInterface module_name
-      in
-
-      let add_dependence_edge original_or_working_map lid =
-        let key = lowercase_join_longident lid true in
-        match resolve_module_name original_or_working_map key with
-        | Some module_name ->
-          add_dep deps (dep_edge module_name);
-          if has_interface original_or_working_map module_name
-          && has_implementation original_or_working_map module_name
-          then add_dep mo_roots (UseImplementation module_name);
-          true
-        | _ ->
-          false
-      in
-
-      let record_open_module let_open lid =
-          //use the original_map here
-          //since the working_map will resolve lid while accounting
-          //for already opened namespaces
-          //if let_open, then this is the form `UInt64.( ... )`
-          //             where UInt64 can resolve to FStar.UInt64
-          //           So, use the working map, accounting for opened namespaces
-          //Otherwise, this is the form `open UInt64`,
-          //           where UInt64 must resolve to either
-          //           a module or a namespace for F# compatibility
-          //           So, use the original map, disregarding opened namespaces
-          if (let_open     && add_dependence_edge working_map lid)
-          ||  (not let_open && add_dependence_edge original_map lid)
-          then true
-          else begin
-            if let_open then
-               FStar.Errors.log_issue (range_of_lid lid)
-                (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "Module not found: %s" (string_of_lid lid true)));
-            false
-          end
-      in
-
-      let record_open_namespace lid =
-        let key = lowercase_join_longident lid true in
-        let r = enter_namespace original_map working_map key in
-        if not r then
-            FStar.Errors.log_issue (range_of_lid lid)
-              (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
-                that name either" (string_of_lid lid true)))
-      in
-
-      let record_open let_open lid =
-        if record_open_module let_open lid
-        then ()
-        else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
-        then record_open_namespace lid
-      in
-
-      let record_open_module_or_namespace (lid, kind) =
-        match kind with
-        | Open_namespace -> record_open_namespace lid
-        | Open_module -> let _ = record_open_module false lid in ()
-      in
-
-      let record_module_alias ident lid =
-        let key = String.lowercase (text_of_id ident) in
-        let alias = lowercase_join_longident lid true in
-        // Only fully qualified module aliases are allowed.
-        match smap_try_find original_map alias with
-        | Some deps_of_aliased_module ->
-            smap_add working_map key deps_of_aliased_module;
-            true
-        | None ->
-            FStar.Errors.log_issue (range_of_lid lid)
-              (Errors.Warning_ModuleOrFileNotFoundWarning,  (Util.format1 "module not found in search path: %s\n" alias));
-            false
-      in
-
-      let add_dep_on_module (module_name : lid) =
-          if add_dependence_edge working_map module_name
-          then ()
-          else if Options.debug_any () then
-                FStar.Errors.log_issue (range_of_lid module_name)
-                    (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
-                                    (Ident.string_of_lid module_name)))
-      in
-      let record_lid lid =
-        (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
-           module name itself, so only its namespace part is to be
-           recorded as a module dependency.  *)
-        match lid.ns with
-        | [] -> ()
-        | _ ->
-          let module_name = Ident.lid_of_ids lid.ns in
-          add_dep_on_module module_name
-      in
-
-      let auto_open = hard_coded_dependencies filename in
-      List.iter record_open_module_or_namespace auto_open;
-
+      //parse the file and traverse the AST to collect parsing data
       let num_of_toplevelmods = BU.mk_ref 0 in
+      let pd : ref<(list<parsing_data_elt>)> = BU.mk_ref [] in
+
+      let add_to_parsing_data elt =
+        if not (List.existsML (fun e -> parsing_data_elt_eq e elt) !pd)
+        then pd := elt::!pd
+      in
 
       let rec collect_module = function
         | Module (lid, decls)
         | Interface (lid, decls, _) ->
             check_module_declaration_against_filename lid filename;
-            if List.length lid.ns > 0 then
-              ignore (enter_namespace original_map working_map (namespace_of_lid lid));
+            add_to_parsing_data (P_begin_module lid);
             collect_decls decls
 
       and collect_decls decls =
         List.iter (fun x -> collect_decl x.d;
                             List.iter collect_term x.attrs;
                             if List.contains Inline_for_extraction x.quals
-                            then set_interface_inlining()
+                            then add_to_parsing_data P_inline_for_extraction
                             ) decls
 
       and collect_decl d =
         match d with
         | Include lid
         | Open lid ->
-            record_open false lid
+            add_to_parsing_data (P_open (false, lid))
         | Friend lid ->
-            add_dep deps (FriendImplementation (lowercase_join_longident lid true))
+            add_to_parsing_data (P_dep (true, (lowercase_join_longident lid true |> Ident.lid_of_str)))
         | ModuleAbbrev (ident, lid) ->
-            if record_module_alias ident lid
-            then add_dep deps (dep_edge (lowercase_join_longident lid true))
+            add_to_parsing_data (P_alias (ident, lid))
         | TopLevelLet (_, patterms) ->
             List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
         | Main t
@@ -632,7 +731,7 @@ let collect_one
         | Tycon (_, tc, ts) ->
             begin
             if tc then
-                record_lid Const.mk_class_lid;
+                add_to_parsing_data (P_lid Const.mk_class_lid);
             let ts = List.map (fun (x,docnik) -> x) ts in
             List.iter collect_tycon ts
             end
@@ -696,11 +795,11 @@ let collect_one
         | Const_int (_, Some (signedness, width)) ->
             let u = match signedness with | Unsigned -> "u" | Signed -> "" in
             let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
-            add_dep deps (dep_edge (Util.format2 "fstar.%sint%s" u w))
+            add_to_parsing_data (P_dep (false, (Util.format2 "fstar.%sint%s" u w |> Ident.lid_of_str)))
         | Const_char _ ->
-            add_dep deps (dep_edge "fstar.char")
+            add_to_parsing_data (P_dep (false, ("fstar.char" |> Ident.lid_of_str)))
         | Const_float _ ->
-            add_dep deps (dep_edge "fstar.float")
+            add_to_parsing_data (P_dep (false, ("fstar.float" |> Ident.lid_of_str)))
         | _ ->
             ()
 
@@ -721,9 +820,9 @@ let collect_one
         | AST.Projector (lid, _)
         | AST.Discrim lid
         | Name lid ->
-            record_lid lid
+            add_to_parsing_data (P_lid lid)
         | Construct (lid, termimps) ->
-            record_lid lid;
+            add_to_parsing_data (P_lid lid);
             List.iter (fun (t, _) -> collect_term t) termimps
         | Abs (pats, t) ->
             collect_patterns pats;
@@ -739,7 +838,7 @@ let collect_one
                 patterms;
             collect_term t
         | LetOpen (lid, t) ->
-            record_open true lid;
+            add_to_parsing_data (P_open (true, lid));
             collect_term t
         | Bind(_, t1, t2)
         | Seq (t1, t2) ->
@@ -797,7 +896,7 @@ let collect_one
         | Attributes cattributes  ->
             List.iter collect_term cattributes
         | CalcProof (rel, init, steps) ->
-            add_dep_on_module (Ident.lid_of_str "FStar.Calc");
+            add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Calc")));
             begin
             collect_term rel;
             collect_term init;
@@ -852,15 +951,11 @@ let collect_one
 
       in
       let ast, _ = Driver.parse_file filename in
-      let mname = lowercase_module_name filename in
-      if is_interface filename
-      && has_implementation original_map mname
-      then add_dep mo_roots (UseImplementation mname);
       collect_module ast;
+      let pd = Mk_pd (List.rev !pd) in
+      let deps, has_inline_for_extraction, mo_roots = from_parsing_data pd original_map filename in
       (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
-      { direct_deps = !deps;
-        additional_roots = !mo_roots;
-        has_inline_for_extraction = !has_inline_for_extraction }
+      pd, deps, has_inline_for_extraction, mo_roots
 
 
 (* JP: it looks like the code was changed but the comments were never updated.
@@ -1093,18 +1188,15 @@ let collect (all_cmd_line_files: list<file_name>)
   let rec discover_one (file_name:file_name) =
     if deps_try_find dep_graph file_name = None then
     begin
-      let deps, mo_roots, needs_interface_inlining =
+      let parsing_data, (deps, mo_roots, needs_interface_inlining) =
         match BU.smap_try_find !collect_one_cache file_name with
-        | Some cached -> cached
+        | Some cached -> Mk_pd [], cached
         | None ->
-          let r = collect_one file_system_map file_name get_parsing_data_from_cache in
-          r.direct_deps, r.additional_roots, r.has_inline_for_extraction in
+          let parsing_data, deps, needs_interface_inlining, additional_roots = collect_one file_system_map file_name get_parsing_data_from_cache in
+          parsing_data, (deps, additional_roots, needs_interface_inlining) in
       if needs_interface_inlining
       then add_interface_for_inlining file_name;
-      BU.smap_add parse_results file_name ({
-        direct_deps = deps;
-        additional_roots = mo_roots;
-        has_inline_for_extraction = needs_interface_inlining });
+      BU.smap_add parse_results file_name parsing_data;
       let deps =
           let module_name = lowercase_module_name file_name in
           if is_implementation file_name
@@ -1139,8 +1231,30 @@ let collect (all_cmd_line_files: list<file_name>)
      boundaries that can otherwise be exploited to
      build cross-module recursive loops, as in issue #1391
   *)
-  let full_cycle_detection all_command_line_files =
+  let full_cycle_detection all_command_line_files file_system_map =
     let dep_graph = dep_graph_copy dep_graph in
+
+    (*
+     * The cycle detection code considers all_command_line_files
+     *   as roots to perform full cycle detection. As a result,
+     *   all command line files, and their transitive dependences
+     *   are considered. However, this misses the cycles through .fst
+     *   as in the issue #1391, IF only .fsti is given on the command
+     *   line. This is even more a problem in invocations like:
+     *   fstar A.fsti --dep full, which dumps the .depend, while not
+     *   noticing the cycle.
+     *
+     * A fix for this issue is to record in mo_files the implementations
+     *   of command line interfaces whose implementations are not on the
+     *   command line, and consider them also for cycle detection.
+     *
+     * Right now this is done even in the case of fstar A.fsti
+     *   we can consider using mo_files only in the case of
+     *   --dep invocations.
+     *)
+    let mo_files : ref<list<string> > = BU.mk_ref [] in
+
+
     let rec aux (cycle:list<file_name>) filename =
         let node =
             match deps_try_find dep_graph filename with
@@ -1181,11 +1295,25 @@ let collect (all_cmd_line_files: list<file_name>)
                                       all_command_line_files
                                       filename);
             (* Mutate the graph (to mark the node as visited) *)
-            deps_add_dep dep_graph filename ({node with edges=direct_deps; color=Black})
+            deps_add_dep dep_graph filename ({node with edges=direct_deps; color=Black});
+
+            (*
+             * If the file is an interface, and its implementation exists, and the implementation
+             *   is not on the command line, add it to mo_files
+             *)
+            if is_interface filename
+            then iter_opt
+                  (implementation_of_internal file_system_map (lowercase_module_name filename))
+                  (fun impl -> if not (List.contains impl all_command_line_files)
+                               then mo_files := impl::!mo_files
+                               else ())
+            else ()
       in
-      List.iter (aux []) all_command_line_files
+      List.iter (aux []) all_command_line_files;
+      (* Detect cycles via mo_files *)
+      List.iter (aux []) !mo_files
   in
-  full_cycle_detection all_cmd_line_files;
+  full_cycle_detection all_cmd_line_files file_system_map;
 
   //only verify those files on the command line
   all_cmd_line_files |>

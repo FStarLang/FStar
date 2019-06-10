@@ -26,14 +26,13 @@ let eexists (a:Type) (t:unit -> Tac a) : Tac a =
   fst (divide (ngoals()-1) t dismiss)
 
 let f1 =
-  assert_by_tactic (exists x. x == 42 ==> x + 1 == 43)
-  (fun _ -> eexists unit (fun _ ->
-            let b = implies_intro() in
-            let _ = tcut (mk_e_app (pack_fv' squash_qn) [type_of_binder b]) in
-            flip();
-            trefl();
-            norm [primops]; trefl()
-   ))
+  assert (exists x. x == 42 ==> x + 1 == 43)
+      by (eexists unit (fun _ ->
+          let b = implies_intro() in
+          let _ = tcut (mk_e_app (pack_fv' squash_qn) [type_of_binder b]) in
+          flip();
+          trefl();
+          norm [primops]; trefl()))
 
 // inlining this tactic below causes the end of the world
 let foo () : Tac unit =
@@ -48,4 +47,4 @@ let foo () : Tac unit =
               | _, _ -> fail "unexpected2")
             | _ -> fail "unexpected3"))
 
-let f2 = assert_by_tactic (exists x. x == 42 ==> x + 1 == 43) foo
+let f2 = assert (exists x. x == 42 ==> x + 1 == 43) by foo ()
