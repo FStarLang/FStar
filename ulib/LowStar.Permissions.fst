@@ -6,25 +6,25 @@ open FStar.Real
 
 type perm_id = pos
 
-noeq type perms_rec' (a: Type0) (v: a) = {
+noeq type perms_rec' (a: Type0) = {
   current_max : perm_id;
   fully_owned: bool;
   perm_map    : F.restricted_t perm_id (fun (x:perm_id) -> permission & a)
 }
 
-let get_permission_from_pid' (#a: Type0) (#v: a) (p: perms_rec' a v) (pid: perm_id) : GTot permission =
+let get_permission_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : GTot permission =
   let (perm, _) = p.perm_map pid in
   perm
 
-let get_snapshot_from_pid' (#a: Type0) (#v: a) (p: perms_rec' a v) (pid: perm_id) : GTot a =
+let get_snapshot_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : GTot a =
   let (_, snap) = p.perm_map pid in snap
 
-let is_live_pid' (#a: Type0) (#v: a) (v_perms: perms_rec' a v) (pid:perm_id) : GTot bool =
+let is_live_pid' (#a: Type0) (v_perms: perms_rec' a) (pid:perm_id) : GTot bool =
   get_permission_from_pid' v_perms pid >. 0.0R
 
-type live_pid' (#a: Type0) (#v: a) (v_perms: perms_rec' a v) = pid:perm_id{is_live_pid' v_perms pid}
+type live_pid' (#a: Type0) (v_perms: perms_rec' a) = pid:perm_id{is_live_pid' v_perms pid}
 
-let is_fully_owned' (#a: Type0) (#v: a) (p: perms_rec' a v) : GTot bool =
+let is_fully_owned' (#a: Type0) (p: perms_rec' a) : GTot bool =
   p.fully_owned
 
 let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : GTot real =
@@ -32,7 +32,7 @@ let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : GTot real 
   else
     let (x, _) = f n in x +. sum_until f (n - 1)
 
-let perms_rec (a: Type0) (v: a) = p:perms_rec' a v{
+let perms_rec (a: Type0) = p:perms_rec' a{
   // Permissions are null above currently split objects
   (forall (n:perm_id). n > p.current_max ==> get_permission_from_pid' p n = 0.R) /\
   // The sum of permissions is the number of splits up till now
@@ -95,7 +95,7 @@ let share_perms (#a: Type0) (#v: a) (v_perms: value_perms a v) (pid: live_pid v_
     if x = current_max' then ((p /. 2.0R <: permission), v) else (old_p, old_snap))
   in
   sum_until_change perm_map1' perm_map2' current_max' current_max' (p /. 2.0R);
-  let v_perms' : perms_rec' a v =
+  let v_perms' : perms_rec' a =
     { v_perms with
       current_max = current_max';
       perm_map = perm_map2'
@@ -157,7 +157,7 @@ let merge_perms
     if x = pid2 then ((0.0R <: permission), snap2) else perm_map1' x
   ) in
   sum_until_change perm_map1' perm_map2' v_perms.current_max pid2 0.0R;
-  let v_perms': perms_rec' a v =
+  let v_perms': perms_rec' a =
     {  v_perms with perm_map = perm_map2' } in
   assert(forall (pid':perm_id{pid' <> pid2}).
     is_live_pid' v_perms pid' <==>  is_live_pid' v_perms' pid'
@@ -172,8 +172,7 @@ let merge_perms
 
 let only_one_live_pid_with_full_permission'
   (#a: Type0)
-  (#v: a)
-  (v_perms: perms_rec a v)
+  (v_perms: perms_rec a)
   (pid: perm_id)
   : Lemma (requires (get_permission_from_pid' v_perms pid == 1.0R))
     (ensures (forall (pid':live_pid' v_perms). pid == pid'))
@@ -207,7 +206,7 @@ let change_snapshot
   (pid: perm_id)
   (new_snapshot: a)
   =
-  let v_perms' : perms_rec' a new_snapshot = { v_perms with
+  let v_perms' : perms_rec' a = { v_perms with
     perm_map = F.on_dom perm_id (fun (x:perm_id) ->
       if x = pid then
       let (p, _) = v_perms.perm_map x in (p, new_snapshot)

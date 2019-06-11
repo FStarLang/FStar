@@ -1,0 +1,60 @@
+[
+  "s;’M“\\7Ö¸¼—Jì}bÕ",
+  [
+    [
+      "LowStar.Permissions.half_permission",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_LowStar.Permissions.permission",
+        "function_token_typing_LowStar.Permissions.permission",
+        "primitive_FStar.Real.op_Greater_Equals_Dot",
+        "primitive_FStar.Real.op_Less_Equals_Dot",
+        "primitive_FStar.Real.op_Slash_Dot",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "refinement_interpretation_Tm_refine_d504c8e5a898494ef50c935fb51403ab",
+        "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "12d32f6b053d92b3af591fc8ba95f2f7"
+    ],
+    [
+      "LowStar.Permissions.sum_permissions",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_LowStar.Permissions.permission",
+        "function_token_typing_LowStar.Permissions.permission",
+        "primitive_FStar.Real.op_Greater_Equals_Dot",
+        "primitive_FStar.Real.op_Plus_Dot",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "refinement_interpretation_Tm_refine_8d26a6e973b882404b737d465e170675",
+        "refinement_interpretation_Tm_refine_d504c8e5a898494ef50c935fb51403ab",
+        "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "c0b6a51937921dced62f24fb770002d5"
+    ],
+    [
+      "LowStar.Permissions.change_snapshot",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_LowStar.Permissions.permission", "equation_Prims.eqtype",
+        "haseqTm_refine_d504c8e5a898494ef50c935fb51403ab",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Real.real"
+      ],
+      0,
+      "2d3a2de7a494ca4677cb1ad7dff0a377"
+    ]
+  ]
+]

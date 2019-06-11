@@ -85,30 +85,30 @@ let same_pid (pid1 pid2: Ghost.erased perm_id) : GTot bool =
 ///  * the permission owned by the ``pid``;
 ///  * whether the ``pid` owns the resource or not;
 ///  * each ``pid``contains a snapshot of the value of the resource
-val perms_rec (a: Type0) (v: a): Type0
+val perms_rec (a: Type0) : Type0
 
 
 /// Next are getter methods for each of these pieces of information
 
-val get_permission_from_pid: #a: Type0 -> #v: a -> p:perms_rec a v -> pid:perm_id -> GTot permission
+val get_permission_from_pid: #a: Type0 -> p:perms_rec a -> pid:perm_id -> GTot permission
 
-let is_live_pid (#a: Type0) (#v: a) (v_perms: perms_rec a v) (pid:perm_id) : GTot bool =
+let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) : GTot bool =
   get_permission_from_pid v_perms pid >. 0.0R
 
-type live_pid (#a: Type0) (#v: a) (v_perms: perms_rec a v) = pid:perm_id{is_live_pid v_perms pid}
+type live_pid (#a: Type0) (v_perms: perms_rec a) = pid:perm_id{is_live_pid v_perms pid}
 
-val get_snapshot_from_pid: #a: Type0 -> #v: a -> p: perms_rec a v -> pid: perm_id -> GTot a
+val get_snapshot_from_pid: #a: Type0 -> p: perms_rec a -> pid: perm_id -> GTot a
 
-val is_fully_owned: #a: Type0 -> #v: a -> p: perms_rec a v -> GTot bool
+val is_fully_owned: #a: Type0 -> p: perms_rec a -> GTot bool
 
-let get_perm_kind_from_pid (#a: Type0) (#v: a) (perms: perms_rec a v) (pid: perm_id) : GTot permission_kind =
+let get_perm_kind_from_pid (#a: Type0) (#v: a) (perms: perms_rec a) (pid: perm_id) : GTot permission_kind =
   let permission = get_permission_from_pid perms pid in
   let fully_owned = is_fully_owned perms in
   permission_to_kind permission fully_owned
 
 /// Finally, the permission map has to be "synchronized" with an external value to ensure the unicity of the
 /// live value of the resource.
-type value_perms (a: Type0) (v: a) = p:perms_rec a v{forall (pid:live_pid p). get_snapshot_from_pid p pid == v}
+type value_perms (a: Type0) (v: a) = p:perms_rec a{forall (pid:live_pid p). get_snapshot_from_pid p pid == v}
 
 (*** Interacting with permissions *)
 

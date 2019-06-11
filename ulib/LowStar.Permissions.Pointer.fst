@@ -12,9 +12,9 @@ open LowStar.BufferOps
 open LowStar.Permissions
 open FStar.Real
 
-type value_with_perms (a: Type0) = vp : (a & Ghost.erased (value_perms a)){
+type value_with_perms (a: Type0) = vp : (a & Ghost.erased (perms_rec a)){
   let (v, p) = vp in
-  forall (pid:perm_id). get_snapshot_from_pid (Ghost.reveal p) pid == v
+  forall (pid:live_pid (Ghost.reveal p)). get_snapshot_from_pid (Ghost.reveal p) pid == v
 }
 
 abstract noeq type pointer (a: Type0) (perm: Ghost.erased permission) = {
@@ -26,9 +26,10 @@ abstract let ptr_view (#a:Type) (#perm: Ghost.erased permission) (ptr:pointer a 
   reveal_view ();
   let fp = Ghost.hide (B.loc_addr_of_buffer ptr.v) in
   let inv h =
-    let (_, perm_map) = Seq.index (B.as_seq h ptr.v) 0 in
-    B.live h ptr.v /\ B.freeable ptr.v /\
-    get_permission_from_pid (Ghost.reveal perm_map) (Ghost.reveal ptr.pid) = Ghost.reveal perm
+    let (v, perm_map) = Seq.index (B.as_seq h ptr.v) 0 in
+    B.live h ptr.v /\ Ghost.reveal perm >. 0.0R /\ B.freeable ptr.v /\
+    get_permission_from_pid (Ghost.reveal perm_map) (Ghost.reveal ptr.pid) = Ghost.reveal perm /\
+    v == get_snapshot_from_pid (Ghost.reveal perm_map) (Ghost.reveal ptr.pid)
   in
   let sel h =
     let (_, perm_map) = Seq.index (B.as_seq h ptr.v) 0 in
@@ -74,8 +75,8 @@ inline_for_extraction noextract let ptr_write
   =
   reveal_rst_inv ();
   reveal_modifies ();
-  let (_, perm_map) = !* ptr.v in
-  ptr.v *= (x, Ghost.hide (change_snapshot (Ghost.reveal perm_map) (Ghost.reveal ptr.pid) x))
+  let (v', perm_map) = !* ptr.v in
+  ptr.v *= (x, Ghost.hide (change_snapshot #a #v' (Ghost.reveal perm_map) (Ghost.reveal ptr.pid) x))
 
 inline_for_extraction noextract let ptr_alloc
   (#a:Type)
@@ -88,7 +89,7 @@ inline_for_extraction noextract let ptr_alloc
   =
   reveal_rst_inv ();
   reveal_modifies ();
-  let perm_map_pid = Ghost.hide (new_value_perms init true) in
+  let perm_map_pid = Ghost.hide (new_value_perms init true <: perms_rec a & perm_id) in
   let ptr_v = B.malloc HS.root (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) 1ul in
   { v = ptr_v; pid = Ghost.hide (snd (Ghost.reveal perm_map_pid)) }
 
