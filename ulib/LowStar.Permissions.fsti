@@ -84,27 +84,31 @@ let same_pid (pid1 pid2: Ghost.erased perm_id) : GTot bool =
 /// Here is the permission map. It stores three informations about each permission id ``pid``:
 ///  * the permission owned by the ``pid``;
 ///  * whether the ``pid` owns the resource or not;
-///  * a snapshot of the value of the resource associated with the ``pid``
-val value_perms (a: Type0) : Type0
+///  * each ``pid``contains a snapshot of the value of the resource
+val perms_rec (a: Type0) (v: a): Type0
 
 
 /// Next are getter methods for each of these pieces of information
 
-val get_permission_from_pid: #a: Type0 -> p:value_perms a -> pid:perm_id -> GTot permission
+val get_permission_from_pid: #a: Type0 -> #v: a -> p:perms_rec a v -> pid:perm_id -> GTot permission
 
-let is_live_pid (#a: Type0) (v_perms: value_perms a) (pid:perm_id) : GTot bool =
+let is_live_pid (#a: Type0) (#v: a) (v_perms: perms_rec a v) (pid:perm_id) : GTot bool =
   get_permission_from_pid v_perms pid >. 0.0R
 
-type live_pid (#a: Type0) (v_perms: value_perms a) = pid:perm_id{is_live_pid v_perms pid}
+type live_pid (#a: Type0) (#v: a) (v_perms: perms_rec a v) = pid:perm_id{is_live_pid v_perms pid}
 
-val get_snapshot_from_pid: #a: Type0 -> p: value_perms a -> pid: perm_id -> GTot a
+val get_snapshot_from_pid: #a: Type0 -> #v: a -> p: perms_rec a v -> pid: perm_id -> GTot a
 
-val is_fully_owned: #a: Type0 -> p: value_perms a -> GTot bool
+val is_fully_owned: #a: Type0 -> #v: a -> p: perms_rec a v -> GTot bool
 
-let get_perm_kind_from_pid (#a: Type0) (perms: value_perms a) (pid: perm_id) : GTot permission_kind =
+let get_perm_kind_from_pid (#a: Type0) (#v: a) (perms: perms_rec a v) (pid: perm_id) : GTot permission_kind =
   let permission = get_permission_from_pid perms pid in
   let fully_owned = is_fully_owned perms in
   permission_to_kind permission fully_owned
+
+/// Finally, the permission map has to be "synchronized" with an external value to ensure the unicity of the
+/// live value of the resource.
+type value_perms (a: Type0) (v: a) = p:perms_rec a v{forall (pid:live_pid p). get_snapshot_from_pid p pid == v}
 
 (*** Interacting with permissions *)
 
@@ -113,27 +117,21 @@ let get_perm_kind_from_pid (#a: Type0) (perms: value_perms a) (pid: perm_id) : G
 
 /// A new value perms is created with a single ``pid`` who has full permission and ownership of the resource.
 /// You also have to provide the initial value for the snapshot.
-val new_value_perms: #a: Type0 -> init: a -> fully_owned: bool -> Ghost (value_perms a & perm_id)
+val new_value_perms: #a: Type0 -> init: a -> fully_owned: bool -> Ghost (value_perms a init & perm_id)
   (requires (True)) (ensures (fun (v_perms, pid) ->
     get_permission_from_pid v_perms pid = 1.0R /\
-    is_fully_owned v_perms = fully_owned /\
-    (forall (pid:perm_id).{:pattern get_snapshot_from_pid v_perms pid}
-      get_snapshot_from_pid v_perms pid == init
-    )
+    is_fully_owned v_perms = fully_owned
   ))
 
 /// Sharing a particular ``pid`` halves the permission associated with it and returns a new ``perm_id``
 /// containing the other half.
-val share_perms: #a: Type0 -> v_perms: value_perms a -> pid: live_pid v_perms -> Ghost (value_perms a & perm_id)
+val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid v_perms -> Ghost (value_perms a v & perm_id)
   (requires (True)) (ensures (fun (new_v_perms, new_pid) ->
-    disjoint_pid (Ghost.hide new_pid) (Ghost.hide pid) /\
+    new_pid <> pid /\
     get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /. 2.0R /\
     get_permission_from_pid new_v_perms new_pid = get_permission_from_pid v_perms pid /. 2.0R /\
     (forall (pid':perm_id{pid' <> pid /\ pid' <> new_pid}).{:pattern get_permission_from_pid new_v_perms pid'}
       get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
-    ) /\
-    (forall (pid':perm_id).{:pattern get_snapshot_from_pid new_v_perms pid'}
-      get_snapshot_from_pid v_perms pid' == get_snapshot_from_pid new_v_perms pid'
     )
   ))
 
@@ -142,36 +140,45 @@ val share_perms: #a: Type0 -> v_perms: value_perms a -> pid: live_pid v_perms ->
 /// ``pid`` will be deactivated with a zeroed permission.
 val merge_perms:
   #a: Type0 ->
-  v_perms: value_perms a ->
+  #v: a ->
+  v_perms: value_perms a v ->
   pid1: live_pid v_perms ->
-  pid2: live_pid v_perms{disjoint_pid (Ghost.hide pid1) (Ghost.hide pid2)}
-  -> Ghost (value_perms a)
+  pid2: live_pid v_perms{pid1 <> pid2}
+  -> Ghost (value_perms a v)
   (requires (True)) (ensures (fun new_v_perms ->
     get_permission_from_pid new_v_perms pid1 =
       get_permission_from_pid v_perms pid1 +. get_permission_from_pid v_perms pid2 /\
     get_permission_from_pid new_v_perms pid2 = 0.0R /\
     (forall (pid':perm_id{pid' <> pid1 /\ pid' <> pid2}).{:pattern get_permission_from_pid new_v_perms pid'}
       get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
-    ) /\
-    (forall (pid': perm_id).{:pattern get_snapshot_from_pid new_v_perms pid'}
-      get_snapshot_from_pid v_perms pid' == get_snapshot_from_pid new_v_perms pid'
     )
   ))
+
+/// The invariants let us prove a particularly useful lemma: if you have full permission, then you are
+/// the only live ``pid``.
+val only_one_live_pid_with_full_permission:
+  #a: Type0 ->
+  #v: a ->
+  v_perms: value_perms a v ->
+  pid: perm_id ->
+  Lemma (requires (get_permission_from_pid v_perms pid == 1.0R))
+    (ensures (forall (pid':live_pid v_perms). pid == pid'))
+
+
+
 
 /// Once you have full permission with a ``pid``, you can change the value of the snapshot associated with it.
 /// This ensures that read-only permissions cannot change the value of the snapshot.
 val change_snapshot:
   #a: Type0 ->
-  v_perms: value_perms a ->
+  #v: a ->
+  v_perms: value_perms a v ->
   pid: perm_id ->
   new_snapshot: a ->
-  Ghost (value_perms a)
+  Ghost (value_perms a new_snapshot)
   (requires (get_permission_from_pid v_perms pid == 1.0R))
   (ensures (fun new_v_perms ->
     (forall (pid:perm_id).{:pattern get_permission_from_pid new_v_perms pid}
       get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid
-    ) /\
-    (forall (pid:perm_id). {:pattern get_snapshot_from_pid new_v_perms pid}
-      get_snapshot_from_pid new_v_perms pid == new_snapshot
     )
   ))
