@@ -598,6 +598,13 @@ and translate_type env t: typ =
       TBuf (translate_type env arg)
   | MLTY_Named ([arg; _; _], p) when
     Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type env arg)
+  
+  (*
+   * AR: temporarily extracting const_buffer t to t*, until proper support is added downstream
+   *)
+  | MLTY_Named ([arg], p) when
+    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" -> TBuf (translate_type env arg)
+
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
     Syntax.string_of_mlpath p = "LowStar.Buffer.buffer" ||
@@ -709,7 +716,8 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
       || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
-      || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex" ->
+      || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex"
+      || string_of_mlpath p = "LowStar.ConstBuffer.index" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
@@ -782,7 +790,9 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when string_of_mlpath p = "LowStar.Monotonic.Buffer.msub" ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ])
+    when string_of_mlpath p = "LowStar.Monotonic.Buffer.msub"
+      || string_of_mlpath p = "LowStar.ConstBuffer.sub" ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.join") ->
@@ -828,6 +838,14 @@ and translate_expr env e: expr =
           string_of_mlpath p = "LowStar.ImmutableBuffer.witness_contents" ||
           string_of_mlpath p = "LowStar.ImmutableBuffer.recall_contents") ->
       EUnit
+
+ | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1 ])
+   when string_of_mlpath p = "LowStar.ConstBuffer.of_buffer"
+     || string_of_mlpath p = "LowStar.ConstBuffer.of_ibuffer"
+     || string_of_mlpath p = "LowStar.ConstBuffer.cast"
+     || string_of_mlpath p = "LowStar.ConstBuffer.to_buffer"
+     || string_of_mlpath p = "LowStar.ConstBuffer.to_ibuffer" ->
+   translate_expr env e  //just identities
 
   | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->
       ECast (translate_expr env e, TAny)
