@@ -185,7 +185,7 @@ let d_su1'_flip
   ]]
 = d_su1' c c' c'' (flip phi) (flip phi') (flip phi'')
 
-#set-options "--z3rlimit 40"
+#set-options "--z3rlimit 80"
 let sec43
   (i n x y: var)
   (diffs: squash (List.Tot.noRepeats [i; n; x; y] == true))
