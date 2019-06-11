@@ -21,6 +21,7 @@ open FStar.Exn
 open FStar.All
 open FStar
 open FStar.SMTEncoding.Term
+open FStar.SMTEncoding.QIReport
 open FStar.BaseTypes
 open FStar.Util
 module BU = FStar.Util
@@ -112,7 +113,8 @@ let ini_params () =
   List.append ["-smt2";
                "-in";
                Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed ()))]
-              (Options.z3_cliopt ())
+              (Options.z3_cliopt ())@
+              (if Options.report_qi () then ["smt.qi.profile=true"] else [])
 
 type label = string
 type unsat_core = option<list<string>>
@@ -140,16 +142,22 @@ let status_string_and_errors s =
     | TIMEOUT (errs, msg) -> BU.format2 "%s%s" (status_tag s) (match msg with None -> "" | Some msg -> " because " ^ msg), errs
 
 let tid () = BU.current_tid() |> BU.string_of_int
+
 let new_z3proc id =
-    BU.start_process id (Options.z3_exe ()) (ini_params ()) (fun s -> s = "Done!")
+    let filter = if Options.report_qi () then (fun s -> not (BU.starts_with s "[quantifier_instances]")) else (fun s -> true) in
+    BU.start_process id (Options.z3_exe ()) (ini_params ()) (fun s -> s = "Done!") filter
+
 let new_z3proc_with_id =
     let ctr = BU.mk_ref (-1) in
     fun () -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int))
 
 type bgproc = {
-    ask: string -> string;
-    refresh:unit -> unit;
-    restart:unit -> unit
+    ask        : string -> string;
+    refresh    : unit -> string ;
+    restart    : unit -> unit;
+    kill       : unit -> string ;
+    store      : query_info -> list<decl> -> unit ;
+    extract    : unit -> list<(query_info * list<decl>)>;
 }
 
 type query_log = {
@@ -230,25 +238,49 @@ let query_logging =
 
 let bg_z3_proc =
     let the_z3proc = BU.mk_ref None in
+    let the_queries = BU.mk_ref [] in
     let z3proc () =
-      if !the_z3proc = None then
+      if !the_z3proc = None then begin
         the_z3proc := Some (new_z3proc_with_id ());
+        the_queries := []
+      end ;
       must (!the_z3proc) in
     let x : list<unit> = [] in
     let ask input =
         let kill_handler () = "\nkilled\n" in
         BU.ask_process (z3proc ()) input kill_handler in
     let refresh () =
-        BU.kill_process (z3proc ());
+        let extra = BU.kill_process (z3proc ()) in
         the_z3proc := Some (new_z3proc_with_id ());
-        query_logging.close_log() in
+        the_queries := [] ;
+        query_logging.close_log() ;
+        extra
+    in
+    let kill () : string =
+        if is_some (!the_z3proc) then
+            let extra : string = BU.kill_process (z3proc ()) in
+            the_z3proc := None ;
+            query_logging.close_log ();
+            the_queries := [] ;
+            extra
+        else ""
+    in
     let restart () =
         query_logging.close_log();
         the_z3proc := None;
         the_z3proc := Some (new_z3proc_with_id ()) in
+    let store (info : query_info) (decls : list<decl>) : unit =
+        the_queries := (!the_queries)@[(info , decls)]
+    in
+    let extract () : list<(query_info * list<decl>)> =
+        !(the_queries)
+    in
     BU.mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
-                restart = BU.with_monitor x restart})
+                restart = BU.with_monitor x restart;
+                kill = BU.with_monitor x kill;
+                store = store;
+                extract = extract})
 
 let set_bg_z3_proc bgp =
     bg_z3_proc := bgp
@@ -296,7 +328,7 @@ let smt_output_sections (log_file:option<string>) (r:Range.range) (lines:list<st
         | [] -> ()
         | _ ->
             let msg =
-                BU.format2 "%sUnexpected output from Z3: %s\n"
+                BU.format2 "%sUnexpected additional output from Z3: %s\n"
                                         (match log_file with
                                          | None -> ""
                                          | Some f -> f ^ ": ")
@@ -313,7 +345,8 @@ let smt_output_sections (log_file:option<string>) (r:Range.range) (lines:list<st
      smt_statistics = statistics;
      smt_labels = labels}
 
-let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) : z3status * z3statistics =
+let doZ3Exe (log_file:_) (info:query_info) (decls : list<decl>) (fresh:bool) (input:string) (label_messages:error_labels) : z3status * z3statistics =
+  let r = info.query_info_range in
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
     let smt_output = smt_output_sections log_file r lines in
@@ -388,12 +421,22 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
       let proc = new_z3proc_with_id () in
       let kill_handler () = "\nkilled\n" in
       let out = BU.ask_process proc input kill_handler in
-      BU.kill_process proc;
+      let qip_output = BU.kill_process proc in
+      if Options.report_qi () then begin
+        let query_data = [(info , decls)] in
+        qiprofile_analysis query_data qip_output
+      end ;
       out
     else
       (!bg_z3_proc).ask input
   in
-  parse (BU.trim_string stdout)
+  let (status , statistics) : z3status * z3statistics = parse (BU.trim_string stdout) in
+  if Options.report_qi () then begin
+    match status with
+      | UNSAT _ -> if fresh then () else (!bg_z3_proc).store info decls
+      | _ -> ()
+  end ;
+  (status , statistics)
 
 let z3_options = BU.mk_ref
     "(set-option :global-decls false)\n\
@@ -418,6 +461,7 @@ type z3result = {
       z3result_time        : int;
       z3result_statistics  : z3statistics;
       z3result_query_hash  : option<string>;
+      z3result_query_decls : list<decl>;
       z3result_log_file    : option<string>
 }
 
@@ -427,19 +471,21 @@ let job_queue : ref<list<z3job>> = BU.mk_ref []
 
 let pending_jobs = BU.mk_ref 0
 
-let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
+let z3_job (log_file:_) (r:query_info) fresh (label_messages:error_labels) input decls qhash () : z3result =
   let start = BU.now() in
   let status, statistics =
-    try doZ3Exe log_file r fresh input label_messages
+    try doZ3Exe log_file r decls fresh input label_messages
     with e when not (Options.trace_error()) ->
-         (!bg_z3_proc).refresh();
-         raise e
+      ignore <| (!bg_z3_proc).extract () ;
+      ignore <| (!bg_z3_proc).refresh() ;
+      raise e
   in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
   { z3result_status     = status;
     z3result_time       = elapsed_time;
     z3result_statistics = statistics;
     z3result_query_hash = qhash;
+    z3result_query_decls = decls;
     z3result_log_file   = log_file }
 
 let running = BU.mk_ref false
@@ -470,6 +516,9 @@ and dequeue () = match !running with
   | false -> ()
 
 and run_job j = j.callback <| j.job ()
+let kill () =
+    if (Options.n_cores () < 2) then
+        ignore <| (!bg_z3_proc).kill ()
 
 (* threads are spawned only if fresh, I.e. we check here and in ask the mode of execution,
    should be improved by using another option, see ask *)
@@ -496,9 +545,7 @@ let finish () =
         then running := false
         else let _ = BU.sleep(500) in
              aux() in
-    aux()
-
-type scope_t = list<list<decl>>
+    if (Options.n_cores () > 1) then aux() else kill ()
 
 // bg_scope is a global, mutable variable that keeps a list of the declarations
 // that we have given to z3 so far. In order to allow rollback of history,
@@ -506,6 +553,9 @@ type scope_t = list<list<decl>>
 // on fresh_scope (a stack) -- one can then, for instance, verify these
 // declarations immediately, then call pop so that subsequent queries will not
 // reverify or use these declarations
+
+type scope_t = list<list<decl>>
+
 let fresh_scope : ref<scope_t> = BU.mk_ref [[]]
 let mk_fresh_scope () = !fresh_scope
 let flatten_fresh_scope () = List.flatten (List.rev !fresh_scope)
@@ -513,11 +563,14 @@ let flatten_fresh_scope () = List.flatten (List.rev !fresh_scope)
 // bg_scope: Is the flat sequence of declarations already given to Z3
 //           When refreshing the solver, the bg_scope is set to
 //           a flattened version of fresh_scope
+// 
+
 let bg_scope : ref<list<decl>> = BU.mk_ref []
 
 // fresh_scope is a mutable reference; this pushes a new list at the front;
 // then, givez3 modifies the reference so that within the new list at the front,
 // new queries are pushed
+
 let push msg    = BU.atomically (fun () ->
     fresh_scope := [Caption msg; Push]::!fresh_scope;
     bg_scope := !bg_scope @ [Push; Caption msg])
@@ -533,19 +586,22 @@ let rollback msg depth = Common.rollback (fun () -> pop msg) fresh_scope depth
 //              to be actually given to Z3 only when the next
 //              query comes up
 let giveZ3 decls =
-   decls |> List.iter (function Push | Pop -> failwith "Unexpected push/pop" | _ -> ());
-   // This is where we prepend new queries to the head of the list at the head
-   // of fresh_scope
-   begin match !fresh_scope with
-    | hd::tl -> fresh_scope := (hd@decls)::tl
-    | _ -> failwith "Impossible"
-   end;
-   bg_scope := !bg_scope @ decls
+    decls |> List.iter (function Push | Pop -> failwith "Unexpected push/pop" | _ -> ());
+    // This is where we prepend new queries to the head of the list at the head
+    // of fresh_scope
+    begin match !fresh_scope with
+      | hd::tl -> fresh_scope := (hd@decls)::tl
+      | _ -> failwith "Impossible"
+    end;
+    bg_scope := !bg_scope @ decls
 
 //refresh: create a new z3 process, and reset the bg_scope
 let refresh () =
-    if (Options.n_cores() < 2) then
-        (!bg_z3_proc).refresh();
+    if (Options.n_cores() < 2) then begin
+        let qdata : list<(query_info * list<decl>)> = (!bg_z3_proc).extract () in
+        let qip_output : string = (!bg_z3_proc).refresh () in
+        if Options.report_qi () then qiprofile_analysis qdata qip_output else ()
+    end ;
     bg_scope := flatten_fresh_scope ()
 
 let context_profile (theory:list<decl>) =
@@ -574,7 +630,6 @@ let context_profile (theory:list<decl>) =
                         m
                         (string_of_int n))
                modules
-
 
 let mk_input fresh theory =
     let options = !z3_options in
@@ -622,6 +677,7 @@ let mk_input fresh theory =
 type cb = z3result -> unit
 
 let cache_hit
+    (r:query_info)
     (log_file:option<string>)
     (cache:option<string>)
     (qhash:option<string>)
@@ -636,7 +692,8 @@ let cache_hit
               z3result_time = 0;
               z3result_statistics = stats;
               z3result_query_hash = qhash;
-              z3result_log_file = log_file
+              z3result_log_file = log_file;
+              z3result_query_decls = [];
             } in
             cb result;
             true
@@ -646,7 +703,7 @@ let cache_hit
         false
 
 let ask_1_core
-    (r:Range.range)
+    (r: query_info)
     (filter_theory:list<decl> -> list<decl> * bool)
     (cache:option<string>)
     (label_messages:error_labels)
@@ -662,12 +719,18 @@ let ask_1_core
     in
     let theory = theory @[Push]@qry@[Pop] in
     let theory, _used_unsat_core = filter_theory theory in
+    let fscp = if Options.report_qi () then
+            let fscp = (flatten_fresh_scope ())@[Push]@qry@[Pop] in
+            let fscp, _ = filter_theory fscp in
+            fscp
+        else []
+    in
     let input, qhash, log_file_name = mk_input fresh theory in
-    if not (fresh && cache_hit log_file_name cache qhash cb) then
-        run_job ({job=z3_job log_file_name r fresh label_messages input qhash; callback=cb})
+    if not (fresh && cache_hit r log_file_name cache qhash cb) then
+        run_job ({job=z3_job log_file_name r fresh label_messages input fscp qhash; callback=cb})
 
 let ask_n_cores
-    (r:Range.range)
+    (r: query_info)
     (filter_theory:list<decl> -> list<decl> * bool)
     (cache:option<string>)
     (label_messages:error_labels)
@@ -680,12 +743,13 @@ let ask_n_cores
                     (List.rev !fresh_scope)) in
     let theory = theory@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
+    let fscp = if Options.report_qi () then theory else [] in
     let input, qhash, log_file_name = mk_input true theory in
-    if not (cache_hit log_file_name cache qhash cb) then
-        enqueue ({job=z3_job log_file_name r true label_messages input qhash; callback=cb})
+    if not (cache_hit r log_file_name cache qhash cb) then
+        enqueue ({job=z3_job log_file_name r true label_messages input fscp qhash; callback=cb})
 
 let ask
-    (r:Range.range)
+    (r: query_info)
     (filter:list<decl> -> list<decl> * bool)
     (cache:option<string>)
     (label_messages:error_labels)
@@ -697,3 +761,4 @@ let ask
         ask_1_core r filter cache label_messages qry cb fresh
     else
         ask_n_cores r filter cache label_messages qry scope cb
+

@@ -83,7 +83,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
     in
     let is_guard_free tm =
       match tm.tm with
-      | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, _, {tm=App(Imp, [l;r])}) ->
+      | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, _, {tm=App(Imp, [l;r])} , _) ->
         true
       | _ -> false
     in
@@ -125,7 +125,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
             aux default_msg ropt post_name_opt labels arg in
           begin try
               begin match arg.tm with
-                | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) ->
+                | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng} , _) ->
                   let post_name = "^^post_condition_"^ (BU.string_of_int <| Ident.next_id ()) in
                   let names = mk_fv (post_name, post)
                               ::List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Ident.next_id()), s)) sorts in
@@ -136,7 +136,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                     | App(And, clauses_lhs) ->
                       let req, ens = BU.prefix clauses_lhs in
                       begin match ens.tm with
-                        | Quant(Forall, pats_ens, iopt_ens, sorts_ens, {tm=App(Imp, [ensures_conjuncts; post]); rng=rng_ens}) ->
+                        | Quant(Forall, pats_ens, iopt_ens, sorts_ens, {tm=App(Imp, [ensures_conjuncts; post]); rng=rng_ens}, _) ->
                           if is_a_post_condition (Some post_name) post
                           then
                             let labels, ensures_conjuncts = aux "could not prove post-condition" None (Some post_name) labels ensures_conjuncts in
@@ -146,7 +146,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                               | [[]] -> [[post]]  //make the post-condition formula the pattern, if there isn't one already (usually there isn't)
                               | _ -> pats_ens in
                             let ens = Term.mk (Quant(Forall, pats_ens, iopt_ens, sorts_ens,
-                                                             Term.mk (App(Imp, [ensures_conjuncts; post])) rng_ens)) ens.rng in
+                                                             Term.mk (App(Imp, [ensures_conjuncts; post])) rng_ens, BU.mk_ref None)) ens.rng in
                             let lhs = Term.mk (App(And, req@[ens])) lhs.rng in
                             labels, Term.abstr names lhs
                            else raise (Not_a_wp_implication ("Ensures clause doesn't match post name:  "
@@ -166,7 +166,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                     labels, Term.abstr names rhs in
 
                   let body = Term.mkImp(lhs, rhs) rng in
-                  labels, Term.mk (Quant(Forall, pats, iopt, post::sorts, body)) q.rng
+                  labels, Term.mk (Quant(Forall, pats, iopt, post::sorts, body, BU.mk_ref None)) q.rng
 
 
                 | _ -> //not in the form produced by an application of M_stronger
@@ -178,7 +178,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Labeled(arg, reason, r) ->
           aux reason (Some r) post_name_opt labels arg
 
-        | Quant(Forall, [], None, sorts, {tm=App(Imp, [lhs;rhs]); rng=rng})
+        | Quant(Forall, [], None, sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}, _)
             when is_a_named_continuation lhs ->
           let sorts', post = BU.prefix sorts in
           let new_post_name = "^^post_condition_"^ (BU.string_of_int <| Ident.next_id ()) in
@@ -191,7 +191,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           let labels, lhs_conjs =
                 BU.fold_map (fun labels tm ->
                     match tm.tm with
-                    | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Imp, [l0;r])}) ->
+                    | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Imp, [l0;r])}, _) ->
                       if is_a_post_condition (Some new_post_name) r
                       then begin
                         //printfn "++++RHS is a post-condition for %s;\n\trhs=%s"
@@ -201,7 +201,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                         //printfn "++++LHS %s\nlabeled as%s"
                         //        (Term.print_smt_term l0)
                         //        (Term.print_smt_term l);
-                        labels, mk (Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Imp, [l;r])))) q.rng
+                        labels, mk (Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Imp, [l;r])), BU.mk_ref None)) q.rng
                       end
                       else begin
                         //printfn "----RHS not a post-condition for %s;\n\trhs=%s"
@@ -214,7 +214,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
           let labels, rhs = aux default_msg None (Some new_post_name) labels rhs in
           let body = Term.mkImp(Term.mk_and_l lhs_conjs lhs.rng, rhs) rng |> Term.abstr names in
-          let q = Term.mk (Quant(Forall, [], None, sorts, body)) q.rng in
+          let q = Term.mk (Quant(Forall, [], None, sorts, body, BU.mk_ref None)) q.rng in
           labels, q
 
         | App(Imp, [lhs;rhs]) ->
@@ -230,7 +230,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           let labels, q2 = aux default_msg ropt post_name_opt labels q2 in
           labels, Term.mkITE (hd, q1, q2) q.rng
 
-        | Quant(Exists, _, _, _, _)
+        | Quant(Exists, _, _, _, _, _)
         | App(Iff, _)
         | App(Or, _) -> //non-atomic, but can't case split
           let lab, q = fresh_label default_msg ropt q.rng q in
@@ -281,9 +281,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(Imp, _) ->
           failwith "Impossible: arity mismatch"
 
-        | Quant(Forall, pats, iopt, sorts, body) ->
+        | Quant(Forall, pats, iopt, sorts, body, _) ->
           let labels, body = aux default_msg ropt post_name_opt labels body in
-          labels, Term.mk (Quant(Forall, pats, iopt, sorts, body)) q.rng
+          labels, Term.mk (Quant(Forall, pats, iopt, sorts, body, BU.mk_ref None)) q.rng
 
         (* TODO (KM) : I am not sure whether we should label the let-bounded expressions here *)
         | Let(es, body) ->

@@ -1270,7 +1270,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 | [] -> [], push_free_var env t arity tname (Some <| mkApp(tname, []))
                 | _ ->
                         let ttok_decl = Term.DeclFun(ttok, [], Term_sort, Some "token") in
-                        let ttok_fresh = Term.fresh_token (ttok, Term_sort) (varops.next_id()) in
+                        let ttok_fresh = Term.fresh_token (Ident.range_of_lid t) (ttok, Term_sort) (varops.next_id()) in
                         let ttok_app = mk_Apply ttok_tm vars in
                         let pats = [[ttok_app]; [tapp]] in
                         // These patterns allow rewriting (ApplyT T@tok args) to (T args) and vice versa
@@ -1353,7 +1353,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let guard' = mk_and_l guards' in
         let proxy_fresh = match formals with
             | [] -> []
-            | _ -> [Term.fresh_token (ddtok, Term_sort) (varops.next_id())] in
+            | _ -> [Term.fresh_token (Ident.range_of_lid d) (ddtok, Term_sort) (varops.next_id())] in
 
         let encode_elim () =
             let head, args = U.head_and_args t_res in

@@ -231,9 +231,9 @@ val with_sigint_handler: sigint_handler -> (unit -> 'a) -> 'a
 (* not relying on representation *)
 type proc
 val run_process : string -> string -> list<string> -> option<string> -> string
-val start_process: string -> string -> list<string> -> (string -> bool) -> proc
+val start_process: string -> string -> list<string> -> (string -> bool) -> (string -> bool) -> proc
 val ask_process: proc -> string -> (unit -> string) -> string
-val kill_process: proc -> unit
+val kill_process: proc -> string
 val kill_all: unit -> unit
 
 val get_file_extension: string -> string
@@ -283,6 +283,7 @@ val is_upper: char -> Tot<bool>
 val contains: string -> string -> Tot<bool>
 val substring_from: string -> int -> string
 val substring: string -> start:int -> len:int -> string
+val repeat : int -> string -> string
 val replace_char: string -> char -> char -> Tot<string>
 val replace_chars: string -> char -> string -> Tot<string>
 val hashcode: string -> Tot<int>
@@ -309,6 +310,7 @@ val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 val try_find_index: ('a -> bool) -> list<'a> -> option<int>
 val fold_map: ('a -> 'b -> 'a * 'c) -> 'a -> list<'b> -> 'a * list<'c>
 val choose_map: ('a -> 'b -> 'a * option<'c>) -> 'a -> list<'b> -> 'a * list<'c>
+val collect_some: list<option<'a>> -> list<'a>
 val for_all: ('a -> bool) -> list<'a> -> bool
 val for_some: ('a -> bool) -> list<'a> -> bool
 val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
