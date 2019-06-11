@@ -760,6 +760,15 @@ and translate_expr env e: expr =
           string_of_mlpath p = "LowStar.ImmutableBuffer.igcmalloc") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, _)
+    when (string_of_mlpath p = "LowStar.Monotonic.Buffer.mgcmalloc_and_blit" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc_and_blit"   ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca_and_blit"   ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.igcmalloc_and_blit"  ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.imalloc_and_blit"    ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca_and_blit") ->
+    EAbortS "alloc_and_blit family of functions are not yet supported downstream"
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _erid; elen ])
     when string_of_mlpath p = "LowStar.UninitializedBuffer.ugcmalloc" ->
       EBufCreateNoInit (Eternal, translate_expr env elen)
