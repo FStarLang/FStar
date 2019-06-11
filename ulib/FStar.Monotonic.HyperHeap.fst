@@ -41,7 +41,12 @@ let lemma_root_has_color_zero _ = ()
 
 let rid_length r = List.Tot.length (reveal r)
 
-let rid_tail r = elift1_p Cons?.tl r
+// GM: This is needed after a commit fixing solve_c. Perhaps there's
+//     a better way.
+private
+let toghost (f : 'a -> Tot 'b) (x : 'a) : GTot 'b = f x
+
+let rid_tail r = elift1_p (toghost Cons?.tl) r
 
 let rec includes r1 r2 =
   if r1 = r2 then true
