@@ -22,7 +22,7 @@ type m a =
 
 (*
 // The naive mutually recursive definition of parallel composition, which is not properly recursive 
-
+*)
 let rec map (#a:Type) (#b:Type) (f:a -> b) (c:m a) : Tot (m b) (decreases c) =
   match c with
   | Ret x -> Ret (f x)
@@ -30,8 +30,8 @@ let rec map (#a:Type) (#b:Type) (f:a -> b) (c:m a) : Tot (m b) (decreases c) =
   | Put b n c -> Put b n (map f c)
   | Or c0 c1 -> Or (map f c0) (map f c1)
 
-val l_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases c0)
-val r_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases c1)
+val l_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %[c0;c1])
+val r_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %[c0;c1])
 
 let rec l_par #a #b c0 c1 = 
   match c0 with 
@@ -39,14 +39,14 @@ let rec l_par #a #b c0 c1 =
   | Get b c0' -> Get b (fun n -> FStar.WellFounded.axiom1 c0' n; Or (l_par (c0' n) c1) (r_par (c0' n) c1))
   | Put b n c0' -> Put b n (Or (l_par c0' c1) (r_par c0' c1))
   | Or c0' c0'' -> Or (l_par c0' c1) (l_par c0'' c1)
-
+  
 and r_par #a #b c0 c1 =
   match c1 with 
   | Ret y -> map (fun x -> (x,y)) c0
   | Get b c1' -> Get b (fun n -> FStar.WellFounded.axiom1 c1' n; Or (l_par c0 (c1' n)) (r_par c0 (c1' n)))
-  | Put b n c1' -> Put b n (Or (l_par c1' c1) (r_par c1' c1))
-  | Or c1' c1'' -> Or (l_par c1' c1) (l_par c1'' c1)
-*)
+  | Put b n c1' -> Put b n (Or (l_par c0 c1') (r_par c0 c1'))
+  | Or c1' c1'' -> Or (l_par c0 c1') (l_par c0 c1'')
+
 
 // The logically equivalent definition of parallel composition, based on G. Plotkin's slides
 val r_par' (c0:m unit) (c1:m unit -> m unit) : m unit
