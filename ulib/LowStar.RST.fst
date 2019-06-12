@@ -83,7 +83,7 @@ let modifies (res0 res1:resource) (h0 h1:HS.mem) =
 let modifies_refl (res:resource) (h:HS.mem)
   : Lemma (modifies res res h h)
            [SMTPat (modifies res res h h)] =
-  admit()
+  ()
 
 let modifies_trans (res0 res1 res2:resource) (h0 h1 h2:HS.mem)
   : Lemma (requires
@@ -245,7 +245,6 @@ let frame (outer0:resource)
         : RSTATE a outer0 outer1 (frame_wp delta wp) =
   reveal_view ();
   reveal_can_be_split_into ();
-  admit();
   f ()
 
 (* Generic framing operation for RST (through resource inclusion) *)
@@ -289,5 +288,4 @@ let rst_frame (outer0:resource)
                     (frame_post delta post) =
   reveal_view ();
   reveal_can_be_split_into ();
-  admit();
   f ()

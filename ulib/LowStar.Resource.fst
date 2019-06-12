@@ -118,8 +118,6 @@ let ( <*> ) (res1 res2:resource) : res:resource =
       inv = inv;
       sel = sel
     } in
-  assume(sel_reads_fp view.fp view.sel);
-  assume(inv_reads_fp view.fp view.inv);
   let out = {
     t = t;
     view = view
@@ -191,7 +189,7 @@ let can_be_split_into (outer:resource) ((inner,delta):resource & resource) =
 let star_can_be_split_into_parts (res1 res2:resource)
   : Lemma ((res1 <*> res2) `can_be_split_into` (res1,res2))
           [SMTPat (can_be_split_into (res1 <*> res2) (res1,res2))] =
-  admit()
+  ()
 
 let star_can_be_split_into_parts' (res1 res2:resource)
   : Lemma (can_be_split_into (res1 <*> res2) (res2,res1))
@@ -201,12 +199,12 @@ let star_can_be_split_into_parts' (res1 res2:resource)
 let can_be_split_into_empty_left (res:resource)
   : Lemma (res `can_be_split_into` (empty_resource,res))
           [SMTPat (res `can_be_split_into` (empty_resource,res))] =
-  admit()
+  ()
 
 let can_be_split_into_empty_right (res:resource)
   : Lemma (res `can_be_split_into` (res,empty_resource))
           [SMTPat (res `can_be_split_into` (res,empty_resource))] =
-  admit()
+  ()
 
 let reveal_can_be_split_into ()
   : Lemma (forall outer inner delta .
@@ -246,12 +244,12 @@ let equal_refl (res:resource)
 let equal_symm (res1 res2:resource)
   : Lemma (requires (res1 `equal` res2))
           (ensures  (res2 `equal` res1)) =
-  admit()
+  ()
 
 let equal_trans (res1 res2 res3:resource)
   : Lemma (requires (res1 `equal` res2 /\ res2 `equal` res3))
           (ensures  (res1 `equal` res3)) =
-  admit()
+  ()
 
 (* Resources form a commutative monoid (up to `equal`) *)
 
@@ -265,23 +263,23 @@ let equal_comm_monoid_right_unit (res:resource)
 
 let equal_comm_monoid_commutativity (res1 res2:resource)
   : Lemma ((res1 <*> res2) `equal` (res2 <*> res1)) =
-  admit()
+  ()
 
 let equal_comm_monoid_associativity (res1 res2 res3:resource)
   : Lemma (((res1 <*> res2) <*> res3) `equal` (res1 <*> (res2 <*> res3))) =
   loc_union_assoc (as_loc (fp res1)) (as_loc (fp res2)) (as_loc (fp res3));
-  admit()
+  ()
 
 (* `equal` is also a congruence wrt (empty_resource,<*>) *)
 
 let equal_comm_monoid_cong (res1 res2 res3 res4:resource)
   : Lemma (requires (res1 `equal` res3 /\ res2 `equal` res4))
           (ensures  ((res1 <*> res2) `equal` (res3 <*> res4))) =
-  admit()
+  ()
 
 (* `can_be_split_into` follows from equality to `<*>` (called in frame resolution) *)
 
 let can_be_split_into_star (res1 res2 res3:resource)
   : Lemma (requires ((res2 <*> res3) `equal` res1))
           (ensures  (res1 `can_be_split_into` (res2,res3))) =
-  admit()
+  ()
