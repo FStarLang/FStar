@@ -9,9 +9,19 @@ module Par
     for the signature of {get,put,or}) and a specification monad (the weakest 
     precondition transformer monad for state and nondeterminism).
 
+    By the end, we will have parallel composition operator for (unary) RST:
+
+    val (<||>) (#a #b:Type) 
+               (#r0 #r1:resource) 
+               (#wp0:rst_w a r0)
+               (#wp1:rst_w b r1)
+               (c0:rst a r0 wp0)
+               (c1:rst b r1 wp1)
+             : RST (a & b) (r0 <*> r1) (fun p h -> wp0 p h /\ wp1 p h)
+
 *)
 
-// The computational monad (free monad for the signature of {get,put,or})
+// The computational monad (free monad for the signature of { get , put , or }).
 noeq 
 type m a = 
   | Ret : a -> m a
@@ -27,9 +37,8 @@ let rec map (#a:Type) (#b:Type) (f:a -> b) (c:m a) : Tot (m b) (decreases c) =
   | Put b n c -> Put b n (map f c)
   | Or c0 c1 -> Or (map f c0) (map f c1)
 
-// Direct definition of parallel composition as a combination
-// of mutually recursively defined left- and right-preferring 
-// parallel composition operators
+// Direct definition of parallel composition as a combination of two mutually
+// recursively defined left- and right-preferring parallel composition operators.
 val l_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %[c0;c1])
 val r_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %[c0;c1])
 
@@ -51,7 +60,7 @@ let m_par (#a #b:Type) (c0:m a) (c1:m b) =
   Or (l_par c0 c1) (r_par c0 c1)
 
 // A logically equivalent definition of parallel composition (at unit)
-// in terms of two unary effect handlers, based on G. Plotkin's slides
+// in terms of two unary effect handlers, based on G. Plotkin's slides.
 val r_par' (c0:m unit) (c1:m unit -> m unit) : m unit
 let rec r_par' c0 c1 = 
   match c0 with
@@ -77,13 +86,13 @@ let rec l_par' c0 c1 =
 let m_par' c0 c1 : m unit = 
   Or (l_par' c0 c1) (r_par' c1 (l_par' c0))
 
-// Memory is simply a pair of booleans
+// Memory is simply a pair of booleans.
 let mem = bool -> nat
 
-// The specification monad
+// The specification monad.
 let w a = (a -> mem -> prop) -> mem -> prop
 
-// The effect observation (mem-valued state with demonic nondeterminism)
+// The effect observation (mem-valued state with demonic nondeterminism).
 let rec theta #a (c:m a) : w a = 
   match c with
   | Ret x -> 
@@ -98,11 +107,11 @@ let rec theta #a (c:m a) : w a =
   | Or c0 c1 -> 
       fun p h -> theta c0 p h /\ theta c1 p h                   // demonic nondeterminism
 
-// The Dijkstra monad derived from the effect observation above
+// The Dijkstra monad derived from the effect observation above.
 let d (a:Type) (wp:w a) =
   c:m a{forall p h . wp p h ==> theta c p h}
 
-// Simple notion of resources (TODO: resource fp need to be extended to properly capture empty_resource)
+// Simple notion of resources (TODO: resource fp need to be extended to properly capture empty_resource).
 noeq
 type view_t a = {
   fp : option bool;
@@ -116,7 +125,7 @@ type resource = {
     view:view_t t
   }
 
-// Resource for a single location
+// Resource for a single location.
 let loc_resource b = 
   let fp = Some b in
   let inv h = True in
@@ -130,7 +139,7 @@ let loc_resource b =
     }
   }
 
-// Separating conjunction of two resources (TODO: resource fp need to be extended to properly capture empty_resource)
+// Separating conjunction of two resources (TODO: resource fp need to be extended to properly capture empty_resource).
 let xor a b = (a || b) && ((not a) || (not b))
 
 let (<*>) (r0 r1:resource) : resource = 
@@ -164,7 +173,7 @@ let rst (a:Type) (r:resource) (wp:rst_w a r) =
 let return (#a:Type) (#r:resource) (x:a) : rst a r (fun p h -> p x h) =
   Ret x
 
-// TODO: implement bind, restrict WPs to monotonic ones
+// TODO: implement bind, restrict WPs to monotonic predicate transformers
 
 let get b : rst nat (loc_resource b) (fun p h -> p (h b) h) =
   Get b (fun n -> Ret n)
@@ -173,9 +182,7 @@ let put b n : rst unit (loc_resource b) (fun p h -> p () (fun b' -> if b = b' th
   assert_norm (theta (Put b n (Ret ())) == (fun p h -> p () (fun b' -> if b = b' then n else h b')));
   Put b n (Ret ())
 
-// Parallel or splits resources up between the two threads.
-// It is implemented as considering all possible interleavings 
-// of the two threads (see the definition of m_par above).
+// Parallel composition that splits resources up between the two threads.
 let par (#a #b:Type) 
         (#r0 #r1:resource) 
         (#wp0:rst_w a r0)
@@ -185,7 +192,15 @@ let par (#a #b:Type)
       : rst (a & b) (r0 <*> r1) (fun p h -> wp0 p h /\ wp1 p h) =
   m_par c0 c1
 
-// Parallel composition based on G. Plotkin's reformulated definition
+let (<||>) (#a #b:Type) 
+           (#r0 #r1:resource) 
+           (#wp0:rst_w a r0)
+           (#wp1:rst_w b r1)
+           (c0:rst a r0 wp0)
+           (c1:rst b r1 wp1) = 
+  par c0 c1
+
+// Parallel composition based on G. Plotkin's reformulated definition.
 let par' (#r0 #r1:resource) 
         (#wp0:rst_w unit r0)
         (#wp1:rst_w unit r1)

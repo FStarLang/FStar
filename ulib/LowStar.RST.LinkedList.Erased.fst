@@ -161,11 +161,10 @@ let cons (#a:Type) (ptr:t a) (l:erased (list (cell a))) (hd:t a) (v:a)
   (fun _ -> slist hd (hide ({data = v; next = ptr} :: reveal l)))
   (fun _ -> True)
   (fun _ _ _ -> True) =
-  let new_cell = {data = v; next = ptr} in
   rst_frame 
     (dummy_cell hd <*> slist ptr l)
-    (fun _ -> pts_to hd (hide new_cell) <*> slist ptr l)
-    (fun _ -> set_dummy_cell hd new_cell)
+    (fun _ -> pts_to hd (hide ({data = v; next = ptr})) <*> slist ptr l)
+    (fun _ -> set_dummy_cell hd ({data = v; next = ptr}))
 
 let cons_alloc (#a:Type) (ptr:t a) (l:erased (list (cell a))) (v:a)
   : RST (t a)
@@ -173,13 +172,10 @@ let cons_alloc (#a:Type) (ptr:t a) (l:erased (list (cell a))) (v:a)
   (fun ptr' -> slist ptr' (hide ({data = v; next = ptr} :: (reveal l))))
   (fun _ -> True)
   (fun _ _ _ -> True) =
-  let new_cell = {data = v; next = ptr} in
-  let new_head = rst_frame 
+  rst_frame 
     (slist ptr l)
-    (fun ret -> pts_to ret (hide new_cell) <*> slist ptr l)
-    (fun _ -> cell_alloc new_cell)
-  in
-  new_head
+    (fun ret -> pts_to ret (hide ({data = v; next = ptr})) <*> slist ptr l)
+    (fun _ -> cell_alloc ({data = v; next = ptr}))
 
 (* Similarly, we provide two versions of uncons. 
    The second deallocates the node currently in head position, while the first
