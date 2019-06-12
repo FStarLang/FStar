@@ -1064,7 +1064,7 @@ let lemma_lognot_value_zero #n a =
     lognot a;
   }
 
-#set-options "--z3rlimit 50"
+#set-options "--z3rlimit 75"
 private
 val lemma_mod_variation: #n:pos -> a:uint_t n ->
   Lemma (a <> 0 ==> ((-a) % pow2 n) - 1 % pow2 n = (((-a) % pow2 n) - 1) % pow2 n)
