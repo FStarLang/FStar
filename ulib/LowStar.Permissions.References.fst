@@ -108,7 +108,7 @@ let loc_union_idem_1
   (s1 s2: loc)
 : Lemma
   (loc_union s1 (loc_union s1 s2) == loc_union s1 s2)
-  [SMTPat (loc_union s1 (loc_union s1 s2) == loc_union s1 s2)]
+  [SMTPat (loc_union s1 (loc_union s1 s2))]
 = loc_union_assoc s1 s1 s2
 
 let loc_union_idem_2
@@ -521,14 +521,107 @@ let fresh_frame_loc_not_unused_in_disjoint
   [SMTPat (HS.fresh_frame h0 h1)]
 = not_live_region_loc_not_unused_in_disjoint cls h0 (HS.get_tip h1)
 
-(*
-let live_loc_not_unused_in (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem)
-  :Lemma (requires (live h b))
-         (ensures  (loc_not_unused_in h `loc_includes` loc_addr_of_buffer b))
-         [SMTPat (live h b)]
-= live_loc_not
+let mreference_live_loc_not_unused_in
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (h `HS.contains` r))
+  (ensures (loc_not_unused_in cls h `loc_includes` loc_freed_mreference r /\ loc_not_unused_in cls h `loc_includes` loc_mreference r))
+  [SMTPatOr [
+    [SMTPat (HS.contains h r)];
+    [SMTPat (loc_not_unused_in cls h `loc_includes` loc_mreference r)];
+    [SMTPat (loc_not_unused_in cls h `loc_includes` loc_freed_mreference r)];
+  ]]
+= mreference_live_loc_not_unused_in cls h r
 
-val unused_in_loc_unused_in (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem)
-  :Lemma (requires (unused_in b h))
-         (ensures  (loc_unused_in h `loc_includes` loc_addr_of_buffer b))
-         [SMTPat (unused_in b h)]
+let mreference_unused_in_loc_unused_in
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (r `HS.unused_in` h))
+  (ensures (loc_unused_in cls h `loc_includes` loc_freed_mreference r /\ loc_unused_in cls h `loc_includes` loc_mreference r))
+  [SMTPatOr [
+    [SMTPat (HS.unused_in r h)];
+    [SMTPat (loc_unused_in cls h `loc_includes` loc_mreference r)];
+    [SMTPat (loc_unused_in cls h `loc_includes` loc_freed_mreference r)];
+  ]]
+= mreference_unused_in_loc_unused_in cls h r
+
+let unused_in_not_unused_in_disjoint_2
+  (l1 l2 l1' l2': loc)
+  (h: HS.mem)
+: Lemma
+  (requires (loc_unused_in _ h `loc_includes` l1 /\ loc_not_unused_in _ h `loc_includes` l2 /\ l1 `loc_includes` l1' /\ l2 `loc_includes` l2' ))
+  (ensures (loc_disjoint l1'  l2' ))
+  [SMTPat (loc_disjoint l1' l2'); SMTPat (loc_unused_in _ h `loc_includes` l1); SMTPat (loc_not_unused_in _ h `loc_includes` l2)]
+= loc_includes_trans (loc_unused_in _ h) l1 l1' ;
+  loc_includes_trans (loc_not_unused_in _ h) l2 l2'  ;
+  loc_unused_in_not_unused_in_disjoint cls h ;
+  loc_disjoint_includes (loc_unused_in _ h) (loc_not_unused_in _ h) l1' l2'
+
+let modifies_loc_unused_in
+  (l: loc)
+  (h1 h2: HS.mem)
+  (l' : loc)
+: Lemma
+  (requires (
+    modifies l h1 h2 /\
+    address_liveness_insensitive_locs _ `loc_includes` l /\
+    loc_unused_in _ h2 `loc_includes` l'
+  ))
+  (ensures (loc_unused_in _ h1 `loc_includes` l'))
+  [SMTPatOr [
+    [SMTPat (modifies l h1 h2); SMTPat (loc_unused_in _ h2 `loc_includes` l')];
+    [SMTPat (modifies l h1 h2); SMTPat (loc_unused_in _ h1 `loc_includes` l')];
+  ]]
+= 
+  modifies_loc_includes (address_liveness_insensitive_locs _) h1 h2 l;
+  modifies_address_liveness_insensitive_unused_in cls h1 h2;
+  loc_includes_trans (loc_unused_in _ h1) (loc_unused_in _ h2) l'
+
+let fresh_loc (l: loc) (h h' : HS.mem) : GTot Type0 =
+  loc_unused_in _ h `loc_includes` l /\
+  loc_not_unused_in _ h' `loc_includes` l
+
+let ralloc_post_fresh_loc (#a:Type) (#rel:Preorder.preorder a) (i: HS.rid) (init:a) (m0: HS.mem)
+                       (x: HST.mreference a rel{HS.is_eternal_region (HS.frameOf x)}) (m1: HS.mem) : Lemma
+    (requires (HST.ralloc_post i init m0 x m1))
+    (ensures (fresh_loc (loc_freed_mreference x) m0 m1))
+    [SMTPat (HST.ralloc_post i init m0 x m1)]
+=  ()
+
+//AR: this is needed for liveness across fresh_frame
+let fresh_frame_modifies (h0 h1: HS.mem) : Lemma
+  (requires (HS.fresh_frame h0 h1))
+  (ensures  (modifies #_ #cls loc_none h0 h1))
+  [SMTPat (HS.fresh_frame h0 h1)]
+= fresh_frame_modifies cls h0 h1
+
+let popped_modifies (h0 h1: HS.mem) : Lemma
+  (requires (HS.popped h0 h1))
+  (ensures  (modifies #_ #cls (loc_region_only false (HS.get_tip h0)) h0 h1))
+  [SMTPat (HS.popped h0 h1)]
+= popped_modifies cls h0 h1
+
+let modifies_remove_new_locs (l_fresh l_aux l_goal:loc) (h1 h2 h3:HS.mem)
+  : Lemma (requires (fresh_loc l_fresh h1 h2 /\
+                     modifies l_aux h1 h2 /\
+		     l_goal `loc_includes` l_aux /\
+                     modifies (loc_union l_fresh l_goal) h2 h3))
+          (ensures  (modifies l_goal h1 h3))
+	  [SMTPat (fresh_loc l_fresh h1 h2);
+	   SMTPat (modifies l_aux h1 h2);
+	   SMTPat (modifies l_goal h1 h3)]
+= modifies_only_not_unused_in l_goal h1 h3
+
+let modifies_remove_fresh_frame (h1 h2 h3:HS.mem) (l:loc)
+  : Lemma (requires (HS.fresh_frame h1 h2 /\
+                     modifies (loc_union (loc_all_regions_from false (HS.get_tip h2)) l) h2 h3))
+          (ensures  (modifies l h1 h3))
+	  [SMTPat (modifies l h1 h3); SMTPat (HS.fresh_frame h1 h2)]
+  = loc_regions_unused_in cls h1 (HS.mod_set (Set.singleton (HS.get_tip h2)));
+    modifies_only_not_unused_in l h1 h3
