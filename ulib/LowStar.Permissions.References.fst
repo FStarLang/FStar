@@ -14,6 +14,14 @@ type value_with_perms (a: Type0) = vp : (a & Ghost.erased (perms_rec a)){
   forall (pid:live_pid (Ghost.reveal p)). get_snapshot_from_pid (Ghost.reveal p) pid == v
 }
 
+let same_value_with_perms_implies_equal_types
+ (a1: Type0)
+ (a2: Type0)
+ (vp1: value_with_perms a1)
+ (vp2: value_with_perms a2)
+ : Lemma (vp1 === vp2 ==> a1 == a2)
+ = ()
+
 type with_perm (a: Type) = {
   wp_v: a;
   wp_perm: permission
@@ -23,6 +31,7 @@ noeq type pointer (a: Type0) = {
   ptr_v: HST.reference (value_with_perms a);
   ptr_pid: Ghost.erased perm_id
 }
+
 
 let frame_of_pointer (#a: Type0) (ptr: pointer a) : HS.rid =
   HS.frameOf ptr.ptr_v
@@ -41,6 +50,21 @@ let pointer_live (#a: Type0) (ptr: pointer a) (h: HS.mem) =
   a_with_perm.wp_perm >. 0.0R /\ HS.contains h ptr.ptr_v
 
 
+let live_same_pointers_equal_types
+  (a1: Type0)
+  (a2: Type0)
+  (ptr1: pointer a1)
+  (ptr2: pointer a2)
+  (h: HS.mem)
+  : Lemma (requires (
+     frame_of_pointer ptr1 == frame_of_pointer ptr2 /\
+     pointer_as_addr ptr1 == pointer_as_addr ptr2 /\
+     pointer_live ptr1 h /\ pointer_live ptr2 h))
+   (ensures (a1 == a2 /\ HS.sel h ptr1.ptr_v == HS.sel h ptr2.ptr_v))
+  =
+  Heap.lemma_distinct_addrs_distinct_preorders ();
+  Heap.lemma_distinct_addrs_distinct_mm ()
+
 type ploc_ (region: HS.rid) (addr: nat) = perm_id
 
 type ploc (region: HS.rid) (addr: nat) = Ghost.erased (ploc_ region addr)
@@ -54,19 +78,12 @@ let ploc_disjoint  (#r: HS.rid) (#a: nat) (ploc1 ploc2: ploc r a) =
 let ploc_preserved  (#r: HS.rid) (#a: nat) (ploc: ploc r a) (h0 h1: HS.mem) =
   forall (t: Type0) (ptr: pointer t) .
   let pid = Ghost.reveal ptr.ptr_pid in
-  let (_, vp0) = HS.sel h0 ptr.ptr_v in
-  let vp0 = Ghost.reveal vp0 in
-  let (_, vp1) = HS.sel h1 ptr.ptr_v in
-  let vp1 = Ghost.reveal vp1 in
-  begin
-    (pointer_live ptr h0 /\
-    HS.frameOf ptr.ptr_v == r /\ HS.as_addr ptr.ptr_v == a /\ (Ghost.reveal ploc) == pid)
-    ==> begin
-      get_permission_from_pid vp0 pid == get_permission_from_pid vp1 pid /\
-      get_snapshot_from_pid vp0 pid == get_snapshot_from_pid vp1 pid /\
-      pointer_live ptr h1
-    end
-  end
+  (pointer_live ptr h0 /\
+    frame_of_pointer ptr == r /\
+    pointer_as_addr ptr == a /\
+    (Ghost.reveal ploc) == pid) ==>
+  (sel h0 ptr == sel h1 ptr /\
+      pointer_live ptr h1)
 
 open FStar.ModifiesGen
 
@@ -117,8 +134,10 @@ let modifies_pointer_elim
     pointer_live ptr h'
   ))
   [SMTPatOr [
-    [ SMTPat (modifies p h h'); SMTPat (sel h ptr) ] ;
-    [ SMTPat (modifies p h h'); SMTPat (sel h' ptr) ]
+    [ SMTPat (modifies p h h'); SMTPat (sel h ptr) ];
+    [ SMTPat (modifies p h h'); SMTPat (pointer_live ptr h) ];
+    [ SMTPat (modifies p h h'); SMTPat (sel h' ptr) ];
+    [ SMTPat (modifies p h h'); SMTPat (pointer_live ptr h') ];
   ]] =
   MG.modifies_aloc_elim
         #_ #cls
