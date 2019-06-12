@@ -282,5 +282,3 @@ let init_index_ (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a)) (j: 
 let lemma_equal_instances_implies_equal_types ()
   :Lemma (forall (a:Type) (b:Type) (s1:seq a) (s2:seq b). s1 === s2 ==> a == b)
   = ()
-
-
