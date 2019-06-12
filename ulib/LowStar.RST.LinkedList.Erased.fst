@@ -162,7 +162,6 @@ let cons (#a:Type) (ptr:t a) (l:erased (list (cell a))) (hd:t a) (v:a)
   (fun _ -> True)
   (fun _ _ _ -> True) =
   let new_cell = {data = v; next = ptr} in
-  //let r = slist ptr l in                                        //TODO: tactics vs GTot (erased a) <: Tot (erased a)
   rst_frame 
     (dummy_cell hd <*> slist ptr l)
     (fun _ -> pts_to hd (hide new_cell) <*> slist ptr l)
@@ -175,10 +174,9 @@ let cons_alloc (#a:Type) (ptr:t a) (l:erased (list (cell a))) (v:a)
   (fun _ -> True)
   (fun _ _ _ -> True) =
   let new_cell = {data = v; next = ptr} in
-  let r = slist ptr l in                                        //TODO: tactics vs GTot (erased a) <: Tot (erased a)
   let new_head = rst_frame 
-    r
-    (fun ret -> pts_to ret (hide new_cell) <*> r)
+    (slist ptr l)
+    (fun ret -> pts_to ret (hide new_cell) <*> slist ptr l)
     (fun _ -> cell_alloc new_cell)
   in
   new_head
@@ -198,7 +196,7 @@ let uncons (#a:Type) (ptr:t a) (l:erased (list (cell a)){Cons? (reveal l)})
   let node = !* ptr in
   let next = node.next in
   ptr, next
- 
+
 let uncons_dealloc (#a:Type) (ptr:t a) (l:erased (list (cell a)){Cons? (reveal l)})
   : RST (t a)
         (slist ptr l)
@@ -209,11 +207,10 @@ let uncons_dealloc (#a:Type) (ptr:t a) (l:erased (list (cell a)){Cons? (reveal l
   reveal_view ();
   let node = !* ptr in
   let next = node.next in
-  let c = (hide (L.hd (reveal l))) in                  //TODO: tactics vs GTot (erased a) <: Tot (erased a)
-  let r = slist next (hide (L.tl (reveal l))) in       //TODO: tactics vs GTot (erased a) <: Tot (erased a)
+  let c = (hide (L.hd (reveal l))) in                  //TODO: investigate the need for this let
   rst_frame 
-    (pts_to ptr c <*> r)
-    (fun _ -> r)
+    (pts_to ptr c <*> slist next (hide (L.tl (reveal l))))
+    (fun _ -> slist next (hide (L.tl (reveal l))))
     (fun _ -> cell_free ptr c);
   next
 
@@ -231,10 +228,9 @@ let rec map #a f ptr l =
     let node = !*ptr in
     let next = node.next in
     let l_tl = hide (L.tl (reveal l)) in
-    let r = slist next l_tl in                                        //TODO: tactics vs GTot (erased a) <: Tot (erased a)
     rst_frame 
-      (pts_to ptr (hide node) <*> r)
-      (fun _ -> pts_to ptr (hide ({node with data = f node.data})) <*> r)
+      (pts_to ptr (hide node) <*> slist next l_tl)
+      (fun _ -> pts_to ptr (hide ({node with data = f node.data})) <*> slist next l_tl)
       (fun _ -> set_cell ptr node (f node.data));
     // otherwise resolve_delta in rst_frame below fails with a
     // universe mismatch error; the error seems to be stemming
