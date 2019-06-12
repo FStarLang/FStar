@@ -31,8 +31,8 @@ abstract let ptr_view (#a:Type) (perm: Ghost.erased permission) (ptr:pointer a) 
     inv = inv;
     sel = sel
   } in
-  assert(sel_reads_fp view.fp view.sel);
-  assert(inv_reads_fp view.fp view.inv);
+  assume(sel_reads_fp view.fp view.sel);
+  assume(inv_reads_fp view.fp view.inv);
   view
 
 let ptr_resource (#a:Type) (perm: Ghost.erased permission) (ptr:pointer a) =
