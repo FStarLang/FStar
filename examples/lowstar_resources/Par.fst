@@ -77,7 +77,7 @@ and r_par #a #b c0 c1 =
   | Put b n c1' -> Put b n (Or (l_par c0 c1') (r_par c0 c1'))
   | Or c1' c1'' -> Or (r_par c0 c1') (r_par c0 c1'')
 
-let m_par (#a #b:Type) (c0:m a) (c1:m b) = 
+let m_par (#a #b:Type0) (c0:m a) (c1:m b) = 
   Or (l_par c0 c1) (r_par c0 c1)
 
 // A logically equivalent definition of parallel composition (at unit)
@@ -222,7 +222,7 @@ let rst (a:Type) (r:resource) (wp:rst_w a r) =
 let return (#a:Type) (#r:resource) (x:a) : rst a r (fun h p -> p x h) =
   Ret x
 
-let bind (#a #b:Type) 
+let bind (#a:Type) (#b:Type) 
          (#r:resource) 
          (#wp0:rst_w a r) 
          (#wp1:a -> rst_w b r)
@@ -252,18 +252,25 @@ let lemma_modifies_star_right (r0 r1:resource) (h h':mem)
   ()
 
 // Parallel composition that splits the given resource up between the two threads.
-val par (#a #b:Type) 
+val par (#a:Type0) (#b:Type0) 
         (#r0 #r1:resource) 
         (#wp0:rst_w a r0)
         (#wp1:rst_w b r1)
         (c0:rst a r0 wp0)
-        (c1:rst b r1 wp1) 
+        (c1:rst b r1 wp1)
       : rst (a & b) (r0 <*> r1) (fun h p -> 
                                   wp0 h (fun x h' -> wp1 h' (fun y h'' -> p (x,y) h'')) /\ 
                                   wp1 h (fun y h' -> wp0 h' (fun x h'' -> p (x,y) h''))) 
 
 // Having earlier found a bug in the definition of `<*>` above, 
-// this definition of parallel composition currently fails.
+// this definition of parallel composition currently fails.  
+//
+// My guess is that we need some additional lemmas about the  
+// interaction of theta, and `l_par`, `r_par`, and `m_par` (or 
+// define `l_par`, `r_par`, and `m_par` here directly with suitable 
+// RST effect types). To this end, we might also need to refine the
+// definition of `rst_w` to only contain WPs that are commutative   
+// when their resources are disjoint (such as separated by `<*>`).
 [@expect_failure]
 let par #a #b #r0 #r1 #wp0 #wp1 c0 c1 =
-  m_par c0 c1
+  m_par #a #b c0 c1
