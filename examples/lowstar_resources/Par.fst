@@ -12,7 +12,6 @@ module Par
 *)
 
 // The computational monad (free monad for the signature of {get,put,or})
-
 noeq 
 type m a = 
   | Ret : a -> m a
@@ -20,9 +19,7 @@ type m a =
   | Put : bool -> nat -> m a -> m a
   | Or  : m a -> m a -> m a
 
-(*
-// The naive mutually recursive definition of parallel composition, which is not properly recursive 
-*)
+// Functoriality of m
 let rec map (#a:Type) (#b:Type) (f:a -> b) (c:m a) : Tot (m b) (decreases c) =
   match c with
   | Ret x -> Ret (f x)
@@ -30,6 +27,9 @@ let rec map (#a:Type) (#b:Type) (f:a -> b) (c:m a) : Tot (m b) (decreases c) =
   | Put b n c -> Put b n (map f c)
   | Or c0 c1 -> Or (map f c0) (map f c1)
 
+// Direct definition of parallel composition as a combination
+// of mutually recursively defined left- and right-preferring 
+// parallel composition operators
 val l_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %[c0;c1])
 val r_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %[c0;c1])
 
@@ -45,10 +45,13 @@ and r_par #a #b c0 c1 =
   | Ret y -> map (fun x -> (x,y)) c0
   | Get b c1' -> Get b (fun n -> FStar.WellFounded.axiom1 c1' n; Or (l_par c0 (c1' n)) (r_par c0 (c1' n)))
   | Put b n c1' -> Put b n (Or (l_par c0 c1') (r_par c0 c1'))
-  | Or c1' c1'' -> Or (l_par c0 c1') (l_par c0 c1'')
+  | Or c1' c1'' -> Or (r_par c0 c1') (r_par c0 c1'')
 
+let m_par (#a #b:Type) (c0:m a) (c1:m b) = 
+  Or (l_par c0 c1) (r_par c0 c1)
 
-// The logically equivalent definition of parallel composition, based on G. Plotkin's slides
+// A logically equivalent definition of parallel composition (at unit)
+// in terms of two unary effect handlers, based on G. Plotkin's slides
 val r_par' (c0:m unit) (c1:m unit -> m unit) : m unit
 let rec r_par' c0 c1 = 
   match c0 with
@@ -71,7 +74,7 @@ let rec l_par' c0 c1 =
   | Put b n c0' -> Put b n (Or (l_par' c0' c1) (r_par' c1 (l_par' c0')))
   | Or c0' c0'' -> Or (l_par' c0' c1) (l_par' c0'' c1)
 
-let m_par c0 c1 : m unit = 
+let m_par' c0 c1 : m unit = 
   Or (l_par' c0 c1) (r_par' c1 (l_par' c0))
 
 // Memory is simply a pair of booleans
@@ -161,7 +164,7 @@ let rst (a:Type) (r:resource) (wp:rst_w a r) =
 let return (#a:Type) (#r:resource) (x:a) : rst a r (fun p h -> p x h) =
   Ret x
 
-//TODO: implement bind, restrict WPs to monotonic ones
+// TODO: implement bind, restrict WPs to monotonic ones
 
 let get b : rst nat (loc_resource b) (fun p h -> p (h b) h) =
   Get b (fun n -> Ret n)
@@ -173,10 +176,20 @@ let put b n : rst unit (loc_resource b) (fun p h -> p () (fun b' -> if b = b' th
 // Parallel or splits resources up between the two threads.
 // It is implemented as considering all possible interleavings 
 // of the two threads (see the definition of m_par above).
-let par (#r0 #r1:resource) 
+let par (#a #b:Type) 
+        (#r0 #r1:resource) 
+        (#wp0:rst_w a r0)
+        (#wp1:rst_w b r1)
+        (c0:rst a r0 wp0)
+        (c1:rst b r1 wp1)
+      : rst (a & b) (r0 <*> r1) (fun p h -> wp0 p h /\ wp1 p h) =
+  m_par c0 c1
+
+// Parallel composition based on G. Plotkin's reformulated definition
+let par' (#r0 #r1:resource) 
         (#wp0:rst_w unit r0)
         (#wp1:rst_w unit r1)
         (c0:rst unit r0 wp0)
         (c1:rst unit r1 wp1)
       : rst unit (r0 <*> r1) (fun p h -> wp0 p h /\ wp1 p h) =
-  m_par c0 c1
+  m_par' c0 c1

@@ -162,10 +162,10 @@ let cons (#a:Type) (ptr:t a) (l:erased (list (cell a))) (hd:t a) (v:a)
   (fun _ -> True)
   (fun _ _ _ -> True) =
   let new_cell = {data = v; next = ptr} in
-  let r = slist ptr l in                                        //TODO: tactics vs GTot (erased a) <: Tot (erased a)
+  //let r = slist ptr l in                                        //TODO: tactics vs GTot (erased a) <: Tot (erased a)
   rst_frame 
-    (dummy_cell hd <*> r)
-    (fun _ -> pts_to hd (hide new_cell) <*> r)
+    (dummy_cell hd <*> slist ptr l)
+    (fun _ -> pts_to hd (hide new_cell) <*> slist ptr l)
     (fun _ -> set_dummy_cell hd new_cell)
 
 let cons_alloc (#a:Type) (ptr:t a) (l:erased (list (cell a))) (v:a)
