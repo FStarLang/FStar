@@ -18,6 +18,7 @@
     "CIBuildTarget" : "fstar-docs",
     "NightlyBuildTarget" : "fstar-docs",
     "HasLogsToExtract" : true,
+    "HasQueryStats" : false,
 
     "NotificationEnabled" : true,
     "NotificationChannel" : "#fstar-build",

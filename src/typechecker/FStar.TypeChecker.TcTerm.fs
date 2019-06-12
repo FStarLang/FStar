@@ -2864,6 +2864,7 @@ let type_of_tot_term env e =
     let t, c, g =
         try tc_tot_or_gtot_term env e
         with Error(e, msg, _) -> raise_error (e, msg) (Env.get_range env) in
+    let c = N.ghost_to_pure_lcomp env c in
     if U.is_total_lcomp c
     then t, c.res_typ, g
     else raise_error (Errors.Fatal_UnexpectedImplictArgument, (BU.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e))) (Env.get_range env)

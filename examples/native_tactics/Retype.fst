@@ -61,4 +61,4 @@ let tau () : Tac unit =
         fail "should be impossible"
 
 let _ =
-    assert_by_tactic (True ==> True ==> True ==> p ==> q) tau
+    assert (True ==> True ==> True ==> p ==> q) by tau ()
