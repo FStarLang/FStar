@@ -212,6 +212,7 @@ let imem (inv:mem -> Type0) = h:mem{inv h}
 
 let rst_w (a:Type) (r:resource) = h:imem r.view.inv -> (a -> h':imem r.view.inv{modifies r.view.fp h h'} -> Type0) -> Type0
 
+
 let rst (a:Type) (r:resource) (wp:rst_w a r) =
   d a (fun p h -> 
          r.view.inv h /\ 
@@ -258,10 +259,10 @@ val par (#a #b:Type)
         (c0:rst a r0 wp0)
         (c1:rst b r1 wp1) 
       : rst (a & b) (r0 <*> r1) (fun h p -> 
-                                  wp0 h (fun x h' -> exists y . p (x,y) h') /\ 
-                                  wp1 h (fun y h' -> exists x . p (x,y) h')) 
+                                  wp0 h (fun x h' -> wp1 h' (fun y h'' -> p (x,y) h'')) /\ 
+                                  wp1 h (fun y h' -> wp0 h' (fun x h'' -> p (x,y) h''))) 
 
-// Having earliuer found a bug in the definition of `<*>` above, 
+// Having earlier found a bug in the definition of `<*>` above, 
 // this definition of parallel composition currently fails.
 [@expect_failure]
 let par #a #b #r0 #r1 #wp0 #wp1 c0 c1 =
