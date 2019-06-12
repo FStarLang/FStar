@@ -119,6 +119,14 @@ let m_par' c0 c1 : m unit =
 // For this example sketch, memory is simply a pair of booleans.
 let mem = bool -> nat
 
+let upd (b:bool) (n:nat) (h:mem) : mem = 
+  fun b' -> if b = b' then n else h b'
+
+let modifies (fp:option bool) (h0 h1:mem) = 
+  match fp with
+  | None -> True
+  | Some b -> h0 (not b) == h1 (not b)
+
 // The specification monad `w` (omitting its return, bind, etc operations).
 let w a = (a -> mem -> Type0) -> mem -> Type0
 
@@ -133,7 +141,7 @@ let rec theta #a (c:m a) : w a =
         theta (c (h b)) p h
   | Put b n c -> 
       fun p h ->
-        theta c p (fun b' -> if b = b' then n else h b')
+        theta c p (upd b n h) //(fun b' -> if b = b' then n else h b')
   | Or c0 c1 -> 
       fun p h -> theta c0 p h /\ theta c1 p h                   // demonic nondeterminism
 
@@ -144,6 +152,11 @@ let d (a:Type) (wp:w a) =
   c:m a{forall p h . wp p h ==> theta c p h}
 
 // Simple variant of our notion of resources.
+let inv_reads_fp (fp:option bool) (inv:mem -> Type0) =
+  match fp with 
+  | None -> True
+  | Some b -> forall h h' . inv h /\ modifies (Some (not b)) h h' ==> inv h'
+
 noeq
 type view_t a = {
   fp : option bool; (* none denotes owning both locations, TODO: account properly for owning neither location *)
@@ -151,10 +164,13 @@ type view_t a = {
   sel : mem -> a
 }
 
+let view_t_refined a = 
+  view:view_t a{inv_reads_fp view.fp view.inv}
+
 noeq 
 type resource = { 
     t:Type0;
-    view:view_t t
+    view:view_t_refined t
   }
 
 // Resource for a single location.
@@ -194,72 +210,59 @@ let (<*>) (r0 r1:resource) : resource =
 // The (unary) RST effect is defined on top of the Dijkstra monad derived above.
 let imem (inv:mem -> Type0) = h:mem{inv h}
 
-let rst_w (a:Type) (r:resource) = (a -> imem r.view.inv -> Type0) -> imem r.view.inv -> Type0
+let rst_w (a:Type) (r:resource) = h:imem r.view.inv -> (a -> h':imem r.view.inv{modifies r.view.fp h h'} -> Type0) -> Type0
 
 let rst (a:Type) (r:resource) (wp:rst_w a r) =
   d a (fun p h -> 
          r.view.inv h /\ 
-         wp (fun x h' -> r.view.inv h' ==> p x h') h)
+         wp h (fun x h' -> r.view.inv h' /\ modifies r.view.fp h h' ==> p x h'))
 
 // The RST effect comes with expected operations.
-let return (#a:Type) (#r:resource) (x:a) : rst a r (fun p h -> p x h) =
+let return (#a:Type) (#r:resource) (x:a) : rst a r (fun h p -> p x h) =
   Ret x
 
-// TODO: implement bind, restrict WPs to monotonic predicate transformers
+let bind (#a #b:Type) 
+         (#r:resource) 
+         (#wp0:rst_w a r) 
+         (#wp1:a -> rst_w b r)
+         (c0:rst a r wp0)
+         (c1:(x:a -> rst b r (wp1 x)))
+       : rst b r (fun h p -> wp0 h (fun x h' -> wp1 x h' p)) = 
+  admit ()     // TODO: implement bind, likely need to restrict `rst_w` to monotonic predicate transformers
 
-let get b : rst nat (loc_resource b) (fun p h -> p (h b) h) =
+let get b : rst nat (loc_resource b) (fun h p -> p (h b) h) =
   Get b (fun n -> Ret n)
 
-let put b n : rst unit (loc_resource b) (fun p h -> p () (fun b' -> if b = b' then n else h b')) =
-  assert_norm (theta (Put b n (Ret ())) == (fun p h -> p () (fun b' -> if b = b' then n else h b')));
+let put b n : rst unit (loc_resource b) (fun h p -> p () (upd b n h)) =
   Put b n (Ret ())
 
 
-// Parallel composition that splits resources up between the two threads.
-// Simplified variant of the general situation by discarding return values.
-//
-// Having found a bug in the definition of `<*>` above, this definition  
-// currently fails. The immediate problem being that `p` in the specification  
-// expects to work on a heap satisfying `inv (r0 <*> r1)` but it is getting 
-// only a heap satisfying either `inv r0` or `inv r1` from `wp0` and `wp1`.
-//
-// First thoughts are that we probably need to verify this definition by 
-// induction/recutsion on the commands, mimicking the definition of m_par.
-//
-// In the worse case, we might also need to "interleave" the WPs somehow.
-[@expect_failure]
-let par (#r0 #r1:resource) 
-        (#wp0:rst_w unit r0)
-        (#wp1:rst_w unit r1)
-        (c0:rst unit r0 wp0)
-        (c1:rst unit r1 wp1)
-      : rst unit (r0 <*> r1) (fun p h -> wp0 p h /\ wp1 p h) =
-  let _ = m_par c0 c1 in 
-  return #unit #(r0 <*> r1) ()
+// Some lemmas about the expected behaviour of framing resource invariants across modifies.
+// Not being able to prove these results before lead to the non-verification of the spec of `||` .
 
-// This variant fails similarly to the above simplified version, but 
-// with `wp0` and `wp1` giving only one of the return values instead 
-// of a pair of return values. Possibly quantifying over the other 
-// return value could be a solution, but we first need to fix the 
-// above simplified problem before investigating this one.
+let lemma_modifies_star_left (r0 r1:resource) (h h':mem)
+  : Lemma (requires ((r0 <*> r1).view.inv h /\ modifies r0.view.fp h h' /\ r0.view.inv h'))
+          (ensures  ((r0 <*> r1).view.inv h')) = 
+  ()
+
+let lemma_modifies_star_right (r0 r1:resource) (h h':mem)
+  : Lemma (requires ((r0 <*> r1).view.inv h /\ modifies r1.view.fp h h' /\ r1.view.inv h'))
+          (ensures  ((r0 <*> r1).view.inv h')) = 
+  ()
+
+// Parallel composition that splits the given resource up between the two threads.
+val par (#a #b:Type) 
+        (#r0 #r1:resource) 
+        (#wp0:rst_w a r0)
+        (#wp1:rst_w b r1)
+        (c0:rst a r0 wp0)
+        (c1:rst b r1 wp1) 
+      : rst (a & b) (r0 <*> r1) (fun h p -> 
+                                  wp0 h (fun x h' -> exists y . p (x,y) h') /\ 
+                                  wp1 h (fun y h' -> exists x . p (x,y) h')) 
+
+// Having earliuer found a bug in the definition of `<*>` above, 
+// this definition of parallel composition currently fails.
 [@expect_failure]
-let par' (#a #b:Type) 
-         (#r0 #r1:resource) 
-         (#wp0:rst_w a r0)
-         (#wp1:rst_w b r1)
-         (c0:rst a r0 wp0)
-         (c1:rst b r1 wp1) 
-       : rst (a & b) (r0 <*> r1) (fun p h -> wp0 p h /\ wp1 p h) = 
+let par #a #b #r0 #r1 #wp0 #wp1 c0 c1 =
   m_par c0 c1
-
-// Parallel composition based on G. Plotkin's reformulated definition.
-//
-// Currently fails (to verify the spec) similarly to the other two definitions above.
-[@expect_failure]
-let par'' (#r0 #r1:resource) 
-        (#wp0:rst_w unit r0)
-        (#wp1:rst_w unit r1)
-        (c0:rst unit r0 wp0)
-        (c1:rst unit r1 wp1)
-      : rst unit (r0 <*> r1) (fun p h -> wp0 p h /\ wp1 p h) =
-  m_par' c0 c1
