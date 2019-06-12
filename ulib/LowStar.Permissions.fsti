@@ -29,25 +29,25 @@ type permission = r:real{r >=. 0.0R /\ r <=. 1.0R}
 
 /// A permission value of 0 means that the resource is not live. It is live, and can be read, as long as the permission is
 /// strictly positive.
-let allows_read (p: Ghost.erased permission) : GTot bool =
-  Ghost.reveal p >. 0.0R
+let allows_read (p: permission) : Tot bool =
+  p >. 0.0R
 
 /// A full permission (of value 1) is required for writing to the resource.
-let allows_write (p: Ghost.erased permission) : GTot bool =
-  Ghost.reveal p = 1.0R
+let allows_write (p: permission) : Tot bool =
+  p = 1.0R
 
 /// The common way to share a permission is to halve its value.
-let half_permission (p: Ghost.erased permission) : GTot (Ghost.erased permission) =
-  Ghost.hide (Ghost.reveal p /. 2.0R)
+let half_permission (p: permission) : Tot (permission) =
+  p /. 2.0R
 
 /// When merging resources, you have to sum the permissions.
-let summable_permissions (p1: Ghost.erased permission) (p2: Ghost.erased permission)
-  : GTot bool =
-  Ghost.reveal p1 +. Ghost.reveal p2 <=. 1.0R
+let summable_permissions (p1: permission) (p2: permission)
+  : Tot bool =
+   p1 +. p2 <=. 1.0R
 
-let sum_permissions (p1: Ghost.erased permission) (p2: Ghost.erased permission{Ghost.reveal p1 +. Ghost.reveal p2 <=. 1.0R})
-  : GTot (Ghost.erased permission) =
-  Ghost.hide (Ghost.reveal p1 +. Ghost.reveal p2)
+let sum_permissions (p1: permission) (p2: permission{p1 +. p2 <=. 1.0R})
+  : Tot (permission) =
+  (p1 +.  p2)
 
 /// On top of the permission as a number, we define a view defining what you can actually do with the resource given its
 /// permission and a flag signalling if you are its owner.
@@ -101,7 +101,7 @@ val get_snapshot_from_pid: #a: Type0 -> p: perms_rec a -> pid: perm_id -> GTot a
 
 val is_fully_owned: #a: Type0 -> p: perms_rec a -> GTot bool
 
-let get_perm_kind_from_pid (#a: Type0) (#v: a) (perms: perms_rec a) (pid: perm_id) : GTot permission_kind =
+let get_perm_kind_from_pid (#a: Type0) (perms: perms_rec a) (pid: perm_id) : GTot permission_kind =
   let permission = get_permission_from_pid perms pid in
   let fully_owned = is_fully_owned perms in
   permission_to_kind permission fully_owned

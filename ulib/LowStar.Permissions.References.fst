@@ -14,6 +14,11 @@ type value_with_perms (a: Type0) = vp : (a & Ghost.erased (perms_rec a)){
   forall (pid:live_pid (Ghost.reveal p)). get_snapshot_from_pid (Ghost.reveal p) pid == v
 }
 
+type with_perm (a: Type) = {
+  wp_v: a;
+  wp_perm: permission
+}
+
 noeq type pointer (a: Type0) = {
   ptr_v: HST.reference (value_with_perms a);
   ptr_pid: Ghost.erased perm_id
@@ -25,18 +30,26 @@ let frame_of_pointer (#a: Type0) (ptr: pointer a) : HS.rid =
 let pointer_as_addr (#a: Type0) (ptr: pointer a) : GTot nat =
   HS.as_addr ptr.ptr_v
 
+let sel (#a: Type0)  (h: HS.mem) (ptr: pointer a) : GTot (with_perm a) =
+  let (_, perm_map) = HS.sel h ptr.ptr_v in
+  let perm = get_permission_from_pid (Ghost.reveal perm_map) (Ghost.reveal ptr.ptr_pid) in
+  let snapshot = get_snapshot_from_pid (Ghost.reveal perm_map) (Ghost.reveal ptr.ptr_pid) in
+  { wp_v = snapshot; wp_perm = perm}
 
-type ploc_ (region: HS.rid) (addr: nat) = {
-  ploc_pid: perm_id
-}
+let pointer_live (#a: Type0) (ptr: pointer a) (h: HS.mem) =
+  let a_with_perm = sel h ptr in
+  a_with_perm.wp_perm >. 0.0R /\ HS.contains h ptr.ptr_v
+
+
+type ploc_ (region: HS.rid) (addr: nat) = perm_id
 
 type ploc (region: HS.rid) (addr: nat) = Ghost.erased (ploc_ region addr)
 
 let ploc_includes (#r: HS.rid) (#a: nat) (ploc1 ploc2: ploc r a) =
-  (Ghost.reveal ploc1).ploc_pid == (Ghost.reveal ploc2).ploc_pid
+  (Ghost.reveal ploc1) == (Ghost.reveal ploc2)
 
 let ploc_disjoint  (#r: HS.rid) (#a: nat) (ploc1 ploc2: ploc r a) =
-  (Ghost.reveal ploc1).ploc_pid =!= (Ghost.reveal ploc2).ploc_pid
+  (Ghost.reveal ploc1) =!= (Ghost.reveal ploc2)
 
 let ploc_preserved  (#r: HS.rid) (#a: nat) (ploc: ploc r a) (h0 h1: HS.mem) =
   forall (t: Type0) (ptr: pointer t) .
@@ -46,12 +59,12 @@ let ploc_preserved  (#r: HS.rid) (#a: nat) (ploc: ploc r a) (h0 h1: HS.mem) =
   let (_, vp1) = HS.sel h1 ptr.ptr_v in
   let vp1 = Ghost.reveal vp1 in
   begin
-    (is_live_pid vp0 (Ghost.reveal ploc).ploc_pid /\ HS.contains h0 ptr.ptr_v /\
-    HS.frameOf ptr.ptr_v == r /\ HS.as_addr ptr.ptr_v == a /\ (Ghost.reveal ploc).ploc_pid == pid)
+    (pointer_live ptr h0 /\
+    HS.frameOf ptr.ptr_v == r /\ HS.as_addr ptr.ptr_v == a /\ (Ghost.reveal ploc) == pid)
     ==> begin
       get_permission_from_pid vp0 pid == get_permission_from_pid vp1 pid /\
       get_snapshot_from_pid vp0 pid == get_snapshot_from_pid vp1 pid /\
-      HS.contains h1 ptr.ptr_v
+      pointer_live ptr h1
     end
   end
 
@@ -71,13 +84,11 @@ let cls : cls ploc = Cls #ploc
 
 let loc = loc cls
 
-let aloc_pointer (#a: Type0) (ptr: pointer a) : GTot (ploc (frame_of_pointer ptr) (pointer_as_addr ptr)) =
+let aloc_pointer (#a: Type0) (ptr: pointer a) : (ploc (frame_of_pointer ptr) (pointer_as_addr ptr)) =
   let r = frame_of_pointer ptr in
   let a = pointer_as_addr ptr in
   let pid =  Ghost.reveal ptr.ptr_pid in
-  let out = ({
-    ploc_pid = pid
-  } <:  ploc_ r a) in
+  let out = (pid <:  ploc_ r a) in
   Ghost.hide out
 
 let loc_pointer (#a: Type0) (ptr: pointer a) : GTot loc =
@@ -87,6 +98,35 @@ let loc_pointer (#a: Type0) (ptr: pointer a) : GTot loc =
   #r
   #a
   (aloc_pointer ptr)
+
+(* Pointer specific patterns *)
+
+let modifies_pointer_elim
+  (#t: Type)
+  (ptr: pointer t)
+  (p : loc)
+  (h h': HS.mem)
+: Lemma
+  (requires (
+    pointer_live ptr h /\
+    loc_disjoint (loc_pointer ptr) p /\
+    modifies p h h'
+  ))
+  (ensures (
+    sel h ptr  == sel h' ptr /\
+    pointer_live ptr h'
+  ))
+  [SMTPatOr [
+    [ SMTPat (modifies p h h'); SMTPat (sel h ptr) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (sel h' ptr) ]
+  ]] =
+  MG.modifies_aloc_elim
+        #_ #cls
+        #(frame_of_pointer #t ptr)
+        #(pointer_as_addr ptr)
+        (aloc_pointer ptr)
+        p
+        h h'
 
 (* Some loc patterns *)
 
@@ -578,7 +618,7 @@ let modifies_loc_unused_in
     [SMTPat (modifies l h1 h2); SMTPat (loc_unused_in _ h2 `loc_includes` l')];
     [SMTPat (modifies l h1 h2); SMTPat (loc_unused_in _ h1 `loc_includes` l')];
   ]]
-= 
+=
   modifies_loc_includes (address_liveness_insensitive_locs _) h1 h2 l;
   modifies_address_liveness_insensitive_unused_in cls h1 h2;
   loc_includes_trans (loc_unused_in _ h1) (loc_unused_in _ h2) l'
