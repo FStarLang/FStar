@@ -288,6 +288,7 @@ let rec freevars t = match t.tm with
   | Integer _
   | Real _
   | BoundV _ -> []
+  | FreeV fv when fv_force fv -> [] //this is actually a top-level constant
   | FreeV fv -> [fv]
   | App(_, tms) -> List.collect freevars tms
   | Quant(_, _, _, _, t)

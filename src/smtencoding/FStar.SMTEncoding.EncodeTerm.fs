@@ -916,6 +916,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         List.fold_left2 (fun (t_hyps, decls) (bv, _) e ->
                           let t = SS.subst subst bv.sort in
                           let t_hyp, decls' = encode_term_pred None t env e in
+                          if Env.debug env.tcenv (Options.Other "PartialApp")
+                          then BU.print2 "Encoded typing hypothesis for %s ... got %s\n"
+                                         (Print.term_to_string t)
+                                         (Term.print_smt_term t_hyp);
                           t_hyp::t_hyps, decls@decls')
                         ([], [])
                         formals
