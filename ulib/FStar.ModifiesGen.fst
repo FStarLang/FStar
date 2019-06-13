@@ -1373,10 +1373,9 @@ val modifies_strengthen'
   (requires ((~ (a0 `GSet.mem` addrs_of_loc_weak l r0)) /\  modifies (loc_union l (loc_addresses true r0 (Set.singleton a0))) h h'))
   (ensures (modifies (loc_union l (loc_of_aloc al0)) h h'))
 
-#push-options "--z3rlimit 256 --max_fuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 128 --max_fuel 0 --max_ifuel 0"
 
 let modifies_strengthen' #al #c l #r0 #a0 al0 h h' alocs =
-  admit();
   Classical.forall_intro (addrs_of_loc_loc_union_loc_of_aloc_eq_loc_union_loc_addresses_singleton l al0);
   assert (modifies_preserves_regions (loc_union l (loc_of_aloc al0)) h h');
   assert (modifies_preserves_mreferences (loc_union l (loc_of_aloc al0)) h h');
@@ -1398,7 +1397,9 @@ let modifies_strengthen' #al #c l #r0 #a0 al0 h h' alocs =
       c.aloc_disjoint_sym al0 b;
       alocs (fun t pre m -> ()) b
     end 
-    else ()
+    else begin
+      assert (loc_disjoint (loc_union l (loc_addresses true r0 (Set.singleton a0))) (loc_of_aloc b))
+    end
   );
   assert (modifies (loc_union l (loc_of_aloc al0)) h h')
 
