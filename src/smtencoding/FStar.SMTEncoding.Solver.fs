@@ -290,7 +290,7 @@ let report_errors settings : unit =
     let format_smt_error msg =
       BU.format1 "SMT solver says:\n\t%s;\n\t\
                   Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
-                  'incomplete quantifiers' means a (partial) counterexample was found, so try to spell your proof out in greater detail\n\t\
+                  'incomplete quantifiers' means a (partial) counterexample was found, so try to spell your proof out in greater detail, increase fuel or ifuel\n\t\
                   'unknown' means Z3 provided no further reason for the proof failing"
         msg
     in
@@ -303,13 +303,15 @@ let report_errors settings : unit =
         in
         match find_localized_errors settings.query_errors with
         | Some err ->
-          FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
-          FStar.TypeChecker.Err.add_errors settings.query_env err.error_messages
+          // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
+          FStar.TypeChecker.Err.add_errors_smt_detail settings.query_env err.error_messages (Some smt_error)
         | None ->
-          FStar.TypeChecker.Err.add_errors
+          FStar.TypeChecker.Err.add_errors_smt_detail
                    settings.query_env
-                   [(Errors.Error_UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" smt_error,
+                   [(Errors.Error_UnknownFatal_AssertionFailure,
+                     "Unknown assertion failed",
                      settings.query_range)]
+                   (Some smt_error)
     in
     if Options.detail_errors()
     && Options.n_cores() = 1
