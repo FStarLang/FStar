@@ -65,12 +65,11 @@ inline_for_extraction noextract let ptr_write
   RST.reveal_rst_inv ();
   RST.reveal_modifies ();
   let open HST in
-  let (v', perm_map) = ! ptr.PR.ptr_v in
+  let (v', perm_map) = !ptr.PR.ptr_v in
   let perm_map'  = Ghost.hide (P.change_snapshot #a #v' (Ghost.reveal perm_map) (Ghost.reveal ptr.PR.ptr_pid) x) in
   ptr.PR.ptr_v := (x, (perm_map' <: Ghost.erased (P.perms_rec a)));
   let h1 = HST.get () in
   assume(MG.loc_includes (MG.loc_not_unused_in PR.cls h1) (R.as_loc (R.fp (ptr_resource ptr))));
-  assert((R.sel (ptr_view ptr) h1).PR.wp_perm == (R.sel (ptr_view ptr) h0).PR.wp_perm);
   let r = PR.frame_of_pointer ptr in
   let n = PR.pointer_as_addr ptr in
   MG.modifies_aloc_intro
@@ -88,26 +87,28 @@ inline_for_extraction noextract let ptr_write
       assert((Ghost.reveal ploc) =!= (Ghost.reveal ploc'));
       let aux (t': Type0) (ptr': PR.pointer t') : Lemma
        ((
-          let pid = Ghost.reveal ptr'.PR.ptr_pid in
+          let pid' = Ghost.reveal ptr'.PR.ptr_pid in
           PR.pointer_live ptr' h0 /\
-          PR.frame_of_pointer ptr' == r /\
-          PR.pointer_as_addr ptr' == n /\
-          (Ghost.reveal ploc') == pid) ==>
+          PR.frame_of_pointer ptr' == r /\ // The case where r or n are different is trivial
+          PR.pointer_as_addr ptr' == n /\ // So we just take the case where ptr' point to
+          (Ghost.reveal ploc') == pid') ==> // a different pid' than pid.
        (PR.sel h0 ptr' == PR.sel h1 ptr' /\
           PR.pointer_live ptr' h1))
         =
-        let aux' (_ : squash (let pid = Ghost.reveal ptr'.PR.ptr_pid in
+        let aux' (_ : squash (let pid' = Ghost.reveal ptr'.PR.ptr_pid in
           PR.pointer_live ptr' h0 /\
           PR.frame_of_pointer ptr' == r /\
           PR.pointer_as_addr ptr' == n /\
-          (Ghost.reveal ploc') == pid)) : Lemma
+          (Ghost.reveal ploc') == pid')) : Lemma
           (PR.sel h0 ptr' == PR.sel h1 ptr' /\
           PR.pointer_live ptr' h1)
           =
+          let pid = Ghost.reveal ptr.PR.ptr_pid in
+          let pid' = Ghost.reveal ptr'.PR.ptr_pid in
           P.only_one_live_pid_with_full_permission #a #x
             (Ghost.reveal perm_map')
             (Ghost.reveal ptr.PR.ptr_pid);
-          assume(PR.pointer_live ptr' h1);
+          assert(P.get_permission_from_pid (Ghost.reveal perm_map') pid' == P.get_permission_from_pid (Ghost.reveal perm_map) pid');
           PR.live_same_pointers_equal_types t' a ptr' ptr h0;
           PR.live_same_pointers_equal_types t' a ptr' ptr h1;
           assert(PR.sel h0 ptr' == PR.sel h1 ptr');
@@ -115,17 +116,7 @@ inline_for_extraction noextract let ptr_write
         in
         Classical.impl_intro aux'
       in
-      Classical.forall_intro_2 aux;
-      assert(
-        forall (t': Type0) (ptr': PR.pointer t') .
-        let pid = Ghost.reveal ptr'.PR.ptr_pid in
-        (PR.pointer_live ptr' h0 /\
-          PR.frame_of_pointer ptr' == r /\
-          PR.pointer_as_addr ptr' == n /\
-          (Ghost.reveal ploc') == pid) ==>
-        (PR.sel h0 ptr' == PR.sel h1 ptr' /\
-          PR.pointer_live ptr' h1)
-      )
+      Classical.forall_intro_2 aux
     )
   ;
   assert(MG.modifies #PR.ploc #PR.cls (R.as_loc (R.fp (ptr_resource ptr))) h0 h1);
