@@ -1092,9 +1092,9 @@ let topological_dependences_of
 
     if Options.debug_any()
     then BU.print_string "==============Phase1==================\n";
-    let widened = BU.mk_ref false in
-    let widen_deps friends deps =
-        let (Deps dg) = deps in
+    let widen_deps friends dep_graph file_system_map widened =
+        let widened = BU.mk_ref false in
+        let (Deps dg) = dep_graph in
         let (Deps dg') = deps_empty() in
         let widen_one deps =
           deps |> List.map (fun d ->
@@ -1114,13 +1114,14 @@ let topological_dependences_of
                 filename
                 ({dep_node with edges=widen_one dep_node.edges; color=White}))
            ();
-        Deps dg'
+        !widened, Deps dg'
     in
-    let dep_graph =
+    let widened = false in
+    let widened, dep_graph =
       if Options.cmi()
       && for_extraction
-      then widen_deps interfaces_needing_inlining dep_graph
-      else dep_graph
+      then widen_deps interfaces_needing_inlining dep_graph file_system_map widened
+      else widened, dep_graph
     in
     let friends, all_files_0 =
         all_friend_deps dep_graph [] ([], []) root_files
@@ -1133,8 +1134,8 @@ let topological_dependences_of
                    (String.concat ", " all_files_0)
                    (String.concat ", " (remove_dups (fun x y -> x=y) friends))
                    (String.concat ", " (interfaces_needing_inlining));
-    let dep_graph =
-        widen_deps friends dep_graph
+    let widened, dep_graph =
+        widen_deps friends dep_graph file_system_map widened
     in
     let _, all_files =
         if Options.debug_any()
@@ -1144,7 +1145,7 @@ let topological_dependences_of
     if Options.debug_any()
     then BU.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
     all_files,
-    !widened
+    widened
 
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
