@@ -106,7 +106,7 @@ let mods (#b: _)
              (h h':HS.mem)
     = B.modifies (B.loc_buffer (as_buffer vb)) h h'
 
-let upd' (#b: _)
+val upd' (#b: _)
         (h:HS.mem)
         (vb:buffer b{live h vb})
         (i:nat{i < length vb})
@@ -126,7 +126,9 @@ let upd' (#b: _)
             live h' vb /\
             FStar.HyperStack.ST.equal_domains h h'
           })
-  = indexing vb i;
+#push-options "--z3rlimit_factor 4"
+let upd' #b h vb i x =
+    indexing vb i;
     let as = B.as_seq h (as_buffer vb) in
     let v = get_view vb in
     let n = View?.n v in
@@ -139,6 +141,7 @@ let upd' (#b: _)
     B.g_upd_seq_as_seq (as_buffer vb) (Seq.upd as a_i a') h;
     lemma_g_upd_with_same_seq (as_buffer vb) h (Seq.upd as a_i a');
     mem
+#pop-options
 
 let upd = upd'
 let sel_upd #b vb i j x h = ()
