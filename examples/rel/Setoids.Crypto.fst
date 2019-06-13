@@ -35,14 +35,14 @@ let truncate (t:tape) (n:nat) : tape =
 //       nat)          //amount of tape consumed
 
 let option_rel (#a:Type) (arel:rel a) =
-  fun x y ->
+  fun (x:option a) (y:option a) ->
     match x,y with
-    | None,None -> True <: prop
-    | Some some_x, Some some_y -> (some_y == some_x) <: prop
-    | _, _ -> False <: prop
+    | None,None -> True // <: prop
+    | Some some_x, Some some_y -> (arel some_y some_x) // <: prop
+    | _, _ -> False // <: prop
 
 let eff (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) =
-  st srel (option_rel #a arel)
+  st #s #(option a) srel (option_rel arel)
 
 //let option_arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) : prop =
 //    forall x0 x1. x0 `arel` x1 ==>
@@ -93,6 +93,7 @@ let eff_rel #s #a
 //         //used (n) and call `g` with the result of `f`, the truncated
 //         //tape and the state produced by `f` (s')
 //         g v (truncate t n, s')
+#set-options "--z3rlimit 350 --max_fuel 1 --max_ifuel 3"
 let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
          ($f:eff srel arel)
          (g:arel ^--> eff_rel srel brel)
@@ -104,8 +105,6 @@ let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
        g x s1
      | None -> None, s1
 
-#set-options "--max_ifuel 5"
-
 (* Old effect *)
 /// reading the entire state
 //let get #st : eff st st
@@ -114,28 +113,8 @@ let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
 //let get #s (#srel:erel s) : st srel srel =
 //  fun s0 -> s0, s0
 
-// TODO: Further inline these functions to get to figure out what is going on.
-
-let ( ^--> ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) =
-  f:(a -> b){ f `arrow_rel arel brel` f}
-
-let ( ** ) (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (p0 p1:(a & b)) : prop =
-  let (x0, y0) = p0 in
-  let (x1, y1) = p1 in
-  x0 `arel` x1 /\
-  y0 `brel` y1
-
-#set-options "--z3rlimit 350 --max_fuel 0 --max_ifuel 0"
-(* Here, F* runs out of steam *)
-let get #s (#srel:erel s) : f:(s -> p:((option s)*s)){
-  (forall x0 x1. x0 `srel` x1 ==>
-    f x0 `srel` f x1)
-  } =
-  // (srel ^--> (option_rel #s srel) ** srel) =
-  fun s0 -> (Some s0), s0
-
-let eff (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) =
-  st srel (option_rel #a arel)
+let get #s (#srel:erel s) : eff srel srel =
+  fun s0 -> Some s0, s0
 
 (* Old effect *)
 /// writing the entire state
@@ -242,17 +221,7 @@ let key_eff (n:nat) = eff (key_state_rel n)
 
 let key_hon_t = (lo handle) ^--> eff_rel (key_state_rel 1) (lo bool)
 
-#set-options "--z3rlimit 200 --max_fuel 1 --max_ifuel 1"
-let get_key_st : (eff #(key_state 1) #(key_state 1) (key_state_rel 1) (key_state_rel 1)) =
-  bind (get #(key_state 1) #(key_state_rel 1)) (fun x -> return #(key_state 1) #(key_state_rel 1) x)
-  //x <-- get #(key_state 1) #(key_state_rel 1);
-  //return x
-
-let get_snd : st state_rel (hi int) =
-  //bind get (fun x -> return (snd x))
-  x <-- get ;
-  return (snd x)
-
+#set-options "--z3rlimit 500 --max_fuel 1 --max_ifuel 3"
 let key_hon : key_hon_t =
     fun h ->
     s <-- get ;
