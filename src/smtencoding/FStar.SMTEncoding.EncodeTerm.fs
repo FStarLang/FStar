@@ -991,8 +991,27 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             match head_type with
             | None -> encode_partial_app None
             | Some head_type ->
-                let head_type = U.unrefine <| N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv head_type in
-                let formals, c = curried_arrow_formals_comp head_type in
+                let head_type, formals, c =
+                  let head_type = U.unrefine <| N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv head_type in
+                  let formals, c = curried_arrow_formals_comp head_type in
+                  if List.length formals < List.length args
+                  then let head_type =
+                           U.unrefine
+                           <| N.normalize_refinement
+                                    [Env.Weak; Env.HNF; Env.EraseUniverses; Env.UnfoldUntil delta_constant]
+                                    env.tcenv
+                                    head_type
+                       in
+                       let formals, c = curried_arrow_formals_comp head_type in
+                       head_type, formals, c
+                  else head_type, formals, c
+                in
+                if Env.debug env.tcenv (Options.Other "PartialApp")
+                then BU.print3 "Encoding partial application, head_type = %s, formals = %s, args = %s\n"
+                            (Print.term_to_string head_type)
+                            (Print.binders_to_string ", " formals)
+                            (Print.args_to_string args_e);
+
                 begin
                 match head.n with
                 | Tm_uinst({n=Tm_fvar fv}, _)
