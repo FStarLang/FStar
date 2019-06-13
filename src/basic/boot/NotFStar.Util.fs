@@ -295,6 +295,10 @@ let smap_of_list<'value> (l:list<string*'value>) =
     List.iter (fun (x,y) -> smap_add s x y) l;
     s
 let smap_try_find (m:smap<'value>) k = m.TryFind(k)
+let smap_mem (m:smap<'value>) k =
+  match m.TryFind(k) with
+  | Some _ -> true
+  | None -> false
 let smap_fold (m:smap<'value>) f a =
     let out = ref a in
     for entry in m do

@@ -348,6 +348,7 @@ let smap_of_list (l: (string * 'value) list) =
   FStar_List.iter (fun (x,y) -> smap_add s x y) l;
   s
 let smap_try_find (m:'value smap) k = BatHashtbl.find_option m k
+let smap_mem (m:'value smap) k = BatHashtbl.mem m k
 let smap_fold (m:'value smap) f a = BatHashtbl.fold f m a
 let smap_remove (m:'value smap) k = BatHashtbl.remove m k
 let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
