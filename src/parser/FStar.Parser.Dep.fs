@@ -1002,7 +1002,6 @@ let topological_dependences_of'
         dep_graph
         interfaces_needing_inlining
         root_files
-        for_extraction
         widened
     : list<file_name>
     * bool =
@@ -1139,6 +1138,20 @@ let topological_dependences_of'
     all_files,
     widened
 
+let phase1
+        file_system_map
+        dep_graph
+        interfaces_needing_inlining
+        for_extraction
+=
+    if Options.debug_any()
+    then BU.print_string "==============Phase1==================\n";
+    let widened = false in
+    if Options.cmi()
+    && for_extraction
+    then widen_deps interfaces_needing_inlining dep_graph file_system_map widened
+    else widened, dep_graph
+
 let topological_dependences_of
         file_system_map
         dep_graph
@@ -1148,16 +1161,8 @@ let topological_dependences_of
     : list<file_name>
     * bool =
 
-    if Options.debug_any()
-    then BU.print_string "==============Phase1==================\n";
-    let widened = false in
-    let widened, dep_graph =
-      if Options.cmi()
-      && for_extraction
-      then widen_deps interfaces_needing_inlining dep_graph file_system_map widened
-      else widened, dep_graph
-    in
-    topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files for_extraction widened
+    let widened, dep_graph = phase1 file_system_map dep_graph interfaces_needing_inlining for_extraction in
+    topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files widened
 
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
