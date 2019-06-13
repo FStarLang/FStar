@@ -31,8 +31,6 @@ verify-core: $(addsuffix .checked, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
 
 verify-extra: $(addsuffix .checked, $(EXTRA))
 
-ORUN?=orun
-
 # Benchmarking rules
 #
 # we want to run FStar with just the target file as that being checked

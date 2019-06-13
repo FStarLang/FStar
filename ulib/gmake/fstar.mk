@@ -13,3 +13,5 @@ else
 # FSTAR_HOME not defined, assume fstar.exe reachable from PATH
 FSTAR=fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
 endif
+
+ORUN?=orun
