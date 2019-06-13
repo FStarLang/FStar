@@ -53,6 +53,8 @@ val reveal_hide : #a:Type
                 -> Lemma (ensures (reveal (hide x) == x))
                         [SMTPat (hide x)]
 
+let tot_to_gtot (f : 'a -> Tot 'b) (x : 'a) : GTot 'b = f x
+
 ////////////////////////////////////////////////////////////////////////////////
 // The following are all defined notions and need not be trusted
 ////////////////////////////////////////////////////////////////////////////////

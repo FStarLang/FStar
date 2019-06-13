@@ -31,7 +31,6 @@ module U32 = FStar.UInt32
 module Map = FStar.Map
 module M = LowStar.Modifies
 
-
 type lstate = pointer mint * pointer mint
 
 val well_formed : HS.mem -> lstate -> GTot Type0
@@ -103,7 +102,9 @@ let state_as_lstate_put_put h ls bs1 bs2 =
 
 (** ** Low computations and their WPs **)
 
-let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp) =
+#push-options "--admit_smt_queries true" //GM1750
+let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp)
+  =
   ls:lstate ->
   Stack a
      (requires (fun h -> well_formed h ls /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
@@ -112,6 +113,7 @@ let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp) =
                   (let s0 = lstate_as_state h ls in
                    let (x, s1) = c s0 in
                    h' == state_as_lstate h ls s1 /\ x == r)))
+#pop-options
 
 let lcomp (a : Type) pre post (c : comp_p a pre post) =
   lcomp_wp a
@@ -120,12 +122,15 @@ let lcomp (a : Type) pre post (c : comp_p a pre post) =
 //Rather than get into trouble with applying `c` directly in a context
 //where we have to think about the VC of the continuation,
 //let's factor this into a `run`, which makes things a lot more predictable
-let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : Tot (a * state) = c s0
+let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : Tot (a * state) =
+  admit (); //GM1750
+  c s0
 
 type lwp a = lstate -> (mem -> (a * mem -> Type) -> Type)
 
 let as_lwp #a #wp (c:comp_wp a wp) : lwp a =
     fun ls h0 post ->
+      admit (); //GM1750
       well_formed h0 ls /\
       (let s0 = lstate_as_state h0 ls in
        wp s0 (fun _ -> True) /\
@@ -291,6 +296,7 @@ let lbind (#a:Type) (#b:Type)
       assert (h1 == state_as_lstate h0 ls s1);
       state_as_lstate_put_get h0 ls s1; //Get-Put: 1st lens law
       assert (lstate_as_state h1 ls == s1); //this assertion is key to running `f x_a ls` below
+      assume (fwp2 x s1 (fun _ -> True)); //GM1750
       let y, s2 = run_high (c2 x) s1 in
       assert (s2 == snd (run_high #b #(bind_wp wp1 fwp2) (bind_elab c1 c2) s0));
       Ghost.hide (s0, (x, s1), (y, s2))
@@ -413,7 +419,7 @@ let lread' i = fun (b1, b2) ->
 (** ** Equality properties *)
 
 
-let lcast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) (l : lcomp_wp a wp1 c) : lcomp_wp a wp2 c = l
+let lcast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) (l : lcomp_wp a wp1 c) : lcomp_wp a wp2 (admit (); c) = l // GM1750
 
 let as_lwp_precise (#a:Type) wp (c : comp_wp a wp) :
   Lemma
@@ -452,6 +458,8 @@ let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\
                                                   (ensures (sat_as_lwp wp1)) = ()
 
 (** ** Commutation of morphism **)
+
+#set-options "--admit_smt_queries true" // GM1750
 
 let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
   Lemma

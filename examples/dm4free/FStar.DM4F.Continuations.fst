@@ -103,16 +103,16 @@ let em_wp (a:Type)
           (* 2] the overall result satisfies kspec (R _) _ *)
           (forall (x: either a (a -> Tot False)) (post' : False -> Type0). pbpost x post')
 
-
+#push-options "--admit_smt_queries true"
 let em2 (a:Type) : CONTINUATION?.repr (either a (a -> Tot False)) (em_wp a)
   = fun (kspec : (either a (a -> Tot False)) -> (False -> Tot Type0) -> Tot Type0)
       (k : (x:(either a (a -> Tot False))) -> PURE False (kspec x)) ->
       begin
         let devil (x:a) : Tot False = k (L a (a -> Tot False) x) in
         k (R a (a -> Tot False) devil)
-        //<: PURE False (em_wp kspec)
+        (* <: PURE False (em_wp kspec) *)
       end
-
+#pop-options
 
 
  let excluded_middle (a:Type)

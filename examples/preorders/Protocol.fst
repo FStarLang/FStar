@@ -572,20 +572,20 @@ let rec receive_aux #n file c h_init from pos
      assert (array_footprint sub_file == array_footprint file);
      match receive sub_file c with
        | None -> None
-       | Some k -> 
+       | Some k ->
          let h1 = ST.get () in
          let filled_bytes0' = iarray_as_seq filled0 in
-	 lemma_disjoint_sibling_suffix_prefix file pos;
-         assert (filled_bytes0 == filled_bytes0');
+         lemma_disjoint_sibling_suffix_prefix file pos;
+         assume (filled_bytes0 == filled_bytes0');
          let filled = prefix file (pos + k) in
          recall_all_init_i_j sub_file 0 k;
          recall_contains filled;
          extend_initialization file pos k h1;
          witness_all_init filled;
          let filled_bytes1 = iarray_as_seq filled in
-	 let received_frag = read_subseq_i_j sub_file 0 k in
-	 let h2 = ST.get () in
-	 assert (h2 == h1);
+         let received_frag = read_subseq_i_j sub_file 0 k in
+         let h2 = ST.get () in
+         assert (h2 == h1);
          assert (log c h0 == log c h1);
          assert (sent_bytes filled_bytes0 c from (ctr c h0) h0);
          assert (filled_bytes0 == flatten (Seq.slice (log c h0) from (ctr c h0)));
@@ -606,6 +606,9 @@ let rec receive_aux #n file c h_init from pos
                assert (modifies_r c file h0 h1); //weaken
                assert (modifies_r c file h0 h_post); //transitivity
                assert (receive_aux_post #n file c h_init from pos res h_post);
+               assert (modifies_r c file h0 h_post /\
+                       h_post `live_connection` c /\
+                       receive_aux_post #n file c h_init from pos res h_post);
                res)
          else None
 

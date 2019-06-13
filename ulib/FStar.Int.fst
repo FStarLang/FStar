@@ -451,12 +451,14 @@ val logand_pow2_minus_one: #n:pos{1 < n} -> a:int_t n -> m:pos{m < n} ->
 let logand_pow2_minus_one #n a m =
   UInt.logand_le (to_uint a) (to_uint (pow2_minus_one #n m))
 
+#push-options "--z3rlimit 25"
 val logand_max: #n:pos{1 < n} -> a:int_t n{0 <= a} ->
   Lemma (0 <= logand a (max_int n) /\ a = logand a (max_int n))
 let logand_max #n a =
   sign_bit_positive a;
   sign_bit_positive #n (max_int n);
   nth_lemma a (logand a (max_int n))
+#pop-options
 
 (* Bitwise XOR operator *)
 val logxor_commutative: #n:pos -> a:int_t n -> b:int_t n ->
