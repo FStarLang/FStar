@@ -30,3 +30,40 @@ LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
 verify-core: $(addsuffix .checked, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
 
 verify-extra: $(addsuffix .checked, $(EXTRA))
+
+ORUN?=orun
+
+# Benchmarking rules
+#
+# we want to run FStar with just the target file as that being checked
+# ideally all the .checked files will exist and we will:
+#  - move them to the side
+#  - execute the benchmark
+#  - move the checked file back
+#
+#  `mv foo bar || :` is used to ignore the return code if something isn't where it is supposed to be
+
+
+# a.fst.bench will move the a.fst.checked binary and then move it back
+%.fst.bench: %.fst
+	mv $*.fst.checked $*.fst.checked.bench_bkp || :
+ifdef ORUN_FSTAR
+	$(ORUN) -o $@.bench -- $(MY_FSTAR) $*.fst
+else
+	$(MY_FSTAR) $*.fst
+endif
+	mv $*.fst.checked.bench_bkp $*.fst.checked || :
+	touch $@
+
+# a.fsti.bench will move the a.fsti.checked binary and then move it back
+%.fsti.bench: %.fsti
+	mv $*.fsti.checked $*.fsti.checked.bench_bkp || :
+ifdef ORUN_FSTAR
+	$(ORUN) -o $@.bench -- $(MY_FSTAR) $*.fsti
+else
+	$(MY_FSTAR) $*.fsti
+endif
+	mv $*.fsti.checked.bench_bkp $*.fsti.checked || :
+	touch $@
+
+verify-benchmark: $(addsuffix .bench, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
