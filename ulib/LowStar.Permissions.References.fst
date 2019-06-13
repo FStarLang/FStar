@@ -47,7 +47,8 @@ let sel (#a: Type0)  (h: HS.mem) (ptr: pointer a) : GTot (with_perm a) =
 
 let pointer_live (#a: Type0) (ptr: pointer a) (h: HS.mem) =
   let a_with_perm = sel h ptr in
-  a_with_perm.wp_perm >. 0.0R /\ HS.contains h ptr.ptr_v
+  a_with_perm.wp_perm >. 0.0R /\ HS.contains h ptr.ptr_v /\
+  HS.is_mm ptr.ptr_v /\ HST.is_eternal_region (frame_of_pointer ptr)
 
 
 let live_same_pointers_equal_types
