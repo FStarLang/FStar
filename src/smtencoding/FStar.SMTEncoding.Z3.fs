@@ -137,7 +137,7 @@ let status_string_and_errors s =
     | UNSAT _ -> status_tag s, []
     | SAT (errs, msg)
     | UNKNOWN (errs, msg)
-    | TIMEOUT (errs, msg) -> BU.format2 "%s%s" (status_tag s) (match msg with None -> "" | Some msg -> " because " ^ msg), errs
+    | TIMEOUT (errs, msg) -> (match msg with None -> "unknown" | Some msg -> msg), errs
 
 let tid () = BU.current_tid() |> BU.string_of_int
 let new_z3proc id =

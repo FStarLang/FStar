@@ -43,24 +43,35 @@ let info_at_pos env file row col =
       | Inr fv -> Some (Inr (FStar.Syntax.Syntax.lid_of_fv fv), info.identifier_ty,
                        FStar.Syntax.Syntax.range_of_fv fv)
 
-let add_errors env errs =
+let add_errors_smt_detail env errs smt_detail =
+    let maybe_add_smt_detail msg =
+      match smt_detail with
+      | None -> msg
+      | Some d -> msg ^ "\n\t" ^ d
+    in
     let errs =
-        errs |> List.map (fun (e, msg, r) ->
-                        if r = dummyRange
-                        then e, msg, Env.get_range env
-                        else let r' = Range.set_def_range r (Range.use_range r) in
-                             if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
-                             then begin
-                               e,
-                               (msg ^
+        errs
+        |> List.map
+          (fun (e, msg, r) ->
+            let e, msg, r =
+                if r = dummyRange
+                then e, msg, Env.get_range env
+                else let r' = Range.set_def_range r (Range.use_range r) in
+                     if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
+                     then e,
+                          (msg ^
                                 " (Also see: " ^ Range.string_of_use_range r ^")"
                                 ^ (if Range.use_range r <> Range.def_range r
                                    then "(Other related locations: " ^ Range.string_of_def_range r ^")"
                                    else "")),
-                                Env.get_range env
-                             end
-                             else e, msg, r) in
+                          Env.get_range env
+                     else e, msg, r
+            in
+            e, maybe_add_smt_detail msg, r)
+    in
     FStar.Errors.add_errors errs
+
+let add_errors env errs = add_errors_smt_detail env errs None
 
 let err_msg_type_strings env t1 t2 :(string * string) =
   let s1 = N.term_to_string env t1 in

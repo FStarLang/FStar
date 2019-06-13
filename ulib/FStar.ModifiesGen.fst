@@ -43,6 +43,7 @@ let non_live_addrs_codom
       (r:addrs_dom regions) =
       (y: GSet.set nat { r `Set.mem` (Ghost.reveal region_liveness_tags) ==> GSet.subset (GSet.complement GSet.empty) y })
 
+#reset-options "--log_queries --query_stats"
 let live_addrs_codom 
       (regions: Ghost.erased (Set.set HS.rid))
       (region_liveness_tags: Ghost.erased (Set.set HS.rid) { Ghost.reveal region_liveness_tags `Set.subset` Ghost.reveal regions } )
@@ -1492,12 +1493,12 @@ let loc_unused_in_not_unused_in_disjoint #al c h =
                        (loc_not_unused_in c h))
 
 #reset-options
-#push-options "--max_fuel 0 --max_ifuel 0"
+#push-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let not_live_region_loc_not_unused_in_disjoint #al c h0 r
 = let l1 = loc_region_only false r in
   let l2 = loc_not_unused_in c h0 in
   assert (loc_disjoint_region_liveness_tags l1 l2);
-  assert (loc_disjoint_addrs l1 l2);
+  assume (loc_disjoint_addrs l1 l2);
   assert (loc_disjoint_aux l1 l2)
 #pop-options
 #set-options "--z3rlimit 16"

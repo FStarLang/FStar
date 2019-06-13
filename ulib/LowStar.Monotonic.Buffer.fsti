@@ -1552,6 +1552,14 @@ val loc_not_unused_in (h: HS.mem) : GTot loc
 
 val loc_unused_in (h: HS.mem) : GTot loc
 
+(* Shortcut notations with more handy names *)
+
+let loc_in (l: loc) (h: HS.mem) =
+  loc_not_unused_in h `loc_includes` l
+
+let loc_not_in (l: loc) (h: HS.mem) =
+  loc_unused_in h `loc_includes` l
+
 val loc_regions_unused_in (h: HS.mem) (rs: Set.set HS.rid) : Lemma
   (requires (forall r . Set.mem r rs ==> (~ (HS.live_region h r))))
   (ensures (loc_unused_in h `loc_includes` loc_regions false rs))
@@ -2063,6 +2071,22 @@ val mgcmalloc (#a:Type0) (#rrel:srel a)
           (requires (fun _       -> malloc_pre r len))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
 
+
+(*
+ * Allocate a memory-managed buffer initialized with contents from src
+ *
+ * This allocates and initializes the buffer atomically (from the perspective of the Low* clients)
+ *)
+val mgcmalloc_and_blit (#a:Type0) (#rrel:srel a) (r:HS.rid)
+  (#rrel1 #rel1:srel a) (src:mbuffer a rrel1 rel1) (id_src:U32.t) (len:U32.t)
+  : HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ recallable b})
+    (requires fun h0 ->
+      malloc_pre r len /\
+      live h0 src /\ U32.v id_src + U32.v len <= length src)
+    (ensures fun h0 b h1 ->
+      alloc_post_mem_common b h0 h1
+        (Seq.slice (as_seq h0 src) (U32.v id_src) (U32.v id_src + U32.v len)))
+
 (*
  * See the Allocation comment above when changing the spec
  *)
@@ -2090,6 +2114,21 @@ val mmalloc (#a:Type0) (#rrel:srel a)
   :HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ freeable b})
           (requires (fun _       -> malloc_pre r len))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
+
+(*
+ * Allocate a hand-managed buffer initialized with contents from src
+ *
+ * This allocates and initializes the buffer atomically (from the perspective of the Low* clients)
+ *)
+val mmalloc_and_blit (#a:Type0) (#rrel:srel a) (r:HS.rid)
+  (#rrel1 #rel1:srel a) (src:mbuffer a rrel1 rel1) (id_src:U32.t) (len:U32.t)
+  : HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ freeable b})
+    (requires fun h0 ->
+      malloc_pre r len /\
+      live h0 src /\ U32.v id_src + U32.v len <= length src)
+    (ensures fun h0 b h1 ->
+      alloc_post_mem_common b h0 h1
+        (Seq.slice (as_seq h0 src) (U32.v id_src) (U32.v id_src + U32.v len)))
 
 (*
  * See the Allocation comment above when changing the spec
@@ -2120,6 +2159,22 @@ val malloca (#a:Type0) (#rrel:srel a)
                    (requires (fun _       -> alloca_pre len))
                    (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
 		                          frameOf b == HS.get_tip h0))
+
+(*
+ * Allocate a stack buffer initialized with contents from src
+ *
+ * This allocates and initializes the buffer atomically (from the perspective of the Low* clients)
+ *)
+val malloca_and_blit (#a:Type0) (#rrel:srel a)
+  (#rrel1 #rel1:srel a) (src:mbuffer a rrel1 rel1) (id_src:U32.t) (len:U32.t)
+  : HST.StackInline (b:lmbuffer a rrel rrel (U32.v len))
+    (requires fun h0 ->
+      alloca_pre len /\
+      live h0 src /\ U32.v id_src + U32.v len <= length src)
+    (ensures fun h0 b h1 ->
+      alloc_post_mem_common b h0 h1
+        (Seq.slice (as_seq h0 src) (U32.v id_src) (U32.v id_src + U32.v len)) /\
+      frameOf b == HS.get_tip h0)
 
 
 /// ``alloca_of_list init`` allocates a buffer in the current stack

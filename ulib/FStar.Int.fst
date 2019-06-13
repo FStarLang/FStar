@@ -454,6 +454,7 @@ let logand_pow2_minus_one #n a m =
 #push-options "--z3rlimit 25"
 val logand_max: #n:pos{1 < n} -> a:int_t n{0 <= a} ->
   Lemma (0 <= logand a (max_int n) /\ a = logand a (max_int n))
+#push-options "--z3rlimit_factor 2"
 let logand_max #n a =
   sign_bit_positive a;
   sign_bit_positive #n (max_int n);

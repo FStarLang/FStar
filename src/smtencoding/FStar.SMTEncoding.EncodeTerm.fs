@@ -351,18 +351,24 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
 
     if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
 
-    let vars, guards, env, decls, names = bs |> List.fold_left (fun (vars, guards, env, decls, names) b ->
+    let vars, guards, env, decls, names =
+      bs |> List.fold_left
+      (fun (vars, guards, env, decls, names) b ->
         let v, g, env, decls', n =
             let x = fst b in
             let xxsym, xx, env' = gen_term_var env x in
-            let guard_x_t, decls' = encode_term_pred fuel_opt (norm env x.sort) env xx in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
+            let guard_x_t, decls' =
+              encode_term_pred fuel_opt (norm env x.sort) env xx
+            in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
             mk_fv (xxsym, Term_sort),
             guard_x_t,
             env',
             decls',
-            x in
-        v::vars, g::guards, env, decls@decls', n::names) ([], [], env, [], []) in
-
+            x
+        in
+        v::vars, g::guards, env, decls@decls', n::names)
+       ([], [], env, [], [])
+    in
     List.rev vars,
     List.rev guards,
     env,
@@ -905,19 +911,54 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     if Env.debug env.tcenv (Options.Other "PartialApp")
                     then BU.print1 "Encoding partial application, after subst:\n\tty=%s\n"
                             (Print.term_to_string ty);
-                    let has_type, decls'' = encode_term_pred None ty env app_tm in
+                    let vars, pattern, has_type, decls'' =
+                      let t_hyps, decls =
+                        List.fold_left2 (fun (t_hyps, decls) (bv, _) e ->
+                          let t = SS.subst subst bv.sort in
+                          let t_hyp, decls' = encode_term_pred None t env e in
+                          t_hyp::t_hyps, decls@decls')
+                        ([], [])
+                        formals
+                        args
+                      in
+                      let t_head_hyp, decls' =
+                        match smt_head.tm with
+                        | FreeV _ ->
+                          encode_term_pred None head_type env smt_head
+                        | _ ->
+                          mkTrue, []
+                      in
+                      let hyp = Term.mk_and_l (t_head_hyp::t_hyps) Range.dummyRange in
+                      let has_type_conclusion, decls'' =
+                          encode_term_pred None ty env app_tm
+                      in
+                      let has_type = mkImp (hyp, has_type_conclusion) in
+                      let cvars = Term.free_variables has_type in
+                      let app_tm_vars = Term.free_variables app_tm in
+                      let pattern, vars =
+                        if Term.fvs_subset_of cvars app_tm_vars
+                        then [app_tm], app_tm_vars
+                        else if Term.fvs_subset_of cvars (Term.free_variables has_type_conclusion)
+                        then [has_type_conclusion], cvars
+                        else begin
+                          Errors.log_issue
+                            t0.pos
+                            (Errors.Warning_SMTPatternIllFormed,
+                             BU.format1 "No SMT pattern for partial application %s"
+                               (Print.term_to_string t0));
+                          [], cvars //no pattern!
+                        end
+                      in
+                      vars,
+                      pattern,
+                      has_type,
+                      decls@decls'@decls''
+                    in
                     if Env.debug env.tcenv (Options.Other "PartialApp")
                     then BU.print1 "Encoding partial application, after SMT encoded predicate:\n\t=%s\n"
                             (Term.print_smt_term has_type);
-                    let cvars = Term.free_variables has_type in
-                    let app_tm_vars = Term.free_variables app_tm in
-                    let pattern, vars =
-                      if Term.fvs_subset_of cvars app_tm_vars
-                      then app_tm, app_tm_vars
-                      else has_type, cvars
-                    in
                     let tkey_hash = Term.hash_of_term app_tm in
-                    let e_typing = Util.mkAssume(mkForall t0.pos ([[pattern]], vars, has_type),
+                    let e_typing = Util.mkAssume(mkForall t0.pos ([pattern], vars, has_type),
                                                 Some "Partial app typing",
                                                 ("partial_app_typing_" ^
                                                  (BU.digest_of_string (Term.hash_of_term app_tm)))) in
