@@ -973,8 +973,8 @@ let dep_graph_copy dep_graph =
     let (Deps g) = dep_graph in
     Deps (BU.smap_copy g)
 
-let widen_deps friends dep_graph file_system_map =
-    let widened = BU.mk_ref false in
+let widen_deps friends dep_graph file_system_map widened =
+    let widened = BU.mk_ref widened in
     let (Deps dg) = dep_graph in
     let (Deps dg') = deps_empty() in
     let widen_one deps =
@@ -1134,7 +1134,7 @@ let topological_dependences_of
                    (String.concat ", " all_files_0)
                    (String.concat ", " (remove_dups (fun x y -> x=y) friends))
                    (String.concat ", " (interfaces_needing_inlining));
-    let dep_graph, widened = widen_deps friends dep_graph file_system_map in
+    let dep_graph, widened = widen_deps friends dep_graph file_system_map widened in
     let _, all_files =
         if Options.debug_any()
         then BU.print_string "==============Phase2==================\n";
@@ -1323,7 +1323,7 @@ let collect (all_cmd_line_files: list<file_name>)
   let all_files, _ =
     FStar.Options.profile
       (fun () ->
-        let widened_graph_for_extraction, widened_first = widen_deps inlining_ifaces dep_graph file_system_map in
+        let widened_graph_for_extraction, widened_first = widen_deps inlining_ifaces dep_graph file_system_map false in
          topological_dependences_of
            file_system_map
            dep_graph
@@ -1456,7 +1456,7 @@ let print_full (deps:deps) : unit =
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
     let cache_file f = norm_path (cache_file_name f) in
-    let widened_graph_for_extraction, widened_first = widen_deps deps.interfaces_with_inlining deps.dep_graph deps.file_system_map in
+    let widened_graph_for_extraction, widened_first = widen_deps deps.interfaces_with_inlining deps.dep_graph deps.file_system_map false in
     let all_checked_files =
         keys |>
         List.fold_left
