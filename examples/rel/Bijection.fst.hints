@@ -8,12 +8,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Bijection_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "equation_Bijection.bijection", "equation_Bijection.injection",
         "equation_Bijection.inverses", "equation_Bijection.surjection"
       ],
       0,
-      "e8710c3286e5260394fa8daa007ce41d"
+      "3f39f0dbce4f3d7417e8c4016e309aca"
     ]
   ]
 ]

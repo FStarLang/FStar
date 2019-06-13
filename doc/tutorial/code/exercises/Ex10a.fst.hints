@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "75fc9f2d51251186b1456aca94d4fcb2"
+      "f09a98b0820d66bc9ff3063dab093d14"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "852989b6420b606ab47d25ddc89d83f3"
+      "7b3cf7f3df862b6c5f31ce8132ab3e68"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "bf853a297e2573ebe89fc6433e0d07ee"
+      "64b43bb318a3ab1202c54fa914bdc26b"
     ],
     [
       "Ex10a.safe_delete",
@@ -54,12 +54,12 @@
         "equation_FStar.Monotonic.Heap.modifies_t",
         "equation_FStar.ST.modifies_none", "equation_Prims.eqtype",
         "function_token_typing_Prims.unit",
+        "refinement_interpretation_Tm_refine_3f348b77994310044a31a5b79ff495a0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_c0bbd352d24513b8adaab74dd888e42a",
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "f12338b725e13760e2c9f0110f4589f0"
+      "5b053150198293a21919db692d3c2d06"
     ],
     [
       "Ex10a.test_acls",
@@ -70,11 +70,10 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "@query",
-        "Ex10a_interpretation_Tm_arrow_449d659811cde73f2fac6653669a9d13",
-        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Ex10a_interpretation_Tm_arrow_874ea41fef5db3d0b79dc4f1f9eea4a2",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Ex10a.entry__uu___haseq", "bool_typing",
+        "assumption_Ex10a.entry__uu___haseq",
         "constructor_distinct_Ex10a.Readable",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
@@ -83,7 +82,7 @@
         "equation_Ex10a.db",
         "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.result",
-        "interpretation_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e",
+        "interpretation_Tm_abs_93700a44318bb4193871b2dacb8d41d6",
         "kinding_Ex10a.entry@tok", "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -91,10 +90,10 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "typing_Tm_abs_34ef4ead09ec7d33c614d4dffaa96c6e", "unit_typing"
+        "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6", "unit_typing"
       ],
       0,
-      "26e4c1483d5b717691f849d19b1bf412"
+      "9b2dc5d7589103267ed48db285e3b03c"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -107,7 +106,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "dc4e56f25c247234dbfcdf4f436b0ae6"
+      "2954183c79613ba3e98a388bcc6ea08d"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -120,7 +119,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "7fa1d7991fb61b331e612c36f9c26bc2"
+      "fd38bc3a8fe1754435a56f8dbd66f4cb"
     ],
     [
       "Ex10a.canRead",
@@ -133,7 +132,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "d2cbec38a02f651ce889f27d66d33036"
+      "874f8bae3643324ea21bf72613e50b7e"
     ],
     [
       "Ex10a.revoke",
@@ -146,7 +145,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "d6b66ef73acb9058ef5757281843cd94"
+      "1378464cccf3ca7c0675469e153e0a28"
     ]
   ]
 ]

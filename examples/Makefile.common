@@ -27,7 +27,7 @@ OUTPUT_DIRECTORY ?= _output
 CACHE_DIR ?= _cache
 
 # Additionaly flags to pass to F*
-OTHERFLAGS += --use_extracted_interfaces true --use_hints --use_hint_hashes
+OTHERFLAGS += --use_extracted_interfaces true --use_hints
 
 ################################################################################
 # YOU SHOULDN'T NEED TO TOUCH THE REST

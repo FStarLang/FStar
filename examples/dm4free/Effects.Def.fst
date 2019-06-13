@@ -31,6 +31,9 @@ open FStar.FunctionalExtensionality //proving the laws requires feq
 
 //A generic template for proving the monad laws, via some equivalence relation eq_m
 let eq_m (m:Type -> Type) = eq:(a:Type -> m a -> m a -> Type){forall a x y. eq a x y ==> x == y}
+
+let eq_m_aux (#m : Type->Type) (e : eq_m m) (#a : Type) (x y : m a) : Lemma (requires (e _ x y)) (ensures (x == y)) = ()
+
 val monad_laws_via_eq: m:(Type -> Type)
          -> eq:eq_m m
 	 -> return:(a:Type -> x:a -> Tot (m a))
@@ -43,7 +46,16 @@ val monad_laws_via_eq: m:(Type -> Type)
 			   /\ (forall (a:Type) (b:Type) (x:a) (f:a -> Tot (m b)). bind a b (return a x) f == f x)  //left unit
 			   /\ (forall (a:Type) (b:Type) (c:Type) (f:m a) (g:(a -> Tot (m b))) (h:(b -> Tot (m c))). //associativity
 			             bind a c f (fun x -> bind b c (g x) h) == bind b c (bind a b f g) h))
-let monad_laws_via_eq m eq return bind = ()
+let monad_laws_via_eq m eq return bind =
+  let lem (a:Type) (f:m a) : Lemma (bind a a f (return a) == f) [SMTPat (bind a a f (return a))] =
+    assert (bind a a f (return a) `eq a` f);
+    eq_m_aux eq (bind a a f (return a)) f;
+      // GM: ^ Unsure why Z3 doesn't figure this out on its own
+      //     instead of needing this lemma call. That's the only
+      //     reason this inner lemma exists.
+    assert (bind a a f (return a) == f)
+  in
+  ()
 
 //A generic template for proving the monad morphism laws, via some equivalence relation eq_m
 val morphism_laws_via_eq: m:(Type -> Type) 

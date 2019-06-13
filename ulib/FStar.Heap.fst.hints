@@ -10,12 +10,12 @@
         "@query", "equation_FStar.Heap.trivial_rel",
         "equation_FStar.Preorder.preorder_rel",
         "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive", "equation_Prims.l_True",
-        "interpretation_Tm_abs_fa0cb1fe1698a880aba4dd22bebacfbf",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_e262c78ce17cee91585468f4f0dc4c30",
         "true_interp"
       ],
       0,
-      "d599b9d18a22855db35534f7f1e89a2a"
+      "72a5e677f9b78c949bf2859f01fb7f43"
     ],
     [
       "FStar.Heap.trivial_preorder",
@@ -26,12 +26,12 @@
         "@query", "equation_FStar.Heap.trivial_rel",
         "equation_FStar.Preorder.preorder_rel",
         "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive", "equation_Prims.l_True",
-        "interpretation_Tm_abs_fa0cb1fe1698a880aba4dd22bebacfbf",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_e262c78ce17cee91585468f4f0dc4c30",
         "true_interp"
       ],
       0,
-      "de27f7afd53ed9680e0bc4133c7ef9b1"
+      "ba18c911dc1fb900125a19709556e574"
     ]
   ]
 ]

@@ -41,7 +41,7 @@ let lemma_root_has_color_zero _ = ()
 
 let rid_length r = List.Tot.length (reveal r)
 
-let rid_tail r = elift1_p Cons?.tl r
+let rid_tail r = elift1_p (tot_to_gtot Cons?.tl) r
 
 let rec includes r1 r2 =
   if r1 = r2 then true

@@ -1168,7 +1168,7 @@ let tot_piece_tail (#t:Type) (h0:heap) (p:piece t) (n:pointer (node t)) :
     (ensures (fun q ->
          (piece_valid h0 q) /\
          (reveal q.pnodes) == tl (reveal p.pnodes))) =
-  { phead = n ; ptail = p.ptail ; pnodes = elift1_p tl p.pnodes }
+  { phead = n ; ptail = p.ptail ; pnodes = elift1_p (tot_to_gtot tl) p.pnodes }
 
 /// If a dll is valid, then both the forward and backward links of
 /// each of the nodes are contained in the heap, and disjoint from

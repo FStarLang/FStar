@@ -8,8 +8,8 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Bug710_interpretation_Tm_arrow_b2723f04049f55e23469d5c6dd46d21f",
-        "Bug710_interpretation_Tm_arrow_c56aebc985490abf5ef65536a48a4daa",
+        "Bug710_interpretation_Tm_arrow_657bc76303a8a2e3fadb4915c654df47",
+        "Bug710_interpretation_Tm_arrow_89fc5d09c5535f5bc6cb36a74f66fca8",
         "Bug710_pretyping_e9504e14cc1510d6e0212487d8a1730a",
         "bool_inversion", "bool_typing", "data_typing_intro_Bug710.High@tok",
         "disc_equation_FStar.Pervasives.Native.None",
@@ -20,7 +20,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "69b8c48da475322da782f9134a7ac771"
+      "cf08e5f4836179e8b7aefadbdcb7ec16"
     ],
     [
       "Bug710.left_unit",
@@ -29,12 +29,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Bug710_interpretation_Tm_arrow_b2723f04049f55e23469d5c6dd46d21f",
-        "Bug710_interpretation_Tm_arrow_c56aebc985490abf5ef65536a48a4daa",
+        "Bug710_interpretation_Tm_arrow_657bc76303a8a2e3fadb4915c654df47",
+        "Bug710_interpretation_Tm_arrow_89fc5d09c5535f5bc6cb36a74f66fca8",
         "Bug710_pretyping_e9504e14cc1510d6e0212487d8a1730a",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Some",
-        "equality_tok_Bug710.Low@tok", "equation_Bug710.bind_ifc",
+        "data_typing_intro_Bug710.High@tok", "equation_Bug710.bind_ifc",
         "equation_Bug710.eq_ifc", "equation_Bug710.ifc",
         "equation_Bug710.return_ifc", "fuel_guarded_inversion_Bug710.label",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
@@ -45,11 +45,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "typing_Bug710.bind_ifc", "typing_Bug710.return_ifc",
-        "typing_tok_Bug710.Low@tok"
+        "typing_Bug710.bind_ifc", "typing_Bug710.return_ifc"
       ],
       0,
-      "8d4f51bd200f177b80fe5b4f0312beee"
+      "d63d43d54b07f552f977333680900ca1"
     ]
   ]
 ]

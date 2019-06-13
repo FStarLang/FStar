@@ -10,10 +10,10 @@
         "@MaxIFuel_assumption", "@query",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Tm_refine_89761103e61acc2f14aca90db784842d"
+        "refinement_interpretation_Tm_refine_3f9be36a23ab849b41fe5bee0bcd749d"
       ],
       0,
-      "76c541b8d5d86a8fb6af11623732dd82"
+      "9fe5b5e8c4099cbceb7d67b84533adc3"
     ],
     [
       "Bug077.ok4",
@@ -28,10 +28,10 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
+        "refinement_interpretation_Tm_refine_f368f6a92aa5bdefd9919da4e81bb950"
       ],
       0,
-      "cc1d547ddf22893b439357ee3a28b3c8"
+      "f15e94af102aa2cf6cdda2fb7ba8ed0e"
     ],
     [
       "Bug077.ok5",
@@ -40,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "9fa1deb380fdddf9227dadd451af1c7a"
+      "8be6340e161d8b7feed15ed51d632f5f"
     ],
     [
       "Bug077.ok5",
@@ -57,10 +57,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
+        "refinement_interpretation_Tm_refine_f368f6a92aa5bdefd9919da4e81bb950"
       ],
       0,
-      "476a1b6831ad1b3cb3bba7dad98c2e88"
+      "7e358d15c2fb8a05419b39781bf8eafa"
     ],
     [
       "Bug077.bug",
@@ -75,10 +75,10 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_fc7177e494d31e0a45992cab1cc70b54"
+        "refinement_interpretation_Tm_refine_f368f6a92aa5bdefd9919da4e81bb950"
       ],
       0,
-      "480aa2feea124fa37a55d9257e8cb478"
+      "b01a4a238d8144765545c6c99e79358f"
     ]
   ]
 ]

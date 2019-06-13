@@ -876,7 +876,7 @@ let lemma_msb_gte #n a b =
 
 #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 
-#set-options "--z3rlimit 10"
+#set-options "--z3rlimit 80"
 val lemma_uint_mod: #n:pos -> a:uint_t n ->
   Lemma (a = a % pow2 n)
 let lemma_uint_mod #n a = ()

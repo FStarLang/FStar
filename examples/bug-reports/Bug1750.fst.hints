@@ -1,0 +1,17 @@
+[
+  "òa³\u0014Fp\"Ÿ­ø‚4\u001b{NF",
+  [
+    [
+      "Bug1750.eff",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1750.G",
+        "disc_equation_Bug1750.T", "fuel_guarded_inversion_Bug1750.eff_tag"
+      ],
+      0,
+      "50ba6093b87ad0b4a3734cfac764746c"
+    ]
+  ]
+]

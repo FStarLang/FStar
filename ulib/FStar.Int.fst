@@ -451,6 +451,7 @@ val logand_pow2_minus_one: #n:pos{1 < n} -> a:int_t n -> m:pos{m < n} ->
 let logand_pow2_minus_one #n a m =
   UInt.logand_le (to_uint a) (to_uint (pow2_minus_one #n m))
 
+#push-options "--z3rlimit 25"
 val logand_max: #n:pos{1 < n} -> a:int_t n{0 <= a} ->
   Lemma (0 <= logand a (max_int n) /\ a = logand a (max_int n))
 #push-options "--z3rlimit_factor 2"
