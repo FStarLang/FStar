@@ -208,7 +208,6 @@ let defaults =
       ("max_ifuel"                    , Int 2);
       ("min_fuel"                     , Int 1);
       ("MLish"                        , Bool false);
-      ("n_cores"                      , Int 1);
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
@@ -354,7 +353,6 @@ let get_max_fuel                ()      = lookup_opt "max_fuel"                 
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
 let get_min_fuel                ()      = lookup_opt "min_fuel"                 as_int
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
-let get_n_cores                 ()      = lookup_opt "n_cores"                  as_int
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
@@ -667,14 +665,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "detail_errors",
         Const (Bool true),
-         "Emit a detailed error report by asking the SMT solver many queries; will take longer;
-         implies n_cores=1");
+         "Emit a detailed error report by asking the SMT solver many queries; will take longer");
 
        ( noshort,
         "detail_hint_replay",
         Const (Bool true),
-         "Emit a detailed report for proof whose unsat core fails to replay;
-         implies n_cores=1");
+         "Emit a detailed report for proof whose unsat core fails to replay");
 
        ( noshort,
         "doc",
@@ -818,11 +814,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "MLish",
         Const (Bool true),
         "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
-
-       ( noshort,
-        "n_cores",
-        IntStr "positive_integer", //; detail_errors := false),
-        "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)");
 
        ( noshort,
         "no_default_includes",
@@ -1492,7 +1483,7 @@ let max_ifuel                    () = get_max_ifuel                   ()
 let min_fuel                     () = get_min_fuel                    ()
 let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
-let n_cores                      () = get_n_cores                     ()
+let n_cores                      () = 1 // Multiples cores are disabled, see issue #1538 in Github
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
