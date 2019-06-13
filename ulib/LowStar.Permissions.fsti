@@ -178,9 +178,11 @@ val change_snapshot:
   Ghost (value_perms a new_snapshot)
   (requires (get_permission_from_pid v_perms pid == 1.0R))
   (ensures (fun new_v_perms ->
-    is_live_pid new_v_perms pid /\
-    (forall (pid:live_pid new_v_perms).{:pattern get_permission_from_pid new_v_perms pid}
-      get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /\
-      get_snapshot_from_pid new_v_perms pid == new_snapshot
-    )
+    (forall (pid':perm_id).{:pattern get_permission_from_pid new_v_perms pid'}
+      get_permission_from_pid new_v_perms pid' = get_permission_from_pid v_perms pid' /\
+      (pid' <> pid ==>
+        get_snapshot_from_pid new_v_perms pid' ==
+        get_snapshot_from_pid v_perms pid')
+    ) /\
+    get_snapshot_from_pid new_v_perms pid == new_snapshot
   ))
