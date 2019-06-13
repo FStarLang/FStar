@@ -85,6 +85,41 @@ let ploc_preserved  (#r: HS.rid) (#a: nat) (ploc: ploc r a) (h0 h1: HS.mem) =
   (sel h0 ptr == sel h1 ptr /\
       pointer_live ptr h1)
 
+let prove_ploc_preserved (#r: HS.rid) (#a: nat) (ploc: ploc r a) (h0 h1: HS.mem)
+  (lemma: (t: Type0 -> ptr: pointer t -> Lemma
+    (requires (
+      let pid = Ghost.reveal ptr.ptr_pid in
+      pointer_live ptr h0 /\
+      frame_of_pointer ptr == r /\
+      pointer_as_addr ptr == a /\
+      (Ghost.reveal ploc) == pid))
+    (ensures (sel h0 ptr == sel h1 ptr /\
+      pointer_live ptr h1))
+  )) : Lemma (ploc_preserved #r #a ploc h0 h1)
+  =
+  let aux (t: Type0) (ptr: pointer t) : Lemma(
+    let pid = Ghost.reveal ptr.ptr_pid in
+    (pointer_live ptr h0 /\
+      frame_of_pointer ptr == r /\
+      pointer_as_addr ptr == a /\
+      (Ghost.reveal ploc) == pid) ==>
+    (sel h0 ptr == sel h1 ptr /\
+      pointer_live ptr h1)
+  ) =
+  let aux' (_ : squash (
+     let pid = Ghost.reveal ptr.ptr_pid in
+      pointer_live ptr h0 /\
+      frame_of_pointer ptr == r /\
+      pointer_as_addr ptr == a /\
+      (Ghost.reveal ploc) == pid)
+    ) : Lemma (sel h0 ptr == sel h1 ptr /\
+      pointer_live ptr h1)
+    = lemma t ptr
+  in
+    Classical.impl_intro aux'
+  in
+  Classical.forall_intro_2 aux
+
 open FStar.ModifiesGen
 
 let cls : cls ploc = Cls #ploc
@@ -97,7 +132,23 @@ let cls : cls ploc = Cls #ploc
   ploc_preserved
   (fun #r #a x h -> ())
   (fun #r #a x h1 h2 h3 -> ())
-  (fun #r #a b h1 h2 f -> admit())
+  (fun #r #a b h0 h1 f ->
+    let lemma (t: Type0) (ptr: pointer t) : Lemma
+      (requires (
+        let pid = Ghost.reveal ptr.ptr_pid in
+        pointer_live ptr h0 /\
+        frame_of_pointer ptr == r /\
+        pointer_as_addr ptr == a /\
+        (Ghost.reveal b) == pid
+      )) (ensures (
+        sel h0 ptr == sel h1 ptr /\
+        pointer_live ptr h1
+      ))
+    =
+      f (value_with_perms t) (Heap.trivial_preorder (value_with_perms t)) ptr.ptr_v
+    in
+    prove_ploc_preserved #r #a b h0 h1 lemma
+  )
 
 let loc = loc cls
 
