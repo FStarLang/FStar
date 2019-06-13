@@ -16,11 +16,6 @@ let plus (x y : int) = x + y
 //applications of top-level functions
 let test_partial_app0 (x y : int) = assert (apply (plus x) y == plus x y)
 
-//This tests derivability of the has_type relation for partial
-//applications of function-typed bound variables
-let test_partial_app2 (f:int -> int -> int) (x y:int) =
-  assert (apply (f x) y == f x y)
-
 //This tests that partial app typing doesn't incorrectly introduce
 //an unsoundness ... a previous version did!
 [@(expect_failure [19])]
@@ -28,6 +23,17 @@ let test_partial_app1 (f:int -> int -> int) (g:int -> bool) (x y:int) : Lemma Fa
   assert (apply (f x) y == f x y);
   assert (has_type (g x) int);
   assert (has_type (g x) bool)
+
+//This tests derivability of the has_type relation for partial
+//applications of function-typed bound variables
+let test_partial_app2 (f:int -> int -> int) (x y:int) =
+  assert (apply (f x) y == f x y)
+
+//This tests derivability of the has_type relation for partial
+//applications of function-typed bound variables
+let ref_t = f:(int -> int -> int){forall x y. f x y > x}
+let test_partial_app3 (f:ref_t) (x y:int) =
+  assert (apply (f x) y == f x y)
 
 //This is Jay's original bug report
 type eff_tag =
