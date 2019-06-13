@@ -436,7 +436,7 @@ let build_map (filenames: list<string>): files_for_module_name =
 let enter_namespace (original_map: files_for_module_name) (working_map: files_for_module_name) (prefix: string): bool =
   let found = BU.mk_ref false in
   let prefix = prefix ^ "." in
-  List.iter (fun k ->
+  smap_iter original_map (fun k _ ->
     if Util.starts_with k prefix then
       let suffix =
         String.substring k (String.length prefix) (String.length k - String.length prefix)
@@ -444,7 +444,7 @@ let enter_namespace (original_map: files_for_module_name) (working_map: files_fo
       let filename = must (smap_try_find original_map k) in
       smap_add working_map suffix filename;
       found := true
-  ) (List.unique (smap_keys original_map));
+  );
   !found
 
 
