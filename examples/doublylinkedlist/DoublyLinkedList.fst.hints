@@ -22,7 +22,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "c5ca17b3a7eafe8ace21a7e7a9ed9bb0"
+      "5deaf8acb1c328d6d0e354b4d07e3a87"
     ],
     [
       "DoublyLinkedList.op_At",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "0eb5aa512c8414f0fa9471879e235736"
+      "a41eec54a3b846b166020c03b0a2557b"
     ],
     [
       "DoublyLinkedList.op_Hat_At",
@@ -84,7 +84,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "7e1ceaac14f8ccacf4b0fcd1907008e8"
+      "4e5a0ae9c513f20dc4206838e43e6b1e"
     ],
     [
       "DoublyLinkedList.__proj__Frag1__item___0",
@@ -98,7 +98,7 @@
         "refinement_interpretation_Tm_refine_d56d2c22716a132051de7449f1f9f54c"
       ],
       0,
-      "3a4e00fa9261053c8b5aed7ca321a419"
+      "2c7bab7b8772af867547de5e9baeb561"
     ],
     [
       "DoublyLinkedList.__proj__Frag2__item___0",
@@ -112,7 +112,7 @@
         "refinement_interpretation_Tm_refine_70bbde2f8ce7313b7302658284bddacb"
       ],
       0,
-      "c886e1f188d907fdd42d8002c441f798"
+      "2c51329fdca77b3e968b2050b6169caf"
     ],
     [
       "DoublyLinkedList.__proj__Frag2__item___1",
@@ -126,7 +126,7 @@
         "refinement_interpretation_Tm_refine_70bbde2f8ce7313b7302658284bddacb"
       ],
       0,
-      "8c76f456cfa54557aeceaff71ad4afdf"
+      "9f0c5e3cd0888690be83115f2e5cd58a"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___0",
@@ -140,7 +140,7 @@
         "refinement_interpretation_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "f6f8aaea898894370b06cf629ce2aed6"
+      "32e2dc9fd9489564526c55339b87277e"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___1",
@@ -154,7 +154,7 @@
         "refinement_interpretation_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "6f73adb92f9b5e30b3deb588be5948ad"
+      "33993fea91ffe92afea726a4c8fea319"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___2",
@@ -168,7 +168,7 @@
         "refinement_interpretation_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "a4c3ee3753a999e00e01a00025df9f75"
+      "b5683ed79d3e3e412d6d285e7592b3ae"
     ],
     [
       "DoublyLinkedList.empty_node",
@@ -184,7 +184,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "2c108894c0a695e81eb51732c0d8b394"
+      "532db712ebb7fc72320ba00a6c859e21"
     ],
     [
       "DoublyLinkedList.empty_list",
@@ -200,7 +200,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "c8cddcc7802b375097dbf713f4b27a59"
+      "0c7492b12f1b72b463f6d3d2f9e14261"
     ],
     [
       "DoublyLinkedList.fragment_for_each0",
@@ -216,7 +216,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "df4971bb779f596695e3bf0ab5e79b68"
+      "3c8f31dbb06e463a93227b03e7f1bd30"
     ],
     [
       "DoublyLinkedList.fragment_for_each1",
@@ -232,7 +232,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "6deaaadda2380a8e0570b9f5e4083004"
+      "329aded131a5cb028ebe3a75453e3605"
     ],
     [
       "DoublyLinkedList.fragment_length",
@@ -248,7 +248,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "994707464ff008f1c33e742bb8f3aa26"
+      "eed641233f9f11a166387bc393a4e2da"
     ],
     [
       "DoublyLinkedList.dll_ghostly_connections",
@@ -268,7 +268,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "5597d127cf744ef3415cc982f84c85e9"
+      "47e72e13562bba9ae3c32404e9ef4463"
     ],
     [
       "DoublyLinkedList.piece_ghostly_connections",
@@ -288,7 +288,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "687bcb80d1399562c1b8748b84cb913b"
+      "51d2d92b6771d1b8d109f0fb57e486c3"
     ],
     [
       "DoublyLinkedList.nodelist_contained0",
@@ -306,7 +306,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2907d8bd3c4daf93eb8273c300f0bca2"
+      "cab310d6792174b64fafc064e662677e"
     ],
     [
       "DoublyLinkedList.nodelist_fp0",
@@ -322,7 +322,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bebc3cf342d71b3f25430924bcb2f48b"
+      "7a20002ff86151ab1f03f302709ad0bf"
     ],
     [
       "DoublyLinkedList.nodelist_fp_f",
@@ -340,7 +340,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8c00b3db9348c48fbdf98f86324d16f9"
+      "b46a6906eb89ab4f6aa7ce795ed8afb3"
     ],
     [
       "DoublyLinkedList.nodelist_fp_b",
@@ -358,7 +358,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5c3cba8dcae0cd00a9e720fdce90fdea"
+      "ebd7099c6e1b071310fd20b59180d230"
     ],
     [
       "DoublyLinkedList.dll_fp_f",
@@ -375,7 +375,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "cec67b6f42d4322d81fb97aa51018308"
+      "e5455557da0a308773453bd3e02bedf6"
     ],
     [
       "DoublyLinkedList.dll_fp_b",
@@ -392,7 +392,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "75f04586b26ab9031f5aa2abf0f106d8"
+      "a924dd21b04e3e08ff97592d33cf17a1"
     ],
     [
       "DoublyLinkedList.fragment_fp0",
@@ -409,7 +409,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "f76f225d9e949223e022022181387c36"
+      "fc2ff4288a5523299fc68d4c1a61c497"
     ],
     [
       "DoublyLinkedList.loc_includes_union_l_nodelist_fp0",
@@ -418,7 +418,7 @@
       1,
       [ "@query" ],
       0,
-      "e727a6304efe24dd7707d0b6e3da468b"
+      "d2195e344b620497f3458d900b415965"
     ],
     [
       "DoublyLinkedList.loc_includes_union_l_dll_fp0",
@@ -427,7 +427,7 @@
       1,
       [ "@query" ],
       0,
-      "1e86931b847e8b35acb83604defd0fd7"
+      "30c1f719b685729e4d6bd5a756c509d7"
     ],
     [
       "DoublyLinkedList.loc_includes_union_l_piece_fp0",
@@ -436,7 +436,7 @@
       1,
       [ "@query" ],
       0,
-      "0053d26ac5beb4a21eb16a3e4e8e7bd5"
+      "af51d5530df6cc42861e936072ee5674"
     ],
     [
       "DoublyLinkedList.loc_includes_union_l_fragment_fp0",
@@ -445,7 +445,7 @@
       1,
       [ "@query" ],
       0,
-      "353cee6b4cd3ceca06908e2bb01ed2c8"
+      "7c747429b6168f665433b08fe5d0fe51"
     ],
     [
       "DoublyLinkedList.loc_equiv_trans",
@@ -454,7 +454,7 @@
       1,
       [ "@query", "equation_DoublyLinkedList.loc_equiv" ],
       0,
-      "0e8404e11f4ad692564f77e4bb65a108"
+      "12995d016e0cb0e074bb399a434a302a"
     ],
     [
       "DoublyLinkedList.loc_equiv_union_union_loc",
@@ -469,7 +469,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "83ef5db2d66999114402c69ba3882bc6"
+      "d368ed68b8c32dd3eadabedb7de76e6e"
     ],
     [
       "DoublyLinkedList.nodelist_aa_r",
@@ -485,7 +485,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b2a0a008b9daa5fe43212e56b991ce8c"
+      "d27d1a0ccbeafeeeef63f52021147a75"
     ],
     [
       "DoublyLinkedList.nodelist_aa_l",
@@ -517,7 +517,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a6b6b6443234af9ffea97d51f970370e"
+      "f977745ced9466a81a49b6046e55d4cd"
     ],
     [
       "DoublyLinkedList.fragment_aa_lr",
@@ -534,7 +534,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "06ffef1c1ac9ed65e8c187c9c94e49f4"
+      "5e515ef34285a09635dfca9259db332c"
     ],
     [
       "DoublyLinkedList.op_Bar_Greater",
@@ -543,7 +543,7 @@
       1,
       [ "@query" ],
       0,
-      "09dab3c9025a4f1ed707b86177406f3f"
+      "09c71b2a6ea8cf5f2a1100bb98d48d68"
     ],
     [
       "DoublyLinkedList.op_Less_Bar",
@@ -552,7 +552,7 @@
       1,
       [ "@query" ],
       0,
-      "3600e315474f413d3d79a0e28fd3715c"
+      "2aea35904738fa31b33dbadf347c076d"
     ],
     [
       "DoublyLinkedList.nodelist_conn",
@@ -584,7 +584,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f32226768be2cf1ef26ffc277e87c02c"
+      "d07f2f6f8a7a8b2c1b8169dceb705f85"
     ],
     [
       "DoublyLinkedList.dll_conn",
@@ -626,7 +626,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "810891e00370d59b001c53aad2906d75"
+      "ad66ac7c8ee82f7af39395fc810d17d6"
     ],
     [
       "DoublyLinkedList.op_Equals_Bar_Greater",
@@ -680,7 +680,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "f411f5c16a683b03c268fd3f0d5d1e0c"
+      "a6c056aa235a8bf5c7ac1260c6dc6355"
     ],
     [
       "DoublyLinkedList.op_Less_Bar_Equals",
@@ -733,7 +733,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "6321c63154d5fc42edc890e5ecc1bb41"
+      "1e301ad6f1c1c92536f8b09cddb55173"
     ],
     [
       "DoublyLinkedList.op_Bang_Equals_Bar_Greater",
@@ -787,7 +787,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "6cfadd57fd7f90a068948afe4e5e26a4"
+      "dfe9fd47c129f83d62242d7750f4e80b"
     ],
     [
       "DoublyLinkedList.op_Bang_Less_Bar_Equals",
@@ -841,7 +841,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "17699658482cb745692b4dccfb22cbe0"
+      "6d038077d7f8ee79919b94158af1b836"
     ],
     [
       "DoublyLinkedList.extract_nodelist_contained",
@@ -850,7 +850,7 @@
       1,
       [ "@query" ],
       0,
-      "5e118d2298e2af052cc1509385a9bc25"
+      "2b7dc5e48702cec13f0fc5122a81c097"
     ],
     [
       "DoublyLinkedList.extract_nodelist_contained",
@@ -900,7 +900,7 @@
         "typing_LowStar.Buffer.trivial_preorder"
       ],
       0,
-      "817ec68d87e6e741871ecfab09903e56"
+      "067c204190f5b660ece70cbd4e1def1b"
     ],
     [
       "DoublyLinkedList.extract_nodelist_fp0",
@@ -909,7 +909,7 @@
       1,
       [ "@query" ],
       0,
-      "d385168bdc1b9caf1166fc4cc761375b"
+      "0865b119b3c03425d1a763c05b330330"
     ],
     [
       "DoublyLinkedList.extract_nodelist_fp0",
@@ -960,7 +960,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "7442fbb3a86803a5f463a74f75c26ec0"
+      "08df89170fa140843fc831d54d8f8aaa"
     ],
     [
       "DoublyLinkedList.extract_nodelist_aa_r",
@@ -969,7 +969,7 @@
       1,
       [ "@query" ],
       0,
-      "436b5e34e53a4edd9e9e255ac877ed92"
+      "74d7295cdb09dc2c076c1feb0cf0dfd0"
     ],
     [
       "DoublyLinkedList.extract_nodelist_aa_r",
@@ -1020,7 +1020,7 @@
         "typing_LowStar.Buffer.trivial_preorder"
       ],
       0,
-      "b298bee576cb1ed810e4ad86e0e28d05"
+      "2b311374ea2e00e8b734744d9a95241b"
     ],
     [
       "DoublyLinkedList.extract_nodelist_aa_l",
@@ -1029,7 +1029,7 @@
       1,
       [ "@query" ],
       0,
-      "6ef543233d4811a1fc7034c8b2fbef81"
+      "2a6ae513af8d0b6062572c2fa0f2e206"
     ],
     [
       "DoublyLinkedList.extract_nodelist_aa_l",
@@ -1087,7 +1087,7 @@
         "typing_LowStar.Monotonic.Buffer.len", "well-founded-ordering-on-nat"
       ],
       0,
-      "65e0f88538255bb9f98e68d9b8d2aa76"
+      "b28083506722155db1799f734811d0e5"
     ],
     [
       "DoublyLinkedList.extract_nodelist_conn",
@@ -1107,7 +1107,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f673cd552860ac2b451c18260b81a645"
+      "92e20c923535ae75a044d1fe03955e9f"
     ],
     [
       "DoublyLinkedList.extract_nodelist_conn",
@@ -1178,7 +1178,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9b79c9c48b341756dcbb7cbc9123ab8a"
+      "e57d201d7c73b791f37dd560f4842eb3"
     ],
     [
       "DoublyLinkedList.nodelist_remains_aa_l",
@@ -1204,7 +1204,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "236146a0821aee31901677a7d6516480"
+      "281f4f4998ce157f8bd8dee40368cfeb"
     ],
     [
       "DoublyLinkedList.nodelist_remains_aa_l",
@@ -1271,7 +1271,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "643c98d6629fed64758d662ef9eeda63"
+      "fef4d96f369e443c8ac39eb497f548d5"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_fp0",
@@ -1285,7 +1285,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "445f4489cb2411f1984c77aa6486862d"
+      "e4073abd6cd2119d28aa1cec878fc30a"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_fp0",
@@ -1350,7 +1350,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "21f55167c1e644cc0e0c8aa7edb023d9"
+      "ea25427b690cb2ea1178615919281012"
     ],
     [
       "DoublyLinkedList.snd_unsnoc_nodelist_fp0",
@@ -1364,7 +1364,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "b6244ce45bd278972ccafbcfd93c531f"
+      "4a980320ea42363b4ec35f4e56b55536"
     ],
     [
       "DoublyLinkedList.snd_unsnoc_nodelist_fp0",
@@ -1429,7 +1429,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "de86bf22cc5faa1c9e880626901483d9"
+      "947193d553a9d0c58fdb2a143e298f67"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_contained",
@@ -1444,7 +1444,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "5b8ce4d401d39c5f01c3138cad3cc3df"
+      "8cd7e227787ac2eafd3dd524c7625c5b"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_contained",
@@ -1523,7 +1523,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "f32ee0527ae0499e13da3a1bbafb6494"
+      "a28488437b2cd86aba769e46cf344cf9"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_aa",
@@ -1538,7 +1538,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "f139fca1087c8da753af83a6fb5c824f"
+      "c53cf8d7cea4670d69a5ccfef39f739e"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_aa",
@@ -1603,7 +1603,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "33fac016eefa13ccb082101fa5f0692f"
+      "714b3f6f5bfdc4a61806cd064cd8be1a"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_conn",
@@ -1618,7 +1618,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "6c76f88bf05b8af738d7a37b96f4edcf"
+      "227923b78e5b598450517063384ae124"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_conn",
@@ -1696,7 +1696,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "fa5e0f5b1b5e7cf913cfc0de7141866d"
+      "533dee15c8212196a7af6235f1033f39"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_valid",
@@ -1715,7 +1715,7 @@
         "unit_typing"
       ],
       0,
-      "0c2c9372f40328cbd370a0ffb127a138"
+      "1624a9944315dc89c4758022be9749ba"
     ],
     [
       "DoublyLinkedList.nodelist_includes_r_fp0",
@@ -1776,7 +1776,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "70c7259c9455641038597d7a8d4d39aa"
+      "f5a28087426d81f07addebbfefb08232"
     ],
     [
       "DoublyLinkedList.nodelist_includes_l_fp0",
@@ -1839,7 +1839,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "085af55d28559c6af00389fbc87f034a"
+      "35df669a00feccd19c06c07df554e837"
     ],
     [
       "DoublyLinkedList.tot_dll_to_piece",
@@ -1898,7 +1898,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "9fdbaa82e10dfc9faf5d83dbe302a172"
+      "c548116755866215bbb4afcffc6ff771"
     ],
     [
       "DoublyLinkedList.tot_dll_to_fragment",
@@ -1947,7 +1947,7 @@
         "true_interp"
       ],
       0,
-      "2cd32cb447ca5002d6074a31ef0bfb2c"
+      "b55c70caa86645b3427e8d39406469bc"
     ],
     [
       "DoublyLinkedList.tot_piece_to_dll",
@@ -1991,7 +1991,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "2bd09c149851abdf35d26ca97a4da533"
+      "e4ac3a34ba4d11daf427d955686edb0e"
     ],
     [
       "DoublyLinkedList.nodelist_append_contained",
@@ -2030,7 +2030,7 @@
         "typing_LowStar.Buffer.pointer", "unit_typing"
       ],
       0,
-      "d4c49918d8d19b187667425482485375"
+      "a882a77a02ed8f2909bd6ef016d69456"
     ],
     [
       "DoublyLinkedList.nodelist_append_fp0",
@@ -2075,7 +2075,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "383d8942de39235c605f582b1fb483b2"
+      "6791fbdcd34bde771d02291339d35810"
     ],
     [
       "DoublyLinkedList.nodelist_append_aa_l",
@@ -2137,7 +2137,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9a545445f3aabe893f57ef40e7167bed"
+      "e35a176ed939ba1307b10f75bbdc1565"
     ],
     [
       "DoublyLinkedList.nodelist_append_aa_r",
@@ -2183,7 +2183,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "d99f5d4ff72f78a7d986b1610952627c"
+      "b4b99dbd7228485e2246ec47409bddcc"
     ],
     [
       "DoublyLinkedList.nodelist_append_aa",
@@ -2192,7 +2192,7 @@
       1,
       [ "@query", "equation_DoublyLinkedList.nodelist_aa" ],
       0,
-      "3055434187da62c2fda16cfff55aad0a"
+      "583774f3e44147e854f3e6b049913f96"
     ],
     [
       "DoublyLinkedList.nodelist_append_conn",
@@ -2232,7 +2232,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "6e4bf0fdcd43e478eeb606c5d4c77ee8"
+      "409d58f9de227c950e68a1a4a46da790"
     ],
     [
       "DoublyLinkedList.nodelist_append_conn",
@@ -2317,7 +2317,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "466f3e246b839508483cd97b2ead9ecb"
+      "48281bc40486559f55206fd67f8484dd"
     ],
     [
       "DoublyLinkedList.nodelist_append_valid",
@@ -2341,7 +2341,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "1233f418c8be5bcb0408da8e48c01b4e"
+      "8f2fcd7cf549f63ec03f8da5aa7093e7"
     ],
     [
       "DoublyLinkedList.loc_includes_union_r_inv",
@@ -2353,7 +2353,7 @@
         "lemma_LowStar.Monotonic.Buffer.loc_includes_union_r_"
       ],
       0,
-      "a259c71ee5b0e97221038aadc20d116e"
+      "fb387729585d1da1ad170790515ea585"
     ],
     [
       "DoublyLinkedList.piece_merge",
@@ -2437,7 +2437,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "238afa01c3045831ce981393483e4e36"
+      "abe8c814b4cd50c623716a21e206d9e8"
     ],
     [
       "DoublyLinkedList.piece_merge_fp0",
@@ -2529,7 +2529,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union", "unit_typing"
       ],
       0,
-      "023e72c578c33e41be214c7d7ecfc1f9"
+      "c440f02eec1530b3b1ebfff73e52db35"
     ],
     [
       "DoublyLinkedList.fragment_defragmentable",
@@ -2602,7 +2602,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "92122b26a97cc059f5ced2f427ddeba5"
+      "ea7fdbb6a3fc6eed0276590cfee98878"
     ],
     [
       "DoublyLinkedList.single_piece_fragment_valid",
@@ -2637,7 +2637,7 @@
         "projection_inverse_DoublyLinkedList.Frag1_t", "true_interp"
       ],
       0,
-      "e0e6af265e1bdefa2b84c5dfb566a3ee"
+      "2a9b0626243c5605e3fd52d8fc7bb024"
     ],
     [
       "DoublyLinkedList.tot_defragmentable_fragment_to_dll",
@@ -2653,7 +2653,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "c60db5d4d5dcc8c25d683c04b87b2221"
+      "b5eae44a2a1ab6a2463ad2325134ad32"
     ],
     [
       "DoublyLinkedList.tot_defragmentable_fragment_to_dll",
@@ -2763,7 +2763,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "42a77c63ba9f7b28b15f18387ec30e86"
+      "550d21c29b55272b62ef7e24d80ad97a"
     ],
     [
       "DoublyLinkedList.nodelist_split_contained",
@@ -2798,7 +2798,7 @@
         "typing_FStar.List.Tot.Base.append", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "b4682d2f80c2af7b019e9611b7fb8578"
+      "2b17f2b95991d1dfb19c620e08ef5924"
     ],
     [
       "DoublyLinkedList.nodelist_split_fp0",
@@ -2867,7 +2867,7 @@
         "unit_typing"
       ],
       0,
-      "1a3866351808b1d89a5ae2cd5fd514d7"
+      "d2b191a63b724bd46d2c994c8500abae"
     ],
     [
       "DoublyLinkedList.nodelist_split_fp0_equiv",
@@ -2914,7 +2914,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "7b66694ec058a27eb518e2e1e7a0e8a6"
+      "06766c82bd018d6052f075ff3d906344"
     ],
     [
       "DoublyLinkedList.nodelist_split_aa_l",
@@ -2970,7 +2970,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bb43993876c6d42886f218495d77a7b5"
+      "5219ec18a54782d8a58bc99bc0eed155"
     ],
     [
       "DoublyLinkedList.nodelist_split_aa_r",
@@ -3013,7 +3013,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "5d2a1419e4d8273d9a784f2d9aa553e0"
+      "e3711fdc2826331b50d2d7fdf1f32b32"
     ],
     [
       "DoublyLinkedList.nodelist_split_aa",
@@ -3035,7 +3035,7 @@
         "kinding_DoublyLinkedList.node@tok", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "3b004eae2f9b7a874483acdb7c926db3"
+      "c28f9b3d629c542cf168d0b4ece6c3e3"
     ],
     [
       "DoublyLinkedList.nodelist_split_conn",
@@ -3066,7 +3066,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "135489701adb1a580b5a9230a250ceb9"
+      "e400ac3b3526ba0f6fea1cb3ea17198c"
     ],
     [
       "DoublyLinkedList.nodelist_split_conn",
@@ -3144,7 +3144,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "554be496b20e7c435fcfaf89b4f7912e"
+      "d58ae85c9d233005cc28576f0b480785"
     ],
     [
       "DoublyLinkedList.nodelist_split_valid",
@@ -3183,7 +3183,7 @@
         "typing_LowStar.Buffer.pointer", "unit_typing"
       ],
       0,
-      "e102b4713004f6dfd95546a4550494ce"
+      "a7437cd0efe40bef043d5cdf56b7cec2"
     ],
     [
       "DoublyLinkedList.dll_fp0_is_nodelist_fp0",
@@ -3238,7 +3238,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "ed7169835c83d66dc718548e0c32e739"
+      "5c009d234eba7b16e9b3e41473869f41"
     ],
     [
       "DoublyLinkedList.piece_fp0_is_nodelist_fp0",
@@ -3287,7 +3287,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "27ccdd3f176c49c1b5ce51611c363bc2"
+      "9b0c903f11d62525da729704978bfd62"
     ],
     [
       "DoublyLinkedList.tot_dll_to_fragment_split",
@@ -3443,7 +3443,7 @@
         "unit_typing"
       ],
       0,
-      "91702c830d149231224d586fd00c7f30"
+      "697bf1a7d13cb75f2a042970ff196d73"
     ],
     [
       "DoublyLinkedList.tot_node_to_dll",
@@ -3516,7 +3516,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "411ec09fdbcd1ddc5a810980a296c14d"
+      "ece2c184492ef8352c28c139a28a9670"
     ],
     [
       "DoublyLinkedList.singleton_dll",
@@ -3546,7 +3546,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "99e911a4e4bd61224e33a98ad18b9398"
+      "94a22c3e25b21310697a89e83bfd34ef"
     ],
     [
       "DoublyLinkedList.tot_node_to_piece",
@@ -3626,7 +3626,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "9fa7e00f92e4c47b52b176772072c47b"
+      "c95a017a410ddfea9fb05b7f71852e86"
     ],
     [
       "DoublyLinkedList.tot_piece_tail",
@@ -3725,7 +3725,7 @@
         "typing_Tm_abs_bc617b992456846c9e984a6621d98ca5"
       ],
       0,
-      "745c3a64c6ec1c4a0a97c973e9a3238e"
+      "70ca894675d4fcb2589b71b25c6635d2"
     ],
     [
       "DoublyLinkedList.lemma_dll_links_contained",
@@ -3817,7 +3817,7 @@
         "typing_Prims.__proj__Cons__item__tl", "unit_typing"
       ],
       0,
-      "afb6466dcfdc05d672b6e8ceaa24a74c"
+      "bd3a631e2701beb4c817f736a89da4e3"
     ],
     [
       "DoublyLinkedList.lemma_dll_links_disjoint",
@@ -3949,7 +3949,7 @@
         "unit_typing"
       ],
       0,
-      "6cbb5aba896765f59854821b3ccb9232"
+      "339d5022a0b2a974a312607c15f5d135"
     ],
     [
       "DoublyLinkedList.nodelist_remains_valid",
@@ -4039,7 +4039,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "73ff0319b6e58247878987a30e322b5a"
+      "1b4b66b75bf4604c7ffec127b357687e"
     ],
     [
       "DoublyLinkedList.piece_remains_valid",
@@ -4096,7 +4096,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "bbf52c058e567adad94cf72c71a7b5a4"
+      "de70f7a96c571286cbed6b21967ce42f"
     ],
     [
       "DoublyLinkedList.piece_remains_valid_b",
@@ -4209,7 +4209,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "d7d3ef32495cd78ff7fbf126eae6d6ce"
+      "b015c5339e7730e52cb6d6f73da56eb9"
     ],
     [
       "DoublyLinkedList.piece_remains_valid_f",
@@ -4318,7 +4318,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "9f6fdb8019e079ab531ebaa17f83dbee"
+      "d89515dc2ef4ad1a800162373405cb5a"
     ],
     [
       "DoublyLinkedList.dll_insert_at_head",
@@ -4484,7 +4484,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "28b6a008d1a46a485b4588825d3f0192"
+      "02e486e98aa51fa4b536363764786cf5"
     ],
     [
       "DoublyLinkedList.dll_insert_at_tail",
@@ -4654,7 +4654,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "558af7f4b844021ea4f18cc8c876a994"
+      "c3d3e88390fbb854e51591645cc339c3"
     ],
     [
       "DoublyLinkedList.dll_insert_after",
@@ -4900,7 +4900,7 @@
         "typing_Tm_abs_d0f4d0750aee5c6c21de612f4760a681", "unit_typing"
       ],
       0,
-      "435985bcffcbfa0e9bf392920090e8cc"
+      "43f06e80f2d402f7d6e1bb7c114276c5"
     ],
     [
       "DoublyLinkedList.dll_insert_before",
@@ -4990,7 +4990,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull", "typing_Prims.eq2"
       ],
       0,
-      "28b0d0989b628c8c6426a80cd479fa9a"
+      "de022955213683a6a6b81158d70844f0"
     ],
     [
       "DoublyLinkedList.dll_remove_head",
@@ -5121,7 +5121,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "2206240cbb47dcb7ea2af0aebcde1739"
+      "788fde6341ee93f189986c1d973fe8e8"
     ],
     [
       "DoublyLinkedList.dll_remove_tail",
@@ -5268,7 +5268,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull", "unit_typing"
       ],
       0,
-      "6234f62e103a9944c1d3502792b0b0c7"
+      "2e36c00ac62a50c35b9852ac46434caa"
     ],
     [
       "DoublyLinkedList.dll_remove_node",
@@ -5306,11 +5306,9 @@
         "FStar.Pervasives_interpretation_Tm_arrow_a7f622c21c9bfd4b48ff31ec14061ca8",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
-        "bool_inversion", "bool_typing",
-        "constructor_distinct_DoublyLinkedList.Frag2",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Tm_unit",
+        "bool_inversion", "constructor_distinct_DoublyLinkedList.Frag2",
+        "constructor_distinct_Prims.Cons",
         "data_elim_DoublyLinkedList.Mknode", "data_elim_Prims.Cons",
         "data_typing_intro_DoublyLinkedList.Frag2@tok",
         "disc_equation_DoublyLinkedList.Frag2", "disc_equation_Prims.Cons",
@@ -5348,8 +5346,7 @@
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.Monotonic.Buffer.get",
         "equation_LowStar.Monotonic.Buffer.length", "equation_Prims.eq2",
-        "equation_Prims.logical", "equation_Prims.nat",
-        "equation_Prims.squash",
+        "equation_Prims.nat", "equation_Prims.squash",
         "equation_with_fuel_DoublyLinkedList.fragment_aa0.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.fragment_aa_lr.fuel_instrumented",
         "equation_with_fuel_DoublyLinkedList.fragment_conn.fuel_instrumented",
@@ -5424,6 +5421,7 @@
         "refinement_interpretation_Tm_refine_3d7b649663b4fab04cceb6e2c2c28fc1",
         "refinement_interpretation_Tm_refine_3daf37ab3cd19c1e74e63f8f5e0fb16a",
         "refinement_interpretation_Tm_refine_50e552dc638ed7dac9f2492d99576667",
+        "refinement_interpretation_Tm_refine_52fd52c3e96fb4b41742efc8f738b032",
         "refinement_interpretation_Tm_refine_573cfed777dae20cc82e8fef9622857e",
         "refinement_interpretation_Tm_refine_5b76b1c4682092d8298d5677347b4a58",
         "refinement_interpretation_Tm_refine_60615e112db050dff0da18a1fe8ab035",
@@ -5433,7 +5431,6 @@
         "refinement_interpretation_Tm_refine_785b445c1ccb59eaa8c666ff5bddec28",
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -5463,7 +5460,6 @@
         "typing_FStar.List.Tot.Properties.index_of",
         "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
-        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_FStar.UInt32.v", "typing_LowStar.Buffer.pointer",
         "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.Monotonic.Buffer.g_is_null",
@@ -5472,11 +5468,11 @@
         "typing_LowStar.Monotonic.Buffer.length",
         "typing_LowStar.Monotonic.Buffer.loc_buffer",
         "typing_LowStar.Monotonic.Buffer.loc_union",
-        "typing_LowStar.Monotonic.Buffer.mnull", "typing_Prims.eq2",
+        "typing_LowStar.Monotonic.Buffer.mnull",
         "typing_Tm_abs_d0f4d0750aee5c6c21de612f4760a681", "unit_typing"
       ],
       0,
-      "abed393b332c429a5e2ffd77bbda79f6"
+      "adb58a8d6e9f5570d487ccadf940798d"
     ],
     [
       "DoublyLinkedList.lemma_non_null",
@@ -5485,7 +5481,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "253df3e040551d9559ed17371b8f31e6"
+      "5e70fbaaaf125e453ebbe6c493fe3606"
     ],
     [
       "DoublyLinkedList.op_At",
@@ -5498,7 +5494,7 @@
         "refinement_interpretation_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "e9fce4a22dbafb238d6222ed1db2e120"
+      "1cb2721fa6f55f75a4e8c28679c712b9"
     ],
     [
       "DoublyLinkedList.op_Hat_At",
@@ -5547,7 +5543,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "dc7d65341a48e7cc900f15bc12b3a527"
+      "ca08e129a91c08f46e28b2cbb8e2e872"
     ],
     [
       "DoublyLinkedList.__proj__Frag1__item___0",
@@ -5561,7 +5557,7 @@
         "refinement_interpretation_Tm_refine_d56d2c22716a132051de7449f1f9f54c"
       ],
       0,
-      "0445677950d65a04ba3d623ca46d928e"
+      "f5f0408317d8a63c9b21b2dcd0b81fed"
     ],
     [
       "DoublyLinkedList.__proj__Frag2__item___0",
@@ -5575,7 +5571,7 @@
         "refinement_interpretation_Tm_refine_70bbde2f8ce7313b7302658284bddacb"
       ],
       0,
-      "74312510b591879158fd8b02f13e5c11"
+      "d64e3f49b1f1cf9fddbba243be0db789"
     ],
     [
       "DoublyLinkedList.__proj__Frag2__item___1",
@@ -5589,7 +5585,7 @@
         "refinement_interpretation_Tm_refine_70bbde2f8ce7313b7302658284bddacb"
       ],
       0,
-      "520250b3ef8dd09a50e28df204ca7297"
+      "a49a8c038cf5cad5d05e9973f896dbca"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___0",
@@ -5603,7 +5599,7 @@
         "refinement_interpretation_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "d1058e30bb0944b051808b311b90c572"
+      "a7ab9b7fe9c7713ed493aae551650474"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___1",
@@ -5617,7 +5613,7 @@
         "refinement_interpretation_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "17d990a43fc14608f38b9546c07b0998"
+      "8160c282d1f19e4fd91649bd4dba9be5"
     ],
     [
       "DoublyLinkedList.__proj__Frag3__item___2",
@@ -5631,7 +5627,7 @@
         "refinement_interpretation_Tm_refine_b9ea59e6deac4413a566ae57bc3064f5"
       ],
       0,
-      "264c789e8353f1b41ceacf636176f987"
+      "69b32d1ab59831b5a9689e90abea7d40"
     ],
     [
       "DoublyLinkedList.empty_node",
@@ -5647,7 +5643,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "a94b4397819bec658c7f30b459864227"
+      "2b30bdee3fe77e6a8cbb23a81b8ecd87"
     ],
     [
       "DoublyLinkedList.empty_list",
@@ -5663,7 +5659,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "c768d23fefd0ac451280fceb5de1d5fa"
+      "134b77b602f5f3d719e92a7ddc9e2ecc"
     ],
     [
       "DoublyLinkedList.fragment_for_each0",
@@ -5679,7 +5675,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "961d7a244b4cc1afe9fcc339c5511de8"
+      "fd35f924710c94c3812e0863a115a414"
     ],
     [
       "DoublyLinkedList.fragment_for_each1",
@@ -5695,7 +5691,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "123fd5a785363009c65f8e109bc563b4"
+      "fbeb972d4b605c81dcb25caf415115ff"
     ],
     [
       "DoublyLinkedList.fragment_length",
@@ -5711,7 +5707,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "8630a4b655c894bf2827a5bb58b98cc6"
+      "0b84909f525e2fb1cd14275724301903"
     ],
     [
       "DoublyLinkedList.dll_ghostly_connections",
@@ -5731,7 +5727,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "817f59dc92e99a8b2d1594e5d1fc16ac"
+      "90270ac18a852cdc62460aded5537467"
     ],
     [
       "DoublyLinkedList.piece_ghostly_connections",
@@ -5751,7 +5747,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "77cd7db946635ba5dd6c443951dfe777"
+      "9bbb1940e887be693703c734e551c935"
     ],
     [
       "DoublyLinkedList.nodelist_contained0",
@@ -5769,7 +5765,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b297659b3f7a2256a5c69ff5e9fa349a"
+      "abb2089845e3539263fbb94bd6683ef7"
     ],
     [
       "DoublyLinkedList.nodelist_fp0",
@@ -5785,7 +5781,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "43172532a25954af6bbef80a26c81ae9"
+      "4f55e94f99efdb2f233caa2830b302c3"
     ],
     [
       "DoublyLinkedList.nodelist_fp_f",
@@ -5803,7 +5799,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6778b0904ad2a24ff5a004c68a82a570"
+      "6e7539dd97f94ca8c1a638fdaa6f4a2c"
     ],
     [
       "DoublyLinkedList.nodelist_fp_b",
@@ -5821,7 +5817,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "55b7ede560d163e32e8859cc6a13f115"
+      "b3f56780833acd8cdfeae4e481d1aab5"
     ],
     [
       "DoublyLinkedList.dll_fp_f",
@@ -5838,7 +5834,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "212c6ced37457129d6e06546560ab6dc"
+      "16ecdd489367cbb64108f94c162c324e"
     ],
     [
       "DoublyLinkedList.dll_fp_b",
@@ -5855,7 +5851,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "d54e76bc5709257ce2fafece7b336791"
+      "cf4dfffbee530cca4960c6883f10332c"
     ],
     [
       "DoublyLinkedList.fragment_fp0",
@@ -5872,7 +5868,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "214b66535812ecbddee6ff94de5422b3"
+      "fb7b2490734cd2bc7cfdf4e46c01a031"
     ],
     [
       "DoublyLinkedList.nodelist_aa_r",
@@ -5888,7 +5884,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2c134d182974de1679136b98d7df8216"
+      "a9aefb5adba616f7350ceaf207204cb7"
     ],
     [
       "DoublyLinkedList.nodelist_aa_l",
@@ -5920,7 +5916,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2545f15ccc8a89c0c4a56ae61163cc2f"
+      "da189086f6b4351c79601a975446fa83"
     ],
     [
       "DoublyLinkedList.fragment_aa_lr",
@@ -5937,7 +5933,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "c5dc4464fa2efc148e7b5bb33d40e082"
+      "6e11e27074b06c76d8e7682ce76aab0c"
     ],
     [
       "DoublyLinkedList.op_Bar_Greater",
@@ -5946,7 +5942,7 @@
       1,
       [ "@query" ],
       0,
-      "64e4f335e77b995255d62aa361d55f4e"
+      "5904ffddc2a3596cd1009733cee7e4fc"
     ],
     [
       "DoublyLinkedList.op_Less_Bar",
@@ -5955,7 +5951,7 @@
       1,
       [ "@query" ],
       0,
-      "6e64a2edc47794dff276fecd01d62d7a"
+      "b681d0887d4add3c05d536d39b23a793"
     ],
     [
       "DoublyLinkedList.nodelist_conn",
@@ -5987,7 +5983,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "fdb4645314f3077c8575fe9663430412"
+      "bfb881ed390daab5d211975374b87be6"
     ],
     [
       "DoublyLinkedList.dll_conn",
@@ -6029,7 +6025,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "860ec894e73ef5f8af8aa52dd6644866"
+      "d9a1981b51c51f7aeea2bdf570210d8f"
     ],
     [
       "DoublyLinkedList.extract_nodelist_conn",
@@ -6049,7 +6045,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b3f74fea2cf07da1d81328b9d6c8bb95"
+      "e48f025b315d90bcd700ebeb7d6dc09d"
     ],
     [
       "DoublyLinkedList.nodelist_remains_aa_l",
@@ -6074,7 +6070,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "74acc25b7b4d9cd03850fcd8a17a0f38"
+      "98957913041a4183b6ae19ab85b6ff74"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_fp0",
@@ -6088,7 +6084,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "c4c14697e2657d1a52eb452de7864af6"
+      "1c26958a53c2ab0b86ecdc15a0c81fcf"
     ],
     [
       "DoublyLinkedList.snd_unsnoc_nodelist_fp0",
@@ -6102,7 +6098,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "2caf16a92bccdd58cb185299ab045b2d"
+      "db6df4cc78abb8faad79828df4982588"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_contained",
@@ -6117,7 +6113,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "bd5758cab79f772b2feb5e2a6ead8f86"
+      "e73a931df6958ea9be795e02193c541d"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_aa",
@@ -6132,7 +6128,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "4073a5cca241b646a30e915729ad209c"
+      "4b34e3ff25a46a374d7318cd185ce691"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_conn",
@@ -6147,7 +6143,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "ed37db0785d9e71ceb0743b3f11f1574"
+      "a4da5ca48f2f5b0c30e4746563b2ed28"
     ],
     [
       "DoublyLinkedList.fst_unsnoc_nodelist_valid",
@@ -6162,7 +6158,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "2fa7ececfc2312409656649d9a1808e1"
+      "67867d6bd5bd6b65c72ece19d7c5fcea"
     ],
     [
       "DoublyLinkedList.tot_dll_to_piece",
@@ -6221,7 +6217,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "c295c0cbe4e31935a1313ae177a685c6"
+      "85086ffbf12fc8daaa5defee7a3a71c1"
     ],
     [
       "DoublyLinkedList.tot_dll_to_fragment",
@@ -6270,7 +6266,7 @@
         "true_interp"
       ],
       0,
-      "975b1b98391bee165a561caecf28fa6c"
+      "403342c86c01b1ec2287fb30e89e043c"
     ],
     [
       "DoublyLinkedList.tot_piece_to_dll",
@@ -6314,7 +6310,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "edcf6d78d6d193a6214694fa66e9a1f5"
+      "80107e043a6134b45e0e69f6f7c72171"
     ],
     [
       "DoublyLinkedList.tot_piece_to_dll",
@@ -6332,7 +6328,7 @@
         "refinement_interpretation_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "6a65da21191f026f177884838bf02590"
+      "07c9f7ffbb076f668cecfdbd646355c0"
     ],
     [
       "DoublyLinkedList.nodelist_append_conn",
@@ -6359,7 +6355,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "b1aa2ff0f1c5ac567bd23093e63b42d2"
+      "7dae13f47a5de3c3ee6ee8c47d49dfd2"
     ],
     [
       "DoublyLinkedList.nodelist_append_valid",
@@ -6382,7 +6378,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "ed36038d573913aff153ed9441591ded"
+      "ec3cf01c299d08af2be8c7283f8cd750"
     ],
     [
       "DoublyLinkedList.piece_merge",
@@ -6466,7 +6462,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "2a19543295569160e35be2afeeb98970"
+      "027c70bb326bbf509f0672186fb55720"
     ],
     [
       "DoublyLinkedList.piece_merge",
@@ -6509,7 +6505,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "e38612dd17b52764d5c10ce99218502e"
+      "a4f7f1ec5528a3f0b15d67b239ce376e"
     ],
     [
       "DoublyLinkedList.piece_merge_fp0",
@@ -6550,7 +6546,7 @@
         "typing_LowStar.Buffer.pointer", "unit_typing"
       ],
       0,
-      "700feb3346a8014303cba4e76f295085"
+      "70d77612f166db2aab7c8e9aaf4b5ece"
     ],
     [
       "DoublyLinkedList.fragment_defragmentable",
@@ -6623,7 +6619,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "5a2430d8d3bee5a912e81e9c59a77de1"
+      "9e67c43f68a16281597ada83b438fedc"
     ],
     [
       "DoublyLinkedList.tot_defragmentable_fragment_to_dll",
@@ -6639,7 +6635,7 @@
         "fuel_guarded_inversion_DoublyLinkedList.fragment"
       ],
       0,
-      "091f36156f4515e487473bbf53bec367"
+      "1fbd00fda3b01e3ad77ecffa69ea5ac2"
     ],
     [
       "DoublyLinkedList.tot_defragmentable_fragment_to_dll",
@@ -6749,7 +6745,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull"
       ],
       0,
-      "44fd89f4391274868a852949306c52fd"
+      "6f3e841f5480a1fd5a766dff6f2c8e67"
     ],
     [
       "DoublyLinkedList.tot_defragmentable_fragment_to_dll",
@@ -6789,7 +6785,7 @@
         "refinement_interpretation_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "102ff70b53a65799d2711a0ff4972842"
+      "8bce4c2d565824377f625954cd8144a8"
     ],
     [
       "DoublyLinkedList.nodelist_split_conn",
@@ -6818,7 +6814,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "df16e18c183863e50fbe3974d4964a17"
+      "20b26c1902938b50f3d7a4a5fea4b9ee"
     ],
     [
       "DoublyLinkedList.nodelist_split_valid",
@@ -6844,7 +6840,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "d52a62c17ed5da8566536c92f4ca2c81"
+      "3048de0a27ced98c125ffb406f3d44a7"
     ],
     [
       "DoublyLinkedList.tot_dll_to_fragment_split",
@@ -7001,7 +6997,7 @@
         "unit_typing"
       ],
       0,
-      "22e7aa485184f2cf5840109e20458cb2"
+      "5616eaeccc7dd9108e813f78e61b3284"
     ],
     [
       "DoublyLinkedList.tot_dll_to_fragment_split",
@@ -7014,7 +7010,7 @@
         "refinement_interpretation_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "8cb50e7acda6ef2be2be60ab739cbcbd"
+      "9ac7ca49e50033fcad6c88e60c00fac7"
     ],
     [
       "DoublyLinkedList.tot_node_to_dll",
@@ -7102,7 +7098,7 @@
         "typing_LowStar.Monotonic.Buffer.mnull", "unit_typing"
       ],
       0,
-      "27bacd0ad567c638dcb7330ea5f7f5b5"
+      "4924e5a9cfa9bd9f21d46698e27a632f"
     ],
     [
       "DoublyLinkedList.tot_node_to_dll",
@@ -7115,7 +7111,7 @@
         "refinement_interpretation_Tm_refine_573cfed777dae20cc82e8fef9622857e"
       ],
       0,
-      "48c3f50bdfa0f12e328fb860c3168494"
+      "b83615d721a2d557f4a5bb4296820aa4"
     ],
     [
       "DoublyLinkedList.tot_node_to_piece",
@@ -7199,7 +7195,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer", "unit_typing"
       ],
       0,
-      "93c2c7891ba49c5766e6ea7a8ecc477f"
+      "0c5f8d330b03f1c978c3054221d83278"
     ],
     [
       "DoublyLinkedList.tot_piece_tail",
@@ -7284,6 +7280,7 @@
         "refinement_interpretation_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
         "refinement_interpretation_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_DoublyLinkedList.__proj__Mkpiece__item__pnodes",
         "typing_DoublyLinkedList.nodelist", "typing_FStar.Ghost.elift1_p",
         "typing_FStar.Ghost.reveal", "typing_FStar.List.Tot.Base.length",
@@ -7297,7 +7294,7 @@
         "typing_Tm_abs_bc617b992456846c9e984a6621d98ca5"
       ],
       0,
-      "1024c386af8e7a73bb4d6b7e21c2a8f4"
+      "9ec4ddc9fec7eb472464f6be2ae13260"
     ],
     [
       "DoublyLinkedList.tot_piece_tail",
@@ -7326,7 +7323,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "cc4f4ce3f6e991b69793f5f2d9de0b35"
+      "1471ac5e27e39b58cfa852c9f219cbdc"
     ],
     [
       "DoublyLinkedList.lemma_dll_links_contained",
@@ -7340,7 +7337,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "1b2ac183f586a3ef86c7b3c745152e46"
+      "d3fc50ba65435a3a9e294a8d378feeff"
     ],
     [
       "DoublyLinkedList.lemma_dll_links_disjoint",
@@ -7354,7 +7351,7 @@
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "1d298f0e5cd44c3327b475f8b2aa1304"
+      "a5df25adc72ff6282fa3bff4052ba6a2"
     ],
     [
       "DoublyLinkedList.dll_remove_head",
@@ -7383,7 +7380,7 @@
         "typing_LowStar.Buffer.pointer"
       ],
       0,
-      "a8a1362a88de695708fae57fe509bd89"
+      "d071cb16d3c7146bca695ade300e6d06"
     ],
     [
       "DoublyLinkedList.dll_remove_tail",
@@ -7422,7 +7419,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "29487e4a95532ffd3e633e56a5ecf3c5"
+      "b53c4f0054d394f321593e9cc2c45710"
     ],
     [
       "DoublyLinkedList.dll_remove_node",
@@ -7464,7 +7461,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "ae7ad3bbaa707d52394571e6cfc2eb93"
+      "6b503d55ef3e2d3a47be1d6d0f0cc06b"
     ]
   ]
 ]
