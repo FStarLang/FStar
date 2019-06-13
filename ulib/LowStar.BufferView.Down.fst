@@ -126,7 +126,7 @@ val upd' (#b: _)
             live h' vb /\
             FStar.HyperStack.ST.equal_domains h h'
           })
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8"
 let upd' #b h vb i x =
     indexing vb i;
     let as = B.as_seq h (as_buffer vb) in

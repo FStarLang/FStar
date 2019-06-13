@@ -18,6 +18,7 @@ include gmake/z3.mk
 include gmake/fstar.mk
 include gmake/Makefile.tmpl
 
+FStar.UInt128.fst.checked: VALIDITY_AXIOMS=
 FStar.UInt128.fst.checked: OTHERFLAGS+=--z3rlimit_factor 2
 FStar.Math.Lemmas.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4 --admit_smt_queries true
 FStar.UInt.fst.checked:OTHERFLAGS+=--z3rlimit_factor 4 --admit_smt_queries true
