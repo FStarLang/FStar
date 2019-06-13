@@ -973,12 +973,37 @@ let dep_graph_copy dep_graph =
     let (Deps g) = dep_graph in
     Deps (BU.smap_copy g)
 
-let topological_dependences_of
+let widen_deps friends dep_graph file_system_map widened =
+    let widened = BU.mk_ref widened in
+    let (Deps dg) = dep_graph in
+    let (Deps dg') = deps_empty() in
+    let widen_one deps =
+      deps |> List.map (fun d ->
+        match d with
+        | PreferInterface m
+            when (List.contains m friends &&
+                 has_implementation file_system_map m) ->
+          widened := true;
+          FriendImplementation m
+        | _ -> d)
+    in
+    BU.smap_fold
+       dg
+       (fun filename dep_node () ->
+          BU.smap_add
+            dg'
+            filename
+            ({dep_node with edges=widen_one dep_node.edges; color=White}))
+       ();
+    !widened, Deps dg'
+
+let topological_dependences_of'
         file_system_map
         dep_graph
         interfaces_needing_inlining
         root_files
         for_extraction
+        widened
     : list<file_name>
     * bool =
     let rec all_friend_deps_1
@@ -1090,39 +1115,6 @@ let topological_dependences_of
        them adjacent to the each other in the final order.
     *)
 
-    if Options.debug_any()
-    then BU.print_string "==============Phase1==================\n";
-    let widen_deps friends dep_graph file_system_map widened =
-        let widened = BU.mk_ref false in
-        let (Deps dg) = dep_graph in
-        let (Deps dg') = deps_empty() in
-        let widen_one deps =
-          deps |> List.map (fun d ->
-            match d with
-            | PreferInterface m
-                when (List.contains m friends &&
-                     has_implementation file_system_map m) ->
-              widened := true;
-              FriendImplementation m
-            | _ -> d)
-        in
-        BU.smap_fold
-           dg
-           (fun filename dep_node () ->
-              BU.smap_add
-                dg'
-                filename
-                ({dep_node with edges=widen_one dep_node.edges; color=White}))
-           ();
-        !widened, Deps dg'
-    in
-    let widened = false in
-    let widened, dep_graph =
-      if Options.cmi()
-      && for_extraction
-      then widen_deps interfaces_needing_inlining dep_graph file_system_map widened
-      else widened, dep_graph
-    in
     let friends, all_files_0 =
         all_friend_deps dep_graph [] ([], []) root_files
     in
@@ -1146,6 +1138,26 @@ let topological_dependences_of
     then BU.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
     all_files,
     widened
+
+let topological_dependences_of
+        file_system_map
+        dep_graph
+        interfaces_needing_inlining
+        root_files
+        for_extraction
+    : list<file_name>
+    * bool =
+
+    if Options.debug_any()
+    then BU.print_string "==============Phase1==================\n";
+    let widened = false in
+    let widened, dep_graph =
+      if Options.cmi()
+      && for_extraction
+      then widen_deps interfaces_needing_inlining dep_graph file_system_map widened
+      else widened, dep_graph
+    in
+    topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files for_extraction widened
 
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
