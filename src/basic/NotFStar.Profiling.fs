@@ -26,7 +26,7 @@ let profiling = ref false
 exception ProfilingException of string
 
 type counter = {total_time:int ref;}
-type profiler = {pname:string; ptime:int ref; counters:System.Collections.Generic.Dictionary<Options.profile_t, counter>; }
+type profiler = {plevel:Options.profile_t; pname:string; ptime:int ref; counters:System.Collections.Generic.Dictionary<string, counter>; }
 let stack:ref<(list<profiler>)> = BU.mk_ref []
 
 let cur_counters () = 
@@ -34,28 +34,34 @@ let cur_counters () =
   | hd::tl -> Some (hd.counters)
   | _ -> None
 
-let find_counter (counters:System.Collections.Generic.Dictionary<Options.profile_t, counter>) n =
+let find_counter (counters:System.Collections.Generic.Dictionary<string, counter>) n =
   let (hit, res) = counters.TryGetValue n in
   if hit then Some res else None
 
-let new_counter (counters:System.Collections.Generic.Dictionary<Options.profile_t, counter>) name =
+let new_counter (counters:System.Collections.Generic.Dictionary<string, counter>) name =
   let ctr = {total_time= ref 0;} in
   counters.Add(name, ctr);
-  ctr
+  ()
 
 let add_counter counters name elapsed =
   match find_counter counters name with
     | Some ctr -> ctr.total_time := elapsed + !ctr.total_time;
     | _ -> 
-      let c = new_counter counters name in
-      c.total_time := elapsed
+      failwith ("counter for " ^ name ^ "not found")
 
 let push_stack p =
   stack := p::!stack
 
-let get_profiler s new_level =
+let get_profiler l s new_level =
   if new_level then
-    let p = {pname=s; ptime = ref 0; counters=new System.Collections.Generic.Dictionary<Options.profile_t, counter>()} in 
+    // create a counter for each profile_phase, instead of creating it lazily when the phase is
+    // invoked. This is to ensure profile data will be consistent for all modules regardless 
+    // whether a phase is invoked for all modules, e.g. for modules without decls, we will still
+    // have normalization time as 0ms, instead of missing normalization time since normalization is
+    // never called. 
+    let cts = new System.Collections.Generic.Dictionary<string, counter>() in
+    Options.get_profile_phase() |> List.iter (fun l ->  new_counter cts l);
+    let p = {plevel=l; pname=s; ptime = ref 0; counters=cts} in 
     push_stack p;
     Some (p.counters)
   else
@@ -83,12 +89,12 @@ let print_profile p =
     let ctr = 
       match find_counter counters name with 
       | Some ctr -> ctr 
-      | _ ->  failwith ("counter for " ^(Options.profile_name name)^ "not found") in
-    Printf.sprintf "%s:\t %sms " (Options.profile_name name)  (string_of_int (!ctr.total_time)) in
+      | _ ->  failwith ("counter for " ^ name ^ "not found") in
+    Printf.sprintf "\t%s: %s ms" name (string_of_int (!ctr.total_time)) in
   let all_keys = List.ofSeq (counters.Keys) in
   let output = List.fold_left
     (fun accum c -> accum ^ (ctr2string c)) (p.pname + ": ") all_keys in
-  Printf.printf "%s\t total: %sms\n" output (string_of_int !p.ptime)
+  Printf.printf "Profiled %s: %s\t total: %s ms\n" (Options.profile_name p.plevel) output (string_of_int !p.ptime)
 
 let pop_and_print_profiler name elapsed =
   let p = pop_stack () in
@@ -98,11 +104,11 @@ let pop_and_print_profiler name elapsed =
   print_profile p
 
 let profile' (f: unit -> 'b) (name:string) (phasename:Options.profile_t) (new_level:bool) (new_phase:bool): 'b * int =
-  let counters = get_profiler name new_level in // push a new profiler if new_level
+  let counters = get_profiler phasename name new_level in // push a new profiler if new_level
   let (r, ms) = BU.record_time f in
   let _ = match counters with
   | Some counters -> // has a profiler to aggregate time
-    if new_phase then add_counter counters phasename ms; // only aggregate the time on phases that are profiled.
+    if new_phase then add_counter counters (Options.profile_name phasename) ms; // only aggregate the time on phases that are profiled.
     if new_level then pop_and_print_profiler name ms; // pop and print current level
   | None -> 
     // if there is no profiler (which means no profile_at_level), then don't

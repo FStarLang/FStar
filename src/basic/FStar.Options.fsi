@@ -141,6 +141,7 @@ val profile_module              : string -> bool
 val profile_name                : profile_t -> string
 val profile_at_level            : profile_t -> bool
 val profile_phase               : profile_t -> bool
+val get_profile_phase           : unit -> list<string>
 val defensive                   : unit    -> bool // true if "warn" or "fail"
 val defensive_fail              : unit    -> bool // true if "fail"
 val dep                         : unit    -> option<string>

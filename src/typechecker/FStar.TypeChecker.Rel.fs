@@ -35,7 +35,6 @@ open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.TypeChecker.Common
 open FStar.Syntax
-open FStar.Profiling
 
 module BU = FStar.Util //basic util
 module U = FStar.Syntax.Util
@@ -45,7 +44,6 @@ module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 module FC = FStar.Const
-module P = FStar.Profiling
 
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
@@ -3091,10 +3089,7 @@ let solve_and_commit env probs err =
   if Env.debug env <| Options.Other "RelBench" then
     BU.print1 "solving problems %s {\n"
       (FStar.Common.string_of_list (fun p -> string_of_int (p_pid p)) probs.attempting);
-  let (sol, ms)  = 
-    P.profile (fun () -> solve env probs)
-      (fun() -> FStar.Common.string_of_list (fun p -> string_of_int (p_pid p)) probs.attempting)
-      Options.ProfileSMT in
+  let (sol, ms) = BU.record_time (fun () -> solve env probs) in
   if Env.debug env <| Options.Other "RelBench" then
     BU.print1 "} solved in %s ms\n" (string_of_int ms);
 

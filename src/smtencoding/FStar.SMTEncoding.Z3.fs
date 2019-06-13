@@ -23,7 +23,9 @@ open FStar
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Util
+open FStar.Profiling
 module BU = FStar.Util
+module P = FStar.Profiling
 
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
@@ -237,7 +239,9 @@ let bg_z3_proc =
     let x : list<unit> = [] in
     let ask input =
         let kill_handler () = "\nkilled\n" in
-        BU.ask_process (z3proc ()) input kill_handler in
+        let (x, _) = P.profile (fun() -> BU.ask_process (z3proc ()) input kill_handler) 
+            (fun() -> input) Options.ProfileSMT in
+        x in
     let refresh () =
         BU.kill_process (z3proc ());
         the_z3proc := Some (new_z3proc_with_id ());

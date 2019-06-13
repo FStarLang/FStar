@@ -7518,7 +7518,8 @@ let (tc_decls :
             let uu____14232 =
               FStar_Profiling.profile
                 (fun uu____14279  -> process_one_decl acc se)
-                (fun uu____14281  -> FStar_Syntax_Print.sigelt_to_string se)
+                (fun uu____14281  ->
+                   FStar_Syntax_Print.sigelt_to_string_short se)
                 FStar_Options.ProfileDecl
                in
             (match uu____14232 with
