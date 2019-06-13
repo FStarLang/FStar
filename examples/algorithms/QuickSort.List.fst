@@ -115,7 +115,6 @@ let rec quicksort #a f l =
   match l with
   | [] -> []
   | pivot::tl ->
-    partition_lemma (f pivot) tl;
     let hi, lo = partition (f pivot) tl in
     let m = quicksort f lo @ pivot :: quicksort f hi in
     permutation_app_lemma pivot tl (quicksort f lo) (quicksort f hi);
