@@ -9,11 +9,11 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "23a245ff83ede2a2c20bb9f3d9787c6c"
+      "4b3b1c68805eb389214cc99e9e2cba76"
     ],
     [
       "Bug1206.ser_id",
@@ -28,7 +28,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option"
       ],
       0,
-      "64ee9e4821c5456e1833aaaca1983cb4"
+      "363c3a122abdc8fc7f9eb08bca2e4b43"
     ]
   ]
 ]

@@ -8,18 +8,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "FStar.PredicateExtensionality_interpretation_Tm_arrow_81e65de2755319ee661cc1adc7d951e3",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.PredicateExtensionality.peq",
         "equation_FStar.PredicateExtensionality.predicate",
-        "equation_Prims.prop",
-        "interpretation_Tm_abs_66926e89e50e2ac69caf858cc1113f07",
+        "interpretation_Tm_abs_2bac9c8a5eacd30e2057426a7a632682",
         "lemma_FStar.FunctionalExtensionality.extensionality",
-        "typing_Tm_abs_66926e89e50e2ac69caf858cc1113f07"
+        "typing_Tm_abs_2bac9c8a5eacd30e2057426a7a632682"
       ],
       0,
-      "603f891d4dfb1aa0ebe6a545e5464e59"
+      "8b4fb91ffd49066cf0bc576140c74576"
     ]
   ]
 ]

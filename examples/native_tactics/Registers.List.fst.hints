@@ -26,7 +26,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "2d9581b101eda29cf842b7513468f817"
+      "b67d7c148ef23e25f5a159a231c2ee7e"
     ],
     [
       "Registers.List.const_map_n",
@@ -35,16 +35,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_1", "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
         "int_inversion", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4ff423471992031bb951a478a1d20b15"
+      "1fba78f31971051f9bf35a1fd9e4fa51"
     ],
     [
       "Registers.List.identity_map",
@@ -53,16 +51,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
         "int_inversion", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0bfa17d598df586ca1831433bb0db729"
+      "05d6315e1d27d70e97d82a5775ca604b"
     ],
     [
       "Registers.List.eta_map",
@@ -70,17 +66,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "int_inversion", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2ec99f9161c8686a0857f2893ad82eac"
+      "c002b2c9d94ca9f740c92208f98afaec"
     ]
   ]
 ]

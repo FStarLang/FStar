@@ -9,15 +9,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_83752f706b2a3b6e453989c3c43318d8_0",
+        "binder_x_717cd45ee01469f780e77315120157cb_0",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7613eef3f717c4cb68e47a86c1501e8c"
+      "3f40afc730632fbc8bfa59eb7b81d30f"
     ],
     [
       "Ex03a.factorial",
@@ -27,15 +27,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_83752f706b2a3b6e453989c3c43318d8_0",
+        "binder_x_717cd45ee01469f780e77315120157cb_0",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c05b7c9b8c0593d925906a0405d5ebb2"
+      "60ac5d93d73fc498ed39e43c70f6ec3b"
     ]
   ]
 ]

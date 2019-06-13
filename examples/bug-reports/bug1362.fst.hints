@@ -9,10 +9,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "2af3b5a68be8d436471b83d6e5a13d16"
+      "fb6ed94d8652f876ebf4159e85264451"
     ],
     [
       "Bug1362.f1",
@@ -26,11 +26,11 @@
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b8b98c2520de9a1131da2ef562dcccfe"
+      "e3b2abde5aca00fc51e110ea7923c0eb"
     ],
     [
       "Bug1362.f2",
@@ -39,16 +39,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "primitive_Prims.op_Addition",
+        "Bug1362_interpretation_Tm_arrow_b71b847c8a1dce9fbabbfc40fd470d89",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "866c2afc42cafb8ab5d437df645d3a15"
+      "bd74f0ac1c42409d7fdc58b1e6d0b067"
     ],
     [
       "Bug1362.f3",
@@ -57,7 +54,7 @@
       1,
       [ "@query" ],
       0,
-      "d09e4f7618c94b696e525a2d183563d2"
+      "af0ba57cacccf2f649025c1ce7c76726"
     ],
     [
       "Bug1362.f4",
@@ -72,7 +69,7 @@
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "f7a8681374c9b250966155e4c38644e4"
+      "c7d0e80db2250fac50c27abfda81da0f"
     ]
   ]
 ]

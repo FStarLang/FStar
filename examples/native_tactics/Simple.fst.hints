@@ -13,11 +13,11 @@
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6a6cfb12d5e86203a06324a2a925e4f9"
+      "cd803a15f21cc8e70f2769bf75430bb5"
     ],
     [
       "Simple.poly_id",
@@ -31,11 +31,11 @@
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b4435ccc2bae119d0829e0a2c9a4c871"
+      "d0237e15a738f45cf29a86b915bead10"
     ],
     [
       "Simple.mk_n_list",
@@ -43,17 +43,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "int_inversion", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ce9b24be33930d3962f1f6f52ecc8b96"
+      "536ddf985b0e4a2d3f4d634f80248f4b"
     ],
     [
       "Simple.poly_list_id",
@@ -66,7 +63,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "357689f5d8e32a33660e2be1c879eb82"
+      "6722381b5041e7793d9000056f849437"
     ],
     [
       "Simple.eq_int_list",
@@ -75,14 +72,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
+        "binder_x_66b03f5c7897b05649fed8196554c587_0",
         "equality_tok_Prims.LexTop@tok",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f43218cac84ce4e47716aa54f3ec0ed0"
+      "630be86d78e375920bd01900d366a28c"
     ]
   ]
 ]

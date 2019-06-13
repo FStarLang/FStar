@@ -8,18 +8,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_273c0cb114efbc10b99731f088b17ae0_2",
-        "binder_x_64708a90e4c1cd5b69c070f58f27b7f6_5",
-        "binder_x_f538212e06d702a48faf191d4189dbc7_7",
+        "binder_x_06b52328a0126bab40d52f7d3255b94f_7",
+        "binder_x_9cd1733a5204f989dbb2f01d5984df93_2",
+        "binder_x_db2cd789b023eeccbb0b327fc82c73ad_5",
         "binder_x_fe28d8bcde588226b4e538b35321de05_3", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "equation_Prims.nat", "int_inversion",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.OrdMap.choose_m", "lemma_FStar.OrdMap.contains_upd1",
         "lemma_FStar.OrdMap.eq_lemma", "lemma_FStar.OrdMap.size_empty",
         "lemma_FStar.OrdMap.size_remove", "primitive_Prims.op_Addition",
@@ -33,7 +31,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "typing_FStar.OrdMap.choose", "typing_FStar.OrdMap.empty",
         "typing_FStar.OrdMap.remove", "typing_FStar.OrdMap.size",
         "typing_FStar.OrdMap.update",
@@ -41,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "16e91c973d1c3b5512cfcedd5d95fb4e"
+      "a0df910816d2244122147d2bb15bef9f"
     ],
     [
       "FStar.OrdMapProps.fold",
@@ -50,18 +48,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_273c0cb114efbc10b99731f088b17ae0_2",
-        "binder_x_64708a90e4c1cd5b69c070f58f27b7f6_5",
-        "binder_x_f538212e06d702a48faf191d4189dbc7_7",
+        "binder_x_06b52328a0126bab40d52f7d3255b94f_7",
+        "binder_x_9cd1733a5204f989dbb2f01d5984df93_2",
+        "binder_x_db2cd789b023eeccbb0b327fc82c73ad_5",
         "binder_x_fe28d8bcde588226b4e538b35321de05_3", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "equation_Prims.nat", "int_inversion",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.OrdMap.choose_m", "lemma_FStar.OrdMap.contains_upd1",
         "lemma_FStar.OrdMap.eq_lemma", "lemma_FStar.OrdMap.size_empty",
         "lemma_FStar.OrdMap.size_remove", "primitive_Prims.op_Addition",
@@ -75,7 +71,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "typing_FStar.OrdMap.choose", "typing_FStar.OrdMap.empty",
         "typing_FStar.OrdMap.remove", "typing_FStar.OrdMap.size",
         "typing_FStar.OrdMap.update",
@@ -83,7 +79,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5b19e6842395a264a4f0bee81bcda747"
+      "942cc1b29784bb713959518b64746c7f"
     ]
   ]
 ]

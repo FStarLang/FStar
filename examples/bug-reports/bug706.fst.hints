@@ -8,17 +8,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Bug706_interpretation_Tm_arrow_0be46514fe61755cfabf3fe87e746ccc",
-        "bool_inversion", "disc_equation_FStar.Pervasives.Native.None",
+        "Bug706_interpretation_Tm_arrow_6e9cab30cb0eafb661d768f4364082e9",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Bug706.exnst",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.Native.uu___is_None",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
+        "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "8d097bdb8befb8fac1b708c4905b8266"
+      "9935e5c0f2a288f18da4f455264d48b7"
     ],
     [
       "Bug706._dm4f_EXNST_bind_wp",
@@ -35,7 +34,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "a3179202950920fa71576a96f3a1254f"
+      "10448212233c4c9f0db763bfd6e7809b"
     ],
     [
       "Bug706._dm4f_EXNST_int_bind_wp",
@@ -53,7 +52,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6bdf21858d9cdae0ddf46a73dfe7aa00"
+      "f1dfddb01b26e29953e54040948cd78e"
     ]
   ]
 ]

@@ -11,10 +11,10 @@
         "@fuel_correspondence_FStar.Reflection.Data.forall_list.fuel_instrumented",
         "@fuel_irrelevance_FStar.Reflection.Data.forall_list.fuel_instrumented",
         "@query",
-        "FStar.Reflection.Derived.Lemmas_interpretation_Tm_arrow_ddb110116104047fad289f36e66e464e",
-        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "FStar.Preorder_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "FStar.Reflection.Derived.Lemmas_interpretation_Tm_arrow_5a98e66daedcb0b3e66fcff80567f12a",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
-        "binder_x_45cac57f38e27b96eab3a3f21e0703ab_2",
+        "binder_x_8691477dadb3127747d6cabdd98d71a0_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil",
@@ -25,7 +25,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6bf3e5dfc588ca4ba501ed06cb737be2"
+      "7bc106fa7296479e7ec0da8ce1250dbe"
     ],
     [
       "FStar.Reflection.Derived.Lemmas.list_ref",
@@ -37,10 +37,10 @@
         "@fuel_correspondence_FStar.Reflection.Data.forall_list.fuel_instrumented",
         "@fuel_irrelevance_FStar.Reflection.Data.forall_list.fuel_instrumented",
         "@query",
-        "FStar.Reflection.Derived.Lemmas_interpretation_Tm_arrow_ddb110116104047fad289f36e66e464e",
-        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "FStar.Preorder_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "FStar.Reflection.Derived.Lemmas_interpretation_Tm_arrow_5a98e66daedcb0b3e66fcff80567f12a",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
-        "binder_x_45cac57f38e27b96eab3a3f21e0703ab_2",
+        "binder_x_8691477dadb3127747d6cabdd98d71a0_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil",
@@ -51,7 +51,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "987e9d5e039d22e6d9a4598744c6f261"
+      "5ab5dcb4420cf8a98b519bed5e5c2d35"
     ]
   ]
 ]
