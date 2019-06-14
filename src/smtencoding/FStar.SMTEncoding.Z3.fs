@@ -239,9 +239,7 @@ let bg_z3_proc =
     let x : list<unit> = [] in
     let ask input =
         let kill_handler () = "\nkilled\n" in
-        let (x, _) = P.profile (fun() -> BU.ask_process (z3proc ()) input kill_handler) 
-            (fun() -> input) Options.ProfileSMT in
-        x in
+        BU.ask_process (z3proc ()) input kill_handler in
     let refresh () =
         BU.kill_process (z3proc ());
         the_z3proc := Some (new_z3proc_with_id ());
@@ -697,7 +695,10 @@ let ask
     (scope:option<scope_t>)
     (cb:cb)
     (fresh:bool)
+    (name:string)
   = if Options.n_cores() = 1 then
-        ask_1_core r filter cache label_messages qry cb fresh
+        P.profile (fun () -> ask_1_core r filter cache label_messages qry cb fresh)
+         (fun() -> name) Options.ProfileSMT |> ignore
     else
-        ask_n_cores r filter cache label_messages qry scope cb
+        P.profile (fun () -> ask_n_cores r filter cache label_messages qry scope cb)
+         (fun() -> name) Options.ProfileSMT |> ignore

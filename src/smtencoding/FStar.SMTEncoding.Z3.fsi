@@ -53,6 +53,7 @@ val ask: r:Range.range
        -> scope:option<scope_t>
        -> cb:cb
        -> fresh:bool
+       -> name:string
        -> unit
 
 val refresh: unit -> unit

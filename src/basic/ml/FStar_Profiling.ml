@@ -90,7 +90,7 @@ let profile' f name phasename new_level new_phase =
     if new_phase then add_counter counters (FStar_Options.profile_name phasename) ms;
     if new_level then pop_and_print_profiler name ms;
   | None -> 
-    Printf.printf "%s: %s: %sms\n" name (FStar_Options.profile_name phasename)(string_of_int ms)
+    Printf.printf "%s: %s: %s ms\n" name (FStar_Options.profile_name phasename)(string_of_int ms)
   in
   (r, elapsed)
 

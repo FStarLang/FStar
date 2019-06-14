@@ -266,7 +266,8 @@ let detail_hint_replay settings z3result =
                       (with_fuel_and_diagnostics settings label_assumptions)
                       None
                       (fun r -> res := Some r)
-                      false;
+                      false
+                      settings.query_name;
                Option.get (!res)
            in
            detail_errors true settings.query_env settings.query_all_labels ask_z3
@@ -310,7 +311,8 @@ let report_errors settings : unit =
                     (with_fuel_and_diagnostics initial_fuel label_assumptions)
                     None
                     (fun r -> res := Some r)
-                    false;
+                    false
+                    settings.query_name;
             Option.get (!res)
             in
          detail_errors false settings.query_env settings.query_all_labels ask_z3
@@ -612,6 +614,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                   (Some (Z3.mk_fresh_scope()))
                   k
                   (used_hint config)
+                  config.query_name
     in
 
     let check_all_configs configs =
