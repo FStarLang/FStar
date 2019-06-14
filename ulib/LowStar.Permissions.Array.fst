@@ -124,6 +124,7 @@ let cls : MG.cls ucell = MG.Cls #ucell
 
 let bloc = MG.loc cls
 
+let loc_none = MG.loc_none #ucell #cls
 let loc_union (l1 l2:bloc) = MG.loc_union #ucell #cls l1 l2
 let loc_disjoint (l1 l2:bloc) = MG.loc_disjoint #ucell #cls l1 l2
 let loc_includes (l1 l2:bloc) = MG.loc_includes #ucell #cls l1 l2
@@ -331,3 +332,37 @@ let sub #a b i len =
   | Array max_len content i0 len0 pid ->
     // Keep the same perm_id, to avoid being considered disjoint
     Array max_len content (U32.add i0 i) len pid
+
+val alloc (#a:Type0) (init:a) (len:U32.t)
+  : ST (array a)
+       (requires fun _ -> U32.v len > 0)
+       (ensures fun h0 b h1 -> 
+         modifies loc_none h0 h1 /\ 
+         writeable h1 b /\ 
+         as_seq h1 b == Seq.create (U32.v len) init)
+
+let alloc #a init len =
+  let perm_map_pid = (
+    let (vp, pid) = new_value_perms init true in
+    ((vp <: perms_rec a), pid)
+  ) in
+  let v = (init, Ghost.hide (fst perm_map_pid)) in
+  let s = Seq.create (U32.v len) v in
+  let h0 = HST.get() in
+  let content = HST.ralloc_mm HS.root s in
+  let h1 = HST.get() in
+  MG.modifies_ralloc_post #ucell #cls HS.root s h0 content h1;
+  let b = Array len content 0ul len (snd perm_map_pid) in
+  assert (Seq.equal (as_seq h1 b) (Seq.create (U32.v len) init));
+  b
+
+val share (#a:Type0) (b:array a) : Stack (array a)
+  (requires fun h0 -> live h0 b)
+  (ensures fun h0 b' h1 -> 
+    modifies (loc_array b) h0 h1 /\ 
+    live h1 b' /\ 
+    as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
+    as_seq h1 b' == as_seq h1 b /\ // The values of the new buffer are the same as the initial array
+    True) // TODO: Talk about permissions here
+
+let share #a b = admit()
