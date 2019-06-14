@@ -497,7 +497,7 @@ let compile_op arity s r =
       |':' -> "Colon"
       |'$' -> "Dollar"
       |'.' -> "Dot"
-      | c -> raise_error (Fatal_UnexpectedOperatorSymbol, "Unexpected operator symbol: '" ^ string_of_char c ^ "'") r
+      | c -> "u" ^ (Util.string_of_int (Util.int_of_char c))
     in
     match s with
     | ".[]<-" -> "op_String_Assignment"
