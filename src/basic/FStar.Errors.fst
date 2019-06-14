@@ -243,7 +243,6 @@ type raw_error =
   | Fatal_UnexpectedModuleDeclaration
   | Fatal_UnexpectedNumberOfUniverse
   | Fatal_UnexpectedNumericLiteral
-  | Fatal_UnexpectedOperatorSymbol
   | Fatal_UnexpectedPattern
   | Fatal_UnexpectedPosition
   | Fatal_UnExpectedPreCondition
