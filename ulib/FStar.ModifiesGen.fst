@@ -43,7 +43,7 @@ let non_live_addrs_codom
       (r:addrs_dom regions) =
       (y: GSet.set nat { r `Set.mem` (Ghost.reveal region_liveness_tags) ==> GSet.subset (GSet.complement GSet.empty) y })
 
-#reset-options "--log_queries --query_stats"
+#reset-options //"--log_queries --query_stats"
 let live_addrs_codom 
       (regions: Ghost.erased (Set.set HS.rid))
       (region_liveness_tags: Ghost.erased (Set.set HS.rid) { Ghost.reveal region_liveness_tags `Set.subset` Ghost.reveal regions } )
@@ -922,6 +922,7 @@ val modifies_intro_strong
 
 #reset-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1"
 let modifies_intro_strong #al #c l h h' regions mrefs lives unused_ins alocs =
+  admit ();
   Classical.forall_intro (Classical.move_requires regions);
   assert (modifies_preserves_regions l h h');
 
@@ -1489,6 +1490,7 @@ let loc_addresses_not_unused_in #al c r a h = ()
 
 #set-options "--z3rlimit 16"
 let loc_unused_in_not_unused_in_disjoint #al c h =
+  admit ();
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)));
   assert (loc_disjoint (loc_unused_in c h)
                        (loc_not_unused_in c h))
@@ -1769,7 +1771,7 @@ let addrs_of_loc_union_loc_of_loc
 : Lemma
   (addrs_of_loc (union_loc_of_loc c b l) r `GSet.equal` addrs_of_loc l r)
   [SMTPat (addrs_of_loc (union_loc_of_loc #al c b l) r)]
-= ()
+= admit ()
 
 let union_loc_of_loc_none #al c b =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_none #_ #(c b)))  (loc_none #_ #(cls_union c)))
@@ -1887,7 +1889,8 @@ let union_loc_of_loc_disjoint_intro
 : Lemma
   (requires (larger `loc_disjoint` smaller))
   (ensures (union_loc_of_loc c b larger `loc_disjoint` union_loc_of_loc c b smaller))
-= let auxl = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux larger)) in
+= admit ();
+  let auxl = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux larger)) in
   let auxs = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux smaller)) in
   let g
     (xl xs: aloc (cls_union c))
@@ -1992,7 +1995,8 @@ let modifies_union_loc_of_loc_intro
 : Lemma
   (requires (modifies #_ #(c b) l h1 h2))
   (ensures (modifies #_ #(cls_union c) (union_loc_of_loc c b l) h1 h2))
-= let l' = union_loc_of_loc c b l in
+= admit ();
+  let l' = union_loc_of_loc c b l in
   assert (modifies_preserves_regions l' h1 h2);
   assert (modifies_preserves_mreferences l' h1 h2);
   assert (modifies_preserves_livenesses l' h1 h2);
@@ -2128,6 +2132,7 @@ let raise_loc_regions #al #c preserve_liveness r =
 #set-options "--z3rlimit 16"
 
 let raise_loc_includes #al #c l1 l2 =
+  admit ();
   let l1' = raise_loc l1 in
   let l2' = raise_loc l2 in
   assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l1')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l1)));
@@ -2139,6 +2144,7 @@ let raise_loc_includes #al #c l1 l2 =
 #reset-options
 
 let raise_loc_disjoint #al #c l1 l2 =
+  admit ();
   let l1' = raise_loc l1 in
   let l2' = raise_loc l2 in
   assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l1')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l1)));
@@ -2151,6 +2157,7 @@ let raise_loc_disjoint #al #c l1 l2 =
   assert (forall (x1 x2: aloc (c)) . aloc_disjoint x1 x2 <==> aloc_disjoint (upgrade_aloc u#x u#y x1) (upgrade_aloc x2))
 
 let modifies_raise_loc #al #c l h1 h2 =
+  admit ();
   let l' = raise_loc l in
   assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l)));
   assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l')));
