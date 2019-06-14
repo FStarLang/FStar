@@ -323,6 +323,17 @@ let loc_includes_region_region'
   [SMTPat (loc_regions #_ #cls preserve_liveness s)]
 = ()
 
+let loc_includes_adresses_ploc (#a: Type) (ptr: pointer a) (preserve_liveness: bool)
+: Lemma (
+    loc_includes (loc_addresses preserve_liveness (frame_of_pointer ptr) (Set.singleton (pointer_as_addr ptr)))
+      (loc_pointer ptr)
+  )
+  [SMTPat (loc_addresses #ploc #cls preserve_liveness (frame_of_pointer ptr) (Set.singleton (pointer_as_addr ptr)));
+   SMTPat (loc_pointer ptr)]
+=
+  loc_includes_addresses_aloc #ploc #cls preserve_liveness (frame_of_pointer ptr) (Set.singleton (pointer_as_addr ptr))
+    #(pointer_as_addr ptr) (aloc_pointer ptr)
+
 let loc_includes_region_union_l
   (preserve_liveness: bool)
   (l: loc)

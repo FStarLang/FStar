@@ -111,18 +111,9 @@ inline_for_extraction noextract let ptr_write
   (**)     PR.prove_ploc_preserved #r #n ploc' h0 h1 lemma
   (**)   )
   (**) ;
-  (**) //assert(MG.modifies #PR.ploc #PR.cls (R.as_loc (R.fp (ptr_resource ptr))) h0 h1);
   (**) MG.modifies_address_liveness_insensitive_unused_in
   (**)   #PR.ploc PR.cls h0 h1;
-  (**) //assert(MG.loc_includes (MG.loc_not_unused_in PR.cls h1) (R.as_loc (R.fp (ptr_resource ptr))));
   ()
-
-let lemma_pointer (#a: Type) (ptr: PR.pointer a) (b: bool) : Lemma (ensures (
-  MG.loc_includes (MG.loc_addresses b (PR.frame_of_pointer ptr) (Set.singleton (PR.pointer_as_addr ptr)))
-    (PR.loc_pointer ptr)
-)) =
-  MG.loc_includes_addresses_aloc #PR.ploc #PR.cls b (PR.frame_of_pointer ptr) (Set.singleton (PR.pointer_as_addr ptr))
-    #(PR.pointer_as_addr ptr) (PR.aloc_pointer ptr)
 
 inline_for_extraction noextract let ptr_alloc
   (#a:Type)
@@ -144,32 +135,18 @@ inline_for_extraction noextract let ptr_alloc
   let ptr_v = HST.ralloc_mm HS.root (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) in
   let h1 = HST.get () in
   let ptr = { PR.ptr_v = ptr_v; PR.ptr_pid = Ghost.hide (snd (Ghost.reveal perm_map_pid)) } in
-  let f () : Lemma (MG.loc_includes (MG.loc_not_unused_in PR.cls h1) (R.as_loc (R.fp (ptr_resource ptr)))) =
-    let singlet = Set.singleton (PR.pointer_as_addr ptr) in
-    (**) let r = PR.frame_of_pointer ptr in
-    (**) let n = PR.pointer_as_addr ptr in
-    (*Classical.move_requires ( MG.does_not_contain_addr_elim #(PR.value_with_perms a) #(Heap.trivial_preorder (PR.value_with_perms a))
-    (ptr.PR.ptr_v)
-    h1) (r, n);
-    MG.loc_addresses_not_unused_in #PR.ploc #PR.cls*)
-    MG.mreference_live_loc_not_unused_in #PR.ploc PR.cls #(PR.value_with_perms a)
-      #(Heap.trivial_preorder (PR.value_with_perms a))
-      h1 ptr.PR.ptr_v;
-    lemma_pointer #a ptr false;
-    MG.loc_includes_trans (MG.loc_not_unused_in PR.cls h1)
-    ( MG.loc_freed_mreference ptr.PR.ptr_v)
-     (PR.loc_pointer ptr)
-  in
-  f ();
-  (**) assert(MG.loc_includes (MG.loc_not_unused_in PR.cls h1) (R.as_loc (R.fp (ptr_resource ptr))));
-  MG.modifies_address_liveness_insensitive_unused_in #PR.ploc PR.cls h0 h1;
-  (**) assert((forall frame .
-  (**)    MG.loc_disjoint frame (R.as_loc (R.fp R.empty_resource)) /\
-  (**)    MG.loc_includes (MG.loc_not_unused_in PR.cls h0) frame
-  (**)    ==>
-  (**)    (MG.loc_disjoint frame (R.as_loc (R.fp (ptr_resource ptr))) /\
-  (**)    (MG.loc_includes (MG.loc_not_unused_in PR.cls h1) frame))
-  (**) ));
+  (**) let f () : Lemma (MG.loc_includes (MG.loc_not_unused_in PR.cls h1) (R.as_loc (R.fp (ptr_resource ptr)))) =
+  (**)   let singlet = Set.singleton (PR.pointer_as_addr ptr) in
+  (**)   let r = PR.frame_of_pointer ptr in
+  (**)   let n = PR.pointer_as_addr ptr in
+  (**)   MG.mreference_live_loc_not_unused_in #PR.ploc PR.cls #(PR.value_with_perms a)
+  (**)      #(Heap.trivial_preorder (PR.value_with_perms a))
+  (**)      h1 ptr.PR.ptr_v;
+  (**)   MG.loc_includes_trans (MG.loc_not_unused_in PR.cls h1)
+  (**)   (MG.loc_freed_mreference ptr.PR.ptr_v)
+  (**)   (PR.loc_pointer ptr)
+  (**) in f ();
+  (**) MG.modifies_address_liveness_insensitive_unused_in #PR.ploc PR.cls h0 h1;
   ptr
 
 inline_for_extraction noextract let ptr_free
@@ -193,8 +170,13 @@ inline_for_extraction noextract let ptr_free
   (**)   #(Heap.trivial_preorder (PR.value_with_perms a))
   (**)   ptr.PR.ptr_v h0
   (**) ;
-  (**)
-  (**) assume(MG.modifies #PR.ploc #PR.cls (R.as_loc (R.fp (R.empty_resource))) h0 h1);
+  (**) assert(MG.modifies (MG.loc_freed_mreference #PR.ploc #PR.cls  ptr.PR.ptr_v) h0 h1);
+  (**) assert(MG.loc_includes
+  (**)   (MG.loc_freed_mreference ptr.PR.ptr_v)
+  (**)   (PR.loc_pointer ptr));
+  (**) //MG.modifies_loc_includes #PR.ploc #PR.cls (MG.loc_freed_mreference ptr.PR.ptr_v) h0 h1 (PR.loc_pointer ptr);
+  (**) assume(MG.modifies #PR.ploc #PR.cls (PR.loc_pointer ptr) h0 h1);
+  (**) assert(MG.modifies #PR.ploc #PR.cls (R.as_loc (R.fp (ptr_resource ptr))) h0 h1);
   ()
 
 inline_for_extraction noextract let ptr_share
