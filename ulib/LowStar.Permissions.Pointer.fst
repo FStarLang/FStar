@@ -44,9 +44,9 @@ inline_for_extraction noextract let ptr_read
       R.sel (ptr_view ptr) h0 == R.sel (ptr_view ptr) h1
     )
   =
-  let open HST in
-  let (x, _) = ! ptr.PR.ptr_v in
-  x
+  RST.reveal_rst_inv ();
+  RST.reveal_modifies ();
+  PR.get ptr
 
 inline_for_extraction noextract let ptr_write
   (#a: Type)
@@ -61,59 +61,9 @@ inline_for_extraction noextract let ptr_write
       (R.sel (ptr_view ptr) h1).PR.wp_perm == (R.sel (ptr_view ptr) h0).PR.wp_perm
     )
   =
-  (**) let h0 = HST.get () in
   (**) RST.reveal_rst_inv ();
   (**) RST.reveal_modifies ();
-  let open HST in
-  let (v', perm_map) = !ptr.PR.ptr_v in
-  let perm_map'  = Ghost.hide (P.change_snapshot #a #v' (Ghost.reveal perm_map) (Ghost.reveal ptr.PR.ptr_pid) x) in
-  ptr.PR.ptr_v := (x, (perm_map' <: Ghost.erased (P.perms_rec a)));
-  (**) let h1 = HST.get () in
-  (**) let r = PR.frame_of_pointer ptr in
-  (**) let n = PR.pointer_as_addr ptr in
-  (**) MG.modifies_aloc_intro
-  (**)   #PR.ploc #PR.cls
-  (**)   #r
-  (**)   #n
-  (**)   (PR.aloc_pointer ptr)
-  (**)   h0 h1
-  (**)   (fun r -> ())
-  (**)   (fun t pre b -> ())
-  (**)   (fun t pre b -> ())
-  (**)   (fun r n -> ())
-  (**)   (fun ploc' ->
-  (**)     let ploc = PR.aloc_pointer ptr in
-  (**)     assert((Ghost.reveal ploc) =!= (Ghost.reveal ploc'));
-  (**)     let lemma (t': Type0) (ptr': PR.pointer t') : Lemma
-  (**)       (requires (let pid' = Ghost.reveal ptr'.PR.ptr_pid in
-  (**)         PR.pointer_live ptr' h0 /\
-  (**)         PR.frame_of_pointer ptr' == r /\
-  (**)         PR.pointer_as_addr ptr' == n /\
-  (**)         (Ghost.reveal ploc') == pid'
-  (**)       )) (ensures (
-  (**)         PR.sel h0 ptr' == PR.sel h1 ptr' /\
-  (**)         PR.pointer_live ptr' h1
-  (**)       ))
-  (**)       =
-  (**)       let pid = Ghost.reveal ptr.PR.ptr_pid in
-  (**)       let pid' = Ghost.reveal ptr'.PR.ptr_pid in
-  (**)       P.only_one_live_pid_with_full_permission #a #x
-  (**)         (Ghost.reveal perm_map')
-  (**)         (Ghost.reveal ptr.PR.ptr_pid);
-  (**)       assert(P.get_permission_from_pid (Ghost.reveal perm_map') pid' ==
-  (**)         P.get_permission_from_pid (Ghost.reveal perm_map) pid'
-  (**)       );
-  (**)       PR.live_same_pointers_equal_types t' a ptr' ptr h0;
-  (**)       PR.live_same_pointers_equal_types t' a ptr' ptr h1;
-  (**)       assert(PR.sel h0 ptr' == PR.sel h1 ptr');
-  (**)       ()
-  (**)     in
-  (**)     PR.prove_ploc_preserved #r #n ploc' h0 h1 lemma
-  (**)   )
-  (**) ;
-  (**) MG.modifies_address_liveness_insensitive_unused_in
-  (**)   #PR.ploc PR.cls h0 h1;
-  ()
+  PR.upd ptr x
 
 inline_for_extraction noextract let ptr_alloc
   (#a:Type)
@@ -127,27 +77,7 @@ inline_for_extraction noextract let ptr_alloc
   (**) RST.reveal_rst_inv ();
   (**) RST.reveal_modifies ();
   (**) R.reveal_empty_resource ();
-  let perm_map_pid = Ghost.hide (
-    let (vp, pid) = P.new_value_perms init true in
-    ((vp <: P.perms_rec a), pid)
-  ) in
-  let h0 = HST.get () in
-  let ptr_v = HST.ralloc_mm HS.root (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) in
-  let h1 = HST.get () in
-  let ptr = { PR.ptr_v = ptr_v; PR.ptr_pid = Ghost.hide (snd (Ghost.reveal perm_map_pid)) } in
-  (**) let f () : Lemma (MG.loc_includes (MG.loc_not_unused_in PR.cls h1) (R.as_loc (R.fp (ptr_resource ptr)))) =
-  (**)   let singlet = Set.singleton (PR.pointer_as_addr ptr) in
-  (**)   let r = PR.frame_of_pointer ptr in
-  (**)   let n = PR.pointer_as_addr ptr in
-  (**)   MG.mreference_live_loc_not_unused_in #PR.ploc PR.cls #(PR.value_with_perms a)
-  (**)      #(Heap.trivial_preorder (PR.value_with_perms a))
-  (**)      h1 ptr.PR.ptr_v;
-  (**)   MG.loc_includes_trans (MG.loc_not_unused_in PR.cls h1)
-  (**)   (MG.loc_freed_mreference ptr.PR.ptr_v)
-  (**)   (PR.loc_pointer ptr)
-  (**) in f ();
-  (**) MG.modifies_address_liveness_insensitive_unused_in #PR.ploc PR.cls h0 h1;
-  ptr
+  PR.create init
 
 inline_for_extraction noextract let ptr_free
   (#a: Type)
@@ -161,23 +91,8 @@ inline_for_extraction noextract let ptr_free
   (**) RST.reveal_rst_inv ();
   (**) RST.reveal_modifies ();
   R.reveal_empty_resource ();
-  (**) let h0 = HST.get () in
-  HST.rfree ptr.PR.ptr_v;
-  (**) let h1 = HST.get () in
-  (**) let r = PR.frame_of_pointer ptr in
-  (**) let n = PR.pointer_as_addr ptr in
-  (**) MG.modifies_free #PR.ploc #PR.cls #(PR.value_with_perms a)
-  (**)   #(Heap.trivial_preorder (PR.value_with_perms a))
-  (**)   ptr.PR.ptr_v h0
-  (**) ;
-  (**) assert(MG.modifies (MG.loc_freed_mreference #PR.ploc #PR.cls  ptr.PR.ptr_v) h0 h1);
-  (**) assert(MG.loc_includes
-  (**)   (MG.loc_freed_mreference ptr.PR.ptr_v)
-  (**)   (PR.loc_pointer ptr));
-  (**) //MG.modifies_loc_includes #PR.ploc #PR.cls (MG.loc_freed_mreference ptr.PR.ptr_v) h0 h1 (PR.loc_pointer ptr);
-  (**) assume(MG.modifies #PR.ploc #PR.cls (PR.loc_pointer ptr) h0 h1);
-  (**) assert(MG.modifies #PR.ploc #PR.cls (R.as_loc (R.fp (ptr_resource ptr))) h0 h1);
-  ()
+  PR.free ptr
+
 
 inline_for_extraction noextract let ptr_share
   (#a: Type)
