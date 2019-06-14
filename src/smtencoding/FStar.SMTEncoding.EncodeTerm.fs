@@ -757,11 +757,20 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, [tdecl; t_kinding; t_interp] |> mk_decls_trivial (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
-        let x, f = match N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv t0 with
-            | {n=Tm_refine(x, f)} ->
-               let b, f = SS.open_term [x, None] f in
-               fst (List.hd b), f
-            | _ -> failwith "impossible" in
+        let x, f =
+          let steps = [
+            Env.Weak;
+            Env.HNF;
+            Env.EraseUniverses;
+            Env.Eager_unfolding;  //AR: 06/14: adding unfolding steps to normalize the types in the sorts, otherwise they interfere with hashconsing
+            Env.UnfoldUntil S.delta_constant
+          ] in
+          match N.normalize_refinement steps env.tcenv t0 with
+          | {n=Tm_refine(x, f)} ->
+            let b, f = SS.open_term [x, None] f in
+            fst (List.hd b), f
+          | _ -> failwith "impossible"
+        in
 
         let base_t, decls = encode_term x.sort env in
         let x, xtm, env' = gen_term_var env x in
@@ -785,7 +794,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let ffv = mk_fv (fsym, Fuel_sort) in
         let tkey = mkForall t0.pos ([], ffv::xfv::cvars, encoding) in
         let tkey_hash = Term.hash_of_term tkey in
-        let module_name = env.current_module_name in
+
+        if Env.debug env.tcenv (Options.Other "SMTEncoding")
+        then BU.print3 "Encoding Tm_refine %s with tkey_hash %s and digest %s\n"
+               (Syntax.Print.term_to_string f) tkey_hash (BU.digest_of_string tkey_hash)
+        else ();
+
         let tsym = "Tm_refine_" ^ (BU.digest_of_string tkey_hash) in
         let cvar_sorts = List.map fv_sort cvars in
         let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
