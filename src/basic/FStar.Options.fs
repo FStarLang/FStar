@@ -444,12 +444,14 @@ let one_debug_level_geq l1 l2 = match l1 with
    | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
 let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
 
-let profile_name = function
+let profile_name x = 
+  let n = match x with
    | ProfileModule -> "Module"
    | ProfileDecl -> "Decl"
    | ProfileNormalize -> "Normalize"
    | ProfileSMT -> "SMT"
-   | Profile s -> s
+   | Profile s -> s in
+  String.lowercase n
    
 let profile_level_eq l2 = get_profile_level() |> Util.for_some (fun l1 -> String.lowercase l1 = String.lowercase (profile_name l2))
 let profile_phase_eq p2 = get_profile_phase() |> Util.for_some (fun p1 -> String.lowercase p1 = String.lowercase (profile_name p2))

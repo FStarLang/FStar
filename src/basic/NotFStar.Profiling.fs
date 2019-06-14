@@ -47,7 +47,7 @@ let add_counter counters name elapsed =
   match find_counter counters name with
     | Some ctr -> ctr.total_time := elapsed + !ctr.total_time;
     | _ -> 
-      failwith ("counter for " ^ name ^ "not found")
+      failwith ("counter for " ^ name ^ " not found")
 
 let push_stack p =
   stack := p::!stack
@@ -60,7 +60,7 @@ let get_profiler l s new_level =
     // have normalization time as 0ms, instead of missing normalization time since normalization is
     // never called. 
     let cts = new System.Collections.Generic.Dictionary<string, counter>() in
-    Options.get_profile_phase() |> List.iter (fun l ->  new_counter cts l);
+    Options.get_profile_phase() |> List.iter (fun l ->  new_counter cts (String.lowercase l));
     let p = {plevel=l; pname=s; ptime = ref 0; counters=cts} in 
     push_stack p;
     Some (p.counters)
@@ -89,7 +89,7 @@ let print_profile p =
     let ctr = 
       match find_counter counters name with 
       | Some ctr -> ctr 
-      | _ ->  failwith ("counter for " ^ name ^ "not found") in
+      | _ ->  failwith ("counter for " ^ name ^ " not found") in
     Printf.sprintf "\t%s: %s ms" name (string_of_int (!ctr.total_time)) in
   let all_keys = List.ofSeq (counters.Keys) in
   let output = List.fold_left
