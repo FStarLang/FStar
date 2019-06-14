@@ -116,17 +116,8 @@ inline_for_extraction noextract let ptr_share
   RST.reveal_modifies ();
   let open HST in
   let h0 = HST.get () in
-  let (v, perm_map) = ! ptr.PR.ptr_v in
-  let (new_perm_map_new_pid) = Ghost.hide (
-    let (vp, pid) = P.share_perms #a #v (Ghost.reveal perm_map) (Ghost.reveal ptr.PR.ptr_pid) in
-    ((vp <: P.perms_rec a), pid)
-  ) in
-  ptr.PR.ptr_v := (v, Ghost.hide (fst (Ghost.reveal new_perm_map_new_pid)));
+  let ptr1 = PR.share ptr in
   let h1 = HST.get () in
-  let ptr1 = {
-    PR.ptr_v = ptr.PR.ptr_v;
-    PR.ptr_pid = Ghost.hide (snd (Ghost.reveal new_perm_map_new_pid))
-  } in
   assert(
     ptr.PR.ptr_v == ptr1.PR.ptr_v /\ (
         let v0_ptr = R.sel (ptr_view ptr) h0 in

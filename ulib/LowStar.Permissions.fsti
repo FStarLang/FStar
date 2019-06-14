@@ -130,6 +130,7 @@ val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid
     new_pid <> pid /\
     get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /. 2.0R /\
     get_permission_from_pid new_v_perms new_pid = get_permission_from_pid v_perms pid /. 2.0R /\
+    ~ (is_live_pid v_perms new_pid) /\
     (forall (pid':perm_id{pid' <> pid /\ pid' <> new_pid}).{:pattern get_permission_from_pid new_v_perms pid'}
       get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
     )
