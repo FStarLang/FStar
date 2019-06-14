@@ -72,6 +72,7 @@ let sel (#a: Type0)  (h: HS.mem) (b: array a) (i:nat{i < length b}) : GTot (with
 // of the two smaller buffers.
 noeq
 type ucell_ : Type0 = {
+  b_max: nat;
   b_index:nat;
   b_pid:perm_id;
 }
@@ -90,21 +91,24 @@ let as_addr (#a:Type0) (b:array a) : GTot nat = HS.as_addr b.content
 
 let ucell_preserved (#r:HS.rid) (#a:nat) (b:ucell r a) (h0 h1:HS.mem) : GTot Type0 =
   forall (t:Type0) (b':array t).
-    (frameOf b' == r /\ as_addr b' == a /\ b'.pid == b.b_pid /\
-      b.b_index >= U32.v b'.idx /\ b.b_index < U32.v b'.idx + U32.v b'.length ==> // If this cell is part of the buffer
-        (let i = b.b_index - U32.v b'.idx in // This cell corresponds to index i in the buffer
-         (live_cell h0 b' i ==> live_cell h1 b' i) /\ // If this cell is preserved, then its liveness is preserved
-         (sel h0 b' i == sel h1 b' i))) // And its contents (snapshot + permission) are the same
+    (let i = b.b_index - U32.v b'.idx in // This cell corresponds to index i in the buffer
+      (frameOf b' == r /\ as_addr b' == a /\ b'.pid == b.b_pid /\ U32.v b'.max_length == b.b_max /\
+        b.b_index >= U32.v b'.idx /\ b.b_index < U32.v b'.idx + U32.v b'.length /\ // If this cell is part of the buffer
+        live_cell h0 b' i ==>
+          live_cell h1 b' i /\ // If this cell is preserved, then its liveness is preserved
+          (sel h0 b' i == sel h1 b' i))) // And its contents (snapshot + permission) are the same
 
 // Two cells are included if they are equal: Same pid and same index in the buffer
 let ucell_includes (#r: HS.rid) (#a: nat) (c1 c2: ucell r a) : GTot Type0 =
   c1.b_pid == c2.b_pid /\
-  c1.b_index == c2.b_index
+  c1.b_index == c2.b_index /\
+  c1.b_max == c2.b_max
   
 
 let ucell_disjoint (#r:HS.rid) (#a:nat) (c1 c2:ucell r a) : GTot Type0 =
-  c1.b_index <> c2.b_index \/           // Either the cells are different (i.e. spatially disjoint)
-  c1.b_pid <> c2.b_pid                 // Or they don't have the same permission
+  c1.b_max == c2.b_max /\
+    (c1.b_index <> c2.b_index \/           // Either the cells are different (i.e. spatially disjoint)
+    c1.b_pid <> c2.b_pid)                 // Or they don't have the same permission
 
 let cls : MG.cls ucell = MG.Cls #ucell
   ucell_includes
@@ -128,6 +132,7 @@ let loc_cell (#a:Type) (b:array a) (i:nat{i < length b}) : GTot bloc =
   let r = frameOf b in
   let a = as_addr b in
   let aloc = {
+    b_max = U32.v b.max_length;
     b_index = U32.v b.idx + i;       // The index of the cell is the index inside the bigger array
     b_pid = b.pid;
   } in
@@ -162,6 +167,79 @@ let lemma_includes_loc_cell_loc_array (#a:Type) (b:array a) (i:nat{i < length b}
   
 let modifies (s:bloc) (h0 h1:HS.mem) : GTot Type0 = MG.modifies s h0 h1
 
+let prove_bloc_preserved (#r: HS.rid) (#a: nat) (bloc: ucell r a) (h0 h1: HS.mem)
+  (lemma: (t: Type0 -> b': array t -> Lemma
+    (requires (
+      let i = bloc.b_index - U32.v b'.idx in
+      frameOf b' == r /\ as_addr b' == a /\
+      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
+      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h0 b' i))
+    (ensures (
+      let i = bloc.b_index - U32.v b'.idx in
+      live_cell h1 b' i /\
+      sel h0 b' i  == sel h1 b' i
+      ))
+  )) : Lemma (ucell_preserved #r #a bloc h0 h1)
+  =
+  let aux (t: Type0) (b':array t) : Lemma(
+      let i = bloc.b_index - U32.v b'.idx in
+      frameOf b' == r /\ as_addr b' == a /\
+      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
+      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h0 b' i ==>
+        live_cell h1 b' i /\
+        sel h0 b' i  == sel h1 b' i)
+  =
+  let aux' (_ : squash (
+      let i = bloc.b_index - U32.v b'.idx in
+      frameOf b' == r /\ as_addr b' == a /\
+      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
+      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h0 b' i)
+    ) : Lemma (
+      let i = bloc.b_index - U32.v b'.idx in
+      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\      
+      live_cell h1 b' i /\
+      sel h0 b' i  == sel h1 b' i
+    )
+    = lemma t b'
+  in
+    Classical.impl_intro aux'
+  in
+  Classical.forall_intro_2 aux
+
+let live_same_arrays_equal_types
+  (#a1: Type0)
+  (#a2: Type0)
+  (b1: array a1{U32.v b1.max_length > 0})
+  (b2: array a2{U32.v b2.max_length > 0})
+  (h: HS.mem)
+  : Lemma (requires (
+     frameOf b1 == frameOf b2 /\
+     as_addr b1 == as_addr b2 /\
+     HS.contains h b1.content /\
+     HS.contains h b2.content))
+   (ensures (a1 == a2 /\ HS.sel h b1.content == HS.sel h b2.content))
+  =
+  Heap.lemma_distinct_addrs_distinct_preorders ();
+  Heap.lemma_distinct_addrs_distinct_mm ();
+  let s1 = HS.sel h b1.content in
+  let s2 = HS.sel h b2.content in
+  let (_, vp1) = Seq.index s1 0 in
+  let (_, vp2) = Seq.index s2 0 in
+  Seq.lemma_equal_instances_implies_equal_types ()
+
+let only_one_live_pid_with_full_permission_specific
+  (#a: Type0)
+  (#v: a)
+  (v_perms: value_perms a v)
+  (pid: perm_id)
+  (pid':live_pid v_perms)
+  : Lemma (requires (get_permission_from_pid v_perms pid == 1.0R))
+    (ensures pid == pid')
+  = only_one_live_pid_with_full_permission v_perms pid
+
 (*** Stateful operations implementing the ghost specifications ***)
 
 val index (#a:Type) (b:array a) (i:UInt32.t{UInt32.v i < length b})
@@ -175,7 +253,6 @@ let index #a b i =
   v
 
 
-//TODO: Need to add modifies. First need to define locs
 val upd (#a:Type) (b:array a) (i:UInt32.t{UInt32.v i < length b}) (v:a)
     : Stack unit (requires fun h -> writeable h b)
                  (ensures fun h0 _ h1 ->  writeable h1 b /\
@@ -196,30 +273,40 @@ let upd #a b i v =
   assert (as_seq h1 b `Seq.equal` Seq.upd (as_seq h0 b) (U32.v i) v);
   let r = frameOf b in
   let n = as_addr b in
-  // MG.modifies_intro (loc_cell b (U32.v i)) h0 h1
-  //   (fun r -> ())
-  //   (fun t pre p -> ())// modifies_mrefs_disjoint b h0 h1 t pre p)
-  //   (fun t pre p -> ())
-  //   (fun r n -> ())
-  //   (fun r' a' b' -> admit())
-  
   
   MG.modifies_aloc_intro
     #ucell #cls
     #r #n
-    ({b_index = U32.v b.idx + U32.v i; b_pid = b.pid})
+    ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = b.pid})
     h0 h1
     (fun r -> ())
     (fun t pre b -> ())
     (fun t pre b -> ())
     (fun r n -> ())
     (fun aloc' -> 
-      let aloc = ({b_index = U32.v b.idx + U32.v i; b_pid = b.pid}) in
-      assert (ucell_disjoint aloc aloc');
-      admit();
-      if aloc.b_index <> aloc'.b_index then ()
-      else
-      admit());
+      let aloc = ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = b.pid}) in
+      let aux (t:Type0) (b':array t) : Lemma
+        (requires (
+          let i = aloc'.b_index - U32.v b'.idx in
+          frameOf b' == r /\ as_addr b' == n /\ b'.pid == aloc'.b_pid /\ U32.v b'.max_length == aloc'.b_max /\
+          aloc'.b_index >= U32.v b'.idx /\ aloc'.b_index < U32.v b'.idx + U32.v b'.length /\
+          live_cell h0 b' i))
+        (ensures (let i = aloc'.b_index - U32.v b'.idx in
+         live_cell h1 b' i /\
+         (sel h0 b' i == sel h1 b' i))) =
+         live_same_arrays_equal_types b b' h0;
+         if aloc.b_index = aloc'.b_index then begin
+           let s0 = HS.sel h0 b.content in
+           let (v0, vp0) = Seq.index s0 aloc.b_index in         
+           only_one_live_pid_with_full_permission_specific #a #v0 (Ghost.reveal vp0) aloc.b_pid aloc'.b_pid
+         end
+         else begin
+           live_same_arrays_equal_types b b' h1
+         end
+      in
+      prove_bloc_preserved #r #n aloc' h0 h1 aux
+    );
+
   assert (modifies (loc_cell b (U32.v i)) h0 h1);
   lemma_includes_loc_cell_loc_array b (U32.v i);
   MG.modifies_loc_includes (loc_array b) h0 h1 (loc_cell b (U32.v i))
