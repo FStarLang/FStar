@@ -9,6 +9,9 @@ open LowStar.Permissions
 open FStar.Real
 
 
+(**** Defining pointers as references + pid *)
+
+
 type value_with_perms (a: Type0) = vp : (a & Ghost.erased (perms_rec a)){
   let (v, p) = vp in
   forall (pid:live_pid (Ghost.reveal p)). get_snapshot_from_pid (Ghost.reveal p) pid == v
@@ -24,7 +27,7 @@ let same_value_with_perms_implies_equal_types
 
 type with_perm (a: Type) = {
   wp_v: a;
-  wp_perm: permission
+  wp_perm: permission;
 }
 
 noeq type pointer (a: Type0) = {
@@ -39,6 +42,8 @@ let frame_of_pointer (#a: Type0) (ptr: pointer a) : HS.rid =
 let pointer_as_addr (#a: Type0) (ptr: pointer a) : GTot nat =
   HS.as_addr ptr.ptr_v
 
+(**** Reading pointer properties *)
+
 let sel (#a: Type0)  (h: HS.mem) (ptr: pointer a) : GTot (with_perm a) =
   let (_, perm_map) = HS.sel h ptr.ptr_v in
   let perm = get_permission_from_pid (Ghost.reveal perm_map) (Ghost.reveal ptr.ptr_pid) in
@@ -50,21 +55,14 @@ let pointer_live (#a: Type0) (ptr: pointer a) (h: HS.mem) =
   a_with_perm.wp_perm >. 0.0R /\ HS.contains h ptr.ptr_v /\
   HS.is_mm ptr.ptr_v /\ HST.is_eternal_region (frame_of_pointer ptr)
 
+let readable (#a: Type0) (ptr: pointer a) (h: HS.mem) : GTot bool =
+  (sel h ptr).wp_perm >. 0.0R
 
-let live_same_pointers_equal_types
-  (a1: Type0)
-  (a2: Type0)
-  (ptr1: pointer a1)
-  (ptr2: pointer a2)
-  (h: HS.mem)
-  : Lemma (requires (
-     frame_of_pointer ptr1 == frame_of_pointer ptr2 /\
-     pointer_as_addr ptr1 == pointer_as_addr ptr2 /\
-     pointer_live ptr1 h /\ pointer_live ptr2 h))
-   (ensures (a1 == a2 /\ HS.sel h ptr1.ptr_v == HS.sel h ptr2.ptr_v))
-  =
-  Heap.lemma_distinct_addrs_distinct_preorders ();
-  Heap.lemma_distinct_addrs_distinct_mm ()
+let writeable (#a: Type0) (ptr: pointer a) (h: HS.mem) : GTot bool =
+  (sel h ptr).wp_perm = 1.0R
+
+
+(**** Pointer locations *)
 
 type ploc_ (region: HS.rid) (addr: nat) = perm_id
 
@@ -86,7 +84,7 @@ let ploc_preserved  (#r: HS.rid) (#a: nat) (ploc: ploc r a) (h0 h1: HS.mem) =
   (sel h0 ptr == sel h1 ptr /\
       pointer_live ptr h1)
 
-let prove_ploc_preserved (#r: HS.rid) (#a: nat) (ploc: ploc r a) (h0 h1: HS.mem)
+let ploc_preserved_intro (#r: HS.rid) (#a: nat) (ploc: ploc r a) (h0 h1: HS.mem)
   (lemma: (t: Type0 -> ptr: pointer t -> Lemma
     (requires (
       let pid = Ghost.reveal ptr.ptr_pid in
@@ -148,7 +146,7 @@ let cls : cls ploc = Cls #ploc
     =
       f (value_with_perms t) (Heap.trivial_preorder (value_with_perms t)) ptr.ptr_v
     in
-    prove_ploc_preserved #r #a b h0 h1 lemma
+    ploc_preserved_intro #r #a b h0 h1 lemma
   )
 
 let loc = loc cls
@@ -168,7 +166,7 @@ let loc_pointer (#a: Type0) (ptr: pointer a) : GTot loc =
   #a
   (aloc_pointer ptr)
 
-(* Pointer specific patterns *)
+(**** Pointer locations lemma library *)
 
 let modifies_pointer_elim
   (#t: Type)
@@ -747,3 +745,134 @@ let modifies_remove_fresh_frame (h1 h2 h3:HS.mem) (l:loc)
 	  [SMTPat (modifies l h1 h3); SMTPat (HS.fresh_frame h1 h2)]
   = loc_regions_unused_in cls h1 (HS.mod_set (Set.singleton (HS.get_tip h2)));
     modifies_only_not_unused_in l h1 h3
+
+(**** Operations on pointers *)
+
+let get (#a: Type0) (ptr: pointer a) : HST.Stack a
+  (requires (fun h0 -> readable ptr h0 /\ pointer_live ptr h0))
+  (ensures (fun h0 x h1 ->
+    sel h0 ptr == sel h1 ptr /\ x == (sel h0 ptr).wp_v /\
+    pointer_live ptr h1 /\
+    modifies #ploc #cls (loc_pointer ptr) h0 h1
+  ))
+  = let open HST in
+  let (v, _) = ! ptr.ptr_v in
+  v
+
+
+let live_same_pointers_equal_types
+  (a1: Type0)
+  (a2: Type0)
+  (ptr1: pointer a1)
+  (ptr2: pointer a2)
+  (h: HS.mem)
+  : Lemma (requires (
+     frame_of_pointer ptr1 == frame_of_pointer ptr2 /\
+     pointer_as_addr ptr1 == pointer_as_addr ptr2 /\
+     pointer_live ptr1 h /\ pointer_live ptr2 h))
+   (ensures (a1 == a2 /\ HS.sel h ptr1.ptr_v == HS.sel h ptr2.ptr_v))
+  =
+  Heap.lemma_distinct_addrs_distinct_preorders ();
+  Heap.lemma_distinct_addrs_distinct_mm ()
+
+let upd (#a: Type0) (ptr: pointer a) (x: a) : HST.Stack unit
+  (requires (fun h0 -> writeable ptr h0 /\ pointer_live ptr h0))
+  (ensures (fun h0 _ h1 ->
+     (sel h0 ptr).wp_perm == (sel h1 ptr).wp_perm /\
+     (sel h1 ptr).wp_v == x /\
+     modifies (loc_pointer ptr) h0 h1
+  ))
+  =
+  (**) let h0 = HST.get () in
+  let open HST in
+  let (v', perm_map) = !ptr.ptr_v in
+  let perm_map'  = Ghost.hide (change_snapshot #a #v' (Ghost.reveal perm_map) (Ghost.reveal ptr.ptr_pid) x) in
+  ptr.ptr_v := (x, (perm_map' <: Ghost.erased (perms_rec a)));
+  (**) let h1 = HST.get () in
+  (**) let r = frame_of_pointer ptr in
+  (**) let n = pointer_as_addr ptr in
+  (**) modifies_aloc_intro
+  (**)   #ploc #cls
+  (**)   #r
+  (**)   #n
+  (**)   (aloc_pointer ptr)
+  (**)   h0 h1
+  (**)   (fun r -> ())
+  (**)   (fun t pre b -> ())
+  (**)   (fun t pre b -> ())
+  (**)   (fun r n -> ())
+  (**)   (fun ploc' ->
+  (**)     let ploc = aloc_pointer ptr in
+  (**)     assert((Ghost.reveal ploc) =!= (Ghost.reveal ploc'));
+  (**)     let lemma (t': Type0) (ptr': pointer t') : Lemma
+  (**)       (requires (let pid' = Ghost.reveal ptr'.ptr_pid in
+  (**)         pointer_live ptr' h0 /\
+  (**)         frame_of_pointer ptr' == r /\
+  (**)         pointer_as_addr ptr' == n /\
+  (**)         (Ghost.reveal ploc') == pid'
+  (**)       )) (ensures (
+  (**)         sel h0 ptr' == sel h1 ptr' /\
+  (**)         pointer_live ptr' h1
+  (**)       ))
+  (**)       =
+  (**)       let pid = Ghost.reveal ptr.ptr_pid in
+  (**)       let pid' = Ghost.reveal ptr'.ptr_pid in
+  (**)       only_one_live_pid_with_full_permission #a #x
+  (**)         (Ghost.reveal perm_map')
+  (**)         (Ghost.reveal ptr.ptr_pid);
+  (**)       assert(get_permission_from_pid (Ghost.reveal perm_map') pid' ==
+  (**)         get_permission_from_pid (Ghost.reveal perm_map) pid'
+  (**)       );
+  (**)       live_same_pointers_equal_types t' a ptr' ptr h0;
+  (**)       live_same_pointers_equal_types t' a ptr' ptr h1;
+  (**)       assert(sel h0 ptr' == sel h1 ptr');
+  (**)       ()
+  (**)     in
+  (**)     ploc_preserved_intro #r #n ploc' h0 h1 lemma
+  (**)   )
+  (**) ;
+  ()
+
+let create (#a: Type) (init :a) : HST.ST (pointer a)
+  (requires (fun _ -> True))
+  (ensures (fun h0 ptr h1 ->
+    ptr.ptr_v `HS.unused_in` h0 /\
+    Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\
+    (HS.get_tip h1) == (HS.get_tip h0) /\
+    modifies (loc_none #ploc #cls) h0 h1 /\
+    pointer_live ptr h1 /\
+    sel h1 ptr == { wp_v = init; wp_perm = 1.0R}
+  ))
+  =
+  let perm_map_pid = Ghost.hide (
+    let (vp, pid) = new_value_perms init true in
+    ((vp <: perms_rec a), pid)
+  ) in
+  let ptr_v = HST.ralloc_mm HS.root (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) in
+  { ptr_v = ptr_v; ptr_pid = Ghost.hide (snd (Ghost.reveal perm_map_pid)) }
+
+let free (#a: Type) (ptr: pointer a) : HST.Stack unit
+  (requires (fun h0 -> writeable ptr h0 /\ pointer_live ptr h0))
+  (ensures (fun h0 _ h1 ->
+    Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\
+    (HS.get_tip h1) == (HS.get_tip h0) /\
+    modifies (loc_pointer ptr) h0 h1 /\
+    HS.live_region h1 (frame_of_pointer ptr)
+  ))
+=
+  (**) let h0 = HST.get () in
+  HST.rfree ptr.ptr_v;
+  (**) let h1 = HST.get () in
+  (**) let r = frame_of_pointer ptr in
+  (**) let n = pointer_as_addr ptr in
+  (**) modifies_free #(value_with_perms a)
+  (**)   #(Heap.trivial_preorder (value_with_perms a))
+  (**)   ptr.ptr_v h0
+  (**) ;
+  (**) assert(modifies (loc_freed_mreference #ploc #cls  ptr.ptr_v) h0 h1);
+  (**) assert(loc_includes
+  (**)   (loc_freed_mreference ptr.ptr_v)
+  (**)   (loc_pointer ptr));
+  (**) //modifies_loc_includes #ploc #cls (loc_freed_mreference ptr.ptr_v) h0 h1 (loc_pointer ptr);
+  (**) assume(modifies #ploc #cls (loc_pointer ptr) h0 h1);
+  ()
