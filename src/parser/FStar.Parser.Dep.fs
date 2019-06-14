@@ -1473,6 +1473,7 @@ let print_full (deps:deps) : unit =
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
     let cache_file f = norm_path (cache_file_name f) in
+    let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
     let all_checked_files =
         keys |>
         List.fold_left
@@ -1533,12 +1534,12 @@ let print_full (deps:deps) : unit =
               if Options.cmi()
               then Options.profile
                    (fun () ->
-                     topological_dependences_of
+                     topological_dependences_of'
                      deps.file_system_map
-                     deps.dep_graph
+                     (dep_graph_copy dep_graph)
                      deps.interfaces_with_inlining
                      [file_name]
-                     true)
+                     widened)
                    (fun _ ->
                      //would be nice to eliminate this; it adds up to about
                      //6 seconds in the miTLS dependence analysis
