@@ -117,7 +117,7 @@ type value_perms (a: Type0) (v: a) = p:perms_rec a{forall (pid:live_pid p). get_
 
 /// A new value perms is created with a single ``pid`` who has full permission and ownership of the resource.
 /// You also have to provide the initial value for the snapshot.
-val new_value_perms: #a: Type0 -> init: a -> fully_owned: bool -> Ghost (value_perms a init & perm_id)
+val new_value_perms: #a: Type0 -> init: a -> fully_owned: bool -> Pure (value_perms a init & perm_id)
   (requires (True)) (ensures (fun (v_perms, pid) ->
     get_permission_from_pid v_perms pid = 1.0R /\
     is_fully_owned v_perms = fully_owned
