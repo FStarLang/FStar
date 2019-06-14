@@ -42,6 +42,9 @@ let frame_of_pointer (#a: Type0) (ptr: pointer a) : HS.rid =
 let pointer_as_addr (#a: Type0) (ptr: pointer a) : GTot nat =
   HS.as_addr ptr.ptr_v
 
+let mergeable (#a: Type) (ptr1 ptr2: pointer a) : Type0 =
+  ptr1.ptr_v == ptr2.ptr_v /\ (Ghost.reveal ptr1.ptr_pid) <> (Ghost.reveal ptr2.ptr_pid)
+
 (**** Reading pointer properties *)
 
 let sel (#a: Type0)  (h: HS.mem) (ptr: pointer a) : GTot (with_perm a) =
@@ -804,17 +807,7 @@ let upd (#a: Type0) (ptr: pointer a) (x: a) : HST.Stack unit
   (**)   (fun ploc' ->
   (**)     let ploc = aloc_pointer ptr in
   (**)     assert((Ghost.reveal ploc) =!= (Ghost.reveal ploc'));
-  (**)     let lemma (t': Type0) (ptr': pointer t') : Lemma
-  (**)       (requires (let pid' = Ghost.reveal ptr'.ptr_pid in
-  (**)         pointer_live ptr' h0 /\
-  (**)         frame_of_pointer ptr' == r /\
-  (**)         pointer_as_addr ptr' == n /\
-  (**)         (Ghost.reveal ploc') == pid'
-  (**)       )) (ensures (
-  (**)         sel h0 ptr' == sel h1 ptr' /\
-  (**)         pointer_live ptr' h1
-  (**)       ))
-  (**)       =
+  (**)     ploc_preserved_intro #r #n ploc' h0 h1 (fun t' ptr' ->
   (**)       let pid = Ghost.reveal ptr.ptr_pid in
   (**)       let pid' = Ghost.reveal ptr'.ptr_pid in
   (**)       only_one_live_pid_with_full_permission #a #x
@@ -827,8 +820,7 @@ let upd (#a: Type0) (ptr: pointer a) (x: a) : HST.Stack unit
   (**)       live_same_pointers_equal_types t' a ptr' ptr h1;
   (**)       assert(sel h0 ptr' == sel h1 ptr');
   (**)       ()
-  (**)     in
-  (**)     ploc_preserved_intro #r #n ploc' h0 h1 lemma
+  (**)     )
   (**)   )
   (**) ;
   ()
@@ -851,7 +843,7 @@ let create (#a: Type) (init :a) : HST.ST (pointer a)
   let ptr_v = HST.ralloc_mm HS.root (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) in
   { ptr_v = ptr_v; ptr_pid = Ghost.hide (snd (Ghost.reveal perm_map_pid)) }
 
-let free (#a: Type) (ptr: pointer a) : HST.Stack unit
+let free (#a: Type) (ptr: pointer a) : HST.ST unit
   (requires (fun h0 -> writeable ptr h0 /\ pointer_live ptr h0))
   (ensures (fun h0 _ h1 ->
     Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\
@@ -861,6 +853,7 @@ let free (#a: Type) (ptr: pointer a) : HST.Stack unit
   ))
 =
   (**) let h0 = HST.get () in
+  (**) let (v, perm_map) = HST.(!ptr.ptr_v) in
   HST.rfree ptr.ptr_v;
   (**) let h1 = HST.get () in
   (**) let r = frame_of_pointer ptr in
@@ -870,9 +863,152 @@ let free (#a: Type) (ptr: pointer a) : HST.Stack unit
   (**)   ptr.ptr_v h0
   (**) ;
   (**) assert(modifies (loc_freed_mreference #ploc #cls  ptr.ptr_v) h0 h1);
-  (**) assert(loc_includes
-  (**)   (loc_freed_mreference ptr.ptr_v)
-  (**)   (loc_pointer ptr));
-  (**) //modifies_loc_includes #ploc #cls (loc_freed_mreference ptr.ptr_v) h0 h1 (loc_pointer ptr);
-  (**) assume(modifies #ploc #cls (loc_pointer ptr) h0 h1);
+  (**) modifies_aloc_intro
+  (**)   #ploc #cls
+  (**)   #r
+  (**)   #n
+  (**)   (aloc_pointer ptr)
+  (**)   h0 h1
+  (**)   (fun r -> ())
+  (**)   (fun t pre b -> ())
+  (**)   (fun t pre b -> begin
+            assert(HS.contains h0 b);
+            assume(HS.contains h1 b)
+  (**)   end)
+  (**)   (fun r' n' -> begin
+            assume(n `Heap.addr_unused_in` (HS.get_hmap h0 `Map.sel` r))
+  (**)   end)
+  (**)   (fun ploc' ->
+  (**)     let ploc = aloc_pointer ptr in
+  (**)     assert((Ghost.reveal ploc) =!= (Ghost.reveal ploc'));
+  (**)     ploc_preserved_intro #r #n ploc' h0 h1 (fun t' ptr' ->
+  (**)       let pid = Ghost.reveal ptr.ptr_pid in
+  (**)       let pid' = Ghost.reveal ptr'.ptr_pid in
+  (**)       only_one_live_pid_with_full_permission #a #v
+  (**)         (Ghost.reveal perm_map)
+  (**)         (Ghost.reveal ptr.ptr_pid);
+  (**)       ()
+  (**)     )
+  (**)   )
+  (**) ;
+  (**) assert(modifies #ploc #cls (loc_pointer ptr) h0 h1);
+  ()
+
+let share (#a: Type) (ptr: pointer a) : HST.Stack (pointer a)
+  (requires (fun h0 -> pointer_live ptr h0 /\ readable ptr h0))
+  (ensures (fun h0 ptr1 h1 ->
+     pointer_live ptr h1 /\ pointer_live ptr1 h1 /\
+     mergeable ptr ptr1 /\
+     modifies (loc_pointer ptr) h0 h1 /\
+     (sel h1 ptr).wp_v == (sel h0 ptr).wp_v /\ (sel h1 ptr1).wp_v == (sel h0 ptr).wp_v /\
+     (sel h1 ptr).wp_perm = half_permission (sel h0 ptr).wp_perm /\
+     (sel h1 ptr1).wp_perm = half_permission (sel h0 ptr).wp_perm
+  ))
+  =
+  let open HST in
+  (**) let h0 = HST.get () in
+  let (v, perm_map) = ! ptr.ptr_v in
+  let (new_perm_map_new_pid) = Ghost.hide (
+    let (vp, pid) = share_perms #a #v (Ghost.reveal perm_map) (Ghost.reveal ptr.ptr_pid) in
+    ((vp <: perms_rec a), pid)
+  ) in
+  ptr.ptr_v := (v, Ghost.hide (fst (Ghost.reveal new_perm_map_new_pid)));
+  (**) let h1 = HST.get () in
+  let ptr1 = {
+    ptr_v = ptr.ptr_v;
+    ptr_pid = Ghost.hide (snd (Ghost.reveal new_perm_map_new_pid))
+  } in
+  (**) modifies_aloc_intro
+  (**)   #ploc #cls
+  (**)   #(frame_of_pointer ptr)
+  (**)   #(pointer_as_addr ptr)
+  (**)   (aloc_pointer ptr)
+  (**)   h0 h1
+  (**)   (fun r -> ())
+  (**)   (fun t pre b -> ())
+  (**)   (fun t pre b -> ())
+  (**)   (fun r n -> ())
+  (**)   (fun ploc' ->
+  (**)     let r = frame_of_pointer ptr in
+  (**)     let n = pointer_as_addr ptr in
+  (**)     let ploc = aloc_pointer ptr in
+  (**)     let perm_map' = fst (Ghost.reveal new_perm_map_new_pid) in
+  (**)     let pid1 = snd (Ghost.reveal new_perm_map_new_pid) in
+  (**)     ploc_preserved_intro #r #n ploc' h0 h1 (fun t' ptr' ->
+  (**)       let pid = Ghost.reveal ptr.ptr_pid in
+  (**)       let pid' = Ghost.reveal ptr'.ptr_pid in
+  (**)       if pid' = pid1 then begin
+  (**)         assert(~ (pointer_live ptr' h0))
+  (**)       end else ()
+  (**)     )
+  (**)   )
+  (**) ;
+  ptr1
+
+let merge (#a: Type) (ptr ptr1: pointer a) : HST.Stack unit
+  (requires (fun h0 ->
+    mergeable ptr ptr1 /\
+    pointer_live ptr h0 /\ pointer_live ptr1 h0 /\
+    summable_permissions (sel h0 ptr).wp_perm (sel h0 ptr1).wp_perm
+  ))
+  (ensures (fun h0 _ h1 ->
+    pointer_live ptr h1 /\
+    (sel h1 ptr).wp_perm = sum_permissions (sel h0 ptr).wp_perm (sel h0 ptr1).wp_perm /\
+    (sel h1 ptr).wp_v == (sel h0 ptr).wp_v /\
+    modifies (loc_pointer ptr `loc_union` loc_pointer ptr1) h0 h1
+  ))
+  =
+  let open HST in
+  (**) let h0 = HST.get () in
+  let (v, perm_map) = !ptr.ptr_v in
+  let new_perm_map = Ghost.hide (
+    merge_perms #a #v (Ghost.reveal perm_map) (Ghost.reveal ptr.ptr_pid) (Ghost.reveal ptr1.ptr_pid)
+  ) in
+  ptr.ptr_v := (v, new_perm_map);
+   MG.loc_disjoint_aloc_intro #ploc #cls
+    #(frame_of_pointer ptr)
+    #(pointer_as_addr ptr)
+    #(frame_of_pointer ptr1)
+    #(pointer_as_addr ptr1)
+    (aloc_pointer ptr) (aloc_pointer ptr1);
+  (**) let h1 = HST.get () in
+  (**) modifies_intro
+  (**)   #ploc #cls
+  (**)   (loc_pointer ptr `loc_union` loc_pointer ptr1)
+  (**)   h0 h1
+  (**)   (fun r -> ())
+  (**)   (fun t pre b -> ())
+  (**)   (fun t pre b -> ())
+  (**)   (fun r n -> ())
+  (**)   (fun r' n' ploc' ->
+  (**)     let r = frame_of_pointer ptr in
+  (**)     let n = pointer_as_addr ptr in
+  (**)     let orig_ploc = aloc_pointer ptr in
+  (**)     let perm_map' = new_perm_map in
+  (**)     let pid1 = Ghost.reveal ptr1.ptr_pid in
+  (**)       let union = loc_pointer ptr `loc_union` loc_pointer ptr1 in
+  (**)     assert(loc_disjoint (loc_of_aloc ploc') union);
+  (**)     ploc_preserved_intro #r' #n' ploc' h0 h1 (fun t' ptr' ->
+  (**)       let pid = Ghost.reveal ptr.ptr_pid in
+  (**)       let pid' = Ghost.reveal ptr'.ptr_pid in
+  (**)       loc_includes_union_l (loc_pointer ptr) (loc_pointer ptr1) (loc_pointer ptr);
+  (**)       loc_includes_union_l (loc_pointer ptr) (loc_pointer ptr1) (loc_pointer ptr1);
+  (**)       loc_disjoint_includes
+  (**)         (loc_pointer ptr')
+  (**)         union
+  (**)         (loc_pointer ptr')
+  (**)         (loc_pointer ptr);
+  (**)       loc_disjoint_includes
+  (**)         (loc_pointer ptr')
+  (**)         union
+  (**)         (loc_pointer ptr')
+  (**)         (loc_pointer ptr1);
+  (**)       assert(loc_pointer ptr' `loc_disjoint` loc_pointer ptr);
+  (**)       assert(loc_pointer ptr' `loc_disjoint` loc_pointer ptr1);
+  (**)       //loc_disjoint_aloc_elim #ploc #cls #r #n #r' #n' (aloc_pointer ptr') (aloc_pointer ptr);
+  (**)
+  (**)       admit()
+  (**)     )
+  (**)   )
+  (**) ;
   ()
