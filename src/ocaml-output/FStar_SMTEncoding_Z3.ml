@@ -23,7 +23,7 @@ let (parse_z3_version_lines :
         else
           (let msg =
              FStar_Util.format2 "Expected Z3 version \"%s\", got \"%s\""
-               _z3version_expected version
+               _z3version_expected out
               in
            FStar_Pervasives_Native.Some msg)
     | uu____72 -> FStar_Pervasives_Native.Some "No Z3 version string found"
