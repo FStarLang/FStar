@@ -1881,11 +1881,7 @@ and (encode_term :
              let steps =
                [FStar_TypeChecker_Env.Weak;
                FStar_TypeChecker_Env.HNF;
-               FStar_TypeChecker_Env.EraseUniverses;
-               FStar_TypeChecker_Env.Eager_unfolding;
-               FStar_TypeChecker_Env.UnfoldUntil
-                 FStar_Syntax_Syntax.delta_constant]
-                in
+               FStar_TypeChecker_Env.EraseUniverses]  in
              let uu____5363 =
                FStar_TypeChecker_Normalize.normalize_refinement steps
                  env.FStar_SMTEncoding_Env.tcenv t0
