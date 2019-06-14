@@ -761,9 +761,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           let steps = [
             Env.Weak;
             Env.HNF;
-            Env.EraseUniverses;
-            Env.Eager_unfolding;  //AR: 06/14: adding unfolding steps to normalize the types in the sorts, otherwise they interfere with hashconsing
-            Env.UnfoldUntil S.delta_constant
+            Env.EraseUniverses
           ] in
           match N.normalize_refinement steps env.tcenv t0 with
           | {n=Tm_refine(x, f)} ->
