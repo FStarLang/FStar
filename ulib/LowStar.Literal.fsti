@@ -50,9 +50,7 @@ let for_all_tail #a p (l: list a { Cons? l }): Lemma
 
 let ascii_chars_of_ascii_string (s: ascii_string):
   l:list ascii_char { List.Tot.length l = String.length s }
-=
-  let l = String.list_of_string s in
-  List.Tot.list_refb (String.list_of_string s)
+= List.Tot.list_refb (String.list_of_string s)
 
 let u8_of_ascii_char (c: ascii_char): x:UInt8.t{ UInt8.v x = Char.int_of_char c } =
   let x32 = Char.u32_of_char c in
