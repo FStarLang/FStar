@@ -429,15 +429,14 @@ let job_queue : ref<list<z3job>> = BU.mk_ref []
 
 let pending_jobs = BU.mk_ref 0
 
-let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
-  let start = BU.now() in
-  let status, statistics =
-    try doZ3Exe log_file r fresh input label_messages
-    with e when not (Options.trace_error()) ->
-         (!bg_z3_proc).refresh();
-         raise e
+let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash name () : z3result =
+  let ((status, statistics), elapsed_time) =
+    P.profile (fun () -> try doZ3Exe log_file r fresh input label_messages
+                 with e when not (Options.trace_error()) ->
+                 (!bg_z3_proc).refresh();
+                 raise e)
+              (fun() -> name) Options.ProfileSMT
   in
-  let _, elapsed_time = BU.time_diff start (BU.now()) in
   { z3result_status     = status;
     z3result_time       = elapsed_time;
     z3result_statistics = statistics;
@@ -655,6 +654,7 @@ let ask_1_core
     (qry:list<decl>)
     (cb:cb)
     (fresh:bool)
+    (name:string)
   = let theory =
         if fresh
         then flatten_fresh_scope()
@@ -666,7 +666,7 @@ let ask_1_core
     let theory, _used_unsat_core = filter_theory theory in
     let input, qhash, log_file_name = mk_input fresh theory in
     if not (fresh && cache_hit log_file_name cache qhash cb) then
-        run_job ({job=z3_job log_file_name r fresh label_messages input qhash; callback=cb})
+        run_job ({job=z3_job log_file_name r fresh label_messages input qhash name; callback=cb})
 
 let ask_n_cores
     (r:Range.range)
@@ -676,6 +676,7 @@ let ask_n_cores
     (qry:list<decl>)
     (scope:option<scope_t>)
     (cb:cb)
+    (name:string)
   = let theory = List.flatten (match scope with
         | Some s -> (List.rev s)
         | None   -> bg_scope := [] ; // Not needed; discard.
@@ -684,7 +685,7 @@ let ask_n_cores
     let theory, used_unsat_core = filter_theory theory in
     let input, qhash, log_file_name = mk_input true theory in
     if not (cache_hit log_file_name cache qhash cb) then
-        enqueue ({job=z3_job log_file_name r true label_messages input qhash; callback=cb})
+        enqueue ({job=z3_job log_file_name r true label_messages input qhash name; callback=cb})
 
 let ask
     (r:Range.range)
@@ -697,8 +698,6 @@ let ask
     (fresh:bool)
     (name:string)
   = if Options.n_cores() = 1 then
-        P.profile (fun () -> ask_1_core r filter cache label_messages qry cb fresh)
-         (fun() -> name) Options.ProfileSMT |> ignore
+       ask_1_core r filter cache label_messages qry cb fresh name
     else
-        P.profile (fun () -> ask_n_cores r filter cache label_messages qry scope cb)
-         (fun() -> name) Options.ProfileSMT |> ignore
+       ask_n_cores r filter cache label_messages qry scope cb name

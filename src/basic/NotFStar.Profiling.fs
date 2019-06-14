@@ -113,7 +113,7 @@ let profile' (f: unit -> 'b) (name:string) (phasename:Options.profile_t) (new_le
   | None -> 
     // if there is no profiler (which means no profile_at_level), then don't
     // aggregate, just print out the time
-    Printf.printf "%s: %s: %s ms\n" name (Options.profile_name phasename)(string_of_int ms)
+    Printf.printf "Profiled %s: %s: %s: %s ms\n" (Options.profile_name phasename) name (Options.profile_name phasename)(string_of_int ms)
   in 
   (r, ms)
 
