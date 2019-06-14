@@ -211,6 +211,7 @@ type raw_error =
   | Fatal_UnexpectedModuleDeclaration
   | Fatal_UnexpectedNumberOfUniverse
   | Fatal_UnexpectedNumericLiteral
+  | Fatal_UnexpectedOperatorSymbol_deprecated
   | Fatal_UnexpectedPattern
   | Fatal_UnexpectedPosition
   | Fatal_UnExpectedPreCondition
@@ -541,6 +542,7 @@ let default_flags =
   (Fatal_UnexpectedModuleDeclaration                 , CFatal);
   (Fatal_UnexpectedNumberOfUniverse                  , CFatal);
   (Fatal_UnexpectedNumericLiteral                    , CFatal);
+  (Fatal_UnexpectedOperatorSymbol_deprecated         , CFatal);
   (Fatal_UnexpectedPattern                           , CFatal);
   (Fatal_UnexpectedPosition                          , CFatal);
   (Fatal_UnExpectedPreCondition                      , CFatal);
