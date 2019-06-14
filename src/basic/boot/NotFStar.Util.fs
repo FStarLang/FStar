@@ -307,6 +307,9 @@ let smap_copy (m:smap<'value>) =
     smap_fold m (fun k v () -> smap_add n k v) ();
     n
 let smap_size (m:smap<'value>) = m.Count
+let smap_iter<'a> (m: smap<'a>) (f: string -> 'a -> unit) =
+  for i in m  do
+    f i.Key i.Value
 
 type psmap<'value> = Collections.Map<string,'value>
 let psmap_empty (_: unit) : psmap<'value> = Collections.Map.empty
