@@ -83,7 +83,7 @@ following commands. (On Windows this requires Cygwin and `make`)
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
         $ z3 --version
-        Z3 version 4.5.1 - 64 bit - build hashcode 1f29cebd4df6
+        Z3 version 4.8.5 - 64 bit
 
    Note: if you are using the binary package and extracted it to,
    say, the `fstar` directory, then both `fstar.exe` and `z3` are in
