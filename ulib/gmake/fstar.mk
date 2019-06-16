@@ -1,4 +1,4 @@
-HINTS_ENABLED?=--use_hints --use_hint_hashes
+HINTS_ENABLED?=--use_hints
 WARN_ERROR=
 OTHERFLAGS+=$(WARN_ERROR) --z3cliopt 'timeout=600000' --smtencoding.valid_intro true --smtencoding.valid_elim true
 

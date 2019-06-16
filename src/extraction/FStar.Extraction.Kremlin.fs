@@ -854,7 +854,7 @@ and translate_expr env e: expr =
      || string_of_mlpath p = "LowStar.ConstBuffer.cast"
      || string_of_mlpath p = "LowStar.ConstBuffer.to_buffer"
      || string_of_mlpath p = "LowStar.ConstBuffer.to_ibuffer" ->
-   translate_expr env e  //just identities
+   translate_expr env e1  //just identities
 
   | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->
       ECast (translate_expr env e, TAny)
