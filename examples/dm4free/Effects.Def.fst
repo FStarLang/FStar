@@ -72,7 +72,7 @@ val morphism_laws_via_eq: m:(Type -> Type)
 			        (ensures  (forall (a:Type) (x:a). lift a (return_m a x) == return_n a x)                          //lift-unit
 					/\ (forall (a:Type) (b:Type) (f:m a) (g: a -> Tot (m b)).
 					      lift b (bind_m a b f g) == bind_n a b (lift a f) (fun x -> lift b (g x))))         //lift-bind
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 50"
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 let morphism_laws_via_eq m n eqn return_m bind_m return_n bind_n lift = ()
 #reset-options
 
