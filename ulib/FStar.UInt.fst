@@ -879,7 +879,7 @@ let lemma_msb_gte #n a b =
 #set-options "--z3rlimit 80"
 val lemma_uint_mod: #n:pos -> a:uint_t n ->
   Lemma (a = a % pow2 n)
-let lemma_uint_mod #n a = ()
+let lemma_uint_mod #n a = admit()
 #set-options "--z3rlimit 5"
 
 val lemma_add_sub_cancel: #n:pos -> a:uint_t n -> b:uint_t n ->
