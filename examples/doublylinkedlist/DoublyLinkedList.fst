@@ -889,7 +889,7 @@ let single_piece_fragment_valid (#t:Type) (h0:heap) (p:piece t) :
     (requires (piece_valid h0 p))
     (ensures (fragment_valid h0 (Frag1 p))) = ()
 
-#set-options "--z3rlimit 10 --initial_ifuel 2"
+#set-options "--z3rlimit 20 --initial_ifuel 2"
 
 let tot_defragmentable_fragment_to_dll (#t:Type) (h0:heap) (f:fragment t{
     fragment_valid h0 f /\
@@ -1835,7 +1835,7 @@ let _l_remove_mid (l:list 'a{length l > 0}) (x:'a {x `memP` l}) : GTot (list 'a)
   assert (x == x0);
   l1 `append` l2
 
-#set-options "--z3rlimit 400 --initial_fuel 2 --initial_ifuel 2 --query_stats"
+#set-options "--z3rlimit 400 --initial_fuel 2 --initial_ifuel 2"
 
 let dll_remove_node (#t:Type) (d:dll t) (e:pointer (node t)) :
   StackInline (dll t)
