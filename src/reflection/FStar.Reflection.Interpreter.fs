@@ -144,6 +144,12 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk2 "lookup_attr"           RB.lookup_attr        E.e_term            E.e_env            (e_list E.e_fv)
                                 RB.lookup_attr        NRE.e_term          NRE.e_env          (NBET.e_list NRE.e_fv);
 
+    mk1 "all_defs_in_env"       RB.all_defs_in_env    E.e_env             (e_list E.e_fv)
+                                RB.all_defs_in_env    NRE.e_env           (NBET.e_list NRE.e_fv);
+
+    mk2 "defs_in_module"        RB.defs_in_module     E.e_env             e_string_list      (e_list E.e_fv)
+                                RB.defs_in_module     NRE.e_env           NBET.e_string_list (NBET.e_list NRE.e_fv);
+
     mk2 "term_eq"               term_eq               E.e_term            E.e_term           e_bool
                                 term_eq               NRE.e_term          NRE.e_term         NBET.e_bool;
 

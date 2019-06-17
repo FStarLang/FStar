@@ -40,7 +40,7 @@ module Dep     = FStar.Parser.Dep
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
  *)
-let cache_version_number = 11
+let cache_version_number = 12
 
 type tc_result = {
   checked_module: Syntax.modul; //persisted

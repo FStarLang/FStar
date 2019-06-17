@@ -216,8 +216,9 @@ let with_fuel_and_diagnostics settings label_assumptions =
         settings.query_decl        //the query itself
     ]
     @label_assumptions         //the sub-goals that are currently disabled
-    @[  Term.SetOption ("rlimit", string_of_int rlimit); //the rlimit setting
+    @[  Term.SetOption ("rlimit", string_of_int rlimit); //the rlimit setting for the check-sat
         Term.CheckSat; //go Z3!
+        Term.SetOption ("rlimit", "0"); //back to using infinite rlimit
         Term.GetReasonUnknown; //explain why it failed
         Term.GetUnsatCore; //for proof profiling, recording hints etc
     ]

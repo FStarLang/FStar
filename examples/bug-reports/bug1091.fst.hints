@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
       0,
-      "53005719823b1a90c4aebbb440851d24"
+      "eb51aa6b432a4f3e1381508872a81785"
     ],
     [
       "Bug1091.jun21_2017_logand_fail",
@@ -25,7 +25,7 @@
         "uvar_typing_19"
       ],
       0,
-      "948d2042cf226c191b6f4b103bed36df"
+      "3f85236c8b892f40df30efa43952e589"
     ],
     [
       "Bug1091.jun21_2017_logand",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8f0416221a9caf2723790194fb16787d"
+      "74d5bb2358dffcbb8430e402cadabc2c"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -54,7 +54,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3b0c53912d84142cdb55d01ded2526cc"
+      "fea5624979d3e8f265b00be4f24e2764"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -66,7 +66,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9bd8918e520405daeecf2da679b73f69"
+      "1e653ed9792dd236088e0ccefbbd2831"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "184c96e9005d74c7ce47342eb3aa598d"
+      "c02c9e3c2b166e960d1ad40a26258f26"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f13b14de600b21e1452eab7f359c2116"
+      "b359d6a3380a94c38d172799ffacd7f3"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ae52b4aa6af6e9c3e6f52fa3850d2016"
+      "d6d66523d199a68c9e55afb18f053ecc"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -124,7 +124,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c188b2d832ac0bc6b7942054e6d40597"
+      "1de7dad45fece132fda12df238650471"
     ]
   ]
 ]

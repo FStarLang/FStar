@@ -104,15 +104,15 @@ cd fstar
 export FSTAR_HOME="$PWD"
 
 diag "-- Verify hello ocaml -- should output Hello F*! --"
-make -C examples/hello ocaml | tee HelloOcamlOutput.log
+make -C examples/hello hello | tee HelloOcamlOutput.log
 if [ $? -ne 0 ]; then
-  echo -e "* ${RED}FAIL!${NC} for examples/hello ocaml - make failed withexit code $?"
+  echo -e "* ${RED}FAIL!${NC} for examples/hello hello - make failed withexit code $?"
   exit 1
 elif ! egrep -q 'Hello F\*!' HelloOcamlOutput.log; then
-  echo -e "* ${RED}FAIL!${NC} for examples/hello ocaml - 'Hello F*!' was not found in HelloOcamlOutput.log"
+  echo -e "* ${RED}FAIL!${NC} for examples/hello hello - 'Hello F*!' was not found in HelloOcamlOutput.log"
   exit 1
 else
-  echo -e "* ${GREEN}PASSED!${NC} for examples/hello ocaml"
+  echo -e "* ${GREEN}PASSED!${NC} for examples/hello hello"
 fi
 
 diag "-- Verify all examples --"
