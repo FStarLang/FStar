@@ -135,21 +135,9 @@ let cls : cls ploc = Cls #ploc
   (fun #r #a x h -> ())
   (fun #r #a x h1 h2 h3 -> ())
   (fun #r #a b h0 h1 f ->
-    let lemma (t: Type0) (ptr: pointer t) : Lemma
-      (requires (
-        let pid = Ghost.reveal ptr.ptr_pid in
-        pointer_live ptr h0 /\
-        frame_of_pointer ptr == r /\
-        pointer_as_addr ptr == a /\
-        (Ghost.reveal b) == pid
-      )) (ensures (
-        sel h0 ptr == sel h1 ptr /\
-        pointer_live ptr h1
-      ))
-    =
+    ploc_preserved_intro #r #a b h0 h1 (fun t ptr ->
       f (value_with_perms t) (Heap.trivial_preorder (value_with_perms t)) ptr.ptr_v
-    in
-    ploc_preserved_intro #r #a b h0 h1 lemma
+    )
   )
 
 let loc = loc cls
