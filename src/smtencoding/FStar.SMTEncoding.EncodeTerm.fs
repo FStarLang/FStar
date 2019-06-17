@@ -659,17 +659,17 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         if  (env.encode_non_total_function_typ
              && U.is_pure_or_ghost_comp res)
              || U.is_tot_or_gtot_comp res
-        then let vars, guards, env', decls, _ = encode_binders None binders env in
+        then let vars, guards_l, env', decls, _ = encode_binders None binders env in
              let fsym = mk_fv (varops.fresh module_name "f", Term_sort) in
              let f = mkFreeV  fsym in
              let app = mk_Apply f vars in
              let pre_opt, res_t = TcUtil.pure_or_ghost_pre_and_post ({env.tcenv with lax=true}) res in
              let res_pred, decls' = encode_term_pred None res_t env' app in
              let guards, guard_decls = match pre_opt with
-                | None -> mk_and_l guards, []
+                | None -> mk_and_l guards_l, []
                 | Some pre ->
                   let guard, decls0 = encode_formula pre env' in
-                  mk_and_l (guard::guards), decls0  in
+                  mk_and_l (guard::guards_l), decls0  in
              let is_pure = U.is_pure_comp res in
              //cf. Bug #1750
              //We need to distinguish pure and ghost functions in the encoding
@@ -681,6 +681,39 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             vars,
                               mkImp(guards, res_pred))
              in
+
+             (*
+              * AR: For an arrow like int -> int -> int -> int, t_interp is of the form:
+              *     forall (x0:int -> int -> int -> int) (x1:int) (x2:int) (x3:int).
+              *            (ApplyTT (ApplyTT (ApplyTT (x0 x1)) x2) x3) : int
+              *     And then below, we add IsTotFun x0
+              *
+              *     In the fold loop below, we also add IsTotFun predicates for the partially applied terms
+              *       ApplyTT (x0 x1) and ApplyTT ((ApplyTT x0 x1) x2)
+              *
+              *     Note that we add them irrespective of the final computation type (it could also be Ghost, for example)
+              *)
+             
+             //get all vars and guards, except for the last one
+             let all_vars_but_one, all_guards_but_one =
+               BU.prefix vars |> fst, BU.prefix guards_l |> fst
+             in
+
+             let t_interp, _, _, _ =
+               //fold over the vars and guards
+               //start with t_interp as computed above, f (the function term), [], and true
+               List.fold_left2 (fun (t_interp, app, vars, guards) var guard ->
+                 let app = mk_Apply app [var] in
+                 let vars = vars @ [var] in
+                 let guards = mkAnd (guards, guard) in
+                 let is_tot_fun_pred_for_partial_app =
+                   mkForall t.pos
+                            ([[app]], vars, mkImp (guards, mk_IsTotFun app)) in
+                 let t = mkAnd (t_interp, is_tot_fun_pred_for_partial_app) in
+                 t, app, vars, guards
+               ) (t_interp, f, [], mkTrue) all_vars_but_one all_guards_but_one in
+             
+             //finally add the IsTotFun for the function term itself
              let t_interp =
                if is_pure
                then mkAnd (t_interp, mk_IsTotFun f)
