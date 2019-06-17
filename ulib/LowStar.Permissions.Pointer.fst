@@ -102,7 +102,7 @@ inline_for_extraction noextract let ptr_share
     (fun ptr1 -> R.(ptr_resource ptr1 <*> ptr_resource ptr))
     (fun h0 -> P.allows_read (R.sel (ptr_view ptr) h0).PR.wp_perm)
     (fun h0 ptr1 h1 ->
-      ptr.PR.ptr_v == ptr1.PR.ptr_v /\ (
+      ptr.PR.ptr_v == ptr1.PR.ptr_v /\ PR.mergeable ptr ptr1 /\ (
         let v0_ptr = R.sel (ptr_view ptr) h0 in
         let v1_ptr = R.sel (ptr_view ptr) h1 in
         let v1_ptr1 = R.sel (ptr_view ptr1) h1 in
@@ -112,64 +112,41 @@ inline_for_extraction noextract let ptr_share
       )
     )
   =
-  RST.reveal_rst_inv ();
-  RST.reveal_modifies ();
-  let open HST in
-  let h0 = HST.get () in
-  let ptr1 = PR.share ptr in
-  let h1 = HST.get () in
-  assert(
-    ptr.PR.ptr_v == ptr1.PR.ptr_v /\ (
-        let v0_ptr = R.sel (ptr_view ptr) h0 in
-        let v1_ptr = R.sel (ptr_view ptr) h1 in
-        let v1_ptr1 = R.sel (ptr_view ptr1) h1 in
-        v1_ptr.PR.wp_v == v0_ptr.PR.wp_v /\ v1_ptr1.PR.wp_v == v0_ptr.PR.wp_v /\
-        v1_ptr.PR.wp_perm = P.half_permission (v0_ptr.PR.wp_perm) /\
-        v1_ptr1.PR.wp_perm = P.half_permission (v0_ptr.PR.wp_perm)
-      )
-  );
-  assume(R.inv (R.(ptr_resource ptr1 <*> ptr_resource ptr)) h1);
-  assume(RST.rst_inv (R.(ptr_resource ptr1 <*> ptr_resource ptr)) h1);
-  assume(MG.modifies #PR.ploc #PR.cls (R.as_loc (R.fp (ptr_resource ptr))) h0 h1);
-  assume(
-         (forall frame .
-               MG.loc_disjoint frame (R.as_loc (R.fp (ptr_resource ptr))) /\
-               MG.loc_includes (MG.loc_not_unused_in PR.cls h0) frame
-               ==>
-               MG.loc_disjoint frame (R.as_loc (R.fp (R.(ptr_resource ptr1 <*> ptr_resource ptr)))) /\
-               MG.loc_includes (MG.loc_not_unused_in PR.cls h1) frame)
-  );
+  (**) RST.reveal_rst_inv ();
+  (**) RST.reveal_modifies ();
+  (**) R.reveal_star ();
+  (**) let open HST in
+  (**) let h0 = HST.get () in
+  (**) let ptr1 = PR.share ptr in
+  (**) let h1 = HST.get () in
+  (**) R.reveal_star_inv (ptr_resource ptr) (ptr_resource ptr1) h1;
+  (**) assume(forall frame .
+  (**)   MG.loc_disjoint frame (PR.loc_pointer ptr) /\
+  (**)   MG.loc_includes (MG.loc_not_unused_in PR.cls h0) frame
+  (**)   ==>
+  (**)   MG.loc_disjoint frame (MG.loc_union (PR.loc_pointer ptr) (PR.loc_pointer ptr1)) /\
+  (**)   MG.loc_includes (MG.loc_not_unused_in PR.cls h1) frame
+  (**) );
   ptr1
 
 inline_for_extraction noextract let ptr_merge
   (#a: Type)
-  (ptr1: pointer a)
-  (ptr2: pointer a)
-  : RST unit
-    (ptr_resource ptr1 <*> ptr_resource ptr2)
+  (ptr1: PR.pointer a)
+  (ptr2: PR.pointer a)
+  : RST.RST unit
+    (R.(ptr_resource ptr1 <*> ptr_resource ptr2))
     (fun _ -> ptr_resource ptr1)
-    (fun h ->
-      let (_, p1) = sel (ptr_view ptr1) h in
-      let (_, p2) = sel (ptr_view ptr1) h in
-      allows_read p1 /\ allows_read p2 /\
-      summable_permissions p1 p2 /\
-      ptr1.ptr_v == ptr2.ptr_v
+    (fun h0 ->
+      let s1 = R.sel (ptr_view ptr1) h0 in
+      let s2 = R.sel (ptr_view ptr2) h0 in
+      PR.mergeable ptr1 ptr2 /\
+      P.allows_read s1.PR.wp_perm /\ P.allows_read s2.PR.wp_perm /\
+      P.summable_permissions s1.PR.wp_perm s2.PR.wp_perm /\
+      ptr1.PR.ptr_v == ptr2.PR.ptr_v
     )
     (fun h0 _ h1 -> True)
   =
-  reveal_rst_inv ();
-  reveal_modifies ();
-  let open HST in
-  let (v, perm_map) = !ptr1.ptr_v in
-  FStar.ModifiesGen.loc_disjoint_aloc_elim #ploc #cls
-  #(let r1 = frame_of_pointer ptr1 in r1)
-  #(let a1 = pointer_as_addr ptr1 in a1)
-  #(let r2 = frame_of_pointer ptr2 in r2)
-  #(let a2 = pointer_as_addr ptr2 in a2)
-  (aloc_pointer ptr1) (aloc_pointer ptr2);
-
-  let new_perm_map = Ghost.hide (
-    merge_perms #a #v (Ghost.reveal perm_map) (Ghost.reveal ptr1.ptr_pid) (Ghost.reveal ptr2.ptr_pid)
-  ) in
-  ptr1.ptr_v := (v, new_perm_map);
-  admit()
+  (**) RST.reveal_rst_inv ();
+  (**) RST.reveal_modifies ();
+  (**) R.reveal_star ();
+  PR.merge ptr1 ptr2
