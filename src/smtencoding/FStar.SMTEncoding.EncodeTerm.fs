@@ -696,32 +696,38 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
              //finally add the IsTotFun for the function term itself
              let t_interp =
-               if is_pure
-               then
-                 //get all vars and guards, except for the last one
-                 let all_vars_but_one, all_guards_but_one =
-                   BU.prefix vars |> fst, BU.prefix guards_l |> fst
+                 let maybe_mkForall pat vars body =
+                     match vars with
+                     | [] -> body
+                     | _ -> mkForall t.pos (pat, vars, body)
                  in
-            
-                 let t_interp, _, _, _ =
-                   //fold over the vars and guards
-                   //start with t_interp as computed above, f (the function term), [], and true
-                   List.fold_left2 (fun (t_interp, app, vars, guards) var guard ->
-                     let app = mk_Apply app [var] in
-                     let vars = vars @ [var] in
-                     let guards = mkAnd (guards, guard) in
-                     let is_tot_fun_pred_for_partial_app =
-                       mkForall t.pos
-                                ([[app]], vars, mkImp (guards, mk_IsTotFun app)) in
-                     let t = mkAnd (t_interp, is_tot_fun_pred_for_partial_app) in
-                     t, app, vars, guards
-                   ) (t_interp, f, [], mkTrue) all_vars_but_one all_guards_but_one in
-
-                 mkAnd (t_interp, mk_IsTotFun f)
-               
-               else t_interp
+                 let rec is_tot_fun_axioms ctx head vars =
+                   match vars with
+                   | [] -> 
+                     mkTrue
+                     
+                   | [_] ->
+                     //last arrow
+                     if is_pure
+                     then maybe_mkForall [[head]] ctx (mk_IsTotFun head)
+                     else mkTrue
+                     
+                   | x::vars ->
+                     let is_tot_fun_head =
+                         maybe_mkForall [[head]] ctx (mk_IsTotFun head)
+                     in
+                     let app = mk_Apply head [x] in
+                     let ctx = ctx @ [x] in
+                     let rest = is_tot_fun_axioms ctx app vars in
+                     mkAnd (is_tot_fun_head, rest)
+                 in
+                 let tot_fun_axioms = is_tot_fun_axioms [] f vars in
+                 mkAnd (t_interp, tot_fun_axioms)
              in
-             let cvars = Term.free_variables t_interp |> List.filter (fun x -> fv_name x <> fv_name fsym) in
+             let cvars =
+               Term.free_variables t_interp 
+               |> List.filter (fun x -> fv_name x <> fv_name fsym) 
+             in
              let tkey =
                mkForall t.pos ([], fsym::cvars, t_interp)
              in
