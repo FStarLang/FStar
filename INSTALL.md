@@ -198,7 +198,7 @@ Some convenience Makefile targets are available:
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.0 should work.
+The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.X should work.
 
 #### Instructions for Windows ####
 
@@ -211,7 +211,7 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
    - Can be installed using either your package manager or using OPAM
      (see below).
 
-1. Install OPAM (version 1.2.x).
+1. Install OPAM (version 1.2.x or later).
 
    - Installation instructions are available at various places
      (e.g., https://dev.realworldocaml.org/install.html
