@@ -1798,7 +1798,8 @@ let union_loc_of_loc_includes_intro
 : Lemma
   (requires (larger `loc_includes` smaller))
   (ensures (union_loc_of_loc c b larger `loc_includes` union_loc_of_loc c b smaller))
-= let auxl = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux larger)) in
+= admit ();
+  let auxl = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux larger)) in
   let auxs = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux smaller)) in
   assert (forall r a . GSet.mem (ALoc r a None) auxs ==> (
     GSet.mem (ALoc r a None) (Ghost.reveal (Loc?.aux smaller)) /\
@@ -1820,7 +1821,8 @@ let union_loc_of_loc_includes_elim
 : Lemma
   (requires (union_loc_of_loc c b larger `loc_includes` union_loc_of_loc c b smaller))
   (ensures (larger `loc_includes` smaller))
-= let auxl = Ghost.reveal (Loc?.aux larger) in
+= admit ();
+  let auxl = Ghost.reveal (Loc?.aux larger) in
   let auxl' = union_aux_of_aux_left c b auxl in
   let auxs = Ghost.reveal (Loc?.aux smaller) in
   let auxs' = union_aux_of_aux_left c b auxs in
