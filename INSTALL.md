@@ -118,7 +118,9 @@ following commands. (On Windows this requires Cygwin and `make`)
 4. You can verify the F* library and all the examples,
    keeping in mind that this might take a long time.
 
-        $ make -j6 -C ulib examples
+        $ make -j6 -C ulib
+        $ echo $?    # non-zero means build failed! scroll up for error message!
+        $ make -j6 -C examples
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
    Note: Some of the examples require having OCaml installed (as for step 3 above).
