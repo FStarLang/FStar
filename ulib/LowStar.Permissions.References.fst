@@ -899,6 +899,7 @@ let share (#a: Type) (ptr: pointer a) : HST.Stack (pointer a)
   (ensures (fun h0 ptr1 h1 ->
      pointer_live ptr h1 /\ pointer_live ptr1 h1 /\
      mergeable ptr ptr1 /\
+     loc_disjoint (loc_pointer ptr) (loc_pointer ptr1) /\
      modifies (loc_pointer ptr) h0 h1 /\
      (sel h1 ptr).wp_v == (sel h0 ptr).wp_v /\ (sel h1 ptr1).wp_v == (sel h0 ptr).wp_v /\
      (sel h1 ptr).wp_perm = half_permission (sel h0 ptr).wp_perm /\
@@ -943,6 +944,13 @@ let share (#a: Type) (ptr: pointer a) : HST.Stack (pointer a)
   (**)     )
   (**)   )
   (**) ;
+  (**) MG.loc_disjoint_aloc_intro #ploc #cls
+  (**)   #(frame_of_pointer ptr)
+  (**)   #(pointer_as_addr ptr)
+  (**)   #(frame_of_pointer ptr1)
+  (**)   #(pointer_as_addr ptr1)
+  (**)   (aloc_pointer ptr)
+  (**)   (aloc_pointer ptr1);
   ptr1
 
 let merge (#a: Type) (ptr ptr1: pointer a) : HST.Stack unit
