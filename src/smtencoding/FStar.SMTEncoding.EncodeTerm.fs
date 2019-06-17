@@ -683,14 +683,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              in
 
              (*
-              * AR: For an arrow like int -> int -> int -> int, t_interp is of the form:
-              *     forall (x0:int -> int -> int -> int) (x1:int) (x2:int) (x3:int).
-              *            (ApplyTT (ApplyTT (ApplyTT (x0 x1)) x2) x3) : int
-              *     And then below, we add IsTotFun x0
+              * AR/NS: For an arrow like int -> int -> int -> GTot int, t_interp is of the form:
+              *     forall x0. 
+              *           HasType x0 (int -> int -> int -> GTot int)
+              *         <==>
+              *           (forall (x1:int) (x2:int) (x3:int).
+              *             HasType (ApplyTT (ApplyTT (ApplyTT (x0 x1)) x2) x3) int)
+              *          /\ IsTotFun x0
+              *          /\ (forall x1. IsTotFun (ApplyTT x0 x1)
               *
-              *     In the fold loop below, we also add IsTotFun predicates for the partially applied terms
-              *       ApplyTT (x0 x1) and ApplyTT ((ApplyTT x0 x1) x2)
-              *
+              *   I.e, we add IsTotFun axioms for every total partial application.
+              *   Importantly, in the example above, the axiom is omitted for 
+              *   (x0 x1 x2 : int -> GTot int), since this function is not total
               *)
              
 
@@ -707,12 +711,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                      mkTrue
                      
                    | [_] ->
-                     //last arrow
+                     //last arrow, the effect label tells us if its pure or not
                      if is_pure
                      then maybe_mkForall [[head]] ctx (mk_IsTotFun head)
                      else mkTrue
                      
                    | x::vars ->
+                     //curried arrow with more than 1 argument
+                     //head is definitely Tot
                      let is_tot_fun_head =
                          maybe_mkForall [[head]] ctx (mk_IsTotFun head)
                      in
