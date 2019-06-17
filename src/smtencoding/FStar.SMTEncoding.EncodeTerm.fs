@@ -691,32 +691,34 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               *     In the fold loop below, we also add IsTotFun predicates for the partially applied terms
               *       ApplyTT (x0 x1) and ApplyTT ((ApplyTT x0 x1) x2)
               *
-              *     Note that we add them irrespective of the final computation type (it could also be Ghost, for example)
               *)
              
-             //get all vars and guards, except for the last one
-             let all_vars_but_one, all_guards_but_one =
-               BU.prefix vars |> fst, BU.prefix guards_l |> fst
-             in
 
-             let t_interp, _, _, _ =
-               //fold over the vars and guards
-               //start with t_interp as computed above, f (the function term), [], and true
-               List.fold_left2 (fun (t_interp, app, vars, guards) var guard ->
-                 let app = mk_Apply app [var] in
-                 let vars = vars @ [var] in
-                 let guards = mkAnd (guards, guard) in
-                 let is_tot_fun_pred_for_partial_app =
-                   mkForall t.pos
-                            ([[app]], vars, mkImp (guards, mk_IsTotFun app)) in
-                 let t = mkAnd (t_interp, is_tot_fun_pred_for_partial_app) in
-                 t, app, vars, guards
-               ) (t_interp, f, [], mkTrue) all_vars_but_one all_guards_but_one in
-             
              //finally add the IsTotFun for the function term itself
              let t_interp =
                if is_pure
-               then mkAnd (t_interp, mk_IsTotFun f)
+               then
+                 //get all vars and guards, except for the last one
+                 let all_vars_but_one, all_guards_but_one =
+                   BU.prefix vars |> fst, BU.prefix guards_l |> fst
+                 in
+            
+                 let t_interp, _, _, _ =
+                   //fold over the vars and guards
+                   //start with t_interp as computed above, f (the function term), [], and true
+                   List.fold_left2 (fun (t_interp, app, vars, guards) var guard ->
+                     let app = mk_Apply app [var] in
+                     let vars = vars @ [var] in
+                     let guards = mkAnd (guards, guard) in
+                     let is_tot_fun_pred_for_partial_app =
+                       mkForall t.pos
+                                ([[app]], vars, mkImp (guards, mk_IsTotFun app)) in
+                     let t = mkAnd (t_interp, is_tot_fun_pred_for_partial_app) in
+                     t, app, vars, guards
+                   ) (t_interp, f, [], mkTrue) all_vars_but_one all_guards_but_one in
+
+                 mkAnd (t_interp, mk_IsTotFun f)
+               
                else t_interp
              in
              let cvars = Term.free_variables t_interp |> List.filter (fun x -> fv_name x <> fv_name fsym) in
