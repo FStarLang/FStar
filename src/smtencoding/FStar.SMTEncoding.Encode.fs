@@ -74,17 +74,41 @@ let prims =
         let xapp = mkApp(x, List.map mkFreeV vars) in //arity ok, see decl (#1383)
         let xtok = mkApp(xtok, []) in //arity ok, see decl (#1383)
         let xtok_app = mk_Apply xtok vars in
+
+        (*
+         * AR: adding IsTotFun axioms for the symbol itself, and its partial applications
+         *     NOTE: there are no typing guards here, but then there are no typing guards in
+         *           any of the other axioms too
+         *)
+        let tot_fun_axioms =
+          let all_vars_but_one = BU.prefix vars |> fst in
+          let axiom_name = "primitive_tot_fun_" ^ x in
+          //IsTotFun axiom for the symbol itself
+          let tot_fun_axiom_for_x = Util.mkAssume (mk_IsTotFun xtok, None, axiom_name) in
+          let axioms, _, _ =  //collect other axioms for partial applications
+            List.fold_left (fun (axioms, app, vars) var ->
+              let app = mk_Apply app [var] in
+              let vars = vars @ [var] in
+              let axiom_name = axiom_name ^ "." ^ (string_of_int (vars |> List.length)) in
+              axioms @ [Util.mkAssume (mkForall rng ([[app]], vars, mk_IsTotFun app), None, axiom_name)],
+              app,
+              vars
+            ) ([tot_fun_axiom_for_x], xtok, []) all_vars_but_one
+          in
+          axioms
+        in
+
         xtok,
         List.length vars,
-        [xname_decl;
-         xtok_decl;
-         Util.mkAssume(mkForall rng ([[xapp]], vars, mkEq(xapp, body)), None, "primitive_" ^x);
-         Util.mkAssume(mk_IsTotFun xtok, None, "primitive_tot_fun_" ^x);
-         Util.mkAssume(mkForall rng ([[xtok_app]],
-                     vars,
-                     mkEq(xtok_app, xapp)),
-                     Some "Name-token correspondence",
-                     "token_correspondence_"^x)]
+        ([xname_decl;
+          xtok_decl;
+          Util.mkAssume(mkForall rng ([[xapp]], vars, mkEq(xapp, body)), None, "primitive_" ^x)] @
+         tot_fun_axioms @
+         [Util.mkAssume(mkForall rng ([[xtok_app]],
+                        vars,
+                        mkEq(xtok_app, xapp)),
+                        Some "Name-token correspondence",
+                        "token_correspondence_"^x)])
     in
     let axy = List.map mk_fv [(asym, Term_sort); (xsym, Term_sort); (ysym, Term_sort)] in
     let xy = List.map mk_fv [(xsym, Term_sort); (ysym, Term_sort)] in
