@@ -822,7 +822,7 @@ let (label_goals :
                           in
                        (labels1, uu____2317))
                in
-            aux "assertion failed" FStar_Pervasives_Native.None
+            aux "assertion failed" (FStar_Pervasives_Native.Some r)
               FStar_Pervasives_Native.None [] q
   
 let (detail_errors :

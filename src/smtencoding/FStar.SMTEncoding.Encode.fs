@@ -1705,7 +1705,7 @@ let encode_query use_env_msg tcenv q
     || debug tcenv <| Options.Other "SMTQuery"
     then BU.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
     let phi, qdecls = encode_formula q env in
-    let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
+    let labels, phi = ErrorReporting.label_goals use_env_msg phi.rng phi in
     let label_prefix, label_suffix = encode_labels labels in
     let caption =
         if Options.log_queries ()
