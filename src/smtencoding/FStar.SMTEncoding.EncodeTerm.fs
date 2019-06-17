@@ -684,7 +684,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
              (*
               * AR/NS: For an arrow like int -> int -> int -> GTot int, t_interp is of the form:
-              *     forall x0. 
+              *     forall x0.
               *           HasType x0 (int -> int -> int -> GTot int)
               *         <==>
               *           (forall (x1:int) (x2:int) (x3:int).
@@ -693,10 +693,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               *          /\ (forall x1. IsTotFun (ApplyTT x0 x1)
               *
               *   I.e, we add IsTotFun axioms for every total partial application.
-              *   Importantly, in the example above, the axiom is omitted for 
+              *   Importantly, in the example above, the axiom is omitted for
               *   (x0 x1 x2 : int -> GTot int), since this function is not total
               *)
-             
+
 
              //finally add the IsTotFun for the function term itself
              let t_interp =
@@ -707,15 +707,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  in
                  let rec is_tot_fun_axioms ctx head vars =
                    match vars with
-                   | [] -> 
+                   | [] ->
                      mkTrue
-                     
+
                    | [_] ->
                      //last arrow, the effect label tells us if its pure or not
                      if is_pure
                      then maybe_mkForall [[head]] ctx (mk_IsTotFun head)
                      else mkTrue
-                     
+
                    | x::vars ->
                      //curried arrow with more than 1 argument
                      //head is definitely Tot
@@ -731,8 +731,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  mkAnd (t_interp, tot_fun_axioms)
              in
              let cvars =
-               Term.free_variables t_interp 
-               |> List.filter (fun x -> fv_name x <> fv_name fsym) 
+               Term.free_variables t_interp
+               |> List.filter (fun x -> fv_name x <> fv_name fsym)
              in
              let tkey =
                mkForall t.pos ([], fsym::cvars, t_interp)
