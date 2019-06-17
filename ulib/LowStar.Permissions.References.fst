@@ -1003,11 +1003,8 @@ let merge (#a: Type) (ptr ptr1: pointer a) : HST.Stack unit
   (**)         union
   (**)         (loc_pointer ptr')
   (**)         (loc_pointer ptr1);
-  (**)       assert(loc_pointer ptr' `loc_disjoint` loc_pointer ptr);
-  (**)       assert(loc_pointer ptr' `loc_disjoint` loc_pointer ptr1);
-  (**)       //loc_disjoint_aloc_elim #ploc #cls #r #n #r' #n' (aloc_pointer ptr') (aloc_pointer ptr);
-  (**)
-  (**)       admit()
+  (**)       loc_disjoint_aloc_elim #ploc #cls #r' #n' #r #n ploc' (aloc_pointer ptr);
+  (**)       loc_disjoint_aloc_elim #ploc #cls #r' #n' #(frame_of_pointer ptr1) #(pointer_as_addr ptr1) ploc' (aloc_pointer ptr1)
   (**)     )
   (**)   )
   (**) ;
