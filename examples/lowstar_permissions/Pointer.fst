@@ -60,6 +60,7 @@ let read_write_with_sharing () : RST unit
   let ptr = ptr_alloc 42ul in
   let x1 = ptr_read ptr in
   ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
+  R.reveal_star ();
   let ptr1 = rst_frame
     (ptr_resource ptr)
     (fun ptr1 -> ptr_resource ptr1 <*> ptr_resource ptr)
@@ -71,17 +72,20 @@ let read_write_with_sharing () : RST unit
       (fun _ -> ptr_resource ptr1 <*> ptr_resource ptr)
       (fun _ -> ptr_read  ptr1)
   in
+  admit();
   rst_frame
-    (ptr_resource ptr <*> ptr_resource ptr1) #(ptr_resource ptr1)
-    #unit
-    (fun _ -> ptr_resource ptr <*> ptr_resource ptr1) #(fun _ -> ptr_resource ptr1)
-    #(ptr_resource ptr)
-    #(fun h0 -> LowStar.Permissions.allows_write (LowStar.Resource.sel (ptr_view ptr1) h0).LowStar.Permissions.References.wp_perm)
-    #(fun h0 _ h1 ->
-      (R.sel (ptr_view ptr1) h1).PR.wp_v == FStar.UInt32.(x1 +%^ 1ul) /\
-      (R.sel (ptr_view ptr1) h1).PR.wp_perm == (R.sel (ptr_view ptr1) h0).PR.wp_perm
-    )
-    (fun _ -> (ptr_write ptr1 FStar.UInt32.(x1 +%^ 1ul)) <: (LowStar.RST.RST
+    (ptr_resource ptr1 <*> ptr_resource ptr)
+    //#(ptr_resource ptr1)
+    //#unit
+    (fun _ -> ptr_resource ptr1 <*> ptr_resource ptr)
+    //#(fun _ -> ptr_resource ptr1)
+    //#(ptr_resource ptr)
+    //#(fun h0 -> LowStar.Permissions.allows_write (LowStar.Resource.sel (ptr_view ptr1) h0).LowStar.Permissions.References.wp_perm)
+    //#(fun h0 _ h1 ->
+    //  (R.sel (ptr_view ptr1) h1).PR.wp_v == FStar.UInt32.(x1 +%^ 1ul) /\
+    //  (R.sel (ptr_view ptr1) h1).PR.wp_perm == (R.sel (ptr_view ptr1) h0).PR.wp_perm
+    //)
+    (fun _ -> (ptr_write ptr1 FStar.UInt32.(x1 +%^ 1ul)) (*<: (LowStar.RST.RST
       unit
       (ptr_resource ptr <*> ptr_resource ptr1)
       (fun _ -> ptr_resource ptr <*> ptr_resource ptr1)
@@ -90,7 +94,7 @@ let read_write_with_sharing () : RST unit
         (R.sel (ptr_view ptr1) h1).PR.wp_v == FStar.UInt32.(x1 +%^ 1ul) /\
         (R.sel (ptr_view ptr1) h1).PR.wp_perm == (R.sel (ptr_view ptr1) h0).PR.wp_perm
       )
-   ));
+   *));
   admit();(*
   rst_frame
     (ptr_resource ptr <*> ptr_resource ptr1)

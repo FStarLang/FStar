@@ -98,6 +98,49 @@ let ucell_preserved (#r:HS.rid) (#a:nat) (b:ucell r a) (h0 h1:HS.mem) : GTot Typ
           live_cell h1 b' i /\ // If this cell is preserved, then its liveness is preserved
           (sel h0 b' i == sel h1 b' i))) // And its contents (snapshot + permission) are the same
 
+let prove_bloc_preserved (#r: HS.rid) (#a: nat) (bloc: ucell r a) (h0 h1: HS.mem)
+  (lemma: (t: Type0 -> b': array t -> Lemma
+    (requires (
+      let i = bloc.b_index - U32.v b'.idx in
+      frameOf b' == r /\ as_addr b' == a /\
+      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
+      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h0 b' i))
+    (ensures (
+      let i = bloc.b_index - U32.v b'.idx in
+      live_cell h1 b' i /\
+      sel h0 b' i  == sel h1 b' i
+      ))
+  )) : Lemma (ucell_preserved #r #a bloc h0 h1)
+  =
+  let aux (t: Type0) (b':array t) : Lemma(
+      let i = bloc.b_index - U32.v b'.idx in
+      frameOf b' == r /\ as_addr b' == a /\
+      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
+      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h0 b' i ==>
+        live_cell h1 b' i /\
+        sel h0 b' i  == sel h1 b' i)
+  =
+  let aux' (_ : squash (
+      let i = bloc.b_index - U32.v b'.idx in
+      frameOf b' == r /\ as_addr b' == a /\
+      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
+      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h0 b' i)
+    ) : Lemma (
+      let i = bloc.b_index - U32.v b'.idx in
+      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h1 b' i /\
+      sel h0 b' i  == sel h1 b' i
+    )
+    = lemma t b'
+  in
+    Classical.impl_intro aux'
+  in
+  Classical.forall_intro_2 aux
+
+
 // Two cells are included if they are equal: Same pid and same index in the buffer
 let ucell_includes (#r: HS.rid) (#a: nat) (c1 c2: ucell r a) : GTot Type0 =
   c1.b_pid == c2.b_pid /\
@@ -120,7 +163,12 @@ let cls : MG.cls ucell = MG.Cls #ucell
   ucell_preserved
   (fun #r #a x h -> ())
   (fun #r #a x h1 h2 h3 -> ())
-  (fun #r #a b h1 h2 f -> admit())
+  (fun #r #a b h1 h2 f ->
+    prove_bloc_preserved #r #a b h1 h2 (fun t b' ->
+      let ref_t = Seq.lseq (value_with_perms t) (U32.v b'.max_length) in
+      f ref_t (Heap.trivial_preorder ref_t) b'.content
+    )
+  )
 
 let bloc = MG.loc cls
 
@@ -165,50 +213,8 @@ let lemma_includes_loc_cell_loc_array (#a:Type) (b:array a) (i:nat{i < length b}
       MG.loc_includes_union_l #ucell #cls (loc_cell b j) (compute_loc_array b (j+1)) (loc_cell b i)
     end
   in aux 0
-  
-let modifies (s:bloc) (h0 h1:HS.mem) : GTot Type0 = MG.modifies s h0 h1
 
-let prove_bloc_preserved (#r: HS.rid) (#a: nat) (bloc: ucell r a) (h0 h1: HS.mem)
-  (lemma: (t: Type0 -> b': array t -> Lemma
-    (requires (
-      let i = bloc.b_index - U32.v b'.idx in
-      frameOf b' == r /\ as_addr b' == a /\
-      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
-      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
-      live_cell h0 b' i))
-    (ensures (
-      let i = bloc.b_index - U32.v b'.idx in
-      live_cell h1 b' i /\
-      sel h0 b' i  == sel h1 b' i
-      ))
-  )) : Lemma (ucell_preserved #r #a bloc h0 h1)
-  =
-  let aux (t: Type0) (b':array t) : Lemma(
-      let i = bloc.b_index - U32.v b'.idx in
-      frameOf b' == r /\ as_addr b' == a /\
-      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
-      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
-      live_cell h0 b' i ==>
-        live_cell h1 b' i /\
-        sel h0 b' i  == sel h1 b' i)
-  =
-  let aux' (_ : squash (
-      let i = bloc.b_index - U32.v b'.idx in
-      frameOf b' == r /\ as_addr b' == a /\
-      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
-      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
-      live_cell h0 b' i)
-    ) : Lemma (
-      let i = bloc.b_index - U32.v b'.idx in
-      bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\      
-      live_cell h1 b' i /\
-      sel h0 b' i  == sel h1 b' i
-    )
-    = lemma t b'
-  in
-    Classical.impl_intro aux'
-  in
-  Classical.forall_intro_2 aux
+let modifies (s:bloc) (h0 h1:HS.mem) : GTot Type0 = MG.modifies s h0 h1
 
 let live_same_arrays_equal_types
   (#a1: Type0)
