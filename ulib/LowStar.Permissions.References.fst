@@ -961,12 +961,12 @@ let merge (#a: Type) (ptr ptr1: pointer a) : HST.Stack unit
     merge_perms #a #v (Ghost.reveal perm_map) (Ghost.reveal ptr.ptr_pid) (Ghost.reveal ptr1.ptr_pid)
   ) in
   ptr.ptr_v := (v, new_perm_map);
-   MG.loc_disjoint_aloc_intro #ploc #cls
-    #(frame_of_pointer ptr)
-    #(pointer_as_addr ptr)
-    #(frame_of_pointer ptr1)
-    #(pointer_as_addr ptr1)
-    (aloc_pointer ptr) (aloc_pointer ptr1);
+  (**) MG.loc_disjoint_aloc_intro #ploc #cls
+  (**)  #(frame_of_pointer ptr)
+  (**)  #(pointer_as_addr ptr)
+  (**)  #(frame_of_pointer ptr1)
+  (**)  #(pointer_as_addr ptr1)
+  (**)  (aloc_pointer ptr) (aloc_pointer ptr1);
   (**) let h1 = HST.get () in
   (**) modifies_intro
   (**)   #ploc #cls
