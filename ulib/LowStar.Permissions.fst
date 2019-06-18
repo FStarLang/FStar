@@ -249,6 +249,8 @@ let only_one_live_pid_with_full_permission
 
 let lemma_live_pid_smaller_max #a v_perms pid = ()
 
+let lemma_greater_max_not_live_pid #a v_perms pid = ()
+
 let change_snapshot
   (#a: Type0)
   (#v: a)

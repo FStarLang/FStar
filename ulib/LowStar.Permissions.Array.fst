@@ -468,7 +468,14 @@ let share_cell #a b i pid =
     (fun t pre b -> ())
     (fun t pre b -> ())
     (fun r n -> ())
-    (fun aloc' -> admit())
+    (fun aloc' ->
+       prove_bloc_preserved #r #n aloc' h0 h1 (fun t b'-> 
+         live_same_arrays_equal_types b b' h0;
+         live_same_arrays_equal_types b b' h1;
+         if aloc'.b_index <> U32.v b.idx + U32.v i then ()
+         else lemma_greater_max_not_live_pid (Ghost.reveal perm_map) (Ghost.reveal pid)
+       )
+    )
 
 val share_cells 
   (#a:Type0) 
