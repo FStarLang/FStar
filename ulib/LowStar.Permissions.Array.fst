@@ -538,7 +538,7 @@ val share (#a:Type0) (b:array a) : Stack (array a)
     as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
     as_seq h1 b' == as_seq h1 b /\ // The values of the new buffer are the same as the initial array
     mergeable b b' /\
-    True) // TODO: Talk about permissions here. Need a mergeable predicate?
+    True) // TODO: Talk about permissions here?
 
 let share #a b =
   let open HST in
