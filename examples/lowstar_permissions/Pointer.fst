@@ -70,6 +70,15 @@ let read_write_with_sharing () : RST.RST unit
         PT.ptr_read ptr1
       )
   in
+  let x =
+    RST.rst_frame
+      (R.(PT.ptr_resource ptr1 <*> PT.ptr_resource ptr))
+      (fun _ -> R.(PT.ptr_resource ptr1 <*> PT.ptr_resource ptr))
+      (fun _ ->
+        PT.ptr_read ptr
+      )
+  in
+  assert(x == x1);
   (*let new_x1 = FStar.UInt32.(x1 +%^ 1ul) in
   RST.rst_frame
    (R.(PT.ptr_resource ptr1 <*> PT.ptr_resource ptr))
