@@ -76,12 +76,14 @@ let read_write_with_sharing () : RST.RST unit
    (fun _ -> R.(PT.ptr_resource ptr <*> PT.ptr_resource ptr1))
    (fun _ -> PT.ptr_write ptr new_x1);*)
   RST.rst_frame
-    (R.(PT.ptr_resource ptr <*> PT.ptr_resource ptr1))
+    (R.(PT.ptr_resource ptr1 <*> PT.ptr_resource ptr))
     (fun _ -> PT.ptr_resource ptr)
     (fun _ -> PT.ptr_merge ptr ptr1);
   RST.rst_frame
     (PT.ptr_resource ptr)
     (fun _ -> R.empty_resource)
     (fun _ -> PT.ptr_free ptr);
-  R.reveal_empty_resource ();
-  RST.reveal_modifies ()
+  (*PT.ptr_merge ptr ptr1;
+  PT.ptr_free ptr*)
+  (**) R.reveal_can_be_split_into ();
+  (**) RST.reveal_modifies ()
