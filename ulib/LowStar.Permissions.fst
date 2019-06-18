@@ -107,14 +107,14 @@ let share_perms (#a: Type0) (#v: a) (v_perms: value_perms a v) (pid: live_pid v_
   let (p, _) = v_perms.perm_map pid in
   let perm_map1' = F.on_dom perm_id (fun (x:perm_id) ->
     let (old_p, old_snap) = v_perms.perm_map x in
-    if x = pid then ((p /. 2.0R <: permission), old_snap) else (old_p, old_snap))
+    if x = pid then ((p /. two <: permission), old_snap) else (old_p, old_snap))
   in
-  sum_until_change v_perms.perm_map perm_map1' v_perms.current_max pid (p /. 2.0R);
+  sum_until_change v_perms.perm_map perm_map1' v_perms.current_max pid (p /. two);
   let perm_map2' = F.on_dom perm_id (fun (x:perm_id) ->
     let (old_p, old_snap) = perm_map1' x in
-    if x = current_max' then ((p /. 2.0R <: permission), v) else (old_p, old_snap))
+    if x = current_max' then ((p /. two <: permission), v) else (old_p, old_snap))
   in
-  sum_until_change perm_map1' perm_map2' current_max' current_max' (p /. 2.0R);
+  sum_until_change perm_map1' perm_map2' current_max' current_max' (p /. two);
   let v_perms' : perms_rec' a =
     { v_perms with
       current_max = current_max';
@@ -142,15 +142,15 @@ let share_perms_with_pid #a #v v_perms pid new_pid =
   let (p, _) = v_perms.perm_map pid in
   let perm_map1' = F.on_dom perm_id (fun (x:perm_id) ->
     let (old_p, old_snap) = v_perms.perm_map x in
-    if x = pid then ((p /. 2.0R <: permission), old_snap) else (old_p, old_snap))
+    if x = pid then ((p /. two <: permission), old_snap) else (old_p, old_snap))
   in
-  sum_until_change v_perms.perm_map perm_map1' v_perms.current_max pid (p /. 2.0R);
+  sum_until_change v_perms.perm_map perm_map1' v_perms.current_max pid (p /. two);
   let perm_map2' = F.on_dom perm_id (fun (x:perm_id) ->
     let (old_p, old_snap) = perm_map1' x in
-    if x = new_pid then ((p /. 2.0R <: permission), v) else (old_p, old_snap))
+    if x = new_pid then ((p /. two <: permission), v) else (old_p, old_snap))
   in
   sum_until_extend_zeros perm_map1' v_perms.current_max new_pid;
-  sum_until_change perm_map1' perm_map2' new_pid new_pid (p /. 2.0R);
+  sum_until_change perm_map1' perm_map2' new_pid new_pid (p /. two);
   let v_perms' : perms_rec' a =
     { v_perms with
       current_max = new_pid;
