@@ -126,7 +126,7 @@ let reveal_rst_inv ()
 let rst_inv_star (res0 res1: resource) (h: HS.mem) : Lemma
   (rst_inv (res0 <*> res1) h <==> rst_inv (res1 <*> res0) h)
   [SMTPat (rst_inv (res0 <*> res1) h)]
-  = ()
+  = reveal_star ()
 
 // Monotonic WPs for RSTATE
 let rstate_wp (a:Type) (res0:resource) (res1:a -> resource) =
