@@ -373,7 +373,8 @@ let psmap_find_map (m:'value psmap) f =
   !res
 let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
   BatMap.modify_opt k (fun vopt -> Some (upd vopt)) m
-
+let psmap_merge (m1: 'value psmap) (m2: 'value psmap) : 'value psmap =
+  BatMap.union m1 m2
 
 type 'value imap = (Z.t, 'value) BatHashtbl.t
 let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)

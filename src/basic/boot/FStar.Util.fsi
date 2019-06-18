@@ -99,6 +99,7 @@ val psmap_try_find: psmap<'value> -> string -> option<'value>
 val psmap_fold: psmap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 val psmap_find_map: psmap<'value> -> (string -> 'value -> option<'a>) -> option<'a>
 val psmap_modify: psmap<'value> -> string -> (option<'value> -> 'value) -> psmap<'value>
+val psmap_merge: psmap<'value> -> psmap<'value> -> psmap<'value>
 
 (* not relying on representation *)
 type imap<'value>
