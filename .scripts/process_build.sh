@@ -103,6 +103,10 @@ cd fstar
 # to export it from here.
 export FSTAR_HOME="$PWD"
 
+diag "-- Versions --"
+fstar.exe --version
+z3 --version
+
 diag "-- Verify micro benchmarks --"
 make -C examples/micro-benchmarks
 if [ $? -ne 0 ]; then
