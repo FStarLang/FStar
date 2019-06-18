@@ -119,7 +119,38 @@ let raise_arity_mismatch head arity n_args rng =
                                         (BU.string_of_int arity)
                                         (BU.string_of_int n_args))
                                 rng
- let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>) : term =
+
+let isTotFun_axioms pos head vars is_pure =
+    let maybe_mkForall pat vars body =
+        match vars with
+        | [] -> body
+        | _ -> mkForall pos (pat, vars, body)
+    in
+    let rec is_tot_fun_axioms ctx head vars =
+        match vars with
+        | [] ->
+          mkTrue
+
+        | [_] ->
+          //last arrow, the effect label tells us if its pure or not
+          if is_pure
+          then maybe_mkForall [[head]] ctx (mk_IsTotFun head)
+          else mkTrue
+
+        | x::vars ->
+          //curried arrow with more than 1 argument
+          //head is definitely Tot
+          let is_tot_fun_head =
+              maybe_mkForall [[head]] ctx (mk_IsTotFun head)
+          in
+          let app = mk_Apply head [x] in
+          let ctx = ctx @ [x] in
+          let rest = is_tot_fun_axioms ctx app vars in
+          mkAnd (is_tot_fun_head, rest)
+    in
+    is_tot_fun_axioms [] head vars
+
+let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>) : term =
     let n_args = List.length args in
     match head with
     | BU.Inr head -> //must curry
@@ -700,34 +731,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
              //finally add the IsTotFun for the function term itself
              let t_interp =
-                 let maybe_mkForall pat vars body =
-                     match vars with
-                     | [] -> body
-                     | _ -> mkForall t.pos (pat, vars, body)
-                 in
-                 let rec is_tot_fun_axioms ctx head vars =
-                   match vars with
-                   | [] ->
-                     mkTrue
-
-                   | [_] ->
-                     //last arrow, the effect label tells us if its pure or not
-                     if is_pure
-                     then maybe_mkForall [[head]] ctx (mk_IsTotFun head)
-                     else mkTrue
-
-                   | x::vars ->
-                     //curried arrow with more than 1 argument
-                     //head is definitely Tot
-                     let is_tot_fun_head =
-                         maybe_mkForall [[head]] ctx (mk_IsTotFun head)
-                     in
-                     let app = mk_Apply head [x] in
-                     let ctx = ctx @ [x] in
-                     let rest = is_tot_fun_axioms ctx app vars in
-                     mkAnd (is_tot_fun_head, rest)
-                 in
-                 let tot_fun_axioms = is_tot_fun_axioms [] f vars in
+                 let tot_fun_axioms = isTotFun_axioms t.pos f vars is_pure in
                  mkAnd (t_interp, tot_fun_axioms)
              in
              let cvars =
