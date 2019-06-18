@@ -252,11 +252,6 @@ let rec as_seq'_sel' #a #b v as i =
            sel'_tail v as i
          end
 #reset-options
-#set-options "--smtencoding.elim_box true"
-#set-options "--smtencoding.l_arith_repr native"
-#set-options "--smtencoding.nl_arith_repr wrapped"
-#set-options "--z3rlimit_factor 4" //just being conservative
-#set-options "--initial_fuel 1 --max_fuel 1 --max_ifuel 0"
 
 let as_seq_sel #b h vb i =
   indexing vb i;
@@ -280,6 +275,7 @@ val as_seq'_slice (#a #b: _)
       Seq.slice (as_seq' as v) (n * (i /n)) (n * (i / n) + n)))
     (decreases (Seq.length as))
 
+#push-options "--z3rlimit 100"
 let rec as_seq'_slice #a #b v as i =
   let n = View?.n v in
   if Seq.length as = 0 then ()
@@ -301,6 +297,7 @@ let rec as_seq'_slice #a #b v as i =
                     Seq.slice (as_seq' as v) (n * (j / n) + n) (n * (j / n) + n + n));
             FStar.Math.Lemmas.add_div_mod_1 j n;
             assert (j / n == i / n - 1)
+#pop-options
 
 let put_sel #b h vb i =
     indexing vb i;
