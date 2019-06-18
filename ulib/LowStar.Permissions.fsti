@@ -29,24 +29,24 @@ type permission = r:real{r >=. 0.0R /\ r <=. 1.0R}
 
 /// A permission value of 0 means that the resource is not live. It is live, and can be read, as long as the permission is
 /// strictly positive.
-let allows_read (p: permission) : Tot bool =
+let allows_read (p: permission) : GTot bool =
   p >. 0.0R
 
 /// A full permission (of value 1) is required for writing to the resource.
-let allows_write (p: permission) : Tot bool =
+let allows_write (p: permission) : GTot bool =
   p = 1.0R
 
 /// The common way to share a permission is to halve its value.
-let half_permission (p: permission) : Tot (permission) =
+let half_permission (p: permission) : GTot (permission) =
   p /. 2.0R
 
 /// When merging resources, you have to sum the permissions.
 let summable_permissions (p1: permission) (p2: permission)
-  : Tot bool =
+  : GTot bool =
    p1 +. p2 <=. 1.0R
 
 let sum_permissions (p1: permission) (p2: permission{p1 +. p2 <=. 1.0R})
-  : Tot (permission) =
+  : GTot (permission) =
   (p1 +.  p2)
 
 /// On top of the permission as a number, we define a view defining what you can actually do with the resource given its
@@ -58,7 +58,7 @@ type permission_kind =
   | FULL (* Read-write access and deallocation *)
 
 /// Translates the permission and the ownership flag into a permission kind.
-let permission_to_kind (p: permission) (is_fully_owned: bool) : permission_kind =
+let permission_to_kind (p: permission) (is_fully_owned: bool) : GTot permission_kind =
   if p = 0.0R then
     DEAD
   else if p <. 1.0R then

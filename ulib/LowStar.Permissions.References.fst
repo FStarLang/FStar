@@ -739,7 +739,7 @@ let modifies_remove_fresh_frame (h1 h2 h3:HS.mem) (l:loc)
 
 (**** Operations on pointers *)
 
-let get (#a: Type0) (ptr: pointer a) : HST.Stack a
+inline_for_extraction noextract let get (#a: Type0) (ptr: pointer a) : HST.Stack a
   (requires (fun h0 -> readable ptr h0 /\ pointer_live ptr h0))
   (ensures (fun h0 x h1 ->
     sel h0 ptr == sel h1 ptr /\ x == (sel h0 ptr).wp_v /\
@@ -766,7 +766,7 @@ let live_same_pointers_equal_types
   Heap.lemma_distinct_addrs_distinct_preorders ();
   Heap.lemma_distinct_addrs_distinct_mm ()
 
-let upd (#a: Type0) (ptr: pointer a) (x: a) : HST.Stack unit
+inline_for_extraction noextract let upd (#a: Type0) (ptr: pointer a) (x: a) : HST.Stack unit
   (requires (fun h0 -> writeable ptr h0 /\ pointer_live ptr h0))
   (ensures (fun h0 _ h1 ->
      (sel h0 ptr).wp_perm == (sel h1 ptr).wp_perm /\
@@ -813,7 +813,7 @@ let upd (#a: Type0) (ptr: pointer a) (x: a) : HST.Stack unit
   (**) ;
   ()
 
-let create (#a: Type) (init :a) : HST.ST (pointer a)
+inline_for_extraction noextract let create (#a: Type) (init :a) : HST.ST (pointer a)
   (requires (fun _ -> True))
   (ensures (fun h0 ptr h1 ->
     ptr.ptr_v `HS.unused_in` h0 /\
@@ -831,7 +831,7 @@ let create (#a: Type) (init :a) : HST.ST (pointer a)
   let ptr_v = HST.ralloc_mm HS.root (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) in
   { ptr_v = ptr_v; ptr_pid = Ghost.hide (snd (Ghost.reveal perm_map_pid)) }
 
-let free (#a: Type) (ptr: pointer a) : HST.ST unit
+inline_for_extraction noextract let free (#a: Type) (ptr: pointer a) : HST.ST unit
   (requires (fun h0 -> writeable ptr h0 /\ pointer_live ptr h0))
   (ensures (fun h0 _ h1 ->
     Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\
@@ -897,6 +897,7 @@ let share (#a: Type) (ptr: pointer a) : HST.Stack (pointer a)
   let open HST in
   (**) let h0 = HST.get () in
   let (v, perm_map) = ! ptr.ptr_v in
+  [@inline_let]
   let (new_perm_map_new_pid) = Ghost.hide (
     let (vp, pid) = share_perms #a #v (Ghost.reveal perm_map) (Ghost.reveal ptr.ptr_pid) in
     ((vp <: perms_rec a), pid)
@@ -957,6 +958,7 @@ let merge (#a: Type) (ptr ptr1: pointer a) : HST.Stack unit
   let open HST in
   (**) let h0 = HST.get () in
   let (v, perm_map) = !ptr.ptr_v in
+  [@inline_let]
   let new_perm_map = Ghost.hide (
     merge_perms #a #v (Ghost.reveal perm_map) (Ghost.reveal ptr.ptr_pid) (Ghost.reveal ptr1.ptr_pid)
   ) in

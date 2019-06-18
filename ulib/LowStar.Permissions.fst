@@ -48,9 +48,9 @@ let is_fully_owned = is_fully_owned'
 let new_value_perms (#a: Type0) (init: a) (fully_owned: bool) =
   let f:F.restricted_t perm_id (fun (x:perm_id) -> permission & a) =
      F.on_dom perm_id (fun (x:perm_id) -> if x = 1 then
-         ((1.0R <: permission), init)
+         ((FStar.Real.one <: permission), init)
        else
-         ((0.0R <: permission), init)
+         (((FStar.Real.of_int 0) <: permission), init)
      )
   in
   ({ current_max = 1; perm_map = f; fully_owned = fully_owned }, 1)
