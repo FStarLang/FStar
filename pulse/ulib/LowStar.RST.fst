@@ -191,17 +191,18 @@ let frame_delta (outer0:resource)
     frame_delta_post outer1 inner1 delta
   }
 
+
 open FStar.Algebra.CommMonoid.Equiv
 open FStar.Tactics
 open FStar.Tactics.CanonCommMonoidSimple.Equiv
 
-let req : equiv resource =
+inline_for_extraction noextract let req : equiv resource =
   EQ equal
      equal_refl
      equal_symm
      equal_trans
 
-let rm : cm resource req =
+inline_for_extraction noextract let rm : cm resource req =
   CM empty_resource
      (<*>)
      equal_comm_monoid_left_unit
@@ -209,7 +210,7 @@ let rm : cm resource req =
      equal_comm_monoid_commutativity
      equal_comm_monoid_cong
 
-let resolve_delta (outer inner:term) : Tac unit =
+inline_for_extraction noextract let resolve_delta (outer inner:term) : Tac unit =
   norm [delta_only [`%frame_delta]];
   refine_intro ();
   flip ();
@@ -238,7 +239,7 @@ let frame_wp (#outer0:resource)
           ==>
           p x h1) h0
 
-let frame (outer0:resource)
+inline_for_extraction noextract let frame (outer0:resource)
           (#inner0:resource)
           (#a:Type)
           (outer1:a -> resource)
@@ -278,7 +279,7 @@ let frame_post (#outer0:resource)
 
 // [DA: should be definable directly using RSTATE frame, but get
 //      an error about unexpected unification variable remaining]
-let rst_frame (outer0:resource)
+inline_for_extraction noextract let rst_frame (outer0:resource)
               (#inner0:resource)
               (#a:Type)
               (outer1:a -> resource)
