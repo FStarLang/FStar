@@ -701,7 +701,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Some pre ->
                   let guard, decls0 = encode_formula pre env' in
                   mk_and_l (guard::guards_l), decls0  in
-             let is_pure = U.is_pure_comp res in
+             //AR: promote ghost to pure for non-informative types
+             let is_pure = res |> N.ghost_to_pure env.tcenv |> U.is_pure_comp in
              //cf. Bug #1750
              //We need to distinguish pure and ghost functions in the encoding
              //both in hash consing, producing different type constructors for them.
