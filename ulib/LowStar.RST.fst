@@ -123,6 +123,11 @@ let reveal_rst_inv ()
              loc_includes (loc_not_unused_in cls h) (as_loc (fp res)))
   = ()
 
+let rst_inv_star (res0 res1: resource) (h: HS.mem) : Lemma
+  (rst_inv (res0 <*> res1) h <==> rst_inv (res1 <*> res0) h)
+  [SMTPat (rst_inv (res0 <*> res1) h)]
+  = ()
+
 // Monotonic WPs for RSTATE
 let rstate_wp (a:Type) (res0:resource) (res1:a -> resource) =
   wp:((x:a -> imem (inv (res1 x)) -> Type0) -> imem (inv res0) -> Type0){
