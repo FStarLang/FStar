@@ -144,7 +144,13 @@ inline_for_extraction noextract let ptr_merge
       P.summable_permissions s1.PR.wp_perm s2.PR.wp_perm /\
       ptr1.PR.ptr_v == ptr2.PR.ptr_v
     )
-    (fun h0 _ h1 -> True)
+    (fun h0 _ h1 ->
+      let s1 = R.sel (ptr_view ptr1) h0 in
+      let s2 = R.sel (ptr_view ptr2) h0 in
+      let s1' = R.sel (ptr_view ptr1) h1 in
+      P.summable_permissions s1.PR.wp_perm s2.PR.wp_perm /\
+      s1'.PR.wp_perm = P.sum_permissions s1.PR.wp_perm s2.PR.wp_perm
+    )
   =
   (**) RST.reveal_rst_inv ();
   (**) RST.reveal_modifies ();
