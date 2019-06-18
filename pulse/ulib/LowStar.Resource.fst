@@ -201,9 +201,19 @@ let can_be_split_into_empty_left (res:resource)
           [SMTPat (res `can_be_split_into` (empty_resource,res))] =
   ()
 
+let can_be_split_into_empty_reverse_left (res1 res2:resource)
+  : Lemma ((res1 <*> res2) `can_be_split_into` (empty_resource,res2 <*> res1 ))
+          [SMTPat ((res1 <*> res2) `can_be_split_into` (empty_resource,res2 <*> res1))] =
+  ()
+
 let can_be_split_into_empty_right (res:resource)
   : Lemma (res `can_be_split_into` (res,empty_resource))
           [SMTPat (res `can_be_split_into` (res,empty_resource))] =
+  ()
+
+let can_be_split_into_empty_reverse_right (res1 res2:resource)
+  : Lemma ((res1 <*> res2) `can_be_split_into` (res2 <*> res1, empty_resource))
+          [SMTPat ((res1 <*> res2) `can_be_split_into` (res2 <*> res1, empty_resource))] =
   ()
 
 let reveal_can_be_split_into ()
