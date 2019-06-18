@@ -32,50 +32,36 @@ module BU = FStar.Util
 (* Check the Z3 commit hash once, and issue a warning if it is not
    equal to the one that we are expecting from the Z3 url below
 *)
-let _z3hash_checked : ref<bool> = BU.mk_ref false
+let _z3version_checked : ref<bool> = BU.mk_ref false
 
-let _z3hash_expected = "1f29cebd4df6"
+let _z3version_expected = "Z3 version 4.8.5"
 
 let _z3url = "https://github.com/FStarLang/binaries/tree/master/z3-tested"
 
 let parse_z3_version_lines out =
     match splitlines out with
-    | x :: _ ->
-        begin
-            let trimmed = trim_string x in
-            let parts = split trimmed " " in
-            let rec aux = function
-            | [hash] ->
-              let n = min (String.strlen _z3hash_expected) (String.strlen hash) in
-              let hash_prefix = String.substring hash 0 n in
-              if hash_prefix = _z3hash_expected
-              then begin
-                  if Options.debug_any ()
-                  then
-                      let msg =
-                          BU.format1
-                              "Successfully found expected Z3 commit hash %s\n"
-                              hash
-                      in
-                      print_string msg
-                  else ();
-                  None
-              end else
-                  let msg =
-                      BU.format2
-                          "Expected Z3 commit hash \"%s\", got \"%s\""
-                          _z3hash_expected
-                          trimmed
-                  in
-                  Some msg
-            | _ :: q -> aux q
-            | _ -> Some "No Z3 commit hash found"
-            in
-            aux parts
+    | version :: _ ->
+      if BU.starts_with version _z3version_expected
+      then begin
+          if Options.debug_any ()
+          then
+            print_string
+              (BU.format1
+                  "Successfully found expected Z3 version %s\n"
+                  version);
+          None
         end
+      else
+        let msg =
+            BU.format2
+                "Expected Z3 version \"%s\", got \"%s\""
+                _z3version_expected
+                out
+        in
+        Some msg
     | _ -> Some "No Z3 version string found"
 
-let z3hash_warning_message () =
+let z3version_warning_message () =
     let run_proc_result =
         try
             Some (BU.run_process "z3_version" (Options.z3_exe()) ["-version"] None)
@@ -89,11 +75,11 @@ let z3hash_warning_message () =
         | Some msg -> Some (FStar.Errors.Warning_Z3InvocationWarning, msg)
         end
 
-let check_z3hash () =
-    if not !_z3hash_checked
+let check_z3version () =
+    if not !_z3version_checked
     then begin
-        _z3hash_checked := true;
-        match z3hash_warning_message () with
+        _z3version_checked := true;
+        match z3version_warning_message () with
         | None -> ()
         | Some (e, msg) ->
           let msg =
@@ -108,7 +94,7 @@ let check_z3hash () =
     end
 
 let ini_params () =
-  check_z3hash ();
+  check_z3version ();
   List.append ["-smt2";
                "-in";
                Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed ()))]
@@ -427,21 +413,6 @@ let job_queue : ref<list<z3job>> = BU.mk_ref []
 
 let pending_jobs = BU.mk_ref 0
 
-let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
-  let start = BU.now() in
-  let status, statistics =
-    try doZ3Exe log_file r fresh input label_messages
-    with e when not (Options.trace_error()) ->
-         (!bg_z3_proc).refresh();
-         raise e
-  in
-  let _, elapsed_time = BU.time_diff start (BU.now()) in
-  { z3result_status     = status;
-    z3result_time       = elapsed_time;
-    z3result_statistics = statistics;
-    z3result_query_hash = qhash;
-    z3result_log_file   = log_file }
-
 let running = BU.mk_ref false
 
 let rec dequeue' () =
@@ -644,6 +615,20 @@ let cache_hit
             false
     else
         false
+
+let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
+  let start = BU.now() in
+  let status, statistics =
+    try doZ3Exe log_file r fresh input label_messages
+    with e when (refresh(); false) -> //refresh the solver but don't handle the exception; it'll be caught upstream
+        raise e
+  in
+  let _, elapsed_time = BU.time_diff start (BU.now()) in
+  { z3result_status     = status;
+    z3result_time       = elapsed_time;
+    z3result_statistics = statistics;
+    z3result_query_hash = qhash;
+    z3result_log_file   = log_file }
 
 let ask_1_core
     (r:Range.range)

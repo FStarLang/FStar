@@ -353,6 +353,7 @@ let smap_remove (m:'value smap) k = BatHashtbl.remove m k
 let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
 let smap_size (m:'value smap) = BatHashtbl.length m
+let smap_iter (m:'value smap) f = BatHashtbl.iter f m
 
 exception PSMap_Found
 type 'value psmap = (string, 'value) BatMap.t

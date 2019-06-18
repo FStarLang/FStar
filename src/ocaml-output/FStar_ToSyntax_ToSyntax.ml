@@ -4148,7 +4148,7 @@ and (desugar_term_maybe_top :
             let init1 =
               FStar_Parser_AST.mk_term
                 (FStar_Parser_AST.Var FStar_Parser_Const.calc_init_lid)
-                init_expr.FStar_Parser_AST.range FStar_Parser_AST.Expr
+                FStar_Range.dummyRange FStar_Parser_AST.Expr
                in
             let last_expr =
               let uu____15556 = FStar_List.last steps  in
@@ -4172,7 +4172,7 @@ and (desugar_term_maybe_top :
             let e =
               FStar_Parser_AST.mkApp init1
                 [(init_expr, FStar_Parser_AST.Nothing)]
-                init_expr.FStar_Parser_AST.range
+                FStar_Range.dummyRange
                in
             let uu____15590 =
               FStar_List.fold_left
@@ -4221,7 +4221,7 @@ and (desugar_term_maybe_top :
                               in
                            FStar_Parser_AST.mkApp
                              (step rel2.FStar_Parser_AST.range) uu____15631
-                             just.FStar_Parser_AST.range
+                             FStar_Range.dummyRange
                             in
                          (pf, next_expr)) (e, init_expr) steps
                in
@@ -4238,7 +4238,7 @@ and (desugar_term_maybe_top :
                        (last_expr, FStar_Parser_AST.Hash) :: uu____15751  in
                      (init_expr, FStar_Parser_AST.Hash) :: uu____15744  in
                    FStar_Parser_AST.mkApp finish1 uu____15737
-                     init_expr.FStar_Parser_AST.range
+                     FStar_Range.dummyRange
                     in
                  desugar_term_maybe_top top_level env e2)
         | uu____15780 when
