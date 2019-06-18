@@ -930,7 +930,7 @@ let primop_time_report () : string =
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ms) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int ms)) nm) ^ rest) pairs ""
 
-let extendable_primops_dirty : ref bool = BU.mk_ref true
+let extendable_primops_dirty : ref<bool> = BU.mk_ref true
 
 let mk_extendable_primop_set () =
   let steps = BU.mk_ref (empty_prim_steps ()) in
@@ -955,7 +955,7 @@ let register_extra_step  p  = fst extra_steps p
 let retrieve_extra_steps () = snd extra_steps ()
 
 let cached_steps : unit -> prim_step_set =
-    let memo : ref prim_step_set = BU.mk_ref (empty_prim_steps ()) in
+    let memo : ref<prim_step_set> = BU.mk_ref (empty_prim_steps ()) in
     fun () ->
       if !extendable_primops_dirty
       then
