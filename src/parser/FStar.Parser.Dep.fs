@@ -703,8 +703,10 @@ let collect_one
       and collect_decls decls =
         List.iter (fun x -> collect_decl x.d;
                             List.iter collect_term x.attrs;
-                            if List.contains Inline_for_extraction x.quals
-                            then add_to_parsing_data P_inline_for_extraction
+                            match x.d with
+                            | Val _ when List.contains Inline_for_extraction x.quals ->
+                                add_to_parsing_data P_inline_for_extraction
+                            | _ -> ()
                             ) decls
 
       and collect_decl d =
