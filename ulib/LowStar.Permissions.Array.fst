@@ -70,6 +70,14 @@ let sel (#a: Type0)  (h: HS.mem) (b: array a) (i:nat{i < length b}) : GTot (with
   let snapshot = get_snapshot_from_pid (Ghost.reveal perm_map) (Ghost.reveal b.pid) in
   { wp_v = snapshot; wp_perm = perm}
 
+// Two arrays are mergeable (for permissions) if they correspond to the same subarray in the same array, and they have different pids
+let mergeable (#a:Type0) (b1 b2:array a) =
+  b1.max_length == b2.max_length /\
+  b1.content == b2.content /\
+  b1.idx == b2.idx /\
+  b1.length == b2.length /\
+  (Ghost.reveal b1.pid <> Ghost.reveal b2.pid)
+
 (*** Definitions of locations for arrays with permissions ***)
 
 // We need to define the atomic locations cell per cell. We will then define loc_buffer as the union of aloc of cells
@@ -467,6 +475,7 @@ val share (#a:Type0) (b:array a) : Stack (array a)
     live h1 b /\ live h1 b' /\
     as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
     as_seq h1 b' == as_seq h1 b /\ // The values of the new buffer are the same as the initial array
+    mergeable b b' /\
     True) // TODO: Talk about permissions here. Need a mergeable predicate?
 
 let share #a b =
@@ -477,4 +486,5 @@ let share #a b =
   let h1 = get() in
   let b' = Array b.max_length b.content b.idx b.length new_pid in
   assert (as_seq h1 b' `Seq.equal` as_seq h0 b);
+  assume (mergeable b b');
   b'
