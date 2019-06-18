@@ -227,6 +227,58 @@ let lemma_includes_loc_cell_loc_array (#a:Type) (b:array a) (i:nat{i < length b}
     end
   in aux 0
 
+let lemma_disjoint_pid_disjoint_cells (#a:Type) (b1 b2:array a) (i1:nat{i1 < length b1}) (i2:nat{i2 < length b2}) : Lemma
+  (requires Ghost.reveal b1.pid <> Ghost.reveal b2.pid /\ b1.max_length == b2.max_length)
+  (ensures loc_disjoint (loc_cell b1 i1) (loc_cell b2 i2))
+  =
+  let r1 = frameOf b1 in
+  let r2 = frameOf b2 in
+  let a1 = as_addr b1 in
+  let a2 = as_addr b2 in
+  let aloc1 = {
+    b_max = U32.v b1.max_length;
+    b_index = U32.v b1.idx + i1;
+    b_pid = (Ghost.reveal b1.pid)
+  } in
+  let aloc2 = {
+    b_max = U32.v b2.max_length;
+    b_index = U32.v b2.idx + i2;
+    b_pid = (Ghost.reveal b2.pid)
+  } in
+  MG.loc_disjoint_aloc_intro #ucell #cls #r1 #a1 #r2 #a2 aloc1 aloc2
+
+let rec lemma_disjoint_pid_disjoint_cell_array (#a:Type0) (b1 b2:array a) (i:nat{i < length b1}) (j:nat{j <= length b2}) : Lemma
+  (requires Ghost.reveal b1.pid <> Ghost.reveal b2.pid /\ b1.max_length == b2.max_length)
+  (ensures loc_disjoint (compute_loc_array b2 j) (loc_cell b1 i))
+  (decreases (length b2 - j))
+  = if j = length b2 then begin
+       MG.loc_disjoint_none_r #ucell #cls (loc_cell b1 i);
+       MG.loc_disjoint_sym (loc_cell b1 i) (compute_loc_array b2 j)
+    end else begin
+      lemma_disjoint_pid_disjoint_cell_array b1 b2 i (j+1);
+      lemma_disjoint_pid_disjoint_cells b1 b2 i j;
+      MG.loc_disjoint_sym (compute_loc_array b2 (j+1)) (loc_cell b1 i);
+      MG.loc_disjoint_union_r #ucell #cls (loc_cell b1 i) (loc_cell b2 j) (compute_loc_array b2 (j+1));
+      MG.loc_disjoint_sym (loc_cell b1 i) (compute_loc_array b2 j)
+    end
+
+let rec lemma_disjoint_pid_disjoint_compute_array (#a:Type) (b1 b2:array a) (i:nat{i <= length b1}) : Lemma
+  (requires Ghost.reveal b1.pid <> Ghost.reveal b2.pid /\ b1.max_length == b2.max_length)
+  (ensures loc_disjoint (loc_array b2)  (compute_loc_array b1 i) )
+  (decreases (length b1 - i))
+  = if i = length b1 then MG.loc_disjoint_none_r #ucell #cls (loc_array b2)
+    else begin
+      lemma_disjoint_pid_disjoint_cell_array b1 b2 i 0;
+      lemma_disjoint_pid_disjoint_compute_array b1 b2 (i+1);
+      MG.loc_disjoint_union_r #ucell #cls (loc_array b2) (loc_cell b1 i) (compute_loc_array b1 (i+1))
+    end
+
+let lemma_disjoint_pid_disjoint_arrays (#a:Type0) (b1 b2:array a) : Lemma
+  (requires Ghost.reveal b1.pid <> Ghost.reveal b2.pid /\ b1.max_length == b2.max_length)
+  (ensures loc_disjoint (loc_array b1) (loc_array b2))
+  = lemma_disjoint_pid_disjoint_compute_array b1 b2 0;
+    MG.loc_disjoint_sym (loc_array b2) (loc_array b1)
+
 let modifies (s:bloc) (h0 h1:HS.mem) : GTot Type0 = MG.modifies s h0 h1
 
 let live_same_arrays_equal_types
@@ -468,11 +520,21 @@ let rec get_array_current_max #a h b i =
     Ghost.elift2 (fun (a b:perm_id) -> if a > b then a else b) max_end current_max
   end
 
+val lemma_different_live_pid (#a:Type0) (h:HS.mem) (b:array a{length b > 0}) : Lemma
+  (requires live h b)
+  (ensures Ghost.reveal (get_array_current_max h b 0ul) <> Ghost.reveal b.pid)
+
+let lemma_different_live_pid #a h b = 
+  let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx) in
+  assert (live_cell h b 0);
+  lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b.pid)
+
 val share (#a:Type0) (b:array a) : Stack (array a)
-  (requires fun h0 -> live h0 b)
+  (requires fun h0 -> live h0 b /\ length b > 0)
   (ensures fun h0 b' h1 -> 
     modifies (loc_array b) h0 h1 /\ 
     live h1 b /\ live h1 b' /\
+    loc_disjoint (loc_array b) (loc_array b') /\
     as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
     as_seq h1 b' == as_seq h1 b /\ // The values of the new buffer are the same as the initial array
     mergeable b b' /\
@@ -486,5 +548,6 @@ let share #a b =
   let h1 = get() in
   let b' = Array b.max_length b.content b.idx b.length new_pid in
   assert (as_seq h1 b' `Seq.equal` as_seq h0 b);
-  assume (mergeable b b');
+  lemma_different_live_pid h0 b;
+  lemma_disjoint_pid_disjoint_arrays b b';
   b'
