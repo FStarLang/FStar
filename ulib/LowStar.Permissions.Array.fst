@@ -186,15 +186,19 @@ let loc_union (l1 l2:bloc) = MG.loc_union #ucell #cls l1 l2
 let loc_disjoint (l1 l2:bloc) = MG.loc_disjoint #ucell #cls l1 l2
 let loc_includes (l1 l2:bloc) = MG.loc_includes #ucell #cls l1 l2
 
-let loc_cell (#a:Type) (b:array a) (i:nat{i < length b}) : GTot bloc =
+let aloc_cell (#a:Type) (b:array a) (i:nat{i < length b}) : GTot (ucell (frameOf b) (as_addr b)) =
   let r = frameOf b in
   let a = as_addr b in
-  let aloc = {
+  {
     b_max = U32.v b.max_length;
     b_index = U32.v b.idx + i;       // The index of the cell is the index inside the bigger array
     b_pid = (Ghost.reveal b.pid);
-  } in
-  MG.loc_of_aloc #ucell #cls #r #a aloc
+  }
+
+let loc_cell (#t:Type) (b:array t) (i:nat{i < length b}) : GTot bloc =
+  let r = frameOf b in
+  let a = as_addr b in
+  MG.loc_of_aloc #ucell #cls #r #a (aloc_cell #t b i)
 
 // The location of an array is the recursive union of all of its cells
 let rec compute_loc_array (#a:Type) (b:array a) (i:nat{i <= length b}) 
@@ -518,3 +522,83 @@ let share #a b =
   lemma_different_live_pid h0 b;
   lemma_disjoint_pid_disjoint_arrays b b';
   b'
+
+
+val merge_cell:
+  #a: Type ->
+  b: array a ->
+  b1: array a ->
+  i:U32.t{U32.v i < length b} ->
+  Stack unit (requires (fun h0 ->
+    mergeable b b1 /\
+    live h0 b /\ live h0 b1 /\
+    summable_permissions (sel h0 b (U32.v i)).wp_perm (sel h0 b1 (U32.v i)).wp_perm
+  ))
+  (ensures (fun h0 _ h1 ->
+    live h1 b /\
+    (sel h1 b (U32.v i)).wp_perm = sum_permissions (sel h0 b (U32.v i)).wp_perm (sel h0 b1 (U32.v i)).wp_perm /\
+    (sel h1 b (U32.v i)).wp_v == (sel h0 b (U32.v i)).wp_v /\
+    modifies (loc_cell b (U32.v i) `loc_union` loc_cell b1 (U32.v i)) h0 h1
+  ))
+
+let merge_cell #a b b1 i =
+ let open HST in
+  (**) let h0 = HST.get () in
+  let s0 = !b.content in
+  let sb0 = Seq.slice s0 (U32.v b.idx) (U32.v b.idx + U32.v b.length) in
+  let (v_init, perm_map) = Seq.index s0 (U32.v b.idx + U32.v i) in
+  let sb1 = Seq.upd sb0 (U32.v i) (v_init, Ghost.hide (
+    merge_perms #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) (Ghost.reveal b1.pid)
+  )) in
+  let s1 = Seq.replace_subseq s0 (U32.v b.idx) (U32.v b.idx + U32.v b.length) sb1 in
+  b.content := s1;
+  (**) let h1 = HST.get () in
+  (**) assert (as_seq h1 b `Seq.equal` as_seq h0 b);
+  let r = frameOf b in
+  let n = as_addr b in
+  let acell = aloc_cell b (U32.v i) in
+  let cell = loc_cell b (U32.v i) in
+  let acell1 = aloc_cell b1 (U32.v i) in
+  let cell1 = loc_cell b1 (U32.v i) in
+  let l = cell `loc_union` cell1 in
+  MG.modifies_intro #ucell #cls
+    l
+    h0 h1
+    (fun r -> ())
+    (fun t pre ref ->
+      MG.loc_includes_refl cell;
+      MG.loc_includes_union_l cell cell1 cell;
+      MG.loc_includes_refl (MG.loc_mreference #ucell #cls #t #pre ref);
+      MG.loc_disjoint_includes
+        (MG.loc_mreference ref)
+        l
+        (MG.loc_mreference ref)
+        cell;
+      MG.loc_disjoint_sym  (MG.loc_mreference ref) cell;
+      MG.loc_disjoint_aloc_addresses_elim #ucell #cls #r #n acell
+        true
+        (HS.frameOf ref)
+        (Set.singleton (HS.as_addr ref))
+    )
+    (fun t pre b -> ())
+    (fun r n -> ())
+    (fun r' n' ploc' ->
+      admit()
+    )
+
+val merge:
+  #a: Type ->
+  b: array a ->
+  b1: array a ->
+  Stack unit (requires (fun h0 ->
+    mergeable b b1 /\
+    live h0 b /\ live h0 b1 /\
+    (forall (i:nat{i < length b}). summable_permissions (sel h0 b i).wp_perm (sel h0 b1 i).wp_perm)
+  ))
+  (ensures (fun h0 _ h1 ->
+    live h1 b /\ (forall (i:nat{i < length b}).
+      (sel h1 b i).wp_perm = sum_permissions (sel h0 b i).wp_perm (sel h0 b1 i).wp_perm /\
+      (sel h1 b i).wp_v == (sel h0 b i).wp_v
+    ) /\
+    modifies (loc_array b `loc_union` loc_array b1) h0 h1
+  ))
