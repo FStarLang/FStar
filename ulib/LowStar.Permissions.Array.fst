@@ -24,9 +24,9 @@ noeq type array (a:Type0) :Type0 =
 
 (*** Definitions of Ghost operations and predicates on arrays ***)
 
-let length (#a:Type) (b:array a) : nat = UInt32.v b.length
+let length #a b = UInt32.v b.length
 
-let get (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) : GTot a =
+let get' (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) : GTot a =
   let ( _, perm_map ) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
   get_snapshot_from_pid (Ghost.reveal perm_map) (Ghost.reveal b.pid)
 
@@ -39,7 +39,7 @@ let live_cell_pid (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) (pid:pe
   let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
   get_permission_from_pid (Ghost.reveal perm_map) pid >. 0.0R /\ HS.contains h b.content
 
-let live (#a:Type) (h:HS.mem) (b:array a) : Type0 =
+let live #a h b =
   HS.contains h b.content /\
   (forall (i:nat{i < length b}). live_cell h b i)
 
@@ -47,7 +47,7 @@ let writeable_cell (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) : Type
   let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
   get_permission_from_pid (Ghost.reveal perm_map) (Ghost.reveal b.pid) == 1.0R /\ HS.contains h b.content
 
-let writeable (#a:Type) (h:HS.mem) (b:array a) : Type0 =
+let writeable #a h b =
   HS.contains h b.content /\
   (forall (i:nat{i < length b}). writeable_cell h b i)
 
@@ -56,13 +56,9 @@ let lemma_writeable_implies_live (#a:Type) (h:HS.mem) (b:array a)
           (ensures live h b)
    = ()
 
-let as_seq (#a:Type) (h:HS.mem) (b:array a) : GTot (s:Seq.seq a{Seq.length s == length b}) =
+let as_seq #a h b =
   let s = HS.sel h b.content in
   Seq.init (length b) (fun x -> fst (Seq.index s (U32.v b.idx + x))) 
-
-let equiv_get_as_seq (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b /\ live_cell h b i})
-  : Lemma (Seq.index (as_seq h b) i == get h b i)
-  = ()
 
 let sel (#a: Type0)  (h: HS.mem) (b: array a) (i:nat{i < length b}) : GTot (with_perm a) =
   let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
@@ -71,7 +67,7 @@ let sel (#a: Type0)  (h: HS.mem) (b: array a) (i:nat{i < length b}) : GTot (with
   { wp_v = snapshot; wp_perm = perm}
 
 // Two arrays are mergeable (for permissions) if they correspond to the same subarray in the same array, and they have different pids
-let mergeable (#a:Type0) (b1 b2:array a) =
+let mergeable #a b1 b2 =
   b1.max_length == b2.max_length /\
   b1.content == b2.content /\
   b1.idx == b2.idx /\
@@ -314,9 +310,6 @@ let only_one_live_pid_with_full_permission_specific
 
 (*** Stateful operations implementing the ghost specifications ***)
 
-val index (#a:Type) (b:array a) (i:UInt32.t{UInt32.v i < length b})
-  : Stack a (requires fun h -> live h b)
-            (ensures fun h0 y h1 -> h0 == h1 /\ y == get h0 b (UInt32.v i))
 
 let index #a b i =
   let open HST in
@@ -325,13 +318,6 @@ let index #a b i =
   let s = ! b.content in
   let ( v, _ ) = Seq.index s (U32.v b.idx + U32.v i) in
   v
-
-
-val upd (#a:Type) (b:array a) (i:UInt32.t{UInt32.v i < length b}) (v:a)
-    : Stack unit (requires fun h -> writeable h b)
-                 (ensures fun h0 _ h1 ->  writeable h1 b /\
-                                       modifies (loc_array b) h0 h1 /\
-                                       as_seq h1 b == Seq.upd (as_seq h0 b) (U32.v i) v)
 
 let upd #a b i v =
   let open HST in
@@ -385,20 +371,12 @@ let upd #a b i v =
   lemma_includes_loc_cell_loc_array b (U32.v i);
   MG.modifies_loc_includes (loc_array b) h0 h1 (loc_cell b (U32.v i))
 
-val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
-  :Ghost (array a)
-         (requires (U32.v i + U32.v len <= length b))
-	 (ensures (fun _ -> True))
 
 let gsub #a b i len =
   match b with
   | Array max_len content idx length pid ->
     Array max_len content (U32.add idx i) len pid
 
-val sub (#a:Type) (b:array a) (i:UInt32.t) (len:UInt32.t)
-  : Stack (array a)
-          (requires fun h -> UInt32.v i + UInt32.v len <= length b /\ live h b)
-          (ensures fun h0 y h1 -> h0 == h1 /\ y == gsub b i len)
 
 let sub #a b i len =
   match b with
@@ -406,13 +384,6 @@ let sub #a b i len =
     // Keep the same perm_id, to avoid being considered disjoint
     Array max_len content (U32.add i0 i) len pid
 
-val alloc (#a:Type0) (init:a) (len:U32.t)
-  : ST (array a)
-       (requires fun _ -> U32.v len > 0)
-       (ensures fun h0 b h1 -> 
-         modifies loc_none h0 h1 /\ 
-         writeable h1 b /\ 
-         as_seq h1 b == Seq.create (U32.v len) init)
 
 let alloc #a init len =
   let perm_map_pid = (
@@ -535,17 +506,6 @@ let lemma_different_live_pid #a h b =
   let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx) in
   assert (live_cell h b 0);
   lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b.pid)
-
-val share (#a:Type0) (b:array a) : Stack (array a)
-  (requires fun h0 -> live h0 b /\ length b > 0)
-  (ensures fun h0 b' h1 -> 
-    modifies (loc_array b) h0 h1 /\ 
-    live h1 b /\ live h1 b' /\
-    loc_disjoint (loc_array b) (loc_array b') /\
-    as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
-    as_seq h1 b' == as_seq h1 b /\ // The values of the new buffer are the same as the initial array
-    mergeable b b' /\
-    True) // TODO: Talk about permissions here?
 
 let share #a b =
   let open HST in
