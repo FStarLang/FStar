@@ -19,7 +19,7 @@ noeq type array (a:Type0) :Type0 =
     content:HST.reference (Seq.lseq (value_with_perms a) (U32.v max_length)) ->
     idx:U32.t ->
     length:U32.t{U32.v idx + U32.v length <= U32.v max_length} ->
-    pid:perm_id ->
+    pid:Ghost.erased perm_id ->
     array a
 
 (*** Definitions of Ghost operations and predicates on arrays ***)
@@ -28,19 +28,24 @@ let length (#a:Type) (b:array a) : nat = UInt32.v b.length
 
 let get (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) : GTot a =
   let ( _, perm_map ) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
-  get_snapshot_from_pid (Ghost.reveal perm_map) b.pid
+  get_snapshot_from_pid (Ghost.reveal perm_map) (Ghost.reveal b.pid)
 
 let live_cell (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) : Type0 =
   let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
-  get_permission_from_pid (Ghost.reveal perm_map) b.pid >. 0.0R /\ HS.contains h b.content
+  get_permission_from_pid (Ghost.reveal perm_map) (Ghost.reveal b.pid) >. 0.0R /\ HS.contains h b.content
+
+let live_cell_pid (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) (pid:perm_id)
+  : Type0 =
+  let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
+  get_permission_from_pid (Ghost.reveal perm_map) pid >. 0.0R /\ HS.contains h b.content
 
 let live (#a:Type) (h:HS.mem) (b:array a) : Type0 =
   HS.contains h b.content /\
-  (forall (i:nat{i < length b}). {:pattern (get h b i)} live_cell h b i)
+  (forall (i:nat{i < length b}). live_cell h b i)
 
 let writeable_cell (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) : Type0 =
   let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
-  get_permission_from_pid (Ghost.reveal perm_map) b.pid == 1.0R /\ HS.contains h b.content
+  get_permission_from_pid (Ghost.reveal perm_map) (Ghost.reveal b.pid) == 1.0R /\ HS.contains h b.content
 
 let writeable (#a:Type) (h:HS.mem) (b:array a) : Type0 =
   HS.contains h b.content /\
@@ -61,8 +66,8 @@ let equiv_get_as_seq (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b /\ liv
 
 let sel (#a: Type0)  (h: HS.mem) (b: array a) (i:nat{i < length b}) : GTot (with_perm a) =
   let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
-  let perm = get_permission_from_pid (Ghost.reveal perm_map) b.pid in
-  let snapshot = get_snapshot_from_pid (Ghost.reveal perm_map) b.pid in
+  let perm = get_permission_from_pid (Ghost.reveal perm_map) (Ghost.reveal b.pid) in
+  let snapshot = get_snapshot_from_pid (Ghost.reveal perm_map) (Ghost.reveal b.pid) in
   { wp_v = snapshot; wp_perm = perm}
 
 (*** Definitions of locations for arrays with permissions ***)
@@ -92,7 +97,7 @@ let as_addr (#a:Type0) (b:array a) : GTot nat = HS.as_addr b.content
 let ucell_preserved (#r:HS.rid) (#a:nat) (b:ucell r a) (h0 h1:HS.mem) : GTot Type0 =
   forall (t:Type0) (b':array t).
     (let i = b.b_index - U32.v b'.idx in // This cell corresponds to index i in the buffer
-      (frameOf b' == r /\ as_addr b' == a /\ b'.pid == b.b_pid /\ U32.v b'.max_length == b.b_max /\
+      (frameOf b' == r /\ as_addr b' == a /\ b'.pid == (Ghost.hide b.b_pid) /\ U32.v b'.max_length == b.b_max /\
         b.b_index >= U32.v b'.idx /\ b.b_index < U32.v b'.idx + U32.v b'.length /\ // If this cell is part of the buffer
         live_cell h0 b' i ==>
           live_cell h1 b' i /\ // If this cell is preserved, then its liveness is preserved
@@ -103,7 +108,7 @@ let prove_bloc_preserved (#r: HS.rid) (#a: nat) (bloc: ucell r a) (h0 h1: HS.mem
     (requires (
       let i = bloc.b_index - U32.v b'.idx in
       frameOf b' == r /\ as_addr b' == a /\
-      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
+      Ghost.reveal b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
       bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
       live_cell h0 b' i))
     (ensures (
@@ -116,7 +121,7 @@ let prove_bloc_preserved (#r: HS.rid) (#a: nat) (bloc: ucell r a) (h0 h1: HS.mem
   let aux (t: Type0) (b':array t) : Lemma(
       let i = bloc.b_index - U32.v b'.idx in
       frameOf b' == r /\ as_addr b' == a /\
-      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
+      Ghost.reveal b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
       bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
       live_cell h0 b' i ==>
         live_cell h1 b' i /\
@@ -125,7 +130,7 @@ let prove_bloc_preserved (#r: HS.rid) (#a: nat) (bloc: ucell r a) (h0 h1: HS.mem
   let aux' (_ : squash (
       let i = bloc.b_index - U32.v b'.idx in
       frameOf b' == r /\ as_addr b' == a /\
-      b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
+      Ghost.reveal b'.pid == bloc.b_pid /\ U32.v b'.max_length == bloc.b_max /\
       bloc.b_index >= U32.v b'.idx /\ bloc.b_index < U32.v b'.idx + U32.v b'.length /\
       live_cell h0 b' i)
     ) : Lemma (
@@ -183,7 +188,7 @@ let loc_cell (#a:Type) (b:array a) (i:nat{i < length b}) : GTot bloc =
   let aloc = {
     b_max = U32.v b.max_length;
     b_index = U32.v b.idx + i;       // The index of the cell is the index inside the bigger array
-    b_pid = b.pid;
+    b_pid = (Ghost.reveal b.pid);
   } in
   MG.loc_of_aloc #ucell #cls #r #a aloc
 
@@ -255,6 +260,8 @@ val index (#a:Type) (b:array a) (i:UInt32.t{UInt32.v i < length b})
 
 let index #a b i =
   let open HST in
+  let h0 = get() in
+  assert (live_cell h0 b (U32.v i));
   let s = ! b.content in
   let ( v, _ ) = Seq.index s (U32.v b.idx + U32.v i) in
   v
@@ -273,7 +280,7 @@ let upd #a b i v =
   let sb0 = Seq.slice s (U32.v b.idx) (U32.v b.idx + U32.v b.length) in
   let (v_init, perm_map) = Seq.index s (U32.v b.idx + U32.v i) in
   assert (writeable_cell h0 b (U32.v i));
-  let sb1 = Seq.upd sb0 (U32.v i) (v, Ghost.hide (change_snapshot #a #v_init (Ghost.reveal perm_map) b.pid v)) in
+  let sb1 = Seq.upd sb0 (U32.v i) (v, Ghost.hide (change_snapshot #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) v)) in
   let s1 = Seq.replace_subseq s (U32.v b.idx) (U32.v b.idx + U32.v b.length) sb1 in
   b.content := s1;
   let h1 = get() in
@@ -284,18 +291,18 @@ let upd #a b i v =
   MG.modifies_aloc_intro
     #ucell #cls
     #r #n
-    ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = b.pid})
+    ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = (Ghost.reveal b.pid)})
     h0 h1
     (fun r -> ())
     (fun t pre b -> ())
     (fun t pre b -> ())
     (fun r n -> ())
     (fun aloc' -> 
-      let aloc = ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = b.pid}) in
+      let aloc = ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = (Ghost.reveal b.pid)}) in
       let aux (t:Type0) (b':array t) : Lemma
         (requires (
           let i = aloc'.b_index - U32.v b'.idx in
-          frameOf b' == r /\ as_addr b' == n /\ b'.pid == aloc'.b_pid /\ U32.v b'.max_length == aloc'.b_max /\
+          frameOf b' == r /\ as_addr b' == n /\ Ghost.reveal b'.pid == aloc'.b_pid /\ U32.v b'.max_length == aloc'.b_max /\
           aloc'.b_index >= U32.v b'.idx /\ aloc'.b_index < U32.v b'.idx + U32.v b'.length /\
           live_cell h0 b' i))
         (ensures (let i = aloc'.b_index - U32.v b'.idx in
@@ -350,7 +357,7 @@ val alloc (#a:Type0) (init:a) (len:U32.t)
 let alloc #a init len =
   let perm_map_pid = (
     let (vp, pid) = new_value_perms init true in
-    ((vp <: perms_rec a), pid)
+    ((vp <: perms_rec a), Ghost.hide pid)
   ) in
   let v = (init, Ghost.hide (fst perm_map_pid)) in
   let s = Seq.create (U32.v len) v in
@@ -362,13 +369,112 @@ let alloc #a init len =
   assert (Seq.equal (as_seq h1 b) (Seq.create (U32.v len) init));
   b
 
+val share_cell 
+  (#a:Type0) 
+  (b:array a)
+  (i:U32.t{U32.v i < length b})
+  (pid:Ghost.erased perm_id)
+  : Stack unit
+  (requires fun h0 -> live h0 b /\ (let (_, perm_map) = Seq.index (HS.sel h0 b.content) (U32.v b.idx + U32.v i) in Ghost.reveal pid > get_current_max (Ghost.reveal perm_map)))
+  (ensures fun h0 _ h1 -> 
+    modifies (loc_cell b (U32.v i)) h0 h1 /\ 
+    live h1 b /\
+    as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
+    live_cell_pid h1 b (U32.v i) (Ghost.reveal pid) /\
+    (forall (j:nat{j < length b}). j <> U32.v i ==> Seq.index (HS.sel h0 b.content) (U32.v b.idx + j) == Seq.index (HS.sel h1 b.content) (U32.v b.idx + j)) /\      
+    True) // TODO: Talk about permissions here
+
+let share_cell #a b i pid =
+  let open HST in
+  let h0 = get() in
+  let s = ! b.content in
+  let sb0 = Seq.slice s (U32.v b.idx) (U32.v b.idx + U32.v b.length) in
+  let (v_init, perm_map) = Seq.index s (U32.v b.idx + U32.v i) in
+  assert (live_cell h0 b (U32.v i));
+  lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b.pid);
+  let sb1 = Seq.upd sb0 (U32.v i) (v_init, Ghost.hide (share_perms_with_pid #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) (Ghost.reveal pid))) in
+  let s1 = Seq.replace_subseq s (U32.v b.idx) (U32.v b.idx + U32.v b.length) sb1 in
+  b.content := s1;
+  let h1 = get() in
+  assert (as_seq h1 b `Seq.equal` as_seq h0 b);
+  let r = frameOf b in
+  let n = as_addr b in
+  MG.modifies_aloc_intro
+    #ucell #cls
+    #r #n
+    ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = Ghost.reveal b.pid})
+    h0 h1
+    (fun r -> ())
+    (fun t pre b -> ())
+    (fun t pre b -> ())
+    (fun r n -> ())
+    (fun aloc' -> admit())
+
+val share_cells 
+  (#a:Type0) 
+  (b:array a)
+  (i:U32.t{U32.v i <= length b})
+  (pid:Ghost.erased perm_id)
+  : Stack unit
+  (requires fun h0 -> live h0 b /\
+    (forall (j:nat{j < length b}). j >= U32.v i ==> (let (_, perm_map) = Seq.index (HS.sel h0 b.content) (U32.v b.idx + j) in Ghost.reveal pid > get_current_max (Ghost.reveal perm_map)) ))
+  (ensures fun h0 b' h1 -> 
+    modifies (compute_loc_array b (U32.v i)) h0 h1 /\ 
+    live h1 b /\
+    as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
+    (forall (j:nat{j < length b}). j < U32.v i ==> Seq.index (HS.sel h0 b.content) (U32.v b.idx + j) == Seq.index (HS.sel h1 b.content) (U32.v b.idx + j)) /\    
+    (forall (j:nat{j < length b}). j >= U32.v i ==> live_cell_pid h1 b j (Ghost.reveal pid)) /\
+    True) // TODO: Talk about permissions here
+
+let rec share_cells #a b i pid =
+  let h0 = HST.get() in
+  if U32.v i >= length b then
+    MG.modifies_none_intro #ucell #cls h0 h0
+      (fun _ -> ())
+      (fun _ _ _ -> ())
+      (fun _ _ -> ())
+  else begin
+    share_cells b (U32.add i 1ul) pid;
+    let h1 = HST.get() in
+    share_cell b i pid;
+    let h2 = HST.get () in
+    let s12 = compute_loc_array b (U32.v i + 1) in
+    let s23 = loc_cell b (U32.v i) in
+    MG.loc_union_comm #ucell #cls s12 s23;
+    MG.modifies_trans #ucell #cls s12 h0 h1 s23 h2
+  end
+
+val get_array_current_max (#a:Type0) (h:HS.mem) (b:array a) (i:U32.t{U32.v i <= length b}) : Pure (Ghost.erased perm_id)
+  (requires True)
+  (ensures fun pid -> forall (j:nat{j < length b}). j >= U32.v i ==> 
+    (let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + j) in 
+      Ghost.reveal pid > get_current_max (Ghost.reveal perm_map)))
+  (decreases (length b - U32.v i))
+
+let rec get_array_current_max #a h b i =
+  if U32.v i = length b then (Ghost.hide 1)
+  else  begin
+    let max_end = get_array_current_max h b (U32.add i 1ul) in
+    let (v, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + U32.v i) in     
+    let current_max = Ghost.hide (get_current_max (Ghost.reveal perm_map) + 1) in
+    Ghost.elift2 (fun (a b:perm_id) -> if a > b then a else b) max_end current_max
+  end
+
 val share (#a:Type0) (b:array a) : Stack (array a)
   (requires fun h0 -> live h0 b)
   (ensures fun h0 b' h1 -> 
     modifies (loc_array b) h0 h1 /\ 
-    live h1 b' /\ 
+    live h1 b /\ live h1 b' /\
     as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
     as_seq h1 b' == as_seq h1 b /\ // The values of the new buffer are the same as the initial array
-    True) // TODO: Talk about permissions here
+    True) // TODO: Talk about permissions here. Need a mergeable predicate?
 
-let share #a b = admit()
+let share #a b =
+  let open HST in
+  let h0 = get() in
+  let new_pid = get_array_current_max h0 b 0ul in
+  share_cells b 0ul new_pid;
+  let h1 = get() in
+  let b' = Array b.max_length b.content b.idx b.length new_pid in
+  assert (as_seq h1 b' `Seq.equal` as_seq h0 b);
+  b'

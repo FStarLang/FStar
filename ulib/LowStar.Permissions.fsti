@@ -73,7 +73,7 @@ let permission_to_kind (p: permission) (is_fully_owned: bool) : GTot permission_
 /// To keep track of permissions for the resources in program, we define a data structure storing
 /// who owns which permission. We call this data structure a "permission map", which is indexed by
 /// permission identifiers defined below:
-val perm_id: eqtype
+type perm_id = pos
 
 let disjoint_pid (pid1 pid2: Ghost.erased perm_id) : GTot bool =
   Ghost.reveal pid1 <> Ghost.reveal pid2
@@ -98,6 +98,8 @@ let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) : GTot bool =
 type live_pid (#a: Type0) (v_perms: perms_rec a) = pid:perm_id{is_live_pid v_perms pid}
 
 val get_snapshot_from_pid: #a: Type0 -> p: perms_rec a -> pid: perm_id -> GTot a
+
+val get_current_max: #a:Type0 -> p:perms_rec a -> perm_id
 
 val is_fully_owned: #a: Type0 -> p: perms_rec a -> GTot bool
 
@@ -136,6 +138,26 @@ val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid
     )
   ))
 
+/// Sharing a particular ``pid`` halves the permission associated with it and returns a new
+/// map containing the other half in the given ``new_pid``
+val share_perms_with_pid: 
+  #a: Type0 ->
+  #v: a ->
+  v_perms: value_perms a v ->
+  pid: live_pid v_perms ->
+  new_pid:perm_id ->
+  Pure (value_perms a v)
+  (requires 
+    pid <> new_pid /\
+    new_pid > get_current_max v_perms)
+  (ensures (fun new_v_perms ->
+    get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /. 2.0R /\
+    get_permission_from_pid new_v_perms new_pid = get_permission_from_pid v_perms pid /. 2.0R /\
+    (forall (pid':perm_id{pid' <> pid /\ pid' <> new_pid}).{:pattern get_permission_from_pid new_v_perms pid'}
+      get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
+    )
+  ))
+
 
 /// When merginin two ``pid``, the first one will receive the sum of both permissions while the second
 /// ``pid`` will be deactivated with a zeroed permission.
@@ -166,6 +188,9 @@ val only_one_live_pid_with_full_permission:
     (ensures (forall (pid':live_pid v_perms). pid == pid'))
 
 
+/// If a pid is live, then it is smaller than the current max
+val lemma_live_pid_smaller_max (#a:Type0) (v_perms:perms_rec a) (pid:live_pid v_perms) 
+  : Lemma (pid <= get_current_max v_perms)
 
 
 /// Once you have full permission with a ``pid``, you can change the value of the snapshot associated with it.
