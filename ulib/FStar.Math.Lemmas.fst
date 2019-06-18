@@ -432,8 +432,12 @@ let rec lemma_mod_mul_distr_l (a:int) (b:int) (n:pos) =
     mod_add_both (a * b + a) ((a % n) * b + a) (-a) n
   )
 
+#push-options "--z3rlimit 10"
+
 val lemma_mod_mul_distr_r (a:int) (b:int) (n:pos) : Lemma ((a * b) % n = (a * (b % n)) % n)
 let lemma_mod_mul_distr_r (a:int) (b:int) (n:pos) = lemma_mod_mul_distr_l b a n
+
+#pop-options
 
 val lemma_mod_injective: p:pos -> a:nat -> b:nat -> Lemma
   (requires (a < p /\ b < p /\ a % p = b % p))
