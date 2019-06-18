@@ -3,8 +3,6 @@ module LowStar.Permissions
 module F = FStar.FunctionalExtensionality
 open FStar.Real
 
-type perm_id = pos
-
 noeq type perms_rec' (a: Type0) = {
   current_max : perm_id;
   fully_owned: bool;
@@ -42,6 +40,8 @@ let perms_rec (a: Type0) = p:perms_rec' a{
 let get_permission_from_pid = get_permission_from_pid'
 [@inline_let]
 let get_snapshot_from_pid = get_snapshot_from_pid'
+[@inline_let]
+let get_current_max #a p = p.current_max 
 [@inline_let]
 let is_fully_owned = is_fully_owned'
 
@@ -88,6 +88,19 @@ let rec sum_until_change
     if n = i then same_prefix_same_sum_until p1 p2 (n-1)
     else sum_until_change p1 p2 (n-1) i v
 
+let rec sum_until_extend_zeros
+  (#a: Type0)
+  (p:perm_id -> permission & a)
+  (max:perm_id)
+  (j:perm_id{j >= max})
+  : Lemma 
+  (requires
+    (forall (i:nat{i > max}). fst (p i) == 0.0R))
+  (ensures sum_until p max == sum_until p j)
+  = 
+    if j = max then ()
+    else sum_until_extend_zeros p max (j-1)
+
 let share_perms (#a: Type0) (#v: a) (v_perms: value_perms a v) (pid: live_pid v_perms)
   =
   let current_max' = v_perms.current_max + 1 in
@@ -125,6 +138,41 @@ let share_perms (#a: Type0) (#v: a) (v_perms: value_perms a v) (pid: live_pid v_
   );
   (v_perms', current_max')
 
+let share_perms_with_pid #a #v v_perms pid new_pid =
+  let (p, _) = v_perms.perm_map pid in
+  let perm_map1' = F.on_dom perm_id (fun (x:perm_id) ->
+    let (old_p, old_snap) = v_perms.perm_map x in
+    if x = pid then ((p /. 2.0R <: permission), old_snap) else (old_p, old_snap))
+  in
+  sum_until_change v_perms.perm_map perm_map1' v_perms.current_max pid (p /. 2.0R);
+  let perm_map2' = F.on_dom perm_id (fun (x:perm_id) ->
+    let (old_p, old_snap) = perm_map1' x in
+    if x = new_pid then ((p /. 2.0R <: permission), v) else (old_p, old_snap))
+  in
+  sum_until_extend_zeros perm_map1' v_perms.current_max new_pid;
+  sum_until_change perm_map1' perm_map2' new_pid new_pid (p /. 2.0R);
+  let v_perms' : perms_rec' a =
+    { v_perms with
+      current_max = new_pid;
+      perm_map = perm_map2'
+    }
+  in
+  assert(forall (pid':perm_id{pid' <> new_pid}).
+    is_live_pid' v_perms pid' <==>  is_live_pid' v_perms' pid'
+  );
+  assert(forall (pid':live_pid v_perms{pid' <> new_pid}).
+    v == get_snapshot_from_pid v_perms pid'
+  );
+  assert(forall (pid':live_pid v_perms{pid' <> new_pid}).
+    v == get_snapshot_from_pid' v_perms pid'
+  );
+  assert(forall (pid':live_pid' v_perms{pid' <> new_pid}).
+     get_snapshot_from_pid' v_perms' pid' == get_snapshot_from_pid' v_perms pid'
+  );
+  assert(forall (pid':live_pid' v_perms'{pid' <> new_pid}).
+    v == get_snapshot_from_pid' v_perms' pid'
+  );
+  v_perms'
 
 private let rec sum_greater_than_subterm (#a: Type0) (f:perm_id -> permission & a) (n:nat) (pid1:perm_id)
   : Lemma (ensures (
@@ -205,6 +253,8 @@ let only_one_live_pid_with_full_permission
       ()
   in
   Classical.forall_intro aux
+
+let lemma_live_pid_smaller_max #a v_perms pid = ()
 
 let change_snapshot
   (#a: Type0)
