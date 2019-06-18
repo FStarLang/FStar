@@ -413,21 +413,6 @@ let job_queue : ref<list<z3job>> = BU.mk_ref []
 
 let pending_jobs = BU.mk_ref 0
 
-let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
-  let start = BU.now() in
-  let status, statistics =
-    try doZ3Exe log_file r fresh input label_messages
-    with e when not (Options.trace_error()) ->
-         (!bg_z3_proc).refresh();
-         raise e
-  in
-  let _, elapsed_time = BU.time_diff start (BU.now()) in
-  { z3result_status     = status;
-    z3result_time       = elapsed_time;
-    z3result_statistics = statistics;
-    z3result_query_hash = qhash;
-    z3result_log_file   = log_file }
-
 let running = BU.mk_ref false
 
 let rec dequeue' () =
@@ -630,6 +615,20 @@ let cache_hit
             false
     else
         false
+
+let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
+  let start = BU.now() in
+  let status, statistics =
+    try doZ3Exe log_file r fresh input label_messages
+    with e when (refresh(); false) -> //refresh the solver but don't handle the exception; it'll be caught upstream
+        raise e
+  in
+  let _, elapsed_time = BU.time_diff start (BU.now()) in
+  { z3result_status     = status;
+    z3result_time       = elapsed_time;
+    z3result_statistics = statistics;
+    z3result_query_hash = qhash;
+    z3result_log_file   = log_file }
 
 let ask_1_core
     (r:Range.range)
