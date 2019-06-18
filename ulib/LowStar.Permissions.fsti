@@ -192,6 +192,10 @@ val only_one_live_pid_with_full_permission:
 val lemma_live_pid_smaller_max (#a:Type0) (v_perms:perms_rec a) (pid:live_pid v_perms) 
   : Lemma (pid <= get_current_max v_perms)
 
+/// If a pid is live, then it is smaller than the current max
+val lemma_greater_max_not_live_pid (#a:Type0) (v_perms:perms_rec a) (pid:perm_id) : Lemma 
+    (requires pid > get_current_max v_perms)
+    (ensures not (is_live_pid v_perms pid))
 
 /// Once you have full permission with a ``pid``, you can change the value of the snapshot associated with it.
 /// This ensures that read-only permissions cannot change the value of the snapshot.
