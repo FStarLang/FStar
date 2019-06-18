@@ -562,7 +562,7 @@ val receive_aux
                    h1 `live_connection` c /\
                    receive_aux_post #n file c h_init from pos ropt h1))
 
-#push-options "--query_stats"
+#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 20 --using_facts_from '* -ArrayUtils.lemma_get_some_equivalent_append'"
 let rec receive_aux #n file c h_init from pos
    = let h0 = ST.get() in
      let filled0 = prefix file pos in
@@ -611,7 +611,7 @@ let rec receive_aux #n file c h_init from pos
                        receive_aux_post #n file c h_init from pos res h_post);
                res)
          else None
-
+#reset-options
 val receive_file (#n:nat{fragment_size <= n})
             (file:array byte n)
             (c:connection{receiver c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
