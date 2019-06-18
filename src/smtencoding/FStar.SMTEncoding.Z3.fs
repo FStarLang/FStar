@@ -216,22 +216,30 @@ let query_logging =
 
 let bg_z3_proc =
     let the_z3proc = BU.mk_ref None in
+    let z3proc_ask_count = BU.mk_ref 0 in
     let z3proc () =
       if !the_z3proc = None then
         the_z3proc := Some (new_z3proc_with_id ());
       must (!the_z3proc) in
     let x : list<unit> = [] in
     let ask input =
+        incr z3proc_ask_count;
         let kill_handler () = "\nkilled\n" in
         BU.ask_process (z3proc ()) input kill_handler in
     let refresh () =
-        BU.kill_process (z3proc ());
-        the_z3proc := Some (new_z3proc_with_id ());
+        if (Options.log_queries()) || (!z3proc_ask_count > 0) then begin
+          if (Options.query_stats()) then
+             BU.print1 "Killing the z3_proc (z3proc_ask_count=%s)\n" (BU.string_of_int !z3proc_ask_count);
+          BU.kill_process (z3proc ());
+          the_z3proc := Some (new_z3proc_with_id ());
+          z3proc_ask_count := 0
+        end ;
         query_logging.close_log() in
     let restart () =
         query_logging.close_log();
         the_z3proc := None;
-        the_z3proc := Some (new_z3proc_with_id ()) in
+        the_z3proc := Some (new_z3proc_with_id ());
+        z3proc_ask_count := 0 in
     BU.mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
                 restart = BU.with_monitor x restart})
