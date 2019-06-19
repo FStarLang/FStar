@@ -104,8 +104,8 @@ cd fstar
 export FSTAR_HOME="$PWD"
 
 diag "-- Versions --"
-fstar.exe --version
-z3 --version
+bin/fstar.exe --version
+bin/z3 --version
 
 diag "-- Verify micro benchmarks --"
 make -C examples/micro-benchmarks
