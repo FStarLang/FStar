@@ -96,6 +96,8 @@ let rec insert'' x t =
                     else if x < n then Node n (insert'' x t1) t2
                     else               Node n t1 (insert'' x t2)
 
+#push-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+
 val insert_lemma : x:int -> t:tree{is_bst t} -> Lemma
       (is_bst (insert'' x t) /\
       (forall y. in_tree y (insert'' x t) <==> in_tree y t \/ x = y))
@@ -104,6 +106,8 @@ val insert_lemma : x:int -> t:tree{is_bst t} -> Lemma
 let rec insert_lemma x t = match t with
   | Leaf -> ()
   | Node _ t1 t2 -> insert_lemma x t1; insert_lemma x t2
+#pop-options
+
 #pop-options
 
 val ge : int -> int -> Tot bool
