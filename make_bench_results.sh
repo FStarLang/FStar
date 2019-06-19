@@ -17,6 +17,10 @@ make -C src clean_boot
 make -C src clean
 git checkout -- src/ocaml-output
 
+# log the git state of the tree
+git log -n 1 2>&1 | tee -a ${OUTDIR}/git_info.log
+git status -v -v 2>&1 | tee -a ${OUTDIR}/git_info.log
+
 # build fstar compiler bootstrap
 T0=`date +'%Y%m%d_%H%M%S'`
 echo "Starting fstar compiler bootstrap ${T0}"
