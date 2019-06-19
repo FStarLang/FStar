@@ -392,8 +392,11 @@ let lemma_mod_sub_distr (a:int) (b:int) (n:pos) =
 val lemma_mod_sub_0: a:pos -> Lemma ((-1) % a = a - 1)
 let lemma_mod_sub_0 a = ()
 val lemma_mod_sub_1: a:pos -> b:pos{a < b} -> Lemma ((-a) % b = b - (a%b))
-#push-options "--z3rlimit_factor 40 --max_fuel 0 --max_ifuel 0"
-let lemma_mod_sub_1 a b = ()
+#push-options "--z3rlimit_factor 100 --max_fuel 0 --max_ifuel 0"
+let lemma_mod_sub_1 a b =
+  small_mod a b;
+  assert ((a%b) == a);
+  assert ((-a)%b == b - a)
 #pop-options
 
 //NS: not sure why this requires 4 unfoldings
