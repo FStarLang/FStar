@@ -523,7 +523,6 @@ let share #a b =
   lemma_disjoint_pid_disjoint_arrays b b';
   b'
 
-
 val merge_cell:
   #a: Type ->
   b: array a ->
@@ -531,13 +530,15 @@ val merge_cell:
   i:U32.t{U32.v i < length b} ->
   Stack unit (requires (fun h0 ->
     mergeable b b1 /\
-    live h0 b /\ live h0 b1 /\
+    live h0 b /\ live_cell h0 b1 (U32.v i) /\ HS.contains h0 b1.content /\
     summable_permissions (sel h0 b (U32.v i)).wp_perm (sel h0 b1 (U32.v i)).wp_perm
   ))
   (ensures (fun h0 _ h1 ->
-    live h1 b /\
+    live h1 b /\ HS.contains h1 b1.content /\
+    as_seq h0 b == as_seq h1 b /\
     (sel h1 b (U32.v i)).wp_perm = sum_permissions (sel h0 b (U32.v i)).wp_perm (sel h0 b1 (U32.v i)).wp_perm /\
     (sel h1 b (U32.v i)).wp_v == (sel h0 b (U32.v i)).wp_v /\
+    (forall (j:nat{j <> U32.v i /\ j < length b}). sel h0 b j == sel h1 b j /\ sel h0 b1 j == sel h1 b1 j) /\
     modifies (loc_cell b (U32.v i) `loc_union` loc_cell b1 (U32.v i)) h0 h1
   ))
 
@@ -577,10 +578,10 @@ let merge_cell #a b b1 i =
   (**)       true
   (**)       (HS.frameOf ref)
   (**)       (Set.singleton (HS.as_addr ref))
-  (**)     )
-  (**)     (fun t pre b -> ())
-  (**)     (fun r n -> ())
-  (**)  (fun r' n' bloc' ->
+  (**)   )
+  (**)   (fun t pre b -> ())
+  (**)   (fun r n -> ())
+  (**)   (fun r' n' bloc' ->
   (**)     prove_bloc_preserved #r' #n' bloc' h0 h1 (fun t' b' ->
   (**)       MG.loc_includes_refl cell;
   (**)       MG.loc_includes_union_l cell cell1 cell;
@@ -610,6 +611,96 @@ let merge_cell #a b b1 i =
   (**)     )
   (**)  )
 
+let rec double_array_union_intro (#a: Type) (buf buf1: array a) (i:nat{i < length buf}) : Lemma
+  (requires (mergeable buf buf1))
+  (ensures (
+      let s02 = compute_loc_array buf i `MG.loc_union` compute_loc_array buf1 i in
+      let s12 = compute_loc_array buf (i + 1) `MG.loc_union` (compute_loc_array buf1 (i + 1)) in
+      let s01 = loc_cell buf i `MG.loc_union` loc_cell buf1 i in
+      s02 == s01 `MG.loc_union` s12
+  ))
+  (decreases (length buf - i))
+  =
+  assert(mergeable buf buf1) ;
+  let lbi = compute_loc_array buf i in
+  let lb1i = compute_loc_array buf1 i in
+  let b = compute_loc_array buf (i + 1) in
+  let d = compute_loc_array buf1 (i + 1) in
+  let a = loc_cell buf i in
+  let c = loc_cell buf1 i in
+  let s02 = (compute_loc_array buf i) `MG.loc_union` (compute_loc_array buf1 i) in
+  let s12 = b `MG.loc_union` d in
+  let s01 = a `MG.loc_union` c in
+  assert(compute_loc_array buf i == a `MG.loc_union` b);
+  assert(compute_loc_array buf1 i == c `MG.loc_union` d);
+  assert(s02 == s01 `MG.loc_union` s12  <==>
+    (a `MG.loc_union` b) `MG.loc_union` (c `MG.loc_union` d) ==
+    (a `MG.loc_union` c) `MG.loc_union` (b `MG.loc_union` d)
+  );
+  calc (==) {
+     (a `MG.loc_union` b) `MG.loc_union` (c `MG.loc_union` d);
+     (==) { MG.loc_union_assoc (a `MG.loc_union` b) c d }
+     ((a `MG.loc_union` b) `MG.loc_union` c) `MG.loc_union` d;
+     (==) { MG.loc_union_comm a b }
+     ((b `MG.loc_union` a) `MG.loc_union` c) `MG.loc_union` d;
+     (==) { MG.loc_union_assoc b a c}
+     (b `MG.loc_union` (a `MG.loc_union` c)) `MG.loc_union` d;
+     (==) { MG.loc_union_comm (a `MG.loc_union` c) b }
+     ((a `MG.loc_union` c) `MG.loc_union` b) `MG.loc_union` d;
+     (==) { MG.loc_union_assoc (a `MG.loc_union` c) b d }
+     (a `MG.loc_union` c) `MG.loc_union` (b `MG.loc_union` d);
+  }
+
+val merge_cells:
+  #a: Type ->
+  b: array a ->
+  b1: array a ->
+  i:U32.t{U32.v i <= length b} ->
+  Stack unit (requires (fun h0 ->
+    mergeable b b1 /\
+    live h0 b /\  HS.contains h0 b1.content /\
+    (forall (j:nat{j < length b /\ j >= U32.v i}). live_cell h0 b1 j /\ summable_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm)
+  ))
+  (ensures (fun h0 _ h1 ->
+    modifies (compute_loc_array b (U32.v i) `MG.loc_union` compute_loc_array b1 (U32.v i)) h0 h1 /\
+    as_seq h0 b == as_seq h1 b /\
+    live h1 b /\ (forall (j:nat{j >= U32.v i /\ j < length b}).
+      (sel h1 b j).wp_perm = sum_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm /\
+      (sel h1 b j).wp_v == (sel h0 b j).wp_v
+    ) /\ (forall (j:nat{j < U32.v i /\ j < length b}).
+      sel h1 b j ==  sel h0 b j
+    )
+  ))
+
+let rec merge_cells #a b b1 i =
+  (**) let h0 = HST.get () in
+  if U32.v i >= length b then begin
+    (**) MG.modifies_none_intro #ucell #cls h0 h0
+    (**)   (fun _ -> ())
+    (**)   (fun _ _ _ -> ())
+    (**)   (fun _ _ -> ());
+    (**) MG.loc_union_loc_none_l #ucell #cls (MG.loc_none)
+  end else begin
+    merge_cell #a b b1 i;
+    (**) let h1 = HST.get () in
+    (**) assert(forall (j:nat{j >=  U32.v i + 1 /\ j < length b}).
+    (**)   live_cell h0 b1 j /\ sel h0 b1 j == sel h1 b1 j /\ live_cell h1 b1 j /\
+    (**)   summable_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm
+    (**) );
+    merge_cells #a b b1 (U32.add i 1ul);
+    (**) let h2 = HST.get () in
+    (**) let s02 = compute_loc_array b (U32.v i) `MG.loc_union` compute_loc_array b1 (U32.v i) in
+    (**) let s12 = compute_loc_array b (U32.v i + 1) `MG.loc_union` (compute_loc_array b1 (U32.v i + 1)) in
+    (**) let s01 = loc_cell b (U32.v i) `MG.loc_union` loc_cell b1 (U32.v i) in
+    (**) MG.loc_union_comm #ucell #cls s01 s12;
+    (**) MG.modifies_trans #ucell #cls s01 h0 h1 s12 h2;
+    (**) double_array_union_intro b b1 (U32.v i);
+    (**) assert(MG.modifies s02 h0 h2)
+    (**)
+  end;
+  (**) let h2 = HST.get () in
+  assert(MG.modifies (compute_loc_array b (U32.v i) `MG.loc_union` compute_loc_array b1 (U32.v i)) h0 h2)
+
 val merge:
   #a: Type ->
   b: array a ->
@@ -626,3 +717,6 @@ val merge:
     ) /\
     modifies (loc_array b `loc_union` loc_array b1) h0 h1
   ))
+
+let merge #a b b1 =
+  merge_cells #a b b1 0ul
