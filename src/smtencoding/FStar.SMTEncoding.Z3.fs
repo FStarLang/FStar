@@ -93,13 +93,6 @@ let check_z3version () =
           FStar.Errors.log_issue Range.dummyRange (e, msg)
     end
 
-let ini_params () =
-  check_z3version ();
-  List.append ["-smt2";
-               "-in";
-               Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed ()))]
-              (Options.z3_cliopt ())
-
 type label = string
 type unsat_core = option<list<string>>
 type z3status =
@@ -125,18 +118,6 @@ let status_string_and_errors s =
     | UNKNOWN (errs, msg)
     | TIMEOUT (errs, msg) -> BU.format2 "%s%s" (status_tag s) (match msg with None -> "" | Some msg -> " because " ^ msg), errs
 
-let tid () = BU.current_tid() |> BU.string_of_int
-let new_z3proc id =
-    BU.start_process id (Options.z3_exe ()) (ini_params ()) (fun s -> s = "Done!")
-let new_z3proc_with_id =
-    let ctr = BU.mk_ref (-1) in
-    fun () -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int))
-
-type bgproc = {
-    ask: string -> string;
-    refresh:unit -> unit;
-    restart:unit -> unit
-}
 
 type query_log = {
     get_module_name: unit -> string;
@@ -214,38 +195,76 @@ let query_logging =
       write_to_log=write_to_log;
       close_log=close_log}
 
+(*  Z3 background process handling *)
+let z3_cmd_and_args () =
+  let cmd = Options.z3_exe () in
+  let cmd_args =
+    List.append ["-smt2";
+                 "-in";
+                 Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed ()))]
+                (Options.z3_cliopt ()) in
+  (cmd, cmd_args)
+
+let new_z3proc id cmd_and_args =
+    check_z3version();
+    BU.start_process id (fst cmd_and_args) (snd cmd_and_args) (fun s -> s = "Done!")
+
+let new_z3proc_with_id =
+    let ctr = BU.mk_ref (-1) in
+    (fun cmd_and_args -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args)
+
+type bgproc = {
+    ask:      string -> string;
+    refresh:  unit -> unit;
+    restart:  unit -> unit
+}
+
+let cmd_and_args_to_string cmd_and_args =
+  String.concat " " [
+   "cmd="; (fst cmd_and_args);
+   "args=["; (String.concat ", " (snd cmd_and_args));
+   "]"
+    ]
+
+(* the current background process is stored in the_z3proc
+   the params with which it was started are stored in the_z3proc_params
+   refresh will kill and restart the process if the params changed or
+   we have asked the z3 process something
+ *)
 let bg_z3_proc =
     let the_z3proc = BU.mk_ref None in
-    let z3proc_ask_count = BU.mk_ref 0 in
+    let the_z3proc_params = BU.mk_ref (Some ("", [""])) in
+    let the_z3proc_ask_count = BU.mk_ref 0 in
+    let make_new_z3_proc cmd_and_args =
+      the_z3proc := Some (new_z3proc_with_id cmd_and_args);
+      the_z3proc_params := Some cmd_and_args;
+      the_z3proc_ask_count := 0 in
     let z3proc () =
-      if !the_z3proc = None then
-        the_z3proc := Some (new_z3proc_with_id ());
+      if !the_z3proc = None then make_new_z3_proc (z3_cmd_and_args ());
       must (!the_z3proc) in
-    let x : list<unit> = [] in
+    let next_params = z3_cmd_and_args () in
     let ask input =
-        incr z3proc_ask_count;
+        incr the_z3proc_ask_count;
         let kill_handler () = "\nkilled\n" in
         BU.ask_process (z3proc ()) input kill_handler in
     let refresh () =
-        if (Options.log_queries()) || (!z3proc_ask_count > 0) then begin
+        let old_params = must (!the_z3proc_params) in
+        if (Options.log_queries()) || (!the_z3proc_ask_count > 0) || (not (old_params = next_params)) then begin
           if (Options.query_stats()) then
-             BU.print1 "Killing the z3_proc (z3proc_ask_count=%s)\n" (BU.string_of_int !z3proc_ask_count);
+             BU.print3 "Killing the z3proc (ask_count=%s old=[%s] new=[%s]) \n" (BU.string_of_int !the_z3proc_ask_count) (cmd_and_args_to_string old_params) (cmd_and_args_to_string next_params);
           BU.kill_process (z3proc ());
-          the_z3proc := Some (new_z3proc_with_id ());
-          z3proc_ask_count := 0
+          make_new_z3_proc next_params
         end ;
         query_logging.close_log() in
     let restart () =
         query_logging.close_log();
         the_z3proc := None;
-        the_z3proc := Some (new_z3proc_with_id ());
-        z3proc_ask_count := 0 in
+        make_new_z3_proc next_params in
+    let x : list<unit> = [] in
     BU.mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
                 restart = BU.with_monitor x restart})
 
-let set_bg_z3_proc bgp =
-    bg_z3_proc := bgp
 
 type smt_output_section = list<string>
 type smt_output = {
@@ -379,7 +398,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
   in
   let stdout =
     if fresh then
-      let proc = new_z3proc_with_id () in
+      let proc = new_z3proc_with_id (z3_cmd_and_args ()) in
       let kill_handler () = "\nkilled\n" in
       let out = BU.ask_process proc input kill_handler in
       BU.kill_process proc;
