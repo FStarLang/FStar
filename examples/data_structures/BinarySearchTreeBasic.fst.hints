@@ -1,5 +1,5 @@
 [
-  "\u0013hQO\u0010ïº§üF\u001eøãÍBË",
+  "ñá\u0014²\u0003\u000f\"dîÄ\u001dÀU|ÄM",
   [
     [
       "BinarySearchTreeBasic.tree",
@@ -315,7 +315,7 @@
     [
       "BinarySearchTreeBasic.insert_lemma",
       1,
-      2,
+      1,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
@@ -377,7 +377,7 @@
         "typing_tok_BinarySearchTreeBasic.Leaf@tok"
       ],
       0,
-      "e0c2e0cbf4048c4de822f733c2644d30"
+      "abef288b70aa98f59fdb81d568e3bb08"
     ],
     [
       "BinarySearchTreeBasic.find_max",
@@ -432,7 +432,7 @@
         "typing_BinarySearchTreeBasic.in_tree"
       ],
       0,
-      "87da53774878b7f4760dea04632001b0"
+      "517a1e500838056a7832af7a3ee30fec"
     ],
     [
       "BinarySearchTreeBasic.find_max'",
@@ -451,7 +451,7 @@
         "subterm_ordering_BinarySearchTreeBasic.Node"
       ],
       0,
-      "9c3fcfea67d5142403223e53ab72d9f0"
+      "09e5e9ba39048bf52a4efd3eb44b7c01"
     ],
     [
       "BinarySearchTreeBasic.find_max_lemma",
@@ -460,7 +460,7 @@
       1,
       [ "@query" ],
       0,
-      "a78acfaa96e592276e585f2a73778e18"
+      "1d3c78e72f0a060b889780be9e01b011"
     ],
     [
       "BinarySearchTreeBasic.find_max_lemma",
@@ -517,7 +517,7 @@
         "typing_BinarySearchTreeBasic.is_bst"
       ],
       0,
-      "b4dbd853f36ed544c9d01412b2eeeea1"
+      "5386048316630de02c8d5ed82e788b56"
     ],
     [
       "BinarySearchTreeBasic.find_max_lemma",
@@ -580,7 +580,7 @@
         "typing_BinarySearchTreeBasic.in_tree"
       ],
       0,
-      "ead97c6646a7c5fd51392f66f40e41a5"
+      "1f313863fcc4685b3046cb3ec0fb152b"
     ],
     [
       "BinarySearchTreeBasic.find_max_eq",
@@ -589,7 +589,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "361f5394a35cf63037144277b0ba4473"
+      "52359f41115958768627ed0820fcfcb0"
     ],
     [
       "BinarySearchTreeBasic.find_max_eq",
@@ -628,7 +628,7 @@
         "typing_BinarySearchTreeBasic.uu___is_Node"
       ],
       0,
-      "bcd8d3ea08e0d7f8eded3c2ff2244f96"
+      "bede5aeac7d4da6b007ed5ada9e9c368"
     ],
     [
       "BinarySearchTreeBasic.delete",
@@ -702,7 +702,7 @@
         "typing_tok_BinarySearchTreeBasic.Leaf@tok"
       ],
       0,
-      "ceb5cacfbeda6fcb9d11980de11eea7b"
+      "4dc12897f95b10db9adf7792c21706e7"
     ],
     [
       "BinarySearchTreeBasic.delete'",
@@ -726,7 +726,7 @@
         "typing_tok_BinarySearchTreeBasic.Leaf@tok"
       ],
       0,
-      "9086bcb4849d1184453da5c2c9715535"
+      "22cc788d0fd4a1380de3776a93d55931"
     ],
     [
       "BinarySearchTreeBasic.delete_lemma",
@@ -801,7 +801,7 @@
         "unit_typing"
       ],
       0,
-      "5aa03e52fce2dd8c3bf3e9dcdee371f7"
+      "0cb2f3af3531f46803be7885f57f0a07"
     ],
     [
       "BinarySearchTreeBasic.tree",
@@ -1166,7 +1166,7 @@
         "typing_BinarySearchTreeBasic.in_tree"
       ],
       0,
-      "43d9b48454f9a2bbae100b847a87dd56"
+      "894cfb27b93e2e94b7fb20a828c7e7c9"
     ],
     [
       "BinarySearchTreeBasic.find_max'",
@@ -1185,7 +1185,7 @@
         "subterm_ordering_BinarySearchTreeBasic.Node"
       ],
       0,
-      "d5d2c29717e31fcc34c527a959343b33"
+      "ea157c60765885e854432c1c85c45ad1"
     ],
     [
       "BinarySearchTreeBasic.find_max_lemma",
@@ -1194,7 +1194,7 @@
       1,
       [ "@query" ],
       0,
-      "8c227c54ae84b964aa5037cf61868e08"
+      "215f0085709468fd46f6a4f69b91082f"
     ],
     [
       "BinarySearchTreeBasic.find_max_eq",
@@ -1203,7 +1203,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a8650df2087d86ec901f4c3f75acefd8"
+      "7d8d69049340d1b13aec34ef2b687614"
     ],
     [
       "BinarySearchTreeBasic.delete",
@@ -1277,7 +1277,7 @@
         "typing_tok_BinarySearchTreeBasic.Leaf@tok"
       ],
       0,
-      "8a57cb4d342fac78ce8b6825243337ca"
+      "0c566e1925b0d49c7978ea84f4d66f59"
     ],
     [
       "BinarySearchTreeBasic.delete'",
@@ -1301,7 +1301,7 @@
         "typing_tok_BinarySearchTreeBasic.Leaf@tok"
       ],
       0,
-      "6094c97d865c8513643d4d40da14cf53"
+      "4573402bae9e628e40c75c49c0844293"
     ]
   ]
 ]
