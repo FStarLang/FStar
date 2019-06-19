@@ -545,12 +545,10 @@ let merge_cell #a b b1 i =
  let open HST in
   (**) let h0 = HST.get () in
   let s0 = !b.content in
-  let sb0 = Seq.slice s0 (U32.v b.idx) (U32.v b.idx + U32.v b.length) in
   let (v_init, perm_map) = Seq.index s0 (U32.v b.idx + U32.v i) in
-  let sb1 = Seq.upd sb0 (U32.v i) (v_init, Ghost.hide (
+  let s1 = Seq.upd s0 (U32.v b.idx + U32.v i) (v_init, Ghost.hide (
     merge_perms #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) (Ghost.reveal b1.pid)
   )) in
-  let s1 = Seq.replace_subseq s0 (U32.v b.idx) (U32.v b.idx + U32.v b.length) sb1 in
   b.content := s1;
   (**) let h1 = HST.get () in
   (**) assert (as_seq h1 b `Seq.equal` as_seq h0 b);
@@ -582,30 +580,33 @@ let merge_cell #a b b1 i =
   (**)     )
   (**)     (fun t pre b -> ())
   (**)     (fun r n -> ())
-  (**)  (fun r' n' ploc' ->
-  (**)     MG.loc_includes_refl cell;
-  (**)     MG.loc_includes_union_l cell cell1 cell;
-  (**)     MG.loc_includes_refl (MG.loc_of_aloc #ucell #cls #r' #n' ploc');
-  (**)     MG.loc_disjoint_includes
-  (**)       (MG.loc_of_aloc ploc')
-  (**)       l
-  (**)       (MG.loc_of_aloc ploc')
-  (**)       cell;
-  (**)     MG.loc_disjoint_sym  (MG.loc_of_aloc ploc') cell;
-  (**)     MG.loc_includes_refl cell1;
-  (**)     MG.loc_includes_union_l cell cell1 cell1;
-  (**)     MG.loc_disjoint_includes
-  (**)       (MG.loc_of_aloc ploc')
-  (**)       l
-  (**)       (MG.loc_of_aloc ploc')
-  (**)       cell1;
-  (**)     MG.loc_disjoint_sym  (MG.loc_of_aloc ploc') cell1;
-  (**)     MG.loc_disjoint_aloc_elim #ucell #cls #r' #n' #r #n ploc' acell;
-  (**)     MG.loc_disjoint_aloc_elim #ucell #cls #r' #n' #r #n ploc' acell1;
-  (**)     prove_bloc_preserved #r' #n' ploc' h0 h1 (fun t' b' ->
-  (**)       let i = ploc'.b_index - U32.v b'.idx in
-  (**)       assume(live_cell h1 b' i);
-  (**)       assume(sel h0 b' i  == sel h1 b' i)
+  (**)  (fun r' n' bloc' ->
+  (**)     prove_bloc_preserved #r' #n' bloc' h0 h1 (fun t' b' ->
+  (**)       MG.loc_includes_refl cell;
+  (**)       MG.loc_includes_union_l cell cell1 cell;
+  (**)       MG.loc_includes_refl (MG.loc_of_aloc #ucell #cls #r' #n' bloc');
+  (**)       MG.loc_disjoint_includes
+  (**)         (MG.loc_of_aloc bloc')
+  (**)         l
+  (**)         (MG.loc_of_aloc bloc')
+  (**)         cell;
+  (**)       MG.loc_disjoint_sym (MG.loc_of_aloc bloc') cell;
+  (**)       MG.loc_includes_refl cell1;
+  (**)       MG.loc_includes_union_l cell cell1 cell1;
+  (**)       MG.loc_disjoint_includes
+  (**)         (MG.loc_of_aloc bloc')
+  (**)         l
+  (**)         (MG.loc_of_aloc bloc')
+  (**)         cell1;
+  (**)       MG.loc_disjoint_sym (MG.loc_of_aloc bloc') cell1;
+  (**)       MG.loc_disjoint_aloc_elim #ucell #cls #r' #n' #r #n bloc' acell;
+  (**)       MG.loc_disjoint_aloc_elim #ucell #cls #r' #n' #r #n bloc' acell1;
+  (**)       let i' = bloc'.b_index - U32.v b'.idx in
+  (**)       let (_, new_perm_map) = Seq.index (HS.sel h1 b'.content) (U32.v b'.idx + i') in
+  (**)       if r' = r && n' = n then begin
+  (**)         live_same_arrays_equal_types b b' h0;
+  (**)         live_same_arrays_equal_types b b' h1
+  (**)       end else ()
   (**)     )
   (**)  )
 
