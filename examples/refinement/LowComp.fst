@@ -454,7 +454,13 @@ let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\
 
 (** ** Commutation of morphism **)
 
-#push-options "--admit_smt_queries true" // GM1750
+(*
+ * AR: 06/19: The following proofs (seem to) rely on the Valid intro and elim axioms
+ *            that are no longer default in the smt encoding. So unless your .emacs
+ *            adds those options (--smtencoding.valid_intro true --smtencoding.valid_elim true),
+ *            the following proofs will fail in the interactive mode.
+ *            (I could manage to work some proofs without those options though.)
+ *)
 
 let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
   Lemma
@@ -580,4 +586,3 @@ let morph_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
                       #wp #(cast wp (ite_elab b c1 c2)) (lcast wp (ite_elab b c1 c2)
                       (lite b (morph wp1 c1) (morph wp2 c2))) in
   ()
-#pop-options
