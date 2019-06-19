@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a2000075adb4613b41f4d8dcbde0da3a"
+      "bcfbaf5177ccba94388528819e1510b3"
     ],
     [
       "Ex12g.TMAC2.bspec1",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "507037fa17eb026064ee5cc833109d11"
+      "91c12177bfd3a8e513a6df779e67a7bc"
     ],
     [
       "Ex12g.TMAC2.keygen",
@@ -27,10 +27,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Ex12.BMAC_interpretation_Tm_arrow_ce0c823d76df01d9670b8417aea68ae7",
-        "Ex12g.TMAC2_interpretation_Tm_arrow_61e0cb4feb92547a6114527e2315a716",
+        "Ex12g.TMAC2_interpretation_Tm_arrow_14f9f9c4dc62ab8f484a4f5a7d430394",
+        "Ex12g.TMAC2_interpretation_Tm_arrow_65e57789957503873b79e6089065effa",
         "equation_Ex12.BMAC.pkey", "equation_Prims.logical",
-        "partial_app_typing_58076f92f313e17c7d4a464aa7e8cfac",
-        "partial_app_typing_cef420ad8f8ddf26e23998561b58810d",
+        "function_token_typing_Ex12g.TMAC2.bspec0",
+        "function_token_typing_Ex12g.TMAC2.bspec1",
         "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
         "projection_inverse_Ex12g.TMAC2.Keys_k0",
@@ -39,7 +40,7 @@
         "typing_Ex12.BMAC.keygen"
       ],
       0,
-      "1e1e27ef41830cf760aaab1ef7ed5e4b"
+      "7d302cc53bc845365e4b056c47b95872"
     ],
     [
       "Ex12g.TMAC2.mac",
@@ -61,16 +62,16 @@
         "projection_inverse_Ex12g.TMAC2.Keys_k0",
         "projection_inverse_Ex12g.TMAC2.Keys_k1",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
         "refinement_interpretation_Tm_refine_e3d4eb3b9c71d04bf5e6aaaac2533376",
-        "refinement_interpretation_Tm_refine_ea84979aa8acafa9e175105dd0ecbe26",
-        "refinement_interpretation_Tm_refine_f5021a0a46da06e72536e685c06ac26b",
+        "refinement_interpretation_Tm_refine_e7d49a12d3df8c08b458b9f6bfd3dbdf",
         "refinement_interpretation_Tm_refine_f62a4b8b0af8dcca8132351ce07f1d2d",
         "token_correspondence_Ex12g.TMAC2.bspec0",
         "token_correspondence_Ex12g.TMAC2.bspec1",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "6dfed74ec0a4696be464d4e655b8e22a"
+      "ce303e07c800d19ceb94aec7853cbe8e"
     ],
     [
       "Ex12g.TMAC2.verify",
@@ -94,15 +95,15 @@
         "projection_inverse_Ex12g.TMAC2.Keys_k1",
         "refinement_interpretation_Tm_refine_43058a325e271c84cdddd4bb5cf626de",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_ea84979aa8acafa9e175105dd0ecbe26",
-        "refinement_interpretation_Tm_refine_f5021a0a46da06e72536e685c06ac26b",
+        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
+        "refinement_interpretation_Tm_refine_e7d49a12d3df8c08b458b9f6bfd3dbdf",
         "refinement_interpretation_Tm_refine_f62a4b8b0af8dcca8132351ce07f1d2d",
         "token_correspondence_Ex12g.TMAC2.bspec0",
         "token_correspondence_Ex12g.TMAC2.bspec1",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "4dc15aa10b47722a9e25746dccec0207"
+      "13fbed459d5ef805e28e1dd27b8d1d28"
     ],
     [
       "Ex12g.TMAC2.bspec0",
@@ -111,7 +112,7 @@
       1,
       [ "@query" ],
       0,
-      "e1228db922b496e5246d40eda9cbd8be"
+      "bb0204ad3fa0c068f8f32a64f8184922"
     ],
     [
       "Ex12g.TMAC2.bspec1",
@@ -120,7 +121,7 @@
       1,
       [ "@query" ],
       0,
-      "b5c78db1531cc5627a17fec60674d43f"
+      "46db095ce233e7970ed4d8bf069c1499"
     ],
     [
       "Ex12g.TMAC2.keygen",
@@ -130,10 +131,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Ex12.BMAC_interpretation_Tm_arrow_ce0c823d76df01d9670b8417aea68ae7",
-        "Ex12g.TMAC2_interpretation_Tm_arrow_61e0cb4feb92547a6114527e2315a716",
+        "Ex12g.TMAC2_interpretation_Tm_arrow_14f9f9c4dc62ab8f484a4f5a7d430394",
+        "Ex12g.TMAC2_interpretation_Tm_arrow_65e57789957503873b79e6089065effa",
         "equation_Ex12.BMAC.pkey", "equation_Prims.logical",
-        "partial_app_typing_58076f92f313e17c7d4a464aa7e8cfac",
-        "partial_app_typing_cef420ad8f8ddf26e23998561b58810d",
+        "function_token_typing_Ex12g.TMAC2.bspec0",
+        "function_token_typing_Ex12g.TMAC2.bspec1",
         "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
         "projection_inverse_Ex12g.TMAC2.Keys_k0",
@@ -142,7 +144,7 @@
         "typing_Ex12.BMAC.keygen"
       ],
       0,
-      "3e6d02d53ec885fe838191d759a2da5b"
+      "0c624de81cd24b98618dab9ed0d6780e"
     ],
     [
       "Ex12g.TMAC2.mac",
@@ -164,16 +166,16 @@
         "projection_inverse_Ex12g.TMAC2.Keys_k0",
         "projection_inverse_Ex12g.TMAC2.Keys_k1",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
         "refinement_interpretation_Tm_refine_e3d4eb3b9c71d04bf5e6aaaac2533376",
-        "refinement_interpretation_Tm_refine_ea84979aa8acafa9e175105dd0ecbe26",
-        "refinement_interpretation_Tm_refine_f5021a0a46da06e72536e685c06ac26b",
+        "refinement_interpretation_Tm_refine_e7d49a12d3df8c08b458b9f6bfd3dbdf",
         "refinement_interpretation_Tm_refine_f62a4b8b0af8dcca8132351ce07f1d2d",
         "token_correspondence_Ex12g.TMAC2.bspec0",
         "token_correspondence_Ex12g.TMAC2.bspec1",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "bcb86c5781505dde8feec8198049f5b8"
+      "fe558db9e22c571e88ec572f2af78c0d"
     ],
     [
       "Ex12g.TMAC2.verify",
@@ -197,15 +199,15 @@
         "projection_inverse_Ex12g.TMAC2.Keys_k1",
         "refinement_interpretation_Tm_refine_43058a325e271c84cdddd4bb5cf626de",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_ea84979aa8acafa9e175105dd0ecbe26",
-        "refinement_interpretation_Tm_refine_f5021a0a46da06e72536e685c06ac26b",
+        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
+        "refinement_interpretation_Tm_refine_e7d49a12d3df8c08b458b9f6bfd3dbdf",
         "refinement_interpretation_Tm_refine_f62a4b8b0af8dcca8132351ce07f1d2d",
         "token_correspondence_Ex12g.TMAC2.bspec0",
         "token_correspondence_Ex12g.TMAC2.bspec1",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "5f5f69a34d1f7db9c59072f17a8c9676"
+      "e4496a57a95e8e25748484a970dee60f"
     ]
   ]
 ]

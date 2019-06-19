@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "f09a98b0820d66bc9ff3063dab093d14"
+      "5c039ad2b6de15fb95c49ac2f303975a"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "7b3cf7f3df862b6c5f31ce8132ab3e68"
+      "3b94cbd6cca252d8d1cd991be14feb90"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "64b43bb318a3ab1202c54fa914bdc26b"
+      "1441404c8f83b37417f6139ec0b23913"
     ],
     [
       "Ex10a.safe_delete",
@@ -59,7 +59,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "5b053150198293a21919db692d3c2d06"
+      "bc8b9d9bae3fbeb00ef3020fd65be174"
     ],
     [
       "Ex10a.test_acls",
@@ -93,7 +93,7 @@
         "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6", "unit_typing"
       ],
       0,
-      "9b2dc5d7589103267ed48db285e3b03c"
+      "f212e2516cd3a827dacfbd23f8cf9a1d"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -106,7 +106,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "2954183c79613ba3e98a388bcc6ea08d"
+      "81e97fef0c888f3c4b824c15110613af"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -119,7 +119,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "fd38bc3a8fe1754435a56f8dbd66f4cb"
+      "1841c5670150beb49c14f8de7d1e23ca"
     ],
     [
       "Ex10a.canRead",
@@ -132,7 +132,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "874f8bae3643324ea21bf72613e50b7e"
+      "72ec0f50a1168fb2269b213ddae97a8b"
     ],
     [
       "Ex10a.revoke",
@@ -145,7 +145,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "1378464cccf3ca7c0675469e153e0a28"
+      "76c315f127f7ca4e47d5d65e31228ea8"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "7fa8eb4e4a22662c54664826b41ea2ac"
+      "042f7202674ae5e8cdfb84d4372f38a1"
     ],
     [
       "Ex12a1.Cap.issue",
@@ -32,7 +32,7 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2c7ecebd8a41d0890aab4251b61d6458",
         "refinement_interpretation_Tm_refine_80ee390faac14219b179447f9069a246",
-        "refinement_interpretation_Tm_refine_bbb4d93d8361c2d73ff7dba26615db61",
+        "refinement_interpretation_Tm_refine_a78a11f6d8fca85f14eb29fc1e1cdce3",
         "refinement_interpretation_Tm_refine_d9c41f2458aa18cfc85adf836620b4d6",
         "string_inversion", "typing_Ex12a.ACLs.canRead",
         "typing_Ex12a.ACLs.canWrite", "typing_Ex12a1.Cap.capRead",
@@ -42,7 +42,7 @@
         "typing_Tm_abs_a1d1049ee2dcc4f8d8e625ec85c05f83"
       ],
       0,
-      "e0f46b275f105d74b2ed152cafd05a36"
+      "2fc6667b0bf48404575b4bfdb8782d68"
     ],
     [
       "Ex12a1.Cap.redeem",
@@ -52,11 +52,11 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Ex12a1.Cap.capRead",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9ab60d8402d282d56b307ab589444018",
+        "refinement_interpretation_Tm_refine_8885e999df4e0d375e24457caef23a82",
         "string_inversion"
       ],
       0,
-      "7c9beb1fb1f2c8d4b8eaa76f1520b2ca"
+      "85cd6a699169dd76de7288fa2a6f791c"
     ],
     [
       "Ex12a1.Cap.capRead",
@@ -65,7 +65,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "02c68a0a95d0e0aae5901b55e573d868"
+      "59b0bf2e04338bac571f7f1e69ce81b6"
     ]
   ]
 ]

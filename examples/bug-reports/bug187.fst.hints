@@ -8,17 +8,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Bug187_interpretation_Tm_ghost_arrow_4c2b2049a74508e0161bc5875bd29203",
-        "Prims_interpretation_Tm_ghost_arrow_0c988788f556346763c5f0bccf544755",
+        "Bug187_interpretation_Tm_arrow_b9ff16838ca14be79c4714dd5f2c76fe",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "bool_inversion", "bool_typing",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Bug187.vkey",
         "function_token_typing_Bug187.vkey", "kinding_Prims.dtuple2@tok",
         "lemma_FStar.Pervasives.invertOption", "typing_Bug187.test",
-        "typing_Tm_abs_64719a75a4046a9cccc34dd770bc0afc"
+        "typing_Tm_abs_99be3afbadfb3e442ef3d04d50777fd6"
       ],
       0,
-      "9f8eeccee7c9a025f088f2275322321b"
+      "9ad5bcb3f8052bab67cae1e3426b49f0"
     ],
     [
       "Bug187.no_fail",
@@ -27,7 +27,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "028227b72b273cda4ddedf78ae5ab856"
+      "9a71699e8d68e2b3a24ed902f3809204"
     ]
   ]
 ]
