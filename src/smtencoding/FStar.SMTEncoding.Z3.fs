@@ -220,9 +220,9 @@ type bgproc = {
 }
 
 let cmd_and_args_to_string cmd_and_args =
-  String.concat " " [
+  String.concat "" [
    "cmd="; (fst cmd_and_args);
-   "args=["; (String.concat ", " (snd cmd_and_args));
+   " args=["; (String.concat ", " (snd cmd_and_args));
    "]"
     ]
 
@@ -250,8 +250,8 @@ let bg_z3_proc =
     let refresh () =
         let old_params = must (!the_z3proc_params) in
         if (Options.log_queries()) || (!the_z3proc_ask_count > 0) || (not (old_params = next_params)) then begin
-          if (Options.query_stats()) then
-             BU.print3 "Killing the z3proc (ask_count=%s old=[%s] new=[%s]) \n" (BU.string_of_int !the_z3proc_ask_count) (cmd_and_args_to_string old_params) (cmd_and_args_to_string next_params);
+          if (Options.query_stats()) && (not (!the_z3proc = None)) then
+             BU.print3 "Refreshing the z3proc (ask_count=%s old=[%s] new=[%s]) \n" (BU.string_of_int !the_z3proc_ask_count) (cmd_and_args_to_string old_params) (cmd_and_args_to_string next_params);
           BU.kill_process (z3proc ());
           make_new_z3_proc next_params
         end ;
