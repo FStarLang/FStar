@@ -61,7 +61,6 @@ let read_write_with_sharing () : RST.RST unit
   let x1 = PT.ptr_read ptr in
   PT.ptr_write ptr FStar.UInt32.(x1 +%^ 1ul);
   let ptr1 = PT.ptr_share ptr in
-  (**) let h0 = HST.get () in
   let x1 =
     RST.rst_frame
       (R.(PT.ptr_resource ptr1 <*> PT.ptr_resource ptr))
@@ -70,29 +69,6 @@ let read_write_with_sharing () : RST.RST unit
         PT.ptr_read ptr1
       )
   in
-  let x =
-    RST.rst_frame
-      (R.(PT.ptr_resource ptr1 <*> PT.ptr_resource ptr))
-      (fun _ -> R.(PT.ptr_resource ptr1 <*> PT.ptr_resource ptr))
-      (fun _ ->
-        PT.ptr_read ptr
-      )
-  in
-  assert(x == x1);
-  (*let new_x1 = FStar.UInt32.(x1 +%^ 1ul) in
-  RST.rst_frame
-   (R.(PT.ptr_resource ptr1 <*> PT.ptr_resource ptr))
-   (fun _ -> R.(PT.ptr_resource ptr <*> PT.ptr_resource ptr1))
-   (fun _ -> PT.ptr_write ptr new_x1);*)
-  RST.rst_frame
-    (R.(PT.ptr_resource ptr1 <*> PT.ptr_resource ptr))
-    (fun _ -> PT.ptr_resource ptr)
-    (fun _ -> PT.ptr_merge ptr ptr1);
-  RST.rst_frame
-    (PT.ptr_resource ptr)
-    (fun _ -> R.empty_resource)
-    (fun _ -> PT.ptr_free ptr);
-  (*PT.ptr_merge ptr ptr1;
-  PT.ptr_free ptr*)
-  (**) R.reveal_can_be_split_into ();
-  (**) RST.reveal_modifies ()
+  PT.ptr_merge ptr ptr1;
+  PT.ptr_free ptr;
+  ()
