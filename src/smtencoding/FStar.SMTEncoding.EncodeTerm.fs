@@ -962,7 +962,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 let smt_head, decls' = encode_term head env in
                 let app_tm = mk_Apply_args smt_head args in
                 match ht_opt with
-                | None -> app_tm, decls@decls'
+                | _ -> app_tm, decls@decls' //NS: Intentionally using a default case here to disable the axiom below
                 | Some (head_type, formals, c) ->
                     if Env.debug env.tcenv (Options.Other "PartialApp")
                     then BU.print5 "Encoding partial application:\n\thead=%s\n\thead_type=%s\n\tformals=%s\n\tcomp=%s\n\tactual args=%s\n"
