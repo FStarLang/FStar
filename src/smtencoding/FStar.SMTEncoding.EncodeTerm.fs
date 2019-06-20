@@ -120,35 +120,37 @@ let raise_arity_mismatch head arity n_args rng =
                                         (BU.string_of_int n_args))
                                 rng
 
-let isTotFun_axioms pos head vars is_pure =
+//See issue #1750 and examples/bug-reports/Bug1750.fst
+let isTotFun_axioms pos head vars guards is_pure =
     let maybe_mkForall pat vars body =
         match vars with
         | [] -> body
         | _ -> mkForall pos (pat, vars, body)
     in
-    let rec is_tot_fun_axioms ctx head vars =
-        match vars with
-        | [] ->
+    let rec is_tot_fun_axioms ctx ctx_guard head vars guards =
+        match vars, guards with
+        | [], [] ->
           mkTrue
 
-        | [_] ->
+        | [_], _ ->
           //last arrow, the effect label tells us if its pure or not
           if is_pure
-          then maybe_mkForall [[head]] ctx (mk_IsTotFun head)
+          then maybe_mkForall [[head]] ctx (mkImp (ctx_guard, mk_IsTotFun head))
           else mkTrue
 
-        | x::vars ->
+        | x::vars, g_x::guards ->
           //curried arrow with more than 1 argument
           //head is definitely Tot
           let is_tot_fun_head =
-              maybe_mkForall [[head]] ctx (mk_IsTotFun head)
+              maybe_mkForall [[head]] ctx (mkImp (ctx_guard, mk_IsTotFun head))
           in
           let app = mk_Apply head [x] in
           let ctx = ctx @ [x] in
-          let rest = is_tot_fun_axioms ctx app vars in
+          let ctx_guard = mkAnd (ctx_guard, g_x) in
+          let rest = is_tot_fun_axioms ctx ctx_guard app vars guards in
           mkAnd (is_tot_fun_head, rest)
     in
-    is_tot_fun_axioms [] head vars
+    is_tot_fun_axioms [] mkTrue head vars guards
 
 let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>) : term =
     let n_args = List.length args in
@@ -732,7 +734,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
              //finally add the IsTotFun for the function term itself
              let t_interp =
-                 let tot_fun_axioms = isTotFun_axioms t.pos f vars is_pure in
+                 let tot_fun_axioms = isTotFun_axioms t.pos f vars guards_l is_pure in
                  mkAnd (t_interp, tot_fun_axioms)
              in
              let cvars =

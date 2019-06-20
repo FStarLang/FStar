@@ -901,7 +901,11 @@ let encode_top_level_let :
                 let tok_app = mk_Apply (mkFreeV <| mk_fv (gtok, Term_sort)) (fuel::vars) in
                 let tot_fun_axioms =
                   let head = mkFreeV <| mk_fv (gtok, Term_sort) in
-                  EncodeTerm.isTotFun_axioms rng head (fuel::vars) (U.is_pure_comp tres_comp)
+                  let vars = fuel :: vars in
+                  //the guards are trivial here since this tot_fun_axioms
+                  //should never appear in a goal (see Bug1750.fst, test_currying)
+                  let guards = List.map (fun _ -> mkTrue) vars in
+                  EncodeTerm.isTotFun_axioms rng head vars guards (U.is_pure_comp tres_comp)
                 in
                 Util.mkAssume(mkAnd(mkForall (U.range_of_lbname lbn) ([[tok_app]], fuel::vars, mkEq(tok_app, gapp)),
                                     tot_fun_axioms),

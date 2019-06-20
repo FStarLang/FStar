@@ -1,11 +1,45 @@
 module Bug1750
 
+
 //This is a minimized version of the original bug report by Jay Bosamiya
 let t_f = bool -> Tot bool
 let t_g = bool -> GTot bool
 [@(expect_failure [19])]
 let test (b:bool) (f:'a{'a == t_f}) (g:'b{'b == t_g}) =
   if b then f else g
+
+//This next test exercises the equivalnce of the HasType relation
+//for functions types that differ only by currying
+let t_t_f = bool -> t_f
+//We expect the equality of `a == t_t_h` to suffice in showing
+//via SMT that HasType x (bool -> bool -> bool -> bool)
+//This is meant to work because:
+// 1. t_t_f is encoded as
+//       HasType f t_t_f <==>
+//          (forall x. HasType x bool ==> HasType (f x) t_f) /\
+//          IsTotFun f
+// 2. t_f is encoded as
+//       HasType f t_f <==>
+//           (forall x. HasType x bool ==> HasType (f x) bool) /\
+//           IsTotFun f
+// 3. t_bbb = bool -> bool -> bool
+//       HasType f t_bbb <==>
+//            forall x y. HasType x bool /\ HasType y bool ==>
+//                          HasType (f x y) bool /\
+//            IsTotFun f /\
+//            forall x. HasType x bool ==> IsTotFun (f x) <---****Typing guard?
+//The crucial bit to see here is in the very last axiom
+//In particular, why do we need the typing guard?
+//If we want to prove (HasType f t_t_f ==> HasType f t_bbb)
+//Then, without the typing guard, we need to prove that
+//   forall x. IsTotFun (f x)          (Goal)
+//But, from the encoding of t_t_f, we only get
+//   forall x. HasType x bool ==> HasType (f x) t_f
+//   ==> forall x. HasType x bool ==> IsTotFun (f x)
+//Which isn't enough to prove (Goal)
+//So, those typing guards, though they may seem unnecessary
+//are actually needed
+let test_currying #a (x:a{a == t_t_f}) : bool -> bool -> bool = x
 
 //This is intentionally marked `rec` so that its SMT interpretation
 //is guarded by typing hypotheses on its arguments
