@@ -961,9 +961,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let encode_partial_app ht_opt =
                 let smt_head, decls' = encode_term head env in
                 let app_tm = mk_Apply_args smt_head args in
-                //NS: disable emitting partial_app_typing axioms
                 match ht_opt with
-                | _ -> app_tm, decls@decls'
+                | None -> app_tm, decls@decls'
                 | Some (head_type, formals, c) ->
                     if Env.debug env.tcenv (Options.Other "PartialApp")
                     then BU.print5 "Encoding partial application:\n\thead=%s\n\thead_type=%s\n\tformals=%s\n\tcomp=%s\n\tactual args=%s\n"
