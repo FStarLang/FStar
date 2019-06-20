@@ -9,22 +9,22 @@ noeq type perms_rec' (a: Type0) = {
   perm_map    : F.restricted_t perm_id (fun (x:perm_id) -> permission & a)
 }
 
-let get_permission_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : GTot permission =
+let get_permission_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : Tot permission =
   let (perm, _) = p.perm_map pid in
   perm
 
-let get_snapshot_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : GTot a =
+let get_snapshot_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : Tot a =
   let (_, snap) = p.perm_map pid in snap
 
-let is_live_pid' (#a: Type0) (v_perms: perms_rec' a) (pid:perm_id) : GTot bool =
+let is_live_pid' (#a: Type0) (v_perms: perms_rec' a) (pid:perm_id) : Tot bool =
   get_permission_from_pid' v_perms pid >. 0.0R
 
 type live_pid' (#a: Type0) (v_perms: perms_rec' a) = pid:perm_id{is_live_pid' v_perms pid}
 
-let is_fully_owned' (#a: Type0) (p: perms_rec' a) : GTot bool =
+let is_fully_owned' (#a: Type0) (p: perms_rec' a) : Tot bool =
   p.fully_owned
 
-let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : GTot real =
+let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : Tot real =
   if n = 0 then 0.0R
   else
     let (x, _) = f n in x +. sum_until f (n - 1)
@@ -41,7 +41,7 @@ let get_permission_from_pid = get_permission_from_pid'
 [@inline_let]
 let get_snapshot_from_pid = get_snapshot_from_pid'
 [@inline_let]
-let get_current_max #a p = p.current_max 
+let get_current_max #a p = p.current_max
 [@inline_let]
 let is_fully_owned = is_fully_owned'
 
@@ -93,11 +93,11 @@ let rec sum_until_extend_zeros
   (p:perm_id -> permission & a)
   (max:perm_id)
   (j:perm_id{j >= max})
-  : Lemma 
+  : Lemma
   (requires
     (forall (i:nat{i > max}). fst (p i) == 0.0R))
   (ensures sum_until p max == sum_until p j)
-  = 
+  =
     if j = max then ()
     else sum_until_extend_zeros p max (j-1)
 
