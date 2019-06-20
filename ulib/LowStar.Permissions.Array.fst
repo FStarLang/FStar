@@ -24,44 +24,42 @@ noeq type array (a:Type0) :Type0 =
 
 (*** Definitions of Ghost operations and predicates on arrays ***)
 
-let length #a b = UInt32.v b.length
-
+let length #a b = b.length
 
 let as_seq #a h b =
   let s = HS.sel h b.content in
-  Seq.init (length b) (fun x -> fst (Seq.index s (U32.v b.idx + x)))
+  Seq.init (vlength b) (fun x -> fst (Seq.index s (U32.v b.idx + x)))
 
 let as_perm_seq (#a:Type) (h:HS.mem) (b: array a) : GTot (Seq.seq permission) =
   let s = HS.sel h b.content in
-  Seq.init_ghost  (length b) (fun x ->
+  Seq.init_ghost (vlength b) (fun x ->
     get_permission_from_pid (Ghost.reveal (snd (Seq.index s (U32.v b.idx + x)))) (Ghost.reveal b.pid)
   )
 
-let live_cell (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) : Type0 =
+let live_cell (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) : Type0 =
   get_perm #a h b i >. 0.0R /\ HS.contains h b.content
 
 let as_perm_seq_pid (#a:Type) (h:HS.mem) (b: array a) (pid:perm_id) : GTot (Seq.seq permission) =
   let s = HS.sel h b.content in
-  Seq.init_ghost  (length b) (fun x ->
+  Seq.init_ghost (vlength b) (fun x ->
     get_permission_from_pid (Ghost.reveal (snd (Seq.index s (U32.v b.idx + x)))) pid
   )
 
-let get_perm_pid (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) (pid:perm_id) : GTot P.permission
+let get_perm_pid (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) (pid:perm_id) : GTot P.permission
   = Seq.index (as_perm_seq_pid h b pid) i
 
-let cell_perm_pid (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) (pid:perm_id) =
+let cell_perm_pid (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) (pid:perm_id) =
   Seq.index (as_perm_seq_pid #a h b pid) i
 
-let live_cell_pid (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < length b}) (pid:perm_id)
+let live_cell_pid (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) (pid:perm_id)
   : Type0 =
   cell_perm_pid #a h b i pid >. 0.0R /\ HS.contains h b.content
 
 let live #a h b =
   HS.contains h b.content /\
-  (forall (i:nat{i < length b}). live_cell h b i)
+  (forall (i:nat{i < vlength b}). live_cell h b i)
 
-
-let sel (#a: Type0)  (h: HS.mem) (b: array a) (i:nat{i < length b}) : GTot (with_perm a) =
+let sel (#a: Type0)  (h: HS.mem) (b: array a) (i:nat{i < vlength b}) : GTot (with_perm a) =
   let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
   let perm = get_perm h b i in
   let snapshot = get h b i in
@@ -85,6 +83,49 @@ let mergeable_comm (#a: Type0) (b1 b2: array a): Lemma
   (ensures (mergeable b2 b1))
 = ()
 
+let frameOf (#a:Type0) (b:array a) : Tot HS.rid = HS.frameOf b.content
+let as_addr (#a:Type0) (b:array a) : GTot nat = HS.as_addr b.content
+
+(*** Sub-buffers *)
+
+
+let gsub #a b i len =
+    let b' = Array b.max_length b.content (U32.add b.idx i) len b.pid in
+    let aux (h:HS.mem) : Lemma
+      (as_seq h b' == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) /\
+       as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)) =
+      let sb' = as_seq h b' in
+      let sbslice =  Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) in
+      let sbp' =  as_perm_seq h b' in
+      let sbpslice =  Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len) in
+      FStar.Seq.Base.lemma_eq_intro sb' sbslice;
+      FStar.Seq.Base.lemma_eq_intro sbp' sbpslice
+    in
+    Classical.forall_intro aux;
+    b'
+
+let live_gsub #a h b i len =
+  let b' = gsub b i len in
+  let f1 (_ : squash (live h b))  : Lemma (live h b') =
+    assert(forall (j:nat{j < vlength b'}). get_perm #a h b (U32.v i + j) >. 0.0R);
+    assert(forall (j:nat{j < vlength b'}). get_perm #a h b' j >. 0.0R)
+  in
+  FStar.Classical.impl_intro f1
+
+let len_gsub #a b i len' = ()
+
+let frameOf_gsub #a b i len = ()
+
+let as_addr_gsub #a b i len = ()
+
+let gsub_inj #a b1 b2 i1 i2 len1 len2 = ()
+
+let gsub_gsub #a b i1 len1 i2 len2 = ()
+
+let gsub_zero_length #a b = ()
+
+let msub #a b i len =
+ Array b.max_length b.content (U32.add b.idx i) len b.pid
 (*** Definitions of locations for arrays with permissions ***)
 
 // We need to define the atomic locations cell per cell. We will then define loc_buffer as the union of aloc of cells
@@ -99,9 +140,6 @@ type ucell_ : Type0 = {
 
 val ucell (region:HS.rid) (addr:nat) : Tot Type0
 let ucell region addr = ucell_
-
-let frameOf (#a:Type0) (b:array a) : Tot HS.rid = HS.frameOf b.content
-let as_addr (#a:Type0) (b:array a) : GTot nat = HS.as_addr b.content
 
 // let uarray_of_array (#a:Type0) (b:array a) : Tot (uarray (frameOf b) (as_addr b)) =
 //   { b_max_length = U32.v b.max_length;
@@ -197,7 +235,7 @@ let loc_union (l1 l2:loc) = MG.loc_union #ucell #cls l1 l2
 let loc_disjoint (l1 l2:loc) = MG.loc_disjoint #ucell #cls l1 l2
 let loc_includes (l1 l2:loc) = MG.loc_includes #ucell #cls l1 l2
 
-let aloc_cell (#a:Type) (b:array a) (i:nat{i < length b}) : GTot (ucell (frameOf b) (as_addr b)) =
+let aloc_cell (#a:Type) (b:array a) (i:nat{i < vlength b}) : GTot (ucell (frameOf b) (as_addr b)) =
   let r = frameOf b in
   let a = as_addr b in
   {
@@ -206,23 +244,23 @@ let aloc_cell (#a:Type) (b:array a) (i:nat{i < length b}) : GTot (ucell (frameOf
     b_pid = (Ghost.reveal b.pid);
   }
 
-let loc_cell (#t:Type) (b:array t) (i:nat{i < length b}) : GTot loc =
+let loc_cell (#t:Type) (b:array t) (i:nat{i < vlength b}) : GTot loc =
   let r = frameOf b in
   let a = as_addr b in
   MG.loc_of_aloc #ucell #cls #r #a (aloc_cell #t b i)
 
 // The location of an array is the recursive union of all of its cells
-let rec compute_loc_array (#a:Type) (b:array a) (i:nat{i <= length b})
+let rec compute_loc_array (#a:Type) (b:array a) (i:nat{i <= vlength b})
   : GTot loc
-  (decreases (length b - i))
-  = if i = length b then MG.loc_none
+  (decreases (vlength b - i))
+  = if i = vlength b then MG.loc_none
     else loc_cell b i `MG.loc_union #ucell #cls` compute_loc_array b (i+1)
 
 let loc_array (#a:Type) (b:array a) : GTot loc =
   compute_loc_array b 0
 
 // The location of a cell of the array is included in the global loc_array
-let lemma_includes_loc_cell_loc_array (#a:Type) (b:array a) (i:nat{i < length b})
+let lemma_includes_loc_cell_loc_array (#a:Type) (b:array a) (i:nat{i < vlength b})
   : Lemma (loc_includes (loc_array b) (loc_cell b i))
   =
   let rec aux (j:nat{j <= i}) : Lemma
@@ -238,7 +276,7 @@ let lemma_includes_loc_cell_loc_array (#a:Type) (b:array a) (i:nat{i < length b}
     end
   in aux 0
 
-let lemma_disjoint_pid_disjoint_cells (#a:Type) (b1 b2:array a) (i1:nat{i1 < length b1}) (i2:nat{i2 < length b2}) : Lemma
+let lemma_disjoint_pid_disjoint_cells (#a:Type) (b1 b2:array a) (i1:nat{i1 < vlength b1}) (i2:nat{i2 < vlength b2}) : Lemma
   (requires Ghost.reveal b1.pid <> Ghost.reveal b2.pid /\ b1.max_length == b2.max_length)
   (ensures loc_disjoint (loc_cell b1 i1) (loc_cell b2 i2))
   =
@@ -258,11 +296,11 @@ let lemma_disjoint_pid_disjoint_cells (#a:Type) (b1 b2:array a) (i1:nat{i1 < len
   } in
   MG.loc_disjoint_aloc_intro #ucell #cls #r1 #a1 #r2 #a2 aloc1 aloc2
 
-let rec lemma_disjoint_pid_disjoint_cell_array (#a:Type0) (b1 b2:array a) (i:nat{i < length b1}) (j:nat{j <= length b2}) : Lemma
+let rec lemma_disjoint_pid_disjoint_cell_array (#a:Type0) (b1 b2:array a) (i:nat{i < vlength b1}) (j:nat{j <= vlength b2}) : Lemma
   (requires Ghost.reveal b1.pid <> Ghost.reveal b2.pid /\ b1.max_length == b2.max_length)
   (ensures loc_disjoint (compute_loc_array b2 j) (loc_cell b1 i))
-  (decreases (length b2 - j))
-  = if j = length b2 then begin
+  (decreases (vlength b2 - j))
+  = if j = vlength b2 then begin
        MG.loc_disjoint_none_r #ucell #cls (loc_cell b1 i);
        MG.loc_disjoint_sym (loc_cell b1 i) (compute_loc_array b2 j)
     end else begin
@@ -273,11 +311,11 @@ let rec lemma_disjoint_pid_disjoint_cell_array (#a:Type0) (b1 b2:array a) (i:nat
       MG.loc_disjoint_sym (loc_cell b1 i) (compute_loc_array b2 j)
     end
 
-let rec lemma_disjoint_pid_disjoint_compute_array (#a:Type) (b1 b2:array a) (i:nat{i <= length b1}) : Lemma
+let rec lemma_disjoint_pid_disjoint_compute_array (#a:Type) (b1 b2:array a) (i:nat{i <= vlength b1}) : Lemma
   (requires Ghost.reveal b1.pid <> Ghost.reveal b2.pid /\ b1.max_length == b2.max_length)
   (ensures loc_disjoint (loc_array b2)  (compute_loc_array b1 i) )
-  (decreases (length b1 - i))
-  = if i = length b1 then MG.loc_disjoint_none_r #ucell #cls (loc_array b2)
+  (decreases (vlength b1 - i))
+  = if i = vlength b1 then MG.loc_disjoint_none_r #ucell #cls (loc_array b2)
     else begin
       lemma_disjoint_pid_disjoint_cell_array b1 b2 i 0;
       lemma_disjoint_pid_disjoint_compute_array b1 b2 (i+1);
@@ -406,7 +444,7 @@ let alloc #a init len =
 val share_cell
   (#a:Type0)
   (b:array a)
-  (i:U32.t{U32.v i < length b})
+  (i:U32.t{U32.v i < vlength b})
   (pid:Ghost.erased perm_id)
   : Stack unit
   (requires (fun h0 ->
@@ -420,7 +458,7 @@ val share_cell
     live h1 b /\
     as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
     live_cell_pid h1 b (U32.v i) (Ghost.reveal pid) /\ // The cell is still live
-    (forall (j:nat{j < length b}). // We only touch one cell
+    (forall (j:nat{j < vlength b}). // We only touch one cell
       j <> U32.v i ==> Seq.index (HS.sel h0 b.content) (U32.v b.idx + j) ==
         Seq.index (HS.sel h1 b.content) (U32.v b.idx + j)
     ) /\ // Permission is split into two
@@ -466,11 +504,11 @@ let share_cell #a b i pid =
 val share_cells
   (#a:Type0)
   (b:array a)
-  (i:U32.t{U32.v i <= length b})
+  (i:U32.t{U32.v i <= vlength b})
   (pid:Ghost.erased perm_id)
   : Stack unit
   (requires (fun h0 -> live h0 b /\
-    (forall (j:nat{j < length b}). j >= U32.v i ==> (
+    (forall (j:nat{j < vlength b}). j >= U32.v i ==> (
       let (_, perm_map) = Seq.index (HS.sel h0 b.content) (U32.v b.idx + j) in
       Ghost.reveal pid > get_current_max (Ghost.reveal perm_map)
     ))
@@ -479,10 +517,10 @@ val share_cells
     modifies (compute_loc_array b (U32.v i)) h0 h1 /\
     live h1 b /\
     as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
-    (forall (j:nat{j < length b}). j < U32.v i ==> // We haven't modified the beginning
+    (forall (j:nat{j < vlength b}). j < U32.v i ==> // We haven't modified the beginning
       Seq.index (HS.sel h0 b.content) (U32.v b.idx + j) == Seq.index (HS.sel h1 b.content) (U32.v b.idx + j)
     ) /\
-    (forall (j:nat{j < length b}). j >= U32.v i ==> // Cells atr still live but permissiosn are halved
+    (forall (j:nat{j < vlength b}). j >= U32.v i ==> // Cells atr still live but permissiosn are halved
       live_cell_pid h1 b j (Ghost.reveal pid) /\
       get_perm h1 b j == P.half_permission (get_perm h0 b j) /\
       get_perm_pid h1 b j (Ghost.reveal pid) == P.half_permission (get_perm h0 b j)
@@ -491,7 +529,7 @@ val share_cells
 
 let rec share_cells #a b i pid =
   (**) let h0 = HST.get() in
-  if U32.v i >= length b then
+  if U32.v i >= vlength b then
     (**) MG.modifies_none_intro #ucell #cls h0 h0
     (**)   (fun _ -> ())
     (**)   (fun _ _ _ -> ())
@@ -507,15 +545,15 @@ let rec share_cells #a b i pid =
     (**) MG.modifies_trans #ucell #cls s12 h0 h1 s23 h2
   end
 
-val get_array_current_max (#a:Type0) (h:HS.mem) (b:array a) (i:U32.t{U32.v i <= length b}) : Pure (Ghost.erased perm_id)
+val get_array_current_max (#a:Type0) (h:HS.mem) (b:array a) (i:U32.t{U32.v i <= vlength b}) : Pure (Ghost.erased perm_id)
   (requires True)
-  (ensures fun pid -> forall (j:nat{j < length b}). j >= U32.v i ==>
+  (ensures fun pid -> forall (j:nat{j < vlength b}). j >= U32.v i ==>
     (let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + j) in
       Ghost.reveal pid > get_current_max (Ghost.reveal perm_map)))
-  (decreases (length b - U32.v i))
+  (decreases (vlength b - U32.v i))
 
 let rec get_array_current_max #a h b i =
-  if U32.v i = length b then (Ghost.hide 1)
+  if U32.v i = vlength b then (Ghost.hide 1)
   else  begin
     let max_end = get_array_current_max h b (U32.add i 1ul) in
     let (v, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + U32.v i) in
@@ -523,7 +561,7 @@ let rec get_array_current_max #a h b i =
     Ghost.elift2 (fun (a b:perm_id) -> if a > b then a else b) max_end current_max
   end
 
-val lemma_different_live_pid (#a:Type0) (h:HS.mem) (b:array a{length b > 0}) : Lemma
+val lemma_different_live_pid (#a:Type0) (h:HS.mem) (b:array a{vlength b > 0}) : Lemma
   (requires live h b)
   (ensures Ghost.reveal (get_array_current_max h b 0ul) <> Ghost.reveal b.pid)
 
@@ -549,7 +587,7 @@ val merge_cell:
   #a: Type ->
   b: array a ->
   b1: array a ->
-  i:U32.t{U32.v i < length b} ->
+  i:U32.t{U32.v i < vlength b} ->
   Stack unit (requires (fun h0 ->
     mergeable b b1 /\
     live h0 b /\ live_cell h0 b1 (U32.v i) /\ HS.contains h0 b1.content /\
@@ -560,7 +598,7 @@ val merge_cell:
     as_seq h0 b == as_seq h1 b /\
     (sel h1 b (U32.v i)).wp_perm = sum_permissions (sel h0 b (U32.v i)).wp_perm (sel h0 b1 (U32.v i)).wp_perm /\
     (sel h1 b (U32.v i)).wp_v == (sel h0 b (U32.v i)).wp_v /\
-    (forall (j:nat{j <> U32.v i /\ j < length b}). sel h0 b j == sel h1 b j /\ sel h0 b1 j == sel h1 b1 j) /\
+    (forall (j:nat{j <> U32.v i /\ j < vlength b}). sel h0 b j == sel h1 b j /\ sel h0 b1 j == sel h1 b1 j) /\
     modifies (loc_cell b (U32.v i) `loc_union` loc_cell b1 (U32.v i)) h0 h1
   ))
 
@@ -633,7 +671,7 @@ let merge_cell #a b b1 i =
   (**)     )
   (**)  )
 
-let rec double_array_union_intro (#a: Type) (buf buf1: array a) (i:nat{i < length buf}) : Lemma
+let rec double_array_union_intro (#a: Type) (buf buf1: array a) (i:nat{i < vlength buf}) : Lemma
   (requires (mergeable buf buf1))
   (ensures (
       let s02 = compute_loc_array buf i `MG.loc_union` compute_loc_array buf1 i in
@@ -641,7 +679,7 @@ let rec double_array_union_intro (#a: Type) (buf buf1: array a) (i:nat{i < lengt
       let s01 = loc_cell buf i `MG.loc_union` loc_cell buf1 i in
       s02 == s01 `MG.loc_union` s12
   ))
-  (decreases (length buf - i))
+  (decreases (vlength buf - i))
   =
   assert(mergeable buf buf1) ;
   let lbi = compute_loc_array buf i in
@@ -677,26 +715,26 @@ val merge_cells:
   #a: Type ->
   b: array a ->
   b1: array a ->
-  i:U32.t{U32.v i <= length b} ->
+  i:U32.t{U32.v i <= vlength b} ->
   Stack unit (requires (fun h0 ->
     mergeable b b1 /\
     live h0 b /\  HS.contains h0 b1.content /\
-    (forall (j:nat{j < length b /\ j >= U32.v i}). live_cell h0 b1 j /\ P.summable_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm)
+    (forall (j:nat{j < vlength b /\ j >= U32.v i}). live_cell h0 b1 j /\ P.summable_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm)
   ))
   (ensures (fun h0 _ h1 ->
     modifies (compute_loc_array b (U32.v i) `MG.loc_union` compute_loc_array b1 (U32.v i)) h0 h1 /\
     as_seq h0 b == as_seq h1 b /\
-    live h1 b /\ (forall (j:nat{j >= U32.v i /\ j < length b}).
+    live h1 b /\ (forall (j:nat{j >= U32.v i /\ j < vlength b}).
       (sel h1 b j).wp_perm = sum_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm /\
       (sel h1 b j).wp_v == (sel h0 b j).wp_v
-    ) /\ (forall (j:nat{j < U32.v i /\ j < length b}).
+    ) /\ (forall (j:nat{j < U32.v i /\ j < vlength b}).
       sel h1 b j ==  sel h0 b j
     )
   ))
 
 let rec merge_cells #a b b1 i =
   (**) let h0 = HST.get () in
-  if U32.v i >= length b then begin
+  if U32.v i >= vlength b then begin
     (**) MG.modifies_none_intro #ucell #cls h0 h0
     (**)   (fun _ -> ())
     (**)   (fun _ _ _ -> ())
@@ -705,7 +743,7 @@ let rec merge_cells #a b b1 i =
   end else begin
     merge_cell #a b b1 i;
     (**) let h1 = HST.get () in
-    (**) assert(forall (j:nat{j >=  U32.v i + 1 /\ j < length b}).
+    (**) assert(forall (j:nat{j >=  U32.v i + 1 /\ j < vlength b}).
     (**)   live_cell h0 b1 j /\ sel h0 b1 j == sel h1 b1 j /\ live_cell h1 b1 j /\
     (**)   P.summable_permissions (sel h0 b j).wp_perm (sel h0 b1 j).wp_perm
     (**) );
@@ -726,69 +764,4 @@ let rec merge_cells #a b b1 i =
 let merge #a b b1 =
   merge_cells #a b b1 0ul;
   (**) let h1 = HST.get () in
-  (**) assert(forall (i:nat{i < length b}). (sel h1 b i).wp_perm = get_perm h1 b i)
-
-(*** Sub-buffers *)
-
-
-val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
-  :Ghost (array a)
-         (requires (U32.v i + U32.v len <= length b))
-	 (ensures (fun b' ->
-	   forall(h: HS.mem). {:pattern [as_seq h b'; as_perm_seq h b']}
-	   as_seq h b' == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) /\
-	   as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)
-	 ))
-
-<<<<<<< HEAD
-let gsub #a b i len =
-    let b' = Array b.max_length b.content (U32.add b.idx i) len b.pid in
-    let aux (h:HS.mem) : Lemma
-      (as_seq h b' == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) /\
-       as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)) =
-      let sb' = as_seq h b' in
-      let sbslice =  Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) in
-      let sbp' =  as_perm_seq h b' in
-      let sbpslice =  Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len) in
-      FStar.Seq.Base.lemma_eq_intro sb' sbslice;
-      FStar.Seq.Base.lemma_eq_intro sbp' sbpslice
-    in
-    Classical.forall_intro aux;
-    b'
-
-val live_gsub (#a:Type0) (h:HS.mem) (b:array a) (i:U32.t) (len:U32.t)
-  :Lemma (requires (U32.v i + U32.v len <= length b))
-         (ensures  (live h b ==> (live h (gsub  b i len))))
-         [SMTPat (live h (gsub  b i len))]
-
-let live_gsub #a h b i len =
-  let b' = gsub b i len in
-  let f1 (_ : squash (live h b))  : Lemma (live h b') =
-    assert(forall (j:nat{j < length b'}). get_perm #a h b (U32.v i + j) >. 0.0R);
-    assert(forall (j:nat{j < length b'}). get_perm #a h b' j >. 0.0R)
-  in
-  FStar.Classical.impl_intro f1
-=======
-// let gsub #a b i len =
-//     let b' = Array b.max_length b.content (U32.add b.idx i) len b.pid in
-//     let aux (h:HS.mem) : Lemma
-//       (as_seq h b' == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) /\
-//        as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)) =
-//       let sb' = as_seq h b' in
-//       let sbslice =  Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) in
-//       let spb' =  as_perm_seq h b' in
-//       let sbpslice =
-//       FStar.Seq.Base.lemma_eq_intro sb' sbslice
-//     in
-//     Classical.forall_intro aux;
-//     b'
-
-// val live_gsub (#a:Type0) (#rrel #rel:srel a)
-//   (h:HS.mem) (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
-//   :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
-//          (ensures  (live h b <==> (live h (mgsub sub_rel b i len) /\ (exists h0 . {:pattern (live h0 b)} live h0 b))))
-//          [SMTPatOr [
-//              [SMTPat (live h (mgsub sub_rel b i len))];
-//              [SMTPat (live h b); SMTPat (mgsub sub_rel b i len);]
-//          ]]
->>>>>>> ef871356bcc7cad04679880cafa7c4ae6d99e8d7
+  (**) assert(forall (i:nat{i < vlength b}). (sel h1 b i).wp_perm = get_perm h1 b i)
