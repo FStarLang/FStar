@@ -51,6 +51,15 @@ private abstract let rec init_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents
 inline_for_extraction abstract val init: #a:Type -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (seq a)
 inline_for_extraction abstract let init #a len contents = if len = 0 then MkSeq [] else init_aux len 0 contents
 
+private abstract let rec init_aux_ghost (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> GTot a))
+  : GTot (seq a) (decreases (len - k))
+  = if k + 1 = len
+    then MkSeq [contents k]
+    else cons (contents k) (init_aux_ghost len (k+1) contents)
+
+inline_for_extraction abstract val init_ghost: #a:Type -> len:nat -> contents: (i:nat { i < len } -> GTot a) -> GTot (seq a)
+inline_for_extraction abstract let init_ghost #a len contents = if len = 0 then MkSeq [] else init_aux_ghost len 0 contents
+
 abstract
 let empty #a : Tot (s:(seq a){length s=0}) = MkSeq []
 
@@ -98,6 +107,22 @@ let rec lemma_init_aux_len (#a:Type) (n:nat) (k:nat{k < n}) (contents:(i:nat{ i 
   if k + 1 = n then () else lemma_init_aux_len #a n (k+1) contents
 
 let rec lemma_init_len #a n contents = if n = 0 then () else lemma_init_aux_len #a n 0 contents
+
+abstract val lemma_init_ghost_len: #a:Type -> n:nat -> contents: (i:nat { i < n } -> Tot a) -> Lemma
+  (requires True)
+  (ensures (length (init_ghost n contents) = n))
+  [SMTPat (length (init_ghost n contents))]
+
+private
+let rec lemma_init_aux_ghost_len (#a:Type) (n:nat) (k:nat{k < n}) (contents:(i:nat{ i < n } -> Tot a))
+  : Lemma (requires True)
+    (ensures (length (init_aux_ghost n k contents) = n - k))
+    (decreases (n-k))
+    [SMTPat (length (init_aux_ghost n k contents))]
+=
+  if k + 1 = n then () else lemma_init_aux_ghost_len #a n (k+1) contents
+
+let rec lemma_init_ghost_len #a n contents = if n = 0 then () else lemma_init_aux_len #a n 0 contents
 
 abstract val lemma_len_upd: #a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> Lemma
   (requires True)
@@ -278,6 +303,39 @@ let init_index_ (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a)) (j: 
     [SMTPat (index (init len contents) j)]
 =
   init_index len contents
+
+
+abstract
+val init_ghost_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> GTot a))
+  : Lemma (requires True)
+    (ensures (forall (i:nat{i < len}). index (init_ghost len contents) i == contents i))
+
+private
+let rec init_ghost_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> GTot a))
+  : Lemma (requires True)
+    (ensures (forall (i:nat{i < len - k}).index (init_aux_ghost len k contents) i == contents (k + i)))
+    (decreases (len - k))
+=
+  if k + 1 = len
+  then ()
+  else begin
+    init_ghost_index_aux #a len (k+1) contents ;
+    assert (forall (i:nat{i < len - k}).
+      if i = 0 then index (init_aux_ghost len k contents) 0 == contents k
+      else index (init_aux_ghost len k contents) i == index (init_aux_ghost len (k+1) contents) (i-1))
+  end
+
+let init_ghost_index #a len contents =
+  if len = 0 then () else init_ghost_index_aux #a len 0 contents
+
+abstract
+let init_ghost_index_ (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a)) (j: nat)
+  : Lemma (requires j < len)
+    (ensures (index (init_ghost len contents) j == contents j))
+    [SMTPat (index (init_ghost len contents) j)]
+=
+  init_ghost_index len contents
+
 
 let lemma_equal_instances_implies_equal_types ()
   :Lemma (forall (a:Type) (b:Type) (s1:seq a) (s2:seq b). s1 === s2 ==> a == b)

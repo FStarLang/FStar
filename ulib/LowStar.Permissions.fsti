@@ -29,24 +29,24 @@ type permission = r:real{r >=. 0.0R /\ r <=. 1.0R}
 
 /// A permission value of 0 means that the resource is not live. It is live, and can be read, as long as the permission is
 /// strictly positive.
-let allows_read (p: permission) : GTot bool =
+let allows_read (p: permission) : Tot bool =
   p >. 0.0R
 
 /// A full permission (of value 1) is required for writing to the resource.
-let allows_write (p: permission) : GTot bool =
+let allows_write (p: permission) : Tot bool =
   p = 1.0R
 
 /// The common way to share a permission is to halve its value.
-let half_permission (p: permission) : GTot (permission) =
+let half_permission (p: permission) : Tot (permission) =
   p /. 2.0R
 
 /// When merging resources, you have to sum the permissions.
 let summable_permissions (p1: permission) (p2: permission)
-  : GTot bool =
+  : Tot bool =
    p1 +. p2 <=. 1.0R
 
 let sum_permissions (p1: permission) (p2: permission{p1 +. p2 <=. 1.0R})
-  : GTot (permission) =
+  : Tot (permission) =
   (p1 +.  p2)
 
 /// On top of the permission as a number, we define a view defining what you can actually do with the resource given its
@@ -58,7 +58,7 @@ type permission_kind =
   | FULL (* Read-write access and deallocation *)
 
 /// Translates the permission and the ownership flag into a permission kind.
-let permission_to_kind (p: permission) (is_fully_owned: bool) : GTot permission_kind =
+let permission_to_kind (p: permission) (is_fully_owned: bool) : Tot permission_kind =
   if p = 0.0R then
     DEAD
   else if p <. 1.0R then
@@ -90,20 +90,20 @@ val perms_rec (a: Type0) : Type0
 
 /// Next are getter methods for each of these pieces of information
 
-val get_permission_from_pid: #a: Type0 -> p:perms_rec a -> pid:perm_id -> GTot permission
+val get_permission_from_pid: #a: Type0 -> p:perms_rec a -> pid:perm_id -> Tot permission
 
-let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) : GTot bool =
+let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) : Tot bool =
   get_permission_from_pid v_perms pid >. 0.0R
 
 type live_pid (#a: Type0) (v_perms: perms_rec a) = pid:perm_id{is_live_pid v_perms pid}
 
-val get_snapshot_from_pid: #a: Type0 -> p: perms_rec a -> pid: perm_id -> GTot a
+val get_snapshot_from_pid: #a: Type0 -> p: perms_rec a -> pid: perm_id -> Tot a
 
 val get_current_max: #a:Type0 -> p:perms_rec a -> perm_id
 
-val is_fully_owned: #a: Type0 -> p: perms_rec a -> GTot bool
+val is_fully_owned: #a: Type0 -> p: perms_rec a -> Tot bool
 
-let get_perm_kind_from_pid (#a: Type0) (perms: perms_rec a) (pid: perm_id) : GTot permission_kind =
+let get_perm_kind_from_pid (#a: Type0) (perms: perms_rec a) (pid: perm_id) : Tot permission_kind =
   let permission = get_permission_from_pid perms pid in
   let fully_owned = is_fully_owned perms in
   permission_to_kind permission fully_owned
@@ -127,7 +127,7 @@ val new_value_perms: #a: Type0 -> init: a -> fully_owned: bool -> Pure (value_pe
 
 /// Sharing a particular ``pid`` halves the permission associated with it and returns a new ``perm_id``
 /// containing the other half.
-val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid v_perms -> Ghost (value_perms a v & perm_id)
+val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid v_perms -> Pure (value_perms a v & perm_id)
   (requires (True)) (ensures (fun (new_v_perms, new_pid) ->
     new_pid <> pid /\
     get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /. 2.0R /\
@@ -140,14 +140,14 @@ val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid
 
 /// Sharing a particular ``pid`` halves the permission associated with it and returns a new
 /// map containing the other half in the given ``new_pid``
-val share_perms_with_pid: 
+val share_perms_with_pid:
   #a: Type0 ->
   #v: a ->
   v_perms: value_perms a v ->
   pid: live_pid v_perms ->
   new_pid:perm_id ->
   Pure (value_perms a v)
-  (requires 
+  (requires
     pid <> new_pid /\
     new_pid > get_current_max v_perms)
   (ensures (fun new_v_perms ->
@@ -167,7 +167,7 @@ val merge_perms:
   v_perms: value_perms a v ->
   pid1: live_pid v_perms ->
   pid2: live_pid v_perms{pid1 <> pid2}
-  -> Ghost (value_perms a v)
+  -> Pure (value_perms a v)
   (requires (True)) (ensures (fun new_v_perms ->
     get_permission_from_pid new_v_perms pid1 =
       get_permission_from_pid v_perms pid1 +. get_permission_from_pid v_perms pid2 /\
@@ -189,11 +189,11 @@ val only_one_live_pid_with_full_permission:
 
 
 /// If a pid is live, then it is smaller than the current max
-val lemma_live_pid_smaller_max (#a:Type0) (v_perms:perms_rec a) (pid:live_pid v_perms) 
+val lemma_live_pid_smaller_max (#a:Type0) (v_perms:perms_rec a) (pid:live_pid v_perms)
   : Lemma (pid <= get_current_max v_perms)
 
 /// If a pid is live, then it is smaller than the current max
-val lemma_greater_max_not_live_pid (#a:Type0) (v_perms:perms_rec a) (pid:perm_id) : Lemma 
+val lemma_greater_max_not_live_pid (#a:Type0) (v_perms:perms_rec a) (pid:perm_id) : Lemma
     (requires pid > get_current_max v_perms)
     (ensures not (is_live_pid v_perms pid))
 
@@ -205,7 +205,7 @@ val change_snapshot:
   v_perms: value_perms a v ->
   pid: perm_id ->
   new_snapshot: a ->
-  Ghost (value_perms a new_snapshot)
+  Pure (value_perms a new_snapshot)
   (requires (get_permission_from_pid v_perms pid == 1.0R))
   (ensures (fun new_v_perms ->
     (forall (pid':perm_id).{:pattern get_permission_from_pid new_v_perms pid'}
