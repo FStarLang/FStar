@@ -388,19 +388,6 @@ let upd #a b i v =
 
 #pop-options
 
-let gsub #a b i len =
-  match b with
-  | Array max_len content idx length pid ->
-    Array max_len content (U32.add idx i) len pid
-
-
-let sub #a b i len =
-  match b with
-  | Array max_len content i0 len0 pid ->
-    // Keep the same perm_id, to avoid being considered disjoint
-    Array max_len content (U32.add i0 i) len pid
-
-
 let alloc #a init len =
   let perm_map_pid = (
     let (vp, pid) = new_value_perms init true in
@@ -740,3 +727,37 @@ let merge #a b b1 =
   merge_cells #a b b1 0ul;
   (**) let h1 = HST.get () in
   (**) assert(forall (i:nat{i < length b}). (sel h1 b i).wp_perm = get_perm h1 b i)
+
+(*** Sub-buffers *)
+
+val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
+  :Ghost (array a)
+         (requires (U32.v i + U32.v len <= length b))
+	 (ensures (fun b' ->
+	   forall(h: HS.mem). {:pattern (as_seq h b')}
+	   as_seq h b' == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) /\
+	   as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)
+	 ))
+
+let gsub #a b i len =
+    let b' = Array b.max_length b.content (U32.add b.idx i) len b.pid in
+    let aux (h:HS.mem) : Lemma
+      (as_seq h b' == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) /\
+       as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)) =
+      let sb' = as_seq h b' in
+      let sbslice =  Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) in
+      let spb' =  as_perm_seq h b' in
+      let sbpslice =
+      FStar.Seq.Base.lemma_eq_intro sb' sbslice
+    in
+    Classical.forall_intro aux;
+    b'
+
+val live_gsub (#a:Type0) (#rrel #rel:srel a)
+  (h:HS.mem) (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
+  :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
+         (ensures  (live h b <==> (live h (mgsub sub_rel b i len) /\ (exists h0 . {:pattern (live h0 b)} live h0 b))))
+         [SMTPatOr [
+             [SMTPat (live h (mgsub sub_rel b i len))];
+             [SMTPat (live h b); SMTPat (mgsub sub_rel b i len);]
+         ]]

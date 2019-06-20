@@ -347,7 +347,7 @@ val gsub_gsub (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel)
   (i1:U32.t) (len1:U32.t) (sub_rel1:srel a)
   (i2: U32.t) (len2: U32.t) (sub_rel2:srel a)
-  :Lemma (requires (U32.v i1 + U32.v len1 <= length b /\ 
+  :Lemma (requires (U32.v i1 + U32.v len1 <= length b /\
                     U32.v i2 + U32.v len2 <= U32.v len1))
          (ensures  (((compatible_sub b i1 len1 sub_rel1 /\  compatible_sub (mgsub sub_rel1 b i1 len1) i2 len2 sub_rel2) ==> compatible_sub b (U32.add i1 i2) len2 sub_rel2) /\
                     mgsub sub_rel2 (mgsub sub_rel1 b i1 len1) i2 len2 == mgsub sub_rel2 b (U32.add i1 i2) len2))
@@ -1459,7 +1459,7 @@ val modifies_loc_buffer_from_to_intro
     Seq.slice s (U32.v to) (length b) `Seq.equal` Seq.slice s' (U32.v to) (length b)
   ))
   (ensures (modifies (loc_union l (loc_buffer_from_to b from to)) h h'))
-  
+
 
 ///  A memory ``h`` does not contain address ``a`` in region ``r``, denoted
 ///  ``does_not_contain_addr h (r, a)``, only if, either region ``r`` is
