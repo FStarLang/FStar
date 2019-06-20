@@ -81,20 +81,6 @@ val upd (#a:Type) (b:array a) (i:U32.t{U32.v i < length b}) (v:a)
                                        modifies (loc_array b) h0 h1 /\
                                        as_seq h1 b == Seq.upd (as_seq h0 b) (U32.v i) v)
 
-
-// TODO: Do we want split instead
-val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
-  :Ghost (array a)
-         (requires (U32.v i + U32.v len <= length b))
-	 (ensures (fun _ -> True))
-
-
-val sub (#a:Type) (b:array a) (i:U32.t) (len:U32.t)
-  : Stack (array a)
-          (requires fun h -> U32.v i + U32.v len <= length b /\ live h b)
-          (ensures fun h0 y h1 -> h0 == h1 /\ y == gsub b i len)
-
-
 val alloc (#a:Type0) (init:a) (len:U32.t)
   : ST (array a)
        (requires fun _ -> U32.v len > 0)
