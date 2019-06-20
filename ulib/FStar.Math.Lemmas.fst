@@ -30,7 +30,7 @@ val lemma_eucl_div_bound: a:nat -> b:nat -> q:pos -> Lemma
   (ensures  (a + q * b < q * (b+1)))
 let lemma_eucl_div_bound a b q = ()
 
-val lemma_mult_le_left: a:pos -> b:pos -> c:pos -> Lemma
+val lemma_mult_le_left: a:nat -> b:int -> c:int -> Lemma
   (requires (b <= c))
   (ensures  (a * b <= a * c))
 let lemma_mult_le_left a b c = ()
