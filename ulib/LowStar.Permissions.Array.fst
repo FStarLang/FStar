@@ -730,34 +730,40 @@ let merge #a b b1 =
 
 (*** Sub-buffers *)
 
+
 val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
   :Ghost (array a)
          (requires (U32.v i + U32.v len <= length b))
 	 (ensures (fun b' ->
-	   forall(h: HS.mem). {:pattern (as_seq h b')}
+	   forall(h: HS.mem). {:pattern [as_seq h b'; as_perm_seq h b']}
 	   as_seq h b' == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) /\
 	   as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)
 	 ))
 
-// let gsub #a b i len =
-//     let b' = Array b.max_length b.content (U32.add b.idx i) len b.pid in
-//     let aux (h:HS.mem) : Lemma
-//       (as_seq h b' == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) /\
-//        as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)) =
-//       let sb' = as_seq h b' in
-//       let sbslice =  Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) in
-//       let spb' =  as_perm_seq h b' in
-//       let sbpslice =
-//       FStar.Seq.Base.lemma_eq_intro sb' sbslice
-//     in
-//     Classical.forall_intro aux;
-//     b'
+let gsub #a b i len =
+    let b' = Array b.max_length b.content (U32.add b.idx i) len b.pid in
+    let aux (h:HS.mem) : Lemma
+      (as_seq h b' == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) /\
+       as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)) =
+      let sb' = as_seq h b' in
+      let sbslice =  Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) in
+      let sbp' =  as_perm_seq h b' in
+      let sbpslice =  Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len) in
+      FStar.Seq.Base.lemma_eq_intro sb' sbslice;
+      FStar.Seq.Base.lemma_eq_intro sbp' sbpslice
+    in
+    Classical.forall_intro aux;
+    b'
 
-// val live_gsub (#a:Type0) (#rrel #rel:srel a)
-//   (h:HS.mem) (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t) (sub_rel:srel a)
-//   :Lemma (requires (U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel))
-//          (ensures  (live h b <==> (live h (mgsub sub_rel b i len) /\ (exists h0 . {:pattern (live h0 b)} live h0 b))))
-//          [SMTPatOr [
-//              [SMTPat (live h (mgsub sub_rel b i len))];
-//              [SMTPat (live h b); SMTPat (mgsub sub_rel b i len);]
-//          ]]
+val live_gsub (#a:Type0) (h:HS.mem) (b:array a) (i:U32.t) (len:U32.t)
+  :Lemma (requires (U32.v i + U32.v len <= length b))
+         (ensures  (live h b ==> (live h (gsub  b i len))))
+         [SMTPat (live h (gsub  b i len))]
+
+let live_gsub #a h b i len =
+  let b' = gsub b i len in
+  let f1 (_ : squash (live h b))  : Lemma (live h b') =
+    assert(forall (j:nat{j < length b'}). get_perm #a h b (U32.v i + j) >. 0.0R);
+    assert(forall (j:nat{j < length b'}). get_perm #a h b' j >. 0.0R)
+  in
+  FStar.Classical.impl_intro f1
