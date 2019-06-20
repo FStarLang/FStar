@@ -42,11 +42,11 @@ let half_permission (p: permission) : Tot (permission) =
 
 /// When merging resources, you have to sum the permissions.
 let summable_permissions (p1: permission) (p2: permission)
-  : Tot bool =
+  : GTot bool =
    p1 +. p2 <=. 1.0R
 
 let sum_permissions (p1: permission) (p2: permission{p1 +. p2 <=. 1.0R})
-  : Tot (permission) =
+  : GTot (permission) =
   (p1 +.  p2)
 
 /// On top of the permission as a number, we define a view defining what you can actually do with the resource given its
@@ -58,7 +58,7 @@ type permission_kind =
   | FULL (* Read-write access and deallocation *)
 
 /// Translates the permission and the ownership flag into a permission kind.
-let permission_to_kind (p: permission) (is_fully_owned: bool) : Tot permission_kind =
+let permission_to_kind (p: permission) (is_fully_owned: bool) : GTot permission_kind =
   if p = 0.0R then
     DEAD
   else if p <. 1.0R then
@@ -90,9 +90,9 @@ val perms_rec (a: Type0) : Type0
 
 /// Next are getter methods for each of these pieces of information
 
-val get_permission_from_pid: #a: Type0 -> p:perms_rec a -> pid:perm_id -> Tot permission
+val get_permission_from_pid: #a: Type0 -> p:perms_rec a -> pid:perm_id -> GTot permission
 
-let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) : Tot bool =
+let is_live_pid (#a: Type0) (v_perms: perms_rec a) (pid:perm_id) : GTot bool =
   get_permission_from_pid v_perms pid >. 0.0R
 
 type live_pid (#a: Type0) (v_perms: perms_rec a) = pid:perm_id{is_live_pid v_perms pid}
@@ -103,7 +103,7 @@ val get_current_max: #a:Type0 -> p:perms_rec a -> perm_id
 
 val is_fully_owned: #a: Type0 -> p: perms_rec a -> Tot bool
 
-let get_perm_kind_from_pid (#a: Type0) (perms: perms_rec a) (pid: perm_id) : Tot permission_kind =
+let get_perm_kind_from_pid (#a: Type0) (perms: perms_rec a) (pid: perm_id) : GTot permission_kind =
   let permission = get_permission_from_pid perms pid in
   let fully_owned = is_fully_owned perms in
   permission_to_kind permission fully_owned

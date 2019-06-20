@@ -604,6 +604,8 @@ val share_cell
     get_perm_pid h1 b (U32.v i) (Ghost.reveal pid) == P.half_permission (get_perm h0 b (U32.v i))
   ))
 
+#push-options "--z3rlimit 10"
+
 let share_cell #a b i pid =
   (**) let open HST in
   (**) let h0 = get() in
@@ -638,6 +640,8 @@ let share_cell #a b i pid =
   (**)        else lemma_greater_max_not_live_pid (Ghost.reveal perm_map) (Ghost.reveal pid)
   (**)      )
   (**)     )
+
+#pop-options
 
 val share_cells
   (#a:Type0)
