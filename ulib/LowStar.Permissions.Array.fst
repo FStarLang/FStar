@@ -126,6 +126,7 @@ let gsub_zero_length #a b = ()
 
 let msub #a b i len =
  Array b.max_length b.content (U32.add b.idx i) len b.pid
+
 (*** Definitions of locations for arrays with permissions ***)
 
 // We need to define the atomic locations cell per cell. We will then define loc_buffer as the union of aloc of cells
@@ -341,6 +342,7 @@ let modifies_array_elim #t b p h h' = admit()
 
 let loc_union_idem s = MG.loc_union_idem s
 let loc_union_comm s1 s2 = MG.loc_union_comm s1 s2
+let loc_union_assoc = MG.loc_union_assoc #ucell #cls
 
 let loc_union_idem_1 s1 s2 = MG.loc_union_assoc s1 s1 s2; loc_union_idem s1
 let loc_union_idem_2 s1 s2 = MG.loc_union_assoc s1 s2 s2
