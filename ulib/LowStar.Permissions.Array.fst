@@ -328,7 +328,143 @@ let lemma_disjoint_pid_disjoint_arrays (#a:Type0) (b1 b2:array a) : Lemma
   = lemma_disjoint_pid_disjoint_compute_array b1 b2 0;
     MG.loc_disjoint_sym (loc_array b2) (loc_array b1)
 
+let loc_addresses = MG.loc_addresses #ucell #cls
+let loc_regions = MG.loc_regions #ucell #cls
+
+let loc_not_unused_in = MG.loc_not_unused_in _
+
+let loc_unused_in = MG.loc_unused_in _
+
 let modifies (s:loc) (h0 h1:HS.mem) : GTot Type0 = MG.modifies s h0 h1
+
+let modifies_array_elim #t b p h h' = admit()
+
+let loc_union_idem s = MG.loc_union_idem s
+let loc_union_comm s1 s2 = MG.loc_union_comm s1 s2
+
+let loc_union_idem_1 s1 s2 = MG.loc_union_assoc s1 s1 s2; loc_union_idem s1
+let loc_union_idem_2 s1 s2 = MG.loc_union_assoc s1 s2 s2
+
+let loc_union_loc_none_l s = MG.loc_union_loc_none_l s
+let loc_union_loc_none_r s = MG.loc_union_loc_none_r s
+let loc_includes_refl s = MG.loc_includes_refl s
+let loc_includes_trans_backwards s1 s2 s3 = MG.loc_includes_trans s1 s2 s3
+let loc_includes_union_l s1 s2 s = MG.loc_includes_union_l s1 s2 s
+
+let loc_includes_union_r s s1 s2 =
+  Classical.move_requires (MG.loc_includes_union_r s s1) s2;
+  Classical.move_requires (MG.loc_includes_union_l s1 s2) s1;
+  Classical.move_requires (MG.loc_includes_union_l s1 s2) s2;
+  Classical.move_requires (MG.loc_includes_trans s (loc_union s1 s2)) s1;
+  Classical.move_requires (MG.loc_includes_trans s (loc_union s1 s2)) s2;
+  admit()
+  
+let loc_includes_none s = MG.loc_includes_none s
+
+let loc_includes_region_addresses preserve_liveness1 preserve_liveness2 s r a = 
+  MG.loc_includes_region_addresses #_ #cls preserve_liveness1 preserve_liveness2 s r a
+
+let loc_includes_region_addresses' preserve_liveness r a = ()
+let loc_includes_region_region preserve_liveness1 preserve_liveness2 s1 s2 =
+  MG.loc_includes_region_region #_ #cls preserve_liveness1 preserve_liveness2 s1 s2
+let loc_includes_region_region' preserve_liveness s = ()
+
+let loc_includes_adresses_ploc #a b preserve_liveness = admit()
+  // TODO: Something similar but with a recursive lemma on compute_loc_array
+  // MG.loc_includes_addresses_aloc #ploc #cls preserve_liveness (frame_of_pointer ptr) (Set.singleton (pointer_as_addr ptr))
+  //   #(pointer_as_addr ptr) (aloc_pointer ptr)
+
+
+let loc_includes_region_union_l preserve_liveness l s1 s2 =
+  MG.loc_includes_region_union_l preserve_liveness l s1 s2
+let loc_includes_addresses_addresses_1 preserve_liveness1 preserve_liveness2 r1 r2 s1 s2 =
+  MG.loc_includes_addresses_addresses cls preserve_liveness1 preserve_liveness2 r1 s1 s2
+let loc_includes_addresses_addresses_2 preserve_liveness r s = ()
+
+let loc_disjoint_sym' s1 s2 =
+  Classical.move_requires (MG.loc_disjoint_sym s1) s2;
+  Classical.move_requires (MG.loc_disjoint_sym s2) s1
+
+let loc_disjoint_none_r s = MG.loc_disjoint_none_r s
+
+let loc_disjoint_union_r' s s1 s2 =
+  admit();
+  Classical.move_requires (MG.loc_disjoint_union_r s s1) s2;
+  loc_includes_union_l s1 s2 s1;
+  loc_includes_union_l s1 s2 s2;
+  Classical.move_requires (MG.loc_disjoint_includes s (loc_union s1 s2) s) s1;
+  Classical.move_requires (MG.loc_disjoint_includes s (loc_union s1 s2) s) s2
+
+let loc_disjoint_includes p1 p2 p1' p2' = MG.loc_disjoint_includes p1 p2 p1' p2'
+
+let loc_disjoint_includes_r b1 b2 b2' = loc_disjoint_includes b1 b2 b1 b2'
+
+let loc_disjoint_addresses preserve_liveness1 preserve_liveness2 r1 r2 n1 n2 =
+  MG.loc_disjoint_addresses #_ #cls preserve_liveness1 preserve_liveness2 r1 r2 n1 n2
+
+let loc_disjoint_regions preserve_liveness1 preserve_liveness2 rs1 rs2 =
+  MG.loc_disjoint_regions #_ #cls preserve_liveness1 preserve_liveness2 rs1 rs2
+
+let modifies_live_region s h1 h2 r = MG.modifies_live_region s h1 h2 r
+
+let modifies_mreference_elim #t #pre b p h h' = MG.modifies_mreference_elim b p h h'
+let modifies_refl s h = MG.modifies_refl s h
+let modifies_loc_includes s1 h h' s2 = MG.modifies_loc_includes s1 h h' s2
+
+let address_liveness_insensitive_locs = MG.address_liveness_insensitive_locs _
+let region_liveness_insensitive_locs = MG.region_liveness_insensitive_locs _
+
+let address_liveness_insensitive_addresses r a = MG.loc_includes_address_liveness_insensitive_locs_addresses cls r a
+let region_liveness_insensitive_addresses preserve_liveness r a = 
+  MG.loc_includes_region_liveness_insensitive_locs_loc_addresses cls preserve_liveness r a
+let region_liveness_insensitive_regions rs = MG.loc_includes_region_liveness_insensitive_locs_loc_regions cls rs
+let region_liveness_insensitive_address_liveness_insensitive =
+  MG.loc_includes_region_liveness_insensitive_locs_address_liveness_insensitive_locs cls
+
+let modifies_liveness_insensitive_mreference l1 l2 h h' #t #pre x = MG.modifies_preserves_liveness l1 l2 h h' x
+let modifies_liveness_insensitive_mreference_weak l h h' #t #pre x = modifies_liveness_insensitive_mreference loc_none l h h' x
+let modifies_liveness_insensitive_region l1 l2 h h' x = MG.modifies_preserves_region_liveness l1 l2 h h' x
+let modifies_liveness_insensitive_region_mreference l1 l2 h h' #t #pre x = MG.modifies_preserves_region_liveness_reference l1 l2 h h' x
+let modifies_liveness_insensitive_region_weak l2 h h' x = modifies_liveness_insensitive_region loc_none l2 h h' x
+let modifies_liveness_insensitive_region_mreference_weak l2 h h' #t #pre x = modifies_liveness_insensitive_region_mreference loc_none l2 h h' x
+
+let modifies_trans = MG.modifies_trans
+
+let modifies_trans_linear l l_goal h1 h2 h3 = modifies_trans l h1 h2 l_goal h3
+
+let no_upd_fresh_region r l h0 h1 = MG.no_upd_fresh_region r l h0 h1
+let new_region_modifies m0 r0 col = MG.new_region_modifies cls m0 r0 col
+
+let modifies_ralloc_post #a #rel i init h x h' = MG.modifies_ralloc_post #_ #cls i init h x h'
+let modifies_free #a #rel r m = MG.modifies_free #_ #cls r m
+
+let modifies_upd #t #pre r v h = MG.modifies_upd #_ #cls r v h
+
+let fresh_frame_loc_not_unused_in_disjoint h0 h1 = MG.not_live_region_loc_not_unused_in_disjoint cls h0 (HS.get_tip h1)
+
+let mreference_live_loc_not_unused_in #t #pre h r = MG.mreference_live_loc_not_unused_in cls h r
+let mreference_unused_in_loc_unused_in #t #pre h r = MG.mreference_unused_in_loc_unused_in cls h r
+
+let unused_in_not_unused_in_disjoint_2 l1 l2 l1' l2' h =   
+  MG.loc_includes_trans (loc_unused_in h) l1 l1' ;
+  MG.loc_includes_trans (loc_not_unused_in h) l2 l2'  ;
+  MG.loc_unused_in_not_unused_in_disjoint cls h ;
+  MG.loc_disjoint_includes (loc_unused_in h) (loc_not_unused_in h) l1' l2'
+
+let modifies_loc_unused_in l h1 h2 l' =
+  modifies_loc_includes (address_liveness_insensitive_locs) h1 h2 l;
+  MG.modifies_address_liveness_insensitive_unused_in cls h1 h2;
+  MG.loc_includes_trans (loc_unused_in h1) (loc_unused_in h2) l'
+
+let ralloc_post_fresh_loc #a #rel i init m0 x m1 = ()
+let fresh_frame_modifies h0 h1 = MG.fresh_frame_modifies cls h0 h1
+let popped_modifies h0 h1 = MG.popped_modifies cls h0 h1
+
+let modifies_only_not_unused_in = MG.modifies_only_not_unused_in #ucell #cls
+let modifies_remove_new_locs l_fresh l_aux l_goal h1 h2 h3 = modifies_only_not_unused_in l_goal h1 h3
+let modifies_remove_fresh_frame h1 h2 h3 l =
+   MG.loc_regions_unused_in cls h1 (HS.mod_set (Set.singleton (HS.get_tip h2)));
+   modifies_only_not_unused_in l h1 h3
 
 let live_same_arrays_equal_types
   (#a1: Type0)
