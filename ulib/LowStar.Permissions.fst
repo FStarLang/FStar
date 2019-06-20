@@ -64,15 +64,8 @@ let rec same_prefix_same_sum_until(#a: Type0) (p1 p2:perm_id -> permission & a) 
   (ensures sum_until p1 n = sum_until p2 n)
   = if n = 0 then () else same_prefix_same_sum_until p1 p2 (n-1)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 let rec sum_until_change
-=======
-private let rec sum_until_change
->>>>>>> Abstracted away LowStar.Permissions
-=======
-let rec sum_until_change
->>>>>>> Nice interface for LowStar.Permissions
   (#a: Type0)
   (p1 p2:perm_id -> permission & a)
   (n:nat)
