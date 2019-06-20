@@ -19,8 +19,7 @@ open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-open FStar.ModifiesGen
-open LowStar.Permissions.References
+open LowStar.Permissions.Array
 
 (* Views and resources *)
 

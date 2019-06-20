@@ -221,6 +221,11 @@ val loc_union_comm (s1 s2: loc) : Lemma
   (loc_union s1 s2 == loc_union s2 s1)
   [SMTPat (loc_union s1 s2)]
 
+val loc_union_assoc
+  (s1 s2 s3: loc)
+: Lemma
+  (loc_union s1 (loc_union s2 s3) == loc_union (loc_union s1 s2) s3)
+
 val loc_union_idem_1 (s1 s2: loc) : Lemma
   (loc_union s1 (loc_union s1 s2) == loc_union s1 s2)
   [SMTPat (loc_union s1 (loc_union s1 s2))]
