@@ -57,16 +57,16 @@ val as_addr (#a:Type0) (b:array a) : GTot nat
 
 (*** Definitions of locations for arrays with permissions ***)
 
-val bloc:Type0
+val loc:Type0
 
-val loc_none: bloc
-val loc_union (s1 s2: bloc) : GTot bloc
-val loc_disjoint (s1 s2: bloc) : GTot Type0
-val loc_includes (s1 s2: bloc) : GTot Type0
+val loc_none: loc
+val loc_union (s1 s2: loc) : GTot loc
+val loc_disjoint (s1 s2: loc) : GTot Type0
+val loc_includes (s1 s2: loc) : GTot Type0
 
-val loc_array (#a:Type0) (b:array a) : GTot bloc
+val loc_array (#a:Type0) (b:array a) : GTot loc
 
-val modifies (s: bloc) (h1 h2: HS.mem) : GTot Type0
+val modifies (s: loc) (h1 h2: HS.mem) : GTot Type0
 
 (*** Stateful operations implementing the ghost specifications ***)
 
