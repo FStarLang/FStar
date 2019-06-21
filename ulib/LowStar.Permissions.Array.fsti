@@ -303,7 +303,7 @@ val loc_includes_region_region'
   (loc_includes (loc_regions false s) (loc_regions preserve_liveness s))
   [SMTPat (loc_regions preserve_liveness s)]
 
-val loc_includes_adresses_ploc (#a: Type) (b: array a) (preserve_liveness: bool)
+val loc_includes_adresses_loc_array (#a: Type) (b: array a) (preserve_liveness: bool)
 : Lemma (
     loc_includes (loc_addresses preserve_liveness (frameOf b) (Set.singleton (as_addr b)))
       (loc_array b)
