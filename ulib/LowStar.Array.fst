@@ -1,4 +1,4 @@
-module LowStar.Permissions.Array
+module LowStar.Array
 
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
@@ -9,9 +9,18 @@ module U32 = FStar.UInt32
 module MG = FStar.ModifiesGen
 
 open LowStar.Permissions
-open LowStar.Permissions.References
 
 open FStar.Real
+
+type value_with_perms (a: Type0) = vp : (a & Ghost.erased (perms_rec a)){
+  let (v, p) = vp in
+  forall (pid:live_pid (Ghost.reveal p)). get_snapshot_from_pid (Ghost.reveal p) pid == v
+}
+
+type with_perm (a: Type) = {
+  wp_v: a;
+  wp_perm: permission;
+}
 
 noeq type array (a:Type0) :Type0 =
   | Array:
