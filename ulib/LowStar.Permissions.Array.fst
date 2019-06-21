@@ -86,6 +86,10 @@ let mergeable_comm (#a: Type0) (b1 b2: array a): Lemma
 let frameOf (#a:Type0) (b:array a) : Tot HS.rid = HS.frameOf b.content
 let as_addr (#a:Type0) (b:array a) : GTot nat = HS.as_addr b.content
 
+let freeable #a b = b.idx = 0ul /\ b.max_length = b.length /\
+  HS.is_mm b.content /\ HST.is_eternal_region (frameOf b)
+
+
 (*** Sub-buffers *)
 
 
@@ -360,10 +364,10 @@ let loc_includes_union_r s s1 s2 =
   Classical.move_requires (MG.loc_includes_trans s (loc_union s1 s2)) s1;
   Classical.move_requires (MG.loc_includes_trans s (loc_union s1 s2)) s2;
   admit()
-  
+
 let loc_includes_none s = MG.loc_includes_none s
 
-let loc_includes_region_addresses preserve_liveness1 preserve_liveness2 s r a = 
+let loc_includes_region_addresses preserve_liveness1 preserve_liveness2 s r a =
   MG.loc_includes_region_addresses #_ #cls preserve_liveness1 preserve_liveness2 s r a
 
 let loc_includes_region_addresses' preserve_liveness r a = ()
@@ -417,7 +421,7 @@ let address_liveness_insensitive_locs = MG.address_liveness_insensitive_locs _
 let region_liveness_insensitive_locs = MG.region_liveness_insensitive_locs _
 
 let address_liveness_insensitive_addresses r a = MG.loc_includes_address_liveness_insensitive_locs_addresses cls r a
-let region_liveness_insensitive_addresses preserve_liveness r a = 
+let region_liveness_insensitive_addresses preserve_liveness r a =
   MG.loc_includes_region_liveness_insensitive_locs_loc_addresses cls preserve_liveness r a
 let region_liveness_insensitive_regions rs = MG.loc_includes_region_liveness_insensitive_locs_loc_regions cls rs
 let region_liveness_insensitive_address_liveness_insensitive =
@@ -447,7 +451,7 @@ let fresh_frame_loc_not_unused_in_disjoint h0 h1 = MG.not_live_region_loc_not_un
 let mreference_live_loc_not_unused_in #t #pre h r = MG.mreference_live_loc_not_unused_in cls h r
 let mreference_unused_in_loc_unused_in #t #pre h r = MG.mreference_unused_in_loc_unused_in cls h r
 
-let unused_in_not_unused_in_disjoint_2 l1 l2 l1' l2' h =   
+let unused_in_not_unused_in_disjoint_2 l1 l2 l1' l2' h =
   MG.loc_includes_trans (loc_unused_in h) l1 l1' ;
   MG.loc_includes_trans (loc_not_unused_in h) l2 l2'  ;
   MG.loc_unused_in_not_unused_in_disjoint cls h ;
@@ -578,6 +582,20 @@ let alloc #a init len =
   let b = Array len content 0ul len (snd perm_map_pid) in
   (**) assert (Seq.equal (as_seq h1 b) (Seq.create (U32.v len) init));
   b
+
+let free #a b =
+  (**) let h0 = HST.get () in
+  HST.rfree b.content;
+  (**) let h1 = HST.get () in
+  (**) let r = frameOf b in
+  (**) let n = as_addr b in
+  (**) modifies_free #(Seq.lseq (value_with_perms a) (U32.v b.max_length))
+  (**)   #(Heap.trivial_preorder (Seq.lseq (value_with_perms a) (U32.v b.max_length)))
+  (**)   b.content h0
+  (**) ;
+  (**) assert(modifies (loc_freed_mreference b.content) h0 h1);
+  (**) assume(modifies (loc_array b) h0 h1);
+  ()
 
 val share_cell
   (#a:Type0)
