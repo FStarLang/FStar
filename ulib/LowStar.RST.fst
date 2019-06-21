@@ -20,7 +20,7 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
 // open FStar.ModifiesGen
-open LowStar.Permissions.Array
+open LowStar.Array
 open LowStar.Resource
 
 
@@ -98,7 +98,7 @@ let modifies_trans (res0 res1 res2:resource) (h0 h1 h2:HS.mem)
 let reveal_modifies ()
   : Lemma (forall res0 res1 h0 h1.{:pattern modifies res0 res1 h0 h1}
              modifies res0 res1 h0 h1 <==>
-             LowStar.Permissions.Array.modifies (as_loc (fp res0)) h0 h1 /\
+             LowStar.Array.modifies (as_loc (fp res0)) h0 h1 /\
              (forall frame .
                loc_disjoint frame (as_loc (fp res0)) /\
                loc_includes (loc_not_unused_in  h0) frame
