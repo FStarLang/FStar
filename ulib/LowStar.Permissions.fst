@@ -16,7 +16,7 @@ let get_permission_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : Tot 
 let get_snapshot_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : Tot a =
   let (_, snap) = p.perm_map pid in snap
 
-let is_live_pid' (#a: Type0) (v_perms: perms_rec' a) (pid:perm_id) : Tot bool =
+let is_live_pid' (#a: Type0) (v_perms: perms_rec' a) (pid:perm_id) : GTot bool =
   get_permission_from_pid' v_perms pid >. 0.0R
 
 type live_pid' (#a: Type0) (v_perms: perms_rec' a) = pid:perm_id{is_live_pid' v_perms pid}
@@ -24,7 +24,7 @@ type live_pid' (#a: Type0) (v_perms: perms_rec' a) = pid:perm_id{is_live_pid' v_
 let is_fully_owned' (#a: Type0) (p: perms_rec' a) : Tot bool =
   p.fully_owned
 
-let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : Tot real =
+let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : GTot real =
   if n = 0 then 0.0R
   else
     let (x, _) = f n in x +. sum_until f (n - 1)
