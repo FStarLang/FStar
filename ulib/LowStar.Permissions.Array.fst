@@ -15,10 +15,10 @@ open FStar.Real
 
 noeq type array (a:Type0) :Type0 =
   | Array:
-    max_length:U32.t ->
+    max_length:U32.t{U32.v max_length > 0} ->
     content:HST.reference (Seq.lseq (value_with_perms a) (U32.v max_length)) ->
     idx:U32.t ->
-    length:U32.t{U32.v idx + U32.v length <= U32.v max_length} ->
+    length:U32.t{U32.v idx + U32.v length <= U32.v max_length /\ U32.v length > 0} ->
     pid:Ghost.erased perm_id ->
     array a
 
@@ -342,7 +342,40 @@ let loc_unused_in = MG.loc_unused_in _
 
 let modifies (s:loc) (h0 h1:HS.mem) : GTot Type0 = MG.modifies s h0 h1
 
-let modifies_array_elim #t b p h h' = admit()
+let lemma_disjoint_loc_from_array_disjoint_from_cells (#t: Type) (b: array t) (p: loc)
+  : Lemma (requires (loc_disjoint (loc_array b) p))
+    (ensures (forall(i:nat{i < vlength b}). loc_disjoint (loc_cell b i) p))
+  =
+  let aux (i:nat{i < vlength b}) : Lemma (loc_disjoint (loc_cell b i) p) =
+    lemma_includes_loc_cell_loc_array b i;
+    MG.loc_includes_refl p;
+    MG.loc_disjoint_includes
+      (loc_array b) p
+      (loc_cell b i) p
+  in
+  Classical.forall_intro aux
+
+let modifies_array_elim #t b p h h' =
+  lemma_disjoint_loc_from_array_disjoint_from_cells #t b p;
+  assert(forall(i:nat{i < vlength b}). loc_disjoint (loc_cell b i) p);
+  let aux (i:nat{i < vlength b}) : Lemma (ensures (ucell_preserved #(frameOf b) #(as_addr b) (aloc_cell b i) h h')) =
+    MG.modifies_aloc_elim #ucell #cls #(frameOf b) #(as_addr b)
+      (aloc_cell b i) p h h'
+  in
+  Classical.forall_intro aux;
+  assert(forall(i:nat{i < vlength b}). ucell_preserved #(frameOf b) #(as_addr b) (aloc_cell b i) h h');
+  assert(forall(i:nat{i < vlength b}). sel h b i == sel h' b i);
+  assert(forall(i:nat{i < vlength b}). (sel h b i).wp_v == Seq.index (as_seq h b) i /\ (sel h' b i).wp_v == Seq.index (as_seq h' b) i);
+  assert(forall(i:nat{i < vlength b}).
+    (sel h b i).wp_perm == Seq.index (as_perm_seq h b) i /\
+    (sel h' b i).wp_perm == Seq.index (as_perm_seq h' b) i
+  );
+  Seq.lemma_eq_intro (as_seq h b) (as_seq h' b);
+  Seq.lemma_eq_intro (as_perm_seq h b) (as_perm_seq h' b);
+  assert(as_seq h b  == as_seq h' b);
+  assert(as_perm_seq h b  == as_perm_seq h' b);
+  assert((forall (i:nat{i < vlength b}). live_cell h' b i /\ HS.contains h' b.content));
+  assert(HS.contains h' b.content)
 
 let loc_union_idem s = MG.loc_union_idem s
 let loc_union_comm s1 s2 = MG.loc_union_comm s1 s2
