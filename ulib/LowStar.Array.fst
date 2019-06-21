@@ -499,6 +499,8 @@ let modifies_liveness_insensitive_region_mreference l1 l2 h h' #t #pre x = MG.mo
 let modifies_liveness_insensitive_region_weak l2 h h' x = modifies_liveness_insensitive_region loc_none l2 h h' x
 let modifies_liveness_insensitive_region_mreference_weak l2 h h' #t #pre x = modifies_liveness_insensitive_region_mreference loc_none l2 h h' x
 
+let modifies_address_liveness_insensitive_unused_in h h' = MG.modifies_address_liveness_insensitive_unused_in cls h h'
+
 let modifies_trans = MG.modifies_trans
 
 let modifies_trans_linear l l_goal h1 h2 h3 = modifies_trans l h1 h2 l_goal h3
@@ -585,14 +587,13 @@ let upd #a b i v =
   (**) let open HST in
   (**) let h0 = get() in
   let s = ! b.content in
-  let sb0 = Seq.slice s (U32.v b.idx) (U32.v b.idx + U32.v b.length) in
   let (v_init, perm_map) = Seq.index s (U32.v b.idx + U32.v i) in
   (**) assert (writeable_cell h0 b (U32.v i));
-  let sb1 = Seq.upd sb0 (U32.v i) (v, Ghost.hide (change_snapshot #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) v)) in
-  let s1 = Seq.replace_subseq s (U32.v b.idx) (U32.v b.idx + U32.v b.length) sb1 in
+  let s1 = Seq.upd s (U32.v b.idx + U32.v i) (v, Ghost.hide (change_snapshot #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) v)) in
   b.content := s1;
   (**) let h1 = get() in
   (**) assert (as_seq h1 b `Seq.equal` Seq.upd (as_seq h0 b) (U32.v i) v);
+  (**) assert (as_perm_seq h1 b `Seq.equal` as_perm_seq h0 b);
   (**) let r = frameOf b in
   (**) let n = as_addr b in
   (**) MG.modifies_aloc_intro

@@ -11,7 +11,7 @@ val array (a:Type0): Type0
 (*** Definitions of Ghost operations and predicates on arrays ***)
 
 val length (#a:Type) (b:array a) : l:U32.t{U32.v l > 0}
-let vlength (#a:Type) (b:array a) : nat = U32.v (length b)
+let vlength (#a:Type) (b:array a) : pos = U32.v (length b)
 
 val as_seq (#a:Type) (h:HS.mem) (b:array a) : GTot (s:Seq.seq a{Seq.length s == vlength b})
 
@@ -211,8 +211,10 @@ val modifies_array_elim
   ))
   [SMTPatOr [
     [ SMTPat (modifies p h h'); SMTPat (as_seq h b) ];
+    [ SMTPat (modifies p h h'); SMTPat (as_perm_seq h b) ];
     [ SMTPat (modifies p h h'); SMTPat (live h b) ];
     [ SMTPat (modifies p h h'); SMTPat (as_seq h' b) ];
+    [ SMTPat (modifies p h h'); SMTPat (as_perm_seq h' b) ];
     [ SMTPat (modifies p h h'); SMTPat (live h' b) ];
   ]]
 
@@ -542,6 +544,11 @@ val modifies_liveness_insensitive_region_mreference_weak
             [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h' (HS.frameOf x))];
           ]]
 
+val modifies_address_liveness_insensitive_unused_in (h h' : HS.mem)
+: Lemma
+  (requires (modifies (address_liveness_insensitive_locs) h h'))
+  (ensures (loc_not_unused_in h' `loc_includes` loc_not_unused_in h /\ loc_unused_in h `loc_includes` loc_unused_in h'))
+
 val modifies_trans
   (s12: loc)
   (h1 h2: HS.mem)
@@ -711,17 +718,20 @@ val index (#a:Type) (b:array a) (i:U32.t{U32.v i < vlength b})
   : Stack a (requires fun h -> live h b)
             (ensures fun h0 y h1 -> h0 == h1 /\ y == get h0 b (U32.v i))
 
-val upd (#a:Type) (b:array a) (i:U32.t{U32.v i < vlength b}) (v:a)
-    : Stack unit (requires fun h -> writeable_cell h b (U32.v i))
-                 (ensures fun h0 _ h1 ->  writeable_cell h1 b (U32.v i) /\
-                                       modifies (loc_array b) h0 h1 /\
-                                       as_seq h1 b == Seq.upd (as_seq h0 b) (U32.v i) v)
+val upd (#a:Type) (b:array a) (i:U32.t{U32.v i < vlength b}) (v:a) : Stack unit
+  (requires fun h -> writeable_cell h b (U32.v i) /\ live h b)
+  (ensures fun h0 _ h1 ->  writeable_cell h1 b (U32.v i) /\
+    modifies (loc_array b) h0 h1 /\
+    as_seq h1 b == Seq.upd (as_seq h0 b) (U32.v i) v /\
+    as_perm_seq h1 b == as_perm_seq h0 b
+  )
 
 val alloc (#a:Type0) (init:a) (len:U32.t)
   : ST (array a)
        (requires fun _ -> U32.v len > 0)
        (ensures fun h0 b h1 ->
          modifies loc_none h0 h1 /\
+         fresh_loc (loc_array b) h0 h1 /\
          writeable h1 b /\
          freeable b /\
          as_seq h1 b == Seq.create (U32.v len) init)
