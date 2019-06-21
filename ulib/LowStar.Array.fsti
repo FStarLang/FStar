@@ -1,4 +1,4 @@
-module LowStar.Permissions.Array
+module LowStar.Array
 
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
