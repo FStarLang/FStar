@@ -396,7 +396,8 @@ let loc_includes_union_r s s1 s2 =
   Classical.move_requires (MG.loc_includes_union_l s1 s2) s2;
   Classical.move_requires (MG.loc_includes_trans s (loc_union s1 s2)) s1;
   Classical.move_requires (MG.loc_includes_trans s (loc_union s1 s2)) s2;
-  admit()
+  MG.loc_includes_refl s1;
+  MG.loc_includes_refl s2
 
 let loc_includes_none s = MG.loc_includes_none s
 
@@ -408,16 +409,38 @@ let loc_includes_region_region preserve_liveness1 preserve_liveness2 s1 s2 =
   MG.loc_includes_region_region #_ #cls preserve_liveness1 preserve_liveness2 s1 s2
 let loc_includes_region_region' preserve_liveness s = ()
 
-let loc_includes_adresses_ploc #a b preserve_liveness = admit()
-  // TODO: Something similar but with a recursive lemma on compute_loc_array
-  // MG.loc_includes_addresses_aloc #ploc #cls preserve_liveness (frame_of_pointer ptr) (Set.singleton (pointer_as_addr ptr))
-  //   #(pointer_as_addr ptr) (aloc_pointer ptr)
+let loc_includes_adresses_loc_cell (#a: Type) (b: array a) (preserve_liveness: bool) (i:nat{i < vlength b})
+  : Lemma (
+    loc_includes (loc_addresses preserve_liveness (frameOf b) (Set.singleton (as_addr b)))
+      (loc_cell b i)
+  )
+= MG.loc_includes_addresses_aloc #ucell #cls preserve_liveness (frameOf b) (Set.singleton (as_addr b))
+    #(as_addr b) (aloc_cell b i)
 
+let rec loc_includes_adresses_loc_array_rec (#a: Type) (b: array a) (preserve_liveness: bool) (i:nat{i <= vlength b})
+  : Lemma (requires True) (ensures (
+    loc_includes (loc_addresses preserve_liveness (frameOf b) (Set.singleton (as_addr b)))
+      (compute_loc_array b i)
+   )) (decreases (vlength b - i))
+= if i = vlength b then
+    MG.loc_includes_none (loc_addresses preserve_liveness (frameOf b) (Set.singleton (as_addr b)))
+  else begin
+  loc_includes_adresses_loc_cell b preserve_liveness i;
+  loc_includes_adresses_loc_array_rec b preserve_liveness (i+1);
+  assert(loc_includes (loc_addresses preserve_liveness (frameOf b) (Set.singleton (as_addr b)))
+    ((loc_cell b i) `loc_union` (compute_loc_array b (i + 1)))
+  )
+  end
+
+let loc_includes_adresses_loc_array #a b preserve_liveness =
+  loc_includes_adresses_loc_array_rec b preserve_liveness 0
 
 let loc_includes_region_union_l preserve_liveness l s1 s2 =
   MG.loc_includes_region_union_l preserve_liveness l s1 s2
+
 let loc_includes_addresses_addresses_1 preserve_liveness1 preserve_liveness2 r1 r2 s1 s2 =
   MG.loc_includes_addresses_addresses cls preserve_liveness1 preserve_liveness2 r1 s1 s2
+
 let loc_includes_addresses_addresses_2 preserve_liveness r s = ()
 
 let loc_disjoint_sym' s1 s2 =
@@ -427,12 +450,12 @@ let loc_disjoint_sym' s1 s2 =
 let loc_disjoint_none_r s = MG.loc_disjoint_none_r s
 
 let loc_disjoint_union_r' s s1 s2 =
-  admit();
   Classical.move_requires (MG.loc_disjoint_union_r s s1) s2;
   loc_includes_union_l s1 s2 s1;
   loc_includes_union_l s1 s2 s2;
   Classical.move_requires (MG.loc_disjoint_includes s (loc_union s1 s2) s) s1;
-  Classical.move_requires (MG.loc_disjoint_includes s (loc_union s1 s2) s) s2
+  Classical.move_requires (MG.loc_disjoint_includes s (loc_union s1 s2) s) s2;
+  MG.loc_includes_refl s
 
 let loc_disjoint_includes p1 p2 p1' p2' = MG.loc_disjoint_includes p1 p2 p1' p2'
 
