@@ -56,6 +56,9 @@ let summable_permissions (#a: Type0) (h: HS.mem) (b1 b2: array a) : Type0 =
 val frameOf (#a:Type0) (b:array a) : Tot HS.rid
 val as_addr (#a:Type0) (b:array a) : GTot nat
 
+val freeable (#a: Type) (b: array a) : GTot Type0
+
+
 (*** Sub-bufers *)
 
 val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
@@ -719,7 +722,17 @@ val alloc (#a:Type0) (init:a) (len:U32.t)
        (ensures fun h0 b h1 ->
          modifies loc_none h0 h1 /\
          writeable h1 b /\
+         freeable b /\
          as_seq h1 b == Seq.create (U32.v len) init)
+
+val free (#a: Type) (b: array a) : HST.ST unit
+  (requires (fun h0 -> writeable h0 b /\ live  h0 b /\ freeable b))
+  (ensures (fun h0 _ h1 ->
+    Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\
+    (HS.get_tip h1) == (HS.get_tip h0) /\
+    modifies (loc_array b) h0 h1 /\
+    HS.live_region h1 (frameOf b)
+  ))
 
 val share (#a:Type0) (b:array a) : Stack (array a)
   (requires fun h0 -> live h0 b /\ vlength b > 0)
