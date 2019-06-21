@@ -10,7 +10,7 @@ val array (a:Type0): Type0
 
 (*** Definitions of Ghost operations and predicates on arrays ***)
 
-val length (#a:Type) (b:array a) : U32.t
+val length (#a:Type) (b:array a) : l:U32.t{U32.v l > 0}
 let vlength (#a:Type) (b:array a) : nat = U32.v (length b)
 
 val as_seq (#a:Type) (h:HS.mem) (b:array a) : GTot (s:Seq.seq a{Seq.length s == vlength b})
@@ -61,7 +61,7 @@ val freeable (#a: Type) (b: array a) : GTot Type0
 
 (*** Sub-bufers *)
 
-val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
+val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t{U32.v len > 0})
   :Ghost (array a)
          (requires (U32.v i + U32.v len <= vlength b))
 	 (ensures (fun b' ->
@@ -70,12 +70,12 @@ val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
 	   as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)
 	 ))
 
-val live_gsub (#a:Type0) (h:HS.mem) (b:array a) (i:U32.t) (len:U32.t)
+val live_gsub (#a:Type0) (h:HS.mem) (b:array a) (i:U32.t) (len:U32.t{U32.v len > 0})
   :Lemma (requires (U32.v i + U32.v len <= vlength b))
          (ensures  (live h b ==> (live h (gsub  b i len))))
          [SMTPat (live h (gsub  b i len))]
 
-val len_gsub (#a:Type0) (b:array a) (i:U32.t) (len':U32.t)
+val len_gsub (#a:Type0) (b:array a) (i:U32.t) (len':U32.t{U32.v len' > 0})
   :Lemma (requires (U32.v i + U32.v len' <= vlength b))
          (ensures (length (gsub b i len') == len'))
          [SMTPatOr [
@@ -83,17 +83,17 @@ val len_gsub (#a:Type0) (b:array a) (i:U32.t) (len':U32.t)
              [SMTPat (length (gsub b i len'))];
          ]]
 
-val frameOf_gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
+val frameOf_gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t{U32.v len > 0})
   :Lemma (requires (U32.v i + U32.v len <= vlength b))
          (ensures (frameOf (gsub b i len) == frameOf b))
   [SMTPat (frameOf (gsub  b i len))]
 
-val as_addr_gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
+val as_addr_gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t{U32.v len > 0})
   :Lemma (requires (U32.v i + U32.v len <= vlength b))
          (ensures (as_addr (gsub b i len) == as_addr b))
          [SMTPat (as_addr (gsub b i len))]
 
-val gsub_inj (#a:Type0) (b1 b2:array a) (i1 i2:U32.t) (len1 len2:U32.t)
+val gsub_inj (#a:Type0) (b1 b2:array a) (i1 i2:U32.t) (len1:U32.t{U32.v len1 > 0}) (len2:U32.t{U32.v len2 > 0})
   :Lemma (requires (U32.v i1 + U32.v len1 <= vlength b1 /\
                     U32.v i2 + U32.v len2 <= vlength b2 /\
 		    gsub b1 i1 len1 === gsub b2 i2 len2))
@@ -101,8 +101,8 @@ val gsub_inj (#a:Type0) (b1 b2:array a) (i1 i2:U32.t) (len1 len2:U32.t)
 
 val gsub_gsub (#a:Type0)
   (b:array a)
-  (i1:U32.t) (len1:U32.t)
-  (i2: U32.t) (len2: U32.t)
+  (i1:U32.t) (len1:U32.t{U32.v len1 > 0})
+  (i2: U32.t)  (len2:U32.t{U32.v len2 > 0})
   :Lemma (requires (U32.v i1 + U32.v len1 <= vlength b /\
                     U32.v i2 + U32.v len2 <= U32.v len1))
          (ensures  (gsub (gsub b i1 len1) i2 len2 == gsub b (U32.add i1 i2) len2))
@@ -111,7 +111,7 @@ val gsub_gsub (#a:Type0)
 val gsub_zero_length (#a:Type0) (b:array a)
   :Lemma (b == gsub  b 0ul (length b))
 
-val msub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t)
+val msub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t{U32.v len > 0})
   : Stack (array a)
     (requires (fun h ->
       U32.v i + U32.v len <= vlength b /\ live h b
@@ -206,6 +206,7 @@ val modifies_array_elim
   ))
   (ensures (
     as_seq h b  == as_seq h' b /\
+    as_perm_seq h b == as_perm_seq h' b /\
     live h' b
   ))
   [SMTPatOr [
