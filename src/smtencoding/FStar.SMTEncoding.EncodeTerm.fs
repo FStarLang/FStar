@@ -1155,6 +1155,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                            else body
                 in
                 let body, decls' = encode_term body envbody in
+                let is_pure = U.is_pure_effect rc.residual_effect in
                 let arrow_t_opt, decls'' =
                   match codomain_eff rc with
                   | None   -> None, []
@@ -1194,7 +1195,17 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   let app = mk_Apply f vars in
                   let typing_f =
                     match arrow_t_opt with
-                    | None -> [] //no typing axiom for this lambda, because we don't have enough info
+                    | None ->
+                      let tot_fun_ax =
+                        let ax = (isTotFun_axioms t0.pos f vars (vars |> List.map (fun _ -> mkTrue)) is_pure) in
+                        match cvars with
+                        | [] -> ax
+                        | _ -> mkForall t0.pos ([[f]], cvars, ax)
+                      in
+                      let a_name = "tot_fun_"^fsym in
+                      [Util.mkAssume(tot_fun_ax, Some a_name, a_name)]
+                      //no typing axiom for this lambda, because we don't have enough info
+                      //but we at least mark its partial applications as total (cf. #1750)
                     | Some t ->
                       let f_has_t = mk_HasTypeWithFuel None f t in
                       let a_name = "typing_"^fsym in
