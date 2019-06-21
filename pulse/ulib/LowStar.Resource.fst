@@ -19,7 +19,7 @@ open FStar.HyperStack.ST
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-open LowStar.Permissions.Array
+open LowStar.Array
 
 (* Views and resources *)
 
