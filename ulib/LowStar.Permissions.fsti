@@ -127,6 +127,7 @@ val new_value_perms: #a: Type0 -> init: a -> fully_owned: bool -> Pure (value_pe
 
 /// Sharing a particular ``pid`` halves the permission associated with it and returns a new ``perm_id``
 /// containing the other half.
+noextract
 val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid v_perms -> Pure (value_perms a v & perm_id)
   (requires (True)) (ensures (fun (new_v_perms, new_pid) ->
     new_pid <> pid /\
@@ -140,6 +141,7 @@ val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid
 
 /// Sharing a particular ``pid`` halves the permission associated with it and returns a new
 /// map containing the other half in the given ``new_pid``
+noextract
 val share_perms_with_pid:
   #a: Type0 ->
   #v: a ->
@@ -161,6 +163,7 @@ val share_perms_with_pid:
 
 /// When merginin two ``pid``, the first one will receive the sum of both permissions while the second
 /// ``pid`` will be deactivated with a zeroed permission.
+noextract
 val merge_perms:
   #a: Type0 ->
   #v: a ->
@@ -199,6 +202,7 @@ val lemma_greater_max_not_live_pid (#a:Type0) (v_perms:perms_rec a) (pid:perm_id
 
 /// Once you have full permission with a ``pid``, you can change the value of the snapshot associated with it.
 /// This ensures that read-only permissions cannot change the value of the snapshot.
+noextract
 val change_snapshot:
   #a: Type0 ->
   #v: a ->
