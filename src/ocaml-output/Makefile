@@ -243,6 +243,8 @@ package: all
 	$(INSTALL_EXEC) -m 755 $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
 	@# Then the standard library.
 	$(call fexport,ulib)
+	mkdir -p $(PREFIX)/src/ocaml-output/
+	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
 	@# Then the rest of the static files.
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
