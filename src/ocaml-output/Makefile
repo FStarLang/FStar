@@ -245,6 +245,7 @@ package: all
 	$(call fexport,ulib)
 	mkdir -p $(PREFIX)/src/ocaml-output/
 	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
+	cp ../../_tags $(PREFIX)/
 	@# Then the rest of the static files.
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
