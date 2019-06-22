@@ -110,10 +110,28 @@ bin/z3 --version
 diag "-- Verify micro benchmarks --"
 make -C examples/micro-benchmarks
 if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for micro benchmarks - make returned $?"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for micro benchmarks"
+fi
+
+diag "-- Verify ulib --"
+make -j6 -C ulib
+if [ $? -ne 0 ]; then
   echo -e "* ${RED}FAIL!${NC} for ulib - make returned $?"
   exit 1
 else
   echo -e "* ${GREEN}PASSED!${NC} for ulib"
+fi
+
+diag "-- Rebuilding ulib/ml (to make sure it works) --"
+make -C ulib/ml clean && make -C ulib/ml
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for ulib/ml - make returned $?"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for ulib/ml"
 fi
 
 diag "-- Execute examples/hello via OCaml -- should output Hello F*! --"
@@ -126,15 +144,6 @@ elif ! egrep -q 'Hello F\*!' HelloOcamlOutput.log; then
   exit 1
 else
   echo -e "* ${GREEN}PASSED!${NC} for examples/hello"
-fi
-
-diag "-- Verify ulib --"
-make -j6 -C ulib
-if [ $? -ne 0 ]; then
-  echo -e "* ${RED}FAIL!${NC} for ulib - make returned $?"
-  exit 1
-else
-  echo -e "* ${GREEN}PASSED!${NC} for ulib"
 fi
 
 diag "-- Verify all examples --"
