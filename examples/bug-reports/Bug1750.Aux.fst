@@ -1,4 +1,4 @@
-module TestDH
+module Bug1750.Aux
 
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
@@ -16,7 +16,7 @@ noeq
 type ilog_entry (i:pre_dhi) =
   | Corrupt
 
-#reset-options "--log_queries --query_stats --max_fuel 0 --max_ifuel 0"
+#reset-options "--max_fuel 0 --max_ifuel 0"
 let test (log:MDM.map pre_dhi ilog_entry) (k:pre_dhi) (v:ilog_entry k) : Tot unit =
   let log1 = MDM.upd #pre_dhi #ilog_entry log k v in
   assert (Some? (MDM.sel #pre_dhi #ilog_entry log1 k))
