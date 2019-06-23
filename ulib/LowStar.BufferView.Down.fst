@@ -349,6 +349,7 @@ let rec upd_seq'_spec (#a #b: _) (v:view a b) (s:Seq.seq b{Seq.length s % View?.
          assert (as `Seq.equal` Seq.cons (View?.put v pfx) as');
          as_seq'_cons v (View?.put v pfx) as'
 
+#set-options "--z3rlimit 20"
 let upd_seq_spec (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (s:Seq.seq b{Seq.length s = length vb})
   = let h' = upd_seq h vb s in
     Math.cancel_mul_mod (B.length (as_buffer vb)) (View?.n (get_view vb));
