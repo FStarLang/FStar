@@ -1321,8 +1321,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let karr =
                 if List.length formals > 0
                 then [Util.mkAssume(mk_tester "Tm_arrow" (mk_PreType ttok_tm), Some "kinding", ("pre_kinding_"^ttok))]
-                else [] in
-            decls@(karr@[Util.mkAssume(mkForall (Ident.range_of_lid t) ([[tapp]], vars, mkImp(guard, k)), None, ("kinding_"^ttok))]
+                else []
+            in
+            let rng = Ident.range_of_lid t in
+            let tot_fun_axioms =
+              EncodeTerm.isTotFun_axioms rng ttok_tm vars (List.map (fun _ -> mkTrue) vars) true
+            in
+
+            decls@(karr@[Util.mkAssume(mkAnd(tot_fun_axioms, mkForall rng ([[tapp]], vars, mkImp(guard, k))), None, ("kinding_"^ttok))]
                    |> mk_decls_trivial) in
         let aux =
             kindingAx
