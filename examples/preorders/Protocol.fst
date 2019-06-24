@@ -576,7 +576,7 @@ let rec receive_aux #n file c h_init from pos
          let h1 = ST.get () in
          let filled_bytes0' = iarray_as_seq filled0 in
          lemma_disjoint_sibling_suffix_prefix file pos;
-         assume (filled_bytes0 == filled_bytes0');
+         assert (filled_bytes0 == filled_bytes0');
          let filled = prefix file (pos + k) in
          recall_all_init_i_j sub_file 0 k;
          recall_contains filled;
