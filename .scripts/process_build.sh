@@ -117,12 +117,12 @@ else
 fi
 
 diag "-- Rebuilding ulib/ml (to make sure it works) --"
-make -C ulib/ml clean && make -C ulib/ml
+make -C ulib/ml clean && make -C ulib install-fstarlib
 if [ $? -ne 0 ]; then
-  echo -e "* ${RED}FAIL!${NC} for ulib/ml - make returned $?"
+  echo -e "* ${RED}FAIL!${NC} for install-fstarlib - make returned $?"
   exit 1
 else
-  echo -e "* ${GREEN}PASSED!${NC} for ulib/ml"
+  echo -e "* ${GREEN}PASSED!${NC} for install-fstarlib"
 fi
 
 diag "-- Execute examples/hello via OCaml -- should output Hello F*! --"
