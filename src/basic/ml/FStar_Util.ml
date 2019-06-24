@@ -341,7 +341,7 @@ let set_eq ((s1, eq):'a set) ((s2, _):'a set) : bool =
 module StringHash =
   struct
     type t = string
-    let equal (s:string) (t:string) = s=t
+    let equal (s1:string) (s2:string) = s1=s2
     let hash (s:string) = BatHashtbl.hash s
   end
 
@@ -364,48 +364,67 @@ let smap_copy (m:'value smap) = StringHashtbl.copy m
 let smap_size (m:'value smap) = StringHashtbl.length m
 let smap_iter (m:'value smap) f = StringHashtbl.iter f m
 
+module StringMap = BatMap.Make(String)
+
 exception PSMap_Found
-type 'value psmap = (string, 'value) BatMap.t
-let psmap_empty (_: unit) : 'value psmap = BatMap.empty
-let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
+type 'value psmap = 'value StringMap.t
+let psmap_empty (_: unit) : 'value psmap = StringMap.empty
+let psmap_add (map: 'value psmap) (key: string) (value: 'value) = StringMap.add key value map
 let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
-  BatMap.find_default dflt key map
+  StringMap.find_default dflt key map
 let psmap_try_find (map: 'value psmap) (key: string) =
-  BatMap.Exceptionless.find key map
-let psmap_fold (m:'value psmap) f a = BatMap.foldi f m a
+  StringMap.Exceptionless.find key map
+let psmap_fold (m:'value psmap) f a = StringMap.fold f m a
 let psmap_find_map (m:'value psmap) f =
   let res = ref None in
   let upd k v =
     let r = f k v in
     if r <> None then (res := r; raise PSMap_Found) in
-  (try BatMap.iter upd m with PSMap_Found -> ());
+  (try StringMap.iter upd m with PSMap_Found -> ());
   !res
 let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
-  BatMap.modify_opt k (fun vopt -> Some (upd vopt)) m
+  StringMap.modify_opt k (fun vopt -> Some (upd vopt)) m
 
+module ZHash =
+  struct
+    type t = Z.t
+    let equal (z1:Z.t) (z2:Z.t) = Z.equal z1 z2
+    let hash (z:Z.t) = Z.hash z
+  end
 
-type 'value imap = (Z.t, 'value) BatHashtbl.t
-let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
-let imap_clear (s:('value imap)) = BatHashtbl.clear s
-let imap_add (m:'value imap) k (v:'value) = BatHashtbl.add m k v
+module ZHashtbl = BatHashtbl.Make(ZHash)
+
+type 'value imap = 'value ZHashtbl.t
+let imap_create (i:Z.t) : 'value imap = ZHashtbl.create (Z.to_int i)
+let imap_clear (s:('value imap)) = ZHashtbl.clear s
+let imap_add (m:'value imap) k (v:'value) = ZHashtbl.add m k v
 let imap_of_list (l: (Z.t * 'value) list) =
-  let s = BatHashtbl.create (BatList.length l) in
+  let s = ZHashtbl.create (BatList.length l) in
   FStar_List.iter (fun (x,y) -> imap_add s x y) l;
   s
-let imap_try_find (m:'value imap) k = BatHashtbl.find_option m k
-let imap_fold (m:'value imap) f a = BatHashtbl.fold f m a
-let imap_remove (m:'value imap) k = BatHashtbl.remove m k
+let imap_try_find (m:'value imap) k = ZHashtbl.find_option m k
+let imap_fold (m:'value imap) f a = ZHashtbl.fold f m a
+let imap_remove (m:'value imap) k = ZHashtbl.remove m k
 let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
-let imap_copy (m:'value imap) = BatHashtbl.copy m
+let imap_copy (m:'value imap) = ZHashtbl.copy m
 
-type 'value pimap = (Z.t, 'value) BatMap.t
-let pimap_empty (_: unit) : 'value pimap = BatMap.empty
-let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = BatMap.add key value map
+
+module ZOrder =
+  struct
+    type t = Z.t
+    let compare (z1:Z.t) (z2:Z.t) = Z.compare z1 z2
+  end
+
+module ZMap = BatMap.Make(ZOrder)
+
+type 'value pimap = 'value ZMap.t
+let pimap_empty (_: unit) : 'value pimap = ZMap.empty
+let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = ZMap.add key value map
 let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
-  BatMap.find_default dflt key map
+  ZMap.find_default dflt key map
 let pimap_try_find (map: 'value pimap) (key: Z.t) =
-  BatMap.Exceptionless.find key map
-let pimap_fold (m:'value pimap) f a = BatMap.foldi f m a
+  ZMap.Exceptionless.find key map
+let pimap_fold (m:'value pimap) f a = ZMap.fold f m a
 
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
