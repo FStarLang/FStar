@@ -105,6 +105,7 @@ install-compiler-lib: $(FSTAR_MAIN_NATIVE)
 	@# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
 	$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
 	$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
+	sed "s/__FSTAR_VERSION__/$$(cat ../../version.txt)/" <../../ulib/ml/fstar-compiler-lib-META >../../bin/fstar-compiler-lib/META
 	touch $@
 
 FStar_Parser_Parse.ml: parse.mly
