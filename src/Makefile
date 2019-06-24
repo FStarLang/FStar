@@ -202,6 +202,7 @@ tutorial: fstarlib
 
 uexamples: fstarlib
 	+$(MAKE) -C ../examples all
+	+$(MAKE) -C ../examples native_tactics
 
 # Interactive mode regressions
 interactive-test:

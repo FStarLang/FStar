@@ -27,7 +27,6 @@ low-mitls-experiments \
 seplogic \
 csl \
 hello \
-native_tactics \
 extraction \
 demos \
 refinement \
@@ -39,9 +38,10 @@ calc
 
 # low-level \  ... NS: removing from CI for this branch
 
-# WARNING: this target shouldn't depend on anything other than the F*
-# binary; in particular it shouldn't depend on OCaml, F#, git, etc.
 all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))
+
+# Note: separated this out, since binary package can't verify this
+native_tactics: native_tactics.all
 
 %.all: %
 	+$(MAKE) -C $^ all
