@@ -785,6 +785,7 @@ and p_pragma = function
   | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
   | PushOptions s_opt -> str "#push-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
   | PopOptions -> str "#pop-options"
+  | RestartSolver -> str "#restart-solver"
   | LightOff ->
       should_print_fs_typ_app := true ;
       str "#light \"off\""

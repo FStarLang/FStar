@@ -632,16 +632,46 @@ let ask_and_report_errors env all_labels prefix query suffix =
       in
       if not skip then check_all_configs all_configs
 
+type solver_cfg = {
+  seed             : int;
+  cliopt           : list<string>;
+  facts            : list<(list<string> * bool)>;
+  valid_intro      : bool;
+  valid_elim       : bool;
+}
+
+let _last_cfg : ref<option<solver_cfg>> = BU.mk_ref None
+
+let get_cfg env : solver_cfg =
+    { seed             = Options.z3_seed ()
+    ; cliopt           = Options.z3_cliopt ()
+    ; facts            = env.proof_ns
+    ; valid_intro      = Options.smtencoding_valid_intro ()
+    ; valid_elim       = Options.smtencoding_valid_elim ()
+    }
+
+let save_cfg env =
+    _last_cfg := Some (get_cfg env)
+
+let should_refresh env =
+    match !_last_cfg with
+    | None -> (save_cfg env; false)
+    | Some cfg ->
+        not (cfg = get_cfg env)
+
 let solve use_env_msg tcenv q : unit =
-    Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-    if Options.no_smt ()
-    then
+    if Options.no_smt () then
         FStar.TypeChecker.Err.add_errors
                  tcenv
                  [(Errors.Error_NoSMTButNeeded,
                     BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
                         tcenv.range)]
-    else
+    else begin
+    if should_refresh tcenv then begin
+      save_cfg tcenv;
+      Z3.refresh ()
+    end;
+    Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
     let tcenv = incr_query_index tcenv in
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
     let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
@@ -653,13 +683,14 @@ let solve use_env_msg tcenv q : unit =
         pop ()
 
     | _ -> failwith "Impossible"
+    end
 
 (**********************************************************************************************)
 (* Top-level interface *)
 (**********************************************************************************************)
 open FStar.TypeChecker.Env
 let solver = {
-    init=Encode.init;
+    init=(fun e -> save_cfg e; Encode.init e);
     push=Encode.push;
     pop=Encode.pop;
     snapshot=Encode.snapshot;

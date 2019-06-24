@@ -46,11 +46,6 @@ type option_val =
   | List of list<option_val>
   | Unset
 
-type options =
-  | Set
-  | Reset
-  | Restore
-
 type error_flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
   | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
@@ -60,7 +55,6 @@ type error_flag =
   | CWarning        //CWarning: reported using log_issue as warnings by default;
                     //          then can be silenced or escalated to errors
   | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
-
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
 let __unit_tests__ = Util.mk_ref false
@@ -1170,12 +1164,13 @@ and specs () : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode 
             mk_spec (short, long, arg_spec_of_opt_type long typ, doc))
            (specs_with_types ())
 
-//Several options can only be set at the time the process is created, and not controlled interactively via pragmas
-//Additionaly, the --smt option is a security concern
+// Several options can only be set at the time the process is created,
+// and not controlled interactively via pragmas.
+// Additionaly, the --smt option is a security concern.
 let settable = function
     | "abort_on"
-    | "admit_smt_queries"
     | "admit_except"
+    | "admit_smt_queries"
     | "debug"
     | "debug_level"
     | "defensive"
@@ -1183,20 +1178,22 @@ let settable = function
     | "detail_hint_replay"
     | "eager_subtyping"
     | "hide_uvar_nums"
-    | "hint_info"
     | "hint_file"
+    | "hint_info"
     | "initial_fuel"
     | "initial_ifuel"
     | "lax"
     | "load"
-    | "log_types"
     | "log_queries"
+    | "log_types"
     | "max_fuel"
     | "max_ifuel"
     | "min_fuel"
-    | "no_smt"
+    | "no_plugins"
     | "__no_positivity"
-    | "ugly"
+    | "normalize_pure_terms_for_extraction"
+    | "no_smt"
+    | "no_tactics"
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_full_names"
@@ -1205,45 +1202,43 @@ let settable = function
     | "print_z3_statistics"
     | "prn"
     | "query_stats"
+    | "reuse_hint_for"
     | "silent"
     | "smtencoding.elim_box"
-    | "smtencoding.nl_arith_repr"
     | "smtencoding.l_arith_repr"
-    | "timing"
-    | "trace_error"
-    | "unthrottle_inductives"
-    | "use_eq_at_higher_order"
-    | "no_plugins"
-    | "no_tactics"
-    | "normalize_pure_terms_for_extraction"
+    | "smtencoding.nl_arith_repr"
+    | "smtencoding.valid_intro"
+    | "smtencoding.valid_elim"
     | "tactic_raw_binders"
     | "tactics_failhard"
     | "tactics_info"
+    | "__tactics_nbe"
     | "tactic_trace"
     | "tactic_trace_d"
     | "tcnorm"
-    | "__tactics_nbe"
     | "__temp_fast_implicits"
     | "__temp_no_proj"
-    | "reuse_hint_for"
-    | "warn_error"
-    | "z3rlimit_factor"
-    | "z3rlimit"
-    | "z3refresh"
+    | "timing"
+    | "trace_error"
+    | "ugly"
+    | "unthrottle_inductives"
+    | "use_eq_at_higher_order"
     | "use_two_phase_tc"
-    | "vcgen.optimize_bind_as_seq" -> true
+    | "using_facts_from"
+    | "vcgen.optimize_bind_as_seq"
+    | "warn_error"
+    | "z3cliopt"
+    | "z3refresh"
+    | "z3rlimit"
+    | "z3rlimit_factor"
+    | "z3seed"
+    -> true
+
     | _ -> false
 
-// the first two options below are options that are passed to z3 using
-// command-line arguments;
-// using_facts_from requires pruning the Z3 context.
-// All of these can only be used with #reset_options, with re-starts the z3 process
-let resettable s = settable s || s="z3seed" || s="z3cliopt" || s="using_facts_from" || s="smtencoding.valid_intro" || s="smtencoding.valid_elim"
 let all_specs = specs ()
 let all_specs_with_types = specs_with_types ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
-let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC API
@@ -1254,17 +1249,13 @@ let fstar_bin_directory = Util.get_exec_dir ()
 
 exception File_argument of string
 
-let set_options o s =
-    let specs = match o with
-        | Set -> settable_specs
-        | Reset -> resettable_specs
-        | Restore -> all_specs in
+let set_options s =
     try
         if s = ""
         then Success
-        else Getopt.parse_string specs (fun s -> raise (File_argument s); ()) s
+        else Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s
     with
-      | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
+    | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
 
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
