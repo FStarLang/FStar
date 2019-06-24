@@ -241,7 +241,7 @@ let run_either i r expected normalizer =
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
-    // ignore (Options.set_options Options.Set "--debug Test --debug_level univ_norm --debug_level NBE");
+    // ignore (Options.set_options "--debug Test --debug_level univ_norm --debug_level NBE");
     always i (term_eq (U.unascribe x) expected)
 
 let run_interpreter i r expected = run_either i r expected (N.normalize [Env.Beta; Env.UnfoldUntil delta_constant; Env.Primops])
