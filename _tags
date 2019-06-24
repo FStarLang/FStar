@@ -55,6 +55,8 @@ true: \
 #  - make sure landmarks is installed with opam (opam install landmarks)
 #  - enable the landmarks and landmarks.ppx packages
 #  - select the modules for auto-instrumentation
+#  - build the compiler
+#  - run the compiler with OCAML_LANDMARKS='on,output=landmarks.out'
 #
 # Uncomment the following to add the packages:
 #
