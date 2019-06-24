@@ -258,7 +258,6 @@ let bg_z3_proc =
         query_logging.close_log() in
     let restart () =
         query_logging.close_log();
-        the_z3proc := None;
         make_new_z3_proc next_params in
     let x : list<unit> = [] in
     BU.mk_ref ({ask = BU.with_monitor x ask;
