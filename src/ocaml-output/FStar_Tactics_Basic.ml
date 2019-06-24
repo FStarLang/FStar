@@ -796,7 +796,7 @@ let (do_unify :
               then
                 (FStar_Options.push ();
                  (let uu____2136 =
-                    FStar_Options.set_options FStar_Options.Set
+                    FStar_Options.set_options
                       "--debug_level Rel --debug_level RelCheck"
                      in
                   ()))
@@ -5608,7 +5608,7 @@ let (set_options : Prims.string -> unit tac) =
            (let uu____11823 = FStar_Util.smap_copy g.FStar_Tactics_Types.opts
                in
             FStar_Options.set uu____11823);
-           (let res = FStar_Options.set_options FStar_Options.Set s  in
+           (let res = FStar_Options.set_options s  in
             let opts' = FStar_Options.peek ()  in
             FStar_Options.pop ();
             (match res with
