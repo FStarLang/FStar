@@ -121,7 +121,10 @@ let unshadow (bs : binders) (t : term) : binders * term =
         match bs with
         | [] -> List.rev bs', SS.subst subst t
         | b::bs -> begin
-            let [b] = SS.subst_binders subst [b] in
+            let b = match SS.subst_binders subst [b] with
+                    | [b] -> b
+                    | _ -> failwith "impossible: unshadow subst_binders"
+            in
             let (bv0, q) = b in
             let nbs = fresh_until (s bv0) (fun s -> not (List.mem s seen)) in
             let bv = sset bv0 nbs in

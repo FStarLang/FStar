@@ -337,7 +337,7 @@ let lookup_attr (attr:term) (env:Env.env) : list<fv> =
 let all_defs_in_env (env:Env.env) : list<fv> =
     List.map (fun l -> S.lid_as_fv l (S.Delta_constant_at_level 999) None) (Env.lidents env) // |> take 10
 
-let defs_in_module (env:Env.env) (modul:name) : list <fv> =
+let defs_in_module (env:Env.env) (modul:name) : list<fv> =
     List.concatMap
         (fun l ->
                 (* must succeed, ids_of_lid always returns a non-empty list *)

@@ -122,7 +122,7 @@ let (err_msg_type_strings :
           FStar_Options.with_saved_options
             (fun uu____387  ->
                (let uu____389 =
-                  FStar_Options.set_options
+                  FStar_Options.set_options FStar_Options.Set
                     "--print_full_names --print_universes"
                    in
                 ());
@@ -148,7 +148,7 @@ let (err_msg_comp_strings :
           FStar_Options.with_saved_options
             (fun uu____451  ->
                (let uu____453 =
-                  FStar_Options.set_options
+                  FStar_Options.set_options FStar_Options.Set
                     "--print_full_names --print_universes --print_effect_args"
                    in
                 ());
