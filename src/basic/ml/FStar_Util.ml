@@ -338,22 +338,31 @@ let set_eq ((s1, eq):'a set) ((s2, _):'a set) : bool =
   set_is_empty (set_symmetric_difference (s1, eq) (s2, eq))
 
 
-type 'value smap = (string, 'value) BatHashtbl.t
-let smap_create (i:Z.t) : 'value smap = BatHashtbl.create (Z.to_int i)
-let smap_clear (s:('value smap)) = BatHashtbl.clear s
+module StringHash =
+  struct
+    type t = string
+    let equal (s:string) (t:string) = s=t
+    let hash (s:string) = BatHashtbl.hash s
+  end
+
+module StringHashtbl = BatHashtbl.Make(StringHash)
+
+type 'value smap = 'value StringHashtbl.t
+let smap_create (i:Z.t) : 'value smap = StringHashtbl.create (Z.to_int i)
+let smap_clear (s:('value smap)) = StringHashtbl.clear s
 let smap_add (m:'value smap) k (v:'value) =
-    BatHashtbl.remove m k; BatHashtbl.add m k v
+    StringHashtbl.remove m k; StringHashtbl.add m k v
 let smap_of_list (l: (string * 'value) list) =
-  let s = BatHashtbl.create (BatList.length l) in
+  let s = StringHashtbl.create (BatList.length l) in
   FStar_List.iter (fun (x,y) -> smap_add s x y) l;
   s
-let smap_try_find (m:'value smap) k = BatHashtbl.find_option m k
-let smap_fold (m:'value smap) f a = BatHashtbl.fold f m a
-let smap_remove (m:'value smap) k = BatHashtbl.remove m k
+let smap_try_find (m:'value smap) k = StringHashtbl.find_option m k
+let smap_fold (m:'value smap) f a = StringHashtbl.fold f m a
+let smap_remove (m:'value smap) k = StringHashtbl.remove m k
 let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
-let smap_copy (m:'value smap) = BatHashtbl.copy m
-let smap_size (m:'value smap) = BatHashtbl.length m
-let smap_iter (m:'value smap) f = BatHashtbl.iter f m
+let smap_copy (m:'value smap) = StringHashtbl.copy m
+let smap_size (m:'value smap) = StringHashtbl.length m
+let smap_iter (m:'value smap) f = StringHashtbl.iter f m
 
 exception PSMap_Found
 type 'value psmap = (string, 'value) BatMap.t
