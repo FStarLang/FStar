@@ -38,7 +38,7 @@ abstract
 let ptr_view (#a:Type) (ptr:A.array a) : view (vptr a) = 
   reveal_view ();
   let fp = Ghost.hide (A.loc_array ptr) in 
-  let inv h = A.live h ptr /\ A.freeable ptr /\ A.vlength ptr = 1 in
+  let inv h = A.live h ptr /\ A.vlength ptr = 1 in
   let sel h = {x = Seq.index (A.as_seq h ptr) 0; p = A.get_perm h ptr 0} in
   {
     fp = fp;
@@ -53,7 +53,7 @@ let reveal_ptr ()
   : Lemma ((forall a (ptr:A.array a) .{:pattern as_loc (fp (ptr_resource ptr))} 
              as_loc (fp (ptr_resource ptr)) == A.loc_array ptr) /\
            (forall a (ptr:A.array a) h .{:pattern inv (ptr_resource ptr) h} 
-             inv (ptr_resource ptr) h <==> A.live h ptr /\ A.freeable ptr /\ A.vlength ptr = 1) /\
+             inv (ptr_resource ptr) h <==> A.live h ptr /\ A.vlength ptr = 1) /\
            (forall a (ptr:A.array a) h .{:pattern sel (ptr_view ptr) h} 
              sel (ptr_view ptr) h == { x = Seq.index (A.as_seq h ptr) 0; p = A.get_perm h ptr 0})) = 
   ()
@@ -92,6 +92,7 @@ let ptr_alloc (#a:Type)
                                 (fun ptr -> ptr_resource ptr)
                                 (fun _ -> True)
                                 (fun _ ptr h1 -> 
+                                   A.freeable ptr /\
                                    sel (ptr_view ptr) h1 == {x = init; p = FStar.Real.one}) =
   reveal_rst_inv ();
   reveal_modifies ();
@@ -101,12 +102,52 @@ let ptr_free (#a:Type)
              (ptr:A.array a)
            : RST unit (ptr_resource ptr)
                       (fun ptr -> empty_resource)
-                      (fun h -> P.allows_write (sel (ptr_view ptr) h).p)
+                      (fun h -> A.freeable ptr /\ P.allows_write (sel (ptr_view ptr) h).p)
                       (fun _ ptr h1 -> True) =
   reveal_rst_inv ();
   reveal_modifies ();
   reveal_empty_resource ();
   A.free ptr
+
+let ptr_share
+  (#a: Type)
+  (ptr: A.array a)
+  : RST (A.array a)
+    (ptr_resource ptr)
+    (fun ptr1 -> ptr_resource ptr <*> ptr_resource ptr1)
+    (fun h0 -> True)
+    (fun h0 ptr1 h1 ->
+      (sel (ptr_view ptr) h0).x == (sel (ptr_view ptr) h1).x /\
+      (sel (ptr_view ptr) h1).x == (sel (ptr_view ptr1) h1).x /\
+      (sel (ptr_view ptr) h1).p == P.half_permission (sel (ptr_view ptr) h0).p /\
+      (sel (ptr_view ptr1) h1).p == P.half_permission (sel (ptr_view ptr) h0).p /\
+      A.mergeable ptr ptr1 /\
+      P.summable_permissions (sel (ptr_view ptr) h1).p (sel (ptr_view ptr1) h1).p)
+  =
+  (**) reveal_rst_inv ();
+  (**) reveal_modifies ();
+  (**) reveal_star ();
+  let ptr1 = A.share ptr in
+  ptr1
+
+let ptr_merge
+  (#a: Type)
+  (ptr1: A.array a)
+  (ptr2: A.array a)
+  : RST unit
+    (ptr_resource ptr1 <*> ptr_resource ptr2)
+    (fun _ -> ptr_resource ptr1)
+    (fun h0 -> A.mergeable ptr1 ptr2 /\ P.summable_permissions (sel (ptr_view ptr1) h0).p (sel (ptr_view ptr2) h0).p)
+    (fun h0 _ h1 ->
+      P.summable_permissions (sel (ptr_view ptr1) h0).p (sel (ptr_view ptr2) h0).p /\
+      (sel (ptr_view ptr1) h0).x == (sel (ptr_view ptr1) h1).x /\
+      (sel (ptr_view ptr1) h1).p == P.sum_permissions (sel (ptr_view ptr1) h0).p (sel (ptr_view ptr2) h0).p)    
+  =
+  (**) reveal_rst_inv ();
+  (**) reveal_modifies ();
+  (**) reveal_star ();
+  A.merge ptr1 ptr2
+
 
 (* Scoped allocation of (heap-allocated, freeable) pointer resources *)
 
