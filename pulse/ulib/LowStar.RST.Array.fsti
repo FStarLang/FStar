@@ -79,35 +79,45 @@ let reveal_array ()
     ) =
   ()
 
+val length_view_as_seq (#a:Type) (h:HS.mem) (b:A.array a) : Lemma
+  (requires (array_view b).inv h)
+  (ensures A.vlength b == Seq.length (sel (array_view b) h).s)
+  [SMTPat (sel (array_view b) h).s]
+
+let summable_permissions (#a:Type) (h:HS.mem) (b:A.array a{(array_view b).inv h}) (b':A.array a{(array_view b').inv h}) =
+  A.mergeable b b' /\
+  P.summable_permissions (sel (array_view b) h).p (sel (array_view b') h).p
+
 val index (#a:Type) (b:A.array a) (i:UInt32.t)
   : RST a (array_resource b)
-    (fun _ -> array_resource b)
-    (fun h0 -> UInt32.v i < A.vlength b /\ P.allows_read (sel (array_view b) h0).p)
-    (fun h0 x h1 ->
-      UInt32.v i < A.vlength b /\
-      Seq.index (sel (array_view b) h0).s (UInt32.v i) == x /\
-      sel (array_view b) h0 == sel (array_view b) h1
-    )
+          (fun _ -> array_resource b)
+          (fun h0 -> UInt32.v i < A.vlength b /\ P.allows_read (sel (array_view b) h0).p)
+          (fun h0 x h1 ->
+          UInt32.v i < A.vlength b /\
+          Seq.index (sel (array_view b) h0).s (UInt32.v i) == x /\
+          sel (array_view b) h0 == sel (array_view b) h1
+          )
 
 val upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a)
   : RST unit (array_resource b)
-    (fun _ -> array_resource b)
-    (fun h0 -> UInt32.v i < A.vlength b /\ P.allows_write (sel (array_view b) h0).p )
-    (fun h0 _ h1 -> UInt32.v i < A.vlength b /\
-      (sel (array_view b) h1).s ==
-         Seq.upd (sel (array_view b) h0).s (UInt32.v i) v /\
-      (sel (array_view b) h1).p == (sel (array_view b) h0).p
-     )
+             (fun _ -> array_resource b)
+             (fun h0 -> UInt32.v i < A.vlength b /\ P.allows_write (sel (array_view b) h0).p )
+             (fun h0 _ h1 -> UInt32.v i < A.vlength b /\
+             (sel (array_view b) h1).s ==
+             Seq.upd (sel (array_view b) h0).s (UInt32.v i) v /\
+             (sel (array_view b) h1).p == (sel (array_view b) h0).p
+             )
 
 val alloc (#a:Type) (init:a) (len:UInt32.t)
   : RST (A.array a)
-    (empty_resource)
-    (fun b -> array_resource b)
-    (fun _ -> UInt32.v len > 0)
-    (fun _ b h1 ->
-      (sel (array_view b) h1).s == Seq.create (UInt32.v len) init /\
-      (sel (array_view b) h1).p = FStar.Real.one
-    )
+        (empty_resource)
+        (fun b -> array_resource b)
+        (fun _ -> UInt32.v len > 0)
+        (fun _ b h1 ->
+        A.freeable b /\
+        (sel (array_view b) h1).s == Seq.create (UInt32.v len) init /\
+        (sel (array_view b) h1).p = FStar.Real.one
+        )
 
 val free (#a:Type) (b:A.array a)
   : RST unit (array_resource b)
@@ -125,14 +135,14 @@ val share (#a:Type) (b:A.array a)
           (sel (array_view b') h1).s == (sel (array_view b) h1).s /\
           (sel (array_view b) h1).p == P.half_permission (sel (array_view b) h0).p /\
           (sel (array_view b') h1).p == P.half_permission (sel (array_view b) h0).p /\
-          A.mergeable b b')
+          summable_permissions h1 b b')
 
 val merge (#a:Type) (b b':A.array a)
   : RST unit (array_resource b <*> array_resource b')
              (fun _ -> array_resource b)
-             (fun h0 -> A.mergeable b b' /\ A.summable_permissions h0 b b')
+             (fun h0 -> A.mergeable b b' /\ summable_permissions h0 b b')
              (fun h0 _ h1 ->
-               A.summable_permissions h0 b b' /\
+               summable_permissions h0 b b' /\
                (sel (array_view b) h0).s == (sel (array_view b) h1).s /\
                (sel (array_view b) h1).p == P.sum_permissions (sel (array_view b) h0).p (sel (array_view b') h0).p)
     

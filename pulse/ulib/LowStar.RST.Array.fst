@@ -15,6 +15,8 @@
 *)
 module LowStar.RST.Array
 
+let length_view_as_seq #a h b = ()
+
 let index (#a:Type) (b:A.array a) (i:UInt32.t) = A.index b i
 
 let upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) =
