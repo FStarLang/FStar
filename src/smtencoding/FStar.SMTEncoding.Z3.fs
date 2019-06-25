@@ -117,6 +117,7 @@ let status_string_and_errors s =
     | SAT (errs, msg)
     | UNKNOWN (errs, msg)
     | TIMEOUT (errs, msg) -> BU.format2 "%s%s" (status_tag s) (match msg with None -> "" | Some msg -> " because " ^ msg), errs
+                             //(match msg with None -> "unknown" | Some msg -> msg), errs
 
 
 type query_log = {

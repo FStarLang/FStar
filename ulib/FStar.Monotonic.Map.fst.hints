@@ -11,7 +11,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "822c45e26753fd5581982fd561857a5f"
+      "f8e965f425215d9b20b937ec5fb85bd0"
     ],
     [
       "FStar.Monotonic.Map.grows",
@@ -22,12 +22,12 @@
         "@query", "equation_FStar.Monotonic.Map.map",
         "equation_FStar.Preorder.preorder_rel",
         "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive", "equation_Prims.logical",
-        "interpretation_Tm_abs_8935eb6a3f3494dba1a429b59718d3b2",
-        "l_quant_interp_2eaea4c481e803d3e20ed031c2575eba"
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_645907ef3744a746d7ff6113c290185b",
+        "l_quant_interp_3439469e67c044de57ce8f8134ebf267"
       ],
       0,
-      "7b8c440d8446f6820735267141d10abc"
+      "53f95779900219fd3310e4cf39c8b76f"
     ],
     [
       "FStar.Monotonic.Map.alloc",
@@ -38,14 +38,13 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.HyperStack.ST.erid",
         "equation_FStar.HyperStack.ST.ralloc_post",
-        "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.Monotonic.Map.rid",
-        "refinement_interpretation_Tm_refine_08d14059b664746699a12b0c359d3b8d",
-        "refinement_interpretation_Tm_refine_190fd4de5bc10e4dcc9db801c604e0f3",
-        "refinement_interpretation_Tm_refine_601254ebe274211073b2024a11d02039"
+        "refinement_interpretation_Tm_refine_161e04719814801d293219f408210f95",
+        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
+        "refinement_interpretation_Tm_refine_ff29b7a45b8f3430bb5eb44dab5f02d4"
       ],
       0,
-      "4f648558203ee0ab1fef4059fb2a79d8"
+      "4d47a54ef2959367b7a7aee66a6ce16f"
     ],
     [
       "FStar.Monotonic.Map.contains",
@@ -54,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "355febd6ef53d9beffed37ba25c4e805"
+      "7a083062a1465f3f5ff24c5673542b6b"
     ],
     [
       "FStar.Monotonic.Map.value",
@@ -65,16 +64,15 @@
         "@MaxIFuel_assumption", "@query", "b2t_def",
         "equation_FStar.HyperStack.ST.m_rref",
         "equation_FStar.Monotonic.HyperStack.frameOf",
-        "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.Monotonic.Map.contains",
         "equation_FStar.Monotonic.Map.defined",
         "equation_FStar.Monotonic.Map.grows",
         "equation_FStar.Monotonic.Map.map", "equation_FStar.Monotonic.Map.t",
-        "refinement_interpretation_Tm_refine_917434e5926e6e7523badbe9af0f8597",
+        "refinement_interpretation_Tm_refine_9b52d8df2db9a70aa4173c55ec4812eb",
         "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f"
       ],
       0,
-      "e9fdd565351eedb55f6eade20eb429d8"
+      "e8e480aa8b4019e9293791a691801713"
     ],
     [
       "FStar.Monotonic.Map.contains_stable",
@@ -86,14 +84,14 @@
         "equation_FStar.Monotonic.HyperStack.sel",
         "equation_FStar.Monotonic.Map.contains",
         "equation_FStar.Monotonic.Map.grows",
-        "equation_FStar.Monotonic.Map.sel", "equation_Prims.logical",
-        "interpretation_Tm_abs_8935eb6a3f3494dba1a429b59718d3b2",
-        "l_quant_interp_2eaea4c481e803d3e20ed031c2575eba",
+        "equation_FStar.Monotonic.Map.sel",
+        "interpretation_Tm_abs_645907ef3744a746d7ff6113c290185b",
+        "l_quant_interp_3439469e67c044de57ce8f8134ebf267",
         "projection_inverse_BoxBool_proj_0",
         "token_correspondence_FStar.Monotonic.Map.grows"
       ],
       0,
-      "4e09253d8a0990dbe6bfde819fb553c8"
+      "e8970c50264f9e42d9ad8fb565e83166"
     ],
     [
       "FStar.Monotonic.Map.extend",
@@ -101,10 +99,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "b2t_def",
-        "bool_inversion",
+        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.Some",
@@ -135,15 +130,14 @@
         "equation_FStar.Monotonic.Map.rid",
         "equation_FStar.Monotonic.Map.sel", "equation_FStar.Monotonic.Map.t",
         "equation_FStar.Monotonic.Map.upd", "equation_Prims.eqtype",
-        "equation_Prims.logical", "equation_Prims.nat",
+        "equation_Prims.nat",
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.Map.grows",
-        "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
-        "interpretation_Tm_abs_203f5fd594ee7edfa79153ddf4cb8bf4",
-        "interpretation_Tm_abs_8935eb6a3f3494dba1a429b59718d3b2",
-        "l_quant_interp_2eaea4c481e803d3e20ed031c2575eba",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "interpretation_Tm_abs_46b733f17eb513a8d644cc15e54c5a79",
+        "interpretation_Tm_abs_645907ef3744a746d7ff6113c290185b",
+        "l_quant_interp_3439469e67c044de57ce8f8134ebf267",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_elim",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
         "lemma_FStar.Map.lemma_ContainsDom",
@@ -162,18 +156,15 @@
         "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Tm_refine_08d14059b664746699a12b0c359d3b8d",
+        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
         "refinement_interpretation_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
+        "refinement_interpretation_Tm_refine_2c7ecebd8a41d0890aab4251b61d6458",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
-        "refinement_interpretation_Tm_refine_9a74d818566e70513bc032cc3b65a144",
-        "refinement_interpretation_Tm_refine_abc559f9e743b71f6c0a5ab7d71044fd",
-        "refinement_interpretation_Tm_refine_acfd0b78b0f98784a2238ac299fca96e",
+        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
+        "refinement_interpretation_Tm_refine_76056f8746bac63e7053e341861c3bdf",
+        "refinement_interpretation_Tm_refine_b62b4ab2df3344dc0e8c33c6601630e1",
         "refinement_interpretation_Tm_refine_ecfe710eaddaa768c46a7d024350dcbc",
         "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "typing_FStar.Map.concat", "typing_FStar.Map.contains",
@@ -191,12 +182,13 @@
         "typing_FStar.Monotonic.HyperStack.is_eternal_color",
         "typing_FStar.Monotonic.HyperStack.is_mm",
         "typing_FStar.Monotonic.HyperStack.live_region",
+        "typing_FStar.Monotonic.HyperStack.mk_mem",
         "typing_FStar.Monotonic.Map.grows", "typing_FStar.Monotonic.Map.map",
         "typing_FStar.Set.complement", "typing_FStar.Set.singleton",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "11c422335d75d3e6c3610f6230877047"
+      "a392de94e47865c35b60ab5f220b8163"
     ],
     [
       "FStar.Monotonic.Map.lookup",
@@ -205,7 +197,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "b2t_def", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
@@ -225,17 +217,16 @@
         "equation_FStar.Monotonic.Map.grows",
         "equation_FStar.Monotonic.Map.map",
         "equation_FStar.Monotonic.Map.sel", "equation_FStar.Monotonic.Map.t",
-        "equation_Prims.logical",
         "function_token_typing_FStar.Monotonic.Map.grows",
-        "interpretation_Tm_abs_8935eb6a3f3494dba1a429b59718d3b2",
-        "l_quant_interp_2eaea4c481e803d3e20ed031c2575eba",
+        "interpretation_Tm_abs_645907ef3744a746d7ff6113c290185b",
+        "l_quant_interp_3439469e67c044de57ce8f8134ebf267",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Negation",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Tm_refine_08d14059b664746699a12b0c359d3b8d",
         "refinement_interpretation_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
+        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
         "refinement_interpretation_Tm_refine_ecfe710eaddaa768c46a7d024350dcbc",
         "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "typing_FStar.Monotonic.HyperHeap.color",
@@ -246,7 +237,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "ad321b102b0e798d356816558ecc0bb2"
+      "39200f707654c095b6a2115e235c824d"
     ],
     [
       "FStar.Monotonic.Map.upd",
@@ -258,7 +249,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a7f5ecfc2ffeee055ded7104a1e445b5"
+      "fa28b45c0a596c471a0c2501af6a99dc"
     ],
     [
       "FStar.Monotonic.Map.alloc",
@@ -269,10 +260,10 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.HyperStack.ST.erid",
         "equation_FStar.Monotonic.Map.rid",
-        "refinement_interpretation_Tm_refine_08d14059b664746699a12b0c359d3b8d"
+        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df"
       ],
       0,
-      "ea22e5901bb2b3e000b0244dc3664864"
+      "e1e784e6a0a544e2a310d1e58051a638"
     ],
     [
       "FStar.Monotonic.Map.contains",
@@ -281,7 +272,7 @@
       1,
       [ "@query" ],
       0,
-      "005a6b355c75d4b845a6aca349982cc2"
+      "12c049b47577ac76d37834e0828289a5"
     ],
     [
       "FStar.Monotonic.Map.value",
@@ -292,15 +283,14 @@
         "@MaxIFuel_assumption", "@query", "b2t_def",
         "equation_FStar.HyperStack.ST.m_rref",
         "equation_FStar.Monotonic.HyperStack.frameOf",
-        "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.Monotonic.Map.contains",
         "equation_FStar.Monotonic.Map.defined",
         "equation_FStar.Monotonic.Map.map", "equation_FStar.Monotonic.Map.t",
-        "refinement_interpretation_Tm_refine_917434e5926e6e7523badbe9af0f8597",
+        "refinement_interpretation_Tm_refine_9b52d8df2db9a70aa4173c55ec4812eb",
         "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f"
       ],
       0,
-      "7cccb46ed5073645190e7c78430b8ba8"
+      "dff6d890e4eab039c77919abb36e1aa8"
     ],
     [
       "FStar.Monotonic.Map.extend",
@@ -308,16 +298,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "176ecd948d44b7295d6e7691cb7fe75d"
+      "8d0a9bad145a7909cf2c53e10a7fd6e2"
     ],
     [
       "FStar.Monotonic.Map.lookup",
@@ -326,7 +313,7 @@
       1,
       [ "@query" ],
       0,
-      "4597236280b3ac9e8b2e247e009dcdb8"
+      "585047e62ba8c34d75d9a929d5d208e5"
     ]
   ]
 ]
