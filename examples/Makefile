@@ -1,6 +1,11 @@
 FSTAR_HOME=..
 include Makefile.include
 
+# Note: native_tactics is not included in the list below, it is called
+# explicitly by the uexamples rule from the Makefile in ../src/Makefile.
+# These examples are excluded since the binary package can't verify
+# them.
+
 ALL_EXAMPLE_DIRS=\
 bug-reports \
 data_structures \
@@ -35,13 +40,9 @@ doublylinkedlist \
 regional \
 generic \
 calc
-
 # low-level \  ... NS: removing from CI for this branch
 
 all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))
-
-# Note: separated this out, since binary package can't verify this
-native_tactics: native_tactics.all
 
 %.all: %
 	+$(MAKE) -C $^ all
