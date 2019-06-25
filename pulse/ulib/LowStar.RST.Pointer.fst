@@ -16,10 +16,11 @@
 module LowStar.RST.Pointer
 
 open FStar.HyperStack.ST
-module B = LowStar.Buffer
+module A = LowStar.Array
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module Seq = FStar.Seq
+module P = LowStar.Permissions
 
 open LowStar.Resource
 open LowStar.RST
@@ -28,79 +29,84 @@ open LowStar.BufferOps
 
 (* View and resource for (heap-allocated, freeable) pointer resources *)
 
+type vptr (a: Type) = {
+  x: a;
+  p: P.permission
+}
+
 abstract
-let ptr_view (#a:Type) (ptr:B.pointer a) : view a = 
+let ptr_view (#a:Type) (ptr:A.array a) : view (vptr a) = 
   reveal_view ();
-  let fp = Ghost.hide (B.loc_addr_of_buffer ptr) in 
-  let inv h = B.live h ptr /\ B.freeable ptr in
-  let sel h = Seq.index (B.as_seq h ptr) 0 in
+  let fp = Ghost.hide (A.loc_array ptr) in 
+  let inv h = A.live h ptr /\ A.freeable ptr /\ A.vlength ptr = 1 in
+  let sel h = {x = Seq.index (A.as_seq h ptr) 0; p = A.get_perm h ptr 0} in
   {
     fp = fp;
     inv = inv;
     sel = sel
   }
 
-let ptr_resource (#a:Type) (ptr:B.pointer a) = 
+let ptr_resource (#a:Type) (ptr:A.array a) = 
   as_resource (ptr_view ptr)
 
 let reveal_ptr ()
-  : Lemma ((forall a (ptr:B.pointer a) .{:pattern as_loc (fp (ptr_resource ptr))} 
-             as_loc (fp (ptr_resource ptr)) == B.loc_addr_of_buffer ptr) /\
-           (forall a (ptr:B.pointer a) h .{:pattern inv (ptr_resource ptr) h} 
-             inv (ptr_resource ptr) h <==> B.live h ptr /\ B.freeable ptr) /\
-           (forall a (ptr:B.pointer a) h .{:pattern sel (ptr_view ptr) h} 
-             sel (ptr_view ptr) h == Seq.index (B.as_seq h ptr) 0)) = 
+  : Lemma ((forall a (ptr:A.array a) .{:pattern as_loc (fp (ptr_resource ptr))} 
+             as_loc (fp (ptr_resource ptr)) == A.loc_array ptr) /\
+           (forall a (ptr:A.array a) h .{:pattern inv (ptr_resource ptr) h} 
+             inv (ptr_resource ptr) h <==> A.live h ptr /\ A.freeable ptr /\ A.vlength ptr = 1) /\
+           (forall a (ptr:A.array a) h .{:pattern sel (ptr_view ptr) h} 
+             sel (ptr_view ptr) h == { x = Seq.index (A.as_seq h ptr) 0; p = A.get_perm h ptr 0})) = 
   ()
 
 (* Reading and writing using a pointer resource *)
 
 let ptr_read (#a:Type)
-             (ptr:B.pointer a)
+             (ptr:A.array a)
            : RST a (ptr_resource ptr)
                    (fun _ -> ptr_resource ptr)
                    (fun _ -> True)
                    (fun h0 x h1 -> 
-                      sel (ptr_view ptr) h0 == x /\ 
-                      x == sel (ptr_view ptr) h1) =
-  !* ptr
+                      (sel (ptr_view ptr) h0).x == x /\ 
+                      sel (ptr_view ptr) h0 == sel (ptr_view ptr) h1) =
+  A.index ptr 0ul
 
 let ptr_write (#a:Type)
-              (ptr:B.pointer a)
+              (ptr:A.array a)
               (x:a)
             : RST unit (ptr_resource ptr)
                        (fun _ -> ptr_resource ptr)
-                       (fun _ -> True)
-                       (fun _ _ h1 -> 
-                          sel (ptr_view ptr) h1 == x) =
+                       (fun h -> P.allows_write (sel (ptr_view ptr) h).p)
+                       (fun h0 _ h1 -> 
+                          (sel (ptr_view ptr) h0).p == (sel (ptr_view ptr) h1).p /\
+                          (sel (ptr_view ptr) h1).x == x) =
   reveal_rst_inv ();
   reveal_modifies ();
-  ptr *= x
-
+  A.upd ptr 0ul x
 
 
 (* Unscoped allocation and deallocation of pointer resources *)
 
 let ptr_alloc (#a:Type)
               (init:a)
-            : RST (B.pointer a) (empty_resource)
+            : RST (A.array a) (empty_resource)
                                 (fun ptr -> ptr_resource ptr)
                                 (fun _ -> True)
                                 (fun _ ptr h1 -> 
-                                   sel (ptr_view ptr) h1 == init) =
+                                   sel (ptr_view ptr) h1 == {x = init; p = FStar.Real.one}) =
   reveal_rst_inv ();
   reveal_modifies ();
-  B.malloc HS.root init 1ul
+  A.alloc init 1ul
 
 let ptr_free (#a:Type)
-             (ptr:B.pointer a)
+             (ptr:A.array a)
            : RST unit (ptr_resource ptr)
                       (fun ptr -> empty_resource)
-                      (fun _ -> True)
+                      (fun h -> P.allows_write (sel (ptr_view ptr) h).p)
                       (fun _ ptr h1 -> True) =
   reveal_rst_inv ();
   reveal_modifies ();
   reveal_empty_resource ();
-  B.free ptr
+  A.free ptr
 
 (* Scoped allocation of (heap-allocated, freeable) pointer resources *)
 
@@ -127,10 +133,10 @@ let with_new_ptr (#res:resource)
                  (#b:Type)
                  (#pre:with_new_ptr_pre res)
                  (#post:with_new_ptr_post res b (fun _ -> res))
-                 (f:(ptr:B.pointer a -> RST b (res <*> (ptr_resource ptr))
+                 (f:(ptr:A.array a -> RST b (res <*> (ptr_resource ptr))
                                               (fun _ -> res <*> (ptr_resource ptr))
-                                              (fun h -> pre h /\ sel (ptr_view ptr) h == init) 
-                                              (post))) 
+                                              (fun h -> pre h /\ sel (ptr_view ptr) h == {x = init; p = FStar.Real.one}) 
+                                              (fun h0 x h1 -> post h0 x h1 /\ P.allows_write (sel (ptr_view ptr) h1).p))) 
                : RST b res (fun _ -> res) pre post = 
   reveal_star ();
   let ptr = 
