@@ -27,6 +27,11 @@ open FStar.Real
 inline_for_extraction
 type permission = r:real{r >=. 0.0R /\ r <=. 1.0R}
 
+inline_for_extraction
+type with_perm (a: Type) = {
+  wp_v: a;
+  wp_perm: permission;
+}
 
 /// A permission value of 0 means that the resource is not live. It is live, and can be read, as long as the permission is
 /// strictly positive.
