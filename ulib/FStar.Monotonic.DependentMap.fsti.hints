@@ -10,11 +10,10 @@
         "@MaxIFuel_assumption", "@query", "b2t_def",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Monotonic.DependentMap.defined",
-        "equation_FStar.Monotonic.HyperStack.mem",
-        "refinement_interpretation_Tm_refine_1dd7435cdcadd9a889fd16140057f1f1"
+        "refinement_interpretation_Tm_refine_29666485b5a0a190c9167fabb9b987b8"
       ],
       0,
-      "04534c734a64eb81ceaf6ccc1c8ddbd8"
+      "b351b9024e705f9f060c5f071ace2650"
     ],
     [
       "FStar.Monotonic.DependentMap.contains",
@@ -23,7 +22,7 @@
       1,
       [ "@query" ],
       0,
-      "61e0a7cdf70c5765a494b9a3274bbfc9"
+      "55afd6a86ef9292740fa4ab84858d0cb"
     ],
     [
       "FStar.Monotonic.DependentMap.alloc",
@@ -33,11 +32,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.HyperStack.ST.erid",
-        "refinement_interpretation_Tm_refine_08d14059b664746699a12b0c359d3b8d",
-        "refinement_interpretation_Tm_refine_b2967d9ab9ba1cfd9fec4aa29b50fa40"
+        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
+        "refinement_interpretation_Tm_refine_80c1a9e9a59b1f3e9fe89cca8db03bac"
       ],
       0,
-      "896bef2e894bfa1bf8093c71285d26f1"
+      "f6e292db35c0297e382e1af07d48832f"
     ],
     [
       "FStar.Monotonic.DependentMap.extend",
@@ -45,16 +44,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "082d09a12fcb257bca5a876719d140bc"
+      "6fad6c4f4c9a5bf606a908b2242de33d"
     ],
     [
       "FStar.Monotonic.DependentMap.lookup",
@@ -63,7 +59,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "bool_inversion", "bool_typing",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
@@ -71,7 +67,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "b5d83fee3d2723afe3cac6d2735a2a99"
+      "6707c07df2162e5215d62332f00b6735"
     ],
     [
       "FStar.Monotonic.DependentMap.forall_t",
@@ -83,7 +79,7 @@
         "equation_FStar.Monotonic.DependentMap.defined"
       ],
       0,
-      "adc44c40598f59a3b23c31806d434e06"
+      "2c965df4cb9a85a0db7e716e70b603f0"
     ],
     [
       "FStar.Monotonic.DependentMap.f_opt",
@@ -92,7 +88,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "bool_inversion", "bool_typing",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
@@ -100,7 +96,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d1d09bc716240101f4b7dbe4cf24a2f6"
+      "713c7cdaebe904ff4ae2a74e519fdaf5"
     ],
     [
       "FStar.Monotonic.DependentMap.map_f",
@@ -110,11 +106,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.HyperStack.ST.erid",
-        "refinement_interpretation_Tm_refine_08d14059b664746699a12b0c359d3b8d",
+        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
         "refinement_interpretation_Tm_refine_ecc923c61561a744b55919cb2bbb6591"
       ],
       0,
-      "b33b3f9437e5f0ea0b1182aed9866cdd"
+      "195a78e62a603f570e152f2528d7fc6c"
     ]
   ]
 ]
