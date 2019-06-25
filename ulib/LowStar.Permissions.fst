@@ -9,27 +9,22 @@ noeq type perms_rec' (a: Type0) = {
   perm_map    : F.restricted_t perm_id (fun (x:perm_id) -> permission & a)
 }
 
-noextract
-let get_permission_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : Tot permission =
+let get_permission_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : GTot permission =
   let (perm, _) = p.perm_map pid in
   perm
 
-noextract
 let get_snapshot_from_pid' (#a: Type0) (p: perms_rec' a) (pid: perm_id) : Tot a =
   let (_, snap) = p.perm_map pid in snap
 
-noextract
-let is_live_pid' (#a: Type0) (v_perms: perms_rec' a) (pid:perm_id) : Tot bool =
+let is_live_pid' (#a: Type0) (v_perms: perms_rec' a) (pid:perm_id) : GTot bool =
   get_permission_from_pid' v_perms pid >. 0.0R
 
 type live_pid' (#a: Type0) (v_perms: perms_rec' a) = pid:perm_id{is_live_pid' v_perms pid}
 
-noextract
-let is_fully_owned' (#a: Type0) (p: perms_rec' a) : Tot bool =
+let is_fully_owned' (#a: Type0) (p: perms_rec' a) : GTot bool =
   p.fully_owned
 
-noextract
-let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : Tot real =
+let rec sum_until (#a: Type0) (f:perm_id -> permission & a) (n:nat) : GTot real =
   if n = 0 then 0.0R
   else
     let (x, _) = f n in x +. sum_until f (n - 1)
@@ -99,7 +94,6 @@ let rec sum_until_extend_zeros
     if j = max then ()
     else sum_until_extend_zeros p max (j-1)
 
-noextract
 let share_perms (#a: Type0) (#v: a) (v_perms: value_perms a v) (pid: live_pid v_perms)
   =
   let current_max' = v_perms.current_max + 1 in
@@ -191,7 +185,6 @@ private let rec sum_greater_than_subterms (#a: Type0) (f:perm_id -> permission &
   )) =
   if n = 0 then () else sum_greater_than_subterms f (n-1) pid1 pid2
 
-noextract
 let merge_perms
   (#a: Type0)
   (#v: a)
@@ -259,7 +252,6 @@ let lemma_live_pid_smaller_max #a v_perms pid = ()
 
 let lemma_greater_max_not_live_pid #a v_perms pid = ()
 
-noextract
 let change_snapshot
   (#a: Type0)
   (#v: a)
