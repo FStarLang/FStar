@@ -298,6 +298,9 @@ let recall_p #_ #_ r p =
   gst_recall (region_contains_pred (HS.frameOf r));
   gst_recall (mem_rel_predicate r p)
 
+let token_functoriality #_ #_ r p q =
+  lemma_functoriality (mem_rel_predicate r p) (mem_rel_predicate r q)
+
 let lemma_witnessed_constant p = W.lemma_witnessed_constant mem_rel p
 
 let lemma_witnessed_nested p =

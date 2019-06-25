@@ -1,5 +1,5 @@
 [
-  "ìw&®Z7ææ\u001dçFÁŸ¬ôÔ",
+  "!∑6ÇR. Å»áo?º„éÅ",
   [
     [
       "FStar.HyperStack.ST.mem_rel",
@@ -1917,13 +1917,39 @@
       "71f76e15093f9bbaa95652c6a0d01db6"
     ],
     [
+      "FStar.HyperStack.ST.token_functoriality",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.HyperStack.ST.mem_predicate",
+        "equation_FStar.HyperStack.ST.mem_rel_predicate",
+        "equation_FStar.HyperStack.ST.mreference",
+        "equation_FStar.HyperStack.ST.token_p",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_FStar.Monotonic.HyperStack.mreference",
+        "equation_Prims.l_and",
+        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mreference_",
+        "function_token_typing_FStar.HyperStack.ST.mem_rel_predicate",
+        "interpretation_Tm_abs_b9a920429d40578b1cdbdc6505db779f",
+        "l_and-interp", "l_or-interp",
+        "refinement_interpretation_Tm_refine_003cbb363565c5358e7ed8a8d7dba6d4",
+        "refinement_interpretation_Tm_refine_7af3d68aeed2439684c7a91a5e996e4a",
+        "refinement_interpretation_Tm_refine_e0fa4a0e4f0d1410deabf748aa041b27",
+        "token_correspondence_FStar.HyperStack.ST.mem_rel_predicate"
+      ],
+      0,
+      "6b3b105b69c214b07b3d4af2f8084355"
+    ],
+    [
       "FStar.HyperStack.ST.lemma_witnessed_constant",
       1,
       2,
       1,
       [ "@query", "equation_FStar.HyperStack.ST.witnessed" ],
       0,
-      "a5f25d1ca0f3c14c4dd0cbeb3062f46f"
+      "c9c0eea38faf30e8af7433fe84fb5d22"
     ],
     [
       "FStar.HyperStack.ST.lemma_witnessed_nested",
@@ -1932,7 +1958,7 @@
       1,
       [ "@query" ],
       0,
-      "c81bfd5f6a344479890be8a5b95627a6"
+      "81e0d2639cecc6a223b0b5031ae8913b"
     ],
     [
       "FStar.HyperStack.ST.lemma_witnessed_and",
@@ -1941,7 +1967,7 @@
       1,
       [ "@query", "equation_FStar.HyperStack.ST.witnessed" ],
       0,
-      "28eba5a445353c1fd22f18eadc50663a"
+      "863c832759d8eed58b29dea8705627cd"
     ],
     [
       "FStar.HyperStack.ST.lemma_witnessed_or",
@@ -1950,7 +1976,7 @@
       1,
       [ "@query", "equation_FStar.HyperStack.ST.witnessed" ],
       0,
-      "e45cfbddc3252ac18cefcd354ff777fc"
+      "01d87fa8ac0cf439ba20dd6f400873c9"
     ],
     [
       "FStar.HyperStack.ST.lemma_witnessed_impl",
@@ -1959,7 +1985,7 @@
       1,
       [ "@query", "equation_FStar.HyperStack.ST.witnessed" ],
       0,
-      "e548adffc5608b9e8742011a0e4e16f7"
+      "9be0310c83298e5bd3115eb1a93128ce"
     ],
     [
       "FStar.HyperStack.ST.lemma_witnessed_forall",
@@ -1968,7 +1994,7 @@
       1,
       [ "@query", "equation_FStar.HyperStack.ST.witnessed" ],
       0,
-      "d67f0e28c437e10cbb6228f9a02277d1"
+      "1ec3ef28c776ed5ccfe08c37f49802e6"
     ],
     [
       "FStar.HyperStack.ST.lemma_witnessed_exists",
@@ -1977,7 +2003,7 @@
       1,
       [ "@query", "equation_FStar.HyperStack.ST.witnessed" ],
       0,
-      "a75cef190a577f3cc817860a234ee220"
+      "5f0e9ee0cd85bab055d0ec67d9631284"
     ]
   ]
 ]

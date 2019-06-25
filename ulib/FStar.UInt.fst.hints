@@ -6682,7 +6682,7 @@
         "token_correspondence_Prims.pow2.fuel_instrumented"
       ],
       0,
-      "2e9f8e8f2ac527229ebf86c974c57e3b"
+      "fabadf0a1371cd6066b652ed479c10bb"
     ],
     [
       "FStar.UInt.lemma_one_mod_pow2",
