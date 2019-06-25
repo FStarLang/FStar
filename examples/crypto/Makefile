@@ -31,7 +31,14 @@ HyE.PlainPKE.fst \
 HyE.Plain.fst \
 HyE.AE.fst \
 HyE.CCA2.fst \
-HyE.HCCA2.fst
+HyE.HCCA2.fst \
+OPLSS.Ideal.fsti \
+OPLSS.Plain.fst \
+OPLSS.AES.fst \
+OPLSS.Log.fst \
+OPLSS.MAC.fst \
+OPLSS.CPA.fst \
+OPLSS.AE.fst
 
 LIB = ../../ucontrib/CoreCrypto/ml
 
