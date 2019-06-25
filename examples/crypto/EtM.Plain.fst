@@ -13,10 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module EtM.Plain
-
-open Platform.Bytes
-open CoreCrypto
+module OPLSS.Plain
+let bytes = OPLSS.AES.bytes
 open EtM.Ideal
 
 abstract 

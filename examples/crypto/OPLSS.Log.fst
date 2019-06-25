@@ -90,6 +90,7 @@ let new_log #a
     (ensures fun h0 x h1 ->
        HS.contains h1 x /\
        HS.sel h1 x == Seq.empty /\
+       B.fresh_loc (B.loc_mreference x) h0 h1 /\
        HST.ralloc_post HS.root Seq.empty h0 x h1)
   = ralloc HS.root Seq.empty
 

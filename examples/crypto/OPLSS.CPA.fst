@@ -168,10 +168,11 @@ val random : unit -> EXT AES.key
 let keygen ()
   : ST key
   (requires fun _ -> True)
-  (ensures  fun m0 k m1 -> 
-    B.modifies B.loc_none m0 m1 /\
-    log k m1 == Seq.empty /\
-    invariant k m1) =
+  (ensures  fun h0 k h1 -> 
+    B.modifies B.loc_none h0 h1 /\
+    log k h1 == Seq.empty /\
+    invariant k h1 /\
+    B.fresh_loc (B.loc_mreference k.log) h0 h1) =
   let raw = random () in
   let log = Log.new_log #log_entry in
   Key raw log
@@ -196,7 +197,8 @@ let encrypt (k:key) (m:Plain.plain)
   (ensures  fun h0 c h1 ->
     B.modifies (B.loc_mreference k.log) h0 h1 /\
     invariant k h1 /\
-    k.log `Log.contains` Entry m c) =
+    entry_functional_correctness k.raw (Entry m c) /\    
+    (ind_cpa ==> log k h1 == Seq.snoc (log k h0) (Entry m c))) =
   let iv = fresh_iv k in
   let text = if ind_cpa
              then Seq.create (Plain.length m) 0z
@@ -204,80 +206,16 @@ let encrypt (k:key) (m:Plain.plain)
   let raw_c = AES.aes_encrypt k.raw iv text in
   let c = iv@|raw_c in
   let e = Entry m c in
-  split_entry m iv raw_c;
-  assert (entry_functional_correctness k.raw e);
   let h0 = FStar.HyperStack.ST.get () in  
-  Log.add k.log e;
-  let h1 = FStar.HyperStack.ST.get () in
+  if ind_cpa then Log.add k.log e;
+  split_entry m iv raw_c;
   lemma_mem_snoc (log k h0) e;
   pairwise_snoc (log k h0) e;
   c
 
-
-/// find_entry: An auxiliary function with a somewhhat technical proof
-///    -- We search for an entry in a log that contains a cipher using
-///       a left-to-right scan of the sequence provide by Seq.seq_find
-///    -- Knowing that a the cipher exists in the log (via Seq.mem)
-///       guarantees that this scan will succeed.
-let find_entry (log:seq log_entry) (c:iv_cipher) : Pure log_entry
-    (requires (exists p. Seq.mem (Entry p c) log))
-    (ensures (fun e -> Seq.mem e log /\ Entry?.c e == c))
-  = let entry_has_cipher (c:iv_cipher) (e:log_entry) = Entry?.c e = c in
-    let eopt = Seq.seq_find (entry_has_cipher c) log in
-    FStar.Classical.exists_elim
-             (Some? eopt /\ Seq.mem (Some?.v eopt) log /\ entry_has_cipher c (Some?.v eopt))
-             ()
-             (fun (p:Plain.plain{Seq.mem (Entry p c) log}) -> 
-                Seq.find_mem log (entry_has_cipher c) (Entry p c));
-    Some?.v eopt                
-
-let functionally_correct (k:key) (c:iv_cipher) (p:Plain.plain) =
+let dec_functionally_correct (k:key) (c:iv_cipher) (p:Plain.plain) =
     let iv, c = split c ivsize in
     Plain.reveal p == AES.aes_decrypt k.raw iv c
-
-/// decrypt:
-///    -- An important pre-condition of decrypt is that when idealizing
-///       (ind_cpa_rest_adv), we need to know that the cipher being decrypted
-///       is actually the valid encryption of some plain text already in the log.
-///
-///    -- This allow us to prove that the plain text returned is a
-///       valid decryption
-let decrypt (k:key) (c:iv_cipher)
-  : ST Plain.plain
-  (requires (fun h0 ->
-    let log = log k h0 in
-    invariant k h0 /\
-    (b2t ind_cpa_rest_adv ==> (exists p. Seq.mem (Entry p c) log))))
-  (ensures  (fun h0 res h1 ->
-    let log = log k h1 in
-    B.modifies B.loc_none h0 h1 /\
-    invariant k h1 /\
-    (b2t ind_cpa_rest_adv ==> Seq.mem (Entry res c) log) /\
-    (not ind_cpa || not uf_cma ==> functionally_correct k c res))) =
-  let Key raw_key log = k in
-  let iv,c' = split c ivsize in
-  let raw_plain = AES.aes_decrypt raw_key iv c' in
-  if ind_cpa_rest_adv then
-    let log = !log in
-    let Entry plain _ = find_entry log c in
-    split_entry plain iv c';
-    if not ind_cpa then begin
-       //no correction necessary: raw_plain is the corrext plain text already
-       AES.enc_dec_inverses raw_key iv (repr plain);
-       assert (repr plain == raw_plain);
-       assert (functionally_correct k c plain);
-       plain
-    end
-    else begin
-      let zeroes = Seq.create (Plain.length plain) 0z in
-      AES.enc_dec_inverses raw_key iv zeroes;
-      assert (raw_plain == zeroes);
-      plain
-    end
-  else let p = coerce raw_plain in
-       assert (functionally_correct k c p);
-       p
-
 
 let authentic (k:key) (c:iv_cipher) =
   exists p. k.log `Log.contains` Entry p c
@@ -290,12 +228,12 @@ let find (k:key) (c:iv_cipher)
       e.c == c /\
       k.log `Log.contains` e /\
       Seq.mem e (log k h1) /\
-      B.modifies B.loc_none h0 h1)
+      h0 == h1)
   = Log.contains_now_e k.log (fun e -> e.c == c);
     let h = get () in
-    assert (exists p. Log.contains_h k.log (Entry p c) h);
     let Some e = Log.find k.log (fun e -> e.c = c) in
-    Seq.contains_elim (HS.sel h k.log) e;
+    Log.contains_now k.log e;
+    Seq.contains_elim (log k h) e;
     e
 
 /// decrypt:
@@ -305,17 +243,17 @@ let find (k:key) (c:iv_cipher)
 ///
 ///    -- This allow us to prove that the plain text returned is a
 ///       valid decryption
-let decrypt2 (k:key) (c:iv_cipher)
+let decrypt (k:key) (c:iv_cipher)
   : ST Plain.plain
   (requires fun h ->
     invariant k h /\
     (uf_cma ==> authentic k c))
   (ensures  fun h0 res h1 ->
     let log = log k h1 in
-    B.modifies B.loc_none h0 h1 /\
+    h0 == h1 /\
     invariant k h1 /\
     (uf_cma ==> k.log `Log.contains` Entry res c) /\
-    (not uf_cma || not ind_cpa ==> functionally_correct k c res)) =
+    (not uf_cma || not ind_cpa ==> dec_functionally_correct k c res)) =
   let Key raw_key log = k in
   let iv,c' = split c ivsize in
   let raw_plain = AES.aes_decrypt raw_key iv c' in
