@@ -59,7 +59,7 @@ val as_addr (#a:Type0) (b:array a) : GTot nat
 val freeable (#a: Type) (b: array a) : GTot Type0
 
 
-(*** Sub-bufers *)
+(*** Sub-buffers *)
 
 val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t{U32.v len > 0})
   :Ghost (array a)
