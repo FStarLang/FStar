@@ -120,7 +120,7 @@ let pairwise_snoc (cpas:Seq.seq log_entry) (tl:log_entry)
 
 /// It's convenient to lift the pairwise-distinctness of IVs to
 /// pairwise distinctness of the cipher texts
-let invert_pairwise (cpas:Seq.seq log_entry) (e:log_entry) (c:cipher)
+let invert_pairwise (cpas:Seq.seq log_entry) (e:log_entry) (c:iv_cipher)
     : Lemma (requires (pairwise_distinct_ivs (snoc cpas e) /\
                        Entry?.c e == c))
             (ensures (forall e'. Seq.mem e' cpas ==> Entry?.c e' <> c))
@@ -198,7 +198,9 @@ let encrypt (k:key) (m:Plain.plain)
     B.modifies (B.loc_mreference k.log) h0 h1 /\
     invariant k h1 /\
     entry_functional_correctness k.raw (Entry m c) /\    
-    (ind_cpa ==> log k h1 == Seq.snoc (log k h0) (Entry m c))) =
+    (if ind_cpa
+     then log k h1 == Seq.snoc (log k h0) (Entry m c)
+     else log k h1 == log k h0)) =
   let iv = fresh_iv k in
   let text = if ind_cpa
              then Seq.create (Plain.length m) 0z
@@ -217,20 +219,19 @@ let dec_functionally_correct (k:key) (c:iv_cipher) (p:Plain.plain) =
     let iv, c = split c ivsize in
     Plain.reveal p == AES.aes_decrypt k.raw iv c
 
-let authentic (k:key) (c:iv_cipher) =
-  exists p. k.log `Log.contains` Entry p c
+let authentic (k:key) (c:iv_cipher) (h:HS.mem) =
+  exists p. Log.contains_h k.log (Entry p c) h
 
 let find (k:key) (c:iv_cipher)
   : ST log_entry
-    (requires fun _ ->
+    (requires
       authentic k c)
     (ensures fun h0 e h1 ->
       e.c == c /\
       k.log `Log.contains` e /\
       Seq.mem e (log k h1) /\
       h0 == h1)
-  = Log.contains_now_e k.log (fun e -> e.c == c);
-    let h = get () in
+  = let h = get () in
     let Some e = Log.find k.log (fun e -> e.c = c) in
     Log.contains_now k.log e;
     Seq.contains_elim (log k h) e;
@@ -247,19 +248,20 @@ let decrypt (k:key) (c:iv_cipher)
   : ST Plain.plain
   (requires fun h ->
     invariant k h /\
-    (uf_cma ==> authentic k c))
+    (ind_cpa ==> authentic k c h))
   (ensures  fun h0 res h1 ->
     let log = log k h1 in
     h0 == h1 /\
     invariant k h1 /\
-    (uf_cma ==> k.log `Log.contains` Entry res c) /\
-    (not uf_cma || not ind_cpa ==> dec_functionally_correct k c res)) =
+    (if ind_cpa 
+     then k.log `Log.contains` Entry res c
+     else dec_functionally_correct k c res)) =
   let Key raw_key log = k in
   let iv,c' = split c ivsize in
   let raw_plain = AES.aes_decrypt raw_key iv c' in
-  if uf_cma then
+  if ind_cpa then
     let Entry plain _ = find k c in
     split_entry plain iv c';
-    if not ind_cpa then AES.enc_dec_inverses raw_key iv (repr plain);
     plain
-  else coerce raw_plain
+  else
+    coerce raw_plain

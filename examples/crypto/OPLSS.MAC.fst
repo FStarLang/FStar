@@ -53,9 +53,9 @@ let mac (k:key) (m:msg)
       invariant k h1 /\
       B.modifies (B.loc_mreference k.log) h0 h1 /\
       t == hmac_sha1 k.raw m /\
-      (Ideal.uf_cma ==>
-        log k h1 == Seq.snoc (log k h0) (Entry m t)
-        ))
+      (if Ideal.uf_cma
+       then log k h1 == Seq.snoc (log k h0) (Entry m t)
+       else log k h1 == log k h0))
   = let t = hmac_sha1 k.raw m in
     if Ideal.uf_cma then Log.add k.log (Entry m t);
     t
@@ -66,7 +66,7 @@ let verify (k:key) (m:msg) (t:tag)
       invariant k)
     (ensures fun h0 b h1 ->
       invariant k h1 /\
-      B.modifies B.loc_none h0 h1 /\
+      h0 == h1 /\
       (b ==> t == hmac_sha1 k.raw m /\
              (Ideal.uf_cma ==> k.log `Log.contains` Entry m t)))
   = let verified = (t = hmac_sha1 k.raw m) in

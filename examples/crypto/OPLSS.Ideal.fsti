@@ -15,13 +15,10 @@
 *)
 module OPLSS.Ideal
 
-val ind_cpa : bool
+val uf_cma : bool
 
-val uf_cma : b:bool{ ind_cpa ==> b }
+val ind_cpa : b:bool{b ==> uf_cma}
 
-let ind_cpa_rest_adv = uf_cma
-(* well typed adversaries only submit ciphertext obtained using encrypt *)
-
-let conf = ind_cpa && uf_cma
+let conf = ind_cpa
 
 let auth =  uf_cma
