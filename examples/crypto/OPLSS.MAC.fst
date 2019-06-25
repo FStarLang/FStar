@@ -24,7 +24,7 @@ type key =
        -> key
 
 let loc (k:key) = B.loc_mreference k.log
-let log (k:key) (h:HS.mem) = HS.sel h k.log
+let log (k:key) (h:HS.mem) = Log.entries k.log h
 
 assume
 val random : unit -> EXT raw_key
@@ -43,7 +43,6 @@ let keygen () :
   = let raw = random () in
     let l = Log.new_log #log_entry in
     Key raw l
-
 
 let mac (k:key) (m:msg)
   : ST tag
@@ -68,7 +67,7 @@ let verify (k:key) (m:msg) (t:tag)
       invariant k h1 /\
       h0 == h1 /\
       (b ==> t == hmac_sha1 k.raw m /\
-             (Ideal.uf_cma ==> k.log `Log.contains` Entry m t)))
+             (Ideal.uf_cma ==> log k h1 `Log.has` Entry m t)))
   = let verified = (t = hmac_sha1 k.raw m) in
     if Ideal.uf_cma
     then let found = Some? (Log.find k.log (fun e -> e.msg = m && e.tag = t)) in

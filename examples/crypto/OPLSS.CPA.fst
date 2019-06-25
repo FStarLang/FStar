@@ -198,7 +198,7 @@ let encrypt (k:key) (m:Plain.plain)
     B.modifies (B.loc_mreference k.log) h0 h1 /\
     invariant k h1 /\
     entry_functional_correctness k.raw (Entry m c) /\    
-    (if ind_cpa
+    (if uf_cma
      then log k h1 == Seq.snoc (log k h0) (Entry m c)
      else log k h1 == log k h0)) =
   let iv = fresh_iv k in
@@ -209,7 +209,7 @@ let encrypt (k:key) (m:Plain.plain)
   let c = iv@|raw_c in
   let e = Entry m c in
   let h0 = FStar.HyperStack.ST.get () in  
-  if ind_cpa then Log.add k.log e;
+  if uf_cma then Log.add k.log e;
   split_entry m iv raw_c;
   lemma_mem_snoc (log k h0) e;
   pairwise_snoc (log k h0) e;
@@ -220,7 +220,7 @@ let dec_functionally_correct (k:key) (c:iv_cipher) (p:Plain.plain) =
     Plain.reveal p == AES.aes_decrypt k.raw iv c
 
 let authentic (k:key) (c:iv_cipher) (h:HS.mem) =
-  exists p. Log.contains_h k.log (Entry p c) h
+  exists p. Log.entries k.log h `Log.has` Entry p c
 
 let find (k:key) (c:iv_cipher)
   : ST log_entry
@@ -229,7 +229,7 @@ let find (k:key) (c:iv_cipher)
     (ensures fun h0 e h1 ->
       e.c == c /\
       k.log `Log.contains` e /\
-      Seq.mem e (log k h1) /\
+      log k h1 `Log.has` e /\
       h0 == h1)
   = let h = get () in
     let Some e = Log.find k.log (fun e -> e.c = c) in
@@ -248,20 +248,21 @@ let decrypt (k:key) (c:iv_cipher)
   : ST Plain.plain
   (requires fun h ->
     invariant k h /\
-    (ind_cpa ==> authentic k c h))
+    (uf_cma ==> authentic k c h))
   (ensures  fun h0 res h1 ->
     let log = log k h1 in
     h0 == h1 /\
     invariant k h1 /\
-    (if ind_cpa 
-     then k.log `Log.contains` Entry res c
-     else dec_functionally_correct k c res)) =
+    (uf_cma ==> Log.entries k.log h1 `Log.has` Entry res c) /\
+    (not ind_cpa ==> dec_functionally_correct k c res)) =
   let Key raw_key log = k in
   let iv,c' = split c ivsize in
   let raw_plain = AES.aes_decrypt raw_key iv c' in
-  if ind_cpa then
+  if uf_cma then
     let Entry plain _ = find k c in
     split_entry plain iv c';
+    if not ind_cpa
+    then AES.enc_dec_inverses raw_key iv (repr plain);
     plain
   else
     coerce raw_plain

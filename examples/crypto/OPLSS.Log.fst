@@ -14,10 +14,14 @@ let grows (#a:Type)
     length s1 <= length s2 /\
     (forall (i:nat).{:pattern (index s1 i) \/ (index s2 i)} i < length s1 ==> index s1 i == index s2 i)
 
-let t (a:Type) = HST.mref (seq a) grows
+let t (a:eqtype) = HST.mref (seq a) grows
 
-let contains_h #a (x:t a) (v:a) (h:HS.mem) =
-  Seq.contains (HS.sel h x) v
+let entries #a (x:t a) (h:HS.mem) = HS.sel h x
+let has (#a:eqtype) (l:seq a) (x:a) = Seq.mem x l
+
+private
+let contains_h #a (x:t a) (v:a) (h:HS.mem) : Type =
+  entries x h `has` v
 
 let contains_h_stable #a (x:t a) (v:a)
   : Lemma ((x `contains_h` v) `stable_on` x)
@@ -27,14 +31,14 @@ let contains_h_stable #a (x:t a) (v:a)
                contains_h x v h1)
         [SMTPat (contains_h x v h0);
          SMTPat (contains_h x v h1)]
-      = let aux (#a:Type) (s:seq a) (x:a) (k:nat)
+      = let aux (s:seq a) (x:a) (k:nat)
           : Lemma (k < Seq.length s /\ Seq.index s k == x
                      ==>
-                  s `Seq.contains` x)
-                  [SMTPat (Seq.index s k); SMTPat (s `Seq.contains` x)]
-          = contains_intro s k x
+                  x `Seq.mem` s)
+                  [SMTPat (Seq.index s k); SMTPat (x `Seq.mem` s)]
+          = ()
         in
-        contains_elim (HS.sel h0 x) v
+        FStar.Classical.move_requires (mem_index v) (HS.sel h0 x)
     in
     ()
 
@@ -74,7 +78,7 @@ let contains_now_e #a (x:t a) (refine: a -> Type)
       exists (v:a{refine v}). x `contains` v)
     (ensures fun h0 _ h1 ->
       h0 == h1 /\
-      (exists (v:a{refine v}). contains_h x v h1))
+      (exists (v:a{refine v}). entries x h1 `has` v))
   = let u : squash (exists (v:a{refine v}). x `contains` v) = () in
     FStar.Classical.exists_elim
          (token_p x (fun h -> exists (v:a{refine v}). contains_h x v h))
@@ -99,6 +103,7 @@ let add #a (x:t a) (v:a)
     (requires fun _ -> True)
     (ensures fun h0 _ h1 ->
       x `contains` v /\
+      entries x h1 `has` v /\
       HS.sel h1 x == Seq.snoc (HS.sel h0 x) v /\
       B.modifies (B.loc_mreference x) h0 h1)
   = let l0 = !x in
@@ -109,8 +114,15 @@ let add #a (x:t a) (v:a)
     contains_h_stable x v;
     witness_p x (x `contains_h` v)
 
-let not_found (l:seq 'a) (f:'a -> bool) =
-    forall (x:'a). Seq.contains l x ==> not (f x)
+let not_found (#a:eqtype) (l:seq a) (f:a -> bool) =
+    forall (x:a). x `Seq.mem` l ==> not (f x)
+
+let rec index_mem (#a:eqtype) (s:seq a) (x:a)
+    : Lemma (ensures (Seq.mem x s <==> (exists i. Seq.index s i == x)))
+            (decreases (Seq.length s))
+    = if length s = 0 then ()
+      else if head s = x then ()
+      else index_mem (tail s) x
 
 let find #a (x:t a) (f: a -> bool)
   : ST (option a)
@@ -120,15 +132,19 @@ let find #a (x:t a) (f: a -> bool)
       (let l = HS.sel h1 x in
        match o with
        | None -> not_found l f
-       | Some v -> contains x v /\ f v))
+       | Some v ->
+         contains x v /\
+         entries x h1 `has` v /\
+         f v))
   = let l = !x in
     match Seq.find_l f l with
     | None ->
       Seq.find_l_none_no_index l f;
-      FStar.Classical.forall_intro (Seq.contains_elim l);
+      FStar.Classical.forall_intro (index_mem l);
       None
     | Some v ->
       Seq.lemma_find_l_contains f l;
+      Seq.contains_elim l v;
       contains_h_stable x v;
       witness_p x (x `contains_h` v);
       Some v
