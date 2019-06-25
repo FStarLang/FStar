@@ -1,9 +1,9 @@
-FSTAR_HOME=../../../..
+FSTAR_HOME=../../..
 
 all: verify-all
 
 include .depend
-include ../../../Makefile.include
+include ../../Makefile.include
 
 verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
 

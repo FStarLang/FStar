@@ -13,10 +13,7 @@ else
 NEGTESTS=3
 endif
 
-all: uall
-
-uall: all-pos
-	+$(MAKE) -C friends all-dirs
+all: all-pos
 
 MustEraseForExtraction.uver: OTHERFLAGS += --warn_error @318
 

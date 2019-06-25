@@ -24,6 +24,7 @@ dm4free \
 incl \
 struct \
 micro-benchmarks \
+friends \
 tactics \
 typeclasses \
 miniparse \
