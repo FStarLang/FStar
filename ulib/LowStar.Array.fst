@@ -515,6 +515,12 @@ let modifies_upd #t #pre r v h = MG.modifies_upd #_ #cls r v h
 
 let fresh_frame_loc_not_unused_in_disjoint h0 h1 = MG.not_live_region_loc_not_unused_in_disjoint cls h0 (HS.get_tip h1)
 
+let live_loc_not_unused_in #a b h =
+  let set = Set.singleton (as_addr b) in
+  Classical.move_requires (MG.does_not_contain_addr_elim b.content h) (frameOf b, as_addr b);
+  MG.loc_addresses_not_unused_in cls (frameOf b) set h;
+  assert (loc_not_unused_in h `loc_includes` loc_addresses false (frameOf b) set)
+
 let mreference_live_loc_not_unused_in #t #pre h r = MG.mreference_live_loc_not_unused_in cls h r
 let mreference_unused_in_loc_unused_in #t #pre h r = MG.mreference_unused_in_loc_unused_in cls h r
 
@@ -807,6 +813,8 @@ let share #a b =
   (**) assert (as_seq h1 b' `Seq.equal` as_seq h0 b);
   (**) lemma_different_live_pid h0 b;
   (**) lemma_disjoint_pid_disjoint_arrays b b';
+  // This assumption requires a fundamental change in the modifies library. This is on TR's plate
+  (**) assume (fresh_loc (loc_array b') h0 h1);
   b'
 
 val merge_cell:
