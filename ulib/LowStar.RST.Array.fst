@@ -45,3 +45,16 @@ let free (#a:Type) (b:A.array a) =
    reveal_rst_inv();
    reveal_modifies();
    A.free b
+
+let share #a b =
+  reveal_rst_inv();
+  reveal_modifies();
+  reveal_star();
+  let b' = A.share b in
+  b'
+
+let merge #a b b' =
+  reveal_rst_inv();
+  reveal_modifies();
+  reveal_star();
+  A.merge #a b b'
