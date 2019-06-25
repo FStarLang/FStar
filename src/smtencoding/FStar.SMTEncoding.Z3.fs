@@ -622,7 +622,8 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
   let start = BU.now() in
   let status, statistics =
     try doZ3Exe log_file r fresh input label_messages
-    with e when (refresh(); false) -> //refresh the solver but don't handle the exception; it'll be caught upstream
+    with e ->
+        refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
         raise e
   in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
