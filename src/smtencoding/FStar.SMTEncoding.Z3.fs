@@ -124,6 +124,7 @@ let status_string_and_errors s =
     | SAT (errs, msg)
     | UNKNOWN (errs, msg)
     | TIMEOUT (errs, msg) -> BU.format2 "%s%s" (status_tag s) (match msg with None -> "" | Some msg -> " because " ^ msg), errs
+                             //(match msg with None -> "unknown" | Some msg -> msg), errs
 
 let tid () = BU.current_tid() |> BU.string_of_int
 let new_z3proc id =
@@ -225,6 +226,8 @@ let bg_z3_proc =
         let kill_handler () = "\nkilled\n" in
         BU.ask_process (z3proc ()) input kill_handler in
     let refresh () =
+        if Options.debug_any () then
+          Errors.diag Range.dummyRange "Restarting SMT solver...";
         BU.kill_process (z3proc ());
         the_z3proc := Some (new_z3proc_with_id ());
         query_logging.close_log() in

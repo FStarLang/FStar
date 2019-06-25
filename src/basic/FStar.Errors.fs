@@ -333,6 +333,7 @@ type raw_error =
   | Fatal_EmptySurfaceLet
   | Warning_UnexpectedCheckedFile
   | Fatal_ExtractionUnsupported
+  | Warning_SMTErrorReason
 
 type flag = error_flag
 
@@ -663,6 +664,7 @@ let default_flags =
   (Fatal_EmptySurfaceLet                             , CFatal);
   (Warning_UnexpectedCheckedFile                     , CWarning); //321
   (Fatal_ExtractionUnsupported                       , CFatal);
+  (Warning_SMTErrorReason                            , CWarning);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]
