@@ -17,12 +17,6 @@ type value_with_perms (a: Type0) = vp : (a & Ghost.erased (perms_rec a)){
   forall (pid:live_pid (Ghost.reveal p)). get_snapshot_from_pid (Ghost.reveal p) pid == v
 }
 
-inline_for_extraction
-type with_perm (a: Type) = {
-  wp_v: a;
-  wp_perm: permission;
-}
-
 noeq type array (a:Type0) :Type0 =
   | Array:
     max_length:U32.t{U32.v max_length > 0} ->
