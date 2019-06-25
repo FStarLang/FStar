@@ -91,7 +91,7 @@ let summable_permissions (#a:Type) (h:HS.mem) (b:A.array a{(array_view b).inv h}
 val index (#a:Type) (b:A.array a) (i:UInt32.t)
   : RST a (array_resource b)
           (fun _ -> array_resource b)
-          (fun h0 -> UInt32.v i < A.vlength b /\ P.allows_read (sel (array_view b) h0).p)
+          (fun h0 -> UInt32.v i < A.vlength b)
           (fun h0 x h1 ->
           UInt32.v i < A.vlength b /\
           Seq.index (sel (array_view b) h0).s (UInt32.v i) == x /\
