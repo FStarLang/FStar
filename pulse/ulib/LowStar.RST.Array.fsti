@@ -114,3 +114,25 @@ val free (#a:Type) (b:A.array a)
              (fun _ -> empty_resource)
              (fun h0 -> A.freeable b /\ P.allows_write (sel (array_view b) h0).p)
              (fun _ _ _ -> True)
+
+val share (#a:Type) (b:A.array a)
+  : RST (A.array a)
+        (array_resource b)
+        (fun b' -> array_resource b <*> array_resource b')
+        (fun h0 -> A.vlength b > 0)
+        (fun h0 b' h1 ->
+          (sel (array_view b) h0).s == (sel (array_view b) h1).s /\
+          (sel (array_view b') h1).s == (sel (array_view b) h1).s /\
+          (sel (array_view b) h1).p == P.half_permission (sel (array_view b) h0).p /\
+          (sel (array_view b') h1).p == P.half_permission (sel (array_view b) h0).p /\
+          A.mergeable b b')
+
+val merge (#a:Type) (b b':A.array a)
+  : RST unit (array_resource b <*> array_resource b')
+             (fun _ -> array_resource b)
+             (fun h0 -> A.mergeable b b' /\ A.summable_permissions h0 b b')
+             (fun h0 _ h1 ->
+               A.summable_permissions h0 b b' /\
+               (sel (array_view b) h0).s == (sel (array_view b) h1).s /\
+               (sel (array_view b) h1).p == P.sum_permissions (sel (array_view b) h0).p (sel (array_view b') h0).p)
+    
