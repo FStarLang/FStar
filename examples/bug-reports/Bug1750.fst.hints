@@ -1,0 +1,66 @@
+[
+  "pﬁ\u001d·£BjL3∆‘≥\u000bN_Ç",
+  [
+    [
+      "Bug1750.test_partial_app0",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Bug1750.apply.fuel_instrumented", "@query",
+        "Prims_interpretation_Tm_arrow_35447810753695c4fe25c93af1251992",
+        "Prims_interpretation_Tm_arrow_d8786b19d6bfb85050fd4e7eeca6f4bb",
+        "equation_with_fuel_Bug1750.apply.fuel_instrumented",
+        "function_token_typing_Bug1750.plus", "int_inversion"
+      ],
+      0,
+      "fb51b3e262aedad9c13bb26dee611099"
+    ],
+    [
+      "Bug1750.test_partial_app2",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Bug1750.apply.fuel_instrumented", "@query",
+        "Prims_interpretation_Tm_arrow_35447810753695c4fe25c93af1251992",
+        "Prims_interpretation_Tm_arrow_d8786b19d6bfb85050fd4e7eeca6f4bb",
+        "equation_with_fuel_Bug1750.apply.fuel_instrumented", "int_inversion"
+      ],
+      0,
+      "9141d6ed1eb938dfe04b72c757f2c3b6"
+    ],
+    [
+      "Bug1750.test_partial_app3",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Bug1750.apply.fuel_instrumented", "@query",
+        "Prims_interpretation_Tm_arrow_35447810753695c4fe25c93af1251992",
+        "Prims_interpretation_Tm_arrow_d8786b19d6bfb85050fd4e7eeca6f4bb",
+        "equation_Bug1750.ref_t",
+        "equation_with_fuel_Bug1750.apply.fuel_instrumented",
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_e39e0b1bfbdbf19786e6ddda7c6622a2"
+      ],
+      0,
+      "bc2dbfb3df6a808404198ceeef594c8e"
+    ],
+    [
+      "Bug1750.eff",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1750.G",
+        "disc_equation_Bug1750.T", "fuel_guarded_inversion_Bug1750.eff_tag"
+      ],
+      0,
+      "bb59ada064258605cf7f10b6ceeb5aa1"
+    ]
+  ]
+]

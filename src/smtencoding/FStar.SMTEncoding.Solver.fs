@@ -179,11 +179,20 @@ type errors = {
 }
 
 let error_to_short_string err =
-    BU.format4 "%s (fuel=%s; ifuel=%s; %s)"
+    BU.format4 "%s (fuel=%s; ifuel=%s%s)"
             err.error_reason
             (string_of_int err.error_fuel)
             (string_of_int err.error_ifuel)
-            (if Option.isSome err.error_hint then "with hint" else "")
+            (if Option.isSome err.error_hint then "; with hint" else "")
+
+let error_to_is_timeout err =
+    if BU.ends_with err.error_reason "canceled"
+    then [BU.format4 "timeout (fuel=%s; ifuel=%s; %s)"
+            err.error_reason
+            (string_of_int err.error_fuel)
+            (string_of_int err.error_ifuel)
+            (if Option.isSome err.error_hint then "with hint" else "")]
+    else []
 
 type query_settings = {
     query_env:env;
@@ -278,21 +287,31 @@ let find_localized_errors errs =
 let has_localized_errors errs = Option.isSome (find_localized_errors errs)
 
 let report_errors settings : unit =
+    let format_smt_error msg =
+      BU.format1 "SMT solver says:\n\t%s;\n\t\
+                  Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
+                  'incomplete quantifiers' means a (partial) counterexample was found, so try to spell your proof out in greater detail, increase fuel or ifuel\n\t\
+                  'unknown' means Z3 provided no further reason for the proof failing"
+        msg
+    in
     let _basic_error_report =
+        let smt_error =
+            settings.query_errors
+            |> List.map error_to_short_string
+            |> String.concat ";\n\t"
+            |> format_smt_error
+        in
         match find_localized_errors settings.query_errors with
         | Some err ->
-          settings.query_errors |> List.iter (fun e ->
-          FStar.Errors.diag settings.query_range ("SMT solver says: " ^ error_to_short_string e));
-          FStar.TypeChecker.Err.add_errors settings.query_env err.error_messages
+          // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
+          FStar.TypeChecker.Err.add_errors_smt_detail settings.query_env err.error_messages (Some smt_error)
         | None ->
-          let err_detail =
-            settings.query_errors |>
-            List.map (fun e -> "SMT solver says: " ^ error_to_short_string e) |>
-            String.concat "; " in
-          FStar.TypeChecker.Err.add_errors
+          FStar.TypeChecker.Err.add_errors_smt_detail
                    settings.query_env
-                   [(Errors.Error_UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
+                   [(Errors.Error_UnknownFatal_AssertionFailure,
+                     "Unknown assertion failed",
                      settings.query_range)]
+                   (Some smt_error)
     in
     if Options.detail_errors()
     && Options.n_cores() = 1

@@ -48,15 +48,28 @@ let callee
 = S.write (S.field pto "I") (S.read (S.field pfrom "I") + 1);
   S.read (S.field pfrom "I")
 
-#set-options "--z3rlimit 16"
 
-let caller
-  ()
+//NS June 18, 2019: This annotation is necessary in the code below
+//to introduce a struct literal at an appropriate type with the
+//typing hypothesis in the Z3 context. Without it, we get into
+//trouble in the Z3 encoding, with the literal encoded without typing
+//hypotheses and Z3 is only able to prove that it has a type that is
+//equivalent to, but not equal to, the types expected by FStar.Pointer.Base
+//leading to simple proofs failing. This regressed likely because of a bug
+//fix in the SMT encoding that was incorrectly abstracting over top-level
+//nullary constants, introducing spurious sharing in the SMT encoding.
+
+let mk_struct_literal (x:S.struct_literal 'a) : Pure (S.struct_literal 'a)
+  (requires True)
+  (ensures fun _ -> True) = x
+
+let caller ()
 : HST.Stack int
-  (requires (fun _ -> True))
-  (ensures (fun _ z _ -> z == 18))
-= HST.push_frame();
-  let dm : S.struct struct = S.struct_create struct [(|"I", 18|); (|"B", true|)] in
+  (requires fun _ -> True)
+  (ensures (fun _ z _ -> z == 18)) =
+  HST.push_frame();
+  let l : S.struct_literal struct = mk_struct_literal [(|"I", 18|); (| "B", true |)] in
+  let dm : S.struct struct = S.struct_create struct l in
   let b = S.buffer_of_array_pointer (S.screate (S.TArray 2ul struct_t) (Some (Seq.create 2 dm))) in
   let pfrom : obj = S.pointer_of_buffer_cell b (UInt32.uint_to_t 0) in
   let pto : obj = S.pointer_of_buffer_cell b (UInt32.uint_to_t 1) in

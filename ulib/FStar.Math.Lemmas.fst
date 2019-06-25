@@ -30,7 +30,7 @@ val lemma_eucl_div_bound: a:nat -> b:nat -> q:pos -> Lemma
   (ensures  (a + q * b < q * (b+1)))
 let lemma_eucl_div_bound a b q = ()
 
-val lemma_mult_le_left: a:pos -> b:pos -> c:pos -> Lemma
+val lemma_mult_le_left: a:nat -> b:int -> c:int -> Lemma
   (requires (b <= c))
   (ensures  (a * b <= a * c))
 let lemma_mult_le_left a b c = ()
@@ -302,7 +302,7 @@ let add_div_mod_1 (a:int) (n:pos) : Lemma ((a + n) % n == a % n /\ (a + n) / n =
   lt_multiple_is_equal ((a + n) % n) (a % n) (a / n + 1 - (a + n) / n) n;
   ()
 
-
+#push-options "--z3rlimit_factor 4"
 let sub_div_mod_1 (a:int) (n:pos) : Lemma ((a - n) % n == a % n /\ (a - n) / n == a / n - 1) =
   lemma_div_mod a n;
   lemma_div_mod (a - n) n;
@@ -312,6 +312,7 @@ let sub_div_mod_1 (a:int) (n:pos) : Lemma ((a - n) % n == a % n /\ (a - n) / n =
   // ((a - n) % n) == a % n + (a / n - 1 - (a - n) / n) * n
   lt_multiple_is_equal ((a - n) % n) (a % n) (a / n - 1 - (a - n) / n) n;
   ()
+#pop-options
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3cliopt smt.arith.nl=true --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native --z3rlimit 30"
 
@@ -391,7 +392,12 @@ let lemma_mod_sub_distr (a:int) (b:int) (n:pos) =
 val lemma_mod_sub_0: a:pos -> Lemma ((-1) % a = a - 1)
 let lemma_mod_sub_0 a = ()
 val lemma_mod_sub_1: a:pos -> b:pos{a < b} -> Lemma ((-a) % b = b - (a%b))
-let lemma_mod_sub_1 a b = ()
+#push-options "--z3rlimit_factor 100 --max_fuel 0 --max_ifuel 0"
+let lemma_mod_sub_1 a b =
+  small_mod a b;
+  assert ((a%b) == a);
+  assert ((-a)%b == b - a)
+#pop-options
 
 //NS: not sure why this requires 4 unfoldings
 //    it fails initially, and then succeeds on a retry with less fuel; strange

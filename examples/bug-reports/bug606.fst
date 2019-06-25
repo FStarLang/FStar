@@ -74,7 +74,16 @@ let uint64_to_uint32 m =
 
 val uint64_to_uint32': m:UInt64.t{fits (UInt64.v m) n} -> Tot FStar.UInt32.t
 let uint64_to_uint32' m =
-  cut (uint_t n == x:int{size x n});
-  cut (forall (p:uint_t n). p:(x:int{size x n}));
+  (*
+   * AR: 06/15: This assertion was only provable because of a bug in
+   *            the smt encoding of Tm_refine terms. Essentially we were
+   *            mistakenly closing over the nullary constants (n here).
+   *            That results in the following refinements having the same
+   *            smt encoding as that of the refinements in the definition of
+   *            uint_t. But since that bug is fixed, the encoding is no more
+   *            shared.
+   *)
+  //cut (uint_t n == x:int{size x n});
+  //cut (forall (p:uint_t n). p:(x:int{size x n}));
   let m':uint_t n = UInt64.v m in // This fails, even if the above is provable
   UInt32.uint_to_t m'
