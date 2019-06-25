@@ -337,15 +337,16 @@ let set_symmetric_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
 let set_eq ((s1, eq):'a set) ((s2, _):'a set) : bool =
   set_is_empty (set_symmetric_difference (s1, eq) (s2, eq))
 
-
-module StringHash =
+module StringOps =
   struct
     type t = string
-    let equal (s1:string) (s2:string) = s1=s2
-    let hash (s:string) = BatHashtbl.hash s
+    let equal (x:t) (y:t) = x=y
+    let compare (x:t) (y:t) = BatString.compare x y
+    let hash (x:t) = BatHashtbl.hash x
   end
 
-module StringHashtbl = BatHashtbl.Make(StringHash)
+module StringHashtbl = BatHashtbl.Make(StringOps)
+module StringMap = BatMap.Make(StringOps)
 
 type 'value smap = 'value StringHashtbl.t
 let smap_create (i:Z.t) : 'value smap = StringHashtbl.create (Z.to_int i)
@@ -363,8 +364,6 @@ let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = StringHashtbl.copy m
 let smap_size (m:'value smap) = StringHashtbl.length m
 let smap_iter (m:'value smap) f = StringHashtbl.iter f m
-
-module StringMap = BatMap.Make(String)
 
 exception PSMap_Found
 type 'value psmap = 'value StringMap.t
@@ -385,14 +384,16 @@ let psmap_find_map (m:'value psmap) f =
 let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
   StringMap.modify_opt k (fun vopt -> Some (upd vopt)) m
 
-module ZHash =
+module Zops =
   struct
     type t = Z.t
-    let equal (z1:Z.t) (z2:Z.t) = Z.equal z1 z2
-    let hash (z:Z.t) = Z.hash z
+    let equal (x:Z.t) (y:Z.t) = Z.equal x y
+    let compare (x:Z.t) (y:Z.t) = Z.compare x y
+    let hash (x:Z.t) = Z.hash x
   end
 
-module ZHashtbl = BatHashtbl.Make(ZHash)
+module ZHashtbl = BatHashtbl.Make(Zops)
+module ZMap = BatMap.Make(Zops)
 
 type 'value imap = 'value ZHashtbl.t
 let imap_create (i:Z.t) : 'value imap = ZHashtbl.create (Z.to_int i)
@@ -407,15 +408,6 @@ let imap_fold (m:'value imap) f a = ZHashtbl.fold f m a
 let imap_remove (m:'value imap) k = ZHashtbl.remove m k
 let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
 let imap_copy (m:'value imap) = ZHashtbl.copy m
-
-
-module ZOrder =
-  struct
-    type t = Z.t
-    let compare (z1:Z.t) (z2:Z.t) = Z.compare z1 z2
-  end
-
-module ZMap = BatMap.Make(ZOrder)
 
 type 'value pimap = 'value ZMap.t
 let pimap_empty (_: unit) : 'value pimap = ZMap.empty
@@ -552,7 +544,7 @@ let replace_char (s:string) c1 c2 =
   BatUTF8.map (fun x -> if x = c1 then c2 else x) s
 let replace_chars (s:string) c (by:string) =
   BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
-let hashcode s = Z.of_int (BatHashtbl.hash s)
+let hashcode s = Z.of_int (StringOps.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = if s = "" then [""] else BatString.nsplit s sep
 let splitlines s = split s "\n"
