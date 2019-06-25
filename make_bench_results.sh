@@ -10,8 +10,10 @@ TIMESTAMP=`date +'%Y%m%d_%H%M%S'`
 OUTDIR=bench_results/${TIMESTAMP}
 
 if hash taskset 2>/dev/null; then
+	echo "taskset found, will run on CPU ${TASKSET_CPU}"
 	TASKSET_WRAP='taskset --cpu-list '${TASKSET_CPU}
 else
+	echo "taskset not found, will run without it"
 	TASKSET_WRAP=''
 fi
 
