@@ -615,6 +615,11 @@ val fresh_frame_loc_not_unused_in_disjoint
   (ensures (loc_disjoint (loc_region_only false (HS.get_tip h1)) (loc_not_unused_in h0)))
   [SMTPat (HS.fresh_frame h0 h1)]
 
+val live_loc_not_unused_in (#a:Type0) (b:array a) (h:HS.mem)
+  :Lemma (requires (live h b))
+         (ensures  (loc_not_unused_in h `loc_includes` loc_array b))
+         [SMTPat (live h b)]
+
 val mreference_live_loc_not_unused_in
   (#t: Type)
   (#pre: Preorder.preorder t)
@@ -754,7 +759,8 @@ val share (#a:Type0) (b:array a) : Stack (array a)
     as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
     as_seq h1 b' == as_seq h1 b /\ // The values of the new array are the same as the initial array
     mergeable b b' /\
-    (forall (i:nat{i < vlength b}). {:pattern [get_perm h1 b' i; get_perm h1 b i] } // The permission gets split in two
+    fresh_loc (loc_array b') h0 h1 /\
+    (forall (i:nat{i < vlength b}). {:pattern get_perm h1 b' i \/ get_perm h1 b i } // The permission gets split in two
       get_perm h1 b' i == P.half_permission (get_perm h0 b i) /\
       get_perm h1 b i == P.half_permission (get_perm h0 b i)
     ))
