@@ -83,7 +83,7 @@ following commands. (On Windows this requires Cygwin and `make`)
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
         $ z3 --version
-        Z3 version 4.5.1 - 64 bit - build hashcode 1f29cebd4df6
+        Z3 version 4.8.5 - 64 bit
 
    Note: if you are using the binary package and extracted it to,
    say, the `fstar` directory, then both `fstar.exe` and `z3` are in
@@ -118,7 +118,9 @@ following commands. (On Windows this requires Cygwin and `make`)
 4. You can verify the F* library and all the examples,
    keeping in mind that this might take a long time.
 
-        $ make -j6 -C ulib examples
+        $ make -j6 -C ulib
+        $ echo $?    # non-zero means build failed! scroll up for error message!
+        $ make -j6 -C examples
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
    Note: Some of the examples require having OCaml installed (as for step 3 above).
@@ -198,7 +200,7 @@ Some convenience Makefile targets are available:
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.0 should work.
+The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.X should work.
 
 #### Instructions for Windows ####
 
@@ -211,7 +213,7 @@ The steps require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, o
    - Can be installed using either your package manager or using OPAM
      (see below).
 
-1. Install OPAM (version 1.2.x).
+1. Install OPAM (version 1.2.x or later).
 
    - Installation instructions are available at various places
      (e.g., https://dev.realworldocaml.org/install.html

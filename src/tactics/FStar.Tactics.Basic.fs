@@ -121,7 +121,10 @@ let unshadow (bs : binders) (t : term) : binders * term =
         match bs with
         | [] -> List.rev bs', SS.subst subst t
         | b::bs -> begin
-            let [b] = SS.subst_binders subst [b] in
+            let b = match SS.subst_binders subst [b] with
+                    | [b] -> b
+                    | _ -> failwith "impossible: unshadow subst_binders"
+            in
             let (bv0, q) = b in
             let nbs = fresh_until (s bv0) (fun s -> not (List.mem s seen)) in
             let bv = sset bv0 nbs in
@@ -346,7 +349,7 @@ let do_unify env t1 t2 : tac<bool> =
     bind idtac (fun () ->
     if Env.debug env (Options.Other "1346") then (
         Options.push ();
-        let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
+        let _ = Options.set_options "--debug_level Rel --debug_level RelCheck" in
         ()
     );
     bind (__do_unify env t1 t2) (fun r ->
@@ -741,7 +744,7 @@ let intro () : tac<binder> = wrap_err "intro" <|
              //BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
              //BU.print1 "[intro]: new goal is %s"
              //           (Print.ctx_uvar_to_string ctx_uvar);
-             //ignore (FStar.Options.set_options Options.Set "--debug_level Rel");
+             //ignore (FStar.Options.set_options "--debug_level Rel");
               (* Suppose if instead of simply assigning `?u` to the lambda term on
                 the RHS, we tried to unify `?u` with the `(fun (x:t) -> ?v @ [NM(x, 0)])`.
 
@@ -1623,7 +1626,7 @@ let set_options (s : string) : tac<unit> = wrap_err "set_options" <|
     bind (cur_goal ()) (fun g ->
     FStar.Options.push ();
     FStar.Options.set (Util.smap_copy g.opts); // copy the map, they are not purely functional
-    let res = FStar.Options.set_options FStar.Options.Set s in
+    let res = FStar.Options.set_options s in
     let opts' = FStar.Options.peek () in
     FStar.Options.pop ();
     match res with

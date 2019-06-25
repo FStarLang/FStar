@@ -2384,7 +2384,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             (let uu____7776 = FStar_Extraction_ML_Syntax.string_of_mlpath p
                 in
              uu____7776 = "LowStar.ConstBuffer.to_ibuffer")
-          -> translate_expr env e
+          -> translate_expr env e1
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
