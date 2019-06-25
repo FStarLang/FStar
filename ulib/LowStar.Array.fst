@@ -17,6 +17,7 @@ type value_with_perms (a: Type0) = vp : (a & Ghost.erased (perms_rec a)){
   forall (pid:live_pid (Ghost.reveal p)). get_snapshot_from_pid (Ghost.reveal p) pid == v
 }
 
+inline_for_extraction
 type with_perm (a: Type) = {
   wp_v: a;
   wp_perm: permission;
@@ -641,17 +642,17 @@ let upd #a b i v =
 #pop-options
 
 let alloc #a init len =
-  let perm_map_pid = (
+  let perm_map_pid = Ghost.hide (
     let (vp, pid) = new_value_perms init true in
     ((vp <: perms_rec a), Ghost.hide pid)
   ) in
-  let v = (init, Ghost.hide (fst perm_map_pid)) in
+  let v = (init, Ghost.hide (fst (Ghost.reveal perm_map_pid))) in
   let s = Seq.create (U32.v len) v in
   (**) let h0 = HST.get() in
   let content = HST.ralloc_mm HS.root s in
   (**) let h1 = HST.get() in
   (**) MG.modifies_ralloc_post #ucell #cls HS.root s h0 content h1;
-  let b = Array len content 0ul len (snd perm_map_pid) in
+  let b = Array len content 0ul len (snd (Ghost.reveal perm_map_pid)) in
   (**) assert (Seq.equal (as_seq h1 b) (Seq.create (U32.v len) init));
   b
 
