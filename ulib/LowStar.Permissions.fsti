@@ -24,6 +24,7 @@ open FStar.Real
 
 /// A permission is a real number between 0 and 1. It is not meant ot be extracted, and as such should always be handled
 /// through a ``Ghost`` type.
+inline_for_extraction
 type permission = r:real{r >=. 0.0R /\ r <=. 1.0R}
 
 
@@ -37,7 +38,7 @@ let allows_write (p: permission) : GTot bool =
   p = 1.0R
 
 /// The common way to share a permission is to halve its value.
-let half_permission (p: permission) : Tot (permission) =
+let half_permission (p: permission) : GTot (permission) =
   p /. two
 
 /// When merging resources, you have to sum the permissions.
@@ -101,7 +102,7 @@ val get_snapshot_from_pid: #a: Type0 -> p: perms_rec a -> pid: perm_id -> Tot a
 
 val get_current_max: #a:Type0 -> p:perms_rec a -> perm_id
 
-val is_fully_owned: #a: Type0 -> p: perms_rec a -> Tot bool
+val is_fully_owned: #a: Type0 -> p: perms_rec a -> GTot bool
 
 let get_perm_kind_from_pid (#a: Type0) (perms: perms_rec a) (pid: perm_id) : GTot permission_kind =
   let permission = get_permission_from_pid perms pid in
@@ -119,7 +120,7 @@ type value_perms (a: Type0) (v: a) = p:perms_rec a{forall (pid:live_pid p). get_
 
 /// A new value perms is created with a single ``pid`` who has full permission and ownership of the resource.
 /// You also have to provide the initial value for the snapshot.
-val new_value_perms: #a: Type0 -> init: a -> fully_owned: bool -> Pure (value_perms a init & perm_id)
+val new_value_perms: #a: Type0 -> init: a -> fully_owned: bool -> Ghost (value_perms a init & perm_id)
   (requires (True)) (ensures (fun (v_perms, pid) ->
     get_permission_from_pid v_perms pid = 1.0R /\
     is_fully_owned v_perms = fully_owned
@@ -128,7 +129,7 @@ val new_value_perms: #a: Type0 -> init: a -> fully_owned: bool -> Pure (value_pe
 /// Sharing a particular ``pid`` halves the permission associated with it and returns a new ``perm_id``
 /// containing the other half.
 noextract
-val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid v_perms -> Pure (value_perms a v & perm_id)
+val share_perms: #a: Type0 -> #v: a -> v_perms: value_perms a v -> pid: live_pid v_perms -> Ghost (value_perms a v & perm_id)
   (requires (True)) (ensures (fun (new_v_perms, new_pid) ->
     new_pid <> pid /\
     get_permission_from_pid new_v_perms pid = get_permission_from_pid v_perms pid /. 2.0R /\
@@ -148,7 +149,7 @@ val share_perms_with_pid:
   v_perms: value_perms a v ->
   pid: live_pid v_perms ->
   new_pid:perm_id ->
-  Pure (value_perms a v)
+  Ghost (value_perms a v)
   (requires
     pid <> new_pid /\
     new_pid > get_current_max v_perms)
@@ -163,14 +164,13 @@ val share_perms_with_pid:
 
 /// When merginin two ``pid``, the first one will receive the sum of both permissions while the second
 /// ``pid`` will be deactivated with a zeroed permission.
-noextract
 val merge_perms:
   #a: Type0 ->
   #v: a ->
   v_perms: value_perms a v ->
   pid1: live_pid v_perms ->
   pid2: live_pid v_perms{pid1 <> pid2}
-  -> Pure (value_perms a v)
+  -> Ghost (value_perms a v)
   (requires (True)) (ensures (fun new_v_perms ->
     get_permission_from_pid new_v_perms pid1 =
       get_permission_from_pid v_perms pid1 +. get_permission_from_pid v_perms pid2 /\
@@ -202,7 +202,6 @@ val lemma_greater_max_not_live_pid (#a:Type0) (v_perms:perms_rec a) (pid:perm_id
 
 /// Once you have full permission with a ``pid``, you can change the value of the snapshot associated with it.
 /// This ensures that read-only permissions cannot change the value of the snapshot.
-noextract
 val change_snapshot:
   #a: Type0 ->
   #v: a ->
