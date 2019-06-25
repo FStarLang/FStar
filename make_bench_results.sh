@@ -42,16 +42,20 @@ BENCH_DIR=examples/micro-benchmarks; NME=micro-benchmarks
 rm -f ${BENCH_DIR}/*.bench
 ${TASKSET_WRAP} make -C ${BENCH_DIR} ORUN_FSTAR=true OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
 cat ${BENCH_DIR}/*.bench > ${OUTDIR}/${NME}.bench
+cat ${OUTDIR}/${NME}.bench | ./make_csv_from_bench.sh > ${OUTDIR}/${NME}.csv
 
 # benchmark ulib
 BENCH_DIR=ulib; NME=ulib
 rm -f ${BENCH_DIR}/*.bench
 ${TASKSET_WRAP} make -C ${BENCH_DIR} benchmark ORUN_FSTAR=true OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
 cat ${BENCH_DIR}/*.bench > ${OUTDIR}/${NME}.bench
+cat ${OUTDIR}/${NME}.bench | ./make_csv_from_bench.sh > ${OUTDIR}/${NME}.csv
 
 # ocaml_extract: make -C src ocaml
 make -C src clean_boot
 #make -C src clean # will do a clean-ocaml as well
-${TASKSET_WRAP} make -C src ocaml ORUN_FSTAR=true OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/ocaml_extract.log
-cat src/ocaml-output/*.bench > ${OUTDIR}/ocaml_extract.bench
+NME=ocaml_extract
+${TASKSET_WRAP} make -C src ocaml ORUN_FSTAR=true OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
+cat src/ocaml-output/*.bench > ${OUTDIR}/${NME}.bench
+cat ${OUTDIR}/${NME}.bench | ./make_csv_from_bench.sh > ${OUTDIR}/${NME}.csv
 
