@@ -461,6 +461,8 @@ let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\
  *            the following proofs will fail in the interactive mode.
  *            (I could manage to work some proofs without those options though.)
  *)
+(* GM: Jun 25, 2019: Adding a set-options for them *)
+#set-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 
 let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
   Lemma
