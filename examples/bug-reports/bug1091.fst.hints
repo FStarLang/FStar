@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
       0,
-      "2ea346ece387c4173a45f317fc20a5e1"
+      "9a1a51f993e14ff8dc223e8ac8ebc713"
     ],
     [
       "Bug1091.jun21_2017_logand_fail",
@@ -25,7 +25,7 @@
         "uvar_typing_19"
       ],
       0,
-      "c62f80935353442e064cad98b4e52138"
+      "9f121a28f272ba09ed435e2914778515"
     ],
     [
       "Bug1091.jun21_2017_logand",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "df1288a41500e767774cb5fc9d4a649a"
+      "79f7bd57d18f47ced781ce253cb46fa8"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -54,7 +54,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "61f3eaa36d5d6ae55f0f3fd1aa32154d"
+      "3b0ba94a9e080a43e97f33f456ef01f0"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -66,7 +66,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "afc650d459b616b5fc07946bf0d8d65a"
+      "b1cf0e3463bcaa913d51d89edd7e2169"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6e2336e3ba11896e7da19300b7ca5cd4"
+      "3c801b4c21b5300bf0a8a783dcea769d"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8c768cca9f902660e81321196bfbb16c"
+      "e40e35cb77cf02c7270badadc8f4d1d8"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "87ec7795a3b9c2d3fe44461d84098fef"
+      "4aff8e3aaf8744ee5bf157d38c3e9cc8"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -124,7 +124,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5ffd0089600c58982ac9b2843d8238bf"
+      "468b8753ea0615f8d120421370ef451b"
     ]
   ]
 ]
