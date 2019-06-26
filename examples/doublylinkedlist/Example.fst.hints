@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4bf2bb4b9dd074eafb5af8e737cc7e36"
+      "22945a0b10e31268f5e04c4ca393671d"
     ],
     [
       "Example.reverse",
@@ -26,7 +26,6 @@
         "@fuel_correspondence_Example.l_reverse.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_Example.l_reverse.fuel_instrumented", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_FStar.Monotonic.HyperHeap.Mod_set_def", "bool_inversion",
         "bool_typing", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
@@ -52,9 +51,7 @@
         "equation_with_fuel_Example.l_reverse.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion",
+        "function_token_typing_FStar.Monotonic.Heap.heap", "int_inversion",
         "lemma_DoublyLinkedListIface.auto_dll_as_list_staying_unchanged",
         "lemma_DoublyLinkedListIface.auto_dll_as_payload_list_staying_unchanged",
         "lemma_DoublyLinkedListIface.auto_dll_fp_disjoint_push",
@@ -103,12 +100,12 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Tm_refine_2011e81e05d092e08833cbfdaea77df9",
-        "refinement_interpretation_Tm_refine_230f82e75da51e1ef2620d7dabe6a18a",
-        "refinement_interpretation_Tm_refine_8ecf980b3e6fc466e30d9d739792064c",
-        "refinement_interpretation_Tm_refine_953f984c7f5f8ec5e8477460f3dcef31",
-        "refinement_interpretation_Tm_refine_9a74d818566e70513bc032cc3b65a144",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
+        "refinement_interpretation_Tm_refine_156c49afb7e1e070fbb2e47dc0e3d4b2",
+        "refinement_interpretation_Tm_refine_16cb19cdfda0ad15828e70e1c7f34226",
+        "refinement_interpretation_Tm_refine_3aac47f90ec5f312f230a639872610fd",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5b639a91c64460c5c5ce01410bb80c64",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_DoublyLinkedListIface.as_list",
         "typing_DoublyLinkedListIface.as_payload_list",
@@ -132,7 +129,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "805263c0f6115db3cf6968334397aaa9"
+      "06c309234d2557a6f3a7ee4b9650463c"
     ],
     [
       "Example.main",
@@ -148,10 +145,9 @@
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@query", "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_Prims.Cons@tok", "eq2-interp",
-        "equation_DoublyLinkedListIface.as_payload_list",
+        "bool_inversion", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Cons@tok",
+        "eq2-interp", "equation_DoublyLinkedListIface.as_payload_list",
         "equation_DoublyLinkedListIface.l_insert_at_head",
         "equation_DoublyLinkedListIface.l_insert_at_tail",
         "equation_DoublyLinkedListIface.loc_equiv",
@@ -177,9 +173,7 @@
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "function_token_typing_FStar.Monotonic.Heap.heap",
-        "function_token_typing_FStar.UInt32.t",
-        "function_token_typing_Prims.__cache_version_number__",
-        "l_or-interp",
+        "function_token_typing_FStar.UInt32.t", "l_or-interp",
         "lemma_DoublyLinkedListIface.auto_dll_as_list_staying_unchanged",
         "lemma_DoublyLinkedListIface.auto_dll_as_payload_list_staying_unchanged",
         "lemma_DoublyLinkedListIface.auto_dll_fp_upon_staying_unchanged",
@@ -218,11 +212,11 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Tm_refine_2011e81e05d092e08833cbfdaea77df9",
-        "refinement_interpretation_Tm_refine_230f82e75da51e1ef2620d7dabe6a18a",
-        "refinement_interpretation_Tm_refine_8ecf980b3e6fc466e30d9d739792064c",
-        "refinement_interpretation_Tm_refine_9a74d818566e70513bc032cc3b65a144",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
+        "refinement_interpretation_Tm_refine_156c49afb7e1e070fbb2e47dc0e3d4b2",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_78ab9b577cef43ee554dc4451361480d",
+        "refinement_interpretation_Tm_refine_a9cde84bd83a9caa08139f8ac755c9eb",
         "token_correspondence_DoublyLinkedListIface.g_node_vals.fuel_instrumented",
         "token_correspondence_Example.l_reverse.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
@@ -251,7 +245,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "e15ae3b4e767584ab49eccf2f0fe3a57"
+      "f0832c8e356b891472536854da7452b2"
     ],
     [
       "Example.l_reverse",
@@ -265,7 +259,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "25a19f1cee981f63d7cc45553c6b3784"
+      "3aa12d80193ace79549d5ad5f661fe44"
     ]
   ]
 ]

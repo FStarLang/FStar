@@ -459,7 +459,7 @@ let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   assert (low_n < pow2 s);
   mod_mul_pow2 (U64.v hi) (64 - s) s;
   U64.add high low
-#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native --z3cliopt 'smt.case_split=3'"
+#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 #set-options "--normalize_pure_terms_for_extraction"
 
 
@@ -472,12 +472,14 @@ let div_plus_multiple (a:nat) (b:nat) (k:pos) :
 val div_add_small: n:nat -> m:nat -> k1:pos -> k2:pos ->
   Lemma (requires (n < k1))
         (ensures (k1*m / (k1*k2) == (n + k1*m) / (k1*k2)))
+#push-options "--z3rlimit_factor 20"
 let div_add_small n m k1 k2 =
   div_product (k1*m) k1 k2;
   div_product (n+k1*m) k1 k2;
   mul_div_cancel m k1;
   assert (k1*m/k1 == m);
   div_plus_multiple n m k1
+#pop-options
 #set-options "--z3rlimit 5"
 
 val add_mod_small: n: nat -> m:nat -> k1:pos -> k2:pos ->
@@ -1014,6 +1016,7 @@ let mul_wide_low_ok (x y: U64.t) :
 
 val product_high32 : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 32 == phh x y * pow2 32 + plh x y + phl x y + pll_h x y)
+#push-options "--z3rlimit_factor 10"
 let product_high32 x y =
   Math.pow2_plus 32 32;
   product_expand x y;
@@ -1021,6 +1024,7 @@ let product_high32 x y =
   mul_div_cancel (phh x y * pow2 32) (pow2 32);
   mul_div_cancel (plh x y + phl x y + pll_h x y) (pow2 32);
   Math.small_division_lemma_1 (pll_l x y) (pow2 32)
+#pop-options
 
 val product_high_expand : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 64 == phh x y + (plh x y + phl x y + pll_h x y) / pow2 32)
