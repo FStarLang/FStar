@@ -296,22 +296,26 @@ let report_errors settings : unit =
     in
     let _basic_error_report =
         let smt_error =
+            if Options.query_stats ()
+            then
             settings.query_errors
             |> List.map error_to_short_string
             |> String.concat ";\n\t"
             |> format_smt_error
+            |> Some
+            else None
         in
         match find_localized_errors settings.query_errors with
         | Some err ->
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
-          FStar.TypeChecker.Err.add_errors_smt_detail settings.query_env err.error_messages (Some smt_error)
+          FStar.TypeChecker.Err.add_errors_smt_detail settings.query_env err.error_messages smt_error
         | None ->
           FStar.TypeChecker.Err.add_errors_smt_detail
                    settings.query_env
                    [(Errors.Error_UnknownFatal_AssertionFailure,
                      "Unknown assertion failed",
                      settings.query_range)]
-                   (Some smt_error)
+                   smt_error
     in
     if Options.detail_errors()
     && Options.n_cores() = 1
