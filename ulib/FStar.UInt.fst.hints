@@ -5612,7 +5612,7 @@
         "token_correspondence_Prims.pow2.fuel_instrumented"
       ],
       0,
-      "8cbe98eeccf9f745430982b4d94cb78f"
+      "a050dd90008bc3f890cd48e8a03fbb22"
     ],
     [
       "FStar.UInt.lemma_add_sub_cancel",
@@ -8726,7 +8726,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "4c88c0708c8497def9099893ddc71424"
+      "a09f76cdc043400bbc3bbde749b796aa"
     ],
     [
       "FStar.UInt.lemma_add_sub_cancel",

@@ -10,7 +10,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.fold_left.fuel_instrumented",
         "@query",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_8e5a1cca30655d0283f41a68e51d2b4c",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_f0225aaf6b987d44876e7f498390aa39",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Prims.eqtype",
@@ -27,7 +27,7 @@
         "typing_FStar.List.Tot.Base.fold_left"
       ],
       0,
-      "a8df2928c317f64f6d14ab9c3fda7ea7"
+      "81ef8d559c30ccd794e3edf86f663305"
     ]
   ]
 ]

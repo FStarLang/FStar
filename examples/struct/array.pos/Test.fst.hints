@@ -13,7 +13,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@query",
         "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
-        "FStar.Pervasives.Native_interpretation_Tm_arrow_8a5341dcb3712685d3c5f186cdb775d1",
+        "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
         "bool_inversion", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
@@ -50,7 +50,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "d9d5fe8948400ef7accabe530683f641"
+      "3a8c52c8f32f7c37bfdb60d20cb1a811"
     ],
     [
       "Test.callee",
@@ -65,7 +65,7 @@
         "@fuel_correspondence_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "@query",
         "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
-        "FStar.Pervasives.Native_interpretation_Tm_arrow_8a5341dcb3712685d3c5f186cdb775d1",
+        "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
         "bool_inversion", "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TInt",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
@@ -124,7 +124,7 @@
         "typing_Test.struct_t"
       ],
       0,
-      "34da02c1054577d5785c7944017a75e8"
+      "ad488ed35d93b3dd789be95ed6621584"
     ],
     [
       "Test.caller",
@@ -144,11 +144,11 @@
         "@query",
         "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "FStar.Pervasives.Native_interpretation_Tm_arrow_8a5341dcb3712685d3c5f186cdb775d1",
+        "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
+        "FStar.Pointer.Base_interpretation_Tm_arrow_28e00c6cddbebec863cfb4ba46afe386",
         "FStar.Pointer.Base_interpretation_Tm_arrow_3039342fd2e0851a3664dcc7db386d3a",
-        "FStar.Pointer.Base_interpretation_Tm_arrow_31cfce0995008908061f56cc685294ac",
+        "FStar.Pointer.Base_interpretation_Tm_arrow_6fc799a790a74ce5209418d25bd87e6d",
         "FStar.Pointer.Base_interpretation_Tm_arrow_dc341725e79c77ee2826c69229248156",
-        "FStar.Pointer.Base_interpretation_Tm_arrow_e1ee56d0838d76e6870e5a64e6e029ed",
         "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
@@ -277,7 +277,7 @@
         "typing_Tm_abs_38d4bb2034e4c433acd11631b66192dd"
       ],
       0,
-      "7c70c6db5aed4f0f2cc7231b272a516b"
+      "8127aeea8b4b6a2fc549f4a7d29d61bf"
     ]
   ]
 ]

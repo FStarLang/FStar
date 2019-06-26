@@ -1868,7 +1868,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "fb822a018d0fb664021924087ce3a085"
+      "88b60b697939b8ce255bb64d5d50c230"
     ],
     [
       "FStar.List.Tot.Properties.sorted",
@@ -1932,7 +1932,7 @@
         "typing_FStar.List.Tot.Properties.sorted"
       ],
       0,
-      "9d7e5f43c57189870614c452ba889f36"
+      "8521653d1530975be855828208596de1"
     ],
     [
       "FStar.List.Tot.Properties.sortWith_sorted",
@@ -1995,7 +1995,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "1a5692fc7c24663631573fc7ba70d332"
+      "0949008eee5f8fbfba89909121412002"
     ],
     [
       "FStar.List.Tot.Properties.mem_memP",
@@ -2585,7 +2585,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "933cfaf67ca621194946db1de128eb03"
+      "ce846bf388cc74619c66d51694191a18"
     ],
     [
       "FStar.List.Tot.Properties.fold_left_map",
@@ -2622,7 +2622,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.map"
       ],
       0,
-      "4fb63386d2340848f2588f493869746a"
+      "4430e077aab549fd5396b05fb73afb69"
     ],
     [
       "FStar.List.Tot.Properties.map_append",
@@ -2690,7 +2690,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.append"
       ],
       0,
-      "06bb96e0aadebae31ab0fef843b0eabc"
+      "0f1e469309d338852831991750c25a12"
     ],
     [
       "FStar.List.Tot.Properties.fold_left_monoid",
@@ -2719,7 +2719,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.fold_left"
       ],
       0,
-      "086f9b3ed261cc6b4ba016c30032c32b"
+      "76d5dc39adbb00fe0a026b1f40dfb67e"
     ],
     [
       "FStar.List.Tot.Properties.fold_left_append_monoid",
@@ -2735,7 +2735,7 @@
         "typing_FStar.List.Tot.Base.fold_left"
       ],
       0,
-      "a815c16104808fe9d94d1c0554a76cd2"
+      "5ac73652ff7c904d2de9d842427fd300"
     ],
     [
       "FStar.List.Tot.Properties.index_extensionality_aux",
@@ -3083,7 +3083,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
       ],
       0,
-      "a6eb9bbc4c2773951f9827b416f7c9c0"
+      "bd0ead4d067d014d52b452a48b63ce79"
     ],
     [
       "FStar.List.Tot.Properties.memP_precedes",
