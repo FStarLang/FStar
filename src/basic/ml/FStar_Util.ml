@@ -384,16 +384,8 @@ let psmap_find_map (m:'value psmap) f =
 let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
   StringMap.modify_opt k (fun vopt -> Some (upd vopt)) m
 
-module Zops =
-  struct
-    type t = Z.t
-    let equal (x:Z.t) (y:Z.t) = Z.equal x y
-    let compare (x:Z.t) (y:Z.t) = Z.compare x y
-    let hash (x:Z.t) = Z.hash x
-  end
-
-module ZHashtbl = BatHashtbl.Make(Zops)
-module ZMap = BatMap.Make(Zops)
+module ZHashtbl = BatHashtbl.Make(Z)
+module ZMap = BatMap.Make(Z)
 
 type 'value imap = 'value ZHashtbl.t
 let imap_create (i:Z.t) : 'value imap = ZHashtbl.create (Z.to_int i)
