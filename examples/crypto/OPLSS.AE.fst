@@ -14,15 +14,11 @@
    limitations under the License.
 *)
 module OPLSS.AE
+open OPLSS
 open FStar.Seq
-open FStar.HyperStack
 open FStar.HyperStack.ST
-
-module MAC = OPLSS.MAC
-module CPA = OPLSS.CPA
-module Ideal = OPLSS.Ideal
-module Plain = OPLSS.Plain
 module B = LowStar.Monotonic.Buffer
+module HS = FStar.HyperStack
 
 (*** Basic types ***)
 
@@ -33,7 +29,8 @@ module B = LowStar.Monotonic.Buffer
 /// 
 /// Aside from this, we have an AE log, which is a view of the two
 /// other logs.
-noeq type key =
+noeq 
+type key =
   | Key: mac:MAC.key
        -> enc:CPA.key { 
            B.loc_disjoint (B.loc_mreference mac.MAC.log)
@@ -41,13 +38,17 @@ noeq type key =
            }
        -> key
 
+let footprint (k:key) =
+  B.loc_union (B.loc_mreference k.mac.MAC.log)
+              (B.loc_mreference k.enc.CPA.log)
+
 /// mac log
-let mac_log (h:mem) (k:key) =
-  sel h k.mac.MAC.log
+let mac_log (h:HS.mem) (k:key) =
+  HS.sel h k.mac.MAC.log
 
 /// cpa log
-let cpa_log (h:mem) (k:key) =
-  sel h k.enc.CPA.log
+let cpa_log (h:HS.mem) (k:key) =
+  HS.sel h k.enc.CPA.log
 
 (*** Main invariant on the ideal state ***)
 (** There are two main components to this invariant
@@ -85,7 +86,6 @@ let mac_only_cpa_ciphers_snoc (macs:Seq.seq MAC.log_entry) (mac:MAC.log_entry)
   = un_snoc_snoc macs mac;
     un_snoc_snoc cpas cpa
 
-let ae_cipher = AES.iv_cipher * MAC.tag
 let ae_as_mac (c:ae_cipher) = MAC.Entry (fst c) (snd c)
 
 /// A lemma that shows that if a cipher is MAC'd
@@ -106,17 +106,13 @@ let rec mac_only_cpa_ciphers_mem (macs:Seq.seq MAC.log_entry)
            if mac = ae_as_mac c then ()
            else mac_only_cpa_ciphers_mem macs cpas c
 
-let ae = Ideal.uf_cma
-
 /// The main invariant:
 ///     -- A conjunction of the 3 components already mentioned
 ///      + some technical invariants about logs being allocated
 let invariant k h =
   CPA.invariant k.enc h /\
   MAC.invariant k.mac h /\
-  (ae ==> mac_only_cpa_ciphers (mac_log h k) (cpa_log h k))
-
-let log_entry = Plain.plain & ae_cipher
+  (Flag.reveal Ideal.uf_cma ==> mac_only_cpa_ciphers (mac_log h k) (cpa_log h k))
 
 let composite_log_entry (mac:MAC.log_entry) (cpa:CPA.log_entry) : log_entry =
   (cpa.CPA.plain, (cpa.CPA.c, mac.MAC.tag))  
@@ -141,22 +137,24 @@ let composite_log_snoc
   = un_snoc_snoc macs mac;
     un_snoc_snoc cpas cpa
 
-let ae_log (k:key) (h:mem{invariant k h /\ ae}) =
-  composite_log (MAC.log k.mac h) (CPA.log k.enc h)
+let ae_log (k:key) (h:HS.mem{invariant k h}) =
+  if Flag.reveal Ideal.uf_cma
+  then composite_log (MAC.log k.mac h) (CPA.log k.enc h)
+  else Seq.empty
 
 (*** The main AE lemma relying on the invariant  ***)
 
 (** For logs that respect the main invariant:
-//        if  (c, t) is a valid MAC
-//        and (p, c) is a valid CPA
-//        then (p, (c, t)) must be a in the AE log
+        if  (c, t) is a valid MAC
+        and (p, c) is a valid CPA
+        then (p, (c, t)) must be a in the AE log
 
-//     The pairwise distinctness of ciphers in the CPA log
-//     plays a crucial role.
+    The pairwise distinctness of ciphers in the CPA log
+    plays a crucial role.
 
-//     For instance, using it, and knowing that (c, t) is a valid MAC, 
-//     we can conclude that their must be exactly one entry 
-//     in the CPA table containing c. **)
+    For instance, using it, and knowing that (c, t) is a valid MAC, 
+    we can conclude that their must be exactly one entry 
+    in the CPA table containing c. **)
 let rec invert_invariant_aux (macs:Seq.seq MAC.log_entry)
                              (cpas:Seq.seq CPA.log_entry)
                              (c:ae_cipher) (p:Plain.plain)
@@ -202,10 +200,10 @@ let rec invert_invariant_aux (macs:Seq.seq MAC.log_entry)
            end
 
 /// Lifting the lemma above to work on the current state, h
-let invert_invariant (h:mem) (k:key) (c:ae_cipher) (p:Plain.plain)
+let invert_invariant (h:HS.mem) (k:key) (c:ae_cipher) (p:Plain.plain)
   : Lemma 
     (requires 
-      ae /\
+      Flag.reveal Ideal.uf_cma /\
       invariant k h /\
       Seq.mem (ae_as_mac c) (mac_log h k) /\
       Seq.mem (CPA.Entry p (fst c)) (cpa_log h k))
@@ -221,12 +219,7 @@ let invert_invariant (h:mem) (k:key) (c:ae_cipher) (p:Plain.plain)
 
 /// keygen: create a fresh key in the caller's region
 ///         its ae log is initially empty
-let keygen ()
-  : ST key
-  (requires fun _ -> True)
-  (ensures  fun h0 k h1 ->
-    B.modifies B.loc_none h0 h1 /\
-    invariant k h1) =
+let keygen () =
   let ke = CPA.keygen () in
   let ka = MAC.keygen () in
   Key ka ke
@@ -235,15 +228,7 @@ let keygen ()
 /// encrypt:
 ///       We return a cipher, preserve the invariant,
 ///       and extend the log by exactly one entry
-let encrypt (k:key) (plain:Plain.plain)
-  : ST ae_cipher
-  (requires 
-    invariant k)
-  (ensures  fun h0 c h1 ->
-    invariant k h1 /\
-    B.modifies (B.loc_union (B.loc_mreference k.mac.MAC.log)
-                            (B.loc_mreference k.enc.CPA.log)) h0 h1 /\
-    (ae ==> ae_log k h1 == Seq.snoc (ae_log k h0) (plain, c))) =
+let encrypt k plain =
   let h0 = FStar.HyperStack.ST.get () in
   let c = CPA.encrypt k.enc plain in
   let h1 = FStar.HyperStack.ST.get () in
@@ -254,7 +239,7 @@ let encrypt (k:key) (plain:Plain.plain)
   assert (MAC.invariant k.mac h2); 
   mac_only_cpa_ciphers_snoc (mac_log h0 k) (MAC.Entry c t)
                             (cpa_log h0 k) (CPA.Entry plain c);
-  if ae then 
+  if Flag.reveal Ideal.uf_cma then 
     composite_log_snoc (mac_log h0 k)  (MAC.Entry c t)
                        (cpa_log h0 k) (CPA.Entry plain c);
   (c, t)
@@ -262,24 +247,14 @@ let encrypt (k:key) (plain:Plain.plain)
 /// decrypt:
 ///     In the ideal case, we prove it functionally correct and secure
 ///     meaning that we the plain text returned is exactly the one in in AE log
-let decrypt (k:key) (c:ae_cipher)
-  : ST (option Plain.plain)
-  (requires 
-    invariant k)
-  (ensures fun h0 res h1 ->
-    invariant k h1 /\
-    h0 == h1 /\
-    (ae ==>
-     (match res with
-      | Some plain -> ae_log k h1 `Log.has` (plain, c)
-      | None -> True))) = //forall plain. ~ (ae_log k h1 `Log.has` (plain, c))))) =
+let decrypt k c =
   let h = get() in
   let c, tag = c in
   if MAC.verify k.mac c tag
   then begin
-       if ae then mac_only_cpa_ciphers_mem (mac_log h k) (cpa_log h k) (c, tag);
+       if Flag.reveal Ideal.uf_cma then mac_only_cpa_ciphers_mem (mac_log h k) (cpa_log h k) (c, tag);
        let p = CPA.decrypt k.enc c in
-       if ae then invert_invariant h k (c,tag) p;
+       if Flag.reveal Ideal.uf_cma then invert_invariant h k (c,tag) p;
        Some p
   end
   else None

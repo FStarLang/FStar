@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module OPLSS.Plain
-let bytes = OPLSS.AES.bytes
+open OPLSS
 open OPLSS.Ideal
 
 abstract 
@@ -37,12 +37,12 @@ let hide_reveal (b:AES.plain)
   = ()
 
 abstract
-let repr (p:plain{not conf}) 
+let repr (p:plain{not (Flag.reveal conf)}) 
   : (b:AES.plain{b == reveal p}) 
   = p
 
 abstract
-let coerce (r:AES.plain{not auth}) 
+let coerce (r:AES.plain{not (Flag.reveal auth)}) 
   : (p:plain{p == hide r}) 
   = r
 

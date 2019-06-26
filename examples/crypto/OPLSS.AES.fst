@@ -14,11 +14,8 @@
    limitations under the License.
 *)
 module OPLSS.AES
-open FStar.Mul
-module U8 = FStar.UInt8
-let bytes = Seq.seq U8.t
-let lbytes l = b:bytes{Seq.length b = l}
-
+open OPLSS
+  
 /// iv: initialization vectors
 assume val ivsize : nat
 let iv = lbytes ivsize
@@ -41,18 +38,12 @@ let cipher = lbytes cipher_size
 let iv_cipher = lbytes (ivsize + cipher_size)
   
 assume 
-val aes_encrypt:
-    key
-  -> iv
-  -> plain
-  -> Tot cipher
+val aes_encrypt (k:key) (iv:iv) (p:plain)
+  : Tot cipher
        
 assume 
-val aes_decrypt:
-    key
-  -> iv
-  -> cipher
-  -> Tot plain
+val aes_decrypt (k:key) (iv:iv) (c:cipher)
+  : Tot plain
 
 assume
 val enc_dec_inverses (key:key) (iv:iv) (plain:plain)

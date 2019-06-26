@@ -14,32 +14,28 @@
    limitations under the License.
 *)
 module OPLSS.CPA
+open OPLSS
 open FStar.HyperStack.ST
 open FStar.Seq
-open FStar.Monotonic.Seq
-open FStar.HyperStack
-open OPLSS.Ideal
-open OPLSS.Plain
-open OPLSS.AES
-module Log = OPLSS.Log
 module HS = FStar.HyperStack
+module B = LowStar.Monotonic.Buffer
 
 (*** Ideal state ***)
 
 /// CPA log entries are pairs of a plain text and its corresponding cipher
 type log_entry =
   | Entry: plain:Plain.plain
-         -> c:iv_cipher
+         -> c:AES.iv_cipher
          -> log_entry
 
 /// Recover the IV from an entry by splitting out a prefix of the cipher
-let iv_of_entry (Entry _ c) : AES.iv = fst (Seq.split c ivsize)
+let iv_of_entry (Entry _ c) : AES.iv = fst (Seq.split c AES.ivsize)
 
 /// Recover the AES cipher from an entry by splitting out a suffix of the cipher
-let raw_cipher (Entry _ c) : bytes = snd (Seq.split c ivsize)
+let raw_cipher (Entry _ c) : bytes = snd (Seq.split c AES.ivsize)
 
 /// A lemma inverting the iv+cipher construction
-let split_entry (p:Plain.plain) (iv:iv) (r:cipher)
+let split_entry (p:Plain.plain) (iv:AES.iv) (r:AES.cipher)
    : Lemma  (iv_of_entry (Entry p (iv@|r)) == iv /\
              raw_cipher  (Entry p (iv@|r)) == r)
    = assert (Seq.equal (iv_of_entry (Entry p (iv@|r))) iv);
@@ -78,9 +74,9 @@ type key =
  **)
 
 /// An accessor for the log in state h
-let log (k:key) (h:mem) 
+let log (k:key) (h:HS.mem) 
   : GTot (seq log_entry) =
-    sel h k.log
+    HS.sel h k.log
 
 (*** Invariants on the ideal state ***)
 
@@ -98,7 +94,7 @@ let log (k:key) (h:mem)
 /// Invariant part 1: distinctness of IVs
 /// ---------------------------------------
 
-let iv_not_in (iv:iv) (log:seq log_entry) =
+let iv_not_in (iv:AES.iv) (log:seq log_entry) =
     forall (e:log_entry{Seq.mem e log}). iv_of_entry e <> iv
 
 /// We state pairwise-distinctness of IVs in this recursive form
@@ -120,7 +116,7 @@ let pairwise_snoc (cpas:Seq.seq log_entry) (tl:log_entry)
 
 /// It's convenient to lift the pairwise-distinctness of IVs to
 /// pairwise distinctness of the cipher texts
-let invert_pairwise (cpas:Seq.seq log_entry) (e:log_entry) (c:iv_cipher)
+let invert_pairwise (cpas:Seq.seq log_entry) (e:log_entry) (c:AES.iv_cipher)
     : Lemma (requires (pairwise_distinct_ivs (snoc cpas e) /\
                        Entry?.c e == c))
             (ensures (forall e'. Seq.mem e' cpas ==> Entry?.c e' <> c))
@@ -138,7 +134,7 @@ let invert_pairwise (cpas:Seq.seq log_entry) (e:log_entry) (c:iv_cipher)
 let entry_functional_correctness (raw_key:AES.key) (e:log_entry) : Type0 =
     let iv = iv_of_entry e in
     let c = raw_cipher e in
-    let p = if ind_cpa then Seq.create (Plain.length e.plain) 0z else repr e.plain in
+    let p = if Flag.reveal Ideal.ind_cpa then Seq.create (Plain.length e.plain) 0z else Plain.repr e.plain in
     c == AES.aes_encrypt raw_key iv p
 
 /// Lifting the correctness of individual entries pointwise to correctness of the entire log
@@ -149,16 +145,13 @@ let cipher_functional_correctness (raw_key:AES.key) (log:seq log_entry) =
 /// The invariant is the conjunction of distinctness and correctness
 ///   -- Together with a technical requirement of the log actually
 ///      being present in the memory
-let invariant (k:key) (h:mem) =
+let invariant (k:key) (h:HS.mem) =
     let Key raw_key lg = k in
     let log = log k h in
-    HS.contains h lg /\ //<-- technical: the log must be allocated
+    HS.contains h lg /\ //technical: the log must be allocated
     pairwise_distinct_ivs log /\
     cipher_functional_correctness raw_key log
 
-module B = LowStar.Monotonic.Buffer
-assume
-val random : unit -> EXT AES.key
 
 (*** The main interface:
        keygen, encrypt, decrypt  ***)
@@ -173,7 +166,7 @@ let keygen ()
     log k h1 == Seq.empty /\
     invariant k h1 /\
     B.fresh_loc (B.loc_mreference k.log) h0 h1) =
-  let raw = random () in
+  let raw = random AES.keysize in
   let log = Log.new_log #log_entry in
   Key raw log
 
@@ -181,7 +174,8 @@ let keygen ()
 ///    Exercise: Implement this, e.g, by simply incrementing a counter
 ///              Or by sampling and retrying
 assume 
-val fresh_iv (k:key) : ST iv
+val fresh_iv (k:key) 
+  : ST AES.iv
     (requires (fun h -> True))
     (ensures (fun h0 iv h1 -> 
                 h0 == h1 /\
@@ -192,37 +186,37 @@ val fresh_iv (k:key) : ST iv
 ///     -- requires a key initially in the invariant
 ///     -- ensures that only the key's log is modified
 let encrypt (k:key) (m:Plain.plain)
-  : ST iv_cipher
+  : ST AES.iv_cipher
   (requires invariant k)
   (ensures  fun h0 c h1 ->
     B.modifies (B.loc_mreference k.log) h0 h1 /\
     invariant k h1 /\
     entry_functional_correctness k.raw (Entry m c) /\    
-    (if uf_cma
+    (if Flag.reveal Ideal.uf_cma
      then log k h1 == Seq.snoc (log k h0) (Entry m c)
      else log k h1 == log k h0)) =
   let iv = fresh_iv k in
-  let text = if ind_cpa
+  let text = if Flag.branch Ideal.ind_cpa
              then Seq.create (Plain.length m) 0z
-             else repr m in
+             else Plain.repr m in
   let raw_c = AES.aes_encrypt k.raw iv text in
   let c = iv@|raw_c in
   let e = Entry m c in
   let h0 = FStar.HyperStack.ST.get () in  
-  if uf_cma then Log.add k.log e;
+  if Flag.branch Ideal.uf_cma then Log.add k.log e;
   split_entry m iv raw_c;
   lemma_mem_snoc (log k h0) e;
   pairwise_snoc (log k h0) e;
   c
 
-let dec_functionally_correct (k:key) (c:iv_cipher) (p:Plain.plain) =
-    let iv, c = split c ivsize in
+let dec_functionally_correct (k:key) (c:AES.iv_cipher) (p:Plain.plain) =
+    let iv, c = split c AES.ivsize in
     Plain.reveal p == AES.aes_decrypt k.raw iv c
 
-let authentic (k:key) (c:iv_cipher) (h:HS.mem) =
+let authentic (k:key) (c:AES.iv_cipher) (h:HS.mem) =
   exists p. Log.entries k.log h `Log.has` Entry p c
 
-let find (k:key) (c:iv_cipher)
+let find (k:key) (c:AES.iv_cipher)
   : ST log_entry
     (requires
       authentic k c)
@@ -244,25 +238,25 @@ let find (k:key) (c:iv_cipher)
 ///
 ///    -- This allow us to prove that the plain text returned is a
 ///       valid decryption
-let decrypt (k:key) (c:iv_cipher)
+let decrypt (k:key) (c:AES.iv_cipher)
   : ST Plain.plain
   (requires fun h ->
     invariant k h /\
-    (uf_cma ==> authentic k c h))
+    (Flag.reveal Ideal.pre_ind_cpa ==> authentic k c h))
   (ensures  fun h0 res h1 ->
     let log = log k h1 in
     h0 == h1 /\
     invariant k h1 /\
-    (uf_cma ==> Log.entries k.log h1 `Log.has` Entry res c) /\
-    (not ind_cpa ==> dec_functionally_correct k c res)) =
+    (Flag.reveal Ideal.pre_ind_cpa ==> Log.entries k.log h1 `Log.has` Entry res c) /\
+    (not (Flag.reveal Ideal.ind_cpa) ==> dec_functionally_correct k c res)) =
   let Key raw_key log = k in
-  let iv,c' = split c ivsize in
+  let iv,c' = split c AES.ivsize in
   let raw_plain = AES.aes_decrypt raw_key iv c' in
-  if uf_cma then
+  if Flag.branch Ideal.pre_ind_cpa then
     let Entry plain _ = find k c in
     split_entry plain iv c';
-    if not ind_cpa
-    then AES.enc_dec_inverses raw_key iv (repr plain);
+    if not (Flag.reveal Ideal.ind_cpa)
+    then AES.enc_dec_inverses raw_key iv (Plain.repr plain);
     plain
   else
-    coerce raw_plain
+    Plain.coerce raw_plain

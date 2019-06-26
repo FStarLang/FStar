@@ -14,11 +14,28 @@
    limitations under the License.
 *)
 module OPLSS.Ideal
+open OPLSS.Flag
 
-val uf_cma : bool
+//we're idealizing MACs
+val uf_cma : flag 
 
-val ind_cpa : b:bool{b ==> uf_cma}
+//after idealizing MAC's
+//we're pre-idealizing encryption, but without any loss of security
+val pre_ind_cpa : b:flag{ reveal b == reveal uf_cma }
 
+//we're idealizing encryption for secrecy, at the end
+val ind_cpa : b:flag{ reveal b ==> reveal pre_ind_cpa }
+
+//we get authenticated encryption after idealizing everyting
+// -- we write it this way to make explicit 
+//    that all the idealization flags are on, 
+//    rather than just ind_cpa
+val ae : b:flag{ reveal b = reveal pre_ind_cpa &&
+                            reveal uf_cma &&
+                            reveal ind_cpa }
+
+//we get authenticity when uf_cma is on
+let auth = uf_cma
+
+//we get confidentiality when ind_cpa is on
 let conf = ind_cpa
-
-let auth =  uf_cma
