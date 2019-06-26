@@ -571,6 +571,95 @@ let only_one_live_pid_with_full_permission_specific
     (ensures pid == pid')
   = only_one_live_pid_with_full_permission v_perms pid
 
+let rec loc_gsub_len_loc_gsub (#a:Type0) (b:array a) (i len1 len2:U32.t) (n:nat{n <= U32.v len1 + U32.v len2})
+  :Lemma (requires (U32.v len1 > 0 /\ U32.v len2 > 0 /\ U32.v i + U32.v len1 + U32.v len2 <= vlength b /\ n >= U32.v len1))
+         (ensures compute_loc_array (gsub b (i `U32.add` len1) len2) (n - U32.v len1)
+                  == compute_loc_array (gsub b i (len1 `U32.add` len2)) n)
+         (decreases (U32.v len1 + U32.v len2 - n))
+  = if n = U32.v len1 + U32.v len2 then ()
+    else begin
+      loc_gsub_len_loc_gsub b i len1 len2 (n+1)
+    end
+
+let rec loc_union_gsub_compute_loc_array (#a:Type0) (b:array a) (i len1 len2:U32.t) (n:nat{n <= U32.v len1})
+  :Lemma (requires (U32.v len1 > 0 /\ U32.v len2 > 0 /\ U32.v i + U32.v len1 + U32.v len2 <= vlength b))
+         (ensures loc_union (compute_loc_array (gsub b i len1) n) (loc_array (gsub b (i `U32.add` len1) len2))
+                  == compute_loc_array (gsub b i (len1 `U32.add` len2)) n)
+         (decreases (U32.v len1 - n))
+  =
+  let b1 = gsub b i len1 in
+  let b2 = gsub b (i `U32.add` len1) len2 in
+  let ball = gsub b i (len1 `U32.add` len2) in
+  let l1 = loc_union (compute_loc_array (gsub b i len1) n) (compute_loc_array (gsub b (i `U32.add` len1) len2) 0) in
+  let l2 = compute_loc_array (gsub b i (len1 `U32.add` len2)) n in
+  if n = U32.v len1 then begin
+    assert (l1 == loc_union loc_none (loc_array b2));
+    loc_gsub_len_loc_gsub b i len1 len2 (U32.v len1)
+    end 
+  else begin
+    loc_union_gsub_compute_loc_array b i len1 len2 (n+1);
+    loc_union_assoc (loc_cell b1 n) (compute_loc_array b1 (n+1)) (loc_array b2)
+  end
+
+let loc_union_gsub #a b i len1 len2 = loc_union_gsub_compute_loc_array b i len1 len2 0
+
+
+let lemma_disjoint_index_disjoint_cells (#a:Type) (b:array a) (i1:nat{i1 < vlength b}) (i2:nat{i2 < vlength b}) : Lemma
+  (requires i1 <> i2)
+  (ensures loc_disjoint (loc_cell b i1) (loc_cell b i2))
+  =
+  let r = frameOf b in
+  let a = as_addr b in
+  let aloc1 = {
+    b_max = U32.v b.max_length;
+    b_index = U32.v b.idx + i1;
+    b_pid = (Ghost.reveal b.pid)
+  } in
+  let aloc2 = {
+    b_max = U32.v b.max_length;
+    b_index = U32.v b.idx + i2;
+    b_pid = (Ghost.reveal b.pid)
+  } in
+  MG.loc_disjoint_aloc_intro #ucell #cls #r #a #r #a aloc1 aloc2
+
+let rec lemma_disjoint_index_disjoint_cell_array (#a:Type0) (b:array a) (idx:U32.t) (len:U32.t{U32.v len > 0})
+  (i:nat{i < vlength b}) (j:nat{j <= U32.v len}) : Lemma
+  (requires (i < U32.v idx \/ i >= U32.v idx + U32.v len) /\ U32.v idx + U32.v len <= vlength b)
+  (ensures loc_disjoint (compute_loc_array (gsub b idx len) j) (loc_cell b i))
+  (decreases (U32.v len - j))
+  =   
+  let b2 = gsub b idx len in
+  if j = U32.v len then begin
+       loc_disjoint_none_r (loc_cell b i);
+       loc_disjoint_sym' (loc_cell b i) (compute_loc_array b2 j)
+  end else begin
+      lemma_disjoint_index_disjoint_cell_array b idx len i (j+1);
+      lemma_disjoint_index_disjoint_cells b i (U32.v idx + j);
+      loc_disjoint_sym' (compute_loc_array b2 (j+1)) (loc_cell b i);
+      loc_disjoint_union_r' (loc_cell b i) (loc_cell b2 j) (compute_loc_array b2 (j+1));
+      loc_disjoint_sym' (loc_cell b i) (compute_loc_array b2 j)
+    end
+
+let rec lemma_disjoint_gsub_disjoint_compute_array (#a:Type) (b:array a) 
+  (i1 i2:U32.t) (len1:U32.t{U32.v len1 > 0}) (len2:U32.t{U32.v len2 > 0})
+  (i:nat{i <= U32.v len2}) : Lemma
+  (requires (UInt32.v i1 + UInt32.v len1 <= (vlength b) /\
+                    UInt32.v i2 + UInt32.v len2 <= (vlength b) /\
+		    (UInt32.v i1 + UInt32.v len1 <= UInt32.v i2 \/
+                     UInt32.v i2 + UInt32.v len2 <= UInt32.v i1)))
+  (ensures loc_disjoint (loc_array (gsub b i1 len1)) (compute_loc_array (gsub b i2 len2) i))
+  (decreases (U32.v len2 - i))
+  = let b1 = gsub b i1 len1 in
+    let b2 = gsub b i2 len2 in
+    if i = U32.v len2 then loc_disjoint_none_r (loc_array b1)
+    else begin
+      lemma_disjoint_gsub_disjoint_compute_array b i1 i2 len1 len2 (i+1);
+      lemma_disjoint_index_disjoint_cell_array b i1 len1 (U32.v i2 + i) 0;
+      loc_disjoint_union_r' (loc_array b1) (loc_cell b2 i) (compute_loc_array b2 (i+1))
+    end
+
+let disjoint_gsubs #a b i1 i2 len1 len2 = lemma_disjoint_gsub_disjoint_compute_array b i1 i2 len1 len2 0
+
 (*** Stateful operations implementing the ghost specifications ***)
 
 

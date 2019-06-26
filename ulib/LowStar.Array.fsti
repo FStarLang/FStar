@@ -716,6 +716,19 @@ val modifies_remove_fresh_frame (h1 h2 h3:HS.mem) (l:loc)
           (ensures  (modifies l h1 h3))
 	  [SMTPat (modifies l h1 h3); SMTPat (HS.fresh_frame h1 h2)]
 
+val loc_union_gsub (#a:Type0) (b:array a) (i len1 len2:U32.t)
+  :Lemma (requires (U32.v len1 > 0 /\ U32.v len2 > 0 /\ U32.v i + U32.v len1 + U32.v len2 <= vlength b))
+         (ensures loc_union (loc_array (gsub b i len1)) (loc_array (gsub b (i `U32.add` len1) len2))
+                  == loc_array (gsub b i (len1 `U32.add` len2)))
+
+val disjoint_gsubs (#a:Type0) (b:array a) (i1 i2:U32.t) (len1:U32.t{U32.v len1 > 0}) (len2:U32.t{U32.v len2 > 0})
+  :Lemma (requires (UInt32.v i1 + UInt32.v len1 <= (vlength b) /\
+                    UInt32.v i2 + UInt32.v len2 <= (vlength b) /\
+		    (UInt32.v i1 + UInt32.v len1 <= UInt32.v i2 \/
+                     UInt32.v i2 + UInt32.v len2 <= UInt32.v i1)))
+         (ensures  (loc_disjoint (loc_array (gsub b i1 len1)) (loc_array (gsub b i2 len2))))
+  
+
 (*** Stateful operations implementing the ghost specifications ***)
 
 
