@@ -23,7 +23,7 @@ MustEraseForExtraction.uver: OTHERFLAGS += --warn_error @318
 ALL_UVERS = Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.Parser.uver \
 	 Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver \
 	 Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver  \
-	 Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver \
+	 TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver \
 	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver DoNotation.uver \
 	 Pruning.uver NormVsSMT.uver Unit1.TopLevelPats.uver AssumeRequires.uver TwoPhaseTC.uver \
 	 IntNormalization.uver Subtyping.uver Test.HyperStack.uver Raising.uver RangeStep.uver \
@@ -40,7 +40,7 @@ ALL_UVERS += WPExtensionality.uver  NegativeTests.BST.uver NegativeTests.Heap.uv
 	 NegativeTests.False.uver  NegativeTests.Set.uver NegativeTests.Positivity.uver \
 	 NegativeTests.ZZImplicitFalse.uver StableErr.uver \
 	 PatAnnot.uver TestHasEq.uver Test.FunctionalExtensionality.uver \
-	 MustEraseForExtraction.uver
+	 Unit2.uver MustEraseForExtraction.uver
 else
 $(info Excluding negative tests as admit_smt_queries is set)
 endif
