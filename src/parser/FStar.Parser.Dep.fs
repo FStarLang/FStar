@@ -1405,7 +1405,7 @@ let print_raw (deps:deps) =
      -- We also print dependences for producing .ml files from .checked files
         This takes care of renaming A.B.C.fst to A_B_C.ml
   *)
-let print_full (deps:deps) : unit =
+let print_full (deps:deps) (ninja:bool) : unit =
     //let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
     let sort_output_files (orig_output_file_map:BU.smap<string>) =
         let order : ref<(list<string>)> = BU.mk_ref [] in
@@ -1457,12 +1457,24 @@ let print_full (deps:deps) : unit =
     in
     let sb = FStar.StringBuffer.create (FStar.BigInt.of_int_fs 10000) in
     let pr str = ignore <| FStar.StringBuffer.add str sb in
-    let print_entry target first_dep all_deps =
-        pr target;
-        pr ": ";
-        pr first_dep;
-        pr "\\\n\t";
-        pr all_deps;
+    let norm_ninja_build s = replace_chars s ':' "$:" in
+    let print_entry kind target first_dep all_deps =
+        if ninja then begin
+          pr "build ";
+          pr (norm_ninja_build target);
+          pr ": ";
+          pr kind;
+          pr " ";
+          pr (norm_ninja_build first_dep);
+          pr " | ";
+          pr (norm_ninja_build all_deps)
+        end else begin
+          pr target;
+          pr ": ";
+          pr first_dep;
+          pr "\\\n\t";
+          pr all_deps
+        end;
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
@@ -1516,7 +1528,7 @@ let print_full (deps:deps) : unit =
             let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
             let files =
                 Options.profile
-                  (fun () -> String.concat "\\\n\t" files)
+                  (fun () -> if ninja then String.concat " " files else String.concat "\\\n\t" files)
                   (fun _ -> "Dependence analysis: concat files")
             in
             let cache_file_name = cache_file file_name in
@@ -1525,7 +1537,7 @@ let print_full (deps:deps) : unit =
                 if not (Options.should_be_already_cached (module_name_of_file file_name))
                 then //this one prints:
                      //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-                     (print_entry cache_file_name norm_f files;
+                     (print_entry "checked" cache_file_name norm_f files;
                       cache_file_name::all_checked_files)
                 else all_checked_files
             in
@@ -1564,6 +1576,9 @@ let print_full (deps:deps) : unit =
           in
           let all_checked_fst_dep_files = all_fst_files_dep |> List.map cache_file in
           let all_checked_fst_dep_files_string =
+            if ninja then
+                 String.concat " " all_checked_fst_dep_files
+            else
                  String.concat " \\\n\t" all_checked_fst_dep_files
           in
           let _ =
@@ -1573,22 +1588,26 @@ let print_full (deps:deps) : unit =
               && widened
               then begin
                      print_entry
+                        "ml"
                         (output_ml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string;
 
                      print_entry
+                        "krml"
                         (output_krml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string
               end
               else begin
                      print_entry
+                        "ml"
                         (output_ml_file file_name)
                         cache_file_name
                         "";
 
                      print_entry
+                        "krml"
                         (output_krml_file file_name)
                         cache_file_name
                         ""
@@ -1605,8 +1624,14 @@ let print_full (deps:deps) : unit =
               in
               if Options.should_extract (lowercase_module_name file_name)
               then
-                let cmx_files = String.concat "\\\n\t" cmx_files in
+                let cmx_files =
+                  if ninja then
+                    String.concat " " cmx_files
+                  else
+                    String.concat "\\\n\t" cmx_files
+                in
                 print_entry
+                    "cmx"
                     (output_cmx_file file_name)
                     (output_ml_file file_name)
                     cmx_files
@@ -1620,11 +1645,13 @@ let print_full (deps:deps) : unit =
                 && (widened || true)
                 then
                     print_entry
+                        "krml"
                         (output_krml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string
                 else
                    print_entry
+                    "krml"
                     (output_krml_file file_name)
                     (cache_file_name)
                     ""
@@ -1660,8 +1687,12 @@ let print_full (deps:deps) : unit =
     in
     let print_all tag files =
         pr tag;
-        pr "=\\\n\t";
-        List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files;
+        if ninja then pr " = " else pr "=\\\n\t";
+        if ninja then
+          List.iter (fun f -> pr (norm_path f); pr " ") files
+        else
+          List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files
+        ;
         pr "\n"
     in
     print_all "ALL_FST_FILES" all_fst_files;
@@ -1678,7 +1709,11 @@ let print deps =
       print_make deps
   | Some "full" ->
       FStar.Options.profile
-        (fun () -> print_full deps)
+        (fun () -> print_full deps false)
+        (fun _ -> "Dependence analysis: printing")
+  | Some "ninja" ->
+      FStar.Options.profile
+        (fun () -> print_full deps true)
         (fun _ -> "Dependence analysis: printing")
   | Some "graph" ->
       print_graph deps.dep_graph

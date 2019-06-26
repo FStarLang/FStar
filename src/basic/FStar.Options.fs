@@ -652,10 +652,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "dep",
-        EnumStr ["make"; "graph"; "full"; "raw"],
+        EnumStr ["make"; "graph"; "full"; "ninja"; "raw"],
         "Output the transitive closure of the full dependency graph in three formats:\n\t \
          'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t \
          'full': a format suitable for 'make', including dependences for producing .ml and .krml files\n\t \
+	 'ninja': same as 'full' but suitable for 'ninja'\n\t \
          'make': (deprecated) a format suitable for 'make', including only dependences among source files");
 
        ( noshort,
