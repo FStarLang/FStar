@@ -1,6 +1,22 @@
 [
-  "pﬁ\u001d·£BjL3∆‘≥\u000bN_Ç",
+  "U‰<\nm[Ø\u000eôÀniƒ\u0017ãè",
   [
+    [
+      "Bug1750.test_currying",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Bug1750_interpretation_Tm_arrow_a41b9b98d4288401e09e5c3b51ccc4f5",
+        "Bug1750_interpretation_Tm_arrow_a9f8a2e504f49bf12fdda2bb70e77093",
+        "Bug1750_interpretation_Tm_arrow_ae87dd7306d3f92da99f8dd0d7e6277d",
+        "bool_inversion", "equation_Bug1750.t_f", "equation_Bug1750.t_t_f",
+        "refinement_interpretation_Tm_refine_4a8b14cc2437f87e25f4222d8fe180cc"
+      ],
+      0,
+      "ba539da7dffc36aa5a6dd998a15350d6"
+    ],
     [
       "Bug1750.test_partial_app0",
       1,
@@ -10,12 +26,12 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug1750.apply.fuel_instrumented", "@query",
         "Prims_interpretation_Tm_arrow_35447810753695c4fe25c93af1251992",
-        "Prims_interpretation_Tm_arrow_d8786b19d6bfb85050fd4e7eeca6f4bb",
+        "Prims_interpretation_Tm_arrow_47fc285d7b44e13bcb7e420cbfc55623",
         "equation_with_fuel_Bug1750.apply.fuel_instrumented",
         "function_token_typing_Bug1750.plus", "int_inversion"
       ],
       0,
-      "fb51b3e262aedad9c13bb26dee611099"
+      "2bad3b277da38b0128590ae2666071bf"
     ],
     [
       "Bug1750.test_partial_app2",
@@ -26,11 +42,11 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug1750.apply.fuel_instrumented", "@query",
         "Prims_interpretation_Tm_arrow_35447810753695c4fe25c93af1251992",
-        "Prims_interpretation_Tm_arrow_d8786b19d6bfb85050fd4e7eeca6f4bb",
+        "Prims_interpretation_Tm_arrow_47fc285d7b44e13bcb7e420cbfc55623",
         "equation_with_fuel_Bug1750.apply.fuel_instrumented", "int_inversion"
       ],
       0,
-      "9141d6ed1eb938dfe04b72c757f2c3b6"
+      "c8b84a509ea332f5b9d88d38153e0728"
     ],
     [
       "Bug1750.test_partial_app3",
@@ -41,14 +57,14 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug1750.apply.fuel_instrumented", "@query",
         "Prims_interpretation_Tm_arrow_35447810753695c4fe25c93af1251992",
-        "Prims_interpretation_Tm_arrow_d8786b19d6bfb85050fd4e7eeca6f4bb",
+        "Prims_interpretation_Tm_arrow_47fc285d7b44e13bcb7e420cbfc55623",
         "equation_Bug1750.ref_t",
         "equation_with_fuel_Bug1750.apply.fuel_instrumented",
         "int_inversion",
-        "refinement_interpretation_Tm_refine_e39e0b1bfbdbf19786e6ddda7c6622a2"
+        "refinement_interpretation_Tm_refine_11b94044b318d04810c219460ee922f5"
       ],
       0,
-      "bc2dbfb3df6a808404198ceeef594c8e"
+      "9a4e3f465ad149f4b4699780838c99d0"
     ],
     [
       "Bug1750.eff",
@@ -60,7 +76,7 @@
         "disc_equation_Bug1750.T", "fuel_guarded_inversion_Bug1750.eff_tag"
       ],
       0,
-      "bb59ada064258605cf7f10b6ceeb5aa1"
+      "184ead50c4933167f9a741bbf980a704"
     ]
   ]
 ]
