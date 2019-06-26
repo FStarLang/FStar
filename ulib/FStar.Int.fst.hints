@@ -1502,7 +1502,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ba56c90c5857217d4b07db47b28ccb1d"
+      "9707160c158b38080c03e0d3601c5a26"
     ],
     [
       "FStar.Int.pow2_from_vec_lemma",
@@ -1561,7 +1561,7 @@
         "typing_FStar.UInt.from_vec"
       ],
       0,
-      "0b88e50c0d02d55fc656129c950efbe4"
+      "61193e041dab61f0d8d33325f5e71717"
     ],
     [
       "FStar.Int.ones_to_vec_lemma",
@@ -3964,7 +3964,7 @@
         "typing_FStar.Int.pow2_n", "typing_FStar.Int.to_vec"
       ],
       0,
-      "515fddd6a3fcbb3d7ecaa778595fc5c5"
+      "b31e4d871aaeb2ae70f775461846e197"
     ],
     [
       "FStar.Int.pow2_from_vec_lemma",
@@ -4332,7 +4332,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "36a19909f6df8dc00e48a4841547fd19"
+      "6649a6b21da76860f8ff17325cc50e0d"
     ],
     [
       "FStar.Int.shift_left_lemma_1",

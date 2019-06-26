@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "ec1374c66b3590e04c3a537977bbb012"
+      "e38e3ec65380c740cb1a596413fec69f"
     ],
     [
       "Normalization.id",
@@ -23,7 +23,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "20858a76b3431dbfe3a19f91000affe8"
+      "c4511864c04952b00e3b546a0f9b9580"
     ],
     [
       "Normalization.test2",
@@ -32,7 +32,7 @@
       0,
       [ "@query" ],
       0,
-      "34e0c3fca9b75824f27e8678e48cdf9a"
+      "a7afa7bec27ea7ac6fee93a76c96aab7"
     ],
     [
       "Normalization.pow2_values",
@@ -41,7 +41,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "915285d1538f44c3621785f7bb7a2ff3"
+      "2868acb462317444e6f9aad1b35d66d9"
     ],
     [
       "Normalization.test_sort",
@@ -55,7 +55,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ff851a08e755a81d86e5e27cce947a0f"
+      "5998addb1445df32691cdfba7d2fc529"
     ],
     [
       "Normalization.test_sort1",
@@ -69,7 +69,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a06be046f3d87f952dbbee4b1ce1af04"
+      "babff34c8105bb4b5f6706e94010f2ed"
     ],
     [
       "Normalization.f_1529_3",
@@ -81,7 +81,7 @@
         "interpretation_Tm_abs_8284a06c98cf4d08ee876bb3cd7024dc"
       ],
       0,
-      "33be8f0e2bdca5507e43e719f81b3824"
+      "74537f9fa5bc1b9cc4e0a0b128464de0"
     ],
     [
       "Normalization.id",
@@ -96,7 +96,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "fea84f80165067ab7758ea4fc06ff7a1"
+      "af09b660923df620a80eec4455cc7baf"
     ],
     [
       "Normalization.test_sort",
@@ -110,7 +110,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "32cf3b208274f18e3a6a085bef8a91c3"
+      "a564152b8f52d8b83a3c4635adea4e2d"
     ],
     [
       "Normalization.test_sort1",
@@ -124,7 +124,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d15c2f93c6eceaacb71ab20389a9c2a7"
+      "eb49310bf1b7cd4ac9fd04c9e854ab47"
     ],
     [
       "Normalization.f_1529_3",
@@ -136,7 +136,7 @@
         "interpretation_Tm_abs_8284a06c98cf4d08ee876bb3cd7024dc"
       ],
       0,
-      "c78e1e10c203e2fe224ea51fc3367eab"
+      "6f7e4a114637665775706aa4f0009045"
     ]
   ]
 ]
