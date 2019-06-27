@@ -79,6 +79,7 @@ and flag =
   | Abstract
   | IfDef
   | Macro
+  | Deprecated of string
 
 and fsdoc = string
 
@@ -377,6 +378,7 @@ and translate_flags flags =
     | Syntax.CAbstract -> Some Abstract
     | Syntax.CIfDef -> Some IfDef
     | Syntax.CMacro -> Some Macro
+    | Syntax.Deprecated s -> Some (Deprecated s)
     | _ -> None // is this all of them?
   ) flags
 
