@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "769bf96e4ce8f3d3c7d4d226540552fc"
+      "3905ba6dc4730a4d6096acb5e9c489ef"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "cced9a0e4b1044e5cd5ddac27599310b"
+      "3104640d79a621ff9c92117c113efc22"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7d8f005e2f1f017d2d399a965d0237a2"
+      "784716d81d8d431d351dbb337b1f6709"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "675a0bc61a90932243bac86efc3ffa3e"
+      "b4149bc4084eded34cff7b7f1ea275c2"
     ],
     [
       "Trace.fall",
@@ -63,7 +63,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "2aad50bf8bf8747fd3cb3cbf716a12d8"
+      "3d9dbdeb47555ded86e062816a7196ac"
     ],
     [
       "Trace.uu___99",
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "d8ced5fbfda155a410b5b80e5b481f94"
+      "4fa4f82f24fe0d19902ca84948e4f6b0"
     ],
     [
       "Trace.fact_aux",
@@ -100,7 +100,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f3a09d6bf24a71e3fef72829ce80ab9a"
+      "9ccb21f4bba1b79bbf99dc98f7e15284"
     ],
     [
       "Trace.uu___109",
@@ -125,7 +125,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "99ec06e4baa7af0fd3441dfc380d5139"
+      "1daa5fff98d1b8ed63c068760a108550"
     ],
     [
       "Trace.uu___113",
@@ -151,7 +151,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "5c6c6363b14443ae695d565c7c166672"
+      "496d52ac93ff3ba4496e1798cfce4977"
     ],
     [
       "Trace.mynat",
@@ -160,7 +160,7 @@
       1,
       [ "@query" ],
       0,
-      "6b24816e4aa97d93be250aeeb41e579b"
+      "702ba1093930e2933faf0e69a6ecc9be"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -173,7 +173,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "1e545c4e8d8cb8ff64773397f449663e"
+      "d7a5428460b8cbafa12279deb294dbe1"
     ],
     [
       "Trace.tick_last",
@@ -187,7 +187,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "549b47d22628229f72518690777a1647"
+      "d713404c9e662183435a889c95b5a889"
     ],
     [
       "Trace.term_is_fv",
@@ -204,7 +204,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "bc68b66d3f6e7e1954a72009bb10f061"
+      "0b961a112c7cabbdcada147856b21225"
     ],
     [
       "Trace.cutlast",
@@ -218,7 +218,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "be278888c98e24c5e1e4028163f3264c"
+      "5306447b53439cf5fafaf18e59b1dea6"
     ],
     [
       "Trace.fall",
@@ -232,7 +232,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "023028900b161e3affca6279beb6eda2"
+      "a6851ff9df7f39e2c00c6c36ee579f70"
     ],
     [
       "Trace.uu___99",
@@ -251,7 +251,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "b09a45f783203654951cc0122cffb485"
+      "febcef82f61799ea3cd5f7c0f8fb27b2"
     ],
     [
       "Trace.fact_aux",
@@ -269,7 +269,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c7111b5903bdf458525a7f2d66c7e1ce"
+      "ee6b8f8897e719030c64639197f27dbe"
     ],
     [
       "Trace.uu___109",
@@ -294,7 +294,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "6517ada9092eef12ca4de9ab99b961c3"
+      "d3c1715dfe244ca163899220467f708e"
     ],
     [
       "Trace.uu___113",
@@ -320,7 +320,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "6015eedf582438172a82b296960dfa30"
+      "d759066865ba291dd039ea7374be9d26"
     ]
   ]
 ]

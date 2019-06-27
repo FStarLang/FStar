@@ -315,6 +315,11 @@ let report_errors settings : unit =
              *     in the following code we go through the error reasons in all the configs,
              *       and if all the error reasons are the same, we provide a hint for that reason
              *     otherwise we just ask the user to run with --query_stats
+             *
+             *     as per the smt-lib standard, the possible values of reason-unknown are s-expressions,
+             *       that are either non-space strings, or strings with spaces enclosed in parenthesis
+             *       (I think), so incomplete or resource messages are in parenthesis, whereas
+             *       canceled, timeout, etc. are without
              *)
             let incomplete_count, canceled_count, unknown_count =
               List.fold_left (fun (ic, cc, uc) err ->

@@ -21,7 +21,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2cdb6e018f57f12b939aabf6f6edb456"
+      "1fa272fc190ad55b754f1db1e69ccde1"
     ],
     [
       "Bug058b.fibonacci",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "6e01fd14496f4f60d818563831ec5ea1"
+      "de87a419296a40dec96115c9c491474b"
     ]
   ]
 ]
