@@ -34,3 +34,34 @@ LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
 verify-core: $(addsuffix .checked, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
 
 verify-extra: $(addsuffix .checked, $(EXTRA))
+
+# Benchmarking rules
+#
+# we want to run FStar with just the target file as that being checked
+# ideally all the .checked files will exist and we will:
+#  - move them to the side
+#  - execute the benchmark
+#  - move the checked file back
+#
+
+# a.fst.bench will move the a.fst.checked binary and then move it back
+%.fst.bench: %.fst
+	-mv -f $*.fst.checked $*.fst.checked.bench_bkp
+ifdef BENCHMARK_FSTAR
+	$(BENCHMARK_CMD) -o $@ -- $(MY_FSTAR) $*.fst
+else
+	$(MY_FSTAR) $*.fst
+endif
+	-mv -f $*.fst.checked.bench_bkp $*.fst.checked
+
+# a.fsti.bench will move the a.fsti.checked binary and then move it back
+%.fsti.bench: %.fsti
+	-mv -f $*.fsti.checked $*.fsti.checked.bench_bkp
+ifdef BENCHMARK_FSTAR
+	$(BENCHMARK_CMD) -o $@ -- $(MY_FSTAR) $*.fsti
+else
+	$(MY_FSTAR) $*.fsti
+endif
+	-mv -f $*.fsti.checked.bench_bkp $*.fsti.checked
+
+verify-benchmark: $(addsuffix .bench, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
