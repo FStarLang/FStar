@@ -320,7 +320,10 @@ let report_errors settings : unit =
               List.fold_left (fun (ic, cc, uc) err ->
                 let err = BU.substring_from err.error_reason (String.length "unknown because ") in
                 //err is (incomplete quantifiers), (resource ...), canceled, or unknown etc.
-                if BU.starts_with err "canceled" || BU.starts_with err "(resource" then (ic, cc + 1, uc)
+                if BU.starts_with err "canceled"  ||
+                   BU.starts_with err "(resource" ||
+                   BU.starts_with err "timeout"
+                then (ic, cc + 1, uc)
                 else if BU.starts_with err "(incomplete" then (ic + 1, cc, uc)
                 else (ic, cc, uc + 1)  //note this covers unknowns, overflows, etc.
               ) (0, 0, 0) settings.query_errors
