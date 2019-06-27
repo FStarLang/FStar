@@ -27,7 +27,6 @@ open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
-open FStar.SMTEncoding.Encode
 open FStar.SMTEncoding.Util
 
 module BU = FStar.Util
@@ -295,23 +294,54 @@ let report_errors settings : unit =
         msg
     in
     let _basic_error_report =
+        (*
+         * AR: smt_error is either an Inr of a multi-line detailed message OR an Inl of a single line short message
+         *     depending on whether Options.query_stats is on or off
+         *)
         let smt_error =
+          if Options.query_stats () then
             settings.query_errors
             |> List.map error_to_short_string
             |> String.concat ";\n\t"
-            |> format_smt_error
+            |> format_smt_error |> Inr
+          else
+            (*
+             * AR: --query_stats is not set, we want to give a succint but helpful diagnosis
+             *
+             *     settings.query_errors is a list of errors, whose field error_reason contains the strings:
+             *       unknown because (incomplete ...) or unknown because (resource ...) or unknown because canceled etc.
+             *     it's a list as it contains one element per config (e.g. fuel options)
+             *
+             *     in the following code we go through the error reasons in all the configs,
+             *       and if all the error reasons are the same, we provide a hint for that reason
+             *     otherwise we just ask the user to run with --query_stats
+             *)
+            let incomplete_count, canceled_count, unknown_count =
+              List.fold_left (fun (ic, cc, uc) err ->
+                let err = BU.substring_from err.error_reason (String.length "unknown because ") in
+                //err is (incomplete quantifiers), (resource ...), canceled, or unknown etc.
+                if BU.starts_with err "canceled" || BU.starts_with err "(resource" then (ic, cc + 1, uc)
+                else if BU.starts_with err "(incomplete" then (ic + 1, cc, uc)
+                else (ic, cc, uc + 1)  //note this covers unknowns, overflows, etc.
+              ) (0, 0, 0) settings.query_errors
+            in
+            (match incomplete_count, canceled_count, unknown_count with
+             | _, 0, 0 when incomplete_count > 0 -> "The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel"
+             | 0, _, 0 when canceled_count > 0   -> "The SMT query timed out, you might want to increase the rlimit"
+             | _, _, _                           -> "Try with --query_stats to get more details") |> Inl
         in
+            
         match find_localized_errors settings.query_errors with
         | Some err ->
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
-          FStar.TypeChecker.Err.add_errors_smt_detail settings.query_env err.error_messages (Some smt_error)
+          FStar.TypeChecker.Err.add_errors_smt_detail settings.query_env err.error_messages smt_error
         | None ->
           FStar.TypeChecker.Err.add_errors_smt_detail
                    settings.query_env
                    [(Errors.Error_UnknownFatal_AssertionFailure,
                      "Unknown assertion failed",
                      settings.query_range)]
-                   (Some smt_error)
+                   smt_error
     in
     if Options.detail_errors()
     && Options.n_cores() = 1

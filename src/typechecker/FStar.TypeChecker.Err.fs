@@ -43,11 +43,17 @@ let info_at_pos env file row col =
       | Inr fv -> Some (Inr (FStar.Syntax.Syntax.lid_of_fv fv), info.identifier_ty,
                        FStar.Syntax.Syntax.range_of_fv fv)
 
+(*
+ * AR: smt_detail is either an Inr of a long multi-line message or Inr of a short one
+ *     in the first case, we print it starting from a newline,
+ *       while in the latter, it is printed on the same line
+ *)
 let add_errors_smt_detail env errs smt_detail =
     let maybe_add_smt_detail msg =
       match smt_detail with
-      | None -> msg
-      | Some d -> msg ^ "\n\t" ^ d
+      | Inr d -> msg ^ "\n\t" ^ d
+      | Inl d when BU.trim_string d <> "" -> msg ^ "; " ^ d
+      | _ -> msg
     in
     let errs =
         errs
@@ -71,7 +77,7 @@ let add_errors_smt_detail env errs smt_detail =
     in
     FStar.Errors.add_errors errs
 
-let add_errors env errs = add_errors_smt_detail env errs None
+let add_errors env errs = add_errors_smt_detail env errs (Inl "")
 
 let err_msg_type_strings env t1 t2 :(string * string) =
   let s1 = N.term_to_string env t1 in
