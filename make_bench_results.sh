@@ -17,8 +17,23 @@ else
 	TASKSET_WRAP=''
 fi
 
-simple_summary() {
-    awk -F',' 'BEGIN {total=0; user=0; sys=0} NR>0 {total+=$2; user+=$3; sys+=$4} END {printf "total\tuser\tsystem\t\n%.4g\t%.4g\t%.4g\n", total, user, sys}'
+write_simple_summary() {
+	IN=${1}
+	OUT=${1}.summary
+	echo ${IN} > ${OUT}
+    cat ${IN}.csv | awk -F',' 'BEGIN {total=0; user=0; sys=0} NR>0 {total+=$2; user+=$3; sys+=$4} END {printf "total\tuser\tsystem\t\n%.4g\t%.4g\t%.4g\n", total, user, sys}' >> ${OUT}
+}
+
+write_csv() {
+	IN=${1}
+	OUT=${1}.csv
+
+	FIELDS=('name', 'time_secs', 'user_time_secs', 'sys_time_secs', 'maxrss_kB', 'gc.allocated_words', 'gc.minor_words', 'gc.promoted_words', 'gc.major_words', 'gc.minor_collections', 'gc.major_collections', 'gc.heap_words', 'gc.heap_chunks', 'gc.top_heap_words', 'gc.compactions')
+	HEADER=$(printf "%s" ${FIELDS[@]})
+	JQ_ARGS=$(printf ".%s" ${FIELDS[@]})
+
+	echo $HEADER > ${OUT}
+	cat ${IN}.bench | jq -s -r ".[] | [$JQ_ARGS] | @csv" >> ${OUT}
 }
 
 mkdir -p ${OUTDIR}
@@ -54,16 +69,16 @@ BENCH_DIR=examples/micro-benchmarks; NME=micro-benchmarks
 rm -f ${BENCH_DIR}/*.bench
 ${TASKSET_WRAP} make -C ${BENCH_DIR} ORUN_FSTAR=true OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
 cat ${BENCH_DIR}/*.bench > ${OUTDIR}/${NME}.bench
-cat ${OUTDIR}/${NME}.bench | ./make_csv_from_bench.sh > ${OUTDIR}/${NME}.csv
-cat ${OUTDIR}/${NME}.csv | simple_summary > ${OUTDIR}/${NME}.summary
+write_csv ${OUTDIR}/${NME}
+write_simple_summary ${OUTDIR}/${NME}
 
 # benchmark ulib
 BENCH_DIR=ulib; NME=ulib
 rm -f ${BENCH_DIR}/*.bench
 ${TASKSET_WRAP} make -C ${BENCH_DIR} benchmark ORUN_FSTAR=true OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
 cat ${BENCH_DIR}/*.bench > ${OUTDIR}/${NME}.bench
-cat ${OUTDIR}/${NME}.bench | ./make_csv_from_bench.sh > ${OUTDIR}/${NME}.csv
-cat ${OUTDIR}/${NME}.csv | simple_summary > ${OUTDIR}/${NME}.summary
+write_csv ${OUTDIR}/${NME}
+write_simple_summary ${OUTDIR}/${NME}
 
 # ocaml_extract: make -C src ocaml
 make -C src clean_boot
@@ -71,6 +86,6 @@ make -C src clean_boot
 NME=ocaml_extract
 ${TASKSET_WRAP} make -C src ocaml ORUN_FSTAR=true OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
 cat src/ocaml-output/*.bench > ${OUTDIR}/${NME}.bench
-cat ${OUTDIR}/${NME}.bench | ./make_csv_from_bench.sh > ${OUTDIR}/${NME}.csv
-cat ${OUTDIR}/${NME}.csv | simple_summary > ${OUTDIR}/${NME}.summary
+write_csv ${OUTDIR}/${NME}
+write_simple_summary ${OUTDIR}/${NME}
 
