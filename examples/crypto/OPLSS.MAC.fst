@@ -60,7 +60,7 @@ let mac (k:key) (m:HMACSHA1.msg)
        then log k h1 == Seq.snoc (log k h0) (Entry m t)
        else log k h1 == log k h0))
   = let t = HMACSHA1.hmac_sha1 k.raw m in
-    if Flag.branch Ideal.uf_cma then Log.add k.log (Entry m t);
+    if Flag.idealizing Ideal.uf_cma then Log.add k.log (Entry m t);
     t
 
 let verify (k:key) (m:HMACSHA1.msg) (t:HMACSHA1.tag)
@@ -73,7 +73,7 @@ let verify (k:key) (m:HMACSHA1.msg) (t:HMACSHA1.tag)
       (b <==> t == HMACSHA1.hmac_sha1 k.raw m /\
             (Flag.reveal Ideal.uf_cma ==> log k h1 `Log.has` Entry m t)))
   = let verified = (t = HMACSHA1.hmac_sha1 k.raw m) in
-    if Flag.branch Ideal.uf_cma
+    if Flag.idealizing Ideal.uf_cma
     then let found = Some? (Log.find k.log (fun e -> e.msg = m && e.tag = t)) in
          verified && found
     else verified

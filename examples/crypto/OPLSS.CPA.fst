@@ -48,7 +48,7 @@ let iv_of_entry_inj (e1 e2:log_entry)
            ==> Entry?.c e1 <> Entry?.c e2)
   = let iv1, r1 = iv_of_entry e1, raw_cipher e1 in
     let iv2, r2 = iv_of_entry e2, raw_cipher e2 in
-    FStar.Classical.move_requires (Platform.Bytes.lemma_append_inj iv1 r1 iv2) r2
+    FStar.Classical.move_requires (Seq.lemma_append_inj iv1 r1 iv2) r2
 
 /// A key includes the raw AES key but also an monotonic log of entries
 /// representing the ideal state
@@ -196,14 +196,14 @@ let encrypt (k:key) (m:Plain.plain)
      then log k h1 == Seq.snoc (log k h0) (Entry m c)
      else log k h1 == log k h0)) =
   let iv = fresh_iv k in
-  let text = if Flag.branch Ideal.ind_cpa
+  let text = if Flag.idealizing Ideal.ind_cpa
              then Seq.create (Plain.length m) 0z
              else Plain.repr m in
   let raw_c = AES.aes_encrypt k.raw iv text in
   let c = iv@|raw_c in
   let e = Entry m c in
   let h0 = FStar.HyperStack.ST.get () in  
-  if Flag.branch Ideal.uf_cma then Log.add k.log e;
+  if Flag.idealizing Ideal.uf_cma then Log.add k.log e;
   split_entry m iv raw_c;
   lemma_mem_snoc (log k h0) e;
   pairwise_snoc (log k h0) e;
@@ -252,7 +252,7 @@ let decrypt (k:key) (c:AES.iv_cipher)
   let Key raw_key log = k in
   let iv,c' = split c AES.ivsize in
   let raw_plain = AES.aes_decrypt raw_key iv c' in
-  if Flag.branch Ideal.pre_ind_cpa then
+  if Flag.idealizing Ideal.pre_ind_cpa then
     let Entry plain _ = find k c in
     split_entry plain iv c';
     if not (Flag.reveal Ideal.ind_cpa)
