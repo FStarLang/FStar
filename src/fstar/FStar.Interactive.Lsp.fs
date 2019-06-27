@@ -85,7 +85,7 @@ let deserialize_lsp_query js_query : lsp_query =
   | UnexpectedJsonType (expected, got) -> wrap_jsfail None expected got
 
 let parse_lsp_query query_str : lsp_query =
-  U.print1_error ">>> %s\n" query_str;
+  if false then U.print1_error ">>> %s\n" query_str;
   match U.json_of_string query_str with
   | None -> { query_id = None; q = BadProtocolMsg "Json parsing failed" }
   | Some request -> deserialize_lsp_query request
@@ -201,7 +201,7 @@ let rec go (gst: grepl_state) : int =
   let r, state_opt = run_query gst query.q in
   (match r with
    | Some response -> (let response' = json_of_response query.query_id response in
-                       U.print1_error "<<< %s\n" (U.string_of_json response');
+                       if false then U.print1_error "<<< %s\n" (U.string_of_json response');
                        write_jsonrpc response')
    | None -> ()); // Don't respond
   match state_opt with

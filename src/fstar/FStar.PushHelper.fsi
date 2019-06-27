@@ -45,6 +45,6 @@ type name_tracking_event =
 val track_name_changes : env_t -> env_t * (env_t -> env_t * list<name_tracking_event>)
 val commit_name_tracking : repl_state -> list<name_tracking_event> -> repl_state
 
-// Lax-check the whole file; used on didOpen
+// Lax-check the whole file; used on didOpen and didSave
 // returns a diagnostic (only on error) along with the repl_state
 val full_lax : string -> repl_state -> option<assoct> * repl_state
