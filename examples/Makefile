@@ -1,6 +1,11 @@
 FSTAR_HOME=..
 include Makefile.include
 
+# Note: native_tactics is not included in the list below, it is called
+# explicitly by the uexamples rule from the Makefile in ../src/Makefile.
+# These examples are excluded since the binary package can't verify
+# them.
+
 ALL_EXAMPLE_DIRS=\
 bug-reports \
 data_structures \
@@ -19,6 +24,7 @@ dm4free \
 incl \
 struct \
 micro-benchmarks \
+friends \
 tactics \
 typeclasses \
 miniparse \
@@ -27,7 +33,6 @@ low-mitls-experiments \
 seplogic \
 csl \
 hello \
-native_tactics \
 extraction \
 demos \
 refinement \
@@ -36,11 +41,8 @@ doublylinkedlist \
 regional \
 generic \
 calc
-
 # low-level \  ... NS: removing from CI for this branch
 
-# WARNING: this target shouldn't depend on anything other than the F*
-# binary; in particular it shouldn't depend on OCaml, F#, git, etc.
 all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))
 
 %.all: %

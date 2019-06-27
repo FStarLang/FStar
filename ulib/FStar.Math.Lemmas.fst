@@ -768,9 +768,13 @@ let pow2_multiplication_modulo_lemma_1 a b c =
   paren_mul_left a (pow2 (c - b)) (pow2 b);
   multiple_modulo_lemma (a * pow2 (c - b)) (pow2 b)
 
-#set-options "--z3rlimit 350"
 val pow2_multiplication_modulo_lemma_2: a:nat -> b:nat -> c:nat{c <= b} ->
     Lemma ( (a * pow2 c) % pow2 b = (a % pow2 (b - c)) * pow2 c )
+
+// GM, 2019-06-25: Not sure why validity makes a difference here, it's probably
+// just noise.
+#push-options "--z3rlimit 500 --smtencoding.valid_intro true --smtencoding.valid_elim true"
+
 let pow2_multiplication_modulo_lemma_2 a b c =
   euclidean_division_definition a (pow2 (b - c));
   let q = pow2 (b - c) in
@@ -784,7 +788,7 @@ let pow2_multiplication_modulo_lemma_2 a b c =
   multiplication_order_lemma (pow2 (b - c)) (a % pow2 (b - c)) (pow2 c);
   small_modulo_lemma_1 ((a % pow2 (b - c)) * pow2 c) (pow2 b)
 
-#set-options "--z3rlimit 5"
+#pop-options
 
 val pow2_modulo_division_lemma_1: a:nat -> b:nat -> c:nat{c >= b} ->
     Lemma ( (a % pow2 c) / pow2 b = (a / pow2 b) % (pow2 (c - b)) )
