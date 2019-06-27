@@ -36,6 +36,15 @@ write_csv() {
 	cat ${IN}.bench | jq -s -r ".[] | [$JQ_ARGS] | @csv" >> ${OUT}
 }
 
+write_csv_and_summary() {
+	if hash jq 2>/dev/null; then
+		write_csv $1
+		write_simple_summary $1
+	else
+		echo "Unable to find jq to create csv and summary (https://stedolan.github.io/jq/)"
+	fi
+}
+
 mkdir -p ${OUTDIR}
 
 # setup clean fstar to clean state
@@ -69,23 +78,21 @@ BENCH_DIR=examples/micro-benchmarks; NME=micro-benchmarks
 rm -f ${BENCH_DIR}/*.bench
 ${TASKSET_WRAP} make -C ${BENCH_DIR} BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
 cat ${BENCH_DIR}/*.bench > ${OUTDIR}/${NME}.bench
-write_csv ${OUTDIR}/${NME}
-write_simple_summary ${OUTDIR}/${NME}
+write_csv_and_summary ${OUTDIR}/${NME}
 
 # benchmark ulib
 BENCH_DIR=ulib; NME=ulib
 rm -f ${BENCH_DIR}/*.bench
 ${TASKSET_WRAP} make -C ${BENCH_DIR} benchmark BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
 cat ${BENCH_DIR}/*.bench > ${OUTDIR}/${NME}.bench
-write_csv ${OUTDIR}/${NME}
-write_simple_summary ${OUTDIR}/${NME}
+write_csv_and_summary ${OUTDIR}/${NME}
 
 # ocaml_extract: make -C src ocaml
 make -C src clean_boot
 #make -C src clean # will do a clean-ocaml as well
 NME=ocaml_extract
+rm -f src/${NME}/*.bench
 ${TASKSET_WRAP} make -C src ocaml BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
-cat src/ocaml-output/*.bench > ${OUTDIR}/${NME}.bench
-write_csv ${OUTDIR}/${NME}
-write_simple_summary ${OUTDIR}/${NME}
+cat src/${NME}/*.bench > ${OUTDIR}/${NME}.bench
+write_csv_and_summary ${OUTDIR}/${NME}
 
