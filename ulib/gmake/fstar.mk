@@ -17,14 +17,16 @@ endif
 
 # Benchmarking wrappers are enabled when you pass BENCHMARK_FSTAR=true, for example:
 #  make -C examples/micro-benchmarks BENCHMARK_FSTAR=true
+#  make -C ulib benchmark BENCHMARK_FSTAR=true BENCHMARK_CMD='perf stat -x,'
 #
-# This will utilize the BENCHMARK_CMD wrapper to collect data on the commands executed.
+# This will utilize the BENCHMARK_CMD wrapper to collect data on the commands executed
 #
 # BENCHMARK_CMD can be set to a wrapper command that works when called as follows:
 #  $BENCHMARK_CMD -o <output-file> -- <program-to-benchmark> <arguments-to-program>
 #
-# For example Linux perf stat:
+# For example Linux perf stat or strace:
 #  BENCHMARK_CMD=perf stat -x,
+#  BENCHMARK_CMD=strace
 #
 # or GNU time:
 #  BENCHMARK_CMD=time
