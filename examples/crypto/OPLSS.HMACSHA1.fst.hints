@@ -1,0 +1,51 @@
+[
+  "›\u001e-F~'?W²ê&]\u001eÂ*‰",
+  [
+    [
+      "OPLSS.HMACSHA1.sha1_key",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS.HMACSHA1.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "5911e0802de454096e2273ce47310468"
+    ],
+    [
+      "OPLSS.HMACSHA1.tag",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS.HMACSHA1.macsize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "828c3c477ef141a5d597984a17b0e431"
+    ],
+    [
+      "OPLSS.HMACSHA1.hmac_sha1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_OPLSS.HMACSHA1.blocksize",
+        "equation_OPLSS.HMACSHA1.keysize",
+        "equation_OPLSS.HMACSHA1.sha1_key", "equation_OPLSS.bytes",
+        "equation_OPLSS.lbytes", "equation_Prims.nat",
+        "function_token_typing_FStar.UInt8.t", "int_typing",
+        "lemma_FStar.Seq.Base.lemma_create_len",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_31c7d3d85d92cb942c95a78642e657c7",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_defbf19c7608fb05f460f9836bab2a7f",
+        "typing_FStar.Seq.Base.length", "typing_OPLSS.HMACSHA1.byte_of_int"
+      ],
+      0,
+      "01b144c19e5a0edce9d97760e4d0b5c5"
+    ]
+  ]
+]
