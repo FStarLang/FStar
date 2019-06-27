@@ -47,5 +47,6 @@ val aes_decrypt (k:key) (iv:iv) (c:cipher)
 
 assume
 val enc_dec_inverses (key:key) (iv:iv) (plain:plain)
-    : Lemma (aes_decrypt key iv (aes_encrypt key iv plain) == plain)
-             
+    : Lemma 
+      (ensures (aes_decrypt key iv (aes_encrypt key iv plain) == plain))
+      [SMTPat (aes_decrypt key iv (aes_encrypt key iv plain))]       

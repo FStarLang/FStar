@@ -36,8 +36,12 @@ let raw_cipher (Entry _ c) : bytes = snd (Seq.split c AES.ivsize)
 
 /// A lemma inverting the iv+cipher construction
 let split_entry (p:Plain.plain) (iv:AES.iv) (r:AES.cipher)
-   : Lemma  (iv_of_entry (Entry p (iv@|r)) == iv /\
-             raw_cipher  (Entry p (iv@|r)) == r)
+   : Lemma  
+     (ensures (iv_of_entry (Entry p (iv@|r)) == iv /\
+               raw_cipher  (Entry p (iv@|r)) == r))
+     [SMTPatOr 
+       [[SMTPat (iv_of_entry (Entry p (iv@|r)))];
+        [SMTPat (raw_cipher (Entry p (iv@|r)))]]]       
    = assert (Seq.equal (iv_of_entry (Entry p (iv@|r))) iv);
      assert (Seq.equal (raw_cipher (Entry p (iv@|r))) r)
 
@@ -110,8 +114,11 @@ let rec pairwise_distinct_ivs (log:seq log_entry)
 
 /// A simple lemma to introduce and eliminate pairwise_distinct_ivs
 let pairwise_snoc (cpas:Seq.seq log_entry) (tl:log_entry)
-    : Lemma ((pairwise_distinct_ivs cpas /\ iv_not_in (iv_of_entry tl) cpas) <==>
-             (pairwise_distinct_ivs (Seq.snoc cpas tl)))
+    : Lemma 
+      (ensures 
+        ((pairwise_distinct_ivs cpas /\ iv_not_in (iv_of_entry tl) cpas) <==>
+         (pairwise_distinct_ivs (Seq.snoc cpas tl))))
+      [SMTPat (pairwise_distinct_ivs (Seq.snoc cpas tl))]
     = un_snoc_snoc cpas tl
 
 /// It's convenient to lift the pairwise-distinctness of IVs to
@@ -153,62 +160,6 @@ let invariant (k:key) (h:HS.mem) =
     cipher_functional_correctness raw_key log
 
 
-(*** The main interface:
-       keygen, encrypt, decrypt  ***)
-/// keygen: allocating a new key
-///       -- Caller provides a parent region in which to allocate the ideal log
-///       -- Returns a fresh key satisfying its invariant whose log is initially empty
-let keygen ()
-  : ST key
-  (requires fun _ -> True)
-  (ensures  fun h0 k h1 -> 
-    B.modifies B.loc_none h0 h1 /\
-    log k h1 == Seq.empty /\
-    invariant k h1 /\
-    B.fresh_loc (B.loc_mreference k.log) h0 h1) =
-  let raw = random AES.keysize in
-  let log = Log.new_log #log_entry in
-  Key raw log
-
-/// A primitive to sample a fresh iv distinct from others
-///    Exercise: Implement this, e.g, by simply incrementing a counter
-///              Or by sampling and retrying
-assume 
-val fresh_iv (k:key) 
-  : ST AES.iv
-    (requires (fun h -> True))
-    (ensures (fun h0 iv h1 -> 
-                h0 == h1 /\
-                iv_not_in iv (log k h0)))
-
-
-/// encrypt:
-///     -- requires a key initially in the invariant
-///     -- ensures that only the key's log is modified
-let encrypt (k:key) (m:Plain.plain)
-  : ST AES.iv_cipher
-  (requires invariant k)
-  (ensures  fun h0 c h1 ->
-    B.modifies (B.loc_mreference k.log) h0 h1 /\
-    invariant k h1 /\
-    entry_functional_correctness k.raw (Entry m c) /\    
-    (if Flag.reveal Ideal.uf_cma
-     then log k h1 == Seq.snoc (log k h0) (Entry m c)
-     else log k h1 == log k h0)) =
-  let iv = fresh_iv k in
-  let text = if Flag.idealizing Ideal.ind_cpa
-             then Seq.create (Plain.length m) 0z
-             else Plain.repr m in
-  let raw_c = AES.aes_encrypt k.raw iv text in
-  let c = iv@|raw_c in
-  let e = Entry m c in
-  let h0 = FStar.HyperStack.ST.get () in  
-  if Flag.idealizing Ideal.uf_cma then Log.add k.log e;
-  split_entry m iv raw_c;
-  lemma_mem_snoc (log k h0) e;
-  pairwise_snoc (log k h0) e;
-  c
-
 let dec_functionally_correct (k:key) (c:AES.iv_cipher) (p:Plain.plain) =
     let iv, c = split c AES.ivsize in
     Plain.reveal p == AES.aes_decrypt k.raw iv c
@@ -231,9 +182,64 @@ let find (k:key) (c:AES.iv_cipher)
     Seq.contains_elim (log k h) e;
     e
 
+
+/// A primitive to sample a fresh iv distinct from others
+///    Exercise: Implement this, e.g, by simply incrementing a counter
+///              Or by sampling and retrying
+assume 
+val fresh_iv (k:key) 
+  : ST AES.iv
+    (requires (fun h -> True))
+    (ensures (fun h0 iv h1 -> 
+                h0 == h1 /\
+                iv_not_in iv (log k h0)))
+
+
+(*** The main interface:
+       keygen, encrypt, decrypt  ***)
+/// keygen: allocating a new key
+///       -- Caller provides a parent region in which to allocate the ideal log
+///       -- Returns a fresh key satisfying its invariant whose log is initially empty
+let keygen ()
+  : ST key
+  (requires fun _ -> True)
+  (ensures  fun h0 k h1 -> 
+    B.modifies B.loc_none h0 h1 /\
+    log k h1 == Seq.empty /\
+    invariant k h1 /\
+    B.fresh_loc (Log.fp k.log) h0 h1) =
+  let raw = random AES.keysize in
+  let log = Log.new_log #log_entry in
+  Key raw log
+
+
+/// encrypt:
+///     -- requires a key initially in the invariant
+///     -- ensures that only the key's log is modified
+let encrypt (k:key) (m:Plain.plain)
+  : ST AES.iv_cipher
+  (requires
+    invariant k)
+  (ensures  fun h0 c h1 ->
+    B.modifies (Log.fp k.log) h0 h1 /\
+    invariant k h1 /\
+    entry_functional_correctness k.raw (Entry m c) /\    
+    (if Flag.reveal Ideal.pre_ind_cpa
+     then log k h1 == Seq.snoc (log k h0) (Entry m c)
+     else log k h1 == log k h0)) =
+  let iv = fresh_iv k in
+  let text = if Flag.idealizing Ideal.ind_cpa
+             then Seq.create (Plain.length m) 0z
+             else Plain.repr m in
+  let raw_c = AES.aes_encrypt k.raw iv text in
+  let c = iv@|raw_c in
+  let e = Entry m c in
+  if Flag.idealizing Ideal.pre_ind_cpa then Log.add k.log e;
+  c
+
 /// decrypt:
 ///    -- An important pre-condition of decrypt is that when idealizing
-///       (ind_cpa_rest_adv), we need to know that the cipher being decrypted
+///       (pre_ind_cpa), we need to know that the cipher being decrypted
 ///       is actually the valid encryption of some plain text already in the log.
 ///
 ///    -- This allow us to prove that the plain text returned is a
@@ -254,9 +260,6 @@ let decrypt (k:key) (c:AES.iv_cipher)
   let raw_plain = AES.aes_decrypt raw_key iv c' in
   if Flag.idealizing Ideal.pre_ind_cpa then
     let Entry plain _ = find k c in
-    split_entry plain iv c';
-    if not (Flag.reveal Ideal.ind_cpa)
-    then AES.enc_dec_inverses raw_key iv (Plain.repr plain);
     plain
   else
     Plain.coerce raw_plain

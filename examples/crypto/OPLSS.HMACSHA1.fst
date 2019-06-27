@@ -20,18 +20,12 @@ let keysize   = 64
 let blocksize = keysize
 let macsize   = 20
 
-let msg = bytes
-type sha1_key = lbytes keysize
-type tag = lbytes macsize
-
-assume
-val byte_of_int: n:nat{n < 256} -> Tot UInt8.t
-
 assume
 val sha1: bytes -> Tot (h:bytes{Seq.length h = macsize})
 
-assume 
-val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
+let msg = bytes
+type sha1_key = lbytes keysize
+type tag = lbytes macsize
 
 let hmac_sha1 (k:sha1_key) (m:msg)
   : tag =

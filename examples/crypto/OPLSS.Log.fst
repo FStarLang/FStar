@@ -16,6 +16,8 @@ let grows (#a:Type)
 
 let t (a:eqtype) = HST.mref (seq a) grows
 
+let fp #a (x:t a) = B.loc_mreference x
+
 let entries #a (x:t a) (h:HS.mem) = HS.sel h x
 let has (#a:eqtype) (l:seq a) (x:a) = Seq.mem x l
 

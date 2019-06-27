@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2019 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,6 +14,15 @@
    limitations under the License.
 *)
 module OPLSS.AE
+(* This file is the interface for authenticated encryption (AE)
+
+   It provides an ideal view of AE in terms of a log associating
+   plain and ciphertexts.
+
+   However, this ideal interface is implemented without any loss in
+   security by composing secure interfaces for MACs (based on the
+   UF-CMA hypothesis) and Encryption (based on IND-CPA).
+*)
 open OPLSS
 open FStar.Seq
 open FStar.HyperStack.ST
@@ -21,26 +30,25 @@ module B = LowStar.Monotonic.Buffer
 module HS = FStar.HyperStack
 
 (*** Basic types ***)
-
+  
 
 /// An AE key pairs an encryption key, ke, with a MAC'ing key, km,
 /// with an invariant ensuring that their memory footprints of their
 /// ideal state are disjoint.
-/// 
-/// Aside from this, we have an AE log, which is a view of the two
-/// other logs.
 noeq 
 type key =
   | Key: mac:MAC.key
        -> enc:CPA.key { 
-           B.loc_disjoint (B.loc_mreference mac.MAC.log)
-                          (B.loc_mreference enc.CPA.log)
+           B.loc_disjoint (Log.fp mac.MAC.log) 
+                          (Log.fp enc.CPA.log)
            }
        -> key
 
+let ae_cipher = AES.iv_cipher * HMACSHA1.tag
+
 let footprint (k:key) =
-  B.loc_union (B.loc_mreference k.mac.MAC.log)
-              (B.loc_mreference k.enc.CPA.log)
+  B.loc_union (Log.fp k.mac.MAC.log)
+              (Log.fp k.enc.CPA.log)
 
 /// mac log
 let mac_log (h:HS.mem) (k:key) =
@@ -81,8 +89,10 @@ let rec mac_only_cpa_ciphers (macs:Seq.seq MAC.log_entry)
 /// A lemma to intro/elim the recursive predicate above
 let mac_only_cpa_ciphers_snoc (macs:Seq.seq MAC.log_entry) (mac:MAC.log_entry)
                               (cpas:Seq.seq CPA.log_entry) (cpa:CPA.log_entry)
-  : Lemma (mac_only_cpa_ciphers (snoc macs mac) (snoc cpas cpa) <==>
-          (mac_only_cpa_ciphers macs cpas /\ mac_cpa_related mac cpa))
+  : Lemma 
+    (ensures (mac_only_cpa_ciphers (snoc macs mac) (snoc cpas cpa) <==>
+             (mac_only_cpa_ciphers macs cpas /\ mac_cpa_related mac cpa)))
+    [SMTPat (mac_only_cpa_ciphers (snoc macs mac) (snoc cpas cpa))]
   = un_snoc_snoc macs mac;
     un_snoc_snoc cpas cpa
 
@@ -132,8 +142,11 @@ let composite_log_snoc
        (cpa:CPA.log_entry{
          mac_only_cpa_ciphers macs cpas /\
          mac_only_cpa_ciphers (snoc macs mac) (snoc cpas cpa)})
-  : Lemma (composite_log (snoc macs mac) (snoc cpas cpa) ==
-           snoc (composite_log macs cpas) (composite_log_entry mac cpa))
+  : Lemma 
+    (ensures 
+      (composite_log (snoc macs mac) (snoc cpas cpa) ==
+       snoc (composite_log macs cpas) (composite_log_entry mac cpa)))
+    [SMTPat (composite_log (snoc macs mac) (snoc cpas cpa))]
   = un_snoc_snoc macs mac;
     un_snoc_snoc cpas cpa
 
@@ -229,19 +242,8 @@ let keygen () =
 ///       We return a cipher, preserve the invariant,
 ///       and extend the log by exactly one entry
 let encrypt k plain =
-  let h0 = FStar.HyperStack.ST.get () in
   let c = CPA.encrypt k.enc plain in
-  let h1 = FStar.HyperStack.ST.get () in
   let t = MAC.mac k.mac c in
-  let h2 = get () in
-  assert (cpa_log h2 k == cpa_log h1 k);
-  assert (CPA.invariant k.enc h2); 
-  assert (MAC.invariant k.mac h2); 
-  mac_only_cpa_ciphers_snoc (mac_log h0 k) (MAC.Entry c t)
-                            (cpa_log h0 k) (CPA.Entry plain c);
-  if Flag.reveal Ideal.uf_cma then 
-    composite_log_snoc (mac_log h0 k)  (MAC.Entry c t)
-                       (cpa_log h0 k) (CPA.Entry plain c);
   (c, t)
 
 /// decrypt:

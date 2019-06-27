@@ -14,6 +14,14 @@
    limitations under the License.
 *)
 module OPLSS.Ideal
+(* This interface captures the sequence of idealization steps 
+   that we'll make. 
+   
+   Each concrete use of an idealization flag is a cryptographic
+   hypothesis and should be treated as an `assume`, i.e., each such
+   hypothesis should be validates as being cryptographically justified
+   by an expert.
+*)
 open OPLSS.Flag
 
 //we're idealizing MACs
@@ -23,7 +31,7 @@ val uf_cma : flag
 //we're pre-idealizing encryption, but without any loss of security
 val pre_ind_cpa : b:flag{ reveal b == reveal uf_cma }
 
-//we're idealizing encryption for secrecy, at the end
+//finally, we're idealizing encryption for secrecy, at the end
 val ind_cpa : b:flag{ reveal b ==> reveal pre_ind_cpa }
 
 //we get authenticated encryption after idealizing everyting
