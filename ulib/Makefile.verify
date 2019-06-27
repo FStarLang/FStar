@@ -49,8 +49,8 @@ verify-extra: $(addsuffix .checked, $(EXTRA))
 # a.fst.bench will move the a.fst.checked binary and then move it back
 %.fst.bench: %.fst
 	mv -f $*.fst.checked $*.fst.checked.bench_bkp || true
-ifdef ORUN_FSTAR
-	$(ORUN) -o $@ -- $(MY_FSTAR) $*.fst
+ifdef BENCHMARK_FSTAR
+	$(BENCHMARK_CMD) -o $@ -- $(MY_FSTAR) $*.fst
 else
 	$(MY_FSTAR) $*.fst
 endif
@@ -59,8 +59,8 @@ endif
 # a.fsti.bench will move the a.fsti.checked binary and then move it back
 %.fsti.bench: %.fsti
 	mv -f $*.fsti.checked $*.fsti.checked.bench_bkp || true
-ifdef ORUN_FSTAR
-	$(ORUN) -o $@ -- $(MY_FSTAR) $*.fsti
+ifdef BENCHMARK_FSTAR
+	$(BENCHMARK_CMD) -o $@ -- $(MY_FSTAR) $*.fsti
 else
 	$(MY_FSTAR) $*.fsti
 endif

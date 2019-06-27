@@ -15,4 +15,22 @@ else
 FSTAR=fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
 endif
 
-ORUN?=orun
+# Benchmarking wrappers are enabled when you pass BENCHMARK_FSTAR=true, for example:
+#  make -C examples/micro-benchmarks BENCHMARK_FSTAR=true
+#
+# This will utilize the BENCHMARK_CMD wrapper to collect data on the commands executed.
+#
+# BENCHMARK_CMD can be set to a wrapper command that works when called as follows:
+#  $BENCHMARK_CMD -o <output-file> -- <program-to-benchmark> <arguments-to-program>
+#
+# For example Linux perf stat:
+#  BENCHMARK_CMD=perf stat -x,
+#
+# or GNU time:
+#  BENCHMARK_CMD=time
+#
+# or the orun OCaml benchmarking program which will include GC stats and available at:
+#  https://github.com/ocaml-bench/sandmark/tree/master/orun
+#  BENCHMARK_CMD=orun
+#
+BENCHMARK_CMD?=time

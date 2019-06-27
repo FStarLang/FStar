@@ -67,7 +67,7 @@ ls -ltr ulib >> ${OUTDIR}/build_fstarlib.log
 # benchmark examples/micro-benchmarks
 BENCH_DIR=examples/micro-benchmarks; NME=micro-benchmarks
 rm -f ${BENCH_DIR}/*.bench
-${TASKSET_WRAP} make -C ${BENCH_DIR} ORUN_FSTAR=true OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
+${TASKSET_WRAP} make -C ${BENCH_DIR} BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
 cat ${BENCH_DIR}/*.bench > ${OUTDIR}/${NME}.bench
 write_csv ${OUTDIR}/${NME}
 write_simple_summary ${OUTDIR}/${NME}
@@ -75,7 +75,7 @@ write_simple_summary ${OUTDIR}/${NME}
 # benchmark ulib
 BENCH_DIR=ulib; NME=ulib
 rm -f ${BENCH_DIR}/*.bench
-${TASKSET_WRAP} make -C ${BENCH_DIR} benchmark ORUN_FSTAR=true OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
+${TASKSET_WRAP} make -C ${BENCH_DIR} benchmark BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
 cat ${BENCH_DIR}/*.bench > ${OUTDIR}/${NME}.bench
 write_csv ${OUTDIR}/${NME}
 write_simple_summary ${OUTDIR}/${NME}
@@ -84,7 +84,7 @@ write_simple_summary ${OUTDIR}/${NME}
 make -C src clean_boot
 #make -C src clean # will do a clean-ocaml as well
 NME=ocaml_extract
-${TASKSET_WRAP} make -C src ocaml ORUN_FSTAR=true OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
+${TASKSET_WRAP} make -C src ocaml BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
 cat src/ocaml-output/*.bench > ${OUTDIR}/${NME}.bench
 write_csv ${OUTDIR}/${NME}
 write_simple_summary ${OUTDIR}/${NME}
