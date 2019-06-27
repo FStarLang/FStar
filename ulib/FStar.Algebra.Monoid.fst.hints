@@ -192,7 +192,7 @@
         "typing_Tm_abs_5043f38a94b5783f1a2853ffc23a082c"
       ],
       0,
-      "5c054ffde5ce1c3c178924f3690325fa"
+      "6983bd63b06506f072e2f6bad4f4bb60"
     ],
     [
       "FStar.Algebra.Monoid.lift_monoid_option",
@@ -228,7 +228,7 @@
         "typing_Tm_abs_9bee8d4e0220718dda8a4314b261cdec"
       ],
       0,
-      "b06dd970bdb348f78c9894b767672d62"
+      "065b2584839f03c77553995f775acb1b"
     ],
     [
       "FStar.Algebra.Monoid.monoid_morphism",
@@ -590,7 +590,7 @@
         "typing_Tm_abs_5043f38a94b5783f1a2853ffc23a082c"
       ],
       0,
-      "f542dae6390a38bde6f06b7f0da2017d"
+      "146418b450b462917724ed9178e7d496"
     ],
     [
       "FStar.Algebra.Monoid.lift_monoid_option",
@@ -626,7 +626,7 @@
         "typing_Tm_abs_9bee8d4e0220718dda8a4314b261cdec"
       ],
       0,
-      "9dbe703fda4d3dbab9e861b415af5406"
+      "2c96bcc4e84931a16038e031aa7db939"
     ],
     [
       "FStar.Algebra.Monoid.monoid_morphism",
