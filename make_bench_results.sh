@@ -91,8 +91,8 @@ write_csv_and_summary ${OUTDIR}/${NME}
 make -C src clean_boot
 #make -C src clean # will do a clean-ocaml as well
 NME=ocaml_extract
-rm -f src/${NME}/*.bench
+rm -f src/ocaml-output/*.bench
 ${TASKSET_WRAP} make -C src ocaml BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
-cat src/${NME}/*.bench > ${OUTDIR}/${NME}.bench
+cat src/ocaml-output/*.bench > ${OUTDIR}/${NME}.bench
 write_csv_and_summary ${OUTDIR}/${NME}
 
