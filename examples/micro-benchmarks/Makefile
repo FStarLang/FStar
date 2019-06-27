@@ -13,10 +13,7 @@ else
 NEGTESTS=3
 endif
 
-all: uall
-
-uall: all-pos
-	+$(MAKE) -C friends all-dirs
+all: all-pos
 
 MustEraseForExtraction.uver: OTHERFLAGS += --warn_error @318
 
@@ -30,17 +27,17 @@ ALL_UVERS = Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Uni
 	 UnifyMatch.uver UnifyRefs.uver \
 	 ChrisCheck.uver PatCoerce.uver \
 	 OccursCheckOnArrows.uver Test.Integers.uver AnotType.uver Test.ReifyNBE.fst \
-	 TupleSyntax.uver  ArgsAndQuals.uver Test.Printf.uver \
+	 TupleSyntax.uver ArgsAndQuals.uver Test.Printf.uver \
 	 UnifyReify.uver NestedLemma.uver NormTypesForSMT.uver
 
 ifeq ($(filter --admit_smt_queries,$(OTHERFLAGS)),)
-ALL_UVERS += WPExtensionality.uver  NegativeTests.BST.uver NegativeTests.Heap.uver \
-     NegativeTests.ShortCircuiting.uver \
-	 NegativeTests.Bug260.uver NegativeTests.Neg.uver NegativeTests.Termination.uver \
-	 NegativeTests.False.uver  NegativeTests.Set.uver NegativeTests.Positivity.uver \
+ALL_UVERS += WPExtensionality.uver \
+	 NegativeTests.BST.uver    NegativeTests.Heap.uver  NegativeTests.ShortCircuiting.uver \
+	 NegativeTests.Bug260.uver NegativeTests.Neg.uver   NegativeTests.Termination.uver \
+	 NegativeTests.False.uver  NegativeTests.Set.uver   NegativeTests.Positivity.uver \
 	 NegativeTests.ZZImplicitFalse.uver StableErr.uver \
-	 PatAnnot.uver TestHasEq.uver Test.FunctionalExtensionality.uver \
-	 Unit2.uver MustEraseForExtraction.uver
+	 TestHasEq.uver PatAnnot.uver Test.FunctionalExtensionality.uver \
+	 MustEraseForExtraction.uver
 else
 $(info Excluding negative tests as admit_smt_queries is set)
 endif
