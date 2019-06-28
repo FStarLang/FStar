@@ -962,7 +962,16 @@ let encode_top_level_let :
               encode_non_rec_lbdef bindings typs toks_fvbs env
             else
               encode_rec_lbdefs bindings typs toks_fvbs env
-          with Inner_let_rec -> decls, env_decls  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
+          with
+            | Inner_let_rec (s, r) ->
+              FStar.TypeChecker.Err.add_errors
+                env.tcenv
+                [(Errors.Warning_DefinitionNotTranslated,
+                  BU.format1
+                    "Definitions of inner let-rec %s and its enclosing top-level letbinding are not encoded to the solver, you will only be able to reason with their types"
+                    s,
+                  r)];
+              decls, env_decls  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
 
     with Let_rec_unencodeable ->
       let msg = bindings |> List.map (fun lb -> Print.lbname_to_string lb.lbname) |> String.concat " and " in

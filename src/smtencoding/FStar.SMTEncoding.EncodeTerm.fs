@@ -1225,9 +1225,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
         encode_let x t1 e1 e2 env encode_term
 
-      | Tm_let _ ->
-        Errors.diag t0.pos "Non-top-level recursive functions, and their enclosings let bindings (including the top-level let) are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
-        raise Inner_let_rec
+      | Tm_let ((_, [ { lbname = BU.Inl x } ]), _) ->
+        raise (Inner_let_rec (Ident.text_of_id x.ppname, S.range_of_bv x))  
 
       | Tm_match(e, pats) ->
         encode_match e pats mk_Term_unit env encode_term

@@ -21,7 +21,6 @@ open FStar.All
 open FStar
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding.Term
-open FStar.BaseTypes
 open FStar.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
@@ -724,22 +723,33 @@ let solve use_env_msg tcenv q : unit =
                     BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
                         tcenv.range)]
     else begin
-    if should_refresh tcenv then begin
-      save_cfg tcenv;
-      Z3.refresh ()
-    end;
-    Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-    let tcenv = incr_query_index tcenv in
-    let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
-    let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
-    match qry with
-    | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
-    | _ when tcenv.admit -> pop()
-    | Assume _ ->
-        ask_and_report_errors tcenv labels prefix qry suffix;
-        pop ()
+      if should_refresh tcenv then begin
+        save_cfg tcenv;
+        Z3.refresh ()
+      end;
+      Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+      let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+      try
+        let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
+        let tcenv = incr_query_index tcenv in  
+        match qry with
+        | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
+        | _ when tcenv.admit -> pop()
+        | Assume _ ->
+          ask_and_report_errors tcenv labels prefix qry suffix;
+          pop ()
 
-    | _ -> failwith "Impossible"
+        | _ -> failwith "Impossible"
+      with
+        | FStar.SMTEncoding.Env.Inner_let_rec (s, _) ->  //can be raised by encode_query
+          pop ();  //AR: Important, we push-ed before encode_query was called
+          FStar.TypeChecker.Err.add_errors
+            tcenv
+            [(Errors.Error_NonTopRecFunctionNotFullyEncoded,
+              BU.format1
+                "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+                s,
+              tcenv.range)]
     end
 
 (**********************************************************************************************)
