@@ -587,6 +587,12 @@ type eq (#s:sig) (#t:sig) (r:per (functor_t s t)) : eps s t -> functor_t s t -> 
     f:functor_t q t ->
     eq r (eps_trans f e) (f `comp` x) (f `comp` y)
 
+(* `eq r eps x y` isn't a PER
+    Instead, it's some kind of ε-indexed PER
+
+   We can turn it into a PER by making it existentially quantifying
+   the epsilon in a proof-relevant way, that's `eeq`
+*)
 let eeq #s #t (r:per (functor_t s t))
   : rel (functor_t s t)
   = fun (x y : functor_t s t) -> (e:eps s t & squash (eq r e x y))
@@ -595,6 +601,7 @@ let get_eeq #s #t (r:per (functor_t s t)) (x:functor_t s t) (y:functor_t s t{eeq
   : Tot (squash (eeq r x y))
   = ()
 
+(* `eeq` is a PER *)
 let per_eeq #s #t (r:per (functor_t s t))
   : Lemma (sym (eeq r) /\
            trans (eeq r))
@@ -638,11 +645,3 @@ let per_eeq #s #t (r:per (functor_t s t))
         eeq_xz
     in
     ()
-
-//TODO: restore this to work with the new functorized eeq
-// let hi_lo_rel : per (int & int -> int) = arrow_rel (hi int ** lo int) (lo int)
-// let hi_lo_eeq : per (int & int -> int) = eeq hi_lo_rel
-// assume val enc : int & int -> int
-// assume val ideal_enc: (hi int ** lo int) ^--> lo int
-// assume val enc_eeq_ideal_enc : squash (hi_lo_eeq enc ideal_enc)
-// let _ = assert (enc `erel_of_per hi_lo_eeq` ideal_enc)
