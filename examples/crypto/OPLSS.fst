@@ -6,13 +6,13 @@ module B = LowStar.Monotonic.Buffer
 let bytes = Seq.seq UInt8.t
 let lbytes l = b:bytes{Seq.length b = l}
 
-assume
+assume //demo scaffolding
 val random (l:nat) : EXT (lbytes l)
 
-assume
+assume //demo scaffolding
 val byte_of_int: n:nat{n < 256} -> Tot UInt8.t
 
-assume
+assume //demo scaffolding
 val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 
 open FStar.Seq

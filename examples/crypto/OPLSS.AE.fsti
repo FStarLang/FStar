@@ -73,7 +73,7 @@ val encrypt (k:key) (plain:Plain.plain)
   (ensures  fun h0 c h1 ->
     invariant k h1 /\
     B.modifies (footprint k) h0 h1 /\
-    (Flag.reveal Ideal.ae ==> ae_log k h1 == Seq.snoc (ae_log k h0) (plain, c)))
+     (Flag.reveal Ideal.ae ==> ae_log k h1 == Seq.snoc (ae_log k h0) (plain, c)))
 
 /// decrypt:
 ///     In the ideal case, we prove it functionally correct and

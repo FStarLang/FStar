@@ -34,7 +34,7 @@ let bij (n:elem) =
   let finv = fun h -> upd h (to_id 0) ((sel h (to_id 0) ^^ n)) in
   Bijection f finv
 
-reifiable val otp: elem -> Rand elem
+val otp: elem -> Rand elem
 let otp n =
   let m = sample () in
   n ^^ m
@@ -56,25 +56,3 @@ let otp_secure n1 n2 z =
   let f1 h = reify (otp n1) h in
   let f2 h = reify (otp n2) h in
   pr_eq f1 f2 (point z) (point z) (bij ((n1 ^^ n2)))
-
-let one_time_pad () : Rand ((elem -> elem) * (elem -> elem)) =
-  let key = sample () in
-  let encrypt (msg:elem) = msg ^^ key in
-  let decrypt (cipher:elem) = cipher ^^ key in
-  encrypt, decrypt
-
-(*
- * AR: 03/07/18: this relies on abstraction leaks in FStar.DM4F.OTP.Heap
- *               admitting, see the changes in that file alongside this commit
- *)		 
-// let one_time_pad_ok x0 x1 t0 t1 : Lemma
-//   (requires (t1 == (bij (x1 ^^ x0)).f t0))
-//   (ensures (let (Some (enc0, dec0),_) = reify (one_time_pad ()) (to_id 0, t0) in
-//             let (Some (enc1, dec1),_) = reify (one_time_pad ()) (to_id 0, t1) in
-//             dec0 (enc0 x0) == x0 /\
-//             dec1 (enc1 x1) == x1 /\
-//             enc0 x0 == enc1 x1))
-//    = let (Some (enc0, dec0),_) = reify (one_time_pad ()) (to_id 0, t0) in
-//      let (Some (enc1, dec1),_) = reify (one_time_pad ()) (to_id 0, t1) in
-//      assert (enc0 x0 == x0 ^^ (index t0 (to_id 0)));
-//      assert (enc1 x1 == x1 ^^ (index t1 (to_id 0)))

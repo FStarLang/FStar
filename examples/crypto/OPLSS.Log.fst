@@ -67,7 +67,7 @@ let contains_now #a (x:t a) (v:a)
       contains_h x v h1)
   = recall_p x (x `contains_h` v)
 
-assume val token_functoriality
+assume val token_functoriality //demo scaffolding, should be in stdlib
            (#a:_) (#pre:_)
            (x:HST.mreference a pre)
            (p:mem_predicate{token_p x p})

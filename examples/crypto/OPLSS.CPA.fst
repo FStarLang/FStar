@@ -186,7 +186,7 @@ let find (k:key) (c:AES.iv_cipher)
 /// A primitive to sample a fresh iv distinct from others
 ///    Exercise: Implement this, e.g, by simply incrementing a counter
 ///              Or by sampling and retrying
-assume 
+assume  //exercise
 val fresh_iv (k:key) 
   : ST AES.iv
     (requires (fun h -> True))

@@ -52,12 +52,12 @@ let bij' (m:group) =
   Bijection f finv
 
 
-reifiable val elgamal: m:group -> Rand group
+val elgamal: m:group -> Rand group
 let elgamal (m:group)  =
   let z = sample () in
   g^z
 
-reifiable val elgamal': m:group -> Rand group
+val elgamal': m:group -> Rand group
 let elgamal' (m:group) =
   let z = sample () in
   (g^z) * m

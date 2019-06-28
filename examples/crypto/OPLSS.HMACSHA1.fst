@@ -20,7 +20,7 @@ let keysize   = 64
 let blocksize = keysize
 let macsize   = 20
 
-assume
+assume //demo scaffolding
 val sha1: bytes -> Tot (h:bytes{Seq.length h = macsize})
 
 let msg = bytes

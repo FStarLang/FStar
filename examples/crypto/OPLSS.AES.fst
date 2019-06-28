@@ -17,35 +17,35 @@ module OPLSS.AES
 open OPLSS
   
 /// iv: initialization vectors
-assume val ivsize : nat
+assume val ivsize : nat //demo scaffolding
 let iv = lbytes ivsize
 
 /// Raw keys for AES 128
-assume val keysize : nat
+assume val keysize : nat //demo scaffolding
 let key = lbytes keysize
 
 /// Plain text
-assume val plainsize : nat
+assume val plainsize : nat //demo scaffolding
 let plain = lbytes keysize
 
 
 /// Cipher-texts are a concatenation of the IV and the AES cipher
 ///    -- we underspecify its length
 ///    -- MK says: minimal cipher length twice blocksize?
-assume val cipher_size : nat
+assume val cipher_size : nat //demo scaffolding
 let cipher = lbytes cipher_size
 
 let iv_cipher = lbytes (ivsize + cipher_size)
   
-assume 
+assume  //demo scaffolding
 val aes_encrypt (k:key) (iv:iv) (p:plain)
   : Tot cipher
        
-assume 
+assume  //demo scaffolding
 val aes_decrypt (k:key) (iv:iv) (c:cipher)
   : Tot plain
 
-assume
+assume //demo scaffolding
 val enc_dec_inverses (key:key) (iv:iv) (plain:plain)
     : Lemma 
       (ensures (aes_decrypt key iv (aes_encrypt key iv plain) == plain))
