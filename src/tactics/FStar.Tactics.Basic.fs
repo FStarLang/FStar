@@ -358,6 +358,19 @@ let do_unify env t1 t2 : tac<bool> =
     (* bind compress_implicits (fun _ -> *)
     ret r))
 
+(* Does t1 match t2? That is, do they unify without instantiating/changing t1? *)
+let do_match env t1 t2 : tac<bool> =
+    let uvs1 = SF.uvars_uncached t1 in
+    bind (do_unify env t1 t2) (fun r ->
+    if r then begin
+        let uvs2 = SF.uvars_uncached t1 in
+        if not (set_eq uvs1 uvs2)
+        then ret false
+        else ret true
+    end
+    else ret false
+    )
+
 let remove_solved_goals : tac<unit> =
     bind get (fun ps ->
     let ps' = { ps with goals = List.filter (fun g -> Option.isNone (check_goal_solved g)) ps.goals } in
@@ -880,10 +893,16 @@ let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
         bind (mapM f xs) (fun ys ->
         ret (y::ys)))
 
-let rec  __try_match_by_application (acc : list<(term * aqual * ctx_uvar)>)
-                                    (e : env) (ty1 : term) (ty2 : term)
-                                        : tac<list<(term * aqual * ctx_uvar)>> =
-    bind (do_unify e ty1 ty2) (function
+let rec  __try_unify_by_application
+            (only_match : bool)
+            (acc : list<(term * aqual * ctx_uvar)>)
+            (e : env) (ty1 : term) (ty2 : term)
+            : tac<list<(term * aqual * ctx_uvar)>> =
+    let f = if only_match
+            then do_match
+            else do_unify
+    in
+    bind (f e ty2 ty1) (function
     | true ->
         (* Done! *)
         ret acc
@@ -897,13 +916,13 @@ let rec  __try_match_by_application (acc : list<(term * aqual * ctx_uvar)>)
             bind (new_uvar "apply arg" e (fst b).sort) (fun (uvt, uv) ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (fst b, uvt)] typ in
-            __try_match_by_application ((uvt, snd b, uv)::acc) e typ' ty2)
+            __try_unify_by_application only_match ((uvt, snd b, uv)::acc) e typ' ty2)
     end)
 
-(* Can t1 match t2 if it's applied to arguments? If so return uvars for them *)
+(* Can t1 unify t2 if it's applied to arguments? If so return uvars for them *)
 (* NB: Result is reversed, which helps so we use fold_right instead of fold_left *)
-let try_match_by_application (e : env) (ty1 : term) (ty2 : term) : tac<list<(term * aqual * ctx_uvar)>> =
-    __try_match_by_application [] e ty1 ty2
+let try_unify_by_application (only_match:bool) (e : env) (ty1 : term) (ty2 : term) : tac<list<(term * aqual * ctx_uvar)>> =
+    __try_unify_by_application only_match [] e ty1 ty2
 
 // uopt: Don't add goals for implicits that appear free in posterior goals.
 // This is very handy for users, allowing to turn
@@ -918,14 +937,14 @@ let try_match_by_application (e : env) (ty1 : term) (ty2 : term) : tac<list<(ter
 // without asking for |- ?u : Type first, which will most likely be instantiated when
 // solving any of these two goals. In any case, if ?u is not solved, we will later fail.
 // TODO: this should probably be made into a user tactic
-let t_apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
+let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
     mlog (fun () -> BU.print1 "t_apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (cur_goal ()) (fun goal ->
     let e = goal_env goal in
     bind (__tc e tm) (fun (tm, typ, guard) ->
     // Focus helps keep the goal order
     let typ = bnorm e typ in
-    bind (try_match_by_application e typ (goal_type goal)) (fun uvs ->
+    bind (try_unify_by_application only_match e typ (goal_type goal)) (fun uvs ->
     (* use normal implicit application for meta-args: meta application does
      * make sense and the typechecker complains. *)
     let fix_qual q =
