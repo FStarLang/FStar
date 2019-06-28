@@ -212,6 +212,9 @@ let imem (inv:mem -> Type0) = h:mem{inv h}
 
 let rst_w (a:Type) (r:resource) = h:imem r.view.inv -> (a -> h':imem r.view.inv{modifies r.view.fp h h'} -> Type0) -> Type0
 
+let equiv_rst_w (#a:Type) (#r:resource) (wp:rst_w a r) (h:imem r.view.inv): Lemma
+  (forall p p'. (forall x h. p x h <==> p' x h) ==> (wp h p <==> wp h p'))
+  = admit()
 
 let rst (a:Type) (r:resource) (wp:rst_w a r) =
   d a (fun p h -> 
@@ -262,6 +265,15 @@ val par (#a:Type0) (#b:Type0)
                                   wp0 h (fun x h' -> wp1 h' (fun y h'' -> p (x,y) h'')) /\ 
                                   wp1 h (fun y h' -> wp0 h' (fun x h'' -> p (x,y) h''))) 
 
+//#reset-options "--z3rlimit 50 --max_fuel 6 --max_ifuel 6"
+#reset-options "--z3rlimit 50 --z3cliopt smt.qi.eager_threshold=100"
+
+let theta_ret #a (c:m a) (x:a) (p: a -> mem -> Type0) (h:mem) : Lemma
+  (requires theta c p h /\ c == Ret x)
+  (ensures  p x h)
+ = ()
+
+
 // Having earlier found a bug in the definition of `<*>` above, 
 // this definition of parallel composition currently fails.  
 //
@@ -277,19 +289,68 @@ let par #a #b #r0 #r1 #wp0 #wp1 c0 c1 =
   let wp_rst : rst_w (a & b) (r0 <*> r1) = (fun h p ->
       wp0 h (fun x h' -> wp1 h' (fun y h'' -> p (x,y) h'')) /\ 
       wp1 h (fun y h' -> wp0 h' (fun x h'' -> p (x,y) h''))) in 
+  let wp_rst0 : w a = (fun (p:a -> mem -> Type0) h ->
+         r0.view.inv h /\
+         wp0 h (fun x h' -> r0.view.inv h' /\ modifies r0.view.fp h h' ==> p x h')) in
+  let wp_rst1 : w b = (fun p h ->
+         r1.view.inv h /\ 
+         wp1 h (fun x h' -> r1.view.inv h' /\ modifies r1.view.fp h h' ==> p x h')) in         
+  assert (forall p h. wp_rst0 p h ==> theta c0 p h);
+  assert (forall p h. wp_rst1 p h ==> theta c1 p h);
   let wp_full : w (a & b) = fun p h ->
          r.view.inv h /\ 
          wp_rst h (fun x h' -> r.view.inv h' /\ modifies r.view.fp h h' ==> p x h') in
   let c = m_par #a #b c0 c1 in
-  let aux (p:(a & b) -> mem -> Type0) (h:mem) : Lemma
+  let aux_lpar (p:(a & b) -> mem -> Type0) (h:mem) : Lemma
     (requires wp_full p h)
-    (ensures theta c p h)
-    = assert (r.view.inv h);
-      assert (wp_rst h (fun x h' -> r.view.inv h' /\ modifies r.view.fp h h' ==> p x h'));
-//      assert (wp0 h (fun x h' -> wp1 
-      assume (theta (l_par c0 c1) p h);
-      assume (theta (r_par c0 c1) p h)
-  in Classical.forall_intro_2 (fun p h -> Classical.move_requires (aux p) h);
-  c
-  
+    (ensures theta (l_par c0 c1) p h)
+    = // assert (r.view.inv h);
+      assert (r0.view.inv h);
+      assert (r1.view.inv h);
+      let p0 = (fun (x:a) (h':imem r0.view.inv{modifies r0.view.fp h h'}) -> 
+        wp1 h' (fun y h'' -> r.view.inv h'' /\ modifies r.view.fp h h'' ==> p (x, y) h''))
+      in
 
+      let p' (x:a) (h':mem) = 
+        r.view.inv h' /\ modifies r0.view.fp h h' /\ 
+        p0 x h'
+      in
+      
+      assert (wp0 h p0);
+      equiv_rst_w wp0 h;
+      assert (wp_rst0 p' h);
+      assert (theta c0 p' h);
+
+      match c0 with
+      | Ret x -> begin
+        theta_ret c0 x p' h;
+        assert (p' x h);
+        let p1 = (fun (y:b) (h'':imem r1.view.inv{modifies r1.view.fp h h''}) ->
+          r.view.inv h'' /\ modifies r.view.fp h h'' ==> p (x, y) h'') in
+
+        let p1' (y:b) (h'':mem) =
+          r.view.inv h'' /\ modifies r1.view.fp h h'' /\
+          p1 y h'' in
+
+        equiv_rst_w wp1 h;
+        assert (wp_rst1 p1' h);
+        assert (theta c1 p1' h);
+       match c1 with
+       | Ret y -> theta_ret c1 y p1' h
+       | Get b c -> admit()
+       | Put b n c -> admit()
+       | Or c0' c1' -> admit()
+        end
+        // assert (l_par c0 c1 == map (fun y -> (x, y)) c1); 
+        // assume (theta (map (fun y -> (x, y)) c1) p h)
+      | _ -> admit()
+
+  in 
+  let aux_rpar (p:(a & b) -> mem -> Type0) (h:mem) : Lemma
+    (requires wp_full p h)
+    (ensures theta (r_par c0 c1) p h)
+    = admit()
+  in
+  Classical.forall_intro_2 (fun p h -> Classical.move_requires (aux_lpar p) h);
+  Classical.forall_intro_2 (fun p h -> Classical.move_requires (aux_rpar p) h);
+  c
