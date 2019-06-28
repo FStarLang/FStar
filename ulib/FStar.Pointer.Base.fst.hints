@@ -4452,7 +4452,7 @@
         "typing_FStar.Pointer.Base.uu___is_PathStep"
       ],
       0,
-      "c0a62664f6bd8a088d258258b34e6509"
+      "484d5e17e21a1bea4308a7b5afe48068"
     ],
     [
       "FStar.Pointer.Base.path_length_concat",
@@ -4930,7 +4930,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "347eafaf71777e86ffa6c4686a047de5"
+      "84f5b6ea228bc3ea7935be549a704448"
     ],
     [
       "FStar.Pointer.Base.path_includes_concat_l",
@@ -7099,7 +7099,7 @@
         "unit_typing"
       ],
       0,
-      "45ee39cc1e5023db43234527696ee28e"
+      "83dd850b647cb0aefc2b2b3a21362cfe"
     ],
     [
       "FStar.Pointer.Base.includes_ind",
@@ -15611,6 +15611,7 @@
         "equation_FStar.Pointer.Base.buffer_as_addr",
         "equation_FStar.Pointer.Base.buffer_live",
         "equation_FStar.Pointer.Base.cls",
+        "equation_FStar.Pointer.Base.disjoint",
         "equation_FStar.Pointer.Base.disjoint_buffer_vs_pointer",
         "equation_FStar.Pointer.Base.frameOf",
         "equation_FStar.Pointer.Base.frameOf_buffer",
@@ -15638,9 +15639,9 @@
         "lemma_FStar.Monotonic.HyperStack.contains_aref_unused_in",
         "lemma_FStar.Monotonic.HyperStack.contains_greference_of",
         "lemma_FStar.Monotonic.HyperStack.frameOf_greference_of",
-        "lemma_FStar.Pointer.Base.as_addr_gpointer_of_buffer_cell",
         "lemma_FStar.Pointer.Base.frameOf_gpointer_of_buffer_cell",
         "lemma_FStar.Pointer.Base.live_region_frameOf_buffer",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "proj_equation_FStar.ModifiesGen.Cls_aloc_disjoint",
         "proj_equation_FStar.Pointer.Base.Pointer_contents",
         "projection_inverse_BoxBool_proj_0",
@@ -15656,7 +15657,7 @@
         "refinement_interpretation_Tm_refine_c8374bfee518478c6a0e30260a118ee6",
         "token_correspondence_FStar.ModifiesGen.__proj__Cls__item__aloc_disjoint",
         "token_correspondence_FStar.Pointer.Base.loc_aux_disjoint",
-        "typing_FStar.Heap.trivial_preorder",
+        "true_interp", "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.HyperStack.greference_of",
         "typing_FStar.Monotonic.HyperStack.live_region",
         "typing_FStar.Pointer.Base.__proj__Buffer__item__broot",
