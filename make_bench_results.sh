@@ -21,7 +21,7 @@ write_simple_summary() {
 	IN=${1}
 	OUT=${1}.summary
 	echo ${IN} > ${OUT}
-    cat ${IN}.csv | awk -F',' 'BEGIN {total=0; user=0; sys=0} NR>0 {total+=$2; user+=$3; sys+=$4} END {printf "total\tuser\tsystem\t\n%.4g\t%.4g\t%.4g\n", total, user, sys}' >> ${OUT}
+    cat ${IN}.csv | awk -F',' 'BEGIN {total=0; user=0; sys=0} NR>0 {total+=$2; user+=$3; sys+=$4} END {printf "n\ttotal\tuser\tsystem\t\n%d\t%.4g\t%.4g\t%.4g\n", NR-1,total, user, sys}' >> ${OUT}
 }
 
 write_csv() {
