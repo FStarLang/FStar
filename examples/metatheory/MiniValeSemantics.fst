@@ -17,7 +17,7 @@
 *)
 module MiniValeSemantics
 
-(* 
+(*
 This is a highly-simplified model of Vale/F*, based on Section
 3.1-3.3 of the paper of the POPL '19 paper.
 
@@ -28,7 +28,7 @@ branch of Vale.
 
 /// We use this tag to mark certain definitions
 /// and control normalization based on it
-irreducible 
+irreducible
 let qattr = ()
 
 /// 2^64
@@ -41,7 +41,7 @@ type nat64 = i:int{0 <= i /\ i < pow2_64}
 type reg = | Rax | Rbx | Rcx | Rdx
 
 /// An operand is either a register or a constant
-type operand = 
+type operand =
   | OReg: r:reg -> operand
   | OConst: n:nat64 -> operand
 
@@ -88,7 +88,7 @@ let update_state (r:reg) (s' s:state) : state =
   update_reg s r (s' r)
 
 // We don't have an "ok" flag, so errors just result an arbitrary state:
-assume 
+assume
 val unknown_state (s:state) : state
 
 (*** A basic semantics using
@@ -101,13 +101,13 @@ let eval_ins (ins:ins) (s:state) : state =
   match ins with
   | Mov64 (OConst _) _ ->
     unknown_state s
-    
+
   | Mov64 (OReg dst) src ->
     update_reg s dst (eval_operand src s)
-    
+
   | Add64 (OConst _) _ ->
     unknown_state s
-    
+
   | Add64 (OReg dst) src ->
     update_reg s dst ((s dst + eval_operand src s) % 0x10000000000000000)
 
@@ -116,12 +116,12 @@ let eval_ins (ins:ins) (s:state) : state =
 ///   While lops return None when we're out of fuel
 let rec eval_code (c:code) (f:fuel) (s:state) : option state =
   match c with
-  | Ins ins -> 
+  | Ins ins ->
     Some (eval_ins ins s)
-    
+
   | Block cs ->
     eval_codes cs f s
-    
+
   | WhileLessThan src1 src2 body ->
       if f = 0 then None
       else if eval_operand src1 s < eval_operand src2 s then
@@ -145,7 +145,7 @@ and eval_codes (cs:list code) (f:fuel) (s:state) : option state =
 /// 1. We prove that incrasing the fuel is irrelevant to terminating executions
 
 val increase_fuel (c:code) (s0:state) (f0:fuel) (sN:state) (fN:fuel) : Lemma
-  (requires 
+  (requires
     eval_code c f0 s0 == Some sN /\
     f0 <= fN)
   (ensures
@@ -156,7 +156,7 @@ val increase_fuels (c:list code) (s0:state) (f0:fuel) (sN:state) (fN:fuel) : Lem
   (requires
     eval_code (Block c) f0 s0 == Some sN /\
     f0 <= fN)
-  (ensures 
+  (ensures
     eval_code (Block c) fN s0 == Some sN)
   (decreases %[f0; c])
 
@@ -183,7 +183,7 @@ and increase_fuels (c:list code) (s0:state) (f0:fuel) (sN:state) (fN:fuel) =
 
 /// 2. We can compute the fuel needed to run a sequential composition
 ///    as the max of the fuel to compute each piece of code in it
-let lemma_merge (c:code) (cs:list code) (s0:state) (f0:fuel) (sM:state) (fM:fuel) (sN:state) 
+let lemma_merge (c:code) (cs:list code) (s0:state) (f0:fuel) (sM:state) (fM:fuel) (sN:state)
   : Ghost fuel
   (requires
     eval_code c f0 s0 == Some sM /\
@@ -197,13 +197,13 @@ let lemma_merge (c:code) (cs:list code) (s0:state) (f0:fuel) (sM:state) (fM:fuel
   f
 
 /////////////////////////////////////////////////////////////////
-// Now, we're going to define a verification-condition generator 
-// 
+// Now, we're going to define a verification-condition generator
+//
 // The main idea is that we're going to:
 //
 //   1. define a kind of typeclass, that associates with a
 //      piece of code a weakest-precondition rule for it
-// 
+//
 //   2. Define a WP-generator that computes WPs for each of the
 //      control constructs of the language, given a program
 //      represented as the raw code packaged with their typeclass
@@ -251,7 +251,7 @@ type with_wps : list code -> Type =
    hd:with_wp c ->
    tl:with_wps cs ->
    with_wps (c::cs)
-   
+
 | QLemma: //augmenting an instruction sequence with a lemma
    #cs:list code ->
    pre:Type0 ->
@@ -263,15 +263,15 @@ type with_wps : list code -> Type =
 [@qattr]
 let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post) : state -> Type0 = fun (s0:state) ->
   match qcs with
-  | QEmpty -> 
+  | QEmpty ->
     k s0 //no instructions; prove the postcondition right away
-    
+
   | QSeq qc qcs ->
     // let pre_tl = //compute the VC generator for the tail, a precondition
     qc.wp (vc_gen (Cons?.tl cs) qcs k) s0
     // in
     // qc.wp pre_tl s0 //apply the wp-generator to the precondition for the tail
-    
+
   | QLemma pre post _ qcs ->
     pre /\ //prove the precondition of the lemma
     (post ==> vc_gen cs qcs k s0) //and assume its postcondition to verify the progra
@@ -280,7 +280,7 @@ let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post) : state -> Type0 = fu
 let rec vc_sound (cs:list code)
                  (qcs:with_wps cs)
                  (k:state -> Type0)
-                 (s0:state) 
+                 (s0:state)
   : Ghost (state * fuel)
     (requires vc_gen cs qcs k s0)
     (ensures fun (sN, fN) -> eval_code (Block cs) fN s0 == Some sN /\ k sN)
@@ -292,12 +292,12 @@ let rec vc_sound (cs:list code)
       let (sN, fN) = vc_sound cs' qcs k sM in
       let fN' = lemma_merge c cs' s0 fM sM fN sN in
       (sN, fN')
-    | QLemma pre post lem qcs' -> 
+    | QLemma pre post lem qcs' ->
       lem ();
       vc_sound cs qcs' k s0
 
-let vc_sound' (cs:list code) (qcs:with_wps cs) 
-  : has_wp (Block cs) (vc_gen cs qcs) 
+let vc_sound' (cs:list code) (qcs:with_wps cs)
+  : has_wp (Block cs) (vc_gen cs qcs)
   = vc_sound cs qcs
 
 (*** Instances of with_wp ***)
@@ -379,17 +379,17 @@ let normal_steps : list string =
     `%QProc?.wp;
   ]
 
-unfold 
+unfold
 let normal (x:Type0) : Type0 =
   norm [iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps] x
 
-let vc_sound_norm 
+let vc_sound_norm
      (cs:list code)
      (qcs:with_wps cs)
      (k:state -> Type0)
      (s0:state)
   : Ghost (state * fuel)
-    (requires 
+    (requires
       normal (vc_gen cs qcs k s0))
     (ensures fun (sN, fN) ->
       eval_code (Block cs) fN s0 == Some sN /\ k sN)
@@ -400,7 +400,7 @@ let vc_sound_norm
 ////////////////////////////////////////////////////////////////////////////////
 
 [@qattr]
-let codes_Triple : list code = 
+let codes_Triple : list code =
   [Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
    Ins (Add64 (OReg Rax) (OReg Rbx));   //add rax rbx;
    Ins (Add64 (OReg Rbx) (OReg Rax))]   //add rbx rax
@@ -437,18 +437,16 @@ let state_eq (s0 s1:state) : Ghost Type0
   s0 Rcx == s1 Rcx /\
   s0 Rdx == s1 Rdx
 
-#reset-options "--debug MiniValeSemantics --debug_level SMTQuery --print_full_names --max_fuel 0 --max_ifuel 2"
-val lemma_Triple (s0:state) 
+#reset-options
+let lemma_Triple (s0:state)
   : Ghost (state & fuel)
     (requires
       s0 Rax < 100)
     (ensures fun (sM, f0) ->
       eval_code (Block codes_Triple) f0 s0 == Some sM /\
       sM Rbx == 3 * s0 Rax /\
-      sM `feq` update_state Rax sM (update_state Rbx sM s0))
-let lemma_Triple s0 =
-(*
-  // Naive proof:
+      sM `feq` update_state Rax sM (update_state Rbx sM s0)) =
+// Naive proof:
   let b1 = codes_Triple in
   let (s2, fc2) = lemma_Move s0 (OReg Rbx) (OReg Rax) in let b2 = Cons?.tl b1 in
   let (s3, fc3) = lemma_Add s2 (OReg Rax) (OReg Rbx) in  let b3 = Cons?.tl b2 in
@@ -457,15 +455,20 @@ let lemma_Triple s0 =
   let f3 = lemma_merge (Cons?.hd b3) b4 s3 fc4 s4 f4 sM in
   let f2 = lemma_merge (Cons?.hd b2) b3 s2 fc3 s3 f3 sM in
   let fM = lemma_merge (Cons?.hd b1) b2 s0 fc2 s2 f2 sM in
-  assert (FStar.FunctionalExtensionality.feq sM (update_state Rax sM (update_state Rbx sM s0)));
   (sM, fM)
-*)
+
+
+let lemma_Triple_opt (s0:state)
+  : Ghost (state & fuel)
+    (requires
+      s0 Rax < 100)
+    (ensures fun (sM, f0) ->
+      eval_code (Block codes_Triple) f0 s0 == Some sM /\
+      sM Rbx == 3 * s0 Rax /\
+      sM `feq` update_state Rax sM (update_state Rbx sM s0)) =
   // Optimized VC generation:
-  vc_sound_norm 
+  vc_sound_norm
     codes_Triple
     inst_Triple
     (fun sM -> sM Rbx == 3 * s0 Rax /\ state_eq sM (update_state Rax sM (update_state Rbx sM s0)))
     s0
-
-
-
