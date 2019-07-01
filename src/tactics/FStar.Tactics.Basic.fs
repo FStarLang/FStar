@@ -1548,7 +1548,7 @@ let pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "pointwise"
     bind (push_goals gs) (fun _ ->
     add_goals [goal_with_type g gt']))))
 
-let _trefl (l r : term) : tac<unit> =
+let _trefl (l : term) (r : term) : tac<unit> =
    bind (cur_goal ()) (fun g ->
    bind (do_unify (goal_env g) l r) (fun b ->
    if b then solve' g U.exp_unit else
