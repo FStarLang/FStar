@@ -735,6 +735,9 @@ in
 | PRAGMA_POP_OPTIONS
     {let _1 = () in
       ( PopOptions )}
+| PRAGMA_RESTART_SOLVER
+    {let _1 = () in
+      ( RestartSolver )}
 
 attribute:
   LBRACK_AT list_atomicTerm_ RBRACK
@@ -3052,6 +3055,4 @@ in
    ( x :: xs )}
 
 %%
-
-
 
