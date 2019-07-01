@@ -33,7 +33,7 @@ module SS = FStar.Syntax.Subst
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 
-exception Inner_let_rec
+exception Inner_let_rec of list<(string * Range.range)> //name of the inner let-rec(s) and their locations
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
