@@ -5,7 +5,7 @@ all: verify-all
 include .depend
 include ../../Makefile.include
 
-verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
+verify-all: $(addsuffix .checked, $(ALL_FST_FILES) $(ALL_FSTI_FILES))
 
 .depend:
 	$(FSTAR) --dep full $(wildcard *.fst *.fsti) > .depend
