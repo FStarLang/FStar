@@ -30,7 +30,7 @@ let sum2 (#a:Type) [|additive a|] (l : list a) : a =
 let _ = assert_norm (sum2 [1;2;3;4] == 10)
 let _ = assert_norm (sum2 [false; true] == true)
 
-let sandwich (#a:Type) [|num a|] (x y z : a) : a =
+let sandwich (#a:Type0) [|num a|] (x y z : a) : a =
     if eq x y
     then plus x z
     else minus y z
