@@ -167,6 +167,27 @@ val share_perms_with_pid:
   ))
 
 
+/// Moves a particular ``pid`` zeroes the permission associated with it and returns a new
+/// map containing the original permission in the given ``new_pid``
+noextract
+val move_perms_with_pid:
+  #a: Type0 ->
+  #v: a ->
+  v_perms: value_perms a v ->
+  pid: live_pid v_perms ->
+  new_pid:perm_id ->
+  Ghost (value_perms a v)
+  (requires
+    pid <> new_pid /\
+    new_pid > get_current_max v_perms)
+  (ensures (fun new_v_perms ->
+    get_permission_from_pid new_v_perms pid = 0.0R /\
+    get_permission_from_pid new_v_perms new_pid = get_permission_from_pid v_perms pid /\
+    (forall (pid':perm_id{pid' <> pid /\ pid' <> new_pid}).{:pattern get_permission_from_pid new_v_perms pid'}
+      get_permission_from_pid v_perms pid' == get_permission_from_pid new_v_perms pid'
+    )
+  ))
+
 /// When merginin two ``pid``, the first one will receive the sum of both permissions while the second
 /// ``pid`` will be deactivated with a zeroed permission.
 val merge_perms:
