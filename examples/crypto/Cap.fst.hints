@@ -11,7 +11,7 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "42fdeacc86bbb1980063d9d4426b8fca"
+      "f0230e40a9ea0d3bbf8aeb969aaedb9e"
     ],
     [
       "Cap.main",
@@ -20,28 +20,25 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Cap.UTF8_inj", "bool_inversion", "bool_typing",
+        "assumption_Cap.UTF8_inj",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Cap.capRead",
         "equation_Cap.f", "equation_Cert.ACLs.canRead",
-        "equation_Cert.ACLs.file", "equation_Cert.ACLs.publicFile",
-        "equation_Cert.ACLs.readme", "equation_MAC.pkey",
-        "equation_Platform.Bytes.bytes", "equation_SHA1.key",
-        "equation_SHA1.tag", "function_token_typing_Cert.ACLs.readme",
+        "equation_Cert.ACLs.publicFile", "equation_MAC.pkey",
+        "equation_Platform.Bytes.bytes", "equation_SHA1.tag",
         "function_token_typing_MAC.key_prop", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2",
-        "refinement_interpretation_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
-        "token_correspondence_Cap.capRead", "typing_Cert.ACLs.canRead",
+        "refinement_interpretation_Tm_refine_80ee390faac14219b179447f9069a246",
+        "refinement_interpretation_Tm_refine_8780019b0aae248f45fa2cdeef995357",
+        "token_correspondence_Cap.capRead", "typing_Cap.f",
         "typing_Platform.Bytes.equalBytes", "unit_typing"
       ],
       0,
-      "6df1aaa28fc1cca48c5ce7ef44d9c57d"
+      "4cd3c6cd3b32c944406e2b22fb5ec56e"
     ],
     [
       "Cap.capRead",
@@ -53,7 +50,7 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "20b2a5c18ff14da94bcbdc2002db2170"
+      "f201b7f0c1154f85df5044adddc4fc66"
     ],
     [
       "Cap.issue",
@@ -62,7 +59,7 @@
       1,
       [ "@query" ],
       0,
-      "ed289e7f799936721d137af4fcfd3026"
+      "688203cfb964565fdea33e25c267d7a1"
     ]
   ]
 ]

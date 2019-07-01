@@ -108,13 +108,13 @@ let rec lemma_init_aux_len (#a:Type) (n:nat) (k:nat{k < n}) (contents:(i:nat{ i 
 
 let rec lemma_init_len #a n contents = if n = 0 then () else lemma_init_aux_len #a n 0 contents
 
-abstract val lemma_init_ghost_len: #a:Type -> n:nat -> contents: (i:nat { i < n } -> Tot a) -> Lemma
+abstract val lemma_init_ghost_len: #a:Type -> n:nat -> contents: (i:nat { i < n } -> GTot a) -> Lemma
   (requires True)
   (ensures (length (init_ghost n contents) = n))
   [SMTPat (length (init_ghost n contents))]
 
 private
-let rec lemma_init_aux_ghost_len (#a:Type) (n:nat) (k:nat{k < n}) (contents:(i:nat{ i < n } -> Tot a))
+let rec lemma_init_aux_ghost_len (#a:Type) (n:nat) (k:nat{k < n}) (contents:(i:nat{ i < n } -> GTot a))
   : Lemma (requires True)
     (ensures (length (init_aux_ghost n k contents) = n - k))
     (decreases (n-k))
@@ -122,7 +122,7 @@ let rec lemma_init_aux_ghost_len (#a:Type) (n:nat) (k:nat{k < n}) (contents:(i:n
 =
   if k + 1 = n then () else lemma_init_aux_ghost_len #a n (k+1) contents
 
-let rec lemma_init_ghost_len #a n contents = if n = 0 then () else lemma_init_aux_len #a n 0 contents
+let rec lemma_init_ghost_len #a n contents = if n = 0 then () else lemma_init_aux_ghost_len #a n 0 contents
 
 abstract val lemma_len_upd: #a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> Lemma
   (requires True)
@@ -313,7 +313,8 @@ val init_ghost_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> GTot a)
 private
 let rec init_ghost_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> GTot a))
   : Lemma (requires True)
-    (ensures (forall (i:nat{i < len - k}).index (init_aux_ghost len k contents) i == contents (k + i)))
+    (ensures (forall (i:nat{i < len - k}).
+      index (init_aux_ghost len k contents) i == contents (k + i)))
     (decreases (len - k))
 =
   if k + 1 = len
@@ -329,7 +330,7 @@ let init_ghost_index #a len contents =
   if len = 0 then () else init_ghost_index_aux #a len 0 contents
 
 abstract
-let init_ghost_index_ (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a)) (j: nat)
+let init_ghost_index_ (#a:Type) (len:nat) (contents:(i:nat { i < len } -> GTot a)) (j: nat)
   : Lemma (requires j < len)
     (ensures (index (init_ghost len contents) j == contents j))
     [SMTPat (index (init_ghost len contents) j)]

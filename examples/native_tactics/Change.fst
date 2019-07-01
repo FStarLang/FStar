@@ -23,7 +23,7 @@ let id #a (x:a) : a = x
 // let tau1 = fun () -> dump "0";
 //                        change_sq (`(eq2 #int (id #int 5) 5));
 //                        dump "1"
-// let _ = assert_by_tactic (id 5 == 5) tau1
+// let _ = assert (id 5 == 5) by tau1 ()
 
 let rec is_five (x: nat) =
   match x with
@@ -34,10 +34,10 @@ let rec is_five (x: nat) =
 let tau2 = fun () -> dump "0";
                        change_sq (`(id 5 == (match (is_five 5) with | true -> 5 | false -> 4)));
                        dump "1"
-let _ = assert_by_tactic (id 5 == 5) tau2
+let _ = assert (id 5 == 5) by tau2
 
 // [@plugin]
 // let tau3 = fun () -> dump "0";
 //                        change_sq (`(5 == 5));
 //                        dump "1"
-// let _ = assert_by_tactic (id 5 == 5) tau3
+// let _ = assert (id 5 == 5) by tau3

@@ -141,7 +141,7 @@ let lemma_slice_cons_pv #a s i pivot j pv =
   cut (Seq.equal (slice s i j) (append lo (cons pv hi)))
 
 #reset-options
-#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --z3rlimit 15"
+#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --z3rlimit 50"
 val sort: #a:eqtype -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
   (requires (fun h -> Array.contains h x /\ j <= length (Array.sel h x)))

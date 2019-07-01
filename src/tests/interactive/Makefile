@@ -43,7 +43,7 @@ ifdef Z3
 SMT=--smt $(Z3)
 endif
 
-FSTAR:=${FSTAR_HOME}/bin/fstar.exe $(SMT) --ide
+FSTAR:=${FSTAR_HOME}/bin/fstar.exe $(SMT) --ide --warn_error -282
 
 
 # Feed .in to F* and record output as .out.  Output is passed through cleanup.py

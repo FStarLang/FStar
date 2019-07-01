@@ -134,6 +134,7 @@ let logic_qualifier_deprecation_warning =
 %token PRAGMA_POP_OPTIONS
 %token PRAGMA_PUSH_OPTIONS
 %token PRAGMA_RESET_OPTIONS
+%token PRAGMA_RESTART_SOLVER
 %token PRAGMA_SET_OPTIONS
 %token PRIVATE
 %token QMARK
@@ -3051,4 +3052,6 @@ in
    ( x :: xs )}
 
 %%
+
+
 

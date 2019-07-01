@@ -43,6 +43,7 @@ let non_live_addrs_codom
       (r:addrs_dom regions) =
       (y: GSet.set nat { r `Set.mem` (Ghost.reveal region_liveness_tags) ==> GSet.subset (GSet.complement GSet.empty) y })
 
+#reset-options //"--log_queries --query_stats"
 let live_addrs_codom 
       (regions: Ghost.erased (Set.set HS.rid))
       (region_liveness_tags: Ghost.erased (Set.set HS.rid) { Ghost.reveal region_liveness_tags `Set.subset` Ghost.reveal regions } )
@@ -605,9 +606,11 @@ let loc_disjoint_aloc_elim #al #c #r1 #a1 #r2 #a2 b1 b2 =
   // FIXME: WHY WHY WHY this assert?
   assert (aloc_disjoint (ALoc #_ #c r1 a1 (Some b1)) (ALoc #_ #c r2 a2 (Some b2)))
 
+#push-options "--z3rlimit 20"
 let loc_disjoint_addresses_intro #al #c preserve_liveness1 preserve_liveness2 r1 r2 n1 n2 =
   // FIXME: WHY WHY WHY this assert?
   assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_addresses #_ #c preserve_liveness1 r1 n1))) (Ghost.reveal (Loc?.aux (loc_addresses #_ #c preserve_liveness2 r2 n2))))
+#pop-options
 
 let loc_disjoint_addresses_elim #al #c preserve_liveness1 preserve_liveness2 r1 r2 n1 n2 = ()
 
@@ -1020,6 +1023,7 @@ let modifies_loc_includes #al #c s1 h h' s2 =
 
 let modifies_preserves_liveness #al #c s1 s2 h h' #t #pre r = ()
 
+#push-options "--z3rlimit_factor 4 --max_fuel 0 --max_ifuel 0"
 let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
   let rg = HS.frameOf r in
   let ad = HS.as_addr r in
@@ -1043,6 +1047,7 @@ let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
       end else ()
     end else ()
   end else ()
+#pop-options
 
 let modifies_preserves_region_liveness #al #c l1 l2 h h' r = ()
 
@@ -1290,6 +1295,7 @@ let modifies_loc_addresses_intro_weak
   modifies_preserves_alocs_intro (loc_union (loc_addresses true r s) l) h1 h2 () (fun r' a b -> if r = r' then f a b else ()
   )
 
+#push-options "--z3rlimit 20"
 let modifies_loc_addresses_intro #al #c r s l h1 h2 =
   loc_includes_loc_regions_restrict_to_regions l (Set.singleton r);
   loc_includes_loc_union_restrict_to_regions l (Set.singleton r);
@@ -1301,6 +1307,7 @@ let modifies_loc_addresses_intro #al #c r s l h1 h2 =
   loc_disjoint_includes (loc_regions #_ #c false (Set.complement (Set.singleton r))) (loc_region_only false r) l' (loc_region_only false r);
   modifies_loc_addresses_intro_weak r s l' h1 h2;
   loc_includes_restrict_to_regions l (Set.complement (Set.singleton r))
+#pop-options
 
 #reset-options
 
@@ -1373,7 +1380,7 @@ val modifies_strengthen'
   (requires ((~ (a0 `GSet.mem` addrs_of_loc_weak l r0)) /\  modifies (loc_union l (loc_addresses true r0 (Set.singleton a0))) h h'))
   (ensures (modifies (loc_union l (loc_of_aloc al0)) h h'))
 
-#push-options "--z3rlimit 128"
+#push-options "--z3rlimit 256 --max_fuel 0 --max_ifuel 0"
 
 let modifies_strengthen' #al #c l #r0 #a0 al0 h h' alocs =
   Classical.forall_intro (addrs_of_loc_loc_union_loc_of_aloc_eq_loc_union_loc_addresses_singleton l al0);
@@ -1397,7 +1404,9 @@ let modifies_strengthen' #al #c l #r0 #a0 al0 h h' alocs =
       c.aloc_disjoint_sym al0 b;
       alocs (fun t pre m -> ()) b
     end 
-    else ()
+    else begin
+      assert (loc_disjoint (loc_union l (loc_addresses true r0 (Set.singleton a0))) (loc_of_aloc b))
+    end
   );
   assert (modifies (loc_union l (loc_of_aloc al0)) h h')
 
@@ -1482,20 +1491,21 @@ let loc_addresses_unused_in #al c r a h = ()
 
 let loc_addresses_not_unused_in #al c r a h = ()
 
-#set-options "--z3rlimit 16"
-
+#reset-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3rlimit_factor 4"
 let loc_unused_in_not_unused_in_disjoint #al c h =
-  assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)))
+  assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)));
+  assert (loc_disjoint #al #c (loc_unused_in #al c h)
+                              (loc_not_unused_in #al c h))
 
-#reset-options
 
+#push-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 let not_live_region_loc_not_unused_in_disjoint #al c h0 r
 = let l1 = loc_region_only false r in
   let l2 = loc_not_unused_in c h0 in
   assert (loc_disjoint_region_liveness_tags l1 l2);
   assert (loc_disjoint_addrs l1 l2);
   assert (loc_disjoint_aux l1 l2)
-
+#pop-options
 #set-options "--z3rlimit 16"
 
 let modifies_address_liveness_insensitive_unused_in #al c h h' =
@@ -1511,7 +1521,7 @@ let modifies_address_liveness_insensitive_unused_in #al c h h' =
   assert (lu `loc_includes` lu')
 
 #reset-options
-
+#push-options "--max_fuel 0 --max_ifuel 0"
 let modifies_only_not_unused_in #al #c l h h' =
   assert (modifies_preserves_regions l h h');
   assert (modifies_preserves_not_unused_in l h h');
@@ -1532,7 +1542,7 @@ let mreference_live_loc_not_unused_in #al c #t #pre h b =
   loc_includes_trans (loc_not_unused_in c h) (loc_freed_mreference b) (loc_mreference b);
   ()
 
-#reset-options
+#reset-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 
 let mreference_unused_in_loc_unused_in #al c #t #pre h b =
   Classical.move_requires (addr_unused_in_does_not_contain_addr h) (HS.frameOf b, HS.as_addr b);
@@ -1695,6 +1705,7 @@ let union_aux_of_aux_left
 : Tot (GSet.set (aloc (cls_union c)))
 = GSet.comprehend (union_aux_of_aux_left_pred c b s)
 
+#reset-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 let union_loc_of_loc #al c b l =
   let (Loc regions region_liveness_tags non_live_addrs live_addrs aux) = l in
   let aux' : GSet.set (aloc #(cls_union_aloc al) (cls_union c)) =
@@ -1751,9 +1762,10 @@ let mem_union_aux_of_aux_left_elim
   (aux: GSet.set (aloc (c b)))
 : Lemma
   (GSet.mem x (union_aux_of_aux_left c b aux) <==> (if None? x.loc then GSet.mem (ALoc x.region x.addr None) aux else (bool_of_cls_union_aloc (Some?.v x.loc) == b /\ GSet.mem (ALoc x.region x.addr (Some (aloc_of_cls_union_aloc (Some?.v x.loc)))) aux)))
-  [SMTPat (GSet.mem x (union_aux_of_aux_left c b aux))]
+  [SMTPat (GSet.mem x (union_aux_of_aux_left #al c b aux))]
 = ()
 
+#push-options "--z3rlimit_factor 4"
 let addrs_of_loc_union_loc_of_loc
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1762,7 +1774,7 @@ let addrs_of_loc_union_loc_of_loc
   (r: HS.rid)
 : Lemma
   (addrs_of_loc (union_loc_of_loc c b l) r `GSet.equal` addrs_of_loc l r)
-  [SMTPat (addrs_of_loc (union_loc_of_loc c b l) r)]
+  [SMTPat (addrs_of_loc (union_loc_of_loc #al c b l) r)]
 = ()
 
 let union_loc_of_loc_none #al c b =
@@ -1773,7 +1785,7 @@ let union_loc_of_loc_none #al c b =
 let union_loc_of_loc_union #al c b l1 l2 =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_union #_ #(c b) l1 l2)) (loc_union #_ #(cls_union c) (union_loc_of_loc c b l1) (union_loc_of_loc c b l2)))
 
-#reset-options
+#reset-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 
 let union_loc_of_loc_addresses #al c b preserve_liveness r n =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_addresses #_ #(c b) preserve_liveness r n)) (loc_addresses #_ #(cls_union c) preserve_liveness r n))
@@ -1791,7 +1803,8 @@ let union_loc_of_loc_includes_intro
 : Lemma
   (requires (larger `loc_includes` smaller))
   (ensures (union_loc_of_loc c b larger `loc_includes` union_loc_of_loc c b smaller))
-= let auxl = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux larger)) in
+= ();
+  let auxl = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux larger)) in
   let auxs = union_aux_of_aux_left c b (Ghost.reveal (Loc?.aux smaller)) in
   assert (forall r a . GSet.mem (ALoc r a None) auxs ==> (
     GSet.mem (ALoc r a None) (Ghost.reveal (Loc?.aux smaller)) /\
@@ -1803,7 +1816,7 @@ let union_loc_of_loc_includes_intro
   let doms = aloc_domain (cls_union c) (Loc?.regions smaller) (Loc?.live_addrs smaller) in
   assert (doml `loc_aux_includes` doms)
 
-#set-options "--z3rlimit 64"
+#reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0 --smtencoding.valid_intro true --smtencoding.valid_elim true"
 
 let union_loc_of_loc_includes_elim
   (#al: (bool -> HS.rid -> nat -> Tot Type))
@@ -1865,7 +1878,7 @@ let union_loc_of_loc_includes_elim
   );
   assert (larger `loc_includes` smaller)
 
-#reset-options
+#reset-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 
 let union_loc_of_loc_includes #al c b s1 s2 =
   Classical.move_requires (union_loc_of_loc_includes_elim c b s1) s2;
@@ -1919,8 +1932,9 @@ let union_loc_of_loc_disjoint_intro
   assert (auxl ` loc_aux_disjoint` doms);
   assert (loc_disjoint_aux larger' smaller')
 
-#reset-options
+#reset-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 
+#push-options "--z3rlimit 32"
 let union_loc_of_loc_disjoint_elim
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1938,6 +1952,7 @@ let union_loc_of_loc_disjoint_elim
     let y' = ALoc y.region y.addr (if None? y.loc then None else Some (make_cls_union_aloc b (Some?.v y.loc))) in
     GSet.mem x' auxl' /\ GSet.mem y' auxs' /\ (aloc_disjoint x' y' ==> aloc_disjoint x y))); 
   assert (auxl `loc_aux_disjoint` auxs)
+#pop-options
 
 let union_loc_of_loc_disjoint #al c b s1 s2 =
   Classical.move_requires (union_loc_of_loc_disjoint_elim c b s1) s2;
@@ -2047,6 +2062,7 @@ let loc_of_union_loc_union_loc_of_loc #al c b s
 let loc_of_union_loc_none #al c b
 = assert (loc_of_union_loc #_ #c b loc_none `loc_equal` loc_none)
 
+#reset-options "--z3rlimit_factor 4 --z3cliopt 'smt.qi.eager_threshold=100' --initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_ifuel 2"
 let loc_of_union_loc_union #al c b l1 l2
 = assert (loc_of_union_loc b (l1 `loc_union` l2) `loc_equal` (loc_of_union_loc b l1 `loc_union` loc_of_union_loc b l2))
 
@@ -2130,7 +2146,7 @@ let raise_loc_includes #al #c l1 l2 =
   assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l2)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l2')));
   assert (loc_aux_includes (Ghost.reveal (Loc?.aux l1')) (Ghost.reveal (Loc?.aux l2')) <==> loc_aux_includes (Ghost.reveal (Loc?.aux l1)) (Ghost.reveal (Loc?.aux l2)))
 
-#reset-options
+#reset-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 
 let raise_loc_disjoint #al #c l1 l2 =
   let l1' = raise_loc l1 in

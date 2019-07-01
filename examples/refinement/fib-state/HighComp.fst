@@ -137,14 +137,14 @@ let for_wp_unfold (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) :
        by (compute ()) = ()
 
 (*
-  assert (~ (lo = hi));
-  assert ((if lo = hi then (return_wp ())
-           else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))) ==
-           bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
-           assert_norm (for_wp wp lo hi ==
-                        (if lo = hi then (return_wp ())
-                         else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))))
-*)
+//   assert (~ (lo = hi));
+//   assert ((if lo = hi then (return_wp ())
+//            else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))) ==
+//            bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
+//            assert_norm (for_wp wp lo hi ==
+//                         (if lo = hi then (return_wp ())
+//                          else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))))
+// *)
 
 
 
@@ -153,7 +153,8 @@ let rec for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:
     HIGH unit (for_wp wp lo hi) (decreases (hi - lo)) =
   if lo = hi then ()
   else
-  (f lo; for #wp (lo + 1) hi f)
+  (f lo;
+   for #wp (lo + 1) hi f)
 
 
 let get () : H state = (HIGH?.get 0, HIGH?.get 1)
@@ -228,7 +229,7 @@ let put_action = HIGH?.put
 let get_action = HIGH?.get
 
 let ite_elab (#a:Type) (b : bool) (#wp1 : hwp_mon a) (c1:comp_wp a wp1)
-    (#wp2 : hwp_mon a) (c2:comp_wp a wp2) : comp_wp a (ite_wp b wp1 wp2) =
+    (#wp2 : hwp_mon a) (c2:comp_wp a wp2) : Tot (comp_wp a (ite_wp b wp1 wp2)) by (compute (); explode () ;dump "")  =
     (fun s0 -> if b then c1 s0 else c2 s0)
 
 
@@ -275,7 +276,8 @@ assume val for_inv'  (inv : state -> int -> Type0)
 
 (** ** Explicit casting to stronger WPs **)
 
-let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 = c
+let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 =
+  c
 
 //GM: Oct 22, 2018: This lemma now fails to verify due to the fix for #1533. However, it doesn't seem to be used.
 (* let cast_eq #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : Lemma (c === cast wp2 c) = () *)
@@ -283,9 +285,10 @@ let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a
 
 (** ** Equality on high computations **)
 
-let h_eq (#a:Type) (wp1:hwp_mon a) (wp2:hwp_mon a) (c1:comp_wp a wp1) (c2:comp_wp a wp2) =
+let h_eq (#a:Type) (wp1:hwp_mon a) (wp2:hwp_mon a) (c1:comp_wp a wp1) (c2:comp_wp a wp2)
+  =
     (forall s0. wp1 s0 (fun _ -> True) <==> wp2 s0 (fun _ -> True)) /\
-    (forall s0. wp1 s0 (fun _ -> True) ==> c1 s0 == c2 s0)
+    (forall s0. (wp1 s0 (fun _ -> True) /\ wp2 s0 (fun _ -> True)) ==> c1 s0 == c2 s0)
 
 (** ** Reify commutes **)
 

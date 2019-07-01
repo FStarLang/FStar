@@ -87,6 +87,7 @@ val smap_remove: smap<'value> -> string -> unit
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
 val smap_size: smap<'value> -> int
+val smap_iter: smap<'value> -> (string -> 'value -> unit) -> unit
 
 (* pure version *)
 type psmap<'value>
@@ -414,6 +415,8 @@ val map_option: ('a -> 'b) -> option<'a> -> option<'b>
 
 val save_value_to_file: string -> 'a -> unit
 val load_value_from_file: string -> option<'a>
+val save_2values_to_file: string -> 'a -> 'b -> unit
+val load_2values_from_file: string -> option<('a * 'b)>
 val print_exn: exn -> string
 val digest_of_file: string -> string
 val digest_of_string: string -> string
