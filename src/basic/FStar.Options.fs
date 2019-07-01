@@ -170,6 +170,7 @@ let defaults =
       ("debug_level"                  , List []);
       ("defensive"                    , String "no");
       ("dep"                          , Unset);
+      ("dep_ninja"                    , String "all");
       ("detail_errors"                , Bool false);
       ("detail_hint_replay"           , Bool false);
       ("doc"                          , Bool false);
@@ -318,6 +319,7 @@ let get_debug                   ()      = lookup_opt "debug"                    
 let get_debug_level             ()      = lookup_opt "debug_level"              as_comma_string_list
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
+let get_dep_ninja               ()      = lookup_opt "dep_ninja"                as_string
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
@@ -658,6 +660,16 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          'full': a format suitable for 'make', including dependences for producing .ml and .krml files\n\t \
 	 'ninja': same as 'full' but suitable for 'ninja'\n\t \
          'make': (deprecated) a format suitable for 'make', including only dependences among source files");
+
+       ( noshort,
+        "dep_ninja",
+        EnumStr ["checked"; "ml"; "cmx"; "krml"; "all"],
+        "Output the following dependency rules in ninja format (only with '--dep ninja'):\n\t \
+         'checked': dependencies for producing .checked files\n\t \
+         'ml': dependencies for producing .checked, .ml, files\n\t \
+         'cmx': dependencies for producing .checked, .ml, and .cmx files\n\t \
+	 'krml': dependencies for producing .checked and .krml files\n\t \
+         'all': dependencies for producing .checked, .ml, .cmx and .krml files (this is the default)");
 
        ( noshort,
         "detail_errors",
@@ -1446,6 +1458,7 @@ let debug_at_level      modul level = (get_debug () |> List.existsb (module_name
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
 let dep                          () = get_dep                         ()
+let dep_ninja                    () = get_dep_ninja                   ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()

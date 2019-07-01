@@ -1397,6 +1397,15 @@ let print_raw (deps:deps) =
       |> String.concat ";;\n"
       |> BU.print_endline
 
+(* Do I need to print dependencies for .ml, .cmx, etc.? *)
+
+let dep_opt_le (lesser: string) (greater: string) : bool =
+    greater = "all" ||
+    lesser = "checked" ||
+    greater = lesser ||
+    (lesser = "ml" && greater = "cmx")
+
+
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format.
 
@@ -1405,7 +1414,7 @@ let print_raw (deps:deps) =
      -- We also print dependences for producing .ml files from .checked files
         This takes care of renaming A.B.C.fst to A_B_C.ml
   *)
-let print_full (deps:deps) (ninja:bool) : unit =
+let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
     //let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
     let sort_output_files (orig_output_file_map:BU.smap<string>) =
         let order : ref<(list<string>)> = BU.mk_ref [] in
@@ -1459,7 +1468,8 @@ let print_full (deps:deps) (ninja:bool) : unit =
     let pr str = ignore <| FStar.StringBuffer.add str sb in
     let norm_ninja_build s = replace_chars s ':' "$:" in
     let print_entry kind target first_dep all_deps =
-        if ninja then begin
+        if ninja then
+        begin if dep_opt_le kind dep_opt then begin
           pr "build ";
           pr (norm_ninja_build target);
           pr ": ";
@@ -1468,7 +1478,7 @@ let print_full (deps:deps) (ninja:bool) : unit =
           pr (norm_ninja_build first_dep);
           pr " | ";
           pr (norm_ninja_build all_deps)
-        end else begin
+        end end else begin
           pr target;
           pr ": ";
           pr first_dep;
@@ -1709,11 +1719,12 @@ let print deps =
       print_make deps
   | Some "full" ->
       FStar.Options.profile
-        (fun () -> print_full deps false)
+        (fun () -> print_full deps false "all")
         (fun _ -> "Dependence analysis: printing")
   | Some "ninja" ->
+      let dep_opt = Options.dep_ninja () in
       FStar.Options.profile
-        (fun () -> print_full deps true)
+        (fun () -> print_full deps true dep_opt)
         (fun _ -> "Dependence analysis: printing")
   | Some "graph" ->
       print_graph deps.dep_graph
