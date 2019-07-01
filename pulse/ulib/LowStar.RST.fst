@@ -113,8 +113,8 @@ let r_pre (res:resource) = imem (inv res) -> Type0
 let r_post res0 a res1 = imem (inv res0) -> x:a -> imem (inv (res1 x)) -> Type0
 
 abstract
-let rst_inv (res:resource) (h:HS.mem) =
-  loc_includes (loc_not_unused_in  h) (as_loc (fp res))
+let rst_inv (res:resource) (h:HS.mem) : GTot prop =
+  loc_includes (loc_not_unused_in  h) (as_loc (fp res)) /\ True
 
 let reveal_rst_inv ()
   : Lemma (forall res h .
@@ -173,63 +173,14 @@ let bind (#a #b:Type)
        : RSTATE b res0 res2 (fun p h0 -> wp0 (fun x h1 -> wp1 x p h1) h0) =
   g (f ())
 
-(* Generic framing operation for RSTATE (through resource inclusion) *)
-
-let frame_delta_pre (outer0 inner0 delta:resource) =
-  outer0 `can_be_split_into` (inner0,delta)
-
-let frame_delta_post (#a:Type) (outer1 inner1:a -> resource) (delta:resource) =
-  forall x. (outer1 x) `can_be_split_into` (inner1 x,delta)
-
-let frame_delta (outer0:resource)
-                (inner0:resource)
-                (#a:Type)
-                (outer1:a -> resource)
-                (inner1:a -> resource) =
-  delta:resource{
-    frame_delta_pre outer0 inner0 delta /\
-    frame_delta_post outer1 inner1 delta
-  }
-
-
-open FStar.Algebra.CommMonoid.Equiv
-open FStar.Tactics
-open FStar.Tactics.CanonCommMonoidSimple.Equiv
-
-inline_for_extraction noextract let req : equiv resource =
-  EQ equal
-     equal_refl
-     equal_symm
-     equal_trans
-
-inline_for_extraction noextract let rm : cm resource req =
-  CM empty_resource
-     (<*>)
-     equal_comm_monoid_left_unit
-     equal_comm_monoid_associativity
-     equal_comm_monoid_commutativity
-     equal_comm_monoid_cong
-
-inline_for_extraction noextract let resolve_delta (outer inner:term) : Tac unit =
-  norm [delta_only [`%frame_delta]];
-  refine_intro ();
-  flip ();
-  split ();
-  norm [delta_only [`%frame_delta_pre]];
-  apply_lemma (quote can_be_split_into_star);
-  flip ();
-  canon_monoid req rm;
-  norm [delta_only [`%frame_delta_post]];
-  ignore (forall_intro ());
-  apply_lemma (quote can_be_split_into_star);
-  canon_monoid req rm
+open LowStar.RST.Tactics
 
 let frame_wp (#outer0:resource)
              (#inner0:resource)
              (#a:Type)
              (#outer1:a -> resource)
              (#inner1:a -> resource)
-             (delta:frame_delta outer0 inner0 outer1 inner1)
+             (delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
              (wp:rstate_wp a inner0 inner1)
            : rstate_wp a outer0 outer1 =
   fun p h0 ->
@@ -245,7 +196,7 @@ inline_for_extraction noextract let frame (outer0:resource)
           (outer1:a -> resource)
           (#inner1:a -> resource)
           (#[resolve_delta (quote outer0) (quote inner0)]
-                   delta:frame_delta outer0 inner0 outer1 inner1)
+                   delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
           (#wp:rstate_wp a inner0 inner1)
           ($f:unit -> RSTATE a inner0 inner1 wp)
         : RSTATE a outer0 outer1 (frame_wp delta wp) =
@@ -269,7 +220,7 @@ let frame_post (#outer0:resource)
                (#a:Type)
                (#outer1:a -> resource)
                (#inner1:a -> resource)
-               (delta:frame_delta outer0 inner0 outer1 inner1)
+               (delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
                (post:r_post inner0 a inner1)
                (h0:imem (inv outer0))
                (x:a)
@@ -285,7 +236,7 @@ inline_for_extraction noextract let rst_frame (outer0:resource)
               (outer1:a -> resource)
               (#inner1:a -> resource)
               (#[resolve_delta (quote outer0) (quote inner0)]
-                   delta:frame_delta outer0 inner0 outer1 inner1)
+                   delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
               (#pre:r_pre inner0)
               (#post:r_post inner0 a inner1)
               ($f:unit -> RST a inner0 inner1 pre post)

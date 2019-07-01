@@ -102,14 +102,10 @@ let sel (#a:Type) (view:view a) (h:imem (inv (as_resource view))) =
 
 (* Separating conjunction on views and resources *)
 
-unfold
-let r_disjoint (res1 res2:resource) : GTot Type =
-  loc_disjoint (as_loc (fp res1)) (as_loc (fp res2))
-
 abstract
 let ( <*> ) (res1 res2:resource) : res:resource =
+  let inv h = inv res1 h /\ inv res2 h /\ loc_disjoint (as_loc (fp res1)) (as_loc (fp res2)) in
   let fp = Ghost.hide (loc_union (as_loc (fp res1)) (as_loc (fp res2))) in
-  let inv h = inv res1 h /\ inv res2 h /\ r_disjoint res1 res2 in
   let sel h = (sel res1.view h,sel res2.view h) in
   let t = res1.t & res2.t in
   let view = {
@@ -126,7 +122,7 @@ let ( <*> ) (res1 res2:resource) : res:resource =
 let reveal_star_inv (res1 res2:resource) (h:HS.mem)
   : Lemma ((inv (res1 <*> res2) h)
            <==>
-           (inv res1 h /\ inv res2 h /\ r_disjoint res1 res2))
+           (inv res1 h /\ inv res2 h /\ loc_disjoint (as_loc (fp res1)) (as_loc (fp res2))))
           [SMTPat (inv (res1 <*> res2) h)] =                    // [DA: we might consider removing this SMTPat
                                                                 //      at the cost of having to have expicitly
                                                                 //      call reveals in specs involving <*>]
@@ -183,7 +179,7 @@ let can_be_split_into (outer:resource) ((inner,delta):resource & resource) =
     // Footprint of the outer resource is union of delta and the inner resource
     as_loc (fp outer) == loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
     // Outer invariant is equivalent to delta and the inner invariant (when they are disjoint)
-    (forall h . inv outer h <==> inv inner h /\ inv delta h /\ r_disjoint delta inner)
+    (forall h . inv outer h <==> inv inner h /\ inv delta h /\ loc_disjoint (as_loc (fp delta)) (as_loc (fp inner)))
 
 let star_can_be_split_into_parts (res1 res2:resource)
   : Lemma ((res1 <*> res2) `can_be_split_into` (res1,res2))
@@ -219,7 +215,7 @@ let reveal_can_be_split_into ()
   : Lemma (forall outer inner delta .
              outer `can_be_split_into` (inner,delta) <==>
              (as_loc (fp outer) == loc_union (as_loc (fp delta)) (as_loc (fp inner)) /\
-              (forall h . inv outer h <==> inv inner h /\ inv delta h /\ r_disjoint delta inner))) =
+              (forall h . inv outer h <==> inv inner h /\ inv delta h /\ loc_disjoint (as_loc (fp delta)) (as_loc (fp inner))))) =
   ()
 
 (* SMT-patterns to reveal some of the properties of abstract can_be_split_into in specs *)

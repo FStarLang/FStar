@@ -15,11 +15,10 @@
 *)
 module LowStar.RST.Array
 
-let length_view_as_seq #a h b = ()
-
-let index (#a:Type) (b:A.array a) (i:UInt32.t) = A.index b i
+let index (#a:Type) (b:A.array a) (i:UInt32.t) = reveal_array(); A.index b i
 
 let upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) =
+  reveal_array();
   reveal_rst_inv();
   reveal_modifies();
   (**) let h0 = HST.get () in
@@ -31,9 +30,11 @@ let upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a) =
   A.address_liveness_insensitive_addresses (A.frameOf b) (Set.singleton (A.as_addr b));
   assert(A.modifies (A.address_liveness_insensitive_locs) h0 h1);
   A.modifies_address_liveness_insensitive_unused_in h0 h1;
-  assert(A.loc_includes (A.loc_not_unused_in h1) (as_loc (fp (array_resource b))))
+  assert(A.loc_includes (A.loc_not_unused_in h1) (as_loc (fp (array_resource b))));
+  same_perm_seq_always_constant h0 h1 b
 
 let alloc (#a:Type) (init:a) (len:UInt32.t) =
+  reveal_array();
   reveal_rst_inv();
   reveal_modifies();
   let b = A.alloc init len in
@@ -43,12 +44,14 @@ let alloc (#a:Type) (init:a) (len:UInt32.t) =
   b
 
 let free (#a:Type) (b:A.array a) =
+  reveal_array();
    reveal_empty_resource();
    reveal_rst_inv();
    reveal_modifies();
    A.free b
 
 let share #a b =
+  reveal_array();
   reveal_rst_inv();
   reveal_modifies();
   reveal_star();
@@ -56,6 +59,7 @@ let share #a b =
   b'
 
 let merge #a b b' =
+  reveal_array();
   reveal_rst_inv();
   reveal_modifies();
   reveal_star();
