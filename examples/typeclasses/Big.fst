@@ -13,19 +13,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Loop2
+module Big
 
-open FStar.Tactics.Typeclasses
+type z = | X
+type s (a:Type) = | Y
 
-(* two classes for inhabitation, with an integer index *)
-class c (n:nat) a = { x : a }
-class d (n:nat) a = { y : a }
+class c a = { x : a }
 
-instance cd  (#n:nat) (_ : c n 'a) : d (n + 1) 'a = { y = x }
+instance iz : c z = { x = X }
+instance is (a:Type) (i1 : c a) (i2 : c a) : c (s a) = { x = Y }
 
-instance dc  (#n:nat) (_ : d n 'a) : c (n + 1) 'a = { x = y }
-instance dc' (#n:nat) (_ : d n 'a) : c (n + 1) 'a = { x = y }
-
-(* This should fail... in finite time *)
-[@expect_failure]
-let f (a:Type) : a = x
+let f (a:Type) : s (s (s (s (s (s (s (s z))))))) = x

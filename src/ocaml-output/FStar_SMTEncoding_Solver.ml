@@ -1434,42 +1434,73 @@ let (solve :
                  in
               FStar_Util.format1 "Starting query at %s" uu____4317  in
             FStar_SMTEncoding_Encode.push uu____4315);
-           (let tcenv1 = FStar_TypeChecker_Env.incr_query_index tcenv  in
-            let uu____4323 =
-              FStar_SMTEncoding_Encode.encode_query use_env_msg tcenv1 q  in
-            match uu____4323 with
-            | (prefix1,labels,qry,suffix) ->
-                let pop1 uu____4359 =
-                  let uu____4360 =
-                    let uu____4362 =
-                      let uu____4364 = FStar_TypeChecker_Env.get_range tcenv1
+           (let pop1 uu____4327 =
+              let uu____4328 =
+                let uu____4330 =
+                  let uu____4332 = FStar_TypeChecker_Env.get_range tcenv  in
+                  FStar_All.pipe_left FStar_Range.string_of_range uu____4332
+                   in
+                FStar_Util.format1 "Ending query at %s" uu____4330  in
+              FStar_SMTEncoding_Encode.pop uu____4328  in
+            try
+              (fun uu___530_4348  ->
+                 match () with
+                 | () ->
+                     let uu____4349 =
+                       FStar_SMTEncoding_Encode.encode_query use_env_msg
+                         tcenv q
+                        in
+                     (match uu____4349 with
+                      | (prefix1,labels,qry,suffix) ->
+                          let tcenv1 =
+                            FStar_TypeChecker_Env.incr_query_index tcenv  in
+                          (match qry with
+                           | FStar_SMTEncoding_Term.Assume
+                               {
+                                 FStar_SMTEncoding_Term.assumption_term =
+                                   {
+                                     FStar_SMTEncoding_Term.tm =
+                                       FStar_SMTEncoding_Term.App
+                                       (FStar_SMTEncoding_Term.FalseOp
+                                        ,uu____4381);
+                                     FStar_SMTEncoding_Term.freevars =
+                                       uu____4382;
+                                     FStar_SMTEncoding_Term.rng = uu____4383;_};
+                                 FStar_SMTEncoding_Term.assumption_caption =
+                                   uu____4384;
+                                 FStar_SMTEncoding_Term.assumption_name =
+                                   uu____4385;
+                                 FStar_SMTEncoding_Term.assumption_fact_ids =
+                                   uu____4386;_}
+                               -> pop1 ()
+                           | uu____4406 when
+                               tcenv1.FStar_TypeChecker_Env.admit -> 
+                               pop1 ()
+                           | FStar_SMTEncoding_Term.Assume uu____4407 ->
+                               (ask_and_report_errors tcenv1 labels prefix1
+                                  qry suffix;
+                                pop1 ())
+                           | uu____4409 -> failwith "Impossible"))) ()
+            with
+            | FStar_SMTEncoding_Env.Inner_let_rec names1 ->
+                (pop1 ();
+                 (let uu____4425 =
+                    let uu____4435 =
+                      let uu____4443 =
+                        let uu____4445 =
+                          let uu____4447 =
+                            FStar_List.map FStar_Pervasives_Native.fst names1
+                             in
+                          FStar_String.concat "," uu____4447  in
+                        FStar_Util.format1
+                          "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+                          uu____4445
                          in
-                      FStar_All.pipe_left FStar_Range.string_of_range
-                        uu____4364
+                      (FStar_Errors.Error_NonTopRecFunctionNotFullyEncoded,
+                        uu____4443, (tcenv.FStar_TypeChecker_Env.range))
                        in
-                    FStar_Util.format1 "Ending query at %s" uu____4362  in
-                  FStar_SMTEncoding_Encode.pop uu____4360  in
-                (match qry with
-                 | FStar_SMTEncoding_Term.Assume
-                     {
-                       FStar_SMTEncoding_Term.assumption_term =
-                         {
-                           FStar_SMTEncoding_Term.tm =
-                             FStar_SMTEncoding_Term.App
-                             (FStar_SMTEncoding_Term.FalseOp ,uu____4367);
-                           FStar_SMTEncoding_Term.freevars = uu____4368;
-                           FStar_SMTEncoding_Term.rng = uu____4369;_};
-                       FStar_SMTEncoding_Term.assumption_caption = uu____4370;
-                       FStar_SMTEncoding_Term.assumption_name = uu____4371;
-                       FStar_SMTEncoding_Term.assumption_fact_ids =
-                         uu____4372;_}
-                     -> pop1 ()
-                 | uu____4392 when tcenv1.FStar_TypeChecker_Env.admit ->
-                     pop1 ()
-                 | FStar_SMTEncoding_Term.Assume uu____4393 ->
-                     (ask_and_report_errors tcenv1 labels prefix1 qry suffix;
-                      pop1 ())
-                 | uu____4395 -> failwith "Impossible")))
+                    [uu____4435]  in
+                  FStar_TypeChecker_Err.add_errors tcenv uu____4425))))
   
 let (solver : FStar_TypeChecker_Env.solver_t) =
   {
@@ -1483,36 +1514,36 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
          fun g  ->
-           let uu____4409 =
-             let uu____4416 = FStar_Options.peek ()  in (e, g, uu____4416)
+           let uu____4487 =
+             let uu____4494 = FStar_Options.peek ()  in (e, g, uu____4494)
               in
-           [uu____4409]);
+           [uu____4487]);
     FStar_TypeChecker_Env.solve = solve;
     FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
   } 
 let (dummy : FStar_TypeChecker_Env.solver_t) =
   {
-    FStar_TypeChecker_Env.init = (fun uu____4432  -> ());
-    FStar_TypeChecker_Env.push = (fun uu____4434  -> ());
-    FStar_TypeChecker_Env.pop = (fun uu____4437  -> ());
+    FStar_TypeChecker_Env.init = (fun uu____4510  -> ());
+    FStar_TypeChecker_Env.push = (fun uu____4512  -> ());
+    FStar_TypeChecker_Env.pop = (fun uu____4515  -> ());
     FStar_TypeChecker_Env.snapshot =
-      (fun uu____4440  ->
+      (fun uu____4518  ->
          (((Prims.parse_int "0"), (Prims.parse_int "0"),
             (Prims.parse_int "0")), ()));
     FStar_TypeChecker_Env.rollback =
-      (fun uu____4459  -> fun uu____4460  -> ());
+      (fun uu____4537  -> fun uu____4538  -> ());
     FStar_TypeChecker_Env.encode_sig =
-      (fun uu____4475  -> fun uu____4476  -> ());
+      (fun uu____4553  -> fun uu____4554  -> ());
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
          fun g  ->
-           let uu____4482 =
-             let uu____4489 = FStar_Options.peek ()  in (e, g, uu____4489)
+           let uu____4560 =
+             let uu____4567 = FStar_Options.peek ()  in (e, g, uu____4567)
               in
-           [uu____4482]);
+           [uu____4560]);
     FStar_TypeChecker_Env.solve =
-      (fun uu____4505  -> fun uu____4506  -> fun uu____4507  -> ());
-    FStar_TypeChecker_Env.finish = (fun uu____4514  -> ());
-    FStar_TypeChecker_Env.refresh = (fun uu____4516  -> ())
+      (fun uu____4583  -> fun uu____4584  -> fun uu____4585  -> ());
+    FStar_TypeChecker_Env.finish = (fun uu____4592  -> ());
+    FStar_TypeChecker_Env.refresh = (fun uu____4594  -> ())
   } 

@@ -3700,7 +3700,7 @@ and (desugar_term_maybe_top :
                                        FStar_Syntax_Syntax.withinfo
                                          (FStar_Syntax_Syntax.Pat_constant
                                             (FStar_Const.Const_bool true))
-                                         t2.FStar_Parser_AST.range
+                                         t1.FStar_Parser_AST.range
                                         in
                                      (uu____13738,
                                        FStar_Pervasives_Native.None, t2')
@@ -3710,7 +3710,7 @@ and (desugar_term_maybe_top :
                                        let uu____13784 =
                                          FStar_Syntax_Syntax.withinfo
                                            (FStar_Syntax_Syntax.Pat_wild x)
-                                           t3.FStar_Parser_AST.range
+                                           t1.FStar_Parser_AST.range
                                           in
                                        (uu____13784,
                                          FStar_Pervasives_Native.None, t3')

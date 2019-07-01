@@ -142,7 +142,7 @@ type raw_error =
   | Fatal_NonLinearPatternVars 
   | Fatal_NonSingletonTopLevel 
   | Fatal_NonSingletonTopLevelModule 
-  | Fatal_NonTopRecFunctionNotFullyEncoded 
+  | Error_NonTopRecFunctionNotFullyEncoded 
   | Fatal_NonTrivialPreConditionInPrims 
   | Fatal_NonVariableInductiveTypeParameter 
   | Fatal_NotApplicationOrFv 
@@ -1172,11 +1172,11 @@ let (uu___is_Fatal_NonSingletonTopLevelModule : raw_error -> Prims.bool) =
     | Fatal_NonSingletonTopLevelModule  -> true
     | uu____1570 -> false
   
-let (uu___is_Fatal_NonTopRecFunctionNotFullyEncoded :
+let (uu___is_Error_NonTopRecFunctionNotFullyEncoded :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | Fatal_NonTopRecFunctionNotFullyEncoded  -> true
+    | Error_NonTopRecFunctionNotFullyEncoded  -> true
     | uu____1581 -> false
   
 let (uu___is_Fatal_NonTrivialPreConditionInPrims : raw_error -> Prims.bool) =
@@ -2387,7 +2387,7 @@ let (default_flags : (raw_error * FStar_Options.error_flag) Prims.list) =
   (Fatal_NonLinearPatternVars, FStar_Options.CFatal);
   (Fatal_NonSingletonTopLevel, FStar_Options.CFatal);
   (Fatal_NonSingletonTopLevelModule, FStar_Options.CFatal);
-  (Fatal_NonTopRecFunctionNotFullyEncoded, FStar_Options.CFatal);
+  (Error_NonTopRecFunctionNotFullyEncoded, FStar_Options.CError);
   (Fatal_NonTrivialPreConditionInPrims, FStar_Options.CFatal);
   (Fatal_NonVariableInductiveTypeParameter, FStar_Options.CFatal);
   (Fatal_NotApplicationOrFv, FStar_Options.CFatal);
