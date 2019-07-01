@@ -1467,7 +1467,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
     let sb = FStar.StringBuffer.create (FStar.BigInt.of_int_fs 10000) in
     let pr str = ignore <| FStar.StringBuffer.add str sb in
     let norm_ninja_build s = replace_chars s ':' "$:" in
-    let print_entry kind target first_dep all_deps =
+    let print_entry kind modul target first_dep all_deps =
         if ninja then
         begin if dep_opt_le kind dep_opt then begin
           pr "build ";
@@ -1477,7 +1477,10 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
           pr " ";
           pr (norm_ninja_build first_dep);
           pr " | ";
-          pr (norm_ninja_build all_deps)
+          pr (norm_ninja_build all_deps);
+	  pr "\n";
+	  pr " module = ";
+	  pr modul
         end end else begin
           pr target;
           pr ": ";
@@ -1488,8 +1491,11 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
+    let get_module_from_file_name fst_file =
+        Option.get (check_and_strip_suffix (BU.basename fst_file))
+    in
     let output_file ext fst_file =
-        let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
+        let ml_base_name = replace_chars (get_module_from_file_name fst_file) '.' "_" in
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
     let norm_path s = replace_chars s '\\' "/" in
@@ -1502,6 +1508,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
         keys |>
         List.fold_left
         (fun all_checked_files file_name ->
+	  let modul = get_module_from_file_name file_name in
           let process_one_key () =
             let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
             let iface_deps =
@@ -1547,7 +1554,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                 if not (Options.should_be_already_cached (module_name_of_file file_name))
                 then //this one prints:
                      //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-                     (print_entry "checked" cache_file_name norm_f files;
+                     (print_entry "checked" modul cache_file_name norm_f files;
                       cache_file_name::all_checked_files)
                 else all_checked_files
             in
@@ -1599,12 +1606,14 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
               then begin
                      print_entry
                         "ml"
+			modul
                         (output_ml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string;
 
                      print_entry
                         "krml"
+			modul
                         (output_krml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string
@@ -1612,12 +1621,14 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
               else begin
                      print_entry
                         "ml"
+			modul
                         (output_ml_file file_name)
                         cache_file_name
                         "";
 
                      print_entry
                         "krml"
+			modul
                         (output_krml_file file_name)
                         cache_file_name
                         ""
@@ -1642,6 +1653,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                 in
                 print_entry
                     "cmx"
+		    modul
                     (output_cmx_file file_name)
                     (output_ml_file file_name)
                     cmx_files
@@ -1656,12 +1668,14 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                 then
                     print_entry
                         "krml"
+			modul
                         (output_krml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string
                 else
                    print_entry
                     "krml"
+		    modul
                     (output_krml_file file_name)
                     (cache_file_name)
                     ""
