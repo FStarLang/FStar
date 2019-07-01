@@ -41,8 +41,7 @@ regional \
 generic \
 calc \
 lowstar_lenses \
-lowstar_permissions \
-lowstar_resources
+lowstar_permissions
 
 # low-level \  ... NS: removing from CI for this branch
 

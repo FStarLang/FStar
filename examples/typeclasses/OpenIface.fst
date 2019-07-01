@@ -19,5 +19,5 @@ open EnumEq
 open Enum
 open Eq
 
-let test #a [|enum a|] (x y : a) : bool =
+let test (#a:Type0) [|enum a|] (x y : a) : bool =
   eq x y
