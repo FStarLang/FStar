@@ -50,6 +50,8 @@ val mergeable_comm (#a: Type0) (b1 b2: array a): Lemma
   (ensures (mergeable b2 b1))
   [SMTPat (mergeable b1 b2)]
 
+val glueable (#a:Type0) (b b1 b2:array a) : Type0
+
 let summable_permissions (#a: Type0) (h: HS.mem) (b1 b2: array a) : Type0 =
   mergeable #a b1 b2 /\
   (forall (i:nat{i < vlength #a b1}). P.summable_permissions (get_perm h b1 i) (get_perm h b2 i))
@@ -66,7 +68,7 @@ val gsub (#a:Type0) (b:array a) (i:U32.t) (len:U32.t{U32.v len > 0})
   :Ghost (array a)
          (requires (U32.v i + U32.v len <= vlength b))
 	 (ensures (fun b' ->
-	   forall(h: HS.mem). {:pattern [as_seq h b'; as_perm_seq h b']}
+	   forall(h: HS.mem). {:pattern (as_seq h b') \/ (as_perm_seq h b')}
 	   as_seq h b' == Seq.slice (as_seq h b) (U32.v i) (U32.v i + U32.v len) /\
 	   as_perm_seq h b' == Seq.slice (as_perm_seq h b) (U32.v i) (U32.v i + U32.v len)
 	 ))

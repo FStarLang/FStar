@@ -12,11 +12,11 @@ open LowStar.Permissions
 
 open FStar.Real
 
-open LowStar.Array.Defs
-open LowStar.Array.Modifies
-
 friend LowStar.Array.Defs
 friend LowStar.Array.Modifies
+
+open LowStar.Array.Defs
+open LowStar.Array.Modifies
 
 (*** Stateful operations implementing the ghost specifications ***)
 
@@ -441,3 +441,153 @@ let merge #a b b1 =
   merge_cells #a b b1 0ul;
   (**) let h1 = HST.get () in
   (**) assert(forall (i:nat{i < vlength b}). (sel h1 b i).wp_perm = get_perm h1 b i)
+
+val move_cell
+  (#a:Type0)
+  (b:array a)
+  (i:U32.t{U32.v i < vlength b})
+  (pid:Ghost.erased perm_id)
+  : Stack unit
+  (requires (fun h0 ->
+    live_cell h0 b (U32.v i)  /\ (
+      let (_, perm_map) = Seq.index (HS.sel h0 b.content) (U32.v b.idx + U32.v i) in
+      Ghost.reveal pid > get_current_max (Ghost.reveal perm_map)
+    )
+  ))
+  (ensures (fun h0 _ h1 ->
+    modifies (loc_cell b (U32.v i)) h0 h1 /\
+    HS.contains h0 b.content /\
+    as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
+    live_cell_pid h1 b (U32.v i) (Ghost.reveal pid) /\ // The cell is still live
+    (forall (j:nat{j < vlength b}). // We only touch one cell
+      j <> U32.v i ==> Seq.index (HS.sel h0 b.content) (U32.v b.idx + j) ==
+        Seq.index (HS.sel h1 b.content) (U32.v b.idx + j)
+    ) /\ // Permission is moved
+    get_perm h1 b (U32.v i) == FStar.Real.of_int 0 /\
+    get_perm_pid h1 b (U32.v i) (Ghost.reveal pid) == get_perm h0 b (U32.v i)
+  ))
+
+#push-options "--z3rlimit 10"
+
+let move_cell #a b i pid =
+  (**) let open HST in
+  (**) let h0 = get() in
+  let s = ! b.content in
+  let sb0 = Seq.slice s (U32.v b.idx) (U32.v b.idx + U32.v b.length) in
+  let (v_init, perm_map) = Seq.index s (U32.v b.idx + U32.v i) in
+  (**) lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b.pid);
+  let sb1 = Seq.upd sb0 (U32.v i)
+    (v_init, Ghost.hide (move_perms_with_pid #a #v_init (Ghost.reveal perm_map) (Ghost.reveal b.pid) (Ghost.reveal pid)))
+  in
+  let s1 = Seq.replace_subseq s (U32.v b.idx) (U32.v b.idx + U32.v b.length) sb1 in
+  b.content := s1;
+  (**) let h1 = get() in
+  (**) assert (as_seq h1 b `Seq.equal` as_seq h0 b);
+  (**) let r = frameOf b in
+  (**) let n = as_addr b in
+  (**) MG.modifies_aloc_intro
+  (**)   #ucell #cls
+  (**)   #r #n
+  (**)   ({b_max = U32.v b.max_length; b_index = U32.v b.idx + U32.v i; b_pid = Ghost.reveal b.pid})
+  (**)   h0 h1
+  (**)   (fun r -> ())
+  (**)   (fun t pre b -> ())
+  (**)   (fun t pre b -> ())
+  (**)   (fun r n -> ())
+  (**)   (fun aloc' ->
+  (**)      prove_loc_preserved #r #n aloc' h0 h1 (fun t b'->
+  (**)        live_same_arrays_equal_types b b' h0;
+  (**)        live_same_arrays_equal_types b b' h1;
+  (**)        if aloc'.b_index <> U32.v b.idx + U32.v i then ()
+  (**)        else lemma_greater_max_not_live_pid (Ghost.reveal perm_map) (Ghost.reveal pid)
+  (**)      )
+  (**)     )
+
+#pop-options
+
+val move_cells
+  (#a:Type0)
+  (b:array a)
+  (i:U32.t{U32.v i <= vlength b})
+  (pid:Ghost.erased perm_id)
+  : Stack unit
+  (requires (fun h0 ->
+    (forall (j:nat{j < vlength b}). j >= U32.v i ==> (
+      live_cell h0 b j /\ begin
+        let (_, perm_map) = Seq.index (HS.sel h0 b.content) (U32.v b.idx + j) in
+        Ghost.reveal pid > get_current_max (Ghost.reveal perm_map)
+      end
+    ))
+  ))
+  (ensures (fun h0 b' h1 ->
+    modifies (compute_loc_array b (U32.v i)) h0 h1 /\
+    as_seq h0 b == as_seq h1 b /\ // The values of the initial array are not modified
+    (forall (j:nat{j < vlength b}). j < U32.v i ==> // We haven't modified the beginning
+      Seq.index (HS.sel h0 b.content) (U32.v b.idx + j) == Seq.index (HS.sel h1 b.content) (U32.v b.idx + j)
+    ) /\
+    (forall (j:nat{j < vlength b}). j >= U32.v i ==> // Cells atr still live but permissiosn are halved
+      live_cell_pid h1 b j (Ghost.reveal pid) /\
+      get_perm h1 b j == FStar.Real.of_int 0 /\
+      get_perm_pid h1 b j (Ghost.reveal pid) == get_perm h0 b j
+    )
+  ))
+
+let rec move_cells #a b i pid =
+  (**) let h0 = HST.get() in
+  if U32.v i >= vlength b then
+    (**) MG.modifies_none_intro #ucell #cls h0 h0
+    (**)   (fun _ -> ())
+    (**)   (fun _ _ _ -> ())
+    (**)   (fun _ _ -> ())
+  else begin
+    move_cells b (U32.add i 1ul) pid;
+    (**) let h1 = HST.get() in
+    move_cell b i pid;
+    (**) let h2 = HST.get () in
+    (**) let s12 = compute_loc_array b (U32.v i + 1) in
+    (**) let s23 = loc_cell b (U32.v i) in
+    (**) MG.loc_union_comm #ucell #cls s12 s23;
+    (**) MG.modifies_trans #ucell #cls s12 h0 h1 s23 h2
+  end
+
+
+let move #a b =
+  (**) let open HST in
+  (**) let h0 = get() in
+  let new_pid = get_array_current_max h0 b 0ul in
+  move_cells b 0ul new_pid;
+  (**) let h1 = get() in
+  let b' = Array b.max_length b.content b.idx b.length new_pid in
+  (**) assert (as_seq h1 b' `Seq.equal` as_seq h0 b);
+  (**) assert (as_perm_seq h1 b' `Seq.equal` as_perm_seq h0 b);
+  (**) lemma_different_live_pid h0 b;
+  (**) lemma_disjoint_pid_disjoint_arrays b b';
+  // This assumption requires a fundamental change in the modifies library. This is on TR's plate
+  (**) assume (fresh_loc (loc_array b') h0 h1);
+  b'
+
+val split:
+  #a: Type ->
+  b: array a ->
+  idx: U32.t{ U32.v idx > 0 /\ U32.v idx < vlength b} ->
+  Stack (array a & array a) (requires (fun h0 ->
+    live h0 b
+  )) (ensures (fun h0 (b1, b2) h1 ->
+    glueable b b1 b2 /\ live h1 b1 /\ live h1 b2 /\
+    modifies (loc_array b) h0 h1 /\
+    fresh_loc (loc_array b1) h0 h1 /\ fresh_loc (loc_array b2) h0 h1 /\
+    as_seq h0 b == Seq.append (as_seq h1 b1) (as_seq h1 b2) /\
+    as_perm_seq h0 b == Seq.append (as_perm_seq h1 b1) (as_perm_seq h1 b2)
+  ))
+
+let split #a b idx =
+  (**) let h0 = HST.get () in
+  let b' = move b in
+  (**) let h1 = HST.get () in
+  let b1 = msub b' 0ul idx in
+  let b2 = msub b' idx U32.(b.length -^ idx) in
+  assert(fresh_loc (loc_array b') h0 h1);
+  assume(fresh_loc (loc_array b1) h0 h1 /\ fresh_loc (loc_array b2) h0 h1);
+  Seq.Properties.lemma_split (as_seq h0 b) (U32.v idx);
+  Seq.Properties.lemma_split (as_perm_seq h0 b) (U32.v idx);
+  (b1, b2)
