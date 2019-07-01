@@ -86,3 +86,31 @@ let split #a b idx =
   (**) Classical.forall_intro_2 aux2;
   (**) assert(forall(i:nat{i < A.vlength b2}). (A.get_perm h1 b2 i == A.get_perm h0 b (i + A.vlength b1)));
   (b1, b2)
+
+#push-options "--z3rlimit 10"
+
+let glue #a b1 b2 =
+  (**) reveal_array ();
+  (**) reveal_rst_inv ();
+  (**) reveal_modifies ();
+  (**) reveal_star ();
+  (**) let h0 = HST.get () in
+  (**) reveal_star_inv (array_resource b1) (array_resource b2) h0;
+  let b = A.glue #a b1 b2 in
+  (**) let h1 = HST.get () in
+  (**) let aux (i:nat{i < A.vlength b}) (j:nat{j < A.vlength b}) : Lemma (A.get_perm h1 b i == A.get_perm h1 b j) =
+  (**)   begin if i < A.vlength b1 then
+  (**)     assert(A.get_perm h1 b i = A.get_perm h0 b1 i)
+  (**)   else
+  (**)     assert(A.get_perm h1 b i = A.get_perm h0 b2 (i - A.vlength b1))
+  (**)   end;
+  (**)   if j < A.vlength b1 then
+  (**)     assert(A.get_perm h1 b j = A.get_perm h0 b1 j)
+  (**)   else
+  (**)     assert(A.get_perm h1 b j = A.get_perm h0 b2 (j - A.vlength b1))
+  (**) in
+  (**) Classical.forall_intro_2 aux;
+  (**) assume(inv (as_resource (array_view b)) h1 <==> A.live h1 b /\ constant_perm_seq h1 b);
+  b
+
+#pop-options
