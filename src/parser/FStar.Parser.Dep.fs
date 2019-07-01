@@ -1467,7 +1467,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
     let sb = FStar.StringBuffer.create (FStar.BigInt.of_int_fs 10000) in
     let pr str = ignore <| FStar.StringBuffer.add str sb in
     let norm_ninja_build s = replace_chars s ':' "$:" in
-    let print_entry kind modul target first_dep all_deps =
+    let print_entry kind modul source target first_dep all_deps =
         if ninja then
         begin if dep_opt_le kind dep_opt then begin
           pr "build ";
@@ -1480,7 +1480,9 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
           pr (norm_ninja_build all_deps);
 	  pr "\n";
 	  pr " module = ";
-	  pr modul
+	  pr modul;
+	  pr "\n source = ";
+	  pr source
         end end else begin
           pr target;
           pr ": ";
@@ -1554,7 +1556,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                 if not (Options.should_be_already_cached (module_name_of_file file_name))
                 then //this one prints:
                      //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-                     (print_entry "checked" modul cache_file_name norm_f files;
+                     (print_entry "checked" modul norm_f cache_file_name norm_f files;
                       cache_file_name::all_checked_files)
                 else all_checked_files
             in
@@ -1607,6 +1609,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                      print_entry
                         "ml"
 			modul
+			norm_f
                         (output_ml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string;
@@ -1614,6 +1617,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                      print_entry
                         "krml"
 			modul
+			norm_f
                         (output_krml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string
@@ -1622,6 +1626,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                      print_entry
                         "ml"
 			modul
+			norm_f
                         (output_ml_file file_name)
                         cache_file_name
                         "";
@@ -1629,6 +1634,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                      print_entry
                         "krml"
 			modul
+			norm_f
                         (output_krml_file file_name)
                         cache_file_name
                         ""
@@ -1654,6 +1660,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                 print_entry
                     "cmx"
 		    modul
+		    norm_f
                     (output_cmx_file file_name)
                     (output_ml_file file_name)
                     cmx_files
@@ -1669,6 +1676,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                     print_entry
                         "krml"
 			modul
+			norm_f
                         (output_krml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string
@@ -1676,6 +1684,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
                    print_entry
                     "krml"
 		    modul
+		    norm_f
                     (output_krml_file file_name)
                     (cache_file_name)
                     ""
