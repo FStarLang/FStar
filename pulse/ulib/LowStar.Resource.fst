@@ -103,7 +103,7 @@ let sel (#a:Type) (view:view a) (h:imem (inv (as_resource view))) =
 (* Separating conjunction on views and resources *)
 
 unfold
-let r_disjoint (res1 res2:resource) =
+let r_disjoint (res1 res2:resource) : GTot Type =
   loc_disjoint (as_loc (fp res1)) (as_loc (fp res2))
 
 abstract
