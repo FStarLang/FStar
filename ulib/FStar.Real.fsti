@@ -41,6 +41,7 @@ val ( <=. ) : real -> real -> Tot bool
 
 #reset-options "--smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native"
 //Tests
+let zero : real = of_int 0
 let one : real = of_int 1
 let two : real = of_int 2
 
