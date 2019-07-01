@@ -25,7 +25,7 @@ open FStar.Real
 /// A permission is a real number between 0 and 1. It is not meant ot be extracted, and as such should always be handled
 /// through a ``Ghost`` type.
 inline_for_extraction
-type permission = r:real{r >=. 0.0R /\ r <=. 1.0R}
+type permission = r:real{r >=. zero /\ r <=. one}
 
 inline_for_extraction
 type with_perm (a: Type) = {
