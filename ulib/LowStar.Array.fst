@@ -581,8 +581,6 @@ let split #a b idx =
   (**) loc_includes_trans_backwards (loc_unused_in h0) (loc_array b') (loc_array b2);
   (**) loc_includes_trans_backwards (loc_not_unused_in h1) (loc_array b') (loc_array b2);
   (**) assert(fresh_loc (loc_array b2) h0 h1);
-  (**) Seq.Properties.lemma_split (as_seq h0 b) (U32.v idx);
-  (**) Seq.Properties.lemma_split (as_perm_seq h0 b) (U32.v idx);
   (**) disjoint_gsubs b 0ul idx idx U32.(b.length -^ idx);
   (b1, b2)
 
