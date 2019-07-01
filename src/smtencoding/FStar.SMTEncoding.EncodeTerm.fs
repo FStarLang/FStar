@@ -1231,8 +1231,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_let((false, _::_), _) ->
         failwith "Impossible: non-recursive let with multiple bindings"
 
-      | Tm_let ((_, [ { lbname = BU.Inl x } ]), _) ->
-        raise (Inner_let_rec (Ident.text_of_id x.ppname, S.range_of_bv x))  
+      | Tm_let ((_, lbs), _) ->
+        let names = lbs |> List.map (fun lb ->
+                                        let {lbname = lbname} = lb in
+                                        let x = BU.left lbname in (* has to be Inl *)
+                                        (Ident.text_of_id x.ppname, S.range_of_bv x)) in
+        raise (Inner_let_rec names)
 
       | Tm_match(e, pats) ->
         encode_match e pats mk_Term_unit env encode_term

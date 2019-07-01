@@ -741,14 +741,14 @@ let solve use_env_msg tcenv q : unit =
 
         | _ -> failwith "Impossible"
       with
-        | FStar.SMTEncoding.Env.Inner_let_rec (s, _) ->  //can be raised by encode_query
+        | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
           pop ();  //AR: Important, we push-ed before encode_query was called
           FStar.TypeChecker.Err.add_errors
             tcenv
             [(Errors.Error_NonTopRecFunctionNotFullyEncoded,
               BU.format1
                 "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                s,
+                (String.concat "," (List.map fst names)),
               tcenv.range)]
     end
 
