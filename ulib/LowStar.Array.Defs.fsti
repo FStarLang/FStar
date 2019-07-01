@@ -50,7 +50,7 @@ val mergeable_comm (#a: Type0) (b1 b2: array a): Lemma
   (ensures (mergeable b2 b1))
   [SMTPat (mergeable b1 b2)]
 
-val glueable (#a:Type0) (b b1 b2:array a) : Type0
+val glueable (#a:Type0) (b1 b2:array a) : Type0
 
 let summable_permissions (#a: Type0) (h: HS.mem) (b1 b2: array a) : Type0 =
   mergeable #a b1 b2 /\

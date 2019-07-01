@@ -88,13 +88,11 @@ let mergeable_comm (#a: Type0) (b1 b2: array a): Lemma
   (ensures (mergeable b2 b1))
 = ()
 
-let glueable #a b b1 b2 =
-  b.max_length == b1.max_length /\
-  b.content == b1.content /\
-  b.max_length == b2.max_length /\
-  b.content == b2.content /\
+let glueable #a b1 b2 =
+  b1.max_length == b2.max_length /\
+  b1.content == b2.content /\
   (Ghost.reveal b1.pid = Ghost.reveal b2.pid) /\
-  (Ghost.reveal b.pid <> Ghost.reveal b1.pid)
+  (U32.(b1.idx +^ b1.length) = b2.idx)
 
 let frameOf (#a:Type0) (b:array a) : Tot HS.rid = HS.frameOf b.content
 let as_addr (#a:Type0) (b:array a) : GTot nat = HS.as_addr b.content
