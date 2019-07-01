@@ -151,7 +151,7 @@ type raw_error =
   | Fatal_NonLinearPatternVars
   | Fatal_NonSingletonTopLevel
   | Fatal_NonSingletonTopLevelModule
-  | Fatal_NonTopRecFunctionNotFullyEncoded
+  | Error_NonTopRecFunctionNotFullyEncoded
   | Fatal_NonTrivialPreConditionInPrims
   | Fatal_NonVariableInductiveTypeParameter
   | Fatal_NotApplicationOrFv
@@ -483,7 +483,7 @@ let default_flags =
   (Fatal_NonLinearPatternVars                        , CFatal);
   (Fatal_NonSingletonTopLevel                        , CFatal);
   (Fatal_NonSingletonTopLevelModule                  , CFatal);
-  (Fatal_NonTopRecFunctionNotFullyEncoded            , CFatal);
+  (Error_NonTopRecFunctionNotFullyEncoded            , CError);
   (Fatal_NonTrivialPreConditionInPrims               , CFatal);
   (Fatal_NonVariableInductiveTypeParameter           , CFatal);
   (Fatal_NotApplicationOrFv                          , CFatal);

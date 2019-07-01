@@ -21,13 +21,11 @@ open FStar.All
 open FStar
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding.Term
-open FStar.BaseTypes
 open FStar.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
-open FStar.SMTEncoding.Encode
 open FStar.SMTEncoding.Util
 
 module BU = FStar.Util
@@ -295,16 +293,51 @@ let report_errors settings : unit =
         msg
     in
     let _basic_error_report =
+        (*
+         * AR: smt_error is either an Inr of a multi-line detailed message OR an Inl of a single line short message
+         *     depending on whether Options.query_stats is on or off
+         *)
         let smt_error =
-            if Options.query_stats ()
-            then
+          if Options.query_stats () then
             settings.query_errors
             |> List.map error_to_short_string
             |> String.concat ";\n\t"
-            |> format_smt_error
-            |> Some
-            else None
+            |> format_smt_error |> Inr
+          else
+            (*
+             * AR: --query_stats is not set, we want to give a succint but helpful diagnosis
+             *
+             *     settings.query_errors is a list of errors, whose field error_reason contains the strings:
+             *       unknown because (incomplete ...) or unknown because (resource ...) or unknown because canceled etc.
+             *     it's a list as it contains one element per config (e.g. fuel options)
+             *
+             *     in the following code we go through the error reasons in all the configs,
+             *       and if all the error reasons are the same, we provide a hint for that reason
+             *     otherwise we just ask the user to run with --query_stats
+             *
+             *     as per the smt-lib standard, the possible values of reason-unknown are s-expressions,
+             *       that are either non-space strings, or strings with spaces enclosed in parenthesis
+             *       (I think), so incomplete or resource messages are in parenthesis, whereas
+             *       canceled, timeout, etc. are without
+             *)
+            let incomplete_count, canceled_count, unknown_count =
+              List.fold_left (fun (ic, cc, uc) err ->
+                let err = BU.substring_from err.error_reason (String.length "unknown because ") in
+                //err is (incomplete quantifiers), (resource ...), canceled, or unknown etc.
+                if BU.starts_with err "canceled"  ||
+                   BU.starts_with err "(resource" ||
+                   BU.starts_with err "timeout"
+                then (ic, cc + 1, uc)
+                else if BU.starts_with err "(incomplete" then (ic + 1, cc, uc)
+                else (ic, cc, uc + 1)  //note this covers unknowns, overflows, etc.
+              ) (0, 0, 0) settings.query_errors
+            in
+            (match incomplete_count, canceled_count, unknown_count with
+             | _, 0, 0 when incomplete_count > 0 -> "The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel"
+             | 0, _, 0 when canceled_count > 0   -> "The SMT query timed out, you might want to increase the rlimit"
+             | _, _, _                           -> "Try with --query_stats to get more details") |> Inl
         in
+            
         match find_localized_errors settings.query_errors with
         | Some err ->
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
@@ -690,22 +723,33 @@ let solve use_env_msg tcenv q : unit =
                     BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
                         tcenv.range)]
     else begin
-    if should_refresh tcenv then begin
-      save_cfg tcenv;
-      Z3.refresh ()
-    end;
-    Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-    let tcenv = incr_query_index tcenv in
-    let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
-    let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
-    match qry with
-    | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
-    | _ when tcenv.admit -> pop()
-    | Assume _ ->
-        ask_and_report_errors tcenv labels prefix qry suffix;
-        pop ()
+      if should_refresh tcenv then begin
+        save_cfg tcenv;
+        Z3.refresh ()
+      end;
+      Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+      let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+      try
+        let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
+        let tcenv = incr_query_index tcenv in  
+        match qry with
+        | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
+        | _ when tcenv.admit -> pop()
+        | Assume _ ->
+          ask_and_report_errors tcenv labels prefix qry suffix;
+          pop ()
 
-    | _ -> failwith "Impossible"
+        | _ -> failwith "Impossible"
+      with
+        | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
+          pop ();  //AR: Important, we push-ed before encode_query was called
+          FStar.TypeChecker.Err.add_errors
+            tcenv
+            [(Errors.Error_NonTopRecFunctionNotFullyEncoded,
+              BU.format1
+                "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+                (String.concat "," (List.map fst names)),
+              tcenv.range)]
     end
 
 (**********************************************************************************************)

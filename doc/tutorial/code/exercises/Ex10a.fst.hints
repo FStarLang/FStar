@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "37242993c4e8c1c02a0cf248de5dbf86"
+      "82ea02911b5691b404bacbcd7c6354b0"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "7d15a0b0907a3b0ec80750cdc8bbd9c3"
+      "a6dbae3c424529476e7af8f8a97d9e13"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "6c7d6ec1531245eb5cf407d7c03b7828"
+      "26e809d0de2367e54634f89193252309"
     ],
     [
       "Ex10a.safe_delete",
@@ -59,7 +59,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "4731abfa0a33cbe5d351d269fbb9b1e9"
+      "0a1442804ef91ce49925503faafb11f1"
     ],
     [
       "Ex10a.test_acls",
@@ -93,7 +93,7 @@
         "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6", "unit_typing"
       ],
       0,
-      "baf3a68905e6d753df8910c9da07780d"
+      "ef6ddd09b18904c4759eba5b515b36e9"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -106,7 +106,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "4a7625a7ad6e303c89395ae9b99eb12c"
+      "f637763dc798f320fb7a989ac2f135cf"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -119,7 +119,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "0ed658dd6ecb72e52ae2505a13140e0e"
+      "415311d83a112e86404887468ff52951"
     ],
     [
       "Ex10a.canRead",
@@ -132,7 +132,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "3a27543169c7a73be94a671a53834850"
+      "05b80364f5de2154889c1e2821c180db"
     ],
     [
       "Ex10a.revoke",
@@ -145,7 +145,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "5b40ac8e1730588773c359fc34e8344c"
+      "8f36d93b53adf679eda19f95e8ef8597"
     ]
   ]
 ]
