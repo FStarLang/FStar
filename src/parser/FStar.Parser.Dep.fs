@@ -1692,6 +1692,10 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
       keys |> List.filter is_implementation
            |> Util.sort_with String.compare
     in
+    let all_fsti_files =
+      keys |> List.filter is_interface
+           |> Util.sort_with String.compare
+    in
     let all_ml_files =
         let ml_file_map = BU.smap_create 41 in
         all_fst_files
@@ -1720,6 +1724,7 @@ let print_full (deps:deps) (ninja:bool) (dep_opt: string) : unit =
         pr "\n"
     in
     print_all "ALL_FST_FILES" all_fst_files;
+    print_all "ALL_FSTI_FILES" all_fsti_files;
     print_all "ALL_CHECKED_FILES" all_checked_files;
     print_all "ALL_ML_FILES" all_ml_files;
     print_all "ALL_KRML_FILES" all_krml_files;
