@@ -1482,20 +1482,25 @@ let (solve :
                                 pop1 ())
                            | uu____4409 -> failwith "Impossible"))) ()
             with
-            | FStar_SMTEncoding_Env.Inner_let_rec (s,uu____4418) ->
+            | FStar_SMTEncoding_Env.Inner_let_rec names1 ->
                 (pop1 ();
-                 (let uu____4422 =
-                    let uu____4432 =
-                      let uu____4440 =
+                 (let uu____4425 =
+                    let uu____4435 =
+                      let uu____4443 =
+                        let uu____4445 =
+                          let uu____4447 =
+                            FStar_List.map FStar_Pervasives_Native.fst names1
+                             in
+                          FStar_String.concat "," uu____4447  in
                         FStar_Util.format1
                           "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                          s
+                          uu____4445
                          in
                       (FStar_Errors.Error_NonTopRecFunctionNotFullyEncoded,
-                        uu____4440, (tcenv.FStar_TypeChecker_Env.range))
+                        uu____4443, (tcenv.FStar_TypeChecker_Env.range))
                        in
-                    [uu____4432]  in
-                  FStar_TypeChecker_Err.add_errors tcenv uu____4422))))
+                    [uu____4435]  in
+                  FStar_TypeChecker_Err.add_errors tcenv uu____4425))))
   
 let (solver : FStar_TypeChecker_Env.solver_t) =
   {
@@ -1509,36 +1514,36 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
          fun g  ->
-           let uu____4470 =
-             let uu____4477 = FStar_Options.peek ()  in (e, g, uu____4477)
+           let uu____4487 =
+             let uu____4494 = FStar_Options.peek ()  in (e, g, uu____4494)
               in
-           [uu____4470]);
+           [uu____4487]);
     FStar_TypeChecker_Env.solve = solve;
     FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
   } 
 let (dummy : FStar_TypeChecker_Env.solver_t) =
   {
-    FStar_TypeChecker_Env.init = (fun uu____4493  -> ());
-    FStar_TypeChecker_Env.push = (fun uu____4495  -> ());
-    FStar_TypeChecker_Env.pop = (fun uu____4498  -> ());
+    FStar_TypeChecker_Env.init = (fun uu____4510  -> ());
+    FStar_TypeChecker_Env.push = (fun uu____4512  -> ());
+    FStar_TypeChecker_Env.pop = (fun uu____4515  -> ());
     FStar_TypeChecker_Env.snapshot =
-      (fun uu____4501  ->
+      (fun uu____4518  ->
          (((Prims.parse_int "0"), (Prims.parse_int "0"),
             (Prims.parse_int "0")), ()));
     FStar_TypeChecker_Env.rollback =
-      (fun uu____4520  -> fun uu____4521  -> ());
+      (fun uu____4537  -> fun uu____4538  -> ());
     FStar_TypeChecker_Env.encode_sig =
-      (fun uu____4536  -> fun uu____4537  -> ());
+      (fun uu____4553  -> fun uu____4554  -> ());
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
          fun g  ->
-           let uu____4543 =
-             let uu____4550 = FStar_Options.peek ()  in (e, g, uu____4550)
+           let uu____4560 =
+             let uu____4567 = FStar_Options.peek ()  in (e, g, uu____4567)
               in
-           [uu____4543]);
+           [uu____4560]);
     FStar_TypeChecker_Env.solve =
-      (fun uu____4566  -> fun uu____4567  -> fun uu____4568  -> ());
-    FStar_TypeChecker_Env.finish = (fun uu____4575  -> ());
-    FStar_TypeChecker_Env.refresh = (fun uu____4577  -> ())
+      (fun uu____4583  -> fun uu____4584  -> fun uu____4585  -> ());
+    FStar_TypeChecker_Env.finish = (fun uu____4592  -> ());
+    FStar_TypeChecker_Env.refresh = (fun uu____4594  -> ())
   } 
