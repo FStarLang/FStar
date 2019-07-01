@@ -1689,7 +1689,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     (check "arrow comp"    (comp_eq_dbg dbg c1 c2))
 
   | Tm_refine (b1,t1), Tm_refine (b2,t2) ->
-    (check "refine bv"      (b1.index = b2.index)) &&
+    (check "refine bv sort" (term_eq_dbg dbg b1.sort b2.sort)) &&
     (check "refine formula" (term_eq_dbg dbg t1 t2))
 
   | Tm_app (f1, a1), Tm_app (f2, a2) ->
@@ -1830,8 +1830,8 @@ let has_attribute (attrs:list<Syntax.attribute>) (attr:lident) =
 // Setting pragmas
 ///////////////////////////////////////////
 let process_pragma p r =
-    let set_options t s =
-    match Options.set_options t s with
+    let set_options s =
+      match Options.set_options s with
       | Getopt.Success -> ()
       | Getopt.Help  ->
         Errors.raise_error
@@ -1840,28 +1840,32 @@ let process_pragma p r =
                 r
       | Getopt.Error s ->
         Errors.raise_error
-                (Errors.Fatal_FailToProcessPragma,
-                 "Failed to process pragma: " ^s)
-                r
+                (Errors.Fatal_FailToProcessPragma, "Failed to process pragma: " ^ s) r
     in
     match p with
     | LightOff ->
-      if p = LightOff
-      then Options.set_ml_ish()
+      Options.set_ml_ish()
+
     | SetOptions o ->
-      set_options Options.Set o
+      set_options o
+
     | ResetOptions sopt ->
       Options.restore_cmd_line_options false |> ignore;
       begin match sopt with
       | None -> ()
-      | Some s -> set_options Options.Reset s
+      | Some s -> set_options s
       end
+
     | PushOptions sopt ->
       Options.internal_push ();
       begin match sopt with
       | None -> ()
-      | Some s -> set_options Options.Reset s
+      | Some s -> set_options s
       end
+
+    | RestartSolver ->
+      ()
+
     | PopOptions ->
       if Options.internal_pop ()
       then ()

@@ -10,7 +10,8 @@ true: \
   annot, bin_annot, thread, -traverse, \
   package(batteries), \
   package(zarith), \
-  package(ppx_deriving.std), package(ppx_deriving_yojson)
+  package(ppx_deriving.std), \
+  package(ppx_deriving_yojson)
 
 # ADL: the new unicode lexer
 "src/parser/ml/FStar_Parser_LexFStar.ml": syntax(camlp4o)
@@ -47,3 +48,29 @@ true: \
 
 <**/FStar_Monotonic_Seq.ml>: \
   principal
+
+
+#
+# To use landmarks to profile ocaml code:
+#  - make sure landmarks is installed with opam (opam install landmarks)
+#  - enable the landmarks and landmarks.ppx packages
+#  - select the modules for auto-instrumentation
+#  - build the compiler
+#  - run the compiler with OCAML_LANDMARKS='on,output=landmarks.out'
+#
+# Uncomment the following to add the packages:
+#
+# true: \
+#   package(landmarks), \
+#   package(landmarks.ppx)
+#
+# Uncomment the following to profile specific modules:
+#
+# <src/ocaml-output/FStar_{Main,Dependencies,Universal,TypeChecker_Normalize,TypeChecker_Tc,TypeChecker_Util,SMTEncoding_Encode}.ml>: \
+#    ppx(`ocamlfind query landmarks.ppx`/ppx.exe --as-ppx --auto)
+#
+#
+# NB: the fully inclusive landmarks ppx on ocaml-output/**/*.ml files can cause a stack overflow
+# <src/ocaml-output/**/*.ml>: \
+#   ppx(`ocamlfind query landmarks.ppx`/ppx.exe --as-ppx --auto)
+#

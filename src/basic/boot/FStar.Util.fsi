@@ -87,6 +87,7 @@ val smap_remove: smap<'value> -> string -> unit
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
 val smap_size: smap<'value> -> int
+val smap_iter: smap<'value> -> (string -> 'value -> unit) -> unit
 
 (* pure version *)
 type psmap<'value>

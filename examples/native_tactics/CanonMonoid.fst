@@ -113,12 +113,12 @@ let change t1 =
 let change_sq t1 =
     change (mk_e_app (`squash) [t1])
 
-let g f = assert_by_tactic (f (3 + 5) > 0)
-             (fun () -> change_sq (quote (f 8 > 0)); admit1())
+let g f = assert (f (3 + 5) > 0)
+              by (change_sq (quote (f 8 > 0)); admit1())
 
 assume val f:int->int
-let _ = assert_by_tactic (f (3 + 5) > 0)
-             (fun () -> change_sq (`(f 8 > 0)); admit1())
+let _ = assert (f (3 + 5) > 0)
+            by (change_sq (`(f 8 > 0)); admit1())
 
 let canon_monoid (#a:Type) (m:monoid a) (*a_to_string:a->string*) : Tac unit =
   norm [];
@@ -141,8 +141,8 @@ let canon_monoid (#a:Type) (m:monoid a) (*a_to_string:a->string*) : Tac unit =
   | _ -> fail "Goal should be an equality"
 
 let lem0 (a b c d : int) =
-  assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c + 0) + (d + 0))
-  (fun _ -> canon_monoid int_plus_monoid (* string_of_int *); trefl())
+  assert (0 + a + b + c + d == (0 + a) + (b + c + 0) + (d + 0))
+      by (canon_monoid int_plus_monoid (* string_of_int *); trefl())
 
 (* TODO: should extend this to a commutative monoid and
          sort the list to prove things like a + b = b + a;

@@ -896,7 +896,7 @@ let lemma_msb_gte #n a b =
 
 #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 
-#set-options "--z3rlimit 10"
+#set-options "--z3rlimit 80"
 val lemma_uint_mod: #n:pos -> a:uint_t n ->
   Lemma (a = a % pow2 n)
 let lemma_uint_mod #n a = ()
@@ -1084,7 +1084,7 @@ let lemma_lognot_value_zero #n a =
     lognot a;
   }
 
-#set-options "--z3rlimit 50"
+#set-options "--z3rlimit 100"
 private
 val lemma_mod_variation: #n:pos -> a:uint_t n ->
   Lemma (a <> 0 ==> ((-a) % pow2 n) - 1 % pow2 n = (((-a) % pow2 n) - 1) % pow2 n)

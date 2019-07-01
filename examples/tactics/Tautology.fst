@@ -51,8 +51,8 @@ assume val p: prop
 // This one exercises matching on squash p
 let _ =
   assume p;
-  assert_by_tactic p tauto
+  assert p by tauto ()
 
 // This one exercises matching on p (without the squash)
 let _ =
-  assert_by_tactic (p ==> (True /\ False \/ True) /\ p) tauto
+  assert (p ==> (True /\ False \/ True) /\ p) by tauto ()

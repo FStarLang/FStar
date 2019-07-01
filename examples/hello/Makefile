@@ -1,61 +1,23 @@
-# For simplified Makefiles, define FSTAR_HOME, then include the file below.
 FSTAR_HOME=../..
-include ../Makefile.include
 
-all: ocaml testseq
+include ../Makefile.include
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
+all: hello testseq
 
-
-# This target is very concise and re-uses the variables defined in
-# Makefile.include. You shouldn't need to call `cp` ever.
-ocaml: out hello.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml hello.fst
+hello: out Hello.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract 'Hello' Hello.fst --record_hints
 	$(OCAMLOPT) out/Hello.ml -o hello.exe
 	./hello.exe
 
-# FIXME (Guido): This comment seems very stale. I made the rule look
-# exactly as the one for `hello` and this works anyway.
-#
-# This target demonstrates how to compile with native_ints: the recursive
-# invocation of $(MAKE) changes, and so do the include paths for `ocamlopt`.
-# In this particular case, we need to compile against the extracted version of
-# `FStar.Seq` (it is not realized in ML), so we pass it to `ocamlopt`.
-testseq: out testseq.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml testseq.fst
+testseq: out TestSeq.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract 'TestSeq' TestSeq.fst --record_hints
 	$(OCAMLOPT) out/TestSeq.ml -o testseq.exe
 	./testseq.exe
-
-LIB=$(FSTAR_HOME)/ulib
-BIN=$(FSTAR_HOME)/bin
-
-ifeq ($(OS),Windows_NT)
-FSC     = fsc --mlcompatibility
-else
-FSC     = fsharpc --mlcompatibility
-endif
-
-ifeq ($(OS),Windows_NT)
-FSRUNTIME =
-else
-FSRUNTIME = mono
-endif
-
-fs: out hello.fst
-	$(FSTAR)   --odir out --codegen FSharp hello.fst
-	$(FSRUNTIME) ./out/hello.exe
-
-# CH: this target is dead, there is no ml/native_int anywhere
-bat_testseq: out testseq.fst
-	$(FSTAR) --use_native_int --odir out --codegen OCaml testseq.fst
-	cp $(LIB)/ml/native_int/prims.ml $(LIB)/ml/FStar_IO.ml FStar_Seq.ml out
-	(cd out; ocamlfind ocamlc -package batteries -linkpkg -g -o testseq.exe nums.cma prims.ml FStar_IO.ml FStar_Seq.ml TestSeq.ml)
-	./out/TestSeq.exe
 
 out:
 	mkdir -p out
 
 clean:
-	rm -rf out
-	rm -f *~
+	rm -rf out *~ *.exe

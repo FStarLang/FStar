@@ -1,7 +1,9 @@
 open FStar.UInt
 open FStar.Mul
 
-(* NOTE: anything that you fix/update here should be reflected in [FStar.IntN.fstp], which is mostly
+#set-options "--max_fuel 0 --max_ifuel 0"
+
+(* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
 
 (* Except, as compared to [FStar.IntN.fstp], here:

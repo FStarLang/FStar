@@ -82,6 +82,7 @@ let trans_pragma = function
   | AST.ResetOptions sopt -> S.ResetOptions sopt
   | AST.PushOptions sopt -> S.PushOptions sopt
   | AST.PopOptions -> S.PopOptions
+  | AST.RestartSolver -> S.RestartSolver
   | AST.LightOff -> S.LightOff
 
 let as_imp = function
@@ -1385,8 +1386,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let t2', aq2 = desugar_term_aq env t2 in
       let t3', aq3 = desugar_term_aq env t3 in
       mk (Tm_match(t1',
-                    [(withinfo (Pat_constant (Const_bool true)) t2.range, None, t2');
-                     (withinfo (Pat_wild x) t3.range, None, t3')])), join_aqs [aq1;aq2;aq3]
+                    [(withinfo (Pat_constant (Const_bool true)) t1.range, None, t2');
+                     (withinfo (Pat_wild x) t1.range, None, t3')])), join_aqs [aq1;aq2;aq3]
 
     | TryWith(e, branches) ->
       let r = top.range in
@@ -1528,7 +1529,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let rel = eta_and_annot rel in
 
       let wild r = mk_term Wild r Expr in
-      let init   = mk_term (Var C.calc_init_lid) init_expr.range Expr in
+      let init   = mk_term (Var C.calc_init_lid) Range.dummyRange Expr in
       let last_expr = match List.last steps with
                       | Some (CalcStep (_, _, last_expr)) -> last_expr
                       | _ -> failwith "impossible: no last_expr on calc"
@@ -1536,17 +1537,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let step r = mk_term (Var C.calc_step_lid) r Expr in
       let finish = mkApp (mk_term (Var C.calc_finish_lid) top.range Expr) [(rel, Nothing)] top.range in
 
-      let e = mkApp init [(init_expr, Nothing)] init_expr.range in
+      let e = mkApp init [(init_expr, Nothing)] Range.dummyRange in
       let (e, _) = List.fold_left (fun (e, prev) (CalcStep (rel, just, next_expr)) ->
                           let pf = mkApp (step rel.range)
                                           [(wild rel.range, Hash);
                                            (init_expr, Hash);
                                            (prev, Hash);
                                            (eta_and_annot rel, Nothing); (next_expr, Nothing);
-                                           (thunk e, Nothing); (thunk just, Nothing)] just.range in
+                                           (thunk e, Nothing); (thunk just, Nothing)] Range.dummyRange in
                           (pf, next_expr))
                    (e, init_expr) steps in
-      let e = mkApp finish [(init_expr, Hash); (last_expr, Hash); (thunk e, Nothing)] init_expr.range in
+      let e = mkApp finish [(init_expr, Hash); (last_expr, Hash); (thunk e, Nothing)] Range.dummyRange in
       desugar_term_maybe_top top_level env e
 
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
