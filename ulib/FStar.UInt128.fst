@@ -820,10 +820,12 @@ let mul32_digits x y = ()
 
 let u32_32 : x:U32.t{U32.v x == 32} = U32.uint_to_t 32
 
+#push-options "--z3rlimit 40"
 let u32_combine (hi lo: U64.t) : Pure U64.t
   (requires (U64.v lo < pow2 32))
   (ensures (fun r -> U64.v r = U64.v hi % pow2 32 * pow2 32 + U64.v lo)) =
   U64.add lo (U64.shift_left hi u32_32)
+#pop-options
 
 // generalization of Math.lemma_mult_le_left (relaxed bounds on arguments)
 val lemma_mult_le_left: a:nat -> b:int -> c:int -> Lemma
@@ -1029,14 +1031,14 @@ let product_high32 x y =
 val product_high_expand : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 64 == phh x y + (plh x y + phl x y + pll_h x y) / pow2 32)
 
-#set-options "--z3rlimit 20"
+#push-options "--z3rlimit 80"
 let product_high_expand x y =
   Math.pow2_plus 32 32;
   div_product (mul_wide_high x y) (pow2 32) (pow2 32);
   product_high32 x y;
   Math.division_addition_lemma (plh x y + phl x y + pll_h x y) (pow2 32) (phh x y);
   ()
-#set-options "--z3rlimit 5"
+#pop-options
 
 val mod_spec_multiply : n:nat -> k:pos ->
   Lemma ((n - n%k) / k * k == n - n%k)

@@ -1112,9 +1112,13 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
-    | Some (U.BaseConn(l, [_; (e1, _); (e2, _)]))
+    | Some (U.BaseConn(l, [_; (e1, None); (e2, None)]))
       when Ident.lid_equals l PC.eq2_lid
       ||   Ident.lid_equals l PC.c_eq2_lid
+      ->
+        Some (e1, e2)
+    | Some (U.BaseConn(l, [_; _; (e1, _); (e2, _)]))
+      when Ident.lid_equals l PC.eq3_lid
       ->
         Some (e1, e2)
     | _ ->
@@ -1122,12 +1126,10 @@ let destruct_eq' (typ : typ) : option<(term * term)> =
       | None -> None
       | Some t ->
         begin
-        BU.print1 "GG t = %s\n" (Print.term_to_string t);
         let hd, args = U.head_and_args t in
         match (SS.compress hd).n, args with
         | Tm_fvar fv, [(_, Some (Implicit _)); (e1, None); (e2, None)] when S.fv_eq_lid fv PC.op_Eq ->
-            (BU.print2 "wat %s -- %s\n" (Print.term_to_string e1) (Print.term_to_string e2);
-            Some (e1, e2))
+            Some (e1, e2)
         | _ -> None
         end
 
@@ -1563,30 +1565,24 @@ let pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "pointwise"
     bind (push_goals gs) (fun _ ->
     add_goals [goal_with_type g gt']))))
 
+let _trefl (l : term) (r : term) : tac<unit> =
+   bind (cur_goal ()) (fun g ->
+   bind (do_unify (goal_env g) l r) (fun b ->
+   if b then solve' g U.exp_unit else
+     (* if that didn't work, normalize and retry *)
+     let l = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) l in
+     let r = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) r in
+     bind (do_unify (goal_env g) l r) (fun b ->
+     if b then solve' g U.exp_unit else
+       fail2 "not a trivial equality ((%s) vs (%s))" (tts (goal_env g) l) (tts (goal_env g) r))))
+
 let trefl () : tac<unit> = wrap_err "trefl" <|
     bind (cur_goal ()) (fun g ->
-    match U.un_squash (goal_type g) with
-    | Some t ->
-        begin
-        let hd, args = U.head_and_args' t in
-        match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
-            bind (do_unify (goal_env g) l r) (fun b ->
-            if b
-            then solve' g U.exp_unit
-            else
-            let l = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) l in
-            let r = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) r in
-            bind (do_unify (goal_env g) l r) (fun b ->
-            if b
-            then solve' g U.exp_unit
-            else
-            fail2 "not a trivial equality ((%s) vs (%s))" (tts (goal_env g) l) (tts (goal_env g) r)))
-        | hd, _ ->
-            fail1 "trefl: not an equality (%s)" (tts (goal_env g) t)
-        end
-     | None ->
-        fail "not an irrelevant goal")
+    match destruct_eq (goal_type g) with
+    | Some (l, r) ->
+        _trefl l r
+    | None ->
+        fail1 "not an equality (%s)" (tts (goal_env g) (goal_type g)))
 
 let dup () : tac<unit> =
     bind (cur_goal ()) (fun g ->

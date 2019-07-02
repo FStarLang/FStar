@@ -1084,18 +1084,20 @@ let lemma_lognot_value_zero #n a =
     lognot a;
   }
 
-#set-options "--z3rlimit 100"
+#push-options "--z3rlimit 150"
 private
 val lemma_mod_variation: #n:pos -> a:uint_t n ->
   Lemma (a <> 0 ==> ((-a) % pow2 n) - 1 % pow2 n = (((-a) % pow2 n) - 1) % pow2 n)
 let lemma_mod_variation #n a = ()
+#pop-options
 
-#set-options "--z3rlimit 5"
+#push-options "--z3rlimit 5"
 val lemma_one_mod_pow2: #n:pos ->
   Lemma (1 = 1 % (pow2 n))
 let lemma_one_mod_pow2 #n = ()
+#pop-options
 
-#set-options "--z3rlimit 50"
+#push-options "--z3rlimit 50"
 private
 val lemma_lognot_value_variation: #n:pos -> a:uint_t n{a <> 0} ->
   Lemma (lognot a = (-a) % pow2 n - 1 % pow2 n)
@@ -1112,6 +1114,7 @@ let lemma_lognot_value_variation #n a =
     == { FStar.Math.Lemmas.lemma_mod_sub_1 a p }
     (-a) % p - 1 % p;
   }
+#pop-options
 
 val lemma_lognot_value_nonzero: #n:pos -> a:uint_t n{a <> 0} ->
   Lemma (lognot a = sub_mod (sub_mod 0 a) 1)

@@ -149,6 +149,9 @@ let isTotFun_axioms pos head vars guards is_pure =
           let ctx_guard = mkAnd (ctx_guard, g_x) in
           let rest = is_tot_fun_axioms ctx ctx_guard app vars guards in
           mkAnd (is_tot_fun_head, rest)
+
+        | _ ->
+            failwith "impossible: isTotFun_axioms"
     in
     is_tot_fun_axioms [] mkTrue head vars guards
 
@@ -1225,8 +1228,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
         encode_let x t1 e1 e2 env encode_term
 
-      | Tm_let ((_, [ { lbname = BU.Inl x } ]), _) ->
-        raise (Inner_let_rec (Ident.text_of_id x.ppname, S.range_of_bv x))  
+      | Tm_let((false, _::_), _) ->
+        failwith "Impossible: non-recursive let with multiple bindings"
+
+      | Tm_let ((_, lbs), _) ->
+        let names = lbs |> List.map (fun lb ->
+                                        let {lbname = lbname} = lb in
+                                        let x = BU.left lbname in (* has to be Inl *)
+                                        (Ident.text_of_id x.ppname, S.range_of_bv x)) in
+        raise (Inner_let_rec names)
 
       | Tm_match(e, pats) ->
         encode_match e pats mk_Term_unit env encode_term
