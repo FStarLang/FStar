@@ -40,25 +40,23 @@ verify-extra: $(addsuffix .checked, $(EXTRA))
 #  - execute the benchmark
 #  - move the checked file back
 #
+# phony-benchmark target to ensure bench rules always run on:
+#  make -C ulib benchmark
+
+.PHONY: phony-benchmark
+
+phony-benchmark:
 
 # a.fst.bench will move the a.fst.checked binary and then move it back
-%.fst.bench: %.fst
+%.fst.bench: %.fst phony-benchmark
 	-mv -f $*.fst.checked $*.fst.checked.bench_bkp
-ifdef BENCHMARK_FSTAR
-	$(BENCHMARK_CMD) -o $@ -- $(MY_FSTAR) $*.fst
-else
-	$(MY_FSTAR) $*.fst
-endif
+	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fst
 	-mv -f $*.fst.checked.bench_bkp $*.fst.checked
 
 # a.fsti.bench will move the a.fsti.checked binary and then move it back
-%.fsti.bench: %.fsti
+%.fsti.bench: %.fsti phony-benchmark
 	-mv -f $*.fsti.checked $*.fsti.checked.bench_bkp
-ifdef BENCHMARK_FSTAR
-	$(BENCHMARK_CMD) -o $@ -- $(MY_FSTAR) $*.fsti
-else
-	$(MY_FSTAR) $*.fsti
-endif
+	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fsti
 	-mv -f $*.fsti.checked.bench_bkp $*.fsti.checked
 
 verify-benchmark: $(addsuffix .bench, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
