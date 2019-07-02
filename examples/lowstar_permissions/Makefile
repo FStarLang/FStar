@@ -1,7 +1,7 @@
 OUTPUT_DIR    = .output
 HINT_DIR      = .hints
-GENERATED_DIR = pointers-c
-OUT_DIR	      = pointers-c
+GENERATED_DIR = test-c
+OUT_DIR	      = test-c
 
 .PHONY: all test stage1 stage2 clean distclean
 
@@ -9,12 +9,12 @@ all: compile-c
 
 compile-c: $(GENERATED_DIR)/Makefile.include
 	$(MAKE) -C $(GENERATED_DIR) -f Makefile.basic
-compile-c: EXTRA+=-o libpointers.a
+compile-c: EXTRA+=-o test.a
 
 test-c: $(GENERATED_DIR)/Makefile.include | $(GENERATED_DIR)
-	$(MAKE) -C $(GENERATED_DIR) -f Makefile.basic Test_Impl_Signal.exe
-	$(GENERATED_DIR)/pointers.exe
-test-c: EXTRA+=-o pointers.exe -add-include '"kremlib.h"'
+	$(MAKE) -C $(GENERATED_DIR) -f Makefile.basic test.exe
+	$(GENERATED_DIR)/test.exe
+test-c: EXTRA+=-o test.exe -add-include '"kremlib.h"'
 
 FSTAR_INCLUDE_DIRS = \
   $(HACL_KREMLIN) \
@@ -29,13 +29,13 @@ FSTAR = $(FSTAR_HOME)/bin/fstar.exe $(FSTAR_FLAGS)
 
 ENABLE_HINTS = --use_hints --use_hint_hashes --record_hints --query_stats
 
-ROOTS = Pointer.fst
+ROOTS = Test.Array.fst
 
 .PRECIOUS: %.krml
 
 ifndef MAKE_RESTARTS
 .depend: .FORCE
-	$(FSTAR) --dep full $(ROOTS) --extract 'Pointer -FStar.Real' > $@
+	$(FSTAR) --dep full $(ROOTS) --extract 'Test.Array -FStar.Real' > $@
 .PHONY: .FORCE
 .FORCE:
 endif
@@ -69,7 +69,7 @@ $(GENERATED_DIR)/Makefile.include: EXTRA+=-fparentheses
 # We use -drop (deprecated) only to avoid creating unnecessary .c,.h files
 %/Makefile.include: $(ALL_KRML_FILES) | .depend
 	$(KREMLIN) -skip-compilation \
-	-no-prefix 'Pointer' \
+	-no-prefix 'Test.Array' \
 	-bundle Prims -bundle LowStar.Endianness -bundle C.Endianness \
 	-bundle FStar.* \
 	-tmpdir $* \
