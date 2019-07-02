@@ -1,5 +1,5 @@
 type int64 = Int64.t
-type uint8 = int
+type uint32 = int
 type t = int64
 type t' = t
                
@@ -32,8 +32,9 @@ let lognot (a:int64) : int64 = Int64.lognot a
        
 let int_to_int64 (x:Prims.int) : int64 = Int64.of_string (Prims.to_string x) 
 
-let shift_right (a:int64) (b:uint8) : int64 = Int64.shift_right a b
-let shift_left  (a:int64) (b:uint8) : int64 = Int64.shift_left a b 
+let shift_right (a:int64) (b:uint32) : int64 = Int64.shift_right_logical a b
+let shift_left  (a:int64) (b:uint32) : int64 = Int64.shift_left a b
+let shift_arithmetic_right (a:int64) (b:uint32) : int64 = Int64.shift_right a b
 
 (* Comparison operators *)
 let eq (a:int64) (b:int64) : bool = a = b

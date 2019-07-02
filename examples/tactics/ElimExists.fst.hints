@@ -1,0 +1,26 @@
+[
+  "Ò\u001cè4‚ZÉgÚ'kÅ\u001d9mj",
+  [
+    [
+      "ElimExists.lem",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "d0b65d9a55f117ed368796a57d4a303e"
+    ],
+    [
+      "ElimExists.lem",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_17693b9c0be6584f79f76d61935752d0"
+      ],
+      0,
+      "74c4f83aad835e860907cfa0a6d95ef2"
+    ]
+  ]
+]

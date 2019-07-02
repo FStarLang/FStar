@@ -1043,12 +1043,6 @@ let tc_inductive env ses quals lids =
   try tc_inductive' env ses quals lids |> (fun r -> pop (); r)
   with e -> pop (); raise e
 
-//when we process a reset-options pragma, we need to restart z3 etc.
-let z3_reset_options (en:env) :env =
-  let env = Env.set_proof_ns (Options.using_facts_from ()) en in
-  env.solver.refresh ();
-  env
-
 let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
     let comb f1 f2 =
         match f1, f2 with
@@ -1067,7 +1061,7 @@ let list_of_option = function
 
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2) *)
 (* Precondition: lists are sorted *)
-let check_multi_contained (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
+let check_multi_eq (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
     let rec collect (l : list<'a>) : list<('a * int)> =
         match l with
         | [] -> []
@@ -1095,12 +1089,13 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) : option<(int * int 
         | [], (e, n) :: _ ->
             Some (e, 0, n)
 
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 <> hd2 ->
-            Some (hd1, n1, 0)
-
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 (* when hd1 = hd2 *) ->
-            if n1 <> n2
-            then Some (hd1, n1, n2)
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 ->
+            if hd1 < hd2 then
+                Some (hd1, n1, 0)
+            else if hd1 > hd2 then
+                Some (hd2, 0, n2)
+            else if n1 <> n2 then
+                Some (hd1, n1, n2)
             else aux tl1 tl2
     in
     aux l1 l2
@@ -1667,7 +1662,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
         Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
     | _ ->
         if errnos <> [] && errnos <> actual then
-            let (e, n1, n2) = match check_multi_contained errnos actual with
+            let (e, n1, n2) = match check_multi_eq errnos actual with
                               | Some r -> r
                               | None -> (-1, -1, -1) // should be impossible
             in
@@ -1800,7 +1795,19 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   match se.sigel with
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
-  | Sig_pragma (ResetOptions _) -> z3_reset_options env
+
+  | Sig_pragma (PushOptions _)
+  | Sig_pragma PopOptions
+  | Sig_pragma (SetOptions _)
+  | Sig_pragma (ResetOptions _) ->
+    (* we keep --using_facts_from reflected in the environment, so update it here *)
+    let env = { env with proof_ns = Options.using_facts_from () } in
+    env
+
+  | Sig_pragma RestartSolver ->
+    env.solver.refresh ();
+    env
+
   | Sig_pragma _
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect ne ->
@@ -2145,7 +2152,7 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
       //restore command line options ad restart z3 (to reset things like nl.arith options)
       if not (Options.interactive ()) then begin  //we should not have this case actually since extracted interfaces are not supported in ide yet
         Options.restore_cmd_line_options true |> ignore;
-        z3_reset_options en0
+        en0
       end
       else en0
     in

@@ -1159,6 +1159,11 @@ let mk_disj_l phi = match phi with
 let mk_imp phi1 phi2 : term = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2 : term = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
+let unb2t (e:term) : option<term> =
+    let hd, args = head_and_args e in
+    match (compress hd).n, args with
+    | Tm_fvar fv, [(e, _)] when fv_eq_lid fv PC.b2t_lid -> Some e
+    | _ -> None
 
 let is_t_true t =
      match (unmeta t).n with
@@ -1392,7 +1397,7 @@ let destruct_typ_as_formula f : option<connective> =
     let patterns t =
         let t = compress t in
         match t.n with
-            | Tm_meta(t, Meta_pattern pats) -> pats, compress t
+            | Tm_meta(t, Meta_pattern (_, pats)) -> pats, compress t
             | _ -> [], t in
 
     let destruct_q_conn t =
@@ -1684,7 +1689,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     (check "arrow comp"    (comp_eq_dbg dbg c1 c2))
 
   | Tm_refine (b1,t1), Tm_refine (b2,t2) ->
-    (check "refine bv"      (b1.index = b2.index)) &&
+    (check "refine bv sort" (term_eq_dbg dbg b1.sort b2.sort)) &&
     (check "refine formula" (term_eq_dbg dbg t1 t2))
 
   | Tm_app (f1, a1), Tm_app (f2, a2) ->
@@ -1825,8 +1830,8 @@ let has_attribute (attrs:list<Syntax.attribute>) (attr:lident) =
 // Setting pragmas
 ///////////////////////////////////////////
 let process_pragma p r =
-    let set_options t s =
-    match Options.set_options t s with
+    let set_options s =
+      match Options.set_options s with
       | Getopt.Success -> ()
       | Getopt.Help  ->
         Errors.raise_error
@@ -1835,28 +1840,32 @@ let process_pragma p r =
                 r
       | Getopt.Error s ->
         Errors.raise_error
-                (Errors.Fatal_FailToProcessPragma,
-                 "Failed to process pragma: " ^s)
-                r
+                (Errors.Fatal_FailToProcessPragma, "Failed to process pragma: " ^ s) r
     in
     match p with
     | LightOff ->
-      if p = LightOff
-      then Options.set_ml_ish()
+      Options.set_ml_ish()
+
     | SetOptions o ->
-      set_options Options.Set o
+      set_options o
+
     | ResetOptions sopt ->
       Options.restore_cmd_line_options false |> ignore;
       begin match sopt with
       | None -> ()
-      | Some s -> set_options Options.Reset s
+      | Some s -> set_options s
       end
+
     | PushOptions sopt ->
       Options.internal_push ();
       begin match sopt with
       | None -> ()
-      | Some s -> set_options Options.Reset s
+      | Some s -> set_options s
       end
+
+    | RestartSolver ->
+      ()
+
     | PopOptions ->
       if Options.internal_pop ()
       then ()
@@ -1946,7 +1955,7 @@ let rec unbound_variables tm :  list<bv> =
       | Tm_meta(t, m) ->
         unbound_variables t
         @ (match m with
-           | Meta_pattern args ->
+           | Meta_pattern (_, args) ->
              List.collect (List.collect (fun (a, _) -> unbound_variables a)) args
 
            | Meta_monadic_lift(_, _, t')
@@ -2085,7 +2094,7 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>
     in
     (* Postcondition is thunked, c.f. #57 *)
     let post = unthunk_lemma_post post in
-    let body = mk (Tm_meta (mk_imp pre post, Meta_pattern patterns)) None t.pos in
+    let body = mk (Tm_meta (mk_imp pre post, Meta_pattern (binders_to_names binders, patterns))) None t.pos in
     let quant =
       List.fold_right2
         (fun b u out -> mk_forall u (fst b) out)

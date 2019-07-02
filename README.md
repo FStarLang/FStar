@@ -1,7 +1,5 @@
-F*: An ML-like language aimed at program verification
-=====================================================
-
-[![Build status](https://travis-ci.org/FStarLang/FStar.svg?branch=master)](https://travis-ci.org/FStarLang/FStar)
+F*: Verification system for effectful programs
+==============================================
 
 ### F\* website
 
@@ -9,9 +7,7 @@ More information on F\* can be found at www.fstar-lang.org
 
 ### Installation
 
-See [INSTALL.md]
-
-[INSTALL.md]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
+See [INSTALL.md](https://github.com/FStarLang/FStar/blob/master/INSTALL.md)
 
 ### Tutorial
 
@@ -35,6 +31,14 @@ including syntax highlighting and interactive development. More
 details on [editor support] on the [F\* wiki].
 
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
+
+You can also edit simple examples directly in your browser by using
+either the [online F\* editor] that's part of the [F\* tutorial] or our
+new [even cooler online editor] (experimental).
+
+[online F\* editor]: https://www.fstar-lang.org/run.php
+[F\* tutorial]: https://www.fstar-lang.org/tutorial
+[even cooler online editor]: http://fstar.ht.vc
 
 ### Extracting and executing F* code
 
@@ -60,12 +64,11 @@ Users can chat about F* or ask questions at https://fstar.zulipchat.com
 
 ### Community mailing list
 
-The [fstar-club mailing list] is dedicated to F* users. Here is where
-all F* announcements are made to the general public (e.g. for
+The [fstar-club mailing list] is where
+various F* announcements are made to the general public (e.g. for
 releases, new papers, etc) and where users can ask questions, ask for
 help, discuss, provide feedback, announce jobs requiring at least 10
 years of F* experience, etc.
-
 [List archives] are public and [searchable], but only members can post.
 [Join here][fstar-club mailing list]!
 
@@ -73,6 +76,13 @@ years of F* experience, etc.
 
 [List archives]: https://lists.gforge.inria.fr/pipermail/fstar-club/
 [searchable]: https://mail-archive.com/fstar-club@lists.gforge.inria.fr/
+
+### Blog
+
+The [F\* for the masses] blog is also expected to become an important
+source of information and news on the F\* project.
+
+[F\* for the masses]: https://fstarlang.github.io/
 
 ### Reporting issues
 
@@ -86,33 +96,13 @@ that your problem still exists on the `master` branch.
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [the GitHub sources]: [https://github.com/FStarLang/FStar/blob/master/INSTALL.md#building-f-from-sources
 
-### Blog
+### Contributing
 
-The [F\* for the masses] blog is also expected to become an important
-source of information and news on the F\* project.
-
-[F\* for the masses]: https://fstarlang.github.io/
+See [CONTRIBUTING.md](https://github.com/FStarLang/FStar/blob/master/CONTRIBUTING.md)
 
 ### License
 
-This new variant of F* is released under the [Apache 2.0 license];
-see `LICENSE` for more details.
+F* is released under the [Apache 2.0 license]; for more details
+see [LICENSE](https://github.com/FStarLang/FStar/blob/master/LICENSE)
 
 [Apache 2.0 license]: https://www.apache.org/licenses/LICENSE-2.0
-
-### Towards F* version 1.0
-
-This is a new variant of F* (carrying version 0.9.x) that is still in
-development and we hope will eventually lead to a 1.0 release. This
-new variant is incompatible and quite different compared to the
-previously released [0.7 versions and earlier].
-
-[0.7 versions and earlier]: https://github.com/FStarLang/FStar#old-f-versions-v071-and-earlier
-
-### Old F* versions (v0.7.1 and earlier) ###
-
-[F\* v0.7.1] and earlier are no longer maintained, so please do not
-create any issues here about those versions.
-
-[F\* v0.7.1]: https://github.com/FStarLang/FStar/blob/stratified_last/.old/fstar-0.7.1-alpha.zip?raw=true
-

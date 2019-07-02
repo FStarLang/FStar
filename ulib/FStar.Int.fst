@@ -301,6 +301,7 @@ val one_to_vec_lemma: #n:pos{1 < n} -> i:nat{i < n} ->
 let one_to_vec_lemma #n i =
   if i = n - 1 then () else zero_to_vec_lemma #n i
 
+#reset-options "--smtencoding.elim_box true --smtencoding.l_arith_repr native"
 val pow2_to_vec_lemma: #n:pos -> p:nat{p < n-1} -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures index (to_vec (pow2_n #n p)) i = index (elem_vec #n (n - p - 1)) i)
@@ -309,6 +310,7 @@ let rec pow2_to_vec_lemma #n p i =
   if i = n - 1 then ()
   else if p = 0 then one_to_vec_lemma #n i
   else pow2_to_vec_lemma #(n - 1) (p - 1) i
+#reset-options
 
 val pow2_from_vec_lemma: #n:pos -> p:pos{p < n-1} ->
   Lemma (requires True) (ensures from_vec (elem_vec #n p) = pow2_n #n (n - p - 1))
@@ -448,12 +450,15 @@ val logand_pow2_minus_one: #n:pos{1 < n} -> a:int_t n -> m:pos{m < n} ->
 let logand_pow2_minus_one #n a m =
   UInt.logand_le (to_uint a) (to_uint (pow2_minus_one #n m))
 
+#push-options "--z3rlimit 25"
 val logand_max: #n:pos{1 < n} -> a:int_t n{0 <= a} ->
   Lemma (0 <= logand a (max_int n) /\ a = logand a (max_int n))
+#push-options "--z3rlimit_factor 2"
 let logand_max #n a =
   sign_bit_positive a;
   sign_bit_positive #n (max_int n);
   nth_lemma a (logand a (max_int n))
+#pop-options
 
 (* Bitwise XOR operator *)
 val logxor_commutative: #n:pos -> a:int_t n -> b:int_t n ->
@@ -486,6 +491,12 @@ val logxor_neq_nonzero: #n:pos -> a:int_t n -> b:int_t n -> Lemma
 let logxor_neq_nonzero #n a b = 
   UInt.logxor_neq_nonzero (to_uint a) (to_uint b)
 
+val lognot_negative: #n:pos -> a:int_t n -> Lemma
+  (requires a < 0)
+  (ensures  lognot a == UInt.lognot #n (a + pow2 n))
+let lognot_negative #n a =
+  assert_norm (pow2 n = 2 * pow2 (n - 1));
+  UInt.lemma_lognot_value_mod #n (a + pow2 n)
 
 (* Shift operators *)
 
@@ -496,6 +507,10 @@ let shift_left #n a s = from_vec (shift_left_vec #n (to_vec #n a) s)
 (** If a is negative the result is implementation defined *)
 val shift_right: #n:pos -> a:int_t n{0 <= a} -> s:nat -> Tot (int_t n)
 let shift_right #n a s = from_vec (shift_right_vec #n (to_vec #n a) s)
+
+val shift_arithmetic_right: #n:pos -> a:int_t n -> s:nat -> Tot (int_t n)
+let shift_arithmetic_right #n a s =
+  from_vec (shift_arithmetic_right_vec #n (to_vec #n a) s)
 
 (* Shift operators lemmas *)
 val shift_left_lemma_1: #n:pos -> a:int_t n{0 <= a} -> s:nat -> i:nat{i < n && i >= n - s} ->
@@ -510,6 +525,13 @@ val shift_left_lemma_2: #n:pos -> a:int_t n{0 <= a} -> s:nat -> i:nat{i < n && i
 	[SMTPat (nth (shift_left #n a s) i)]
 let shift_left_lemma_2 #n a s i = ()
 
+val shift_left_value_lemma: #n:pos -> a:int_t n{0 <= a} -> s:nat ->
+  Lemma (requires True)
+        (ensures shift_left #n a s = (a * pow2 s) @% pow2 n)
+	[SMTPat (shift_left #n a s)]
+let shift_left_value_lemma #n a s =
+  UInt.shift_left_value_lemma #n a s
+
 val shift_right_lemma_1: #n:pos -> a:int_t n{0 <= a} -> s:nat -> i:nat{i < n && i < s} ->
   Lemma (requires True)
 	(ensures (nth (shift_right #n a s) i = false))
@@ -522,9 +544,14 @@ val shift_right_lemma_2: #n:pos -> a:int_t n{0 <= a} -> s:nat -> i:nat{i < n && 
 	[SMTPat (nth (shift_right #n a s) i)]
 let shift_right_lemma_2 #n a s i = ()
 
-val shift_left_value_lemma: #n:pos -> a:int_t n{0 <= a} -> s:nat ->
+val shift_arithmetic_right_lemma_1: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n && i < s} ->
   Lemma (requires True)
-        (ensures shift_left #n a s = (a * pow2 s) @% pow2 n)
-	[SMTPat (shift_left #n a s)]
-let shift_left_value_lemma #n a s =
-  UInt.shift_left_value_lemma #n a s
+	(ensures (nth (shift_arithmetic_right #n a s) i = nth a 0))
+	[SMTPat (nth (shift_arithmetic_right #n a s) i)]
+let shift_arithmetic_right_lemma_1 #n a s i = ()
+
+val shift_arithmetic_right_lemma_2: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n && i >= s} ->
+  Lemma (requires True)
+        (ensures (nth (shift_arithmetic_right #n a s) i = nth #n a (i - s)))
+	[SMTPat (nth (shift_arithmetic_right #n a s) i)]
+let shift_arithmetic_right_lemma_2 #n a s i = ()

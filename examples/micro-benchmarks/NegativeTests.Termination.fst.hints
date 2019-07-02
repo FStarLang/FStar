@@ -9,16 +9,16 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3a4a48ffdb9d4aa0959b12a1096af5ce"
+      "a99179ee4e2697840a03918ce6b79d8b"
     ],
     [
       "NegativeTests.Termination.snat",
@@ -27,7 +27,7 @@
       1,
       [ "@query" ],
       0,
-      "8790419657e1e36b07be60aab4f8b8f2"
+      "096b2e19dec09cde547abd5144d50d8a"
     ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0,
-      "d824dea380dfcd8265b37237ae494984"
+      "478a04303b154067fe857e8c08781620"
     ],
     [
       "NegativeTests.Termination.sumto",
@@ -51,16 +51,16 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b196c4bfd1d3e70c29c632073c849917"
+      "b9a489a9f742e828fd9764947aae3bf2"
     ],
     [
       "NegativeTests.Termination.snat",
@@ -69,7 +69,7 @@
       1,
       [ "@query" ],
       0,
-      "57de31af7ba195d641f2c2c3b48e8101"
+      "c2e336394410b0f1ac47c491d1211bdb"
     ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
@@ -83,7 +83,7 @@
         "refinement_interpretation_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0,
-      "470f5b15156cfc6fe5acedb2557f1be0"
+      "17bb5d5de45b7541984f15167671e873"
     ]
   ]
 ]

@@ -27,6 +27,8 @@ let q = i p
 let _ = intro_ambient q
 
 val false_of_pq : p q -> Lemma False
+
+#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 let false_of_pq pq =
   FStar.Classical.(
     exists_elim
@@ -34,14 +36,15 @@ let false_of_pq pq =
       (give_witness pq)
       (fun (a:(Type u#1 -> Type u#0){i a == q /\ ~(a q)}) ->
         isInj_admit p a w))
+#pop-options
 
-let false_of_pq_squash (pq: p q) : False =
+let false_of_pq_squash (pq: p q) : GTot False =
   false_of_pq pq;
   coerce (FStar.Squash.return_squash #c_False (match () with))
 
 let not_pq : ~ (p q) =
   FStar.Classical.give_witness
-    #(p q -> False) false_of_pq_squash
+    #(p q -> GTot False) false_of_pq_squash
 
 let _ = intro_ambient not_pq
 

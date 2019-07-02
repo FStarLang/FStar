@@ -12,7 +12,6 @@ complete -c fstar.exe -l detail_errors --description "Emit a detailed error repo
 complete -c fstar.exe -l detail_hint_replay --description "Emit a detailed report for proof whose unsat core fails to replay;"
 complete -c fstar.exe -l doc --description "Extract Markdown documentation files for the input modules, as well as an index. Output is written to --odir directory."
 complete -c fstar.exe -l dump_module --description "[module name]"
-complete -c fstar.exe -l eager_inference --description "Solve all type-inference constraints eagerly; more efficient but at the cost of generality"
 complete -c fstar.exe -l extract_module -r --description "Only extract the specified modules (instead of the possibly-partial dependency graph)"
 complete -c fstar.exe -l extract_namespace -r --description "Only extract modules in the specified namespace"
 complete -c fstar.exe -l fstar_home -r --description "Set the FSTAR_HOME variable to [dir]"

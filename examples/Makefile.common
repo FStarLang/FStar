@@ -27,7 +27,7 @@ OUTPUT_DIRECTORY ?= _output
 CACHE_DIR ?= _cache
 
 # Additionaly flags to pass to F*
-OTHERFLAGS += --use_extracted_interfaces true --use_hints --use_hint_hashes
+OTHERFLAGS += --use_extracted_interfaces true --use_hints
 
 ################################################################################
 # YOU SHOULDN'T NEED TO TOUCH THE REST
@@ -58,12 +58,12 @@ include .depend
 # a.fst.checked is the binary, checked version of a.fst
 %.fst.checked:
 	$(MY_FSTAR) $<
-	touch -ac $@
+	touch -c $@
 
 # a.fsti.checked is the binary, checked version of a.fsti
 %.fsti.checked:
 	$(MY_FSTAR) $<
-	touch -ac $@
+	touch -c $@
 
 clean:
 	rm -rf $(CACHE_DIR)

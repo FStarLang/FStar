@@ -58,13 +58,22 @@ let more_obj = S.pointer more_struct_t
 
 #reset-options "--z3rlimit 16"
 
+(*
+ * AR: 06/19: Blindly applying the #1750 fix from array.pos/Test.fst
+ *)
+
+let mk_struct_literal (x:S.struct_literal 'a) : Pure (S.struct_literal 'a)
+  (requires True)
+  (ensures fun _ -> True) = x
+
 let caller
   ()
 : HST.Stack int
   (requires (fun _ -> True))
   (ensures (fun _ z _ -> z == 18))
 = HST.push_frame();
-  let ofrom : obj = S.screate _ (Some (S.struct_create struct [(|"I",18|); (|"B",true|)])) in
+  let l : S.struct_literal struct = mk_struct_literal [(|"I", 18|); (| "B", true |)] in
+  let ofrom : obj = S.screate _ (Some (S.struct_create struct l)) in
   let moto : more_obj = S.screate _ (Some (S.struct_create more_struct [(|"Less",S.struct_create struct [(|"I",1729|); (|"B",false|)]|); (|"ThisMore", ()|)])) in
   let pfrom : obj = ofrom in
   let pto : obj = S.field moto "Less" in

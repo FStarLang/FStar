@@ -1057,3 +1057,28 @@ let rec find_none
     #(fun _ -> f x == false)
     (fun h -> ())
     (fun h -> find_none f l' x)
+
+(** Properties of init and last *)
+
+let rec append_init_last (#a: Type) (l: list a { Cons? l }) : Lemma
+  (l == append (init l) [last l])
+= match l with
+  | a :: q ->
+    if Cons? q
+    then
+      append_init_last q
+    else
+      ()
+
+let rec init_last_def (#a: Type) (l: list a) (x: a) : Lemma
+  (let l' = append l [x] in
+  init l' == l /\ last l' == x)
+= match l with
+  | [] -> ()
+  | y :: q -> init_last_def q x
+
+let init_last_inj (#a: Type) (l1: list a { Cons? l1 } ) (l2: list a { Cons? l2 } ) : Lemma
+  (requires (init l1 == init l2 /\ last l1 == last l2))
+  (ensures (l1 == l2))
+= append_init_last l1;
+  append_init_last l2

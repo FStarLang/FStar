@@ -55,7 +55,7 @@ let logic_qualifier_deprecation_warning =
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
-%token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS
+%token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
@@ -133,6 +133,8 @@ pragma:
       { PushOptions s_opt }
   | PRAGMA_POP_OPTIONS
       { PopOptions }
+  | PRAGMA_RESTART_SOLVER
+      { RestartSolver }
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
@@ -420,7 +422,7 @@ atomicPattern:
       }
   | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rhs2 parseState 1 3) }
-  | LBRACE record_pat=separated_nonempty_list(SEMICOLON, fieldPattern) RBRACE
+  | LBRACE record_pat=right_flexible_nonempty_list(SEMICOLON, fieldPattern) RBRACE
       { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
@@ -677,8 +679,11 @@ typ:
   | q=quantifier bs=binders DOT trigger=trigger e=noSeqTerm
       {
         match bs with
-            | [] -> raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
-            | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
+        | [] ->
+          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
+        | _ ->
+          let idents = idents_of_binders bs (rhs2 parseState 1 3) in
+          mk_term (q (bs, (idents, trigger), e)) (rhs2 parseState 1 5) Formula
       }
 
 %inline quantifier:

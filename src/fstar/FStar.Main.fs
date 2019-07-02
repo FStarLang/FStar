@@ -106,7 +106,7 @@ let go _ =
     | Help ->
         Options.display_usage(); exit 0
     | Error msg ->
-        Util.print_string msg; exit 1
+        Util.print_error msg; exit 1
     | Success ->
         fstar_files := Some filenames;
         load_native_tactics ();
@@ -129,7 +129,11 @@ let go _ =
                                found " ^ (string_of_int (List.length filenames)))
                              Range.dummyRange
 
-        (* --ide: Interactive mode *)
+        (* --lsp *)
+        else if Options.lsp_server () then
+          FStar.Interactive.Lsp.start_server ()
+
+        (* --ide, --in: Interactive mode *)
         else if Options.interactive () then begin
           match filenames with
           | [] -> (* input validation: move to process args? *)

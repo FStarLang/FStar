@@ -33,4 +33,4 @@ let tau () : Tac unit =
     apply (quote g);
     exact (quote vq)
 
-let _ = assert_by_tactic r tau
+let _ = assert r by tau ()
