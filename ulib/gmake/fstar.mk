@@ -1,6 +1,7 @@
 HINTS_ENABLED?=--use_hints
-WARN_ERROR=
-OTHERFLAGS+=$(WARN_ERROR) --z3cliopt 'timeout=600000' --smtencoding.valid_intro true --smtencoding.valid_elim true
+# 271: theory symbols in smt patters
+WARN_ERROR=--warn_error -271
+OTHERFLAGS+=$(WARN_ERROR) --z3cliopt 'timeout=600000'
 
 ifdef Z3
 OTHERFLAGS+=--smt $(Z3)

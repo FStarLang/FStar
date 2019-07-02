@@ -876,6 +876,37 @@ let load_value_from_file (fname:string) =
     printfn "Failed to load file because: %A" e;
     None
 
+let save_2values_to_file (fname:string) value1 value2 =
+  try
+    use writer = new System.IO.FileStream(fname,
+                                          FileMode.OpenOrCreate,
+                                          FileAccess.Write,
+                                          FileShare.Write) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    formatter.Serialize(writer, value1)
+    formatter.Serialize(writer, value2)
+  with
+  | e ->
+    printfn "Failed to write value to file because: %A" e;
+    raise e
+
+let load_2values_from_file (fname:string) =
+  try
+    use reader = new System.IO.FileStream(fname,
+                                          FileMode.Open,
+                                          FileAccess.Read,
+                                          FileShare.Read) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    let result1 = formatter.Deserialize(reader) :?> 'a in
+    let result2 = formatter.Deserialize(reader) :?> 'b in
+    Some (result1, result2)
+  with
+  | e ->
+    printfn "Failed to load file because: %A" e;
+    None
+
+
+
 let print_exn (e: exn): string =
   e.Message
 

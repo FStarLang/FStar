@@ -269,6 +269,12 @@ let fv_name (x:fv) = let nm, _, _ = x in nm
 let fv_sort (x:fv) = let _, sort, _ = x in sort
 let fv_force (x:fv) = let _, _, force = x in force
 let fv_eq (x:fv) (y:fv) = fv_name x = fv_name y
+let fvs_subset_of (x:fvs) (y:fvs) =
+  let cmp_fv x y =
+    BU.compare (fv_name x) (fv_name y)
+  in
+  BU.set_is_subset_of (BU.as_set x cmp_fv)
+                      (BU.as_set y cmp_fv)
 let freevar_eq x y = match x.tm, y.tm with
     | FreeV x, FreeV y -> fv_eq x y
     | _ -> false
@@ -282,6 +288,7 @@ let rec freevars t = match t.tm with
   | Integer _
   | Real _
   | BoundV _ -> []
+  | FreeV fv when fv_force fv -> [] //this is actually a top-level constant
   | FreeV fv -> [fv]
   | App(_, tms) -> List.collect freevars tms
   | Quant(_, _, _, _, t)
@@ -942,6 +949,7 @@ and mkPrelude z3options =
                     (HasTypeFuel ZFuel x t))\n\
                 (define-fun HasType ((x Term) (t Term)) Bool\n\
                     (HasTypeFuel MaxIFuel x t))\n\
+                (declare-fun IsTotFun (Term) Bool)\n
                 ;;fuel irrelevance\n\
                 (assert (forall ((f Fuel) (x Term) (t Term))\n\
                                 (! (= (HasTypeFuel (SFuel f) x t)\n\
@@ -1114,6 +1122,7 @@ let mk_Valid t        = match t.tm with
         mkApp("Valid",  [t]) t.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
+let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng
 let mk_IsTyped v      = mkApp("IsTyped", [v]) norng
 let mk_HasTypeFuel f v t =
    if Options.unthrottle_inductives()

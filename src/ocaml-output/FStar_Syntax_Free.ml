@@ -503,3 +503,13 @@ let (names_of_binders :
       uu____1477.FStar_Syntax_Syntax.free_names  in
     FStar_Util.as_set uu____1474 FStar_Syntax_Syntax.order_bv
   
+let (uvars_uncached :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.ctx_uvar FStar_Util.set) =
+  fun t  ->
+    let uu____1496 =
+      let uu____1499 =
+        let uu____1500 = free_names_and_uvars t false  in
+        FStar_Pervasives_Native.fst uu____1500  in
+      uu____1499.FStar_Syntax_Syntax.free_uvars  in
+    FStar_Util.as_set uu____1496 compare_uv
+  
