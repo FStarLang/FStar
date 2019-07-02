@@ -53,10 +53,7 @@ let reveal_array ()
     (forall a (b:A.array a) .{:pattern as_loc (fp (array_resource b))}
       as_loc (fp (array_resource b)) == A.loc_array b) /\
       (forall a (b:A.array a) h .{:pattern inv (array_resource b) h}
-        inv (array_resource b) h <==> A.live h b /\
-        (forall (i:nat{i < A.vlength b}) (j:nat{j < A.vlength b}). {:pattern (A.get_perm h b i); (A.get_perm h b j) }
-          A.get_perm h b i == A.get_perm h b j // Array resource cells have uniform permissions
-        )
+        inv (array_resource b) h <==> A.live h b /\ constant_perm_seq h b
       ) /\
       (forall a (b:A.array a) h .{:pattern sel (array_view b) h}
         sel (array_view b) h == { s = A.as_seq h b; p = A.get_perm h b 0 }
