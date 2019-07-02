@@ -129,7 +129,11 @@ let go _ =
                                found " ^ (string_of_int (List.length filenames)))
                              Range.dummyRange
 
-        (* --ide: Interactive mode *)
+        (* --lsp *)
+        else if Options.lsp_server () then
+          FStar.Interactive.Lsp.start_server ()
+
+        (* --ide, --in: Interactive mode *)
         else if Options.interactive () then begin
           match filenames with
           | [] -> (* input validation: move to process args? *)
