@@ -108,6 +108,7 @@ let rec extract_meta x =
       | "FStar.Pervasives.CAbstractStruct" -> Some CAbstract
       | "FStar.Pervasives.CIfDef" -> Some CIfDef
       | "FStar.Pervasives.CMacro" -> Some CMacro
+      | "Prims.deprecated" -> Some (Deprecated "")
       | _ -> None
       end
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } ->
@@ -118,6 +119,7 @@ let rec extract_meta x =
       | "FStar.Pervasives.CEpilogue" -> Some (CEpilogue s)
       | "FStar.Pervasives.CConst" -> Some (CConst s)
       | "FStar.Pervasives.CCConv" -> Some (CCConv s)
+      | "Prims.deprecated" -> Some (Deprecated s)
       | _ -> None
       end
   | { n = Tm_constant (Const_string ("KremlinPrivate", _)) } -> Some Private // This one generated internally

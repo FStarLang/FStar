@@ -202,6 +202,17 @@ let read_line (s:stream_reader) =
     if is_end_of_stream s
     then None
     else Some <| s.ReadLine()
+
+open FStar.String
+
+let nread (s:stream_reader) (count:int) =
+    if is_end_of_stream s
+    then None
+    else
+      let b = Array.create count 'a' in
+      s.Read(b, 0, count) |> ignore;
+      Some <| string_of_list (List.of_array b)
+
 type string_builder = System.Text.StringBuilder (* not relying on representation *)
 let new_string_builder () = new System.Text.StringBuilder()
 let clear_string_builder (s:string_builder) = s.Clear() |> ignore
@@ -875,6 +886,37 @@ let load_value_from_file (fname:string) =
   | e ->
     printfn "Failed to load file because: %A" e;
     None
+
+let save_2values_to_file (fname:string) value1 value2 =
+  try
+    use writer = new System.IO.FileStream(fname,
+                                          FileMode.OpenOrCreate,
+                                          FileAccess.Write,
+                                          FileShare.Write) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    formatter.Serialize(writer, value1)
+    formatter.Serialize(writer, value2)
+  with
+  | e ->
+    printfn "Failed to write value to file because: %A" e;
+    raise e
+
+let load_2values_from_file (fname:string) =
+  try
+    use reader = new System.IO.FileStream(fname,
+                                          FileMode.Open,
+                                          FileAccess.Read,
+                                          FileShare.Read) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    let result1 = formatter.Deserialize(reader) :?> 'a in
+    let result2 = formatter.Deserialize(reader) :?> 'b in
+    Some (result1, result2)
+  with
+  | e ->
+    printfn "Failed to load file because: %A" e;
+    None
+
+
 
 let print_exn (e: exn): string =
   e.Message

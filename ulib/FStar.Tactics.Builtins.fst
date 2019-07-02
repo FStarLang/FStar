@@ -162,7 +162,7 @@ if it's not solved later.
 
 You probably want [apply] from FStar.Tactics.Derived.
 *)
-assume val t_apply : bool -> term -> Tac unit
+assume val t_apply : bool -> bool -> term -> Tac unit
 
 (** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a Lemma
 ensuring [phi]. The arguments to [l] and its requires clause are introduced as new goals.

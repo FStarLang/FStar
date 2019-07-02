@@ -28,12 +28,16 @@ or our new [even cooler online editor] (experimental).
 
 ## OPAM package ##
 
-If the OCaml package manager is present on your platform, you can
+If the OCaml package manager (OPAM) is present on your platform, you can
 install the latest development version of F\* (`master` branch) and
 required dependencies (except for Z3) using the following commands:
 
         $ opam pin add fstar --dev-repo
         $ opam install fstar
+
+Note: To install OCaml and OPAM on your platform please read the
+[Working OCaml setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup)
+section further below, steps 0 to 3.
 
 ## Binary releases ##
 

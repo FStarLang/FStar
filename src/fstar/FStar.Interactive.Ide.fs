@@ -25,6 +25,7 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.Errors
+open FStar.JsonHelper
 
 open FStar.Universal
 open FStar.TypeChecker.Env
@@ -474,32 +475,6 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
 (* Reading queries and writing responses *)
 (*****************************************)
 
-let json_debug = function
-  | JsonNull -> "null"
-  | JsonBool b -> Util.format1 "bool (%s)" (if b then "true" else "false")
-  | JsonInt i -> Util.format1 "int (%s)" (Util.string_of_int i)
-  | JsonStr s -> Util.format1 "string (%s)" s
-  | JsonList _ -> "list (...)"
-  | JsonAssoc _ -> "dictionary (...)"
-
-exception UnexpectedJsonType of string * json
-
-let js_fail expected got =
-  raise (UnexpectedJsonType (expected, got))
-
-let js_int = function
-  | JsonInt i -> i
-  | other -> js_fail "int" other
-let js_str = function
-  | JsonStr s -> s
-  | other -> js_fail "string" other
-let js_list k = function
-  | JsonList l -> List.map k l
-  | other -> js_fail "list" other
-let js_assoc = function
-  | JsonAssoc a -> a
-  | other -> js_fail "dictionary" other
-
 let js_pushkind s : push_kind = match js_str s with
   | "syntax" -> SyntaxCheck
   | "lax" -> LaxCheck
@@ -594,11 +569,7 @@ let interactive_protocol_features =
    "peek"; "pop"; "push"; "search"; "segment";
    "vfs-add"; "tactic-ranges"; "interrupt"; "progress"]
 
-exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
-
-let try_assoc key a =
-  Util.map_option snd (Util.try_find (fun (k, _) -> k = key) a)
 
 let wrap_js_failure qid expected got =
   { qid = qid;
@@ -785,10 +756,6 @@ let alist_of_fstar_option opt =
 
 let json_of_fstar_option opt =
   JsonAssoc (alist_of_fstar_option opt)
-
-let write_json json =
-  Util.print_raw (Util.string_of_json json);
-  Util.print_raw "\n"
 
 let json_of_response qid status response =
   let qid = JsonStr qid in
@@ -1194,12 +1161,6 @@ let run_autocomplete st search_term context =
     run_option_autocomplete st search_term is_reset
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
-
-// let string_of_sigmap sigmap =
-//   Util.smap_fold sigmap
-//     (fun k (v, _) acc ->
-//        (k ^ ": " ^ (sigelt_to_string v)) :: acc) []
-//   |> Util.concat_l "\n"
 
 let run_and_rewind st sigint_default task =
   let st = push_repl "run_and_rewind" FullCheck Noop st in
