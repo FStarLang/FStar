@@ -54,7 +54,7 @@ $(OUTPUT_DIRECTORY)/c/out.krml: $(addsuffix .checked,$(FSTAR_FILES))
 	krml -fsopts --cache_checked_modules -tmpdir $(OUTPUT_DIRECTORY)/c -skip-translation $(FSTAR_FILES)
 
 $(KREMLIN_EXE): $(OUTPUT_DIRECTORY)/c/out.krml
-	krml $< -tmpdir $(OUTPUT_DIRECTORY)/c -no-prefix A -o $@
+	krml -add-include '"kremlin/internal/compat.h"' $< -tmpdir $(OUTPUT_DIRECTORY)/c -no-prefix A -o $@ -drop WasmSupport
 
 test.kremlin: $(KREMLIN_EXE)
 	./$< hello

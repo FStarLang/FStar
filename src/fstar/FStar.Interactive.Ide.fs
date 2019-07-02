@@ -688,12 +688,10 @@ let alist_of_protocol_info =
 
 type fstar_option_permission_level =
 | OptSet
-| OptReset
 | OptReadOnly
 
 let string_of_option_permission_level = function
   | OptSet -> ""
-  | OptReset -> "requires #reset-options"
   | OptReadOnly -> "read-only"
 
 type fstar_option =
@@ -814,7 +812,6 @@ let fstar_options_list_cache =
                opt_snippets = snippets_of_fstar_option name typ;
                opt_documentation = if doc = "" then None else Some doc;
                opt_permission_level = if Options.settable name then OptSet
-                                      else if Options.resettable name then OptReset
                                       else OptReadOnly }))
   |> List.sortWith (fun o1 o2 ->
         String.compare (String.lowercase (o1.opt_name))
@@ -1131,7 +1128,6 @@ let candidates_of_fstar_option match_len is_reset opt =
   let may_set, explanation =
     match opt.opt_permission_level with
     | OptSet -> true, ""
-    | OptReset -> is_reset, "#reset-only"
     | OptReadOnly -> false, "read-only" in
   let opt_type =
     kind_of_fstar_option_type opt.opt_type in

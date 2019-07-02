@@ -39,7 +39,7 @@ let rec l_revert_all (bs:binders) : Tac unit =
 private val fa_intro_lem : (#a:Type) -> (#p : (a -> Type)) ->
                            (x:a -> squash (p x)) ->
                            Lemma (forall (x:a). p x)
-let fa_intro_lem #a #p f = FStar.Classical.lemma_forall_intro_gtot f
+let fa_intro_lem #a #p f = FStar.Classical.lemma_forall_intro_gtot (fun x -> (f x) <: GTot (squash (p x)))
 
 let forall_intro () : Tac binder =
     apply_lemma (`fa_intro_lem);
@@ -228,8 +228,15 @@ private
 let __forall_inst #t (#pred : t -> Type0) (h : (forall x. pred x)) (x : t) : squash (pred x) =
     ()
 
+(* GM: annoying that this doesn't just work by SMT *)
+private
+let __forall_inst_sq #t (#pred : t -> Type0) (h : squash (forall x. pred x)) (x : t) : squash (pred x) =
+    FStar.Squash.bind_squash h (fun (f : (forall x. pred x)) -> __forall_inst f x)
+
 let instantiate (fa : term) (x : term) : Tac binder =
-    pose (`__forall_inst (`#fa) (`#x))
+    try pose (`__forall_inst_sq (`#fa) (`#x)) with | _ ->
+    try pose (`__forall_inst (`#fa) (`#x)) with | _ ->
+    fail "could not instantiate"
 
 private
 let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :

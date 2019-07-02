@@ -27,4 +27,4 @@ let trans #a #x #z #y e1 e2 = ()
 
 // Even if we admit the goals, an uninstantiated variable remains
 [@expect_failure]
-let _ = assert_by_tactic (a == b) (fun () -> (); apply_lemma (`trans); tadmit(); tadmit ())
+let _ = assert (a == b) by (apply_lemma (`trans); tadmit(); tadmit ())

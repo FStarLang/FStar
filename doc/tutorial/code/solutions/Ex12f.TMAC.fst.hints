@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f224740a9228d736985eb461032296ff"
+      "a2f37ca6c924990c73842d251480794d"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -16,21 +16,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.BMAC.key",
-        "equation_Ex12.Pad.blocksize", "equation_Ex12.Pad.bytes",
+        "@MaxIFuel_assumption", "@query", "equation_Ex12.Pad.bytes",
         "equation_Ex12.Pad.encode", "equation_Ex12.Pad.text",
-        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.key",
-        "equation_Ex12f.TMAC.pkey",
+        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.pkey",
         "function_token_typing_Ex12.BMAC.key_prop",
         "function_token_typing_FStar.UInt8.t", "lemma_Ex12.Pad.inj",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "refinement_interpretation_Tm_refine_0b4eea63038be23ac97553bb7c8a71cc",
-        "refinement_interpretation_Tm_refine_3c40c68998e031e6744deee90305e0e2",
-        "refinement_interpretation_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "refinement_interpretation_Tm_refine_71abb27e82b0c356f50fe92b2fe580a1",
+        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
+        "refinement_interpretation_Tm_refine_ee191569bd9f131505476eb9bb2f0dbe",
         "token_correspondence_Ex12f.TMAC.bspec"
       ],
       0,
-      "610557eac0176951a01de0ca4196e3e0"
+      "d7e7ca2324702cf0364a082c30edf649"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -38,20 +36,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.BMAC.key",
-        "equation_Ex12.Pad.block", "equation_Ex12.Pad.blocksize",
-        "equation_Ex12.Pad.bytes", "equation_Ex12.Pad.encode",
-        "equation_Ex12.Pad.nbytes", "equation_Ex12f.TMAC.bspec",
-        "equation_Ex12f.TMAC.key", "equation_Ex12f.TMAC.pkey",
+        "@MaxIFuel_assumption", "@query", "equation_Ex12.Pad.block",
+        "equation_Ex12.Pad.blocksize", "equation_Ex12.Pad.bytes",
+        "equation_Ex12.Pad.encode", "equation_Ex12.Pad.nbytes",
+        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.pkey",
         "function_token_typing_Ex12.BMAC.key_prop",
         "function_token_typing_FStar.UInt8.t",
         "lemma_FStar.Seq.Base.lemma_eq_refl",
-        "refinement_interpretation_Tm_refine_3c40c68998e031e6744deee90305e0e2",
-        "refinement_interpretation_Tm_refine_b769c0bf16cb286238e7b11ff583e99b",
+        "refinement_interpretation_Tm_refine_43058a325e271c84cdddd4bb5cf626de",
+        "refinement_interpretation_Tm_refine_71abb27e82b0c356f50fe92b2fe580a1",
         "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
       ],
       0,
-      "74c2d963da9d52cb9f26b17498113da7"
+      "18a95fa16484b0b6bdff06d5e4e49579"
     ],
     [
       "Ex12f.TMAC.keygen",
@@ -60,7 +57,7 @@
       1,
       [ "@query" ],
       0,
-      "be570fdf8462644fe548ca1caf800678"
+      "1c45aff0eb2c7f1df43906055c3197b0"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -68,21 +65,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.BMAC.key",
-        "equation_Ex12.Pad.blocksize", "equation_Ex12.Pad.bytes",
+        "@MaxIFuel_assumption", "@query", "equation_Ex12.Pad.bytes",
         "equation_Ex12.Pad.encode", "equation_Ex12.Pad.text",
-        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.key",
-        "equation_Ex12f.TMAC.pkey",
+        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.pkey",
         "function_token_typing_Ex12.BMAC.key_prop",
         "function_token_typing_FStar.UInt8.t", "lemma_Ex12.Pad.inj",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "refinement_interpretation_Tm_refine_0b4eea63038be23ac97553bb7c8a71cc",
-        "refinement_interpretation_Tm_refine_3c40c68998e031e6744deee90305e0e2",
-        "refinement_interpretation_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "refinement_interpretation_Tm_refine_71abb27e82b0c356f50fe92b2fe580a1",
+        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
+        "refinement_interpretation_Tm_refine_ee191569bd9f131505476eb9bb2f0dbe",
         "token_correspondence_Ex12f.TMAC.bspec"
       ],
       0,
-      "cbcef0715f611da8fa45145321a43021"
+      "f54f7152be0aada3a1defb75c6c4d4dc"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -90,20 +85,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.BMAC.key",
-        "equation_Ex12.Pad.block", "equation_Ex12.Pad.blocksize",
-        "equation_Ex12.Pad.bytes", "equation_Ex12.Pad.encode",
-        "equation_Ex12.Pad.nbytes", "equation_Ex12f.TMAC.bspec",
-        "equation_Ex12f.TMAC.key", "equation_Ex12f.TMAC.pkey",
+        "@MaxIFuel_assumption", "@query", "equation_Ex12.Pad.block",
+        "equation_Ex12.Pad.blocksize", "equation_Ex12.Pad.bytes",
+        "equation_Ex12.Pad.encode", "equation_Ex12.Pad.nbytes",
+        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.pkey",
         "function_token_typing_Ex12.BMAC.key_prop",
         "function_token_typing_FStar.UInt8.t",
         "lemma_FStar.Seq.Base.lemma_eq_refl",
-        "refinement_interpretation_Tm_refine_3c40c68998e031e6744deee90305e0e2",
-        "refinement_interpretation_Tm_refine_b769c0bf16cb286238e7b11ff583e99b",
+        "refinement_interpretation_Tm_refine_43058a325e271c84cdddd4bb5cf626de",
+        "refinement_interpretation_Tm_refine_71abb27e82b0c356f50fe92b2fe580a1",
         "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
       ],
       0,
-      "2906d03ecc49f390c66d5356aaaddacd"
+      "b23070d602aa2d7c693e203b6b2bee16"
     ]
   ]
 ]
