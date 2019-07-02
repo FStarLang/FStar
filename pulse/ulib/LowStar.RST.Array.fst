@@ -110,7 +110,6 @@ let glue #a b1 b2 =
   (**)     assert(A.get_perm h1 b j = A.get_perm h0 b2 (j - A.vlength b1))
   (**) in
   (**) Classical.forall_intro_2 aux;
-  (**) assume(inv (as_resource (array_view b)) h1 <==> A.live h1 b /\ constant_perm_seq h1 b);
   b
 
 #pop-options
