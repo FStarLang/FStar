@@ -208,14 +208,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
 (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
 let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * universe)>) (datas:list<sigelt>)
     : list<sigelt> * list<sigelt>
-    =   let tc_universe_vars = List.map snd tcs in
-        let g = {g with univ_ineqs=tc_universe_vars, snd (g.univ_ineqs)} in
-
-        if Env.debug env <| Options.Other "GenUniverses"
-        then BU.print1 "@@@@@@Guard before generalization: %s\n" (Rel.guard_to_string env g);
-
-        Rel.force_trivial_guard env g;
-        //We build a single arrow term of the form
+    =   //We build a single arrow term of the form
         //   tc_1 -> .. -> tc_n -> dt_1 -> .. dt_n -> Tot unit
         //for each type constructor tc_i
         //and each data constructor type dt_i
@@ -987,7 +980,17 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   in
 
   (* Generalize their universes if not already annotated *)
-  let tcs, datas = if List.length univs = 0 then generalize_and_inst_within env1 g tcs datas else (List.map fst tcs), datas in
+  let tcs, datas =
+    let tc_universe_vars = List.map snd tcs in
+    let g = {g with univ_ineqs=tc_universe_vars, snd (g.univ_ineqs)} in
+
+    if Env.debug env <| Options.Other "GenUniverses"
+    then BU.print1 "@@@@@@Guard before (possible) generalization: %s\n" (Rel.guard_to_string env g);
+
+    Rel.force_trivial_guard env g;
+    if List.length univs = 0 then generalize_and_inst_within env1 g tcs datas
+    else (List.map fst tcs), datas
+  in
 
   let sig_bndle = { sigel = Sig_bundle(tcs@datas, lids);
                     sigquals = quals;
