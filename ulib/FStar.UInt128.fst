@@ -820,9 +820,10 @@ let mul32_digits x y = ()
 
 let u32_32 : x:U32.t{U32.v x == 32} = U32.uint_to_t 32
 
-#push-options "--z3rlimit 40"
+#restart-solver
+#push-options "--z3rlimit_factor 20"
 let u32_combine (hi lo: U64.t) : Pure U64.t
-  (requires (U64.v lo < pow2 32))
+    (requires (U64.v lo < pow2 32))
   (ensures (fun r -> U64.v r = U64.v hi % pow2 32 * pow2 32 + U64.v lo)) =
   U64.add lo (U64.shift_left hi u32_32)
 #pop-options
