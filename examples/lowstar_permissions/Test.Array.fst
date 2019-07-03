@@ -59,65 +59,40 @@ let read_write_with_sharing () : RST.RST unit
   (fun _ -> True)
   (fun _ _ _ -> True)
   =
-  let h0 = HST.get () in
   let b = A.alloc 2ul 42ul in
   let x1 = A.index b 0ul in
   A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
   let b1 = A.share b in
-  let h = HST.get () in
-  assert((R.sel (A.array_view b) h).A.p = 0.5R);
+
+
   let x1 =
     RST.rst_frame
       (R.(A.array_resource b <*> A.array_resource b1))
-      // #(A.array_resource b)
-        (fun _ -> R.(A.array_resource b <*> A.array_resource b1))
-      // #(fun _ -> A.array_resource b)
-      // #(A.array_resource b1)
+      (fun _ -> R.(A.array_resource b <*> A.array_resource b1))
       (fun _ ->
         A.index b 0ul
       )
   in
-  (* (R.(A.array_resource b <*> A.array_resource b1)) *)
+
   let b_first, b_second = RST.rst_frame
     (R.(A.array_resource b <*> A.array_resource b1))
-    // #(A.array_resource b)
     (fun p -> R.(A.array_resource (fst p) <*> A.array_resource (snd p) <*> A.array_resource b1))
-    // #(fun p -> R.(A.array_resource (fst p) <*> A.array_resource (snd p)))
-//    #(A.array_resource b1)
     (let f = fun _ -> A.split #FStar.UInt32.t b 1ul in f) //TODO: remove let binding
   in
-  (* R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1)  *)
-  let h = HST.get () in
-  assert((R.sel (A.array_view b_first) h).A.p = 0.5R);
-  assert((R.sel (A.array_view b_second) h).A.p = 0.5R);
-  assert(R.inv R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1) h);
-  // admit()
 
-  // assume(R.inv R.(A.array_resource b_second <*> (A.array_resource b_first <*> A.array_resource b1)) h);
-  // assume(RST.rst_inv R.(A.array_resource b_second <*> (A.array_resource b_first <*> A.array_resource b1)) h);
-  // admit()
   let x2 = RST.rst_frame
     (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
-    //(R.(A.array_resource b_second <*> (A.array_resource b_first <*> A.array_resource b1)))
-    // #(A.array_resource b_second)
     (fun _ -> (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1)))
-    //(fun _ -> R.(A.array_resource b_second <*> (A.array_resource b_first <*> A.array_resource b1)))
-    // #(fun _ -> A.array_resource b_second)
-//    #(R.(A.array_resource b_first <*> A.array_resource b1))
     (fun _ -> A.index b_second 0ul)
   in
 
   let h = HST.get () in
-  // assume(R.inv R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1) h);
-  // assume(RST.rst_inv R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1) h);
   assume((R.sel (A.array_view b_first) h).A.p = 0.5R);
   assume((R.sel (A.array_view b_second) h).A.p = 0.5R);
+
   let b = RST.rst_frame
     (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
-    // #(R.(A.array_resource b_first <*> A.array_resource b_second))
     (fun b -> R.(A.array_resource b <*> A.array_resource b1))
-    // #(fun b -> A.array_resource b)
-    // #(A.array_resource b1)
     (fun _ -> A.glue b_first b_second)
   in
   let h = HST.get () in
@@ -125,7 +100,6 @@ let read_write_with_sharing () : RST.RST unit
   assume((R.sel (A.array_view b) h).A.p = 0.5R);
   assume((R.sel (A.array_view b1) h).A.p = 0.5R);
   assume(Arr.mergeable b b1 /\ Arr.freeable b); // These ones have to be fixed in Lowstar.Array
+
   A.merge b b1;
-  let h = HST.get () in
-  assert((R.sel (A.array_view b) h).A.p = 1.0R);
   A.free b
