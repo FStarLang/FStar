@@ -88,12 +88,6 @@ let mergeable_comm (#a: Type0) (b1 b2: array a): Lemma
   (ensures (mergeable b2 b1))
 = ()
 
-let glueable #a b1 b2 =
-  b1.max_length == b2.max_length /\
-  b1.content == b2.content /\
-  (Ghost.reveal b1.pid = Ghost.reveal b2.pid) /\
-  (U32.(b1.idx +^ b1.length) = b2.idx)
-
 let frameOf (#a:Type0) (b:array a) : Tot HS.rid = HS.frameOf b.content
 let as_addr (#a:Type0) (b:array a) : GTot nat = HS.as_addr b.content
 
@@ -141,3 +135,18 @@ let gsub_zero_length #a b = ()
 
 let msub #a b i len =
  Array b.max_length b.content (U32.add b.idx i) len b.pid
+
+let is_split_into #a b (b1,b2) =
+  b.max_length == b1.max_length /\
+  b.content == b1.content /\
+  b.max_length == b2.max_length /\
+  b.content == b2.content /\
+  (Ghost.reveal b.pid = Ghost.reveal b1.pid) /\
+  (Ghost.reveal b.pid = Ghost.reveal b2.pid) /\
+  (U32.(b1.idx +^ b1.length) = b2.idx) /\
+  (U32.(b1.length +^ b2.length) = b.length) /\
+  U32.(b1.length <=^ length b) /\
+  b1 == gsub b 0ul b1.length /\
+  (UInt.size (U32.v b1.length + U32.v b2.length) 32) /\
+  U32.(b1.length +^ b2.length <=^ length b) /\
+  b2 == gsub b b1.length b2.length

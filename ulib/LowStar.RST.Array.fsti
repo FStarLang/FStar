@@ -93,19 +93,19 @@ val split (#a: Type) (b: A.array a) (idx: UInt32.t{UInt32.v idx > 0 /\ UInt32.v 
     (fun p -> array_resource (fst p) <*> array_resource (snd p))
     (fun _ -> True)
     (fun h0 (b1, b2) h1 ->
-      A.glueable b1 b2 /\
+      A.is_split_into b (b1, b2) /\
       (sel (array_view b1) h1).s == Seq.slice (sel (array_view b) h0).s 0 (UInt32.v idx) /\
       (sel (array_view b2) h1).s == Seq.slice (sel (array_view b) h0).s (UInt32.v idx) (A.vlength b) /\
       (sel (array_view b) h0).p == (sel (array_view b1) h1).p /\
       (sel (array_view b) h0).p == (sel (array_view b2) h1).p
     )
 
-val glue (#a: Type) (b1 b2: A.array a)
-  : RST (A.array a)
+val glue (#a: Type) (b b1 b2: A.array a)
+  : RST unit
     (array_resource b1 <*> array_resource b2)
-    (fun b -> array_resource b)
-    (fun h0 -> A.glueable b1 b2 /\  (sel (array_view b1) h0).p == (sel (array_view b2) h0).p)
-    (fun h0 b h1 ->
+    (fun _ -> array_resource b)
+    (fun h0 -> A.is_split_into b (b1, b2) /\  (sel (array_view b1) h0).p == (sel (array_view b2) h0).p)
+    (fun h0 _ h1 ->
       (sel (array_view b) h1).s == Seq.append (sel (array_view b1) h0).s (sel (array_view b2) h0).s /\
       (sel (array_view b) h1).p == (sel (array_view b1) h0).p
     )

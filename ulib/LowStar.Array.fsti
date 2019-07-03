@@ -97,9 +97,8 @@ val split:
   Stack (array a & array a) (requires (fun h0 ->
     live h0 b
   )) (ensures (fun h0 (b1, b2) h1 ->
-    glueable b1 b2 /\ live h1 b1 /\ live h1 b2 /\
-    modifies (loc_array b) h0 h1 /\
-    fresh_loc (loc_array b1) h0 h1 /\ fresh_loc (loc_array b2) h0 h1 /\
+    is_split_into b (b1,b2) /\ live h1 b1 /\ live h1 b2 /\
+    modifies loc_none h0 h1 /\
     loc_disjoint (loc_array b1) (loc_array b2) /\
     as_seq h1 b1 == Seq.slice (as_seq h0 b) 0 (U32.v idx) /\
     as_seq h1 b2 == Seq.slice (as_seq h0 b) (U32.v idx) (vlength b) /\
@@ -109,15 +108,15 @@ val split:
 
 val glue:
   #a: Type ->
+  b: array a ->
   b1: array a ->
   b2: array a ->
-  Stack (array a)
+  Stack unit
     (requires (fun h0 ->
-      live h0 b1 /\ live h0 b2 /\ glueable b1 b2
-    )) (ensures (fun h0 b h1 ->
+      live h0 b1 /\ live h0 b2 /\ is_split_into b (b1,b2)
+    )) (ensures (fun h0 _ h1 ->
       live h1 b /\
-      modifies (loc_array b1 `loc_union` loc_array b2) h0 h1 /\
+      modifies loc_none h0 h1 /\
       as_seq h1 b == Seq.append (as_seq h0 b1) (as_seq h0 b2) /\
-      as_perm_seq h1 b == Seq.append (as_perm_seq h0 b1) (as_perm_seq h0 b2) /\
-      fresh_loc (loc_array b) h0 h1
+      as_perm_seq h1 b == Seq.append (as_perm_seq h0 b1) (as_perm_seq h0 b2)
     ))
