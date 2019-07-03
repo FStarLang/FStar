@@ -27,7 +27,7 @@ module Math=FStar.Math.Lemmas
 #set-options "--initial_fuel 1 --max_fuel 1"
 
 noeq
-type buffer_view (src:Type0) (rrel rel:B.srel src) (dest:Type u#b) : Type0 =
+type buffer_view (src:Type0) (rrel rel:B.srel src) (dest:Type u#b) : Type u#b =
   | BufferView: buf:B.mbuffer src rrel rel
               -> v:view src dest
               -> buffer_view src rrel rel dest

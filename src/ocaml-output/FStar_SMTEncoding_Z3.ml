@@ -1149,11 +1149,8 @@ let (z3_job :
                        | () -> doZ3Exe log_file r fresh input label_messages)
                       ()
                   with
-                  | uu___541_5679 ->
-                      if (refresh (); false)
-                      then
-                        Obj.magic (Obj.repr (FStar_Exn.raise uu___541_5679))
-                      else Obj.magic (Obj.repr (failwith "unreachable"))
+                  | uu___541_5680 ->
+                      (refresh (); FStar_Exn.raise uu___541_5680)
                    in
                 match uu____5663 with
                 | (status,statistics) ->
