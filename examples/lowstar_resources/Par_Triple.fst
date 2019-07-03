@@ -7,8 +7,8 @@ module Par_Triple
 
     In short, we want parallel composition with the following (simplified) type
 
-    val (<||>) (#a #b:Type) 
-               (#r0 #r1:resource) 
+    val (<||>) (#a #b:Type)
+               (#r0 #r1:resource)
                (#pre0:view r0 -> Type)
                (#pre1:view r1 -> Type)
                (#post0:a -> view r0 -> Type)
@@ -21,14 +21,14 @@ module Par_Triple
 
 // The computational monad (free monad for the signature of { get , put , or }).
 //
-// This is a simple model of computation, supporting global state (2 locations 
+// This is a simple model of computation, supporting global state (2 locations
 // storing natural numbers, locations modelled as booleans) and binary nondeterminism.
 //
-// Observe that parallel composition `||` is not part of the monad structure, because 
-// as is well known (cf the works of Plotkin et al), `||` is in fact a (binary) effect 
+// Observe that parallel composition `||` is not part of the monad structure, because
+// as is well known (cf the works of Plotkin et al), `||` is in fact a (binary) effect
 // handler defined by recursion on the free monad structure (see below for details).
-noeq 
-type m a = 
+noeq
+type m a =
   | Ret : a -> m a
   | Get : bool -> (nat -> m a) -> m a
   | Put : bool -> nat -> m a -> m a
@@ -50,32 +50,32 @@ let rec map (#a:Type) (#b:Type) (f:a -> b) (c:m a) : Tot (m b) (decreases c) =
 val l_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %[c0;c1])
 val r_par (#a:Type0) (#b:Type0) (c0:m a) (c1:m b) : Tot (m (a & b)) (decreases %[c0;c1])
 
-let rec l_par #a #b c0 c1 = 
-  match c0 with 
+let rec l_par #a #b c0 c1 =
+  match c0 with
   | Ret x -> map (fun y -> (x,y)) c1
   | Get b c0' -> Get b (fun n -> FStar.WellFounded.axiom1 c0' n; Or (l_par (c0' n) c1) (r_par (c0' n) c1))
   | Put b n c0' -> Put b n (Or (l_par c0' c1) (r_par c0' c1))
   | Or c0' c0'' -> Or (l_par c0' c1) (l_par c0'' c1)
-  
+
 and r_par #a #b c0 c1 =
-  match c1 with 
+  match c1 with
   | Ret y -> map (fun x -> (x,y)) c0
   | Get b c1' -> Get b (fun n -> FStar.WellFounded.axiom1 c1' n; Or (l_par c0 (c1' n)) (r_par c0 (c1' n)))
   | Put b n c1' -> Put b n (Or (l_par c0 c1') (r_par c0 c1'))
   | Or c1' c1'' -> Or (r_par c0 c1') (r_par c0 c1'')
 
-let m_par (#a #b:Type0) (c0:m a) (c1:m b) = 
+let m_par (#a #b:Type0) (c0:m a) (c1:m b) =
   Or (l_par c0 c1) (r_par c0 c1)
 
 // A logically equivalent definition of parallel composition (at unit)
 // in terms of two unary effect handlers, based on G. Plotkin's slides.
 val r_par' (c0:m unit) (c1:m unit -> m unit) : m unit
-let rec r_par' c0 c1 = 
+let rec r_par' c0 c1 =
   match c0 with
   | Ret x -> Ret x
-  | Get b c0' -> Get b (fun n -> 
+  | Get b c0' -> Get b (fun n ->
                           FStar.WellFounded.axiom1 c0' n;
-                          Or (c1 (c0' n)) 
+                          Or (c1 (c0' n))
                              (r_par' (c0' n) c1))
   | Put b n c0' -> Put b n (Or (c1 c0') (r_par' c0' c1))
   | Or c0' c0'' -> Or (r_par' c0' c1) (r_par' c0'' c1)
@@ -84,26 +84,26 @@ val l_par' (c0:m unit) (c1:m unit) : m unit
 let rec l_par' c0 c1 =
   match c0 with
   | Ret x -> Ret x
-  | Get b c0' -> Get b (fun n -> 
-                          FStar.WellFounded.axiom1 c0' n; 
-                          Or (l_par' (c0' n) c1) 
+  | Get b c0' -> Get b (fun n ->
+                          FStar.WellFounded.axiom1 c0' n;
+                          Or (l_par' (c0' n) c1)
                              (r_par' c1 (l_par' (c0' n))))
   | Put b n c0' -> Put b n (Or (l_par' c0' c1) (r_par' c1 (l_par' c0')))
   | Or c0' c0'' -> Or (l_par' c0' c1) (l_par' c0'' c1)
 
-let m_par' c0 c1 : m unit = 
+let m_par' c0 c1 : m unit =
   Or (l_par' c0 c1) (r_par' c1 (l_par' c0))
 
 
 // For this example sketch, memory is simply a pair of booleans.
 let mem = bool -> nat
 
-let upd (b:bool) (n:nat) (h:mem) : mem = 
+let upd (b:bool) (n:nat) (h:mem) : mem =
   fun b' -> if b = b' then n else h b'
 
 let loc = option bool
 
-let modifies (fp:loc) (h0 h1:mem) = 
+let modifies (fp:loc) (h0 h1:mem) =
   match fp with
   | None -> True
   | Some b -> h0 (not b) == h1 (not b)
@@ -129,7 +129,7 @@ let rec run #a (c:m a) (h:mem) : a * mem =
 
 // Simple variant of our notion of resources.
 let inv_reads_fp (fp:option bool) (inv:mem -> Type0) =
-  match fp with 
+  match fp with
   | None -> True
   | Some b -> forall h h' . inv h /\ modifies (Some (not b)) h h' ==> inv h'
 
@@ -140,18 +140,18 @@ type view_t a = {
   sel : mem -> a
 }
 
-let view_t_refined a = 
+let view_t_refined a =
   view:view_t a{inv_reads_fp view.fp view.inv}
 
-noeq 
-type resource = { 
+noeq
+type resource = {
     t:Type0;
     view:view_t_refined t
   }
 
-let (<*>) (r0 r1:resource) : resource = 
+let (<*>) (r0 r1:resource) : resource =
   let t = r0.t & r1.t in
-  let fp = None in 
+  let fp = None in
   let inv h = r0.view.inv h /\ r1.view.inv h /\
               Some? r0.view.fp /\ Some? r1.view.fp /\
               xor (Some?.v r0.view.fp) (Some?.v r1.view.fp)
@@ -170,7 +170,17 @@ let (<*>) (r0 r1:resource) : resource =
 // We define the validity of a Hoare triple by induction on a command
 // For the time being, the postcondition only takes one state. TODO: Take initial state as a parameter as well
 // TODO: The postcondition should also take the return value as an argument
-let chi #a (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : Type = admit()
+let rec chi #a (c:m a) (r:resource) (pre:mem -> Type) (post:mem -> Type) : Type =
+  match c with
+  | Ret x -> forall h. pre h ==> post h
+  | Get b c ->
+    forall h.
+      // TODO: Something about invariant/liveness here?
+      (FStar.WellFounded.axiom1 c (h b);
+      chi (c (h b)) r pre post)
+  | Put b n c -> // TODO: Something about invariant/liveness here?
+        chi c r (fun h -> pre (upd b n h)) post
+  | Or c0 c1 -> chi c0 r pre post /\ chi c1 r pre post
 
 // This is an alternate characterization of Hoare Triples. This should be provable from the definition of chi.
 // It states that if we satisfy chi, then running the command in a state satisfying the precondition
