@@ -478,7 +478,7 @@ let rec loc_union_gsub_compute_loc_array (#a:Type0) (b:array a) (i len1 len2:U32
   if n = U32.v len1 then begin
     assert (l1 == loc_union loc_none (loc_array b2));
     loc_gsub_len_loc_gsub b i len1 len2 (U32.v len1)
-    end 
+    end
   else begin
     loc_union_gsub_compute_loc_array b i len1 len2 (n+1);
     loc_union_assoc (loc_cell b1 n) (compute_loc_array b1 (n+1)) (loc_array b2)
@@ -486,6 +486,7 @@ let rec loc_union_gsub_compute_loc_array (#a:Type0) (b:array a) (i len1 len2:U32
 
 let loc_union_gsub #a b i len1 len2 = loc_union_gsub_compute_loc_array b i len1 len2 0
 
+let loc_union_is_split_into #a b b1 b2 = loc_union_gsub #a b 0ul b1.length b2.length
 
 let lemma_disjoint_index_disjoint_cells (#a:Type) (b:array a) (i1:nat{i1 < vlength b}) (i2:nat{i2 < vlength b}) : Lemma
   (requires i1 <> i2)
@@ -510,7 +511,7 @@ let rec lemma_disjoint_index_disjoint_cell_array (#a:Type0) (b:array a) (idx:U32
   (requires (i < U32.v idx \/ i >= U32.v idx + U32.v len) /\ U32.v idx + U32.v len <= vlength b)
   (ensures loc_disjoint (compute_loc_array (gsub b idx len) j) (loc_cell b i))
   (decreases (U32.v len - j))
-  =   
+  =
   let b2 = gsub b idx len in
   if j = U32.v len then begin
        loc_disjoint_none_r (loc_cell b i);
@@ -523,7 +524,7 @@ let rec lemma_disjoint_index_disjoint_cell_array (#a:Type0) (b:array a) (idx:U32
       loc_disjoint_sym' (loc_cell b i) (compute_loc_array b2 j)
     end
 
-let rec lemma_disjoint_gsub_disjoint_compute_array (#a:Type) (b:array a) 
+let rec lemma_disjoint_gsub_disjoint_compute_array (#a:Type) (b:array a)
   (i1 i2:U32.t) (len1:U32.t{U32.v len1 > 0}) (len2:U32.t{U32.v len2 > 0})
   (i:nat{i <= U32.v len2}) : Lemma
   (requires (UInt32.v i1 + UInt32.v len1 <= (vlength b) /\
