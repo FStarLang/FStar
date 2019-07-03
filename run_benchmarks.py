@@ -178,7 +178,7 @@ for h in hashes:
 
 			else:
 				## collate benchmark output
-				shell_exec('cp -r bench_results/*/* ../bench_results')
+				shell_exec('mkdir -p ../bench_results; cp -r bench_results/*/* ../bench_results')
 
 	if 'upload' in run_stages:
 		os.chdir(hashdir)
