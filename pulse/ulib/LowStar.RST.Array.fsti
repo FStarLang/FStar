@@ -90,7 +90,7 @@ val merge (#a:Type) (b b':A.array a)
 val split (#a: Type) (b: A.array a) (idx: UInt32.t{UInt32.v idx > 0 /\ UInt32.v idx < A.vlength b})
   : RST (A.array a & A.array a)
     (array_resource b)
-    (fun (b1, b2) -> array_resource b1 <*> array_resource b2)
+    (fun p -> array_resource (fst p) <*> array_resource (snd p))
     (fun _ -> True)
     (fun h0 (b1, b2) h1 ->
       A.glueable b1 b2 /\
