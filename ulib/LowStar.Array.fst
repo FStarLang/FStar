@@ -568,27 +568,17 @@ let move #a b =
 
 let split #a b idx =
   (**) let h0 = HST.get () in
-  let b' = move b in
-  (**) let h1 = HST.get () in
-  let b1 = msub b' 0ul idx in
-  let b2 = msub b' idx U32.(b.length -^ idx) in
-  (**) assert(fresh_loc (loc_array b') h0 h1);
-  (**) loc_union_gsub #a b' 0ul idx U32.(b.length -^ idx);
-  (**) loc_includes_union_r (loc_array b') (loc_array b1) (loc_array b2);
-  (**) loc_includes_trans_backwards (loc_unused_in h0) (loc_array b') (loc_array b1);
-  (**) loc_includes_trans_backwards (loc_not_unused_in h1) (loc_array b') (loc_array b1);
-  (**) assert(fresh_loc (loc_array b1) h0 h1);
-  (**) loc_includes_trans_backwards (loc_unused_in h0) (loc_array b') (loc_array b2);
-  (**) loc_includes_trans_backwards (loc_not_unused_in h1) (loc_array b') (loc_array b2);
-  (**) assert(fresh_loc (loc_array b2) h0 h1);
+  let b1 = msub b 0ul idx in
+  let b2 = msub b idx U32.(b.length -^ idx) in
   (**) disjoint_gsubs b 0ul idx idx U32.(b.length -^ idx);
   (b1, b2)
 
+
+
 #push-options "--z3rlimit 10"
 
-let glue #a b1 b2 =
+let glue #a b b1 b2 =
   (**) let h0 = HST.get () in
-  let b = Array b1.max_length b1.content b1.idx U32.(b1.length +^ b2.length) b1.pid in
   (**)let aux (i:nat{i < vlength b}) : Lemma (live_cell h0 b i) =
   (**)  if i < vlength b1 then
   (**)    assert(live_cell h0 b1 i)
@@ -596,7 +586,6 @@ let glue #a b1 b2 =
   (**)    assert(live_cell h0 b2 (i - vlength b1))
   (**) in
   (**) Classical.forall_intro aux;
-  let b' = move b in
   (**) let h1 = HST.get () in
   (**) assert(as_seq h0 b1 `Seq.equal` Seq.slice (as_seq h0 b) 0 (vlength b1));
   (**) assert(as_seq h0 b2 `Seq.equal` Seq.slice (as_seq h0 b) (vlength b1) (vlength b1 + vlength b2));
@@ -604,8 +593,6 @@ let glue #a b1 b2 =
   (**) assert(as_perm_seq h0 b1 `Seq.equal` Seq.slice (as_perm_seq h0 b) 0 (vlength b1));
   (**) assert(as_perm_seq h0 b2 `Seq.equal` Seq.slice (as_perm_seq h0 b) (vlength b1) (vlength b1 + vlength b2));
   (**) Seq.Properties.lemma_split (as_perm_seq h0 b) (U32.v b2.idx - U32.v b1.idx);
-  (**) assert(modifies (loc_array b) h0 h1);
-  (**) loc_union_gsub #a b 0ul b1.length b2.length;
-  b'
+  (**) loc_union_gsub #a b 0ul b1.length b2.length
 
 #pop-options
