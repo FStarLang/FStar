@@ -237,7 +237,7 @@ inline_for_extraction noextract let rst_frame (outer0:resource)
               (#inner1:a -> resource)
               (#[resolve_delta ()]
                    delta:resource{FStar.Tactics.with_tactic
-                                         FStar.Tactics.tadmit //resolve_frame_delta
+                                         resolve_frame_delta
                                          (frame_delta outer0 inner0 outer1 inner1 delta)
                                          })
               (#pre:r_pre inner0)
