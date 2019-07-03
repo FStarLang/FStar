@@ -195,7 +195,7 @@ inline_for_extraction noextract let frame (outer0:resource)
           (#a:Type)
           (outer1:a -> resource)
           (#inner1:a -> resource)
-          (#[resolve_delta (quote outer0) (quote inner0)]
+          (#[resolve_delta ()]
                    delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
           (#wp:rstate_wp a inner0 inner1)
           ($f:unit -> RSTATE a inner0 inner1 wp)
@@ -235,8 +235,11 @@ inline_for_extraction noextract let rst_frame (outer0:resource)
               (#a:Type)
               (outer1:a -> resource)
               (#inner1:a -> resource)
-              (#[resolve_delta (quote outer0) (quote inner0)]
-                   delta:resource{frame_delta outer0 inner0 outer1 inner1 delta})
+              (#[resolve_delta ()]
+                   delta:resource{FStar.Tactics.with_tactic
+                                         FStar.Tactics.tadmit //resolve_frame_delta
+                                         (frame_delta outer0 inner0 outer1 inner1 delta)
+                                         })
               (#pre:r_pre inner0)
               (#post:r_post inner0 a inner1)
               ($f:unit -> RST a inner0 inner1 pre post)
@@ -245,4 +248,6 @@ inline_for_extraction noextract let rst_frame (outer0:resource)
                     (frame_post delta post) =
   reveal_view ();
   reveal_can_be_split_into ();
+//  FStar.Tactics.by_tactic_seman _ resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
+  assume (frame_delta outer0 inner0 outer1 inner1 delta);
   f ()
