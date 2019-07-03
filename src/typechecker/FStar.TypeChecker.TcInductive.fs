@@ -206,7 +206,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
 
 
 (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
-let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * universe)>) (datas:list<sigelt>)
+let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (datas:list<sigelt>)
     : list<sigelt> * list<sigelt>
     =   //We build a single arrow term of the form
         //   tc_1 -> .. -> tc_n -> dt_1 -> .. dt_n -> Tot unit
@@ -967,7 +967,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
     then BU.print1 "@@@@@@Guard before (possible) generalization: %s\n" (Rel.guard_to_string env g);
 
     Rel.force_trivial_guard env0 g;
-    if List.length univs = 0 then generalize_and_inst_within env0 g tcs datas
+    if List.length univs = 0 then generalize_and_inst_within env0 tcs datas
     else (List.map fst tcs), datas
   in
 
