@@ -88,7 +88,7 @@ def get_git_hashes(args):
 	os.chdir(old_cwd)
 	return hashes
 
-def parse_and_format_results_for_upload(fname):
+def parse_and_format_results_for_upload(fname, bench_name_prefix=''):
     bench_data = []
     with open(fname) as f:
         for l in f:
@@ -123,7 +123,7 @@ def parse_and_format_results_for_upload(fname):
             'executable': 'fstar',
             'executable_description': 'fstar (%s)'%args.repo_branch,
             'environment': args.environment,
-            'benchmark': bench_name,
+            'benchmark': bench_name_prefix + bench_name,
             'units': metric_units,
             'units_title': metric_units_title,
             'result_value': results['mean'],
@@ -201,7 +201,8 @@ for h in hashes:
 		for fname in fnames:
 			print('Uploading data from %s'%fname)
 
-			upload_data = parse_and_format_results_for_upload(fname)
+			prefix = fname.split('/')[-1].split('.bench')[0] + '/'
+			upload_data = parse_and_format_results_for_upload(fname, prefix)
 
 			## upload this stuff into the codespeed server
 			if upload_data:
