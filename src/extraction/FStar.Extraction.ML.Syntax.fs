@@ -153,6 +153,7 @@ type meta =
   | CAbstract
   | CIfDef
   | CMacro
+  | Deprecated of string
 
 // rename
 type metadata = list<meta>

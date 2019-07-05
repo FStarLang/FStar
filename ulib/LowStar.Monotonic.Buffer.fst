@@ -1495,10 +1495,21 @@ let mgcmalloc_of_list #a #rrel r init =
   let b = Buffer len content 0ul len in
   b
 
-#push-options "--z3rlimit 64 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 64"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
-  if len = 0ul then ()
+  if len = 0ul then begin
+    (*
+     * AR: 07/03: the then case, which should actually be trivial, takes a long time to verify
+     *            we should do some z3 profiling to see what's going on
+     *)
+    let h = get () in
+    Seq.slice_is_empty (as_seq h dst) (U32.v idx_dst);
+    Seq.slice_is_empty (as_seq h src) (U32.v idx_src);
+    assert (Seq.equal (Seq.slice (as_seq h dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len))
+                      (Seq.slice (as_seq h src) (U32.v idx_src) (U32.v idx_src + U32.v len)));
+    ()
+  end
   else
     let h = get () in
     let Buffer _ content1 idx1 length1 = src in

@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
- module FStar.Monotonic.Witnessed
+module FStar.Monotonic.Witnessed
 
 open FStar.Preorder
 
@@ -72,39 +72,33 @@ assume val set_set_axiom :#world:Type
 private val get_constant_lemma :world:Type
                                 -> p:Type0
                                 -> Lemma (get #world (fun _ -> p) <==> p)
-                                        [SMTPat (get #world (fun _ -> p))]
 let get_constant_lemma world p = get_set_axiom #world p
 
 (* Get and set commute with (non-modal) logical connectives *)
 
 private val get_true :world:Type
                       -> Lemma (get #world (fun _ -> True))
-                              [SMTPat (get #world (fun _ -> True))]
-let get_true world = ()
+let get_true world = get_constant_lemma world True
 
 assume private val set_true :#world:Type
                              -> w:world
                              -> Lemma (set True w)
-                                     [SMTPat (set True w)]
 
 private val get_false :world:Type
                        -> Lemma (requires (get #world (fun _ -> False)))
                                (ensures  (False))
-                               [SMTPat (get #world (fun _ -> False))]
-let get_false world = ()
+let get_false world = get_constant_lemma world False
 
 assume val set_false :#world:Type
                       -> w:world
                       -> Lemma (requires (set False w)) 
                               (ensures  (False))
-                              [SMTPat (set False w)]
 
 private val get_and_1 :#world:Type
                        -> p:(world -> Type0)
                        -> q:(world -> Type0)
                        -> Lemma (requires (get (fun w -> p w /\ q w)))
                                (ensures  (get p /\ get q))
-                               [SMTPat (get (fun w -> p w /\ q w))]
 let get_and_1 #world p q = ()
 
 assume private val set_and_1 :#world:Type
@@ -113,14 +107,13 @@ assume private val set_and_1 :#world:Type
                               -> q:Type0
                               -> Lemma (requires (set (p /\ q) w))
                                       (ensures  (set p w /\ set q w))
-                                      [SMTPat (set (p /\ q) w)]
 
 assume private val get_and_2 :#world:Type
                               -> p:(world -> Type0)
                               -> q:(world -> Type0)
                               -> Lemma (requires (get p /\ get q))
                                       (ensures  (get (fun w -> p w /\ q w)))
-                                      [SMTPat (get (fun w -> p w /\ q w))]
+
 
 assume private val set_and_2 :#world:Type
                               -> w:world
@@ -128,14 +121,12 @@ assume private val set_and_2 :#world:Type
                               -> q:Type0
                               -> Lemma (requires (set p w /\ set q w))
                                       (ensures  (set (p /\ q) w))
-                                      [SMTPat (set (p /\ q) w)]
 
 private val get_or_1 :#world:Type
                       -> p:(world -> Type0)
                       -> q:(world -> Type0)
                       -> Lemma (requires (get p \/ get q))
                               (ensures  (get (fun w -> p w \/ q w)))
-                              [SMTPat (get (fun w -> p w \/ q w))]
 let get_or_1 #world p q = ()
 
 assume private val set_or_1 :#world:Type
@@ -144,14 +135,12 @@ assume private val set_or_1 :#world:Type
                              -> q:Type0
                              -> Lemma (requires (set p w \/ set q w))
                                      (ensures  (set (p \/ q) w))
-                                     [SMTPat (set (p \/ q) w)]
 
 assume private val get_or_2 :#world:Type
                              -> p:(world -> Type0)
                              -> q:(world -> Type0)
                              -> Lemma (requires (get (fun w -> p w \/ q w)))
                                      (ensures  (get p \/ get q))
-                                     [SMTPat (get (fun w -> p w \/ q w))]
 
 assume private val set_or_2 :#world:Type
                              -> w:world
@@ -159,14 +148,12 @@ assume private val set_or_2 :#world:Type
                              -> q:Type0
                              -> Lemma (requires (set (p \/ q) w))
                                      (ensures  (set p w \/ set q w))
-                                     [SMTPat (set (p \/ q) w)]
 
 private val get_impl_1 :#world:Type
                         -> p:(world -> Type0)
                         -> q:(world -> Type0)
                         -> Lemma (requires (get (fun w -> p w ==> q w) /\ get p))
                                 (ensures  (get q))
-                                [SMTPat (get (fun w -> p w ==> q w))]
 let get_impl_1 #world p q = 
   get_and_2 (fun w -> p w ==> q w) p; 
   get_weakening (fun w -> (p w ==> q w) /\ p w) q
@@ -177,14 +164,12 @@ assume private val set_impl_1 :#world:Type
                                -> q:Type0
                                -> Lemma (requires (set (p ==> q) w /\ set p w))
                                        (ensures  (set q w))
-                                       [SMTPat (set (p ==> q) w)]
 
 assume private val get_impl_2 :#world:Type
                                -> p:(world -> Type0)
                                -> q:(world -> Type0)
                                -> Lemma (requires (get p ==> get q))
                                        (ensures  (get (fun w -> p w ==> q w)))
-                                       [SMTPat (get (fun w -> p w ==> q w))]
 
 assume private val set_impl_2 :#world:Type
                                -> w:world
@@ -192,7 +177,6 @@ assume private val set_impl_2 :#world:Type
                                -> q:Type0
                                -> Lemma (requires (set p w ==> set q w))
                                        (ensures  (set (p ==> q) w))
-                                       [SMTPat (set (p ==> q) w)]
 
 private val get_forall_1_aux :#world:Type
                               -> #t:Type
@@ -200,7 +184,6 @@ private val get_forall_1_aux :#world:Type
                               -> x:t
                               -> Lemma (requires (get (fun w -> forall x. p x w)))
                                       (ensures  (get (fun w -> p x w)))
-                                      [SMTPat (get (fun w -> p x w)); SMTPat (get (fun w -> forall (x:t). p x w))]
 let get_forall_1_aux #world #t p x = 
   get_weakening (fun w -> forall x. p x w) (fun w -> p x w)
 
@@ -209,7 +192,6 @@ private val get_forall_1 :#world:Type
                           -> p:(t -> world -> Type0)
                           -> Lemma (requires (get (fun w -> forall x. p x w)))
                                   (ensures  (forall x. get (fun w -> p x w)))
-                                  [SMTPat (get (fun w -> forall (x:t). p x w))]
 let get_forall_1 #world #t p = ()
 
 assume private val set_forall_1 :#world:Type
@@ -218,14 +200,12 @@ assume private val set_forall_1 :#world:Type
                                  -> p:(t -> Type0)
                                  -> Lemma (requires (set (forall x. p x) w))
                                          (ensures  (forall x. set (p x) w))
-                                         [SMTPat (set (forall x. p x) w)]
 
 assume private val get_forall_2 :#world:Type
                                  -> #t:Type
                                  -> p:(t -> world -> Type0)
                                  -> Lemma (requires (forall x. get (fun w -> p x w)))
                                          (ensures  (get (fun w -> forall x. p x w)))
-                                         [SMTPat (get (fun w -> forall x. p x w))]
 
 assume private val set_forall_2 :#world:Type
                                  -> #t:Type
@@ -233,7 +213,6 @@ assume private val set_forall_2 :#world:Type
                                  -> p:(t -> Type0)
                                  -> Lemma (requires (forall x. set (p x) w))
                                          (ensures  (set (forall x. p x) w))
-                                         [SMTPat (set (forall x. p x) w)]
 
 private val get_exists_1_aux :#world:Type
                               -> #t:Type
@@ -241,7 +220,6 @@ private val get_exists_1_aux :#world:Type
                               -> x:t
                               -> Lemma (requires (get (fun w -> p x w)))
                                       (ensures  (get (fun w -> exists x. p x w)))
-                                      [SMTPat (get (fun w -> p x w)); SMTPat (get (fun w -> exists x. p x w))]
 let get_exists_1_aux #world #t p x = 
   get_weakening (fun w -> p x w) (fun w -> exists x . p x w)
 
@@ -250,7 +228,6 @@ private val get_exists_1 :#world:Type
                           -> p:(t -> world -> Type0)
                           -> Lemma (requires (exists x. get (fun w -> p x w)))
                                   (ensures  (get (fun w -> exists x. p x w)))
-                                  [SMTPat (get (fun w -> exists x . p x w))]
 let get_exists_1 #world #t p = ()
 
 assume private val set_exists_1 :#world:Type
@@ -259,14 +236,12 @@ assume private val set_exists_1 :#world:Type
                                  -> p:(t -> Type0)
                                  -> Lemma (requires (exists x. set (p x) w)) 
                                          (ensures  (set (exists x. p x) w))
-                                         [SMTPat (set (exists x. p x) w)]
 
 assume private val get_exists_2 :#world:Type
                                  -> #t:Type
                                  -> p:(t -> world -> Type0)
                                  -> Lemma (requires (get (fun w -> exists x. p x w)))
                                          (ensures  (exists x. get (fun w -> p x w)))
-                                         [SMTPat (get (fun w -> exists x. p x w))]
 
 assume private val set_exists_2 :#world:Type
                                  -> #t:Type
@@ -274,14 +249,12 @@ assume private val set_exists_2 :#world:Type
                                  -> p:(t -> Type0)
                                  -> Lemma (requires (set (exists x. p x) w)) 
                                          (ensures  (exists x. set (p x) w))
-                                         [SMTPat (set (exists x. p x) w)]
 
 private val get_eq :#world:Type
                     -> #t:Type
                     -> v:t
                     -> v':t
                     -> Lemma (get #world (fun _ -> v == v') <==> v == v')
-                            [SMTPat (get #world (fun _ -> v == v'))]
 let get_eq #world #t v v' = 
   get_constant_lemma world (v == v')
 
@@ -291,7 +264,6 @@ assume private val set_eq :#world:Type
                            -> v:t
                            -> v':t
                            -> Lemma (set (v == v') w <==> v == v')
-                                   [SMTPat (set (v == v') w)]
 
 (* NOT EXPOSED BY THE INTERFACE [end] *)
 

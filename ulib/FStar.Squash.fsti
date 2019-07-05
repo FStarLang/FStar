@@ -27,7 +27,7 @@ val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> GTot (squash b)) ->
   Tot (squash b)
 
 (* With a special ``push'' operation *)
-val push_squash : #a:Type -> #b:(a -> Type) -> (x:a -> Tot (squash (b x))) -> Tot (squash (x:a -> Tot (b x)))
+val push_squash   : #a:Type -> #b:(a -> Type) -> (x:a -> Tot (squash (b x))) -> Tot (squash (x:a -> GTot (b x)))
 
 val get_proof : p:Type ->
   Pure (squash p) (requires p) (ensures (fun _ -> True))

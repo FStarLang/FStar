@@ -49,7 +49,7 @@ and global (seen:list term) (fuel:int) () : Tac unit =
     first (fun fv -> trywith seen fuel (pack (Tv_FVar fv))) cands
 and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
-    (fun () -> apply t) `seq` (fun () -> tcresolve' seen (fuel-1))
+    (fun () -> apply_noinst t) `seq` (fun () -> tcresolve' seen (fuel-1))
 
 [@plugin]
 let tcresolve () : Tac unit =

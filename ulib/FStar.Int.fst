@@ -301,6 +301,7 @@ val one_to_vec_lemma: #n:pos{1 < n} -> i:nat{i < n} ->
 let one_to_vec_lemma #n i =
   if i = n - 1 then () else zero_to_vec_lemma #n i
 
+#reset-options "--smtencoding.elim_box true --smtencoding.l_arith_repr native"
 val pow2_to_vec_lemma: #n:pos -> p:nat{p < n-1} -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures index (to_vec (pow2_n #n p)) i = index (elem_vec #n (n - p - 1)) i)
@@ -309,6 +310,7 @@ let rec pow2_to_vec_lemma #n p i =
   if i = n - 1 then ()
   else if p = 0 then one_to_vec_lemma #n i
   else pow2_to_vec_lemma #(n - 1) (p - 1) i
+#reset-options
 
 val pow2_from_vec_lemma: #n:pos -> p:pos{p < n-1} ->
   Lemma (requires True) (ensures from_vec (elem_vec #n p) = pow2_n #n (n - p - 1))
@@ -448,12 +450,15 @@ val logand_pow2_minus_one: #n:pos{1 < n} -> a:int_t n -> m:pos{m < n} ->
 let logand_pow2_minus_one #n a m =
   UInt.logand_le (to_uint a) (to_uint (pow2_minus_one #n m))
 
+#push-options "--z3rlimit 25"
 val logand_max: #n:pos{1 < n} -> a:int_t n{0 <= a} ->
   Lemma (0 <= logand a (max_int n) /\ a = logand a (max_int n))
+#push-options "--z3rlimit_factor 2"
 let logand_max #n a =
   sign_bit_positive a;
   sign_bit_positive #n (max_int n);
   nth_lemma a (logand a (max_int n))
+#pop-options
 
 (* Bitwise XOR operator *)
 val logxor_commutative: #n:pos -> a:int_t n -> b:int_t n ->

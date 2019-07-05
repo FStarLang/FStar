@@ -703,8 +703,10 @@ let collect_one
       and collect_decls decls =
         List.iter (fun x -> collect_decl x.d;
                             List.iter collect_term x.attrs;
-                            if List.contains Inline_for_extraction x.quals
-                            then add_to_parsing_data P_inline_for_extraction
+                            match x.d with
+                            | Val _ when List.contains Inline_for_extraction x.quals ->
+                                add_to_parsing_data P_inline_for_extraction
+                            | _ -> ()
                             ) decls
 
       and collect_decl d =
@@ -1639,6 +1641,10 @@ let print_full (deps:deps) : unit =
       keys |> List.filter is_implementation
            |> Util.sort_with String.compare
     in
+    let all_fsti_files =
+      keys |> List.filter is_interface
+           |> Util.sort_with String.compare
+    in
     let all_ml_files =
         let ml_file_map = BU.smap_create 41 in
         all_fst_files
@@ -1663,6 +1669,7 @@ let print_full (deps:deps) : unit =
         pr "\n"
     in
     print_all "ALL_FST_FILES" all_fst_files;
+    print_all "ALL_FSTI_FILES" all_fsti_files;
     print_all "ALL_CHECKED_FILES" all_checked_files;
     print_all "ALL_ML_FILES" all_ml_files;
     print_all "ALL_KRML_FILES" all_krml_files;

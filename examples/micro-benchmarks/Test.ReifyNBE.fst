@@ -39,9 +39,9 @@ let test1 (a:Type) (y:a) =
 open FStar.Tactics
 
 let test2 (a:Type) (x:a) =
-    assert True by (fun () -> let t0 = quote (reify (ID?.reflect (return_id a x)) ()) in
-                              (* print ("t0 = " ^ term_to_string t0); *)
-                              let t1 = norm_term [nbe; delta] t0 in
-                              if term_eq t1 (quote x)
-                              then ()
-                              else fail ("The reify was not normalized!: " ^ term_to_string t1))
+    assert True by (let t0 = quote (reify (ID?.reflect (return_id a x)) ()) in
+                    (* print ("t0 = " ^ term_to_string t0); *)
+                    let t1 = norm_term [nbe; delta] t0 in
+                    if term_eq t1 (quote x)
+                    then ()
+                    else fail ("The reify was not normalized!: " ^ term_to_string t1))

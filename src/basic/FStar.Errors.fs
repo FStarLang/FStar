@@ -151,7 +151,7 @@ type raw_error =
   | Fatal_NonLinearPatternVars
   | Fatal_NonSingletonTopLevel
   | Fatal_NonSingletonTopLevelModule
-  | Fatal_NonTopRecFunctionNotFullyEncoded
+  | Error_NonTopRecFunctionNotFullyEncoded
   | Fatal_NonTrivialPreConditionInPrims
   | Fatal_NonVariableInductiveTypeParameter
   | Fatal_NotApplicationOrFv
@@ -333,6 +333,7 @@ type raw_error =
   | Fatal_EmptySurfaceLet
   | Warning_UnexpectedCheckedFile
   | Fatal_ExtractionUnsupported
+  | Warning_SMTErrorReason
 
 type flag = error_flag
 
@@ -482,7 +483,7 @@ let default_flags =
   (Fatal_NonLinearPatternVars                        , CFatal);
   (Fatal_NonSingletonTopLevel                        , CFatal);
   (Fatal_NonSingletonTopLevelModule                  , CFatal);
-  (Fatal_NonTopRecFunctionNotFullyEncoded            , CFatal);
+  (Error_NonTopRecFunctionNotFullyEncoded            , CError);
   (Fatal_NonTrivialPreConditionInPrims               , CFatal);
   (Fatal_NonVariableInductiveTypeParameter           , CFatal);
   (Fatal_NotApplicationOrFv                          , CFatal);
@@ -663,6 +664,7 @@ let default_flags =
   (Fatal_EmptySurfaceLet                             , CFatal);
   (Warning_UnexpectedCheckedFile                     , CWarning); //321
   (Fatal_ExtractionUnsupported                       , CFatal);
+  (Warning_SMTErrorReason                            , CWarning);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]
