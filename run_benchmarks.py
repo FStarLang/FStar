@@ -4,7 +4,9 @@ import argparse
 import datetime
 import glob
 import inspect
+import json
 import os
+import pandas
 import subprocess
 import sys
 
@@ -17,7 +19,8 @@ SCRIPTDIR = get_script_dir()
 DEFAULT_REPO = os.path.join(SCRIPTDIR, 'FStar') ## TODO: what should this be
 DEFAULT_BENCHMARK_RUN_SCRIPT = 'make_bench_results.sh' ## TODO: what should this be
 DEFAULT_BRANCH = 'master'
-CODESPEED_URL = 'localhost:8070'
+ENVIRONMENT = 'bench_machine'
+CODESPEED_URL = 'http://localhost:8070/'
 
 parser = argparse.ArgumentParser(description='Run FStar benchmarks across multiple git commits')
 parser.add_argument('outdir', type=str, help='directory of output')
@@ -30,7 +33,9 @@ parser.add_argument('--commit_after', type=str, help='select commits after the s
 parser.add_argument('--commit_before', type=str, help='select commits before the specified date (e.g. 2017-10-02)', default=None)
 parser.add_argument('--max_hashes', type=int, help='maximum_number of hashes to process', default=16)
 parser.add_argument('--benchmark_hook_patch', type=str, help='Patch to try if we don\'t have the benchmark hooks', default=None)
+parser.add_argument('--benchmark_no_cleanup', action='store_true', default=False)
 parser.add_argument('--run_stages', type=str, help='stages to run', default='bench,upload')
+parser.add_argument('--environment', type=str, help='environment tag for run (default: %s)'%ENVIRONMENT, default=ENVIRONMENT)
 parser.add_argument('--codespeed_url', type=str, help='codespeed URL for upload', default=CODESPEED_URL)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 
@@ -113,10 +118,10 @@ def parse_and_format_results_for_upload(fname):
         upload_data.append({
             'commitid': h[:7],
             'commitid_long': h,
-            'project': args.upload_project_name if args.upload_project_name else 'ocaml_%s'%args.branch,
-            'branch': args.branch,
-            'executable': executable_name,
-            'executable_description': full_branch_tag,
+            'project': 'fstar_%s'%args.repo_branch,
+            'branch': args.repo_branch,
+            'executable': 'fstar',
+            'executable_description': 'fstar (%s)'%args.repo_branch,
             'environment': args.environment,
             'benchmark': bench_name,
             'units': metric_units,
@@ -176,9 +181,13 @@ for h in hashes:
 			if completed_proc.returncode != 0:
 				print('ERROR[%d] in fstar bench run for %s (see %s)'%(completed_proc.returncode, h, log_fname))
 
-			else:
-				## collate benchmark output
-				shell_exec('mkdir -p ../bench_results; cp -r bench_results/*/* ../bench_results')
+			## collate benchmark output
+			shell_exec('mkdir -p ../bench_results; cp -r bench_results/*/* ../bench_results')
+
+			## clean directory after use
+			if not args.benchmark_no_cleanup:
+				os.chdir(hashdir)
+				shell_exec('rm -rf %s'%h)
 
 	if 'upload' in run_stages:
 		os.chdir(hashdir)
@@ -189,7 +198,7 @@ for h in hashes:
 			print('ERROR: could not find any results of form %s to upload'%glob_pat)
 			continue
 
-		for f in fnames:
+		for fname in fnames:
 			print('Uploading data from %s'%fname)
 
 			upload_data = parse_and_format_results_for_upload(fname)
@@ -199,4 +208,3 @@ for h in hashes:
 				codespeed_upload.post_data_to_server(args.codespeed_url, upload_data, verbose=args.verbose)
 
 
-## TODO: clean directory after use
