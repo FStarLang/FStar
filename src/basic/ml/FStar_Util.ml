@@ -285,6 +285,11 @@ let read_line s =
     Some (BatIO.read_line s)
   with
     _ -> None
+let nread (s:stream_reader) (n:Z.t) =
+  try
+    Some (BatIO.nread s (Z.to_int n))
+  with
+    _ -> None
 
 type string_builder = BatBuffer.t
 let new_string_builder () = BatBuffer.create 256
@@ -965,6 +970,27 @@ let load_value_from_file (fname:string) =
     BatPervasives.finally
       (fun () -> close_in channel)
       (fun channel -> Some (input_value channel))
+      channel
+  with | _ -> None
+
+let save_2values_to_file (fname:string) value1 value2 =
+  let channel = open_out_bin fname in
+  BatPervasives.finally
+    (fun () -> close_out channel)
+    (fun channel ->
+      output_value channel value1;
+      output_value channel value2)
+    channel
+
+let load_2values_from_file (fname:string) =
+  try
+    let channel = open_in_bin fname in
+    BatPervasives.finally
+      (fun () -> close_in channel)
+      (fun channel ->
+        let v1 = input_value channel in
+        let v2 = input_value channel in
+        Some (v1, v2))
       channel
   with | _ -> None
 
