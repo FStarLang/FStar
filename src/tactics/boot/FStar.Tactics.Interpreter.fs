@@ -520,7 +520,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
     match (U.un_uinst hd).n, args with
 
     // with_tactic marker
-    | Tm_fvar fv, [(rett, Some (Implicit _)); (tactic, None); (assertion, None)]
+    | Tm_fvar fv, [(tactic, None); (assertion, None)]
             when S.fv_eq_lid fv PC.by_tactic_lid ->
         begin match pol with
         | Pos ->
