@@ -1113,7 +1113,8 @@ val shrink:
       rv_inv h1 frv /\
       S.equal (as_seq h1 frv)
               (S.slice (as_seq h0 rv) 0 (U32.v new_size))))
-#reset-options "--z3rlimit 40"
+#reset-options "--z3rlimit 40 --z3cliopt 'smt.qi.eager_threshold=100'"
+//#restart-solver
 let shrink #a #rg rv new_size =
   let size = V.size_of rv in
   [@inline_let] let sz = U32.v size in
