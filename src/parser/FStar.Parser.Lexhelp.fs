@@ -174,6 +174,7 @@ let keywords =
     ALWAYS, "module"     ,MODULE;
     ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
+    ALWAYS, "layered_effect"            ,LAYERED_EFFECT;
     ALWAYS, "noextract",  NOEXTRACT;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;

@@ -2916,6 +2916,9 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     let attrs = d.attrs in
     desugar_effect env d quals eff_name eff_binders eff_typ eff_decls attrs
 
+  | LayeredEffect (DefineEffect (eff_name, eff_binders, eff_typ, eff_decls)) ->
+    failwith "LayeredEffect desugaring is not implemented yet" 
+
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with
         | None -> raise_error (Errors.Fatal_EffectNotFound, ("Effect name " ^Print.lid_to_string l^ " not found")) d.drange
