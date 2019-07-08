@@ -90,11 +90,11 @@ let read_write_with_sharing () : RST.RST unit
   assume((R.sel (A.array_view b_first) h).A.p = 0.5R);
   assume((R.sel (A.array_view b_second) h).A.p = 0.5R);
 
-  let b = RST.rst_frame
+  RST.rst_frame
     (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
-    (fun b -> R.(A.array_resource b <*> A.array_resource b1))
-    (fun _ -> A.glue b_first b_second)
-  in
+    (fun _ -> R.(A.array_resource b <*> A.array_resource b1))
+    (fun _ -> A.glue b b_first b_second);
+
   let h = HST.get () in
 
   assume((R.sel (A.array_view b) h).A.p = 0.5R);
