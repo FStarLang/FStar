@@ -70,7 +70,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 ocaml-output/%.ml:
-	$(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
+	$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 

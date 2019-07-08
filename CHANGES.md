@@ -177,6 +177,14 @@ Guidelines for the changelog:
      is not already_cached in a location that is not the same as its
      expected output location, we raise Warning 321.
 
+## Command line options
+
+   * [PR #1711](https://github.com/FStarLang/FStar/pull/1711): Where
+     options take lists of namespaces as arguments
+     (`--already_cached`, `--extract`, `--using_facts_from`, etc.),
+     those lists of namespaces can be given under the form `+A -B +C`
+     (space-separated) or `+A,-B,+C` (comma-separated).
+
 # Version 0.9.6.0
 
 ## Command line options

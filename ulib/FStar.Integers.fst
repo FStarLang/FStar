@@ -534,7 +534,7 @@ let ( |^ ) #sw (x:int_t sw) (y:int_t sw{width_of_sw sw <> Winfinite})
 [@mark_for_norm]
 unfold
 let ( <<^ ) #sw (x:int_t sw{0 <= (v x <: Prims.int)}) 
-                (y:int_t (Unsigned W32){width_of_sw sw <> Winfinite /\ v y < nat_of_fixed_width (width_of_sw sw)})
+                (y:int_t (Unsigned W32){width_of_sw sw <> Winfinite /\ v y < nat_of_fixed_width (width_of_sw sw) /\ (Signed? sw ==> within_bounds sw (v x * pow2 (v y)))})
     : Tot (int_t sw)
     = match sw with
       | Unsigned W8 -> FStar.UInt8.(x <<^ y)
