@@ -8,7 +8,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "98310f02faceb6556e878a67f592c841"
+      "a19c71ea2f70569a39f4ec1b7779f8c0"
     ],
     [
       "Bug052.use_fact_and_lemma",
@@ -18,10 +18,10 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "c435c60aea103dfac0cea6d38344947a"
+      "dcc2ad7eb20ec78624f7b1085af45fc8"
     ],
     [
       "Bug052.test",
@@ -34,7 +34,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f18d368198fd1c6860302f987ce8595a"
+      "42ebc28e155e0c461bb161d0354cdea4"
     ]
   ]
 ]

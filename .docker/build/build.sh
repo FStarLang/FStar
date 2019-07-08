@@ -295,6 +295,14 @@ function build_fstar() {
                     }
             } &
 
+	    # The LowParse test suite is now in project-everest/everparse
+	    {
+		$gnutime make -C qd -j $threads -k lowparse-fstar-test || {
+		    echo "Error - LowParse"
+		    echo " - min-test (LowParse)" >>$ORANGE_FILE
+		}
+	    } &
+	    
             # We now run all (hardcoded) tests in mitls-fstar@master
             {
                 # First regenerate dependencies and parsers (maybe not

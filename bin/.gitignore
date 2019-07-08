@@ -8,3 +8,4 @@ fstar.exe
 fstar.fsharp
 FsLexYacc.Runtime.dll
 *.XML
+*lib/META

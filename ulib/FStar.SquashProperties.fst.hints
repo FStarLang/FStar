@@ -1,5 +1,5 @@
 [
-  "DoJv¨\u007f≈\u001b.:i{H˚€\n",
+  "8\u0004~Bπ \u00177èΩP|S \\Á",
   [
     [
       "FStar.SquashProperties.forall_intro",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "3e1c875b435467082849359569af94a3"
+      "dad11a1ce8d42e75e35910f4e57d1e71"
     ],
     [
       "FStar.SquashProperties.bool_of_or",
@@ -20,7 +20,7 @@
         "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "58a241e6afbd17fa58a73b2c2e5047d6"
+      "29ea754f1a1f19d798a5c9e300149fa4"
     ],
     [
       "FStar.SquashProperties.excluded_middle",
@@ -29,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "8828a6a5563b12cf654b1d482248d995"
+      "d9b6b41e9f9eb1559fc30d704960c070"
     ],
     [
       "FStar.SquashProperties.excluded_middle_squash",
@@ -37,16 +37,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "equation_Prims.l_False", "equation_Prims.l_imp",
-        "equation_Prims.l_not", "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3d9be3f8c1f455cdaac99a8638e52c06",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "refinement_interpretation_Tm_refine_0a072959e7be7be61159772bf968ea07"
       ],
       0,
-      "f4ff3c76f1530b4e52150590d67cb467"
+      "c0da71b67200fd5d97acb81233be8d38"
     ],
     [
       "FStar.SquashProperties.ifProp",
@@ -58,7 +54,7 @@
         "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "0791c9a80964d956231727b902b910b1"
+      "600583454d63d51ed3eb5dbb4d9efb91"
     ],
     [
       "FStar.SquashProperties.__proj__MkR__item__inv",
@@ -74,7 +70,7 @@
         "token_correspondence_FStar.SquashProperties.__proj__MkR__item__j"
       ],
       0,
-      "164c7fe3dec1f69fb0cb5a44dc7b43d4"
+      "c15758d17dde3cadbd1fa16fc215ebca"
     ],
     [
       "FStar.SquashProperties.__proj__MkC__item__inv2",
@@ -90,7 +86,7 @@
         "token_correspondence_FStar.SquashProperties.__proj__MkC__item__j2"
       ],
       0,
-      "50c302f9684fccf8dc389f8b64a1a297"
+      "9f35291cd68d704a71b82086ce82fd36"
     ],
     [
       "FStar.SquashProperties.ac",
@@ -106,7 +102,7 @@
         "token_correspondence_FStar.SquashProperties.__proj__MkC__item__j2"
       ],
       0,
-      "3ca1aaffe4690659015a6a438967ccc9"
+      "dee58ff7a45209125ce76a1b3ceaa606"
     ],
     [
       "FStar.SquashProperties.false_elim",
@@ -115,10 +111,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
+        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
       ],
       0,
-      "53bd3e14d5c174f74aea79cdc4e919b0"
+      "8ef9cadd51eece2019739c7481163672"
     ],
     [
       "FStar.SquashProperties.l1",
@@ -130,7 +126,7 @@
         "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "6c1610e8df526550161bd609a80cbd5b"
+      "c2c8af5179c663c051bc6b4568e9a871"
     ],
     [
       "FStar.SquashProperties.bool_of_or",
@@ -142,7 +138,7 @@
         "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "ccb62b61a6dbad1bfb0d19ae90664fb6"
+      "0ce67c2616a3e0fed28838c363b636ef"
     ],
     [
       "FStar.SquashProperties.excluded_middle",
@@ -151,7 +147,7 @@
       1,
       [ "@query" ],
       0,
-      "d74e8f3c00f801a6a1b49c1d5213d52b"
+      "687a48ea36f6581a719ed5999c6e84dc"
     ],
     [
       "FStar.SquashProperties.excluded_middle_squash",
@@ -159,16 +155,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "equation_Prims.l_False", "equation_Prims.l_imp",
-        "equation_Prims.l_not", "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3d9be3f8c1f455cdaac99a8638e52c06",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+        "refinement_interpretation_Tm_refine_0a072959e7be7be61159772bf968ea07"
       ],
       0,
-      "d7de598917355c44c05f4950f87ce6b9"
+      "63af8db58c9a74b38fe6ae6806999d34"
     ],
     [
       "FStar.SquashProperties.ifProp",
@@ -180,7 +172,7 @@
         "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "80850e31f8e7c8e0e265cb1b98795b74"
+      "4de1334693eef49a6b053079f9f22a33"
     ],
     [
       "FStar.SquashProperties.__proj__MkR__item__inv",
@@ -196,7 +188,7 @@
         "token_correspondence_FStar.SquashProperties.__proj__MkR__item__j"
       ],
       0,
-      "e421f7ac54d9ba9ea2661aeb3ce21cd8"
+      "4aebfffcc671f5d484ed449a82fc0a1e"
     ],
     [
       "FStar.SquashProperties.__proj__MkC__item__inv2",
@@ -212,7 +204,7 @@
         "token_correspondence_FStar.SquashProperties.__proj__MkC__item__j2"
       ],
       0,
-      "b359d05299fa1dae0797003162819958"
+      "ac33975ccc48e061e70e59b5b0b79b5f"
     ],
     [
       "FStar.SquashProperties.ac",
@@ -228,7 +220,7 @@
         "token_correspondence_FStar.SquashProperties.__proj__MkC__item__j2"
       ],
       0,
-      "d5d5279b5252c64b58157bf74ae8523d"
+      "bffb72fb7689224ba9be5ccde39f2d71"
     ],
     [
       "FStar.SquashProperties.false_elim",
@@ -237,10 +229,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
+        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
       ],
       0,
-      "7858d991e63b7e91a9340caddd3d0826"
+      "ea3322ae2902e15357790b1b5dfb5528"
     ],
     [
       "FStar.SquashProperties.l1",
@@ -252,7 +244,7 @@
         "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "babd8d0f39ec85e748731a20957e247e"
+      "f6e92ef4c4711c513a81d776dbe04002"
     ]
   ]
 ]
