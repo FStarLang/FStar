@@ -228,6 +228,8 @@ let frame_post (#outer0:resource)
   post h0 x h1 /\
   sel (view_of delta) h0 == sel (view_of delta) h1
 
+#set-options "--no_tactics"
+
 // [DA: should be definable directly using RSTATE frame, but get
 //      an error about unexpected unification variable remaining]
 inline_for_extraction noextract let rst_frame (outer0:resource)
@@ -244,10 +246,10 @@ inline_for_extraction noextract let rst_frame (outer0:resource)
               (#post:r_post inner0 a inner1)
               ($f:unit -> RST a inner0 inner1 pre post)
             : RST a outer0 outer1
-                    (frame_pre delta pre)
+                    (FStar.Tactics.by_tactic_seman _ resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
+                      frame_pre delta pre)
                     (frame_post delta post) =
   reveal_view ();
   reveal_can_be_split_into ();
-//  FStar.Tactics.by_tactic_seman _ resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
-  assume (frame_delta outer0 inner0 outer1 inner1 delta);
+  FStar.Tactics.by_tactic_seman _ resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
   f ()
