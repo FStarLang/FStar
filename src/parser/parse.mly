@@ -1,6 +1,6 @@
 %{
 (*
- We are expected to have only 5 shift-reduce conflicts.
+ We are expected to have only 6 shift-reduce conflicts in ML and 8 in F#.
  A lot (176) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
