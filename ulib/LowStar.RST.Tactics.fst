@@ -60,11 +60,6 @@ inline_for_extraction noextract let resolve_frame_delta () : Tac unit =
   ignore (forall_intro ());
   apply_lemma (quote can_be_split_into_star);
   canon_monoid req rm
-  
-let unfold_with_tactic (t:unit -> Tac 'a) (p:Type)
-  : Lemma (requires p)
-          (ensures (with_tactic t p))
-  = admit()
 
 inline_for_extraction noextract let resolve_delta () : Tac unit =
   refine_intro ();
