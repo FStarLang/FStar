@@ -149,39 +149,42 @@ let rem (a b:t)
 
 (* Bitwise operators *)
 
-[@unfold_for_smt]
-let logand (a b:t)
-  : Tot t
-  = Mk (logand (v a) (v b))
 
-[@unfold_for_smt]
-let logxor (a b:t)
-  : Tot t
-  = Mk (logxor (v a) (v b))
+abstract
+let logand (x:t) (y:t) : Pure t
+  (requires True)
+  (ensures (fun z -> v x `logand` v y = v z))
+  = Mk (logand (v x) (v y))
 
-[@unfold_for_smt]
-let logor (a b:t)
-  : Tot t
-  = Mk (logor (v a) (v b))
+abstract
+let logxor (x:t) (y:t) : Pure t
+  (requires True)
+  (ensures (fun z -> v x `logxor` v y == v z))
+  = Mk (logxor (v x) (v y))
 
-[@unfold_for_smt]
-let lognot (a:t)
-  : Tot t
-  = Mk (lognot (v a))
+abstract
+let logor (x:t) (y:t) : Pure t
+  (requires True)
+  (ensures (fun z -> v x `logor` v y == v z))
+  = Mk (logor (v x) (v y))
+
+abstract
+let lognot (x:t) : Pure t
+  (requires True)
+  (ensures (fun z -> lognot (v x) == v z))
+  = Mk (lognot (v x))
 
 (* Shift operators *)
-[@unfold_for_smt]
-let shift_right (a:t) (s:UInt32.t)
-  : Pure t
-    (requires UInt32.v s < n)
-    (ensures tt)
+abstract
+let shift_right (a:t) (s:UInt32.t) : Pure t
+  (requires (UInt32.v s < n))
+  (ensures (fun c -> FStar.UInt.shift_right (v a) (UInt32.v s) = v c))
   = Mk (shift_right (v a) (UInt32.v s))
 
-[@unfold_for_smt]
-let shift_left (a:t) (s:UInt32.t)
-  : Pure t
-    (requires UInt32.v s < n)
-    (ensures tt)
+abstract
+let shift_left (a:t) (s:UInt32.t) : Pure t
+  (requires (UInt32.v s < n))
+  (ensures (fun c -> FStar.UInt.shift_left (v a) (UInt32.v s) = v c))
   = Mk (shift_left (v a) (UInt32.v s))
 
 (* Comparison operators *)
