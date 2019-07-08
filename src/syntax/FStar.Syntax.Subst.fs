@@ -103,9 +103,9 @@ let rec force_uvar' t =
 //from the uvar to anything it may have been resolved to
 let force_uvar t =
   let t', forced = force_uvar' t in
-  if not forced
-  then t, forced
-  else delay t' ([], SomeUseRange t.pos), forced
+  if forced
+  then delay t' ([], SomeUseRange t.pos)
+  else t
 
 //If a delayed node has already been memoized, then return the memo
 //THIS DOES NOT PUSH A SUBSTITUTION UNDER A DELAYED NODE---see push_subst for that
@@ -475,7 +475,7 @@ let rec push_subst s t =
 *)
 let rec compress (t:term) =
     let t = try_read_memo t in
-    let t, _ = force_uvar t in
+    let t = force_uvar t in
     match t.n with
     | Tm_delayed((t', s), memo) ->
         memo := Some (push_subst s t');
