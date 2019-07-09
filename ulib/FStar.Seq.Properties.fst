@@ -968,7 +968,7 @@ let slice_slice
 : Lemma
   (requires True)
   (ensures (slice (slice s i1 j1) i2 j2 == slice s (i1 + i2) (i1 + j2)))
-  [SMTPat (slice (slice s i1 j1) i2 j2)]
+//  [SMTPat (slice (slice s i1 j1) i2 j2)]
 = lemma_eq_elim (slice (slice s i1 j1) i2 j2) (slice s (i1 + i2) (i1 + j2))
 
 let rec lemma_seq_of_list_index (#a:Type) (l:list a) (i:nat{i < List.Tot.length l})
