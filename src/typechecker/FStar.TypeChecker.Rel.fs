@@ -2929,6 +2929,22 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
              in
              if BU.physical_equality wpc1 wpc2
              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
+             else (*
+                   * AR: If one of the sides is a uvar, we don't have any chance of solving it using sub logic
+                   *     So try EQ of wpc1 and wpc2, and also equate the two result types
+                   *
+                   *     Are the following patterns sufficient? Should we check more, e.g. Tm_app (Tm_uvar, _) etc.?
+                   *)
+                  if lid_equals c1.effect_name c2.effect_name &&
+                     (match wpc1.n, wpc2.n with
+                      | Tm_uvar _, _
+                      | _, Tm_uvar _ -> true
+                      | _ -> false)
+             then let t_prob, wl = sub_prob wl c1.result_typ EQ c2.result_typ "result type" in
+                  let wp_prob, wl = sub_prob wl wpc1 EQ wpc2 "wp" in
+                  //AR: important, don't leave the guard of the original problem hanging
+                  let wl = solve_prob orig (Some <| U.mk_conj (p_guard t_prob) (p_guard wp_prob)) [] wl in
+                  solve env (attempt [t_prob; wp_prob] wl)
              else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
                   if qualifiers |> List.contains Reifiable
                   then let c1_repr =
