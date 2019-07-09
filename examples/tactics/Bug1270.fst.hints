@@ -16,7 +16,7 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "1d5d34a11fe42983a01ef7374c590043"
+      "0f1c61753b47ecab2a74544ce4b6a5e2"
     ],
     [
       "Bug1270.test",
@@ -33,7 +33,7 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "71eb01c21367a097b8bb0e178f4f2c98"
+      "0c6e4fbb0d83572dace6be3ff85cb8e0"
     ],
     [
       "Bug1270.test",
@@ -50,7 +50,7 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "6c21032cf222421228523726fcc34267"
+      "7c5c437168151be642f71e6e2d83094d"
     ],
     [
       "Bug1270.test",
@@ -67,7 +67,7 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "b22448f7f42cf4339bdf0a9bf480485c"
+      "bd6c181638a45f752535dc67f7e1b12a"
     ]
   ]
 ]
