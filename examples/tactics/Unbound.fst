@@ -26,4 +26,4 @@ let tau () : Tac unit =
     squash_intro (); exact (pack (Tv_Var x))
 
 [@(expect_failure [228])]
-let _ = assert_by_tactic ((False ==> False) /\ False) tau
+let _ = assert ((False ==> False) /\ False) by tau ()

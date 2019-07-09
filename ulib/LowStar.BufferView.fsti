@@ -61,26 +61,23 @@ type view (a:Type) (b:Type) =
 ///
 /// The destination type `dest` is for specification only and is not
 /// subject to the same universe constraints by the memory model.
-///
-/// Being indexed by both the `src` and `dest` allows `buffer_view` to
-/// remain in universe 0.
-val buffer_view (src:Type0) (rrel rel:B.srel src) (dest:Type u#a) : Type0
+
+val buffer_view (src:Type0) (rrel rel:B.srel src) (dest:Type u#b) : Type u#b
 
 /// `buffer b`: In contrast to `buffer_view`, `buffer b` hides the
 /// source type of the view. As such, it is likely more convenient to
 /// use in specifications and the rest of this interface is designed
 /// around this type.
 ///
-/// However, the existential abstraction of the source type forces
-/// this type to be in universe 1.
-///
-/// This means, for instance, that values of `buffer b` cannot be
+/// However, the type has a higher universe, and
+/// this means, for instance, that values of `buffer b` cannot be
 /// stored in the heap.
 ///
 /// We leave its defnition transparent in case clients wish to
 /// manipulate both the `src` and `dest` types explicitly (e.g., to
 /// stay in a lower universe)
-let buffer (dest:Type u#a) : Type u#1 = (src:Type0 & rrel:B.srel src & rel:B.srel src & buffer_view src rrel rel dest)
+
+let buffer (dest:Type u#a) : Type u#(max a 1) = (src:Type0 & rrel:B.srel src & rel:B.srel src & buffer_view src rrel rel dest)
 
 let as_buffer_t (#dest:Type) (b:buffer dest) = B.mbuffer (Mkdtuple4?._1 b) (Mkdtuple4?._2 b) (Mkdtuple4?._3 b)
 

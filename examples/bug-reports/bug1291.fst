@@ -547,8 +547,8 @@ let gpm #b #a (abspat : a) : unit -> Tac b =
 open FStar.Tactics // needed again because we overrode return and bind
 
 let example #a #b #c: unit =
-  assert_by_tactic (a /\ b ==> c == b ==> c)
-    (fun () -> repeat' #unit
+  assert (a /\ b ==> c == b ==> c)
+    by (repeat' #unit
        (fun () -> idtac ();
                   gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
                     clear h <: Tac unit) `or_else`

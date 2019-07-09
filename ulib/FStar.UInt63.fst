@@ -21,7 +21,9 @@ unfold let n = 63
 open FStar.UInt
 open FStar.Mul
 
-(* NOTE: anything that you fix/update here should be reflected in [FStar.IntN.fstp], which is mostly
+#set-options "--max_fuel 0 --max_ifuel 0"
+
+(* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
 
 (* Except, as compared to [FStar.IntN.fstp], here:
@@ -185,7 +187,7 @@ let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 inline_for_extraction
 let n_minus_one = UInt32.uint_to_t (n - 1)
 
-#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 80 --initial_fuel 1 --max_fuel 1"
 // With inspiration from https://git.zx2c4.com/WireGuard/commit/src/crypto/curve25519-hacl64.h?id=2e60bb395c1f589a398ec606d611132ef9ef764b
 let eq_mask (a:t) (b:t)
   : Pure t

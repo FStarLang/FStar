@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "61d398967f9b2c712920fbc7c8a776b3"
+      "ca7470eab62a647387ead3addd6b13cf"
     ],
     [
       "IST.f",
@@ -17,7 +17,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-      "aa5fac7bd1dc18afcf31cae0f4e971e5"
+      "2a5649bf9824debcc548026e1e3b624b"
     ],
     [
       "IST.g",
@@ -25,12 +25,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat", "int_typing",
+        "@MaxIFuel_assumption", "@query", "int_typing",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "refinement_interpretation_Tm_refine_afd51579b90d50ea23e03b743a1fa001"
       ],
       0,
-      "e422794f6671e70c9b5a87b6ac884361"
+      "791d0a3557e2680583ba881657a1d407"
     ],
     [
       "IST.op_Greater_Less",
@@ -39,7 +39,7 @@
       1,
       [ "@query" ],
       0,
-      "1d1a2e60b62fe3e6f5a4da9101c6bd64"
+      "b9b0bf25f953ac37404397bf1ac4b6fa"
     ]
   ]
 ]

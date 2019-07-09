@@ -28,42 +28,38 @@ let my_cut (t:term) : Tac unit =
 assume val aug : (unit -> Type0) -> Type0
 
 let test (p:(unit -> Type0)) (q:(unit -> Type0))
-   = assert_by_tactic
-            (p == q ==>
+   = assert (p == q ==>
              aug p ==>
              aug q)
-             (fun () ->
-               let eq = implies_intro () in
-               let h = implies_intro () in
-               ddump "A";
-               my_cut (type_of_binder h);
-               ddump "B";
-               rewrite eq;
-               norm [];
-               ddump "C";
-               let hh = intro () in
-               apply (quote return_squash);
-               exact (pack (Tv_Var (bv_of_binder hh)));
-               ddump "D";
-               exact (pack (Tv_Var (bv_of_binder h))) )
+         by (let eq = implies_intro () in
+             let h = implies_intro () in
+             ddump "A";
+             my_cut (type_of_binder h);
+             ddump "B";
+             rewrite eq;
+             norm [];
+             ddump "C";
+             let hh = intro () in
+             apply (quote return_squash);
+             exact (pack (Tv_Var (bv_of_binder hh)));
+             ddump "D";
+             exact (pack (Tv_Var (bv_of_binder h))) )
 
 [@expect_failure]
 let test2 (post:(unit -> Type0))
-   = assert_by_tactic
-            ((post ==  (fun x -> post ())) ==>
+   = assert ((post ==  (fun x -> post ())) ==>
              aug post ==>
              aug (fun x -> post ()))
-             (fun () ->
-               let eq = implies_intro () in
-               let h = implies_intro () in
-               ddump "A";
-               my_cut (type_of_binder h);
-               ddump "B";
-               rewrite eq;
-               norm [];
-               ddump "C";
-               let hh = intro () in
-               () )
+         by (let eq = implies_intro () in
+             let h = implies_intro () in
+             ddump "A";
+             my_cut (type_of_binder h);
+             ddump "B";
+             rewrite eq;
+             norm [];
+             ddump "C";
+             let hh = intro () in
+             ())
 
 let test3 (p:(unit -> Type0)) (q:(unit -> Type0))
    = assert (p == q ==> aug p ==> aug q)

@@ -9,6 +9,9 @@ FSTAR_HOME=..
 all:
 	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-core
 
+benchmark:
+	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-benchmark
+
 extra:
 	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-extra
 
@@ -112,9 +115,11 @@ TACLIB_OUTPUTS=$(addprefix tactics_ml/_build/ulib/tactics_ml/, \
 install-fstarlib: $(FSTARLIB_OBJECTS)
 	mkdir -p $(FSTARLIB_DIR)
 	cp $(FSTARLIB_OUTPUTS) $(FSTARLIB_DIR)
+	sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstarlib-META >$(FSTARLIB_DIR)/META
 install-fstar-tactics: $(TACLIB_OBJECTS)
 	mkdir -p $(TACLIB_DIR)
 	cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
+	sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstar-tactics-lib-META >$(TACLIB_DIR)/META
 
 clean:
 	rm -f .depend .depend.extract

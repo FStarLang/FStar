@@ -14,8 +14,10 @@ else
   MSBUILD = $(shell which msbuild || (echo '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'>&2; which xbuild))
 endif
 
+# we ignore the return result in benchmark runs because we can have micro-benchmarks which
+# produce error asserts when executed with '--admit_smt_queries true'
 %.uver: %.fst
-	$(FSTAR) --use_extracted_interfaces true $^
+	$(BENCHMARK_PRE) $(FSTAR) --use_extracted_interfaces true $^
 
 %.fail-uver: %.fst
 	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)

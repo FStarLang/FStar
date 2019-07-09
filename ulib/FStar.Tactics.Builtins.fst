@@ -162,7 +162,7 @@ if it's not solved later.
 
 You probably want [apply] from FStar.Tactics.Derived.
 *)
-assume val t_apply : bool -> term -> Tac unit
+assume val t_apply : bool -> bool -> term -> Tac unit
 
 (** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a Lemma
 ensuring [phi]. The arguments to [l] and its requires clause are introduced as new goals.
@@ -263,7 +263,7 @@ assume val unify_env : env -> term -> term -> Tac bool
 [input] and returns the output. For security reasons, this can only be
 performed when the `--unsafe_tactic_exec` options was provided for the
 current F* invocation. The tactic will fail if this is not so. *)
-assume val launch_process : string -> string -> string -> Tac string
+assume val launch_process : string -> list string -> string -> Tac string
 
 (** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh unaccessible integer within

@@ -91,7 +91,7 @@ else
   fi
 fi
 
-diag "*** Make the examples ***"
+diag "*** Test the binary package ***"
 cd fstar
 
 # We need two FSTAR_HOMEs in this script: one for the host (from where
@@ -103,16 +103,47 @@ cd fstar
 # to export it from here.
 export FSTAR_HOME="$PWD"
 
-diag "-- Verify hello ocaml -- should output Hello F*! --"
-make -C examples/hello ocaml | tee HelloOcamlOutput.log
+diag "-- Versions --"
+bin/fstar.exe --version
+bin/z3 --version
+
+diag "-- Verify micro benchmarks --"
+make -C examples/micro-benchmarks
 if [ $? -ne 0 ]; then
-  echo -e "* ${RED}FAIL!${NC} for examples/hello ocaml - make failed withexit code $?"
-  exit 1
-elif ! egrep -q 'Hello F\*!' HelloOcamlOutput.log; then
-  echo -e "* ${RED}FAIL!${NC} for examples/hello ocaml - 'Hello F*!' was not found in HelloOcamlOutput.log"
+  echo -e "* ${RED}FAIL!${NC} for micro benchmarks - make returned $?"
   exit 1
 else
-  echo -e "* ${GREEN}PASSED!${NC} for examples/hello ocaml"
+  echo -e "* ${GREEN}PASSED!${NC} for micro benchmarks"
+fi
+
+diag "-- Rebuilding ulib/ml (to make sure it works) --"
+make -C ulib/ml clean && make -C ulib install-fstarlib
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for install-fstarlib - make returned $?"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for install-fstarlib"
+fi
+
+diag "-- Execute examples/hello via OCaml -- should output Hello F*! --"
+make -C examples/hello hello | tee HelloOcamlOutput.log
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for examples/hello - make failed withexit code $?"
+  exit 1
+elif ! egrep -q 'Hello F\*!' HelloOcamlOutput.log; then
+  echo -e "* ${RED}FAIL!${NC} for examples/hello - 'Hello F*!' was not found in HelloOcamlOutput.log"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for examples/hello"
+fi
+
+diag "-- Verify ulib --"
+make -j6 -C ulib
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for ulib - make returned $?"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for ulib"
 fi
 
 diag "-- Verify all examples --"

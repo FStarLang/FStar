@@ -19,5 +19,5 @@ module Nest
 
 open FStar.Tactics
 
-let _ = assert_by_tactic (3 == 3)
-                         (fun () -> pointwise (fun () -> pointwise trefl; trefl ()))
+let _ = assert (3 == 3)
+            by (pointwise (fun () -> pointwise trefl; trefl ()))

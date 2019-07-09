@@ -3,8 +3,11 @@
 
     "BaseContainerIsEverestImage" : true,
     "BaseContainerImageName" : "fstar",
-    "BaseContainerImageTagOrCommitId": "latest",
-    "BranchName" : "master",
+
+    "_ABOUT_NEXT_TWO_VARS": "These variables are commented out. When these variables are undefined, builds use Azure DevOps variables instead. Uncomment them to specify a different base image",
+    "_BaseContainerImageTagOrCommitId": "latest",
+    "_BranchName" : "master",
+
     "GithubCommitUrl" : "https://github.com/FStarLang/FStar/commit",
     "OnDemandBuildDefinition" : "FStar\\FStar-{agentOS}",
 
@@ -18,6 +21,7 @@
     "CIBuildTarget" : "fstar-binary-build",
     "NightlyBuildTarget" : "fstar-binary-build",
     "HasLogsToExtract" : true,
+    "HasQueryStats" : false,
 
     "NotificationEnabled" : true,
     "NotificationChannel" : "#fstar-build",

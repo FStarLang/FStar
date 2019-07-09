@@ -39,7 +39,7 @@ let rec l_revert_all (bs:binders) : Tac unit =
 private val fa_intro_lem : (#a:Type) -> (#p : (a -> Type)) ->
                            (x:a -> squash (p x)) ->
                            Lemma (forall (x:a). p x)
-let fa_intro_lem #a #p f = FStar.Classical.lemma_forall_intro_gtot f
+let fa_intro_lem #a #p f = FStar.Classical.lemma_forall_intro_gtot (fun x -> (f x) <: GTot (squash (p x)))
 
 let forall_intro () : Tac binder =
     apply_lemma (`fa_intro_lem);

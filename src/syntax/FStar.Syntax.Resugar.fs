@@ -968,6 +968,7 @@ let resugar_pragma = function
   | S.ResetOptions s -> A.ResetOptions s
   | S.PushOptions s -> A.PushOptions s
   | S.PopOptions -> A.PopOptions
+  | S.RestartSolver -> A.RestartSolver
   | S.LightOff -> A.LightOff
 
 let resugar_typ env datacon_ses se : sigelts * A.tycon =
