@@ -304,7 +304,9 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     : uenv
     * mlident
     * exp_binding =
-    let mlp = mlpath_of_lident x.fv_name.v in
+    //rewrite FStar.[U]Int[N].Mk to FStar.[U]Int[N].[u]int_to_t
+    let y = U.maybe_map_machine_int_constructor x in
+    let mlp = mlpath_of_lident y.fv_name.v in
     // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
     // so this conversion should be moved to lookup_fv
 

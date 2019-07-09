@@ -2105,3 +2105,31 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>
     quant
 
 (* End SMT Lemma utilities *)
+
+let maybe_map_machine_int_constructor =
+    let as_fv l =
+      lid_as_fv (PC.p2l l)
+                (Delta_constant_at_level 1)
+                None
+    in
+    let bounded_unsigned_int_types =
+        [ "UInt8"; "UInt16"; "UInt32"; "UInt64" ]
+        |> List.map (fun m -> PC.p2l ["FStar"; m; "Mk"],
+                          as_fv ["FStar"; m; "uint_to_t"])
+    in
+    let bounded_signed_int_types =
+        [ "Int8"; "Int16"; "Int32"; "Int64" ]
+        |> List.map (fun m -> PC.p2l ["FStar"; m; "Mk"],
+                         as_fv ["FStar"; m; "int_to_t"])
+    in
+    let machine_int_constructors =
+      bounded_unsigned_int_types
+      @ bounded_signed_int_types
+    in
+    fun fv ->
+      match FStar.Util.try_find
+                (fun (x, _) -> fv_eq_lid fv x)
+                machine_int_constructors
+      with
+      | None -> fv
+      | Some (_, fv') -> fv'
