@@ -159,6 +159,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
      else failwith "Impossible: Expected pure_or_ghost comp"
   in
   let expected_c_opt, c =
+    let ct = U.comp_result c in
     match copt with
     | Some _ -> copt, c
     | None  ->
@@ -167,12 +168,17 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
         || (Options.ml_ish ()
             && env.lax
             && not (U.is_pure_or_ghost_comp c))
-        then Some (U.ml_comp (U.comp_result c) e.pos), c
+        then Some (U.ml_comp ct e.pos), c
         else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
         then None, tot_or_gtot c //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
-             then Some (tot_or_gtot c), c
-             else None, c
+        then Some (tot_or_gtot c), c
+        else (*
+              * AR: force null wp for all effects
+              *
+              *     note that Env.null_wp_for_eff does the normalization of effects
+              *)
+             Some (Env.null_wp_for_eff env (U.comp_effect_name c) (ct |> env.universe_of env) ct), c
   in
   let c = norm_c env c in
   match expected_c_opt with
