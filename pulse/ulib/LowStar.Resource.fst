@@ -29,7 +29,7 @@ let eloc = Ghost.erased loc
 let as_loc (x:eloc) : GTot loc = Ghost.reveal x
 
 abstract
-let sel_reads_fp #b fp #inv (sel:(imem inv) -> GTot b) =
+let sel_reads_fp #b fp (inv:HS.mem -> Type0) (sel:HS.mem -> GTot b) =
   forall (h0 h1:imem inv) loc. {:pattern (modifies loc h0 h1); (sel h1)}
     loc_disjoint (as_loc fp) loc /\
     modifies loc h0 h1 ==>
@@ -50,18 +50,18 @@ noeq
 type view_aux a = {
     fp: eloc;
     inv: HS.mem -> Type0;
-    sel: view_t (imem inv) a
+    sel: view_t HS.mem a
   }
 
 let view a =
   view:view_aux a{
-    sel_reads_fp view.fp view.sel /\
+    sel_reads_fp view.fp view.inv view.sel /\
     inv_reads_fp view.fp view.inv
   }
 
 let reveal_view ()
-  : Lemma ((forall #b fp #inv (sel:(imem inv) -> GTot b) .{:pattern sel_reads_fp fp sel}
-              sel_reads_fp fp sel
+  : Lemma ((forall #b fp inv (sel:HS.mem -> GTot b) .{:pattern sel_reads_fp fp inv sel}
+              sel_reads_fp fp inv sel
               <==>
               (forall (h0 h1:imem inv) loc. {:pattern  (modifies loc h0 h1); (sel h1)}
                  loc_disjoint (as_loc fp) loc /\
@@ -97,7 +97,7 @@ let fp (res:resource) =
 let inv (res:resource) (h:HS.mem) =
   res.view.inv h
 
-let sel (#a:Type) (view:view a) (h:imem (inv (as_resource view))) =
+let sel (#a:Type) (view:view a) (h:HS.mem) =
   view.sel h
 
 (* Separating conjunction on views and resources *)
@@ -127,6 +127,12 @@ let reveal_star_inv (res1 res2:resource) (h:HS.mem)
                                                                 //      at the cost of having to have expicitly
                                                                 //      call reveals in specs involving <*>]
   ()
+
+let reveal_star_sel (res1 res2:resource) (h:HS.mem)
+  : Lemma 
+      (ensures (sel (view_of (res1 <*> res2)) h == (sel (view_of res1) h, sel (view_of res2) h)))
+      [SMTPat (sel (view_of (res1 <*> res2)) h)]
+  = ()
 
 let reveal_star ()
   : Lemma ((forall res1 res2 .{:pattern as_loc (fp (res1 <*> res2))}
