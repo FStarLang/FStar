@@ -82,19 +82,16 @@ let read_write_with_sharing () : RST.RST unit
   let h = HST.get () in
    let full = R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1) in
   let delta = R.(A.array_resource b_first <*> A.array_resource b1) in
-  let open FStar.Tactics in
-  assert (R.can_be_split_into full (delta, A.array_resource b_second)) by (tadmit ()); (* TODO: fix by tactic ?*)
+//  assume(R.inv full h ==> R.inv delta h);
   let x2 = RST.rst_frame
     (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
     (fun _ -> (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1)))
     (fun _ -> A.index b_second 0ul)
   in
-
   let h' = HST.get () in
-  assert(R.can_be_split_into delta (A.array_resource b_first, A.array_resource b1));
-  assume(R.sel (R.view_of delta) h == R.sel (R.view_of delta) h' ==>
-    R.sel (A.array_view b_first ) h == R.sel (A.array_view b_first) h' /\
-    R.sel (A.array_view b1 ) h == R.sel (A.array_view b1) h');
+  // assume(R.sel (R.view_of delta) h == R.sel (R.view_of delta) h' ==>
+  //   R.sel (A.array_view b_first ) h == R.sel (A.array_view b_first) h' /\
+  //   R.sel (A.array_view b1 ) h == R.sel (A.array_view b1) h');
   RST.rst_frame
     (R.(A.array_resource b_first <*> A.array_resource b_second <*> A.array_resource b1))
     (fun _ -> R.(A.array_resource b <*> A.array_resource b1))
