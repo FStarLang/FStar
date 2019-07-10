@@ -83,7 +83,7 @@ val move:
   )) (ensures (fun h0 b' h1 ->
     live h1 b' /\ mergeable b b' /\ modifies (loc_array b) h0 h1 /\
     loc_disjoint (loc_array b) (loc_array b') /\
-    fresh_loc (loc_array b') h0 h1 /\
+    fresh_loc (loc_array b') h0 h1  /\
     (freeable b ==> freeable b') /\
     (forall (b1: array a{mergeable b b1}). {:pattern mergeable b' b1} mergeable b b1) /\
     as_seq h0 b == as_seq h1 b' /\
