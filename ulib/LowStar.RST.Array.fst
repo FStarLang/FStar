@@ -58,6 +58,7 @@ let share #a b =
   let b' = A.share b in
   b'
 
+
 let merge #a b b' =
   (**) reveal_array();
   (**) reveal_rst_inv();

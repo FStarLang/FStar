@@ -219,25 +219,10 @@ let rec share_cells #a b i pid =
     (**) MG.modifies_trans #ucell #cls s12 h0 h1 s23 h2
   end
 
-val get_array_current_max (#a:Type0) (h:HS.mem) (b:array a) (i:U32.t{U32.v i <= vlength b}) : Pure (Ghost.erased perm_id)
-  (requires True)
-  (ensures fun pid -> forall (j:nat{j < vlength b}). j >= U32.v i ==>
-    (let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + j) in
-      Ghost.reveal pid > get_current_max (Ghost.reveal perm_map)))
-  (decreases (vlength b - U32.v i))
-
-let rec get_array_current_max #a h b i =
-  if U32.v i = vlength b then (Ghost.hide 1)
-  else  begin
-    let max_end = get_array_current_max h b (U32.add i 1ul) in
-    let (v, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + U32.v i) in
-    let current_max = Ghost.hide (get_current_max (Ghost.reveal perm_map) + 1) in
-    Ghost.elift2 (fun (a b:perm_id) -> if a > b then a else b) max_end current_max
-  end
 
 val lemma_different_live_pid (#a:Type0) (h:HS.mem) (b:array a{vlength b > 0}) : Lemma
   (requires live h b)
-  (ensures Ghost.reveal (get_array_current_max h b 0ul) <> Ghost.reveal b.pid)
+  (ensures Ghost.reveal (get_array_current_max h b) <> Ghost.reveal b.pid)
 
 let lemma_different_live_pid #a h b =
   let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx) in
@@ -248,15 +233,17 @@ let lemma_different_live_pid #a h b =
 let share #a b =
   (**) let open HST in
   (**) let h0 = get() in
-  let new_pid = get_array_current_max h0 b 0ul in
+  let new_pid = get_array_current_max h0 b in
   share_cells b 0ul new_pid;
   (**) let h1 = get() in
   let b' = Array b.max_length b.content b.idx b.length new_pid in
   (**) assert (as_seq h1 b' `Seq.equal` as_seq h0 b);
   (**) lemma_different_live_pid h0 b;
   (**) lemma_disjoint_pid_disjoint_arrays b b';
-  // This assumption requires a fundamental change in the modifies library. This is on TR's plate
-  (**) assume (fresh_loc (loc_array b') h0 h1);
+  get_array_current_max_same_with_new_pid #a b h0 new_pid;
+  array_not_used_pid_in_loc_unused_in b' h0;
+  (**) assert( loc_unused_in h0 `loc_includes` (loc_array b'));
+  (**) assert( loc_not_unused_in h1 `loc_includes` (loc_array b'));
   b'
 
 val merge_cell:
@@ -554,7 +541,7 @@ let rec move_cells #a b i pid =
 let move #a b =
   (**) let open HST in
   (**) let h0 = get() in
-  let new_pid = get_array_current_max h0 b 0ul in
+  let new_pid = get_array_current_max h0 b in
   move_cells b 0ul new_pid;
   (**) let h1 = get() in
   let b' = Array b.max_length b.content b.idx b.length new_pid in
@@ -562,8 +549,8 @@ let move #a b =
   (**) assert (as_perm_seq h1 b' `Seq.equal` as_perm_seq h0 b);
   (**) lemma_different_live_pid h0 b;
   (**) lemma_disjoint_pid_disjoint_arrays b b';
-  // This assumption requires a fundamental change in the modifies library. This is on TR's plate
-  (**) assume (fresh_loc (loc_array b') h0 h1);
+  get_array_current_max_same_with_new_pid #a b h0 new_pid;
+  array_not_used_pid_in_loc_unused_in b' h0;
   b'
 
 let split #a b idx =
