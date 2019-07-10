@@ -543,3 +543,122 @@ let rec lemma_disjoint_gsub_disjoint_compute_array (#a:Type) (b:array a)
     end
 
 let disjoint_gsubs #a b i1 i2 len1 len2 = lemma_disjoint_gsub_disjoint_compute_array b i1 i2 len1 len2 0
+
+val get_array_current_max' (#a:Type0) (h:HS.mem) (b:array a) (i:U32.t{U32.v i <= vlength b}) : Pure (Ghost.erased perm_id)
+  (requires True)
+  (ensures fun pid -> forall (j:nat{j < vlength b}). j >= U32.v i ==>
+    (let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + j) in
+      Ghost.reveal pid > get_current_max (Ghost.reveal perm_map)))
+  (decreases (vlength b - U32.v i))
+
+let rec get_array_current_max' #a h b i =
+  if U32.v i = vlength b then (Ghost.hide 1)
+  else  begin
+    let max_end = get_array_current_max' h b (U32.add i 1ul) in
+    let (v, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + U32.v i) in
+    let current_max = Ghost.hide (get_current_max (Ghost.reveal perm_map) + 1) in
+    Ghost.elift2 (fun (a b:perm_id) -> if a > b then a else b) max_end current_max
+  end
+
+val get_array_current_max (#a:Type0) (h:HS.mem) (b:array a) : Pure (Ghost.erased perm_id)
+  (requires True)
+  (ensures fun pid -> forall (j:nat{j < vlength b}).
+    (let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + j) in
+      Ghost.reveal pid > get_current_max (Ghost.reveal perm_map)))
+
+let get_array_current_max #a h b = get_array_current_max' #a h b 0ul
+
+let rec get_array_current_max_same_with_new_pid'
+  (#a: Type)
+  (b: array a)
+  (h: HS.mem)
+  (new_pid: Ghost.erased perm_id)
+  (i:U32.t{U32.v i <= vlength b})
+  : Lemma (requires (True)) (ensures (
+    let b' = Array b.max_length b.content b.idx b.length new_pid in
+    Ghost.reveal (get_array_current_max' #a h b' i) =  Ghost.reveal (get_array_current_max' #a h b i)
+  )) (decreases (vlength b - U32.v i))  =
+  if U32.v i = vlength b then ()
+  else
+    get_array_current_max_same_with_new_pid' #a b h new_pid (U32.add i 1ul)
+
+let get_array_current_max_same_with_new_pid (#a: Type) (b: array a) (h: HS.mem) (new_pid: Ghost.erased perm_id) : Lemma (
+   let b' = Array b.max_length b.content b.idx b.length new_pid in
+   Ghost.reveal (get_array_current_max #a h b') =  Ghost.reveal (get_array_current_max #a h b)
+) =
+  get_array_current_max_same_with_new_pid' #a b h new_pid 0ul
+
+let fresh_array_pid #a b' h0 h1 =
+  Ghost.reveal b'.pid > Ghost.reveal (get_array_current_max h0 b') /\
+  Ghost.reveal (get_array_current_max h1 b') = Ghost.reveal b'.pid
+
+let ucell_unused (r: HS.rid) (a:nat) (cell:ucell r a) (h: HS.mem) =
+  forall (t:Type) (b:array t).
+    (frameOf b = r /\ as_addr b = a /\ HS.contains h b.content) ==>
+    (cell.b_index < U32.v b.max_length /\
+    begin
+      let (_, perm_map) = Seq.index (HS.sel h b.content) cell.b_index in
+      cell.b_pid > get_current_max (Ghost.reveal perm_map)
+    end)
+
+let ucell_not_used_pid_in_loc_unused_in (r: HS.rid) (a:nat) (cell:ucell r a) (h: HS.mem) : Lemma
+  (requires (ucell_unused r a cell h))
+  (ensures (loc_unused_in h `loc_includes` MG.loc_of_aloc cell))
+  = admit()
+
+let cell_not_used_pid_in_loc_unused_in (#t: Type) (b: array t) (i:nat{i < vlength b}) (h: HS.mem) :
+  Lemma (requires (
+    HS.contains h b.content /\ begin
+      let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
+      Ghost.reveal b.pid > get_current_max (Ghost.reveal perm_map)
+    end
+  ))
+  (ensures (loc_unused_in h `loc_includes` (loc_cell b i)))
+=
+  let r = frameOf b in
+  let a = as_addr b in
+  let cell = aloc_cell b i in
+  let aux (t': Type) (b': array t') : Lemma (
+    (frameOf b' = r /\ as_addr b' = a /\ HS.contains h b'.content) ==>
+    (cell.b_index < U32.v b'.max_length /\
+    begin
+      let (_, perm_map) = Seq.index (HS.sel h b'.content) (cell.b_index) in
+      cell.b_pid > get_current_max (Ghost.reveal perm_map)
+    end))
+  =
+    let aux (_ : squash ((frameOf b' = r /\ as_addr b' = a /\ HS.contains h b'.content))) : Lemma
+      (cell.b_index < U32.v b'.max_length /\
+      begin
+        let (_, perm_map) = Seq.index (HS.sel h b'.content) (cell.b_index) in
+        cell.b_pid > get_current_max (Ghost.reveal perm_map)
+      end)
+     =
+      live_same_arrays_equal_types #t #t' b b' h
+    in Classical.impl_intro aux
+  in
+  Classical.forall_intro_2 aux;
+  ucell_not_used_pid_in_loc_unused_in
+    (frameOf b)
+    (as_addr b)
+    cell h
+
+let rec array_not_used_pid_in_loc_unused_in' (#a: Type) (b: array a) (h: HS.mem) (i:nat{i <= vlength b}) :
+  Lemma (requires (Ghost.reveal b.pid >= Ghost.reveal (get_array_current_max #a h b) /\ HS.contains h b.content))
+  (ensures (loc_unused_in h `loc_includes` (compute_loc_array b i)))
+  (decreases (vlength b - i))
+  =
+  if i = vlength b then
+    loc_includes_none (loc_unused_in h)
+  else begin
+    array_not_used_pid_in_loc_unused_in' #a b h (i + 1);
+    cell_not_used_pid_in_loc_unused_in #a b i h;
+    loc_includes_union_r (loc_unused_in h)(loc_cell b i) (compute_loc_array b (i+1))
+  end
+
+let array_not_used_pid_in_loc_unused_in (#a: Type) (b: array a) (h: HS.mem) :
+  Lemma (requires (
+    Ghost.reveal b.pid >= Ghost.reveal (get_array_current_max #a h b) /\
+    HS.contains h b.content
+  ))
+  (ensures (loc_unused_in h `loc_includes` (loc_array b)))
+  = array_not_used_pid_in_loc_unused_in' #a b h 0
