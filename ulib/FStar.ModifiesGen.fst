@@ -387,7 +387,8 @@ let addrs_of_loc_union
   [SMTPat (addrs_of_loc (loc_union l1 l2) r)]
 = assert (GSet.equal (addrs_of_loc (loc_union l1 l2) r) (GSet.union (addrs_of_loc l1 r) (addrs_of_loc l2 r)))
 
-let loc_includes #al #c s1 s2 =
+unfold
+let loc_includes' #al (#c: cls al) (s1 s2: loc c) =
   let regions1 = Ghost.reveal (Loc?.regions s1) in
   let regions2 = Ghost.reveal (Loc?.regions s2) in (
     Set.subset regions2 regions1 /\
@@ -406,6 +407,9 @@ let loc_includes #al #c s1 s2 =
       (Ghost.reveal (Loc?.aux s1)) `loc_aux_includes` (Ghost.reveal (Loc?.aux s2))
     )
   )
+
+let loc_includes #al #c s1 s2 =
+  loc_includes' s1 s2
 
 let loc_includes_refl #al #c s =
   loc_aux_includes_refl (Ghost.reveal (Loc?.aux s))
@@ -622,6 +626,36 @@ let loc_disjoint_regions #al #c preserve_liveness1 preserve_liveness2 rs1 rs2 =
   // FIXME: WHY WHY WHY this assert?
   assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_regions #_ #c preserve_liveness1 rs1))) (Ghost.reveal (Loc?.aux (loc_regions #_ #c preserve_liveness2 rs2))))
 
+
+let loc_none_in_some_region #a (c: cls a) (r: HS.rid) : GTot (loc c) =
+  Loc
+    (Ghost.hide (Set.singleton r))
+    (Ghost.hide (Set.empty))    
+    (mk_non_live_addrs (fun _ -> GSet.empty))
+    (mk_live_addrs (fun _ -> GSet.empty))    
+    (Ghost.hide GSet.empty)
+
+let dummy #a (c: cls a) (r: HS.rid) : Tot unit =
+  let l = loc_none_in_some_region c r in
+  let l1 = loc_region_only false r in
+  let l2 = loc_none in
+  assert ((l1 `loc_union` l2) `loc_includes` l);
+  assert (l1 `loc_disjoint` l);
+  assert (l1 `loc_disjoint` l2);
+  assert (~ (l2 `loc_includes` l))
+
+#push-options "--z3rlimit 128"
+
+let loc_includes_disjoint_elim
+  #al (c: cls al)
+  (l l1 l2: loc c)
+: Lemma
+  (requires ((l1 `loc_union` l2) `loc_includes` l /\ l1 `loc_disjoint` l /\ l1 `loc_disjoint` l2)
+//    (forall r . r `Set.mem` Ghost.reveal (Loc?.regions l) ==> (exists (a: nat) (x: al r a) . ALoc r a (Some x) `GSet.mem` Ghost.reveal (Loc?.aux l)))
+  )
+  (ensures (l2 `loc_includes'` l))
+= assume (Set.subset (Ghost.reveal (Loc?.regions l)) (Ghost.reveal (Loc?.regions l2)));
+  assume (forall r . GSet.subset (addrs_of_loc l r) (addrs_of_loc l2 r))
 
 (** Liveness-insensitive memory locations *)
 
@@ -1496,6 +1530,15 @@ let loc_unused_in_not_unused_in_disjoint #al c h =
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)));
   assert (loc_disjoint #al #c (loc_unused_in #al c h)
                               (loc_not_unused_in #al c h))
+
+let loc_unused_in_not_unused_in_union
+  #al
+  (#c: cls al)
+  (l: loc c)
+  h
+: Lemma
+  ((loc_not_unused_in c h `loc_union` loc_unused_in c h) `loc_includes` l)
+= ()
 
 
 #push-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1"
