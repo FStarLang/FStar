@@ -156,6 +156,9 @@ let e_arrow_rel #a #b (ra:per a) (rb:per b) : erel (ra ^--> rb) = arrow_rel ra r
 
 /// Now for some simple examples
 
+/// `id` is relationally parametric:
+let id (arel:rel 'a) : (arel ^--> arel) = fun x -> x
+
 /// `lo`: The "low security relation", i.e., adversary visible values
 /// must be equal on both sides
 let lo a : erel a = fun x y -> (x == y <: prop)
