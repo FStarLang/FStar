@@ -75,6 +75,45 @@ type cls (aloc: Type) : Type = | Cls:
     (requires (aloc_preserved x h1 h2 /\ aloc_preserved x h2 h3))
     (ensures (aloc_preserved x h1 h3))
   )) ->
+  (aloc_used_in: (
+    (x: aloc) ->
+    (h: HS.mem) ->
+    GTot Type0
+  )) ->
+  (aloc_unused_in: (
+    (x: aloc) ->
+    (h: HS.mem) ->
+    GTot Type0
+  )) ->
+  (aloc_used_in_unused_in_disjoint: (
+    (x: aloc) ->
+    (y: aloc) ->
+    (h: HS.mem) ->
+    Lemma
+    ((x `aloc_used_in` h /\ y `aloc_unused_in` h) ==> x `aloc_disjoint` y)
+  )) ->
+  (aloc_used_in_includes: (
+    (greater: aloc) ->
+    (lesser: aloc) ->
+    (h: HS.mem) ->
+    Lemma
+    ((greater `aloc_includes` lesser /\ greater `aloc_used_in` h) ==> lesser `aloc_used_in` h)
+  )) ->
+  (aloc_unused_in_includes: (
+    (greater: aloc) ->
+    (lesser: aloc) ->
+    (h: HS.mem) ->
+    Lemma
+    ((greater `aloc_includes` lesser /\ greater `aloc_unused_in` h) ==> lesser `aloc_unused_in` h)
+  )) ->
+  (aloc_unused_in_preserved: (
+    (x: aloc) ->
+    (h1: HS.mem) ->
+    (h2: HS.mem) ->
+    Lemma
+    (requires (x `aloc_unused_in` h1))
+    (ensures (aloc_preserved x h1 h2))
+  )) ->
   cls aloc
 
 module GSet = FStar.GSet
@@ -121,3 +160,17 @@ let loc_includes_disjoint_elim
       Classical.move_requires g ()
   in
   Classical.forall_intro_2 (fun x -> Classical.move_requires (f x))
+
+let preserved #al (#c: cls al) (l: loc c) (h1 h2: HS.mem) : GTot Type0 =
+  forall (x: al) . {:pattern (x `GSet.mem` l)} x `GSet.mem` l ==> c.aloc_preserved x h1 h2
+
+let modifies #al (#c: cls al) (l: loc c) (h1 h2: HS.mem) : GTot Type0 =
+  forall (l' : loc c) . {:pattern (l' `loc_disjoint` l)} l' `loc_disjoint` l ==> preserved l' h1 h2
+
+let used_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
+  Classical.forall_intro_3 c.aloc_used_in_includes;
+  GSet.comprehend (fun x -> FStar.StrongExcludedMiddle.strong_excluded_middle (x `c.aloc_used_in` h))
+
+let unused_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
+  Classical.forall_intro_3 c.aloc_unused_in_includes;
+  GSet.comprehend (fun x -> FStar.StrongExcludedMiddle.strong_excluded_middle (x `c.aloc_unused_in` h))
