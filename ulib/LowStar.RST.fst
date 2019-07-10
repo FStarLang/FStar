@@ -44,6 +44,11 @@ assume val lemma_unused_in_monotonic (l:loc) (h0 h1:HS.mem)
   : Lemma (requires modifies l h0 h1)
           (ensures loc_unused_in h0 `loc_includes` loc_unused_in h1)
 
+assume val lemma_not_unused_in_monotonic (l:loc) (h0 h1:HS.mem)
+  : Lemma (requires modifies l h0 h1)
+          (ensures loc_not_unused_in h1 `loc_includes` loc_not_unused_in h0)
+
+
 assume val lemma_loc_disjoint_not_unused_in_modifies (h0 h1:HS.mem) (l l':loc)
   : Lemma (requires (loc_disjoint l' l /\
                      loc_includes (loc_not_unused_in h0) l' /\
@@ -100,7 +105,7 @@ let modifies_trans (res0 res1 res2:resource) (h0 h1 h2:HS.mem)
              modifies res0 res2 h0 h2)
            [SMTPat (modifies res0 res2 h0 h2);
             SMTPat (modifies res0 res1 h0 h1)] =
-           
+
    lemma_unused_in_monotonic (as_loc (fp res0)) h0 h1;
    modifies_only_not_unused_in (as_loc (fp res0)) h0 h2
 
@@ -256,8 +261,11 @@ inline_for_extraction noextract let rst_frame (outer0:resource)
                     (frame_post delta post) =
   reveal_view ();
   reveal_can_be_split_into ();
-  assume (loc_includes (as_loc (fp outer0)) (as_loc (fp inner0)));
-  admit()
-  // FStar.Tactics.by_tactic_seman _ resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
-  // f ()
-  
+  FStar.Tactics.by_tactic_seman _ resolve_frame_delta (frame_delta outer0 inner0 outer1 inner1 delta);
+  let h0 = HST.get() in
+  let x = f () in
+  let h1 = HST.get() in
+  lemma_unused_in_monotonic (as_loc (fp inner0)) h0 h1;
+  lemma_not_unused_in_monotonic (as_loc (fp inner0)) h0 h1;
+  unused_in_not_unused_in_disjoint_2 (loc_unused_in h0) (loc_not_unused_in h0) (loc_unused_in h0) (loc_not_unused_in h0) h0;
+  x
