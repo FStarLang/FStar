@@ -101,6 +101,13 @@ let whnf env t =
 let norm env t = N.normalize [Env.Beta; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
                               Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
 
+let maybe_whnf env t =
+  let t' = whnf env t in
+  let head', _ = U.head_and_args t' in
+  if head_redex env head' //this wasn't reducible for some reason, e.g., not applied to strict arguments
+  then None
+  else Some t'
+
 let trivial_post t : Syntax.term =
     U.abs [null_binder t]
              (Syntax.fvar Const.true_lid delta_constant None)
@@ -657,12 +664,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         t, []
 
       | Tm_fvar v ->
-        if head_redex env t
-        then encode_term (whnf env t) env
-        else let fvb = lookup_free_var_name env v.fv_name in
-             let tok = lookup_free_var env v.fv_name in
-             let tkey_hash = Term.hash_of_term tok in
-             let aux_decls, sym_name =
+        let encode_freev () =
+          let fvb = lookup_free_var_name env v.fv_name in
+          let tok = lookup_free_var env v.fv_name in
+          let tkey_hash = Term.hash_of_term tok in
+          let aux_decls, sym_name =
                if fvb.smt_arity > 0
                then //kick partial application axioms if arity > 0; see #613
                     //and if the head symbol is just a variable
@@ -676,9 +682,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                     sym_name)], sym_name
                    | _ -> [], ""
                else [], "" in
-             tok, (if aux_decls = []
-                   then ([] |> mk_decls_trivial)
-                   else mk_decls sym_name tkey_hash aux_decls [])
+          tok, (if aux_decls = []
+                then ([] |> mk_decls_trivial)
+                else mk_decls sym_name tkey_hash aux_decls [])
+        in
+        if head_redex env t
+        then match maybe_whnf env t with
+             | None -> encode_freev()
+             | Some t -> encode_term t env
+        else encode_freev ()
 
       | Tm_type _ ->
         mk_Term_type, []
@@ -915,11 +927,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         (* if Env.debug env.tcenv <| Options.Other "SMTEncoding" *)
         (* then BU.print2 "Encoding app head=%s, n_args=%s\n" (Print.term_to_string head) *)
         (*                                                    (string_of_int <| List.length args_e); *)
+        let head, args_e =
+          if head_redex env head
+          then match maybe_whnf env t0 with
+               | None -> head, args_e
+               | Some t -> U.head_and_args t
+          else head, args_e
+        in
         begin
         match (SS.compress head).n, args_e with
-        | _ when head_redex env head ->
-            encode_term (whnf env t) env
-
         | _ when is_arithmetic_primitive head args_e ->
             encode_arith_term env head args_e
 
@@ -1516,16 +1532,20 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
                  || S.fv_eq_lid fv Const.auto_squash_lid ->
               encode_formula t env
 
-            | _ when head_redex env head ->
-              encode_formula (whnf env phi) env
-
             | _ ->
-              let tt, decls = encode_term phi env in
-              let tt =
-                  if Range.rng_included (Range.use_range tt.rng) (Range.use_range phi.pos)
-                  then tt
-                  else {tt with rng=phi.pos} in
-              mk_Valid tt, decls
+              let encode_valid () =
+                let tt, decls = encode_term phi env in
+                let tt =
+                    if Range.rng_included (Range.use_range tt.rng) (Range.use_range phi.pos)
+                    then tt
+                    else {tt with rng=phi.pos} in
+                mk_Valid tt, decls
+              in
+              if head_redex env head
+              then match maybe_whnf env head with
+                   | None -> encode_valid()
+                   | Some phi -> encode_formula phi env
+              else encode_valid()
           end
 
         | _ ->

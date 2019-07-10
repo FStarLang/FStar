@@ -1227,6 +1227,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
               norm cfg env stack head
 
             | Some strict_args ->
+              // BU.print2 "%s has strict args [%s]\n"
+              //   (Print.term_to_string head)
+              //   (List.map string_of_int strict_args |> String.concat "; ");
               let norm_args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
               if strict_args
                 |> List.for_all (fun i ->
@@ -1247,6 +1250,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    norm cfg env stack head
               else let head = closure_as_term cfg env head in
                    let term = S.mk_Tm_app head norm_args None t.pos in
+                   // let _ =
+                   //   BU.print3 "Rebuilding %s as %s\n%s\n"
+                   //     (Print.term_to_string t)
+                   //     (Print.term_to_string term)
+                   //     (BU.stack_dump())
+                   // in
                    rebuild cfg env stack term
             end
 
