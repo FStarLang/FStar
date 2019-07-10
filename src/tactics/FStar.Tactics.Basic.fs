@@ -945,7 +945,9 @@ let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac<unit> = wrap_err "appl
     // Focus helps keep the goal order
     let typ = bnorm e typ in
     bind (try_unify_by_application only_match e typ (goal_type goal)) (fun uvs ->
-    (* use normal implicit application for meta-args: meta application does
+    mlog (fun () -> BU.print1 "t_apply: found args = %s\n"
+        (FStar.Common.string_of_list (fun (t, _, _) -> Print.term_to_string t) uvs)) (fun () ->
+    (* use normal implicit application for meta-args: meta application does not
      * make sense and the typechecker complains. *)
     let fix_qual q =
       match q with
@@ -974,7 +976,7 @@ let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac<unit> = wrap_err "appl
                                                   is_guard = false; })]
                ) uvs) (fun _ ->
     proc_guard "apply guard" e guard
-    ))))))
+    )))))))
 
 // returns pre and post
 let lemma_or_sq (c : comp) : option<(term * term)> =

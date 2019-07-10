@@ -15,11 +15,11 @@ else
 FSTAR=fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
 endif
 
-# Benchmarking wrappers are enabled when you pass BENCHMARK_FSTAR=true, for example:
-#  make -C examples/micro-benchmarks BENCHMARK_FSTAR=true
-#  make -C ulib benchmark BENCHMARK_FSTAR=true BENCHMARK_CMD='perf stat -x,'
+# Benchmarking wrappers are enabled by setting BENCHMARK_CMD, for example:
+#  make -C examples/micro-benchmarks BENCHMARK_CMD=time
+#  make -C ulib benchmark BENCHMARK_CMD='perf stat -x,'
 #
-# This will utilize the BENCHMARK_CMD wrapper to collect data on the commands executed
+# This will utilize the BENCHMARK_CMD to collect data on the executed commands
 #
 # BENCHMARK_CMD can be set to a wrapper command that works when called as follows:
 #  $BENCHMARK_CMD -o <output-file> -- <program-to-benchmark> <arguments-to-program>
@@ -35,4 +35,11 @@ endif
 #  https://github.com/ocaml-bench/sandmark/tree/master/orun
 #  BENCHMARK_CMD=orun
 #
-BENCHMARK_CMD?=time
+BENCHMARK_CMD?=
+
+ifeq ($(BENCHMARK_CMD),)
+BENCHMARK_PRE=
+else
+# substitution allows targets of the form %.fst.bench to still produce single .bench suffix
+BENCHMARK_PRE=-$(BENCHMARK_CMD) -o $(subst .bench,,$@).bench --
+endif
