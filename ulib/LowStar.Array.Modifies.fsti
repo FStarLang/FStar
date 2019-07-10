@@ -561,8 +561,8 @@ val modifies_loc_unused_in
   ]]
 
 let fresh_loc (l: loc) (h h' : HS.mem) : GTot Type0 =
-  loc_unused_in h `loc_includes` l /\
-  loc_not_unused_in h' `loc_includes` l
+  (loc_unused_in h `loc_includes` l /\
+  loc_not_unused_in h' `loc_includes` l)
 
 val ralloc_post_fresh_loc (#a:Type) (#rel:Preorder.preorder a) (i: HS.rid) (init:a) (m0: HS.mem)
                        (x: HST.mreference a rel{HS.is_eternal_region (HS.frameOf x)}) (m1: HS.mem) : Lemma
