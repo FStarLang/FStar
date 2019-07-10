@@ -1214,9 +1214,41 @@ let rec norm : cfg -> env -> stack -> term -> term =
             end
 
           | Tm_app(head, args) ->
-            let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack) args in
-            log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
-            norm cfg env stack head
+            let strict_args =
+              match (U.un_uinst head).n with
+              | Tm_fvar fv -> Env.fv_has_strict_args cfg.tcenv fv
+              | _ -> None
+            in
+            begin
+            match strict_args with
+            | None ->
+              let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack) args in
+              log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+              norm cfg env stack head
+
+            | Some strict_args ->
+              let norm_args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
+              if strict_args
+                |> List.for_all (fun i ->
+                  let arg_i, _ = List.nth norm_args i in
+                  let head, _ = U.head_and_args arg_i in
+                  match (un_uinst head).n with
+                  | Tm_constant _ -> true
+                  | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
+                  | _ -> false)
+              then //all strict args have constant head symbols
+                   let stack =
+                     stack |>
+                     List.fold_right (fun (a, aq) stack ->
+                       Arg (Clos(env, a, BU.mk_ref (Some ([], a)), false),aq,t.pos)::stack)
+                     norm_args
+                   in
+                   log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+                   norm cfg env stack head
+              else let head = closure_as_term cfg env head in
+                   let term = S.mk_Tm_app head norm_args None t.pos in
+                   rebuild cfg env stack term
+            end
 
           | Tm_refine(x, _) when cfg.steps.for_extraction ->
             norm cfg env stack x.sort

@@ -145,6 +145,7 @@ type env = {
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   nbe            : list<step> -> env -> term -> term;  (* Callback to the NBE function *)
+  strict_args_tab:BU.smap<(option<(list<int>)>)>;                (* a dictionary of fv names to strict arguments *)
 }
 
 and solver_depth_t = int * int * int
@@ -245,6 +246,7 @@ val attrs_of_qninfo        : qninfo -> option<list<attribute>>
 val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 val fv_with_lid_has_attr   : env -> fv_lid:lid -> attr_lid:lid -> bool
 val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
+val fv_has_strict_args     : env -> fv -> option<(list<int>)>
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>

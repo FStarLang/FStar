@@ -2310,38 +2310,50 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
+let parse_attr_with_list warn (at:S.term) (head:lident) : option<(list<int>)> * bool =
+  let warn () =
+    if warn then
+      Errors.log_issue
+              at.pos
+              (Errors.Warning_UnappliedFail,
+               BU.format1 "Found ill-applied '%s', argument should be a non-empty list of integer literals"
+                          (string_of_lid head))
+  in
+  let hd, args = U.head_and_args at in
+   match (SS.compress hd).n with
+   | Tm_fvar fv when S.fv_eq_lid fv head ->
+     begin
+       match args with
+       | [] -> Some [], true
+       | [(a1, _)] ->
+         begin
+         match EMB.unembed (EMB.e_list EMB.e_int) a1 true EMB.id_norm_cb with
+         | Some es ->
+           Some (List.map FStar.BigInt.to_int_fs es), true
+         | _ ->
+           warn();
+           None, true
+         end
+      | _ ->
+        warn ();
+        None, true
+     end
+
+   | _ ->
+     None, false
+
+
 // If this is a fail attribute, return the listed errors and whether it's a fail_lax or not
 let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
-    let hd, args = U.head_and_args at in
-    match (SS.compress hd).n, args with
-    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_attr
-                              || S.fv_eq_lid fv C.fail_lax_attr ->
-        begin match EMB.unembed (EMB.e_list EMB.e_int) a1 true EMB.id_norm_cb with
-        | Some es when List.length es > 0->
-            (* Is this an expect_lax_failure? *)
-            let b = S.fv_eq_lid fv C.fail_lax_attr in
-            Some (List.map FStar.BigInt.to_int_fs es, b)
-
-        | _ ->
-            if warn then
-                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied 'expect_failure', argument should be a non-empty list of integer literals");
-            None
-        end
-
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_attr
-                       || S.fv_eq_lid fv C.fail_lax_attr ->
-        (* Is this an expect_lax_failure? *)
-        let b = S.fv_eq_lid fv C.fail_lax_attr in
-        Some ([], b)
-
-    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_attr
-                      || S.fv_eq_lid fv C.fail_lax_attr ->
-        if warn then
-            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied 'expect_failure', argument should be a non-empty list of integer literals");
-        None
-
-    | _ ->
-        None
+    let rebind res b =
+      match res with
+      | None -> None
+      | Some l -> Some (l, b)
+    in
+    let res, matched = parse_attr_with_list warn at C.fail_attr in
+    if matched then rebind res false
+    else let res, _ = parse_attr_with_list warn at C.fail_lax_attr in
+         rebind res true
 
 let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls attrs =
     let env0 = env in
