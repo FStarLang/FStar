@@ -109,7 +109,7 @@ let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
 sub_effect DIV ~> TAC = lift_div_tac
 
 let get = TAC?.__get
-let raise (#a:Type) (e:exn) : TAC _ _ = TAC?.__raise a e
+let raise (#a:Type) (e:exn) = TAC?.__raise a e
 
 abstract
 let with_tactic (t : unit -> Tac unit) (p:Type) : Type = p
