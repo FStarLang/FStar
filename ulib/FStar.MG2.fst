@@ -10,6 +10,24 @@ module HST = FStar.HyperStack.ST
 
 noeq
 type cls (aloc: Type) : Type = | Cls:
+  (aloc_includes: (
+    aloc ->
+    aloc ->
+    GTot Type0
+  )) ->
+  (aloc_includes_refl: (
+    (x: aloc) ->
+    Lemma
+    (aloc_includes x x)
+  )) ->
+  (aloc_includes_trans: (
+    (x1: aloc) ->
+    (x2: aloc) ->
+    (x3: aloc) ->
+    Lemma
+    (requires (aloc_includes x1 x2 /\ aloc_includes x2 x3))
+    (ensures (aloc_includes x1 x3))
+  )) ->
   (aloc_disjoint: (
     (x1: aloc) ->
     (x2: aloc) ->
@@ -21,11 +39,20 @@ type cls (aloc: Type) : Type = | Cls:
     Lemma
     (aloc_disjoint x1 x2 <==> aloc_disjoint x2 x1)
   )) ->
-  (aloc_disjoint_neq: (
+  (aloc_disjoint_not_includes: (
     (x1: aloc) ->
     (x2: aloc) ->
     Lemma
-    ((aloc_disjoint x1 x2 /\ x1 == x2) ==> False)
+    ((aloc_disjoint x1 x2 /\ aloc_includes x1 x2) ==> False)
+  )) ->
+  (aloc_disjoint_includes: (
+    (larger1: aloc) ->
+    (larger2: aloc) ->
+    (smaller1: aloc) ->
+    (smaller2: aloc) ->
+    Lemma
+    (requires (aloc_disjoint larger1 larger2 /\ larger1 `aloc_includes` smaller1 /\ larger2 `aloc_includes` smaller2))
+    (ensures (aloc_disjoint smaller1 smaller2))
   )) ->
   (aloc_preserved: (
     aloc ->
@@ -52,10 +79,10 @@ type cls (aloc: Type) : Type = | Cls:
 
 module GSet = FStar.GSet
 
-type loc (#aloc: Type) (c: cls aloc) = GSet.set aloc
+type loc (#aloc: Type) (c: cls aloc) = (s: GSet.set aloc { forall (greater lesser: aloc) . {:pattern (greater `GSet.mem` s); (greater `c.aloc_includes` lesser)} greater `GSet.mem` s /\ greater `c.aloc_includes` lesser ==> lesser `GSet.mem` s })
 
 let loc_includes (#aloc: Type) (#c: cls aloc) (greater lesser: loc c) : GTot Type0 =
-  lesser `GSet.subset` greater
+  forall (x_lesser: aloc) . {:pattern (x_lesser `GSet.mem` lesser)} x_lesser `GSet.mem` lesser ==> (exists (x_greater: aloc) . {:pattern (x_greater `GSet.mem` greater)} x_greater `GSet.mem` greater /\ x_greater `c.aloc_includes` x_lesser)
 
 let loc_disjoint (#aloc: Type) (#c: cls aloc) (l1 l2: loc c) : GTot Type0 =
   forall (x1 x2: aloc) . {:pattern (GSet.mem x1 l1); (GSet.mem x2 l2)} (GSet.mem x1 l1 /\ GSet.mem x2 l2) ==> c.aloc_disjoint x1 x2
@@ -76,20 +103,21 @@ let loc_includes_disjoint_elim
   (ensures (l2 `loc_includes` l))
 = let f
     (x: al)
+    (y: al)
   : Lemma
-    (requires (GSet.mem x l))
-    (ensures (GSet.mem x l2))
-  = if GSet.mem x l2
+    (requires (GSet.mem x l /\ GSet.mem y (l1 `loc_union` l2) /\ y `c.aloc_includes` x))
+    (ensures (GSet.mem y l2))
+  = if GSet.mem y l2
     then ()
     else
       let g
         ()
       : Lemma
-        (requires (GSet.mem x l1))
+        (requires (GSet.mem y l1))
         (ensures False)
       = assert (l `loc_disjoint` l1);
-        c.aloc_disjoint_neq x x
+        c.aloc_disjoint_not_includes y x
       in
       Classical.move_requires g ()
   in
-  Classical.forall_intro (Classical.move_requires f)
+  Classical.forall_intro_2 (fun x -> Classical.move_requires (f x))
