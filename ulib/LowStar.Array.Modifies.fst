@@ -543,3 +543,6 @@ let rec lemma_disjoint_gsub_disjoint_compute_array (#a:Type) (b:array a)
     end
 
 let disjoint_gsubs #a b i1 i2 len1 len2 = lemma_disjoint_gsub_disjoint_compute_array b i1 i2 len1 len2 0
+
+// TODO: This should be provable in the next version of modifiesGen
+let loc_includes_disjoint_elim l l1 l2 = admit()

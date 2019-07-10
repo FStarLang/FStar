@@ -620,3 +620,7 @@ val disjoint_gsubs (#a:Type0) (b:array a) (i1 i2:U32.t) (len1:U32.t{U32.v len1 >
 		    (UInt32.v i1 + UInt32.v len1 <= UInt32.v i2 \/
                      UInt32.v i2 + UInt32.v len2 <= UInt32.v i1)))
          (ensures  (loc_disjoint (loc_array (gsub b i1 len1)) (loc_array (gsub b i2 len2))))
+
+val loc_includes_disjoint_elim (l l1 l2:loc) : Lemma
+  (requires (l1 `loc_union` l2) `loc_includes` l /\ l1 `loc_disjoint` l2 /\ l1 `loc_disjoint` l)
+  (ensures l2 `loc_includes` l)
