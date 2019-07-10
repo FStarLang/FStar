@@ -248,7 +248,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "686fd520a083c1db26b18b71ab5bff32"
+      "8f5c9955e7b76aafcf429523e17eb300"
     ],
     [
       "FStar.Int64.shift_arithmetic_right",
@@ -417,7 +417,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "8ff73e071ee53a4a90f8a4ee28de55ac"
+      "677ce5c1bfb1b5c3269de24863121d9f"
     ],
     [
       "FStar.Int64.shift_arithmetic_right",
@@ -501,7 +501,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "e915c07e106e41e94f6cf28012399d46"
+      "1dc5fe959191358002202816b69fe809"
     ],
     [
       "FStar.Int64.op_Greater_Greater_Hat",
