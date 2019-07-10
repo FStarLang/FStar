@@ -44,10 +44,6 @@ let option_rel (#a:Type) (arel:rel a) =
 let eff (#s:Type) (#a:Type) (srel:rel s) (arel:rel a) =
   st #s #(option a) srel (option_rel arel)
 
-//let option_arrow_rel (#a:Type) (#b:Type) (arel:rel a) (brel:rel b) (f g : (a -> b)) : prop =
-//    forall x0 x1. x0 `arel` x1 ==>
-//             f x0 `brel` g x1
-
 let eff_rel #s #a
     (srel: erel s)
     (arel: erel a)
@@ -73,8 +69,9 @@ let eff_rel #s #a
 
 
 /// returning a result into a computation
-//let return #st #a (x:a) : eff st a =
-//  fun (t, s) -> Some x, s, 0
+let return #s #a (#srel:erel s) (#arel:erel a) (x:a)
+  : eff srel arel
+  = fun s0 -> Some x, s0
 
 /// sequential composition of `eff` computations
 //let bind #st #a #b
@@ -105,22 +102,11 @@ let bind #s #a (#srel:erel s) (#arel:erel a) #b (#brel:erel b)
        g x s1
      | None -> None, s1
 
-(* Old effect *)
 /// reading the entire state
-//let get #st : eff st st
-//  = fun (t, s) -> Some s, s, 0
-
-//let get #s (#srel:erel s) : st srel srel =
-//  fun s0 -> s0, s0
-
 let get #s (#srel:erel s) : eff srel srel =
   fun s0 -> Some s0, s0
 
-(* Old effect *)
 /// writing the entire state
-//let set #st (s:st) : eff st unit
-//  = fun (t, _) -> Some (), s, 0
-
 let put #s (#srel:erel s) : (srel ^--> eff_rel srel (lo unit)) =
   fun s _ -> Some (), s
 
@@ -132,16 +118,9 @@ let put #s (#srel:erel s) : (srel ^--> eff_rel srel (lo unit)) =
 
 (* Old effect *)
 /// raising an exception
-//let raise #st #a : eff st a
-//  = fun s -> (None, s)
-
-let return #s #a (#srel:erel s) (#arel:erel a) (x:a)
-  : eff srel arel
-  = fun s0 -> Some x, s0
-
-(* Here, F* runs out of steam *)
 let raise #s (#srel:erel s) #a (#arel:erel a) : eff srel arel
   = fun s -> (None, s)
+
 
 
 /// state separation
@@ -168,9 +147,9 @@ let lbytes (n:nat) = Seq.lseq byte n
 let bytes = Seq.seq byte
 let handle = bytes&bytes
 let key (n:nat) = lbytes n
-let key_state (n:nat) = (Map.t handle bool & Map.t handle (key n))
+let key_state (n:nat) = (Map.t handle (option bool) & Map.t handle (option (key n)))
 
-let key_state_rel (n:nat) = hi (key_state n)
+let key_state_rel (n:nat) = lo (key_state n)
 
 let key_eff (n:nat) = eff (key_state_rel n)
 
@@ -186,79 +165,89 @@ let key_eff (n:nat) = eff (key_state_rel n)
 //    | _,_ ->
 //      raise
 //
-//let key_set (h:handle) (k_in:Seq.lseq byte 1) : eff (key_state 1) handle =
-//    s <-- get ;
-//    let (h_map,k_map) = s in
-//    match Map.contains h_map h,Map.contains k_map h with
-//    | false,false ->
-//      let s':key_state 1 = (Map.upd h_map h true, Map.upd k_map h k_in) in
-//      set s' ;;
-//      return h
-//    | _,_ ->
-//      raise
-//
-//let key_cset (h:handle) (k_in:Seq.lseq byte 1) : eff (key_state 1) handle =
-//    s <-- get ;
-//    let (h_map,k_map) = s in
-//    match Map.contains h_map h,Map.contains k_map h with
-//    | false,false ->
-//      let s':key_state 1 = (Map.upd h_map h false, Map.upd k_map h k_in) in
-//      set s' ;;
-//      return h
-//    | _,_ ->
-//      raise
-//
-//let key_get_t = handle -> eff (key_state 1) (key 1)
-//let key_get (h:handle) : eff (key_state 1) (key 1) =
-//    s <-- get ;
-//    let (h_map,k_map) = s in
-//    match Map.contains h_map h,Map.contains k_map h with
-//    | true,true ->
-//      let k = Map.sel k_map h in
-//      return k
-//    | _,_ ->
-//      raise
+let key_set_t = (lo handle) ** (lo (Seq.lseq byte 1)) ^--> eff_rel (key_state_rel 1) (lo handle)
+let key_set : key_set_t =
+    fun (h, k_in) ->
+    s <-- get ;
+    let (h_map,k_map) = s in
+    match Map.sel h_map h,Map.sel k_map h with
+    | None,None ->
+      let s':key_state 1 = (Map.upd h_map h (Some true), Map.upd k_map h (Some k_in)) in
+      put s' ;;
+      return h
+    | _,_ ->
+      raise
+
+let key_cset_t = (lo handle) ** (lo (Seq.lseq byte 1)) ^--> eff_rel (key_state_rel 1) (lo handle)
+let key_cset : key_cset_t =
+    fun (h, k_in) ->
+    s <-- get ;
+    let (h_map,k_map) = s in
+    match Map.sel h_map h,Map.sel k_map h with
+    | None, None ->
+      let s':key_state 1 = (Map.upd h_map h (Some false), Map.upd k_map h (Some k_in)) in
+      put s' ;;
+      return h
+    | _,_ ->
+      raise
+
+let key_get_t = (lo handle) ^--> eff_rel (key_state_rel 1) (lo (key 1))
+let key_get : key_get_t =
+    fun h ->
+    s <-- get ;
+    let (h_map,k_map) = s in
+    match Map.sel h_map h,Map.sel k_map h with
+    | Some hon, Some k ->
+      return k
+    | _,_ ->
+      raise
 
 let key_hon_t = (lo handle) ^--> eff_rel (key_state_rel 1) (lo bool)
-
-#set-options "--z3rlimit 500 --max_fuel 1 --max_ifuel 3"
 let key_hon : key_hon_t =
     fun h ->
     s <-- get ;
     let (h_map,k_map) = s in
-    match Map.contains h_map h,Map.contains k_map h with
-    | true,true ->
-      let honest = Map.sel h_map h in
-      return honest
+    match Map.sel h_map h,Map.sel k_map h with
+    | Some hon, Some k ->
+      return hon
     | _,_ ->
       raise
 
 type key_labels =
-    //| GET
+    | GET
     | HON
+    | SET
+    | CSET
 
 let key_field_types: key_labels -> Type =
-    function  //GET -> key_get_t
+    function  GET -> key_get_t
             | HON -> key_hon_t
+            | SET -> key_set_t
+            | CSET -> key_cset_t
 
-
-
-/// A couple of `st` types
-let t_one = lo int ^--> st_rel state_rel (lo int)
-let t_two = lo int ^--> st_rel state_rel (lo bool)
-
-let field_rels : (k:key -> erel (field_types k)) =
+let key_field_rels : (k:key_labels -> erel (key_field_types k)) =
   function
-    | ONE -> arrow (lo int) (st_rel state_rel (lo int))
-    | TWO -> arrow (lo int) (st_rel state_rel (lo bool))
+      GET -> arrow (lo handle) (eff_rel (key_state_rel 1) (lo (key 1)))
+    | HON -> arrow (lo handle) (eff_rel (key_state_rel 1) (lo bool))
+    | SET -> arrow (lo handle**lo (lbytes 1)) (eff_rel (key_state_rel 1) (lo handle))
+    | CSET -> arrow (lo handle**lo (lbytes 1)) (eff_rel (key_state_rel 1) (lo handle))
 
-#set-options "--z3rlimit 100"
-let field_rels : (k:key_labels -> erel (key_field_types k)) =
-  function
-    //| GET -> arrow (lo handle) (st_rel state_rel (lo key))
-    | HON -> arrow (lo handle) (eff (key_state 1) (lo bool))
+let sig_key = {
+  labels = key_labels;
+  ops = key_field_types;
+  rels = key_field_rels
+  }
 
-//let key_module
+module DM = FStar.DependentMap
+
+let key_module : module_t sig_key =
+  DM.create #_ #sig_key.ops
+    (function GET -> key_get
+            | HON -> key_hon
+            | SET -> key_set
+            | CSET -> key_cset)
+
+let key_functor = as_fun key_module
 
 ////////////////////////////////////////////////////////////////////////////////
 //AE package
@@ -271,21 +260,32 @@ noeq type ae_scheme (n:nat) =
 
 /// Map from nonces to a maps from ciphertext to plaintexts
 let ae_state #n (aes:ae_scheme n) =
-  Map.t bytes (Map.t bytes bytes)
+  Map.t bytes (option (Map.t bytes (option bytes)))
 
-let ae_key_state #n aes = ae_state #n aes & key_state n
-
-let enc_0 (#n:nat) (aes:ae_scheme n) (plain:bytes) (nonce:bytes) (h:handle) : (eff (ae_key_state aes) bytes) =
+//let ae_key_state #n aes = (lo (ae_state #n aes)) ** (hi (key_state 1))
+#set-options "--z3rlimit 350 --max_fuel 1 --max_ifuel 3"
+let enc_0 (key:key_state 1) (#n:nat) (aes:ae_scheme n) (plain:bytes) (nonce:bytes) (h:handle) : (eff (lo (ae_state #n aes)) (lo bytes)) =
   state <-- get ;
-  let ae_st = fst state in
-  let key_st = snd state in
-  match Map.contains ae_st nonce with
-  | true ->
+  match Map.sel state nonce with
+  | Some option_map ->
     raise
-  | false ->
-    k <-- get key_st h;
+  | None ->
+  let k_get : key_get_t = (DM.sel key_module GET) in
+  match k_get h key with
+  | Some k, k_st ->
     let c = aes.enc plain k nonce in
     return c
+  | None, _ ->
+    raise
+  //return k
+  //let key, k_st = k_get key h in
+  //match key with
+  //| Some k  ->
+  //admit()
+  //  //let c = aes.enc plain k nonce in
+  //  //return c
+  //| None -> //raise
+  //admit()
 
 let enc_1 (#n:nat) (aes:ae_scheme n) (plain:bytes) (nonce:bytes) : (eff (ae_key_state aes) bytes) =
   state <-- get ;
