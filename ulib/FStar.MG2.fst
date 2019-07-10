@@ -174,3 +174,144 @@ let used_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
 let unused_in #al (c: cls al) (h: HS.mem) : Tot (loc c) =
   Classical.forall_intro_3 c.aloc_unused_in_includes;
   GSet.comprehend (fun x -> FStar.StrongExcludedMiddle.strong_excluded_middle (x `c.aloc_unused_in` h))
+
+open LowStar.Array.Defs
+friend LowStar.Array.Defs
+open LowStar.Permissions
+module U32 = FStar.UInt32
+
+// We need to define the atomic locations cell per cell. We will then define loc_buffer as the union of aloc of cells
+// The reason for this is that we want to prove that the loc of the union of two buffers corresponds to the union of locs
+// of the two smaller buffers.
+noeq
+type ucell : Type0 = {
+  b_rid: HS.rid;
+  b_addr: nat;
+  b_max: nat;
+  b_index:nat;
+  b_pid:perm_id;
+}
+
+let ucell_preserved (b:ucell) (h0 h1:HS.mem) : GTot Type0 =
+  forall (t:Type0) (b':array t).
+    (let i = b.b_index - U32.v b'.idx in // This cell corresponds to index i in the buffer
+      (frameOf b' == b.b_rid /\ as_addr b' == b.b_addr /\ b'.pid == (Ghost.hide b.b_pid) /\ U32.v b'.max_length == b.b_max /\
+        b.b_index >= U32.v b'.idx /\ b.b_index < U32.v b'.idx + U32.v b'.length /\ // If this cell is part of the buffer
+        live_cell h0 b' i ==>
+          live_cell h1 b' i /\ // If this cell is preserved, then its liveness is preserved
+          (sel h0 b' i == sel h1 b' i))) // And its contents (snapshot + permission) are the same
+
+let prove_loc_preserved (loc: ucell) (h0 h1: HS.mem)
+  (lemma: (t: Type0 -> b': array t -> Lemma
+    (requires (
+      let i = loc.b_index - U32.v b'.idx in
+      frameOf b' == loc.b_rid /\ as_addr b' == loc.b_addr /\
+      Ghost.reveal b'.pid == loc.b_pid /\ U32.v b'.max_length == loc.b_max /\
+      loc.b_index >= U32.v b'.idx /\ loc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h0 b' i))
+    (ensures (
+      let i = loc.b_index - U32.v b'.idx in
+      live_cell h1 b' i /\
+      sel h0 b' i  == sel h1 b' i
+      ))
+  )) : Lemma (ucell_preserved loc h0 h1)
+  =
+  let aux (t: Type0) (b':array t) : Lemma(
+      let i = loc.b_index - U32.v b'.idx in
+      frameOf b' == loc.b_rid /\ as_addr b' == loc.b_addr /\
+      Ghost.reveal b'.pid == loc.b_pid /\ U32.v b'.max_length == loc.b_max /\
+      loc.b_index >= U32.v b'.idx /\ loc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h0 b' i ==>
+        live_cell h1 b' i /\
+        sel h0 b' i  == sel h1 b' i)
+  =
+  let aux' (_ : squash (
+      let i = loc.b_index - U32.v b'.idx in
+      frameOf b' == loc.b_rid /\ as_addr b' == loc.b_addr /\
+      Ghost.reveal b'.pid == loc.b_pid /\ U32.v b'.max_length == loc.b_max /\
+      loc.b_index >= U32.v b'.idx /\ loc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h0 b' i)
+    ) : Lemma (
+      let i = loc.b_index - U32.v b'.idx in
+      loc.b_index >= U32.v b'.idx /\ loc.b_index < U32.v b'.idx + U32.v b'.length /\
+      live_cell h1 b' i /\
+      sel h0 b' i  == sel h1 b' i
+    )
+    = lemma t b'
+  in
+    Classical.impl_intro aux'
+  in
+  Classical.forall_intro_2 aux
+
+
+// Two cells are included if they are equal: Same pid and same index in the buffer
+let ucell_includes (c1 c2: ucell) : GTot Type0 =
+  c1.b_rid = c2.b_rid /\
+  c1.b_addr = c2.b_addr /\
+  c1.b_pid = c2.b_pid /\
+  c1.b_index = c2.b_index /\
+  c1.b_max = c2.b_max
+
+
+let ucell_disjoint (c1 c2:ucell) : GTot Type0 =
+  (c1.b_rid <> c2.b_rid) \/
+  (c1.b_addr <> c2.b_addr) \/
+  (c1.b_max == c2.b_max /\
+    (c1.b_index <> c2.b_index \/           // Either the cells are different (i.e. spatially disjoint)
+    c1.b_pid <> c2.b_pid))                 // Or they don't have the same permission
+
+let live_ucell_matches_array (cell: ucell) (t:Type) (b: array t) (h: HS.mem) =
+frameOf b = cell.b_rid /\ as_addr b = cell.b_addr /\ U32.v b.max_length = cell.b_max /\ HS.contains h b.content /\
+     cell.b_index >= U32.v b.idx /\ cell.b_index < U32.v b.idx + U32.v b.length /\ // If this cell is part of the buffer
+     live_cell h b (cell.b_index - U32.v b.idx)
+
+let ucell_unused_in (cell:ucell) (h: HS.mem) =
+  forall (t:Type) (b:array t).
+    live_ucell_matches_array cell t b h ==>
+    begin
+      let (_, perm_map) = Seq.index (HS.sel h b.content) cell.b_index in
+      cell.b_pid > get_current_max (Ghost.reveal perm_map)
+    end
+
+
+
+let ucell_used_in (cell:ucell) (h: HS.mem) =
+  let used_in  (t:Type) (b:array t) =
+    live_ucell_matches_array cell t b h ==>
+    begin
+      let (_, perm_map) = Seq.index (HS.sel h b.content) cell.b_index in
+      cell.b_pid <= get_current_max (Ghost.reveal perm_map)
+    end
+  in
+  (forall (t:Type) (b:array t). used_in t b) /\
+  (exists (t:Type) (b:array t). used_in t b)
+
+let cls_ucell : cls ucell = Cls #ucell
+  ucell_includes
+  (fun  x -> ())
+  (fun  x1 x2 x3 -> ())
+  ucell_disjoint
+  (fun x1 x2 -> ())
+  (fun x1 xl -> ())
+  (fun larger1 larger2 smaller1 smaller2 -> ())
+  ucell_preserved
+  (fun x h -> ())
+  (fun x h1 h2 h3 -> ())
+  ucell_used_in
+  ucell_unused_in
+  (fun x y h ->
+    (* used_in and unused_in disjoint *)
+    let aux (_ : squash(x `ucell_used_in` h /\ y `ucell_unused_in` h)) : Lemma
+      (x `ucell_disjoint` y)
+      = admit()
+    in
+    Classical.impl_intro aux
+  )
+  (fun greater lesser h -> ())
+  (fun greater lesser h -> ())
+  (fun x h1 h2 ->
+    (* aloc_unused_in_preserved *)
+    admit()
+  )
+
+let loc_ucell = loc cls_ucell
