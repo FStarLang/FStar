@@ -1616,7 +1616,9 @@ and (encode_term :
                               FStar_TypeChecker_Env.dsenv =
                                 (uu___713_5257.FStar_TypeChecker_Env.dsenv);
                               FStar_TypeChecker_Env.nbe =
-                                (uu___713_5257.FStar_TypeChecker_Env.nbe)
+                                (uu___713_5257.FStar_TypeChecker_Env.nbe);
+                              FStar_TypeChecker_Env.strict_args_tab =
+                                (uu___713_5257.FStar_TypeChecker_Env.strict_args_tab)
                             }) res
                           in
                        (match uu____5248 with
