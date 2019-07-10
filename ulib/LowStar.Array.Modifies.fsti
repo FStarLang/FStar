@@ -25,6 +25,9 @@ val loc_addresses
   (n: Set.set nat)
 : GTot loc
 
+unfold let loc_addr_of_array (#a:Type0) (b:array a) :GTot loc =
+  loc_addresses false (frameOf b) (Set.singleton (as_addr b))
+
 val loc_regions
   (preserve_liveness: bool)
   (r: Set.set HS.rid)

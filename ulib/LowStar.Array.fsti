@@ -29,7 +29,7 @@ val alloc (#a:Type0) (init:a) (len:U32.t)
        (requires fun _ -> U32.v len > 0)
        (ensures fun h0 b h1 ->
          modifies loc_none h0 h1 /\
-         fresh_loc (loc_array b) h0 h1 /\
+         fresh_loc (loc_addr_of_array b) h0 h1 /\
          writeable h1 b /\
          freeable b /\
          as_seq h1 b == Seq.create (U32.v len) init)
@@ -39,7 +39,7 @@ val free (#a: Type) (b: array a) : HST.ST unit
   (ensures (fun h0 _ h1 ->
     Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\
     (HS.get_tip h1) == (HS.get_tip h0) /\
-    modifies (loc_array b) h0 h1 /\
+    modifies (loc_addr_of_array b) h0 h1 /\
     HS.live_region h1 (frameOf b)
   ))
 

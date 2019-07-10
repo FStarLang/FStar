@@ -108,7 +108,6 @@ let free #a b =
   (**)   b.content h0
   (**) ;
   (**) assert(modifies (loc_freed_mreference b.content) h0 h1);
-  (**) assume(modifies (loc_array b) h0 h1);
   ()
 
 val share_cell
