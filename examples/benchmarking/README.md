@@ -18,7 +18,6 @@ The `make_bench_results.sh` script is an example which:
  - cleans the fstar tree to start from a known state
  - builds the fstar compiler
  - builds a fresh ulib
- - uses taskset to optionally pin the process to a CPU (if TASKSET_CPU is set)
  - executes the benchmarks for micro-benchmarks, ulib and OCaml extraction
  - collates the JSON results into a CSV file and also timing summaries in the results directory
 
@@ -34,5 +33,10 @@ To run this script you may need to install:
 To run the script execute (from the fstar root directory)
 ```
  $ examples/benchmarking/make_bench_results.sh
+```
+
+The script has options to set wrappers for tasksetting and/or setting FStar OTHERFLAGS, for example:
+```
+ $ BENCH_WRAP='taskset --cpu-list 3' BENCH_OTHERFLAGS='--admit_smt_queries true' examples/benchmarking/make_bench_results.sh
 ```
 
