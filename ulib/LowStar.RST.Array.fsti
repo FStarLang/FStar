@@ -51,18 +51,17 @@ val upd (#a:Type) (b:A.array a) (i:UInt32.t) (v:a)
 val alloc (#a:Type) (init:a) (len:UInt32.t)
   : RST (A.array a)
         (empty_resource)
-        (fun b -> array_resource b)
+        (fun b -> full_array_resource b)
         (fun _ -> UInt32.v len > 0)
         (fun _ b h1 ->
-        A.freeable b /\
-        (sel (array_view b) h1).s == Seq.create (UInt32.v len) init /\
-        (sel (array_view b) h1).p = FStar.Real.one
+        (sel (full_array_view b) h1).s == Seq.create (UInt32.v len) init /\
+        (sel (full_array_view b) h1).p = FStar.Real.one
         )
 
 val free (#a:Type) (b:A.array a)
-  : RST unit (array_resource b)
+  : RST unit (full_array_resource b)
              (fun _ -> empty_resource)
-             (fun h0 -> A.freeable b /\ P.allows_write (sel (array_view b) h0).p)
+             (fun h0 -> P.allows_write (sel (full_array_view b) h0).p)
              (fun _ _ _ -> True)
 
 val share (#a:Type) (b:A.array a)

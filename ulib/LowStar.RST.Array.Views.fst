@@ -38,7 +38,7 @@ let array_view (#a:Type) (b:A.array a) : view (varray a) =
   let inv h =
     A.live h b /\ constant_perm_seq h b
   in
-  let sel (h: imem inv) : GTot (varray a) = { s = A.as_seq h b; p = A.get_perm h b 0 } in
+  let sel h: GTot (varray a) = { s = A.as_seq h b; p = A.get_perm h b 0 } in
   {
     fp = fp;
     inv = inv;
@@ -60,6 +60,38 @@ let reveal_array ()
       )
     ) =
   ()
+
+abstract
+let full_array_view (#a:Type) (b:A.array a) : view (varray a) =
+  reveal_view ();
+  let fp = Ghost.hide (A.loc_addr_of_array b) in
+  let inv h =
+    A.live h b /\ constant_perm_seq h b /\ A.freeable b
+  in
+  let sel (h: HS.mem) : GTot (varray a) = { s = A.as_seq h b; p = A.get_perm h b 0 } in
+  {
+    fp = fp;
+    inv = inv;
+    sel = sel
+  }
+
+
+let full_array_resource (#a:Type) (b:A.array a) =
+  as_resource (full_array_view b)
+
+let reveal_full_array ()
+  : Lemma (
+    (forall a (b:A.array a) .{:pattern as_loc (fp (full_array_resource b))}
+      as_loc (fp (full_array_resource b)) == A.loc_addr_of_array b) /\
+      (forall a (b:A.array a) h .{:pattern inv (full_array_resource b) h}
+        inv (full_array_resource b) h <==> A.live h b /\ constant_perm_seq h b /\ A.freeable b
+      ) /\
+      (forall a (b:A.array a) h .{:pattern sel (full_array_view b) h}
+        sel (full_array_view b) h == { s = A.as_seq h b; p = A.get_perm h b 0 }
+      )
+    ) =
+  ()
+
 
 val length_view_as_seq (#a:Type) (h:HS.mem) (b:A.array a) : Lemma
   (requires (array_view b).inv h)
