@@ -40,7 +40,6 @@ verify-extra: $(addsuffix .checked, $(EXTRA))
 #  - execute the benchmark
 #  - move the checked file back
 #
-
 # phony-benchmark target to ensure bench rules always run on:
 #  make -C ulib benchmark
 
