@@ -2,7 +2,7 @@ open Prims
 type file_name = Prims.string[@@deriving yojson,show]
 type pos = {
   line: Prims.int ;
-  col: Prims.int }[@@deriving yojson,show,yojson,show]
+  col: Prims.int }[@@deriving yojson,show]
 let (__proj__Mkpos__item__line : pos -> Prims.int) =
   fun projectee  -> match projectee with | { line; col;_} -> line 
 let (__proj__Mkpos__item__col : pos -> Prims.int) =
@@ -17,7 +17,7 @@ let (pos_geq : pos -> pos -> Prims.bool) =
 type rng = {
   file_name: file_name ;
   start_pos: pos ;
-  end_pos: pos }[@@deriving yojson,show,yojson,show]
+  end_pos: pos }[@@deriving yojson,show]
 let (__proj__Mkrng__item__file_name : rng -> file_name) =
   fun projectee  ->
     match projectee with | { file_name; start_pos; end_pos;_} -> file_name
@@ -32,7 +32,7 @@ let (__proj__Mkrng__item__end_pos : rng -> pos) =
   
 type range = {
   def_range: rng ;
-  use_range: rng }[@@deriving yojson,show,yojson,show]
+  use_range: rng }[@@deriving yojson,show]
 let (__proj__Mkrange__item__def_range : range -> rng) =
   fun projectee  ->
     match projectee with | { def_range; use_range;_} -> def_range
