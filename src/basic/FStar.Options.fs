@@ -1148,7 +1148,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         ( noshort,
          "use_nbe",
           BoolStr,
-         "Use normalization by evaluation as the default normalization srategy (default 'false')");
+         "Use normalization by evaluation as the default normalization strategy (default 'false')");
 
         ( noshort,
          "top_level_trivial_pre",
