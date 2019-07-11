@@ -184,11 +184,13 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
         then None, tot_or_gtot c, false //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, false
-        else (*
+        else if Options.top_level_trivial_pre ()
+        then (*
               * AR: note that Env.null_wp_for_eff does the normalization of effects
               *     the true flag indicates that check sub-comp but return c
               *)
              Some (Env.null_wp_for_eff env (U.comp_effect_name c) (ct |> env.universe_of env) ct), c, true
+        else None, c, true
   in
   let c0 = c in
   let c = norm_c env c in
