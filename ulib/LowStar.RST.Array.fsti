@@ -109,41 +109,105 @@ val glue (#a: Type) (b b1 b2: A.array a)
       (sel (array_view b) h1).p == (sel (array_view b1) h0).p
     )
 
+
+let frame_delta_pre_full (#a:Type) (b:A.array a) (outer0 inner0 delta0:resource) =
+  outer0 `can_be_split_into` (full_array_resource b, delta0) /\
+  inner0 `can_be_split_into` (array_resource b, delta0)
+
+let frame_delta_post_full (#t:Type) (#a:Type) (b:A.array a) (outer1 inner1 delta1:t -> resource) =
+  forall x. (
+    (outer1 x) `can_be_split_into` (full_array_resource b, delta1 x) /\
+    (inner1 x) `can_be_split_into` (array_resource b, delta1 x))
+
 unfold
-let frame_full_pre (#a:Type) (b:A.array a) (res:resource) (pre:r_pre (array_resource b <*> res))
-  (h:imem (inv (full_array_resource b <*> res)))
+let frame_full_pre (#a:Type) (b:A.array a) (outer0 inner0:resource)
+  (delta0:resource{frame_delta_pre_full b outer0 inner0 delta0})
+  (pre:r_pre inner0)
+  (h:imem (inv outer0))
   =
   reveal_full_array();
   reveal_array();
-  reveal_star();
-  pre h /\
-  sel (array_view b) h == sel (full_array_view b) h
-
+  reveal_can_be_split_into();
+  sel (array_view b) h == sel (full_array_view b) h ==> pre h
+  
 unfold
 let frame_full_post(#t:Type)
                    (#a:Type)
                    (b:A.array a)
-                   (res0:resource)
-                   (res1:t -> resource)
-                   (pre:r_pre (array_resource b <*> res0))
-                   (post:r_post (array_resource b <*> res0) t (fun x -> array_resource b <*> res1 x))
-                   (h0:imem (inv (full_array_resource b <*> res0)))
+                   (outer0 inner0:resource)                   
+                   (delta0:resource{frame_delta_pre_full b outer0 inner0 delta0})
+                   (outer1 inner1:t -> resource)
+                   (delta1:t -> resource{frame_delta_post_full b outer1 inner1 delta1})
+                   (post:r_post inner0 t inner1)
+                   (h0:imem (inv outer0))
                    (x:t)
-                   (h1:imem (inv (full_array_resource b <*> res1 x)))
+                   (h1:imem (inv (outer1 x)))
     = reveal_array();
       reveal_full_array();
-      reveal_star();
+      reveal_can_be_split_into();
       post h0 x h1 /\
+      sel (array_view b) h0 == sel (full_array_view b) h0 /\
       sel (array_view b) h1 == sel (full_array_view b) h1
 
+open LowStar.RST.Tactics
+
+open FStar.Algebra.CommMonoid.Equiv
+open FStar.Tactics
+open FStar.Tactics.CanonCommMonoidSimple.Equiv
+
+
 val frame_full_array (#t:Type) (#a:Type) (b:A.array a)
-    (res0:resource)
-    (res1:t -> resource)
-    (#pre:r_pre (array_resource b <*> res0))
-    (#post:r_post (array_resource b <*> res0) t (fun x -> array_resource b <*> res1 x))
-    ($f:unit -> RST t (array_resource b <*> res0) (fun x -> array_resource b <*> res1 x) pre post)
+    (outer0:resource)
+    (outer1:t -> resource)
+    (#inner0:resource)
+    (#inner1:t -> resource)
+    (#[(fun () -> tadmit()
+          // refine_intro();
+          // dump "refine_intro";
+          // flip();
+          // apply_lemma (`unfold_with_tactic);
+          // dump "hello";
+          // norm [delta_only [`%frame_delta_pre_full]];
+          // split(); apply_lemma (quote can_be_split_into_star); canon_monoid req rm; apply_lemma (quote can_be_split_into_star); canon_monoid req rm
+    ) ()]
+      delta0:resource{FStar.Tactics.with_tactic
+                     (fun () -> tadmit())
+                     // split(); apply_lemma (quote can_be_split_into_star); canon_monoid req rm; apply_lemma (quote can_be_split_into_star); canon_monoid req rm)
+                     (frame_delta_pre_full b outer0 inner0 delta0)
+                     // (outer0 `can_be_split_into` (full_array_resource b, delta0) /\
+                     // inner0 `can_be_split_into` (array_resource b, delta0))
+                     })
+    (#
+      delta1:(t -> resource){FStar.Tactics.with_tactic
+                     (fun () -> tadmit ())
+                     (forall x. (outer1 x) `can_be_split_into` (full_array_resource b, delta1 x)) /\
+                     (forall x. (inner1 x) `can_be_split_into` (array_resource b, delta1 x))
+                     })    
+    (#pre:r_pre inner0)
+    (#post:r_post inner0 t inner1)
+    ($f:unit -> RST t inner0 inner1 pre post)
     : RST t
-      (full_array_resource b <*> res0)
-      (fun x -> full_array_resource b <*> res1 x)
-      (frame_full_pre b res0 pre)
-      (frame_full_post b res0 res1 pre post)
+      outer0
+      outer1
+      (FStar.Tactics.by_tactic_seman _ (fun () -> tadmit()) (frame_delta_pre_full b outer0 inner0 delta0);
+        frame_full_pre b outer0 inner0 delta0 pre)
+      (frame_full_post b outer0 inner0 delta0 outer1 inner1 delta1 post)
+
+
+#reset-options "--z3rlimit 10 --max_fuel 0 --max_ifuel 0 --z3cliopt smt.qi.eager_threshold=1000"
+#restart-solver
+let read_write_without_sharing () : RST unit
+  (empty_resource)
+  (fun _ -> empty_resource)
+  (fun _ -> True)
+  (fun _ _ _ -> True)
+  =
+  let b = alloc 2ul 42ul in
+  let h0 = HST.get() in
+  let x = frame_full_array #unit #_ b (full_array_resource b) (fun _ -> full_array_resource b) #_ #_
+    #(empty_resource) #(fun _ -> empty_resource)
+    (fun () ->
+      upd b 0ul 0ul
+    ) in
+  let h1 = HST.get() in
+  free b

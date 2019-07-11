@@ -10,56 +10,66 @@ module HST = FStar.HyperStack.ST
 
 #reset-options "--z3rlimit 10 --max_fuel 0 --max_ifuel 0 --z3cliopt smt.qi.eager_threshold=1000"
 #restart-solver
-let read_write_without_sharing () : RST.RST unit
+let read_write_without_sharing (b:Arr.array UInt32.t) : RST.RST unit
+  (A.array_resource b)
+  (fun _ -> A.array_resource b)
+  (fun h0 -> Arr.vlength b > 1 /\ P.allows_write (R.sel (A.array_view b) h0).A.p)
+  (fun _ _ h1 -> P.allows_write (R.sel (A.array_view b) h1).A.p)
+  =
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 1ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 1ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 1ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 1ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
+  let x1 = A.index b 0ul in
+  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul)  
+ 
+let alloc_read_write_without_sharing () : RST.RST unit
   (R.empty_resource)
   (fun _ -> R.empty_resource)
   (fun _ -> True)
   (fun _ _ _ -> True)
   =
   let b = A.alloc 2ul 42ul in
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 1ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 1ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 1ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 1ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  let x1 = A.index b 0ul in
-  A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
-  A.free b;
-  ()
+  let _ = A.frame_full_array b (A.full_array_resource b) (fun _ -> A.full_array_resource b) #_ #_
+    #(R.empty_resource) #(fun _ -> R.empty_resource)
+    (fun () ->
+      read_write_without_sharing b
+    ) in
+  A.free b
 
 #set-options "--warn_error '-271-296'"
-let read_write_with_sharing () : RST.RST unit
-  (R.empty_resource)
-  (fun _ -> R.empty_resource)
-  (fun _ -> True)
-  (fun _ _ _ -> True)
+let read_write_with_sharing (b:Arr.array UInt32.t) : RST.RST unit
+  (A.array_resource b)
+  (fun _ -> A.array_resource b)
+  (fun h0 -> Arr.vlength b > 1 /\ P.allows_write (R.sel (A.array_view b) h0).A.p)
+  (fun _ _ h1 -> P.allows_write (R.sel (A.array_view b) h1).A.p)  
   =
-  let b = A.alloc 2ul 42ul in
   let x1 = A.index b 0ul in
   A.upd b 0ul FStar.UInt32.(x1 +%^ 1ul);
   let b1 = A.share b in
@@ -98,5 +108,18 @@ let read_write_with_sharing () : RST.RST unit
     (fun _ -> A.glue b b_first b_second);
 
   let h'' = HST.get () in
-  A.merge b b1;
+  A.merge b b1
+
+let alloc_read_write_with_sharing () : RST.RST unit
+  (R.empty_resource)
+  (fun _ -> R.empty_resource)
+  (fun _ -> True)
+  (fun _ _ _ -> True)
+  =
+  let b = A.alloc 2ul 42ul in
+  let _ = A.frame_full_array b (A.full_array_resource b) (fun _ -> A.full_array_resource b) #_ #_
+    #(R.empty_resource) #(fun _ -> R.empty_resource)
+    (fun () ->
+      read_write_with_sharing b
+    ) in
   A.free b

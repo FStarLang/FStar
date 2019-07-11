@@ -98,7 +98,13 @@ val length_view_as_seq (#a:Type) (h:HS.mem) (b:A.array a) : Lemma
   (ensures A.vlength b == Seq.length (sel (array_view b) h).s)
   [SMTPat (sel (array_view b) h).s]
 
+val length_full_view_as_seq (#a:Type) (h:HS.mem) (b:A.array a) : Lemma
+  (requires (full_array_view b).inv h)
+  (ensures A.vlength b == Seq.length (sel (full_array_view b) h).s)
+  [SMTPat (sel (full_array_view b) h).s]
+
 let length_view_as_seq #a h b = ()
+let length_full_view_as_seq #a h b = ()
 
 let summable_permissions (#a:Type) (h:HS.mem) (b:A.array a{(array_view b).inv h}) (b':A.array a{(array_view b').inv h}) =
   A.mergeable b b' /\
