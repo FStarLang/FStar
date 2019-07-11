@@ -60,7 +60,7 @@ let width_of_sw = function
   | Signed w -> w
   | Unsigned w -> w
 
-[@mark_for_norm (strict_on_arguments [0])]
+[@mark_for_norm]
 inline_for_extraction
 let int_t sw : Tot Type0 =
   match sw with
@@ -655,3 +655,6 @@ let f_uint_8 (x:uint_8) (y:uint_8{ok (+) x y}) = x + y
 let f_int_16 (x:int_16) (y:int_16{ok (+) x y}) = x + y
 let g (x:uint_32) (y:uint_32{ok ( * ) y y /\ ok (+) x (y * y)}) = x + y * y
 let h (x:Prims.nat) (y:Prims.nat): nat  = u x + u y
+let i (x:Prims.nat) (y:Prims.nat) = x + y
+let j (x:Prims.int) (y:Prims.nat) = x - y
+let k (x:Prims.int) (y:Prims.int) = x * y
