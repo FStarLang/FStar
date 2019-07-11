@@ -24,6 +24,13 @@ open FStar.Tactics.Result
 open FStar.Tactics.Util
 module L = FStar.List.Tot
 
+(* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
+let run_tactic (t:unit -> Tac unit)
+  : Pure unit
+         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) (squash True)) (range_of t)))
+         (ensures (fun _ -> True))
+  = ()
+
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
