@@ -61,7 +61,7 @@ let width_of_sw = function
   | Unsigned w -> w
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let int_t sw : Tot Type0 =
   match sw with
   | Unsigned W8 -> FStar.UInt8.t
@@ -81,6 +81,7 @@ let int_t sw : Tot Type0 =
   | Signed W128 -> FStar.Int128.t
 
 [@mark_for_norm (strict_on_arguments [0])]
+unfold
 let within_bounds' sw (x:int) =
   match sw, nat_of_width (width_of_sw sw) with
   | Signed _,   None   -> True
@@ -91,6 +92,7 @@ unfold
 let within_bounds sw x = norm (within_bounds' sw x)
 
 [@mark_for_norm (strict_on_arguments [0])]
+unfold
 let v #sw (x:int_t sw)
   : Tot (y:int_t (Signed Winfinite){within_bounds sw y})
   = match sw with
@@ -115,6 +117,7 @@ let v #sw (x:int_t sw)
        | W128 -> FStar.Int128.v x)
 
 [@mark_for_norm (strict_on_arguments [0])]
+unfold
 let u    #sw
         (x:int_t (Signed Winfinite){within_bounds sw x})
   : Tot (y:int_t sw{norm (v x == v y)})
@@ -572,59 +575,59 @@ let ( >>^ ) #sw (x:int_t sw{0 <= v x})
       | Signed W128 -> FStar.Int128.(x >>^ y)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let uint_8   = int_t (Unsigned W8)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let uint_16  = int_t (Unsigned W16)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let uint_31  = int_t (Unsigned W31)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let uint_32  = int_t (Unsigned W32)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let uint_63  = int_t (Unsigned W63)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let uint_64  = int_t (Unsigned W64)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let int       = int_t (Signed Winfinite)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let int_8   = int_t (Signed W8)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let int_16  = int_t (Signed W16)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let int_31  = int_t (Signed W31)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let int_32  = int_t (Signed W32)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let int_63  = int_t (Signed W63)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let int_64  = int_t (Signed W64)
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let int_128 = int_t (Signed W128)
 
 [@mark_for_norm]
@@ -638,11 +641,11 @@ let ok #sw
    = within_bounds sw (op (v x) (v y))
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let nat = i:int{ 0 <= i }
 
 [@mark_for_norm]
-inline_for_extraction
+unfold
 let pos = i:nat{ 0 < i }
 
 ////////////////////////////////////////////////////////////////////////////////
