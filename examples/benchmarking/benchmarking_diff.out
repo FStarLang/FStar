@@ -11,48 +11,91 @@ index 29cf6f6574..b62a8e290d 100644
  cache/
  /VS/packages
 diff --git a/examples/Makefile.include b/examples/Makefile.include
-index dc215dda94..78bf504ca8 100644
+index dc215dda94..aff9acc51c 100644
 --- a/examples/Makefile.include
 +++ b/examples/Makefile.include
-@@ -14,8 +14,14 @@ else
+@@ -14,8 +14,10 @@ else
    MSBUILD = $(shell which msbuild || (echo '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'>&2; which xbuild))
  endif
  
 +# we ignore the return result in benchmark runs because we can have micro-benchmarks which
 +# produce error asserts when executed with '--admit_smt_queries true'
  %.uver: %.fst
-+ifdef BENCHMARK_FSTAR
-+	-$(BENCHMARK_CMD) -o $@.bench -- $(FSTAR) --use_extracted_interfaces true $^
-+else
- 	$(FSTAR) --use_extracted_interfaces true $^
-+endif
+-	$(FSTAR) --use_extracted_interfaces true $^
++	$(BENCHMARK_PRE) $(FSTAR) --use_extracted_interfaces true $^
  
  %.fail-uver: %.fst
  	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)
-diff --git a/make_bench_results.sh b/make_bench_results.sh
-new file mode 100755
-index 0000000000..7ebd9715cd
+diff --git a/examples/benchmarking/README.md b/examples/benchmarking/README.md
+new file mode 100644
+index 0000000000..9bf0a6e119
 --- /dev/null
-+++ b/make_bench_results.sh
-@@ -0,0 +1,98 @@
++++ b/examples/benchmarking/README.md
+@@ -0,0 +1,42 @@
++Benchmarking FStar
++==================
++
++There are hooks within the FStar makefiles to make it easy to run a benchmarks of examples/micro-benchmarks, ulib and OCaml extraction of the FStar compiler itself.
++
++To get started, you can run the micro-benchmarks using GNU time to measure execution with:
++```
++ $ make -C examples/micro-benchmarks BENCHMARK_CMD=time
++```
++This will output .bench files for each of the benchmarks.
++
++
++Example of full benchmarks
++--------------------------
++
++The `make_bench_results.sh` script is an example which:
++ - places all the results into the directory `./bench_results/YYYY_HHMMSS`
++ - cleans the fstar tree to start from a known state
++ - builds the fstar compiler
++ - builds a fresh ulib
++ - executes the benchmarks for micro-benchmarks, ulib and OCaml extraction
++ - collates the JSON results into a CSV file and also timing summaries in the results directory
++
++To run this script you may need to install:
++ - orun which to collect OCaml profiling information including GC stats and is part of the sandmark OCaml benchmarking suite (https://github.com/ocaml-bench/sandmark). To install a local pinned copy of orun do the following:
++```
++ $ git clone https://github.com/ocaml-bench/sandmark.git sandmark
++ $ cd sandmark/orun
++ $ opam install .
++```
++ - jq which collates JSON into CSV (https://stedolan.github.io/jq/)
++
++To run the script execute (from the fstar root directory)
++```
++ $ examples/benchmarking/make_bench_results.sh
++```
++
++The script has options to set wrappers for tasksetting and/or setting FStar OTHERFLAGS, for example:
++```
++ $ BENCH_WRAP='taskset --cpu-list 3' BENCH_OTHERFLAGS='--admit_smt_queries true' examples/benchmarking/make_bench_results.sh
++```
++
+diff --git a/examples/benchmarking/make_bench_results.sh b/examples/benchmarking/make_bench_results.sh
+new file mode 100755
+index 0000000000..f78f55f338
+--- /dev/null
++++ b/examples/benchmarking/make_bench_results.sh
+@@ -0,0 +1,97 @@
 +#!/bin/bash
-+# simple script to run benchmarks and collect them
++
++# example script to run benchmarks and collate them
 +
 +set -x
 +
-+FSTAR_OTHERFLAGS="--admit_smt_queries true"
-+TASKSET_CPU=4
++# BENCH_OTHERFLAGS are passed to the benchmark commands when they execute,
++#  we default to '--admit_smt_queries true' to exclude Z3 execution time from the benchmarks
++BENCH_OTHERFLAGS=${BENCH_OTHERFLAGS-"--admit_smt_queries true"}
 +
-+TIMESTAMP=`date +'%Y%m%d_%H%M%S'`
-+OUTDIR=bench_results/${TIMESTAMP}
++# BENCH_WRAP can be used to set up CPU affinity with taskset, for example:
++#   BENCH_WRAP='taskset --cpu-list 4'
++BENCH_WRAP=${BENCH_WRAP-}
 +
-+if hash taskset 2>/dev/null; then
-+	echo "taskset found, will run on CPU ${TASKSET_CPU}"
-+	TASKSET_WRAP='taskset --cpu-list '${TASKSET_CPU}
-+else
-+	echo "taskset not found, will run without it"
-+	TASKSET_WRAP=''
-+fi
++# BENCH_OUTDIR is the location of the output directory
++BENCH_OUTDIR=${BENCH_OUTDIR-"./bench_results/"`date +'%Y%m%d_%H%M%S'`}
 +
 +write_simple_summary() {
 +	IN=${1}
@@ -82,96 +125,71 @@ index 0000000000..7ebd9715cd
 +	fi
 +}
 +
-+mkdir -p ${OUTDIR}
++mkdir -p ${BENCH_OUTDIR}
 +
 +# setup clean fstar to clean state
 +make clean
 +make -C src clean_boot
 +make -C src clean
 +git checkout -- src/ocaml-output
++rm src/.cache.boot/*.checked.lax
 +
 +# log the git state of the tree
-+git log -n 1 2>&1 | tee -a ${OUTDIR}/git_info.log
-+git status -v -v 2>&1 | tee -a ${OUTDIR}/git_info.log
++git log -n 1 2>&1 | tee -a ${BENCH_OUTDIR}/git_info.log
++git status -v -v 2>&1 | tee -a ${BENCH_OUTDIR}/git_info.log
 +
 +# build fstar compiler bootstrap
 +T0=`date +'%Y%m%d_%H%M%S'`
 +echo "Starting fstar compiler bootstrap ${T0}"
-+make -C src ocaml-fstar-ocaml 2>&1 | tee ${OUTDIR}/build_fstar.log
++make -C src ocaml-fstar-ocaml 2>&1 | tee ${BENCH_OUTDIR}/build_fstar.log
 +T1=`date +'%Y%m%d_%H%M%S'`
 +echo "Finished fstar compiler boostrap ${T1} (started at ${T0})"
 +
 +# verify ulib and install
 +T0=`date +'%Y%m%d_%H%M%S'`
 +echo "Starting fstarlib build ${T0}"
-+make -C src fstarlib 2>&1 | tee ${OUTDIR}/build_fstarlib.log
++make -C src fstarlib 2>&1 | tee ${BENCH_OUTDIR}/build_fstarlib.log
 +T1=`date +'%Y%m%d_%H%M%S'`
 +echo "Finished fstar compiler boostrap ${T1} (started at ${T0})"
 +
-+ls -ltr ulib >> ${OUTDIR}/build_fstarlib.log
++ls -ltr ulib >> ${BENCH_OUTDIR}/build_fstarlib.log
 +
 +# benchmark examples/micro-benchmarks
 +BENCH_DIR=examples/micro-benchmarks; NME=micro-benchmarks
 +rm -f ${BENCH_DIR}/*.bench
-+${TASKSET_WRAP} make -C ${BENCH_DIR} BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
-+cat ${BENCH_DIR}/*.bench > ${OUTDIR}/${NME}.bench
-+write_csv_and_summary ${OUTDIR}/${NME}
++${BENCH_WRAP} make -C ${BENCH_DIR} BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${BENCH_OTHERFLAGS}" 2>&1 | tee ${BENCH_OUTDIR}/${NME}.log
++cat ${BENCH_DIR}/*.bench > ${BENCH_OUTDIR}/${NME}.bench
++write_csv_and_summary ${BENCH_OUTDIR}/${NME}
 +
 +# benchmark ulib
 +BENCH_DIR=ulib; NME=ulib
 +rm -f ${BENCH_DIR}/*.bench
-+${TASKSET_WRAP} make -C ${BENCH_DIR} benchmark BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
-+cat ${BENCH_DIR}/*.bench > ${OUTDIR}/${NME}.bench
-+write_csv_and_summary ${OUTDIR}/${NME}
++${BENCH_WRAP} make -C ${BENCH_DIR} benchmark BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${BENCH_OTHERFLAGS}" 2>&1 | tee ${BENCH_OUTDIR}/${NME}.log
++cat ${BENCH_DIR}/*.bench > ${BENCH_OUTDIR}/${NME}.bench
++write_csv_and_summary ${BENCH_OUTDIR}/${NME}
 +
 +# ocaml_extract: make -C src ocaml
 +make -C src clean_boot
 +#make -C src clean # will do a clean-ocaml as well
 +NME=ocaml_extract
 +rm -f src/ocaml-output/*.bench
-+${TASKSET_WRAP} make -C src ocaml BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${FSTAR_OTHERFLAGS}" 2>&1 | tee ${OUTDIR}/${NME}.log
-+cat src/ocaml-output/*.bench > ${OUTDIR}/${NME}.bench
-+write_csv_and_summary ${OUTDIR}/${NME}
++${BENCH_WRAP} make -C src ocaml BENCHMARK_FSTAR=true BENCHMARK_CMD=orun OTHERFLAGS="${BENCH_OTHERFLAGS}" 2>&1 | tee ${BENCH_OUTDIR}/${NME}.log
++cat src/ocaml-output/*.bench > ${BENCH_OUTDIR}/${NME}.bench
++write_csv_and_summary ${BENCH_OUTDIR}/${NME}
 +
-diff --git a/make_csv_from_bench.sh b/make_csv_from_bench.sh
-new file mode 100755
-index 0000000000..a92b699104
---- /dev/null
-+++ b/make_csv_from_bench.sh
-@@ -0,0 +1,12 @@
-+#!/bin/sh
-+
-+FIELDS=('name', 'time_secs', 'user_time_secs', 'sys_time_secs', 'maxrss_kB', 'gc.allocated_words', 'gc.minor_words', 'gc.promoted_words', 'gc.major_words', 'gc.minor_collections', 'gc.major_collections', 'gc.heap_words', 'gc.heap_chunks', 'gc.top_heap_words', 'gc.compactions')
-+
-+HEADER=$(printf "%s" ${FIELDS[@]})
-+JQ_ARGS=$(printf ".%s" ${FIELDS[@]})
-+
-+echo $HEADER
-+jq -s -r "[$HEADER], .[] | [$JQ_ARGS] | @csv"
-+
-+#echo '.name,time_secs,user_time_secs,sys_time_secs,maxrss_kB,gc.allocated_words,gc.minor_words,gc.promoted_words,gc.major_words,gc.minor_collections,gc.major_collections,gc.heap_words,gc.heap_chunks,gc.top_heap_words,gc.compactions'
-+#jq -s -r '.[] | [.name, .time_secs, .user_time_secs, .sys_time_secs, .maxrss_kB, .gc.allocated_words, .gc.minor_words, .gc.promoted_words, .gc.major_words, .gc.minor_collections, .gc.major_collections, .gc.heap_words, .gc.heap_chunks, .gc.top_heap_words, .gc.compactions] | @csv'
 diff --git a/src/Makefile.boot b/src/Makefile.boot
-index f0b986b796..92435cb17a 100644
+index fa83ce02e1..5ee7683a35 100644
 --- a/src/Makefile.boot
 +++ b/src/Makefile.boot
-@@ -69,9 +69,16 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
+@@ -70,7 +70,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
  # And then, in a separate invocation, from each .checked.lax we
  # extract an .ml file
  ocaml-output/%.ml:
-+ifdef BENCHMARK_FSTAR
-+	$(BENCHMARK_CMD) -o $@.bench -- \
-+                   $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
-+                   --codegen OCaml \
-+                   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
-+else
- 	$(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
+-	$(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
++	$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
                     --codegen OCaml \
                     --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
-+endif
  
- # --------------------------------------------------------------------
- # Dependency analysis for bootstrapping
 diff --git a/ulib/Makefile b/ulib/Makefile
 index adf1701896..6edeff78e8 100644
 --- a/ulib/Makefile
@@ -187,10 +205,10 @@ index adf1701896..6edeff78e8 100644
  	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-extra
  
 diff --git a/ulib/Makefile.verify b/ulib/Makefile.verify
-index 788362deee..6d45739b3e 100644
+index ad2c5b0c97..624b2d219a 100644
 --- a/ulib/Makefile.verify
 +++ b/ulib/Makefile.verify
-@@ -34,3 +34,34 @@ LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
+@@ -31,3 +31,32 @@ LowStar.Printf.fst.checked: USE_EXTRACTED_INTERFACES=
  verify-core: $(addsuffix .checked, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
  
  verify-extra: $(addsuffix .checked, $(EXTRA))
@@ -203,42 +221,40 @@ index 788362deee..6d45739b3e 100644
 +#  - execute the benchmark
 +#  - move the checked file back
 +#
++# phony-benchmark target to ensure bench rules always run on:
++#  make -C ulib benchmark
++
++.PHONY: phony-benchmark
++
++phony-benchmark:
 +
 +# a.fst.bench will move the a.fst.checked binary and then move it back
-+%.fst.bench: %.fst
++%.fst.bench: %.fst phony-benchmark
 +	-mv -f $*.fst.checked $*.fst.checked.bench_bkp
-+ifdef BENCHMARK_FSTAR
-+	$(BENCHMARK_CMD) -o $@ -- $(MY_FSTAR) $*.fst
-+else
-+	$(MY_FSTAR) $*.fst
-+endif
++	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fst
 +	-mv -f $*.fst.checked.bench_bkp $*.fst.checked
 +
 +# a.fsti.bench will move the a.fsti.checked binary and then move it back
-+%.fsti.bench: %.fsti
++%.fsti.bench: %.fsti phony-benchmark
 +	-mv -f $*.fsti.checked $*.fsti.checked.bench_bkp
-+ifdef BENCHMARK_FSTAR
-+	$(BENCHMARK_CMD) -o $@ -- $(MY_FSTAR) $*.fsti
-+else
-+	$(MY_FSTAR) $*.fsti
-+endif
++	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fsti
 +	-mv -f $*.fsti.checked.bench_bkp $*.fsti.checked
 +
 +verify-benchmark: $(addsuffix .bench, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
 diff --git a/ulib/gmake/fstar.mk b/ulib/gmake/fstar.mk
-index 51b2603e80..3bbdfbb7e1 100644
+index c05fb3b595..fd461a8bb8 100644
 --- a/ulib/gmake/fstar.mk
 +++ b/ulib/gmake/fstar.mk
-@@ -14,3 +14,25 @@ else
+@@ -14,3 +14,32 @@ else
  # FSTAR_HOME not defined, assume fstar.exe reachable from PATH
  FSTAR=fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
  endif
 +
-+# Benchmarking wrappers are enabled when you pass BENCHMARK_FSTAR=true, for example:
-+#  make -C examples/micro-benchmarks BENCHMARK_FSTAR=true
-+#  make -C ulib benchmark BENCHMARK_FSTAR=true BENCHMARK_CMD='perf stat -x,'
++# Benchmarking wrappers are enabled by setting BENCHMARK_CMD, for example:
++#  make -C examples/micro-benchmarks BENCHMARK_CMD=time
++#  make -C ulib benchmark BENCHMARK_CMD='perf stat -x,'
 +#
-+# This will utilize the BENCHMARK_CMD wrapper to collect data on the commands executed
++# This will utilize the BENCHMARK_CMD to collect data on the executed commands
 +#
 +# BENCHMARK_CMD can be set to a wrapper command that works when called as follows:
 +#  $BENCHMARK_CMD -o <output-file> -- <program-to-benchmark> <arguments-to-program>
@@ -254,4 +270,11 @@ index 51b2603e80..3bbdfbb7e1 100644
 +#  https://github.com/ocaml-bench/sandmark/tree/master/orun
 +#  BENCHMARK_CMD=orun
 +#
-+BENCHMARK_CMD?=time
++BENCHMARK_CMD?=
++
++ifeq ($(BENCHMARK_CMD),)
++BENCHMARK_PRE=
++else
++# substitution allows targets of the form %.fst.bench to still produce single .bench suffix
++BENCHMARK_PRE=-$(BENCHMARK_CMD) -o $(subst .bench,,$@).bench --
++endif

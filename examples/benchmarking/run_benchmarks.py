@@ -41,6 +41,9 @@ parser.add_argument('-v', '--verbose', action='store_true', default=False)
 
 args = parser.parse_args()
 
+if args.verbose:
+	print('executing: %s'%' '.join(sys.argv))
+
 def shell_exec(cmd, verbose=args.verbose, check=False, stdout=None, stderr=None):
 	if verbose:
 		print('+ %s'%cmd)
@@ -174,7 +177,7 @@ for h in hashes:
 
 			# HACK: dynamically patch the fstar repo to have the benchmark stubs
 			if args.benchmark_hook_patch:
-				shell_exec('grep BENCHMARK_FSTAR ulib/gmake/fstar.mk || git apply %s'%args.benchmark_hook_patch)
+				shell_exec('grep BENCHMARK_PRE ulib/gmake/fstar.mk || git apply %s'%args.benchmark_hook_patch)
 
 			log_fname = os.path.join(hashdir, 'bench_%s.log'%run_timestamp)
 			completed_proc = shell_exec_redirect('%s'%args.benchmark_run_script, log_fname)
