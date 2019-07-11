@@ -120,31 +120,6 @@ let glue #a b b1 b2 =
 
 #pop-options
 
-let frame_full_pre (#a:Type) (b:A.array a) (res:resource) (pre:r_pre (array_resource b <*> res))
-  (h:imem (inv (full_array_resource b <*> res)))
-  =
-  reveal_full_array();
-  reveal_array();
-  reveal_star();
-  pre h /\
-  sel (array_view b) h == sel (full_array_view b) h
-
-let frame_full_post(#t:Type)
-                   (#a:Type)
-                   (b:A.array a)
-                   (res0:resource)
-                   (res1:t -> resource)
-                   (pre:r_pre (array_resource b <*> res0))
-                   (post:r_post (array_resource b <*> res0) t (fun x -> array_resource b <*> res1 x))
-                   (h0:imem (inv (full_array_resource b <*> res0)))
-                   (x:t)
-                   (h1:imem (inv (full_array_resource b <*> res1 x)))
-    = reveal_array();
-      reveal_full_array();
-      reveal_star();
-      post h0 x h1 /\
-      sel (array_view b) h1 == sel (full_array_view b) h1
-
 let frame_full_array (#t:Type) (#a:Type) (b:A.array a)
     (res0:resource)
     (res1:t -> resource)
@@ -159,10 +134,12 @@ let frame_full_array (#t:Type) (#a:Type) (b:A.array a)
    = reveal_modifies();
      reveal_rst_inv();
      reveal_array();
+     reveal_full_array();
      reveal_star();
      let h0 = HST.get() in
      let x = f() in
      let h1 = HST.get() in
+     lemma_not_unused_in_monotonic (A.loc_union (A.loc_array b) (as_loc (fp res0))) h0 h1;
      A.loc_includes_disjoint_elim (as_loc (fp (res1 x))) (A.loc_array b) (A.loc_union (as_loc (fp res0)) (A.loc_unused_in h0));
      A.unused_in_not_unused_in_disjoint_2 (A.loc_unused_in h0) (A.loc_not_unused_in h0) (A.loc_unused_in h0) (A.loc_not_unused_in h0) h0;
      x

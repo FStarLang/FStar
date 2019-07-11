@@ -108,3 +108,42 @@ val glue (#a: Type) (b b1 b2: A.array a)
       (sel (array_view b) h1).s == Seq.append (sel (array_view b1) h0).s (sel (array_view b2) h0).s /\
       (sel (array_view b) h1).p == (sel (array_view b1) h0).p
     )
+
+unfold
+let frame_full_pre (#a:Type) (b:A.array a) (res:resource) (pre:r_pre (array_resource b <*> res))
+  (h:imem (inv (full_array_resource b <*> res)))
+  =
+  reveal_full_array();
+  reveal_array();
+  reveal_star();
+  pre h /\
+  sel (array_view b) h == sel (full_array_view b) h
+
+unfold
+let frame_full_post(#t:Type)
+                   (#a:Type)
+                   (b:A.array a)
+                   (res0:resource)
+                   (res1:t -> resource)
+                   (pre:r_pre (array_resource b <*> res0))
+                   (post:r_post (array_resource b <*> res0) t (fun x -> array_resource b <*> res1 x))
+                   (h0:imem (inv (full_array_resource b <*> res0)))
+                   (x:t)
+                   (h1:imem (inv (full_array_resource b <*> res1 x)))
+    = reveal_array();
+      reveal_full_array();
+      reveal_star();
+      post h0 x h1 /\
+      sel (array_view b) h1 == sel (full_array_view b) h1
+
+val frame_full_array (#t:Type) (#a:Type) (b:A.array a)
+    (res0:resource)
+    (res1:t -> resource)
+    (#pre:r_pre (array_resource b <*> res0))
+    (#post:r_post (array_resource b <*> res0) t (fun x -> array_resource b <*> res1 x))
+    ($f:unit -> RST t (array_resource b <*> res0) (fun x -> array_resource b <*> res1 x) pre post)
+    : RST t
+      (full_array_resource b <*> res0)
+      (fun x -> full_array_resource b <*> res1 x)
+      (frame_full_pre b res0 pre)
+      (frame_full_post b res0 res1 pre post)
