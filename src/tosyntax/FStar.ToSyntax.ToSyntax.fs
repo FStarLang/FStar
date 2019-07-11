@@ -2637,8 +2637,9 @@ and mk_comment_attr (d: decl) =
   let str = summary ^ pp ^ other ^ text in
   (* Building a fake term *)
   let fv = S.fvar (lid_of_str "FStar.Pervasives.Comment") delta_constant None in //NS delta: ok
-  let arg = U.exp_string str in
-  U.mk_app fv [ S.as_arg arg ]
+  if str = "" then []
+  else [let arg = U.exp_string str in
+        U.mk_app fv [ S.as_arg arg ]]
 
 and desugar_decl_aux env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
@@ -2648,10 +2649,10 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
-  let attrs = mk_comment_attr d :: attrs in
+  let attrs = mk_comment_attr d @ attrs in
   env, List.mapi (fun i sigelt -> if i = 0
-                                  then { sigelt with sigattrs = attrs }
-                                  else { sigelt with sigattrs = List.filter (fun at -> Option.isNone (get_fail_attr false at)) attrs })
+                                  then { sigelt with sigattrs = sigelt.sigattrs@attrs }
+                                  else { sigelt with sigattrs = sigelt.sigattrs@List.filter (fun at -> Option.isNone (get_fail_attr false at)) attrs })
                  sigelts
 
 and desugar_decl env (d:decl) :(env_t * sigelts) =
@@ -2782,11 +2783,26 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       match (Subst.compress <| ds_lets).n with
         | Tm_let(lbs, _) ->
           let fvs = snd lbs |> List.map (fun lb -> right lb.lbname) in
-          let quals = match quals with
-            | _::_ -> List.map (trans_qual None) quals
-            | _ -> snd lbs |> List.collect
-            (function | {lbname=Inl _} -> []
-                      | {lbname=Inr fv} -> Env.lookup_letbinding_quals env fv.fv_name.v) in
+          let attrs = List.map (desugar_term env) d.attrs in
+          let val_quals, val_attrs =
+               fvs
+               |> List.map (fun fv -> Env.lookup_letbinding_quals_and_attrs env fv.fv_name.v)
+               |> List.unzip
+               |> (fun (quals, attrs) ->
+                 List.flatten quals,
+                 List.flatten attrs)
+          in
+          // BU.print3 "Desugaring %s, val_quals are %s, val_attrs are %s\n"
+          //   (List.map Print.fv_to_string fvs |> String.concat ", ")
+          //   (Print.quals_to_string val_quals)
+          //   (List.map Print.term_to_string val_attrs |> String.concat ", ");
+          let quals =
+            match quals with
+            | _::_ ->
+             List.map (trans_qual None) quals
+            | _ ->
+             val_quals
+          in
           let quals =
             if lets |> BU.for_some (fun (_, (_, t)) -> t.level=Formula)
             then S.Logic::quals
@@ -2803,16 +2819,18 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
            *     however this doesn't work if we want access to the attributes during desugaring, e.g. when warning about deprecated defns.
            *     for now, adding attrs to Sig_let to make progress on the deprecated warning, but perhaps we should add attrs to all terms
            *)
-          let attrs = List.map (desugar_term env) d.attrs in
           let s = { sigel = Sig_let(lbs, names);
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
-                    sigattrs = attrs } in
+                    sigattrs = attrs@val_attrs } in
           let env = push_sigelt env s in
           // FIXME all bindings in let get the same docs?
           let env = List.fold_left (fun env id -> push_doc env id d.doc) env names in
-          env, [s]
+          // BU.print2 "Desugaring %s, se attrs are %s\n"
+          //   (List.map Print.fv_to_string fvs |> String.concat ", ")
+          //   (List.map Print.term_to_string s.sigattrs |> String.concat ", ");
+           env, [s]
         | _ -> failwith "Desugaring a let did not produce a let"
     end
     else
@@ -2968,12 +2986,12 @@ let desugar_decls env decls =
         begin match se1.sigel, se2.sigel with
         | Sig_declare_typ _, Sig_let _ ->
             forward ({ se2 with sigattrs =
-              List.filter (function
+              (List.filter (function
                 | { n = Tm_app ({ n = Tm_fvar fv }, _) }
                   when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
                     true
                 | _ -> false
-              ) se1.sigattrs @ se2.sigattrs
+              ) se1.sigattrs) @ se2.sigattrs
             } :: se1 :: acc) sigelts
         | _ ->
             forward (se1 :: acc) (se2 :: sigelts)
