@@ -61,7 +61,7 @@ let width_of_sw = function
   | Unsigned w -> w
 
 [@mark_for_norm]
-unfold
+inline_for_extraction
 let int_t sw : Tot Type0 =
   match sw with
   | Unsigned W8 -> FStar.UInt8.t

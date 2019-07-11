@@ -43,17 +43,18 @@ let test_integer_generic #sw (x:int_t sw) (y:int_t sw{ok (+) x y}) : unit =
 //specifically remove the overloading layer from the SMT context
 #set-options "--using_facts_from '* -FStar.Integers'"
 
-//generic integer operations do not reduce, so you can prove
+//generic integer operations do not reduce, so you cannot prove
 //properties about them without also having FStar.Integers in scope
 [@(expect_failure [19])]
-let test_integer_generic_wo_fstar_integers #sw (x:int_t sw) (y:int_t sw{ok (+) x y}) : int_t sw =
-  assert (v (x + y) == (v x + v y));
-  x
+let test_integer_generic_wo_fstar_integers sw =
+  assert (forall (x y:int_t sw). ok (+) x y ==> v (x + y) == (v x + v y))
+      by (norm [delta; iota]; smt())
 
 //but, specific instances of them do reduce fully and
 //and proofs about them only rely on the underlying machine integer models
-let test_int_64 (x:uint_64) (y:uint_64) : unit =
-  assert (ok (+) x y ==> (v (x + y) == (v x + v y)))
+let test_int_64 : unit =
+  assert (forall (x y:uint_64). ok (+) x y ==> (v (x + y) == (v x + v y)))
+      by (norm [delta;iota]; smt())
 
 (* the code below extracts with `fstar --codegen OCaml` to
 let (test_extraction_generic :
