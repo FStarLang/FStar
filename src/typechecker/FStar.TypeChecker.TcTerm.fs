@@ -1326,9 +1326,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                         try normalizing it first;
                         otherwise synthesize a type and check it against the given type *)
                 if not norm
-                then as_function_typ true (N.unfold_whnf env t)
+                then as_function_typ true (t |> N.unfold_whnf env |> U.unascribe)
                 else let _, bs, _, c_opt, envbody, body, g_env = expected_function_typ env None body in
-                      Some t, bs, [], c_opt, envbody, body, g_env
+                     Some t, bs, [], c_opt, envbody, body, g_env
           in
           as_function_typ false t
     in
@@ -1344,6 +1344,12 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           (if env.top_level then "true" else "false");
 
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g_env = expected_function_typ env topt body in
+
+    if Env.debug env Options.Extreme
+    then BU.print1 "Expected comp of the abstraction body: %s\n"
+           (match c_opt with
+            | None -> "None"
+            | Some t -> Print.comp_to_string t);
 
     if Env.debug env <| Options.Other "NYC"
     then BU.print2 "!!!!!!!!!!!!!!!Guard for function with binders %s is %s\n"
