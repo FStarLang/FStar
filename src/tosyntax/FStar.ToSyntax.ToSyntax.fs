@@ -2646,7 +2646,7 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
   // let each desugar_foo function provide an empty list, then override it here.
   // Not for the `fail` attribute though! We only keep that one on the first
   // new decl.
-  let env, sigelts = desugar_decl_noattrs env d in
+  let env, sigelts = desugar_decl_noattrs env ({d with attrs=[]}) in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
   let attrs = mk_comment_attr d @ attrs in
@@ -2823,7 +2823,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
-                    sigattrs = attrs@val_attrs } in
+                    sigattrs = attrs } in //@val_attrs } in
           let env = push_sigelt env s in
           // FIXME all bindings in let get the same docs?
           let env = List.fold_left (fun env id -> push_doc env id d.doc) env names in
@@ -2986,10 +2986,13 @@ let desugar_decls env decls =
         begin match se1.sigel, se2.sigel with
         | Sig_declare_typ _, Sig_let _ ->
             forward ({ se2 with sigattrs =
-              (List.filter (function
-                | { n = Tm_app ({ n = Tm_fvar fv }, _) }
-                  when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
-                    true
+              (List.filter (fun t ->
+                let head, _ = U.head_and_args t in
+                match (U.un_uinst head).n with
+                | Tm_fvar fv
+                  when S.fv_eq_lid fv C.comment_attr
+                     || S.fv_eq_lid fv C.strict_on_arguments_attr ->
+                  true
                 | _ -> false
               ) se1.sigattrs) @ se2.sigattrs
             } :: se1 :: acc) sigelts
