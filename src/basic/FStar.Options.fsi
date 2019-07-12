@@ -237,7 +237,8 @@ val ml_no_eta_expand_coertions  : unit    -> bool
 val warn_error                  : unit    -> string
 val use_extracted_interfaces    : unit    -> bool
 val use_nbe                     : unit    -> bool
-val top_level_trivial_pre       : unit    -> bool
+val trivial_pre_for_unannotated_effectful_fns
+                                : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

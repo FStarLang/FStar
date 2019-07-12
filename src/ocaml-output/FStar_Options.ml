@@ -367,7 +367,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("warn_error", (List []));
   ("use_extracted_interfaces", (Bool false));
   ("use_nbe", (Bool false));
-  ("top_level_trivial_pre", (Bool true))] 
+  ("trivial_pre_for_unannotated_effectful_fns", (Bool true))] 
 let (parse_warn_error_set_get :
   (((Prims.string -> error_flag Prims.list) -> unit) *
     (unit -> Prims.string -> error_flag Prims.list)))
@@ -650,8 +650,10 @@ let (get_use_extracted_interfaces : unit -> Prims.bool) =
   fun uu____3745  -> lookup_opt "use_extracted_interfaces" as_bool 
 let (get_use_nbe : unit -> Prims.bool) =
   fun uu____3754  -> lookup_opt "use_nbe" as_bool 
-let (get_top_level_trivial_pre : unit -> Prims.bool) =
-  fun uu____3763  -> lookup_opt "top_level_trivial_pre" as_bool 
+let (get_trivial_pre_for_unannotated_effectful_fns : unit -> Prims.bool) =
+  fun uu____3763  ->
+    lookup_opt "trivial_pre_for_unannotated_effectful_fns" as_bool
+  
 let (dlevel : Prims.string -> debug_level_t) =
   fun uu___6_3772  ->
     match uu___6_3772 with
@@ -1233,8 +1235,9 @@ let rec (specs_with_types :
       "Extract interfaces from the dependencies and use them for verification (default 'false')");
     (FStar_Getopt.noshort, "use_nbe", BoolStr,
       "Use normalization by evaluation as the default normalization strategy (default 'false')");
-    (FStar_Getopt.noshort, "top_level_trivial_pre", BoolStr,
-      "Enforce trivial preconditions for top-level unannotated effectful functions (default 'true')");
+    (FStar_Getopt.noshort, "trivial_pre_for_unannotated_effectful_fns",
+      BoolStr,
+      "Enforce trivial preconditions for unannotated effectful functions (default 'true')");
     (FStar_Getopt.noshort, "__debug_embedding",
       (WithSideEffect
          (((fun uu____6968  -> FStar_ST.op_Colon_Equals debug_embedding true)),
@@ -1331,7 +1334,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "z3rlimit" -> true
     | "z3rlimit_factor" -> true
     | "z3seed" -> true
-    | "top_level_trivial_pre" -> true
+    | "trivial_pre_for_unannotated_effectful_fns" -> true
     | uu____7309 -> false
   
 let (all_specs : FStar_Getopt.opt Prims.list) = specs () 
@@ -1964,8 +1967,8 @@ let (warn_error : unit -> Prims.string) =
 let (use_extracted_interfaces : unit -> Prims.bool) =
   fun uu____9719  -> get_use_extracted_interfaces () 
 let (use_nbe : unit -> Prims.bool) = fun uu____9726  -> get_use_nbe () 
-let (top_level_trivial_pre : unit -> Prims.bool) =
-  fun uu____9733  -> get_top_level_trivial_pre () 
+let (trivial_pre_for_unannotated_effectful_fns : unit -> Prims.bool) =
+  fun uu____9733  -> get_trivial_pre_for_unannotated_effectful_fns () 
 let with_saved_options : 'a . (unit -> 'a) -> 'a =
   fun f  ->
     let uu____9750 =
