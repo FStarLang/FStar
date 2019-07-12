@@ -41,8 +41,20 @@ let as_perm_seq (#a:Type) (h:HS.mem) (b: array a) : GTot (Seq.seq permission) =
     get_permission_from_pid (Ghost.reveal (snd (Seq.index s (U32.v b.idx + x)))) (Ghost.reveal b.pid)
   )
 
+let used_cell (#a: Type) (h: HS.mem) (b:array a) (i:nat{i < vlength b}) : Type0 =
+  let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
+  Ghost.reveal b.pid <= get_current_max (Ghost.reveal perm_map)
+
 let live_cell (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) : Type0 =
   get_perm #a h b i >. 0.0R /\ HS.contains h b.content
+
+let live_cell_is_used (#a:Type) (h:HS.mem) (b:array a) (i:nat{i < vlength b}) : Lemma
+  (requires (live_cell #a h b i))
+  (ensures (used_cell #a h b i))
+  [SMTPat (live_cell #a h b i)]
+  =
+  let (_, perm_map) = Seq.index (HS.sel h b.content) (U32.v b.idx + i) in
+  P.lemma_live_pid_smaller_max (Ghost.reveal perm_map) (Ghost.reveal b.pid)
 
 let as_perm_seq_pid (#a:Type) (h:HS.mem) (b: array a) (pid:perm_id) : GTot (Seq.seq permission) =
   let s = HS.sel h b.content in

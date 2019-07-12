@@ -9,7 +9,7 @@ open FStar.HyperStack.ST
 module F = FStar.FunctionalExtensionality
 module G = FStar.Ghost
 module U32 = FStar.UInt32
-module MG = FStar.ModifiesGen
+module MG = FStar.MG2
 
 open LowStar.Permissions
 
@@ -24,64 +24,68 @@ friend LowStar.Array.Defs
 // The reason for this is that we want to prove that the loc of the union of two buffers corresponds to the union of locs
 // of the two smaller buffers.
 noeq
-type ucell_ : Type0 = {
+type ucell : Type0 = {
+  b_rid: HS.rid;
+  b_addr: nat;
   b_max: nat;
   b_index:nat;
   b_pid:perm_id;
 }
 
-val ucell (region:HS.rid) (addr:nat) : Tot Type0
-let ucell region addr = ucell_
+let ucell_matches_array_cell (cell: ucell) (t:Type) (b: array t) (h: HS.mem) =
+frameOf b = cell.b_rid /\ as_addr b = cell.b_addr /\ U32.v b.max_length = cell.b_max /\ HS.contains h b.content /\
+     cell.b_index >= U32.v b.idx /\ cell.b_index < U32.v b.idx + U32.v b.length // If this cell is part of the buffer
 
-// let uarray_of_array (#a:Type0) (b:array a) : Tot (uarray (frameOf b) (as_addr b)) =
-//   { b_max_length = U32.v b.max_length;
-//     b_offset = U32.v b.idx;
-//     b_length = U32.v b.length;
-//     b_pid = b.pid }
+let ucell_matches_used_array_cell (cell: ucell) (t:Type) (b: array t) (h: HS.mem) =
+  ucell_matches_array_cell cell t b h /\ begin
+    let (_, perm_map) = Seq.index (HS.sel h b.content) cell.b_index in
+    cell.b_pid <= get_current_max (Ghost.reveal perm_map)
+  end
 
-let ucell_preserved (#r:HS.rid) (#a:nat) (b:ucell r a) (h0 h1:HS.mem) : GTot Type0 =
-  forall (t:Type0) (b':array t).
-    (let i = b.b_index - U32.v b'.idx in // This cell corresponds to index i in the buffer
-      (frameOf b' == r /\ as_addr b' == a /\ b'.pid == (Ghost.hide b.b_pid) /\ U32.v b'.max_length == b.b_max /\
-        b.b_index >= U32.v b'.idx /\ b.b_index < U32.v b'.idx + U32.v b'.length /\ // If this cell is part of the buffer
-        live_cell h0 b' i ==>
-          live_cell h1 b' i /\ // If this cell is preserved, then its liveness is preserved
-          (sel h0 b' i == sel h1 b' i))) // And its contents (snapshot + permission) are the same
+let ucell_matches_unused_array_cell (cell: ucell) (t:Type) (b: array t) (h: HS.mem) =
+  ucell_matches_array_cell cell t b h /\ begin
+    let (_, perm_map) = Seq.index (HS.sel h b.content) cell.b_index in
+    cell.b_pid > get_current_max (Ghost.reveal perm_map)
+  end
 
-let prove_loc_preserved (#r: HS.rid) (#a: nat) (loc: ucell r a) (h0 h1: HS.mem)
+let ucell_matches_live_array_cell (cell: ucell) (t:Type) (b: array t) (h: HS.mem) =
+  ucell_matches_used_array_cell cell t b h /\ begin
+    let i = cell.b_index - U32.v b.idx in
+    live_cell h b i
+  end
+
+let ucell_preserved (cell:ucell) (h0 h1:HS.mem) : GTot Type0 =
+  forall (t:Type0) (b:array t). begin let i = cell.b_index - U32.v b.idx in // This cell corresponds to index i in the buffer
+    ucell_matches_live_array_cell cell t b h0 ==>
+      (ucell_matches_live_array_cell cell t b h1 /\  // If this cell is preserved, then its liveness is preserved
+      sel h0 b i == sel h1 b i) // And its contents (snapshot + permission) are the same
+  end
+
+let ucell_preserved_intro (loc: ucell) (h0 h1: HS.mem)
   (lemma: (t: Type0 -> b': array t -> Lemma
     (requires (
       let i = loc.b_index - U32.v b'.idx in
-      frameOf b' == r /\ as_addr b' == a /\
-      Ghost.reveal b'.pid == loc.b_pid /\ U32.v b'.max_length == loc.b_max /\
-      loc.b_index >= U32.v b'.idx /\ loc.b_index < U32.v b'.idx + U32.v b'.length /\
-      live_cell h0 b' i))
+      ucell_matches_live_array_cell loc t b' h0))
     (ensures (
       let i = loc.b_index - U32.v b'.idx in
-      live_cell h1 b' i /\
+      ucell_matches_live_array_cell loc t b' h1 /\
       sel h0 b' i  == sel h1 b' i
       ))
-  )) : Lemma (ucell_preserved #r #a loc h0 h1)
+  )) : Lemma (ucell_preserved loc h0 h1)
   =
   let aux (t: Type0) (b':array t) : Lemma(
       let i = loc.b_index - U32.v b'.idx in
-      frameOf b' == r /\ as_addr b' == a /\
-      Ghost.reveal b'.pid == loc.b_pid /\ U32.v b'.max_length == loc.b_max /\
-      loc.b_index >= U32.v b'.idx /\ loc.b_index < U32.v b'.idx + U32.v b'.length /\
-      live_cell h0 b' i ==>
-        live_cell h1 b' i /\
-        sel h0 b' i  == sel h1 b' i)
+      ucell_matches_live_array_cell loc t b' h0 ==>
+      ucell_matches_live_array_cell loc t b' h1 /\
+      sel h0 b' i  == sel h1 b' i)
   =
   let aux' (_ : squash (
       let i = loc.b_index - U32.v b'.idx in
-      frameOf b' == r /\ as_addr b' == a /\
-      Ghost.reveal b'.pid == loc.b_pid /\ U32.v b'.max_length == loc.b_max /\
-      loc.b_index >= U32.v b'.idx /\ loc.b_index < U32.v b'.idx + U32.v b'.length /\
-      live_cell h0 b' i)
+      ucell_matches_live_array_cell loc t b' h0)
     ) : Lemma (
       let i = loc.b_index - U32.v b'.idx in
       loc.b_index >= U32.v b'.idx /\ loc.b_index < U32.v b'.idx + U32.v b'.length /\
-      live_cell h1 b' i /\
+      ucell_matches_live_array_cell loc t b' h1 /\
       sel h0 b' i  == sel h1 b' i
     )
     = lemma t b'
@@ -92,31 +96,148 @@ let prove_loc_preserved (#r: HS.rid) (#a: nat) (loc: ucell r a) (h0 h1: HS.mem)
 
 
 // Two cells are included if they are equal: Same pid and same index in the buffer
-let ucell_includes (#r: HS.rid) (#a: nat) (c1 c2: ucell r a) : GTot Type0 =
-  c1.b_pid == c2.b_pid /\
-  c1.b_index == c2.b_index /\
-  c1.b_max == c2.b_max
+let ucell_includes (c1 c2: ucell) : GTot Type0 =
+  c1.b_rid = c2.b_rid /\
+  c1.b_addr = c2.b_addr /\
+  c1.b_pid = c2.b_pid /\
+  c1.b_index = c2.b_index /\
+  c1.b_max = c2.b_max
 
 
-let ucell_disjoint (#r:HS.rid) (#a:nat) (c1 c2:ucell r a) : GTot Type0 =
-  c1.b_max == c2.b_max /\
+let ucell_disjoint (c1 c2:ucell) : GTot Type0 =
+  (c1.b_rid <> c2.b_rid) \/
+  (c1.b_addr <> c2.b_addr) \/
+  ((c1.b_max = c2.b_max) /\ // At this point c1 and c2 point to the same allocated array
     (c1.b_index <> c2.b_index \/           // Either the cells are different (i.e. spatially disjoint)
-    c1.b_pid <> c2.b_pid)                 // Or they don't have the same permission
+    c1.b_pid <> c2.b_pid))                 // Or they don't have the same permission
+
+let ucell_unused_in (cell:ucell) (h: HS.mem) =
+  // Either there is nothing allocated at that memory cell
+  (forall (t:Type) (ref: HS.mreference t (Heap.trivial_preorder t)).
+    (HS.as_addr ref = cell.b_addr /\ HS.frameOf ref = cell.b_rid) ==> (~ (HS.contains h ref))
+  ) \/
+  // Or there is an allocated array but it doesnt use the ucell
+  (exists (t:Type) (b:array t). ucell_matches_unused_array_cell cell t b h)
+
+let ucell_used_in (cell:ucell) (h: HS.mem) =
+  // There exists an array allocated with the correct size that contains a live cell corresponding to the ucell
+  exists (t:Type) (b:array t). ucell_matches_live_array_cell cell t b h
+
+
+let live_same_arrays_equal_types
+  (#a1: Type0)
+  (#a2: Type0)
+  (b1: array a1{U32.v b1.max_length > 0})
+  (b2: array a2{U32.v b2.max_length > 0})
+  (h: HS.mem)
+  : Lemma (requires (
+     frameOf b1 == frameOf b2 /\
+     as_addr b1 == as_addr b2 /\
+     HS.contains h b1.content /\
+     HS.contains h b2.content))
+   (ensures (a1 == a2 /\ HS.sel h b1.content == HS.sel h b2.content /\ b1.max_length = b2.max_length))
+  =
+  Heap.lemma_distinct_addrs_distinct_preorders ();
+  Heap.lemma_distinct_addrs_distinct_mm ();
+  let s1 = HS.sel h b1.content in
+  let s2 = HS.sel h b2.content in
+  let (_, vp1) = Seq.index s1 0 in
+  let (_, vp2) = Seq.index s2 0 in
+  Seq.lemma_equal_instances_implies_equal_types ()
+
+#set-options "--z3rlimit 10"
 
 let cls : MG.cls ucell = MG.Cls #ucell
   ucell_includes
-  (fun #r #a x -> ())
-  (fun #r #a x1 x2 x3 -> ())
+  (fun  x -> ())
+  (fun  x1 x2 x3 -> ())
   ucell_disjoint
-  (fun #r #a x1 x2 -> ())
-  (fun #r #a larger1 larger2 smaller1 smaller2 -> ())
+  (fun x1 x2 -> ())
+  (fun x1 xl -> ())
+  (fun larger1 larger2 smaller1 smaller2 -> ())
   ucell_preserved
-  (fun #r #a x h -> ())
-  (fun #r #a x h1 h2 h3 -> ())
-  (fun #r #a b h1 h2 f ->
-    prove_loc_preserved #r #a b h1 h2 (fun t b' ->
-      let ref_t = Seq.lseq (value_with_perms t) (U32.v b'.max_length) in
-      f ref_t (Heap.trivial_preorder ref_t) b'.content
+  (fun x h -> ())
+  (fun x h1 h2 h3 -> ())
+  ucell_used_in
+  ucell_unused_in
+  (fun x1 x2 h ->
+    (* used_in and unused_in disjoint *)
+    let aux (_ : squash(x1 `ucell_used_in` h /\ x2 `ucell_unused_in` h)) : Lemma
+      (x1 `ucell_disjoint` x2)
+      =
+      let p (t: Type) = exists (b: array t). ucell_matches_live_array_cell x1 t b h in
+      let pf : squash (exists (t: Type) . p t) = () in
+      Classical.exists_elim (x1 `ucell_disjoint` x2) #Type #p pf (fun t ->
+        let p (b: array t) = ucell_matches_live_array_cell x1 t b h in
+        let pf : squash (exists (b: array t) . p b) = () in
+        Classical.exists_elim (x1 `ucell_disjoint` x2) #(array t) #p pf (fun b ->
+          let case1 = forall (t':Type) (ref: HS.mreference t' (Heap.trivial_preorder t')).
+           (HS.as_addr ref = x2.b_addr /\ HS.frameOf ref = x2.b_rid) ==> (~ (HS.contains h ref))
+          in
+          let case2 = (exists (t':Type) (b':array t'). ucell_matches_unused_array_cell x2 t' b' h) in
+          Classical.or_elim
+            #case1 #case2 #(fun _ -> x1 `ucell_disjoint` x2)
+            (fun (_ : squash (case1)) ->
+              if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else
+                assert((HS.contains h b.content) /\ ~ (HS.contains h b.content))
+            )
+            (fun (_ : squash (case2)) ->
+              let p (t': Type) = exists (b': array t'). ucell_matches_unused_array_cell x2 t' b' h in
+              let pf : squash (exists (t': Type) . p t') = () in
+              Classical.exists_elim (x1 `ucell_disjoint` x2) #Type #p pf (fun t' ->
+                let p (b': array t') = ucell_matches_unused_array_cell x2 t' b' h in
+                let pf : squash (exists (b': array t') . p b') = () in
+                Classical.exists_elim (x1 `ucell_disjoint` x2) #(array t') #p pf (fun b' ->
+                  if (x1.b_rid <> x2.b_rid || x1.b_addr <> x2.b_addr) then () else begin
+                    live_same_arrays_equal_types b' b h;
+                    if x1.b_index <> x2.b_index then () else begin
+                      let (_, perm_map1) = Seq.index (HS.sel h b.content) x1.b_index in
+                      let (_, perm_map2) = Seq.index (HS.sel h b'.content) x2.b_index in
+                      if x1.b_pid <> x2.b_pid then () else begin
+                        assert(perm_map1 == perm_map2);
+                        assert(
+                          x1.b_pid <= get_current_max (Ghost.reveal perm_map1) /\
+                          x1.b_pid > get_current_max (Ghost.reveal perm_map1)
+                        )
+                      end
+                    end
+                  end
+                )
+              )
+            )
+        )
+      )
+    in
+    Classical.impl_intro aux
+  )
+  (fun greater lesser h -> ())
+  (fun greater lesser h -> ())
+  (fun x h0 h1 ->
+    ucell_preserved_intro x h0 h1 (fun t b ->
+      let i = x.b_index - U32.v b.idx in
+      let case1 = forall (t':Type) (ref: HS.mreference t' (Heap.trivial_preorder t')).
+        (HS.as_addr ref = x.b_addr /\ HS.frameOf ref = x.b_rid) ==> (~ (HS.contains h0 ref))
+      in
+      let case2 = exists (t':Type) (b':array t').
+        ucell_matches_unused_array_cell x t' b' h0
+      in
+      let goal = ucell_matches_live_array_cell x t b h1 /\ sel h0 b i  == sel h1 b i in
+      Classical.or_elim #case1 #case2 #(fun _ -> goal)
+        (fun (_ : squash (case1)) -> assert((HS.contains h1 b.content) /\ (~ (HS.contains h1 b.content))))
+        (fun (_ : squash (case2)) ->
+          let p (t': Type) = exists (b': array t'). ucell_matches_unused_array_cell x t' b' h0 in
+          let pf : squash (exists (t': Type) . p t') = () in
+          Classical.exists_elim goal #Type #p pf (fun t' ->
+            let p (b': array t') = ucell_matches_unused_array_cell x t' b' h0 in
+            let pf : squash (exists (b': array t') . p b') = () in
+            Classical.exists_elim goal #(array t') #p pf (fun b' ->
+              live_same_arrays_equal_types b' b h0;
+              let (_, perm_map) = Seq.index (HS.sel h0 b.content) x.b_index in
+              LowStar.Permissions.lemma_greater_max_not_live_pid (Ghost.reveal perm_map) x.b_pid;
+              assert((live_cell h0 b i) /\ (~ (live_cell h0 b i)))
+            )
+          )
+        )
     )
   )
 
@@ -127,26 +248,24 @@ let loc_union (l1 l2:loc) = MG.loc_union #ucell #cls l1 l2
 let loc_disjoint (l1 l2:loc) = MG.loc_disjoint #ucell #cls l1 l2
 let loc_includes (l1 l2:loc) = MG.loc_includes #ucell #cls l1 l2
 
-let aloc_cell (#a:Type) (b:array a) (i:nat{i < vlength b}) : GTot (ucell (frameOf b) (as_addr b)) =
-  let r = frameOf b in
-  let a = as_addr b in
+let aloc_cell (#a:Type) (b:array a) (i:nat{i < vlength b}) : GTot ucell =
   {
+    b_rid = frameOf b;
+    b_addr =  as_addr b;
     b_max = U32.v b.max_length;
     b_index = U32.v b.idx + i;       // The index of the cell is the index inside the bigger array
     b_pid = (Ghost.reveal b.pid);
   }
 
 let loc_cell (#t:Type) (b:array t) (i:nat{i < vlength b}) : GTot loc =
-  let r = frameOf b in
-  let a = as_addr b in
-  MG.loc_of_aloc #ucell #cls #r #a (aloc_cell #t b i)
+  MG.loc_of_aloc (aloc_cell #t b i)
 
 // The location of an array is the recursive union of all of its cells
 let rec compute_loc_array (#a:Type) (b:array a) (i:nat{i <= vlength b})
   : GTot loc
   (decreases (vlength b - i))
-  = if i = vlength b then MG.loc_none
-    else loc_cell b i `MG.loc_union #ucell #cls` compute_loc_array b (i+1)
+  = if i = vlength b then loc_none
+    else loc_cell b i `loc_union` compute_loc_array b (i+1)
 
 let loc_array (#a:Type) (b:array a) : GTot loc =
   compute_loc_array b 0
@@ -172,21 +291,21 @@ let lemma_disjoint_pid_disjoint_cells (#a:Type) (b1 b2:array a) (i1:nat{i1 < vle
   (requires Ghost.reveal b1.pid <> Ghost.reveal b2.pid /\ b1.max_length == b2.max_length)
   (ensures loc_disjoint (loc_cell b1 i1) (loc_cell b2 i2))
   =
-  let r1 = frameOf b1 in
-  let r2 = frameOf b2 in
-  let a1 = as_addr b1 in
-  let a2 = as_addr b2 in
   let aloc1 = {
+    b_rid = frameOf b1;
+    b_addr = as_addr b1;
     b_max = U32.v b1.max_length;
     b_index = U32.v b1.idx + i1;
     b_pid = (Ghost.reveal b1.pid)
   } in
   let aloc2 = {
+    b_rid = frameOf b2;
+    b_addr = as_addr b2;
     b_max = U32.v b2.max_length;
     b_index = U32.v b2.idx + i2;
     b_pid = (Ghost.reveal b2.pid)
   } in
-  MG.loc_disjoint_aloc_intro #ucell #cls #r1 #a1 #r2 #a2 aloc1 aloc2
+  MG.loc_disjoint_aloc_intro #ucell #cls aloc1 aloc2
 
 let rec lemma_disjoint_pid_disjoint_cell_array (#a:Type0) (b1 b2:array a) (i:nat{i < vlength b1}) (j:nat{j <= vlength b2}) : Lemma
   (requires Ghost.reveal b1.pid <> Ghost.reveal b2.pid /\ b1.max_length == b2.max_length)
@@ -219,13 +338,9 @@ let lemma_disjoint_pid_disjoint_arrays (#a:Type0) (b1 b2:array a) : Lemma
   (ensures loc_disjoint (loc_array b1) (loc_array b2))
   = lemma_disjoint_pid_disjoint_compute_array b1 b2 0;
     MG.loc_disjoint_sym (loc_array b2) (loc_array b1)
+let loc_used_in = MG.loc_used_in #ucell cls
 
-let loc_addresses = MG.loc_addresses #ucell #cls
-let loc_regions = MG.loc_regions #ucell #cls
-
-let loc_not_unused_in = MG.loc_not_unused_in _
-
-let loc_unused_in = MG.loc_unused_in _
+let loc_unused_in = MG.loc_unused_in #ucell cls
 
 let modifies (s:loc) (h0 h1:HS.mem) : GTot Type0 = MG.modifies s h0 h1
 
@@ -242,15 +357,17 @@ let lemma_disjoint_loc_from_array_disjoint_from_cells (#t: Type) (b: array t) (p
   in
   Classical.forall_intro aux
 
+#set-options "--z3rlimit 10"
+
 let modifies_array_elim #t b p h h' =
   lemma_disjoint_loc_from_array_disjoint_from_cells #t b p;
   assert(forall(i:nat{i < vlength b}). loc_disjoint (loc_cell b i) p);
-  let aux (i:nat{i < vlength b}) : Lemma (ensures (ucell_preserved #(frameOf b) #(as_addr b) (aloc_cell b i) h h')) =
-    MG.modifies_aloc_elim #ucell #cls #(frameOf b) #(as_addr b)
+  let aux (i:nat{i < vlength b}) : Lemma (ensures (ucell_preserved (aloc_cell b i) h h')) =
+    MG.modifies_aloc_elim #ucell #cls
       (aloc_cell b i) p h h'
   in
   Classical.forall_intro aux;
-  assert(forall(i:nat{i < vlength b}). ucell_preserved #(frameOf b) #(as_addr b) (aloc_cell b i) h h');
+  assert(forall(i:nat{i < vlength b}). ucell_preserved (aloc_cell b i) h h');
   assert(forall(i:nat{i < vlength b}). sel h b i == sel h' b i);
   assert(forall(i:nat{i < vlength b}). (sel h b i).wp_v == Seq.index (as_seq h b) i /\ (sel h' b i).wp_v == Seq.index (as_seq h' b) i);
   assert(forall(i:nat{i < vlength b}).
@@ -262,7 +379,7 @@ let modifies_array_elim #t b p h h' =
   assert(as_seq h b  == as_seq h' b);
   assert(as_perm_seq h b  == as_perm_seq h' b);
   assert((forall (i:nat{i < vlength b}). live_cell h' b i /\ HS.contains h' b.content));
-  assert(HS.contains h' b.content)
+  assert(live_cell h' b 0 /\ HS.contains h' b.content)
 
 let loc_union_idem s = MG.loc_union_idem s
 let loc_union_comm s1 s2 = MG.loc_union_comm s1 s2
@@ -288,53 +405,11 @@ let loc_includes_union_r s s1 s2 =
 
 let loc_includes_none s = MG.loc_includes_none s
 
-let loc_includes_region_addresses preserve_liveness1 preserve_liveness2 s r a =
-  MG.loc_includes_region_addresses #_ #cls preserve_liveness1 preserve_liveness2 s r a
-
-let loc_includes_region_addresses' preserve_liveness r a = ()
-let loc_includes_region_region preserve_liveness1 preserve_liveness2 s1 s2 =
-  MG.loc_includes_region_region #_ #cls preserve_liveness1 preserve_liveness2 s1 s2
-let loc_includes_region_region' preserve_liveness s = ()
-
-let loc_includes_adresses_loc_cell (#a: Type) (b: array a) (preserve_liveness: bool) (i:nat{i < vlength b})
-  : Lemma (
-    loc_includes (loc_addresses preserve_liveness (frameOf b) (Set.singleton (as_addr b)))
-      (loc_cell b i)
-  )
-= MG.loc_includes_addresses_aloc #ucell #cls preserve_liveness (frameOf b) (Set.singleton (as_addr b))
-    #(as_addr b) (aloc_cell b i)
-
-let rec loc_includes_adresses_loc_array_rec (#a: Type) (b: array a) (preserve_liveness: bool) (i:nat{i <= vlength b})
-  : Lemma (requires True) (ensures (
-    loc_includes (loc_addresses preserve_liveness (frameOf b) (Set.singleton (as_addr b)))
-      (compute_loc_array b i)
-   )) (decreases (vlength b - i))
-= if i = vlength b then
-    MG.loc_includes_none (loc_addresses preserve_liveness (frameOf b) (Set.singleton (as_addr b)))
-  else begin
-  loc_includes_adresses_loc_cell b preserve_liveness i;
-  loc_includes_adresses_loc_array_rec b preserve_liveness (i+1);
-  assert(loc_includes (loc_addresses preserve_liveness (frameOf b) (Set.singleton (as_addr b)))
-    ((loc_cell b i) `loc_union` (compute_loc_array b (i + 1)))
-  )
-  end
-
-let loc_includes_adresses_loc_array #a b preserve_liveness =
-  loc_includes_adresses_loc_array_rec b preserve_liveness 0
-
-let loc_includes_region_union_l preserve_liveness l s1 s2 =
-  MG.loc_includes_region_union_l preserve_liveness l s1 s2
-
-let loc_includes_addresses_addresses_1 preserve_liveness1 preserve_liveness2 r1 r2 s1 s2 =
-  MG.loc_includes_addresses_addresses cls preserve_liveness1 preserve_liveness2 r1 s1 s2
-
-let loc_includes_addresses_addresses_2 preserve_liveness r s = ()
-
-let loc_disjoint_sym' s1 s2 =
-  Classical.move_requires (MG.loc_disjoint_sym s1) s2;
-  Classical.move_requires (MG.loc_disjoint_sym s2) s1
+let loc_disjoint_sym' s1 s2 = MG.loc_disjoint_sym s1 s2
 
 let loc_disjoint_none_r s = MG.loc_disjoint_none_r s
+
+
 
 let loc_disjoint_union_r' s s1 s2 =
   Classical.move_requires (MG.loc_disjoint_union_r s s1) s2;
@@ -348,101 +423,26 @@ let loc_disjoint_includes p1 p2 p1' p2' = MG.loc_disjoint_includes p1 p2 p1' p2'
 
 let loc_disjoint_includes_r b1 b2 b2' = loc_disjoint_includes b1 b2 b1 b2'
 
-let loc_disjoint_addresses preserve_liveness1 preserve_liveness2 r1 r2 n1 n2 =
-  MG.loc_disjoint_addresses #_ #cls preserve_liveness1 preserve_liveness2 r1 r2 n1 n2
-
-let loc_disjoint_regions preserve_liveness1 preserve_liveness2 rs1 rs2 =
-  MG.loc_disjoint_regions #_ #cls preserve_liveness1 preserve_liveness2 rs1 rs2
-
-let modifies_live_region s h1 h2 r = MG.modifies_live_region s h1 h2 r
-
-let modifies_mreference_elim #t #pre b p h h' = MG.modifies_mreference_elim b p h h'
 let modifies_refl s h = MG.modifies_refl s h
+
 let modifies_loc_includes s1 h h' s2 = MG.modifies_loc_includes s1 h h' s2
-
-let address_liveness_insensitive_locs = MG.address_liveness_insensitive_locs _
-let region_liveness_insensitive_locs = MG.region_liveness_insensitive_locs _
-
-let address_liveness_insensitive_addresses r a = MG.loc_includes_address_liveness_insensitive_locs_addresses cls r a
-let region_liveness_insensitive_addresses preserve_liveness r a =
-  MG.loc_includes_region_liveness_insensitive_locs_loc_addresses cls preserve_liveness r a
-let region_liveness_insensitive_regions rs = MG.loc_includes_region_liveness_insensitive_locs_loc_regions cls rs
-let region_liveness_insensitive_address_liveness_insensitive =
-  MG.loc_includes_region_liveness_insensitive_locs_address_liveness_insensitive_locs cls
-
-let modifies_liveness_insensitive_mreference l1 l2 h h' #t #pre x = MG.modifies_preserves_liveness l1 l2 h h' x
-let modifies_liveness_insensitive_mreference_weak l h h' #t #pre x = modifies_liveness_insensitive_mreference loc_none l h h' x
-let modifies_liveness_insensitive_region l1 l2 h h' x = MG.modifies_preserves_region_liveness l1 l2 h h' x
-let modifies_liveness_insensitive_region_mreference l1 l2 h h' #t #pre x = MG.modifies_preserves_region_liveness_reference l1 l2 h h' x
-let modifies_liveness_insensitive_region_weak l2 h h' x = modifies_liveness_insensitive_region loc_none l2 h h' x
-let modifies_liveness_insensitive_region_mreference_weak l2 h h' #t #pre x = modifies_liveness_insensitive_region_mreference loc_none l2 h h' x
-
-let modifies_address_liveness_insensitive_unused_in h h' = MG.modifies_address_liveness_insensitive_unused_in cls h h'
 
 let modifies_trans = MG.modifies_trans
 
 let modifies_trans_linear l l_goal h1 h2 h3 = modifies_trans l h1 h2 l_goal h3
 
-let no_upd_fresh_region r l h0 h1 = MG.no_upd_fresh_region r l h0 h1
-let new_region_modifies m0 r0 col = MG.new_region_modifies cls m0 r0 col
-
-let modifies_ralloc_post #a #rel i init h x h' = MG.modifies_ralloc_post #_ #cls i init h x h'
-let modifies_free #a #rel r m = MG.modifies_free #_ #cls r m
-
-let modifies_upd #t #pre r v h = MG.modifies_upd #_ #cls r v h
-
-let fresh_frame_loc_not_unused_in_disjoint h0 h1 = MG.not_live_region_loc_not_unused_in_disjoint cls h0 (HS.get_tip h1)
-
-let live_loc_not_unused_in #a b h =
-  let set = Set.singleton (as_addr b) in
-  Classical.move_requires (MG.does_not_contain_addr_elim b.content h) (frameOf b, as_addr b);
-  MG.loc_addresses_not_unused_in cls (frameOf b) set h;
-  assert (loc_not_unused_in h `loc_includes` loc_addresses false (frameOf b) set)
-
-let mreference_live_loc_not_unused_in #t #pre h r = MG.mreference_live_loc_not_unused_in cls h r
-let mreference_unused_in_loc_unused_in #t #pre h r = MG.mreference_unused_in_loc_unused_in cls h r
-
-let unused_in_not_unused_in_disjoint_2 l1 l2 l1' l2' h =
+let unused_in_used_in_disjoint_2 l1 l2 l1' l2' h =
   MG.loc_includes_trans (loc_unused_in h) l1 l1' ;
-  MG.loc_includes_trans (loc_not_unused_in h) l2 l2'  ;
-  MG.loc_unused_in_not_unused_in_disjoint cls h ;
-  MG.loc_disjoint_includes (loc_unused_in h) (loc_not_unused_in h) l1' l2'
+  MG.loc_includes_trans (loc_used_in h) l2 l2'  ;
+  MG.loc_unused_in_used_in_disjoint cls h ;
+  MG.loc_disjoint_includes (loc_unused_in h) (loc_used_in h) l1' l2'
 
-let modifies_loc_unused_in l h1 h2 l' =
-  modifies_loc_includes (address_liveness_insensitive_locs) h1 h2 l;
-  MG.modifies_address_liveness_insensitive_unused_in cls h1 h2;
-  MG.loc_includes_trans (loc_unused_in h1) (loc_unused_in h2) l'
+let modifies_loc_unused_in l h1 h2 l' = MG.modifies_loc_unused_in #ucell cls l h1 h2 l'
 
-let ralloc_post_fresh_loc #a #rel i init m0 x m1 = ()
-let fresh_frame_modifies h0 h1 = MG.fresh_frame_modifies cls h0 h1
-let popped_modifies h0 h1 = MG.popped_modifies cls h0 h1
+let modifies_only_used_in l h h' =
+  MG.modifies_only_used_in #ucell #cls l h h'
 
-let modifies_only_not_unused_in = MG.modifies_only_not_unused_in #ucell #cls
-let modifies_remove_new_locs l_fresh l_aux l_goal h1 h2 h3 = modifies_only_not_unused_in l_goal h1 h3
-let modifies_remove_fresh_frame h1 h2 h3 l =
-   MG.loc_regions_unused_in cls h1 (HS.mod_set (Set.singleton (HS.get_tip h2)));
-   modifies_only_not_unused_in l h1 h3
-
-let live_same_arrays_equal_types
-  (#a1: Type0)
-  (#a2: Type0)
-  (b1: array a1{U32.v b1.max_length > 0})
-  (b2: array a2{U32.v b2.max_length > 0})
-  (h: HS.mem)
-  : Lemma (requires (
-     frameOf b1 == frameOf b2 /\
-     as_addr b1 == as_addr b2 /\
-     HS.contains h b1.content /\
-     HS.contains h b2.content))
-   (ensures (a1 == a2 /\ HS.sel h b1.content == HS.sel h b2.content))
-  =
-  Heap.lemma_distinct_addrs_distinct_preorders ();
-  Heap.lemma_distinct_addrs_distinct_mm ();
-  let s1 = HS.sel h b1.content in
-  let s2 = HS.sel h b2.content in
-  let (_, vp1) = Seq.index s1 0 in
-  let (_, vp2) = Seq.index s2 0 in
-  Seq.lemma_equal_instances_implies_equal_types ()
+let modifies_remove_new_locs l_fresh l_aux l_goal h1 h2 h3 = modifies_only_used_in l_goal h1 h3
 
 let only_one_live_pid_with_full_permission_specific
   (#a: Type0)
@@ -492,19 +492,21 @@ let lemma_disjoint_index_disjoint_cells (#a:Type) (b:array a) (i1:nat{i1 < vleng
   (requires i1 <> i2)
   (ensures loc_disjoint (loc_cell b i1) (loc_cell b i2))
   =
-  let r = frameOf b in
-  let a = as_addr b in
   let aloc1 = {
+    b_rid = frameOf b;
+    b_addr = as_addr b;
     b_max = U32.v b.max_length;
     b_index = U32.v b.idx + i1;
     b_pid = (Ghost.reveal b.pid)
   } in
   let aloc2 = {
+    b_rid = frameOf b;
+    b_addr = as_addr b;
     b_max = U32.v b.max_length;
     b_index = U32.v b.idx + i2;
     b_pid = (Ghost.reveal b.pid)
   } in
-  MG.loc_disjoint_aloc_intro #ucell #cls #r #a #r #a aloc1 aloc2
+  MG.loc_disjoint_aloc_intro #ucell #cls aloc1 aloc2
 
 let rec lemma_disjoint_index_disjoint_cell_array (#a:Type0) (b:array a) (idx:U32.t) (len:U32.t{U32.v len > 0})
   (i:nat{i < vlength b}) (j:nat{j <= U32.v len}) : Lemma
@@ -592,19 +594,11 @@ let fresh_array_pid #a b' h0 h1 =
   Ghost.reveal b'.pid > Ghost.reveal (get_array_current_max h0 b') /\
   Ghost.reveal (get_array_current_max h1 b') = Ghost.reveal b'.pid
 
-let ucell_unused (r: HS.rid) (a:nat) (cell:ucell r a) (h: HS.mem) =
-  forall (t:Type) (b:array t).
-    (frameOf b = r /\ as_addr b = a /\ HS.contains h b.content) ==>
-    (cell.b_index < U32.v b.max_length /\
-    begin
-      let (_, perm_map) = Seq.index (HS.sel h b.content) cell.b_index in
-      cell.b_pid > get_current_max (Ghost.reveal perm_map)
-    end)
 
-let ucell_not_used_pid_in_loc_unused_in (r: HS.rid) (a:nat) (cell:ucell r a) (h: HS.mem) : Lemma
-  (requires (ucell_unused r a cell h))
+let ucell_not_used_pid_in_loc_unused_in (cell:ucell ) (h: HS.mem) : Lemma
+  (requires (ucell_unused_in cell h))
   (ensures (loc_unused_in h `loc_includes` MG.loc_of_aloc cell))
-  = admit()
+  = MG.aloc_unused_in_intro cls cell h
 
 let cell_not_used_pid_in_loc_unused_in (#t: Type) (b: array t) (i:nat{i < vlength b}) (h: HS.mem) :
   Lemma (requires (
@@ -638,8 +632,6 @@ let cell_not_used_pid_in_loc_unused_in (#t: Type) (b: array t) (i:nat{i < vlengt
   in
   Classical.forall_intro_2 aux;
   ucell_not_used_pid_in_loc_unused_in
-    (frameOf b)
-    (as_addr b)
     cell h
 
 let rec array_not_used_pid_in_loc_unused_in' (#a: Type) (b: array a) (h: HS.mem) (i:nat{i <= vlength b}) :
