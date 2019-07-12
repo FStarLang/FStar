@@ -155,33 +155,67 @@ open FStar.Algebra.CommMonoid.Equiv
 open FStar.Tactics
 open FStar.Tactics.CanonCommMonoidSimple.Equiv
 
+let synth_frame_full_pre () : Tac unit =
+  refine_intro();
+  flip();
+  apply_lemma (`unfold_with_tactic);
+  norm [delta_only [`%frame_delta_pre_full]];
+  split();
+  apply_lemma (quote can_be_split_into_star);
+  flip();
+  canon_monoid req rm
+
+let synth_frame_full_post () : Tac unit =
+  refine_intro();
+  flip();
+  apply_lemma (`unfold_with_tactic);
+  norm [delta_only [`%frame_delta_post_full]];
+  ignore (forall_intro());
+  split();
+  apply_lemma (quote can_be_split_into_star);
+  flip();
+  canon_monoid req rm
+
+let solve_frame_full_pre () : Tac unit =
+  norm [delta_only [`%frame_delta_pre_full]];
+  apply (`squash_and);
+  split();
+  apply_lemma (quote can_be_split_into_star);
+  canon_monoid req rm;
+  apply_lemma (quote can_be_split_into_star);
+  canon_monoid req rm
+
+let squash_forall p (x:squash (forall y. p y)) : (forall y. p y) = admit()
+  // let x : squash (p `c_and` q) = FStar.Squash.join_squash x in
+  // x
+
+let solve_frame_full_post () : Tac unit =
+  norm [delta_only [`%frame_delta_post_full]];
+  apply (`squash_forall);
+  ignore (forall_intro());
+  split();
+  apply_lemma (quote can_be_split_into_star);
+  canon_monoid req rm;
+  apply_lemma (quote can_be_split_into_star);
+  canon_monoid req rm;
+  dump "end"
+
+#push-options "--no_tactics"
 
 val frame_full_array (#t:Type) (#a:Type) (b:A.array a)
     (outer0:resource)
     (outer1:t -> resource)
     (#inner0:resource)
     (#inner1:t -> resource)
-    (#[(fun () -> tadmit()
-          // refine_intro();
-          // dump "refine_intro";
-          // flip();
-          // apply_lemma (`unfold_with_tactic);
-          // dump "hello";
-          // norm [delta_only [`%frame_delta_pre_full]];
-          // split(); apply_lemma (quote can_be_split_into_star); canon_monoid req rm; apply_lemma (quote can_be_split_into_star); canon_monoid req rm
-    ) ()]
+    (#[synth_frame_full_pre ()]
       delta0:resource{FStar.Tactics.with_tactic
-                     (fun () -> tadmit())
-                     // split(); apply_lemma (quote can_be_split_into_star); canon_monoid req rm; apply_lemma (quote can_be_split_into_star); canon_monoid req rm)
+                     (fun () -> solve_frame_full_pre ())
                      (frame_delta_pre_full b outer0 inner0 delta0)
-                     // (outer0 `can_be_split_into` (full_array_resource b, delta0) /\
-                     // inner0 `can_be_split_into` (array_resource b, delta0))
                      })
-    (#
+    (#[synth_frame_full_post ()]
       delta1:(t -> resource){FStar.Tactics.with_tactic
-                     (fun () -> tadmit ())
-                     (forall x. (outer1 x) `can_be_split_into` (full_array_resource b, delta1 x)) /\
-                     (forall x. (inner1 x) `can_be_split_into` (array_resource b, delta1 x))
+                     (fun () -> solve_frame_full_post ())
+                     (frame_delta_post_full b outer1 inner1 delta1)
                      })    
     (#pre:r_pre inner0)
     (#post:r_post inner0 t inner1)
@@ -189,10 +223,12 @@ val frame_full_array (#t:Type) (#a:Type) (b:A.array a)
     : RST t
       outer0
       outer1
-      (FStar.Tactics.by_tactic_seman _ (fun () -> tadmit()) (frame_delta_pre_full b outer0 inner0 delta0);
+      (FStar.Tactics.by_tactic_seman _ (fun () -> solve_frame_full_pre()) (frame_delta_pre_full b outer0 inner0 delta0);
         frame_full_pre b outer0 inner0 delta0 pre)
-      (frame_full_post b outer0 inner0 delta0 outer1 inner1 delta1 post)
+      (FStar.Tactics.by_tactic_seman _ (fun () -> solve_frame_full_post()) (frame_delta_post_full b outer1 inner1 delta1);
+        frame_full_post b outer0 inner0 delta0 outer1 inner1 delta1 post)
 
+#pop-options
 
 #reset-options "--z3rlimit 10 --max_fuel 0 --max_ifuel 0 --z3cliopt smt.qi.eager_threshold=1000"
 #restart-solver
@@ -204,10 +240,13 @@ let read_write_without_sharing () : RST unit
   =
   let b = alloc 2ul 42ul in
   let h0 = HST.get() in
-  let x = frame_full_array #unit #_ b (full_array_resource b) (fun _ -> full_array_resource b) #_ #_
-    #(empty_resource) #(fun _ -> empty_resource)
+  assume (UInt32.v 0ul < A.vlength b /\ P.allows_write (sel (array_view b) h0).p);
+//  assume (frame_full_pre b (full_array_resource b) (array_resource b) (empty_resource) );
+  let x = frame_full_array b (full_array_resource b) (fun _ -> full_array_resource b) #_ #_
+//    #(empty_resource) #(fun _ -> empty_resource)
     (fun () ->
       upd b 0ul 0ul
     ) in
+    admit();
   let h1 = HST.get() in
   free b
