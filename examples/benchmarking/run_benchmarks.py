@@ -182,7 +182,7 @@ for h in hashes:
 			## clean directory after use
 			if not args.benchmark_no_cleanup:
 				os.chdir(hashdir)
-				shell_exec('rm -rf %s'%h)
+				shell_exec('rm -rf %s'%fstar_dir)
 
 	if 'upload' in run_stages:
 		os.chdir(hashdir)
