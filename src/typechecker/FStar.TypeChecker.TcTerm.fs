@@ -184,7 +184,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
         then None, tot_or_gtot c, false //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, false
-        else if Options.top_level_trivial_pre ()
+        else if Options.trivial_pre_for_unannotated_effectful_fns ()
         then (*
               * AR: note that Env.null_wp_for_eff does the normalization of effects
               *     the true flag indicates that check sub-comp but return c
@@ -1348,10 +1348,16 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g_env = expected_function_typ env topt body in
 
     if Env.debug env Options.Extreme
-    then BU.print1 "Expected comp of the abstraction body: %s\n"
+    then BU.print3 "After expected_function_typ, tfun_opt: %s, c_opt: %s, and expected type in envbody: %s\n"
+           (match tfun_opt with
+            | None -> "None"
+            | Some t -> Print.term_to_string t)
            (match c_opt with
             | None -> "None"
-            | Some t -> Print.comp_to_string t);
+            | Some t -> Print.comp_to_string t)
+           (match Env.expected_typ envbody with
+            | None -> "None"
+            | Some t -> Print.term_to_string t);
 
     if Env.debug env <| Options.Other "NYC"
     then BU.print2 "!!!!!!!!!!!!!!!Guard for function with binders %s is %s\n"
