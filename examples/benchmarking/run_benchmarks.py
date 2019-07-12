@@ -49,13 +49,6 @@ def shell_exec(cmd, verbose=args.verbose, check=False, stdout=None, stderr=None)
 		print('+ %s'%cmd)
 	return subprocess.run(cmd, shell=True, check=check, stdout=stdout, stderr=stderr)
 
-def shell_exec_redirect(cmd, fname, verbose=args.verbose, check=False):
-    if verbose:
-        print('+ %s'%cmd)
-        print('+ with stdout/stderr -> %s'% fname)
-    with open(fname, 'w') as f:
-        return shell_exec(cmd, verbose=False, check=check, stdout=f, stderr=subprocess.STDOUT)
-
 def get_git_hashes(args):
 	old_cwd = os.getcwd()
 	repo_path = os.path.abspath(args.repo)
@@ -179,10 +172,9 @@ for h in hashes:
 			if args.benchmark_hook_patch:
 				shell_exec('grep BENCHMARK_PRE ulib/gmake/fstar.mk || git apply %s'%args.benchmark_hook_patch)
 
-			log_fname = os.path.join(hashdir, 'bench_%s.log'%run_timestamp)
-			completed_proc = shell_exec_redirect('%s'%args.benchmark_run_script, log_fname)
+			completed_proc = shell_exec(args.benchmark_run_script)
 			if completed_proc.returncode != 0:
-				print('ERROR[%d] in fstar bench run for %s (see %s)'%(completed_proc.returncode, h, log_fname))
+				print('ERROR[%d] in fstar bench run for %s'%(completed_proc.returncode, h))
 
 			## collate benchmark output
 			shell_exec('mkdir -p ../bench_results; cp -r bench_results/*/* ../bench_results')
